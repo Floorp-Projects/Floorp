@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Geoff Beier <me@mollyandgeoff.com>
  *   Aaron Schulman <aschulm@gmail.com>
+ *   Desmond Elliott <d.elliott@inf.ed.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,22 +56,27 @@
 -(TabButtonCell*)buttonAtPoint:(NSPoint)clickPoint;
 -(void)registerTabButtonsForTracking;
 -(void)unregisterTabButtonsForTracking;
--(void)initOverflowMenu;
+-(void)initOverflow;
 -(NSRect)tabsRect;
 -(BOOL)isMouseInside;
 -(NSString*)view:(NSView*)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void*)userData;
+-(NSButton*)newScrollButton:(NSButton*)button;
+-(void)setLeftMostVisibleTabIndex:(int)index;
+-(NSButton*)scrollButtonAtPoint:(NSPoint)clickPoint;
+-(BOOL)tabIndexIsVisible:(int)index;
+-(void)drawButtons;
 
 @end
 
 static const float kTabBarDefaultHeight = 22.0;
 static const float kTabBottomPad = 4.0;
 
-
 @implementation BrowserTabBarView
 
-static const int kTabBarMargin = 5;       // left/right margin for tab bar
-static const float kMinTabWidth = 100.0;   // the smallest tabs that will be drawn
-static const float kMaxTabWidth = 175.0;  // the widest tabs that will be drawn
+static const int kTabBarMargin = 5;                  // left/right margin for tab bar
+static const int kTabBarMarginWhenOverflowTabs = 16; // left margin for tab bar when overflowing
+static const float kMinTabWidth = 100.0;             // the smallest tabs that will be drawn
+static const float kMaxTabWidth = 175.0;             // the widest tabs that will be drawn
 
 static const int kTabDragThreshold = 3;   // distance a drag must go before we start dnd
 
@@ -83,7 +89,6 @@ static const int kOverflowButtonMargin = 1;
   self = [super initWithFrame:frame];
   if (self) {
     mActiveTabButton = nil;
-    mOverflowButton = nil;
     mOverflowTabs = NO;
     // initialize to YES so that awakeFromNib: will set the right size; awakeFromNib uses setVisible which
     // will only be effective if visibility changes. initializing to YES causes the right thing to happen even
@@ -113,8 +118,8 @@ static const int kOverflowButtonMargin = 1;
 {
   [mTrackingCells release];
   [mActiveTabButton release];
-  [mOverflowButton release];
-  [mOverflowMenu release];
+  [mOverflowRightButton release];
+  [mOverflowLeftButton release];
 
   [mBackgroundImage release];
   [mButtonDividerImage release];
@@ -146,12 +151,16 @@ static const int kOverflowButtonMargin = 1;
     if (NSIntersectsRect(tabButtonFrame, rect) && NSMaxX(tabButtonFrame) <= NSMaxX(tabsRect))
       [tabButton drawWithFrame:tabButtonFrame inView:self];
 
-    // draw the first divider.
-    if ((prevButton == nil) && ([tab tabState] != NSSelectedTab))
-        [mButtonDividerImage compositeToPoint:NSMakePoint(tabButtonFrame.origin.x - [mButtonDividerImage size].width, tabButtonFrame.origin.y)
-                                    operation:NSCompositeSourceOver];
     prevButton = tabButton;
     tab = nextTab;
+  }
+  
+  // The button divider image should only be drawn if the left most visible tab is not selected.
+  if ([mTabView indexOfTabViewItem:[mTabView selectedTabViewItem]] != mLeftMostVisibleTabIndex) {
+    if (mOverflowTabs)
+      [mButtonDividerImage compositeToPoint:NSMakePoint(kTabBarMarginWhenOverflowTabs - [mButtonDividerImage size].width, 0) operation:NSCompositeSourceOver];
+    else
+      [mButtonDividerImage compositeToPoint:NSMakePoint(kTabBarMargin - [mButtonDividerImage size].width, 0) operation:NSCompositeSourceOver];
   }
   
   if (mDragOverBar && !mDragDestButton)
@@ -178,11 +187,12 @@ static const int kOverflowButtonMargin = 1;
 {
   NSPoint clickPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   TabButtonCell *clickedTabButton = [self buttonAtPoint:clickPoint];
+  NSButton *clickedScrollButton = [self scrollButtonAtPoint:clickPoint];
   mLastClickPoint = clickPoint;
   
   if (clickedTabButton && ![clickedTabButton willTrackMouse:theEvent inRect:[clickedTabButton frame] ofView:self])
     [[[clickedTabButton tabViewItem] tabItemContentsView] mouseDown:theEvent];
-  else if (!clickedTabButton && [theEvent clickCount] == 2)
+  else if (!clickedTabButton && !clickedScrollButton && [theEvent clickCount] == 2)
     [[NSNotificationCenter defaultCenter] postNotificationName:kTabBarBackgroundDoubleClickedNotification
                                                         object:mTabView];
 }
@@ -208,6 +218,16 @@ static const int kOverflowButtonMargin = 1;
         (abs((int)(mLastClickPoint.y - clickPoint.y)) >= kTabDragThreshold)) {
           NSLog(@"Here's where we'd handle the drag among friends rather than the drag manager");
     }*/
+}
+
+// Returns the scroll button at the specified point, if there is one.
+-(NSButton*)scrollButtonAtPoint:(NSPoint)clickPoint
+{
+  if (NSPointInRect(clickPoint, [mOverflowLeftButton frame]))
+    return mOverflowLeftButton;
+  if (NSPointInRect(clickPoint, [mOverflowRightButton frame]))
+    return mOverflowRightButton;
+  return nil;
 }
 
 // returns the tab at the specified point
@@ -419,112 +439,160 @@ static const int kOverflowButtonMargin = 1;
   return (button) ? [button tabViewItem] : nil;
 }
 
-// sets the tab buttons to the largest kMinTabWidth <= size <= kMaxTabWidth where they all fit
-// and calculates the frame for each.
 -(void)layoutButtons
 {
-  const int numTabs = [mTabView numberOfTabViewItems];
-  float tabWidth = kMaxTabWidth;
-
-  // calculate the largest tabs that would fit... [self tabsRect] may not be correct until mOverflowTabs is set here.
-  float maxWidth = floor((NSWidth([self bounds]) - (2*kTabBarMargin))/numTabs);
-  // if tabs will overflow, leave space for the button
-  if (maxWidth < kMinTabWidth) {
+  int numberOfTabs = [mTabView numberOfTabViewItems];
+  mOverflowTabs = NO;
+  float widthOfTabBar = NSWidth([self tabsRect]);
+  float widthOfATab = widthOfTabBar / numberOfTabs;
+  int xCoord;
+  if (widthOfATab < kMinTabWidth) {
     mOverflowTabs = YES;
-    NSRect tabsRect = [self tabsRect];
-    for (int i = 1; i < numTabs; i++) {
-      maxWidth = floor(NSWidth(tabsRect)/(numTabs - i));
-      if (maxWidth >= kMinTabWidth) break;
+    widthOfTabBar = NSWidth([self tabsRect]);
+    mNumberOfVisibleTabs = (int)floor(widthOfTabBar / kMinTabWidth);
+    if (mNumberOfVisibleTabs + mLeftMostVisibleTabIndex > numberOfTabs) {
+      [self setLeftMostVisibleTabIndex:(numberOfTabs - mNumberOfVisibleTabs)];
     }
-    // because the specific tabs which overflow may change, empty the menu and rebuild it as tabs are laid out
-    [self initOverflowMenu];
-  } else {
-    mOverflowTabs = NO;
+    widthOfATab = widthOfTabBar / mNumberOfVisibleTabs;
+    xCoord = kTabBarMarginWhenOverflowTabs;
+    [self initOverflow];
   }
-  // if our tabs are currently larger than that, shrink them to the larger of kMinTabWidth or maxWidth
-  if (tabWidth > maxWidth)
-    tabWidth = (maxWidth > kMinTabWidth ? maxWidth : kMinTabWidth);
-  // resize and position the tab buttons
-  int xCoord = kTabBarMargin;
-  NSArray *tabItems = [mTabView tabViewItems];
-  NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
-  BrowserTabViewItem *tab = nil;
-  TabButtonCell *prevTabButton = nil;
-  while ((tab = [tabEnumerator nextObject])) {
-    TabButtonCell *tabButtonCell = [tab tabButtonCell];
-    NSSize buttonSize = [tabButtonCell size];
-    buttonSize.width = tabWidth;
-    buttonSize.height = kTabBarDefaultHeight;
-    NSPoint buttonOrigin = NSMakePoint(xCoord,0);
-    [tabButtonCell setFrame:NSMakeRect(buttonOrigin.x,buttonOrigin.y,buttonSize.width,buttonSize.height)];
-	  // tell the button whether it needs to draw the right side dividing line
-	  if ([tab tabState] == NSSelectedTab) {
-		  [tabButtonCell setDrawDivider:NO];
-		  [prevTabButton setDrawDivider:NO];
-	  } else {
-		  [tabButtonCell setDrawDivider:YES];
-	  }
-    // If the tab ran off the edge, suppress its close button, make sure the divider is drawn, and add it to the menu
-	  if (buttonOrigin.x + buttonSize.width > NSMaxX([self tabsRect])) {
-		  [tabButtonCell hideCloseButton];
-      // push the tab off the edge of the view to keep it from grabbing clicks if there is an area
-      // between the overflow menu and the last tab which is within tabsRect due to rounding
-      [tabButtonCell setFrame:NSMakeRect(NSMaxX([self bounds]),buttonOrigin.y,buttonSize.width,buttonSize.height)];
-      // if the tab prior to the overflow is not selected, it must draw a divider
-      if([[prevTabButton tabViewItem] tabState] != NSSelectedTab) [prevTabButton setDrawDivider:YES];
-      [mOverflowMenu addItem:[tab menuItem]];
-    }
-	  prevTabButton = tabButtonCell;
-	  xCoord += (int)tabWidth;
+  else {
+    mLeftMostVisibleTabIndex = 0;
+    mNumberOfVisibleTabs = numberOfTabs;
+    widthOfATab = (widthOfATab > kMaxTabWidth ? kMaxTabWidth : widthOfATab);
+    xCoord = kTabBarMargin;
+    [mOverflowLeftButton removeFromSuperview];
+    [mOverflowRightButton removeFromSuperview];
   }
-  // if tabs overflowed, position and display the overflow button
-  if (mOverflowTabs) {
-    [mOverflowButton setFrame:NSMakeRect(NSMaxX([self tabsRect]) + kOverflowButtonMargin,
-                                         ([self tabBarHeight] - kOverflowButtonHeight)/2,kOverflowButtonWidth,kOverflowButtonHeight)];
-    [self addSubview:mOverflowButton];
-  } else {
-    [mOverflowButton removeFromSuperview];
+  // Lay out the tabs, giving off-screen tabs a width of 0.
+  NSSize buttonSize = NSMakeSize(widthOfATab, kTabBarDefaultHeight);
+  NSRect overflowTabRect = NSMakeRect(xCoord, 0, 0, 0);
+  int i = 0;
+  for (i; i < mLeftMostVisibleTabIndex; i++) {
+    TabButtonCell *tabButtonCell = [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:i] tabButtonCell];
+    [tabButtonCell setFrame:overflowTabRect];
+    [tabButtonCell hideCloseButton];
+    [tabButtonCell setDrawDivider:NO];
+  }
+  for (i; i < mLeftMostVisibleTabIndex + mNumberOfVisibleTabs; i++) {
+    TabButtonCell *tabButtonCell = [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:i] tabButtonCell];
+    [tabButtonCell setFrame:NSMakeRect(xCoord, 0, buttonSize.width, buttonSize.height)];
+    [tabButtonCell setDrawDivider:YES];
+    xCoord += (int)widthOfATab;
+  }
+  for (i; i < numberOfTabs; i++) {
+    TabButtonCell *tabButtonCell = [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:i] tabButtonCell];
+    [tabButtonCell setFrame:overflowTabRect];
+    [tabButtonCell hideCloseButton];
+    [tabButtonCell setDrawDivider:NO];
+  }
+  BrowserTabViewItem* selectedTab = (BrowserTabViewItem*)[mTabView selectedTabViewItem];
+  if (selectedTab) {
+    [[selectedTab tabButtonCell] setDrawDivider:NO];
+    int selectedTabIndex = [mTabView indexOfTabViewItem:selectedTab];
+    if (selectedTabIndex > 0 && [self tabIndexIsVisible:selectedTabIndex])
+      [[(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:(selectedTabIndex - 1)] tabButtonCell] setDrawDivider:NO];
   }
   [self setNeedsDisplay:YES];
 }
 
--(void)initOverflowMenu
+// Determines whether or not the specified tab index is in the currently visible
+// tab bar.
+-(BOOL)tabIndexIsVisible:(int)tabIndex
 {
-  if (!mOverflowButton) {
-    // if it hasn't been created yet, create an NSPopUpButton and retain a strong reference
-    mOverflowButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, kOverflowButtonWidth, kOverflowButtonHeight)];
-    [mOverflowButton setImage:[NSImage imageNamed:@"tab_overflow"]];
-    [mOverflowButton setImagePosition:NSImageOnly];
-    [mOverflowButton setBezelStyle:NSShadowlessSquareBezelStyle];
-    [mOverflowButton setBordered:NO];
-    [[mOverflowButton cell] setHighlightsBy:NSNoCellMask];
-    [mOverflowButton setTarget:self];
-    [mOverflowButton setAction:@selector(overflowMenu:)];
-    [(NSButtonCell *)[mOverflowButton cell] sendActionOn:NSLeftMouseDownMask];
-  }
-  if (!mOverflowMenu) {
-    // create an empty NSMenu for later use and retain a strong reference
-    mOverflowMenu = [[NSMenu alloc] init];
-    [mOverflowMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
-  }
-
-  // remove any items on the menu other than the dummy item
-  [mOverflowMenu removeItemsFromIndex:1];
+  return (mLeftMostVisibleTabIndex <= tabIndex && tabIndex < mNumberOfVisibleTabs + mLeftMostVisibleTabIndex);
 }
 
-- (IBAction)overflowMenu:(id)sender
+// A helper method that returns an NSButton which will allow the sliding of tabs
+// when clicked.
+-(NSButton*)newScrollButton
 {
-  NSPopUpButtonCell* popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
-  [popupCell setMenu:mOverflowMenu];
-  [popupCell trackMouse:[NSApp currentEvent] inRect:[sender bounds] ofView:sender untilMouseUp:YES];
+  NSButton* button = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, kOverflowButtonWidth, kOverflowButtonHeight)];
+  [button setImagePosition:NSImageOnly];
+  [button setBezelStyle:NSShadowlessSquareBezelStyle];
+  [button setButtonType:NSToggleButton];
+  [button setBordered:NO];
+  [button setTarget:self];
+  [[button cell] setContinuous:YES];
+  [button setPeriodicDelay:0.4 interval:0.15];
+  return button;
+}
+
+// Allocate the left scroll button and the right scroll button using a helper
+-(void)initOverflow
+{
+  if (!mOverflowLeftButton) {
+   mOverflowLeftButton = [self newScrollButton];
+   [mOverflowLeftButton setImage:[NSImage imageNamed:@"tab_scroll_button_left"]];
+   [mOverflowLeftButton setAction:@selector(scrollLeft:)];
+  }
+  if (!mOverflowRightButton) {
+    mOverflowRightButton = [self newScrollButton];
+    [mOverflowRightButton setImage:[NSImage imageNamed:@"tab_scroll_button_right"]];
+    [mOverflowRightButton setAction:@selector(scrollRight:)];
+  }
+  [self drawButtons];
+}
+
+-(void)drawButtons {
+  // Add the overflow buttons to the tab bar view.
+  [mOverflowLeftButton setFrame:NSMakeRect(0, ([self tabBarHeight] - kOverflowButtonHeight) / 2, kOverflowButtonWidth, kOverflowButtonHeight)];
+  [mOverflowLeftButton setEnabled:(mLeftMostVisibleTabIndex != 0)];
+  [self addSubview:mOverflowLeftButton];
+  [mOverflowRightButton setFrame:NSMakeRect(NSMaxX([self tabsRect]), ([self tabBarHeight] - kOverflowButtonHeight) / 2, kOverflowButtonWidth, kOverflowButtonHeight)];
+  [mOverflowRightButton setEnabled:(mLeftMostVisibleTabIndex + mNumberOfVisibleTabs != [mTabView numberOfTabViewItems])];
+  [self addSubview:mOverflowRightButton];
+}
+
+// When a user clicks on mOverflowLeftButton this method is called to slide the 
+// tabs one place to the right, if possible.
+-(IBAction)scrollLeft:(id)aSender
+{
+  if (mLeftMostVisibleTabIndex > 0)
+    [self setLeftMostVisibleTabIndex:(mLeftMostVisibleTabIndex - 1)];
+}
+ 
+// When a user clicks on mOverflowRightButton this method is called to slide the
+// tabs one place to the left, if possible.
+-(IBAction)scrollRight:(id)aSender
+{
+  if ((mLeftMostVisibleTabIndex + mNumberOfVisibleTabs) < [mTabView numberOfTabViewItems])
+    [self setLeftMostVisibleTabIndex:(mLeftMostVisibleTabIndex + 1)];
+}
+
+// Sets the left most visible tab index depending on the the relationship between
+// index and mLeftMostVisibleTabIndex.
+-(void)scrollTabIndexToVisible:(int)index
+{
+  if (index < mLeftMostVisibleTabIndex)
+    [self setLeftMostVisibleTabIndex:index];
+  else if (index >= mLeftMostVisibleTabIndex + mNumberOfVisibleTabs)
+    [self setLeftMostVisibleTabIndex:(index - mNumberOfVisibleTabs + 1)];
+}
+
+// Sets the left most visible tab index to the value specified and rebuilds the 
+// tab bar. Should not be called before performing necessary sanity checks.
+-(void)setLeftMostVisibleTabIndex:(int)index
+{
+  if (index != mLeftMostVisibleTabIndex) {
+    mLeftMostVisibleTabIndex = index;
+    [self rebuildTabBar];
+  }
 }
 
 // returns an NSRect of the area where tab widgets may be drawn
 -(NSRect)tabsRect
 {
-  NSRect rect = [self bounds];
-  rect.origin.x += kTabBarMargin;
-  rect.size.width -= 2 * kTabBarMargin + (mOverflowTabs ? kOverflowButtonWidth : 0.0);
+  NSRect rect = [self frame];
+  if (mOverflowTabs) {
+    rect.origin.x += kTabBarMarginWhenOverflowTabs;
+    rect.size.width -= 2 * kTabBarMarginWhenOverflowTabs;
+  }
+  else {
+    rect.origin.x += kTabBarMargin;
+    rect.size.width -= 2 * kTabBarMargin;
+  }
   return rect;
 }
 

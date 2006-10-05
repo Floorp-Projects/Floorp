@@ -4648,7 +4648,6 @@
 				E010866D06BCA2E500BD5DE0,
 				E010866E06BCA2E500BD5DE0,
 				E010866F06BCA2E500BD5DE0,
-				3FF71AE00710A6800081B5D7,
 				0382B4DA07303CCA00A0228A,
 				82CE28970736615300B4DE07,
 				82CE28980736615300B4DE07,
@@ -4723,6 +4722,8 @@
 				DE09CD7A0ACB97C5008A8D9C,
 				DE09CD7B0ACB97C5008A8D9C,
 				DE09CD7C0ACB97C5008A8D9C,
+				DE1BDD260AD4E13000F0C7BD,
+				DE1BDD270AD4E13000F0C7BD,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8567,7 +8568,6 @@
 				E010867406BCA2E500BD5DE0,
 				E010867506BCA2E500BD5DE0,
 				E010867606BCA2E500BD5DE0,
-				3FF71AE10710A6800081B5D7,
 				0382B4DB07303CCA00A0228A,
 				82CE28840736615300B4DE07,
 				82CE28850736615300B4DE07,
@@ -8646,6 +8646,8 @@
 				DE09CD750ACB97C5008A8D9C,
 				DE09CD760ACB97C5008A8D9C,
 				DE09CD770ACB97C5008A8D9C,
+				DE1BDD240AD4E13000F0C7BD,
+				DE1BDD250AD4E13000F0C7BD,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -12437,26 +12439,6 @@
 			settings = {
 			};
 		};
-		3FF71ADF0710A67F0081B5D7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			name = tab_overflow.tif;
-			path = resources/images/chrome/tab_overflow.tif;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		3FF71AE00710A6800081B5D7 = {
-			fileRef = 3FF71ADF0710A67F0081B5D7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3FF71AE10710A6800081B5D7 = {
-			fileRef = 3FF71ADF0710A67F0081B5D7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3FFE23520847CB0D00D6CAFC = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -14108,6 +14090,46 @@
 			settings = {
 			};
 		};
+		DE1BDD220AD4E13000F0C7BD = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = tab_scroll_button_left.tif;
+			path = resources/images/chrome/tab_scroll_button_left.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DE1BDD230AD4E13000F0C7BD = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = tab_scroll_button_right.tif;
+			path = resources/images/chrome/tab_scroll_button_right.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		DE1BDD240AD4E13000F0C7BD = {
+			fileRef = DE1BDD220AD4E13000F0C7BD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DE1BDD250AD4E13000F0C7BD = {
+			fileRef = DE1BDD230AD4E13000F0C7BD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DE1BDD260AD4E13000F0C7BD = {
+			fileRef = DE1BDD220AD4E13000F0C7BD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DE1BDD270AD4E13000F0C7BD = {
+			fileRef = DE1BDD230AD4E13000F0C7BD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		DE74F7470AB25E7D00FD1D5B = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -15003,7 +15025,8 @@
 				3FF08F1206E7D3C2001C9B19,
 				3FF08F1306E7D3C2001C9B19,
 				3FF08F1406E7D3C2001C9B19,
-				3FF71ADF0710A67F0081B5D7,
+				DE1BDD220AD4E13000F0C7BD,
+				DE1BDD230AD4E13000F0C7BD,
 				E091C0D006225EA3007D9E8F,
 				F540BD1A029ED15301026D5D,
 				F540BD1C029ED17901026D5D,
