@@ -475,13 +475,13 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
         } else {
             if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
                 return JS_FALSE;
-            *rval = ID_TO_VALUE(id);
         }
         iterobj->slots[JSSLOT_ITER_STATE] = state;
         if (JSVAL_IS_NULL(state))
             goto stop;
         if (foreach)
             goto return_key_value;
+        *rval = ID_TO_VALUE(id);
         return JS_TRUE;
     }
 #endif
