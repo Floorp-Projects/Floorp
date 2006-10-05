@@ -226,11 +226,17 @@ protected:
 
 
   NS_IMETHOD CreateTxnForDeleteSelection(EDirection aAction,
-                                              EditAggregateTxn  ** aTxn);
+                                         EditAggregateTxn ** aTxn,
+                                         nsIDOMNode ** aNode,
+                                         PRInt32 *aOffset,
+                                         PRInt32 *aLength);
 
   NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
                                               EDirection aAction, 
-                                              EditAggregateTxn    *aTxn);
+                                              EditAggregateTxn *aTxn,
+                                              nsIDOMNode ** aNode,
+                                              PRInt32 *aOffset,
+                                              PRInt32 *aLength);
 
 
   /** create a transaction for inserting aStringToInsert into aTextNode

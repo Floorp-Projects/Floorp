@@ -4590,78 +4590,16 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   EditAggregateTxn *txn;
-  res = CreateTxnForDeleteSelection(aAction, &txn);
-  if (NS_FAILED(res)) return res;
-  nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
-
-  nsCOMPtr<nsIDOMCharacterData> deleteCharData;
   nsCOMPtr<nsIDOMNode> deleteNode;
-  PRInt32 deleteCharOffset = -1;
-  PRBool isDeletingOneChar = PR_FALSE;
+  PRInt32 deleteCharOffset = 0, deleteCharLength = 0;
+  res = CreateTxnForDeleteSelection(aAction, &txn, getter_AddRefs(deleteNode), &deleteCharOffset, &deleteCharLength);
+  nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
 
-  // Notification uses nsIEditActionListener::[Will|Did]Delete[Text|Node] instead of
-  // nsIEditActionListener::[Will|Did]DeleteSelection when collapsed action is
-  // used to delete one character forward or backwards.
-  // The following code block determines what to call by setting
-  // isDeletingOneChar, deleteNode and deleteCharData
-  if (aAction == ePrevious || aAction == eNext) {
-#ifdef DEBUG
-    PRUint32 flags;
-    NS_ASSERTION(NS_SUCCEEDED(GetFlags(&flags)) &&
-                 (flags & nsIPlaintextEditor::eEditorPlaintextMask),
-                 "Should not have reached this point in rich text editor");
-#endif
-    res = selection->GetIsCollapsed(&isDeletingOneChar);
-    if (isDeletingOneChar) {
-      // XXX After bug 240933 is fixed we will never be deleting a node
-      // a node, there will always be a char data
-      selection->GetFocusNode(getter_AddRefs(deleteNode));
-      deleteCharData = do_QueryInterface(deleteNode);
-      selection->GetFocusOffset(&deleteCharOffset);
-      if (!deleteCharData) {
-        nsCOMPtr<nsINode> parentNode(do_QueryInterface(deleteNode));
-        PRUint32 childCount = parentNode->GetChildCount();
-        // XXX Need to get correct info for backspace at end of text
-        if (deleteCharOffset >= childCount)
-          deleteCharOffset = childCount - 1;
-        deleteNode = do_QueryInterface(parentNode->GetChildAt(deleteCharOffset));
-        deleteCharData = do_QueryInterface(deleteNode);
-        deleteCharOffset = 0;
-      }
-      if (aAction == ePrevious && --deleteCharOffset < 0) {
-        // Backspace pressed at beginning of node, so get the previous node
-        nsCOMPtr<nsIDOMNode> previousNode;
-        deleteNode->GetPreviousSibling(getter_AddRefs(previousNode));
-        deleteNode.swap(previousNode);
-        deleteCharData = do_QueryInterface(deleteNode);
-      }
-      PRUint32 deleteDataLength = 1; // Treat deleted node as length of 1
-      if (deleteCharData) {
-        deleteCharData->GetLength(&deleteDataLength);
-      }
-      // Check for valid position for a deletion
-      if (deleteCharOffset < 0) {
-        deleteCharOffset = deleteDataLength - 1;
-      }
-      else if (deleteCharOffset >= NS_STATIC_CAST(PRInt32, deleteDataLength)) {
-        nsCOMPtr<nsIDOMNode> nextNode;
-        deleteNode->GetNextSibling(getter_AddRefs(nextNode));
-        deleteNode.swap(nextNode);
-        deleteCharOffset = 0;
-      }
-      deleteCharData = do_QueryInterface(deleteNode);
-#ifdef DEBUG
-      nsCOMPtr<nsIDOMHTMLBRElement> deleteBR(do_QueryInterface(deleteNode));
-      NS_ASSERTION(!deleteNode || deleteCharData || deleteBR,
-                   "Deleting non-BR node in plaintext editor");
-#endif
-    }
-  }
-
-  PRInt32 i;
-  nsIEditActionListener *listener;
   if (NS_SUCCEEDED(res))  
   {
+    nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
+    PRInt32 i;
+    nsIEditActionListener *listener;
     // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
     if (mActionListeners)
     {
@@ -4669,13 +4607,13 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
       {
         listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
         if (listener) {
-          if (!isDeletingOneChar) {
+          if (!deleteNode) {
             listener->WillDeleteSelection(selection);
           }
           else if (deleteCharData) {
-            listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+            listener->WillDeleteText(deleteCharData, deleteCharOffset, deleteCharLength);
           }
-          else if (deleteNode) {
+          else {
             listener->WillDeleteNode(deleteNode);
           }
         }
@@ -4692,13 +4630,13 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
       {
         listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
         if (listener) {
-          if (!isDeletingOneChar) {
+          if (!deleteNode) {
             listener->DidDeleteSelection(selection);
           }
           else if (deleteCharData) {
-            listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
+            listener->DidDeleteText(deleteCharData, deleteCharOffset, deleteCharLength, res);
           }
-          else if (deleteNode) {
+          else {
             listener->DidDeleteNode(deleteNode, res);
           }
         }
@@ -5055,7 +4993,10 @@ nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleShee
 
 NS_IMETHODIMP
 nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
-                                      EditAggregateTxn  ** aTxn)
+                                      EditAggregateTxn ** aTxn,
+                                      nsIDOMNode ** aNode,
+                                      PRInt32 *aOffset,
+                                      PRInt32 *aLength)
 {
   if (!aTxn)
     return NS_ERROR_NULL_POINTER;
@@ -5112,7 +5053,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
           }
           else
           { // we have an insertion point.  delete the thing in front of it or behind it, depending on aAction
-            result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn);
+            result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn, aNode, aOffset, aLength);
           }
         }
       }
@@ -5163,7 +5104,10 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
 NS_IMETHODIMP
 nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange, 
                                            nsIEditor::EDirection aAction,
-                                           EditAggregateTxn     *aTxn)
+                                           EditAggregateTxn     *aTxn,
+                                           nsIDOMNode          **aNode,
+                                           PRInt32              *aOffset,
+                                           PRInt32              *aLength)
 {
   NS_ASSERTION(aAction == eNext || aAction == ePrevious, "invalid action");
 
@@ -5221,6 +5165,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
                                                ePrevious, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
+            NS_ADDREF(*aNode = priorNode);
+            *aOffset = txn->GetOffset();
+            *aLength = txn->GetNumCharsToDelete();
             NS_RELEASE(txn);
           }
         }
@@ -5237,6 +5184,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
           NS_RELEASE(txn);
+          NS_ADDREF(*aNode = priorNode);
         }
       }
     }
@@ -5259,6 +5207,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
           result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
+            NS_ADDREF(*aNode = nextNode);
+            *aOffset = txn->GetOffset();
+            *aLength = txn->GetNumCharsToDelete();
             NS_RELEASE(txn);
           }
         }
@@ -5275,6 +5226,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         if (NS_SUCCEEDED(result)) {
           aTxn->AppendChild(txn);
           NS_RELEASE(txn);
+          NS_ADDREF(*aNode = nextNode);
         }
       }
     }
@@ -5287,6 +5239,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
       result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction, &txn);
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
+        NS_ADDREF(*aNode = node);
+        *aOffset = txn->GetOffset();
+        *aLength = txn->GetNumCharsToDelete();
         NS_RELEASE(txn);
       }
     }
@@ -5319,6 +5274,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
           if (NS_FAILED(result))  { return result; }
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delTextTxn);
+          NS_ADDREF(*aNode = selectedNode);
+          *aOffset = delTextTxn->GetOffset();
+          *aLength = delTextTxn->GetNumCharsToDelete();
           NS_RELEASE(delTextTxn);
         }
         else
@@ -5329,6 +5287,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
           if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delElementTxn);
           NS_RELEASE(delElementTxn);
+          NS_ADDREF(*aNode = selectedNode);
         }
       }
     }

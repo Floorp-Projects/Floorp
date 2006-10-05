@@ -85,6 +85,10 @@ public:
 
   NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
+  PRUint32 GetOffset() { return mOffset; }
+
+  PRUint32 GetNumCharsToDelete() { return mNumCharsToDelete; }
+
 protected:
 
   /** the provider of basic editing operations */
