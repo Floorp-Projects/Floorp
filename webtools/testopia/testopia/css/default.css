@@ -84,6 +84,18 @@ textarea {
 
 /* tr_showcaselog */
 
+.short_body {
+  border-bottom:1px solid #000;
+  border-left:1px solid #000;
+  border-right:1px solid #000;
+}
+
+.short_head {
+  border-top:1px solid #000;
+  border-left:1px solid #000;
+  border-right:1px solid #000;
+}
+
 .ae_dv {
   display:none;
   margin-left:15px;
@@ -100,15 +112,7 @@ textarea {
   border-spacing: 0px;
 }
 
-.ae_a {
-  width:50%;
-  border-style:solid;
-  border-width:1px;
-  border-color:#000;
-  background-color:#FFFFE0;
-}
-
-.ae_e {
+.ae_s {
   border-style:solid;
   border-width:1px;
   border-color:#000;
@@ -162,4 +166,12 @@ textarea {
 
 .tr_button {
   width:100px;
+}
+
+a img {
+  border: none;
+}
+
+h3 {
+  border-bottom: 1px dotted #000;
 }

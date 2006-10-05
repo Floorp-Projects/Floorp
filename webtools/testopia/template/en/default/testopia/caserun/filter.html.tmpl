@@ -1,43 +1,101 @@
-<script type="text/javascript">
-function filterTable(type){
-  if (type == 1){
-    if (document.getElementById("ftr_case_run_status_id").value == 0 )
-      return;
-    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&case_run_status_id=" + document.getElementById("ftr_case_run_status_id").value + "#table";
-  }
-  else if (type == 2){
-    if (document.getElementById("ftr_category_id").value == 0 )
-      return;
-    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&category=" + document.getElementById("ftr_category_id").value + "#table";    
-  }
-  else if (type == 3){
-    if (document.getElementById("ftr_build_id").value == 0 )
-      return;
-    document.location="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&build=" + document.getElementById("ftr_build_id").value + "#table";
-  }
-}
-</script>
-Filter: 
-<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]#table">Show All</a>&nbsp;|&nbsp;
-<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&assignee=[% user.login FILTER url_quote %]&assignee_type=exact#table">Assigned to Me</a>&nbsp;|&nbsp;
-<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&testedby=[% user.login FILTER url_quote %]&testedby_type=exact#table">Tested by Me</a>&nbsp;|&nbsp;
-<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&close_date=0#table">Open</a>&nbsp;|&nbsp;
-<a href="[% form_action FILTER none %]?run_id=[% run.id FILTER none %]&close_date=1#table">Closed</a>&nbsp;|&nbsp;
-[% statuslist = run.current_caseruns.0.get_status_list %]
-[% statuslist.unshift({id => 0, name => '--Status--'}) %]
-[% PROCESS select sel = { name => "ftr_case_run_status_id", 
-                          list => statuslist,
-                          events => 'onchange="filterTable(1)"' }
-%]&nbsp;|&nbsp;
-[% categorylist = run.plan.get_product_categories %]
-[% categorylist.unshift({id => 0, name => '--Category--'}) %]
-[% PROCESS select sel = { name => "ftr_category_id", 
-                          list => categorylist,
-                          events => 'onchange="filterTable(2)"' }
-%]&nbsp;|&nbsp;
-[% buildlist = run.plan.get_product_builds %]
-[% buildlist.unshift({id => 0, name => '--Build--'}) %]
-[% PROCESS select sel = { name => "ftr_build_id", 
-                          list => buildlist,
-                          events => 'onchange="filterTable(3)"' }
-%]
+<form method="GET" action="[% table.url_loc FILTER none %]">
+<input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
+<table>
+  <tr>
+    <th colspan="6" class="bz_row_header">Filter</th>
+  </tr>
+  <tr class="bz_row_header">
+    <th>Status</th>
+    <th>Category</th>
+    <th>Build</th>
+    <th>Priority</th>
+    <th>Component</th>
+    <th>Automatic</th>
+    <td rowspan="2">
+      <table>
+        <tr>
+          <th align="right">Assignee Contains</th>
+          <td><input type="hidden" name="assignee_type" value="substring" />
+              <input name="assignee">
+          </td>
+        </tr>
+        <tr>
+          <th align="right">Tested By Contains</th>
+          <td><input type="hidden" name="testedby_type" value="substring" />
+              <input name="testedby">
+          </td>
+        </tr>
+        <tr>
+          <th align="right">Summary Contains</th>
+          <td><input type="hidden" name="case_summary_type" value="allwordssubstr" />
+              <input name="case_summary">
+          </td>
+        </tr>
+        <tr>
+          <th align="right">Environment</th>
+          <td><input type="hidden" name="environment_type" value="anyexact" />
+              <input name="environment">
+          </td>
+        </tr>
+        <tr>
+          <th align="right">Case Tags</th>
+          <td><input type="hidden" name="tags_type" value="anywords" />
+              <input name="tags">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      [% PROCESS select sel = { name => "case_run_status_id", 
+                                list => run.current_caseruns.0.get_status_list,
+                                elements => 6,
+                                mult => 1, }
+      %]
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = { name => "category", 
+                                list => run.filter_case_categories,
+                                byname => 1,
+                                elements => 6,
+                                mult => 1, }
+      
+      %]
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = { name => "build", 
+                                list => run.filter_builds,
+                                byname => 1,
+                                elements => 6,
+                                mult => 1, }
+      %]
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = { name => "priority_id", 
+                                list => run.current_caseruns.0.case.get_priority_list,
+                                elements => 6,
+                                mult => 1, }
+      %]
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = { name => "component", 
+                                list => run.filter_components,
+                                byname => 1,
+                                elements => 6,
+                                mult => 1, }
+      %]
+    </td>
+    <td valign="top">
+    [% PROCESS select sel = { name  => 'isautomated',
+                  accesskey => 'a', 
+                  list      => 
+                    [   { id => "0", name => "Manual" },
+                        { id => "1", name => "Automatic" }  ]
+                  elements  => 5,
+                  mult      => 1 } %]
+    </td>
+    <td><input type="submit" value="Filter" /><input type="reset" value="Clear" /></td>
+  </tr>
+</table>
+</form>

@@ -76,7 +76,6 @@ if ($action eq 'Add'){
             'type_id'    => $type,
             'text'       => $text,
             'author_id'  => Bugzilla->user->id,
-            'editor_id'  => Bugzilla->user->id,
     });
     my $plan_id = $plan->store;
     $vars->{'case_table'} = undef;

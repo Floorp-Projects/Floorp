@@ -84,17 +84,7 @@
     [% PROCESS select sel = { name => 'author_type',
                               list => email_variants } %]</td>
     <td><input name="author"></td>
-    <th><input type="radio" name="andor" value="1"/>AND
-        <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
-
   </tr>
-  <tr>
-    <th align="right">Editor:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'editor_type',
-                              list => email_variants } %]</td>
-    <td><input name="editor"></td>
-  </tr>  
 </table>
 </fieldset>
 <!-- 

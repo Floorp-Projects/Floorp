@@ -161,7 +161,7 @@ sub calculate_percent_completed {
   my $total = $idle + $run;
   my $percent;
   if ($total == 0) {
-    $percent = 100;
+    $percent = 0;
   } else {
     $percent = $run*100/$total;
     $percent = int($percent + 0.5);
@@ -226,8 +226,8 @@ sub add_tag {
         $dbh->bz_unlock_tables;
         return 1;
     }
-    $dbh->do("INSERT INTO test_run_tags VALUES(?,?)",
-              undef, $tag_id, $self->{'run_id'});
+    $dbh->do("INSERT INTO test_run_tags(tag_id, run_id, userid) VALUES(?,?,?)",
+              undef, $tag_id, $self->{'run_id'}, Bugzilla->user->id);
     $dbh->bz_unlock_tables;
     
     return 0;
@@ -259,6 +259,7 @@ the test_case_runs table
 sub add_case_run {
     my $self = shift;
     my ($case_id) = @_;
+    return 0 if $self->check_case($case_id);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new({
         'run_id' => $self->{'run_id'},
@@ -266,6 +267,7 @@ sub add_case_run {
         'assignee' => $case->default_tester->id,
         'case_text_version' => $case->version,
         'build_id' => $self->build->id,
+        'environment_id' => $self->environment_id,
     });
     $caserun->store;    
 }
@@ -318,6 +320,7 @@ sub update {
             # Update the history
             my $field_id = Bugzilla::Testopia::Util::get_field_id($field, "test_runs");
             $dbh->do("INSERT INTO test_run_activity 
+            (run_id, fieldid, who, changed, oldvalue, newvalue)
                       VALUES(?,?,?,?,?,?)",
                       undef, ($self->{'run_id'}, $field_id, Bugzilla->user->id,
                       $timestamp, $self->{$field}, $newvalues->{$field}));
@@ -400,6 +403,25 @@ sub history {
     return $ref;
 }
 
+
+=head2 Check_case
+
+Checks if the given test case is already associated with this run
+
+=cut
+
+sub check_case {
+    my $self = shift;
+    my ($case_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($value) = $dbh->selectrow_array(
+            "SELECT case_run_id 
+               FROM test_case_runs
+              WHERE case_id = ? AND run_id = ?",
+              undef, ($case_id, $self->{'run_id'}));
+    return $value;
+}
+
 =head2 lookup_environment
 
 Takes an ID of the envionment field and returns the value
@@ -415,6 +437,23 @@ sub lookup_environment {
                FROM test_environments
               WHERE environment_id = ?",
               undef, $id);
+    return $value;
+}
+
+=head2 lookup_environment_by_name
+
+Takes the name of an envionment and returns its id
+
+=cut
+
+sub lookup_environment_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($value) = $dbh->selectrow_array(
+            "SELECT environment_id 
+               FROM test_environments
+              WHERE name = ?",
+              undef, $name);
     return $value;
 }
 
@@ -452,6 +491,84 @@ sub lookup_manager {
               WHERE userid = ?",
               undef, $id);
     return $value;
+}
+
+=head2 last_changed
+
+Returns the date of the last change in the history table
+
+=cut
+
+sub last_changed {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($date) = $dbh->selectrow_array(
+            "SELECT MAX(changed)
+               FROM test_run_activity 
+              WHERE run_id = ?",
+              undef, $self->id);
+
+    return $self->{'creation_date'} unless $date;
+    return $date;
+}
+
+sub filter_case_categories {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ids = $dbh->selectcol_arrayref(
+            "SELECT DISTINCT tcc.category_id
+               FROM test_case_categories AS tcc
+               JOIN test_cases ON test_cases.category_id = tcc.category_id
+               JOIN test_case_runs AS tcr ON test_cases.case_id = tcr.case_id  
+              WHERE run_id = ?",
+              undef, $self->id);
+    
+    my @categories;
+    foreach my $id (@$ids){
+        push @categories, Bugzilla::Testopia::Category->new($id);
+    }
+    
+    return \@categories;
+}
+
+sub filter_builds {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ids = $dbh->selectcol_arrayref(
+            "SELECT DISTINCT build_id
+               FROM test_case_runs
+              WHERE run_id = ?",
+              undef, $self->id);
+    
+    my @builds;
+    foreach my $id (@$ids){
+        push @builds, Bugzilla::Testopia::Build->new($id);
+    }
+    return \@builds;
+}
+
+sub filter_components {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ids = $dbh->selectcol_arrayref(
+            "SELECT DISTINCT components.id
+               FROM components
+               JOIN test_case_components AS tcc ON tcc.component_id = components.id
+               JOIN test_cases ON test_cases.case_id = tcc.case_id
+               JOIN test_case_runs AS tcr ON test_cases.case_id = tcr.case_id  
+              WHERE run_id = ?",
+              undef, $self->id);
+    
+    my @components;
+    foreach my $id (@$ids){
+        push @components, Bugzilla::Component->new($id);
+    }
+    
+    return \@components;
 }
 
 =head2 environments
@@ -959,6 +1076,39 @@ sub percent_complete {
     $self->{'percent_complete'} = calculate_percent_completed($notrun, $run); 
     return $self->{'percent_complete'};
 }
+
+sub percent_passed {    
+    my $self = shift;
+    my $notrun = $self->idle_count + $self->running_count + $self->paused_count + $self->failed_count + $self->blocked_count;
+    my $run = $self->passed_count;
+    $self->{'percent_passed'} = calculate_percent_completed($notrun, $run); 
+    return $self->{'percent_passed'};
+}
+
+sub percent_failed {    
+    my $self = shift;
+    my $notrun = $self->idle_count + $self->running_count + $self->paused_count + $self->passed_count + $self->blocked_count;
+    my $run = $self->failed_count;
+    $self->{'percent_failed'} = calculate_percent_completed($notrun, $run); 
+    return $self->{'percent_failed'};
+}
+
+sub percent_blocked {    
+    my $self = shift;
+    my $notrun = $self->idle_count + $self->running_count + $self->paused_count + $self->passed_count + $self->failed_count;
+    my $run = $self->blocked_count;
+    $self->{'percent_blocked'} = calculate_percent_completed($notrun, $run); 
+    return $self->{'percent_blocked'};
+}
+
+sub percent_not_run {    
+    my $self = shift;
+    my $notrun = $self->failed_count + $self->running_count + $self->paused_count + $self->passed_count;
+    my $run = $self->idle_count + $self->blocked_count;
+    $self->{'percent_not_run'} = calculate_percent_completed($notrun, $run); 
+    return $self->{'percent_not_run'};
+}
+
 
 =head2 current_caseruns
 

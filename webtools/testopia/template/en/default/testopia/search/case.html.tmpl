@@ -57,7 +57,7 @@
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'category',
                   accesskey => 't', 
-                  list      => case.get_distinct_categories,
+                  list      => case.get_category_list(1),
                   elements  => 5,
                   mult      => 1 } %]   
     </td>

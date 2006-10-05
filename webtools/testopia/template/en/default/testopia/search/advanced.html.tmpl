@@ -40,19 +40,13 @@
 
 [% tabs = [ { name => 'case', description => "Find Test Cases" },
             { name => 'run',  description => "Find Test Runs"  },
-            { name => 'plan', description => "Find Test Plans" } ] %]
-<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
-<script type="text/javascript">
-    function addOption(selectElement,newOption) {
-      try {
-        selectElement.add(newOption,null);
-      }
-      
-      catch (e) {
-        selectElement.add(newOption,selectElement.length);
-      }
-    }
+            { name => 'plan', description => "Find Test Plans" },
+            { name => 'environment', description => "Find Test Run Environments" }, ] %]
+            
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script src="testopia/js/util.js" type="text/javascript"></script>
 
+<script type="text/javascript">
     function fillSelects (data){
         var xmldocroot = data.documentElement;
         var tab = '[% current_tab FILTER none %]';
@@ -118,7 +112,7 @@
       if (prod.options[i].selected == true)
         ids.push(prod.options[i].value);
     }
-    
+    dojo.require("dojo.io");
     dojo.io.bind({
         url:     "tr_query.cgi",
         content: {  current_tab: "[% current_tab FILTER none %]", prod_ids: ids.join(","), action: "getversions" },
@@ -150,34 +144,14 @@
   </tr>
 </table>
 
-
-[%# Taken from bugzilla search/form.html.tmpl %]
-[% query_variants = [
-  { id => "allwordssubstr", name => "contains all of the words/strings" },
-  { id => "anywordssubstr", name => "contains any of the words/strings" },
-  { id => "substring", name => "contains the string" },
-  { id => "casesubstring", name => "contains the string (exact case)" },
-  { id => "allwords", name => "contains all of the words" },
-  { id => "anywords", name => "contains any of the words" },
-  { id => "regexp", name => "matches the regexp" },
-  { id => "notregexp", name => "doesn't match the regexp" } ] %]
-
-[% email_variants  = [
-  { id => "substring", name => "contains" },
-  { id => "exact", name => "is" },
-  { id => "regexp", name => "matches regexp" },
-  { id => "notregexp", name => "doesn't match regexp" } ]  %]
-  
-[% tag_variants = [
-  { id => "allwords", name => "contains all of the tags" },
-  { id => "anywords", name => "contains any of the tags" },
-  { id => "nowords",  name => "contains none of the tags" } ] %]
-
+[% PROCESS testopia/search/variables.none.tmpl %]
         
 [% IF current_tab == 'plan' %]
   [% PROCESS testopia/search/plan.html.tmpl %]
 [% ELSIF current_tab == 'run' %]
   [% PROCESS testopia/search/run.html.tmpl %]
+[% ELSIF current_tab == 'environment' %]
+  [% PROCESS testopia/search/environment.html.tmpl %]
 [% ELSE %]
   [% PROCESS testopia/search/case.html.tmpl %]
 [% END %]

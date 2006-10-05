@@ -24,8 +24,9 @@
   #%]
 
 [% IF case.canedit %]
+<script src="testopia/js/editor.js" type="text/javascript"></script>
 <script type="text/javascript">
-
+    dojo.require("dojo.widget.Editor2");
     function updateScript() {
       var rm = document.getElementById('isautomated').value;
       var o;
@@ -38,8 +39,16 @@
         o.disabled = (rm != 1);
       }
     }
-
-    dojo.require("dojo.widget.Editor");    
+    
+    function chgTester(obj) {
+      [% IF Param("useqacontact") AND action == 'Add' %]
+        var components = [% components FILTER none %];
+        document.getElementById('tester').value = components[obj.selectedIndex];
+      [% ELSE %]
+        return;
+      [% END %]
+    }
+    
 </script>
 [% END %]
 <a name="attributes"></a>
@@ -53,7 +62,7 @@
     </tr>
     <tr>
       <td align="right"><b>Default Tester</b></td>
-      <td><input name="tester" size="30" value="[% case.default_tester.login ? case.default_tester.login : user.login FILTER html %]" /></td>
+      <td><input name="tester" id="tester" size="30" value="[% case.default_tester.login FILTER html %]" /></td>
       <td align="right"><b>Add Tags</b></td>
       <td><input name="addtags" size="30" /></td>
     </tr>
@@ -126,7 +135,8 @@
                               default   => comps
                               mult      => 1
                               deflist   => 1
-                              elements  => 7 } %]
+                              elements  => 7 
+                              events    => "onChange=\"chgTester(this)\""} %]
    </td>
 [% END %]
 </tr> 
@@ -173,23 +183,36 @@
       </td>
     </tr>
   </table>      
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>
 
 [%# action, effect %]
+  <h3>Set Up</h3>
+  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
+            id="tcsetup" name="tcsetup" dojoType="Editor2" focusOnLoad="false">
+[% case.text.setup FILTER quoteUrls %]</textarea>     
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>
+    <h3>Break Down</h3>
+  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
+            id="tcbreakdown" name="tcbreakdown" dojoType="Editor2" focusOnLoad="false">
+[% case.text.breakdown FILTER quoteUrls %]</textarea>     
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>
   <h3>Action</h3>
-  <div id="case_docs" style="border: 1px solid #000000;  padding-bottom: 5px;">
-  <textarea cols="80" rows="25" dojotype="Editor" 
-            items="blockGroup;|;textGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"
-            id="effect" name="tcaction" style="cursor:text;">
-[% case.text.action %]</textarea>     
-  </div>
-  <br><br>
+  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
+            id="tcaction" name="tcaction" dojoType="Editor2" focusOnLoad="false">
+[% case.text.action FILTER quoteUrls %]</textarea>     
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>
   <h3>Expected Results</h3>
-  <div style="border: 1px solid #000000;  padding-bottom: 5px;">
-  <textarea cols="80" rows="25" dojotype="Editor" 
-            items="blockGroup;|;textGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"
-            id="effect" name="tceffect" style="cursor:text;">
-[% case.text.effect %]</textarea>     
-  </div>
+  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
+            id="tceffect" name="tceffect" dojoType="Editor2" focusOnLoad="false">
+[% case.text.effect FILTER quoteUrls %]</textarea>     
   <p align="right">
     <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
   </p>

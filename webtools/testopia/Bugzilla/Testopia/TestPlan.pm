@@ -66,7 +66,6 @@ use base qw(Exporter);
     plan_id
     product_id
     author_id
-    editor_id
     type_id
     default_product_version
     name
@@ -79,7 +78,6 @@ use constant DB_COLUMNS => qw(
     test_plans.plan_id
     test_plans.product_id
     test_plans.author_id
-    test_plans.editor_id
     test_plans.type_id
     test_plans.default_product_version
     test_plans.name
@@ -158,13 +156,13 @@ sub store {
     my $dbh = Bugzilla->dbh;
     my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_plans ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?)",
+              VALUES (?,?,?,?,?,?,?,?)",
               undef, (undef, $self->{'product_id'}, $self->{'author_id'}, 
-              $self->{'editor_id'}, $self->{'type_id'}, 
-              $self->{'default_product_version'}, $self->{'name'},
+              $self->{'type_id'}, $self->{'default_product_version'}, $self->{'name'},
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );
     $self->store_text($key, $self->{'author_id'}, $self->text, $timestamp);
+    $self->{'plan_id'} = $key;
     return $key;
 }
 
@@ -186,7 +184,9 @@ sub store_text {
     $text ||= '';
     trick_taint($text);
     my $version = $self->version || 0;
-    $dbh->do("INSERT INTO test_plan_texts VALUES(?,?,?,?,?)",
+    $dbh->do("INSERT INTO test_plan_texts 
+              (plan_id, plan_text_version, who, creation_ts, plan_text)
+              VALUES(?,?,?,?,?)",
               undef, $key, ++$version, $author, 
               $timestamp, $text);
     $self->{'version'} = $version;
@@ -208,10 +208,9 @@ sub clone {
     my $dbh = Bugzilla->dbh;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_plans ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?)",
+              VALUES (?,?,?,?,?,?,?,?)",
               undef, (undef, $self->{'product_id'}, $self->{'author_id'}, 
-              $self->{'editor_id'}, $self->{'type_id'}, 
-              $self->{'default_product_version'}, $name,
+              $self->{'type_id'}, $self->{'default_product_version'}, $name,
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );
     if ($store_doc){
@@ -241,6 +240,7 @@ sub toggle_archive {
                WHERE plan_id = ?", undef, $newvalue, $self->{'plan_id'});
     my $field_id = Bugzilla::Testopia::Util::get_field_id("isactive", "test_plans");
     $dbh->do("INSERT INTO test_plan_activity 
+              (plan_id, fieldid, who, changed, oldvalue, newvalue)
               VALUES(?,?,?,?,?,?)",
               undef, ($self->{'plan_id'}, $field_id, Bugzilla->user->id,
               $timestamp, $oldvalue, $newvalue));
@@ -270,8 +270,8 @@ sub add_tag {
         $dbh->bz_unlock_tables();
         return 1;
     }
-    $dbh->do("INSERT INTO test_plan_tags VALUES(?,?)",
-              undef, ($tag_id, $self->{'plan_id'}));
+    $dbh->do("INSERT INTO test_plan_tags(tag_id, plan_id, userid) VALUES(?,?,?)",
+              undef, ($tag_id, $self->{'plan_id'}), Bugzilla->user->id);
     $dbh->bz_unlock_tables();
 
 }
@@ -450,6 +450,103 @@ sub get_plan_types {
            ORDER BY name", 
             {"Slice"=>{}});
     return $types;
+
+}
+
+=head2 last_changed
+
+Returns the date of the last change in the history table
+
+=cut
+
+sub last_changed {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($date) = $dbh->selectrow_array(
+            "SELECT MAX(changed)
+               FROM test_plan_activity 
+              WHERE plan_id = ?",
+              undef, $self->id);
+
+    return $self->{'creation_date'} unless $date;
+    return $date;
+}
+
+=head2 lookup_plan_type
+
+Returns a type name matching the given type id
+
+=cut
+
+sub lookup_plan_type {
+    my $self = shift;
+    my $type_id = shift;
+    my $dbh = Bugzilla->dbh;    
+
+    my $type = $dbh->selectrow_hashref(
+            "SELECT type_id AS id, name 
+               FROM test_plan_types
+              WHERE type_id = ?", 
+            undef, $type_id);
+    
+    return $type;
+}
+
+=head2 check_plan_type
+
+Returns true if a type with the given name exists
+
+=cut
+
+sub check_plan_type {
+    my $self = shift;
+    my $name = shift;
+    my $dbh = Bugzilla->dbh;    
+
+    my $type = $dbh->selectrow_hashref(
+            "SELECT 1 
+               FROM test_plan_types
+              WHERE name = ?", 
+            undef, $name);
+    
+    return $type;
+}
+
+=head2 update_plan_type
+
+Update the given type
+
+=cut
+
+sub update_plan_type {
+    my $self = shift;
+    my ($type_id, $name) = @_;
+    my $dbh = Bugzilla->dbh;    
+
+    my $type = $dbh->do(
+            "UPDATE test_plan_types
+                SET name = ? 
+              WHERE type_id = ?", 
+            undef, ($name,$type_id));
+    
+}
+
+=head2 add_plan_type
+
+Add the given type
+
+=cut
+
+sub add_plan_type {
+    my $self = shift;
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;    
+
+    my $type = $dbh->do(
+            "INSERT INTO test_plan_types (type_id, name)
+                VALUES(?,?)", 
+            undef, (undef, $name));
 }
 
 =head2 get_fields
@@ -551,6 +648,7 @@ sub update {
             # Update the history
             my $field_id = Bugzilla::Testopia::Util::get_field_id($field, "test_plans");
             $dbh->do("INSERT INTO test_plan_activity 
+                      (plan_id, fieldid, who, changed, oldvalue, newvalue)
                            VALUES(?,?,?,?,?,?)",
                       undef, ($self->{'plan_id'}, $field_id, Bugzilla->user->id,
                       $timestamp, $self->{$field}, $newvalues->{$field}));
@@ -609,6 +707,25 @@ sub lookup_type {
               undef, $id);
     return $value;
 }
+
+=head2 lookup_type_by_name
+
+Returns the id of the type name passed.
+
+=cut
+
+sub lookup_type_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($value) = $dbh->selectrow_array(
+            "SELECT type_id
+			 FROM test_plan_types
+			 WHERE name = ?",
+			 undef, $name);
+    return $value;
+}
+
 =head2 lookup_status
 
 Takes an ID of the status field and returns the value
@@ -665,9 +782,8 @@ Returns true if the logged in user has rights to view this plan
 
 sub canview {
     my $self = shift;
-    return $self->{'canview'} if exists $self->{'canview'};
-    $self->{'canview'} = Bugzilla::Testopia::Util::can_view_product($self->product_id);
-    return $self->{'canview'};
+    return 1 if (Bugzilla->user->id == $self->author->id); 
+    return Bugzilla::Testopia::Util::can_view_product($self->product_id);
 }
 
 =head2 delete
@@ -703,10 +819,6 @@ Returns the product version for this object
 
 Returns the product id for this object
 
-=head2 editor
-
-Returns a Bugzilla::User object representing the plan's last editor
-
 =head2 author
 
 Returns a Bugzilla::User object representing the plan author
@@ -729,7 +841,6 @@ sub id              { return $_[0]->{'plan_id'};          }
 sub creation_date   { return $_[0]->{'creation_date'};    }
 sub product_version { return $_[0]->{'default_product_version'};  }
 sub product_id      { return $_[0]->{'product_id'};       }
-sub editor          { return Bugzilla::User->new($_[0]->{'editor_id'});  }
 sub author          { return Bugzilla::User->new($_[0]->{'author_id'});  }
 sub name            { return $_[0]->{'name'};    }
 sub type_id         { return $_[0]->{'type_id'};    }

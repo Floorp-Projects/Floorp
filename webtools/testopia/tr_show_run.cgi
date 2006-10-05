@@ -29,6 +29,7 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestCaseRun;
+use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Environment;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
@@ -44,7 +45,7 @@ print Bugzilla->cgi->header();
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
-my $run_id = trim(Bugzilla->cgi->param('run_id') || '');
+my $run_id = trim($cgi->param('run_id') || '');
 
 unless ($run_id){
   $template->process("testopia/run/choose.html.tmpl", $vars) 
@@ -79,12 +80,14 @@ elsif ($action eq 'History'){
 #############
 ### Clone ###
 #############
-elsif ($action eq 'Clone'){
+elsif ($action =~ /^Clone/){
     Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
+    my $case_list = $cgi->param('case_list');
     do_update($run);
     $vars->{'run'} = $run;
+    $vars->{'case_list'} = $case_list if ($action =~/These Cases/);
     $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({'case_run_id' => 0});
     $template->process("testopia/run/clone.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
@@ -110,7 +113,20 @@ elsif ($action eq 'do_clone'){
             $newrun->add_tag($newtagid);
         }
     }
-    if($cgi->param('copy_test_cases')){
+    if ($cgi->param('case_list')){
+        my @case_ids;
+        foreach my $id (split(",", $cgi->param('case_list'))){
+            detaint_natural($id);
+            my $case = Bugzilla::Testopia::TestCase->new($id);
+            ThrowUserError('testopia-permission-denied', {'object' => 'Test Case'})
+                unless $case->canview;
+            push @case_ids, $id
+        }
+        foreach my $id (@case_ids){
+            $newrun->add_case_run($id);
+        }
+    }
+    if ($cgi->param('copy_test_cases')){
         if ($cgi->param('status')){
             my @status = $cgi->param('status');
             foreach my $s (@status){
@@ -133,6 +149,7 @@ elsif ($action eq 'do_clone'){
             }
         }
     }
+    $cgi->delete_all;
     $cgi->param('run_id', $newrun->id);
     display($newrun);
 }
@@ -192,8 +209,9 @@ sub get_cc_xml {
 
 sub do_update {
     my ($run) = @_;
-    # possible race conditions. Should use locks
+    
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if ($cgi->param('summary') eq '');
+    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($cgi->param('environment') eq '');
     my $timestamp;
     $timestamp = $run->stop_date;
     $timestamp = undef if $cgi->param('status') && $run->stop_date;
@@ -236,6 +254,15 @@ sub do_update {
         'notes'             => $notes
     );
     $run->update(\%newvalues);
+    
+    # Add new tags 
+    foreach my $tag_name (split(/[\s,]+/, $cgi->param('newtag'))){
+        trick_taint($tag_name);
+        my $tag = Bugzilla::Testopia::TestTag->new({tag_name => $tag_name});
+        my $tag_id = $tag->store;
+        $run->add_tag($tag_id);
+    }
+    
     $cgi->delete_all;
     $cgi->param('run_id', $run->id);
 
@@ -247,9 +274,15 @@ sub display {
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-
+    
+    my @case_list;
+    foreach my $caserun (@{$table->list}){
+        push @case_list, $caserun->case_id;
+    }
+    my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
+    $vars->{'case_list'} = join(",", @case_list);
     $vars->{'action'} = 'Commit';
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());

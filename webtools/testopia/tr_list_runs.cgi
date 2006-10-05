@@ -53,6 +53,7 @@ if ($action eq 'Commit'){
         push @runs, Bugzilla::Testopia::TestRun->new($1) if $r =~ $reg;
     }
     ThrowUserError('testopia-none-selected', {'object' => 'run'}) if (scalar @runs < 1);
+    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($cgi->param('environment') eq '');
     foreach my $run (@runs){
         ThowUserError('insufficient-perms') unless $run->canedit;
         my $manager   = DBNameToIdAndCheck(trim($cgi->param('manager'))) if $cgi->param('manager');
@@ -65,7 +66,8 @@ if ($action eq 'Commit'){
                 $status = get_time_stamp();
             }
         }
-        my $enviro    = $cgi->param('environment')   == -1 ? $run->environment->id : $cgi->param('environment');
+        
+        my $enviro    = $cgi->param('environment')   eq '--Do Not Change--' ? $run->environment->id : $cgi->param('environment');
         my $build     = $cgi->param('build') == -1 ? $run->build->id : $cgi->param('build');
 
         detaint_natural($status);
@@ -89,11 +91,10 @@ if ($action eq 'Commit'){
     }
     my $run = Bugzilla::Testopia::TestRun->new({ 'run_id' => 0 });
     $vars->{'run'} = $run;
-    $vars->{'title'} = "Update Susccessful";
+    $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = scalar @runs . " Test Runs Updated";
     $vars->{'current_tab'} = 'run';
-    $vars->{'env_list'} = get_environments();
-    $vars->{'build_list'} = get_all_builds();
+    $vars->{'build_list'} = $run->get_distinct_builds();
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
     exit;
@@ -121,13 +122,10 @@ else {
     }        
     my $r = Bugzilla::Testopia::TestRun->new({'run_id' => 0 });
 
-    my $env_list    = $r->environments;
     my $status_list = $r->get_status_list;
     
-    unshift @{$env_list},    {'id' => -1, 'name' => "--Do Not Change--"};
     unshift @{$status_list}, {'id' => -1, 'name' => "--Do Not Change--"};
 
-    $vars->{'env_list'} = $env_list;
     $vars->{'status_list'} = $status_list;
     
     $vars->{'fullwidth'} = 1; #novellonly

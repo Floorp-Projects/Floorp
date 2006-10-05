@@ -83,6 +83,8 @@
                          default => default_build }
      %]
     </td>
+    <th align="right">Environment</th>
+    <td><input name="caserun_env" id="caserun_env" size="5" value="[% dotweak ? "--Do Not Change--" : caserun.environment.id FILTER html %]"><a href="tr_query.cgi?current_tab=environment" target="blank"><img src="testopia/img/env_lookup.png" align="middle"></a></td>
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
     <th align="right" valign="top" colspan="2">Attach [% terms.Bugs %]</th>
@@ -119,9 +121,15 @@
         <th class="bz_row_header">Notes</th>
       </tr>
       <tr>
-    <td><textarea name="notes" cols="80" rows="15">[% caserun.notes %]</textarea></td>
-    </tr>
-  </table>
+        <td><div style="height:200px; width: 600px; border: 1px solid #000; overflow: auto; background-color: #f8f8f8"><pre>[% caserun.notes %]</pre></div></td>
+      </tr>
+      <tr>
+        <th class="bz_row_header">Append a New Note</th>
+      </tr>
+      <tr>
+        <td><textarea name="notes" cols="80" rows="5" style="width: 600px"></textarea></td>
+      </tr>
+    </table>
   </td>
   </tr>
   <tr>

@@ -1,0 +1,58 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #					Michael Hight <mjhight@gmail.com>
+  #					Scott Sudweeks <ssudweeks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+ 
+
+<form method="POST" action="tr_admin_environment.cgi" name="form1">
+<h3>Property Administration</h3>
+
+
+  <input type="hidden" name="action" value="[% action FILTER none %]" />
+  <input type="hidden" name="id" value="[% property.id FILTER none %]" />
+  <input type="hidden" name="type" value="property" />
+  
+  <table border="0">
+    <tr> 
+    	<th class="bz_row_header" align="right">Assiged to Element:</th>
+     	<td>
+      		<select name="element" id="element">
+      			<option value="[% currentelement.id %]" >[% currentelement.name %]
+      			[% FOREACH e = elements %]
+      				[% IF e.id != currentelement.id %]
+	      				<option value="[% e.id %]">[% e.name %]
+      				[% END %]
+        		[% END %]
+      		</select>
+     	</td>
+    </tr>
+  
+    <th class="bz_row_header" align="right">Property Name:</th>
+    	<td><input name="name" id="name" value="[% property.name %]" size="30" /></td>
+    </tr>
+  </table>
+  
+  <br />
+  
+  <input name="submit" type="button" value="Submit" onclick="updateProperty()">

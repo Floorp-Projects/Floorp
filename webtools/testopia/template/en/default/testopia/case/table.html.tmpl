@@ -52,6 +52,7 @@ Select:
     <th align="left"><a href="[% link %]summary[% paren %]">Summary[% table.arrow IF table.last_sort == 'summary' %]</a></th>
     <th align="left"><a href="[% link %]requirement[% paren %]">Requirement[% table.arrow IF table.last_sort == 'requirement' %]</a></th>
     <th align="left"><a href="[% link %]author[% paren %]">Author[% table.arrow IF table.last_sort == 'author' %]</a></th>
+    <th align="left"><a href="[% link %]tester[% paren %]">Default Tester[% table.arrow IF table.last_sort == 'tester' %]</a></th>
     <th align="left"><a href="[% link %]created[% paren %]">Created[% table.arrow IF table.last_sort == 'author' %]</a></th>
     <th align="left"><a href="[% link %]category[% paren %]">Category[% table.arrow IF table.last_sort == 'category' %]</a></th>
     <th align="left"><a href="[% link %]priority[% paren %]">Priority[% table.arrow IF table.last_sort == 'priority' %]</a></th>
@@ -73,7 +74,8 @@ Select:
     <td align="left" valign="top">[% case.alias %]</td>
     <td align="left" valign="top">[% case.summary %]</td>
     <td align="left" valign="top">[% case.requirement %]</td>
-    <td align="left" valign="top"><a href="mailto:[% case.username %]">[% case.author.login %]</a></td> 
+    <td align="left" valign="top"><a href="mailto:[% case.author.login %]">[% case.author.login %]</a></td> 
+    <td align="left" valign="top"><a href="mailto:[% case.default_tester.login %]">[% case.default_tester.login %]</a></td> 
     <td align="left" valign="top">[% case.creation_date FILTER time %]</td>
     <td align="left" valign="top">[% case.category.name FILTER html %]</td>
     <td align="left" valign="top">[% case.priority FILTER html %]</td>
@@ -82,22 +84,22 @@ Select:
 
   <tr class="[% rowclass %]_first">
     <td></td>
-    <td colspan="8" style="margin:0px;padding:0px;">
+    <td colspan="10" style="margin:0px;padding:0px;">
       <div id="ra[% loop.count %]" class="ae_dv" style=
       "padding-top:5px;padding-bottom:10px;">
         <table class="ae_tb">
           <tr>
-            <td colspan="2"><b>Summary:</b> [% case.summary FILTER html %]</td>
+            <td colspan="3"><b>Summary:</b> [% case.summary FILTER html %]</td>
           </tr>
           <tr>
-            <td valign="top" class="ae_a"><b>Action:</b><br>
-            [% case.text.action %]</td>
+            <td valign="top" width="50%" class="ae_s"><div style="overflow:auto" ><b>Action:</b><br>
+            [% case.text.action %]</div></td>
 
             <td style="width:10px">
             </td>
 
-            <td valign="top" class="ae_e"><b>Expected Results:</b><br>
-            [% case.text.effect %]</td>
+            <td valign="top" width="50%" class="ae_s"><div style="overflow:auto" ><b>Expected Results:</b><br>
+            [% case.text.effect %]</div></td>
           </tr>
         </table>
 

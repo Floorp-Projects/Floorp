@@ -44,20 +44,19 @@
 
 [% PROCESS testopia/messages.html.tmpl %]
 [% IF plan.canedit %]
+<script type="text/javascript">
+  djConfig = {
+    parseWidgets: false,
+    searchIds:  [% dojo_search %]
+  };
+</script>
 <script src="testopia/js/util.js" type="text/javascript"></script>
 <script src="testopia/js/tags.js" type="text/javascript"></script>
-<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
 <script type="text/javascript">
+    dojo.require("dojo.widget.Tooltip");
 [% IF plan.candelete %]
-    function addOption(selectElement,newOption) {
-      try {
-        selectElement.add(newOption,null);
-      }
-      
-      catch (e) {
-        selectElement.add(newOption,selectElement.length);
-      }
-    }
+    
     function fillSelects (data, item){
          var xmldocroot = data.documentElement;
          var err = xmldocroot.getElementsByTagName('error');
@@ -156,7 +155,7 @@
       <td colspan="3"><div align="right">
         <a href="#attributes">Edit Plan Attributes</a>
         <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
-        <input type="submit" name="action" value="Commit">
+        <input type="submit" name="action" value="Commit" style="visibility:hidden;">
         <input type="submit" name="action" value="[% plan.isactive ? "Archive" : "Unarchive" %]">
         <input type="submit" name="action" value="History">
         <input type="submit" name="action" value="Clone">

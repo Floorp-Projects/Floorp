@@ -82,19 +82,23 @@
   </tbody>
 </table>
 </div>
-
+[% IF caserun.candelete %]
+<p align="right">
+  <a href="tr_show_caserun.cgi?action=delete&caserun_id=[% caserun.id FILTER none %]">Delete</a>
+</p>
+[% END %]
 <br><br>
 [%##### Case Action & Expected Results #####%]
 <h3>Case Action & Expected Results</h3>
 <div style="width:800">
 <table width="100%">
   <tr class="bz_row_header">
-    <th colspan="2">Action</th>
-    <th colspan="2">Expected Results</th>
+    <th colspan="2" width=50%">Action</th>
+    <th colspan="2" width=50%">Expected Results</th>
   </tr>
   <tr>
-    <td colspan="2" class="ae_a">[% caserun.case.text.action FILTER none %]</td>
-    <td colspan="2" class="ae_e">[% caserun.case.text.effect FILTER none %]</td>
+    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.action FILTER none %]</div></td>
+    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.effect FILTER none %]</div></td>
   </tr>
 </table>
 <h3>Attributes</h3>

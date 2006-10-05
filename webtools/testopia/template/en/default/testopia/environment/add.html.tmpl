@@ -39,6 +39,48 @@
 [% PROCESS testopia/blocks.html.tmpl %]
 [% PROCESS testopia/messages.html.tmpl %]
 
-[% PROCESS testopia/environment/form.html.tmpl %]
+<form method="POST" action="tr_new_environment.cgi" name="form1">
+  <input type="hidden" name="action" value="Add" />  
+[%############################################################################%]
+[%# New Environment                                                          #%]
+[%############################################################################%]
+  <h3>New Environment</h3>
+  <table border="0">
+    <tr>
+      <th class="bz_row_header" align="right">Name:</th>
+      <td ><input name="name" size="30" /></td>
+    </tr>
+    <tr>
+      <th class="bz_row_header" align="right">Product:</th>
+      <td>[% PROCESS select sel = { 
+                  name      => 'product',
+                  accesskey => 'p', 
+                  list      => products,
+                  } %]
+      </td>
+    </tr>
+  </table>
+  
+  <br />
+  
+  <input name="submit" type="submit" value="Create">
+    <br />
+    <br />
+</form>
+  
+[%############################################################################%]
+[%# Upload XML                                                               #%]
+[%############################################################################%]
+<form action="tr_import_environment.cgi" method="POST">
+    <h3>OR Upload XML</h3>
+    <input type="file" size="40" accept="text/xml" name="xml"></input>
+
+    <br />
+
+    <a href="testopia/doc/Manual.pdf" target="_blank">Help</a><br>
+    <p>
+      <input type="submit" name="submit" value="Upload">
+    </p>
+  </form>
 
 [% PROCESS global/footer.html.tmpl %]

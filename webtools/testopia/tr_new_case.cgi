@@ -29,6 +29,7 @@ use Bugzilla::Util;
 
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestCase;
+use JSON;
 
 require "globals.pl";
 
@@ -48,7 +49,7 @@ push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 my $action = $cgi->param('action') || '';
 my @plan_id = $cgi->param('plan_id');
 
-unless (@plan_id){
+unless ($plan_id[0]){
   $vars->{'form_action'} = 'tr_new_case.cgi';
   $template->process("testopia/plan/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
@@ -83,8 +84,10 @@ if ($action eq 'Add'){
     my $arguments   = $cgi->param("arguments")|| '';    
     my $summary     = $cgi->param("summary")|| '';
     my $requirement = $cgi->param("requirement")|| '';
-    my $tcaction    = $cgi->param("tcaction");
-    my $tceffect    = $cgi->param("tceffect");
+    my $tcaction    = $cgi->param("tcaction") || '';
+    my $tceffect    = $cgi->param("tceffect") || '';
+    my $tcsetup     = $cgi->param("tcsetup") || '';
+    my $tcbreakdown = $cgi->param("tcbreakdown") || '';
     my $tcdependson = $cgi->param("tcdependson")|| '';
     my $tcblocks    = $cgi->param("tcblocks")|| '';
     my $tester      = $cgi->param("tester") || '';
@@ -94,8 +97,6 @@ if ($action eq 'Add'){
     }
     
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'})  if $summary  eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Action'}) if $tcaction eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Expected Results'}) if $tceffect eq '';
     
     detaint_natural($status);
     detaint_natural($category);
@@ -111,6 +112,8 @@ if ($action eq 'Add'){
     trick_taint($tcaction);
     trick_taint($tceffect);
     trick_taint($tcdependson);
+    trick_taint($tcsetup);
+    trick_taint($tcbreakdown);
     trick_taint($tcblocks);
     
     validate_selection($category, 'category_id', 'test_case_categories');
@@ -137,11 +140,27 @@ if ($action eq 'Add'){
             'author_id'  => Bugzilla->user->id,
             'action'     => $tcaction,
             'effect'     => $tceffect,
+            'setup'      => $tcsetup,
+            'breakdown'  => $tcbreakdown,
             'dependson'  => $tcdependson,
             'blocks'     => $tcblocks,
             'plans'      => \@plans,
     });
 
+    # Check for valid ids or aliases in dependecy fields
+    
+    foreach my $field ("dependson", "blocks") {
+        if ($case->{$field}) {
+            my @validvalues;
+            foreach my $id (split(/[\s,]+/, $case->{$field})) {
+                next unless $id;
+                Bugzilla::Testopia::Util::validate_test_id($id, 'case');
+                push(@validvalues, $id);
+            }
+            $case->{$field} = join(",", @validvalues);
+        }
+    }
+    
     ThrowUserError('testiopia-alias-exists', 
         {'alias' => $alias}) if $case->check_alias($alias);
     ThrowUserError('testiopia-invalid-data', 
@@ -149,7 +168,7 @@ if ($action eq 'Add'){
             if ($isautomated !~ /^[01]$/);
             
     my $case_id = $case->store;
-    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    $case = Bugzilla::Testopia::TestCase->new($case_id);
     
     $case->add_component($_) foreach (@components);
     if ($cgi->param('addtags')){
@@ -161,7 +180,7 @@ if ($action eq 'Add'){
         }
     }
 
-    $vars->{'action'} = "update";
+    $vars->{'action'} = "Commit";
     $vars->{'form_action'} = "tr_show_case.cgi";
     $vars->{'case'} = $case;
     $vars->{'tr_message'} = "Case $case_id Created. 
@@ -171,17 +190,24 @@ if ($action eq 'Add'){
         ThrowTemplateError($template->error());
     
 }
+
 ####################
 ### Display Form ###
 ####################
 else {
-    $vars->{'action'} = "Add";
-    $vars->{'form_action'} = "tr_new_case.cgi";
-    $vars->{'case'} = Bugzilla::Testopia::TestCase->new(
+    my $case = Bugzilla::Testopia::TestCase->new(
                         {'case_id' => 0, 
                          'plans' => \@plans, 
                          'category' => {'name' => 'Default'},
     });
+    my @comps;
+    foreach my $comp (@{$case->get_selectable_components(1)}){
+        push @comps, $comp->default_qa_contact->login;
+    }
+    $vars->{'case'} = $case;
+    $vars->{'components'} = objToJson(\@comps);
+    $vars->{'action'} = "Add";
+    $vars->{'form_action'} = "tr_new_case.cgi";
     $template->process("testopia/case/add.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }

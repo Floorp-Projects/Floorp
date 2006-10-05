@@ -97,9 +97,10 @@ if ($action eq 'Commit'){
             'arguments'      => $arguments,
             'default_tester_id' => $tester  || $case->default_tester->id,
         );
+      
         $case->update(\%newvalues);
         if ($cgi->param('addtags')){
-            foreach my $name (split(/,/, $cgi->param('addtags'))){
+            foreach my $name (split(/[\s,]+/, $cgi->param('addtags'))){
                 trick_taint($name);
                 my $tag = Bugzilla::Testopia::TestTag->new({'tag_name' => $name});
                 my $tag_id = $tag->store;
@@ -107,17 +108,44 @@ if ($action eq 'Commit'){
             }
         }
         my @runs;
-        foreach my $runid (split(",", $cgi->param('addruns'))){
+        foreach my $runid (split(/[\s,]+/, $cgi->param('addruns'))){
             validate_test_id($runid, 'run');
             push @runs, Bugzilla::Testopia::TestRun->new($runid);
         }
         foreach my $run (@runs){
             $run->add_case_run($case->id);
         }
+        
+        foreach my $planid (split(",", $cgi->param('linkplans'))){
+            validate_test_id($planid, 'plan');
+            $case->link_plan($planid);
+        }
     }
+    my @runlist = split(/[\s,]+/, $cgi->param('addruns'));
+    if (scalar @runlist == 1){
+        my $run_id = $cgi->param('addruns');
+        validate_test_id($run_id, 'run');
+        $cgi->delete_all;
+        $cgi->param('run_id', $run_id);
+        $cgi->param('current_tab', 'case_run');
+        my $search = Bugzilla::Testopia::Search->new($cgi);
+        my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
+        
+        my @case_list;
+        foreach my $caserun (@{$table->list}){
+            push @case_list, $caserun->case_id;
+        }
+        $vars->{'run'} = Bugzilla::Testopia::TestRun->new($run_id);
+        $vars->{'table'} = $table;
+        $vars->{'case_list'} = join(",", @case_list);
+        $vars->{'action'} = 'Commit';
+        $template->process("testopia/run/show.html.tmpl", $vars)
+            || ThrowTemplateError($template->error());
+        exit;
+    } 
     my $case = Bugzilla::Testopia::TestCase->new({ 'case_id' => 0 });
     $vars->{'case'} = $case;
-    $vars->{'title'} = "Update Susccessful";
+    $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = scalar @cases . " Test Cases Updated";
     $vars->{'current_tab'} = 'case';
     $template->process("testopia/search/advanced.html.tmpl", $vars)
@@ -130,23 +158,56 @@ $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, undef, $search->query);
 
+# Check that all of the test cases returned only belong to one product.
+if ($table->list_count > 0){
+    my %case_prods;
+    my $prod_id;
+    foreach my $case (@{$table->list}){
+        $case_prods{$case->id} = $case->get_product_ids;
+        $prod_id = @{$case_prods{$case->id}}[0];
+        if (scalar(@{$case_prods{$case->id}} > 1)){
+            $vars->{'multiprod'} = 1 ;
+            last;
+        }
+    }
+    # Check that all of them are the same product
+    if (!$vars->{'multiprod'}){
+        foreach my $c (keys %case_prods){
+            if ($case_prods{$c}->[0] != $prod_id){
+                $vars->{'multiprod'} = 1;
+                last;
+            }
+        }
+    }
+    if (!$vars->{'multiprod'}) {
+        my $category_list = $table->list->[0]->get_category_list;
+        unshift @{$category_list},  {'id' => -1, 'name' => "--Do Not Change--"};
+        $vars->{'category_list'} = $category_list;
+    }
+}
 # create an empty case to use for getting status and priority lists
 my $c = Bugzilla::Testopia::TestCase->new({'case_id' => 0 });
 my $status_list   = $c->get_status_list;
 my $priority_list = $c->get_priority_list;
-my $category_list = $c->get_distinct_categories;
 
 # add the "do not change" option to each list
 # we use unshift so they show at the top of the list
 unshift @{$status_list},   {'id' => -1, 'name' => "--Do Not Change--"};
-unshift @{$category_list}, {'id' => -1, 'name' => "--Do Not Change--"};
 unshift @{$priority_list}, {'id' => -1, 'name' => "--Do Not Change--"};
 
-$vars->{'fullwidth'} = 1; #novellonly
-$vars->{'status_list'} = $status_list;
-$vars->{'category_list'} = $category_list;
-$vars->{'priority_list'} = $priority_list;
+my $addrun = $cgi->param('addrun');
+if ($addrun){
+    validate_test_id($addrun, 'run');
+    my $run = Bugzilla::Testopia::TestRun->new($addrun);
+    $vars->{'addruns'} = $addrun;
+    $vars->{'plan'} = $run->plan;
+}
+    
 $vars->{'addrun'} = $cgi->param('addrun');
+$vars->{'fullwidth'} = 1; #novellonly
+$vars->{'case'} = $c;
+$vars->{'status_list'} = $status_list;
+$vars->{'priority_list'} = $priority_list;
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 

@@ -84,6 +84,29 @@ function chBld(idx, bid, sid, cid){
 		mimetype: "text/plain"
 	});
 }
+//chEnv Updates the caserun environment 
+function chEnv(idx, eid, sid, cid, oldid){
+	if (oldid == eid)
+		return;
+	disableAllButtons(true);
+	dojo.io.bind({
+		url:     "tr_show_caserun.cgi",
+		content: {  caserun_id: cid, index: idx, caserun_env: eid, action: 'update_environment'},
+		load:    function(type, data, evt){ 
+				fillrow(data, idx);
+				var fields = data.split("|~+");
+				document.getElementById('head_caserun_'+idx).innerHTML = fields[0];
+				document.getElementById('body_caserun_'+idx).innerHTML = fields[1];
+				document.getElementById('ra'+idx).style.display='block'; 
+				document.getElementById('id'+idx).src='testopia/img/td.gif';
+				displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
+	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
+				disableAllButtons(false);
+		},
+		error:   function(type, error){ alert("ERROR");},
+		mimetype: "text/plain"
+	});
+}
 //chStat updates the status
 function chStat(idx, sid, cid){
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());
@@ -127,6 +150,8 @@ function chNote(idx, cid, note){
 		url:     "tr_show_caserun.cgi",
 		content: {  caserun_id: cid, index: idx, note: note, action: 'update_note'},
 		load:    function(type, data, evt){ fillrow(data, idx);
+					document.getElementById('notes'+idx).value = '';
+					document.getElementById('old_notes'+idx).innerHTML = data;
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
@@ -144,6 +169,10 @@ function chOwn(idx, cid, owner){
 		url:     "tr_show_caserun.cgi",
 		content: {  caserun_id: cid, index: idx, assignee: owner, action: 'update_assignee'},
 		load:    function(type, data, evt){ fillrow(data, idx);
+					if (data.substring(0,5) == 'Error'){
+						displayMsg('pp'+ idx, 2, data);
+						return;
+					}
 					document.getElementById('own'+idx).innerHTML = owner;
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);

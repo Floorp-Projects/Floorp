@@ -72,7 +72,7 @@ if ($action eq 'Add'){
     my $summary  = $cgi->param('summary');
     my $notes    = $cgi->param('notes');    
     my $env      = $cgi->param('environment');
-
+    
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if $summary  eq '';
     
     detaint_natural($status);
@@ -84,6 +84,21 @@ if ($action eq 'Add'){
     trick_taint($summary);
     trick_taint($notes);
     trick_taint($prodver);
+    
+    ThrowUserError('number_not_numeric', {'field' => 'environment', 'num' => $cgi->param('environment')}) if $env eq '';
+    
+    if ($cgi->param('new_build')){
+        my $new_build   = $cgi->param('new_build');
+        trick_taint($new_build);
+        my $b = Bugzilla::Testopia::Build->new({
+                'name'        => $new_build,
+                'milestone'   => '---',
+                'product_id'  => $plan->product_id,
+                'description' => '' 
+        });
+        my $bid = $b->check_name($new_build);
+        $bid ? $build = $bid : $build = $b->store; 
+    }
     
     my $reg = qr/c_([\d]+)/;
     my @c;
@@ -118,6 +133,7 @@ if ($action eq 'Add'){
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';
+    $vars->{'form_action'} = 'tr_show_run.cgi';
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     
@@ -131,6 +147,7 @@ else {
     $cgi->param('viewall', 1);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_new_run.cgi', $cgi, undef, $search->query);
+    $vars->{'case'} = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
     $vars->{'table'} = $table;    
     $vars->{'dotweak'} = 1;
     $vars->{'fullwidth'} = 1; #novellonly

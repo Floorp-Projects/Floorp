@@ -22,6 +22,9 @@
   # ...
   #%]
 [% IF table.list_count > 0 %]
+<script type="text/javascript">
+dojo.require("dojo.widget.Tooltip");
+</script>
   [% IF dotweak %]
 Select:
 <a href="javascript:sall()">All</a>,
@@ -41,6 +44,7 @@ Select:
   <th align="left"><a href="[% link %]start_date[% paren %]">Started[% table.arrow IF table.last_sort == 'alias' %]</a></th>
   <th align="left"><a href="[% link %]stop_date[% paren %]">Finished[% table.arrow IF table.last_sort == 'alias' %]</a></th>
   <th align="center">% Completed</th>
+  <th align="center">Out of</th>
   [% IF NOT plan %]<th align="left"><a href="[% link %]plan_id[% paren %]">Plan[% table.arrow IF table.last_sort == 'alias' %]</a></th>[% END %]
 </tr>
 
@@ -62,9 +66,9 @@ Select:
       [% END %]
   </td>
   <td>
-    [% percent = run.percent_complete %]
     [% PROCESS testopia/percent_bar.html.tmpl %]
   </td>
+  <td>[% run.case_count FILTER html %]</td>
   [% IF NOT plan %]<td align="left"><a href="tr_show_plan.cgi?plan_id=[% run.plan.id FILTER none %]">[% run.plan.id FILTER html %]</a></td>[% END %]
 </tr>
   [% END %]

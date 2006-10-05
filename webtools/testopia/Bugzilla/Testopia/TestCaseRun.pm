@@ -50,6 +50,7 @@ use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
+use Date::Format;
 
 ###############################
 ####    Initialization     ####
@@ -81,6 +82,7 @@ use constant DB_COLUMNS => qw(
     test_case_runs.case_run_status_id
     test_case_runs.case_text_version
     test_case_runs.build_id
+    test_case_runs.environment_id
     test_case_runs.notes
     test_case_runs.close_date
     test_case_runs.iscurrent
@@ -161,10 +163,11 @@ sub store {
     my $self = shift;
     my $dbh = Bugzilla->dbh;    
     $dbh->do("INSERT INTO test_case_runs ($columns)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", undef,
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
               (undef, $self->{'run_id'}, $self->{'case_id'}, $self->{'assignee'},
                undef, IDLE, $self->{'case_text_version'}, 
-               $self->{'build_id'}, $self->{'notes'}, undef, 1, 0));
+               $self->{'build_id'}, $self->{'environment_id'}, 
+               undef, undef, 1, 0));
 
     my $key = $dbh->bz_last_key( 'test_case_runs', 'case_run_id' );
     return $key;               
@@ -180,7 +183,10 @@ sub clone {
     my $self = shift;
     my ($fields) = @_;
     my $dbh = Bugzilla->dbh;
-    $self->{'build_id'} = $fields->{'build_id'};
+    my $note = "Build or Environment changed. Resetting to IDLE.";
+    $self->append_note($note);
+    $self->{'build_id'} = $fields->{'build_id'} if $fields->{'build_id'};
+    $self->{'environment_id'} = $fields->{'environment_id'} if $fields->{'environment_id'};
     my $entry = $self->store;
     $self->set_as_current($entry);
     return $entry;
@@ -188,28 +194,54 @@ sub clone {
 
 =head2 check_exists
 
-Checks for an existing entry with the same build for this case and run
-and returns the id if it is found
+Checks for an existing entry with the same build and environment for this 
+case and run and returns the id if it is found
 
 =cut
 
 sub check_exists {
    my $self = shift;
-   my ($run_id, $case_id, $build_id) = @_;
+   my ($run_id, $case_id, $build_id, $env_id) = @_;
 
    $run_id ||= $self->{'run_id'};
    $case_id ||= $self->{'case_id'};
    $build_id ||= $self->{'build_id'};
-
+   $env_id ||= $self->{'environment_id'};
+   
    my $dbh = Bugzilla->dbh;     
    my ($is) = $dbh->selectrow_array(
+        "SELECT case_run_id 
+           FROM test_case_runs 
+          WHERE run_id = ? 
+            AND case_id = ? 
+            AND build_id = ?
+            AND environment_id = ?",
+          undef, ($run_id, $case_id, $build_id, $env_id));
+
+   return $is;
+
+}
+
+=head2 lookup_case_run_id
+
+Checks for an existing entry based on run, case, and build, 
+and returns the id if it is found
+
+=cut
+
+sub lookup_case_run_id 
+{
+   my ($run_id, $case_id, $build_id) = @_;
+
+   my $dbh = Bugzilla->dbh;     
+
+   my ($case_run_id) = $dbh->selectrow_array(
         "SELECT case_run_id 
            FROM test_case_runs 
           WHERE run_id = ? AND case_id = ? AND build_id = ?",
           undef, ($run_id, $case_id, $build_id));
 
-   return $is;
-
+   return $case_run_id;
 }
 
 =head2 update
@@ -227,9 +259,9 @@ sub update {
     if ($self->is_closed_status($fields->{'case_run_status_id'})){
         $fields->{'close_date'} = Bugzilla::Testopia::Util::get_time_stamp();
     }
-    my ($is) = $self->check_exists($self->run_id, $self->case_id, $fields->{'build_id'});
+    my ($is) = $self->check_exists($self->run_id, $self->case_id, $fields->{'build_id'}, $fields->{'environment_id'});
 
-    if ($fields->{'build_id'} != $self->{'build_id'}){
+    if ($fields->{'build_id'} != $self->{'build_id'} || $fields->{'environment_id'} != $self->{'environment_id'}){
         if ($is){
             return $is;
         }
@@ -311,6 +343,19 @@ sub set_build {
     $self->{'build_id'} = $build_id;
 }
 
+=head2 set_environment
+
+Sets the environment on a case-run
+
+=cut
+
+sub set_environment {
+    my $self = shift;
+    my ($env_id) = @_;
+    $self->_update_fields({'environment_id' => $env_id});
+    $self->{'environment_id'} = $env_id;
+}
+
 =head2 set_status
 
 Sets the status on a case-run and updates the close_date and testedby 
@@ -356,17 +401,56 @@ sub set_assignee {
     $self->_update_fields({'assignee' => $user_id});
 }
 
-=head2 set_note
+=head2 lookup_status
+
+Returns the status name of the given case_run_status_id
+
+=cut
+
+sub lookup_status {
+    my $self = shift;
+    my ($status_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($status) = $dbh->selectrow_array(
+            "SELECT name 
+               FROM test_case_run_status 
+              WHERE case_run_status_id = ?",
+              undef, $status_id);
+   return $status;
+}
+
+=head2 lookup_status_by_name
+
+Returns the id of the status name passed.
+
+=cut
+
+sub lookup_status_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($value) = $dbh->selectrow_array(
+            "SELECT case_run_status_id
+			 FROM test_case_run_status
+			 WHERE name = ?",
+			 undef, $name);
+    return $value;
+}
+
+=head2 append_note
 
 Updates the notes field for the case-run
 
 =cut
 
-sub set_note {
+sub append_note {
     my $self = shift;
-    my ($note, $append) = @_;
-    if ($append){
-        my $note = $self->notes . "\n" . $note;
+    my ($note) = @_;
+    return unless $note;
+    my $timestamp = time2str("%c", time());
+    $note = "$timestamp: $note";
+    if ($self->{'notes'}){
+        $note = $self->{'notes'} . "\n" . $note;
     }
     $self->_update_fields({'notes' => $note});
     $self->{'notes'} = $note;
@@ -456,18 +540,35 @@ sub attach_bug {
     my $dbh = Bugzilla->dbh;
 
     $dbh->bz_lock_tables('test_case_bugs WRITE');
-    my ($is) = $dbh->selectrow_array(
+    my ($exists) = $dbh->selectrow_array(
             "SELECT bug_id 
                FROM test_case_bugs 
               WHERE case_run_id=?
                 AND bug_id=?", 
              undef, ($caserun_id, $bug));
-    if ($is) {
+    if ($exists) {
         $dbh->bz_unlock_tables();
         return;
     }
-    $dbh->do("INSERT INTO test_case_bugs (bug_id, case_run_id)
-              VALUES(?,?)", undef, ($bug, $self->{'case_run_id'}));
+    my ($check) = $dbh->selectrow_array(
+            "SELECT bug_id 
+               FROM test_case_bugs 
+              WHERE case_id=?
+                AND bug_id=?
+                AND case_run_id=?", 
+             undef, ($caserun_id, $bug, undef));
+             
+    if ($check){
+        $dbh->do("UPDATE test_case_bugs 
+                     SET test_case_run_id = ?
+                   WHERE case_id = ?
+                     AND bug_id = ?", 
+                 undef, ($bug, $self->{'case_run_id'}));
+    }
+    else{
+        $dbh->do("INSERT INTO test_case_bugs (bug_id, case_run_id, case_id)
+                  VALUES(?,?,?)", undef, ($bug, $self->{'case_run_id'}, $self->{'case_id'}));
+    }
     $dbh->bz_unlock_tables();
 }
 
@@ -569,13 +670,31 @@ sub run_id            { return $_[0]->{'run_id'};          }
 sub testedby          { return Bugzilla::User->new($_[0]->{'testedby'});   }
 sub assignee          { return Bugzilla::User->new($_[0]->{'assignee'});   }
 sub case_text_version { return $_[0]->{'case_text_version'};   }
-sub notes             { return $_[0]->{'notes'};   }
 sub close_date        { return $_[0]->{'close_date'};   }
 sub iscurrent         { return $_[0]->{'iscurrent'};   }
 sub status_id         { return $_[0]->{'case_run_status_id'};   }
 sub sortkey           { return $_[0]->{'sortkey'};   }
 sub isprivate         { return $_[0]->{'isprivate'};   }
 sub updated_deps      { return $_[0]->{'updated_deps'};   }
+
+=head2 notes
+
+Returns the cumulative notes of all caserun records of this case and run.
+
+=cut
+
+sub notes { 
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my $notes = $dbh->selectcol_arrayref(
+            "SELECT notes
+               FROM test_case_runs
+              WHERE case_id = ? AND run_id = ?
+           ORDER BY case_run_id",
+           undef,($self->case_id, $self->run_id));
+    
+    return join("\n", @$notes);
+}
 
 =head2 run
 
@@ -616,6 +735,19 @@ sub build {
     return $self->{'build'} if exists $self->{'build'};
     $self->{'build'} = Bugzilla::Testopia::Build->new($self->{'build_id'});
     return $self->{'build'};
+}
+
+=head2 environment
+
+Returns the Build object that this case-run is associated with
+
+=cut
+
+sub environment {
+    my $self = shift;
+    return $self->{'environment'} if exists $self->{'environment'};
+    $self->{'environment'} = Bugzilla::Testopia::Environment->new($self->{'environment_id'});
+    return $self->{'environment'};
 }
 
 =head2 status
@@ -817,7 +949,17 @@ Returns true if the logged in user has rights to delete this case-run.
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param('allow-test-deletion');
+    
+    return ($self->canedit 
+            && Param('allow-test-deletion') 
+            && scalar @{$self->get_case_run_list} == 1
+            && $self->status eq 'IDLE');
+}
+
+sub do_delete {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    $dbh->do("DELETE FROM test_case_runs WHERE case_run_id = ?", undef, $self->id);
 }
 
 =head1 SEE ALSO

@@ -47,7 +47,7 @@ test runs. Please reassign these runs to a different Environment before deleting
 [% ELSE %]
 You are about to permanantly delete this environment.
 <br>
-<form method="POST" action="tr_environment.cgi">
+<form method="POST" action="tr_show_environment.cgi">
   <input type="hidden" name="action" value="do_delete" />
   <input type="hidden" name="env_id" value="[% environment.id FILTER none %]" />
   <input type="submit" value="Continue" />

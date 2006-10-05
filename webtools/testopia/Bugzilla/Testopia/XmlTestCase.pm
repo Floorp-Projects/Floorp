@@ -48,6 +48,7 @@ use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::TestRun;
 use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Util;
+use Bugzilla::Testopia::XmlReferences;
 use Bugzilla::User;
 use Bugzilla::Util;
 
@@ -62,129 +63,224 @@ struct
 (
 	'Bugzilla::Testopia::XmlTestCase',
 	{
-		action			=> '$',
-		blocks			=> '@',
-		category		=> '$',
-		dependson		=> '@',
-		expectedresults	=> '$',
-		tags			=> '@',
-		testcase		=> 'Bugzilla::Testopia::TestCase',
+#		action						=> '$',
+		blocks						=> 'Bugzilla::Testopia::XmlReferences',
+		category					=> '$',
+		components					=> '@',
+		dependson					=> 'Bugzilla::Testopia::XmlReferences',
+#		expectedresults				=> '$',
+		tags						=> '@',
+		testcase					=> 'Bugzilla::Testopia::TestCase',
+		testplan					=> 'Bugzilla::Testopia::XmlReferences',
 	}
 );
+
+sub add_tag()
+{
+	my ($self,$tag) = @_;
+		
+	push @{$self->tags}, $tag;
+}
+
+sub add_component()
+{
+	my ($self,$component) = @_;
+		
+	push @{$self->components}, $component;
+}
 
 sub debug_display()
 {	
 	my ($self) = @_;
 	my $display_variable = "";
 
+    my %text = %{$self->testcase->text()} if ( defined $self->testcase->text() );
 	print STDERR "Testcase: " . $self->testcase->summary() . "\n";
-		my $testcase_id = "null";
-		$testcase_id = $self->testcase->id() if ( $self->testcase->id() );
-		print STDERR "   ID                      " . $testcase_id . "\n";
-		print STDERR "   Action\n";
-		my @results = split(/\n/,$self->action);
+	my $testcase_id = "null";
+	$testcase_id = $self->testcase->id() if ( $self->testcase->id() );
+	print STDERR "   ID                      " . $testcase_id . "\n";
+	print STDERR "   Action\n";
+	if ( defined $text{'action'} )
+	{
+		my @results = split(/\n/,$text{'action'});
 		foreach my $result (@results)
 		{
 			print STDERR "      $result\n";
 		}
-	   	my $alias = "null";
-		$alias = $self->testcase-alias() if ( $self->testcase->alias() );
-		print STDERR "   Alias                   " . $alias . "\n";
-		my %author = %{$self->testcase->author()};
-		my $author_id = $author{"id"};
-		my $author_login = $author{"login"};
-		print STDERR "   Author                  " . $author_login . " (id=" . $author_id . ", hash=" . $self->testcase->author() . ")\n";
-		foreach my $loop ( @{$self->blocks} )
-		{
-			$display_variable .= $loop . ",";
-		}
-		chop $display_variable;
-		print STDERR "   Blocks                  " . $display_variable . "\n";
-		$display_variable = "";
-		print STDERR "   Category                " . $self->category . "\n";
-		print STDERR "   Creation Date           " . $self->testcase->creation_date() . "\n";
-				foreach my $loop ( @{$self->blocks} )
-		{
-			$display_variable .= $loop . ",";
-		}
-		chop $display_variable;
-		print STDERR "   Dependson               " . $display_variable . "\n";
-		$display_variable = "";
-		print STDERR "   Expected Results\n";
-		@results = split(/\n/,$self->expectedresults);
+	}
+	my $alias = "null";
+	$alias = $self->testcase-alias() if ( $self->testcase->alias() );
+	print STDERR "   Alias                   " . $alias . "\n";
+	my %author = %{$self->testcase->author()};
+	my $author_id = $author{"id"};
+	my $author_login = $author{"login"};
+	print STDERR "   Author                  " . $author_login . " (id=" . $author_id . ", hash=" . $self->testcase->author() . ")\n";
+	print STDERR "   Blocks                  " . $self->blocks->display() . "\n";
+	print STDERR "   Category                " . $self->category . "\n";
+	$display_variable = $self->testcase->creation_date();
+	if ( defined $display_variable )
+	{
+		print STDERR "   Creation Date           " . $display_variable . "\n";
+	}
+	print STDERR "   Depends On              " . $self->dependson->display() . "\n";
+	print STDERR "   Expected Results\n";
+	if ( defined $text{'effect'} )
+	{
+		my @results = split(/\n/,$text{'effect'});
 		foreach my $result (@results)
 		{
 			print STDERR "      $result\n";
 		}
-		print STDERR "   Summary                 " . $self->testcase->summary() . "\n";
-		#TODO:print STDERR "   Default Product Version " . $self->testcase->product_version() . "\n";
-		#TODO:print STDERR "   Document                " . $self->testcase->text() . "\n";
-		my %tester = %{$self->testcase->default_tester()};
-		my $tester_id = $tester{"id"};
-		my $tester_login = $tester{"login"};
-		print STDERR "   Tester                  " . $tester_login . " (id=" . $tester_id . ", hash=" . $self->testcase->default_tester() . ")\n";
-		print STDERR "   Is Automated            " . $self->testcase->isautomated() . "\n";
-		#TODO:print STDERR "   Plans                   " . $self->testcase->plans() . "\n";
-		#TODO:print STDERR "   Priority                " . $self->testcase->priority_id() . "\n";
-		#TODO:print STDERR "   Product                 " . $self->testcase->product_id() . "\n";
-		print STDERR "   Requirement             " . $self->testcase->requirement() . "\n";
+	}
+	print STDERR "   Summary                 " . $self->testcase->summary() . "\n";
+	#TODO:print STDERR "   Default Product Version " . $self->testcase->product_version() . "\n";
+	#TODO:print STDERR "   Document                " . $self->testcase->text() . "\n";
+	my %tester = %{$self->testcase->default_tester()};
+	my $tester_id = $tester{"id"};
+	my $tester_login = $tester{"login"};
+	print STDERR "   Tester                  " . $tester_login . " (id=" . $tester_id . ", hash=" . $self->testcase->default_tester() . ")\n";
+	print STDERR "   Is Automated            " . $self->testcase->isautomated() . "\n";
+	#TODO:print STDERR "   Plans                   " . $self->testcase->plans() . "\n";
+	#TODO:print STDERR "   Priority                " . $self->testcase->priority_id() . "\n";
+	#TODO:print STDERR "   Product                 " . $self->testcase->product_id() . "\n";
+	print STDERR "   Requirement             " . $self->testcase->requirement() . "\n";
 
-		print STDERR "   Script                  " . $self->testcase->script() . "\n";
-		print STDERR "   Script Arguments        " . $self->testcase->arguments() . "\n";
-		print STDERR "   Status                  " . $self->testcase->status() . "\n";
+	print STDERR "   Script                  " . $self->testcase->script() . "\n";
+	print STDERR "   Script Arguments        " . $self->testcase->arguments() . "\n";
+	print STDERR "   Status                  " . $self->testcase->status() . "\n";
 				
-		foreach my $tag (@{$self->tags})
-		{
-			print STDERR "   Tag                     " . $tag . "\n";
-		}
+	foreach my $tag (@{$self->tags})
+	{
+		print STDERR "   Tag                     " . $tag . "\n";
+	}
 		
-		my @attachments = @{$self->testcase->attachments()};
-		foreach my $attachment (@attachments)
-		{
-			my %submitter = %{$self->testcase->submitter()};
-			my $author_login = $author{"login"};
-			print STDERR "   Attachment                     " . $attachment->description() . "\n";
-			print STDERR "      Creation Date               " . $attachment->creation_ts(). "\n";
-			print STDERR "      Filename                    " . $attachment->filename() . "\n";
-			print STDERR "      Mime Type                   " . $attachment->mime_type(). "\n";
-			print STDERR "      Submitter                   " . $author_login . "\n";
-		}
+	my @attachments = @{$self->testcase->attachments()};
+	foreach my $attachment (@attachments)
+	{
+		my %submitter = %{$self->testcase->submitter()};
+		$author_login = $author{"login"};
+		print STDERR "   Attachment                     " . $attachment->description() . "\n";
+		print STDERR "      Creation Date               " . $attachment->creation_ts(). "\n";
+		print STDERR "      Filename                    " . $attachment->filename() . "\n";
+		print STDERR "      Mime Type                   " . $attachment->mime_type(). "\n";
+		print STDERR "      Submitter                   " . $author_login . "\n";
+	}
 }
 
-sub add_tag()
+sub get_testcase_ids()
 {
-		my ($self,$tag) = @_;
-		
-		push @{$self->tags}, $tag;
+	my ($self, $field, @new_testcases) = @_;
+	my $error_message = "";
+	
+	my @testcase_id = @{$self->$field->get(uc $Bugzilla::Testopia::Xml::DATABASE_ID)};
+	
+	foreach my $testcase_summary ( @{$self->$field->get(uc $Bugzilla::Testopia::Xml::XML_DESCRIPTION)} )
+	{
+		foreach my $testcase (@new_testcases)
+		{
+			push @testcase_id, $testcase->testcase->id() if ( $testcase->testcase->summary() eq $testcase_summary );
+		}
+	}
+	
+	#TODO Testplans using Database_Description
+	foreach my $testcase_summary ( @{$self->$field->get(uc $Bugzilla::Testopia::Xml::DATABASE_DESCRIPTION)} )
+	{
+			$error_message .= "\n" if  ( $error_message ne "" );
+			$error_message .= "Have not implemented code for $Bugzilla::Testopia::Xml::DATABASE_DESCRIPTION lookup for blocking test case " . $testcase_summary . "' for Test Case '". $self->testcase->summary . "'.";
+	}
+	return $error_message if ( $error_message ne "" );
+	
+	my @return_testcase_id;
+	foreach my $testcase_id (@testcase_id)
+	{
+		my $testcase = Bugzilla::Testopia::TestCase->new($testcase_id);
+		if ( ! defined($testcase) )
+		{
+			$error_message .= "\n" if  ( $error_message ne "" );
+			$error_message .= "Could not find blocking Test Case '" . $testcase_id . "' for Test Case '". $self->testcase->summary . "'.";
+		}
+		else
+		{
+			push @return_testcase_id, $testcase->id();
+		}
+	}
+	return $error_message if ( $error_message ne "" );
+	
+	return @return_testcase_id;
 }
 
 sub store()
 {
-	my ($self, $userid, @testplans) = @_;
+	my ($self, @new_testplans) = @_;
+	my $error_message = "";
+	my @testplan_id = @{$self->testplan->get(uc $Bugzilla::Testopia::Xml::DATABASE_ID)};
 	
-	#
-	# Following code pulled from Bugzilla::Testopia::TestCase->get_category_list().
-	# Cannot call Bugzilla::Testopia::TestCase->get_category_list() until we create a 
-	# TestCase but cannot create a TestCase without a category.  
-	#
-	my @categories;
-	foreach my $testplan (@testplans)
+	# If we have any references to test plans from the XML data we need to search the @new_testplans
+	# array to find the actual test plan id.  The new_testplans array contains all test plans created
+	# from the XML.
+	# Order of looping does not matter, number of test plans associated to each test case should be small.
+	foreach my $testplan_name ( @{$self->testplan->get(uc $Bugzilla::Testopia::Xml::XML_DESCRIPTION)} )
 	{
-		push @categories, @{$testplan->categories};
-    }
-    my $categoryid = -1;
-    foreach my $category (@categories)
-    {
-    	my %temphash = %{$category};
-		if ( $self->category eq $temphash{"name"} )
+		foreach my $testplan (@new_testplans)
 		{
-			$categoryid = $temphash{"category_id"};
-			last;
+			push @testplan_id, $testplan->id() if ( $testplan->name() eq $testplan_name );
 		}
-    }
-    return "Cannot save test case '" . $self->testcase->summary . "', Category '" . $self->category . "' is not valid." if ( $categoryid == -1 );
-	$self->testcase->{'category_id'} = $categoryid;
+	}
 	
+	#TODO Testplans using Database_Description
+	foreach my $testplan_name ( @{$self->testplan->get(uc $Bugzilla::Testopia::Xml::DATABASE_DESCRIPTION)} )
+	{
+			$error_message .= "\n" if  ( $error_message ne "" );
+			$error_message .= "Have not implemented code for $Bugzilla::Testopia::Xml::DATABASE_DESCRIPTION lookup of test plan " . $testplan_name . "' for Test Case '". $self->testcase->summary . "'.";
+	}
+	return $error_message if ( $error_message ne "" );
+	
+	# Have to have a testplan to determine valid categories for testcase.
+	return "Test Case '" . $self->testcase->summary . "' needs a Test Plan." if ( $#testplan_id == -1 );
+	
+	# Verify that each testplan exists.
+	my @testplan;
+	foreach my $testplan_id (@testplan_id)
+	{
+		my $testplan = Bugzilla::Testopia::TestPlan->new($testplan_id);
+		if ( ! defined($testplan) )
+		{
+			$error_message .= "\n" if  ( $error_message ne "" );
+			$error_message .= "Could not find Test Plan '" . $testplan_id . "' for Test Case '". $self->testcase->summary . "'.";
+		}
+		else
+		{
+			push @testplan, $testplan;
+		}
+	}
+	return $error_message if ( $error_message ne "" );
+	
+	# Verify that each testplan has the testcase's category associated to it.  If the category does not
+	# exist it will be created.
+	foreach my $testplan (@testplan)
+	{
+		my $categoryid = -1;
+		
+		push my @categories, @{$testplan->categories};
+    	foreach my $category (@categories)
+    	{
+    		if ( $category->name eq $self->category )
+			{
+				$categoryid = $category->id;
+				last;
+			}
+    	}
+    	if ( $categoryid == -1 )
+    	{
+    		my $new_category = Bugzilla::Testopia::Category->new({
+    			product_id  => $testplan->product_id,
+				name        => $self->category,
+				description => "FIX ME.  Created during Test Plan import."
+			});
+			$categoryid = $new_category->store();
+    	}
+    	$self->testcase->{'category_id'} = $categoryid if ( ! defined($self->testcase->{'category_id'}) );
+    }
 	my $case_id = $self->testcase->store();
 	$self->testcase->{'case_id'} = $case_id;
 	foreach my $asciitag ( @{$self->tags} )
@@ -193,13 +289,33 @@ sub store()
 		my $tagid = $classtag->store;
 		$self->testcase->add_tag($tagid);
 	}
-	foreach my $testplan ( @testplans )
+	
+	# Link the testcase to each of it's testplans.
+	foreach my $testplan ( @testplan )
 	{
 		$self->testcase->link_plan($testplan->id(),$case_id)
 	}
-	$self->testcase->store_text($case_id,$userid,$self->action,$self->expectedresults);
 	
-	return "";
+	# Code below requires the testplans to be linked into testcases before being run.
+	foreach my $component ( @{$self->components} )
+	{
+		foreach my $available_component ( @{$self->testcase->get_selectable_components()} )
+		{
+			$self->testcase->add_component($available_component->{'id'}) if ( $component eq $available_component->{'name'} );
+		}
+	}
+	
+	return $error_message;
+}
+
+sub store_relationships()
+{
+	my ($self, @new_testcases) = @_;
+
+	my $blocks = $self->testcase->blocked_list_uncached() . " " . join(' ',$self->get_testcase_ids("blocks",@new_testcases));
+    my $dependson = $self->testcase->dependson_list_uncached() . " " . join(' ',$self->get_testcase_ids("dependson",@new_testcases));
+
+	$self->testcase->update_deps($dependson,$blocks);
 }
 
 1;

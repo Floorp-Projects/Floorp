@@ -24,7 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
 #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
-#                 Fr��ic Buclin <LpSolit@gmail.com>
+#                 Frederic Buclin <LpSolit@gmail.com>
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 
@@ -193,41 +193,26 @@ sub get_selectable_components {
     my $self = shift;
     my ($byid) = @_;
     my $dbh = Bugzilla->dbh;
-    my @compids;
     my @exclusions;
     unless ($byid) {
         foreach my $e (@{$self->components}){
             push @exclusions, $e->{'id'};
         }
     }
-    my $query = "SELECT id FROM components
-                 WHERE product_id = ?";
+    my $query = "SELECT DISTINCT id FROM components
+                 WHERE product_id IN (" . join(",", @{$self->get_product_ids}) . ") ";
     if (@exclusions){
-        $query .= " AND id NOT IN(". join(",", @exclusions) .")";
+        $query .= "AND id NOT IN(". join(",", @exclusions) .") ";
     }
-    foreach my $p (@{$self->plans}){ 
-        my $ref = $dbh->selectcol_arrayref(
-                $query, undef, $p->{'product_id'});
-        push @compids, @{$ref};
-    }
-    my %compseen;
-    foreach (@compids){
-        $compseen{$_} = 1;
-    }
-    @compids = keys %compseen;
-    #TODO: 2.22 use Bugzilla::Component
+    $query .= "ORDER BY name";
+    
+    my $ref = $dbh->selectcol_arrayref($query);
     my @comps;
     push @comps, {'id' => '0', 'name' => '--Please Select--'} unless $byid;
-    foreach my $id (@compids){
-        my $ref = $dbh->selectrow_hashref(
-            "SELECT id, name FROM components
-            WHERE id = ?", undef, $id); 
-        
-        push @comps, $ref;
-        #push @comps, Bugzilla::Component->new($id);
+    foreach my $id (@$ref){
+        push @comps, Bugzilla::Component->new($id);
     }
     return \@comps;
-    
 }
 
 =head2 get_available_components
@@ -275,35 +260,25 @@ plans referenced by this case.
 #TODO: Move to Testopia::Product.pm in 2.22
 sub get_category_list{
     my $self = shift;
+    my ($by_name) = @_;
     my $dbh = Bugzilla->dbh;
-    my @categories;
+    
+    my @product_ids;
     foreach my $p (@{$self->plans}){
-        if (Bugzilla::Testopia::Util::can_view_product($p->product_id)){
-            push @categories, @{$p->categories};
-        }
+        push @product_ids, $p->product_id;
     }
-    my %seen;
-    foreach my $c (@categories){
-        $seen{$c->id} = $c;
+    my $id_part;
+    my $name_part;
+    if ($by_name){
+        $id_part = "cat.name AS id";
+        $name_part = ", cat.name as name";
     }
-    @categories = values %seen;
-    @categories = sort @categories;
-    return \@categories;    
-}
-
-=head2 get_distinct_categories
-
-Returns a list of all user viewable categories for use in searches
-
-=cut
-
-#TODO: Move to Testopia::Product.pm in 2.22
-sub get_distinct_categories{
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-    my $query = "SELECT DISTINCT cat.name AS id, cat.name " .
-                  "FROM test_case_categories AS cat " .
-                  "JOIN products ON cat.product_id = products.id " .
+    else {
+        $id_part = "category_id";
+    }
+    my $query =  "SELECT DISTINCT $id_part $name_part ";
+       $query .= "FROM test_case_categories AS cat " .
+             "JOIN products ON cat.product_id = products.id " .
              "LEFT JOIN group_control_map " .
               "ON group_control_map.product_id = products.id ";
     if (Param('useentrygroupdefault')) {
@@ -316,11 +291,50 @@ sub get_distinct_categories{
         $query .= "AND group_id NOT IN(" . 
               join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
-    $query .= "WHERE group_id IS NULL ORDER BY cat.name";
-    
-    my $ref = $dbh->selectall_arrayref($query, {'Slice'=>{}});
+    $query .= "WHERE group_id IS NULL ";
+    $query .= "AND cat.product_id IN (". join(",", @product_ids) . ") " unless ($by_name || !@product_ids);  
+    $query .= "ORDER BY cat.name";
 
-    return $ref;             
+    if ($by_name){
+        my $ref = $dbh->selectall_arrayref($query, {'Slice'=>{}});
+        return $ref;
+    }
+    my $ids = $dbh->selectcol_arrayref($query);
+    
+    my @categories;
+    foreach my $c (@$ids){
+        push @categories, Bugzilla::Testopia::Category->new($c);
+    }
+    return \@categories;    
+}
+
+=head2 get_product_ids
+
+Returns the list of product ids that this case is associated with
+
+=cut
+
+sub get_product_ids {
+    my $self = shift;
+    
+    if ($self->id == 0){
+        my @ids;
+        foreach my $plan (@{$self->plans}){
+            push @ids, $plan->product_id if Bugzilla->user->can_see_product($plan->product_name);
+        }
+        return \@ids;
+    }
+    
+    my $dbh = Bugzilla->dbh;
+    
+    my $ref = $dbh->selectcol_arrayref(
+            "SELECT DISTINCT products.id FROM products
+               JOIN test_plans AS plans ON plans.product_id = products.id
+               JOIN test_case_plans ON plans.plan_id = test_case_plans.plan_id
+               JOIN test_cases AS cases ON cases.case_id = test_case_plans.case_id  
+              WHERE cases.case_id = ?
+              ORDER BY products.id", undef, $self->{'case_id'});
+    return $ref;
 }
 
 =head2 get_status_list
@@ -373,8 +387,8 @@ sub add_tag {
         $dbh->bz_unlock_tables();
         return 1;
     }
-    $dbh->do("INSERT INTO test_case_tags(tag_id, case_id) VALUES(?,?)",
-              undef, $tag_id, $self->{'case_id'});
+    $dbh->do("INSERT INTO test_case_tags(tag_id, case_id, userid) VALUES(?,?,?)",
+              undef, $tag_id, $self->{'case_id'}, Bugzilla->user->id);
     $dbh->bz_unlock_tables();
 
     return 0;
@@ -394,6 +408,51 @@ sub remove_tag {
               WHERE tag_id=? AND case_id=?",
               undef, $tag_id, $self->{'case_id'});
     return;
+}
+
+=head2 attach_bug
+
+Attaches the specified bug to this test case
+
+=cut
+
+sub attach_bug {
+    my $self = shift;
+    my ($bug, $case_id) = @_;
+    $case_id ||= $self->{'case_id'};
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->bz_lock_tables('test_case_bugs WRITE');
+    my ($exists) = $dbh->selectrow_array(
+            "SELECT bug_id 
+               FROM test_case_bugs 
+              WHERE case_id=?
+                AND bug_id=?", 
+             undef, ($case_id, $bug));
+    if ($exists) {
+        $dbh->bz_unlock_tables();
+        return;
+    }
+    $dbh->do("INSERT INTO test_case_bugs (bug_id, case_run_id, case_id)
+              VALUES(?,?,?)", undef, ($bug, undef, $self->{'case_id'}));
+    $dbh->bz_unlock_tables();
+}
+
+=head2 detach_bug
+
+Removes the association of the specified bug from this test case-run
+
+=cut
+
+sub detach_bug {
+    my $self = shift;
+    my ($bug) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_case_bugs 
+               WHERE bug_id = ? 
+                 AND case_id = ?", 
+             undef, ($bug, $self->{'case_id'}));
 }
 
 =head2 add_component
@@ -465,14 +524,17 @@ text has changed and thus requiring a new version be created.
 
 sub diff_case_doc {
     my $self = shift;
-    my ($newaction, $neweffect) = @_;
+    my ($newaction, $neweffect, $newsetup, $newbreakdown) = @_;
     my $dbh = Bugzilla->dbh;
-    my ($oldaction, $oldeffect) = $dbh->selectrow_array(
-            "SELECT action, effect FROM test_case_texts
-             WHERE case_id = ? AND case_text_version = ?",
-             undef, $self->{'case_id'}, $self->version);
+    my ($oldaction, $oldeffect, $oldsetup, $oldbreakdown) = $dbh->selectrow_array(
+            "SELECT action, effect, setup, breakdown
+               FROM test_case_texts
+              WHERE case_id = ? AND case_text_version = ?",
+             undef, ($self->{'case_id'}, $self->version));
     my $diff = diff(\$newaction, \$oldaction);
     $diff .= diff(\$neweffect, \$oldeffect);
+    $diff .= diff(\$newsetup, \$oldsetup);
+    $diff .= diff(\$newbreakdown, \$oldbreakdown);
     return $diff
 }
 
@@ -516,7 +578,8 @@ sub store {
 
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
 
-    $self->store_text($key, $self->{'author_id'}, $self->{'action'}, $self->{'effect'}, $timestamp);
+    $self->store_text($key, $self->{'author_id'}, $self->{'action'}, $self->{'effect'},  
+                      $self->{'setup'}, $self->{'breakdown'}, $timestamp);
     $self->update_deps($self->{'dependson'}, $self->{'blocks'}, $key);    
     foreach my $p (@{$self->{'plans'}}){
         $self->link_plan($p->id, $key);
@@ -535,16 +598,16 @@ author id, action text, effect text, and an optional timestamp.
 sub store_text {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
-    my ($key, $author, $action, $effect, $timestamp) = @_;
+    my ($key, $author, $action, $effect, $setup, $breakdown, $timestamp) = @_;
     if (!defined $timestamp){
         ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     }
-    trick_taint($action);
-    trick_taint($effect);
     my $version = $self->version || 0;
-    $dbh->do("INSERT INTO test_case_texts VALUES(?,?,?,?,?,?)",
+    $dbh->do("INSERT INTO test_case_texts 
+              (case_id, case_text_version, who, creation_ts, action, effect, setup, breakdown) 
+              VALUES(?,?,?,?,?,?,?,?)",
               undef, $key, ++$version, $author, 
-              $timestamp, $action, $effect);
+              $timestamp, $action, $effect, $setup, $breakdown);
     $self->{'version'} = $version;
     return $self->{'version'};
 
@@ -579,6 +642,43 @@ sub link_plan {
     $dbh->do("INSERT INTO test_case_plans (plan_id, case_id) 
               VALUES (?,?)", undef, $plan_id, $case_id);
     $dbh->bz_unlock_tables();
+    
+    # Update the plans array to include new plan added.
+        
+   	push @{$self->{'plans'}}, Bugzilla::Testopia::TestPlan->new($plan_id);
+
+}
+
+
+=head2 unlink_plan
+
+Removes the link to the specified plan id. 
+
+=cut
+
+sub unlink_plan {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my ($plan_id) = @_;
+    
+    $dbh->bz_lock_tables('test_case_plans WRITE', 'test_case_runs WRITE', 
+                         'test_runs READ', 'test_plans READ');
+    
+    if (!$self->can_unlink_plan($plan_id)){
+        $dbh->bz_unlock_tables();
+        return 0;
+    }
+    
+    $dbh->do("DELETE FROM test_case_plans 
+               WHERE plan_id = ? 
+                 AND case_id = ?", undef, $plan_id, $self->{'case_id'});
+    
+    $dbh->bz_unlock_tables();   
+
+    # Update the plans array.
+    delete $self->{'plans'}; 
+
+  	return 1;    
 }
 
 =head2 copy
@@ -604,7 +704,9 @@ sub copy {
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
     
     if ($copydoc){
-        $self->store_text($key, Bugzilla->user->id, $self->text->{'action'}, $self->text->{'effect'}, $timestamp);
+        $self->store_text($key, Bugzilla->user->id, $self->text->{'action'}, 
+                          $self->text->{'effect'}, $self->text->{'setup'}, 
+                          $self->text->{'breakdown'}, $timestamp);
     }
     return $key;
     
@@ -622,14 +724,36 @@ sub check_alias {
     my ($alias) = @_;
     
     return unless $alias;
+    my $id = $self->{'case_id'} || '';
+    my $dbh = Bugzilla->dbh;
+    ($id) = $dbh->selectrow_array(
+            "SELECT case_id 
+               FROM test_cases 
+              WHERE alias = ?
+                AND case_id != ?",
+              undef, ($alias, $id));
+
+    return $id;
+}
+
+=head2 class_check_alias
+
+Checks if the given alias exists already. Returns the case_id of
+the matching test case if it does.
+
+=cut
+
+sub class_check_alias {
+    my ($alias) = @_;
+    
+    return unless $alias;
     
     my $dbh = Bugzilla->dbh;
     my ($id) = $dbh->selectrow_array(
             "SELECT case_id 
                FROM test_cases 
-              WHERE alias = ?
-                AND case_id != ?",
-              undef, ($alias, $self->{'case_id'}));
+              WHERE alias = ?",
+              undef, ($alias));
 
     return $id;
 }
@@ -662,6 +786,7 @@ sub update {
             # Update the history
             my $field_id = Bugzilla::Testopia::Util::get_field_id($field, "test_cases");
             $dbh->do("INSERT INTO test_case_activity 
+                      (case_id, fieldid, who, changed, oldvalue, newvalue)
                       VALUES(?,?,?,?,?,?)",
                       undef, $self->{'case_id'}, $field_id, Bugzilla->user->id,
                       $timestamp, $self->{$field}, $newvalues->{$field});
@@ -709,6 +834,21 @@ sub history {
         }
     }        
     return $ref;
+}
+
+sub last_changed {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my ($date) = $dbh->selectrow_array(
+            "SELECT MAX(changed)
+               FROM test_case_activity 
+              WHERE case_id = ?",
+              undef, $self->id);
+    
+    return $self->{'creation_date'} unless $date;
+    return $date;
+    
 }
 
 =head2 lookup_status
@@ -764,6 +904,23 @@ sub lookup_category {
     return $value;
 }
 
+=head2 lookup_category_by_name
+
+Returns the id of the category name passed.
+
+=cut
+
+sub lookup_category_by_name {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($value) = $dbh->selectrow_array(
+            "SELECT category_id 
+               FROM test_case_categories
+              WHERE name = ?",
+              undef, $name);
+    return $value;
+}
+
 =head2 lookup_priority
 
 Takes an ID of the priority field and returns the value
@@ -781,6 +938,24 @@ sub lookup_priority {
               undef, $id);
     return $value;
 }
+
+=head2 lookup_priority_by_name
+
+Returns the id of the priority name passed.
+
+=cut
+
+sub lookup_priority_by_value {
+    my ($value) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($id) = $dbh->selectrow_array(
+            "SELECT id 
+               FROM priority
+              WHERE value = ?",
+              undef, $value);
+    return $id;
+}
+
 
 =head2 lookup_default_tester
 
@@ -991,11 +1166,37 @@ sub _generate_dep_tree {
     my $deps = _get_dep_lists("dependson", "blocked", $case_id);
     return unless scalar @$deps;
     foreach my $id (@$deps){
-        #print "ID $id";
         $self->_generate_dep_tree($id);
         push @{$self->{'dep_list'}}, $id
     }
 }
+
+=head2 can_unlink_plan
+
+Returns true if this test case can be unlinked from the given plan
+
+=cut
+
+sub can_unlink_plan {
+    my $self = shift;
+    my ($plan_id) = @_;
+    
+    return 0 if (!UserInGroup('managetestplans'));
+    
+    return 0 if scalar @{$self->plans} < 2;
+    
+    my $dbh = Bugzilla->dbh;
+    my ($res) = $dbh->selectrow_array(
+            "SELECT 1 
+               FROM test_case_runs
+         INNER JOIN test_runs ON test_case_runs.run_id = test_runs.run_id
+              WHERE test_runs.plan_id = ? 
+                AND test_case_runs.case_id = ?",
+                undef, ($plan_id, $self->{'case_id'}));
+    
+    return !$res;
+}
+
 =head2 canedit
 
 Returns true if the logged in user has rights to edit this test case.
@@ -1221,16 +1422,19 @@ sub components {
     my $dbh = Bugzilla->dbh;
     return $self->{'components'} if exists $self->{'components'};
     #TODO: 2.22 use Bugzilla::Component
-    my $comps = $dbh->selectall_arrayref(
-        "SELECT comp.id, comp.name 
+    my $comps = $dbh->selectcol_arrayref(
+        "SELECT comp.id 
            FROM components AS comp
            JOIN test_case_components AS tcc ON tcc.component_id = comp.id
            JOIN test_cases ON tcc.case_id = test_cases.case_id
           WHERE test_cases.case_id = ?", 
          {'Slice' => {}},  $self->{'case_id'}); 
     
-    
-    $self->{'components'} = $comps;
+    my @comps;
+    foreach my $id (@$comps){
+        push @comps, Bugzilla::Component->new($id);
+    }
+    $self->{'components'} = \@comps;
     return $self->{'components'};
 }
 
@@ -1293,8 +1497,7 @@ sub bugs {
     return $self->{'bugs'} if exists $self->{'bugs'};
     my $ref = $dbh->selectcol_arrayref(
         "SELECT DISTINCT bug_id
-           FROM test_case_bugs b
-           JOIN  test_case_runs r ON r.case_run_id = b.case_run_id
+           FROM test_case_bugs 
           WHERE case_id = ?", 
          undef, $self->{'case_id'});
     my @bugs;
@@ -1317,11 +1520,12 @@ sub text {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     return $self->{'text'} if exists $self->{'text'};
-    my $text = $dbh->selectrow_hashref("SELECT action, effect
-                                        FROM test_case_texts
-                                        WHERE case_id=? AND case_text_version=?",
-                                        undef, $self->{'case_id'}, 
-                                        $self->version);
+    my $text = $dbh->selectrow_hashref(
+        "SELECT action, effect, setup, breakdown, who author_id, case_text_version AS version
+           FROM test_case_texts
+          WHERE case_id=? AND case_text_version=?",
+        undef, $self->{'case_id'}, 
+        $self->version);
     $self->{'text'} = $text;
     return $self->{'text'};
 }
@@ -1409,7 +1613,21 @@ sub blocked_list {
     my $ref = _get_dep_lists("dependson", "blocked", $self->{'case_id'});
     $self->{'blocked_list'} = join(",", @$ref);
     return $self->{'blocked_list'};
-} 
+}
+
+=head2 blocked_list_uncached
+
+Returns a space separated list of test cases that are blocked by this test case.
+This method does not cache the blocked test cases so each call will result
+in a database read.
+
+=cut
+
+sub blocked_list_uncached {
+    my ($self) = @_;
+    my $ref = _get_dep_lists("dependson", "blocked", $self->{'case_id'});
+    return join(" ", @$ref)
+}
 
 =head2 dependson
 
@@ -1438,6 +1656,20 @@ sub dependson_list {
     $self->{'dependson_list'} = join(",", @$ref);
     return $self->{'dependson_list'};
 }    
+
+=head2 dependson_list_uncached
+
+Returns a space separated list of test cases that depend on this test case.
+This method does not cache the dependent test cases so each call will result
+in a database read.
+
+=cut
+
+sub dependson_list_uncached {
+    my ($self) = @_;
+    my $ref = _get_dep_lists("blocked", "dependson", $self->{'case_id'});
+    return join(" ", @$ref)
+}
 
 
 =head1 TODO

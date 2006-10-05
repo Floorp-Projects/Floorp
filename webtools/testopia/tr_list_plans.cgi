@@ -82,7 +82,7 @@ if ($action eq 'Commit'){
     }
     my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
     $vars->{'plan'} = $plan;
-    $vars->{'title'} = "Update Susccessful";
+    $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = scalar @plans . " Test Plan(s) Updated";
     $vars->{'current_tab'} = 'plan';
     $template->process("testopia/search/advanced.html.tmpl", $vars)

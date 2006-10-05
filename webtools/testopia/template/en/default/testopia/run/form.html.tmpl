@@ -44,12 +44,10 @@
     <tr>
       <th align="right">Manager</th>
       <td><input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
-      <th align="right"><a href="tr_environment.cgi">Environment</a></td>
-      <td>
-        [% PROCESS select sel = { name => "environment", 
-                                   list => run.get_environments,
-                                   default => run.environment.id}
-         %]
+      <th align="right">Environment</td>
+      <td><input name="environment" id="environment" value="[% run.environment.id FILTER none %]" />
+      	  <a href="tr_query.cgi?current_tab=environment" target="blank"><img src="testopia/img/env_lookup.png" align="middle"></a>
+          <a href="tr_new_environment.cgi" target="_blank">New</a>
       </td>
       
     </tr>
@@ -70,12 +68,15 @@
                                   list => run.plan.builds,
                                   default => run.build.id }
          %]
+       [% IF action == 'Add' %]
+         <b>or New:</b> <input name="new_build">
+       [% END %]
       </td>
       
     </tr>
     <tr>
       <th align="right">Summary</th>
-      <td  colspan="3"><input type="text" size="80" name="summary" value="[% run.summary FILTER html %]"></td>
+      <td  colspan="3"><input type="text" size="110" name="summary" value="[% run.summary FILTER html %]"></td>
     </tr>
 
     <tr>

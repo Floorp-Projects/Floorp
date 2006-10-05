@@ -31,11 +31,12 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Table;
 use Bugzilla::Testopia::TestPlan;
+use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Category;
 use Bugzilla::Testopia::Attachment;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
-
+use JSON;
 
 require "globals.pl";
 
@@ -267,7 +268,6 @@ sub do_update {
     ThrowUserError('testopia-missing-required-field', 
         {'field' => 'product version'}) if ($prodver eq '');
 
-
     trick_taint($plan_name);
     trick_taint($prodver);
 
@@ -296,6 +296,15 @@ sub do_update {
     );
     
     $plan->update(\%newvalues);
+    
+    # Add new tags 
+    foreach my $tag_name (split(/[\s,]+/, $cgi->param('newtag'))){
+        trick_taint($tag_name);
+        my $tag = Bugzilla::Testopia::TestTag->new({tag_name => $tag_name});
+        my $tag_id = $tag->store;
+        $plan->add_tag($tag_id);
+    }
+    
     $cgi->delete_all;
     $cgi->param('plan_id', $plan->id);
 }
@@ -345,6 +354,12 @@ sub display {
         $vars->{'run_table'} = $table;    
       
     }
+    my @dojo_search;
+    foreach my $run (@{$plan->test_runs}){
+        push @dojo_search, "tip_" . $run->id;
+    }
+    push @dojo_search, "plandoc";
+    $vars->{'dojo_search'} = objToJson(\@dojo_search);
     $vars->{'plan'} = $plan;
     $template->process("testopia/plan/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());

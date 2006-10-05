@@ -16,19 +16,20 @@
   # Maciej Maczynski. All Rights Reserved.
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #                    Scott Sudweeks <ssudweeks@novell.com>
   #%]
 
 [%# INTERFACE:
   # ...
   #%]
-
+  
 [%############################################################################%]
 [%# Template Initialization                                                  #%]
 [%############################################################################%]
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% title = "Edit Test Environment: $environment.name" %]
+[% title = "Environment Editor" %]
 
 [%############################################################################%]
 [%# Page Header                                                              #%]
@@ -38,8 +39,203 @@
 
 [% PROCESS testopia/style.none.tmpl %]
 [% PROCESS testopia/blocks.html.tmpl %]
-[% PROCESS testopia/messages.html.tmpl %]
 
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+    dojo.require("dojo.event.*");
+    dojo.require("dojo.io.*");
+    dojo.require("dojo.widget.Tree");
+    dojo.require("dojo.widget.TreeNode");
+    dojo.require("dojo.widget.TreeSelector");
+    dojo.require("dojo.widget.TreeLoadingController");
+    dojo.require("dojo.widget.TreeRPCController");
+    dojo.require("dojo.widget.TreeContextMenu");
+    
+    function update(){
+        var product = document.getElementById('product_id').value;
+        var name = document.getElementById('env_name').value;
+        var hostDiv = document.getElementById("message");
+        var env = dojo.widget.manager.getWidgetById("environment[% environment.id %]");
+        dojo.io.bind({
+          url:     "tr_show_environment.cgi",
+          content: {action:"edit", product_id: product, env_id: [% environment.id FILTER none %], name: name},
+          load:    function(type,data,evt){
+                      if (data.error){
+                        hostDiv.innerHTML = '<span style="font-color:#F00;">' + data.error + '</span>';
+                      }
+                      else{
+                        env.edit({title:name});
+                        hostDiv.innerHTML = data.message;
+                      }
+                   },
+          error:  function(type, error){ alert("ERROR");},
+          mimetype: "text/json"
+        });
+    }                   
+        
+    function treeSelectFired() {
+        var treeSelector = dojo.widget.manager.getWidgetById('env_treeSelector');
+        var tree = dojo.widget.manager.getWidgetById('env_Tree');
+        var selectedNode = treeSelector.selectedNode;
+        var value_selected = selectedNode.title;
+        var hostDiv = document.getElementById("message");
+        var widgetID = selectedNode['widgetId'];
+        if (widgetID.match(/validexp/)){
+            dojo.io.bind({
+            url:        "tr_show_environment.cgi",
+            content:    {  action: "set_selected", value: value_selected, type: selectedNode['widgetId'], prop_id: selectedNode['objectId'], env_id: tree['objectId'] },
+            load:     function(type, data, evt){
+                          if (data.message)
+                            hostDiv.innerHTML = data.message;
+                          selectedNode.edit({childIconSrc: "testopia/img/selected_value.png"});
+                          if (data.old){
+                            var old = dojo.widget.manager.getWidgetById(data.old);
+                            old.edit({childIconSrc:"testopia/img/1x1.gif"}); 
+                          }
+                        },
+            error:     function(type, error){ alert("ERROR");},
+            mimetype:    "text/json"
+            });
+        }
+        
+    }
+    
+    // CONTEXT MENU FUNCTIONS
+    function removeClicked(selectedNode, controllerId, icon) {
+        if (!selectedNode) {
+            alert('No node selected');
+            return false;
+        }
+
+        if (selectedNode.actionIsDisabled(selectedNode.actions.REMOVE)) {
+            return false;
+        }
+        var action = confirm("You are about to remove this item with all it's children from the selected environemnt. Continue?");
+        this.controller = dojo.widget.manager.getWidgetById(controllerId);
+
+        if (action){
+          var res = controller.removeNode(selectedNode);
+        }
+
+        // local checks failed
+        if (res == false) {
+            var hostDiv = document.getElementById("message");
+            hostDiv.innerHTML = "FAILED";
+        } else {
+            var hostDiv = document.getElementById("message");
+            hostDiv.innerHTML = "";
+        }
+    
+    }
+        
+    function init() {
+        //<!-- connect the select event to the function treeSelectFired() -->
+        var env_treeSelector = dojo.widget.manager.getWidgetById('env_treeSelector');
+        dojo.event.connect(env_treeSelector,'select','treeSelectFired');
+    }
+        
+    dojo.addOnLoad(init);
+
+</script>
+
+<div dojoType="TreeContextMenu" toggle="explode" contextMenuForWindow="false" widgetId="env_items_treeContextMenu">
+    <div dojoType="TreeMenuItem" treeActions="remove" iconSrc="" caption="Remove" widgetId="tcm_remove"></div>
+</div>
+<script>
+/* setup menu actrions */
+dojo.addOnLoad(function() {
+
+    dojo.event.topic.subscribe('tcm_remove/engage',
+        function (menuItem) { 
+            removeClicked( menuItem.getTreeNode(), 'env_treeController',  menuItem.getTreeNode().expandIcon); 
+        }
+    );
+
+});
+
+</script>
+
+[% PROCESS testopia/messages.html.tmpl %]
 [% PROCESS testopia/environment/form.html.tmpl %]
+
+<div id="message" style="color:#009900;border:none"></div>
+<table width="100%">
+    <tr>
+        <td valign="top">
+            <table>
+                <tr>
+                <td><h3>Environment: [% environment.name %]</h3>
+                    <div dojoType="TreeRPCController" 
+                         RPCUrl="tr_show_environment.cgi"
+                         data="{environment: [% environment.id FILTER none %]}" 
+                         widgetId="env_treeController" 
+                         DNDController="create"></div>
+                         
+                    <div dojoType="TreeSelector" 
+                         widgetId="env_treeSelector"></div>
+
+                    <div dojoType="Tree" 
+                         DNDAcceptTypes="env_Tree;env_items_environmentTree" 
+                         DNDMode="between" 
+                         menu="env_items_treeContextMenu"
+                         selector="env_treeSelector" 
+                         widgetId="env_Tree" 
+                         objectId="[% environment.id %]" 
+                         controller="env_treeController">
+                        
+                        <div dojoType="TreeNode" 
+                             title="[% environment.name %]" 
+                             widgetId="environment[% environment.id %]" 
+                             objectId="[% environment.id %]" 
+                             isFolder="[% environment.element_count ? 'true' : 'false' %]" 
+                             actionsDisabled="edit;move"></div>
+                    </div>
+                </td>
+                </tr>
+            </table>
+        </td>
+        
+        <td valign="top">
+            <table>
+                <tr>
+                <td><h3>Environment Items</h3>
+                    <div dojoType="TreeRPCController" 
+                         RPCUrl="tr_show_environment.cgi" 
+                         widgetId="env_items_treeController" 
+                         DNDController="create"></div>
+                         
+                    <div dojoType="TreeSelector" 
+                         widgetId="env_items_treeSelector"></div>
+                         
+                    <div dojoType="Tree" 
+                         DNDMode="between" 
+                         selector="env_items_treeSelector" 
+                         widgetId="env_items_environmentTree" 
+                         controller="env_items_treeController">
+                    [% IF type == 'classification' %]
+                    <div dojoType="TreeNode" 
+                         title="--ALL--" 
+                         widgetId="product0" 
+                         objectId="0" 
+                         actionsDisabled="remove;edit;move" 
+                         childIconSrc="testopia/img/folder_red.gif"
+                         [% 'isFolder="true"' IF allhaschild %] ></div>
+                    [% END %]
+                 [% FOREACH item = toplevel %]
+                    <div dojoType="TreeNode" 
+                         title="[% item.name %]" 
+                         widgetId="[% type %][% item.id %]" 
+                         objectId="[% item.id %]" 
+                         actionsDisabled="remove;edit;move" 
+                         childIconSrc="[% type == 'classification' ? 'testopia/img/folder_blue.gif' : 'testopia/img/folder_red.gif' %]"
+                         [% 'isFolder="true"' IF (type == 'classification' OR item.cat_count > 0) %] ></div>
+                 [% END %]
+                    </div>
+                </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
 [% PROCESS global/footer.html.tmpl %]

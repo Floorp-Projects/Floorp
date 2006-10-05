@@ -163,7 +163,7 @@ sub store {
               $self->{'filename'}, $timestamp, $self->{'mime_type'});
  
     my $key = $dbh->bz_last_key( 'test_attachments', 'attachment_id' );
-    $dbh->do("INSERT INTO test_attachment_data VALUES(?,?)",
+    $dbh->do("INSERT INTO test_attachment_data (attachment_id, contents) VALUES(?,?)",
               undef, $key, $self->{'contents'});
 
     return $key;    

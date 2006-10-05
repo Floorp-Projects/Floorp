@@ -20,13 +20,12 @@
 # Contributor(s): Maciej Maczynski <macmac@xdsnet.pl>
 #                 Ed Fuentetaja <efuentetaja@acm.org>
 
-use DBI;
 use File::Copy;
-
-require Bugzilla;
+use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::DB;
 
-my $VERSION = "1.0-beta";
+my $VERSION = "1.1";
 
 #check that we are on the Bugzilla's directory:
 
@@ -41,10 +40,11 @@ if (! -e "localconfig") {
     "Can't continue.\n");
 }
 
+##############################################################################
 print "Now installing Testopia ...\n\n";
-
 do 'localconfig';
-
+##############################################################################
+# Patching.
 my $rollbackPatchOnFail = 0;
 my $patchSuccessFile = "testopia/tr_patch_successful";
 my @files = ();
@@ -57,128 +57,83 @@ if ($patchFile && $patchFile eq "-nopatch") {
 } else {
   doPatch($patchFile);
 }
-
+##############################################################################
 print "\nSetting file permissions ...\n";
 SetupPermissions();
 print "Done.\n\n";
-
+##############################################################################
 print "Checking Testopia database ...\n";
-my ($dbh, $my_db_base, $my_db_host, $my_db_port, $my_db_name, $my_db_user, $my_db_sock) = DBConnect();
-print "  Make  : $my_db_base\n";
-print "  Host  : $my_db_host\n";
-print "  Port  : $my_db_port\n";
-print "  Name  : $my_db_name\n";
-print "  User  : $my_db_user\n";
-print "  Socket: $my_db_sock\n";
-print "\n";
-UpdateDB($dbh);
+my $dbh = Bugzilla::DB::connect_main();
+my $rebuild_bz_schema = 0;
+# If bz_schema doesn't know about Testopia, it's either because
+# Testopia has never been installed, or because Testopia was installed
+# without using the methods in Bugzilla::DB. Either way, we need to
+# bring bz_schema up-to-date.
+if (!$dbh->bz_column_info('test_cases', 'case_id')) {
+    $rebuild_bz_schema = 1;
+    # Since we're going to rebuild bz_schema, we need to disconnect to
+    # forget what we know about the schema.
+    $dbh->disconnect;
+    $dbh = Bugzilla::DB::connect_main();
+}
+UpdateDB($dbh, $rebuild_bz_schema);
 print "Done.\n\n";
-
-print "Adding Testopia groups ...\n";
-# Identify admin group.
+##############################################################################
+print "Checking Testopia groups ...\n";
+# Create groups if needed and grant permissions to the admin group over them
 my $adminid = GetAdminGroup($dbh);
-#Create groups if needed and grant permissions to the admin group over them
 my $groupid;
-$groupid = tr_AddGroup($dbh, 'managetestplans', 'Can create, destroy, run and edit test plans.', $adminid);
+
+$groupid = tr_AddGroup($dbh, 'managetestplans',
+    'Can create, destroy, run and edit test plans.', $adminid);
 tr_AssignAdminGrants($dbh, $groupid, $adminid);
-$groupid = tr_AddGroup($dbh, 'edittestcases', 'Can add, delete and edit test cases.', $adminid);
+
+$groupid = tr_AddGroup($dbh, 'edittestcases',
+    'Can add, delete and edit test cases.', $adminid);
 tr_AssignAdminGrants($dbh, $groupid, $adminid);
-$groupid = tr_AddGroup($dbh, 'runtests', 'Can add, delete and edit test runs.', $adminid);
+
+$groupid = tr_AddGroup($dbh, 'runtests',
+    'Can add, delete and edit test runs.', $adminid);
 tr_AssignAdminGrants($dbh, $groupid, $adminid);
 
 print "Done.\n\n";
-
-DBDisconnect($dbh);
-
-#print "Copying Testopia templates ...\n";
-#CopyTemplates('testopia');
-#CopyTemplates('hook');
-#print "Done.\n\n";
-
+##############################################################################
 print "Cleaning up Testopia cache ...\n";
 unlink "data/plancache";
 print "Done.\n\n";
 
-print "Running checksetup.pl ...\n";
-`perl checksetup.pl`;
-print "Done.\n\n";
-
-#now recover permissions over this script:
-chmod(0750, "tr_install.pl");
-
 print "Testopia installed successfully!\n";
-
-print "\n";
-print "Please follow now the 'Users' link at the bottom of your Bugzilla's home page to assign users to groups 'Edittestcases' and 'Managetestplans'.\n";
-print "\n";
-
+##############################################################################
 1;
-
-
-###############################################################################
-
-sub CopyTemplates {
-
-  my ($d) = @_;
-  
-  my $src = "testopia/template/en/default/$d";
-  my $dst = "template/en/default/$d";
-  
-  _copyRec($src, $dst);  
-}
-
-sub _copyRec {
-
-  my ($src, $dst) = (@_);
-  
-  opendir DIRH, $src;
-  my @files = grep( $_ ne "." && $_ ne "..", readdir(DIRH));
-  closedir DIRH;
-      
-  mkdir $dst;
-  foreach my $f (@files) {
-    if (-d "$src/$f") {
-      # A directory
-      _copyRec("$src/$f", "$dst/$f");
-    } else {
-      copy("$src/$f", "$dst/$f");
-    }
-  }
-}
+##############################################################################
 
 sub doPatch {
-
     my ($fPatch) = @_;
-        
+
     if (-e $patchSuccessFile) {
-    
-      #TODO: check the version run, in case we are upgrading
-      #since version 0.6.2 is the first version using this system
-      #this won't be needed until next version (0.6.3 ?) comes along
-      
       print "Patch already run successfully. Skipping.\n";
       return 1;
     }
-    
+
     print "Patching Bugzilla's files ...\n";
-        
+
     if ($fPatch) {
       # check that the patch file exists:
       if (!-e $fPatch) {
         DieWithStyle("Cannot find patch file: $fPatch\n".
             "Please, double-check the patch's file name and try again.");
       }
-    
+
       print "\nUsing patch file: $fPatch\n\n";
-      
+
     } else {
-      # Guess the patch file to use:      
+      # Guess the patch file to use:
       print "\nNo patch file especified, trying to determine the right one to use ...\n\n";
-      
+
       print "Bugzilla version ".$Bugzilla::Config::VERSION." detected.\n";
-      
+
       # This piece of code needs to be modified when a new patch file is added to the distribution:
-    
+
       if ($Bugzilla::Config::VERSION =~ /^2\.18.*/) {
         # version 2.18.* detected
         $fPatch = "patch-2.18";
@@ -199,22 +154,21 @@ sub doPatch {
         DieWithStyle("No suitable patch detected for your Bugzilla. Patch cannot continue.\n".
                      "Still, there is a chance that a manual patch might work on your installation. Please, check out Testopia's installation manual for details.");
       }
-      
+
       print "Patch file chosen: $fPatch\n\n";
-      
+
       if (isWindows()) {
         $fPatch = "testopia\\".$fPatch;
       } else {
         $fPatch = "testopia/".$fPatch;
       }
     }
-    
-    
+
     # Read the files involved in the patch and put them in @files
     readPatchFiles($fPatch, \@files);
-    
+
     # Now, let's go ahead and run the patch command:
-    
+
     print "Now patching ...\n\n";
 
     my $patchPath = "patch";
@@ -223,22 +177,18 @@ sub doPatch {
     }
 
     my $output;
-        
+
     # Check out if patch is installed:
     $output = `$patchPath -v` || DieWithStyle("Patch failed. Is 'patch' installed and in your path?");
 
-    # Patch doesn't really run yet: --dry-run
-#        print "$patchPath -s --dry-run -bp 1 -i $fPatch 2>&1 \n";
-#    exit;
-    
     $output = `$patchPath -s -l --dry-run -bp 2 -i $fPatch 2>&1`;
 
     # If the output is empty, everything was perfect (the -s argument)
     chomp $output;
     if ($output) {
 
-      # Nop... the patch didn't apply correctly:
-          
+      # Nope... the patch didn't apply correctly:
+
       # Print out the output:
       print $output;
 
@@ -260,52 +210,50 @@ sub doPatch {
                  "> Please, check the documentation. Verify that this version of Bugzilla is supported.\n".
                  "\n".
                  "If you still have problems, please, check out Testopia's installation manual again and, if nothing helps, report the problem to Testopia sourceforge forum at http://sourceforge.net/projects/testopia.");
-      
+
     }
 
     $rollbackPatchOnFail = 1;
-        
+
     #Now let's really run the patch:
     $output = `$patchPath -s -l -z .orig -bp 2 -i $fPatch`;
-    
+
     # If the output is empty, everything was perfect (the -s argument)
     chomp $output;
     if ($output) {
-      
-      # Nop... the patch didn't apply correctly:
-            
+
+      # Nope... the patch didn't apply correctly:
+
       # Print out the output:
       print $output;
-          
+
       DieWithStyle ("\n*** Unexpected condition. Patch failed, but I was pretty sure it should have worked.\n".
         "Try to repeat the installation.\n");
     }
-    
+
     $rollbackPatchOnFail = 0;
-        
+
     print "\nDone.\n";
-        
+
     restorePermissions();
-    
+
     open(MYOUTPUTFILE, ">$patchSuccessFile") or DieWithStyle("Couldn't write file: $patchSuccessFile");
     print MYOUTPUTFILE $VERSION;
     close(MYOUTPUTFILE);
-      
+
     print "\n";
     print "Congratulations, patch worked flawless!\n";
     print "\n";
     print "A backup copy of the modified files has been saved with the .orig sufix.\n";
-    
+
     1;
 }
 
 sub isWindows {
-
   return ($^O eq "MSWin32" || $^O eq "cygwin");
 }
 
 sub SetupPermissions {
-
   if (isWindows()) {
     SetupPermissions_windows();
   } else {
@@ -314,7 +262,6 @@ sub SetupPermissions {
 }
 
 sub SetupPermissions_windows {
-
   print "Running on Windows or Cygwin... skipping permissions...\n";
 }
 
@@ -323,56 +270,246 @@ sub SetupPermissions_unix {
   `chmod 640 tr_*.pl`;
   `chmod 750 tr_install.pl`;
   `chmod 750 testopia`;
-  `chmod 750 testopia/tr_*`;
   `chmod -R 750 testopia/doc`;
   `chmod -R 750 testopia/img`;
   `chmod -R 750 testopia/css`;
   `chmod -R 750 testopia/js`;
-  `chmod -R 750 testopia/dojo-ajax`;
+  `chmod -R 750 testopia/dojo`;
   `chmod -R 750 testopia/scripts`;
   `chmod 770 testopia/temp`;
   if (defined $::webservergroup && ($::webservergroup ne '')) {
-    print "  Webserver group: $::webservergroup\n";
     `chown :$::webservergroup tr_*`;
     `chown :$::webservergroup testopia`;
-    `chown :$::webservergroup testopia/tr_*`;
     `chown -R :$::webservergroup testopia/doc`;
     `chown -R :$::webservergroup testopia/img`;
     `chown -R :$::webservergroup testopia/css`;
     `chown -R :$::webservergroup testopia/js`;
-    `chown -R :$::webservergroup testopia/dojo-ajax`;
+    `chown -R :$::webservergroup testopia/dojo`;
     `chown -R :$::webservergroup testopia/scripts`;
     `chown :$::webservergroup testopia/temp`;
   }
 }
 
 sub UpdateDB {
+    my ($dbh, $rebuild_bz_schema) = (@_);
 
-  my ($dbh) = (@_);
-  
-  my $testRunnerDBPresent = 0;
-  
-  my $qh;
-  
-  $qh = $dbh->prepare("SHOW TABLES LIKE 'test_cases'");
-  $qh->execute;
-  if ($qh->rows) {
-    #assume that the BTR 0.4.5 db was created successfuly
-    $testRunnerDBPresent = 1;
-  }
-  $qh->finish;
-  
-  if ($testRunnerDBPresent) {
-    print "  Testopia database already present.\n";
-    
-    
-  } else {
-    print "  No Testopia database was detected. Need to create it ...\n";
-    
-    #Run the create db script:
-    RunSQLScript('testopia/testopia.create.sql');
-    print "  Done.\n";
-  }
+    if ($rebuild_bz_schema) {
+        $dbh->do("TRUNCATE bz_schema");
+        $dbh->bz_setup_database();
+    }
+
+    $dbh->bz_drop_table('test_case_group_map');
+    $dbh->bz_drop_table('test_category_templates');
+    $dbh->bz_drop_table('test_plan_testers');
+
+    $dbh->bz_drop_column('test_plans', 'editor_id');
+
+    $dbh->bz_add_column('test_case_bugs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1});
+    $dbh->bz_add_column('test_case_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1}, 0);
+    $dbh->bz_add_column('test_case_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
+    $dbh->bz_add_column('test_case_texts', 'setup', {TYPE => 'MEDIUMTEXT'});
+    $dbh->bz_add_column('test_case_texts', 'breakdown', {TYPE => 'MEDIUMTEXT'});
+    $dbh->bz_add_column('test_environments', 'product_id', {TYPE => 'INT2', NOTNULL => 1}, 0);
+    $dbh->bz_add_column('test_environments', 'isactive', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '1'}, 1);
+    $dbh->bz_add_column('test_plan_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
+    $dbh->bz_add_column('test_run_tags', 'userid', {TYPE => 'INT3', NOTNULL => 1}, 0);
+    $dbh->bz_add_column('test_runs', 'default_tester_id', {TYPE => 'INT3'});
+
+    $dbh->bz_alter_column('test_attachment_data', 'attachment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_attachments', 'attachment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_attachments', 'case_id', {TYPE => 'INT4', UNSIGNED => 1});
+    $dbh->bz_alter_column('test_attachments', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
+    $dbh->bz_alter_column('test_attachments', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1});
+    $dbh->bz_alter_column('test_builds', 'build_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_activity', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_bugs', 'case_run_id', {TYPE => 'INT4', UNSIGNED => 1});
+    $dbh->bz_alter_column('test_case_components', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_dependencies', 'blocked', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_dependencies', 'dependson', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_plans', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_plans', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_run_status', 'case_run_status_id', {TYPE => 'TINYSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_runs', 'build_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_runs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_runs', 'case_run_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_runs', 'iscurrent', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '0'});
+    $dbh->bz_alter_column('test_case_runs', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_status', 'case_status_id', {TYPE => 'TINYSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_tags', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_texts', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_case_texts', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
+    $dbh->bz_alter_column('test_cases', 'case_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_environment_map', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_environments', 'environment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_named_queries', 'isvisible', {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 1});
+    $dbh->bz_alter_column('test_plan_activity', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_plan_group_map', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_plan_tags', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_plan_texts', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
+    $dbh->bz_alter_column('test_plan_texts', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_plan_texts', 'plan_text', {TYPE => 'MEDIUMTEXT'});
+    $dbh->bz_alter_column('test_plans', 'plan_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_run_activity', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_run_cc', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_run_tags', 'run_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_runs', 'build_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_runs', 'environment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_runs', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_runs', 'run_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
+    $dbh->bz_alter_column('test_runs', 'start_date', {TYPE => 'DATETIME', NOTNULL => 1});
+
+    $dbh->bz_drop_index('test_case_run_status', 'AI_case_run_status_id');
+    $dbh->bz_drop_index('test_case_run_status', 'sortkey');
+    $dbh->bz_drop_index('test_cases', 'AI_case_id');
+    $dbh->bz_drop_index('test_cases', 'alias');
+    $dbh->bz_drop_index('test_cases', 'case_id');
+    $dbh->bz_drop_index('test_cases', 'case_id_2');
+    $dbh->bz_drop_index('test_cases', 'test_case_requirment_idx');
+    $dbh->bz_drop_index('test_environments', 'environment_id');
+    $dbh->bz_drop_index('test_runs', 'AI_run_id');
+    $dbh->bz_drop_index('test_runs', 'run_id');
+    $dbh->bz_drop_index('test_runs', 'run_id_2');
+    $dbh->bz_drop_index('test_runs', 'test_run_plan_id_run_id__idx');
+
+    $dbh->bz_add_index('test_case_tags', 'case_tags_user_idx', [qw(tag_id userid)]);
+    $dbh->bz_add_index('test_cases', 'test_case_requirement_idx', ['requirement']);
+    $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
+    $dbh->bz_add_index('test_runs', 'test_runs_summary_idx', {FIELDS => ['summary'], TYPE => 'FULLTEXT'});
+
+    if ($dbh->bz_index_info('test_case_tags', 'case_tags_case_id_idx')->{TYPE} eq '') {
+        $dbh->bz_drop_index('test_case_tags', 'case_tags_case_id_idx');
+        $dbh->bz_add_index('test_case_tags', 'case_tags_case_id_idx', {FIELDS => [qw(tag_id case_id)], TYPE => 'UNIQUE'});
+    }
+    if ($dbh->bz_index_info('test_environments', 'environment_name_idx')->{TYPE} eq 'UNIQUE') {
+        $dbh->bz_drop_index('test_environments', 'environment_name_idx');
+        $dbh->bz_add_index('test_environments', 'environment_name_idx', ['name']);
+    }
+
+    populateMiscTables($dbh);
+    populateEnvTables($dbh);
+    migrateEnvData($dbh);
+}
+
+sub populateMiscTables {
+    my ($dbh) = (@_);
+
+    # Insert initial values in static tables. Going out on a limb and
+    # assuming that if one table is empty, they all are.
+    return unless $dbh->selectrow_array("SELECT COUNT(*) FROM test_case_run_status") == 0;
+
+    print "Populating test_case_run_status table ...\n";
+    print "Populating test_case_status table ...\n";
+    print "Populating test_plan_types table ...\n";
+    print "Populating test_fielddefs table ...\n";
+    open FH, "< testopia/testopia.insert.sql" or die;
+    $dbh->do($_) while (<FH>);
+    close FH;
+}
+
+sub populateEnvTables {
+    my ($dbh) = (@_);
+    my $sth;
+    my $ary_ref;
+    my $value;
+
+    return unless $dbh->selectrow_array("SELECT COUNT(*) FROM test_environment_category") == 0;
+    if ($dbh->selectrow_array("SELECT COUNT(*) FROM test_environment_element") != 0) {
+        print STDERR "\npopulateEnv: Fatal Error: test_environment_category " .
+            "is empty but\ntest_environment_element is not. This ought " .
+            "to be impossible.\n\n";
+        return;
+    }
+
+    $dbh->bz_lock_tables(
+        'test_environment_category WRITE',
+        'test_environment_element WRITE',
+        'op_sys READ',
+        'rep_platform READ');
+
+    print "Populating test_environment_category table ...\n";
+    $dbh->do("INSERT INTO test_environment_category " .
+        "(env_category_id, product_id, name) " .
+        "VALUES (1, 0, 'Operating System'), (2, 0, 'Hardware')");
+
+    print "Populating test_environment_element table ...\n";
+    $sth = $dbh->prepare("INSERT INTO test_environment_element " .
+        "(env_category_id, name, parent_id, isprivate) " .
+        "VALUES (?, ?, ?, ?)");
+    $ary_ref = $dbh->selectcol_arrayref("SELECT value FROM op_sys");
+    foreach $value (@$ary_ref) {
+        $sth->execute(1, $value, 0, 0);
+    }
+    $ary_ref = $dbh->selectcol_arrayref("SELECT value FROM rep_platform");
+    foreach $value (@$ary_ref) {
+        $sth->execute(2, $value, 0, 0);
+    }
+
+    $dbh->bz_unlock_tables();
+}
+
+sub migrateEnvData {
+    my ($dbh) = (@_);
+    my $os_mapping;
+    my $platform_mapping;
+    my $ary_ref;
+    my $i;
+
+    return unless $dbh->bz_column_info('test_environments', 'op_sys_id');
+
+    # Map between IDs in op_sys table and IDs in
+    # test_environment_element table.
+    $os_mapping = $dbh->selectall_hashref("SELECT " .
+        "os.id AS op_sys_id, " .
+        "env_elem.element_id AS element_id " .
+        "FROM op_sys os, test_environment_element env_elem " .
+        "WHERE os.value = env_elem.name " .
+        "AND env_elem.env_category_id = 1",
+        'op_sys_id');
+
+    # Map between IDs in rep_platform table and IDs in
+    # test_environment_element table.
+    $platform_mapping = $dbh->selectall_hashref("SELECT " .
+        "platform.id AS rep_platform_id, " .
+        "env_elem.element_id AS element_id " .
+        "FROM rep_platform platform, test_environment_element env_elem " .
+        "WHERE platform.value = env_elem.name " .
+        "AND env_elem.env_category_id = 2",
+        'rep_platform_id');
+
+    $dbh->bz_lock_tables(
+        'test_environment_map WRITE',
+        'test_environments READ');
+    print "Migrating data from test_environments to test_environment_map ...\n";
+    $sth = $dbh->prepare("INSERT INTO test_environment_map " .
+        "(environment_id, property_id, element_id, value_selected) " .
+        "VALUES (?, ?, ?, ?)");
+    $ary_ref = $dbh->selectall_arrayref("SELECT environment_id, op_sys_id " .
+        "FROM test_environments");
+    foreach $i (@$ary_ref) {
+        $sth->execute(@$i[0], 0, $os_mapping->{@$i[1]}->{'element_id'}, '');
+    }
+    $ary_ref = $dbh->selectall_arrayref("SELECT environment_id, rep_platform_id " .
+        "FROM test_environments");
+    foreach $i (@$ary_ref) {
+        $sth->execute(@$i[0], 0, $platform_mapping->{@$i[1]}->{'element_id'}, '');
+    }
+    $dbh->bz_unlock_tables();
+
+    print "Saving data from test_environments.xml column into text files ...\n";
+    $ary_ref = $dbh->selectall_arrayref("SELECT environment_id, name, xml " .
+        "FROM test_environments WHERE xml != ''");
+    foreach $value (@$ary_ref) {
+        open(FH, ">environment_" . @$value[0] . "_xml.txt");
+        print FH "environment ID: @$value[0]\n";
+        print FH "environment name: @$value[1]\n";
+        print FH "environment xml:\n@$value[2]\n";
+        close(FH);
+    }
+
+    $dbh->bz_drop_column('test_environments', 'op_sys_id');
+    $dbh->bz_drop_column('test_environments', 'rep_platform_id');
+    $dbh->bz_drop_column('test_environments', 'xml');
 }
 
 # Copied from checksetup.pl
@@ -383,9 +520,8 @@ sub UpdateDB {
 #
 
 sub tr_AddGroup {
-
   my ($dbh, $name, $desc) = @_;
-  
+
   my ($id) = GroupDoesExist($dbh, $name);
 
   return $id if $id;
@@ -403,18 +539,16 @@ sub tr_AddGroup {
 }
 
 sub GetAdminGroup {
-
   my ($dbh) = @_;
-  
+
   my $sth = $dbh->prepare("SELECT id FROM groups WHERE name = 'admin'");
   $sth->execute();
   my ($adminid) = $sth->fetchrow_array();
-  
+
   return $adminid;
 }
 
 sub tr_AssignAdminGrants {
-
   my ($dbh, $id, $adminid) = @_;
 
   #clean up first:
@@ -422,7 +556,7 @@ sub tr_AssignAdminGrants {
            "WHERE member_id=$adminid AND grantor_id=$id");
 
   #Assign privileges to the admin group over this group:
-  
+
   my $blessColumn;
   my $group_membership;
   my $group_bless;
@@ -436,15 +570,11 @@ sub tr_AssignAdminGrants {
     $group_membership = GROUP_MEMBERSHIP;
     $group_bless = GROUP_BLESS;
   }
-  
+
   # Admins can bless.
   $dbh->do("INSERT INTO group_group_map ".
            "(member_id, grantor_id, $blessColumn) ".
            "VALUES ($adminid, $id," . $group_bless . ")");
-  # Admins can see.
-  #$dbh->do("INSERT INTO group_group_map 
-  #    (member_id, grantor_id, grant_type) 
-  #    VALUES ($adminid, $last," . GROUP_VISIBLE . ")");
   # Admins are initially members.
   $dbh->do("INSERT INTO group_group_map ".
            "(member_id, grantor_id, $blessColumn) ".
@@ -452,7 +582,6 @@ sub tr_AssignAdminGrants {
 }
 
 sub GroupDoesExist {
-
   my ($dbh, $name) = @_;
   my $sth = $dbh->prepare("SELECT id FROM groups WHERE name='$name'");
   $sth->execute;
@@ -463,93 +592,21 @@ sub GroupDoesExist {
   return $id;
 }
 
-sub GetDBConnectionInfo {
-
-  my $my_db_base = 'mysql';
-  # code taken from checksetup.pl:
-  my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
-  my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
-  my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
-  my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
-  my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
-  my $my_db_sock = '';
-  if (defined $main::{'db_sock'}) {
-    $my_db_sock = ${*{$main::{'db_sock'}}{SCALAR}};
-  }
-
-  ($my_db_base, $my_db_host, $my_db_port, $my_db_name,
-   $my_db_user, $my_db_pass, $my_db_sock);
-}
-
-sub DBConnect {
-
-  my ($my_db_base, $my_db_host, $my_db_port, $my_db_name,
-      $my_db_user, $my_db_pass, $my_db_sock) = GetDBConnectionInfo();
-
-  my $dsn = "DBI:$my_db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
-  if ($my_db_sock ne '') {
-    $dsn .= ";mysql_socket=$my_db_sock";
-  }
-  my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
-    || DieWithStyle("Can't connect to the $my_db_base database. Is the database " .
-           "installed and up and running?  Do you have the correct username " .
-           "and password selected in\nlocalconfig?");
-  ($dbh, $my_db_base, $my_db_host, $my_db_port, $my_db_name,
-  $my_db_user, $my_db_sock);
-}
-
-sub DBDisconnect {
-
-  my ($dbh) = (@_);
-  $dbh->disconnect if $dbh;
-}
-
-sub RunSQLScript {
-
-  my ($script) = (@_);
-
-  my ($my_db_base, $my_db_host, $my_db_port, $my_db_name,
-      $my_db_user, $my_db_pass, $my_db_sock) = GetDBConnectionInfo();
-
-  my $cmdline = "mysql -h$my_db_host -P$my_db_port -u $my_db_user $my_db_name -p$my_db_pass";
-  if ($my_db_sock ne '') {
-    $cmdline.= " -S$my_db_sock";
-  }
-  $cmdline.= ' < '.$script;
-  
-  my $output;
-  
-  #Check out that mysql is installed and can be reached:
-  $output = `mysql -V` || DieWithStyle("MySql command failed. Is 'mysql' installed and in your path?");
-
-  $output = `$cmdline 2>&1`;
-  print $output;
-  # If the output is empty, everything was perfect
-  chomp $output;
-  if ($output) {
-    DieWithStyle("Could not create Testopia's tables. See previous errors.");
-  } else {
-    print "    Testopia's tables created successfully.\n";
-  }
-}
-
 sub DieWithStyle {
-
   my($message) = @_;
-  
+
   print "\n$message\n";
 
   if ($rollbackPatchOnFail) {
     rollbackPatch();
   }
-  
+
   die "\nInstall failed. See details above.\n";
 }
 
 sub readPatchFiles {
-
   my($path, $f) = (@_);
-  
+
   open(MYINPUTFILE, "<$path") or DieWithStyle("Couldn't find file: $path");
   while (<MYINPUTFILE>) {
     my $line = $_;
@@ -561,9 +618,8 @@ sub readPatchFiles {
 }
 
 sub rollbackPatch {
+  # Recovered files from the .orig copies made by patch:
 
-  # Recoved files from the .orig copies made by patch:
-  
   print "\n";
   print "Restoring original files ...\n";
   foreach my $file (@files) {
@@ -577,9 +633,8 @@ sub rollbackPatch {
 }
 
 sub restorePermissions {
-
   # Restore permissions from the .orig files:
-  
+
   print "\n";
   print "Recovering original permissions ...\n";
   foreach my $file (@files) {
@@ -593,13 +648,11 @@ sub restorePermissions {
 # http://www.linuxgazette.com/issue87/misc/tips/cpmod.pl.txt
 
 sub perm_cp {
-
   my $perms = perm_get($_[0]);
   perm_set($_[1], $perms);
 }
 
 sub perm_get {
-
   my($filename) = @_;
 
   my @stats = (stat $filename)[2,4,5] or
@@ -609,14 +662,11 @@ sub perm_get {
 }
 
 sub perm_set {
-
   my($filename, $perms) = @_;
 
-  chown($perms->[1], $perms->[2], $filename) or 
+  chown($perms->[1], $perms->[2], $filename) or
     DieWithStyle("Cannot chown $filename ($!)");
 
   chmod($perms->[0] & 07777, $filename) or
     DieWithStyle("Cannot chmod $filename ($!)");
 }
-
-######################################

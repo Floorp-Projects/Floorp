@@ -173,7 +173,8 @@ sub store {
               undef, (undef, $self->{'tag_name'}));
     $key = $dbh->bz_last_key( 'test_tags', 'tag_id' );
     $dbh->bz_unlock_tables();
-
+    
+    $self->{'tag_id'} = $key;
     return $key;
 }
 

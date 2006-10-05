@@ -31,7 +31,7 @@ arguments:
 
 =over 
 
-=item type - one of 'case', 'plan', 'run', or 'caserun'
+=item type - one of 'case', 'plan', 'run', 'caserun', or 'environment'
 
 =item url - the cgi file that is calling this 
 
@@ -134,6 +134,9 @@ sub init {
             }
             elsif ($type eq 'case_run'){
                 $o = Bugzilla::Testopia::TestCaseRun->new($id);
+            }
+            elsif ($type eq 'environment'){
+                $o = Bugzilla::Testopia::Environment->new($id);
             }
             push (@ids, $id);
             push (@list, $o);
@@ -248,7 +251,7 @@ sub save_list {
                       (join(",", $self->{'id_list'}), $self->{'user'}->id, "__". $self->{'type'} ."__"));
         }
         else {
-            $dbh->do("INSERT INTO test_named_queries VALUES(?,?,?,?)", undef,
+            $dbh->do("INSERT INTO test_named_queries (userid, name, isvisible, query) VALUES(?,?,?,?)", undef,
                       ($self->{'user'}->id, "__". $self->{'type'} ."__", 0, join(",", $self->{'id_list'})));
         }
         $dbh->bz_unlock_tables();
@@ -344,8 +347,10 @@ sub get_next{
 ###############################
 
 sub list       { return $_[0]->{'list'};       }
+sub id_list    { return $_[0]->{'id_list'};       }
 sub list_count { return $_[0]->{'list_count'}; }
 sub page       { return $_[0]->{'page'}; }
+sub url_loc    { return $_[0]->{'url_loc'}; }
 
 =head2 page_size
 
@@ -403,6 +408,21 @@ sub get_url {
     $qstring = $self->{'url_loc'} ."?". $qstring;
     $self->{'url'} = $qstring;
     return $self->{'url'};
+}
+
+sub get_query_part {
+    my $self = shift;
+    my $cgi = $self->{'cgi'};
+    my @keys = $cgi->param;
+    my $qstring;
+    foreach my $key (@keys){
+        my @vals = $cgi->param($key);
+        foreach my $val (@vals){
+            $qstring .= $key ."=". $val ."&";
+        }
+    }
+    chop $qstring;
+    return $qstring
 }
 
 =head2 page_count

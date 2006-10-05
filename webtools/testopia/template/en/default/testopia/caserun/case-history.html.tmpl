@@ -33,23 +33,30 @@ Select:
 <table width="100%">
   <tr class="bz_row_header">
     [% IF dotweak %]<th></th>[% END %]
-    [% IF dotweak %]<th><a href="[% link %]case_id">Case</a></th>[% END %]
+    [% IF dotweak %]<th><a href="[% link %]case_id">Case</a></th>
+    <th><a href="[% link %]summary">Case Summary</a></th>
+    [% END %]
     <th><a href="[% link %]run_id">Run</a></th>
     <th><a href="[% link %]build">Build</a></th>
+    <th><a href="[% link %]environment">Environment</a></th>
     <th><a href="[% link %]assignee">Assigned</a></th>
     <th><a href="[% link %]testedby">Tested by</a></th>
     <th><a href="[% link %]close_date">Close&nbsp;date</a></th>
     <th><a href="[% link %]case_run_status">Status</a></th>
+    <th><a href="[% link %]priority">Priority</a></th>
     <th><a href="[% link %]category">Category</a></th>
     <th>Bugs</th>
   </tr>
 [% FOREACH caserun = table.list %]
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" [% IF NOT dotweak %]style="cursor:pointer;" onclick="location='tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]'" [% END%]>
   [% IF dotweak %]<td align="center"><input type="checkbox" id="r_[% caserun.id FILTER none %]" name="r_[% caserun.id FILTER none %]" /></td> [% END %]
-  [% IF dotweak %]<td align="center"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>[% END %]
+  [% IF dotweak %]<td align="center"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
+  <td>[% caserun.case.summary FILTER html %]</td>
+  [% END %]
     <td align="center"><a href="tr_show_run.cgi?run_id=[% caserun.run.id FILTER none %]&case_id=[% caserun.case.id FILTER none %]"
       title="[% caserun.run.summary FILTER html %]">[% caserun.run.id FILTER html %]</a></td>
     <td>[% caserun.build.name FILTER html %]</td>
+    <td>[% caserun.environment.name FILTER html %]</td>
     <td>[% caserun.assignee.login FILTER html %]</td>
     <td>[% caserun.testedby.login FILTER html %]</td>
     <td>[% caserun.close_date FILTER html %]</td>
@@ -60,6 +67,7 @@ Select:
         alt="[% caserun.status FILTER none %]"
         width="14" height="14"
         border="0" /></a></td>
+    <td>[% caserun.case.priority FILTER html %]</td>
     <td>[% caserun.case.category.name FILTER html %]</td>
     <td align="center">
     [% IF caserun.bug_count %]

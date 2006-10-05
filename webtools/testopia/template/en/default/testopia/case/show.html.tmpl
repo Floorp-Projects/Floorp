@@ -41,17 +41,15 @@
 
 <script src="testopia/js/util.js" type="text/javascript"></script>
 <script src="testopia/js/tags.js" type="text/javascript"></script>
-<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
 <script type="text/javascript">
-    function addOption(selectElement,newOption) {
-      try {
-        selectElement.add(newOption,null);
-      }
-      
-      catch (e) {
-        selectElement.add(newOption,selectElement.length);
-      }
-    }
+  djConfig = {
+    parseWidgets: false,
+    searchIds: ["tcaction", "tceffect", "tcsetup", "tcbreakdown"]
+  };
+</script>
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+
     function fillSelects (data){
         var xmldocroot = data.documentElement;
         var selected = xmldocroot.getElementsByTagName('selected');
@@ -99,6 +97,8 @@
 
 [% PROCESS testopia/case/navigate.html.tmpl %]
 
+[% requirement = case.requirement FILTER html %]
+
 [%##### Overview #####%]
 [% IF copied %]
 <h3>Case copied from test case [% copied.id FILTER none %]</h3>
@@ -117,7 +117,7 @@
       </tr>
     <tr class="bz_row_data">
       <td>[% case.alias FILTER html %]</td>
-      <td>[% case.requirement FILTER html %]</td>
+      <td>[% requirement FILTER quoteUrls %]</td>
       <td>[% case.creation_date FILTER time %]</td>
       </tr>
     <tr class="bz_row_header">
@@ -149,7 +149,11 @@
     <tr class="bz_row_data">
       <td>
       [% FOREACH plan = case.plans %]
-        <a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">[% plan.id FILTER none %]: [% plan.name FILTER html %]</a><br/>
+        <a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">[% plan.id FILTER none %]: [% plan.name FILTER html %]</a>
+        [% IF case.can_unlink_plan(plan.id) %]
+        <a href="tr_show_case.cgi?action=unlink&plan_id=[% plan.id FILTER none %]&case_id=[% case.id FILTER none %]"><img src="testopia/img/del.gif" alt="Unlink Test Plan" /></a>
+        [% END %]
+        <br/>
       [% END %]
       </td>
       <td>
@@ -232,6 +236,15 @@
    type = "case"   
 %]
 </div>
+[% #### Bugs ####%]
+<br><br>
+<h3>Bugs</h3>
+<div id="bugs">
+[% PROCESS testopia/case/bugs.html.tmpl
+   item = case
+   type = "case"   
+%]
+</div>
 [%##### Edit Case #####%]
 <br><br>
 [% IF case.canedit %]
@@ -242,12 +255,18 @@
 [% ELSE %]
 [%##### Case Document #####%]
 <br><br>
-<h3>Action</h3>
+<h3>Setup</h3>
 <div id="case_docs">
-    [% case.text.action %]
+    [% case.text.setup FILTER quoteUrls %]
+<br><br>
+<h3>Breakdown</h3>
+    [% case.text.breakdown FILTER quoteUrls %]
+<br><br>
+<h3>Action</h3>
+    [% case.text.action FILTER quoteUrls %]
 <br><br>
 <h3>Expected Results</h3>
-    [% case.text.effect %]
+    [% case.text.effect FILTER quoteUrls %]
 </div>
 
 [% END %]

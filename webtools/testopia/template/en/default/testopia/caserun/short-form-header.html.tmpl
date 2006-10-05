@@ -44,8 +44,9 @@
                            events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
      %]
     </td>
+    <td align="left" valign="top"><input name="env_[% index %]" id="env_[% index %]" size="5" value="[% caserun.environment_id FILTER none %]"><a href="tr_query.cgi?current_tab=environment" target="blank"><img src="testopia/img/env_lookup.png" align="middle"></a>&nbsp;<image src="testopia/img/confirm.png" align="middle" onClick='chEnv([% index %], document.getElementById("env_[% index %]").value, "[% caserun.status %]", [% caserun.id %], [% caserun.environment_id %])' style="cursor:pointer"></td>
 
-    <td align="left" valign="top"><span id="own[% index %]"><a href="mailto:[% caserun.testedby.login %]">[% caserun.assignee.login %]</a></span></td>
+    <td align="left" valign="top"><span id="own[% index %]"><a href="mailto:[% caserun.assignee.login %]">[% caserun.assignee.login %]</a></span></td>
     <td align="left" valign="top"><span id="tdb[% index %]"><a href="mailto:[% caserun.testedby.login %]">[% caserun.testedby.login %]</a></span></td>
     <td align="left" valign="top">
       <span id="cld[% index %]">[% caserun.close_date FILTER time %]      </span>
@@ -58,5 +59,6 @@
         width="14" height="14"/>
       </span>
     </td>
-    <td align="left" valign="top">[% caserun.case.category.name %]</td>
+    <td align="left" valign="top">[% caserun.case.priority FILTER html %]</td>
+    <td align="left" valign="top">[% caserun.case.category.name FILTER html %]</td>
     <td align="center" valign="top"><span id="nbgs[% index %]">[% IF caserun.bug_count %]<a href="buglist.cgi?bug_id=[% caserun.get_buglist %]">[% caserun.bug_count %]</a>[% ELSE %][% caserun.bug_count %][% END %]</span></td>

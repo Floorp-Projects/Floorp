@@ -21,26 +21,28 @@
 [%# INTERFACE:
   # ...
   #%]
+  
+[% link = "${table.get_order_url}&order=" %]
 
-<table>
+[% DECORATIVE_BORDER_BEGIN %] 
+<table width="400">
   <tr class="bz_row_header">
-    <th>ID</th>
-    <th>Name</th>
-    <th>OS</th>
-    <th>Platform</th>
-    <th>Runs</th>
-    <th>Actions</th>
+    <th><a href="[% link %]environment_id">ID</a></th>
+    <th><a href="[% link %]name">Name</th>
+    <th><a href="[% link %]product">Product</th>
   </tr>
-[% FOREACH env = environments %]
-  <tr>
-     <td><a href="tr_environment.cgi?env_id=[% env.id FILTER none %]&action=edit">[% env.id FILTER html %]</a></td>
-     <td>[% env.name FILTER html %]</td>
-     <td>[% env.op_sys FILTER html %]</td>
-     <td>[% env.rep_platform FILTER html %]</td>
-     <td align="center"><a href="tr_list_runs.cgi?run_id=[% env.get_run_list FILTER none %]">[% env.get_run_count(1) FILTER none %]</a></td>
-     <td align="center">
-         <a href="tr_environment.cgi?env_id=[% env.id FILTER none %]&action=delete">Delete</a>
-     </td>
-   </tr>
-[% END %]
+  [% FOREACH env = table.list %]
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" onclick="sr([% loop.count %]);">
+    <td align="center"><a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]">[% env.id FILTER none %]</a></td>
+    <td>[% env.name FILTER none %]</td>
+    <td>[% env.product.name FILTER none %]</td>
+  </tr>
+  [% END %]
 </table>
+  [% IF NOT table.viewall %]
+    [% PROCESS navigation %]
+  [% END %]
+[% DECORATIVE_BORDER_END %] 
+
+<br>
+<a href="tr_new_environment.cgi">Create a New Environment</a>

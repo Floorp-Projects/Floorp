@@ -50,16 +50,60 @@ sub builds {
     
     my $ref = $dbh->selectcol_arrayref(
                    "SELECT build_id 
-                    FROM test_builds tb 
-                    JOIN test_plans tp ON tb.plan_id = tp.plan_id
-                    WHERE tp.product_id = ?",
+                    FROM test_builds 
+                    WHERE product_id = ?",
                     undef, $self->{'id'});
     my @objs;
     foreach my $id (@{$ref}){
         push @objs, Bugzilla::Testopia::Build->new($id);
     }
-    $self->{'build'} = \@objs;
-    return $self->{'build'};
+    $self->{'builds'} = \@objs;
+    return $self->{'builds'};
+}
+
+sub categories {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ref = $dbh->selectcol_arrayref(
+                   "SELECT category_id 
+                    FROM test_case_categories 
+                    WHERE product_id = ?",
+                    undef, $self->{'id'});
+    my @objs;
+    foreach my $id (@{$ref}){
+        push @objs, Bugzilla::Testopia::Category->new($id);
+    }
+    $self->{'categories'} = \@objs;
+    return $self->{'categories'};
+}
+
+sub environment_categories {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ref = $dbh->selectcol_arrayref(
+                   "SELECT env_category_id 
+                    FROM test_environment_category 
+                    WHERE product_id = ?",
+                    undef, $self->id);
+    my @objs;
+    foreach my $id (@{$ref}){
+        push @objs, Bugzilla::Testopia::Environment::Category->new($id);
+    }
+    $self->{'environment_categories'} = \@objs;
+    return $self->{'environment_categories'};
+}
+
+sub check_product_by_name {
+    my $self = shift;
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    my ($used) = $dbh->selectrow_array(qq{
+    	SELECT id 
+		  FROM products
+		  WHERE name = ?},undef,$name);
+    return $used;  
 }
 
 1;

@@ -40,8 +40,12 @@
 <script src="testopia/js/util.js" type="text/javascript"></script>
 
 [% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/search/variables.none.tmpl %]
 
 [% PROCESS testopia/messages.html.tmpl %]
+
+[% PROCESS testopia/case/filter.html.tmpl %]
+ 
 <form id="table" method="post" action="tr_new_run.cgi">
 <h3>Select Test Cases</h3>
 [% PROCESS testopia/case/table.html.tmpl 

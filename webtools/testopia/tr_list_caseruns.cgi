@@ -70,8 +70,13 @@ if ($action eq 'Commit'){
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
         my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));
-        my $notes    = $cgi->param('notes');        
+        my $notes    = $cgi->param('notes');
+        my $env      = $cgi->param('caserun_env') eq '--Do Not Change--' ? $caserun->environment->id : $cgi->param('caserun_env');
         
+        validate_test_id($build, 'build');
+        validate_test_id($env, 'environment');
+        
+        detaint_natural($env);
         detaint_natural($build);
         detaint_natural($status);
         trick_taint($notes);
@@ -79,6 +84,7 @@ if ($action eq 'Commit'){
         foreach my $bug (@buglist){
             $caserun->attach_bug($bug);
         }
+        
         my $testedby;
         my $close_date;
         if ($caserun->is_closed_status($status)){
@@ -91,11 +97,12 @@ if ($action eq 'Commit'){
             'close_date' => $close_date,
             'case_run_status_id' => $status,
             'build_id' => $build,
+            'environment_id' => $env,
         );
         $caserun->update(\%newfields);
-        $caserun->set_note($notes, 1);
+        $caserun->append_note($notes);
     }
-    $vars->{'title'} = "Update Susccessful";
+    $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = scalar @caseruns . ' Test Case-Runs Updated';
     
     if ($cgi->param('run_id')){
@@ -110,6 +117,7 @@ if ($action eq 'Commit'){
         $vars->{'run'} = $run;
         $vars->{'table'} = $table;
         $vars->{'action'} = 'Commit';
+        $vars->{'form_action'} = "tr_show_run.cgi";
         $template->process("testopia/run/show.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
         
@@ -124,7 +132,6 @@ if ($action eq 'Commit'){
     exit;
 }
 # Take the search from the URL params and convert it to SQL
-$cgi->delete('build');
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_list_caseruns.cgi', $cgi, undef, $search->query);
@@ -148,6 +155,8 @@ if ($table->list_count > 0){
 if ($cgi->param('run_id')){
     $vars->{'run'} = Bugzilla::Testopia::TestRun->new($cgi->param('run_id'));
 }
+my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
+$vars->{'component_list'} =  $case->get_available_components();
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';

@@ -23,12 +23,14 @@ use strict;
 use lib ".";
 
 use Bugzilla;
-use Bugzilla::Constants;
-use Bugzilla::Error;
+use Bugzilla::Bug;
 use Bugzilla::Util;
+use Bugzilla::Error;
+use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::TestCaseRun;
+use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Attachment;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
@@ -167,6 +169,7 @@ elsif ($action eq 'Attach'){
     do_update($case);
     display($case);
 }
+
 elsif ($action eq 'Commit'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
@@ -186,6 +189,35 @@ elsif ($action eq 'History'){
     $template->process("testopia/case/history.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
        
+}
+
+elsif ($action eq 'unlink'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $plan_id = $cgi->param('plan_id');
+    validate_test_id($plan_id, 'plan');
+    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    if ($case->unlink_plan($plan_id)){
+        $vars->{'tr_message'} = "Test plan successfully unlinked";
+    }
+    else {
+        $vars->{'tr_error'} = "Test plan could not be unlinked. It is used in test runs.";
+    }
+    display($case);
+}
+
+elsif ($action eq 'detach_bug'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
+    my @buglist;
+    foreach my $bug (split(/[\s,]+/, $cgi->param('bug_id'))){
+        ValidateBugID($bug);
+        push @buglist, $bug;
+    }
+    foreach my $bug (@buglist){
+        $case->detach_bug($bug);
+    }
+    display(Bugzilla::Testopia::TestCase->new($case_id));
 }
 
 ####################
@@ -227,14 +259,14 @@ sub get_components_xml {
     foreach my $c (@{$case->components}){
         $ret .= "<selected>";
         $ret .= "<id>". $c->{'id'} ."</id>";
-        $ret .= "<name>". $c->{'name'} ."</name>";
+        $ret .= "<name>". xml_quote($c->{'name'}) ."</name>";
         $ret .= "</selected>";
     }
 
     foreach my $c (@{$case->get_selectable_components}){
         $ret .= "<nonselected>";
         $ret .= "<id>". $c->{'id'} ."</id>";
-        $ret .= "<name>". $c->{'name'} ."</name>";
+        $ret .= "<name>". xml_quote($c->{'name'}) ."</name>";
         $ret .= "</nonselected>";
     }
   
@@ -246,6 +278,8 @@ sub do_update{
     my ($case) = @_;
     my $newtcaction = $cgi->param("tcaction");
     my $newtceffect = $cgi->param("tceffect");
+    my $newtcsetup  = $cgi->param("tcsetup") || '';
+    my $newtcbreakdown = $cgi->param("tcbreakdown") || '';
     my $alias       = $cgi->param('alias')|| '';
     my $category    = $cgi->param('category');
     my $status      = $cgi->param('status');
@@ -263,8 +297,6 @@ sub do_update{
     }
 
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'})  if $summary  eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Action'}) if $newtcaction eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'Case Expected Results'}) if $newtceffect eq '';
     
     detaint_natural($status);
     detaint_natural($category);
@@ -279,11 +311,19 @@ sub do_update{
     trick_taint($requirement);
     trick_taint($newtcaction);
     trick_taint($newtceffect);
+    trick_taint($newtcbreakdown);
+    trick_taint($newtcsetup);
     trick_taint($tcdependson);
     trick_taint($tcblocks);
 
     validate_selection($category, 'category_id', 'test_case_categories');
     validate_selection($status, 'case_status_id', 'test_case_status');
+    
+    my @buglist;
+    foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
+        ValidateBugID($bug);
+        push @buglist, $bug;
+    }
     
     ThrowUserError('testiopia-alias-exists', 
         {'alias' => $alias}) if $case->check_alias($alias);
@@ -291,8 +331,8 @@ sub do_update{
         {'field' => 'isautomated', 'value' => $isautomated }) 
             if ($isautomated !~ /^[01]$/);
             
-    if($case->diff_case_doc($newtcaction, $newtceffect) ne ''){
-        $case->store_text($case->id, Bugzilla->user->id, $newtcaction, $newtceffect);
+    if($case->diff_case_doc($newtcaction, $newtceffect, $newtcsetup, $newtcbreakdown) ne ''){
+        $case->store_text($case->id, Bugzilla->user->id, $newtcaction, $newtceffect, $newtcsetup, $newtcbreakdown);
     }
 
     my %newvalues = ( 
@@ -309,6 +349,17 @@ sub do_update{
     );
     $case->update(\%newvalues);
     $case->update_deps($cgi->param('tcdependson'), $cgi->param('tcblocks'));
+    # Add new tags 
+    foreach my $tag_name (split(/[\s,]+/, $cgi->param('newtag'))){
+        trick_taint($tag_name);
+        my $tag = Bugzilla::Testopia::TestTag->new({tag_name => $tag_name});
+        my $tag_id = $tag->store;
+        $case->add_tag($tag_id);
+    }
+    # Attach bugs
+    foreach my $bug (@buglist){
+        $case->attach_bug($bug);
+    }
     $cgi->delete_all;
     $cgi->param('case_id', $case->id);
 }

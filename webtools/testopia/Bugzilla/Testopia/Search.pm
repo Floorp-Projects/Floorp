@@ -133,9 +133,10 @@ sub init {
     my $type;
     
     my $obj = trim($cgi->param('current_tab')) || ThrowUserError('testopia-missing-parameter', {'param' => 'current_tab'});
-    ThrowUserError('unknown-tab') if $obj !~ '^(case|plan|run|case_run)$';
+    ThrowUserError('unknown-tab') if $obj !~ '^(case|plan|run|case_run|environment)$';
     trick_taint($obj);
 
+    # Set up tables for field sort order
     my $order = $cgi->param('order') || '';
     if ($order eq 'author') {        
         push @supptables, "INNER JOIN profiles as map_author ON map_author.userid = test_". $obj ."s.author_id";
@@ -158,7 +159,7 @@ sub init {
         push @orderby, 'map_tester.login_name';
     }
     elsif ($order eq 'product') {        
-        push @supptables, "INNER JOIN products ON products.id = test_". $obj ."s.product_id";
+        push @supptables, "LEFT JOIN products ON products.id = test_". $obj ."s.product_id";
         push @orderby, 'products.name';
     }
     elsif ($order eq 'build') {        
@@ -178,6 +179,9 @@ sub init {
         push @orderby, 'versions.value';
     }
     elsif ($order eq 'priority') {
+        if ($obj eq 'case_run'){
+            push @supptables, "INNER JOIN test_cases ON test_cases.case_id = test_case_runs.case_id";
+        }
         push @supptables, "INNER JOIN priority ON priority.id = test_cases.priority_id";
         push @orderby, 'test_cases.priority_id';
     }
@@ -201,7 +205,13 @@ sub init {
         push @orderby, 'case_status.name';
     }
     elsif ($order eq 'summary') {
-        push @orderby, 'test_'. $obj .'s.summary';
+        if ($obj eq 'case_run'){
+            push @supptables, "INNER JOIN test_cases AS cases ON cases.case_id = test_case_runs.case_id";
+            push @orderby, 'cases.summary';
+        }
+        else{            
+            push @orderby, 'test_'. $obj .'s.summary';
+        }
     }
     elsif ($order eq 'created') {
         push @orderby, 'test_'. $obj .'s.creation_date';
@@ -215,6 +225,7 @@ sub init {
             push @orderby, 'test_'. $obj .'s.' . $order;
         }
     }
+    
     my @funcdefs =
     (
          "^category," => sub {
@@ -250,12 +261,71 @@ sub init {
                $f = "plan_texts.plan_text";
          },
          "^environment," => sub {
+               if ($obj eq 'case_run'){
+                  $f = "environment_id";
+               }
+               else{
+                   push(@supptables,
+                          "LEFT JOIN test_environments AS env " .
+                          "ON test_runs.environment_id = env.environment_id");
+                   $f = "env.xml";
+               }
+         },
+         "^env_products," => sub {
+             print STDERR "THIS IS HERE";
                push(@supptables,
-                      "LEFT JOIN test_environments AS env " .
-                      "ON test_runs.environment_id = env.environment_id");
-               $f = "env.xml";
+                    "INNER JOIN products as env_products
+                     ON test_environments.product_id = env_products.id");
+               $f = 'env_products.id'      
+         },
+         "^env_categories," => sub {
+               push(@supptables,
+                    "INNER JOIN test_environment_map as env_map_categories
+                     ON test_environments.environment_id = env_map_categories.environment_id");
+               push(@supptables,
+                    "INNER JOIN test_environment_element as env_element
+                     ON env_map_categories.element_id = env_element.element_id");
+               push(@supptables,
+                    "INNER JOIN test_environment_category as env_categories
+                     ON env_element.env_category_id = env_categories.env_category_id");
+               $f = 'env_categories.env_category_id'      
+         },
+         "^env_elements," => sub {
+               push(@supptables,
+                    "INNER JOIN test_environment_map as env_map_elements
+                     ON test_environments.environment_id = env_map_elements.environment_id");
+               push(@supptables,
+                    "INNER JOIN test_environment_element as env_element
+                     ON env_map_elements.element_id = env_element.element_id");
+               $f = 'env_element.element_id'      
+         },
+         "^env_properties," => sub {
+               push(@supptables,
+                    "INNER JOIN test_environment_map as env_map_properties
+                     ON test_environments.environment_id = env_map_properties.environment_id");
+               push(@supptables,
+                    "INNER JOIN test_environment_property as env_property
+                     ON env_map_properties.property_id = env_property.property_id");
+               $f = 'env_property.property_id'      
+         },
+         "^env_expressions," => sub {
+               push(@supptables,
+                    "INNER JOIN test_environment_map as env_map_value
+                     ON test_environments.environment_id = env_map_value.environment_id");
+               $f = 'env_map_value.value_selected'      
+         },
+         "^env_value_selected," => sub {
+               push(@supptables,
+                    "INNER JOIN test_environment_map as env_map_value_selected
+                     ON test_environments.environment_id = env_map_value_selected.environment_id");
+               $f = 'env_map_value_selected.value_selected'      
          },
          "^component," => sub {
+               if ($obj eq 'case_run'){
+                    push(@supptables,
+                        "INNER JOIN test_cases 
+                         ON test_cases.case_id = test_case_runs.case_id");
+               }
                push(@supptables,
                       "INNER JOIN test_case_components AS tc_components " .
                       "ON test_cases.case_id = tc_components.case_id");
@@ -263,6 +333,22 @@ sub init {
                       "INNER JOIN components ".
                       "ON components.id = tc_components.component_id");
                $f = "components.name";
+         },
+         "^priority_id," => sub {
+               if ($obj eq 'case_run'){
+                    push(@supptables,
+                        "INNER JOIN test_cases 
+                         ON test_cases.case_id = test_case_runs.case_id");
+               }
+               $f = "test_cases.priority_id";
+         },
+         "^isautomated," => sub {
+               if ($obj eq 'case_run'){
+                    push(@supptables,
+                        "INNER JOIN test_cases 
+                         ON test_cases.case_id = test_case_runs.case_id");
+               }
+               $f = "test_cases.isautomated";
          },
          "^milestone," => sub {
                push(@supptables,
@@ -282,13 +368,33 @@ sub init {
                       "ON case_bugs.bug_id = bugs.bug_id");
                $f = "bugs.bug_id";
          },
+         "^case_summary," => sub {
+               push(@supptables,
+                      "INNER JOIN test_cases AS cases " .
+                      "ON cases.case_id = test_case_runs.case_id");
+               $f = "cases.summary";
+         },
+         
          "^tags," => sub {
-               push(@supptables,
-                      "INNER JOIN test_". $obj ."_tags  AS ". $obj ."_tags " .
-                      "ON test_". $obj ."s.". $obj ."_id = ". $obj ."_tags.". $obj ."_id");
-               push(@supptables,
-                      "INNER JOIN test_tags " .
-                      "ON ". $obj ."_tags.tag_id = test_tags.tag_id");
+               if ($obj eq 'case_run'){
+                   push(@supptables,
+                      "INNER JOIN test_cases " .
+                      "ON test_case_runs.case_id = test_cases.case_id");
+                   push(@supptables,
+                      "INNER JOIN test_case_tags  AS case_tags " .
+                      "ON test_cases.case_id = case_tags.case_id");
+                   push(@supptables,
+                       "INNER JOIN test_tags " .
+                       "ON case_tags.tag_id = test_tags.tag_id");
+               }
+               else{
+                   push(@supptables,
+                          "INNER JOIN test_". $obj ."_tags  AS ". $obj ."_tags " .
+                          "ON test_". $obj ."s.". $obj ."_id = ". $obj ."_tags.". $obj ."_id");
+                   push(@supptables,
+                          "INNER JOIN test_tags " .
+                          "ON ". $obj ."_tags.tag_id = test_tags.tag_id");
+                   }
                $f = "test_tags.tag_name";
          },
          "^case_plan_id," => sub {
@@ -324,17 +430,28 @@ sub init {
                       "ON test_plans.product_id = products.id");
                $f = "test_plans.product_id";
          },
-         "^(author|editor|manager|default_tester)," => sub {
+         "^(author|manager|default_tester)," => sub {
                push(@supptables,
                       "INNER JOIN profiles AS map_$1 " . 
                       "ON test_". $obj ."s.". $1 ."_id = map_$1.userid");
-               $f = "map_$1.login_name";               
+               $f = "map_$1.login_name"; 
          },
          "^(assignee|testedby)," => sub {
-               push(@supptables,
+               if ($obj eq 'run'){
+                   push(@supptables,
+                      "LEFT JOIN test_case_runs AS case_run " . 
+                      "ON case_run.run_id = test_runs.run_id");
+                   push(@supptables,
+                      "INNER JOIN profiles AS map_$1 " . 
+                      "ON case_run.". $1 ." = map_$1.userid");
+               }
+               else {
+                   push(@supptables,
                       "INNER JOIN profiles AS map_$1 " . 
                       "ON test_". $obj ."s.". $1 ." = map_$1.userid");
+               }
                $f = "map_$1.login_name";
+               
          },
          ",isnotnull" => sub {
              $term = "$ff is not null";
@@ -409,22 +526,46 @@ sub init {
 
     if ($cgi->param('case_id')) {
         my $type = "anyexact";
-        if ($cgi->param('caseidtype') && $cgi->param('caseidtype') eq 'exclude') {
-            $type = "nowords";
+        if ($cgi->param('caseidtype'))
+        {
+        	if ($cgi->param('caseidtype') eq 'exclude') 
+        	{
+            	$type = "nowords";
+        	}
+            else
+            {
+            	$type = $cgi->param('caseidtype')
+            } 
         }
         push(@specialchart, ["case_id", $type, join(',', $cgi->param('case_id'))]);
     }
     if ($cgi->param('run_id')) {
         my $type = "anyexact";
-        if ($cgi->param('runidtype') && $cgi->param('runidtype') eq 'exclude') {
-            $type = "nowords";
+        if ($cgi->param('runidtype'))
+        {
+        	if ($cgi->param('runidtype') eq 'exclude') 
+        	{
+            	$type = "nowords";
+        	}
+            else
+            {
+            	$type = $cgi->param('runidtype')
+            } 
         }
         push(@specialchart, ["run_id", $type, join(',', $cgi->param('run_id'))]);
     }
     if ($cgi->param('plan_id')) {
         my $type = "anyexact";
-        if ($cgi->param('planidtype') && $cgi->param('planidtype') eq 'exclude') {
-            $type = "nowords";
+        if ($cgi->param('planidtype'))
+        {
+        	if ($cgi->param('planidtype') eq 'exclude') 
+        	{
+            	$type = "nowords";
+        	}
+            else
+            {
+            	$type = $cgi->param('planidtype')
+            } 
         }
         if ($obj eq 'case'){
             push(@specialchart, ["case_plan_id", $type, join(',', $cgi->param('plan_id'))]);
@@ -469,7 +610,8 @@ sub init {
     my @legal_fields = ("case_status_id", "category", "priority_id",
                         "component", "isautomated", "case_run_status_id",
                         "default_product_version", "type_id", 
-                        "build", "environment_id", "milestone");
+                        "build", "environment_id", "milestone", "env_products",
+                        "env_categories", "env_elements", "env_properties", "env_expressions");
 
     foreach my $field ($cgi->param()) {
         if (lsearch(\@legal_fields, $field) != -1) {
@@ -509,7 +651,7 @@ sub init {
     }
     # Check for author
     my @clist;
-    foreach my $profile ("author", "editor", "manager", "default_tester", 
+    foreach my $profile ("author", "manager", "default_tester", 
                          "assignee", "testedby"){
         $t = $cgi->param($profile . "_type") || '';
         if ($t eq "exact") {
@@ -535,9 +677,9 @@ sub init {
     }
     
     # check static text fields
-    foreach my $f ("summary", "tcaction", "tceffect", "script",
+    foreach my $f ("case_summary", "summary", "tcaction", "tceffect", "script",
                    "requirement", "name", "plan_text", "environment",
-                   "notes") {
+                   "notes", "env_value_selected") {
         if (defined $cgi->param($f)) {
             my $s = trim($cgi->param($f));
             if ($s ne "") {
@@ -557,6 +699,7 @@ sub init {
             push @wherepart, 'test_case_runs.iscurrent = 1';
         }
     }
+
     my @funcnames;
     while (@funcdefs) {
         my $key = shift(@funcdefs);

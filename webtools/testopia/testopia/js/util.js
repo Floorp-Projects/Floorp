@@ -1,5 +1,15 @@
 var _disable_sr=false;
 
+function addOption(selectElement,newOption) {
+  try {
+    selectElement.add(newOption,null);
+  }
+  
+  catch (e) {
+    selectElement.add(newOption,selectElement.length);
+  }
+}
+
 function coal() {
   for(var i=1;;i++) {
     var ra = document.getElementById('ra'+i);
@@ -189,4 +199,3 @@ function nb(obj) {
   //obj.rows=1;
   obj.style.height='20px';
 }
-
