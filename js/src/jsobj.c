@@ -178,7 +178,10 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     pobj = JSVAL_TO_OBJECT(*vp);
     if (pobj) {
         clasp = OBJ_GET_CLASS(cx, pobj);
-        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        if (clasp == &js_CallClass || clasp == &js_BlockClass) {
+            /* Censor activations and lexical scopes per ECMA-262. */
+            *vp = JSVAL_NULL;
+        } else if (clasp->flags & JSCLASS_IS_EXTENDED) {
             xclasp = (JSExtendedClass *) clasp;
             if (xclasp->outerObject) {
                 pobj = xclasp->outerObject(cx, pobj);
