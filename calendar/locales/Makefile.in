@@ -209,9 +209,9 @@ langpack-%:
 installers-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) langpack-$*
-#ifeq (WINNT,$(OS_ARCH))
-#	@$(MAKE) repackage-win32-installer-$*
-#endif
+ifeq (WINNT,$(OS_ARCH))
+	@$(MAKE) repackage-win32-installer-$*
+endif
 	@$(MAKE) repackage-zip-$*
 
 #ifdef MOZ_UPDATER
