@@ -5969,6 +5969,9 @@ xml_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *pobj;
     JSProperty *prop;
 
+    if (!JS_InstanceOf(cx, obj, &js_XMLClass, argv))
+        return JS_FALSE;
+
     name = argv[0];
     if (!HasProperty(cx, obj, name, &pobj, &prop))
         return JS_FALSE;
