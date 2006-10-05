@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=80:
+ * vim: set sw=4 ts=8 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -805,14 +805,12 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
-typedef struct HSortArgs {
-    void         *vec;
+typedef struct MSortArgs {
     size_t       elsize;
-    void         *pivot;
     JSComparator cmp;
     void         *arg;
     JSBool       fastcopy;
-} HSortArgs;
+} MSortArgs;
 
 static JSBool
 sort_compare(void *arg, const void *a, const void *b, int *result);
@@ -820,111 +818,142 @@ sort_compare(void *arg, const void *a, const void *b, int *result);
 static int
 sort_compare_strings(void *arg, const void *a, const void *b, int *result);
 
+/* Helper function for js_MergeSort. */
 static JSBool
-HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
+MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
 {
-    void *pivot, *vec, *vec2, *arg, *a, *b;
-    size_t elsize;
+    void *arg, *a, *b, *c;
+    size_t elsize, runtotal;
+    int cmp_result;
     JSComparator cmp;
     JSBool fastcopy;
-    size_t j, hiDiv2;
-    int cmp_result;
 
-    pivot = hsa->pivot;
-    vec = hsa->vec;
-    elsize = hsa->elsize;
-    vec2 =  (char *)vec - 2 * elsize;
-    cmp = hsa->cmp;
-    arg = hsa->arg;
+    runtotal = run1 + run2;
 
-    fastcopy = hsa->fastcopy;
-#define MEMCPY(p,q,n) \
-    (fastcopy ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memcpy(p, q, n))
+    elsize = msa->elsize;
+    cmp = msa->cmp;
+    arg = msa->arg;
+    fastcopy = msa->fastcopy;
+
 #define CALL_CMP(a, b) \
     if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
 
-    if (lo == 1) {
-        j = 2;
-        b = (char *)vec + elsize;
-        if (j < hi) {
-            CALL_CMP(vec, b);
-            if (cmp_result < 0)
-                j++;
-        }
-        a = (char *)vec + (hi - 1) * elsize;
-        b = (char *)vec2 + j * elsize;
-
-        /*
-         * During sorting phase b points to a member of heap that cannot be
-         * bigger then biggest of vec[0] and vec[1], and cmp(a, b, arg) <= 0
-         * always holds.
-         */
-        if (building || hi == 2) {
-            CALL_CMP(a, b);
-            if (cmp_result >= 0)
-                return JS_TRUE;
-        }
-
-        MEMCPY(pivot, a, elsize);
-        MEMCPY(a, b, elsize);
-        lo = j;
-    } else {
-        a = (char *)vec2 + lo * elsize;
-        MEMCPY(pivot, a, elsize);
+    /* Copy runs already in sorted order. */
+    b = (char *)src + run1 * elsize;
+    a = (char *)b - elsize;
+    CALL_CMP(a, b);
+    if (cmp_result <= 0) {
+        memcpy(dest, src, runtotal * elsize);
+        return JS_TRUE;
     }
 
-    hiDiv2 = hi/2;
-    while (lo <= hiDiv2) {
-        j = lo + lo;
-        a = (char *)vec2 + j * elsize;
-        b = (char *)vec + (j - 1) * elsize;
-        if (j < hi) {
-            CALL_CMP(a, b);
-            if (cmp_result < 0)
-                j++;
+#define COPY_ONE(p,q,n) \
+    (fastcopy ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memcpy(p, q, n))
+
+    a = src;
+    c = dest;
+    for (; runtotal != 0; runtotal--) {
+        JSBool from_a = run2 == 0;
+        if (!from_a && run1 != 0) {
+            CALL_CMP(a,b);
+            from_a = cmp_result <= 0;
         }
-        b = (char *)vec2 + j * elsize;
-        CALL_CMP(pivot, b);
-        if (cmp_result >= 0)
-            break;
 
-        a = (char *)vec2 + lo * elsize;
-        MEMCPY(a, b, elsize);
-        lo = j;
+        if (from_a) {
+            COPY_ONE(c, a, elsize);
+            run1--;
+            a = (char *)a + elsize;
+        } else {
+            COPY_ONE(c, b, elsize);
+            run2--;
+            b = (char *)b + elsize;
+        }
+        c = (char *)c + elsize;
     }
-
-    a = (char *)vec2 + lo * elsize;
-    MEMCPY(a, pivot, elsize);
+#undef COPY_ONE
+#undef CALL_CMP
 
     return JS_TRUE;
-
-#undef CALL_CMP
-#undef MEMCPY
-
 }
 
+/*
+ * This sort is stable, i.e. sequence of equal elements is preserved.
+ * See also bug #224128.
+ */
 JSBool
-js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
-            JSComparator cmp, void *arg)
+js_MergeSort(void *src, size_t nel, size_t elsize,
+             JSComparator cmp, void *arg, void *tmp)
 {
-    HSortArgs hsa;
-    size_t i;
+    void *swap, *vec1, *vec2;
+    MSortArgs msa;
+    size_t i, j, lo, hi, run;
+    JSBool fastcopy;
+    int cmp_result;
 
-    hsa.vec = vec;
-    hsa.elsize = elsize;
-    hsa.pivot = pivot;
-    hsa.cmp = cmp;
-    hsa.arg = arg;
-    hsa.fastcopy = (cmp == sort_compare || cmp == sort_compare_strings);
+    fastcopy = (cmp == sort_compare || cmp == sort_compare_strings);
+#define COPY_ONE(p,q,n) \
+    (fastcopy ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memcpy(p, q, n))
+#define CALL_CMP(a, b) \
+    if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
+#define INS_SORT_INT 4
 
-    for (i = nel/2; i != 0; i--) {
-        if (!HeapSortHelper(JS_TRUE, &hsa, i, nel))
-            return JS_FALSE;
+    /*
+     * Apply insertion sort to small chunks to reduce the number of merge
+     * passes needed.
+     */
+    for (lo = 0; lo < nel; lo += INS_SORT_INT) {
+        hi = lo + INS_SORT_INT;
+        if (hi >= nel)
+            hi = nel;
+        for (i = lo + 1; i < hi; i++) {
+            vec1 = (char *)src + i * elsize;
+            vec2 = (char *)vec1 - elsize;
+            for (j = i; j > lo; j--) {
+                CALL_CMP(vec2, vec1);
+                /* "<=" instead of "<" insures the sort is stable */
+                if (cmp_result <= 0) {
+                    break;
+                }
+
+                /* Swap elements, using "tmp" as tmp storage */
+                COPY_ONE(tmp, vec2, elsize);
+                COPY_ONE(vec2, vec1, elsize);
+                COPY_ONE(vec1, tmp, elsize);
+                vec1 = vec2;
+                vec2 = (char *)vec1 - elsize;
+            }
+        }
     }
-    while (nel > 2) {
-        if (!HeapSortHelper(JS_FALSE, &hsa, 1, --nel))
-            return JS_FALSE;
+#undef CALL_CMP
+#undef COPY_ONE
+
+    msa.elsize = elsize;
+    msa.cmp = cmp;
+    msa.arg = arg;
+    msa.fastcopy = fastcopy;
+
+    vec1 = src;
+    vec2 = tmp;
+    for (run = INS_SORT_INT; run < nel; run *= 2) {
+        for (lo = 0; lo < nel; lo += 2 * run) {
+            hi = lo + run;
+            if (hi >= nel) {
+                memcpy((char *)vec2 + lo * elsize, (char *)vec1 + lo * elsize,
+                       (nel - lo) * elsize);
+                break;
+            }
+            if (!MergeArrays(&msa, (char *)vec1 + lo * elsize,
+                             (char *)vec2 + lo * elsize, run,
+                             hi + run > nel ? nel - hi : run)) {
+                return JS_FALSE;
+            }
+        }
+        swap = vec1;
+        vec1 = vec2;
+        vec2 = swap;
     }
+    if (src != vec1)
+        memcpy(src, tmp, nel * elsize);
 
     return JS_TRUE;
 }
@@ -1011,10 +1040,17 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
     return JS_TRUE;
 }
 
+/*
+ * The array_sort function below assumes JSVAL_NULL is zero in order to
+ * perform initialization using memset.  Other parts of SpiderMonkey likewise
+ * "know" that JSVAL_NULL is zero; this static assertion covers all cases.
+ */
+JS_STATIC_ASSERT(JSVAL_NULL == 0);
+
 static JSBool
 array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsval fval, *vec, *pivotroot;
+    jsval fval, *vec, *mergesort_tmp;
     CompareArgs ca;
     jsuint len, newlen, i, undefs;
     JSTempValueRooter tvr;
@@ -1047,16 +1083,20 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /*
-     * We need a temporary array of len jsvals to hold elements of the array.
+     * We need a temporary array of 2 * len jsvals to hold the array elements.
      * Check that its size does not overflow size_t, which would allow for
      * indexing beyond the end of the malloc'd vector.
      */
-    if (len > ((size_t) -1) / sizeof(jsval)) {
+    if (len > (size_t)-1 / (2 * sizeof(jsval))) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
 
-    vec = (jsval *) JS_malloc(cx, ((size_t) len) * sizeof(jsval));
+    /*
+     * Allocate 2 * len instead of len, to reserve space for the mergesort
+     * algorithm.
+     */
+    vec = (jsval *) JS_malloc(cx, 2 * (size_t)len * sizeof(jsval));
     if (!vec)
         return JS_FALSE;
 
@@ -1105,14 +1145,28 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ++newlen;
     }
 
-    /* Here len == newlen + undefs + number_of_holes. */
+    /*
+     * The first newlen elements of vec are copied from the array
+     * object (above).
+     *
+     * Of the remaining 2*len-newlen positions, newlen are used as GC
+     * rooted temp space for mergesort, and the last (2*len-2*newlen)
+     * positions are unused.
+     *
+     * Here we clear the tmp-values before GC-rooting the array.
+     * We assume JSVAL_NULL==0 to optimize initialization using memset.
+     */
+    mergesort_tmp = vec + newlen;
+    memset(mergesort_tmp, 0, newlen * sizeof(jsval));
+    tvr.count += newlen;
+
+    /* Here len == 2 * (newlen + undefs + number_of_holes). */
     ca.context = cx;
     ca.fval = fval;
-    ca.localroot = argv + argc;       /* local GC root for temporary string */
-    pivotroot    = argv + argc + 1;   /* local GC root for pivot val */
-    ok = js_HeapSort(vec, (size_t) newlen, pivotroot, sizeof(jsval),
+    ca.localroot = argv + argc; /* local GC root for temporary string */
+    ok = js_MergeSort(vec, (size_t) newlen, sizeof(jsval),
                      all_strings ? sort_compare_strings : sort_compare,
-                     &ca);
+                     &ca, mergesort_tmp);
     if (!ok)
         goto out;
 
@@ -1766,7 +1820,7 @@ static JSFunctionSpec array_methods[] = {
     /* Perl-ish methods. */
     {"join",                array_join,             1,JSFUN_GENERIC_NATIVE,0},
     {"reverse",             array_reverse,          0,JSFUN_GENERIC_NATIVE,2},
-    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,2},
+    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,1},
     {"push",                array_push,             1,JSFUN_GENERIC_NATIVE,0},
     {"pop",                 array_pop,              0,JSFUN_GENERIC_NATIVE,0},
     {"shift",               array_shift,            0,JSFUN_GENERIC_NATIVE,1},

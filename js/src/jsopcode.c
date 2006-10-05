@@ -3514,7 +3514,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               {
                 ptrdiff_t jmplen, off, off2;
                 jsint j, n, low, high;
-                TableEntry *table, pivot;
+                TableEntry *table, *tmp;
 
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
@@ -3533,6 +3533,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (n == 0) {
                     table = NULL;
                     j = 0;
+                    ok = JS_TRUE;
                 } else {
                     table = (TableEntry *)
                             JS_malloc(cx, (size_t)n * sizeof *table);
@@ -3557,12 +3558,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         }
                         pc2 += jmplen;
                     }
-                    js_HeapSort(table, (size_t) j, &pivot, sizeof(TableEntry),
-                                CompareOffsets, NULL);
+                    tmp = (TableEntry *)
+                          JS_malloc(cx, (size_t)j * sizeof *table);
+                    if (tmp) {
+                        ok = js_MergeSort(table, (size_t)j, sizeof(TableEntry),
+                                          CompareOffsets, NULL, tmp);
+                        JS_free(cx, tmp);
+                    } else {
+                        ok = JS_FALSE;
+                    }
                 }
 
-                ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off,
-                                     JS_FALSE);
+                if (ok) {
+                    ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off,
+                                         JS_FALSE);
+                }
                 JS_free(cx, table);
                 if (!ok)
                     return NULL;
