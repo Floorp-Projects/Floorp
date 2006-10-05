@@ -1026,20 +1026,6 @@ public:
   friend class nsFrameConstructorState;
 
 private:
-#ifdef ACCESSIBILITY
-  // If the frame is visible, return the frame type
-  // If the frame is invisible, return nsnull
-  nsIAtom *GetRenderedFrameType(nsIFrame *aFrame);
-  
-  // Using the rendered frame type from GetRenderedFrameType(), which is nsnull
-  // for invisible frames, compare the previous rendering and new rendering, to
-  // determine if the tree of accessibility objects may change. If it might,
-  // notify the accessibility module of the change, and whether it is a generic
-  // change, something is being made visible or something is being made hidden.
-  void NotifyAccessibleChange(nsIAtom *aPreviousFrameType, nsIAtom *aFrameType,
-                              nsIContent *aContent);
-#endif
-
   nsIDocument*        mDocument;  // Weak ref
   nsIPresShell*       mPresShell; // Weak ref
 
