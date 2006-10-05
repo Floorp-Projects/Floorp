@@ -35,56 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://composer/content/bindings/sidebar.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-.toolbarbutton-1 {
-  -moz-box-orient: vertical;
-  min-width: 0px;
-  padding: 5px;
-}
-
-tabeditor {
-  -moz-binding: url('chrome://composer/content/bindings/tabeditor.xml#tabeditor');
-}
-
-#composer-throbber {
-  list-style-image: url('chrome://composer/skin/logo.png');
-}
-
-#composer-throbber:hover {
-  list-style-image: url('chrome://composer/skin/logo-hover.png');
-}
-
-
-#MainToolbar toolbarbutton {
-  -moz-image-region: rect(0px 32px 32px 0);
-}
-#MainToolbar toolbarbutton:hover {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton:hover:active {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton[disabled="true"],
-#MainToolbar toolbarbutton[disabled="true"]:hover,
-#MainToolbar toolbarbutton[disabled="true"]:hover:active {
-  -moz-image-region: rect(64px 32px 96px 0) ! important;
-}
-
-#newButton {
-  list-style-image: url("chrome://composer/skin/icons/new.png");
-}
-
-#openButton {
-  list-style-image: url("chrome://composer/skin/icons/open.png");
-}
-
-#stopButton {
-  list-style-image: url("chrome://composer/skin/icons/stop.png");
-}
 
 sidebar {
   width: 200px;
+  -moz-box-orient: vertical;
+  -moz-binding: url('chrome://composer/content/bindings/sidebar.xml#sidebar');
+}
+
+sidebarcontent {
+  -moz-box-orient: vertical;
+  -moz-binding: url('chrome://composer/content/bindings/sidebar.xml#sidebarcontent');
+  -moz-box-flex: 1;
+}
+
+sidebaritems {
+  -moz-binding: url('chrome://composer/content/bindings/sidebar.xml#sidebaritems');
+  display: none ! important;
 }

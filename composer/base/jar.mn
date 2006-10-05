@@ -6,12 +6,16 @@ composer.jar:
 	content/composer/about-logo.png					(content/composer/about-logo.png)
 	content/composer/logo-anim.gif					(content/composer/logo-anim.gif)
 	content/composer/aboutDialog.xul				(content/composer/aboutDialog.xul)
+	content/composer/bindings/sidebar.css			(content/composer/bindings/sidebar.css)
+	content/composer/bindings/sidebar.xml			(content/composer/bindings/sidebar.xml)
 	content/composer/bindings/tabeditor.xml			(content/composer/bindings/tabeditor.xml)
 	content/composer/composer.js					(content/composer/composer.js)
 *	content/composer/composer.xul					(content/composer/composer.xul)
 	content/composer/DI.png							(content/composer/DI.png)
 	content/composer/dialogs/openLocation.js		(content/composer/dialogs/openLocation.js)
 	content/composer/dialogs/openLocation.xul		(content/composer/dialogs/openLocation.xul)
+	content/composer/dialogs/standaloneSidebar.js	(content/composer/dialogs/standaloneSidebar.js)
+	content/composer/dialogs/standaloneSidebar.xul	(content/composer/dialogs/standaloneSidebar.xul)
 	content/composer/EditorContent.css				(content/composer/EditorContent.css)
 	content/composer/EditorOverride.css				(content/composer/EditorOverride.css)
 	content/composer/mainCore.js					(content/composer/mainCore.js)
@@ -29,6 +33,8 @@ composer.jar:
 	skin/classic/composer/icons/stop.png			(skin/classic/composer/icons/stop.png)
 	skin/classic/composer/logo-hover.png			(skin/classic/composer/logo-hover.png)
 	skin/classic/composer/logo.png					(skin/classic/composer/logo.png)
+	skin/classic/composer/sidebar.css				(skin/classic/composer/sidebar.css)
+	skin/classic/composer/sidebarcontent.css		(skin/classic/composer/sidebarcontent.css)
 	skin/classic/composer/tabeditor.css				(skin/classic/composer/tabeditor.css)
 
 composer-locale.jar:
@@ -40,4 +46,4 @@ composer-locale.jar:
 	locale/en-US/composer/tabeditor.dtd				(locale/en-US/composer/tabeditor.dtd)
 *	locale/en-US/branding/brand.dtd					(locale/en-US/branding/brand.dtd)
 	locale/en-US/branding/brand.properties			(locale/en-US/branding/brand.properties)
-  
+	locale/en-US/composer/sidebar.dtd				(locale/en-US/composer/sidebar.dtd)

@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Composer.
+ * The Original Code is Composer.
  *
  * The Initial Developer of the Original Code is
  * Disruptive Innovations SARL.
@@ -35,7 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function dgid(aStr)
+// we store all globals in a gDialog object for convenience
+var gDialog = {};
+
+function GetUIElements()
 {
-  return document.getElementById(aStr);
+  var elts = document.getElementsByAttribute("id", "*");
+  for (var i = 0; i < elts.length; i++)
+  {
+    var elt = elts.item(i);
+    gDialog[ elt.getAttribute("id") ] = elt;
+  }
 }

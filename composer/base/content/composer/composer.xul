@@ -13,7 +13,7 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Mozilla Composer.
+   - The Original Code is Composer.
    -
    - The Initial Developer of the Original Code is
    - Disruptive Innovations SARL.
@@ -48,6 +48,7 @@
   title  = "&window.title;"
   width  = "800"
   height = "600"
+  persist="screenX screenY width height"
   onload = "Startup()"
   xmlns  = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -74,7 +75,26 @@
     <toolbarset id="customToolbars" context="format-toolbar-context-menu"/>
   </toolbox>
 
-  <tabeditor id="tabeditor" flex="1"/>
+  <!-- XXX the following sidebaritems element is here only for test purposes
+       will be removed later -->
+  <sidebaritems id="sidebaritems">
+    <sidebaritem id="sidebaritem-glazman" name="glazman" src="http://glazman.org" title="Glazou's cave"/>
+    <sidebaritem id="sidebaritem-blank"   name="blank" src="about:blank" title="Blanc de blanc"/>
+    <sidebaritem id="sidebaritem-inria"   name="inria" src="http://www.inria.fr" title="Inria.fr"/>
+  </sidebaritems>
+
+  <hbox flex="1">
+    <sidebar id="sidebar1" sidebaritems="" persist="sidebaritems"/>
+    <splitter id="splitter1" collapse="before" resizebefore="closest"/>
+    <vbox flex="1">
+      <tabeditor id="tabeditor" flex="1"/>
+      <hbox>
+        <label value="structure toolbar" />
+      </hbox>
+    </vbox>
+    <splitter id="splitter2" collapse="after" resizeafter="closest"/>
+    <sidebar id="sidebar2" sidebaritems="" persist="sidebaritems"/>
+  </hbox>
 
   <statusbar>
     <deck flex="1" id="statusbarDeck">

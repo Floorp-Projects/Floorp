@@ -35,56 +35,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://composer/content/bindings/sidebar.css");
+function Startup()
+{
+  if(window.arguments.length != 4)
+    return;
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+  GetUIElements();
 
-.toolbarbutton-1 {
-  -moz-box-orient: vertical;
-  min-width: 0px;
-  padding: 5px;
+  gDialog.name  = window.arguments[0];
+  gDialog.label = window.arguments[1];
+  gDialog.src   = window.arguments[2];
+  gDialog.sidebaritem = window.arguments[3];
+
+  document.documentElement.setAttribute("id", gDialog.name);
+  gDialog.iframe.setAttribute("src", gDialog.src);
+  document.title = gDialog.label;
+
+  var root = document.documentElement;
+  var item = gDialog.sidebaritem;
+  root.setAttribute("screenX", item.getAttribute("screenX"));
+  root.setAttribute("screenY", item.getAttribute("screenY"));
+  root.setAttribute("width",   item.getAttribute("width"));
+  root.setAttribute("height",  item.getAttribute("height"));
 }
 
-tabeditor {
-  -moz-binding: url('chrome://composer/content/bindings/tabeditor.xml#tabeditor');
+function Onclose()
+{
+  gDialog.sidebaritem.removeAttribute("standalone");
+
+  return true;
 }
 
-#composer-throbber {
-  list-style-image: url('chrome://composer/skin/logo.png');
-}
+function Shutdown()
+{
+  var item = gDialog.sidebaritem;
+  var root = document.documentElement;
 
-#composer-throbber:hover {
-  list-style-image: url('chrome://composer/skin/logo-hover.png');
-}
+  item.setAttribute("screenX", window.screenX);
+  item.setAttribute("screenY", window.screenY);
+  item.setAttribute("width",   document.documentElement.width);
+  item.setAttribute("height",  document.documentElement.height);
 
-
-#MainToolbar toolbarbutton {
-  -moz-image-region: rect(0px 32px 32px 0);
-}
-#MainToolbar toolbarbutton:hover {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton:hover:active {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton[disabled="true"],
-#MainToolbar toolbarbutton[disabled="true"]:hover,
-#MainToolbar toolbarbutton[disabled="true"]:hover:active {
-  -moz-image-region: rect(64px 32px 96px 0) ! important;
-}
-
-#newButton {
-  list-style-image: url("chrome://composer/skin/icons/new.png");
-}
-
-#openButton {
-  list-style-image: url("chrome://composer/skin/icons/open.png");
-}
-
-#stopButton {
-  list-style-image: url("chrome://composer/skin/icons/stop.png");
-}
-
-sidebar {
-  width: 200px;
+  var doc = gDialog.sidebaritem.ownerDocument;
+  var id  = item.getAttribute("id");
+  doc.persist(id, "standalone");
+  doc.persist(id, "screenX");
+  doc.persist(id, "screenY");
+  doc.persist(id, "width");
+  doc.persist(id, "height");
 }

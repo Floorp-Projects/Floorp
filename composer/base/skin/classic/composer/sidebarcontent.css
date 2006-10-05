@@ -35,56 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://composer/content/bindings/sidebar.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.toolbarbutton-1 {
-  -moz-box-orient: vertical;
-  min-width: 0px;
-  padding: 5px;
+.sidebarcontent-name {
+  font-weight: bold;
 }
 
-tabeditor {
-  -moz-binding: url('chrome://composer/content/bindings/tabeditor.xml#tabeditor');
+label {
+  font-size: smaller;
 }
 
-#composer-throbber {
-  list-style-image: url('chrome://composer/skin/logo.png');
+.titlebox {
+  padding-left: 1em;
+
 }
 
-#composer-throbber:hover {
-  list-style-image: url('chrome://composer/skin/logo-hover.png');
+.sidebar-arrowbutton {
+  border: thin groove;
+  -moz-border-radius: 3px;
+  -moz-margin-end: 4px;
 }
 
-
-#MainToolbar toolbarbutton {
-  -moz-image-region: rect(0px 32px 32px 0);
-}
-#MainToolbar toolbarbutton:hover {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton:hover:active {
-  -moz-image-region: rect(32px 32px 64px 0);
-}
-#MainToolbar toolbarbutton[disabled="true"],
-#MainToolbar toolbarbutton[disabled="true"]:hover,
-#MainToolbar toolbarbutton[disabled="true"]:hover:active {
-  -moz-image-region: rect(64px 32px 96px 0) ! important;
-}
-
-#newButton {
-  list-style-image: url("chrome://composer/skin/icons/new.png");
-}
-
-#openButton {
-  list-style-image: url("chrome://composer/skin/icons/open.png");
-}
-
-#stopButton {
-  list-style-image: url("chrome://composer/skin/icons/stop.png");
-}
-
-sidebar {
-  width: 200px;
+.sidebar-arrowbutton > .toolbarbutton-menu-dropmarker {
+  -moz-margin-start: 2px;
 }

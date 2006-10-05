@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Composer.
+ * The Original Code is Composer.
  *
  * The Initial Developer of the Original Code is
  * Disruptive Innovations SARL.
@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gDialog = {};
-
 function Startup()
 {
   var url = null;
@@ -44,14 +42,16 @@ function Startup()
   if (window.arguments.length == 2)
     url = window.arguments[1];
 
-  gDialog.status = dgid("status");
-  gDialog.progress = dgid("progress");
+  GetUIElements();
 
   // let's finish with the url
   if (url)
     OpenFile(url, true);
 
     ComposerCommands.setupMainCommands();
+
+  gDialog.sidebar1.init(gDialog.sidebaritems, gDialog.sidebar2, gDialog.splitter1);
+  gDialog.sidebar2.init(gDialog.sidebaritems, gDialog.sidebar1, gDialog.splitter2);
 }
 
 function OpenLocation(aEvent, type)
