@@ -116,6 +116,10 @@ PR_Now(void)
 
 /*
  * Assemble the command line by concatenating the argv array.
+ * Special characters intentionally do not get escaped, and it is
+ * expected that the caller wraps arguments in quotes if needed
+ * (e.g. for filename with spaces).
+ *
  * On success, this function returns 0 and the resulting command
  * line is returned in *cmdLine.  On failure, it returns -1.
  */
@@ -249,7 +253,6 @@ PRProcess * _PR_CreateOS2Process(
     APIRET    rc;
     ULONG     ulAppType = 0;
     PID       pid = 0;
-    char     *pEnvWPS = NULL;
     char     *pszComSpec;
     char      pszEXEName[CCHMAXPATH] = "";
     char      pszFormatString[CCHMAXPATH];
@@ -305,7 +308,7 @@ PRProcess * _PR_CreateOS2Process(
        if (pszDot) {
           /* If it is a CMD file, launch the users command processor */
           if (!stricmp(pszDot, ".cmd")) {
-             rc = DosScanEnv("COMSPEC", &pszComSpec);
+             rc = DosScanEnv("COMSPEC", (PSZ *)&pszComSpec);
              if (!rc) {
                 strcpy(pszFormatString, "/C %s %s");
                 strcpy(pszEXEName, pszComSpec);
