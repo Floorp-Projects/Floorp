@@ -71,27 +71,31 @@ textbox.padded {
 /* ::::: history button ::::: */
 
 .autocomplete-history-dropmarker {
-  width: 16px;
+  -moz-appearance: none !important;
   height: 20px;
   margin: 0px;
-  border-left: 1px solid #96969D;
-  padding: 0px;
-  background-color: -moz-dialog; 
-  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-arrow.png");
-  -moz-image-region: rect(0px, 16px, 20px, 0px);
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: 1px solid !important;
+  -moz-border-left-colors: #96969D !important;
+  border-right: none !important;
+  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-arrow.png") !important;
+  -moz-image-region: rect(0px, 16px, 20px, 0px) !important;
 }
 
 textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
-  border-left: none;
-  border-right: 1px solid #96969D;
+  border-left: none !important;
+  border-right: 1px solid !important;
+  -moz-border-right-colors: #96969D !important;
 }
 
 .autocomplete-history-dropmarker:hover {
-  -moz-image-region: rect(0px, 32px, 20px, 16px);
+  -moz-image-region: rect(0px, 32px, 20px, 16px) !important;
 }
 
 .autocomplete-history-dropmarker:active {
-  -moz-image-region: rect(0px, 64px, 20px, 48px);
+  -moz-image-region: rect(0px, 64px, 20px, 48px) !important;
 }
 
 .autocomplete-dropmarker-bkgnd-top {
