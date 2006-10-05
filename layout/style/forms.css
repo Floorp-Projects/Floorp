@@ -557,7 +557,7 @@ input[type="submit"] {
 
 %endif
 
-%if MOZ_DEFAULT_TOOLKIT=="cocoa"
+%ifdef MOZ_MACBROWSER
 /* makes sure enabled and disabled input and text area fields are drawn */
 input,
 input[disabled] {
