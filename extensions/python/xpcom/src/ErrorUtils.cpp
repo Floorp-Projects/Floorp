@@ -46,7 +46,7 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include "nsReadableUtils.h"
+#include "nsStringAPI.h"
 #include <nsIConsoleService.h>
 #include "nspr.h" // PR_fprintf
 

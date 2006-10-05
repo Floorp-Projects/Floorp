@@ -43,8 +43,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsEvent.h"
-#include "nsHashtable.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 // nsIDOMEvent contains a long enum which includes a member called ERROR,
 // which conflicts with something that Windows defines somewhere.
@@ -63,6 +62,7 @@ class nsIAccessible;
 class nsIContent;
 class nsIURI;
 class nsIDOMEvent;
+class nsHashKey;
 
 /**
  * Event Struct Types

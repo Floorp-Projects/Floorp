@@ -59,8 +59,9 @@
 #include "nsIInputStream.h"
 #include "nsIVariant.h"
 #include "nsIModule.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStringAPI.h"
 
-#include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "xptcall.h"
 #include "xpt_xdr.h"
@@ -77,6 +78,8 @@
 
 #include <Python.h>
 
+// PYXPCOM_EXPORT means 'exported from the pyxpcom core lib' - which changes
+// spelling depending on whether pyxpcom is being built or just referenced.
 #ifdef BUILD_PYXPCOM
     /* We are building the main dll */
 #   define PYXPCOM_EXPORT NS_EXPORT

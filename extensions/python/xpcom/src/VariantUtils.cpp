@@ -49,10 +49,6 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include <nsIInterfaceInfoManager.h>
-#include <nsAString.h>
-#include <nsString.h>
-#include <nsReadableUtils.h>
 
 // ------------------------------------------------------------------------
 // nsString utilities
@@ -116,16 +112,15 @@ PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_FALSE */)
 		Py_INCREF(Py_None);
 	} else {
 		if (bAssumeUTF8) {
-                        const nsPromiseFlatCString& temp = PromiseFlatCString(s);
+                        const nsCString temp(s);
                         ret = PyUnicode_DecodeUTF8(temp.get(), temp.Length(), NULL);
 		} else {
 			ret = PyString_FromStringAndSize(NULL, s.Length());
 			if (!ret)
 				return NULL;
 			// Need "CopyAsciiTo"!?
-			nsACString::const_iterator fromBegin, fromEnd;
 			char* dest = PyString_AS_STRING(ret);
-			copy_string(s.BeginReading(fromBegin), s.EndReading(fromEnd), dest);
+			PL_strncpy(dest, s.BeginReading(), s.Length());
 		}
 	}
 	return ret;
@@ -139,7 +134,7 @@ PyObject_FromNSString( const nsAString &s )
 		ret = Py_None;
 		Py_INCREF(Py_None);
 	} else {
-		const nsPromiseFlatString& temp = PromiseFlatString(s);
+		const nsString temp(s);
 		ret = PyUnicode_FromPRUnichar(temp.get(), temp.Length());
 	}
 	return ret;
@@ -988,13 +983,13 @@ PyXPCOM_InterfaceVariantHelper::~PyXPCOM_InterfaceVariantHelper()
 				}
 			}
 			if (ns_v.IsValDOMString() && ns_v.val.p) {
-				delete (const nsAString *)ns_v.val.p;
+				delete (const nsString *)ns_v.val.p;
 			}
 			if (ns_v.IsValCString() && ns_v.val.p) {
-				delete (const nsACString *)ns_v.val.p;
+				delete (const nsCString *)ns_v.val.p;
 			}
 			if (ns_v.IsValUTF8String() && ns_v.val.p) {
-				delete (const nsACString *)ns_v.val.p;
+				delete (const nsCString *)ns_v.val.p;
 			}
 			if (ns_v.IsValArray()) {
 				nsXPTCVariant &ns_v = m_var_array[i];
