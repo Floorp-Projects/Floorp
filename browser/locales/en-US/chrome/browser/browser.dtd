@@ -375,7 +375,7 @@
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 
 <!ENTITY spellAddToDictionary.label "Add to dictionary">
-<!ENTITY spellAddToDictionary.accesskey "t">
+<!ENTITY spellAddToDictionary.accesskey "o">
 <!ENTITY spellEnable.label "Spell check this field">
 <!ENTITY spellEnable.accesskey "S">
 <!ENTITY spellNoSuggestions.label "(No spelling suggestions)">

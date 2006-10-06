@@ -279,5 +279,9 @@ var InlineSpellCheckerUI = {
   addToDictionary: function()
   {
     this.mInlineSpellChecker.addWordToDictionary(this.mMisspelling);
+  },
+  ignoreWord: function()
+  {
+    this.mInlineSpellChecker.ignoreWord(this.mMisspelling);
   }
 };
