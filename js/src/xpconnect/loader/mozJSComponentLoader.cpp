@@ -429,6 +429,9 @@ mozJSComponentLoader::ReallyInit()
     uint32 options = JS_GetOptions(mContext);
     JS_SetOptions(mContext, options | JSOPTION_XML);
 
+    // enable Javascript 1.7 features (let, yield, etc. - see bug#351515)
+    JS_SetVersion(mContext, JSVERSION_1_7);
+    
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
