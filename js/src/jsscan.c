@@ -569,126 +569,124 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
     }
 
     JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
-    onError = cx->errorReporter;
-    if (onError) {
-        /*
-         * We are typically called with non-null ts and null cg from jsparse.c.
-         * We can be called with null ts from the regexp compilation functions.
-         * The code generator (jsemit.c) may pass null ts and non-null cg.
-         */
-        do {
-            if (ts) {
-                report->filename = ts->filename;
-                if (pn) {
-                    report->lineno = pn->pn_pos.begin.lineno;
-                    if (report->lineno != ts->lineno)
-                        break;
-                }
-                report->lineno = ts->lineno;
-                linestr = js_NewStringCopyN(cx, ts->linebuf.base,
-                                            PTRDIFF(ts->linebuf.limit,
-                                                    ts->linebuf.base,
-                                                    jschar),
-                                            0);
-                report->linebuf = linestr
-                                  ? JS_GetStringBytes(linestr)
-                                  : NULL;
-                tp = &ts->tokens[(ts->cursor+ts->lookahead) & NTOKENS_MASK].pos;
-                if (pn)
-                    tp = &pn->pn_pos;
-
-                /*
-                 * FIXME: What should instead happen here is that we should
-                 * find error-tokens in userbuf, if !ts->file.  That will
-                 * allow us to deliver a more helpful error message, which
-                 * includes all or part of the bad string or bad token.  The
-                 * code here yields something that looks truncated.
-                 * See https://bugzilla.mozilla.org/show_bug.cgi?id=352970
-                 */
-                index = 0;
-                if (tp->begin.lineno == tp->end.lineno) {
-                    if (tp->begin.index < ts->linepos)
-                        break;
-
-                    index = tp->begin.index - ts->linepos;
-                }
-
-                report->tokenptr = linestr ? report->linebuf + index : NULL;
-                report->uclinebuf = linestr ? JS_GetStringChars(linestr) : NULL;
-                report->uctokenptr = linestr ? report->uclinebuf + index : NULL;
-                break;
-            }
-
-            if (cg) {
-                report->filename = cg->filename;
-                report->lineno = CG_CURRENT_LINE(cg);
-                break;
-            }
-
-            /*
-             * If we can't find out where the error was based on the current
-             * frame, see if the next frame has a script/pc combo we can use.
-             */
-            for (fp = cx->fp; fp; fp = fp->down) {
-                if (fp->script && fp->pc) {
-                    report->filename = fp->script->filename;
-                    report->lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+    /*
+     * We are typically called with non-null ts and null cg from jsparse.c.
+     * We can be called with null ts from the regexp compilation functions.
+     * The code generator (jsemit.c) may pass null ts and non-null cg.
+     */
+    do {
+        if (ts) {
+            report->filename = ts->filename;
+            if (pn) {
+                report->lineno = pn->pn_pos.begin.lineno;
+                if (report->lineno != ts->lineno)
                     break;
-                }
             }
-        } while (0);
-
-        /*
-         * If there's a runtime exception type associated with this error
-         * number, set that as the pending exception.  For errors occuring at
-         * compile time, this is very likely to be a JSEXN_SYNTAXERR.
-         *
-         * If an exception is thrown but not caught, the JSREPORT_EXCEPTION
-         * flag will be set in report.flags.  Proper behavior for an error
-         * reporter is to ignore a report with this flag for all but top-level
-         * compilation errors.  The exception will remain pending, and so long
-         * as the non-top-level "load", "eval", or "compile" native function
-         * returns false, the top-level reporter will eventually receive the
-         * uncaught exception report.
-         *
-         * XXX it'd probably be best if there was only one call to this
-         * function, but there seem to be two error reporter call points.
-         */
-
-        /*
-         * Try to raise an exception only if there isn't one already set --
-         * otherwise the exception will describe the last compile-time error,
-         * which is likely spurious.
-         */
-        if (!ts || !(ts->flags & TSF_ERROR)) {
-            if (js_ErrorToException(cx, message, report))
-                onError = NULL;
-        }
-
-        /*
-         * Suppress any compile-time errors that don't occur at the top level.
-         * This may still fail, as interplevel may be zero in contexts where we
-         * don't really want to call the error reporter, as when js is called
-         * by other code which could catch the error.
-         */
-        if (cx->interpLevel != 0 && !JSREPORT_IS_WARNING(flags))
-            onError = NULL;
-
-        if (onError) {
-            JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+            report->lineno = ts->lineno;
+            linestr = js_NewStringCopyN(cx, ts->linebuf.base,
+                                        PTRDIFF(ts->linebuf.limit,
+                                                ts->linebuf.base,
+                                                jschar),
+                                        0);
+            report->linebuf = linestr
+                              ? JS_GetStringBytes(linestr)
+                              : NULL;
+            tp = &ts->tokens[(ts->cursor+ts->lookahead) & NTOKENS_MASK].pos;
+            if (pn)
+                tp = &pn->pn_pos;
 
             /*
-             * If debugErrorHook is present then we give it a chance to veto
-             * sending the error on to the regular error reporter.
+             * FIXME: What should instead happen here is that we should
+             * find error-tokens in userbuf, if !ts->file.  That will
+             * allow us to deliver a more helpful error message, which
+             * includes all or part of the bad string or bad token.  The
+             * code here yields something that looks truncated.
+             * See https://bugzilla.mozilla.org/show_bug.cgi?id=352970
              */
-            if (hook && !hook(cx, message, report,
-                              cx->runtime->debugErrorHookData)) {
-                onError = NULL;
+            index = 0;
+            if (tp->begin.lineno == tp->end.lineno) {
+                if (tp->begin.index < ts->linepos)
+                    break;
+
+                index = tp->begin.index - ts->linepos;
+            }
+
+            report->tokenptr = linestr ? report->linebuf + index : NULL;
+            report->uclinebuf = linestr ? JS_GetStringChars(linestr) : NULL;
+            report->uctokenptr = linestr ? report->uclinebuf + index : NULL;
+            break;
+        }
+
+        if (cg) {
+            report->filename = cg->filename;
+            report->lineno = CG_CURRENT_LINE(cg);
+            break;
+        }
+
+        /*
+         * If we can't find out where the error was based on the current
+         * frame, see if the next frame has a script/pc combo we can use.
+         */
+        for (fp = cx->fp; fp; fp = fp->down) {
+            if (fp->script && fp->pc) {
+                report->filename = fp->script->filename;
+                report->lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+                break;
             }
         }
-        if (onError)
-            (*onError)(cx, message, report);
+    } while (0);
+
+    /*
+     * If there's a runtime exception type associated with this error
+     * number, set that as the pending exception.  For errors occuring at
+     * compile time, this is very likely to be a JSEXN_SYNTAXERR.
+     *
+     * If an exception is thrown but not caught, the JSREPORT_EXCEPTION
+     * flag will be set in report.flags.  Proper behavior for an error
+     * reporter is to ignore a report with this flag for all but top-level
+     * compilation errors.  The exception will remain pending, and so long
+     * as the non-top-level "load", "eval", or "compile" native function
+     * returns false, the top-level reporter will eventually receive the
+     * uncaught exception report.
+     *
+     * XXX it'd probably be best if there was only one call to this
+     * function, but there seem to be two error reporter call points.
+     */
+    onError = cx->errorReporter;
+
+    /*
+     * Try to raise an exception only if there isn't one already set --
+     * otherwise the exception will describe the last compile-time error,
+     * which is likely spurious.
+     */
+    if (!ts || !(ts->flags & TSF_ERROR)) {
+        if (js_ErrorToException(cx, message, report))
+            onError = NULL;
     }
+
+    /*
+     * Suppress any compile-time errors that don't occur at the top level.
+     * This may still fail, as interplevel may be zero in contexts where we
+     * don't really want to call the error reporter, as when js is called
+     * by other code which could catch the error.
+     */
+    if (cx->interpLevel != 0 && !JSREPORT_IS_WARNING(flags))
+        onError = NULL;
+
+    if (onError) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+
+        /*
+         * If debugErrorHook is present then we give it a chance to veto
+         * sending the error on to the regular error reporter.
+         */
+        if (hook && !hook(cx, message, report,
+                          cx->runtime->debugErrorHookData)) {
+            onError = NULL;
+        }
+    }
+    if (onError)
+        (*onError)(cx, message, report);
 
     if (message)
         JS_free(cx, message);

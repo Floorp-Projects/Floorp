@@ -4529,10 +4529,10 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     }
     if (!ok)
         JS_ClearPendingException(cx);
-    ok = JSVAL_IS_PRIMITIVE(fval) ||
-         js_InternalCall(cx, obj, fval, argc, argv, rval);
     JS_SetErrorReporter(cx, older);
-    return ok;
+
+    return JSVAL_IS_PRIMITIVE(fval) ||
+           js_InternalCall(cx, obj, fval, argc, argv, rval);
 }
 
 #if JS_HAS_XDR
