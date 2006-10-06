@@ -83,15 +83,15 @@ BOOL gSomeMenuBarPainted = NO;
 // these in place of carbon's IDs for these commands in order to stop Carbon from
 // messing with our event handlers. See bug 346883.
 enum {
-  COMMAND_ID_ABOUT = 1,
-  COMMAND_ID_PREFS,
-  COMMAND_ID_QUIT,
-  COMMAND_ID_LAST
+  eCommand_ID_About = 1,
+  eCommand_ID_Prefs,
+  eCommand_ID_Quit,
+  eCommand_ID_Last
 };
 
 
 nsMenuBarX::nsMenuBarX()
-: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(COMMAND_ID_LAST), mDocument(nsnull)
+: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(eCommand_ID_Last), mDocument(nsnull)
 {
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
   
@@ -292,7 +292,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
 
   switch (command.commandID) {
-    case COMMAND_ID_PREFS:
+    case eCommand_ID_Prefs:
     {
       nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
       if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
@@ -300,7 +300,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
       break;
     }
 
-    case COMMAND_ID_QUIT:
+    case eCommand_ID_Quit:
     {
       nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
       if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
@@ -308,7 +308,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
       break;
     }
 
-    case COMMAND_ID_ABOUT:
+    case eCommand_ID_About:
     {
       // the 'about' command is special because we don't have a
       // nsIMenu or nsIMenuItem for the application menu. Grovel for the
@@ -650,7 +650,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add the About menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("aboutName"), @selector(menuItemHit:),
-                                             COMMAND_ID_ABOUT, nsMenuBarX::sNativeEventTarget);
+                                             eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -660,7 +660,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add the Preferences menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_preferences"), @selector(menuItemHit:),
-                                             COMMAND_ID_PREFS, nsMenuBarX::sNativeEventTarget);
+                                             eCommand_ID_Prefs, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -720,7 +720,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add quit menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"), @selector(menuItemHit:),
-                                             COMMAND_ID_QUIT, nsMenuBarX::sNativeEventTarget);
+                                             eCommand_ID_Quit, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -731,7 +731,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
       NSMenuItem* defaultQuitItem = [[[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(menuItemHit:)
                                                          keyEquivalent:@"q"] autorelease];
       [defaultQuitItem setTarget:nsMenuBarX::sNativeEventTarget];
-      [defaultQuitItem setTag:COMMAND_ID_QUIT];
+      [defaultQuitItem setTag:eCommand_ID_Quit];
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
