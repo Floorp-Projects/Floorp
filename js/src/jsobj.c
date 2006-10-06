@@ -4862,7 +4862,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 /* Routines to print out values during debugging. */
 
 void printChar(jschar *cp) {
-    fprintf(stderr, "jschar* (0x%p) \"", (void *)cp);
+    fprintf(stderr, "jschar* (%p) \"", (void *)cp);
     while (*cp)
         fputc(*cp++, stderr);
     fputc('"', stderr);
@@ -4872,7 +4872,7 @@ void printChar(jschar *cp) {
 void printString(JSString *str) {
     size_t i, n;
     jschar *s;
-    fprintf(stderr, "string (0x%p) \"", (void *)str);
+    fprintf(stderr, "string (%p) \"", (void *)str);
     s = JSSTRING_CHARS(str);
     for (i=0, n=JSSTRING_LENGTH(str); i < n; i++)
         fputc(s[i], stderr);
@@ -4887,21 +4887,21 @@ void printObj(JSContext *cx, JSObject *jsobj) {
     jsval val;
     JSClass *clasp;
 
-    fprintf(stderr, "object 0x%p\n", (void *)jsobj);
+    fprintf(stderr, "object %p\n", (void *)jsobj);
     clasp = OBJ_GET_CLASS(cx, jsobj);
-    fprintf(stderr, "class 0x%p %s\n", (void *)clasp, clasp->name);
+    fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
     for (i=0; i < jsobj->map->nslots; i++) {
         fprintf(stderr, "slot %3d ", i);
         val = jsobj->slots[i];
         if (JSVAL_IS_OBJECT(val))
-            fprintf(stderr, "object 0x%p\n", (void *)JSVAL_TO_OBJECT(val));
+            fprintf(stderr, "object %p\n", (void *)JSVAL_TO_OBJECT(val));
         else
             printVal(cx, val);
     }
 }
 
 void printVal(JSContext *cx, jsval val) {
-    fprintf(stderr, "val %d (0x%p) = ", (int)val, (void *)val);
+    fprintf(stderr, "val %d (%p) = ", (int)val, (void *)val);
     if (JSVAL_IS_NULL(val)) {
         fprintf(stderr, "null\n");
     } else if (JSVAL_IS_VOID(val)) {
@@ -4923,7 +4923,7 @@ void printVal(JSContext *cx, jsval val) {
 }
 
 void printId(JSContext *cx, jsid id) {
-    fprintf(stderr, "id %d (0x%p) is ", (int)id, (void *)id);
+    fprintf(stderr, "id %d (%p) is ", (int)id, (void *)id);
     printVal(cx, ID_TO_VALUE(id));
 }
 
