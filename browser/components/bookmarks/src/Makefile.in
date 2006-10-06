@@ -74,7 +74,6 @@ CPPSRCS		= nsBookmarksService.cpp \
 		  nsForwardProxyDataSource.cpp \
 		  $(NULL)
 
-#EXTRA_COMPONENTS = nsBookmarkProtocolHandler.js
 EXTRA_COMPONENTS = nsBookmarkTransactionManager.js
 
 # we don't want the shared lib, but we want to force the creation of a
