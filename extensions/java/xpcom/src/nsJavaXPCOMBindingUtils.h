@@ -371,8 +371,9 @@ void ThrowException(JNIEnv* env, const nsresult aErrorCode,
  * @param env       Java environment pointer
  * @param aString   Java string to convert
  *
- * @return  nsAString/nsACString with same content as given Java string; or
- *          <code>nsnull</code> if out of memory
+ * @return  nsAString/nsACString with same content as given Java string;
+ *          a 'void' nsAString/nsACString object if aString is
+ *          <code>null</code>; or <code>nsnull</code> if out of memory
  */
 nsAString* jstring_to_nsAString(JNIEnv* env, jstring aString);
 nsACString* jstring_to_nsACString(JNIEnv* env, jstring aString);

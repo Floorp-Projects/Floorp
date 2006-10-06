@@ -414,7 +414,6 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
     {
       const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
-      NS_ASSERTION(!paramInfo.IsDipper(), "Dipper!");
       if (!paramInfo.IsRetval()) {
         rv = SetupJavaParams(paramInfo, aMethodInfo, aMethodIndex, aParams,
                              aParams[i], java_params[i], methodSig);
@@ -560,7 +559,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     for (PRUint8 i = 0; i < paramCount; i++)
     {
       const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
-      if (paramInfo.IsIn() && !paramInfo.IsOut()) // 'in'
+      if (paramInfo.IsIn() && !paramInfo.IsOut() && !paramInfo.IsDipper()) // 'in'
         continue;
 
       // If param is null, then caller is not expecting an output value.
@@ -960,80 +959,62 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      nsString* str = nsnull;
-      if (!aParamInfo.IsOut()) {  // 'in'
-        str = NS_STATIC_CAST(nsString*, aVariant.val.p);
-      } else if (aVariant.val.p) {  // 'inout' & 'out'
-        nsString** variant = NS_STATIC_CAST(nsString**, aVariant.val.p);
-        str = *variant;
+      // This only handle 'in' or 'in dipper' params.  In XPIDL, the 'out'
+      // descriptor is mapped to 'in dipper'.
+      NS_PRECONDITION(aParamInfo.IsIn(), "unexpected param descriptor");
+      if (!aParamInfo.IsIn()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      jstring jstr;
-      if (str) {
+      nsString* str = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      if (!str) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+
+      jstring jstr = nsnull;
+      if (!str->IsVoid()) {
         jstr = env->NewString(str->get(), str->Length());
         if (!jstr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        jstr = nsnull;
       }
 
-      if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.l = jstr;
-        aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {  // 'inout' & 'out'
-        if (aVariant.val.p) {
-          aJValue.l = env->NewObjectArray(1, stringClass, jstr);
-          if (aJValue.l == nsnull) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-        } else {
-          aJValue.l = nsnull;
-        }
-        aMethodSig.AppendLiteral("[Ljava/lang/String;");
-      }
+      aJValue.l = jstr;
+      aMethodSig.AppendLiteral("Ljava/lang/String;");
     }
     break;
 
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      nsCString* str = nsnull;
-      if (!aParamInfo.IsOut()) {  // 'in'
-        str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
-      } else if (aVariant.val.p) {  // 'inout' & 'out'
-        nsCString** variant = NS_STATIC_CAST(nsCString**, aVariant.val.p);
-        str = *variant;
+      // This only handle 'in' or 'in dipper' params.  In XPIDL, the 'out'
+      // descriptor is mapped to 'in dipper'.
+      NS_PRECONDITION(aParamInfo.IsIn(), "unexpected param descriptor");
+      if (!aParamInfo.IsIn()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      jstring jstr;
-      if (str) {
+      nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      if (!str) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+
+      jstring jstr = nsnull;
+      if (!str->IsVoid()) {
         jstr = env->NewStringUTF(str->get());
         if (!jstr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        jstr = nsnull;
       }
 
-      if (!aParamInfo.IsOut()) {  // 'in'
-        aJValue.l = jstr;
-        aMethodSig.AppendLiteral("Ljava/lang/String;");
-      } else {  // 'inout' & 'out'
-        if (aVariant.val.p) {
-          aJValue.l = env->NewObjectArray(1, stringClass, jstr);
-          if (aJValue.l == nsnull) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-        } else {
-          aJValue.l = nsnull;
-        }
-        aMethodSig.AppendLiteral("[Ljava/lang/String;");
-      }
+      aJValue.l = jstr;
+      aMethodSig.AppendLiteral("Ljava/lang/String;");
     }
     break;
 
@@ -1552,47 +1533,29 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      jstring str = nsnull;
-      if (aParamInfo.IsRetval()) {  // 'retval'
-        str = (jstring) aJValue.l;
-      } else {  // 'inout' & 'out'
-        str = (jstring) env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      NS_PRECONDITION(aParamInfo.IsDipper(), "string argument is not dipper");
+      if (!aParamInfo.IsDipper()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      nsString** variant = NS_STATIC_CAST(nsString**, aVariant.val.p);
-      if (str) {
+      jstring jstr = (jstring) aJValue.l;
+      nsString* variant = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      
+      if (jstr) {
         // Get string buffer
-        const jchar* wchar_ptr = env->GetStringChars(str, nsnull);
+        const jchar* wchar_ptr = env->GetStringChars(jstr, nsnull);
         if (!wchar_ptr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
 
-        if (!aParamInfo.IsRetval() && *variant) {
-          // If we were given an nsString, set it to the new string
-          nsString* string = *variant;
-          string->Assign(wchar_ptr);
-        } else {
-          // If the argument that was passed in was null, then we need to
-          // create a new string.
-          nsString* embedStr = new nsString(wchar_ptr);
-          if (embedStr) {
-            *variant = embedStr;
-          } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            // don't 'break'; fall through to release chars
-          }
-        }
+        variant->Assign(wchar_ptr);
 
         // release String buffer
-        env->ReleaseStringChars(str, wchar_ptr);
+        env->ReleaseStringChars(jstr, wchar_ptr);
       } else {
-        // If we were passed in a string, delete it now, and set to null.
-        // (Free only 'inout' & 'out' params)
-        if (*variant && !aParamInfo.IsRetval()) {
-          delete *variant;
-        }
-        *variant = nsnull;
+        variant->SetIsVoid(PR_TRUE);
       }
     }
     break;
@@ -1600,47 +1563,29 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      jstring str = nsnull;
-      if (aParamInfo.IsRetval()) {  // 'retval'
-        str = (jstring) aJValue.l;
-      } else {  // 'inout' & 'out'
-        str = (jstring) env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
+      NS_PRECONDITION(aParamInfo.IsDipper(), "string argument is not dipper");
+      if (!aParamInfo.IsDipper()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      nsCString** variant = NS_STATIC_CAST(nsCString**, aVariant.val.p);
-      if (str) {
+      jstring jstr = (jstring) aJValue.l;
+      nsCString* variant = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      
+      if (jstr) {
         // Get string buffer
-        const char* char_ptr = env->GetStringUTFChars(str, nsnull);
+        const char* char_ptr = env->GetStringUTFChars(jstr, nsnull);
         if (!char_ptr) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
 
-        if (!aParamInfo.IsRetval() && *variant) {
-          // If we were given an nsString, set it to the new string
-          nsCString* string = *variant;
-          string->Assign(char_ptr);
-        } else {
-          // If the argument that was passed in was null, then we need to
-          // create a new nsID.
-          nsCString* embedStr = new nsCString(char_ptr);
-          if (embedStr) {
-            *variant = embedStr;
-          } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            // don't 'break'; fall through to release chars
-          }
-        }
+        variant->Assign(char_ptr);
 
         // release String buffer
-        env->ReleaseStringUTFChars(str, char_ptr);
+        env->ReleaseStringUTFChars(jstr, char_ptr);
       } else {
-        // If we were passed in a string, delete it now, and set to null.
-        // (Free only 'inout' & 'out' params)
-        if (*variant && !aParamInfo.IsRetval()) {
-          delete *variant;
-        }
-        *variant = nsnull;
+        variant->SetIsVoid(PR_TRUE);
       }
     }
     break;

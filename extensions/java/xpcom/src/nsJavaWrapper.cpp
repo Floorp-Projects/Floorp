@@ -782,35 +782,22 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     case nsXPTType::T_DOMSTRING:
     {
       LOG(("String\n"));
-      jstring data = nsnull;
-      if (!aIsOut && !aIsArrayElement) {  // 'in'
-        data = (jstring) aParam;
-      } else if (aParam) {  // 'inout' & 'array'
-        data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam,
-                                                    aIndex);
+      // Expecting only 'in' and 'in dipper'
+      NS_PRECONDITION(!aIsOut, "unexpected param descriptor");
+      if (aIsOut) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      nsAString* str;
-      if (data) {
-        str = jstring_to_nsAString(env, data);
-        if (!str) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-      } else {
-        str = nsnull;
+      jstring jstr = NS_STATIC_CAST(jstring, aParam);
+      nsAString* str = jstring_to_nsAString(env, jstr);
+      if (!str) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
       }
 
-      if (!aIsArrayElement) { // 'in' & 'inout'
-        aVariant.val.p = str;
-        aVariant.SetValIsDOMString();
-        if (aIsOut) { // 'inout'
-          aVariant.ptr = &aVariant.val;
-          aVariant.SetPtrIsData();
-        }
-      } else {  // 'array'
-        NS_STATIC_CAST(nsAString**, aVariant.val.p)[aIndex] = str;
-      }
+      aVariant.val.p = str;
+      aVariant.SetValIsDOMString();
       break;
     }
 
@@ -818,38 +805,25 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     case nsXPTType::T_CSTRING:
     {
       LOG(("StringUTF\n"));
-      jstring data = nsnull;
-      if (!aIsOut && !aIsArrayElement) {  // 'in'
-        data = (jstring) aParam;
-      } else if (aParam) {  // 'inout' & 'array'
-        data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam,
-                                                    aIndex);
+      // Expecting only 'in' and 'in dipper'
+      NS_PRECONDITION(!aIsOut, "unexpected param descriptor");
+      if (aIsOut) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
       }
 
-      nsACString* str;
-      if (data) {
-        str = jstring_to_nsACString(env, data);
-        if (!str) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
+      jstring jstr = NS_STATIC_CAST(jstring, aParam);
+      nsACString* str = jstring_to_nsACString(env, jstr);
+      if (!str) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
+
+      aVariant.val.p = str;
+      if (aType == nsXPTType::T_CSTRING) {
+        aVariant.SetValIsCString();
       } else {
-        str = nsnull;
-      }
-
-      if (!aIsArrayElement) { // 'in' & 'inout'
-        aVariant.val.p = str;
-        if (aType == nsXPTType::T_CSTRING) {
-          aVariant.SetValIsCString();
-        } else {
-          aVariant.SetValIsUTF8String();
-        }
-        if (aIsOut) { // 'inout'
-          aVariant.ptr = &aVariant.val;
-          aVariant.SetPtrIsData();
-        }
-      } else {  // 'array'
-        NS_STATIC_CAST(nsACString**, aVariant.val.p)[aIndex] = str;
+        aVariant.SetValIsUTF8String();
       }
       break;
     }
@@ -1157,14 +1131,17 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      nsString* str = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      NS_PRECONDITION(aParamInfo.IsIn(), "unexpected param descriptor");
+      if (!aParamInfo.IsIn()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
 
-      if ((aParamInfo.IsOut() || aParamInfo.IsDipper() || aIsArrayElement) &&
-          NS_SUCCEEDED(aInvokeResult))
-      {
+      nsString* str = NS_STATIC_CAST(nsString*, aVariant.val.p);
+      if (NS_SUCCEEDED(aInvokeResult) && aParamInfo.IsDipper()) {
         // Create Java string from returned nsString
         jstring jstr = nsnull;
-        if (str) {
+        if (str && !str->IsVoid()) {
           jstr = env->NewString((const jchar*) str->get(), str->Length());
           if (!jstr) {
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1172,12 +1149,7 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
           }
         }
 
-        if (aParamInfo.IsRetval() && !aIsArrayElement) {
-          *aParam = jstr;
-        } else if (*aParam) {
-          // put new Java string into output array
-          env->SetObjectArrayElement((jobjectArray) *aParam, aIndex, jstr);
-        }
+        *aParam = jstr;        
       }
 
       // cleanup
@@ -1190,14 +1162,17 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      NS_PRECONDITION(aParamInfo.IsIn(), "unexpected param descriptor");
+      if (!aParamInfo.IsIn()) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
 
-      if ((aParamInfo.IsOut() || aParamInfo.IsDipper() || aIsArrayElement) &&
-          NS_SUCCEEDED(aInvokeResult))
-      {
+      nsCString* str = NS_STATIC_CAST(nsCString*, aVariant.val.p);
+      if (NS_SUCCEEDED(aInvokeResult) && aParamInfo.IsDipper()) {
         // Create Java string from returned nsString
         jstring jstr = nsnull;
-        if (str) {
+        if (str && !str->IsVoid()) {
           jstr = env->NewStringUTF((const char*) str->get());
           if (!jstr) {
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1205,12 +1180,7 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
           }
         }
 
-        if (aParamInfo.IsRetval() && !aIsArrayElement) {
-          *aParam = jstr;
-        } else if (*aParam) {
-          // put new Java string into output array
-          env->SetObjectArrayElement((jobjectArray) *aParam, aIndex, jstr);
-        }
+        *aParam = jstr;        
       }
 
       // cleanup
@@ -1441,7 +1411,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
       params[i].type = paramInfo.GetType();
 
-      if (paramInfo.IsIn() && !paramInfo.IsDipper()) {
+      if (paramInfo.IsIn()) {
         PRUint8 type = params[i].type.TagPart();
 
         // is paramater an array?
@@ -1478,41 +1448,12 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         }
 
         if (NS_SUCCEEDED(rv)) {
-          rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), type,
-                           paramInfo.IsOut(), iid, arrayType, arraySize,
-                           PR_FALSE, 0, params[i]);
-        }
-      } else if (paramInfo.IsDipper()) {
-        LOG(("dipper\n"));
-        switch (params[i].type.TagPart())
-        {
-          case nsXPTType::T_ASTRING:
-          case nsXPTType::T_DOMSTRING:
-          {
-            params[i].val.p = new nsString();
-            if (params[i].val.p == nsnull) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            params[i].SetValIsDOMString();
-            break;
+          jobject param = nsnull;
+          if (aParams && !paramInfo.IsRetval()) {
+            param = env->GetObjectArrayElement(aParams, i);
           }
-
-          case nsXPTType::T_UTF8STRING:
-          case nsXPTType::T_CSTRING:
-          {
-            params[i].val.p = new nsCString();
-            if (params[i].val.p == nsnull) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
-            params[i].SetValIsCString();
-            break;
-          }
-
-          default:
-            LOG(("unhandled dipper type\n"));
-            rv = NS_ERROR_UNEXPECTED;
+          rv = SetupParams(env, param, type, paramInfo.IsOut(), iid, arrayType,
+                           arraySize, PR_FALSE, 0, params[i]);
         }
       } else {
         LOG(("out/retval\n"));
