@@ -2960,7 +2960,7 @@ void sha_test(char *reqfn)
             }
             msgLen = atoi(&buf[i]); /* in bits */
             if (msgLen%8 != 0) {
-                fprintf(stderr, "SHA tests are configured for "
+                fprintf(stderr, "SHA tests are incorrectly configured for "
                     "BIT oriented implementations\n");
                 goto loser;
             }
