@@ -49,8 +49,8 @@
   <!ENTITY cmdToggleWhitespaceNodes.label "Leere Textknoten anzeigen">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "x">
 
-  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
-  <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+  <!ENTITY cmdToggleAccessibleNodes.label "Zugängliche Knoten anzeigen">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "Z">
 
   <!ENTITY cmdFlashSelected.label "Ausgewähltes Element blinken lassen">
 

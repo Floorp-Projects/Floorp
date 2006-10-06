@@ -42,6 +42,9 @@
 <!ENTITY jsProperty.label "Eigenschaft">
 <!ENTITY jsValue.label "Wert">
 
-<!ENTITY jsEval.desc "Geben Sie einen JavaScript-Ausdruck an. Die Variable &quot;target&quot; ist die momentan ausgewählte Eigenschaft. Jeder Wert, den Sie zurückgeben, wird im Javascript-Objektbetrachter angezeigt.">
-
+<!ENTITY evaluateDialog.title "Ausdruck auswerten">
+<!ENTITY jsEval.desc "Geben Sie einen JavaScript-Ausdruck an. Die Variable &quot;target&quot; ist die momentan ausgewählte Eigenschaft.">
 <!ENTITY jsExecute.label "Ausführen">
+<!ENTITY inspectReturn.label "Rückgabe inspizieren in">
+<!ENTITY inspectReturnNew.label "Neuem Fenster">
+<!ENTITY inspectReturnExisting.label "Aktuellem Fenster">
