@@ -1004,26 +1004,3 @@ nsSVGElement::ReportAttributeParseFailure(nsIDocument* aDocument,
                                      "AttributeParseWarning",
                                      strings, NS_ARRAY_LENGTH(strings));
 }
-
-void
-nsSVGElement::RecompileScriptEventListeners()
-{
-    PRInt32 i, count = mAttrsAndChildren.AttrCount();
-    for (i = 0; i < count; ++i) {
-        const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
-
-        // Eventlistenener-attributes are always in the null namespace
-        if (!name->IsAtom()) {
-            continue;
-        }
-
-        nsIAtom *attr = name->Atom();
-        if (!IsEventName(attr)) {
-            continue;
-        }
-
-        nsAutoString value;
-        GetAttr(kNameSpaceID_None, attr, value);
-        AddScriptEventListener(GetEventNameForAttr(attr), value, PR_TRUE);
-    }
-}
