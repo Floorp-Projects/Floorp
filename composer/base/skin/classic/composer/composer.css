@@ -49,6 +49,10 @@ tabeditor {
   -moz-binding: url('chrome://composer/content/bindings/tabeditor.xml#tabeditor');
 }
 
+tabeditor[visibility="hidden"] {
+  visibility: hidden;
+}
+
 #composer-throbber {
   list-style-image: url('chrome://composer/skin/logo.png');
 }

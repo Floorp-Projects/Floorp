@@ -87,7 +87,7 @@
     <sidebar id="sidebar1" sidebaritems="" persist="sidebaritems"/>
     <splitter id="splitter1" collapse="before" resizebefore="closest"/>
     <vbox flex="1">
-      <tabeditor id="tabeditor" flex="1"/>
+      <tabeditor id="tabeditor" flex="1" visibility="hidden"/>
       <hbox>
         <label value="structure toolbar" />
       </hbox>

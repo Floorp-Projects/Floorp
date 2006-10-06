@@ -13,7 +13,7 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Mozilla Composer.
+   - The Original Code is Composer.
    -
    - The Initial Developer of the Original Code is
    - Disruptive Innovations SARL.
@@ -61,8 +61,7 @@
           <xul:tabs flex="1" class="tabbrowser-tabs" anonid="EditorTabs" closebutton="true"
                     setfocus="false" onselect="onTabSelected(event)"/>
         </xul:hbox>
-        <xul:tabpanels anonid="EditorTabpanels" selectedIndex="0" flex="1"
-                       style="border: red solid thick; background-color: gray ! important"/>
+        <xul:tabpanels anonid="EditorTabpanels" selectedIndex="0" flex="1" />
       </xul:tabbox>
     </content>
 
@@ -273,6 +272,8 @@
             this.selectedTab = newTab;
             this.selectedIndex = this.mTabpanels.childNodes.length - 1;
             window.EditorLoadUrl(newEditorElement, aURL);
+
+            this.setAttribute("visibility", "visible");
 
             return {tab: newTab, panel: newEditorElement};
           ]]>
