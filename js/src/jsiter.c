@@ -684,7 +684,7 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen && gen->state != JSGEN_CLOSED) {
+    if (gen) {
         /*
          * We must mark argv[-2], as js_MarkStackFrame will not.  Note that
          * js_MarkStackFrame will mark thisp (argv[-1]) and actual arguments,
