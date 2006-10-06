@@ -16,12 +16,17 @@ unpack_build () {
             cd $dir_name
             ;;
         win32) 
-            /usr/local/bin/7za x ../"$pkg_file" > /dev/null
-            for file in *.xpi
-            do
+            /usr/bin/7za x ../"$pkg_file" > /dev/null
+            if [ -d localized ]
+            then
+              mkdir bin/
+              cp -rp localized/* nonlocalized/* optional/* bin/
+            else
+              for file in *.xpi
+              do
                 unzip -o $file > /dev/null
-            done
-
+              done
+            fi
             ;;
         linux) 
             tar xfz ../"$pkg_file" > /dev/null
