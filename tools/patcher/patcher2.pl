@@ -1112,7 +1112,7 @@ sub CreatePartialPatchinfo {
 
                             #print STDERR "Generating TEST entry: $testPatch->{'info_path'}\n";
                             write_patch_info(patch => $testPatch,
-                                             schemaVersion => $to->{'schema'});
+                                             schemaVer => $to->{'schema'});
                         }
                     }
 
