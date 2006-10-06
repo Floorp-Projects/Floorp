@@ -801,13 +801,13 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
       aNodeArray->AppendElement(kNC_PageTitleServer);
       aNodeArray->AppendElement(kNC_PageTitleCopies);
       aNodeArray->AppendElement(kNC_PageTitleAddressing);
-      // junk settings apply for all server types except for news
-      // Should this be moved outside of the hasIdentities check ??
-      nsXPIDLCString serverType;
-      server->GetType(getter_Copies(serverType));
-      if (nsCRT::strcasecmp(serverType, "nntp"))
-        aNodeArray->AppendElement(kNC_PageTitleJunk);
     }
+
+    // junk settings apply for all server types except for news
+    nsXPIDLCString serverType;
+    server->GetType(getter_Copies(serverType));
+    if (!serverType.LowerCaseEqualsLiteral("nntp"))
+      aNodeArray->AppendElement(kNC_PageTitleJunk);
 
     // Check the offline capability before adding
     // offline item
