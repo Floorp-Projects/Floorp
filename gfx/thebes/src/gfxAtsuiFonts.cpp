@@ -266,7 +266,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, fontStyle);
 
     if (fontID != kATSUInvalidFontID) {
-        /*printf ("FindATSUFont! %s %d -> %d\n", NS_ConvertUTF16toUTF8(aName).get(), fontStyle->weight, (int)fontID);*/
+        //printf ("FindATSUFont! %s %d -> %d\n", NS_ConvertUTF16toUTF8(aName).get(), fontStyle->weight, (int)fontID);
         fontGroup->mFonts.AppendElement(new gfxAtsuiFont(fontID, fontStyle));
     }
 
@@ -306,46 +306,38 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
          &mainStyle,
          &mATSULayout);
 
-    // Set up line layout
+    // Set up our layout attributes
     ATSLineLayoutOptions lineLayoutOptions = kATSLineKeepSpacesOutOfMargin | kATSLineHasNoHangers;
-    ATSUAttributeTag layoutTags[] = { kATSULineLayoutOptionsTag };
-    ByteCount layoutArgSizes[] = { sizeof(ATSLineLayoutOptions) };
-    ATSUAttributeValuePtr layoutArgs[] = { &lineLayoutOptions };
+    ATSUAttributeTag layoutTags[] = { kATSULineLayoutOptionsTag, kATSULineFontFallbacksTag };
+    ByteCount layoutArgSizes[] = { sizeof(ATSLineLayoutOptions), sizeof(ATSUFontFallbacks) };
+    ATSUAttributeValuePtr layoutArgs[] = { &lineLayoutOptions, mGroup->GetATSUFontFallbacksPtr() };
     ATSUSetLayoutControls(mATSULayout,
                           sizeof(layoutTags) / sizeof(ATSUAttributeTag),
                           layoutTags,
                           layoutArgSizes,
                           layoutArgs);
 
-    // Set up our font fallbacks
-    ATSUAttributeTag lineTags[] = { kATSULineFontFallbacksTag };
-    ByteCount lineArgSizes[] = { sizeof(ATSUFontFallbacks) };
-    ATSUAttributeValuePtr lineArgs[] = { mGroup->GetATSUFontFallbacksPtr() };
-    status = ATSUSetLineControls(mATSULayout,
-                                 0,
-                                 sizeof(lineTags) / sizeof(ATSUAttributeTag),
-                                 lineTags,
-                                 lineArgSizes,
-                                 lineArgs);
-    if (status != noErr) {
-        fprintf(stderr, "ATSUSetLineControls gave error: %d\n", (int) status);
-    }
-
     /* Now go through and update the styles for the text, based on font matching. */
 
     UniCharArrayOffset runStart = 0;
-    UniCharCount runLength = mString.Length();
-    while (runStart < runLength) {
+    UniCharCount totalLength = mString.Length();
+    UniCharCount runLength = totalLength;
+
+    //fprintf (stderr, "==== Starting font maching [string length: %d]\n", totalLength);
+    while (runStart < totalLength) {
         ATSUFontID substituteFontID;
         UniCharArrayOffset changedOffset;
         UniCharCount changedLength;
 
-        OSStatus status = ATSUMatchFontsToText (mATSULayout, runStart, kATSUToTextEnd,
+        OSStatus status = ATSUMatchFontsToText (mATSULayout, runStart, runLength,
                                                 &substituteFontID, &changedOffset, &changedLength);
         if (status == noErr) {
+            //fprintf (stderr, "ATSUMatchFontsToText returned noErr\n");
             // everything's good, finish up
             break;
         } else if (status == kATSUFontsMatched) {
+            //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsMatched: FID %d\n", substituteFontID);
+
             ATSUStyle subStyle;
             ATSUCreateStyle (&subStyle);
             ATSUCopyAttributes (mainStyle, subStyle);
@@ -361,16 +353,23 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
             mStylesToDispose.AppendElement(subStyle);
 
         } else if (status == kATSUFontsNotMatched) {
+            //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsNotMatched\n");
             /* I need to select the last resort font; how the heck do I do that? */
         }
 
-        runStart = changedOffset+changedLength;
+        //fprintf (stderr, "total length: %d changedOffset: %d changedLength: %d\n",  runLength, changedOffset, changedLength);
+
+        runStart = changedOffset + changedLength;
+        runLength = totalLength - runStart;
     }
+
+    //fprintf (stderr, "==== End font matching\n");
 }
 
 gfxAtsuiTextRun::~gfxAtsuiTextRun()
 {
-    ATSUDisposeTextLayout(mATSULayout);
+    if (mATSULayout)
+        ATSUDisposeTextLayout(mATSULayout);
 
     for (PRUint32 i = 0; i < mStylesToDispose.Length(); i++) {
         ATSUStyle s = mStylesToDispose[i];
