@@ -100,7 +100,9 @@
 <!ENTITY bidiSwitchTextDirectionItem.label        "Switch Text Direction">
 <!ENTITY bidiSwitchTextDirectionItem.accesskey    "w">
 <!ENTITY spellAddToDictionary.label     "Add to dictionary">
-<!ENTITY spellAddToDictionary.accesskey "t">
+<!ENTITY spellAddToDictionary.accesskey "o">
+<!ENTITY spellIgnoreWord.label          "Ignore word">
+<!ENTITY spellIgnoreWord.accesskey      "w">
 <!ENTITY spellEnable.label              "Spell check this field">
 <!ENTITY spellEnable.accesskey          "S">
 <!ENTITY spellNoSuggestions.label       "(No spelling suggestions)">

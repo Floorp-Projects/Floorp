@@ -75,10 +75,15 @@
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 label="&spellNoSuggestions.label;"/>
+      <menuseparator id="spell-add-separator"/>
       <menuitem id="spell-add-to-dictionary"
                 label="&spellAddToDictionary.label;"
                 accesskey="&spellAddToDictionary.accesskey;"
                 oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+      <menuitem id="spell-ignore-word"
+                label="&spellIgnoreWord.label;"
+                accesskey="&spellIgnoreWord.accesskey;"
+                oncommand="InlineSpellCheckerUI.ignoreWord();"/>
       <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
