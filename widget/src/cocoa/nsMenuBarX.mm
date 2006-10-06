@@ -71,14 +71,27 @@ static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIMutationObserver, 
                    nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
 
+
 NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 NSWindow* nsMenuBarX::sEventTargetWindow = nil;
 BOOL gSomeMenuBarPainted = NO;
 
+
+// Special command IDs that we know Mac OS X does not use for anything else. We use
+// these in place of carbon's IDs for these commands in order to stop Carbon from
+// messing with our event handlers. See bug 346883.
+enum {
+  COMMAND_ID_ABOUT = 1,
+  COMMAND_ID_PREFS,
+  COMMAND_ID_QUIT,
+  COMMAND_ID_LAST
+};
+
+
 nsMenuBarX::nsMenuBarX()
-: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(1), mDocument(nsnull)
+: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(COMMAND_ID_LAST), mDocument(nsnull)
 {
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
   
@@ -279,7 +292,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
 
   switch (command.commandID) {
-    case kHICommandPreferences:
+    case COMMAND_ID_PREFS:
     {
       nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
       if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
@@ -287,7 +300,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
       break;
     }
 
-    case kHICommandQuit:
+    case COMMAND_ID_QUIT:
     {
       nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
       if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
@@ -295,7 +308,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
       break;
     }
 
-    case kHICommandAbout:
+    case COMMAND_ID_ABOUT:
     {
       // the 'about' command is special because we don't have a
       // nsIMenu or nsIMenuItem for the application menu. Grovel for the
@@ -637,7 +650,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add the About menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("aboutName"), @selector(menuItemHit:),
-                                             kHICommandAbout, nsMenuBarX::sNativeEventTarget);
+                                             COMMAND_ID_ABOUT, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -647,7 +660,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add the Preferences menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_preferences"), @selector(menuItemHit:),
-                                             kHICommandPreferences, nsMenuBarX::sNativeEventTarget);
+                                             COMMAND_ID_PREFS, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -707,7 +720,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // Add quit menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"), @selector(menuItemHit:),
-                                             kHICommandQuit, nsMenuBarX::sNativeEventTarget);
+                                             COMMAND_ID_QUIT, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -718,7 +731,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
       NSMenuItem* defaultQuitItem = [[[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(menuItemHit:)
                                                          keyEquivalent:@"q"] autorelease];
       [defaultQuitItem setTarget:nsMenuBarX::sNativeEventTarget];
-      [defaultQuitItem setTag:kHICommandQuit];
+      [defaultQuitItem setTag:COMMAND_ID_QUIT];
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
@@ -958,7 +971,7 @@ nsMenuBarX::Register(nsIMenuItem* inMenuItem, PRUint32* outCommandID)
   // window at 1. Even if we did get close to the reserved Apple command id's,
   // those don't start until at least '    ', which is integer 538976288. If
   // we have that many menu items in one window, I think we have other problems.
-  
+
   // put it in the table, set out param for client
   nsPRUint32Key key(mCurrentCommandID);
   mObserverTable.Put(&key, inMenuItem);
