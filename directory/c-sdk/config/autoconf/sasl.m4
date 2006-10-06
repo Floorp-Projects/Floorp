@@ -22,10 +22,10 @@ AC_ARG_WITH(sasl,
         HAVE_SASL=1
 
         dnl = Check for sasl.h in the normal locations
-        if test -f /usr/include/sasl.h; then
-          SASL_CFLAGS="-I/usr/include"
-        elif test -f /usr/include/sasl/sasl.h; then
+        if test -f /usr/include/sasl/sasl.h; then
           SASL_CFLAGS="-I/usr/include/sasl"
+        elif test -f /usr/include/sasl.h; then
+          SASL_CFLAGS="-I/usr/include"
         else
           AC_MSG_ERROR(sasl.h not found)
         fi
@@ -37,8 +37,6 @@ AC_ARG_WITH(sasl,
 
         if test -f "$withval/include/sasl.h"; then
           SASL_CFLAGS="-I$withval/include"
-        elif test -f "$withval/include/sasl/sasl.h"; then
-          SASL_CFLAGS="-I$withval/include/sasl"
         else
           AC_MSG_ERROR(sasl.h not found)
         fi
