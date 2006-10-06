@@ -490,103 +490,98 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
         iterobj->slots[JSSLOT_ITER_STATE] = state;
         if (JSVAL_IS_NULL(state))
             goto stop;
-        if (foreach)
-            goto return_key_value;
-        *rval = ID_TO_VALUE(id);
-        return JS_TRUE;
-    }
+    } else
 #endif
+    {
+      restart:
+        if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
+            return JS_TRUE;
 
-  restart:
-    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
-        return JS_TRUE;
-
-    iterobj->slots[JSSLOT_ITER_STATE] = state;
-    if (JSVAL_IS_NULL(state)) {
+        iterobj->slots[JSSLOT_ITER_STATE] = state;
+        if (JSVAL_IS_NULL(state)) {
 #if JS_HAS_XML_SUPPORT
-        if (OBJECT_IS_XML(cx, obj)) {
-            /*
-             * We just finished enumerating an XML obj that is present on the
-             * prototype chain of a non-XML origobj. Stop further prototype
-             * chain searches because XML objects don't enumerate prototypes.
-             */
-            JS_ASSERT(origobj != obj);
-            JS_ASSERT(!OBJECT_IS_XML(cx, origobj));
-        } else
+            if (OBJECT_IS_XML(cx, obj)) {
+                /*
+                 * We just finished enumerating an XML obj that is present on
+                 * the prototype chain of a non-XML origobj. Stop further
+                 * prototype chain searches because XML objects don't
+                 * enumerate prototypes.
+                 */
+                JS_ASSERT(origobj != obj);
+                JS_ASSERT(!OBJECT_IS_XML(cx, origobj));
+            } else
 #endif
-        {
-            obj = OBJ_GET_PROTO(cx, obj);
-            if (obj) {
-                iterobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
-                if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, NULL))
-                    return JS_FALSE;
-                iterobj->slots[JSSLOT_ITER_STATE] = state;
-                if (!JSVAL_IS_NULL(state))
-                    goto restart;
+            {
+                obj = OBJ_GET_PROTO(cx, obj);
+                if (obj) {
+                    iterobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
+                    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, NULL))
+                        return JS_FALSE;
+                    iterobj->slots[JSSLOT_ITER_STATE] = state;
+                    if (!JSVAL_IS_NULL(state))
+                        goto restart;
+                }
             }
+            goto stop;
         }
-        goto stop;
-    }
 
-    /* Skip properties not in obj when looking from origobj. */
-    if (!OBJ_LOOKUP_PROPERTY(cx, origobj, id, &obj2, &prop))
-        return JS_FALSE;
-    if (prop)
+        /* Skip properties not in obj when looking from origobj. */
+        if (!OBJ_LOOKUP_PROPERTY(cx, origobj, id, &obj2, &prop))
+            return JS_FALSE;
+        if (!prop)
+            goto restart;
         OBJ_DROP_PROPERTY(cx, obj2, prop);
 
-    /*
-     * If the id was deleted, or found in a prototype object or an unrelated
-     * object (specifically, not in an inner object for obj), skip it. This
-     * step means that all OBJ_LOOKUP_PROPERTY implementations must return an
-     * object further along on the prototype chain, or else possibly an object
-     * returned by the JSExtendedClass.outerObject optional hook.
-     */
-    if (!prop)
-        goto restart;
-    if (obj != obj2) {
-        cond = JS_FALSE;
-        clasp = OBJ_GET_CLASS(cx, obj2);
-        if (clasp->flags & JSCLASS_IS_EXTENDED) {
-            xclasp = (JSExtendedClass *) clasp;
-            cond = xclasp->outerObject &&
-                xclasp->outerObject(cx, obj2) == obj;
+        /*
+         * If the id was found in a prototype object or an unrelated object
+         * (specifically, not in an inner object for obj), skip it. This step
+         * means that all OBJ_LOOKUP_PROPERTY implementations must return an
+         * object further along on the prototype chain, or else possibly an
+         * object returned by the JSExtendedClass.outerObject optional hook.
+         */
+        if (obj != obj2) {
+            cond = JS_FALSE;
+            clasp = OBJ_GET_CLASS(cx, obj2);
+            if (clasp->flags & JSCLASS_IS_EXTENDED) {
+                xclasp = (JSExtendedClass *) clasp;
+                cond = xclasp->outerObject &&
+                    xclasp->outerObject(cx, obj2) == obj;
+            }
+            if (!cond)
+                goto restart;
         }
-        if (!cond)
-            goto restart;
+
+        if (foreach) {
+            /* Get property querying the original object. */
+            if (!OBJ_GET_PROPERTY(cx, origobj, id, rval))
+                return JS_FALSE;
+        }
     }
 
     if (foreach) {
-        /* Get property querying the original object. */
-        if (!OBJ_GET_PROPERTY(cx, origobj, id, rval))
-            return JS_FALSE;
-        goto return_key_value;
-    }
-
-    /* Make rval a string for uniformity and compatibility. */
-    if (JSID_IS_ATOM(id)) {
-        *rval = ATOM_KEY(JSID_TO_ATOM(id));
-    }
+        if (flags & JSITER_KEYVALUE) {
+            if (!NewKeyValuePair(cx, id, *rval, rval))
+                return JS_FALSE;
+        }
+    } else {
+        /* Make rval a string for uniformity and compatibility. */
+        if (JSID_IS_ATOM(id)) {
+            *rval = ATOM_KEY(JSID_TO_ATOM(id));
+        }
 #if JS_HAS_XML_SUPPORT
-    else if (JSID_IS_OBJECT(id)) {
-        str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(id));
-        if (!str)
-            return JS_FALSE;
-        *rval = STRING_TO_JSVAL(str);
-    }
+        else if (JSID_IS_OBJECT(id)) {
+            str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(id));
+            if (!str)
+                return JS_FALSE;
+            *rval = STRING_TO_JSVAL(str);
+        }
 #endif
-    else {
-        str = js_NumberToString(cx, (jsdouble)JSID_TO_INT(id));
-        if (!str)
-            return JS_FALSE;
-        *rval = STRING_TO_JSVAL(str);
-    }
-    return JS_TRUE;
-
-  return_key_value:
-    JS_ASSERT(foreach);
-    if (flags & JSITER_KEYVALUE) {
-        if (!NewKeyValuePair(cx, id, *rval, rval))
-            return JS_FALSE;
+        else {
+            str = js_NumberToString(cx, (jsdouble)JSID_TO_INT(id));
+            if (!str)
+                return JS_FALSE;
+            *rval = STRING_TO_JSVAL(str);
+        }
     }
     return JS_TRUE;
 
