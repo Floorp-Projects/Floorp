@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=2 sw=4 et tw=80: */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 sw=4 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -113,6 +113,18 @@ nsresult nsJSThunk::Init(nsIURI* uri)
 
     mURI = uri;
     return NS_OK;
+}
+
+static PRBool
+IsISO88591(const nsString& aString)
+{
+    for (nsString::const_char_iterator c = aString.BeginReading(),
+                                   c_end = aString.EndReading();
+         c < c_end; ++c) {
+        if (*c > 255)
+            return PR_FALSE;
+    }
+    return PR_TRUE;
 }
 
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
@@ -301,11 +313,27 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
-        PRUint32 resultUTF8len;
-        char *resultUTF8 = ToNewUTF8String(result, &resultUTF8len);
-        if (resultUTF8)
+        char *bytes;
+        PRUint32 bytesLen;
+        NS_NAMED_LITERAL_CSTRING(isoCharset, "ISO-8859-1");
+        NS_NAMED_LITERAL_CSTRING(utf8Charset, "UTF-8");
+        const nsCString *charset;
+        if (IsISO88591(result)) {
+            // For compatibility, if the result is ISO-8859-1, we use
+            // ISO-8859-1, so that people can compatibly create images
+            // using javascript: URLs.
+            bytes = ToNewCString(result);
+            bytesLen = result.Length();
+            charset = &isoCharset;
+        }
+        else {
+            bytes = ToNewUTF8String(result, &bytesLen);
+            charset = &utf8Charset;
+        }
+        aChannel->SetContentCharset(*charset);
+        if (bytes)
             rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
-                                       resultUTF8, resultUTF8len,
+                                       bytes, bytesLen,
                                        NS_ASSIGNMENT_ADOPT);
         else
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -420,8 +448,7 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
-                                  NS_LITERAL_CSTRING("text/html"),
-                                  NS_LITERAL_CSTRING("UTF-8"));
+                                  NS_LITERAL_CSTRING("text/html"));
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);
