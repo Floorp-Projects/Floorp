@@ -127,8 +127,6 @@ public:
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
 
-  virtual void RecompileScriptEventListeners();
-
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);

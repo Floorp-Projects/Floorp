@@ -755,6 +755,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     return NS_OK;
 }
 
+
 void
 nsXULElement::AddListenerFor(const nsAttrName& aName,
                              PRBool aCompileEventHandlers)
@@ -908,7 +909,37 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                 NS_ENSURE_SUCCESS(rv, rv);
             }
 
-            RecompileScriptEventListeners();
+            // we need to (re-)initialize several attributes that are dependant on
+            // the document. Do that now.
+            PRInt32 count = mAttrsAndChildren.AttrCount();
+            PRBool haveLocalAttributes = (count > 0);
+            PRInt32 i;
+            for (i = 0; i < count; i++) {
+                AddListenerFor(*mAttrsAndChildren.AttrNameAt(i),
+                               aCompileEventHandlers);
+            }
+
+            if (mPrototype) {
+                // If we have a prototype, the node we are binding to should
+                // have the same script-type - otherwise we will compile the
+                // event handlers incorrectly.
+                NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
+                             "Prototype and node confused about default language?");
+                PRInt32 count = mPrototype->mNumAttributes;
+                for (i = 0; i < count; i++) {
+                    nsXULPrototypeAttribute *protoattr =
+                        &mPrototype->mAttributes[i];
+
+                    // Don't clobber a locally modified attribute.
+                    if (haveLocalAttributes &&
+                        mAttrsAndChildren.GetAttr(protoattr->mName.LocalName(), 
+                                                  protoattr->mName.NamespaceID())) {
+                        continue;
+                    }
+
+                    AddListenerFor(protoattr->mName, aCompileEventHandlers);
+                }
+            }
         }
     }
 
@@ -2501,63 +2532,6 @@ nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
 
     return attr && attr->Type() == nsAttrValue::eAtom &&
            attr->GetAtomValue() == nsXULAtoms::_true;
-}
-
-void
-nsXULElement::RecompileScriptEventListeners()
-{
-    PRInt32 i, count = mAttrsAndChildren.AttrCount();
-    PRBool haveLocalAttributes = (count > 0);
-    for (i = 0; i < count; ++i) {
-        const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
-
-        // Eventlistenener-attributes are always in the null namespace
-        if (!name->IsAtom()) {
-            continue;
-        }
-
-        nsIAtom *attr = name->Atom();
-        if (!IsEventHandler(attr)) {
-            continue;
-        }
-
-        nsAutoString value;
-        GetAttr(kNameSpaceID_None, attr, value);
-        AddScriptEventListener(attr, value, PR_TRUE);
-    }
-
-    if (mPrototype) {
-        // If we have a prototype, the node we are binding to should
-        // have the same script-type - otherwise we will compile the
-        // event handlers incorrectly.
-        NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
-                     "Prototype and node confused about default language?");
-
-        count = mPrototype->mNumAttributes;
-        for (i = 0; i < count; ++i) {
-            const nsAttrName &name = mPrototype->mAttributes[i].mName;
-
-            // Eventlistenener-attributes are always in the null namespace
-            if (!name.IsAtom()) {
-                continue;
-            }
-
-            nsIAtom *attr = name.Atom();
-
-            // Don't clobber a locally modified attribute.
-            if (haveLocalAttributes && mAttrsAndChildren.GetAttr(attr)) {
-                continue;
-            }
-
-            if (!IsEventHandler(attr)) {
-                continue;
-            }
-
-            nsAutoString value;
-            GetAttr(kNameSpaceID_None, attr, value);
-            AddScriptEventListener(attr, value, PR_TRUE);
-        }
-    }
 }
 
 //----------------------------------------------------------------------
