@@ -236,7 +236,13 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
 JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *argsobj;
+    JSObject *argsobj, *global, *parent;
+
+    /*
+     * We must be in a function activation; the function must be lightweight
+     * or else fp must have a variable object.
+     */
+    JS_ASSERT(fp->fun && (!(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)
@@ -253,6 +259,22 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         cx->newborn[GCX_OBJECT] = NULL;
         return NULL;
     }
+
+    /*
+     * Give arguments an intrinsic scope chain link to fp's global object.
+     * Since the arguments object lacks a prototype because js_ArgumentsClass
+     * is not initialized, js_NewObject won't assign a default parent to it.
+     *
+     * Therefore if arguments is used as the head of an eval scope chain (via
+     * a direct or indirect call to eval(program, arguments)), any reference
+     * to a standard class object in the program will fail to resolve due to
+     * js_GetClassPrototype not being able to find a global object containing
+     * the standard prototype by starting from arguments and following parent.
+     */
+    global = fp->scopeChain;
+    while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
+        global = parent;
+    argsobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(global);
     fp->argsobj = argsobj;
     return argsobj;
 }
