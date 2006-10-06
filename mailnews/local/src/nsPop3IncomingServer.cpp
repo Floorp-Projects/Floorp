@@ -273,10 +273,12 @@ nsPop3IncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
       NS_ENSURE_SUCCESS(rv,rv);
       nsCOMPtr <nsIMsgAccount> account;
       rv = accountManager->GetAccount(deferredToAccount, getter_AddRefs(account));
+      NS_ENSURE_SUCCESS(rv,rv);
       if (account)
       {
         nsCOMPtr <nsIMsgIncomingServer> incomingServer;
         rv = account->GetIncomingServer(getter_AddRefs(incomingServer));
+        NS_ENSURE_SUCCESS(rv,rv);
         // make sure we're not deferred to ourself...
         if (incomingServer && incomingServer != this) 
           rv = incomingServer->GetRootMsgFolder(getter_AddRefs(m_rootMsgFolder));
@@ -326,14 +328,15 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
   nsCOMPtr<nsIMsgFolder> rootMsgFolder;
   nsCOMPtr<nsIUrlListener> urlListener;
   rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
-  if(NS_SUCCEEDED(rv) && rootMsgFolder)
-  {
-    PRUint32 numFolders;
-    rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
-                                           &numFolders,
-                                           getter_AddRefs(inbox));
-    if (NS_FAILED(rv) || numFolders != 1) return rv;
-  }
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!rootMsgFolder) return NS_ERROR_FAILURE;
+
+  PRUint32 numFolders;
+  rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                         &numFolders,
+                                         getter_AddRefs(inbox));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (numFolders != 1) return NS_ERROR_FAILURE;
 
   nsCOMPtr <nsIMsgIncomingServer> server;
   inbox->GetServer(getter_AddRefs(server));
