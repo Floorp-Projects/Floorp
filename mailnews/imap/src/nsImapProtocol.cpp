@@ -1652,9 +1652,14 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
     else
       Log("SendData", nsnull, "Logging suppressed for this command (it probably contained authentication information)");
     
-    PRUint32 n;
-    rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &n);
-
+    {
+      // don't allow someone to close the stream/transport out from under us
+      // this can happen when the ui thread calls TellThreadToDie.
+      nsAutoCMonitor mon(this);
+      PRUint32 n;
+      if (m_outputStream)
+        rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &n);
+    }
     if (NS_FAILED(rv))
     {
       Log("SendData", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
