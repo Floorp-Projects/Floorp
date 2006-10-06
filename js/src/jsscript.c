@@ -161,8 +161,8 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
     JSScript *oldscript, *script;
-    JSString *str;
     JSStackFrame *fp, *caller;
+    JSString *str;
     JSObject *scopeobj;
     const char *file;
     uintN line;
@@ -175,6 +175,16 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* If no args, leave private undefined and return early. */
     if (argc == 0)
         goto out;
+
+    /* XXX thread safety was completely neglected in this function... */
+    oldscript = (JSScript *) JS_GetPrivate(cx, obj);
+    for (fp = cx->fp; fp; fp = fp->down) {
+        if (fp->script == oldscript) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_SELF_MODIFYING_SCRIPT);
+            return JS_FALSE;
+        }
+    }
 
     /* Otherwise, the first arg is the script source to compile. */
     str = js_ValueToString(cx, argv[0]);
@@ -232,7 +242,6 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
 
     /* Swap script for obj's old script, if any. */
-    oldscript = (JSScript *) JS_GetPrivate(cx, obj);
     if (!JS_SetPrivate(cx, obj, script)) {
         js_DestroyScript(cx, script);
         return JS_FALSE;
