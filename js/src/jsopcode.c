@@ -2492,12 +2492,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
                 rval = POP_STR();
                 pos = ss->top;
-                while (ss->opcodes[--pos] != JSOP_ENTERBLOCK)
+                while ((op = ss->opcodes[--pos]) != JSOP_ENTERBLOCK &&
+                       op != JSOP_NEWINIT) {
                     LOCAL_ASSERT(pos != 0);
+                }
                 blockpos = pos;
-                while (ss->opcodes[--pos] == JSOP_ENTERBLOCK) {
+                while (ss->opcodes[pos] == JSOP_ENTERBLOCK) {
                     if (pos == 0)
                         break;
+                    --pos;
                 }
                 LOCAL_ASSERT(ss->opcodes[pos] == JSOP_NEWINIT);
                 startpos = pos;
