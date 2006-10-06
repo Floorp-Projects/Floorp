@@ -58,6 +58,12 @@ use constant WS_ERROR_CODE => {
     account_disabled             => 301,
     auth_invalid_email           => 302,
     extern_id_conflict           => -303,
+
+    # User errors are 500-600.
+    account_exists        => 500,
+    illegal_email_address => 501,
+    password_too_short    => 502,
+    password_too_long     => 503,
 };
 
 # These are the fallback defaults for errors not in ERROR_CODE.
