@@ -52,6 +52,7 @@
 #undef ERROR
 #endif
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
 
 class nsIRenderingContext;
@@ -409,7 +410,7 @@ public:
   // status. This is used also to indicate whether the event is trusted.
   PRUint32    flags;
   // Additional type info for user defined events
-  nsHashKey*  userType;
+  nsCOMPtr<nsIAtom>     userType;
   // Event targets, needed by DOM Events
   // Using nsISupports, not nsIDOMEventTarget because in some cases
   // nsIDOMEventTarget is implemented as a tearoff.

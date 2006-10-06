@@ -136,7 +136,6 @@ nsDOMEvent::~nsDOMEvent()
   NS_ASSERT_OWNINGTHREAD(nsDOMEvent);
 
   if (mEventIsInternal && mEvent) {
-    delete mEvent->userType;
     delete mEvent;
   }
 }
@@ -160,12 +159,11 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
   if (name) {
     CopyASCIItoUTF16(name, aType);
     return NS_OK;
-  }
-  else {
-    if (mEvent->message == NS_USER_DEFINED_EVENT && mEvent->userType) {
-      aType.Assign(NS_STATIC_CAST(nsStringKey*, mEvent->userType)->GetString());
-      return NS_OK;
-    }
+  } else if (mEvent->message == NS_USER_DEFINED_EVENT && mEvent->userType) {
+    nsAutoString name;
+    mEvent->userType->ToString(name);
+    aType = Substring(name, 2, name.Length() - 2); // Remove "on"
+    return NS_OK;
   }
   
   return NS_ERROR_FAILURE;
@@ -479,7 +477,7 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 #endif // MOZ_SVG
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
-    mEvent->userType = new nsStringKey(aEventTypeArg);
+    mEvent->userType = atom;
 
   return NS_OK;
 }
@@ -816,6 +814,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
   newEvent->flags                  = mEvent->flags;
   newEvent->time                   = mEvent->time;
   newEvent->refPoint               = mEvent->refPoint;
+  newEvent->userType               = mEvent->userType;
 
   mEvent = newEvent;
   mPresContext = nsnull;
