@@ -187,7 +187,7 @@ public:
     URL(const URL& aOther)
       : func(aOther.func)
       , url(aOther.url)
-      , next(new URL(*aOther.next))
+      , next(aOther.next ? new URL(*aOther.next) : nsnull)
     {
     }
     ~URL() { delete next; }
