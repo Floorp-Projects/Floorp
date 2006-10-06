@@ -1632,7 +1632,7 @@ sub GetByWordListSubstr {
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
             $sql_word = $dbh->quote($word);
-            trick_taint($word);
+            trick_taint($sql_word);
             push(@list, $dbh->sql_position(lc($sql_word),
                                            "LOWER($field)") . " > 0");
         }
