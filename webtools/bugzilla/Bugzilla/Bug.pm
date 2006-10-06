@@ -637,7 +637,7 @@ sub _check_groups {
     }
 
     foreach my $id (keys %$controls) {
-        next unless $controls->{$id}->{isactive};
+        next unless $controls->{$id}->{'group'}->is_active;
         my $membercontrol = $controls->{$id}->{membercontrol} || 0;
         my $othercontrol  = $controls->{$id}->{othercontrol}  || 0;
 
