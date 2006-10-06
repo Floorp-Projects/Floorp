@@ -79,6 +79,13 @@ ifeq ($(OS_TARGET), SunOS)
 OS_LIBS += -lkstat
 endif
 
+#
+# To create a loadable module on Darwin, we must use -bundle.
+#
+ifeq ($(OS_TARGET),Darwin)
+DSO_LDOPTS = -bundle
+endif
+
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
