@@ -74,7 +74,7 @@ static const float kTabBottomPad = 4.0;
 @implementation BrowserTabBarView
 
 static const int kTabBarMargin = 5;                  // left/right margin for tab bar
-static const int kTabBarMarginWhenOverflowTabs = 16; // left margin for tab bar when overflowing
+static const int kTabBarMarginWhenOverflowTabs = 20; // margin for tab bar when overflowing
 static const float kMinTabWidth = 100.0;             // the smallest tabs that will be drawn
 static const float kMaxTabWidth = 175.0;             // the widest tabs that will be drawn
 
