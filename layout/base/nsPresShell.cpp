@@ -6198,18 +6198,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
   nsCOMPtr<nsIEventStateManager> manager = mPresContext->EventStateManager();
   nsresult rv = NS_OK;
 
-  // Grab the offset of aView from our root view.  We can use this to adjust
-  // coordinates as needed.  Note that we can't just adjust them later, because
-  // event dispatch can destroy aView.  Also note that at times aView is null
-  // here.  When that happens, there isn't much we can do about getting
-  // coordinates right....
-  nsPoint offsetOfaView(0,0);
-  if (aView) {
-    nsIView* rootView;
-    mViewManager->GetRootView(rootView);
-    offsetOfaView = aView->GetOffsetTo(rootView);
-  }
-
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
     PRBool isHandlingUserInput = PR_FALSE;
 
