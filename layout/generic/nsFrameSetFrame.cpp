@@ -549,12 +549,16 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext*       aPresContext,
 {
   PRInt32  fixedTotal = 0;
   PRInt32  numFixed = 0;
-  PRInt32* fixed = new PRInt32[aNumSpecs];
+  nsAutoArrayPtr<PRInt32> fixed(new PRInt32[aNumSpecs]);
   PRInt32  numPercent = 0;
-  PRInt32* percent = new PRInt32[aNumSpecs];
+  nsAutoArrayPtr<PRInt32> percent(new PRInt32[aNumSpecs]);
   PRInt32  relativeSums = 0;
   PRInt32  numRelative = 0;
-  PRInt32* relative= new PRInt32[aNumSpecs];
+  nsAutoArrayPtr<PRInt32> relative(new PRInt32[aNumSpecs]);
+
+  if (NS_UNLIKELY(!fixed || !percent || !relative)) {
+    return; // NS_ERROR_OUT_OF_MEMORY
+  }
 
   float p2t = aPresContext->ScaledPixelsToTwips();
   PRInt32 i, j;
@@ -584,7 +588,6 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext*       aPresContext,
   // scale the fixed sizes if they total too much (or too little and there aren't any percent or relative)
   if ((fixedTotal > aSize) || ((fixedTotal < aSize) && (0 == numPercent) && (0 == numRelative))) { 
     Scale(aSize, numFixed, fixed, aNumSpecs, aValues);
-    delete [] fixed; delete [] percent; delete [] relative;
     return;
   }
 
@@ -600,7 +603,6 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext*       aPresContext,
   // scale the percent sizes if they total too much (or too little and there aren't any relative)
   if ((percentTotal > percentMax) || ((percentTotal < percentMax) && (0 == numRelative))) { 
     Scale(percentMax, numPercent, percent, aNumSpecs, aValues);
-    delete [] fixed; delete [] percent; delete [] relative;
     return;
   }
 
@@ -617,8 +619,6 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsPresContext*       aPresContext,
   if (relativeTotal != relativeMax) { 
     Scale(relativeMax, numRelative, relative, aNumSpecs, aValues);
   }
-  
-  delete [] fixed; delete [] percent; delete [] relative;
 }
 
 
@@ -1015,23 +1015,27 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
     CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
   }
 
-  PRBool*        verBordersVis     = nsnull; // vertical borders visibility
-  nscolor*       verBorderColors   = nsnull;
-  PRBool*        horBordersVis     = nsnull; // horizontal borders visibility
-  nscolor*       horBorderColors   = nsnull;
-  nscolor        borderColor       = GetBorderColor();
-  nsFrameborder  frameborder       = GetFrameBorder();
+  nsAutoArrayPtr<PRBool>  verBordersVis; // vertical borders visibility
+  nsAutoArrayPtr<nscolor> verBorderColors;
+  nsAutoArrayPtr<PRBool>  horBordersVis; // horizontal borders visibility
+  nsAutoArrayPtr<nscolor> horBorderColors;
+  nscolor                 borderColor = GetBorderColor();
+  nsFrameborder           frameborder = GetFrameBorder();
 
   if (firstTime) {
     verBordersVis = new PRBool[mNumCols];
+    NS_ENSURE_TRUE(verBordersVis, NS_ERROR_OUT_OF_MEMORY);
     verBorderColors = new nscolor[mNumCols];
+    NS_ENSURE_TRUE(verBorderColors, NS_ERROR_OUT_OF_MEMORY);
     for (int verX  = 0; verX < mNumCols; verX++) {
       verBordersVis[verX] = PR_FALSE;
       verBorderColors[verX] = NO_COLOR;
     }
 
     horBordersVis = new PRBool[mNumRows];
+    NS_ENSURE_TRUE(horBordersVis, NS_ERROR_OUT_OF_MEMORY);
     horBorderColors = new nscolor[mNumRows];
+    NS_ENSURE_TRUE(horBorderColors, NS_ERROR_OUT_OF_MEMORY);
     for (int horX = 0; horX < mNumRows; horX++) {
       horBordersVis[horX] = PR_FALSE;
       horBorderColors[horX] = NO_COLOR;
@@ -1066,24 +1070,29 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
                                                             borderWidth,
                                                             PR_FALSE,
                                                             PR_FALSE);
-        borderFrame->Init(mContent, this, nsnull);
-
-        mChildCount++;
-        lastChild->SetNextSibling(borderFrame);
-        lastChild = borderFrame;
-        mHorBorders[cellIndex.y-1] = borderFrame;
-        // set the neighbors for determining drag boundaries
-        borderFrame->mPrevNeighbor = lastRow; 
-        borderFrame->mNextNeighbor = cellIndex.y;  
+        if (NS_LIKELY(borderFrame != nsnull)) {
+          borderFrame->Init(mContent, this, nsnull);
+          mChildCount++;
+          lastChild->SetNextSibling(borderFrame);
+          lastChild = borderFrame;
+          mHorBorders[cellIndex.y-1] = borderFrame;
+          // set the neighbors for determining drag boundaries
+          borderFrame->mPrevNeighbor = lastRow;
+          borderFrame->mNextNeighbor = cellIndex.y;
+        }
       } else {
         borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
-        borderFrame->mWidth = borderWidth;
-        borderChildX++;
+        if (NS_LIKELY(borderFrame != nsnull)) {
+          borderFrame->mWidth = borderWidth;
+          borderChildX++;
+        }
       }
-      nsSize borderSize(aDesiredSize.width, borderWidth);
-      ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+      if (NS_LIKELY(borderFrame != nsnull)) {
+        nsSize borderSize(aDesiredSize.width, borderWidth);
+        ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+        borderFrame = nsnull;
+      }
       offset.y += borderWidth;
-      borderFrame = nsnull;
     } else {
       if (cellIndex.x > 0) {  // moved to next col in same row
         if (0 == cellIndex.y) { // in 1st row
@@ -1098,23 +1107,28 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
                                                                 borderWidth,
                                                                 PR_TRUE,
                                                                 PR_FALSE);
-            borderFrame->Init(mContent, this, nsnull);
-
-            mChildCount++;
-            lastChild->SetNextSibling(borderFrame);
-            lastChild = borderFrame;
-            mVerBorders[cellIndex.x-1] = borderFrame;
-            // set the neighbors for determining drag boundaries
-            borderFrame->mPrevNeighbor = lastCol; 
-            borderFrame->mNextNeighbor = cellIndex.x;  
+            if (NS_LIKELY(borderFrame != nsnull)) {
+              borderFrame->Init(mContent, this, nsnull);
+              mChildCount++;
+              lastChild->SetNextSibling(borderFrame);
+              lastChild = borderFrame;
+              mVerBorders[cellIndex.x-1] = borderFrame;
+              // set the neighbors for determining drag boundaries
+              borderFrame->mPrevNeighbor = lastCol;
+              borderFrame->mNextNeighbor = cellIndex.x;
+            }
           } else {         
             borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
-            borderFrame->mWidth = borderWidth;
-            borderChildX++;
+            if (NS_LIKELY(borderFrame != nsnull)) {
+              borderFrame->mWidth = borderWidth;
+              borderChildX++;
+            }
           }
-          nsSize borderSize(borderWidth, aDesiredSize.height);
-          ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
-          borderFrame = nsnull;
+          if (NS_LIKELY(borderFrame != nsnull)) {
+            nsSize borderSize(borderWidth, aDesiredSize.height);
+            ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+            borderFrame = nsnull;
+          }
         }
         offset.x += borderWidth;
       }
@@ -1235,10 +1249,6 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       }
     }
 
-    delete[] verBordersVis;    
-    delete[] verBorderColors;
-    delete[] horBordersVis; 
-    delete[] horBorderColors;
     delete[] mChildTypes; 
     delete[] mChildFrameborder;
     delete[] mChildBorderColors;
@@ -1344,7 +1354,10 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   }
 
   PRInt32 numCells = mNumRows * mNumCols; // max number of cells
-  PRInt32* childTypes = new PRInt32[numCells];
+  nsAutoArrayPtr<PRInt32> childTypes(new PRInt32[numCells]);
+  if (NS_UNLIKELY(!childTypes)) {
+    return;
+  }
   PRUint32 childIndex, frameOrFramesetChildIndex = 0;
 
   // number of any type of children
@@ -1392,7 +1405,6 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
       }
     }
   }
-  delete[] childTypes;
 }
 
 void 
