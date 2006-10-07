@@ -756,9 +756,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
             JSCodeGenerator *cg = (JSCodeGenerator *) tc;
 
             if (!js_FoldConstants(cx, pn, tc) ||
-                !js_AllocTryNotes(cx, cg) ||
-                !js_EmitTree(cx, cg, pn) ||
-                js_Emit1(cx, cg, JSOP_STOP) < 0) {
+                !js_EmitFunctionBytecode(cx, cg, pn)) {
                 pn = NULL;
             }
         }

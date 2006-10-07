@@ -3079,15 +3079,27 @@ bad:
 }
 
 JSBool
+js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
+{
+    if (!js_AllocTryNotes(cx, cg))
+        return JS_FALSE;
+
+    if (cg->treeContext.flags & TCF_FUN_IS_GENERATOR) {
+        if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
+            return JS_FALSE;
+    }
+
+    return js_EmitTree(cx, cg, body) &&
+           js_Emit1(cx, cg, JSOP_STOP) >= 0;
+}
+
+JSBool
 js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
                     JSFunction *fun)
 {
     JSStackFrame *fp, frame;
     JSObject *funobj;
     JSBool ok;
-
-    if (!js_AllocTryNotes(cx, cg))
-        return JS_FALSE;
 
     fp = cx->fp;
     funobj = fun->object;
@@ -3101,10 +3113,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
                   ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
                   : JSFRAME_COMPILING;
     cx->fp = &frame;
-    ok = (!(cg->treeContext.flags & TCF_FUN_IS_GENERATOR) ||
-          js_Emit1(cx, cg, JSOP_GENERATOR) >= 0) &&
-         js_EmitTree(cx, cg, body) &&
-         js_Emit1(cx, cg, JSOP_STOP) >= 0;
+    ok = js_EmitFunctionBytecode(cx, cg, body);
     cx->fp = fp;
     if (!ok)
         return JS_FALSE;
