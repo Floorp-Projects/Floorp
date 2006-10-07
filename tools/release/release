@@ -74,7 +74,7 @@ sub DetermineSteps() {
             } else {
                 $stepNumber += 1;
             }
-            if ($stepNumber > $#allSteps) {
+            if ($stepNumber > scalar(@allSteps)) {
                 die("Step $desiredStep not found!\n");
             }
         }
@@ -82,7 +82,7 @@ sub DetermineSteps() {
         print "Bootstrap running default steps.\n";
     }
 
-    while ($currentStep < $#allSteps) {
+    while ($currentStep < scalar(@allSteps)) {
         my $stepName = $allSteps[$currentStep];
         PerformStep( 'stepName' => $stepName );
         $currentStep += 1;
