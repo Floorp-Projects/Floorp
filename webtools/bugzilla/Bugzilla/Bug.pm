@@ -1825,7 +1825,7 @@ sub check_can_change_field {
             && $oldvalue eq 'UNCONFIRMED'
             && is_open_state($newvalue)))
     {
-        $PrivilegesRequired = 3;
+        $$PrivilegesRequired = 3;
         return $user->in_group('canconfirm');
     }
 
@@ -1854,24 +1854,24 @@ sub check_can_change_field {
     #   in that case we will have already returned 1 above
     #   when checking for the assignee of the bug.
     if ($field eq 'assigned_to') {
-        $PrivilegesRequired = 2;
+        $$PrivilegesRequired = 2;
         return 0;
     }
     # - change the QA contact
     if ($field eq 'qa_contact') {
-        $PrivilegesRequired = 2;
+        $$PrivilegesRequired = 2;
         return 0;
     }
     # - change the target milestone
     if ($field eq 'target_milestone') {
-        $PrivilegesRequired = 2;
+        $$PrivilegesRequired = 2;
         return 0;
     }
     # - change the priority (unless he could have set it originally)
     if ($field eq 'priority'
         && !Bugzilla->params->{'letsubmitterchoosepriority'})
     {
-        $PrivilegesRequired = 2;
+        $$PrivilegesRequired = 2;
         return 0;
     }
 
@@ -1882,7 +1882,7 @@ sub check_can_change_field {
 
     # If we haven't returned by this point, then the user doesn't
     # have the necessary permissions to change this field.
-    $PrivilegesRequired = 1;
+    $$PrivilegesRequired = 1;
     return 0;
 }
 
