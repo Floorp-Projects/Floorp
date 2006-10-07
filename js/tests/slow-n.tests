@@ -1,6 +1,8 @@
 e4x/GC/regress-324278.js
+e4x/Regress/regress-319872.js 
 e4x/Regress/regress-350238.js
 e4x/Regress/regress-350531.js
+e4x/XML/regress-324422-2.js
 e4x/XML/regress-324688.js
 ecma_3/Array/regress-322135-02.js
 ecma_3/Array/regress-322135-03.js
