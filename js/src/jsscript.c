@@ -1441,6 +1441,10 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     jssrcnote *sn;
     JSSrcNoteType type;
 
+    /* Cope with JSStackFrame.pc value prior to entering js_Interpret. */
+    if (!pc)
+        return 0;
+
     /*
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
