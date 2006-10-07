@@ -537,6 +537,8 @@ public:
    */
   already_AddRefed<nsIDOMHTMLFormElement> FindForm(nsIForm* aCurrentForm = nsnull);
 
+  virtual void RecompileScriptEventListeners();
+
   /**
    * See if the document being tested has nav-quirks mode enabled.
    * @param doc the document
