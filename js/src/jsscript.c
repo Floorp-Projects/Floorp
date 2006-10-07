@@ -1393,6 +1393,8 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     js_FreeAtomMap(cx, &script->atomMap);
     if (script->principals)
         JSPRINCIPALS_DROP(cx, script->principals);
+    if (cx->gsnCache.script == script)
+        JS_CLEAR_GSN_CACHE(cx);
     JS_free(cx, script);
 }
 
@@ -1413,22 +1415,77 @@ js_MarkScript(JSContext *cx, JSScript *script)
         js_MarkScriptFilename(script->filename);
 }
 
+typedef struct GSNCacheEntry {
+    JSDHashEntryHdr     hdr;
+    jsbytecode          *pc;
+    jssrcnote           *sn;
+} GSNCacheEntry;
+
+#define GSN_CACHE_THRESHOLD     100
+
 jssrcnote *
-js_GetSrcNote(JSScript *script, jsbytecode *pc)
+js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    jssrcnote *sn;
-    ptrdiff_t offset, target;
+    ptrdiff_t target, offset;
+    GSNCacheEntry *entry;
+    jssrcnote *sn, *result;
+    uintN nsrcnotes;
+
 
     target = PTRDIFF(pc, script->code, jsbytecode);
     if ((uint32)target >= script->length)
         return NULL;
-    offset = 0;
-    for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        offset += SN_DELTA(sn);
-        if (offset == target && SN_IS_GETTABLE(sn))
-            return sn;
+
+    if (cx->gsnCache.script == script) {
+        GSN_CACHE_METER(cx, hits);
+        entry = (GSNCacheEntry *)
+                JS_DHashTableOperate(&cx->gsnCache.table, pc, JS_DHASH_LOOKUP);
+        return entry->sn;
     }
-    return NULL;
+
+    GSN_CACHE_METER(cx, misses);
+    offset = 0;
+    for (sn = SCRIPT_NOTES(script); ; sn = SN_NEXT(sn)) {
+        if (SN_IS_TERMINATOR(sn)) {
+            result = NULL;
+            break;
+        }
+        offset += SN_DELTA(sn);
+        if (offset == target && SN_IS_GETTABLE(sn)) {
+            result = sn;
+            break;
+        }
+    }
+
+    if (cx->gsnCache.script != script &&
+        script->length >= GSN_CACHE_THRESHOLD) {
+        JS_CLEAR_GSN_CACHE(cx);
+        nsrcnotes = 0;
+        for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn);
+             sn = SN_NEXT(sn)) {
+            if (SN_IS_GETTABLE(sn))
+                ++nsrcnotes;
+        }
+        if (JS_DHashTableInit(&cx->gsnCache.table, JS_DHashGetStubOps(), NULL,
+                              sizeof(GSNCacheEntry), nsrcnotes)) {
+            pc = script->code;
+            for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn);
+                 sn = SN_NEXT(sn)) {
+                pc += SN_DELTA(sn);
+                if (SN_IS_GETTABLE(sn)) {
+                    entry = (GSNCacheEntry *)
+                            JS_DHashTableOperate(&cx->gsnCache.table, pc,
+                                                 JS_DHASH_ADD);
+                    entry->pc = pc;
+                    entry->sn = sn;
+                }
+            }
+            cx->gsnCache.script = script;
+            GSN_CACHE_METER(cx, fills);
+        }
+    }
+
+    return result;
 }
 
 uintN

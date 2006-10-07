@@ -439,6 +439,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_free(cx, lrs);
     }
 
+    JS_CLEAR_GSN_CACHE(cx);
+
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);
 #endif
