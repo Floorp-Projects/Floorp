@@ -18,12 +18,21 @@ Steps
 -----------------
 1) tag 
 2) build 
+2.1) push
+2.2) announce
 3) source
 4) repack
+4.1) push
+4.2) announce
 5) updates
+5.1) push
+5.2) announce
 6) stage
+6.1) merge
+6.2) announce
 7) sign
 8) release
+8.1) announce
    
 Details
 -----------------
