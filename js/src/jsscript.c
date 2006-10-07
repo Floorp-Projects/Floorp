@@ -1466,8 +1466,10 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
             if (SN_IS_GETTABLE(sn))
                 ++nsrcnotes;
         }
-        if (JS_DHashTableInit(&cx->gsnCache.table, JS_DHashGetStubOps(), NULL,
+        if (!JS_DHashTableInit(&cx->gsnCache.table, JS_DHashGetStubOps(), NULL,
                               sizeof(GSNCacheEntry), nsrcnotes)) {
+            cx->gsnCache.table.ops = NULL;
+        } else {
             pc = script->code;
             for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn);
                  sn = SN_NEXT(sn)) {
