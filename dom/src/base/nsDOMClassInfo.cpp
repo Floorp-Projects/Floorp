@@ -7116,13 +7116,34 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // If we're assigning to an on* property, we'll register the handler
-  // in our ::SetProperty() hook, so no need to do it here too.
-  if (!JSVAL_IS_STRING(id) || (flags & JSRESOLVE_ASSIGNING)) {
+  if (!JSVAL_IS_STRING(id)) {
     return NS_OK;
   }
 
-  if (id == sAddEventListener_id && !(flags & JSRESOLVE_ASSIGNING)) {
+  if (flags & JSRESOLVE_ASSIGNING) {
+    if (!IsEventName(id)) {
+      // Bail out.  We don't care about this assignment.
+      return NS_OK;
+    }
+
+    // If we're assigning to an on* property, just resolve to null for
+    // now; the assignment will then set the right value.
+    JSString* str = JSVAL_TO_STRING(id);
+    JSAutoRequest ar(cx);
+    // Make sure the flags here match those in
+    // nsJSContext::BindCompiledEventHandler
+    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                               ::JS_GetStringLength(str), JSVAL_NULL,
+                               nsnull, nsnull,
+                               JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *objp = obj;
+    return NS_OK;
+  }
+
+  if (id == sAddEventListener_id) {
     JSString *str = JSVAL_TO_STRING(id);
     // addEventListener always takes at least 3 arguments.
     JSFunction *fnc =
