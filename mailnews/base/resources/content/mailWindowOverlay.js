@@ -541,6 +541,7 @@ function RemoveAllMessageTags()
     msgHdr.folder.getMsgDatabase(msgWindow)
           .setStringProperty(msgHdr.messageKey, "keywords", "");
   }
+  OnTagsChange();
 }
 
 function ToggleMessageTagKey(index)
@@ -613,31 +614,7 @@ function ToggleMessageTag(key, addKey)
   }
   if (prevHdrFolder)
     prevHdrFolder[toggler](messages, key);
-}
-
-function AddTag()
-{
-  var args = {result: "", okCallback: AddTagCallback};
-  var dialog = window.openDialog("chrome://messenger/content/newTagDialog.xul",
-                                 "",
-                                 "chrome,titlebar,modal",
-                                 args);
-}
-
-function AddTagCallback(name, color)
-{
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
-                             .getService(Components.interfaces.nsIMsgTagService);
-  tagService.addTag(name, color, '');
-  try
-  {
-    ToggleMessageTag(tagService.getKeyForTag(name), true);
-  }
-  catch(ex)
-  {
-    return false;
-  }
-  return true;
+  OnTagsChange();
 }
 
 function SetMessageTagLabel(menuitem, index, name)
@@ -688,6 +665,9 @@ function InitMessageTags(menuPopup)
     var removeKey = (" " + curKeys + " ").indexOf(" " + taginfo.key + " ") > -1;
     newMenuItem.setAttribute('checked', removeKey);
     newMenuItem.setAttribute('oncommand', 'ToggleMessageTagMenu(event.target);');
+    var color = taginfo.color;
+    if (color)
+      newMenuItem.setAttribute("class", "lc-" + color.substr(1));
     menuPopup.insertBefore(newMenuItem, menuseparator);
   }
 }

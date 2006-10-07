@@ -175,6 +175,7 @@
 
     <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
     <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+    <mail-tagfield id="expandedtagsBox" label="&tagsHdr.label;" collapsed="true"/>
     <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
   </vbox>
 

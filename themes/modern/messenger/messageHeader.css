@@ -112,6 +112,11 @@
   font-weight: bold;
 }
 
+.tagvalue {
+  margin-top: 0;
+  margin-left: 0;
+}
+
 /* ::::: msg header email addresses ::::: */
 
 .emailDisplayButton {

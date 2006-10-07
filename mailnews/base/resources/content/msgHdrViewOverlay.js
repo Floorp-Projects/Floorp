@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -121,7 +122,8 @@ var gExpandedHeaderList = [ {name:"subject"},
                             {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"bcc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"newsgroups", outputFunction:OutputNewsgroups},
-                            {name:"followup-to", outputFunction:OutputNewsgroups} ];
+                            {name:"followup-to", outputFunction:OutputNewsgroups},
+                            {name:"tags"}];
 
 // Now, for each view the message pane can generate, we need a global table of headerEntries. These
 // header entry objects are generated dynamically based on the static date in the header lists (see above)
@@ -404,6 +406,9 @@ var messageHeaderSink = {
         } // if lowerCaseHeaderName == "from"
       } // while we have more headers to parse
 
+      // process message tags as if they were headers in the message
+      SetTagHeader();      
+
       if (("from" in currentHeaderData) && ("sender" in currentHeaderData) && msgHeaderParser)
       {
         var senderMailbox = kMailboxSeparator + msgHeaderParser.extractHeaderAddressMailboxes(null,
@@ -524,6 +529,56 @@ var messageHeaderSink = {
       }
 };
 
+// Private method which generates a space delimited list of tag keys for the
+// current message. This list is then stored in currentHeaderData["tags"].
+function SetTagHeader()
+{
+  // it would be nice if we passed in the msgHdr from the back end
+  var msgHdr;
+  try
+  {
+    msgHdr = gDBView.hdrForFirstSelectedMessage;
+  }
+  catch (ex)
+  {
+    return; // no msgHdr to add our tags to
+  }
+
+  // get the list of known tags
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                   .getService(Components.interfaces.nsIMsgTagService);
+  var tagArray = tagService.getAllTags({});
+  var tagKeys = {};
+  for each (var tagInfo in tagArray)
+    if (tagInfo.tag)
+      tagKeys[tagInfo.key] = true;
+
+  // extract the tag keys from the msgHdr
+  var msgKeyArray = msgHdr.getStringProperty("keywords").split(" ");
+
+  // attach legacy label to the front if not already there
+  var label = msgHdr.label;
+  if (label)
+  {
+    var labelKey = "$label" + label;
+    if (msgKeyArray.indexOf(labelKey) < 0)
+      msgKeyArray.unshift(labelKey);
+  }
+
+  // Rebuild the keywords string with just the keys that are actual tags or
+  // legacy labels and not other keywords like Junk and NonJunk.
+  // Retain their order, though, with the label as oldest element.
+  for (var i = msgKeyArray.length - 1; i >= 0; --i)
+    if (!(msgKeyArray[i] in tagKeys))
+      msgKeyArray.splice(i, 1); // remove non-tag key
+  var msgKeys = msgKeyArray.join(" ");
+
+  if (msgKeys)
+    currentHeaderData.tags = {headerName: "tags", headerValue: msgKeys};
+  else // no more tags, so clear out the header field
+    delete currentHeaderData.tags;
+}
+
 function EnsureSubjectValue()
 {
   if (!('subject' in currentHeaderData))
@@ -541,6 +596,31 @@ function CheckNotify()
     NotifyClearAddresses();
 }
 
+// Public method called by the tag front end code when the tags for the selected
+// message has changed. 
+function OnTagsChange()
+{
+  // rebuild the tag headers
+  SetTagHeader();
+
+  // now update the expanded header view to rebuild the tags,
+  // and then show or hide the tag header box.  
+  if (gBuiltExpandedView)
+  {
+    var headerEntry = gExpandedHeaderView.tags;
+    if (headerEntry)
+    {
+      headerEntry.valid = ("tags" in currentHeaderData);
+      if (headerEntry.valid)
+        headerEntry.outputFunction(headerEntry, currentHeaderData.tags.headerValue);
+      
+      // if we are showing the expanded header view then we may need to collapse or
+      // show the tag header box...
+      if (!gCollapsedHeaderViewMode)
+        headerEntry.enclosingBox.collapsed = !headerEntry.valid;
+    }
+  }
+}
 
 // flush out any local state being held by a header entry for a given
 // table
