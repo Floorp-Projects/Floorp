@@ -39,7 +39,7 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 1;      # Do l10n packaging?
+$BuildLocales      = 1;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
@@ -142,6 +142,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
+$Tinderbox_server = 'mattwillis@gmail.com';
 
 # Allow for non-client builds, e.g. camino.
 #$moz_client_mk = 'client.mk';
@@ -219,7 +220,8 @@ $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightl
 #$tbox_ftp_path = $ftp_path;
 #$tbox_url_path = $url_path;
 #$milestone     = "trunk";
-$notify_list   = "build-announce\@mozilla.org";
+#$notify_list   = "build-announce\@mozilla.org";
+$notify_list   = "mattwillis\@gmail.com";
 $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
