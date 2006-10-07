@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -187,8 +188,15 @@ js_DestroyScript(JSContext *cx, JSScript *script);
 extern void
 js_MarkScript(JSContext *cx, JSScript *script);
 
+/*
+ * To perturb as little code as possible, we introduce a js_GetSrcNote lookup
+ * cache without adding an explicit cx parameter.  Thus js_GetSrcNote becomes
+ * a macro that uses cx from its calls' lexical environments.
+ */
+#define js_GetSrcNote(script,pc) js_GetSrcNoteCached(cx, script, pc)
+
 extern jssrcnote *
-js_GetSrcNote(JSScript *script, jsbytecode *pc);
+js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 /* XXX need cx to lock function objects declared by prolog bytecodes. */
 extern uintN

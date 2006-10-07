@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -694,9 +695,37 @@ struct JSContext {
     /* Top of the GC mark stack. */
     void                *gcCurrentMarkNode;
 #endif
+
+    /*
+     * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for
+     * a given pc in a script.
+     */
+    struct JSGSNCache {
+        JSScript        *script;
+        JSDHashTable    table;
+#ifdef JS_GSNMETER
+        uint32          hits;
+        uint32          misses;
+        uint32          fills;
+        uint32          clears;
+# define GSN_CACHE_METER(cx,cnt) (++(cx)->gsnCache.cnt)
+#else
+# define GSN_CACHE_METER(cx,cnt) /* nothing */
+#endif
+    } gsnCache;
 };
 
-#define JS_THREAD_ID(cx)            ((cx)->thread ? (cx)->thread->id : 0)
+#define JS_CLEAR_GSN_CACHE(cx)                                                \
+    JS_BEGIN_MACRO                                                            \
+        (cx)->gsnCache.script = NULL;                                         \
+        if ((cx)->gsnCache.table.ops) {                                       \
+            JS_DHashTableFinish(&(cx)->gsnCache.table);                       \
+            (cx)->gsnCache.table.ops = NULL;                                  \
+        }                                                                     \
+        GSN_CACHE_METER(cx, clears);                                          \
+    JS_END_MACRO
+
+#define JS_THREAD_ID(cx)        ((cx)->thread ? (cx)->thread->id : 0)
 
 #ifdef __cplusplus
 /* FIXME(bug 332648): Move this into a public header. */

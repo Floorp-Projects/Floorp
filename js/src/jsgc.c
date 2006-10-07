@@ -2723,6 +2723,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * Set all thread local freelists to NULL. We may visit a thread's
      * freelist more than once. To avoid redundant clearing we unroll the
      * current thread's step.
+     *
+     * Also, in case a JSScript wrapped in an object was finalized, we clear
+     * the acx->gsnCache.script pointer and finish the cache's hashtable.
      */
     memset(cx->thread->gcFreeLists, 0, sizeof cx->thread->gcFreeLists);
     iter = NULL;
@@ -2730,6 +2733,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         if (!acx->thread || acx->thread == cx->thread)
             continue;
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
+        JS_CLEAR_GSN_CACHE(acx);
     }
 #endif
 
