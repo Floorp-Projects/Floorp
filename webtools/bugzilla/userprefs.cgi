@@ -405,10 +405,8 @@ sub DoSavedSearches {
     }
     $vars->{'queries'} = \@newqueries;
     if ($user->queryshare_groups_as_string) {
-        $vars->{'queryshare_groups'} = $dbh->selectall_arrayref(
-            'SELECT id, name FROM groups WHERE id IN ' .
-            '(' . $user->queryshare_groups_as_string .')',
-            {'Slice' => {}});
+        $vars->{'queryshare_groups'} =
+            Bugzilla::Group->new_from_list($user->queryshare_groups);
     }
 }
 
