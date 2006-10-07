@@ -479,6 +479,12 @@ extern JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
 
 /*
+ * Emit function code into cg for the tree rooted at body.
+ */
+extern JSBool
+js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
+
+/*
  * Emit code into cg for the tree rooted at body, then create a persistent
  * script for fun from cg.
  */
