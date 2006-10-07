@@ -1816,6 +1816,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   }
 
   if (NS_SUCCEEDED(rv) &&
+      // Make sure the flags here match those in nsEventReceiverSH::NewResolve
       !::JS_DefineProperty(mContext, target, charName,
                            OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
