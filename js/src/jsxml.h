@@ -125,6 +125,7 @@ struct JSXMLArrayCursor {
     uint32              index;
     JSXMLArrayCursor    *next;
     JSXMLArrayCursor    **prevp;
+    void                *root;
 };
 
 /*
