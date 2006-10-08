@@ -41,7 +41,7 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIXTFBindableElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocument.h"
 #include "nsXFormsUtils.h"
@@ -59,7 +59,7 @@ class nsXFormsItemSetElement : public nsXFormsDelegateStub,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
@@ -82,7 +82,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsItemSetElement,
                              nsIXFormsSelectChild)
 
 NS_IMETHODIMP
-nsXFormsItemSetElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsItemSetElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);

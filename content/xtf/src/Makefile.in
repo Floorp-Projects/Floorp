@@ -63,21 +63,10 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsXMLContentBuilder.cpp \
 		nsXTFElementWrapper.cpp \
-		nsXTFGenericElementWrapper.cpp \
 		nsXTFInterfaceAggregator.cpp \
 		nsXTFService.cpp \
-		nsXTFVisualWrapper.cpp \
 		nsXTFWeakTearoff.cpp \
-		nsXTFXMLVisualWrapper.cpp \
-		nsXTFXULVisualWrapper.cpp \
-		nsXTFBindableElementWrapper.cpp \
 		$(NULL)
-
-ifdef MOZ_SVG
-CPPSRCS		+= \
-		nsXTFSVGVisualWrapper.cpp \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/config.mk
 

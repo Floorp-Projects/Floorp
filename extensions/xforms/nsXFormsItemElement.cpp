@@ -47,7 +47,7 @@
 #include "nsIXFormsValueElement.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
-#include "nsIXTFBindableElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsIXFormsContextControl.h"
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsItemElement.h"
@@ -66,7 +66,7 @@
  * select element.
  */
 
-class nsXFormsItemElement : public nsXFormsBindableStub,
+class nsXFormsItemElement : public nsXFormsStubElement,
                             public nsIXFormsSelectChild,
                             public nsIXFormsItemElement
 {
@@ -79,7 +79,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXFORMSITEMELEMENT
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
@@ -105,14 +105,14 @@ private:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemElement,
-                             nsXFormsBindableStub,
+                             nsXFormsStubElement,
                              nsIXFormsSelectChild,
                              nsIXFormsItemElement)
 
 NS_IMETHODIMP
-nsXFormsItemElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsItemElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsStubElement::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
   
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |

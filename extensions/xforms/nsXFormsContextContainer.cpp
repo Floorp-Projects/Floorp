@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFBindableElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -91,7 +91,7 @@ protected:
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsContextContainer : public nsXFormsBindableControlStub,
+class nsXFormsContextContainer : public nsXFormsControlStub,
                                  public nsIXFormsRepeatItemElement
 {
 protected:
@@ -158,7 +158,7 @@ nsXFormsFocusListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsContextContainer,
-                             nsXFormsBindableControlStub,
+                             nsXFormsControlStub,
                              nsIXFormsRepeatItemElement)
 
 nsresult
@@ -296,10 +296,10 @@ nsXFormsContextContainer::GetContext(nsAString      &aModelID,
                                      PRInt32        *aContextPosition,
                                      PRInt32        *aContextSize)
 {
-  nsresult rv = nsXFormsBindableControlStub::GetContext(aModelID,
-                                                        aContextNode,
-                                                        aContextPosition,
-                                                        aContextSize);
+  nsresult rv = nsXFormsControlStub::GetContext(aModelID,
+                                                aContextNode,
+                                                aContextPosition,
+                                                aContextSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aContextPosition = mContextPosition;

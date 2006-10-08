@@ -341,8 +341,8 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFBindableElement overrides
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  // nsIXTFElement overrides
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
@@ -380,7 +380,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
 
 // nsIXTFBindableElement
 NS_IMETHODIMP
-nsXFormsRepeatElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsRepeatElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
 #ifdef DEBUG_XF_REPEAT
   printf("nsXFormsRepeatElement::OnCreated()\n");

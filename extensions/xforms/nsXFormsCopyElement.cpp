@@ -38,7 +38,7 @@
 
 #include "nsIXFormsCopyElement.h"
 #include "nsXFormsStubElement.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsXFormsUtils.h"
 #include "nsIDOMElement.h"
 #include "nsString.h"
@@ -60,10 +60,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFGenericElement overrides
-  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
-
   // nsIXTFElement overrides
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewParent);
 
@@ -79,7 +77,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsCopyElement,
                              nsIXFormsCopyElement)
 
 NS_IMETHODIMP
-nsXFormsCopyElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsCopyElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
                                 nsIXTFElement::NOTIFY_DOCUMENT_CHANGED);

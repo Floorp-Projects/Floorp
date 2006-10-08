@@ -75,7 +75,7 @@ public:
   NS_IMETHOD IsEventTarget(PRBool *aOK);
   NS_IMETHOD Refresh();
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
 
   // nsIXTFElement overrides
@@ -105,7 +105,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsLabelElement,
                              nsIInterfaceRequestor)
 
 NS_IMETHODIMP
-nsXFormsLabelElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsLabelElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);

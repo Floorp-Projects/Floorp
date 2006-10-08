@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Alex Fritze <alex@croczilla.com> (original author)
  *   Allan Beaufour <allan@beaufour.dk>
+ *   Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,7 @@ interface nsIAtom;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 
-[scriptable, uuid(444d0276-3302-4d35-a74e-25c4e9c483c9)]
+[scriptable, uuid(0ad87068-c6fd-4122-a515-ffe8c4773b10)]
 interface nsIXTFElementWrapper : nsISupports
 {  
   readonly attribute nsIDOMElement elementNode;
@@ -51,7 +52,7 @@ interface nsIXTFElementWrapper : nsISupports
   
   /**
    * Events can be unmasked by setting the corresponding bit as given
-   * by the NOTIFY_* constants in nsIXTFElement and nsIXTFVisual:
+   * by the NOTIFY_* constants in nsIXTFElement:
    */
   attribute unsigned long notificationMask;
 
@@ -60,5 +61,12 @@ interface nsIXTFElementWrapper : nsISupports
    * @see nsIContent::IntrinsicState().
    */
   void setIntrinsicState(in long newState);
+
+  /**
+   * This sets the name of the class attribute.
+   * Should be called only during ::onCreated.
+   * Note! nsIXTFAttributeHandler can't be used to handle class attribute.
+   */
+  void setClassAttributeName(in nsIAtom name);
 };
 

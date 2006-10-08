@@ -45,20 +45,20 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsString.h"
-#include "nsIXTFBindableElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 
 /**
  * Implementation of the XForms case element.
  */
 
-class nsXFormsCaseElement : public nsXFormsBindableStub,
+class nsXFormsCaseElement : public nsXFormsStubElement,
                             public nsIXFormsCaseElement
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXFORMSCASEELEMENT
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD DoneAddingChildren();
 
@@ -74,13 +74,13 @@ protected:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsCaseElement,
-                             nsXFormsBindableStub,
+                             nsXFormsStubElement,
                              nsIXFormsCaseElement)
 
 NS_IMETHODIMP
-nsXFormsCaseElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsCaseElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsStubElement::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);

@@ -46,7 +46,7 @@
 #include "nsString.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsXFormsUtils.h"
 #include "nsNetUtil.h"
 
@@ -136,7 +136,7 @@ nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
 }
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsInstanceElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
                                 nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |

@@ -72,7 +72,7 @@ enum nsRestrictionFlag {
 /**
  * Stub implementation of the nsIXFormsDelegate interface.
  */
-class nsXFormsDelegateStub : public nsXFormsBindableControlStub,
+class nsXFormsDelegateStub : public nsXFormsControlStub,
                              public nsIDelegateInternal
 {
 public:
@@ -80,7 +80,7 @@ public:
   NS_DECL_NSIXFORMSDELEGATE
   NS_DECL_NSIDELEGATEINTERNAL
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
   NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);

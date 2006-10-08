@@ -39,18 +39,13 @@
 #ifndef nsXFormsStubElement_h_
 #define nsXFormsStubElement_h_
 
-#include "nsIXTFGenericElement.h"
-#include "nsIXTFBindableElement.h"
+#include "nsIXTFElement.h"
 #include "nsIXFormsControlBase.h"
 
 /**
- * An implementation of a generic non-UI XForms element.
- * 
- * This is the implementation for e.g. bind so that the id attribute works 
- * correctly for these nodes.  It is also a base class for all XForms
- * nsIXTFGenericElement implementations.
+ * An implementation of a generic XForms element.
  */
-class nsXFormsStubElement : public nsIXTFGenericElement
+class nsXFormsStubElement : public nsIXTFElement
 {
 protected:
   // We need a virtual destructor so that when a subclass does
@@ -61,35 +56,9 @@ protected:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFGENERICELEMENT
-};
-
-/**
- * An implementation of an XForms bindable control.
- *
- * This is a base class for UI controls that use nsIXTFBindableElement.
- * Note: a pointer to the anonymous content root is _not_ provided as part
- * of this base class because different implementations want to store
- * different types of interface pointers.
- */
-class nsXFormsBindableStub : public nsIXTFBindableElement
-{
-protected:
-  // We need a virtual destructor so that when a subclass does
-  // NS_IMPL_ISUPPORTS_INHERITED, our Release() implementation calls the
-  // derived class destructor.
-  virtual ~nsXFormsBindableStub() {}
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFBINDABLEELEMENT
 };
 
 /* Factory methods */
 NS_HIDDEN_(nsresult)
 NS_NewXFormsStubElement(nsIXTFElement **aResult);
-
-NS_HIDDEN_(nsresult)
-NS_NewXFormsBindableStub(nsIXTFElement **aResult);
 #endif

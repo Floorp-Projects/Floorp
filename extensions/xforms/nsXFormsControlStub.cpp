@@ -105,14 +105,14 @@ nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetBoundNode(nsIDOMNode **aBoundNode)
+nsXFormsControlStub::GetBoundNode(nsIDOMNode **aBoundNode)
 {
   NS_IF_ADDREF(*aBoundNode = mBoundNode);
   return NS_OK;  
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies)
+nsXFormsControlStub::GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies)
 {
   if (aDependencies)
     *aDependencies = &mDependencies;
@@ -120,14 +120,14 @@ nsXFormsControlStubBase::GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetElement(nsIDOMElement **aElement)
+nsXFormsControlStub::GetElement(nsIDOMElement **aElement)
 {
   NS_IF_ADDREF(*aElement = mElement);
   return NS_OK;  
 }
 
 void
-nsXFormsControlStubBase::RemoveIndexListeners()
+nsXFormsControlStub::RemoveIndexListeners()
 {
   if (!mIndexesUsed.Count())
     return;
@@ -141,9 +141,9 @@ nsXFormsControlStubBase::RemoveIndexListeners()
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::ResetBoundNode(const nsString &aBindAttribute,
-                                        PRUint16        aResultType,
-                                        PRBool         *aContextChanged)
+nsXFormsControlStub::ResetBoundNode(const nsString &aBindAttribute,
+                                    PRUint16        aResultType,
+                                    PRBool         *aContextChanged)
 {
   NS_ENSURE_ARG(aContextChanged);
 
@@ -213,7 +213,7 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString &aBindAttribute,
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::Bind(PRBool* aContextChanged)
+nsXFormsControlStub::Bind(PRBool* aContextChanged)
 {
   return ResetBoundNode(NS_LITERAL_STRING("ref"),
                         nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
@@ -221,7 +221,7 @@ nsXFormsControlStubBase::Bind(PRBool* aContextChanged)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::Refresh()
+nsXFormsControlStub::Refresh()
 {
   // XXX: In theory refresh should never be called when there is no model,
   // but that's definately not the case now.
@@ -230,28 +230,28 @@ nsXFormsControlStubBase::Refresh()
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::TryFocus(PRBool* aOK)
+nsXFormsControlStub::TryFocus(PRBool* aOK)
 {
   *aOK = PR_FALSE;
   return NS_OK;
 }
   
 NS_IMETHODIMP
-nsXFormsControlStubBase::IsEventTarget(PRBool *aOK)
+nsXFormsControlStub::IsEventTarget(PRBool *aOK)
 {
   *aOK = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetUsesModelBinding(PRBool *aRes)
+nsXFormsControlStub::GetUsesModelBinding(PRBool *aRes)
 {
   *aRes = mUsesModelBinding;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetOnDeferredBindList(PRBool *aOnList)
+nsXFormsControlStub::GetOnDeferredBindList(PRBool *aOnList)
 {
   NS_ENSURE_ARG_POINTER(aOnList);
   *aOnList = mOnDeferredBindList;
@@ -259,14 +259,14 @@ nsXFormsControlStubBase::GetOnDeferredBindList(PRBool *aOnList)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::SetOnDeferredBindList(PRBool aPutOnList)
+nsXFormsControlStub::SetOnDeferredBindList(PRBool aPutOnList)
 {
   mOnDeferredBindList = aPutOnList;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetDefaultIntrinsicState(PRInt32 *aState)
+nsXFormsControlStub::GetDefaultIntrinsicState(PRInt32 *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = kDefaultIntrinsicState;
@@ -274,7 +274,7 @@ nsXFormsControlStubBase::GetDefaultIntrinsicState(PRInt32 *aState)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetDisabledIntrinsicState(PRInt32 *aState)
+nsXFormsControlStub::GetDisabledIntrinsicState(PRInt32 *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = kDisabledIntrinsicState;
@@ -282,8 +282,8 @@ nsXFormsControlStubBase::GetDisabledIntrinsicState(PRInt32 *aState)
 }
 
 nsresult
-nsXFormsControlStubBase::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
-                                         nsIXFormsControl       *aParent)
+nsXFormsControlStub::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
+                                     nsIXFormsControl       *aParent)
 {
   // XXX: just doing pointer comparison would be nice....
   PRBool sameModel = PR_FALSE;
@@ -314,10 +314,10 @@ nsXFormsControlStubBase::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
 
 
 nsresult
-nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAttr,
-                                            PRUint16                 aResultType,
-                                            nsIDOMXPathResult      **aResult,
-                                            nsIModelElementPrivate **aModel)
+nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
+                                        PRUint16                 aResultType,
+                                        nsIDOMXPathResult      **aResult,
+                                        nsIModelElementPrivate **aModel)
 {
   nsStringArray indexesUsed;
 
@@ -395,7 +395,7 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::BindToModel(PRBool aSetBoundNode)
+nsXFormsControlStub::BindToModel(PRBool aSetBoundNode)
 {
   nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
 
@@ -412,7 +412,7 @@ nsXFormsControlStubBase::BindToModel(PRBool aSetBoundNode)
 }
 
 void
-nsXFormsControlStubBase::ResetHelpAndHint(PRBool aInitialize)
+nsXFormsControlStub::ResetHelpAndHint(PRBool aInitialize)
 {
   nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(mElement));
   if (!targ)
@@ -447,7 +447,7 @@ nsXFormsControlStubBase::ResetHelpAndHint(PRBool aInitialize)
 }
 
 PRBool
-nsXFormsControlStubBase::GetRelevantState()
+nsXFormsControlStub::GetRelevantState()
 {
   PRBool res = PR_FALSE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
@@ -457,9 +457,9 @@ nsXFormsControlStubBase::GetRelevantState()
   return res;
 }
 
-nsresult
-nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
-                                       PRBool      *aHandled)
+NS_IMETHODIMP
+nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
+                                   PRBool      *aHandled)
 {
   NS_ENSURE_ARG(aHandled);
   *aHandled = PR_FALSE;
@@ -565,8 +565,8 @@ public:
 
   ~ControlDebug() {
     for (PRInt32 i = 0; i < sControlList->Count(); ++i) {
-      nsXFormsControlStubBase* control =
-        NS_STATIC_CAST(nsXFormsControlStubBase*, sControlList->ElementAt(i));
+      nsXFormsControlStub* control =
+        NS_STATIC_CAST(nsXFormsControlStub*, sControlList->ElementAt(i));
       if (control) {
         printf("Possible leak, <xforms:%s>\n", control->Name());
       }
@@ -579,9 +579,10 @@ public:
 static ControlDebug tester = ControlDebug();
 #endif
 
-nsresult
-nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
+NS_IMETHODIMP
+nsXFormsControlStub::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
+  nsXFormsStubElement::OnCreated(aWrapper);
   aWrapper->SetNotificationMask(kStandardNotificationMask);
 
   // It's ok to keep a weak pointer to mElement.  mElement will have an
@@ -599,8 +600,8 @@ nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
   return NS_OK;
 }
 
-nsresult
-nsXFormsControlStubBase::OnDestroyed()
+NS_IMETHODIMP
+nsXFormsControlStub::OnDestroyed()
 {
   RemoveIndexListeners();
   mDependencies.Clear();
@@ -619,7 +620,7 @@ nsXFormsControlStubBase::OnDestroyed()
 }
 
 nsresult
-nsXFormsControlStubBase::ForceModelDetach(PRBool aRebind)
+nsXFormsControlStub::ForceModelDetach(PRBool aRebind)
 {
   if (mModel) {
     // Remove from model, so Bind() will be forced to reattach
@@ -637,15 +638,15 @@ nsXFormsControlStubBase::ForceModelDetach(PRBool aRebind)
   return rv == NS_OK_XFORMS_DEFERRED ? NS_OK : Refresh();
 }
 
-nsresult
-nsXFormsControlStubBase::WillChangeDocument(nsIDOMDocument *aNewDocument)
+NS_IMETHODIMP
+nsXFormsControlStub::WillChangeDocument(nsIDOMDocument *aNewDocument)
 {
   ResetHelpAndHint(PR_FALSE);
   return NS_OK;
 }
 
-nsresult
-nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
+NS_IMETHODIMP
+nsXFormsControlStub::DocumentChanged(nsIDOMDocument *aNewDocument)
 {
   if (aNewDocument) {
     ResetHelpAndHint(PR_TRUE);
@@ -665,8 +666,8 @@ nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
   return ForceModelDetach(mHasParent && aNewDocument);
 }
 
-nsresult
-nsXFormsControlStubBase::ParentChanged(nsIDOMElement *aNewParent)
+NS_IMETHODIMP
+nsXFormsControlStub::ParentChanged(nsIDOMElement *aNewParent)
 {
   mHasParent = aNewParent != nsnull;
   // We need to re-evaluate our instance data binding when our parent changes,
@@ -674,29 +675,29 @@ nsXFormsControlStubBase::ParentChanged(nsIDOMElement *aNewParent)
   return ForceModelDetach(mHasParent);
 }
 
-nsresult
-nsXFormsControlStubBase::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
+NS_IMETHODIMP
+nsXFormsControlStub::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
   BeforeSetAttribute(aName, aValue);
   return NS_OK;
 }
 
-nsresult
-nsXFormsControlStubBase::AttributeSet(nsIAtom *aName, const nsAString &aValue)
+NS_IMETHODIMP
+nsXFormsControlStub::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 {
   AfterSetAttribute(aName);
   return NS_OK;
 }
 
-nsresult
-nsXFormsControlStubBase::WillRemoveAttribute(nsIAtom *aName)
+NS_IMETHODIMP
+nsXFormsControlStub::WillRemoveAttribute(nsIAtom *aName)
 {
   BeforeSetAttribute(aName, EmptyString());
   return NS_OK;
 }
 
-nsresult
-nsXFormsControlStubBase::AttributeRemoved(nsIAtom *aName)
+NS_IMETHODIMP
+nsXFormsControlStub::AttributeRemoved(nsIAtom *aName)
 {
   AfterSetAttribute(aName);
   return NS_OK;
@@ -705,18 +706,18 @@ nsXFormsControlStubBase::AttributeRemoved(nsIAtom *aName)
 // nsIXFormsContextControl
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::SetContext(nsIDOMNode *aContextNode,
-                                    PRInt32     aContextPosition,
-                                    PRInt32     aContextSize)
+nsXFormsControlStub::SetContext(nsIDOMNode *aContextNode,
+                                PRInt32     aContextPosition,
+                                PRInt32     aContextSize)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::GetContext(nsAString      &aModelID,
-                                    nsIDOMNode    **aContextNode,
-                                    PRInt32        *aContextPosition,
-                                    PRInt32        *aContextSize)
+nsXFormsControlStub::GetContext(nsAString      &aModelID,
+                                nsIDOMNode    **aContextNode,
+                                PRInt32        *aContextPosition,
+                                PRInt32        *aContextSize)
 {
   NS_ENSURE_ARG(aContextSize);
   NS_ENSURE_ARG(aContextPosition);
@@ -753,7 +754,7 @@ nsXFormsControlStubBase::GetContext(nsAString      &aModelID,
 }
 
 void
-nsXFormsControlStubBase::AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValue) 
+nsXFormsControlStub::AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValue) 
 {
   nsAutoString attrStr, attrValue;
   aName->ToString(attrStr);
@@ -772,7 +773,7 @@ nsXFormsControlStubBase::AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValu
 }
 
 PRBool
-nsXFormsControlStubBase::IsBindingAttribute(const nsIAtom *aAttr) const
+nsXFormsControlStub::IsBindingAttribute(const nsIAtom *aAttr) const
 {
   if (aAttr == nsXFormsAtoms::bind ||
       aAttr == nsXFormsAtoms::ref  ||
@@ -784,7 +785,7 @@ nsXFormsControlStubBase::IsBindingAttribute(const nsIAtom *aAttr) const
 }
 
 void
-nsXFormsControlStubBase::AfterSetAttribute(nsIAtom *aName)
+nsXFormsControlStub::AfterSetAttribute(nsIAtom *aName)
 {
   if (IsBindingAttribute(aName)) {
     PRBool dummy;
@@ -797,8 +798,8 @@ nsXFormsControlStubBase::AfterSetAttribute(nsIAtom *aName)
 }
 
 void
-nsXFormsControlStubBase::BeforeSetAttribute(nsIAtom         *aName,
-                                            const nsAString &aValue)
+nsXFormsControlStub::BeforeSetAttribute(nsIAtom         *aName,
+                                        const nsAString &aValue)
 {
   if (IsBindingAttribute(aName)) {
     AddRemoveSNBAttr(aName, aValue);
@@ -806,7 +807,7 @@ nsXFormsControlStubBase::BeforeSetAttribute(nsIAtom         *aName,
 }
 
 nsresult
-nsXFormsControlStubBase::GetBoundBuiltinType(PRUint16 *aBuiltinType)
+nsXFormsControlStub::GetBoundBuiltinType(PRUint16 *aBuiltinType)
 {
   NS_ENSURE_ARG_POINTER(aBuiltinType);
   *aBuiltinType = 0;
@@ -822,8 +823,8 @@ nsXFormsControlStubBase::GetBoundBuiltinType(PRUint16 *aBuiltinType)
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsBindableControlStub,
-                             nsXFormsBindableStub,
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,
+                             nsXFormsStubElement,
                              nsIXFormsContextControl,
                              nsIXFormsControl,
                              nsIXFormsControlBase)

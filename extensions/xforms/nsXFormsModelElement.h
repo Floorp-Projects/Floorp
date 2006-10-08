@@ -250,14 +250,14 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIXFORMSCONTEXTCONTROL
 
-  // nsIXTFGenericElement overrides
+  // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray);
   NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
   NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument);
   NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
-  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   // nsIXFormsControlBase overrides
   NS_IMETHOD Bind(PRBool *aContextChanged) {

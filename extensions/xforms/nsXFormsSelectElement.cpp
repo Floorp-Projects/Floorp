@@ -60,7 +60,7 @@ class nsXFormsSelectElement : public nsXFormsDelegateStub
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
@@ -84,7 +84,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXFormsSelectElement,
                              nsXFormsDelegateStub)
 
 NS_IMETHODIMP
-nsXFormsSelectElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsSelectElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -579,12 +579,8 @@ private:
                                  nsIContent*              aParent,
                                  nsIDocument*             aDocument,
                                  nsIFrame*                aNewFrame,
-                                 PRBool                   aForceBindingParent,
                                  PRBool                   aAppendToExisting,
-                                 nsFrameItems&            aChildItems,
-                                 nsIFrame*                aAnonymousCreator,
-                                 nsIContent*              aInsertionNode,
-                                 PRBool                   aAnonymousParentIsBlock);
+                                 nsFrameItems&            aChildItems);
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -984,17 +980,6 @@ private:
       mCounterManager.RecalcAll();
   }
 
-  inline NS_HIDDEN_(nsresult)
-    CreateInsertionPointChildren(nsFrameConstructorState &aState,
-                                 nsIFrame *aNewFrame,
-                                 nsIContent *aContent,
-                                 PRBool aUseInsertionFrame = PR_TRUE);
-
-  NS_HIDDEN_(nsresult)
-    CreateInsertionPointChildren(nsFrameConstructorState &aState,
-                                 nsIFrame *aNewFrame,
-                                 PRBool aUseInsertionFrame);
-                                 
 public:
   struct RestyleData;
   friend struct RestyleData;

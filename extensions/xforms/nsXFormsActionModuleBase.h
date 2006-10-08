@@ -54,8 +54,8 @@ public:
   nsXFormsActionModuleBase();
   virtual ~nsXFormsActionModuleBase();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIXTFGENERICELEMENT
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
 protected:
   nsIDOMElement* mElement;

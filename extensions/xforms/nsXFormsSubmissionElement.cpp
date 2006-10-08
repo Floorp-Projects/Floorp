@@ -49,7 +49,7 @@
 #include "nsXFormsSubmissionElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsIInstanceElementPrivate.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
@@ -319,10 +319,10 @@ nsXFormsSubmissionElement::SetActivator(nsIXFormsSubmitElement* aActivator)
   return NS_OK;
 }
 
-// nsIXTFGenericElement
+// nsIXTFElement
 
 NS_IMETHODIMP
-nsXFormsSubmissionElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsSubmissionElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
 

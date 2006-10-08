@@ -56,7 +56,7 @@
 #include "nsXFormsModelElement.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsDelegateStub,
-                             nsXFormsBindableControlStub,
+                             nsXFormsControlStub,
                              nsIDelegateInternal,
                              nsIXFormsDelegate)
 
@@ -65,20 +65,20 @@ NS_IMETHODIMP
 nsXFormsDelegateStub::WillChangeDocument(nsIDOMDocument *aNewDocument)
 {
   mRepeatState = eType_Unknown;
-  return nsXFormsBindableControlStub::WillChangeDocument(aNewDocument);
+  return nsXFormsControlStub::WillChangeDocument(aNewDocument);
 }
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::WillChangeParent(nsIDOMElement *aNewParent)
 {
   mRepeatState = eType_Unknown;
-  return nsXFormsBindableControlStub::WillChangeParent(aNewParent);
+  return nsXFormsControlStub::WillChangeParent(aNewParent);
 }
 
 NS_IMETHODIMP
-nsXFormsDelegateStub::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsDelegateStub::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsBindableControlStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT);
@@ -92,7 +92,7 @@ nsXFormsDelegateStub::OnDestroyed()
   if (mAccessor) {
     mAccessor->Destroy();
   }
-  return nsXFormsBindableControlStub::OnDestroyed();
+  return nsXFormsControlStub::OnDestroyed();
 }
 
 // nsIXFormsControl
@@ -109,7 +109,7 @@ nsXFormsDelegateStub::Refresh()
     return NS_OK_XFORMS_NOREFRESH;
   }
 
-  nsresult rv = nsXFormsBindableControlStub::Refresh();
+  nsresult rv = nsXFormsControlStub::Refresh();
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetMozTypeAttribute();

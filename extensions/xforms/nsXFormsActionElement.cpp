@@ -42,7 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIXTFBindableElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 
 #define DEFERRED_REBUILD     0x01
 #define DEFERRED_RECALCULATE 0x02
@@ -53,19 +53,19 @@ nsXFormsActionElement::nsXFormsActionElement() : mElement(nsnull)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsXFormsActionElement, nsXFormsBindableStub)
-NS_IMPL_RELEASE_INHERITED(nsXFormsActionElement, nsXFormsBindableStub)
+NS_IMPL_ADDREF_INHERITED(nsXFormsActionElement, nsXFormsStubElement)
+NS_IMPL_RELEASE_INHERITED(nsXFormsActionElement, nsXFormsStubElement)
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsActionElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionModuleElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END_INHERITING(nsXFormsBindableStub)
+NS_INTERFACE_MAP_END_INHERITING(nsXFormsStubElement)
 
 NS_IMETHODIMP
-nsXFormsActionElement::OnCreated(nsIXTFBindableElementWrapper* aWrapper)
+nsXFormsActionElement::OnCreated(nsIXTFElementWrapper* aWrapper)
 {
-  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsStubElement::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // It's ok to keep a weak pointer to mElement.  mElement will have an

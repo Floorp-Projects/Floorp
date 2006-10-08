@@ -115,7 +115,7 @@ public:
   NS_IMETHOD GetValue(nsAString& aValue);
 
   // nsIXTFElement overrides
-  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
@@ -219,7 +219,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsXFormsDelegateStub)
 // nsIXTFElement
 
 NS_IMETHODIMP
-nsXFormsMessageElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
+nsXFormsMessageElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);

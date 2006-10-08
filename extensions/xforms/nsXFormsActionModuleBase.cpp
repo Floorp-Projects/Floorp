@@ -45,7 +45,7 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 
@@ -63,7 +63,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsActionModuleBase,
                              nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsXFormsActionModuleBase::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsActionModuleBase::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   // It's ok to keep a weak pointer to mElement.  mElement will have an
   // owning reference to this object, so as long as we null out mElement in

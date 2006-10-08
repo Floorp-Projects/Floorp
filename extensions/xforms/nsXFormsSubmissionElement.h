@@ -88,10 +88,10 @@ public:
       mFormat(0)
   {}
 
-  // nsIXTFGenericElement overrides
+  // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
-  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
 
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 

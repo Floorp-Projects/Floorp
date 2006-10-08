@@ -51,25 +51,8 @@ XPIDLSRCS = \
 	nsIXTFElement.idl \
 	nsIXTFElementFactory.idl \
 	nsIXTFElementWrapper.idl \
-	nsIXTFGenericElement.idl \
-	nsIXTFGenericElementWrapper.idl \
 	nsIXTFPrivate.idl \
-	nsIXTFVisual.idl \
-	nsIXTFXMLVisual.idl \
-	nsIXTFXMLVisualWrapper.idl \
-	nsIXTFXULVisual.idl \
-	nsIXTFXULVisualWrapper.idl \
-	nsIXTFBindableElement.idl \
-	nsIXTFBindableElementWrapper.idl \
-	nsIXTFStyledElementWrapper.idl \
 	$(NULL)
-
-ifdef MOZ_SVG
-XPIDLSRCS += \
-	nsIXTFSVGVisual.idl \
-	nsIXTFSVGVisualWrapper.idl \
-	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

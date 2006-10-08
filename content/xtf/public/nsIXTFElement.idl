@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex@croczilla.com> (original author)
+ *   Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,40 +43,20 @@ interface nsIDOMDocument;
 interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
+interface nsIXTFElementWrapper;
 
-[scriptable, uuid(a8b607fd-24b6-4a8c-9a89-d9b24f8e2592)]
+[scriptable, uuid(9987c448-5a9d-4df5-a217-86ef6fedc366)]
 interface nsIXTFElement : nsISupports
 {
+  // onCreated will be called before any notifications are sent to
+  // the xtf element.
+  //
+  // @param wrapper is a weak proxy to the wrapping element
+  // (i.e. holding a reference to this will not create a cycle).
+  void onCreated(in nsIXTFElementWrapper wrapper);
+
   // called when the wrapper object is being destroyed.
   void onDestroyed();
-
-  // Constants for attribute elementType:
-
-  // Elements of type GENERIC_ELEMENT are required to implement the
-  // nsIXTFGenericElement interface in addition to nsIXTFElement:
-  const unsigned long ELEMENT_TYPE_GENERIC_ELEMENT = 0;
-
-  // Elements of type SVG_VISUAL are required to implement the
-  // nsIXTFSVGVisual interface in addition to nsIXTFElement:
-  const unsigned long ELEMENT_TYPE_SVG_VISUAL      = 1;
-
-  // Elements of type XML_VISUAL are required to implement the
-  // nsIXTFXMLVisual interface in addition to nsIXTFElement:
-  const unsigned long ELEMENT_TYPE_XML_VISUAL      = 2;
-
-  // Elements of type XUL_VISUAL are required to implement the
-  // nsIXTFXULVisual interface in addition to nsIXTFElement:
-  const unsigned long ELEMENT_TYPE_XUL_VISUAL      = 3;
-
-  // Elements of type BINDABLE are required to implement the
-  // nsIXTFBindableElement interface in addition to nsIXTFElement:
-  const unsigned long ELEMENT_TYPE_BINDABLE        = 4;
-
-  // elementType identifies the type of wrapper that will be built for
-  // a given xtf element. It must remain constant for the entire
-  // lifetime of the xtf element (i.e. before any onCreated()-calls
-  // until after onDestroyed()-calls).
-  readonly attribute unsigned long elementType;
 
   // If isAttributeHandler is set to 'true', the xtf element indicates
   // that it wants to manage its own attributes. In this case it needs
@@ -90,6 +71,7 @@ interface nsIXTFElement : nsISupports
   // our wrapper element is used from JS (other interfaces need to be
   // explicitly QI'ed for), and b) All these interfaces are callable
   // from unpriviliged script.
+  // @note 'Normal' DOM interfaces are always automatically scriptable.
   void getScriptingInterfaces(out unsigned long count,
                               [array, size_is(count), retval] out nsIIDPtr array);
 

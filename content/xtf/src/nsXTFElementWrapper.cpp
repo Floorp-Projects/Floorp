@@ -57,9 +57,12 @@
 #include "nsEventDispatcher.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIXPConnect.h"
+#include "nsXTFWeakTearoff.h"
 
-nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
+nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo,
+                                         nsIXTFElement* aXTFElement)
     : nsXTFElementWrapperBase(aNodeInfo),
+      mXTFElement(aXTFElement),
       mNotificationMask(0),
       mIntrinsicState(0),
       mTmpAttrName(nsLayoutAtoms::_asterix) // XXX this is a hack, but names
@@ -67,9 +70,26 @@ nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
 {
 }
 
+nsXTFElementWrapper::~nsXTFElementWrapper()
+{
+  mXTFElement->OnDestroyed();
+  mXTFElement = nsnull;
+}
+
 nsresult
 nsXTFElementWrapper::Init()
 {
+  // pass a weak wrapper (non base object ref-counted), so that
+  // our mXTFElement can safely addref/release.
+  nsISupports* weakWrapper = nsnull;
+  nsresult rv = NS_NewXTFWeakTearoff(NS_GET_IID(nsIXTFElementWrapper),
+                                     (nsIXTFElementWrapper*)this,
+                                     &weakWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mXTFElement->OnCreated(NS_STATIC_CAST(nsIXTFElementWrapper*, weakWrapper));
+  weakWrapper->Release();
+
   PRBool innerHandlesAttribs = PR_FALSE;
   GetXTFElement()->GetIsAttributeHandler(&innerHandlesAttribs);
   if (innerHandlesAttribs)
@@ -90,11 +110,6 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   
   if(aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIXTFElementWrapperPrivate))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIXTFElementWrapperPrivate*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -600,9 +615,67 @@ nsXTFElementWrapper::HasAttribute(const nsAString& aName, PRBool* aReturn)
 
 /* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] out nsIIDPtr array); */
 NS_IMETHODIMP 
-nsXTFElementWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
+nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
 {
-  return GetXTFElement()->GetScriptingInterfaces(count, array);
+  *aArray = nsnull;
+  *aCount = 0;
+  PRUint32 baseCount = 0;
+  nsIID** baseArray = nsnull;
+  PRUint32 xtfCount = 0;
+  nsIID** xtfArray = nsnull;
+
+  nsCOMPtr<nsISupports> ci =
+    nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id);
+  nsCOMPtr<nsIClassInfo> baseCi = do_QueryInterface(ci);
+  if (baseCi) {
+    baseCi->GetInterfaces(&baseCount, &baseArray);
+  }
+
+  GetXTFElement()->GetScriptingInterfaces(&xtfCount, &xtfArray);
+  if (!xtfCount) {
+    *aCount = baseCount;
+    *aArray = baseArray;
+    return NS_OK;
+  } else if (!baseCount) {
+    *aCount = xtfCount;
+    *aArray = xtfArray;
+    return NS_OK;
+  }
+
+  PRUint32 count = baseCount + xtfCount;
+  nsIID** iids = NS_STATIC_CAST(nsIID**,
+                                nsMemory::Alloc(count * sizeof(nsIID*)));
+  NS_ENSURE_TRUE(iids, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 i = 0;
+  for (; i < baseCount; ++i) {
+    iids[i] = NS_STATIC_CAST(nsIID*,
+                             nsMemory::Clone(baseArray[i], sizeof(nsIID)));
+    if (!iids[i]) {
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(baseCount, baseArray);
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(xtfCount, xtfArray);
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, iids);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  for (; i < count; ++i) {
+    iids[i] = NS_STATIC_CAST(nsIID*,
+                             nsMemory::Clone(xtfArray[i - baseCount], sizeof(nsIID)));
+    if (!iids[i]) {
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(baseCount, baseArray);
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(xtfCount, xtfArray);
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, iids);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(baseCount, baseArray);
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(xtfCount, xtfArray);
+  *aArray = iids;
+  *aCount = count;
+
+  return NS_OK;
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
@@ -782,21 +855,14 @@ nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
   return NS_OK;
 }
 
-// nsXTFStyleableElementWrapper
-
-nsXTFStyledElementWrapper::nsXTFStyledElementWrapper(nsINodeInfo* aNodeInfo)
-: nsXTFElementWrapper(aNodeInfo)
-{
-}
-
 nsIAtom *
-nsXTFStyledElementWrapper::GetClassAttributeName() const
+nsXTFElementWrapper::GetClassAttributeName() const
 {
   return mClassAttributeName;
 }
 
 const nsAttrValue*
-nsXTFStyledElementWrapper::GetClasses() const
+nsXTFElementWrapper::GetClasses() const
 {
   const nsAttrValue* val = nsnull;
   nsIAtom* clazzAttr = GetClassAttributeName();
@@ -816,12 +882,37 @@ nsXTFStyledElementWrapper::GetClasses() const
 }
 
 nsresult
-nsXTFStyledElementWrapper::SetClassAttributeName(nsIAtom* aName)
+nsXTFElementWrapper::SetClassAttributeName(nsIAtom* aName)
 {
   // The class attribute name can be set only once
   if (mClassAttributeName || !aName)
     return NS_ERROR_FAILURE;
   
   mClassAttributeName = aName;
+  return NS_OK;
+}
+
+nsresult
+NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement,
+                        nsINodeInfo* aNodeInfo,
+                        nsIContent** aResult)
+{
+  *aResult = nsnull;
+   NS_ENSURE_ARG(aXTFElement);
+
+  nsXTFElementWrapper* result = new nsXTFElementWrapper(aNodeInfo, aXTFElement);
+  if (!result) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(result);
+
+  nsresult rv = result->Init();
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(result);
+    return rv;
+  }
+
+  *aResult = result;
   return NS_OK;
 }

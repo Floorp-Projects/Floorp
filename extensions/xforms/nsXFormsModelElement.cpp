@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXFormsModelElement.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFElementWrapper.h"
 #include "nsMemory.h"
 #include "nsIDOMElement.h"
 #include "nsIDOM3Node.h"
@@ -511,9 +511,6 @@ nsXFormsControlListItem::end()
 //------------------------------------------------------------------------------
 
 static const nsIID sScriptingIIDs[] = {
-  NS_IDOMELEMENT_IID,
-  NS_IDOMEVENTTARGET_IID,
-  NS_IDOM3NODE_IID,
   NS_IXFORMSMODELELEMENT_IID,
   NS_IXFORMSNSMODELELEMENT_IID
 };
@@ -985,7 +982,7 @@ nsXFormsModelElement::ConstructDone()
 }
 
 NS_IMETHODIMP
-nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsModelElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
                                 nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
