@@ -75,8 +75,6 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS 	=  \
 		nsIXTFService.h  \
-		nsIXTFElementWrapperPrivate.h \
-		nsIXTFVisualWrapperPrivate.h \
 		$(NULL)
 
 
