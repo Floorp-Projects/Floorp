@@ -658,12 +658,13 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
         return PR_FALSE;
     }
 
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aPopupContent->GetDocument()));
+    if (!domDoc) return PR_FALSE;
+
     // The menu is going to show, and the create handler has executed.
     // We should now walk all of our menu item children, checking to see if any
     // of them has a command attribute.  If so, then several attributes must
     // potentially be updated.
- 
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aPopupContent->GetDocument()));
 
     PRUint32 count = aPopupContent->GetChildCount();
     for (PRUint32 i = 0; i < count; i++) {
