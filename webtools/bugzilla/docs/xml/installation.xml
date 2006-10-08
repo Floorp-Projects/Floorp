@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.129 2006/08/19 17:41:47 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.130 2006/10/08 18:41:45 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -287,7 +287,7 @@
 
         <listitem>
           <para>
-            CGI (&min-cgi-ver;)
+            CGI &min-cgi-ver; or CGI &min-mp-cgi-ver; if using mod_perl
           </para>
         </listitem>
 
@@ -567,7 +567,23 @@
       </para>
 
     </section>  
-
+    <section id="using-mod_perl-with-bugzilla">
+      <title>Installing Bugzilla on mod_perl</title>
+      <para>It is now possible to run the Bugzilla software under <literal>mod_perl</literal> on
+      Apache. <literal>mod_perl</literal> has some additional requirements to that of running
+      Bugzilla under <literal>mod_cgi</literal> (the standard and previous way).</para>
+      
+      <para>Bugzilla requires <literal>mod_perl</literal> to be installed, which can be
+      obtained from <ulink url="http://perl.apache.org"/> - Bugzilla requires
+      version &min-mp-mod_perl2-ver; (AKA 2.0.0-RC5) to be installed.</para>
+      
+      <para>Bugzilla also requires a more up-to-date version of the CGI
+      perl module to be installed, version &min-mp-cgi-ver; as opposed to &min-cgi-ver;
+      </para>
+      
+      <para>Finally, Bugzilla also requires <literal>Apache::DBI</literal>
+      (&min-mp-apache-dbi-ver;) to be installed as well.</para>
+    </section>
   </section>
   
   
@@ -638,7 +654,7 @@
     <section id="database-engine">
       <title>Database Server</title>
       <para>This section deals with configuring your database server for use
-      with Bugzilla. Currently <xref linkend="mysql"/> and
+        with Bugzilla. Currently <xref linkend="mysql"/> and
       <xref linkend="postgresql"/> are available.</para>
       
       <section id="mysql">
@@ -874,100 +890,208 @@
       </para>
 
       <section id="http-apache">
-        <title>Apache <productname>httpd</productname></title>
-
-        <para>
-          To configure your Apache web server to work with Bugzilla,
-          do the following:
+        <title>Bugzilla using Apache</title>
+        <para>You have two options for running Bugzilla under Apache - 
+          <link linkend="http-apache-mod_cgi">mod_cgi</link> (the default) and
+          <link linkend="http-apache-mod_perl">mod_perl</link> (new in Bugzilla
+          2.23)
         </para>
-           
-        <procedure>
-          <step>
+        <section id="http-apache-mod_cgi">
+            <title>Apache <productname>httpd</productname> with mod_cgi</title>
+    
             <para>
-              Load <filename>httpd.conf</filename> in your editor.
-              In Fedora and Red Hat Linux, this file is found in
-              <filename class="directory">/etc/httpd/conf</filename>.
+            To configure your Apache web server to work with Bugzilla while using
+            mod_cgi, do the following:
             </para>
-          </step>
-
-          <step>
-            <para>
-              Apache uses <computeroutput>&lt;Directory&gt;</computeroutput>
-              directives to permit fine-grained permission setting. Add the
-              following lines to a directive that applies to the location
-              of your Bugzilla installation. (If such a section does not
-              exist, you'll want to add one.) In this example, Bugzilla has
-              been installed at 
-              <filename class="directory">/var/www/html/bugzilla</filename>.
-            </para>
-
-            <programlisting>
-&lt;Directory /var/www/html/bugzilla&gt;
-  AddHandler cgi-script .cgi
-  Options +Indexes +ExecCGI
-  DirectoryIndex index.cgi
-  AllowOverride Limit
-&lt;/Directory&gt;
-            </programlisting>
-
-            <para>
-              These instructions: allow apache to run .cgi files found
-              within the bugzilla directory; instructs the server to look
-              for a file called <filename>index.cgi</filename> if someone
-              only types the directory name into the browser; and allows
-              Bugzilla's <filename>.htaccess</filename> files to override
-              global permissions.
-            </para>
-
+            
+            <procedure>
+            <step>
+                <para>
+                Load <filename>httpd.conf</filename> in your editor.
+                In Fedora and Red Hat Linux, this file is found in
+                <filename class="directory">/etc/httpd/conf</filename>.
+                </para>
+            </step>
+    
+            <step>
+                <para>
+                Apache uses <computeroutput>&lt;Directory&gt;</computeroutput>
+                directives to permit fine-grained permission setting. Add the
+                following lines to a directive that applies to the location
+                of your Bugzilla installation. (If such a section does not
+                exist, you'll want to add one.) In this example, Bugzilla has
+                been installed at 
+                <filename class="directory">/var/www/html/bugzilla</filename>.
+                </para>
+    
+                <programlisting>
+    &lt;Directory /var/www/html/bugzilla&gt;
+    AddHandler cgi-script .cgi
+    Options +Indexes +ExecCGI
+    DirectoryIndex index.cgi
+    AllowOverride Limit
+    &lt;/Directory&gt;
+                </programlisting>
+    
+                <para>
+                These instructions: allow apache to run .cgi files found
+                within the bugzilla directory; instructs the server to look
+                for a file called <filename>index.cgi</filename> if someone
+                only types the directory name into the browser; and allows
+                Bugzilla's <filename>.htaccess</filename> files to override
+                global permissions.
+                </para>
+    
+                <note>
+                <para>
+                    It is possible to make these changes globally, or to the
+                    directive controlling Bugzilla's parent directory (e.g.
+                    <computeroutput>&lt;Directory /var/www/html/&gt;</computeroutput>).
+                    Such changes would also apply to the Bugzilla directory...
+                    but they would also apply to many other places where they
+                    may or may not be appropriate. In most cases, including
+                    this one, it is better to be as restrictive as possible
+                    when granting extra access.
+                </para>
+                </note>
+            </step>                    
+    
+            <step>
+                <para>
+                <filename>checksetup.pl</filename> can set tighter permissions
+                on Bugzilla's files and directories if it knows what group the
+                webserver runs as. Find the <computeroutput>Group</computeroutput>
+                line in <filename>httpd.conf</filename>, place the value found
+                there in the <replaceable>$webservergroup</replaceable> variable
+                in <filename>localconfig</filename>, then rerun
+                <filename>checksetup.pl</filename>.
+                </para>
+            </step>
+    
+            <step>
+                <para>
+                Optional: If Bugzilla does not actually reside in the webspace
+                directory, but instead has been symbolically linked there, you
+                will need to add the following to the
+                <computeroutput>Options</computeroutput> line of the Bugzilla 
+                <computeroutput>&lt;Directory&gt;</computeroutput> directive
+                (the same one as in the step above):
+                </para>
+    
+                <programlisting>
+    +FollowSymLinks
+                </programlisting>
+    
+                <para>
+                Without this directive, Apache will not follow symbolic links
+                to places outside its own directory structure, and you will be
+                unable to run Bugzilla.
+                </para>
+            </step>
+            </procedure>
+        </section>
+        <section id="http-apache-mod_perl">
+            <title>Apache <productname>httpd</productname> with mod_perl</title>
+            
+            <para>Some configuration is required to make Bugzilla work with Apache
+            and mod_perl</para>
+            
+            <procedure>
+            <step>
+                <para>
+                Load <filename>httpd.conf</filename> in your editor.
+                In Fedora and Red Hat Linux, this file is found in
+                <filename class="directory">/etc/httpd/conf</filename>.
+                </para>
+            </step>
+            
+            <step>
+                <para>Add the following information to your httpd.conf file, substituting
+                where appropriate with your own local paths.</para>
+                
+                <note>
+                <para>This should be used instead of the &lt;Directory&gt; block
+                shown above. This should also be above any other <literal>mod_perl</literal>
+                directives within the <filename>httpd.conf</filename> and must be specified
+                in the order as below.</para>
+                </note>
+                <warning>
+                <para>You should also ensure that you have disabled <literal>KeepAlive</literal>
+                support in your Apache install when utilizing Bugzilla under mod_perl</para>
+                </warning> 
+                
+                <programlisting>
+    PerlSwitches -I/var/www/html/bugzilla -w -T
+    PerlConfigRequire /var/www/html/bugzilla/mod_perl.pl
+                </programlisting>
+            </step>
+			
+			<step>
+				<para>
+					<filename>checksetup.pl</filename> can set tighter permissions
+					on Bugzilla's files and directories if it knows what group the
+					webserver runs as. Find the <computeroutput>Group</computeroutput>
+					line in <filename>httpd.conf</filename>, place the value found
+					there in the <replaceable>$webservergroup</replaceable> variable
+					in <filename>localconfig</filename>, then rerun
+					<filename>checksetup.pl</filename>.
+				</para>
+            </step>
+            </procedure>
+            
+            <para>On restarting Apache, Bugzilla should now be running within the
+            mod_perl environment. Please ensure you have run checksetup.pl to set
+		    permissions before you restart Apache.</para>
+        
             <note>
-              <para>
-                It is possible to make these changes globally, or to the
-                directive controlling Bugzilla's parent directory (e.g.
-                <computeroutput>&lt;Directory /var/www/html/&gt;</computeroutput>).
-                Such changes would also apply to the Bugzilla directory...
-                but they would also apply to many other places where they
-                may or may not be appropriate. In most cases, including
-                this one, it is better to be as restrictive as possible
-                when granting extra access.
-              </para>
+            <para>Please bear the following points in mind when looking at using 
+                Bugzilla under mod_perl: 
+            <itemizedlist>
+                <listitem>
+                <para>
+                    mod_perl support in Bugzilla can take up a HUGE amount of RAM. You could be
+                    lookng at 30MB per httpd child, easily. Basically, you just need a lot of RAM.
+                    The more RAM you can get, the better. mod_perl is basically trading RAM for
+                    speed. At least 2GB total system RAM is recommended for running Bugzilla under
+                    mod_perl.
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                    Under mod_perl, you have to restart Apache if you make any manual change to
+                    any Bugzilla file. You can't just reload--you have to actually 
+					<emphasis>restart</emphasis> the server (as in make sure it stops and starts 
+					again). You <emphasis>can</emphasis> change localconfig and the params file 
+					manually, if you want, because those are re-read every time you load a page.
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                    You must run in Apache's Prefork MPM (this is the default). The Worker MPM
+                    may not work--we haven't tested Bugzilla's mod_perl support under threads.
+					(And, in fact, we're fairly sure it <emphasis>won't</emphasis> work.)
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                    Bugzilla generally expects to be the only mod_perl application running on
+                    your entire server. It may or may not work if there are other applications also
+                    running under mod_perl. It does try its best to play nice with other mod_perl
+                    applications, but it still may have conflicts.
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                    It is recommended that you have one Bugzilla instance running under mod_perl
+                    on your server. Bugzilla has not been tested with more than one instance running.
+                </para>
+                </listitem>
+            </itemizedlist>
+            </para>
             </note>
-          </step>                    
-
-          <step>
-            <para>
-              <filename>checksetup.pl</filename> can set tighter permissions
-              on Bugzilla's files and directories if it knows what group the
-              webserver runs as. Find the <computeroutput>Group</computeroutput>
-              line in <filename>httpd.conf</filename>, place the value found
-              there in the <replaceable>$webservergroup</replaceable> variable
-              in <filename>localconfig</filename>, then rerun
-              <filename>checksetup.pl</filename>.
-            </para>
-          </step>
-
-          <step>
-            <para>
-              Optional: If Bugzilla does not actually reside in the webspace
-              directory, but instead has been symbolically linked there, you
-              will need to add the following to the
-              <computeroutput>Options</computeroutput> line of the Bugzilla 
-              <computeroutput>&lt;Directory&gt;</computeroutput> directive
-              (the same one as in the step above):
-            </para>
-
-            <programlisting>
- +FollowSymLinks
-            </programlisting>
-
-            <para>
-              Without this directive, Apache will not follow symbolic links
-              to places outside its own directory structure, and you will be
-              unable to run Bugzilla.
-            </para>
-          </step>
-        </procedure>
+        </section>
       </section>
-
+      
       <section id="http-iis">
         <title>Microsoft <productname>Internet Information Services</productname></title>
 
