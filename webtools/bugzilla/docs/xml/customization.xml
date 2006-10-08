@@ -2,6 +2,42 @@
 <chapter id="customization">
   <title>Customising Bugzilla</title>
 
+  <section id="cust-skins">
+    <title>Custom Skins</title>
+    
+    <para>
+      Bugzilla allows you to have multiple skins. These are custom CSS and possibly
+      also custom images for Bugzilla. To create a new custom skin, you have two
+      choices:
+      <itemizedlist>
+        <listitem>
+          <para>
+            Make a single CSS file, and put it in the 
+            <filename>skins/contrib</filename> directory.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Make a directory that contains all the same CSS file
+            names as <filename>skins/standard/</filename>, and put
+            your directory in <filename>skins/contrib/</filename>.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+      
+    <para>
+      After you put the file or the directory there, make sure to run checksetup.pl
+      so that it can reset the file permissions correctly.
+    </para>
+    <para>
+      After you have installed the new skin, it will show up as an option in the
+      user's General Preferences. If you would like to force a particular skin on all
+      users, just select it in the Default Preferences and then uncheck "Enabled" on
+      the preference.
+    </para>
+  </section>
+  
   <section id="cust-templates">
     <title>Template Customization</title>
     
