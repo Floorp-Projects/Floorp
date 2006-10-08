@@ -36,21 +36,24 @@
  * ***** END LICENSE BLOCK ***** */
 class Comment extends AppModel {
   var $name = 'Comment';
-  
+
   var $validate = array(
     'text' => VALID_NOT_EMPTY
   );
-  
+
   function canComment($pid, $uid) {
-    $status = $this->query("SELECT owner, guests, guestcomments FROM parties WHERE id = ".$pid);
-    
+    $status = $this->query('SELECT owner, guestcomments FROM parties WHERE id = '.$pid);
+    $guest = null;
+    if ($status[0]['parties']['owner'] != $uid)
+      $guest = $this->query('SELECT uid FROM guests WHERE pid = '.$pid.' AND uid = '.$uid);
+
     if ($status[0]['parties']['guestcomments'] == 1) {
-      if (in_array($uid, explode(',', $status[0]['parties']['guests'])) || $uid == $status[0]['parties']['owner'])
+      if (!empty($guest[0]['guests']['uid']) || $uid == $status[0]['parties']['owner'])
         return true;
       else
         return false;
     }
-    
+
     else
       return true;
   }

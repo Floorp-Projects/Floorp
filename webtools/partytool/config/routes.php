@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: routes.php,v 1.3 2006/09/28 03:22:08 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: routes.php,v 1.4 2006/10/08 03:39:21 reed%reedloden.com Exp $ */
 /**
  * Short description for file.
  *
@@ -23,9 +23,9 @@
  * @package			cake
  * @subpackage		cake.app.config
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.3 $
+ * @version			$Revision: 1.4 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/09/28 03:22:08 $
+ * @lastmodified	$Date: 2006/10/08 03:39:21 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -33,16 +33,10 @@
  * its action called 'display', and we pass a param to select the view file
  * to use (in this case, /app/views/pages/home.thtml)...
  */
-	$Route->connect('/', array('controller' => 'pages', 'action' => 'display', 'home'));
+  $Route->connect('/', array('controller' => 'pages', 'action' => 'display', 'home'));
 /**
  * ...and connect the rest of 'Pages' controller's urls.
  */
-	$Route->connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
-/**
- * Then we connect url '/test' to our test controller. This is helpfull in
- * developement.
- */
-	$Route->connect('/tests', array('controller' => 'tests', 'action' => 'index'));
-  
+  $Route->connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
   $Route->connect('/privacy-policy', array('controller' => 'pages', 'action' => 'privacy'));
 ?>

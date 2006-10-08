@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `comments` (
+CREATE TABLE `comments` (
   `id` int(10) NOT NULL auto_increment,
   `assoc` int(10) NOT NULL default '0',
   `owner` int(10) NOT NULL default '0',
@@ -7,49 +7,65 @@ CREATE TABLE IF NOT EXISTS `comments` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `parties` (
+CREATE TABLE `guests` (
+  `id` int(10) NOT NULL auto_increment,
+  `pid` int(10) NOT NULL default '0',
+  `uid` int(10) NOT NULL default '0',
+  `invited` tinyint(1) NOT NULL default '1',
+  PRIMARY KEY  (`id`),
+  KEY `pid` (`pid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `parties` (
   `id` int(10) NOT NULL auto_increment,
   `owner` int(10) NOT NULL default '0',
   `name` tinytext collate utf8_unicode_ci NOT NULL,
-  `vname` tinytext collate utf8_unicode_ci,
+  `vname` tinytext collate utf8_unicode_ci NOT NULL,
   `address` tinytext collate utf8_unicode_ci NOT NULL,
   `tz` int(2) NOT NULL default '0',
-  `website` text collate utf8_unicode_ci,
-  `notes` text collate utf8_unicode_ci,
-  `date` int(10) default NULL,
+  `website` text collate utf8_unicode_ci NOT NULL,
+  `notes` text collate utf8_unicode_ci NOT NULL,
+  `date` int(10) NOT NULL default '0',
   `duration` tinyint(2) NOT NULL default '2',
-  `guests` text collate utf8_unicode_ci NOT NULL,
-  `confirmed` tinyint(1) NOT NULL default '0',
+  `confirmed` tinyint(1) NOT NULL default '1',
+  `canceled` tinyint(1) NOT NULL default '0',
   `guestcomments` tinyint(1) NOT NULL default '0',
   `inviteonly` tinyint(1) NOT NULL default '0',
   `invitecode` tinytext collate utf8_unicode_ci NOT NULL,
-  `lat` float default NULL,
-  `long` float default NULL,
-  `zoom` tinyint(2) NOT NULL default '8',
+  `lat` float NOT NULL default '0',
+  `long` float NOT NULL default '0',
+  `zoom` tinyint(2) NOT NULL default '1',
   `useflickr` tinyint(1) NOT NULL default '0',
-  `flickrperms` tinyint(1) default '0',
+  `flickrperms` tinyint(1) NOT NULL default '0',
   `flickrid` tinytext collate utf8_unicode_ci NOT NULL,
   `flickrusr` tinytext collate utf8_unicode_ci NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `users` (
+CREATE TABLE `sessions` (
+  `id` varchar(255) character set latin1 NOT NULL default '',
+  `data` text character set latin1,
+  `expires` int(11) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `users` (
   `id` int(10) NOT NULL auto_increment,
-  `role` tinyint(2) NOT NULL default '0',
-  `email` varchar(75) collate utf8_unicode_ci NOT NULL default '',
-  `active` varchar(10) collate utf8_unicode_ci default NULL,
-  `password` varchar(40) collate utf8_unicode_ci NOT NULL default '',
+  `role` tinyint(1) NOT NULL default '0',
+  `email` tinytext collate utf8_unicode_ci NOT NULL,
+  `active` varchar(10) collate utf8_unicode_ci NOT NULL default '0',
+  `password` varchar(75) collate utf8_unicode_ci NOT NULL default '',
   `salt` varchar(9) collate utf8_unicode_ci NOT NULL default '',
   `name` tinytext collate utf8_unicode_ci NOT NULL,
   `location` tinytext collate utf8_unicode_ci NOT NULL,
-  `tz` int(2) NOT NULL default '0',
-  `website` tinytext collate utf8_unicode_ci NOT NULL,
-  `lat` float default NULL,
-  `long` float default NULL,
-  `zoom` tinyint(2) NOT NULL default '12',
-  `showemail` tinyint(1) NOT NULL default '1',
+  `tz` tinyint(2) NOT NULL default '0',
+  `website` text collate utf8_unicode_ci NOT NULL,
+  `lat` float NOT NULL default '0',
+  `long` float NOT NULL default '0',
+  `zoom` tinyint(2) NOT NULL default '1',
+  `showemail` tinyint(1) NOT NULL default '0',
   `showloc` tinyint(1) NOT NULL default '1',
   `showmap` tinyint(1) NOT NULL default '1',
-  PRIMARY KEY  (`id`),
   UNIQUE KEY `email` (`email`)
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

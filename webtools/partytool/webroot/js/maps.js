@@ -4,7 +4,7 @@ var marker;
 function mapInit(aLat, aLng, aZoom, aState) {
   map = new GMap2(document.getElementById("map"));
   map.addControl((aState == "stationary") ? new GSmallZoomControl() : new GSmallMapControl());
-    
+
   if (aLat) {
     map.setCenter(new GLatLng(aLat, aLng), aZoom);
     if (marker) {
@@ -12,7 +12,7 @@ function mapInit(aLat, aLng, aZoom, aState) {
     }
     marker = new GMarker(new GLatLng(aLat, aLng), (aState != "stationary") ? {draggable: true} : {draggable: false});
   }
-  
+
   else {
     map.setCenter(new GLatLng(14.944785, -156.796875), 1);
     if (marker) {
@@ -20,7 +20,7 @@ function mapInit(aLat, aLng, aZoom, aState) {
     }
     marker = new GMarker(new GLatLng(14.944785, -156.796875), (aState != "stationary") ? {draggable: true} : {draggable: false});
   }
-    
+
   map.addOverlay(marker);
   if (aState != "stationary") {
     GEvent.addListener(marker, "dragend", function() { onDragEnd(); });
@@ -40,17 +40,16 @@ function geocode(aLoc) {
         map.panTo(point);
         map.removeOverlay(marker);
         marker = new GMarker(point, {draggable: true});
+        GEvent.addListener(marker, "dragend", function() { onDragEnd(); });
         map.addOverlay(marker);
       }
     });
 }
 
 function suggest(loc) {
-  GDownloadUrl("/cake/js/suggest.php?s=" + loc, function(data, responseCode) {
-    var xml = GXml.parse(data);
-    var sug = xml.documentElement.getElementsByTagName("string");
-    if (sug[0].getAttribute('value') !== 0) {
-      document.getElementById('locerrlink').innerHTML = sug[0].getAttribute('value');
+  GDownloadUrl("/js/suggest.php?s=" + loc, function(data, responseCode) {
+    if (data != 0) {
+      document.getElementById('locerrlink').innerHTML = data;
       document.getElementById('locerr').setAttribute('style', '');
     }
   });
@@ -81,7 +80,7 @@ function initMashUp() {
   map = new GMap2(document.getElementById("map"));
   map.addControl(new GLargeMapControl());
   map.addControl(new GMapTypeControl());
-  map.setCenter(new GLatLng(37.4419, -122.1419), 2);
+  map.setCenter(new GLatLng(0, -5.25), 1);
   addParties();
 }
 

@@ -34,38 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-uses('sanitize');
-
-class CommentController extends AppController {
-  var $name = 'Comment';
-  var $components = array('Security');
-  
-  function beforeFilter() {
-    $this->Security->requirePost('add');
-  }
-    
-  function add($pid, $uid) {
-    if (!$this->Session->check('User') || $uid != $_SESSION['User']['id'])
-      $this->redirect('/');
-    
-    if (!empty($this->data) && $this->Comment->canComment($pid, $uid)) {
-      // Explictly destroy the last model to avoid an edit instead of an insert
-      $this->Comment->create();
-      
-      $clean = new Sanitize();
-      $text = $clean->html($this->data['Comment']['text']);
-      $this->data['Comment']['text'] = preg_replace('/\n/', '<br/>', $text);
-      $this->data['Comment']['owner'] = $uid;
-      $this->data['Comment']['assoc'] = $pid;
-      $this->data['Comment']['time'] = gmmktime();
-      
-      if ($this->Comment->save($this->data)) {
-        $this->redirect('/party/view/'.$pid.'#c'.$this->Comment->getLastInsertID());
-      }
-    }
-    
-    else
-      $this->redirect('/party/view/'.$pid);
-  }
+class Guest extends AppModel {
+  var $name = 'Guest';
 }
 ?>

@@ -1,9 +1,8 @@
   <?php
-    if (isset($party)): 
-    @$isguest = (isset($guests)) ? in_array($_SESSION['User']['id'], $guests) : 0;?>
+    if (isset($party)): ?>
     <h1><?php echo $party['Party']['name']; ?></h1>
     <br/>
-    Host: <a href="<?php echo $html->url('/user/view/'.$party['Party']['owner']).'">'.$host; ?></a><br/>
+    Host: <a href="<?php echo $html->url('/users/view/'.$party['Party']['owner']).'">'.$host; ?></a><br/>
     <?php
       if (!empty($party['Party']['address']))
         echo 'Location: '.$party['Party']['address']."<br/>\n";
@@ -27,12 +26,12 @@
     <div id="map" class="small-map"></div>
     <h1>Who's coming</h1>
     <div>
-    <?php if (isset($guests)):
+    <?php if (!empty($guests)):
       $i = 0;
       $c = count($guests) - 1;
       foreach ($guests as $guest): ?>
-      <a href="<?php echo $html->url('/user/view/'.$guest); ?>"><?php echo $names[$i]; ?></a><?php echo ($i < $c) ? ", " : ""; ?>
-    <?php $i++; 
+      <a href="<?php echo $html->url('/users/view/'.$guest['users']['id']); ?>"><?php echo $guest['users']['name']; ?></a><?php echo ($i < $c) ? ", " : ""; ?>
+    <?php $i++;   
       endforeach; 
       else:
         echo "No guests yet, be the first!";
@@ -41,7 +40,7 @@
     if (isset($_SESSION['User']['id']) && @$_SESSION['User']['id'] != $party['Party']['owner'] && ($party['Party']['inviteonly'] != 1 || $isguest)):?>
     <br/><br/>
     <form action="<?php 
-      echo $html->url('/party/'.((!$isguest) ? 'rsvp/' : 'unrsvp/').$party['Party']['id']); ?>" method="post">
+      echo $html->url('/parties/'.((!$isguest) ? 'rsvp/' : 'unrsvp/').$party['Party']['id']); ?>" method="post">
       <?php if(!$isguest): ?>
       <button>Count me in!</button>
       <?php else: ?>
@@ -55,8 +54,8 @@
     </div>
     <?php if (@$_SESSION['User']['id'] == $party['Party']['owner']):?>
     <h1>Party options</h1>
-    <a href="<?php echo $html->url('/party/edit/'.$party['Party']['id']);?>">Edit party</a>
-    <a href="<?php echo $html->url('/party/invite/'.$party['Party']['id']);?>">Invite a guest</a>
+    <a href="<?php echo $html->url('/parties/edit/'.$party['Party']['id']);?>">Edit party</a>
+    <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
     <?php endif; ?>
     <?php if (isset($flickr)): ?>
     <h1 id="photos">Photos</h1>
@@ -82,7 +81,7 @@
         $i++;?>
       <div id="c<?php echo $comment['comments']['cid'];?>" class="comment <?php echo $class;?>">
         <span class="comment-content"><?php echo $comment['comments']['text']; ?></span>
-        <span class="comment-tag"><br/><br/>Posted by <a href="<?php echo $html->url('/user/view/'.$comment['users']['uid']); ?>">
+        <span class="comment-tag"><br/><br/>Posted by <a href="<?php echo $html->url('/users/view/'.$comment['users']['uid']); ?>">
         <?php echo $comment['users']['name']; ?></a> on <?php echo date('Y-m-d h:ia', $comment['comments']['time'] - (@$_SESSION['User']['tz'] * 60 * 60)); ?></span>
         </span>
       </div>
@@ -91,7 +90,7 @@
       if (isset($_SESSION['User'])):
         if (($party['Party']['guestcomments'] && $isguest) || !$party['Party']['guestcomments'] || @$_SESSION['User']['id'] == $party['Party']['owner']): ?>
     <h1>Add a comment</h1>
-    <form action="<?php echo $html->url('/comment/add/'.$party['Party']['id'].'/'.$_SESSION['User']['id']); ?>" method="post">
+    <form action="<?php echo $html->url('/comments/add/'.$party['Party']['id'].'/'.$_SESSION['User']['id']); ?>" method="post">
       <div>
         <?php echo $html->textarea('Comment/text', array('rows' => 10, 'cols' => 50))."<br/>".$html->submit('Submit'); ?>
       </div>
@@ -102,9 +101,9 @@
   
   <?php if (isset($parties)):
     if (isset($prev))
-      echo '<a href="'.$html->url('/party/view/all/'.$prev).'">Previous Page</a> ';
+      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">Previous Page</a> ';
     if (isset($next))
-      echo '<a href="'.$html->url('/party/view/all/'.$next).'">Next Page</a>';
+      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page</a>';
     $i = 0;
     foreach ($parties as $party): ?>
     <div>
@@ -122,13 +121,14 @@
         if (!empty($party['Party']['website']))
           echo 'Website: <a href="'.$party['Party']['website'].'" rel="nofollow">'.$party['Party']['website']."</a><br/>\n";
 
-        echo '<a href="'.$html->url('/party/view/'.$party['Party']['id']).'">View Party</a>';
+        echo '<a href="'.$html->url('/parties/view/'.$party['Party']['id']).'">View Party</a>';
       ?>
       </p>
     </div>
   <?php endforeach;
     if (isset($prev))
-      echo '<a href="'.$html->url('/party/view/all/'.$prev).'">Previous Page</a> ';
+      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">Previous Page</a> ';
     if (isset($next))
-      echo '<a href="'.$html->url('/party/view/all/'.$next).'">Next Page</a>';
+      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page</a>';
   endif;?>
+

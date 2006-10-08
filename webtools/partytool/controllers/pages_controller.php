@@ -36,16 +36,15 @@
  * ***** END LICENSE BLOCK ***** */
 class PagesController extends AppController {
   var $name = 'Pages';
-  var $pageTitle;
-  
+
   function display() {
-    $this->pageTitle = APP_NAME." - Home";
-    $this->set('current', "home");
+    $this->pageTitle = 'Home';
+    $this->set('current', 'home');
     $this->set('pcount', $this->Page->findCount());
     $this->set('ucount', $this->Page->getUsers());
   }
-  
+
   function privacy() {
-    $this->pageTitle = APP_NAME." - Privacy Policy";
+    $this->pageTitle = 'Privacy Policy';
   }
 }

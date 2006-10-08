@@ -3,7 +3,7 @@
   There was an error in your submission, please try again.
 </div>
 <?php endif; ?>
-<form class="fxform" action="<?php echo $html->url('/user/edit'); ?>" method="post">
+<form class="fxform" action="<?php echo $html->url('/users/edit'); ?>" method="post">
    <?php echo $html->hidden('User/id'); ?>
   <h1>Profile</h1>
   <div>

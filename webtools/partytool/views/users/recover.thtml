@@ -1,9 +1,9 @@
 <h1><?php echo $atitle; ?></h1>
 <form class="fxform" action="<?php 
   if (isset($reset))
-    echo $html->url('/user/recover/reset/'.$code);
+    echo $html->url('/users/recover/reset/'.$code);
   else
-    echo $html->url('/user/recover/'.$url); ?>" method="post">
+    echo $html->url('/users/recover/'.$url); ?>" method="post">
   <?php if (isset($error)): ?>
   <div class="error">
     <?php echo $error; ?>

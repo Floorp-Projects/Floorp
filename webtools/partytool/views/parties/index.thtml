@@ -2,6 +2,6 @@
 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
       type="text/javascript"></script>
 <script src="<?php echo $html->url('/js/maps.js'); ?>" type="text/javascript"></script>
-<script src="<?php echo $html->url('/party/js'); ?>" type="text/javascript"></script>
+<script src="<?php echo $html->url('/parties/js'); ?>" type="text/javascript"></script>
 <div id="map" class="large-map"/>
 <?php endif; ?>

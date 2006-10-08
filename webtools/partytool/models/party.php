@@ -36,10 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 class Party extends AppModel {
   var $name = 'Party';
-    
   var $validate = array(
-    'name'    => VALID_NOT_EMPTY,
-    'einvite' => VALID_EMAIL
+    'name' => VALID_NOT_EMPTY,
+    'einvite' => VALID_EMAIL,
+    'duration' => VALID_NUMBER
   );
 
   function getComments($pid) {
@@ -52,10 +52,54 @@ class Party extends AppModel {
                         ORDER BY cid ASC");
     return $rv;
   }
-  
-  function getUserName($uid) {
+
+  function getHost($uid) {
     $rv = $this->query("SELECT name FROM users WHERE id = ".$uid);
     return @$rv[0]['users']['name'];
+  }
+
+  function isGuest($pid, $uid) {
+    $rv = $this->query('SELECT id FROM guests WHERE uid = '.$uid.' AND pid = '.$pid);
+    if (!empty($rv[0]['guests']['id']))
+      return true;
+    else
+      return false;
+  }
+
+  function getGuests($pid) {
+    $rv = $this->query("SELECT users.id, users.name, guests.invited
+                        FROM users
+                        LEFT JOIN guests 
+                          ON users.id = guests.uid
+                        WHERE guests.pid = ".$pid);
+    return $rv;
+  }
+
+  function rsvp($pid, $uid) {
+    $party = $this->findById($pid);
+    if (!empty($party['Party']['id']) && !$this->isGuest($pid, $uid)) {
+      $this->query("INSERT INTO guests (id, pid, uid, invited)
+                        VALUES (NULL, ".$party['Party']['id'].", ".$uid.", 0)"); 
+    }
+  }
+
+  function unrsvp($pid, $uid) {
+    $party = $this->findById($pid);
+    if (!empty($party['Party']['id']) && $this->isGuest($pid, $uid)) {
+      $this->query('DELETE FROM guests WHERE uid = '.$uid.' AND pid = '.$pid);
+    }
+  }
+
+  function addGuest($uid, $icode) {
+    $party = $this->findByInvitecode($icode);
+    if (!empty($party['Party']['id'])) {
+      $check = $this->query('SELECT uid FROM guests WHERE uid = '.$uid.' 
+                              AND pid = '.$party['Party']['id']);
+      if (empty($check[0]['guests']['uid']) && $uid != $party['Party']['owner']) {
+        $this->query("INSERT INTO guests (id, pid, uid, invited)
+                        VALUES (NULL, ".$party['Party']['id'].", ".$uid.", 1)");
+      }
+    }
   }
 }
 ?>

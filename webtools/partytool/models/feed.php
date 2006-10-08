@@ -37,12 +37,12 @@
 class Feed extends AppModel {
   var $name = 'Feeds';
   var $useTable = "parties";
-  
+
   function getComments($aParty) {
     $rv = $this->query("SELECT * FROM comments WHERE assoc = ".$aParty." LIMIT 10");
     return $rv;
   }
-  
+
   function getUserCount() {
     $rv = $this->query("SELECT COUNT(*) FROM users");
     return $rv[0][0]['COUNT(*)'];

@@ -15,11 +15,11 @@ DTSTART:<?php echo date('Ymd\This', $event['Feeds']['date'])."\n"; ?>
 DURATION:PT<?php echo $event['Feeds']['duration']; ?>H
 URL:<?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/party/view/'.$event['Feeds']['id'])."\n"; ?>
 STATUS:<?php echo (($event['Feeds']['confirmed'] == 1) ? "CONFIRMED" : "TENTATIVE")."\n"; ?>
-DESCRIPTION;ENCODING=QUOTED-PRINTABLE:
- <?php echo $event['Feeds']['name']."\n"; ?>
- <?php echo str_replace(",", "\,", $event['Feeds']['address'])."\n"; ?>
- <?php echo date('h:ia', $event['Feeds']['date'])."\n"; ?>
- <?php echo $event['Feeds']['notes']."\n"; ?>
+DESCRIPTION
+ <?php echo $event['Feeds']['name']." \r\n"; ?>
+ <?php echo str_replace(",", "\,", $event['Feeds']['address'])." \r\n"; ?>
+ <?php echo date('h:ia', $event['Feeds']['date'])." \r\n"; ?>
+ <?php echo $event['Feeds']['notes']." \r\n"; ?>
 END:VEVENT
 <?php endforeach; ?>
 END:VCALENDAR

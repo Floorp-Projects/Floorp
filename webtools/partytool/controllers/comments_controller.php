@@ -34,42 +34,38 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-class UnicodeComponent extends Object {
-  /**
-   * Unicode utilities. Converts and encodes characters up to 0xFFFF (65535)
-   */
-  function unicode2utf($char) {
-    if ($char < 128) {
-      $rv = chr($char);
-    }
+uses('sanitize');
 
-    else if ($char < 2048) {
-      $rv = chr(192 + (($char - ($char % 64)) / 64));
-      $rv .= chr(128 + ($char % 64));
-    }
-
-    else {
-      $rv = chr(224 + (($char - ($char % 4096)) / 4096));
-      $rv .= chr(128 + ((($char % 4096) - ($char % 64)) / 64));
-      $rv .= chr(128 + ($char % 64));
-    }
-
-    return $rv;
+class CommentsController extends AppController {
+  var $name = 'Comments';
+  var $components = array('Security');
+  
+  function beforeFilter() {
+    $this->Security->requirePost('add');
   }
 
-  function utf2unicode($char) {
-    if (ord($char{0}) < 128)
-      $rv = ord($char);
+  function add($pid, $uid) {
+    if (!$this->Session->check('User') || $uid != $_SESSION['User']['id'])
+      $this->redirect('/');
 
-    else if (ord($char{0}) < 224)
-      $rv = ((ord($char{0}) - 192) * 64) + (ord($char{1}) - 128);
+    if (!empty($this->data) && $this->Comment->canComment($pid, $uid)) {
+      // Explictly destroy the last model to avoid an edit instead of an insert
+      $this->Comment->create();
 
-    else if (ord($char{0}) < 240)
-      $rv = ((ord($char{0}) - 224) * 4096) + ((ord($char{1}) - 128) * 64 + (ord($char{2}) - 128));
+      $clean = new Sanitize();
+      $text = $clean->html($this->data['Comment']['text']);
+      $this->data['Comment']['text'] = nl2br($text);
+      $this->data['Comment']['owner'] = $uid;
+      $this->data['Comment']['assoc'] = $pid;
+      $this->data['Comment']['time'] = gmmktime();
+
+      if ($this->Comment->save($this->data)) {
+        $this->redirect('/parties/view/'.$pid.'#c'.$this->Comment->getLastInsertID());
+      }
+    }
 
     else
-      $rv = ((ord($char{0}) - 240) * 262144) + ((ord($char{1}) - 128) * 4096) + ((ord($char{2}) - 128) * 64) + (ord($char{3}) - 128);
-
-    return $rv;
+      $this->redirect('/parties/view/'.$pid);
   }
 }
+?>

@@ -1,4 +1,4 @@
-<form class="fxform" action="<?php echo $html->url('/party/edit/'.$party['Party']['id']); ?>" method="post">
+<form class="fxform" action="<?php echo $html->url('/parties/edit/'.$party['Party']['id']); ?>" method="post">
   <?php echo $html->hidden('Party/id'); ?>
   <h1>Details</h1>
   <div>

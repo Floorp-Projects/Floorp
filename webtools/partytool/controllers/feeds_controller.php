@@ -36,41 +36,41 @@
  * ***** END LICENSE BLOCK ***** */
 class FeedsController extends AppController {
   var $name = 'Feeds';
-    
+
   function index() {
     header('Content-type: text/xml');
     $this->layout = 'ajax';
     $this->set('count', $this->Feed->findCount());
   }
-    
+
   function latest() {
     header('Content-type: text/xml');
     $this->layout = 'ajax';
     $this->set('latest', $this->Feed->findAll('', '', 'id DESC', 10, 1));
   }
-  
+
   function users() {
     header('Content-type: text/xml');
     $this->layout = 'ajax';
     $this->set('count', $this->Feed->getUserCount());
   }
-    
+
   function comments($id = null) {
     $this->layout = 'ajax';
     header('Content-type: text/xml');
     if (!is_numeric($id))
       return;
-        
+
     $this->set('comments', $this->Feed->getComments($id));
     $this->set('pid', $id);
   }
-    
+
   function upcoming() {
     $this->layout = 'ajax';
     header('Content-type: text/xml');
     $this->set('latest', $this->Feed->findAll('WHERE date > '. time(), '', 'date ASC', 10, 1));
   }
-    
+
   function ical() {
     $this->layout = 'ajax';
     header('Content-type: text/calendar');

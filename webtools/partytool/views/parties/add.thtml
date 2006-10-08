@@ -1,13 +1,9 @@
 <h1>Create a Party</h1>
-<?php if ($error): ?>
-<div class="error">
-  There was an error in your submission, please try again.
-</div>
-<?php endif; ?>
-<form class="fxform" action="<?php echo $html->url('/party/register'); ?>" method="post">
+<form class="fxform" action="<?php echo $html->url('/parties/add'); ?>" method="post">
   <div>
     <label for="PartyName" class="label-large">Party Name<span class="required">*</span>:</label>
     <?php echo $html->input('Party/name', array('size' => 40)); ?>
+    <?php echo $html->tagErrorMsg('Party/name', 'Please enter a party name.')?>
   </div>
   <div>
 	<label for="PartyVname" class="label-large">Venue Name:</label>
@@ -33,33 +29,34 @@
     the party in the local time of the person viewing it.</p>
   <div>
     <label for="PartyTz" class="label-large">Timezone<span class="required">*</span>:</label>
-    <select name="data[Party][tz]"  id="PartyTz">
-      <option value="-12">GMT-12</option>
-      <option value="-11">GMT-11</option>
-      <option value="-10">GMT-10</option>
-      <option value="-9">GMT-9</option>
-      <option value="-8">GMT-8</option>
-      <option value="-7">GMT-7</option>
-      <option value="-6">GMT-6</option>
-      <option value="-5">GMT-5</option>
-      <option value="-4">GMT-4</option>
-      <option value="-3">GMT-3</option>
-      <option value="-2">GMT-2</option>
-      <option value="-1">GMT-1</option>
-      <option value="0" selected="selected">GMT+0</option>
-      <option value="1">GMT+1</option>
-      <option value="2">GMT+2</option>
-      <option value="3">GMT+3</option>
-      <option value="4">GMT+4</option>
-      <option value="5">GMT+5</option>
-      <option value="6">GMT+6</option>
-      <option value="7">GMT+7</option>
-      <option value="8">GMT+8</option>
-      <option value="9">GMT+9</option>
-      <option value="10">GMT+10</option>
-      <option value="11">GMT+11</option>
-      <option value="12">GMT+12</option>
-    </select>
+    <?php 
+      $tzs = array('-12' => 'GMT-12',
+                 '-11' => 'GMT-11',
+                 '-10' => 'GMT-10',
+                 '-9' => 'GMT-9',
+                 '-8' => 'GMT-8',
+                 '-7' => 'GMT-7',
+                 '-6' => 'GMT-6',
+                 '-5' => 'GMT-5',
+                 '-4' => 'GMT-4',
+                 '-3' => 'GMT-3',
+                 '-2' => 'GMT-2',
+                 '-1' => 'GMT-1',
+                 '0' => 'GMT+0',
+                 '1' => 'GMT+1',
+                 '2' => 'GMT+2',
+                 '3' => 'GMT+3',
+                 '4' => 'GMT+4',
+                 '5' => 'GMT+5',
+                 '6' => 'GMT+6',
+                 '7' => 'GMT+7',
+                 '8' => 'GMT+8',
+                 '9' => 'GMT+9',
+                 '10' => 'GMT+10',
+                 '11' => 'GMT+11',
+                 '12' => 'GMT+12');
+      echo $html->selectTag('Party/tz', $tzs, $utz, null, null, false); 
+    ?>
     (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?> GMT)
   </div>
   <div>

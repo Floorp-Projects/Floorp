@@ -17,7 +17,7 @@
     $i = 0;
     
     foreach ($parties as $party) {
-      echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+      echo '<a href="'.$html->url('/parties/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
       echo ($i < $c) ? ', ' : '<br/>';
       $i++;
     }
@@ -29,7 +29,7 @@
     $i = 0;
     
     foreach ($hparties as $party) {
-      echo '<a href="'.$html->url('/party/view/'.$party['parties']['id']).'">'.$party['parties']['name'].'</a>';
+      echo '<a href="'.$html->url('/parties/view/'.$party['id']).'">'.$party['name'].'</a>';
       echo ($i < $c) ? ', ' : '<br/>';
       $i++;
     }

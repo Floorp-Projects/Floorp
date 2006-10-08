@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: css.php,v 1.3 2006/09/28 03:22:10 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: css.php,v 1.4 2006/10/08 03:39:23 reed%reedloden.com Exp $ */
 /**
  * Short description for file.
  *
@@ -21,21 +21,18 @@
  * @package			cake
  * @subpackage		cake.app.webroot
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.3 $
+ * @version			$Revision: 1.4 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/09/28 03:22:10 $
+ * @lastmodified	$Date: 2006/10/08 03:39:23 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
-if (!defined(CAKE_CORE_INCLUDE_PATH)) {
-	die('You can not access this file directly');
+if (!defined('CAKE_CORE_INCLUDE_PATH')) {
+	header('HTTP/1.1 404 Not Found');
 }
 /**
  * Enter description here...
  */
-	require(CONFIGS . 'paths.php');
-	require(CAKE . 'basics.php');
 	require(LIBS . 'folder.php');
-	require(LIBS . 'file.php');
 	require(LIBS . 'legacy.php');
 /**
  * Enter description here...

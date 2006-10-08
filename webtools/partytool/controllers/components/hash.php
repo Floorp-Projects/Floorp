@@ -34,42 +34,21 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-class UnicodeComponent extends Object {
-  /**
-   * Unicode utilities. Converts and encodes characters up to 0xFFFF (65535)
-   */
-  function unicode2utf($char) {
-    if ($char < 128) {
-      $rv = chr($char);
-    }
+class HashComponent extends Object {
 
-    else if ($char < 2048) {
-      $rv = chr(192 + (($char - ($char % 64)) / 64));
-      $rv .= chr(128 + ($char % 64));
-    }
-
-    else {
-      $rv = chr(224 + (($char - ($char % 4096)) / 4096));
-      $rv .= chr(128 + ((($char % 4096) - ($char % 64)) / 64));
-      $rv .= chr(128 + ($char % 64));
-    }
-
+  function password($pass, $data) {
+    $string = $pass.uniqid(rand(), true).$data;
+    $salt = substr(md5($string), 0, 9);
+    $p = sha1($pass.$salt);
+    $rv = array('pass' => $p, 'salt' => $salt);
     return $rv;
   }
 
-  function utf2unicode($char) {
-    if (ord($char{0}) < 128)
-      $rv = ord($char);
-
-    else if (ord($char{0}) < 224)
-      $rv = ((ord($char{0}) - 192) * 64) + (ord($char{1}) - 128);
-
-    else if (ord($char{0}) < 240)
-      $rv = ((ord($char{0}) - 224) * 4096) + ((ord($char{1}) - 128) * 64 + (ord($char{2}) - 128));
-
-    else
-      $rv = ((ord($char{0}) - 240) * 262144) + ((ord($char{1}) - 128) * 4096) + ((ord($char{2}) - 128) * 64) + (ord($char{3}) - 128);
-
-    return $rv;
+  function keygen($chars) {
+    $key = null;
+    $pool = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for ($i = 0; $i < $chars; $i++)
+      $key .= $pool{rand(0,61)};
+    return $key;
   }
 }

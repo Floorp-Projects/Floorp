@@ -36,48 +36,24 @@
  * ***** END LICENSE BLOCK ***** */
 class User extends AppModel {
   var $name = 'User';
-  
   var $validate = array(
-    'email'     => VALID_EMAIL,
-    'confemail' => VALID_EMAIL,
-    'name'      => VALID_NOT_EMPTY,
-    'password'  => VALID_NOT_EMPTY
+    'email' => VALID_EMAIL,
+    'name' => VALID_NOT_EMPTY
   );
-  
+
   function memberOf($uid) {
-    $parties = $this->query("SELECT id,name FROM parties WHERE guests REGEXP '(,|^)".$uid."{1}(,|$)'");
-    return $parties;
+    $rv = $this->query('SELECT parties.id, parties.name FROM guests, parties WHERE guests.uid = '.$uid.' AND parties.id = guests.pid');
+    return $rv;
   }
-  
+
   function hostOf($uid) {
-    $parties = $this->query("SELECT id,name FROM parties WHERE owner = ".$uid);
-    return $parties;
+    $rv = $this->query('SELECT id, name FROM parties WHERE owner = '.$uid);
+    return $rv;
   }
-  
-  function getPartyId($icode) {
-    $party = $this->query("SELECT id FROM parties WHERE invitecode = \"".$icode."\"");
-    
-    if (!empty($party))
-      return $party[0]['parties']['id'];
-  }
-  
-  function addToParty($icode, $uid) {
-    $party = $this->query("SELECT id,guests FROM parties WHERE invitecode = \"".$icode."\"");
-    
-    if (!empty($party[0]['parties']['id'])) {
-      $guests = $party[0]['parties']['guests'];
-      
-      if (empty($guests)) {
-        $guests = $uid;
-      }
-      else {
-        $temp = explode(',', $guests);
-        array_push($temp, $uid);
-        $guests = implode(',', $temp);
-      }
-      
-      $this->query("UPDATE parties SET guests = \"".$guests."\" WHERE id = ".$party[0]['parties']['id']);
-    }
+
+  function invitedTo($uid) {
+    $rv = $this->query('SELECT parties.id, parties.name FROM guests, parties WHERE guests.uid = '.$uid.' AND parties.id = guests.pid AND guests.invited = 1');
+    return $rv;
   }
 }
 ?>

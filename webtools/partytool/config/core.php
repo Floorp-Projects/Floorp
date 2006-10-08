@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: core.php,v 1.3 2006/10/03 09:15:26 reed%reedloden.com Exp $ */
+/* SVN FILE: $Id: core.php,v 1.4 2006/10/08 03:39:21 reed%reedloden.com Exp $ */
 /**
  * This is core configuration file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.config
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.3 $
+ * @version			$Revision: 1.4 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/10/03 09:15:26 $
+ * @lastmodified	$Date: 2006/10/08 03:39:21 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -75,19 +75,19 @@
  *
  *
  */
-	define('CAKE_SESSION_SAVE', 'php');
+	define('CAKE_SESSION_SAVE', 'database');
 /**
  * If using you own table name for storing sessions
  * set the table name here.
  * DO NOT INCLUDE PREFIX IF YOU HAVE SET ONE IN database.php
  *
  */
-	define('CAKE_SESSION_TABLE', 'cake_sessions');
+	define('CAKE_SESSION_TABLE', 'sessions');
 /**
  * Set a random string of used in session.
  *
  */
-	define('CAKE_SESSION_STRING', 'h874dPHn8i19CI43vZ0n30L3SHtS4mze06TkBuA91P7x2FyzXC');
+	define('CAKE_SESSION_STRING', 'DYhG93b0qyJfIxfs2guVoUubWwvniR2G0FgaC9mi');
 /**
  * Set the name of session cookie
  *
