@@ -1,5 +1,7 @@
 classic.jar:
 +   skin/classic/global/tree.css
++   skin/classic/global/tree/sort-asc.gif (icons/sort-asc.gif)
++   skin/classic/global/tree/sort-dsc.gif (icons/sort-dsc.gif)
     skin/classic/communicator/smileys.css
 % skin messenger classic/1.0 %skin/classic/messenger/
     skin/classic/messenger/primaryToolbar.css
