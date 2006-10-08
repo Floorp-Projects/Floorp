@@ -190,17 +190,22 @@ class UsersController extends AppController {
       $this->data['User']['tz'] = intval($temp['tz']);
       $this->data['User']['role'] = $user['User']['role'];
 
-      if (!empty($this->data['User']['password']) && !empty($this->data['User']['confpassword'])) {
-        if ($this->data['User']['password'] === $this->data['User']['confpassword']) {
-          $string = $user['User']['email'].uniqid(rand(), true).$this->data['User']['password'];
-          $this->data['User']['salt'] = substr(md5($string), 0, 9);
-          $this->data['User']['password'] = sha1($this->data['User']['password'] . $this->data['User']['salt']);
-        }
-        else {
-          $this->set('error', true);
-          $this->User->invalidate('password');
-          $this->User->invalidate('confpassword');
-        }
+      if ($this->data['User']['password'] === $this->data['User']['confpassword'] &&
+        !empty($this->data['User']['password'])) {
+        $pass = $this->Hash->password($this->data['User']['password'], $user['User']['email']);
+        $this->data['User']['password'] = $pass['pass'];
+        $this->data['User']['salt'] = $pass['salt'];
+      }
+      
+      else if (empty($this->data['User']['password']) && empty($this->data['User']['confpassword'])) {
+        $this->data['User']['password'] = $user['User']['password'];
+        $this->data['User']['salt'] = $user['User']['salt'];
+      }
+      
+      else {
+        $this->set('error', true);
+        $this->User->invalidate('password');
+        $this->User->invalidate('confpassword');
       }
 
       if ($this->User->validates($this->data)) {
