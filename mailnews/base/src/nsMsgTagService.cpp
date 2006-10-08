@@ -527,6 +527,6 @@ nsresult nsMsgTagService::MigrateLabelsToTags()
       labelKey.SetCharAt(++i + '1', 6);
     }
   }
-  m_tagPrefBranch->SetIntPref(TAG_PREF_VERSION, 1);
+  m_tagPrefBranch->SetIntPref(TAG_PREF_VERSION, 2);
   return rv;
 }
