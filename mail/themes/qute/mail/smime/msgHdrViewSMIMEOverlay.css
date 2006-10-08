@@ -40,6 +40,7 @@
 #signedHdrIcon {
   list-style-image: none;
   visibility: visible;
+  margin-right: 10px;
 }
 
 #signedHdrIcon[signed="ok"] {

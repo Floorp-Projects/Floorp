@@ -664,7 +664,19 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 
 /* ::::: address book sidebar ::::: */
 .ab-closebutton {
-   list-style-image: url("chrome://global/skin/icons/Close.gif");
+  list-style-image: url("chrome://messenger/skin/icons/close-button.png");
+  -moz-image-region: rect(0 16px 16px 0);
+  -moz-appearance: none;
+  border: none !important;
+  padding: 2px;
+}
+
+.ab-closebutton:hover {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+.ab-closebutton:hover:active {
+  -moz-image-region: rect(0 48px 16px 32px);
 }
 
 .ab-closebutton > .toolbarbutton-icon {
