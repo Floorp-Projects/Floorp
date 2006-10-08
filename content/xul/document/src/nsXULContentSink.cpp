@@ -1333,7 +1333,13 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           }
           // Some js specifics yet to be abstracted.
           if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-            nsAutoString value;
+              // By default scripts in XUL documents have E4X turned on. We use
+              // our implementation knowledge to reuse JSVERSION_HAS_XML as a
+              // safe version flag. This is still OK if version is
+              // JSVERSION_UNKNOWN (-1),
+              version |= JSVERSION_HAS_XML;
+
+              nsAutoString value;
               rv = mimeHdrParser->GetParameter(typeAndParams, "e4x",
                                                EmptyCString(), PR_FALSE, nsnull,
                                                value);
@@ -1342,21 +1348,22 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                       return rv;
               } else {
                   if (value.Length() == 1 && value[0] == '0')
-                    // This means that we need to set JSOPTION_XML in the JS
-                    // options. We use our implementation knowledge to reuse
-                    // JSVERSION_HAS_XML as a safe version flag. If version
-                    // has JSVERSION_UNKNOWN (-1), then this is still OK.
-                    version |= JSVERSION_HAS_XML;
+                    version &= ~JSVERSION_HAS_XML;
               }
           }
       }
       else if (key.EqualsLiteral("language")) {
-        // Language is deprecated, and the impl in nsScriptLoader ignores the
-        // various version strings anyway.  So we make no attempt to support
-        // languages other than JS for language=
+          // Language is deprecated, and the impl in nsScriptLoader ignores the
+          // various version strings anyway.  So we make no attempt to support
+          // languages other than JS for language=
           nsAutoString lang(aAttributes[1]);
-          if (nsParserUtils::IsJavaScriptLanguage(lang, &version))
-            langID = nsIProgrammingLanguage::JAVASCRIPT;
+          if (nsParserUtils::IsJavaScriptLanguage(lang, &version)) {
+              langID = nsIProgrammingLanguage::JAVASCRIPT;
+
+              // Even when JS version < 1.6 is specified, E4X is
+              // turned on in XUL.
+              version |= JSVERSION_HAS_XML;
+          }
       }
       aAttributes += 2;
   }
