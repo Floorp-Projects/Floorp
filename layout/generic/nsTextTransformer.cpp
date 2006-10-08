@@ -859,7 +859,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   // beginning of the buffer
   if (aResetTransformBuf) {
     mBufferPos = 0;
-    SetTransformedTextIsAscii(LeaveAsAscii());
+    SetTransformedTextIsAscii(LeaveAsAscii() && !HasMultibyte());
   }
   prevBufferPos = mBufferPos;
 
