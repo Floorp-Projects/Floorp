@@ -43,7 +43,7 @@ class UsersController extends AppController {
 
   function index() {
     if (!isset($_SESSION['User'])) {
-      $this->redirect('/user/login');
+      $this->redirect('/users/login');
     }
 
     $this->pageTitle = 'My Profile';

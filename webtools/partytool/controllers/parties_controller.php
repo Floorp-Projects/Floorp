@@ -249,7 +249,7 @@ class PartiesController extends AppController {
 
       else {
         $this->set('partyid', $party['Party']['id']);
-        $this->set('inviteurl', APP_BASE.'/users/invited/'.$party['Party']['invitecode']);
+        $this->set('inviteurl', APP_BASE.'/parties/invited/'.$party['Party']['invitecode']);
 
         $clean = new Sanitize();
         $uid = $clean->sql($_SESSION['User']['id']);
