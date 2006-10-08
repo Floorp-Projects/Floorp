@@ -1095,8 +1095,9 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
              PRBool inProgress = PR_FALSE;
              if (cleanupInboxOnExit)
              {
+               PRInt32 loopCount = 0; // used to break out after 5 seconds
                accountManager->GetCleanupInboxInProgress(&inProgress);
-               while (inProgress)
+               while (inProgress && loopCount++ < 5000)
                {
                  accountManager->GetCleanupInboxInProgress(&inProgress);
                  PR_CEnterMonitor(folder);
@@ -1108,7 +1109,8 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
              if (emptyTrashOnExit)
              {
                accountManager->GetEmptyTrashInProgress(&inProgress);
-               while (inProgress)
+               PRInt32 loopCount = 0;
+               while (inProgress && loopCount++ < 5000)
                {
                  accountManager->GetEmptyTrashInProgress(&inProgress);
                  PR_CEnterMonitor(folder);
