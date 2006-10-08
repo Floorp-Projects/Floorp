@@ -378,6 +378,10 @@ public:
     return rv;
   }
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
+    return !(aFlags & ~nsIFrame::eMathML);
+  }
+
 protected:
   nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
     // We should always have a space manager.  Not that things can really try
@@ -455,6 +459,10 @@ public:
     nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
+  }
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
+    return !(aFlags & ~nsIFrame::eMathML);
   }
 
 protected:

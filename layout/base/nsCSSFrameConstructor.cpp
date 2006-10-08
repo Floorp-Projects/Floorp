@@ -1222,6 +1222,10 @@ static nsIFrame*
 AdjustAbsoluteContainingBlock(nsPresContext* aPresContext,
                               nsIFrame*       aContainingBlockIn)
 {
+  if (!aContainingBlockIn) {
+    return nsnull;
+  }
+  
   // Always use the container's first in flow.
   return aContainingBlockIn->GetFirstInFlow();
 }
@@ -7223,8 +7227,13 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     }
 
     // Push a null float containing block to disable floating within mathml
-    nsFrameConstructorSaveState saveState;
-    aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
+    nsFrameConstructorSaveState floatSaveState;
+    aState.PushFloatContainingBlock(nsnull, floatSaveState, PR_FALSE,
+                                    PR_FALSE);
+
+    // Same for absolute positioning
+    nsFrameConstructorSaveState absoluteSaveState;
+    aState.PushAbsoluteContainingBlock(nsnull, absoluteSaveState);
 
     // MathML frames are inline frames, so just process their kids
     nsFrameItems childItems;
@@ -8037,6 +8046,14 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
   nsIFrame* containingBlock = nsnull;
   for (nsIFrame* frame = aFrame; frame && !containingBlock;
        frame = frame->GetParent()) {
+    if (frame->IsFrameOfType(nsIFrame::eMathML)) {
+      // If it's mathml, bail out -- no absolute positioning out from inside
+      // mathml frames.  Note that we don't make this part of the loop
+      // condition because of the mInitialContainingBlock stuff at the
+      // end of this method...
+      return nsnull;
+    }
+    
     // Is it positioned?
     // If it's table-related then ignore it, because for the time
     // being table-related frames are not containers for absolutely
@@ -8081,7 +8098,9 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
   
-  // Starting with aFrame, look for a frame that is a float containing block
+  // Starting with aFrame, look for a frame that is a float containing block.
+  // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
+  // frames, because they don't seem to be able to deal.
   for (nsIFrame* containingBlock = aFrame;
        containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML);
        containingBlock = containingBlock->GetParent()) {
@@ -12562,7 +12581,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   // children. So use the block and try to compensate with hacks
   // in nsBlockFrame::CalculateContainingBlockSizeForAbsolutes.
   nsFrameConstructorSaveState absoluteSaveState;
-  if (aAbsPosContainer || !aState.mAbsoluteItems.containingBlock) {
+  if (aAbsPosContainer) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
     aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
   }

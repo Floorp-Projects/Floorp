@@ -42,11 +42,6 @@
 
 @namespace url(http://www.w3.org/1998/Math/MathML);
 
-/* MathML doesn't permit positioning */
-*, * > *|* {
-  position: static !important;
-}
-
 /**************************************************************************/
 /* <math> - outermost math element                                        */
 /**************************************************************************/
