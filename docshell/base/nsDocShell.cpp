@@ -965,115 +965,11 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
     return NS_OK;
 }
 
-
-//
-// Bug 13871: Prevent frameset spoofing
-// Check if origin document uri is the equivalent to target's principal.
-// This takes into account subdomain checking if document.domain is set for
-// Nav 4.x compatability.
-//
-// The following was derived from nsScriptSecurityManager::SecurityCompareURIs
-// but in addition to the host PL_strcmp, it accepts a subdomain
-// (nsHTMLDocument::SetDomain) if the document.domain was set.
-//
-// XXXbz this method also subtracts the checks for jar: URIs, default ports,
-// etc.  This should SO not be living here.  If we need a better security
-// manager method, we should add one.
-//
-static PRBool
-SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
-                        PRBool aDocumentDomainSet)
-{
-  if (aOriginURI == aTargetURI) {
-    return PR_TRUE;
-  }
-  
-  nsCAutoString targetScheme;
-  nsresult rv = aTargetURI->GetScheme(targetScheme);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  nsCAutoString originScheme;
-  rv = aOriginURI->GetScheme(originScheme);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  if (targetScheme != originScheme)
-    return PR_FALSE; // Different schemes - check fails
-
-  if (targetScheme.EqualsLiteral("file"))
-    return PR_TRUE; // All file: urls are considered to have the same origin.
-
-  if (targetScheme.EqualsLiteral("imap") ||
-      targetScheme.EqualsLiteral("mailbox") ||
-      targetScheme.EqualsLiteral("news"))
-  {
-
-    // Each message is a distinct trust domain; use the whole spec for comparison
-    nsCAutoString targetSpec;
-    rv =aTargetURI->GetAsciiSpec(targetSpec);
-    NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-    nsCAutoString originSpec;
-    rv = aOriginURI->GetAsciiSpec(originSpec);
-    NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-    return (targetSpec == originSpec); // True if full spec is same, false otherwise
-  }
-
-  // Compare ports.  Note that failure to get this means we should return
-  // false; such failure happens all the time for non-nsIURL nsIURI impls.
-  int targetPort, originPort;
-  rv = aTargetURI->GetPort(&targetPort);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  rv = aOriginURI->GetPort(&originPort);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  if (targetPort != originPort)
-    return PR_FALSE; // Different port - check fails
-
-  // Need to check the hosts.  Note that failure to get this means we should
-  // return false; such failure happens all the time for non-nsIURL nsIURI
-  // impls.
-  nsCAutoString targetHost;
-  rv = aTargetURI->GetHost(targetHost);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  nsCAutoString originHost;
-  rv = aOriginURI->GetHost(originHost);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  if (targetHost.Equals(originHost, nsCaseInsensitiveCStringComparator()))
-    return PR_TRUE; // Hosts are the same - check passed
-  
-  // If document.domain was set, do the relaxed check
-  // Right align hostnames and compare - ensure preceeding char is . or /
-  if (aDocumentDomainSet)
-  {
-    int targetHostLen = targetHost.Length();
-    int originHostLen = originHost.Length();
-    int prefixChar = originHostLen-targetHostLen-1;
-
-    return ((originHostLen > targetHostLen) &&
-            (! strcmp((originHost.get()+prefixChar+1), targetHost.get())) &&
-            (originHost.CharAt(prefixChar) == '.' || originHost.CharAt(prefixChar) == '/'));
-  }
-
-  return PR_FALSE; // document.domain not set and hosts not same - check failed
-}
-
 //
 // Bug 13871: Prevent frameset spoofing
 //
 // This routine answers: 'Is origin's document from same domain as
 // target's document?'
-// Be optimistic that domain is same - error cases all answer 'yes'.
-// XXXbz why?  That seems wrong to me
-//
-// We have to compare the URI of the actual document loaded in the
-// origin, ignoring any document.domain that was set, with the
-// principal URI of the target (including any document.domain that was
-// set).  This puts control of loading in the hands of the target,
-// which is more secure. (per Nav 4.x)
 //
 /* static */
 PRBool
@@ -1087,7 +983,7 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIPrincipal> subjectPrincipal;
     nsresult rv =
         securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-    NS_ENSURE_SUCCESS(rv, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     if (subjectPrincipal) {
         // We're called from JS, check if UniversalBrowserWrite is
@@ -1102,56 +998,22 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
         }
     }
 
-    // Get origin document uri (ignoring document.domain)
-    nsCOMPtr<nsIWebNavigation> originWebNav =
-        do_QueryInterface(aOriginTreeItem);
-    NS_ENSURE_TRUE(originWebNav, PR_TRUE);
-
-    nsCOMPtr<nsIURI> originDocumentURI;
-    rv = originWebNav->GetCurrentURI(getter_AddRefs(originDocumentURI));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originDocumentURI, PR_TRUE);
-
-    // This may be wyciwyg URI... if so, we need to extract the actual
-    // URI from it.
-    if (sURIFixup) {
-        PRBool isWyciwyg = PR_FALSE;
-        rv = originDocumentURI->SchemeIs("wyciwyg", &isWyciwyg);      
-        if (isWyciwyg && NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIURI> temp;
-            sURIFixup->CreateExposableURI(originDocumentURI,
-                                          getter_AddRefs(temp));
-            originDocumentURI = temp;
-        }
-    }
-
-    // Get target principal uri (including document.domain)
+    // Get origin document principal
+    nsCOMPtr<nsIDOMDocument> originDOMDocument =
+        do_GetInterface(aOriginTreeItem);
+    nsCOMPtr<nsIDocument> originDocument(do_QueryInterface(originDOMDocument));
+    NS_ENSURE_TRUE(originDocument, PR_FALSE);
+    
+    // Get target principal
     nsCOMPtr<nsIDOMDocument> targetDOMDocument =
         do_GetInterface(aTargetTreeItem);
     nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
-    NS_ENSURE_TRUE(targetDocument, PR_TRUE);
+    NS_ENSURE_TRUE(targetDocument, PR_FALSE);
 
-    nsCOMPtr<nsIURI> targetPrincipalURI;
-    rv = targetDocument->
-        NodePrincipal()->GetURI(getter_AddRefs(targetPrincipalURI));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
-
-    // Find out if document.domain was set for HTML documents
-    PRBool documentDomainSet = PR_FALSE;
-    nsCOMPtr<nsIHTMLDocument> targetHTMLDocument =
-        do_QueryInterface(targetDocument);
-
-    // If we don't have an HTML document, fall through with
-    // documentDomainSet false
-    if (targetHTMLDocument) {
-        documentDomainSet = targetHTMLDocument->WasDomainSet();
-    }
-
-    // Is origin same principal or a subdomain of target's
-    // document.domain Compare actual URI of origin document, not origin
-    // principal's URI. (Per Nav 4.x)
-    // XXXbz what do modern browsers do?
-    return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI,
-                                   documentDomainSet);
+    return
+        NS_SUCCEEDED(securityManager->
+                     CheckSameOriginPrincipal(originDocument->NodePrincipal(),
+                                              targetDocument->NodePrincipal()));
 }
 
 NS_IMETHODIMP
