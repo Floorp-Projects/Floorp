@@ -41,22 +41,11 @@
 #include "nsIServiceManager.h"
 #include "nsIXTFElement.h"
 #include "nsIXTFElementFactory.h"
-#include "nsIXTFGenericElement.h"
 #include "nsIXTFService.h"
-#include "nsIXTFXMLVisual.h"
-#include "nsIXTFXULVisual.h"
 #include "nsInterfaceHashtable.h"
 #include "nsString.h"
-#include "nsXTFGenericElementWrapper.h"
-#include "nsXTFXMLVisualWrapper.h"
-#include "nsXTFXULVisualWrapper.h"
-#include "nsIXTFBindableElement.h"
-#include "nsXTFBindableElementWrapper.h"
+#include "nsXTFElementWrapper.h"
 
-#ifdef MOZ_SVG
-#include "nsXTFSVGVisualWrapper.h"
-#include "nsIXTFSVGVisual.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 // nsXTFService class 
@@ -128,7 +117,7 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
     factory = do_GetService(xtf_contract_id.get());
     if (factory) {
 #ifdef DEBUG
-      printf("We've got an XTF factory.\n");
+      printf("We've got an XTF factory: %s \n", xtf_contract_id.get());
 #endif
       // Put into hash:
       mFactoryHash.Put(aNodeInfo->NamespaceID(), factory);
@@ -143,44 +132,7 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
   factory->CreateElement(tagName, getter_AddRefs(elem));
   if (!elem) return NS_ERROR_FAILURE;
   
-  // We've got an xtf element. Create an appropriate wrapper for it:
-  PRUint32 elementType;
-  elem->GetElementType(&elementType);
-  switch (elementType) {
-    case nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT:
-    {
-      nsCOMPtr<nsIXTFGenericElement> elem2 = do_QueryInterface(elem);
-      return NS_NewXTFGenericElementWrapper(elem2, aNodeInfo, aResult);
-    }
-    case nsIXTFElement::ELEMENT_TYPE_BINDABLE:
-    {
-      nsCOMPtr<nsIXTFBindableElement> elem2 = do_QueryInterface(elem);
-      return NS_NewXTFBindableElementWrapper(elem2, aNodeInfo, aResult);
-    }
-    case nsIXTFElement::ELEMENT_TYPE_SVG_VISUAL:
-    {
-#ifdef MOZ_SVG
-      nsCOMPtr<nsIXTFSVGVisual> elem2 = do_QueryInterface(elem);
-      return NS_NewXTFSVGVisualWrapper(elem2, aNodeInfo, aResult);
-#else
-      NS_ERROR("xtf svg visuals are only supported in mozilla builds with native svg support");
-      break;
-#endif
-    }
-    case nsIXTFElement::ELEMENT_TYPE_XML_VISUAL:
-    {
-      nsCOMPtr<nsIXTFXMLVisual> elem2 = do_QueryInterface(elem);
-      return NS_NewXTFXMLVisualWrapper(elem2, aNodeInfo, aResult);
-    }
-    case nsIXTFElement::ELEMENT_TYPE_XUL_VISUAL:
-    {
-      nsCOMPtr<nsIXTFXULVisual> elem2 = do_QueryInterface(elem);
-      return NS_NewXTFXULVisualWrapper(elem2, aNodeInfo, aResult);
-    }
-    default:
-      NS_ERROR("unknown xtf element type");
-      break;
-  }
-  return NS_ERROR_FAILURE;
+  // We've got an xtf element. Create a wrapper for it:
+  return NS_NewXTFElementWrapper(elem, aNodeInfo, aResult);
 }
 

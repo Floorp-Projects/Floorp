@@ -179,7 +179,6 @@ endif
 ifdef MOZ_XTF
 SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/xtf/src/$(LIB_PREFIX)gkcontentxtf_s.$(LIB_SUFFIX) \
-                ../xtf/src/$(LIB_PREFIX)gkxtfbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 

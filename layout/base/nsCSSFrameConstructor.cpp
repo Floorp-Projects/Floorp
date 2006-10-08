@@ -151,20 +151,6 @@
 #include "nsMathMLParts.h"
 #endif
 
-#ifdef MOZ_XTF
-#include "nsIXTFElement.h"
-#include "nsIXTFElementWrapperPrivate.h"
-#include "nsIXTFVisualWrapperPrivate.h"
-nsIFrame*
-NS_NewXTFXULDisplayFrame(nsIPresShell*, nsStyleContext* aContext);
-nsIFrame*
-NS_NewXTFXMLDisplayFrame(nsIPresShell*, nsStyleContext* aContext, PRBool isBlock);
-#ifdef MOZ_SVG
-nsIFrame*
-NS_NewXTFSVGDisplayFrame(nsIPresShell*, nsIContent*, nsStyleContext* aContext);
-#endif
-#endif
-
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -1077,25 +1063,6 @@ private:
   friend class nsFrameConstructorState;
 };
 
-// Structure for saving the existing state when pushing/popping insertion
-// points for nsIAnonymousContentCreator.  The destructor restores the state
-// to its previous state.  See documentation of these members in
-// nsFrameConstructorState.
-class nsFrameConstructorInsertionState {
-public:
-  nsFrameConstructorInsertionState();
-  ~nsFrameConstructorInsertionState();
-
-private:
-  nsIFrame*   mAnonymousCreator;
-  nsIContent* mInsertionContent;
-  PRBool      mCreatorIsBlock;
-
-  nsFrameConstructorState* mState;
-
-  friend class nsFrameConstructorState;
-};
-
 // Structure used for maintaining state information during the
 // frame construction process
 class nsFrameConstructorState {
@@ -1112,13 +1079,6 @@ public:
   PRBool                    mFirstLineStyle;
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   nsPseudoFrames            mPseudoFrames;
-
-  // The nsIAnonymousContentCreator we're currently constructing children for.
-  nsIFrame                 *mAnonymousCreator;
-  // The insertion point node for mAnonymousCreator.
-  nsIContent               *mInsertionContent;
-  // Whether the parent is a block (see ProcessChildren's aParentIsBlock)
-  PRBool                    mCreatorIsBlock;
 
 #ifdef MOZ_XUL
   // The root box, if any.
@@ -1199,15 +1159,8 @@ public:
                     PRBool aCanBeFloated = PR_TRUE,
                     PRBool aIsOutOfFlowPopup = PR_FALSE);
 
-  // Push an nsIAnonymousContentCreator and its insertion node
-  void PushAnonymousContentCreator(nsIFrame *aCreator,
-                                   nsIContent *aContent,
-                                   PRBool aIsBlock,
-                                   nsFrameConstructorInsertionState &aSaveState);
-
 protected:
   friend class nsFrameConstructorSaveState;
-  friend class nsFrameConstructorInsertionState;
 
   /**
    * ProcessFrameInsertions takes the frames in aFrameItems and adds them as
@@ -1231,10 +1184,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
     mFrameState(aHistoryState),
-    mPseudoFrames(),
-    mAnonymousCreator(nsnull),
-    mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE)
+    mPseudoFrames()
 #ifdef MOZ_XUL    
     , mRootBox(nsIRootBox::GetRootBox(aPresShell))
 #endif
@@ -1253,10 +1203,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mPseudoFrames(),
-    mAnonymousCreator(nsnull),
-    mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE)
+    mPseudoFrames()
 #ifdef MOZ_XUL
     , mRootBox(nsIRootBox::GetRootBox(aPresShell))
 #endif
@@ -1458,23 +1405,6 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
 }
 
 void
-nsFrameConstructorState::PushAnonymousContentCreator(nsIFrame *aCreator,
-                                                     nsIContent *aContent,
-                                                     PRBool aIsBlock,
-                                                     nsFrameConstructorInsertionState &aSaveState)
-{
-  NS_ASSERTION(aCreator || !aContent, "Must have a frame if there is an insertion node");
-  aSaveState.mAnonymousCreator = mAnonymousCreator;
-  aSaveState.mInsertionContent = mInsertionContent;
-  aSaveState.mCreatorIsBlock = mCreatorIsBlock;
-  aSaveState.mState = this;
-
-  mAnonymousCreator = aCreator;
-  mInsertionContent = aContent;
-  mCreatorIsBlock = aIsBlock;
-}
-
-void
 nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                                 nsIAtom* aChildListName)
 {
@@ -1577,38 +1507,6 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
   if (mFirstLineStyle) {
     *mFirstLineStyle = mSavedFirstLineStyle;
   }
-}
-
-nsFrameConstructorInsertionState::nsFrameConstructorInsertionState()
-  : mAnonymousCreator(nsnull),
-    mInsertionContent(nsnull),
-    mCreatorIsBlock(PR_FALSE),
-    mState(nsnull)
-{
-}
-
-nsFrameConstructorInsertionState::~nsFrameConstructorInsertionState()
-{
-  // Restore the state
-  if (mState) {
-    mState->mAnonymousCreator = mAnonymousCreator;
-    mState->mInsertionContent = mInsertionContent;
-    mState->mCreatorIsBlock = mCreatorIsBlock;
-  }
-}
-
-// Putting this up here to help inlining work on compilers that won't inline
-// definitions that are after the call site.
-inline nsresult
-nsCSSFrameConstructor::CreateInsertionPointChildren(nsFrameConstructorState &aState,
-                                                    nsIFrame *aNewFrame,
-                                                    nsIContent *aContent,
-                                                    PRBool aUseInsertionFrame)
-{
-  if (aState.mInsertionContent == aContent)
-    return CreateInsertionPointChildren(aState, aNewFrame, aUseInsertionFrame);
-
-  return NS_OK;
 }
 
 static 
@@ -5902,11 +5800,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     }
   }
 
-  if (newFrame && !newFrame->IsLeaf()) {
-    rv = CreateInsertionPointChildren(aState, newFrame, aContent);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   if (addToHashTable) {
     // Add a mapping from content object to primary frame. Note that for
     // floated and positioned frames this is the out-of-flow frame and not
@@ -5947,9 +5840,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
       )
     return NS_OK;
 
-  return CreateAnonymousFrames(aState, aParent, mDocument, aNewFrame, PR_FALSE,
-                               aAppendToExisting, aChildItems,
-                               nsnull, nsnull, PR_FALSE);
+  return CreateAnonymousFrames(aState, aParent, mDocument, aNewFrame,
+                               aAppendToExisting, aChildItems);
 }
 
 // after the node has been constructed and initialized create any
@@ -5959,23 +5851,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIDocument*             aDocument,
                                              nsIFrame*                aParentFrame,
-                                             PRBool                   aForceBindingParent,
                                              PRBool                   aAppendToExisting,
-                                             nsFrameItems&            aChildItems,
-                                             nsIFrame*                aAnonymousCreator,
-                                             nsIContent*              aInsertionNode,
-                                             PRBool                   aAnonymousParentIsBlock)
+                                             nsFrameItems&            aChildItems)
 {
   nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
 
   if (!creator)
     return NS_OK;
-
-  nsFrameConstructorInsertionState saveState;
-  aState.PushAnonymousContentCreator(aAnonymousCreator,
-                                     aInsertionNode,
-                                     aAnonymousParentIsBlock,
-                                     saveState);
 
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
@@ -6040,11 +5922,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
         if (xulDoc)
           bindingParent = aParent;
       }
-      else
-#endif
-#ifdef MOZ_XTF
-      if (aForceBindingParent)
-        bindingParent = aParent;
       else
 #endif
 #ifdef MOZ_SVG
@@ -6598,11 +6475,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
 // addToHashTable:
 
-  if (newFrame && !newFrame->IsLeaf()) {
-    rv = CreateInsertionPointChildren(aState, newFrame, aContent);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   if (topFrame) {
     // the top frame is always what we map the content to. This is the frame that contains a pointer
     // to the content node.
@@ -6668,8 +6540,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
 
   // if there are any anonymous children for the scroll frame, create
   // frames for them.
-  CreateAnonymousFrames(aState, aContent, mDocument, gfxScrollFrame, PR_FALSE,
-                        PR_FALSE, anonymousItems, nsnull, nsnull, PR_FALSE);
+  CreateAnonymousFrames(aState, aContent, mDocument, gfxScrollFrame,
+                        PR_FALSE, anonymousItems);
 
   parentFrame = gfxScrollFrame;
   aNewFrame = gfxScrollFrame;
@@ -7086,16 +6958,12 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
                  "Cases where AddChild() can fail must handle it themselves");
   }
 
-  if (newFrame) {
-    rv = CreateInsertionPointChildren(aState, newFrame, aContent);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (addToHashTable) {
-      // Add a mapping from content object to primary frame. Note that for
-      // floated and positioned frames this is the out-of-flow frame and not
-      // the placeholder frame
-      if (!primaryFrameSet)
-        aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
+  if (newFrame && addToHashTable) {
+    // Add a mapping from content object to primary frame. Note that for
+    // floated and positioned frames this is the out-of-flow frame and not
+    // the placeholder frame
+    if (!primaryFrameSet) {
+      aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
     }
   }
 
@@ -7370,11 +7238,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
-
-
-    if (!newFrame->IsLeaf()) {
-      rv = CreateInsertionPointChildren(aState, newFrame, aContent);
-    }
  
     return rv;
   }
@@ -7383,118 +7246,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   }
 }
 #endif // MOZ_MATHML
-
-// XTF 
-#ifdef MOZ_XTF
-nsresult
-nsCSSFrameConstructor::ConstructXTFFrame(nsFrameConstructorState& aState,
-                                         nsIContent*              aContent,
-                                         nsIFrame*                aParentFrame,
-                                         nsIAtom*                 aTag,
-                                         PRInt32                  aNameSpaceID,
-                                         nsStyleContext*          aStyleContext,
-                                         nsFrameItems&            aFrameItems,
-                                         PRBool                   aHasPseudoParent)
-{
-#ifdef DEBUG
-//  printf("nsCSSFrameConstructor::ConstructXTFFrame\n");
-#endif
-  nsresult  rv = NS_OK;
-  PRBool forceView = PR_FALSE;
-  PRBool isBlock = PR_FALSE;
-  
-  // XXXbz somewhere here we should process pseudo frames if !aHasPseudoParent
-
-  //NS_ASSERTION(aTag != nsnull, "null XTF tag");
-  //if (aTag == nsnull)
-  //  return NS_OK;
-
-  // Initialize the new frame
-  nsIFrame* newFrame = nsnull;
-   
-  // See if the element is absolute or fixed positioned
-  const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
-
-  nsCOMPtr<nsIXTFElementWrapperPrivate> xtfElem = do_QueryInterface(aContent);
-  NS_ASSERTION(xtfElem, "huh? no xtf element?");
-  switch(xtfElem->GetElementType()) {
-    case nsIXTFElement::ELEMENT_TYPE_SVG_VISUAL:
-#ifdef MOZ_SVG
-      newFrame = NS_NewXTFSVGDisplayFrame(mPresShell, aContent, aStyleContext);
-#else
-      NS_ERROR("xtf svg visuals are only supported in mozilla builds with native svg");
-#endif
-      break;
-    case nsIXTFElement::ELEMENT_TYPE_XML_VISUAL:
-    {
-      PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == disp->mDisplay);
-      newFrame = NS_NewXTFXMLDisplayFrame(mPresShell, aStyleContext, isBlock);
-    }
-      break;
-    case nsIXTFElement::ELEMENT_TYPE_XUL_VISUAL:
-      newFrame = NS_NewXTFXULDisplayFrame(mPresShell, aStyleContext);
-      break;
-    case nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT:
-      NS_ERROR("huh? ELEMENT_TYPE_GENERIC_ELEMENT should have been flagged by caller");
-      break;
-    default:
-      NS_ERROR("unknown xtf frame!");
-      return NS_OK;
-  }
-
-  // If we succeeded in creating a frame then initialize it, process its
-  // children (if requested), and set the initial child list
-  if (newFrame) {
-    InitAndRestoreFrame(aState, aContent, 
-                        aState.GetGeometricParent(disp, aParentFrame),
-                        nsnull, newFrame);
-
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
-    rv = aState.AddChild(newFrame, aFrameItems, disp, aContent, aStyleContext,
-                         aParentFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Get the content node in the anonymous content tree where the explicit
-    // children should be inserted.
-
-    nsCOMPtr<nsIContent> insertionNode = newFrame->GetContentInsertionNode();
-
-    // Create anonymous frames before processing children, so that
-    // explicit child content can be appended to the correct anonymous
-    // frame. Call version of CreateAnonymousFrames that doesn't check
-    // tag:
-
-    nsCOMPtr<nsIXTFVisualWrapperPrivate> visual = do_QueryInterface(xtfElem);
-    NS_ASSERTION(visual,
-                 "xtf wrapper not implementing nsIXTFVisualWrapperPrivate");
-
-    nsFrameItems childItems;
-
-    // Since we've set the insertion frame, our children will automatically
-    // be constructed once |insertionNode| has had its frame created.
-    // Call version of CreateAnonymousFrames that doesn't check tag:
-
-    CreateAnonymousFrames(aState, aContent, mDocument, newFrame,
-                          visual->ApplyDocumentStyleSheets(),
-                          PR_FALSE, childItems,
-                          newFrame, insertionNode, isBlock);
-
-    // Set the frame's initial child list
-    newFrame->SetInitialChildList(nsnull, childItems.childList);
-
-    // Note: we don't worry about insertionFrame here because we know
-    // that XTF elements always insert into the primary frame of their
-    // insertion content.
-    return CreateInsertionPointChildren(aState, newFrame, aContent, PR_FALSE);
-  }
-  else {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-}
-#endif // MOZ_XTF
-
 
 // SVG 
 #ifdef MOZ_SVG
@@ -7911,10 +7662,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
-
-    if (NS_SUCCEEDED(rv) && !newFrame->IsLeaf())
-      rv = CreateInsertionPointChildren(aState, newFrame, aContent);
-      
     return rv;
   }
   else {
@@ -8165,27 +7912,6 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
                            *frameItems, pseudoParent, &haltProcessing);
     if (haltProcessing) {
       return rv;
-    }
-  }
-#endif
-
-// XTF
-#ifdef MOZ_XTF
-  if (aNameSpaceID > kNameSpaceID_LastBuiltin &&
-      NS_SUCCEEDED(rv) &&
-      (!frameItems->childList || lastChild == frameItems->lastChild)) {
-    nsCOMPtr<nsIXTFElementWrapperPrivate> xtfElem = do_QueryInterface(aContent);
-    if (xtfElem) {
-      if (xtfElem->GetElementType() == nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT) {
-        // we don't build frames for generic elements, only for visuals
-        // XXXbz this is bogus, really.  These kids should just have
-        // display:none, so they don't mess with pseudo-state!
-        aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
-        return NS_OK;
-      } else if (xtfElem->GetElementType() != nsIXTFElement::ELEMENT_TYPE_BINDABLE)
-        rv = ConstructXTFFrame(aState, aContent, adjParentFrame, aTag,
-                               aNameSpaceID, styleContext, *frameItems,
-                               pseudoParent);
     }
   }
 #endif
@@ -13512,25 +13238,3 @@ NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run() {
   return NS_OK;
 }
 
-nsresult
-nsCSSFrameConstructor::CreateInsertionPointChildren(nsFrameConstructorState &aState,
-                                                    nsIFrame *aNewFrame,
-                                                    PRBool aUseInsertionFrame)
-{
-  nsIContent *creatorContent = aState.mAnonymousCreator->GetContent();
-  nsFrameItems insertionItems;
-
-  nsIFrame *insertionFrame =
-    aUseInsertionFrame ? aNewFrame->GetContentInsertionFrame() : aNewFrame;
-
-  nsresult rv = ProcessChildren(aState, creatorContent, insertionFrame,
-                                PR_TRUE, insertionItems,
-                                aState.mCreatorIsBlock);
-
-  if (NS_SUCCEEDED(rv) && insertionItems.childList) {
-    rv = AppendFrames(aState, creatorContent, insertionFrame,
-                      insertionItems.childList, nsnull);
-  }
-
-  return rv;
-}
