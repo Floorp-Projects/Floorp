@@ -82,6 +82,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptError.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
@@ -96,6 +97,47 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
   if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && 
       NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
       return (isChrome || isResource);
+  return PR_FALSE;
+}
+
+static PRBool
+IsAncestorBinding(nsIDocument* aDocument,
+                  nsIURI* aChildBindingURI,
+                  nsIContent* aChild)
+{
+  NS_ASSERTION(aDocument, "expected a document");
+  NS_ASSERTION(aChildBindingURI, "expected a binding URI");
+  NS_ASSERTION(aChild, "expected a child content");
+
+  nsIContent* bindingParent = aChild->GetBindingParent();
+  nsIBindingManager* bindingManager = aDocument->BindingManager();
+  for (nsIContent* prev = aChild;
+       bindingParent && prev != bindingParent;
+       prev = bindingParent, bindingParent = bindingParent->GetBindingParent()) {
+    nsXBLBinding* binding = bindingManager->GetBinding(bindingParent);
+    if (!binding) {
+      continue;
+    }
+    PRBool equal;
+    nsresult rv =
+      binding->PrototypeBinding()->BindingURI()->Equals(aChildBindingURI,
+                                                        &equal);
+    if (NS_FAILED(rv) || equal) {
+      nsCAutoString spec;
+      aChildBindingURI->GetSpec(spec);
+      NS_ConvertUTF8toUTF16 bindingURI(spec);
+      const PRUnichar* params[] = { bindingURI.get() };
+      nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                      "RecursiveBinding",
+                                      params, NS_ARRAY_LENGTH(params),
+                                      aDocument->GetDocumentURI(),
+                                      EmptyString(), 0, 0,
+                                      nsIScriptError::warningFlag,
+                                      "XBL");
+      return PR_TRUE;
+    }
+  }
+
   return PR_FALSE;
 }
 
@@ -584,6 +626,10 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     NS_ERROR(str.get());
 #endif
     return NS_OK;
+  }
+
+  if (::IsAncestorBinding(document, aURL, aContent)) {
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   if (aAugmentFlag) {
