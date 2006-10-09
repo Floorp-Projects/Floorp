@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.48 2006/08/25 23:04:15 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: keydb.c,v 1.49 2006/10/09 22:28:07 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -1082,6 +1082,10 @@ nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
 
 
     handle = nsslowkey_NewHandle(NULL);
+    if (!handle) {
+        /* error code is set */
+        return NULL;
+    }
 
     openflags = readOnly ? NO_RDONLY : NO_RDWR;
 
