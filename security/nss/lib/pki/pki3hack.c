@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.91 $ $Date: 2006/10/01 05:37:24 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.92 $ $Date: 2006/10/09 22:21:41 $";
 #endif /* DEBUG */
 
 /*
@@ -976,6 +976,10 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     }
     if (cc->slot) {
 	instance = nss_ZNEW(arena, nssCryptokiInstance);
+	if (!instance) {
+	    nssArena_Destroy(arena);
+	    return NULL;
+	}
 	instance->token = nssToken_AddRef(PK11Slot_GetNSSToken(cc->slot));
 	instance->handle = cc->pkcs11ID;
 	instance->isTokenObject = PR_TRUE;
@@ -1047,6 +1051,10 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     PRBool moving_object;
     nssCryptokiObject *newInstance;
     nssPKIObject *pkiob;
+
+    if (c == NULL) {
+        return SECFailure;
+    }
     oldTrust = nssTrust_GetCERTCertTrustForCert(c, cc);
     if (oldTrust) {
 	if (memcmp(oldTrust, trust, sizeof (CERTCertTrust)) == 0) {
@@ -1064,6 +1072,10 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     arena = nssArena_Create();
     if (!arena) return PR_FAILURE;
     nssTrust = nss_ZNEW(arena, NSSTrust);
+    if (!nssTrust) {
+	nssArena_Destroy(arena);
+	return PR_FAILURE;
+    }
     pkiob = nssPKIObject_Create(arena, NULL, cc->dbhandle, NULL, nssPKILock);
     if (!pkiob) {
 	nssArena_Destroy(arena);
