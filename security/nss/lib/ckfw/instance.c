@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.10 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.11 $ $Date: 2006/10/09 22:16:59 $";
 #endif /* DEBUG */
 
 /*
@@ -670,9 +670,10 @@ nssCKFWInstance_DestroySessionHandle
 
   fwSession = (NSSCKFWSession *)nssCKFWHash_Lookup(
                 fwInstance->sessionHandleHash, (const void *)hSession);
-
-  nssCKFWHash_Remove(fwInstance->sessionHandleHash, (const void *)hSession);
-  nssCKFWSession_SetHandle(fwSession, (CK_SESSION_HANDLE)0);
+  if (fwSession) {
+    nssCKFWHash_Remove(fwInstance->sessionHandleHash, (const void *)hSession);
+    nssCKFWSession_SetHandle(fwSession, (CK_SESSION_HANDLE)0);
+  }
 
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
 
@@ -815,9 +816,11 @@ nssCKFWInstance_ReassignObjectHandle
 
   oldObject = (NSSCKFWObject *)nssCKFWHash_Lookup(
                  fwInstance->objectHandleHash, (const void *)hObject);
-  /* Assert(hObject == nssCKFWObject_GetHandle(oldObject) */
-  (void)nssCKFWObject_SetHandle(oldObject, (CK_SESSION_HANDLE)0);
-  nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
+  if(oldObject) {
+    /* Assert(hObject == nssCKFWObject_GetHandle(oldObject) */
+    (void)nssCKFWObject_SetHandle(oldObject, (CK_SESSION_HANDLE)0);
+    nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
+  }
 
   error = nssCKFWObject_SetHandle(fwObject, hObject);
   if( CKR_OK != error ) {
@@ -856,9 +859,11 @@ nssCKFWInstance_DestroyObjectHandle
 
   fwObject = (NSSCKFWObject *)nssCKFWHash_Lookup(
                 fwInstance->objectHandleHash, (const void *)hObject);
-  /* Assert(hObject = nssCKFWObject_GetHandle(fwObject)) */
-  nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
-  (void)nssCKFWObject_SetHandle(fwObject, (CK_SESSION_HANDLE)0);
+  if (fwObject) {
+    /* Assert(hObject = nssCKFWObject_GetHandle(fwObject)) */
+    nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
+    (void)nssCKFWObject_SetHandle(fwObject, (CK_SESSION_HANDLE)0);
+  }
 
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
   return;
