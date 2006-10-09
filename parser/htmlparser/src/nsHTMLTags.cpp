@@ -40,6 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStaticAtom.h"
+#include "nsUnicharUtils.h"
 
 // C++ sucks! There's no way to do this with a macro, at least not
 // that I know, if you know how to do this with a macro then please do
@@ -442,6 +443,7 @@ nsHTMLTags::TestTagTable()
 {
      const PRUnichar *tag;
      nsHTMLTag id;
+     nsCOMPtr<nsIAtom> atom;
 
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
@@ -451,6 +453,16 @@ nsHTMLTags::TestTagTable()
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
        const PRUnichar* check = GetStringValue(id);
        NS_ASSERTION(0 == nsCRT::strcmp(check, tag), "can't map id back to tag");
+
+       nsAutoString uname(tag);
+       ToUpperCase(uname);
+       NS_ASSERTION(id == LookupTag(uname), "wrong id");
+
+       NS_ASSERTION(id == CaseSensitiveLookupTag(tag), "wrong id");
+
+       atom = do_GetAtom(tag);
+       NS_ASSERTION(id == CaseSensitiveLookupTag(atom), "wrong id");
+       NS_ASSERTION(atom == GetAtom(id), "can't map id back to atom");
      }
 
      // Make sure we don't find things that aren't there
@@ -459,12 +471,26 @@ nsHTMLTags::TestTagTable()
      id = LookupTag(NS_LITERAL_STRING("zzzzz"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
+     atom = do_GetAtom("@");
+     id = CaseSensitiveLookupTag(atom);
+     NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
+     atom = do_GetAtom("zzzzz");
+     id = CaseSensitiveLookupTag(atom);
+     NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
+
      tag = GetStringValue((nsHTMLTag) 0);
      NS_ASSERTION(!tag, "found enum 0");
      tag = GetStringValue((nsHTMLTag) -1);
      NS_ASSERTION(!tag, "found enum -1");
      tag = GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
      NS_ASSERTION(!tag, "found past max enum");
+
+     atom = GetAtom((nsHTMLTag) 0);
+     NS_ASSERTION(!atom, "found enum 0");
+     atom = GetAtom((nsHTMLTag) -1);
+     NS_ASSERTION(!atom, "found enum -1");
+     atom = GetAtom((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
+     NS_ASSERTION(!atom, "found past max enum");
 
      ReleaseTable();
 }
