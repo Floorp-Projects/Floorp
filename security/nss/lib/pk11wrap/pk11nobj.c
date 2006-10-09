@@ -547,6 +547,9 @@ SEC_DeletePermCRL(CERTSignedCrl *crl)
     token = PK11Slot_GetNSSToken(slot);
 
     object = nss_ZNEW(NULL, nssCryptokiObject);
+    if (!object) {
+        return SECFailure;
+    }
     object->token = nssToken_AddRef(token);
     object->handle = crl->pkcs11ID;
     object->isTokenObject = PR_TRUE;
@@ -598,6 +601,9 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
 							PR_FALSE,PR_TRUE,NULL);
 	PK11SlotListElement *le;
 
+	if (!list) {
+	    return NULL;
+	}
 	/* loop through all the slots */
 	for (le = list->head; le; le = le->next) {
 	    smimeh = pk11_FindObjectByTemplate(le->slot,theTemplate,tsize);
