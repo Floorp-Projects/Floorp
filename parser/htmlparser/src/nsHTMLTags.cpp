@@ -38,7 +38,6 @@
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
-#include "plhash.h"
 #include "nsString.h"
 #include "nsStaticAtom.h"
 
@@ -263,26 +262,21 @@ static const PRUnichar sHTMLTagUnicodeName_xmp[] =
 // static array of unicode tag names
 #define HTML_TAG(_tag, _classname) sHTMLTagUnicodeName_##_tag,
 #define HTML_OTHER(_tag)
-static const PRUnichar* const kTagUnicodeTable[] = {
-#include "nsHTMLTagList.h"
-};
-#undef HTML_TAG
-
-// static array of tag atoms
-static nsIAtom* kTagAtomTable[eHTMLTag_userdefined - 1];
-
-// static array of tag StaticAtom structs
-#define HTML_TAG(_tag, _classname) { #_tag, &kTagAtomTable[eHTMLTag_##_tag - 1] },
-static const nsStaticAtom kTagAtoms_info[] = {
+const PRUnichar* const nsHTMLTags::sTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
 #undef HTML_OTHER
 
-static PRInt32 gTableRefCount;
-static PLHashTable* gTagTable;
+// static array of tag atoms
+nsIAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
+
+PRInt32 nsHTMLTags::gTableRefCount;
+PLHashTable* nsHTMLTags::gTagTable;
+PLHashTable* nsHTMLTags::gTagAtomTable;
 
 
+// PRUnichar* -> id hash
 PR_STATIC_CALLBACK(PLHashNumber)
 HTMLTagsHashCodeUCPtr(const void *key)
 {
@@ -300,21 +294,44 @@ HTMLTagsKeyCompareUCPtr(const void *key1, const void *key2)
   return nsCRT::strcmp(str1, str2) == 0;
 }
 
+// nsIAtom* -> id hash
+PR_STATIC_CALLBACK(PLHashNumber)
+HTMLTagsHashCodeAtom(const void *key)
+{
+  return NS_PTR_TO_INT32(key) >> 2;
+}
 
-static PRUint32 sMaxTagNameLength;
 #define NS_HTMLTAG_NAME_MAX_LENGTH 10
 
 // static
 nsresult
 nsHTMLTags::AddRefTable(void)
 {
+  // static array of tag StaticAtom structs
+#define HTML_TAG(_tag, _classname) { #_tag, &nsHTMLTags::sTagAtomTable[eHTMLTag_##_tag - 1] },
+#define HTML_OTHER(_tag)
+  static const nsStaticAtom sTagAtoms_info[] = {
+#include "nsHTMLTagList.h"
+  };
+#undef HTML_TAG
+#undef HTML_OTHER
+
   if (gTableRefCount++ == 0) {
-    NS_ASSERTION(!gTagTable, "pre existing hash!");
+    // Fill in our static atom pointers
+    NS_RegisterStaticAtoms(sTagAtoms_info, NS_ARRAY_LENGTH(sTagAtoms_info));
+
+
+    NS_ASSERTION(!gTagTable && !gTagAtomTable, "pre existing hash!");
 
     gTagTable = PL_NewHashTable(64, HTMLTagsHashCodeUCPtr,
                                 HTMLTagsKeyCompareUCPtr, PL_CompareValues,
                                 nsnull, nsnull);
     NS_ENSURE_TRUE(gTagTable, NS_ERROR_OUT_OF_MEMORY);
+
+    gTagAtomTable = PL_NewHashTable(64, HTMLTagsHashCodeAtom,
+                                    PL_CompareValues, PL_CompareValues,
+                                    nsnull, nsnull);
+    NS_ENSURE_TRUE(gTagAtomTable, NS_ERROR_OUT_OF_MEMORY);
 
     // Fill in gTagTable with the above static PRUnichar strings as
     // keys and the value of the corresponding enum as the value in
@@ -322,28 +339,21 @@ nsHTMLTags::AddRefTable(void)
 
     PRInt32 i;
     for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      PRUint32 len = nsCRT::strlen(kTagUnicodeTable[i]);
-
-      PL_HashTableAdd(gTagTable, kTagUnicodeTable[i],
+      PL_HashTableAdd(gTagTable, sTagUnicodeTable[i],
                       NS_INT32_TO_PTR(i + 1));
 
-      if (len > sMaxTagNameLength) {
-        sMaxTagNameLength = len;
-      }
+      PL_HashTableAdd(gTagAtomTable, sTagAtomTable[i],
+                      NS_INT32_TO_PTR(i + 1));
     }
 
-    NS_ASSERTION(sMaxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
-                 "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");
 
-    // Fill in our static atom pointers
-    NS_RegisterStaticAtoms(kTagAtoms_info, NS_ARRAY_LENGTH(kTagAtoms_info));
 
 #ifdef DEBUG
     {
       // let's verify that all names in the the table are lowercase...
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-        nsCAutoString temp1(kTagAtoms_info[i].mString);
-        nsCAutoString temp2(kTagAtoms_info[i].mString);
+        nsCAutoString temp1(sTagAtoms_info[i].mString);
+        nsCAutoString temp2(sTagAtoms_info[i].mString);
         ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
@@ -351,10 +361,19 @@ nsHTMLTags::AddRefTable(void)
       // let's verify that all names in the unicode strings above are
       // correct.
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-        nsAutoString temp1(kTagUnicodeTable[i]);
-        nsAutoString temp2; temp2.AssignWithConversion(kTagAtoms_info[i].mString);
+        nsAutoString temp1(sTagUnicodeTable[i]);
+        nsAutoString temp2; temp2.AssignWithConversion(sTagAtoms_info[i].mString);
         NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
       }
+
+      // let's verify that NS_HTMLTAG_NAME_MAX_LENGTH is correct
+      PRUint32 maxTagNameLength = 0;
+      for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
+        PRUint32 len = nsCRT::strlen(sTagUnicodeTable[i]);
+        maxTagNameLength = PR_MAX(len, maxTagNameLength);        
+      }
+      NS_ASSERTION(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
+                   "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");
     }
 #endif
   }
@@ -371,22 +390,11 @@ nsHTMLTags::ReleaseTable(void)
       // Nothing to delete/free in this table, just destroy the table.
 
       PL_HashTableDestroy(gTagTable);
-
+      PL_HashTableDestroy(gTagAtomTable);
       gTagTable = nsnull;
+      gTagAtomTable = nsnull;
     }
   }
-}
-
-// static
-nsHTMLTag
-nsHTMLTags::CaseSensitiveLookupTag(const PRUnichar* aTagName)
-{
-  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
-  NS_ASSERTION(aTagName, "null tagname!");
-
-  PRUint32 tag = NS_PTR_TO_INT32(PL_HashTableLookupConst(gTagTable, aTagName));
-
-  return tag == eHTMLTag_unknown ? eHTMLTag_userdefined : (nsHTMLTag)tag;
 }
 
 // static
@@ -395,7 +403,7 @@ nsHTMLTags::LookupTag(const nsAString& aTagName)
 {
   PRUint32 length = aTagName.Length();
 
-  if (length > sMaxTagNameLength) {
+  if (length > NS_HTMLTAG_NAME_MAX_LENGTH) {
     return eHTMLTag_userdefined;
   }
 
@@ -428,30 +436,9 @@ nsHTMLTags::LookupTag(const nsAString& aTagName)
   return CaseSensitiveLookupTag(buf);
 }
 
-// static
-const PRUnichar *
-nsHTMLTags::GetStringValue(nsHTMLTag aEnum)
-{
-  if (aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX) {
-    return nsnull;
-  }
-
-  return kTagUnicodeTable[aEnum - 1];
-}
-
-// static
-nsIAtom *
-nsHTMLTags::GetAtom(nsHTMLTag aEnum)
-{
-  if (aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX) {
-    return nsnull;
-  }
-
-  return kTagAtomTable[aEnum - 1];
-}
-
 #ifdef DEBUG
-void TestTagTable()
+void
+nsHTMLTags::TestTagTable()
 {
      const PRUnichar *tag;
      nsHTMLTag id;
@@ -459,27 +446,27 @@ void TestTagTable()
      nsHTMLTags::AddRefTable();
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
-       tag = kTagUnicodeTable[i];
-       id = nsHTMLTags::LookupTag(nsDependentString(tag));
+       tag = sTagUnicodeTable[i];
+       id = LookupTag(nsDependentString(tag));
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
-       const PRUnichar* check = nsHTMLTags::GetStringValue(id);
+       const PRUnichar* check = GetStringValue(id);
        NS_ASSERTION(0 == nsCRT::strcmp(check, tag), "can't map id back to tag");
      }
 
      // Make sure we don't find things that aren't there
-     id = nsHTMLTags::LookupTag(NS_LITERAL_STRING("@"));
+     id = LookupTag(NS_LITERAL_STRING("@"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-     id = nsHTMLTags::LookupTag(NS_LITERAL_STRING("zzzzz"));
+     id = LookupTag(NS_LITERAL_STRING("zzzzz"));
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) 0);
+     tag = GetStringValue((nsHTMLTag) 0);
      NS_ASSERTION(!tag, "found enum 0");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) -1);
+     tag = GetStringValue((nsHTMLTag) -1);
      NS_ASSERTION(!tag, "found enum -1");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
+     tag = GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
      NS_ASSERTION(!tag, "found past max enum");
 
-     nsHTMLTags::ReleaseTable();
+     ReleaseTable();
 }
 
 #endif // DEBUG

@@ -39,6 +39,7 @@
 #define nsHTMLTags_h___
 
 #include "nsStringGlue.h"
+#include "plhash.h"
 
 class nsIAtom;
 
@@ -71,17 +72,52 @@ public:
   static nsresult AddRefTable(void);
   static void ReleaseTable(void);
 
+  // Functions for converting string or atom to id
   static nsHTMLTag LookupTag(const nsAString& aTagName);
-  static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName);
-  static const PRUnichar *GetStringValue(nsHTMLTag aEnum);
-  static nsIAtom *GetAtom(nsHTMLTag aEnum);
+  static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName)
+  {
+    NS_ASSERTION(gTagTable, "no lookup table, needs addref");
+    NS_ASSERTION(aTagName, "null tagname!");
+
+    void* tag = PL_HashTableLookupConst(gTagTable, aTagName);
+
+    return tag ? (nsHTMLTag)NS_PTR_TO_INT32(tag) : eHTMLTag_userdefined;
+  }
+  static nsHTMLTag CaseSensitiveLookupTag(nsIAtom* aTagName)
+  {
+    NS_ASSERTION(gTagAtomTable, "no lookup table, needs addref");
+    NS_ASSERTION(aTagName, "null tagname!");
+
+    void* tag = PL_HashTableLookupConst(gTagAtomTable, aTagName);
+
+    return tag ? (nsHTMLTag)NS_PTR_TO_INT32(tag) : eHTMLTag_userdefined;
+  }
+
+  // Functions for converting an id to a string or atom
+  static const PRUnichar *GetStringValue(nsHTMLTag aEnum)
+  {
+    return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
+      nsnull : sTagUnicodeTable[aEnum - 1];
+  }
+  static nsIAtom *GetAtom(nsHTMLTag aEnum)
+  {
+    return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
+      nsnull : sTagAtomTable[aEnum - 1];
+  }
+
+#ifdef DEBUG
+  static void TestTagTable();
+#endif
+
+private:
+  static nsIAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
+  static const PRUnichar* const sTagUnicodeTable[];
+
+  static PRInt32 gTableRefCount;
+  static PLHashTable* gTagTable;
+  static PLHashTable* gTagAtomTable;
 };
 
 #define eHTMLTags nsHTMLTag
-
-#ifdef DEBUG
-// tag table verification function
-void TestTagTable();
-#endif // DEBUG
 
 #endif /* nsHTMLTags_h___ */
