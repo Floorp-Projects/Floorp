@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.97 2006/09/02 18:53:54 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.98 2006/10/09 22:26:44 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1651,7 +1651,7 @@ ssl3_ComputeRecordMAC(
     } else {
 	/* bypass version */
 	const SECHashObject *hashObj = NULL;
-	unsigned int       pad_bytes;
+	unsigned int       pad_bytes = 0;
 	PRUint64           write_mac_context[MAX_MAC_CONTEXT_LLONGS];
 
 	switch (mac_def->mac) {
@@ -3942,7 +3942,7 @@ getWrappingKey( sslSocket *       ss,
     /* wrap symmetric wrapping key in server's public key. */
     switch (exchKeyType) {
 #ifdef NSS_ENABLE_ECC
-    PK11SymKey *      Ks;
+    PK11SymKey *      Ks = NULL;
     SECKEYPublicKey   *pubWrapKey = NULL;
     SECKEYPrivateKey  *privWrapKey = NULL;
     ECCWrappedKeyInfo *ecWrapped;
