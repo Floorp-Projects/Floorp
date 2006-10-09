@@ -138,7 +138,7 @@ public:
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(MOZ_CAIRO_GFX)
+#if defined(XP_WIN) || defined(XP_OS2)
 #define FONT_LEADING_APIS_V2 1
 #endif 
 
