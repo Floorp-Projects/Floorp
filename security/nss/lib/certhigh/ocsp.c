@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.28 2006/08/07 20:48:04 julien.pierre.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.29 2006/10/09 22:19:58 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -1457,8 +1457,10 @@ static SECStatus
 ocsp_DecodeResponseBytes(PRArenaPool *arena, ocspResponseBytes *rbytes)
 {
     PORT_Assert(rbytes != NULL);		/* internal error, really */
-    if (rbytes == NULL)
+    if (rbytes == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);	/* XXX set better error? */
+	return SECFailure;
+    }
 
     rbytes->responseTypeTag = SECOID_FindOIDTag(&rbytes->responseType);
     switch (rbytes->responseTypeTag) {
