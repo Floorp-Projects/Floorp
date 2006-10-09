@@ -49,6 +49,7 @@ for (var size = 5000; size <= 15000; size += 1000)
 {  
   data.X.push(size);
   data.Y.push(testSort(size));
+  gc();
 }
 
 var order = BigO(data);

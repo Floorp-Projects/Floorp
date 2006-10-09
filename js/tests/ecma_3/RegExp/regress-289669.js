@@ -69,6 +69,7 @@ function neurodna(limit) {
   var da2=new Date();
   data.X.push(limit);
   data.Y.push(da2-da1);
+  gc();
 }
 
 runTest();
