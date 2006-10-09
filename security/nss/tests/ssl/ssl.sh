@@ -197,6 +197,7 @@ kill_selfserv()
   echo "selfserv with PID ${PID} killed at `date`"
 
   rm ${SERVERPID}
+  html_detect_core "<TR><TD>kill_selfserv core detection step"
 }
 
 ########################### start_selfserv #############################
