@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.21 $ $Date: 2005/01/20 02:25:48 $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.22 $ $Date: 2006/10/09 22:14:04 $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -68,6 +68,9 @@ nssSession_ImportNSS3Session(NSSArena *arenaOpt,
 {
     nssSession *rvSession;
     rvSession = nss_ZNEW(arenaOpt, nssSession);
+    if (!rvSession) {
+        return NULL;
+    }
     rvSession->handle = session;
     rvSession->lock = lock;
     rvSession->ownLock = PR_FALSE;
@@ -197,6 +200,10 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     /* Grab the token name from the PKCS#11 fixed-length buffer */
     rvToken->base.name = nssUTF8_Duplicate(nss3slot->token_name,td->arena);
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
+    if (!rvToken->slot) {
+        nssArena_Destroy(arena);
+        return (NSSToken *)NULL;
+    }
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
