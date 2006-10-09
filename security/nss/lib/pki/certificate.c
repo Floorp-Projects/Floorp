@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.60 $ $Date: 2006/10/09 18:45:02 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.61 $ $Date: 2006/10/09 18:51:55 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -940,6 +940,9 @@ nssCertificateList_DoCallback (
     NSSCertificate *cert;
     PRStatus nssrv;
     certs = nssList_CreateIterator(certList);
+    if (!certs) {
+        return PR_FAILURE;
+    }
     for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
          cert != (NSSCertificate *)NULL;
          cert  = (NSSCertificate *)nssListIterator_Next(certs))
