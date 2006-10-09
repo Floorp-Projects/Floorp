@@ -472,7 +472,7 @@ pref("view_source.editor.external", false);
 
 pref("browser.send_pings", true);
 
-#ifdef MOZ_FEEDS
+/* initial web feed readers list */
 pref("browser.contentHandlers.types.0.title", "chrome://browser-region/locale/region.properties");
 pref("browser.contentHandlers.types.0.uri", "chrome://browser-region/locale/region.properties");
 pref("browser.contentHandlers.types.0.type", "application/vnd.mozilla.maybe.feed");
@@ -493,7 +493,6 @@ pref("browser.contentHandlers.types.5.uri", "chrome://browser-region/locale/regi
 pref("browser.contentHandlers.types.5.type", "application/vnd.mozilla.maybe.feed");
 
 pref("browser.feeds.handler", "ask");
-#endif
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless both these prefs are set.
@@ -530,5 +529,3 @@ pref("browser.EULA.2.accepted", true);
 
 // if we rev the EULA again, we should bump this so users agree to the new EULA
 pref("browser.EULA.version", 2);
-
-

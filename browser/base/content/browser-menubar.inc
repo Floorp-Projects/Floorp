@@ -435,20 +435,12 @@
                           label="&addCurPageAsCmd.label;"
                           command="Browser:AddBookmarkAs"/>
                 <menuitem id="subscribeToPageMenuitem"
-#ifdef MOZ_FEEDS
                           label="&subscribeToPageMenuitem.label;"
-#else
-                          label="&addLiveBookmarkMenuitem.label;"
-#endif
                           oncommand="return FeedHandler.subscribeToFeed(null, event);"
                           onclick="checkForMiddleClick(this, event);"
                           disabled="true"/>
                 <menu id="subscribeToPageMenupopup"
-#ifdef MOZ_FEEDS
                       label="&subscribeToPageMenupopup.label;"
-#else
-                      label="&addLiveBookmarkMenupopup.label;"
-#endif
                       hidden="true">
                   <menupopup id="subscribeToPageSubmenuMenupopup" 
                              onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
@@ -486,20 +478,12 @@
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
-#ifdef MOZ_FEEDS
                 label="&subscribeToPageMenuitem.label;"
-#else
-                label="&addLiveBookmarkMenuitem.label;"
-#endif
                 oncommand="return FeedHandler.subscribeToFeed(null, event);"
                 onclick="checkForMiddleClick(this, event);"
                 disabled="true"/>
       <menu id="subscribeToPageMenupopup"
-#ifdef MOZ_FEEDS
             label="&subscribeToPageMenupopup.label;"
-#else
-            label="&addLiveBookmarkMenupopup.label;"
-#endif
             hidden="true">
         <menupopup id="subscribeToPageSubmenuMenupopup" 
                    onpopupshowing="return FeedHandler.buildFeedList(event.target);" 
