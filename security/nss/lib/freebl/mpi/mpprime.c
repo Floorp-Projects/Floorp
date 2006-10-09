@@ -429,11 +429,11 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
   mp_size       num_tests;
   unsigned char *sieve;
   
-  sieve = malloc(SIEVE_SIZE);
-  ARGCHK(sieve != NULL, MP_MEM);
-
   ARGCHK(start != 0, MP_BADARG);
   ARGCHK(nBits > 16, MP_RANGE);
+
+  sieve = malloc(SIEVE_SIZE);
+  ARGCHK(sieve != NULL, MP_MEM);
 
   MP_DIGITS(&trial) = 0;
   MP_DIGITS(&q) = 0;
