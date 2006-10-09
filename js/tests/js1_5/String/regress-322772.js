@@ -64,6 +64,7 @@ for (var power = 0; power < 20; power++)
   }
   var stop = new Date();
   data.Y.push(stop - start);
+  gc();
 }
 
 var order = BigO(data);

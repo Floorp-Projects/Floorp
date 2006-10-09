@@ -74,6 +74,7 @@ for (var x = 0; x < 5; x++)
   data1.Y.push(y1);
   data2.X.push(x);
   data2.Y.push(y2);
+  gc();
 }
 
 var order1 = BigO(data1);
