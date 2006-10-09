@@ -54,15 +54,16 @@
 #include "nsIPrivateTextRange.h"
 #include "nsITransactionManager.h"
 #include "nsIComponentManager.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
+#include "nsIEditActionListener.h"
+#include "nsIEditorObserver.h"
+#include "nsIDocumentStateListener.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMElement.h"
 #include "nsSelectionState.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 
-class nsIEditActionListener;
-class nsIDocumentStateListener;
 class nsIDOMCharacterData;
 class nsIDOMRange;
 class nsIPresShell;
@@ -76,8 +77,6 @@ class DeleteTextTxn;
 class SplitElementTxn;
 class JoinElementTxn;
 class EditAggregateTxn;
-class nsVoidArray;
-class nsISupportsArray;
 class nsILocale;
 class IMETextTxn;
 class AddStyleSheetTxn;
@@ -628,9 +627,9 @@ protected:
   PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   PRPackedBool                  mDidPreDestroy;    // whether PreDestroy has been called
    // various listeners
-  nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
-  nsVoidArray*                  mEditorObservers;  // just notify once per high level change
-  nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
+  nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
+  nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
+  nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument

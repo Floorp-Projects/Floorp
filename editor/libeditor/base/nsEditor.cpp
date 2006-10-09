@@ -77,8 +77,6 @@
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsICaret.h"
-#include "nsIEditActionListener.h"
-#include "nsIEditorObserver.h"
 #include "nsIKBStateControl.h"
 #include "nsIWidget.h"
 #include "nsIPlaintextEditor.h"
@@ -87,7 +85,6 @@
 #include "nsIFrame.h"  // Needed by IME code
 
 #include "nsICSSStyleSheet.h"
-#include "nsIDocumentStateListener.h"
 
 #include "nsIContent.h"
 #include "nsServiceManagerUtils.h"
@@ -159,8 +156,6 @@ nsEditor::nsEditor()
 ,  mIsIMEComposing(PR_FALSE)
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mDidPreDestroy(PR_FALSE)
-,  mActionListeners(nsnull)
-,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
@@ -215,24 +210,6 @@ nsEditor::~nsEditor()
     if (0==refCount) {
       gDeleteTxnName = nsnull;
     }
-  }
-
-  delete mEditorObservers;   // no need to release observers; we didn't addref them
-  mEditorObservers = 0;
-  
-  if (mActionListeners)
-  {
-    PRInt32 i;
-    nsIEditActionListener *listener;
-
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      NS_IF_RELEASE(listener);
-    }
-
-    delete mActionListeners;
-    mActionListeners = 0;
   }
 
   delete mPhonetic;
@@ -530,6 +507,10 @@ nsEditor::PreDestroy()
 
   // Unregister event listeners
   RemoveEventListeners();
+  mActionListeners.Clear();
+  mEditorObservers.Clear();
+  mDocStateListeners.Clear();
+  mInlineSpellChecker = nsnull;
 
   mDidPreDestroy = PR_TRUE;
   return NS_OK;
@@ -1389,19 +1370,11 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
                                    nsIDOMNode **   aNewNode)
 {
   PRInt32 i;
-  nsIEditActionListener *listener;
 
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::eNext);
   
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillCreateNode(aTag, aParent, aPosition);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillCreateNode(aTag, aParent, aPosition);
 
   CreateElementTxn *txn;
   nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
@@ -1419,15 +1392,8 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
   
   mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
   
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->DidCreateNode(aTag, *aNewNode, aParent, aPosition, result);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->DidCreateNode(aTag, *aNewNode, aParent, aPosition, result);
 
   return result;
 }
@@ -1438,18 +1404,10 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
                                    PRInt32      aPosition)
 {
   PRInt32 i;
-  nsIEditActionListener *listener;
   nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillInsertNode(aNode, aParent, aPosition);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillInsertNode(aNode, aParent, aPosition);
 
   InsertElementTxn *txn;
   nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition, &txn);
@@ -1461,15 +1419,8 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
 
   mRangeUpdater.SelAdjInsertNode(aParent, aPosition);
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->DidInsertNode(aNode, aParent, aPosition, result);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->DidInsertNode(aNode, aParent, aPosition, result);
 
   return result;
 }
@@ -1481,18 +1432,10 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
                     nsIDOMNode **aNewLeftNode)
 {
   PRInt32 i;
-  nsIEditActionListener *listener;
   nsAutoRules beginRulesSniffing(this, kOpSplitNode, nsIEditor::eNext);
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillSplitNode(aNode, aOffset);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillSplitNode(aNode, aOffset);
 
   SplitElementTxn *txn;
   nsresult result = CreateTxnForSplitNode(aNode, aOffset, &txn);
@@ -1510,17 +1453,10 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, *aNewLeftNode);
 
-  if (mActionListeners)
+  for (i = 0; i < mActionListeners.Count(); i++)
   {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-      {
-        nsIDOMNode *ptr = *aNewLeftNode;
-        listener->DidSplitNode(aNode, aOffset, ptr, result);
-      }
-    }
+    nsIDOMNode *ptr = *aNewLeftNode;
+    mActionListeners[i]->DidSplitNode(aNode, aOffset, ptr, result);
   }
 
   return result;
@@ -1534,7 +1470,6 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
                     nsIDOMNode * aParent)
 {
   PRInt32 i, offset;
-  nsIEditActionListener *listener;
   nsAutoRules beginRulesSniffing(this, kOpJoinNode, nsIEditor::ePrevious);
 
   // remember some values; later used for saved selection updating.
@@ -1546,15 +1481,8 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
   result = GetLengthOfDOMNode(aLeftNode, oldLeftNodeLen);
   if (NS_FAILED(result)) return result;
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillJoinNodes(aLeftNode, aRightNode, aParent);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillJoinNodes(aLeftNode, aRightNode, aParent);
 
   JoinElementTxn *txn;
   result = CreateTxnForJoinNode(aLeftNode, aRightNode, &txn);
@@ -1567,15 +1495,8 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
 
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (PRInt32)oldLeftNodeLen);
   
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->DidJoinNodes(aLeftNode, aRightNode, aParent, result);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->DidJoinNodes(aLeftNode, aRightNode, aParent, result);
 
   return result;
 }
@@ -1585,22 +1506,14 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
 {
   PRInt32 i, offset;
   nsCOMPtr<nsIDOMNode> parent;
-  nsIEditActionListener *listener;
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
   nsresult result = GetNodeLocation(aElement, address_of(parent), &offset);
   if (NS_FAILED(result)) return result;
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillDeleteNode(aElement);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillDeleteNode(aElement);
 
   DeleteElementTxn *txn;
   result = CreateTxnForDeleteElement(aElement, &txn);
@@ -1611,15 +1524,8 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
 
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->DidDeleteNode(aElement, result);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->DidDeleteNode(aElement, result);
 
   return result;
 }
@@ -1844,18 +1750,10 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
   if (!aObserver)
     return NS_ERROR_NULL_POINTER;
 
-  if (!mEditorObservers)
-  {
-    mEditorObservers = new nsVoidArray();
-
-    if (!mEditorObservers)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Make sure the listener isn't already on the list
-  if (mEditorObservers->IndexOf(aObserver) == -1) 
+  if (mEditorObservers.IndexOf(aObserver) == -1) 
   {
-    if (!mEditorObservers->AppendElement((void *)aObserver))
+    if (!mEditorObservers.AppendObject(aObserver))
       return NS_ERROR_FAILURE;
   }
 
@@ -1866,10 +1764,10 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
 NS_IMETHODIMP
 nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
 {
-  if (!aObserver || !mEditorObservers)
+  if (!aObserver)
     return NS_ERROR_FAILURE;
 
-  if (!mEditorObservers->RemoveElement((void *)aObserver))
+  if (!mEditorObservers.RemoveObject(aObserver))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -1877,17 +1775,8 @@ nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
 
 void nsEditor::NotifyEditorObservers(void)
 {
-  if (mEditorObservers)
-  {
-    PRInt32 i;
-    nsIEditorObserver *observer;
-    for (i = 0; i < mEditorObservers->Count(); i++)
-    {
-      observer = (nsIEditorObserver*)mEditorObservers->ElementAt(i);
-      if (observer)
-        observer->EditAction();
-    }
-  }
+  for (PRInt32 i = 0; i < mEditorObservers.Count(); i++)
+    mEditorObservers[i]->EditAction();
 }
 
 #ifdef XP_MAC
@@ -1902,21 +1791,11 @@ nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
   if (!aListener)
     return NS_ERROR_NULL_POINTER;
 
-  if (!mActionListeners)
-  {
-    mActionListeners = new nsVoidArray();
-
-    if (!mActionListeners)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Make sure the listener isn't already on the list
-  if (mActionListeners->IndexOf(aListener) == -1) 
+  if (mActionListeners.IndexOf(aListener) == -1) 
   {
-    if (!mActionListeners->AppendElement((void *)aListener))
+    if (!mActionListeners.AppendObject(aListener))
       return NS_ERROR_FAILURE;
-    else
-      NS_ADDREF(aListener);
   }
 
   return NS_OK;
@@ -1926,19 +1805,11 @@ nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
 NS_IMETHODIMP
 nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 {
-  if (!aListener || !mActionListeners)
+  if (!aListener)
     return NS_ERROR_FAILURE;
 
-  if (!mActionListeners->RemoveElement((void *)aListener))
+  if (!mActionListeners.RemoveObject(aListener))
     return NS_ERROR_FAILURE;
-
-  NS_IF_RELEASE(aListener);
-
-  if (mActionListeners->Count() < 1)
-  {
-    delete mActionListeners;
-    mActionListeners = 0;
-  }
 
   return NS_OK;
 }
@@ -1957,37 +1828,26 @@ nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
   if (!aListener)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult rv = NS_OK;
-  
-  if (!mDocStateListeners)
+  if (mDocStateListeners.IndexOf(aListener) == -1)
   {
-    rv = NS_NewISupportsArray(getter_AddRefs(mDocStateListeners));
-    if (NS_FAILED(rv)) return rv;
+    if (!mDocStateListeners.AppendObject(aListener))
+      return NS_ERROR_FAILURE;
   }
-  
-  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aListener, &rv);
-  if (NS_FAILED(rv)) return rv;
-    
-  // is it already in the list?
-  PRInt32 foundIndex;
-  if (NS_SUCCEEDED(mDocStateListeners->GetIndexOf(iSupports, &foundIndex)) && foundIndex != -1)
-    return NS_OK;
 
-  return mDocStateListeners->AppendElement(iSupports);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 {
-  if (!aListener || !mDocStateListeners)
+  if (!aListener)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult rv;
-  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aListener, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (!mDocStateListeners.RemoveObject(aListener))
+    return NS_ERROR_FAILURE;
 
-  return mDocStateListeners->RemoveElement(iSupports);
+  return NS_OK;
 }
 
 
@@ -2754,16 +2614,8 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
 
   // let listeners know what's up
   PRInt32 i;
-  nsIEditActionListener *listener;
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->WillInsertText(aTextNode, aOffset, aStringToInsert);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->WillInsertText(aTextNode, aOffset, aStringToInsert);
   
   // XXX we may not need these view batches anymore.  This is handled at a higher level now I believe
   BeginUpdateViewBatch();
@@ -2773,15 +2625,8 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
   mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
   
   // let listeners know what happened
-  if (mActionListeners)
-  {
-    for (i = 0; i < mActionListeners->Count(); i++)
-    {
-      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-      if (listener)
-        listener->DidInsertText(aTextNode, aOffset, aStringToInsert, result);
-    }
-  }
+  for (i = 0; i < mActionListeners.Count(); i++)
+    mActionListeners[i]->DidInsertText(aTextNode, aOffset, aStringToInsert, result);
 
   // Added some cruft here for bug 43366.  Layout was crashing because we left an 
   // empty text node lying around in the document.  So I delete empty text nodes
@@ -2870,41 +2715,29 @@ nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *
 NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
-  if (!mDocStateListeners)
+  PRInt32 numListeners = mDocStateListeners.Count();
+  if (!numListeners)
     return NS_OK;    // maybe there just aren't any.
  
-  PRUint32 numListeners;
-  nsresult rv = mDocStateListeners->Count(&numListeners);
-  if (NS_FAILED(rv)) return rv;
-
-  PRUint32 i;
+  nsresult rv = NS_OK;
+  PRInt32 i;
   switch (aNotificationType)
   {
     case eDocumentCreated:
       for (i = 0; i < numListeners;i++)
       {
-        nsCOMPtr<nsIDocumentStateListener> thisListener =
-          do_QueryElementAt(mDocStateListeners, i);
-        if (thisListener)
-        {
-          rv = thisListener->NotifyDocumentCreated();
-          if (NS_FAILED(rv))
-            break;
-        }
+        rv = mDocStateListeners[i]->NotifyDocumentCreated();
+        if (NS_FAILED(rv))
+          break;
       }
       break;
       
     case eDocumentToBeDestroyed:
       for (i = 0; i < numListeners;i++)
       {
-        nsCOMPtr<nsIDocumentStateListener> thisListener =
-          do_QueryElementAt(mDocStateListeners, i);
-        if (thisListener)
-        {
-          rv = thisListener->NotifyDocumentWillBeDestroyed();
-          if (NS_FAILED(rv))
-            break;
-        }
+        rv = mDocStateListeners[i]->NotifyDocumentWillBeDestroyed();
+        if (NS_FAILED(rv))
+          break;
       }
       break;
   
@@ -2921,14 +2754,9 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
         
         for (i = 0; i < numListeners;i++)
         {
-          nsCOMPtr<nsIDocumentStateListener> thisListener =
-            do_QueryElementAt(mDocStateListeners, i);
-          if (thisListener)
-          {
-            rv = thisListener->NotifyDocumentStateChanged(mDocDirtyState);
-            if (NS_FAILED(rv))
-              break;
-          }
+          rv = mDocStateListeners[i]->NotifyDocumentStateChanged(mDocDirtyState);
+          if (NS_FAILED(rv))
+            break;
         }
       }
       break;
@@ -2968,29 +2796,14 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   {
     // let listeners know what's up
     PRInt32 i;
-    nsIEditActionListener *listener;
-    if (mActionListeners)
-    {
-      for (i = 0; i < mActionListeners->Count(); i++)
-      {
-        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener)
-          listener->WillDeleteText(aElement, aOffset, aLength);
-      }
-    }
+    for (i = 0; i < mActionListeners.Count(); i++)
+      mActionListeners[i]->WillDeleteText(aElement, aOffset, aLength);
     
     result = DoTransaction(txn); 
     
     // let listeners know what happened
-    if (mActionListeners)
-    {
-      for (i = 0; i < mActionListeners->Count(); i++)
-      {
-        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener)
-          listener->DidDeleteText(aElement, aOffset, aLength, result);
-      }
-    }
+    for (i = 0; i < mActionListeners.Count(); i++)
+      mActionListeners[i]->DidDeleteText(aElement, aOffset, aLength, result);
   }
   // The transaction system (if any) has taken ownership of txn
   NS_IF_RELEASE(txn);
@@ -4599,49 +4412,30 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
   {
     nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
     PRInt32 i;
-    nsIEditActionListener *listener;
     // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
-    if (mActionListeners)
-    {
-      for (i = 0; i < mActionListeners->Count(); i++)
-      {
-        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener) {
-          if (!deleteNode) {
-            listener->WillDeleteSelection(selection);
-          }
-          else if (deleteCharData) {
-            listener->WillDeleteText(deleteCharData, deleteCharOffset, deleteCharLength);
-          }
-          else {
-            listener->WillDeleteNode(deleteNode);
-          }
-        }
-      }
-    }
+    if (!deleteNode)
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->WillDeleteSelection(selection);
+    else if (deleteCharData)
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+    else
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->WillDeleteNode(deleteNode);
 
     // Delete the specified amount
     res = DoTransaction(txn);  
 
     // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-    if (mActionListeners)
-    {
-      for (i = 0; i < mActionListeners->Count(); i++)
-      {
-        listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
-        if (listener) {
-          if (!deleteNode) {
-            listener->DidDeleteSelection(selection);
-          }
-          else if (deleteCharData) {
-            listener->DidDeleteText(deleteCharData, deleteCharOffset, deleteCharLength, res);
-          }
-          else {
-            listener->DidDeleteNode(deleteNode, res);
-          }
-        }
-      }
-    }
+    if (!deleteNode)
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->DidDeleteSelection(selection);
+    else if (deleteCharData)
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
+    else
+      for (i = 0; i < mActionListeners.Count(); i++)
+        mActionListeners[i]->DidDeleteNode(deleteNode, res);
   }
 
   // The transaction system (if any) has taken ownership of txn
