@@ -511,33 +511,23 @@ SuggestAutoComplete.prototype = {
 
     this._clearServerErrors();
 
-    var searchString, results, queryURLs;
+    // This is a modified version of Crockford's JSON sanitizer, obtained
+    // from http://www.json.org/js.html.
+    // This should use built-in functions once bug 340987 is fixed.
+    const JSON_STRING = /^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/;
     var sandbox = new Components.utils.Sandbox(this._suggestURI.prePath);
-    var results2 = Components.utils.evalInSandbox(responseText, sandbox);
+    function parseJSON(aString) {
+      try {
+        if (JSON_STRING.test(aString))
+          return Components.utils.evalInSandbox('(' + aString + ')', sandbox);
+      } catch (e) {}
 
-    if (results2[0]) {
-      searchString = results2[0] ? results2[0] : "";
-      results = results2[1] ? results2[1] : [];
-    } else {
-      // this is backwards compat code for Google Suggest, to be removed
-      // once they shift to the new format
-      // The responseText is formatted like so:
-      // searchString\n"r1","r2","r3"\n"c1","c2","c3"\n"p1","p2","p3"
-      // ... where all values are escaped:
-      //  rX = result  (search term or URL)
-      //  cX = comment (number of results or page title)
-      //  pX = prefix
+      return [];
+    };
 
-      // Note that right now we're using the "comment" column of the
-      // autocomplete dropdown to indicate where the suggestions
-      // begin, so we're discarding the comments from the server.
-      var parts = responseText.split("\n");
-      results = parts[1] ? parts[1].split(",") : [];
-      for (var i = 0; i < results.length; ++i) {
-        results[i] = unescape(results[i]);
-        results[i] = results[i].substr(1, results[i].length - 2);
-      }
-    }
+    var serverResults = parseJSON(responseText);
+    var searchString = serverResults[0] || "";
+    var results = serverResults[1] || [];
 
     var comments = [];  // "comments" column values for suggestions
     var historyResults = [];
