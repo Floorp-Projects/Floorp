@@ -306,6 +306,20 @@ gfxWindowsFont::ComputeMetrics()
         } else {
             mMetrics->xHeight = gm.gmptGlyphOrigin.y;
         }
+        // The MS (P)Gothic and MS (P)Mincho are not having suitable values
+        // in them super script offset. If the values are not suitable,
+        // we should use x-height instead of them.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
+        if (mMetrics->superscriptOffset == 0 ||
+            mMetrics->superscriptOffset >= metrics.tmAscent) {
+            mMetrics->superscriptOffset = mMetrics->xHeight;
+        }
+        // And also checking the case of sub script offset.
+        // The old gfx has checked this too.
+        if (mMetrics->subscriptOffset == 0 ||
+            mMetrics->subscriptOffset >= metrics.tmAscent) {
+            mMetrics->subscriptOffset = mMetrics->xHeight;
+        }
     } else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
