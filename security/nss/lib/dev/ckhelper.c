@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.34 $ $Date: 2005/04/04 18:46:23 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.35 $ $Date: 2006/10/09 22:11:44 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -710,8 +710,11 @@ nssCryptokiPrivateKey_SetCertificate (
     } else {
 	NSSSlot *slot = nssToken_GetSlot(token);
 	session = nssSlot_CreateSession(token->slot, NULL, PR_TRUE);
-	createdSession = PR_TRUE;
 	nssSlot_Destroy(slot);
+	if (!session) {
+	    return PR_FAILURE;
+	}
+	createdSession = PR_TRUE;
     }
 
     ckrv = CKAPI(epv)->C_SetAttributeValue(session->handle,
