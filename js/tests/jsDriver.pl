@@ -406,6 +406,7 @@ sub write_results {
         open (OUTPUTFAILURES, "> $output_file_failures") ||
             die ("Could not create failure output file $output_file_failures");
         print OUTPUTFAILURES (join ("\n", @failed_tests));
+        print OUTPUTFAILURES "\n";
         close OUTPUTFAILURES;
 
         &status ("Wrote failures to '$output_file_failures'.");
