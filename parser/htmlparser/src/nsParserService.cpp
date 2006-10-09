@@ -74,10 +74,7 @@ nsParserService::HTMLAtomTagToId(nsIAtom* aAtom) const
 PRInt32
 nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const
 {
-  nsAutoString tagName;
-  aAtom->ToString(tagName);
-
-  return nsHTMLTags::CaseSensitiveLookupTag(tagName.get());
+  return nsHTMLTags::CaseSensitiveLookupTag(aAtom);
 }
 
 PRInt32

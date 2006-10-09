@@ -136,7 +136,7 @@ Initialize(nsIModule* aSelf)
   }
 
 #ifdef DEBUG
-  TestTagTable();
+  nsHTMLTags::TestTagTable();
 #endif
 
   return nsParser::Init();
