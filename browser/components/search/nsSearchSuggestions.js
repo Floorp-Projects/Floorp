@@ -519,7 +519,7 @@ SuggestAutoComplete.prototype = {
     function parseJSON(aString) {
       try {
         if (JSON_STRING.test(aString))
-          return Components.utils.evalInSandbox('(' + aString + ')', sandbox);
+          return Components.utils.evalInSandbox("(" + aString + ")", sandbox);
       } catch (e) {}
 
       return [];
