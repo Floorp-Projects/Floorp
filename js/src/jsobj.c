@@ -933,8 +933,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              * Remove '(function ' from the beginning of valstr and ')' from the
              * end so that we can put "get" in front of the function definition.
              */
-            if (gsop[j]) {
-                int n = strlen(js_function_str) + 2;
+            if (gsop[j] && VALUE_IS_FUNCTION(cx, val[j])) {
+                size_t n = strlen(js_function_str) + 2;
+                JS_ASSERT(vlength > n);
                 vchars += n;
                 vlength -= n + 1;
             }
