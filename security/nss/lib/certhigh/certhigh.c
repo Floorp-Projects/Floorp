@@ -1044,6 +1044,10 @@ loser:
     NSSCryptoContext *cc = STAN_GetDefaultCryptoContext();
 
     stanCert = STAN_GetNSSCertificate(cert);
+    if (!stanCert) {
+        /* error code is set */
+        return NULL;
+    }
     nssUsage.anyUsage = PR_FALSE;
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_FALSE;
