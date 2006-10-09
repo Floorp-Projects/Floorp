@@ -123,14 +123,10 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     mMetrics.maxAscent = atsMetrics.ascent * size;
     mMetrics.maxDescent = - (atsMetrics.descent * size);
 
-    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
-
     mMetrics.internalLeading = atsMetrics.leading * size;
     mMetrics.externalLeading = 0.0;
 
-    if (mMetrics.maxHeight - mMetrics.emHeight > mMetrics.internalLeading)
-        mMetrics.emHeight = mMetrics.maxHeight - mMetrics.internalLeading;
-
+    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / mMetrics.maxHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
