@@ -178,11 +178,13 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* XXX thread safety was completely neglected in this function... */
     oldscript = (JSScript *) JS_GetPrivate(cx, obj);
-    for (fp = cx->fp; fp; fp = fp->down) {
-        if (fp->script == oldscript) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_SELF_MODIFYING_SCRIPT);
-            return JS_FALSE;
+    if (oldscript) {
+        for (fp = cx->fp; fp; fp = fp->down) {
+            if (fp->script == oldscript) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_SELF_MODIFYING_SCRIPT);
+                return JS_FALSE;
+            }
         }
     }
 
