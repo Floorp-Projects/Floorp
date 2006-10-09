@@ -50,8 +50,16 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  
-  (function () { eval("'foo'.b()", arguments) })()
+
+  expect = 'TypeError: "foo".b is not a function';
+  try
+  {
+    (function () { eval("'foo'.b()", arguments) })();
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
