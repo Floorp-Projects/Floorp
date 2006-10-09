@@ -83,22 +83,24 @@ sub HandleSigAlrm() {
 
 sub UpdateTinderboxScripts() {
     if (exists($ENV{'TBOX_CLIENT_CVS_DIR'})) {
-        print STDERR "Updating tinderbox scripts in $ENV{'TBOX_CLIENT_CVS_DIR'}\n";
-        my $cvsUpCmd = $TBOX_CLIENT_CVSUP_CMD;
-        $cvsUpCmd .= exists($ENV{'TBOX_CLIENT_CVS_TAG'}) ? 
-         " -r $ENV{'TBOX_CLIENT_CVS_TAG'}" : '';
+        for my $cvsUpDir (split(":", $ENV{'TBOX_CLIENT_CVS_DIR'})) {
+            print STDERR "Updating tinderbox scripts in $cvsUpDir\n";
+            my $cvsUpCmd = $TBOX_CLIENT_CVSUP_CMD;
+            $cvsUpCmd .= exists($ENV{'TBOX_CLIENT_CVS_TAG'}) ? 
+              " -r $ENV{'TBOX_CLIENT_CVS_TAG'}" : '';
 
-        eval {
-            local $SIG{'ALRM'} = \&HandleSigAlrm;
-            alarm($TBOX_CLIENT_CVS_TIMEOUT);
-            system("cd $ENV{'TBOX_CLIENT_CVS_DIR'} && $cvsUpCmd") == 0 
-             or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
-            alarm(0);
-        };
+            eval {
+                local $SIG{'ALRM'} = \&HandleSigAlrm;
+                alarm($TBOX_CLIENT_CVS_TIMEOUT);
+                system("cd $cvsUpDir && $cvsUpCmd") == 0 
+                  or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
+                alarm(0);
+            };
 
-        if ($@) {
-            print STDERR 'CVS update of client tinderbox scripts ' . 
-              ($@ eq 'timeout' ? "timed out" : "failed: $@") . "\n";
+            if ($@) {
+                print STDERR 'CVS update of client tinderbox scripts ' . 
+                  ($@ eq 'timeout' ? "timed out" : "failed: $@") . "\n";
+            }
         }
     }
 }
