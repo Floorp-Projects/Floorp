@@ -47,6 +47,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../bookmarks/src \
 	-I$(srcdir)/../migration/src \
 	-I$(srcdir)/../shell/src \
+	-I$(srcdir)/../feeds/src \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -55,6 +56,7 @@ endif
 
 SHARED_LIBRARY_LIBS = \
 	../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
+	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
@@ -65,11 +67,6 @@ ifndef MOZ_PLACES
 SHARED_LIBRARY_LIBS += \
 	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(NULL)
-endif
-
-ifdef MOZ_FEEDS
-LOCAL_INCLUDES += -I$(srcdir)/../feeds/src
-SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_SAFE_BROWSING

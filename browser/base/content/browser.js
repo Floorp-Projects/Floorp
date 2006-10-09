@@ -5530,7 +5530,7 @@ function handleLinkClick(event, href, linkNode)
   var docURL = event.target.ownerDocument.location.href;
 
   switch (event.button) {
-    case 0:
+    case 0:    // if left button clicked
 #ifdef XP_MACOSX
       if (event.metaKey) { // Cmd
 #else
@@ -5540,8 +5540,7 @@ function handleLinkClick(event, href, linkNode)
         event.stopPropagation();
         return true;
       }
-                                                       // if left button clicked
-#ifdef MOZ_FEEDS
+
       if (event.shiftKey && event.altKey) {
         var feedService = 
             Cc["@mozilla.org/browser/feeds/result-service;1"].
@@ -5550,7 +5549,6 @@ function handleLinkClick(event, href, linkNode)
         loadURI(href, null, null, false);
         return false;
       }
-#endif
                                                        
       if (event.shiftKey) {
         openNewWindowWith(href, docURL, null, false);
@@ -5565,7 +5563,7 @@ function handleLinkClick(event, href, linkNode)
       }
 
       return false;
-    case 1:                                                         // if middle button clicked
+    case 1:    // if middle button clicked
       var tab;
       try {
         tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick")
@@ -6445,11 +6443,7 @@ var FeedHandler = {
       var feedInfo = feeds[i];
       var menuItem = document.createElement("menuitem");
       var baseTitle = feedInfo.title || feedInfo.href;
-#ifdef MOZ_FEEDS
       var labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);
-#else
-      var labelStr = gNavigatorBundle.getFormattedString("feedShowFeed", [baseTitle]);
-#endif
       menuItem.setAttribute("label", labelStr);
       menuItem.setAttribute("feed", feedInfo.href);
       menuItem.setAttribute("tooltiptext", feedInfo.href);
@@ -6472,19 +6466,11 @@ var FeedHandler = {
    *          to open the preview UI. (Optional, unless href is null)
    */
   subscribeToFeed: function(href, event) {
-#ifdef MOZ_FEEDS
-      // Just load the feed in the content area to either subscribe or show the
-      // preview UI
-      if (!href)
-        href = event.target.getAttribute("feed");
-      this.loadFeed(href, event);
-#else
-#ifdef MOZ_PLACES
-      PlacesCommandHook.addLiveBookmark(feeds[0].href);
-#else
-      this.addLiveBookmark(feeds[0].href);
-#endif
-#endif
+    // Just load the feed in the content area to either subscribe or show the
+    // preview UI
+    if (!href)
+      href = event.target.getAttribute("feed");
+    this.loadFeed(href, event);
   },
 
   /**
@@ -6572,8 +6558,7 @@ var FeedHandler = {
     BookmarksUtils.addLivemark(doc.baseURI, url, title, description);
   },
 #endif
-  
-#ifdef MOZ_FEEDS
+
   loadFeed: function(href, event) {
     var feeds = gBrowser.selectedBrowser.feeds;
     try {
@@ -6585,7 +6570,6 @@ var FeedHandler = {
       gBrowser.selectedBrowser.feeds = feeds;
     }
   },
-#endif
 
   /**
    * Update the browser UI to show whether or not feeds are available when
@@ -6613,11 +6597,7 @@ var FeedHandler = {
       if (feedButton) {
         feedButton.setAttribute("feeds", "true");
         feedButton.setAttribute("tooltiptext", 
-#ifdef MOZ_FEEDS
                                 gNavigatorBundle.getString("feedHasFeedsNew"));
-#else
-                                gNavigatorBundle.getString("feedHasFeeds"));
-#endif
       }
       // check for dupes before we pick which UI to expose
       feeds = this.harvestFeeds(feeds);
@@ -6695,11 +6675,7 @@ var FeedHandler = {
         if (feedButton) {
           feedButton.setAttribute("feeds", "true");
           feedButton.setAttribute("tooltiptext", 
-#ifdef MOZ_FEEDS
                                   gNavigatorBundle.getString("feedHasFeedsNew"));
-#else
-                                  gNavigatorBundle.getString("feedHasFeeds"));
-#endif
         }
       }
     }

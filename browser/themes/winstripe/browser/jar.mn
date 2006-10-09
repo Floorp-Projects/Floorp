@@ -43,12 +43,10 @@ classic.jar:
         skin/classic/browser/Search-provider-bkgnd.png
         skin/classic/browser/Search-provider-mid-top.png
         skin/classic/browser/Search-provider-mid-bottom.png
-#ifdef MOZ_FEEDS
         skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
         skin/classic/browser/feeds/addFeedReader.css            (feeds/addFeedReader.css)
-#endif
 #ifdef MOZ_PLACES
         skin/classic/browser/places/places.css                  (places/places.css)
         skin/classic/browser/places/defaultFavicon.png          (places/defaultFavicon.png)

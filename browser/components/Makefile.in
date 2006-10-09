@@ -64,16 +64,13 @@ DIRS = \
 	sessionstore \
 	shell \
 	sidebar \
+	feeds \
 	$(NULL)
 
 ifdef MOZ_PLACES
 DIRS += places
 else
 DIRS += history bookmarks
-endif
-
-ifdef MOZ_FEEDS
-DIRS += feeds
 endif
 
 ifdef MOZ_SAFE_BROWSING
