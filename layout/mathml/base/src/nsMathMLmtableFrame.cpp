@@ -245,10 +245,11 @@ static void
 MapAllAttributesIntoCSS(nsIFrame* aTableFrame)
 {
   // mtable is simple and only has one (pseudo) row-group
-  nsIFrame* rowgroupFrame = aTableFrame->GetFirstChild(nsnull);
-  if (!rowgroupFrame) return;
+  nsIFrame* rgFrame = aTableFrame->GetFirstChild(nsnull);
+  if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+    return;
 
-  nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
+  nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
   for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
     DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
     if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
@@ -314,6 +315,25 @@ ParseAlignAttribute(nsString& aValue, eAlign& aAlign, PRInt32& aRowIndex)
   }
 }
 
+#ifdef DEBUG_rbs_off
+// call ListMathMLTree(mParent) to get the big picture
+static void
+ListMathMLTree(nsIFrame* atLeast)
+{
+  // climb up to <math> or <body> if <math> isn't there
+  nsIFrame* f = atLeast;
+  for ( ; f; f = f->GetParent()) {
+    nsIContent* c = f->GetContent();
+    if (!c || c->Tag() == nsGkAtoms::math || c->Tag() == nsGkAtoms::body)
+      break;
+  }
+  if (!f) f = atLeast;
+  nsIFrameDebug* fdbg;
+  CallQueryInterface(f, &fdbg);
+  fdbg->List(stdout, 0);
+}
+#endif
+
 // --------
 // implementation of nsMathMLmtableOuterFrame
 
@@ -350,7 +370,8 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
   nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
-  nsMathMLFrame::FindAttrDisplaystyle(mContent, mPresentationData);
+  if (mContent->Tag() == nsMathMLAtoms::mtable_)
+    nsMathMLFrame::FindAttrDisplaystyle(mContent, mPresentationData);
 
   return NS_OK;
 }
@@ -418,9 +439,11 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
   // mtable is simple and only has one (pseudo) row-group inside our inner-table
   nsIFrame* tableFrame = mFrames.FirstChild();
-  if (!tableFrame) return NS_OK;
-  nsIFrame* rowgroupFrame = tableFrame->GetFirstChild(nsnull);
-  if (!rowgroupFrame) return NS_OK;
+  if (!tableFrame || tableFrame->GetType() != nsGkAtoms::tableFrame)
+    return NS_OK;
+  nsIFrame* rgFrame = tableFrame->GetFirstChild(nsnull);
+  if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+    return NS_OK;
 
   // align - just need to issue a dirty (resize) reflow command
   if (aAttribute == nsMathMLAtoms::align) {
@@ -459,7 +482,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   tableFrame->DeleteProperty(aAttribute);
 
   // unset any -moz attribute that we may have set earlier, and re-sync
-  nsIFrame* rowFrame = rowgroupFrame->GetFirstChild(nsnull);
+  nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
   for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
     if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
       if (MOZrowAtom) { // let rows do the work
@@ -499,20 +522,22 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   PRInt32 rowCount, colCount;
   GetTableSize(rowCount, colCount);
   if (aRowIndex <= rowCount) {
-    nsIFrame* innerTableFrame = mFrames.FirstChild();
-    nsTableIterator rowgroupIter(*innerTableFrame, dir);
-    nsIFrame* rowgroupFrame = rowgroupIter.First();
-    while (rowgroupFrame) {
-      nsTableIterator rowIter(*rowgroupFrame, dir);
-      nsIFrame* rowFrame = rowIter.First();
-      while (rowFrame) {
-        if (--aRowIndex == 0) {
-          DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
-          return rowFrame;
-        }
-        rowFrame = rowIter.Next();
+    nsIFrame* tableFrame = mFrames.FirstChild();
+    if (!tableFrame || tableFrame->GetType() != nsGkAtoms::tableFrame)
+      return nsnull;
+    nsIFrame* rgFrame = tableFrame->GetFirstChild(nsnull);
+    if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
+      return nsnull;
+    nsTableIterator rowIter(*rgFrame, dir);
+    nsIFrame* rowFrame = rowIter.First();
+    for ( ; rowFrame; rowFrame = rowIter.Next()) {
+      if (--aRowIndex == 0) {
+        DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+        if (rowFrame->GetType() != nsGkAtoms::tableRowFrame)
+          return nsnull;
+
+        return rowFrame;
       }
-      rowgroupFrame = rowgroupIter.Next();
     }
   }
   return nsnull;
