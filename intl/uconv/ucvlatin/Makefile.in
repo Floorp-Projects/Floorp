@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsUEscapeToUnicode.cpp \
 		nsAsciiToUnicode.cpp \
 		nsISO88592ToUnicode.cpp \
 		nsISO88593ToUnicode.cpp \
@@ -114,7 +113,6 @@ CPPSRCS		= \
 		nsUTF32ToUnicode.cpp \
 		nsT61ToUnicode.cpp \
 		nsUserDefinedToUnicode.cpp \
-		nsUnicodeToUEscape.cpp \
 		nsUnicodeToAscii.cpp \
 		nsUnicodeToISO88592.cpp \
 		nsUnicodeToISO88593.cpp \
