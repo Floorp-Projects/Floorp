@@ -333,6 +333,7 @@ nsHTTPConn::Request(int aResumePos)
         DUMP(("Unencoded string: %s\n", usrPsd));
         rv = Base64Encode((const unsigned char *)usrPsd, strlen(usrPsd),
                           usrPsdEncoded, 128);
+        free(usrPsd);
         DUMP(("Encoded string: %s\n", usrPsdEncoded));
         DUMP(("Base64Encode returned: %d\n", rv));
         if (rv <= 0)
