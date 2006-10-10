@@ -202,34 +202,6 @@ ER3(SEC_ERROR_UNSUPPORTED_KEYALG,		(SEC_ERROR_BASE + 48),
 ER3(SEC_ERROR_DECRYPTION_DISALLOWED,		(SEC_ERROR_BASE + 49),
 "Cannot decrypt: encrypted using a disallowed algorithm or key size.")
 
-
-/* Fortezza Alerts */
-ER3(XP_SEC_FORTEZZA_BAD_CARD,			(SEC_ERROR_BASE + 50),
-"Fortezza card has not been properly initialized.  \
-Please remove it and return it to your issuer.")
-
-ER3(XP_SEC_FORTEZZA_NO_CARD,			(SEC_ERROR_BASE + 51),
-"No Fortezza cards Found")
-
-ER3(XP_SEC_FORTEZZA_NONE_SELECTED,		(SEC_ERROR_BASE + 52),
-"No Fortezza card selected")
-
-ER3(XP_SEC_FORTEZZA_MORE_INFO,			(SEC_ERROR_BASE + 53),
-"Please select a personality to get more info on")
-
-ER3(XP_SEC_FORTEZZA_PERSON_NOT_FOUND,		(SEC_ERROR_BASE + 54),
-"Personality not found")
-
-ER3(XP_SEC_FORTEZZA_NO_MORE_INFO,		(SEC_ERROR_BASE + 55),
-"No more information on that Personality")
-
-ER3(XP_SEC_FORTEZZA_BAD_PIN,			(SEC_ERROR_BASE + 56),
-"Invalid Pin")
-
-ER3(XP_SEC_FORTEZZA_PERSON_ERROR,		(SEC_ERROR_BASE + 57),
-"Couldn't initialize Fortezza personalities.")
-/* end fortezza alerts. */
-
 ER3(SEC_ERROR_NO_KRL,				(SEC_ERROR_BASE + 58),
 "No KRL for this site's certificate has been found.")
 
@@ -367,9 +339,6 @@ ER3(SEC_ERROR_RETRY_OLD_PASSWORD,		(SEC_ERROR_BASE + 102),
 
 ER3(SEC_ERROR_BAD_NICKNAME,			(SEC_ERROR_BASE + 103),
 "Certificate nickname already in use.")
-
-ER3(SEC_ERROR_NOT_FORTEZZA_ISSUER,       	(SEC_ERROR_BASE + 104),
-"Peer FORTEZZA chain has a non-FORTEZZA Certificate.")
 
 ER3(SEC_ERROR_CANNOT_MOVE_SENSITIVE_KEY, 	(SEC_ERROR_BASE + 105),
 "A sensitive key cannot be moved to the slot where it is needed.")

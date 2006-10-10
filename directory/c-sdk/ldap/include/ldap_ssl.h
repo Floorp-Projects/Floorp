@@ -234,6 +234,20 @@ int LDAP_CALL ldapssl_set_strength( LDAP *ld, int sslstrength );
 int LDAP_CALL ldapssl_set_option( LDAP *ld, int option, int on );
 int LDAP_CALL ldapssl_get_option( LDAP *ld, int option, int *onp );
 
+/*
+ * Import the file descriptor corresponding to the socket of an already
+ * open LDAP connection into SSL, and update the socket and session
+ * information accordingly. Returns 0 if all goes well.
+ */
+int LDAP_CALL ldapssl_import_fd ( LDAP *ld, int secure );
+
+/*
+ * Reset an LDAP session from SSL to a non-secure status. Basically, 
+ * this function undoes the work done by ldapssl_install_routines.
+ * Returns 0 if all goes well.
+ */
+int LDAP_CALL ldapssl_reset_to_nonsecure ( LDAP *ld );
+
 #ifdef __cplusplus
 }
 #endif

@@ -389,7 +389,8 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
     }
 
     if (SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_FALSE)
-	    || SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE)) {
+	    || SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE)
+	    || SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE)) {
 	if (( rc = PR_GetError()) >= 0 ) {
 	    rc = -1;
 	}
@@ -527,7 +528,8 @@ ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
     PK11_ConfigurePKCS11(NULL, NULL, tokDes, ptokDes, NULL, NULL, NULL, NULL, 0, 0 );
 
     if (SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_FALSE)
-	|| SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE)) {
+	|| SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE)
+	|| SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE)) {
 	if (( rc = PR_GetError()) >= 0 ) {
 	    rc = -1;
 	}
