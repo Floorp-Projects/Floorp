@@ -57,6 +57,7 @@
 #include "nsIStreamListener.h"
 
 #include "nsIHttpChannel.h"
+#include "nsIMIMEHeaderParam.h"
 
 #define TYPE_ATOM "application/atom+xml"
 #define TYPE_RSS "application/rss+xml"
@@ -111,6 +112,57 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
   return rv;
 }
 
+// XXXsayrer put this in here to get on the branch with minimal delay.
+// Trunk really needs to factor this out. This is the third usage.
+PRBool
+HasAttachmentDisposition(nsIHttpChannel* httpChannel)
+{
+  if (!httpChannel)
+    return PR_FALSE;
+  
+  nsCAutoString contentDisposition;
+  nsresult rv = 
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
+                                   contentDisposition);
+  
+  if (NS_SUCCEEDED(rv) && !contentDisposition.IsEmpty()) {
+    nsCOMPtr<nsIURI> uri;
+    httpChannel->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
+      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCAutoString fallbackCharset;
+      if (uri)
+        uri->GetOriginCharset(fallbackCharset);
+      nsAutoString dispToken;
+      // Get the disposition type
+      rv = mimehdrpar->GetParameter(contentDisposition, "", fallbackCharset,
+                                    PR_TRUE, nsnull, dispToken);
+      // RFC 2183, section 2.8 says that an unknown disposition
+      // value should be treated as "attachment"
+      // XXXbz this code is duplicated in GetFilenameAndExtensionFromChannel in
+      // nsExternalHelperAppService.  Factor it out!
+      if (NS_FAILED(rv) || 
+          (// Some broken sites just send
+           // Content-Disposition: ; filename="file"
+           // screen those out here.
+           !dispToken.IsEmpty() &&
+           !dispToken.LowerCaseEqualsLiteral("inline") &&
+          // Broken sites just send
+          // Content-Disposition: filename="file"
+          // without a disposition token... screen those out.
+           !dispToken.EqualsIgnoreCase("filename", 8)) &&
+          // Also in use is Content-Disposition: name="file"
+           !dispToken.EqualsIgnoreCase("name", 4))
+        // We have a content-disposition of "attachment" or unknown
+        return PR_TRUE;
+    }
+  } 
+  
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request, 
                                       const PRUint8* data, 
@@ -154,6 +206,13 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   channel->GetContentType(contentType);
   if (contentType.EqualsLiteral(TYPE_RSS) ||
       contentType.EqualsLiteral(TYPE_ATOM)) {
+    
+    // check for an attachment after we have a likely feed.
+    if(HasAttachmentDisposition(channel)) {
+      sniffedType.Truncate();
+      return NS_OK;
+    }
+    
     sniffedType.AssignLiteral(TYPE_MAYBE_FEED);
     return NS_OK;
   }
@@ -215,7 +274,7 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   }
 
   // If we sniffed a feed, coerce our internal type
-  if (isFeed)
+  if (isFeed && !HasAttachmentDisposition(channel))
     sniffedType.AssignLiteral(TYPE_MAYBE_FEED);
   else
     sniffedType.Truncate();
