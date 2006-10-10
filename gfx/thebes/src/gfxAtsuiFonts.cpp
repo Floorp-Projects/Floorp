@@ -284,6 +284,26 @@ gfxAtsuiFontGroup::MakeTextRun(const nsAString& aString)
     return new gfxAtsuiTextRun(aString, this);
 }
 
+gfxAtsuiFont*
+gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
+{
+    gfxAtsuiFont *font;
+
+    // In most cases, this will just be 1 -- maybe a
+    // small number, so no need for any more complex
+    // lookup
+    for (int i = 0; i < FontListLength(); i++) {
+        font = GetFontAt(i);
+        if (font->GetATSUFontID() == fid)
+            return font;
+    }
+
+    font = new gfxAtsuiFont(fid, GetStyle());
+    mFonts.AppendElement(font);
+
+    return font;
+}
+
 /**
  ** gfxAtsuiTextRun
  **/
@@ -351,7 +371,6 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
             ATSUSetRunStyle (mATSULayout, subStyle, changedOffset, changedLength);
 
             mStylesToDispose.AppendElement(subStyle);
-
         } else if (status == kATSUFontsNotMatched) {
             //fprintf (stderr, "ATSUMatchFontsToText returned kATSUFontsNotMatched\n");
             /* I need to select the last resort font; how the heck do I do that? */
@@ -466,12 +485,9 @@ gfxAtsuiTextRun::Draw(gfxContext *aContext, gfxPoint pt)
             runGlyphs++;
         }
 
-        cairo_font_face_t *runFace = cairo_atsui_font_face_create_for_atsu_font_id (runFontID);
-        cairo_set_font_face (cr, runFace);
-        cairo_set_font_size (cr, fontSize);
-
+        gfxAtsuiFont *font = mGroup->FindFontFor(runFontID);
+        cairo_set_scaled_font (cr, font->CairoScaledFont());
         cairo_show_glyphs (cr, cairoGlyphs.glyphs, numGlyphs);
-        cairo_font_face_destroy (runFace);
 
         i += numGlyphs;
     }
