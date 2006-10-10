@@ -23,6 +23,7 @@
  *  Joe Hewitt     <hewitt@netscape.com>   (Set Background)
  *  Blake Ross     <blake@cs.stanford.edu  (Desktop Color, DDE support)
  *  Jungshik Shin  <jshin@mailaps.org>     (I18N)
+ *  Robert Strong  <robert.bugzilla@gmail.com>  (Long paths, DDE)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -193,12 +194,11 @@ typedef struct {
 #define APP_REG_NAME L"Firefox"
 #define DDE_COMMAND "\"%1\",,0,0,,,,"
 #define DDE_IFEXEC ",,0,0,,,,"
-#define EXE "firefox.exe"
 
 #define CLS_HTML "FirefoxHTML"
 #define VAL_URL_ICON "%APPPATH%,0"
 #define VAL_FILE_ICON "%APPPATH%,1"
-#define VAL_OPEN "%APPPATH% -url \"%1\""
+#define VAL_OPEN "\"%APPPATH%\" -url \"%1\""
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
@@ -276,11 +276,11 @@ static SETTING gSettings[] = {
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\properties\\command"),
     "", 
-    "%APPPATH% -preferences",   
+    "\"%APPPATH%\" -preferences",
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\safemode\\command"),
     "", 
-    "%APPPATH% -safe-mode",   
+    "\"%APPPATH%\" -safe-mode",
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL }
 
   // These values must be set by hand, since they contain localized strings.
@@ -390,7 +390,6 @@ nsWindowsShellService::SetDefaultBrowserVista()
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
-
   if (IsDefaultBrowserVista(aStartupCheck, aIsDefaultBrowser))
     return NS_OK;
 
@@ -399,21 +398,31 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 
   *aIsDefaultBrowser = PR_TRUE;
 
-  nsCAutoString appPath;
-  char buf[MAX_BUF];
-  ::GetModuleFileName(NULL, buf, sizeof(buf));
-  ::GetShortPathName(buf, buf, sizeof(buf));
-  ToUpperCase(appPath = buf);
+  char exePath[MAX_BUF];
+  if (!::GetModuleFileName(0, exePath, MAX_BUF))
+    return NS_ERROR_FAILURE;
 
-  // 0x5C can be the second byte of a multibyte character.
-  char *pathSep = (char *) _mbsrchr((const unsigned char *) buf, '\\');
+  nsCAutoString appLongPath(exePath);
+
+  // Support short path to the exe so if it is already set the user is not
+  // prompted to set the default browser again.
+  if (!::GetShortPathName(exePath, exePath, sizeof(exePath)))
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString appShortPath;
+  ToUpperCase(appShortPath = exePath);
+
+  nsCOMPtr<nsILocalFile> lf;
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                                      getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCAutoString exeName;
-  if (pathSep) {
-    PRInt32 n = pathSep - buf; 
-    exeName = Substring(appPath, n + 1, appPath.Length() - (n + 1));
-  }
-  else
-    exeName = appPath;
+  rv = lf->GetNativeLeafName(exeName);
+  if (NS_FAILED(rv))
+    return rv;
+  ToUpperCase(exeName);
 
   char currValue[MAX_BUF];
   for (settings = gSettings; settings < end; ++settings) {
@@ -421,11 +430,18 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
       continue; // This is not a registry key that determines whether
                 // or not we consider Firefox the "Default Browser."
 
-    nsCAutoString data(settings->valueData);
+    nsCAutoString dataLongPath(settings->valueData);
+    nsCAutoString dataShortPath(settings->valueData);
     nsCAutoString key(settings->keyName);
     if (settings->flags & PATH_SUBSTITUTION) {
-      PRInt32 offset = data.Find("%APPPATH%");
-      data.Replace(offset, 9, appPath);
+      PRInt32 offset = dataLongPath.Find("%APPPATH%");
+      dataLongPath.Replace(offset, 9, appLongPath);
+      // Remove the quotes around %APPPATH% in VAL_OPEN for short paths
+      PRInt32 offsetQuoted = dataShortPath.Find("\"%APPPATH%\"");
+      if (offsetQuoted != -1)
+        dataShortPath.Replace(offsetQuoted, 11, appShortPath);
+      else
+        dataShortPath.Replace(offset, 9, appShortPath);
     }
     if (settings->flags & EXE_SUBSTITUTION) {
       PRInt32 offset = key.Find("%APPEXE%");
@@ -440,7 +456,9 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
       DWORD result = ::RegQueryValueEx(theKey, settings->valueName, NULL, NULL, (LPBYTE)currValue, &len);
       // Close the key we opened.
       ::RegCloseKey(theKey);
-      if (REG_FAILED(result) || strcmp(data.get(), currValue) != 0) {
+      if (REG_FAILED(result) ||
+          !dataLongPath.EqualsIgnoreCase(currValue) &&
+          !dataShortPath.EqualsIgnoreCase(currValue)) {
         // Key wasn't set, or was set to something else (something else became the default browser)
         *aIsDefaultBrowser = PR_FALSE;
         break;
@@ -460,34 +478,36 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
-  if (SetDefaultBrowserVista())
+  if (!aForAllUsers && SetDefaultBrowserVista())
     return NS_OK;
 
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
 
-  nsCAutoString appPath;
-  char buf[MAX_BUF];
-  ::GetModuleFileName(NULL, buf, sizeof(buf));
-  ::GetShortPathName(buf, buf, sizeof(buf));
-  ToUpperCase(appPath = buf);
+  char exePath[MAX_BUF];
+  if (!::GetModuleFileName(0, exePath, MAX_BUF))
+    return NS_ERROR_FAILURE;
 
-  // 0x5C can be the second byte of a multibyte character.
-  char *pathSep = (char *) _mbsrchr((const unsigned char *) buf, '\\');
+  nsCAutoString appLongPath(exePath);
+
+  nsCOMPtr<nsILocalFile> lf;
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
+                                      getter_AddRefs(lf));
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCAutoString exeName;
-  if (pathSep) {
-    PRInt32 n = pathSep - buf; 
-    exeName = Substring(appPath, n + 1, appPath.Length() - (n + 1));
-  }
-  else
-    exeName = appPath;
+  rv = lf->GetNativeLeafName(exeName);
+  if (NS_FAILED(rv))
+    return rv;
+  ToUpperCase(exeName);
 
   for (settings = gSettings; settings < end; ++settings) {
-    nsCAutoString data(settings->valueData);
+    nsCAutoString dataLongPath(settings->valueData);
     nsCAutoString key(settings->keyName);
     if (settings->flags & PATH_SUBSTITUTION) {
-      PRInt32 offset = data.Find("%APPPATH%");
-      data.Replace(offset, 9, appPath);
+      PRInt32 offset = dataLongPath.Find("%APPPATH%");
+      dataLongPath.Replace(offset, 9, appLongPath);
     }
     if (settings->flags & EXE_SUBSTITUTION) {
       PRInt32 offset = key.Find("%APPEXE%");
@@ -495,8 +515,8 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
     }
 
     PRBool replaceExisting = aClaimAllTypes ? PR_TRUE : !(settings->flags & NON_ESSENTIAL);
-    SetRegKey(key.get(), settings->valueName, data.get(), replaceExisting,
-              aForAllUsers);
+    SetRegKey(key.get(), settings->valueName, dataLongPath.get(),
+              replaceExisting, aForAllUsers);
   }
 
   // Select the Default Browser for the Windows XP Start Menu
@@ -508,7 +528,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> bundle, brandBundle;
-  nsresult rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
+  rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
   NS_ENSURE_SUCCESS(rv, rv);
