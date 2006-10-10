@@ -24,6 +24,7 @@
     <key id="keyEditCopy" key="c" modifiers="accel" command="cmdEditCopy"/>
     <key id="keyEditPaste" key="v" modifiers="accel" command="cmdEditPaste"/>
     <key id="keyEditDelete" keycode="VK_DELETE" command="cmdEditDelete"/>
+    <key id="keyEditDeleteMac" keycode="VK_BACK" command="cmdEditDelete"/>
   </keyset>
 
   <menuitem id="mnEditUndo" label="&mnEditUndo.label;" command="cmdEditUndo"
