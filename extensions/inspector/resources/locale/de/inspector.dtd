@@ -12,8 +12,6 @@
 
 <!ENTITY mnFile.label "Datei">
 <!ENTITY mnFile.accesskey "D">
-  <!ENTITY mnInspectDocument.label "Dokument inspizieren">
-  <!ENTITY mnInspectDocument.accesskey "D">
   <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">
   <!ENTITY cmdClose.label "Schließen">
@@ -47,8 +45,6 @@
 <!ENTITY mnView.accesskey "A">
   <!ENTITY cmdToggleBrowser.label "Browser">
   <!ENTITY cmdToggleSearch.label "Suchergebnisse">
-  <!ENTITY cmdToggleChrome.label "Chrome">
-  <!ENTITY cmdToggleChrome.accesskey "C">
 
 <!ENTITY cmdViewSearchItem.label "Ansicht...">
 <!ENTITY cmdEditSearchItem.label "Bearbeiten...">

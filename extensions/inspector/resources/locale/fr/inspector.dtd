@@ -11,8 +11,6 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Fichier">
-<!ENTITY mnWindows.label "Examiner une fenêtre">
-<!ENTITY mnWindows.accesskey "E">
 <!ENTITY mnFile.accesskey "F">
   <!ENTITY cmdShowOpenURLDialog.label "Examiner une URL…">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">

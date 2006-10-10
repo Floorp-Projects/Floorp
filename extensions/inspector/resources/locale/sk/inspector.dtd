@@ -11,8 +11,6 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Súbor">
-<!ENTITY mnWindows.label "Preskúmať okno">
-<!ENTITY mnWindows.accesskey "o">
 <!ENTITY mnFile.accesskey "s">
   <!ENTITY cmdShowOpenURLDialog.label "Preskúmať URL">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">

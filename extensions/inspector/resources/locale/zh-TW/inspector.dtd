@@ -7,8 +7,6 @@
 <!ENTITY btnSelecting.tooltip "點選節點以觀察之">
 <!ENTITY btnFind.tooltip "以 id, tag, 或 attribute 來觀察節點">
 <!ENTITY mnFile.label "檔案">
-<!ENTITY mnWindows.label "觀察視窗">
-<!ENTITY mnWindows.accesskey "w">
 <!ENTITY mnFile.accesskey "f">
 <!ENTITY cmdShowOpenURLDialog.label "觀察網址 (URL)...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "u">

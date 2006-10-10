@@ -11,8 +11,6 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Arquivo">
-<!ENTITY mnWindows.label "Inspecionar janela">
-<!ENTITY mnWindows.accesskey "I">
 <!ENTITY mnFile.accesskey "A">
   <!ENTITY cmdShowOpenURLDialog.label "Inspecionar URL...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">

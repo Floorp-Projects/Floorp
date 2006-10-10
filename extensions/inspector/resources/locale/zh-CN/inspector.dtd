@@ -30,11 +30,7 @@
 <!ENTITY cmdSaveSearchItemText.label "保存...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "U">
 <!ENTITY cmdShowOpenURLDialog.label "查看一个URL...">
-<!ENTITY cmdToggleChrome.accesskey "C">
-<!ENTITY cmdToggleChrome.label "Chrome">
 <!ENTITY cmdToggleBrowser.label "浏览器">
-<!ENTITY cmdToggleChrome.label "Chrome">
-<!ENTITY cmdToggleChrome.accesskey "C">
 <!ENTITY cmdToggleSearch.label "搜索结果">
 <!ENTITY cmdUndo.accesskey "U">
 <!ENTITY cmdUndo.label "撤销">
@@ -44,10 +40,6 @@
 <!ENTITY mnEdit.label "编辑">
 <!ENTITY mnFile.accesskey "F">
 <!ENTITY mnFile.label "文件">
-<!ENTITY mnInspectDocument.label "Inspect Document">
-<!ENTITY mnInspectDocument.accesskey "D">
-<!ENTITY mnInspectDocument.accesskey "D">
-<!ENTITY mnInspectDocument.label "查看文档">
 <!ENTITY mnSearch.accesskey "S">
 <!ENTITY mnSearch.label "搜索">
 <!ENTITY mnSearchPlugins.accesskey "E">

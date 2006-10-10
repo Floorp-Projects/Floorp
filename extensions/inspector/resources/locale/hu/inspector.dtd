@@ -12,8 +12,6 @@
 
 <!ENTITY mnFile.label "Fájl">
 <!ENTITY mnFile.accesskey "F">
-  <!ENTITY mnInspectDocument.label "Dokumentum vizsgálata">
-  <!ENTITY mnInspectDocument.accesskey "D">
   <!ENTITY cmdShowOpenURLDialog.label "URL vizsgálata...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">
   <!ENTITY cmdClose.label "Bezárás">
@@ -47,8 +45,6 @@
 <!ENTITY mnView.accesskey "N">
   <!ENTITY cmdToggleBrowser.label "Böngésző">
   <!ENTITY cmdToggleSearch.label "Találatok">
-  <!ENTITY cmdToggleChrome.label "Chrome">
-  <!ENTITY cmdToggleChrome.accesskey "C">
 
 <!ENTITY cmdViewSearchItem.label "Megtekintés...">
 <!ENTITY cmdEditSearchItem.label "Szerkesztés...">
