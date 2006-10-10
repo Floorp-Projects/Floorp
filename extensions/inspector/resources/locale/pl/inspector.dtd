@@ -11,6 +11,10 @@
 
 <!ENTITY mnFile.label "Plik">
 <!ENTITY mnFile.accesskey "P">
+  <!ENTITY mnInspectContentDocument.label "Zbadaj zwykły dokument">
+  <!ENTITY mnInspectContentDocument.accesskey "b">
+  <!ENTITY mnInspectChromeDocument.label "Zbadaj dokument chrome">
+  <!ENTITY mnInspectChromeDocument.accesskey "a">
   <!ENTITY cmdShowOpenURLDialog.label "Zbadaj URL...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">
   <!ENTITY cmdClose.label "Zamknij">

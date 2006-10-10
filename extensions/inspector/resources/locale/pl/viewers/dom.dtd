@@ -85,6 +85,14 @@
   <!ENTITY findNodesSearchBy.label "Szukaj po">
   <!ENTITY findNodesDirection.label "Kierunek">
   <!ENTITY findNodesDirectionUp.label "Góra">
-  <!ENTITY findNodesDirectionDown.label "Dól">
+  <!ENTITY findNodesDirectionDown.label "Dół">
   <!ENTITY findNodesFind.label "Znajdź">
   <!ENTITY findNodesCancel.label "Anuluj">
+
+  <!ENTITY mnEditPasteMenu.label "Wklej">
+  <!ENTITY mnEditPasteBefore.label "Przed tym elementem">
+  <!ENTITY mnEditPasteAfter.label "Za tym elementem">
+  <!ENTITY mnEditPasteReplace.label "Zamiast tego elementu">
+  <!ENTITY mnEditPasteFirstChild.label "Jako pierwszy element potomny">
+  <!ENTITY mnEditPasteLastChild.label "Jako ostatni element potomny">
+  <!ENTITY mnEditPasteAsParent.label "Jako element nadrzędny">
