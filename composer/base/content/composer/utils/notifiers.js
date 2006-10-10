@@ -118,6 +118,7 @@ var NotifierUtils = {
         }
         catch (e) {
           this._error("callback raised an exception for notifier id", aKeyword);
+        }
     }
     else
       this._error("called with unrecognized notifier id", aKeyword);
