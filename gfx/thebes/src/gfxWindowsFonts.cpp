@@ -1198,8 +1198,16 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
 
             if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("Looking for other fonts to support the string:"));
-                for (PRUint32 la = 0; la < mLength; la++)
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", mString[la]));
+                for (PRUint32 la = 0; la < mLength; la++) {
+                    PRUint32 ch = mString[la];
+
+                    if ((la+1 < mLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(mString[la+1])) {
+                        la++;
+                        ch = SURROGATE_TO_UCS4(ch, mString[la]);
+                    }
+
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", ch));
+                }
             }
             
             platform->FindOtherFonts(mString, mLength,

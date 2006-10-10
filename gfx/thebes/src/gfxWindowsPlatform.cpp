@@ -273,7 +273,7 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
         }
 
         PRUint8 range = CharRangeBit(ch);
-        if (!ranges[range]) {
+        if (range != NO_RANGE_FOUND && !ranges[range]) {
             FontSearch data(ch, CharRangeBit(ch), aLangGroup, aGeneric);
 
             mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
