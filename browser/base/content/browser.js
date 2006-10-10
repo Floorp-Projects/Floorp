@@ -101,7 +101,6 @@ var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
-var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = false;
 var gMustLoadSidebar = false;
 var gProgressMeterPanel = null;
@@ -2446,32 +2445,6 @@ var urlbarObserver = {
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
-}
-
-function updateToolbarStates(toolbarMenuElt)
-{
-  if (!gHaveUpdatedToolbarState) {
-    var mainWindow = document.getElementById("main-window");
-    if (mainWindow.hasAttribute("chromehidden")) {
-      gHaveUpdatedToolbarState = true;
-      var i;
-      for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
-        document.getElementById(toolbarMenuElt.childNodes[i].getAttribute("observes")).removeAttribute("checked");
-      var toolbars = document.getElementsByTagName("toolbar");
-
-      // Start i at 1, since we skip the menubar.
-      for (i = 1; i < toolbars.length; ++i) {
-        if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          toolbars[i].setAttribute("collapsed", "true");
-      }
-      var statusbars = document.getElementsByTagName("statusbar");
-      for (i = 1; i < statusbars.length; ++i) {
-        if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          statusbars[i].setAttribute("collapsed", "true");
-      }
-      mainWindow.removeAttribute("chromehidden");
-    }
-  }
 }
 
 function BrowserImport()

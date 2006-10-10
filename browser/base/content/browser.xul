@@ -106,7 +106,7 @@
     <popup type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
 
     <popup id="toolbar-context-menu"
-           onpopupshowing="updateToolbarStates(this); onViewToolbarsPopupShowing(event);">
+           onpopupshowing="onViewToolbarsPopupShowing(event);">
       <menuseparator/>
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"

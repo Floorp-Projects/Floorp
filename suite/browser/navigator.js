@@ -52,7 +52,6 @@ var gNavigatorRegionBundle;
 var gBrandRegionBundle;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
-var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = false;
 var gClickAtEndSelects = false;
 var gIgnoreFocus = false;
@@ -2275,26 +2274,6 @@ function updateComponentBarBroadcaster()
 
 function updateToolbarStates(toolbarMenuElt)
 {
-  if (!gHaveUpdatedToolbarState) {
-    var mainWindow = document.getElementById("main-window");
-    if (mainWindow.hasAttribute("chromehidden")) {
-      gHaveUpdatedToolbarState = true;
-      var i;
-      for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
-        document.getElementById(toolbarMenuElt.childNodes[i].getAttribute("observes")).removeAttribute("checked");
-      var toolbars = document.getElementsByTagName("toolbar");
-      for (i = 0; i < toolbars.length; ++i) {
-        if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          toolbars[i].setAttribute("hidden", "true");
-      }
-      var statusbars = document.getElementsByTagName("statusbar");
-      for (i = 0; i < statusbars.length; ++i) {
-        if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-          statusbars[i].setAttribute("hidden", "true");
-      }
-      mainWindow.removeAttribute("chromehidden");
-    }
-  }
   updateComponentBarBroadcaster();
 
   const tabbarMenuItem = document.getElementById("menuitem_showhide_tabbar");
