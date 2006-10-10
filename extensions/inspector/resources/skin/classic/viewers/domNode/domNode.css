@@ -38,7 +38,7 @@
 @import url("chrome://inspector/skin");
 @import url("chrome://inspector/content/extensions/treeEditable.css");
 
-#olNodeInfo label {
+.olNodeInfoLabel {
   padding-right: 0.5em;
 }
 #olNodeInfo {
