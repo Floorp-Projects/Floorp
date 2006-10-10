@@ -984,10 +984,14 @@ pref("bidi.edit.caret_movement_style", 2);
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
 
-// controls caret style during text selection
+// controls caret style and word-delete during text selection
 // 0 = use platform default
-// 1 = caret moves and blinks as when there is no selection
-// 2 = caret moves to selection edge and is not visible during selection
+// 1 = caret moves and blinks as when there is no selection; word
+//     delete deselects the selection and then deletes word (Windows default)
+// 2 = caret moves to selection edge and is not visible during selection; 
+//     word delete deletes the selection (Mac default)
+// 3 = caret moves and blinks as when there is no selection; word delete
+//     deletes the selection (Unix default)
 pref("layout.selection.caret_style", 0);
 
 // pref to control whether or not to replace backslashes with Yen signs
