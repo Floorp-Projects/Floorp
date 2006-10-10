@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
  *   Jason Barnabe <jason_barnabe@fastmail.fm>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,6 +78,12 @@ function InspectorApp_initialize()
     }
   }
   inspector.initialize(initNode, initURI);
+
+  // Disables the Mac Specific VK_BACK for delete key for non-mac systems
+  if (!/Mac/.test(navigator.platform)) {
+    document.getElementById("keyEditDeleteMac")
+            .setAttribute("disabled", "true");
+  }
 }
 
 function InspectorApp_destroy()
