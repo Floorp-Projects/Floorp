@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Jens Bannmann <jens.b@web.de>
+ *   Ryan Jones <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,12 +51,24 @@
 #ifndef SPI_GETFLATMENU
 #define SPI_GETFLATMENU      0x1022
 #endif
+#ifndef SPI_GETMENUSHOWDELAY
+#define SPI_GETMENUSHOWDELAY      106
+#endif //SPI_GETMENUSHOWDELAY
 
 #ifndef WINCE
 typedef UINT (CALLBACK *SHAppBarMessagePtr)(DWORD, PAPPBARDATA);
 SHAppBarMessagePtr gSHAppBarMessage = NULL;
 static HINSTANCE gShell32DLLInst = NULL;
 #endif
+
+static PRInt32 GetSystemParam(long flag, PRInt32 def) {
+#ifndef WINCE
+    return def;
+#else
+    DWORD value; 
+    return SystemParametersInfo(flag, 0, &value, 0) ? value : def;
+#endif
+}
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
@@ -356,81 +369,19 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 1;
         break;
     case eMetric_SubmenuDelay:
-        {
-        static PRInt32 sSubmenuDelay = -1;
-
-        if (sSubmenuDelay == -1) {
-          HKEY key;
-          char value[100];
-          DWORD length, type;
-          LONG result;
-
-          sSubmenuDelay = 300;
-
-#ifndef WINCE
-          result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                   "Control Panel\\Desktop", 0, KEY_READ, &key);
-
-          if (result == ERROR_SUCCESS) {
-            length = sizeof(value);
-
-            result = ::RegQueryValueEx(key, "MenuShowDelay",
-                     NULL, &type, (LPBYTE)&value, &length);
-
-            ::RegCloseKey(key);
-
-            if (result == ERROR_SUCCESS) {
-              PRInt32 errorCode;
-              nsString str; str.AssignWithConversion(value);
-              PRInt32 submenuDelay = str.ToInteger(&errorCode);
-              if (errorCode == NS_OK) {
-                sSubmenuDelay = submenuDelay;
-              }
-            }
-          }
-#endif
-        }
-        aMetric = sSubmenuDelay;
-        }
+        // This will default to the Window's default
+        // (400ms) on error.
+        aMetric = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
         break;
     case eMetric_MenusCanOverlapOSBar:
         // we want XUL popups to be able to overlap the task bar.
         aMetric = 1;
         break;
     case eMetric_DragFullWindow:
-        {
-        static PRInt32 sDragFullWindow = -1;
-#ifndef WINCE
-        if (sDragFullWindow == -1) {
-          HKEY key;
-          char value[100];
-          DWORD length, type;
-          LONG result;
-
-
-          result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                   "Control Panel\\Desktop", 0, KEY_READ, &key);
-
-          if (result == ERROR_SUCCESS) {
-            length = sizeof(value);
-
-            result = ::RegQueryValueEx(key, "DragFullWindows",
-                     NULL, &type, (LPBYTE)&value, &length);
-
-            ::RegCloseKey(key);
-
-            if (result == ERROR_SUCCESS) {
-              PRInt32 errorCode;
-              nsString str; str.AssignWithConversion(value);
-              sDragFullWindow = str.ToInteger(&errorCode);         
-            }
-          }
-        } 
-#endif
-        aMetric = sDragFullWindow ? 1 : 0;
-        }
+        // This will default to the Window's default
+        // (on by default) on error.
+        aMetric = GetSystemParam(SPI_GETDRAGFULLWINDOWS, 1);
         break;
-
 #ifndef WINCE
     case eMetric_DragThresholdX:
         // The system metric is the number of pixels at which a drag should
