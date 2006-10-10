@@ -57,6 +57,8 @@
 
 #include <bitset>
 
+#define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
+
 /** @description Font Weights
  * Each available font weight is stored as as single bit inside a bitset.
  * e.g. The binary value 0000000000001000 indcates font weight 400 is available.
@@ -233,7 +235,7 @@ static PRUint8 CharRangeBit(PRUint32 ch) {
         if (ch >= gUnicodeRanges[i].start && ch <= gUnicodeRanges[i].end)
             return gUnicodeRanges[i].bit;
 
-    return 126; // this bit is required to be 0 in the unicode range bitset
+    return NO_RANGE_FOUND;
 }
 
 /**
