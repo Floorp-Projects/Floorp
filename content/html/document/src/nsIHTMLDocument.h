@@ -55,8 +55,8 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0xd28641ff, 0xd623, 0x40de, \
- { 0xb4, 0x64, 0x75, 0x02, 0xd2, 0x4f, 0x4c, 0xdd } }
+{ 0x43eec0b4, 0xd867, 0x4972, \
+ { 0x8f, 0x64, 0x71, 0x9a, 0xc2, 0x45, 0x19, 0x3d } }
 
 
 /**
@@ -78,11 +78,6 @@ public:
    */
   virtual nsCompatibility GetCompatibilityMode() = 0;
   virtual void SetCompatibilityMode(nsCompatibility aMode) = 0;
-
-  /*
-   * Returns true if document.domain was set for this document
-   */
-  virtual PRBool WasDomainSet() = 0;
 
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIDOMHTMLFormElement *aForm,

@@ -1628,20 +1628,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))
     return NS_ERROR_FAILURE;
 
-  nsresult rv = NodePrincipal()->SetDomain(newURI);
-
-  // Bug 13871: Frameset spoofing - note that document.domain was set
-  if (NS_SUCCEEDED(rv)) {
-    mDomainWasSet = PR_TRUE;
-  }
-
-  return rv;
-}
-
-PRBool
-nsHTMLDocument::WasDomainSet()
-{
-  return mDomainWasSet;
+  return NodePrincipal()->SetDomain(newURI);
 }
 
 NS_IMETHODIMP
