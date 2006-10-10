@@ -169,6 +169,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
   // Get filters
+  // filters may be null, if we should allow all file types.
   NSArray *filters = GenerateFilterList();
 
   // Set the options for how the get file dialog will appear
@@ -178,8 +179,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   [thePanel setCanChooseDirectories:NO];
   [thePanel setCanChooseFiles:YES];
   [thePanel setResolvesAliases:YES];        //this is default - probably doesn't need to be set
-  // handle how we deal with packages. 
-  if (filters)
+  
+  // if we show all file types, also "expose" bundles' contents.
+  if (!filters)
     [thePanel setTreatsFilePackagesAsDirectories:NO];       
 
   // set up default directory
@@ -324,8 +326,8 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 // GenerateFilterList
 //
 // Take the list of file types (in a nice win32-specific format) and fills up
-// an NSArray of them for the Open Panel.  Cocoa's open panel doesn't recognize * 
-// as being equal to everything, so make sure there aren't any in mFlatFilter array.
+// an NSArray of them for the Open Panel.  Note: Will return nil if we should allow
+// all file types.
 //
 //-------------------------------------------------------------------------
 
@@ -336,14 +338,20 @@ nsFilePicker::GenerateFilterList()
   if (mFilters.Count() > 0)
   {
     // Set up our filter string
-    NSMutableString *giantFilterString = [[NSMutableString alloc] initWithString:@""];
+    NSMutableString *giantFilterString = [[[NSMutableString alloc] initWithString:@""] autorelease];
     if (!giantFilterString) //dang.
       return filterArray;   
 
     // Loop through each of the filter strings
     for (PRInt32 loop = 0; loop < mFilters.Count(); loop++)
     {
-      nsString* filterWide = mFilters[loop];
+      nsString *filterWide = mFilters[loop];
+      if (filterWide->Equals(NS_LITERAL_STRING("*"))) {
+        // if we'll allow all files, we won't bother parsing all other
+        // file types. just return early.
+        return nil;
+      }
+      
       if (filterWide && filterWide->Length() > 0)
         [giantFilterString appendString:[NSString stringWithCharacters:filterWide->get() length:filterWide->Length()]];
     }
@@ -360,7 +368,6 @@ nsFilePicker::GenerateFilterList()
       // every time we find a semicolon, we've found a new filter.
       // components SeparatedByString should do that for us.
       filterArray = [[[NSArray alloc] initWithArray:[giantFilterString componentsSeparatedByString:@";"]] autorelease];
-    [giantFilterString release];
   }
   return filterArray;
 } // GenerateFilterList
