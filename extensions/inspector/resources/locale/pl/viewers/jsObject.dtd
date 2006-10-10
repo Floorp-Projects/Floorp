@@ -43,6 +43,9 @@
 <!ENTITY jsProperty.label "Właściwość">
 <!ENTITY jsValue.label "Wartość">
 
+<!ENTITY evaluateDialog.title "Analizuj wyrażenie">
 <!ENTITY jsEval.desc "Wprowadź wyrażenie javascript. Zmienna &quot;target&quot; stanowi odwołanie do aktualnie wybranego obiektu. Dowolna wartość, która zostanie wprowadzona przez użytkownika zostanie wyświetlona w oknie Podglądu obiektów JavaScript.">
-
 <!ENTITY jsExecute.label "Wykonaj">
+<!ENTITY inspectReturn.label "Zbadaj wynik w">
+<!ENTITY inspectReturnNew.label "nowym oknie">
+<!ENTITY inspectReturnExisting.label "istniejącym oknie">
