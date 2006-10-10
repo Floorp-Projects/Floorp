@@ -646,83 +646,98 @@ nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
   return NS_OK;
 }
 
-#define NS_SET_EVENT_ID(_event, _id) \
-  success = (success && (gEventIdTable->Put(nsLayoutAtoms::on##_event, _id)))
+struct EventId {
+  nsIAtom** mAtom;
+  PRUint32  mId;
+};
 
 static void
 InitializeEventIdTable() {
   NS_ASSERTION(!gEventIdTable, "EventIdTable already initialized!");
-  gEventIdTable = new nsDataHashtable<nsISupportsHashKey, PRUint32>;
-  PRBool success = (gEventIdTable && gEventIdTable->Init(64));
-  NS_SET_EVENT_ID(mousedown,                   NS_MOUSE_LEFT_BUTTON_DOWN);
-  NS_SET_EVENT_ID(mouseup,                     NS_MOUSE_LEFT_BUTTON_UP);
-  NS_SET_EVENT_ID(click,                       NS_MOUSE_LEFT_CLICK);
-  NS_SET_EVENT_ID(dblclick,                    NS_MOUSE_LEFT_DOUBLECLICK);
-  NS_SET_EVENT_ID(mouseover,                   NS_MOUSE_ENTER_SYNTH);
-  NS_SET_EVENT_ID(mouseout,                    NS_MOUSE_EXIT_SYNTH);
-  NS_SET_EVENT_ID(mousemove,                   NS_MOUSE_MOVE);
-  NS_SET_EVENT_ID(contextmenu,                 NS_CONTEXTMENU);
-  NS_SET_EVENT_ID(keydown,                     NS_KEY_DOWN);
-  NS_SET_EVENT_ID(keyup,                       NS_KEY_UP);
-  NS_SET_EVENT_ID(keypress,                    NS_KEY_PRESS);
-  NS_SET_EVENT_ID(compositionstart,            NS_COMPOSITION_START);
-  NS_SET_EVENT_ID(compositionend,              NS_COMPOSITION_END);
-  NS_SET_EVENT_ID(focus,                       NS_FOCUS_CONTENT);
-  NS_SET_EVENT_ID(blur,                        NS_BLUR_CONTENT);
-  NS_SET_EVENT_ID(submit,                      NS_FORM_SUBMIT);
-  NS_SET_EVENT_ID(reset,                       NS_FORM_RESET);
-  NS_SET_EVENT_ID(change,                      NS_FORM_CHANGE);
-  NS_SET_EVENT_ID(select,                      NS_FORM_SELECTED);
-  NS_SET_EVENT_ID(load,                        NS_LOAD);
-  NS_SET_EVENT_ID(unload,                      NS_PAGE_UNLOAD);
-  NS_SET_EVENT_ID(beforeunload,                NS_BEFORE_PAGE_UNLOAD);
-  NS_SET_EVENT_ID(abort,                       NS_IMAGE_ABORT);
-  NS_SET_EVENT_ID(error,                       NS_LOAD_ERROR);
-  NS_SET_EVENT_ID(DOMAttrModified,             NS_MUTATION_ATTRMODIFIED);
-  NS_SET_EVENT_ID(DOMCharacterDataModified,    NS_MUTATION_CHARACTERDATAMODIFIED);
-  NS_SET_EVENT_ID(DOMNodeInserted,             NS_MUTATION_NODEINSERTED);
-  NS_SET_EVENT_ID(DOMNodeRemoved,              NS_MUTATION_NODEREMOVED);
-  NS_SET_EVENT_ID(DOMNodeInsertedIntoDocument, NS_MUTATION_NODEINSERTEDINTODOCUMENT);
-  NS_SET_EVENT_ID(DOMNodeRemovedFromDocument,  NS_MUTATION_NODEREMOVEDFROMDOCUMENT);
-  NS_SET_EVENT_ID(DOMSubtreeModified,          NS_MUTATION_SUBTREEMODIFIED);
-  NS_SET_EVENT_ID(DOMActivate,                 NS_UI_ACTIVATE);
-  NS_SET_EVENT_ID(DOMFocusIn,                  NS_UI_FOCUSIN);
-  NS_SET_EVENT_ID(DOMFocusOut,                 NS_UI_FOCUSOUT);
-  NS_SET_EVENT_ID(input,                       NS_FORM_INPUT);
-  NS_SET_EVENT_ID(pageshow,                    NS_PAGE_SHOW);
-  NS_SET_EVENT_ID(pagehide,                    NS_PAGE_HIDE);
-  NS_SET_EVENT_ID(close,                       NS_XUL_CLOSE);
-  NS_SET_EVENT_ID(paint,                       NS_PAINT);
-  NS_SET_EVENT_ID(resize,                      NS_RESIZE_EVENT);
-  NS_SET_EVENT_ID(scroll,                      NS_SCROLL_EVENT);
-  NS_SET_EVENT_ID(text,                        NS_TEXT_TEXT);
-  NS_SET_EVENT_ID(popupshowing,                NS_XUL_POPUP_SHOWING);
-  NS_SET_EVENT_ID(popupshown,                  NS_XUL_POPUP_SHOWN);
-  NS_SET_EVENT_ID(popuphiding,                 NS_XUL_POPUP_HIDING);
-  NS_SET_EVENT_ID(popuphidden,                 NS_XUL_POPUP_HIDDEN);
-  NS_SET_EVENT_ID(command,                     NS_XUL_COMMAND);
-  NS_SET_EVENT_ID(broadcast,                   NS_XUL_BROADCAST);
-  NS_SET_EVENT_ID(commandupdate,               NS_XUL_COMMAND_UPDATE);
-  NS_SET_EVENT_ID(dragenter,                   NS_DRAGDROP_ENTER);
-  NS_SET_EVENT_ID(dragover,                    NS_DRAGDROP_OVER_SYNTH);
-  NS_SET_EVENT_ID(dragexit,                    NS_DRAGDROP_EXIT_SYNTH);
-  NS_SET_EVENT_ID(dragdrop,                    NS_DRAGDROP_DROP);
-  NS_SET_EVENT_ID(draggesture,                 NS_DRAGDROP_GESTURE);
-  NS_SET_EVENT_ID(overflow,                    NS_SCROLLPORT_OVERFLOW);
-  NS_SET_EVENT_ID(underflow,                   NS_SCROLLPORT_UNDERFLOW);
-  NS_SET_EVENT_ID(overflowchanged,             NS_SCROLLPORT_OVERFLOWCHANGED);
+
+  static const EventId eventIdArray[] = {
+    { &nsGkAtoms::onmousedown,                   NS_MOUSE_LEFT_BUTTON_DOWN },
+    { &nsGkAtoms::onmouseup,                     NS_MOUSE_LEFT_BUTTON_UP },
+    { &nsGkAtoms::onclick,                       NS_MOUSE_LEFT_CLICK },
+    { &nsGkAtoms::ondblclick,                    NS_MOUSE_LEFT_DOUBLECLICK },
+    { &nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH },
+    { &nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH },
+    { &nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE },
+    { &nsGkAtoms::oncontextmenu,                 NS_CONTEXTMENU },
+    { &nsGkAtoms::onkeydown,                     NS_KEY_DOWN },
+    { &nsGkAtoms::onkeyup,                       NS_KEY_UP },
+    { &nsGkAtoms::onkeypress,                    NS_KEY_PRESS },
+    { &nsGkAtoms::oncompositionstart,            NS_COMPOSITION_START },
+    { &nsGkAtoms::oncompositionend,              NS_COMPOSITION_END },
+    { &nsGkAtoms::onfocus,                       NS_FOCUS_CONTENT },
+    { &nsGkAtoms::onblur,                        NS_BLUR_CONTENT },
+    { &nsGkAtoms::onsubmit,                      NS_FORM_SUBMIT },
+    { &nsGkAtoms::onreset,                       NS_FORM_RESET },
+    { &nsGkAtoms::onchange,                      NS_FORM_CHANGE },
+    { &nsGkAtoms::onselect,                      NS_FORM_SELECTED },
+    { &nsGkAtoms::onload,                        NS_LOAD },
+    { &nsGkAtoms::onunload,                      NS_PAGE_UNLOAD },
+    { &nsGkAtoms::onbeforeunload,                NS_BEFORE_PAGE_UNLOAD },
+    { &nsGkAtoms::onabort,                       NS_IMAGE_ABORT },
+    { &nsGkAtoms::onerror,                       NS_LOAD_ERROR },
+    { &nsGkAtoms::onDOMAttrModified,             NS_MUTATION_ATTRMODIFIED },
+    { &nsGkAtoms::onDOMCharacterDataModified,    NS_MUTATION_CHARACTERDATAMODIFIED },
+    { &nsGkAtoms::onDOMNodeInserted,             NS_MUTATION_NODEINSERTED },
+    { &nsGkAtoms::onDOMNodeRemoved,              NS_MUTATION_NODEREMOVED },
+    { &nsGkAtoms::onDOMNodeInsertedIntoDocument, NS_MUTATION_NODEINSERTEDINTODOCUMENT },
+    { &nsGkAtoms::onDOMNodeRemovedFromDocument,  NS_MUTATION_NODEREMOVEDFROMDOCUMENT },
+    { &nsGkAtoms::onDOMSubtreeModified,          NS_MUTATION_SUBTREEMODIFIED },
+    { &nsGkAtoms::onDOMActivate,                 NS_UI_ACTIVATE },
+    { &nsGkAtoms::onDOMFocusIn,                  NS_UI_FOCUSIN },
+    { &nsGkAtoms::onDOMFocusOut,                 NS_UI_FOCUSOUT },
+    { &nsGkAtoms::oninput,                       NS_FORM_INPUT },
+    { &nsGkAtoms::onpageshow,                    NS_PAGE_SHOW },
+    { &nsGkAtoms::onpagehide,                    NS_PAGE_HIDE },
+    { &nsGkAtoms::onclose,                       NS_XUL_CLOSE },
+    { &nsGkAtoms::onpaint,                       NS_PAINT },
+    { &nsGkAtoms::onresize,                      NS_RESIZE_EVENT },
+    { &nsGkAtoms::onscroll,                      NS_SCROLL_EVENT },
+    { &nsGkAtoms::ontext,                        NS_TEXT_TEXT },
+    { &nsGkAtoms::onpopupshowing,                NS_XUL_POPUP_SHOWING },
+    { &nsGkAtoms::onpopupshown,                  NS_XUL_POPUP_SHOWN },
+    { &nsGkAtoms::onpopuphiding,                 NS_XUL_POPUP_HIDING },
+    { &nsGkAtoms::onpopuphidden,                 NS_XUL_POPUP_HIDDEN },
+    { &nsGkAtoms::oncommand,                     NS_XUL_COMMAND },
+    { &nsGkAtoms::onbroadcast,                   NS_XUL_BROADCAST },
+    { &nsGkAtoms::oncommandupdate,               NS_XUL_COMMAND_UPDATE },
+    { &nsGkAtoms::ondragenter,                   NS_DRAGDROP_ENTER },
+    { &nsGkAtoms::ondragover,                    NS_DRAGDROP_OVER_SYNTH },
+    { &nsGkAtoms::ondragexit,                    NS_DRAGDROP_EXIT_SYNTH },
+    { &nsGkAtoms::ondragdrop,                    NS_DRAGDROP_DROP },
+    { &nsGkAtoms::ondraggesture,                 NS_DRAGDROP_GESTURE },
+    { &nsGkAtoms::onoverflow,                    NS_SCROLLPORT_OVERFLOW },
+    { &nsGkAtoms::onunderflow,                   NS_SCROLLPORT_UNDERFLOW },
+    { &nsGkAtoms::onoverflowchanged,             NS_SCROLLPORT_OVERFLOWCHANGED }
 #ifdef MOZ_SVG
-  NS_SET_EVENT_ID(SVGLoad,                     NS_SVG_LOAD);
-  NS_SET_EVENT_ID(SVGUnload,                   NS_SVG_UNLOAD);
-  NS_SET_EVENT_ID(SVGAbort,                    NS_SVG_ABORT);
-  NS_SET_EVENT_ID(SVGError,                    NS_SVG_ERROR);
-  NS_SET_EVENT_ID(SVGResize,                   NS_SVG_RESIZE);
-  NS_SET_EVENT_ID(SVGScroll,                   NS_SVG_SCROLL);
-  NS_SET_EVENT_ID(SVGZoom,                     NS_SVG_ZOOM);
+   ,{ &nsGkAtoms::onSVGLoad,                     NS_SVG_LOAD },
+    { &nsGkAtoms::onSVGUnload,                   NS_SVG_UNLOAD },
+    { &nsGkAtoms::onSVGAbort,                    NS_SVG_ABORT },
+    { &nsGkAtoms::onSVGError,                    NS_SVG_ERROR },
+    { &nsGkAtoms::onSVGResize,                   NS_SVG_RESIZE },
+    { &nsGkAtoms::onSVGScroll,                   NS_SVG_SCROLL },
+    { &nsGkAtoms::onSVGZoom,                     NS_SVG_ZOOM }
 #endif // MOZ_SVG
-  if (!success) {
+  };
+
+  gEventIdTable = new nsDataHashtable<nsISupportsHashKey, PRUint32>;
+  if (!gEventIdTable ||
+      !gEventIdTable->Init(int(NS_ARRAY_LENGTH(eventIdArray) / 0.75) + 1)) {
     delete gEventIdTable;
     gEventIdTable = nsnull;
+    return;
+  }
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(eventIdArray); ++i) {
+    if (!gEventIdTable->Put(*(eventIdArray[i].mAtom), eventIdArray[i].mId)) {
+      delete gEventIdTable;
+      gEventIdTable = nsnull;
+      return;
+    }
   }
 }
 
