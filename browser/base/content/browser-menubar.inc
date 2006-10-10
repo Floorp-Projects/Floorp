@@ -144,7 +144,7 @@
               <menupopup id="menu_viewPopup">
                 <menu id="viewToolbarsMenu" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
                       onpopupshowing="onViewToolbarsPopupShowing(event);">
-                  <menupopup onpopupshowing="updateToolbarStates(this);"> 
+                  <menupopup>
                     <menuseparator/>
                       <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
                                 command="cmd_CustomizeToolbars"/>             
