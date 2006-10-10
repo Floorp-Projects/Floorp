@@ -62,7 +62,7 @@ static HINSTANCE gShell32DLLInst = NULL;
 #endif
 
 static PRInt32 GetSystemParam(long flag, PRInt32 def) {
-#ifndef WINCE
+#ifdef WINCE
     return def;
 #else
     DWORD value; 
