@@ -34,40 +34,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+vendor('webServices');
 class FeedsController extends AppController {
   var $name = 'Feeds';
 
   function index() {
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
     $this->layout = 'ajax';
     $this->set('count', $this->Feed->findCount());
   }
 
   function latest() {
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
     $this->layout = 'ajax';
     $this->set('latest', $this->Feed->findAll('', '', 'id DESC', 10, 1));
   }
 
   function users() {
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
     $this->layout = 'ajax';
     $this->set('count', $this->Feed->getUserCount());
   }
 
   function comments($id = null) {
     $this->layout = 'ajax';
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
     if (!is_numeric($id))
       return;
 
     $this->set('comments', $this->Feed->getComments($id));
     $this->set('pid', $id);
   }
+  
+  function photos($id = null) {
+    $this->layout = 'ajax';
+    header('Content-type: application/atom+xml');
+    if (!is_numeric($id))
+      return;
+
+    $party = $this->Feed->findById($id);
+    $this->set('party', $party);
+
+    if (FLICKR_API_KEY != null) {
+      if ($party['Feeds']['useflickr'] == 1) {
+        $data = array('type' => 'flickr', 'userid' => $party['Feeds']['flickrid'], 'randomize' => false);
+        $flickr = new webServices($data);
+        $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$id, 10, (($party['Feeds']['flickrperms']) ? false : true));
+        $this->set('flickr', $photoset, 0, 9);
+      }
+    }
+  }
 
   function upcoming() {
     $this->layout = 'ajax';
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
     $this->set('latest', $this->Feed->findAll('WHERE date > '. time(), '', 'date ASC', 10, 1));
   }
 

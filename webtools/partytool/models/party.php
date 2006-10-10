@@ -101,5 +101,10 @@ class Party extends AppModel {
       }
     }
   }
+  
+  function findByInvitecode($icode) {
+    $rv = $this->query('SELECT * FROM parties AS Party WHERE invitecode = "'.$icode.'" LIMIT 1');
+    return @$rv[0];
+  }
 }
 ?>

@@ -58,7 +58,7 @@
     <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
     <?php endif; ?>
     <?php if (isset($flickr)): ?>
-    <h1 id="photos">Photos</h1>
+    <h1 id="photos">Photos <a title="Photo Feed" href="<?php echo $html->url('/feeds/photos/'.$party['Party']['id']); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="Atom"/></a></h1>
     <div style="text-align: center">
       <?php if (empty($flickr)): ?>
       <p>No photos yet. Tag your flickr pictures with <?php echo FLICKR_TAG_PREFIX.$party['Party']['id']; ?> to display them here.</p>
@@ -71,7 +71,7 @@
     </div>
     <?php endif; 
       if (!empty($comments)): ?>
-    <h1 id="comments">Comments</h1>
+    <h1 id="comments">Comments <a title="Comment Feed" href="<?php echo $html->url('/feeds/comments/'.$party['Party']['id']); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="RSS"/></a></h1>
     <?php $i = 0;
     foreach ($comments as $comment): 
       if ($i % 2 == 0) 
@@ -101,9 +101,11 @@
   
   <?php if (isset($parties)):
     if (isset($prev))
-      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">Previous Page</a> ';
+      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">&laquo; Previous Page</a> ';
+    if (isset($prev) && isset($next))
+      echo ' | ';
     if (isset($next))
-      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page</a>';
+      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page &raquo;</a>';
     $i = 0;
     foreach ($parties as $party): ?>
     <div>
@@ -127,8 +129,10 @@
     </div>
   <?php endforeach;
     if (isset($prev))
-      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">Previous Page</a> ';
+      echo '<a href="'.$html->url('/parties/view/all/'.$prev).'">&laquo; Previous Page</a> ';
+    if (isset($prev) && isset($next))
+      echo ' | ';
     if (isset($next))
-      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page</a>';
+      echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page &raquo;</a>';
   endif;?>
 

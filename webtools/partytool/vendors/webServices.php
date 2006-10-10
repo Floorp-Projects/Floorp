@@ -38,15 +38,18 @@ class webServices {
   
   var $userid;
   var $host;
+  var $randomize;
 
   function webServices($data) {
     switch ($data['type']) {
       case "flickr":
         $this->host = "api.flickr.com";
 
-        if (array_key_exists('userid', $data)) {
+        if (array_key_exists('userid', $data))
           $this->userid = $data['userid'];
-        }
+
+        if (array_key_exists('randomize', $data))
+          $this->randomize = $data['randomize'];
 
         if (array_key_exists('username', $data)) {
           $head  = "GET /services/rest/?method=flickr.people.findByUsername&api_key=".FLICKR_API_KEY."&username=".$data['username']." HTTP/1.1\r\n";
@@ -99,8 +102,10 @@ class webServices {
                          'title'  => $titles[$i][1]);
       }
 
-      // Randomize the results
-      shuffle($arr);
+      if ($this->randomize) {
+        // Randomize the results
+        shuffle($arr);
+      }
 
       return $arr;
     }

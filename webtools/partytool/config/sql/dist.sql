@@ -16,6 +16,15 @@ CREATE TABLE `guests` (
   KEY `pid` (`pid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE `pages` (
+  `id` int(10) NOT NULL auto_increment,
+  `text` text collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+INSERT INTO `pages` (`id`, `text`) VALUES (1, '&lt;h2&gt;Join the Fun!&lt;/h2&gt;\n&lt;p&gt;All over the world, we&#39;re celebrating the launch of Firefox 2. Join the fun by hosting or attending a party. We&#39;re targeting the weekend of October 27th for the shared celebration, but if you&#39;re hosting, you make the call.&lt;/p&gt;\n\n&lt;p&gt;To join the fun, &lt;a href=&quot;/users/register&quot;&gt;register&lt;/a&gt; for a Firefox Party account, and sign up to host or attend.&lt;/p&gt;\n\n&lt;p style=&quot;border: 1px solid #555; background: #faffd4; padding: 5px; font&#45;weight: bold&quot;&gt;Be one of the first 50 party hosts registered and get three extra launch exclusive t&#45;shirts with your purchase of the &lt;a href=&quot;&quot;&gt;Firefox 2 Party Pack&lt;/a&gt;.  We&#39;re selling the party packs and shirts at cost, so it&#39;s a great deal, and for parties with unusually large attendance, we&#39;ll be sending out additional swag for door prizes and other give&#45;aways. Stay tuned for updates!&lt;/p&gt;');
+INSERT INTO `pages` (`id`, `text`) VALUES (2, '1162007940');
+
 CREATE TABLE `parties` (
   `id` int(10) NOT NULL auto_increment,
   `owner` int(10) NOT NULL default '0',

@@ -218,7 +218,7 @@ class PartiesController extends AppController {
       $this->set('current', 'parties');
       $this->set('host', $this->Party->getHost($party['Party']['owner']));
       $this->set('party', $party);
-      $this->set('isguest', $this->Party->isGuest($id, $_SESSION['User']['id']));
+      $this->set('isguest', $this->Party->isGuest($id, @$_SESSION['User']['id']));
       $this->pageTitle = $party['Party']['name'];
       $this->set('map', 'mapInit('.$party['Party']['lat'].','.$party['Party']['long'].
                         ','.$party['Party']['zoom'].',\'stationary\')');
@@ -227,7 +227,7 @@ class PartiesController extends AppController {
 
       if (FLICKR_API_KEY != null) {
         if ($party['Party']['useflickr'] == 1) {
-          $data = array('type' => 'flickr', 'userid' => $party['Party']['flickrid']);
+          $data = array('type' => 'flickr', 'userid' => $party['Party']['flickrid'], 'randomize' => true);
           $flickr = new webServices($data);
           $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$party['Party']['id'], 15, (($party['Party']['flickrperms']) ? false : true));
           $this->set('flickr', array_slice($photoset, 0, 9));
@@ -271,6 +271,7 @@ class PartiesController extends AppController {
             $this->Session->setFlash($this->data['Party']['einvite'].' has been
               invited. You can invite another guest below or <a href="'.APP_BASE.'/parties/view/'.$id.'/">click here</a>
               to return to your party.', 'infoFlash');
+            $this->data['Party']['einvite'] = null;
           }
           else {
             $this->validateErrors($this->Party);
@@ -281,26 +282,36 @@ class PartiesController extends AppController {
     }
   }
 
-  function invited($icode = null) {
-    if ($icode == "cancel") {
+  function invited($icode = null, $conf = null) {
+    $this->pageTitle = "Confirm Invite";
+    if ($icode == 'cancel') {
       $this->Session->delete('invite');
+      $this->Session->delete('invitestep');
       $this->redirect('/');
     }
 
     else {
-      $this->pageTitle = "Confirm Invite";
       $clean = new Sanitize();
       $icode = $clean->sql($icode);
       $party = $this->Party->findByInvitecode($icode);
+
       if (empty($party['Party']['id'])) {
         $this->Session->setFlash('Could not find a party matching that invite code, please check it and try again.', 'errorFlash');
       }
 
       else {
-        if (!empty($_SESSION['User']['id'])) {
-          $this->Party->addGuest($_SESSION['User']['id'], $icode);
+        if (!empty($_SESSION['User']['id']) && !empty($_SESSION['invitestep']) && $conf == 'confirm') {
+          $this->Party->addGuest($_SESSION['User']['id'], $_SESSION['invite']);
           $this->Session->setFlash('You have been successfully added to this party.', 'infoFlash');
           $this->redirect('/parties/view/'.$party['Party']['id']);
+        }
+
+        else if (!empty($_SESSION['User']['id'])) {
+          $this->set('confirm_only', true);
+          $this->set('party', $party);
+          $this->set('icode', $icode);
+          $this->Session->write('invitestep', 'true');
+          $this->Session->write('invite', $icode);
         }
 
         else {

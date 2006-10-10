@@ -1,5 +1,5 @@
 <h1>Confirm Invite</h1>
-<?php if (isset($party)): ?>
+<?php if (isset($party) && !isset($confirm_only)): ?>
 <p>You've been invited to attend <a href="<?php echo $html->url('/parties/view/'.$party['Party']['id']); ?>"><?php echo $party['Party']['name']; ?></a>.
   To join this party please select one of the options below, or <a href="<?php echo $html->url('/parties/invited/cancel/');?>">click here</a> to cancel this invitation.</p>
 <div style="text-align: center">
@@ -29,4 +29,8 @@
   </div>
   <div style="clear: both;"></div>
 </div>
+<?php endif; 
+if (isset($party) && isset($confirm_only)): ?>
+<p>You've been invited to attend <a href="<?php echo $html->url('/parties/view/'.$party['Party']['id']); ?>"><?php echo $party['Party']['name']; ?></a>.
+  To join this party, <a href="<?php echo $html->url('/parties/invited/'.$icode.'/confirm');?>">click here</a>, or cancel this invitation by <a href="<?php echo $html->url('/parties/invited/cancel/');?>">clicking here</a>.</p>
 <?php endif; ?>

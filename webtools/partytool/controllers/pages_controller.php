@@ -34,17 +34,59 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+uses('sanitize');
 class PagesController extends AppController {
   var $name = 'Pages';
+  var $components = array('Unicode');
 
   function display() {
     $this->pageTitle = 'Home';
     $this->set('current', 'home');
     $this->set('pcount', $this->Page->findCount());
     $this->set('ucount', $this->Page->getUsers());
+    $text = $this->Page->query('SELECT text FROM pages WHERE id = 1');
+    $time = $this->Page->query('SELECT text FROM pages WHERE id = 2');
+    $this->set('time', $time[0]['pages']['text']);
+    $this->set('front_text', preg_replace("/&#(\d{2,5});/e", 
+                                          '$this->Unicode->unicode2utf(${1})',
+                                          html_entity_decode($text[0]['pages']['text'])));
   }
 
   function privacy() {
     $this->pageTitle = 'Privacy Policy';
   }
+  
+  function edit() {
+    if (isset($_SESSION['User']['id']) && $_SESSION['User']['role'] == 1) {
+      if (empty($this->data)) {
+        $text = $this->Page->query('SELECT text FROM pages WHERE id = 1');
+        $time = $this->Page->query('SELECT text FROM pages WHERE id = 2');
+        $this->data['Pages']['text'] = preg_replace("/&#(\d{2,5});/e", 
+                                                    '$this->Unicode->unicode2utf(${1})',
+                                                    html_entity_decode($text[0]['pages']['text']));
+        $this->set('selected', date('Y-m-d H:i:s', $time[0]['pages']['text']));
+      }
+    
+      else {
+        // Paranoid? Nah...
+        if ($_SESSION['User']['role'] == 1) {
+          $clean = new Sanitize();
+          $clean->cleanArray($this->data);
+          $date = mktime($this->data['Pages']['date_hour'],
+                         $this->data['Pages']['date_min'],
+                         0,
+                         $this->data['Pages']['date_month'],
+                         $this->data['Pages']['date_day'],
+                         $this->data['Pages']['date_year']);
+
+          $this->Page->execute('UPDATE pages SET text = "'.$this->data['Pages']['text'].'" WHERE pages.id = 1');
+          $this->Page->execute('UPDATE pages SET text = "'.$date.'" WHERE pages.id = 2');
+          $this->redirect('/');
+        }
+      }
+    }
+    else
+     die();
+  }
 }
+?>

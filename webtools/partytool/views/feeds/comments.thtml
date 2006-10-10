@@ -7,7 +7,7 @@
     <title><?php echo APP_NAME." - Latest Comments"; ?></title>
     <?php foreach($comments as $comment): ?>
     <item>
-      <title><![CDATA[<?php echo substr($comment['comments']['text'], 0, 25); ?>]]></title>
+      <title><![CDATA[<?php echo substr($comment['comments']['text'], 0, 25).'...'; ?>]]></title>
       <description><?php echo $comment['comments']['text'] ?></description>
       <link><?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/party/view/'.$comment['comments']['assoc'].'#c'.$comment['comments']['id']); ?></link>
     </item>

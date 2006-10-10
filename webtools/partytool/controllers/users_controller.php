@@ -138,7 +138,7 @@ class UsersController extends AppController {
     }
   }
 
-  function edit($id) {
+  function edit() {
     if (!isset($_SESSION['User'])) {
       $this->redirect('/users/login');
     }
@@ -271,10 +271,10 @@ class UsersController extends AppController {
       $this->pageTitle = $user['User']['name'];
       $this->set('user', $user);
       if (GMAP_API_KEY != null && !empty($user['User']['lat']))
-        $this->set('map', $user['User']['lat'].','.$user['User']['long'].','.$user['User']['zoom'].',\'stationary\'');
+        $this->set('map', 'mapInit('.$user['User']['lat'].','.$user['User']['long'].','.$user['User']['zoom'].',\'stationary\');');
 
       $this->Party->unbindModel(array('hasMany' => array('Comment')));
-      $this->set('hparties', $this->Party->findByOwner($id));
+      $this->set('hparties', $this->User->hostOf($id));
       $att = $this->User->query('SELECT parties.id, parties.name
                                  FROM parties 
                                  LEFT JOIN guests

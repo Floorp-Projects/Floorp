@@ -40,7 +40,7 @@ class MailComponent extends Object {
           break;
 
         case "invite":
-          $this->message = $this->head."<br/>\nYou've been invited by a friend to join them in celebrating the release of Firefox 2. To join them, just <a href=\"".$params['link']."\">click here</a> and sign up for an account.\n
+          $this->message = $this->head."<br/>\nYou've been invited by a friend to join them in celebrating the release of Firefox 2. Simply <a href=\"".$params['link']."\">click here</a> to confirm or cancel this invitation. If you don't already have an account, you'll need to create one.\n
                            If you're unable to use the link above, simply paste the following URL into your browser: ".$params['link'].$this->foot;
           break;
       }
