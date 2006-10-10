@@ -218,7 +218,7 @@ static id gSharedProgressController = nil;
   {
     ProgressViewController* selProgressViewController = [selected objectAtIndex:i];
     if (![selProgressViewController isActive])
-      [self removeDownload:selProgressViewController];
+      [self removeDownload:selProgressViewController suppressRedraw:YES];
   }
   
   [self rebuildViews];
@@ -236,7 +236,7 @@ static id gSharedProgressController = nil;
   // now remove stuff, don't need to check if active, the toolbar/menu validates
   for (unsigned int i = 0; i < selectedCount; i++) {
     [[selected objectAtIndex:i] deleteFile:sender];
-    [self removeDownload:[selected objectAtIndex:i]];
+    [self removeDownload:[selected objectAtIndex:i] suppressRedraw:YES];
   }
   
   [self rebuildViews];
@@ -258,14 +258,11 @@ static id gSharedProgressController = nil;
 // remove all inactive instances
 -(IBAction)cleanUpDownloads:(id)sender
 {
-  for (unsigned int i = 0; i < [mProgressViewControllers count]; i++)
+  for (int i = [mProgressViewControllers count] - 1; i >= 0; i--)
   {
     ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
     if ((![curProgressViewController isActive]) || [curProgressViewController isCanceled])
-    {
-      [self removeDownload:curProgressViewController]; // remove the download
-      i--; // leave index at the same position because the dl there got removed
-    }
+      [self removeDownload:curProgressViewController suppressRedraw:YES];
   }
   mSelectionPivotIndex = -1;
   
@@ -283,7 +280,7 @@ static id gSharedProgressController = nil;
     // the ProgressViewController method "cancel:" has a sanity check, so its ok to call on anything
     // make sure downloads are not active before removing them
     [curProgressViewController cancel:self];
-    [self removeDownload:curProgressViewController]; // remove the download
+    [self removeDownload:curProgressViewController suppressRedraw:YES];
   }
   mSelectionPivotIndex = -1;
   
@@ -645,7 +642,7 @@ static id gSharedProgressController = nil;
 {
 }
 
--(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+-(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay suppressRedraw:(BOOL)suppressRedraw
 {
   [mProgressViewControllers removeObject:progressDisplay];
   
@@ -654,7 +651,8 @@ static id gSharedProgressController = nil;
     [self killDownloadTimer];
   }
   
-  [self rebuildViews];
+  if (!suppressRedraw)
+    [self rebuildViews];
 }
 
 -(void)rebuildViews

@@ -343,7 +343,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 
 -(IBAction)remove:(id)sender
 {
-  [mProgressWindowController removeDownload:self];
+  [mProgressWindowController removeDownload:self suppressRedraw:NO];
 }
 
 // Called just before the view will be shown to the user
@@ -401,7 +401,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
                                                                      withSuccess:NULL];
   
   if (!mUserCancelled && !mDownloadFailed && downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue)
-    [mProgressWindowController removeDownload:self];
+    [mProgressWindowController removeDownload:self suppressRedraw:NO];
 }
 
 // this handles lots of things - all of the status updates

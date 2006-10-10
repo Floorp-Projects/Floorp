@@ -106,7 +106,7 @@
 -(void)clearAllDownloads;
 -(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK statusCode:(nsresult)status;
--(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+-(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay suppressRedraw:(BOOL)suppressRedraw;
 -(NSApplicationTerminateReply)allowTerminate;
 -(void)applicationWillTerminate;
 -(void)saveProgressViewControllers;
