@@ -995,7 +995,8 @@ function delayedStartup()
           .controllers.appendController(BookmarksMenuController);
 #else
   var toolbar = document.getElementById("bookmarksBarContent");
-  toolbar._init();
+  if (toolbar)
+    toolbar._init();
   var menu = document.getElementById("bookmarksMenuPopup");
   menu._init();
   PlacesMenuDNDController.init();
@@ -3400,7 +3401,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   }
 #else
   var bookmarksBar = document.getElementById("bookmarksBarContent");
-  bookmarksBar._init();
+  if (bookmarksBar)
+    bookmarksBar._init();
 #endif
 
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
