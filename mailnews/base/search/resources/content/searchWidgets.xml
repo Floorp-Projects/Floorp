@@ -239,7 +239,6 @@
             {
               case "movemessage":
               case "copymessage":
-                gPicker = actionTarget;
                 SetFolderPickerElement(aFilterAction.targetFolderUri, actionTarget.menulist);
                 break;
               case "replytomessage":
