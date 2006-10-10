@@ -27,6 +27,6 @@
 	<key>NSMainNibFile</key>
 	<string>Navigation</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaNavigatorPreferenceNavigation</string>
+	<string>OrgMozillaChimeraPreferenceNavigation</string>
 </dict>
 </plist>
