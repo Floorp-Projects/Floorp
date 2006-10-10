@@ -1682,7 +1682,8 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
       NS_ASSERTION(PRUint32(mInner->mOrderedRules.Count()) <= PR_INT32_MAX,
                    "Too many style rules!");
 
-      nsICSSRule* rule = mInner->mOrderedRules.ObjectAt(aIndex);
+      // Hold a strong ref to the rule so it doesn't die when we RemoveObjectAt
+      nsCOMPtr<nsICSSRule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
       if (rule) {
         mInner->mOrderedRules.RemoveObjectAt(aIndex);
         rule->SetStyleSheet(nsnull);
