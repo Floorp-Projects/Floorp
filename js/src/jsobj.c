@@ -1023,8 +1023,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
             js_strncpy(&chars[nchars], idstrchars, idstrlength);
             nchars += idstrlength;
-            if (!gsop[j])
-                chars[nchars++] = ':';
+            chars[nchars++] = gsop[j] ? ' ' : ':';
 #endif
             if (vsharplength) {
                 js_strncpy(&chars[nchars], vsharp, vsharplength);
