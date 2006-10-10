@@ -303,11 +303,11 @@ static CK_FUNCTION_LIST sftk_fipsTable = {
     ((objClass) == CKO_PRIVATE_KEY) || \
     ((objClass) == CKO_SECRET_KEY))
 
-#define SFTK_IS_SECURE_KEY_OBJECT(objClass) \
+#define SFTK_IS_NONPUBLIC_KEY_OBJECT(objClass) \
     (((objClass) == CKO_PRIVATE_KEY) || ((objClass) == CKO_SECRET_KEY))
 
 static CK_RV
-fips_get_object_class(CK_SESSION_HANDLE hSession,
+sftk_get_object_class_and_fipsCheck(CK_SESSION_HANDLE hSession,
     CK_OBJECT_HANDLE hObject, CK_OBJECT_CLASS *pObjClass)
 {
     CK_RV rv;
@@ -316,6 +316,9 @@ fips_get_object_class(CK_SESSION_HANDLE hSession,
     class.pValue = pObjClass;
     class.ulValueLen = sizeof(*pObjClass);
     rv = NSC_GetAttributeValue(hSession, hObject, &class, 1);
+    if ((rv == CKR_OK) && SFTK_IS_NONPUBLIC_KEY_OBJECT(*pObjClass)) {
+	rv = sftk_fipsCheck();
+    }
     return rv;
 }
 
@@ -693,7 +696,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     if (classptr == NULL) return CKR_TEMPLATE_INCOMPLETE;
 
     /* FIPS can't create keys from raw key material */
-    if (SFTK_IS_SECURE_KEY_OBJECT(*classptr)) {
+    if (SFTK_IS_NONPUBLIC_KEY_OBJECT(*classptr)) {
 	rv = CKR_ATTRIBUTE_VALUE_INVALID;
     } else {
 	rv = NSC_CreateObject(hSession,pTemplate,ulCount,phObject);
@@ -715,10 +718,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV rv;
     CK_OBJECT_CLASS objClass = CKO_NOT_A_KEY;
     SFTK_FIPSFATALCHECK();
-    rv = fips_get_object_class(hSession, hObject, &objClass);
-    if ((rv == CKR_OK) && SFTK_IS_SECURE_KEY_OBJECT(objClass)) {
-	rv = sftk_fipsCheck();
-    }
+    rv = sftk_get_object_class_and_fipsCheck(hSession, hObject, &objClass);
     if (rv == CKR_OK) {
 	rv = NSC_CopyObject(hSession,hObject,pTemplate,ulCount,phNewObject);
     }
@@ -736,10 +736,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV rv;
     CK_OBJECT_CLASS objClass = CKO_NOT_A_KEY;
     SFTK_FIPSFATALCHECK();
-    rv = fips_get_object_class(hSession, hObject, &objClass);
-    if ((rv == CKR_OK) && SFTK_IS_SECURE_KEY_OBJECT(objClass)) {
-	rv = sftk_fipsCheck();
-    }
+    rv = sftk_get_object_class_and_fipsCheck(hSession, hObject, &objClass);
     if (rv == CKR_OK) {
 	rv = NSC_DestroyObject(hSession,hObject);
     }
@@ -756,10 +753,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV rv;
     CK_OBJECT_CLASS objClass = CKO_NOT_A_KEY;
     SFTK_FIPSFATALCHECK();
-    rv = fips_get_object_class(hSession, hObject, &objClass);
-    if ((rv == CKR_OK) && SFTK_IS_SECURE_KEY_OBJECT(objClass)) {
-	rv = sftk_fipsCheck();
-    }
+    rv = sftk_get_object_class_and_fipsCheck(hSession, hObject, &objClass);
     if (rv == CKR_OK) {
 	rv = NSC_GetObjectSize(hSession, hObject, pulSize);
     }
@@ -776,10 +770,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV rv;
     CK_OBJECT_CLASS objClass = CKO_NOT_A_KEY;
     SFTK_FIPSFATALCHECK();
-    rv = fips_get_object_class(hSession, hObject, &objClass);
-    if ((rv == CKR_OK) && SFTK_IS_SECURE_KEY_OBJECT(objClass)) {
-	rv = sftk_fipsCheck();
-    }
+    rv = sftk_get_object_class_and_fipsCheck(hSession, hObject, &objClass);
     if (rv == CKR_OK) {
 	rv = NSC_GetAttributeValue(hSession,hObject,pTemplate,ulCount);
     }
@@ -796,10 +787,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_RV rv;
     CK_OBJECT_CLASS objClass = CKO_NOT_A_KEY;
     SFTK_FIPSFATALCHECK();
-    rv = fips_get_object_class(hSession, hObject, &objClass);
-    if ((rv == CKR_OK) && SFTK_IS_SECURE_KEY_OBJECT(objClass)) {
-	rv = sftk_fipsCheck();
-    }
+    rv = sftk_get_object_class_and_fipsCheck(hSession, hObject, &objClass);
     if (rv == CKR_OK) {
 	rv = NSC_SetAttributeValue(hSession,hObject,pTemplate,ulCount);
     }
