@@ -6443,6 +6443,8 @@ var FeedHandler = {
     // preview UI
     if (!href)
       href = event.target.getAttribute("feed");
+    urlSecurityCheck(href, gBrowser.currentURI.spec,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
     this.loadFeed(href, event);
   },
 
@@ -6639,6 +6641,16 @@ var FeedHandler = {
       if (browserForLink.feeds != null)
         feeds = browserForLink.feeds;
       var wrapper = event.target;
+
+      try { 
+        urlSecurityCheck(wrapper.href, gBrowser.currentURI.spec,
+                         Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
+      }
+      catch (ex) {
+        dump(ex.message);
+        return; // doesn't pass security check
+      }
+
       feeds.push({ href: wrapper.href,
                    type: etype,
                    title: wrapper.title});
