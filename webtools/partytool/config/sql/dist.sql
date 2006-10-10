@@ -61,7 +61,7 @@ CREATE TABLE `sessions` (
 CREATE TABLE `users` (
   `id` int(10) NOT NULL auto_increment,
   `role` tinyint(1) NOT NULL default '0',
-  `email` tinytext collate utf8_unicode_ci NOT NULL,
+  `email` varchar(255) collate utf8_unicode_ci NOT NULL,
   `active` varchar(10) collate utf8_unicode_ci NOT NULL default '0',
   `password` varchar(75) collate utf8_unicode_ci NOT NULL default '',
   `salt` varchar(9) collate utf8_unicode_ci NOT NULL default '',
@@ -75,6 +75,6 @@ CREATE TABLE `users` (
   `showemail` tinyint(1) NOT NULL default '0',
   `showloc` tinyint(1) NOT NULL default '1',
   `showmap` tinyint(1) NOT NULL default '1',
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
