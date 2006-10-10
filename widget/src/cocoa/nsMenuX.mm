@@ -99,7 +99,7 @@ NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupp
 
 
 nsMenuX::nsMenuX()
-: mParent(nsnull), mManager(nsnull), mMacMenuID(0), mMacMenu(NULL),
+: mParent(nsnull), mManager(nsnull), mMacMenuID(0), mMacMenu(nil),
   mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
   mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE),
   mHandler(nsnull)
@@ -190,7 +190,7 @@ NS_IMETHODIMP nsMenuX::SetLabel(const nsAString &aText)
 {
   mLabel = aText;
   // create an actual NSMenu if this is the first time
-  if (mMacMenu == NULL)
+  if (mMacMenu == nil)
     mMacMenu = CreateMenuWithGeckoString(mLabel);
   return NS_OK;
 }
@@ -272,8 +272,11 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   // We have to add a menu item and then associate the menu with it
   nsAutoString label;
   aMenu->GetLabel(label);
+  PRBool enabled;
+  aMenu->GetEnabled(&enabled);
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(label);
-  NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:NULL keyEquivalent:@""];
+  NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
+  [newNativeMenuItem setEnabled:enabled];
   [mMacMenu addItem:newNativeMenuItem];
   [newCocoaLabelString release];
   [newNativeMenuItem release];
@@ -325,7 +328,7 @@ NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 
 NS_IMETHODIMP nsMenuX::RemoveAll()
 {
-  if (mMacMenu != NULL) {
+  if (mMacMenu != nil) {
     // clear command id's
     nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
     if (dispatcher) {
@@ -474,7 +477,7 @@ nsEventStatus nsMenuX::MenuConstruct(
       
   // Iterate over the kids
   PRUint32 count = menuPopup->GetChildCount();
-  for (PRUint32 i = 0; i < count; ++i) {
+  for (PRUint32 i = 0; i < count; i++) {
     nsIContent *child = menuPopup->GetChildAt(i);
     if (child) {
       // depending on the type, create a menu item, separator, or submenu
@@ -532,6 +535,17 @@ nsEventStatus nsMenuX::SetRebuild(PRBool aNeedsRebuild)
 NS_IMETHODIMP nsMenuX::SetEnabled(PRBool aIsEnabled)
 {
   mIsEnabled = aIsEnabled;
+  
+  // find the menu item this menu is attached to
+  NSMenu* parentMenu = [mMacMenu supermenu];
+  NSArray* parentMenuItems = [parentMenu itemArray];
+  unsigned int parentMenuItemCount = [parentMenuItems count];
+  for (unsigned int i = 0; i < parentMenuItemCount; i++) {
+    NSMenuItem* currentMenuItem = [parentMenuItems objectAtIndex:i];
+    if ([currentMenuItem submenu] == mMacMenu)
+      [currentMenuItem setEnabled:aIsEnabled];
+  }
+  
   return NS_OK;
 }
 
@@ -1013,7 +1027,7 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
     }
     else {
       // reuse the existing menu, to avoid rebuilding the root menu bar.
-      NS_ASSERTION(mMacMenu != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
+      NS_ASSERTION(mMacMenu != nil, "nsMenuX::AttributeChanged: invalid menu handle.");
       RemoveAll();
       NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
       [mMacMenu setTitle:newCocoaLabelString];
@@ -1060,7 +1074,7 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
               // Shove this menu into its rightful place in the menubar. It doesn't matter
               // what title we pass to InsertMenuItem() because when we stuff the actual menu
               // handle in, the correct title goes with it.
-              [menubar insertItemWithTitle:@"placeholder" action:NULL keyEquivalent:@"" atIndex:insertAfter];
+              [menubar insertItemWithTitle:@"placeholder" action:nil keyEquivalent:@"" atIndex:insertAfter];
               [[menubar itemAtIndex:insertAfter] setSubmenu:mMacMenu];
               mVisible = PR_TRUE;
             }
