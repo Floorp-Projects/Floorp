@@ -52,19 +52,23 @@ class nsJARInputStream : public nsIInputStream
 {
   public:
     nsJARInputStream() : 
-        mFd(nsnull), mInSize(0), mCurPos(0), 
-        mClosed(PR_FALSE), mInflate(nsnull) { }
+        mFd(nsnull), mInSize(0), mCurPos(0),
+        mClosed(PR_FALSE), mInflate(nsnull), mDirectory(0) { }
     
+    ~nsJARInputStream() { Close(); }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
-    nsresult Init(nsJAR* jar, nsZipItem *item, PRFileDesc *fd);
+    nsresult InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd);
+    nsresult InitDirectory(nsZipArchive* aZip,
+                           const nsACString& aJarDirSpec,
+                           const char* aDir);
   
   private:
     PRFileDesc*   mFd;              // My own file handle, for reading
     PRUint32      mInSize;          // Size in original file 
     PRUint32      mCurPos;          // Current position in input 
-    PRPackedBool  mClosed;          // Whether the stream is closed
 
     struct InflateStruct {
         PRUint32      mOutSize;     // inflated size 
@@ -75,8 +79,19 @@ class nsJARInputStream : public nsIInputStream
     };
     struct InflateStruct *   mInflate;
 
-    ~nsJARInputStream() { Close(); }
+    /* For directory reading */
+    nsZipArchive*           mZip;        // the zipReader
+    PRUint32                mNameLen; // length of dirname
+    nsCAutoString           mBuffer;  // storage for generated text of stream
+    PRUint32                mArrPos;  // current position within mArray
+    nsCStringArray          mArray;   // array of names in (zip) directory
+
+    PRPackedBool    mDirectory;
+    PRPackedBool    mClosed;          // Whether the stream is closed
+
     nsresult ContinueInflate(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
+    nsresult ReadDirectory(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
+    PRUint32 CopyDataToBuffer(char* &aBuffer, PRUint32 &aCount);
 };
 
 #endif /* nsJARINPUTSTREAM_h__ */
