@@ -634,12 +634,12 @@ NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetPriorityString(const char *priority)
 {
-  nsMsgPriorityValue priorityVal = nsMsgPriority::normal;
+  nsMsgPriorityValue priorityVal = nsMsgPriority::Default;
   
-  // NS_MsgGetPriorityFromString will return normal in case of error,
-  // so we can ignore return value.
-  nsresult res;
-  res = NS_MsgGetPriorityFromString(priority, &priorityVal);
+  // We can ignore |NS_MsgGetPriorityFromString()| return value,
+  // since we set a default value for |priorityVal|.
+  NS_MsgGetPriorityFromString(priority, priorityVal);
+
   return SetPriority(priorityVal);
 }
 

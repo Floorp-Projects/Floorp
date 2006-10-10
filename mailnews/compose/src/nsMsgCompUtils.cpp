@@ -390,18 +390,15 @@ mime_generate_headers (nsMsgCompFields *fields,
         PRInt32 receipt_header_type = nsIMsgMdnGenerator::eDntType;
         fields->GetReceiptHeaderType(&receipt_header_type);
 
-        // nsIMsgMdnGenerator::eDntType = MDN Disposition-Notification-To: ;
-        // nsIMsgMdnGenerator::eRrtType  = Return-Receipt-To: ; 
-        // nsIMsgMdnGenerator::eDntRrtType = both MDN DNT & RRT headers
-      if (receipt_header_type == nsIMsgMdnGenerator::eRrtType) {
-RRT_HEADER:
-        ENCODE_AND_PUSH("Return-Receipt-To: ", PR_TRUE, pFrom, charset, usemime);
-      }
-      else  {
-        ENCODE_AND_PUSH("Disposition-Notification-To: ", PR_TRUE, pFrom, charset, usemime);
-        if (receipt_header_type == nsIMsgMdnGenerator::eDntRrtType)
-          goto RRT_HEADER;
-      }
+      // nsIMsgMdnGenerator::eDntType = MDN Disposition-Notification-To: ;
+      // nsIMsgMdnGenerator::eRrtType = Return-Receipt-To: ;
+      // nsIMsgMdnGenerator::eDntRrtType = both MDN DNT and RRT headers .
+      if (receipt_header_type != nsIMsgMdnGenerator::eRrtType)
+        ENCODE_AND_PUSH(
+	  "Disposition-Notification-To: ", PR_TRUE, pFrom, charset, usemime);
+      if (receipt_header_type != nsIMsgMdnGenerator::eDntType)
+        ENCODE_AND_PUSH(
+	  "Return-Receipt-To: ", PR_TRUE, pFrom, charset, usemime);
     }
 
 #ifdef SUPPORT_X_TEMPLATE_NAME
@@ -696,25 +693,29 @@ RRT_HEADER:
     ENCODE_AND_PUSH("Subject: ", PR_FALSE, pSubject, charset, usemime);
   }
   
-  if (pPriority && *pPriority)
-    if (!PL_strcasestr(pPriority, "normal")) {
-      PUSH_STRING ("X-Priority: ");
-      /* Important: do not change the order of the 
-      * following if statements
-      */
-      if (PL_strcasestr (pPriority, "highest"))
-        PUSH_STRING("1 (");
-      else if (PL_strcasestr(pPriority, "high"))
-        PUSH_STRING("2 (");
-      else if (PL_strcasestr(pPriority, "lowest"))
-        PUSH_STRING("5 (");
-      else if (PL_strcasestr(pPriority, "low"))
-        PUSH_STRING("4 (");
+  // Skip no or empty priority.
+  if (pPriority && *pPriority) {
+    nsMsgPriorityValue priorityValue;
 
-      PUSH_STRING (pPriority);
+    NS_MsgGetPriorityFromString(pPriority, priorityValue);
+
+    // Skip default priority.
+    if (priorityValue != nsMsgPriority::Default) {
+      nsCAutoString priorityName;
+      nsCAutoString priorityValueString;
+
+      NS_MsgGetPriorityValueString(priorityValue, priorityValueString);
+      NS_MsgGetUntranslatedPriorityName(priorityValue, priorityName);
+
+      // Output format: [X-Priority: <pValue> (<pName>)]
+      PUSH_STRING("X-Priority: ");
+      PUSH_STRING(priorityValueString.get());
+      PUSH_STRING(" (");
+      PUSH_STRING(priorityName.get());
       PUSH_STRING(")");
-      PUSH_NEWLINE ();
+      PUSH_NEWLINE();
     }
+  }
 
   if (pReference && *pReference) {
     PUSH_STRING ("References: ");

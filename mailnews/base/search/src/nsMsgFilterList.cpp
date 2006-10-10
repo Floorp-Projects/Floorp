@@ -69,7 +69,10 @@ nsMsgFilterList::nsMsgFilterList() :
     m_fileVersion(0)
 {
   // I don't know how we're going to report this error if we failed to create the isupports array...
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    NS_NewISupportsArray(getter_AddRefs(m_filters));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Fixme bug 180312: NS_NewISupportsArray() failed");
 
   m_loggingEnabled = PR_FALSE;
@@ -159,10 +162,14 @@ NS_IMETHODIMP nsMsgFilterList::ClearLog()
   // disable logging while clearing
   m_loggingEnabled = PR_FALSE;
 
-  nsresult rv = TruncateLog();
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    TruncateLog();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to truncate filter log");
 
   m_loggingEnabled = loggingEnabled;
+
   return NS_OK;
 }
 
@@ -678,7 +685,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
         else if (type == nsMsgFilterAction::ChangePriority)
         {
           nsMsgPriorityValue outPriority;
-          nsresult res = NS_MsgGetPriorityFromString(value.get(), &outPriority);
+          nsresult res = NS_MsgGetPriorityFromString(value.get(), outPriority);
           if (NS_SUCCEEDED(res))
             currentFilterAction->SetPriority(outPriority);
           else

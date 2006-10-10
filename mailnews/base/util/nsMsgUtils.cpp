@@ -172,75 +172,118 @@ nsresult CreateStartupUrl(const char *uri, nsIURI** aUrl)
 }
 
 
-// Where should this live? It's a utility used to convert a string priority, e.g., "High, Low, Normal" to an enum.
-// Perhaps we should have an interface that groups together all these utilities...
-nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority)
+// Where should this live? It's a utility used to convert a string priority,
+//  e.g., "High, Low, Normal" to an enum.
+// Perhaps we should have an interface that groups together all these
+//  utilities...
+nsresult NS_MsgGetPriorityFromString(
+           const char * const priority,
+           nsMsgPriorityValue & outPriority)
 {
-	if (!outPriority)
-		return NS_ERROR_NULL_POINTER;
+  if (!priority)
+    return NS_ERROR_NULL_POINTER;
 
-	nsMsgPriorityValue retPriority = nsMsgPriority::normal;
+  // Note: Checking the values separately and _before_ the names,
+  //        hoping for a much faster match;
+  //       Only _drawback_, as "priority" handling is not truly specified:
+  //        some softwares may have the number meanings reversed (1=Lowest) !?
+  if (PL_strchr(priority, '1'))
+    outPriority = nsMsgPriority::highest;
+  else if (PL_strchr(priority, '2'))
+    outPriority = nsMsgPriority::high;
+  else if (PL_strchr(priority, '3'))
+    outPriority = nsMsgPriority::normal;
+  else if (PL_strchr(priority, '4'))
+    outPriority = nsMsgPriority::low;
+  else if (PL_strchr(priority, '5'))
+    outPriority = nsMsgPriority::lowest;
+  else if (PL_strcasestr(priority, "Highest"))
+    outPriority = nsMsgPriority::highest;
+       // Important: "High" must be tested after "Highest" !
+  else if (PL_strcasestr(priority, "High") ||
+           PL_strcasestr(priority, "Urgent"))
+    outPriority = nsMsgPriority::high;
+  else if (PL_strcasestr(priority, "Normal"))
+    outPriority = nsMsgPriority::normal;
+  else if (PL_strcasestr(priority, "Lowest"))
+    outPriority = nsMsgPriority::lowest;
+       // Important: "Low" must be tested after "Lowest" !
+  else if (PL_strcasestr(priority, "Low") ||
+           PL_strcasestr(priority, "Non-urgent"))
+    outPriority = nsMsgPriority::low;
+  else
+    // "Default" case gets default value.
+    outPriority = nsMsgPriority::Default;
 
-	if (PL_strcasestr(priority, "Normal") != NULL)
-		retPriority = nsMsgPriority::normal;
-	else if (PL_strcasestr(priority, "Lowest") != NULL)
-		retPriority = nsMsgPriority::lowest;
-	else if (PL_strcasestr(priority, "Highest") != NULL)
-		retPriority = nsMsgPriority::highest;
-	else if (PL_strcasestr(priority, "High") != NULL || 
-			 PL_strcasestr(priority, "Urgent") != NULL)
-		retPriority = nsMsgPriority::high;
-	else if (PL_strcasestr(priority, "Low") != NULL ||
-			 PL_strcasestr(priority, "Non-urgent") != NULL)
-		retPriority = nsMsgPriority::low;
-	else if (PL_strcasestr(priority, "1") != NULL)
-		retPriority = nsMsgPriority::highest;
-	else if (PL_strcasestr(priority, "2") != NULL)
-		retPriority = nsMsgPriority::high;
-	else if (PL_strcasestr(priority, "3") != NULL)
-		retPriority = nsMsgPriority::normal;
-	else if (PL_strcasestr(priority, "4") != NULL)
-		retPriority = nsMsgPriority::low;
-	else if (PL_strcasestr(priority, "5") != NULL)
-	    retPriority = nsMsgPriority::lowest;
-	else
-		retPriority = nsMsgPriority::normal;
-	*outPriority = retPriority;
-	return NS_OK;
-		//return nsMsgNoPriority;
+  return NS_OK;
 }
 
-
-nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outName)
+nsresult NS_MsgGetPriorityValueString(
+           const nsMsgPriorityValue p,
+           nsACString & outValueString)
 {
-	if (!outName)
-		return NS_ERROR_NULL_POINTER;
-	switch (p)
-	{
-	case nsMsgPriority::notSet:
-	case nsMsgPriority::none:
-		outName->AssignLiteral("None");
-		break;
-	case nsMsgPriority::lowest:
-		outName->AssignLiteral("Lowest");
-		break;
-	case nsMsgPriority::low:
-		outName->AssignLiteral("Low");
-		break;
-	case nsMsgPriority::normal:
-		outName->AssignLiteral("Normal");
-		break;
-	case nsMsgPriority::high:
-		outName->AssignLiteral("High");
-		break;
-	case nsMsgPriority::highest:
-		outName->AssignLiteral("Highest");
-		break;
-	default:
-		NS_ASSERTION(PR_FALSE, "invalid priority value");
-	}
-	return NS_OK;
+  switch (p)
+  {
+    case nsMsgPriority::highest:
+      outValueString.AssignLiteral("1");
+      break;
+    case nsMsgPriority::high:
+      outValueString.AssignLiteral("2");
+      break;
+    case nsMsgPriority::normal:
+      outValueString.AssignLiteral("3");
+      break;
+    case nsMsgPriority::low:
+      outValueString.AssignLiteral("4");
+      break;
+    case nsMsgPriority::lowest:
+      outValueString.AssignLiteral("5");
+      break;
+    case nsMsgPriority::none:
+    case nsMsgPriority::notSet:
+      // Note: '0' is a "fake" value; we expect to never be in this case.
+      outValueString.AssignLiteral("0");
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "invalid priority value");
+  }
+
+  return NS_OK;
 }
+
+nsresult NS_MsgGetUntranslatedPriorityName(
+           const nsMsgPriorityValue p,
+           nsACString & outName)
+{
+  switch (p)
+  {
+    case nsMsgPriority::highest:
+      outName.AssignLiteral("Highest");
+      break;
+    case nsMsgPriority::high:
+      outName.AssignLiteral("High");
+      break;
+    case nsMsgPriority::normal:
+      outName.AssignLiteral("Normal");
+      break;
+    case nsMsgPriority::low:
+      outName.AssignLiteral("Low");
+      break;
+    case nsMsgPriority::lowest:
+      outName.AssignLiteral("Lowest");
+      break;
+    case nsMsgPriority::none:
+    case nsMsgPriority::notSet:
+      // Note: 'None' is a "fake" value; we expect to never be in this case.
+      outName.AssignLiteral("None");
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "invalid priority value");
+  }
+
+  return NS_OK;
+}
+
 
 /* this used to be XP_StringHash2 from xp_hash.c */
 /* phong's linear congruential hash  */

@@ -746,11 +746,10 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
       {
         nsMsgPriorityValue priorityValue;
         action->GetPriority(&priorityValue);
-        nsAutoString priority;
-        NS_MsgGetUntranslatedPriorityName (priorityValue, &priority);
-        nsCAutoString cStr;
-        cStr.AssignWithConversion(priority);
-        err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr.get(), aStream);
+        nsCAutoString priority;
+        NS_MsgGetUntranslatedPriorityName(priorityValue, priority);
+        err = filterList->WriteStrAttr(
+                nsIMsgFilterList::attribActionValue, priority.get(), aStream);
       }
       break;
       case nsMsgFilterAction::Label:

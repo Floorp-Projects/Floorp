@@ -469,10 +469,9 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
       }
     case nsMsgSearchAttrib::Priority:
       {
-        nsAutoString priority;
-        NS_MsgGetUntranslatedPriorityName( m_value.u.priority, 
-          &priority);
-        outputStr.AppendWithConversion(priority);
+        nsCAutoString priority;
+        NS_MsgGetUntranslatedPriorityName(m_value.u.priority, priority);
+        outputStr += priority;
         break;
       }
     case nsMsgSearchAttrib::HasAttachmentStatus:
@@ -564,7 +563,7 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
       m_value.u.msgStatus = NS_MsgGetStatusValueFromName(inStream);
       break;
     case nsMsgSearchAttrib::Priority:
-      NS_MsgGetPriorityFromString(inStream, &m_value.u.priority);
+      NS_MsgGetPriorityFromString(inStream, m_value.u.priority);
       break;
     case nsMsgSearchAttrib::AgeInDays:
       m_value.u.age = atoi(inStream);

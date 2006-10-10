@@ -64,9 +64,17 @@ NS_MSG_BASE nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr);
 
 NS_MSG_BASE nsresult CreateStartupUrl(const char *uri, nsIURI** aUrl);
 
-NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority);
+NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(
+                       const char * const priority,
+                       nsMsgPriorityValue & outPriority);
 
-NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outName);
+NS_MSG_BASE nsresult NS_MsgGetPriorityValueString(
+                       const nsMsgPriorityValue p,
+                       nsACString & outValueString);
+
+NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName(
+                       const nsMsgPriorityValue p,
+                       nsACString & outName);
 
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsAutoString &name);
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
