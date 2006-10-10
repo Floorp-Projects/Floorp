@@ -250,6 +250,7 @@ xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
   /* input type="xsd:date" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|span[mozType|calendar] {
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#calendar-full');
+  z-index: 2147481647;
 }
 
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {

@@ -506,7 +506,8 @@
             var p = this.container.offsetParent;
             var compStyle =
               document.defaultView.getComputedStyle(p, null);
-            if (compStyle.getPropertyValue("position") != "absolute") {
+            if (compStyle.getPropertyValue("position") != "absolute" &&
+                compStyle.getPropertyValue("position") != "relative") {
               adjust = document.documentElement.offsetTop;
               x = containerBox.x;
               y = containerBox.y;
