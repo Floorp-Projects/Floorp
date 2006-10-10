@@ -32,11 +32,11 @@ class MailComponent extends Object {
     if (array_key_exists('type', $params)) {
       switch($params['type']) {
         case "act":
-          $this->message = $this->head."<br/>\nThank you for registering! To activate your account <a href=\"".$params['link']."\">click here</a>, or paste the link below into your browser<br/>".$params['link'].$this->foot;
+          $this->message = $this->head."<br/>\nThank you for registering! To activate your account, <a href=\"".$params['link']."\">click here</a> or paste the link below into your browser:<br/> ".$params['link'].$this->foot;
           break;
 
         case "prec":
-          $this->message = $this->head."<br/>\nTo reset your password <a href=\"".$params['link']."\">click here</a>, or paste the link below into your browser<br/>".$params['link'].$this->foot;
+          $this->message = $this->head."<br/>\nTo reset your password, <a href=\"".$params['link']."\">click here</a> or paste the link below into your browser:<br/> ".$params['link'].$this->foot;
           break;
 
         case "invite":
