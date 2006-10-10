@@ -102,11 +102,38 @@
   border: 0px;
   margin: -14px;
   padding: 0px;
-  background-image: url("chrome://communicator/skin/icons/autoscroll.gif");
+  background-image: url("chrome://communicator/skin/icons/autoscroll.png");
+  background-color: transparent;
 }
+
 #autoscroller[scrolldir="NS"] {
-  background-image: url("chrome://communicator/skin/icons/autoscroll-ns.gif");
+  background-position: left center;
 }
+
 #autoscroller[scrolldir="EW"] {
-  background-image: url("chrome://communicator/skin/icons/autoscroll-ew.gif");
+  background-position: left bottom;
+}
+
+#autoscroller[transparent="true"] {
+  background-position: center top;
+}
+
+#autoscroller[transparent="true"][scrolldir="NS"] {
+  background-position: center center;
+}
+
+#autoscroller[transparent="true"][scrolldir="EW"] {
+  background-position: center bottom;
+}
+
+#autoscroller[translucent="true"] {
+  background-position: right top;
+}
+
+#autoscroller[translucent="true"][scrolldir="NS"] {
+  background-position: right center;
+}
+
+#autoscroller[translucent="true"][scrolldir="EW"] {
+  background-position: right bottom;
 }

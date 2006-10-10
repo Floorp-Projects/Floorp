@@ -604,6 +604,12 @@ function startScrolling(event)
           = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     gAutoScrollPopup = document.createElementNS(XUL_NS, "popup");
     gAutoScrollPopup.id = "autoscroller";
+    if (screen.colorDepth > 8) { // need high colour for transparency
+      // Exclude second-rate platforms
+      gAutoScrollPopup.setAttribute("transparent", !/BeOS|Mac|OS\/2|Photon/.test(navigator.appVersion));
+      // Enable translucency on W2K+ (but not WinNT4.0)
+      gAutoScrollPopup.setAttribute("translucent", /^Windows NT /.test(navigator.oscpu));
+    }
     gAutoScrollPopup.addEventListener("popuphidden", stopScrolling, true);
     document.documentElement.appendChild(gAutoScrollPopup);
   }
