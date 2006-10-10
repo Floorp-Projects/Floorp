@@ -471,8 +471,26 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 
     obj = fp->blockChain;
     if (!obj) {
+        /*
+         * Don't force a call object for a lightweight function call, but do
+         * insist that there is a call object for a heavyweight function call.
+         */
+        JS_ASSERT(!fp->fun ||
+                  !(fp->fun->flags & JSFUN_HEAVYWEIGHT) ||
+                  fp->callobj);
         JS_ASSERT(fp->scopeChain);
         return fp->scopeChain;
+    }
+
+    /*
+     * We have one or more lexical scopes to reflect into fp->scopeChain, so
+     * make sure there's a call object at the current head of the scope chain,
+     * if this frame is a call frame.
+     */
+    if (fp->fun && !fp->callobj) {
+        JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass);
+        if (!js_GetCallObject(cx, fp, fp->scopeChain))
+            return NULL;
     }
 
     /*

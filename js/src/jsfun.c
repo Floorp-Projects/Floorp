@@ -611,6 +611,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     fp->callobj = callobj;
 
     /* Make callobj be the scope chain and the variables object. */
+    JS_ASSERT(fp->scopeChain == parent);
     fp->scopeChain = callobj;
     fp->varobj = callobj;
     return callobj;
