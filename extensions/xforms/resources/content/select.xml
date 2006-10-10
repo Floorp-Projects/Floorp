@@ -605,8 +605,12 @@
           // will be correctly generated if none of the items in the select have
           // an empty string as a value.
 
-          if (!aValue)
+          if (!aValue) {
             aValue = this.accessors.getValue();
+            if (!aValue) {
+              aValue = "";
+            }
+          }
 
           if (this.localName == "select1")
             return [aValue];
