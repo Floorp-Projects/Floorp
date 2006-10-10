@@ -124,6 +124,9 @@ const CAPABILITIES = [
   "Subframes", "Plugins", "Javascript", "MetaRedirects", "Images"
 ];
 
+// sandbox to evaluate JavaScript code from non-trustable sources
+var EVAL_SANDBOX = new Components.utils.Sandbox("about:blank");
+
 function debug(aMsg) {
   aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
@@ -1218,8 +1221,7 @@ SessionStoreService.prototype = {
       }
     }
     if (winData._closedTabs && (root._firstTabs || aOverwriteTabs)) {
-      //XXXzeniko remove the slice call as soon as _closedTabs instanceof Array
-      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs.slice();
+      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs;
     }
     
     this.restoreHistoryPrecursor(aWindow, winData.tabs, (aOverwriteTabs ?
@@ -1870,8 +1872,7 @@ SessionStoreService.prototype = {
    * safe eval'ing
    */
   _safeEval: function sss_safeEval(aStr) {
-    var s = new Components.utils.Sandbox("about:blank");
-    return Components.utils.evalInSandbox(aStr, s);
+    return Components.utils.evalInSandbox(aStr, EVAL_SANDBOX);
   },
 
   /**
@@ -1913,7 +1914,7 @@ SessionStoreService.prototype = {
       else if (aObj == null) {
         parts.push("null");
       }
-      else if (aObj instanceof Array) {
+      else if (aObj instanceof Array || aObj instanceof EVAL_SANDBOX.Array) {
         parts.push("[");
         for (var i = 0; i < aObj.length; i++) {
           jsonIfy(aObj[i]);
