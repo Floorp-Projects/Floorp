@@ -91,6 +91,8 @@ public:
         return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
     }
 
+    gfxAtsuiFont* FindFontFor(ATSUFontID fid);
+
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
                                const nsACString& aGenericName,
