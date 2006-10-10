@@ -12,7 +12,7 @@ define('APP_BASE', '');
 define('GMAP_API_KEY', '');
 
 /* The search API key is used to generate spelling suggestions for locations not
- * not found during a Geocode operation. You may obtain a key here: http://www.google.com/apis/
+ * not found during a Geocode operation. You may obtain a key here: http://code.google.com/apis/soapsearch/
  */
 define('GSEARCH_API_KEY', '');
 

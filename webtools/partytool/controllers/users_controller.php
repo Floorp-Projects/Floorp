@@ -307,7 +307,7 @@ class UsersController extends AppController {
           }
           else {
             $code = md5($user['User']['salt'].$user['User']['email'].$user['User']['password']);
-            $message = array('from'   => APP_NAME.'<'.APP_EMAIL.'>',
+            $message = array('from'   => APP_NAME.' <'.APP_EMAIL.'>',
                            'envelope' => APP_EMAIL,
                            'to'       => $user['User']['email'],
                            'subject'  => APP_NAME.' Password Request',
