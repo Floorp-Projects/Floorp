@@ -286,7 +286,9 @@ private:
    * the child list of the outer frame, and will put any pseudo frames it had
    * to create into aChildItems.  The newly-created outer frame will either be
    * in aChildItems or a descendant of a pseudo in aChildItems (unless it's
-   * positioned, in which case its placeholder will be in aChildItems).
+   * positioned or floated, in which case its placeholder will be in
+   * aChildItems).  If aAllowOutOfFlow is false, the table frame will be forced
+   * to be in-flow no matter what its float or position values are.
    */ 
   nsresult ConstructTableFrame(nsFrameConstructorState& aState,
                                nsIContent*              aContent,
@@ -295,6 +297,7 @@ private:
                                nsTableCreator&          aTableCreator,
                                PRBool                   aIsPseudo,
                                nsFrameItems&            aChildItems,
+                               PRBool                   aAllowOutOfFlow,
                                nsIFrame*&               aNewOuterFrame,
                                nsIFrame*&               aNewInnerFrame);
 
