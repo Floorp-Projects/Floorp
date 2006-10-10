@@ -41,6 +41,8 @@
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 
+#import "PreferenceManager.h"
+
 #import "NSString+Utils.h"
 #import "NSMenu+Utils.h"
 
@@ -263,14 +265,34 @@ const long kOpenInTabsTag = 0xBEEF;
   {
     [self addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil)
-                                                       action:nil
-                                                keyEquivalent:@""] autorelease];
+    NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil)
+                                                       action:@selector(openMenuBookmark:)
+                                                keyEquivalent:@""];
+    NSMenuItem* altMenuItem;
+    if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+      altMenuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Tabs", nil)
+                                               action:@selector(openMenuBookmark:)
+                                        keyEquivalent:@""];
+    else
+      altMenuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs in New Window", nil)
+                                               action:@selector(openMenuBookmark:)
+                                        keyEquivalent:@""];
+
     [menuItem setTarget:[NSApp delegate]];
     [menuItem setTag:kOpenInTabsTag];
-    [menuItem setAction:@selector(openMenuBookmark:)];
     [menuItem setRepresentedObject:mFolder];
+    [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
+
+    [altMenuItem setTarget:[NSApp delegate]];
+    [altMenuItem setTag:kOpenInTabsTag];
+    [altMenuItem setRepresentedObject:mFolder];
+    [altMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+    [altMenuItem setAlternate:YES];
+
     [self addItem:menuItem];
+    [menuItem release];
+    [self addItem:altMenuItem];
+    [altMenuItem release];
   }
 }
 
