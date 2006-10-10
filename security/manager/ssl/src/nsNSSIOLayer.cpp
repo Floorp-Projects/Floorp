@@ -69,6 +69,7 @@
 #include "nsSSLThread.h"
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
+#include "nsNSSCleaner.h"
 #include "nsThreadUtils.h"
 
 #include "ssl.h"
@@ -89,6 +90,8 @@
                        //Uses PR_LOG except on Mac where
                        //we always write out to our own
                        //file.
+
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 /* SSM_UserCertChoice: enum for cert choice info */
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
@@ -2089,6 +2092,26 @@ loser:
 	return ret;
 }
 
+static PRBool hasExplicitKeyUsageNonRepudiation(CERTCertificate *cert)
+{
+  /* There is no extension, v1 or v2 certificate */
+  if (!cert->extensions)
+    return PR_FALSE;
+
+  SECStatus srv;
+  SECItem keyUsageItem;
+  keyUsageItem.data = NULL;
+
+  srv = CERT_FindKeyUsageExtension(cert, &keyUsageItem);
+  if (srv == SECFailure)
+    return PR_FALSE;
+
+  unsigned char keyUsage = keyUsageItem.data[0];
+  PORT_Free (keyUsageItem.data);
+
+  return (keyUsage & KU_NON_REPUDIATION);
+}
+
 /*
  * Function: SECStatus SSM_SSLGetClientAuthData()
  * Purpose: this callback function is used to pull client certificate
@@ -2172,7 +2195,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     /* find all user certs that are valid and for SSL */
     certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
-                                         certUsageSSLClient, PR_TRUE,
+                                         certUsageSSLClient, PR_FALSE,
                                          PR_TRUE, wincx);
     if (certList == NULL) {
       goto noCert;
@@ -2191,6 +2214,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       goto noCert;
     }
 
+    CERTCertificate* low_prio_nonrep_cert = NULL;
+    CERTCertificateCleaner low_prio_cleaner(low_prio_nonrep_cert);
+
     /* loop through the list until we find a cert with a key */
     while (!CERT_LIST_END(node, certList)) {
       /* if the certificate has restriction and we do not satisfy it
@@ -2206,9 +2232,16 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
       privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
       if (privKey != NULL) {
-          /* this is a good cert to present */
+        if (hasExplicitKeyUsageNonRepudiation(node->cert)) {
+          // Not a prefered cert
+          if (!low_prio_nonrep_cert) // did not yet find a low prio cert
+            low_prio_nonrep_cert = CERT_DupCertificate(node->cert);
+        }
+        else {
+          // this is a good cert to present
           cert = CERT_DupCertificate(node->cert);
-          break;
+        }
+        break;
       }
       keyError = PR_GetError();
       if (keyError == SEC_ERROR_BAD_PASSWORD) {
@@ -2217,6 +2250,11 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       }
 
       node = CERT_LIST_NEXT(node);
+    }
+
+    if (!cert && low_prio_nonrep_cert) {
+      cert = low_prio_nonrep_cert;
+      low_prio_nonrep_cert = NULL; // take it away from the cleaner
     }
 
     if (cert == NULL) {
@@ -2333,6 +2371,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       
       if (NS_FAILED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details)))
         continue;
+
+      if (hasExplicitKeyUsageNonRepudiation(node->cert))
+        nickWithSerial.Append(NS_LITERAL_STRING(" [NR]"));
 
       certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
       if (!certNicknameList[CertsToUse])
