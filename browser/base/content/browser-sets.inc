@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Blake Ross <blakeross@telocity.com>
+#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -380,10 +381,11 @@
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
 
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
-    <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
 #ifdef XP_MACOSX
+    <key id="key_sanitize_mac" command="Tools:Sanitize" keycode="VK_BACK" modifiers="accel,shift"/>
     <key id="key_quitApplicationCmdMac" key="&quitApplicationCmdMac.key;" modifiers="accel"/>
 #endif
+    <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
   </keyset>
 
 # Used by baseMenuOverlay
