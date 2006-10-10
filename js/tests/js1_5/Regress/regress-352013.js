@@ -57,14 +57,14 @@ function test()
   var w = 42;
 
   f = function() { new (x(z))(w) }
-  expect = 'function() { new (x(z))(w); }';
+  expect = 'function() { new x(z)(w); }';
   actual = f + '';
-  compareSource(expect, actual, summary);
+  compareSource(expect, actual, summary + ': 1');
 
   g = function () { new x(z)(w); }
   expect = 'function () { (new x(z))(w); }';
   actual = g + '';
-  compareSource(expect, actual, summary);
+  compareSource(expect, actual, summary + ': 2');
 
   expect = '4242';
   actual = '';
