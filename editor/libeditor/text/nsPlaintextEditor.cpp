@@ -95,6 +95,11 @@ nsPlaintextEditor::nsPlaintextEditor()
 , mMaxTextLength(-1)
 , mInitTriggerCounter(0)
 , mNewlineHandling(nsIPlaintextEditor::eNewlinesPasteToFirst)
+#ifdef XP_WIN
+, mCaretStyle(1)
+#else
+, mCaretStyle(0)
+#endif
 {
 } 
 
@@ -137,11 +142,19 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
     res = nsEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
   }
 
-  // check the "single line editor newline handling" pref
+  // check the "single line editor newline handling"
+  // and "caret behaviour in selection" prefs
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch)
+  {
     prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
                            &mNewlineHandling);
+    prefBranch->GetIntPref("layout.selection.caret_style", &mCaretStyle);
+#ifdef XP_WIN
+    if (mCaretStyle == 0)
+      mCaretStyle = 1;
+#endif
+  }
 
   if (NS_FAILED(rulesRes)) return rulesRes;
   return res;
@@ -630,6 +643,33 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
+  // pre-process
+  nsCOMPtr<nsISelection> selection;
+  result = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(result)) return result;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  // If there is an existing selection when an extended delete is requested,
+  //  platforms that use "caret-style" caret positioning collapse the
+  //  selection to the  start and then create a new selection.
+  //  Platforms that use "selection-style" caret positioning just delete the
+  //  existing selection without extending it.
+  PRBool bCollapsed;
+  result  = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(result)) return result;
+  if (!bCollapsed &&
+      (aAction == eNextWord || aAction == ePreviousWord ||
+       aAction == eToBeginningOfLine || aAction == eToEndOfLine))
+    if (mCaretStyle == 1)
+    {
+      result = selection->CollapseToStart();
+      if (NS_FAILED(result)) return result;
+    }
+    else
+    { 
+      aAction = eNone;
+    }
+
   // If it's one of these modes,
   // we have to extend the selection first.
   // This needs to happen inside selection batching,
@@ -668,12 +708,6 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
     }
     NS_ENSURE_SUCCESS(result, result);
   }
-
-  // pre-process
-  nsCOMPtr<nsISelection> selection;
-  result = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(result)) return result;
-  if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
   ruleInfo.collapsedAction = aAction;
