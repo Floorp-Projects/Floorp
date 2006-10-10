@@ -186,11 +186,6 @@ public:
   // nsIDOMNSHTMLDocument interface
   NS_DECL_NSIDOMNSHTMLDOCUMENT
 
-  /*
-   * Returns true if document.domain was set for this document
-   */
-  virtual PRBool WasDomainSet();
-
   virtual nsresult ResolveName(const nsAString& aName,
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
@@ -329,11 +324,6 @@ protected:
   PRUint32 mLoadFlags;
 
   nsCOMPtr<nsIDOMNode> mBodyContent;
-
-  /*
-   * Bug 13871: Frameset spoofing - find out if document.domain was set
-   */
-  PRPackedBool mDomainWasSet;
 
   PRPackedBool mIsFrameset;
 
