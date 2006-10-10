@@ -40,7 +40,6 @@
 #include "nsJAR.h"
 #include "nsJARChannel.h"
 #include "nsJARProtocolHandler.h"
-#include "nsJARDirectoryInputStream.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsInt64.h"
@@ -145,19 +144,16 @@ nsJARInputThunk::EnsureJarStream()
     if (NS_FAILED(rv)) return rv;
 
     if (ENTRY_IS_DIRECTORY(mJarEntry)) {
-        // This isn't simply part of nsJAR::GetInputStream because it shouldn't
-        // be possible to get an input stream for a directory in a zip via that
-        // path, just as it isn't possible to get a directory stream via an
-        // nsIFileInputStream
+        // A directory stream also needs the Spec of the FullJarURI
+        // because is included in the stream data itself.
 
         nsCAutoString jarDirSpec;
         rv = mFullJarURI->GetAsciiSpec(jarDirSpec);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsJARDirectoryInputStream::Create(mJarReader,
-                                               jarDirSpec,
-                                               mJarEntry.get(),
-                                               getter_AddRefs(mJarStream));
+        rv = mJarReader->GetInputStreamWithSpec(jarDirSpec,
+                                                mJarEntry.get(),
+                                                getter_AddRefs(mJarStream));
     }
     else {
         rv = mJarReader->GetInputStream(mJarEntry.get(),
