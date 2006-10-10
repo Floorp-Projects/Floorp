@@ -105,9 +105,15 @@ int main(int argc, char *argv[], char *envp[])
 
         strcpy(regFilePath, argv[0]);
         char* lastSlash = strrchr(regFilePath, '\\');
-        lastSlash++; 
-        *lastSlash = 0;//strip of the executable name
-        strcat(regFilePath, CLEANUP_REGISTRY); //append reg file name
+        if (lastSlash) {
+          // path does contain backslash
+          lastSlash++; 
+          *lastSlash = 0; // strip off the executable name
+        } else {
+          // no backslash in path, just strip off everything
+          *regFilePath = 0;
+        }
+        strcat(regFilePath, CLEANUP_REGISTRY); // append reg file name
     
         if (stat(regFilePath, &st) != 0)
           strcpy(regFilePath, ""); // an empty reg file tells RegOpen to get the "default"
