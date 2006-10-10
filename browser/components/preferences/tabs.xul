@@ -78,11 +78,11 @@
     <!-- XXX flex below and on prefpane is a hack because wrapping checkboxes don't
              reflow properly; see bug 349098 -->
     <vbox id="tabPrefsBox" align="start" flex="1">
-      <checkbox id="warnCloseMultiple" label="&warnCloseMultiple.label;"
-                accesskey="&warnCloseMultiple.accesskey;"
+      <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
+                accesskey="&warnCloseMultipleTabs.accesskey;"
                 preference="browser.tabs.warnOnClose"/>
-      <checkbox id="warnOpenMany" label="&warnOpenMany.label;"
-                accesskey="&warnOpenMany.accesskey;"
+      <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
+                accesskey="&warnOpenManyTabs.accesskey;"
                 preference="browser.tabs.warnOnOpen"/>
       <checkbox id="showTabBar" label="&showTabBar.label;"
                 accesskey="&showTabBar.accesskey;"

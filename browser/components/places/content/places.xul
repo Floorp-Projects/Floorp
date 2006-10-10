@@ -68,7 +68,7 @@
   <stringbundleset id="stringbundles">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
-    <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
   
   <commandset id="TMCommandSet"

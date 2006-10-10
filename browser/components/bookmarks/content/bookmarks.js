@@ -737,17 +737,19 @@ var BookmarksCommand = {
         // default to true: if it were false, we wouldn't get this far
         var warnOnOpen = { value: true };
  
-        var messageKey = "tabs.openWarningMultiple";
+        var messageKey = "tabs.openWarningMultipleBranded";
         var openKey = "tabs.openButtonMultiple";
 
         var buttonPressed = promptService.confirmEx(window,
             BookmarksUtils.getLocaleString("tabs.openWarningTitle"),
-            BookmarksUtils.getLocaleString(messageKey, [numTabsToOpen]),
+            BookmarksUtils.getLocaleString(messageKey, 
+              [numTabsToOpen, BookmarksUtils._brandShortName]),
             (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
             + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
             BookmarksUtils.getLocaleString(openKey),
             null, null,
-            BookmarksUtils.getLocaleString("tabs.openWarningPromptMe"),
+            BookmarksUtils.getLocaleString("tabs.openWarningPromptMeBranded",
+               [BookmarksUtils._brandShortName]),
             warnOnOpen);
 
          reallyOpen = (buttonPressed == 0);

@@ -4,11 +4,11 @@
 <!ENTITY inNewTab.label               "a new tab">
 <!ENTITY inNewTab.accesskey           "t">
 
-<!ENTITY warnCloseMultiple.label      "Warn me when I close a window with multiple tabs">
-<!ENTITY warnCloseMultiple.accesskey  "m">
+<!ENTITY warnCloseMultipleTabs.label  "Warn me when closing multiple tabs">
+<!ENTITY warnCloseMultipleTabs.accesskey  "m">
 
-<!ENTITY warnOpenMany.label           "Warn me when I open lots of tabs at once">
-<!ENTITY warnOpenMany.accesskey       "o">
+<!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
+<!ENTITY warnOpenManyTabs.accesskey   "o">
 
 <!ENTITY showTabBar.label             "Always show the tab bar">
 <!ENTITY showTabBar.accesskey         "b">

@@ -1338,18 +1338,22 @@ var PlacesController = {
         // default to true: if it were false, we wouldn't get this far
         var warnOnOpen = { value: true };
 
-        var messageKey = "tabs.openWarningMultiple";
+        var messageKey = "tabs.openWarningMultipleBranded";
         var openKey = "tabs.openButtonMultiple";
         var strings = document.getElementById("placeBundle");
+        var brandBundle = document.getElementById("bundle_brand");
+        var brandShortName = brandBundle.getString("brandShortName");
        
         var buttonPressed = promptService.confirmEx(window,
           strings.getString("tabs.openWarningTitle"),
-          strings.getFormattedString(messageKey, [numTabsToOpen]),
+          strings.getFormattedString(messageKey, 
+            [numTabsToOpen, brandShortName]),
           (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
           + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
           strings.getString(openKey),
           null, null,
-          strings.getString("tabs.openWarningPromptMe"),
+          strings.getFormattedString("tabs.openWarningPromptMeBranded",
+            [brandShortName]),
           warnOnOpen);
 
          reallyOpen = (buttonPressed == 0);
