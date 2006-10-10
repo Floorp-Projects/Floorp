@@ -320,7 +320,8 @@
   // deallocated too soon.  This occurs with SDK >= 10.3, but not earlier.
   // Change in cleanup strategy?  Hold on tight.
   [[self retain] autorelease];
-  [self dragImage: [MainController createImageForDragging:[self image] title:title]
+  [self dragImage: [MainController createImageForDragging:[self image]
+                                                    title:([item isSeparator] ? @"" : title)]
                at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
             event: aEvent pasteboard: pboard source: self slideBack: YES];
 }
