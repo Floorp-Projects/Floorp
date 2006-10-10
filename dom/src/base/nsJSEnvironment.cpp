@@ -659,6 +659,11 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   // Get the native context
   nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
 
+  if (!ctx) {
+    // Can happen; see bug 355811
+    return JS_TRUE;
+  }
+
   PRUint32 callbackCount = ++ctx->mBranchCallbackCount;
 
   if (callbackCount & INITIALIZE_TIME_BRANCH_COUNT_MASK) {
