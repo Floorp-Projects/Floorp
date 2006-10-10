@@ -72,7 +72,7 @@ Select:
 
     <td align="right" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.id FILTER none %]</a></td>
     <td align="left" valign="top">[% case.alias %]</td>
-    <td align="left" valign="top">[% case.summary %]</td>
+    <td align="left" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.summary %]</a></td>
     <td align="left" valign="top">[% case.requirement %]</td>
     <td align="left" valign="top"><a href="mailto:[% case.author.login %]">[% case.author.login %]</a></td> 
     <td align="left" valign="top"><a href="mailto:[% case.default_tester.login %]">[% case.default_tester.login %]</a></td> 

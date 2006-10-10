@@ -32,13 +32,13 @@
   <span style="float:left;"><img src="testopia/img/pg.gif" style="width:[% 80 - run.percent_complete * 0.8 %]px;height:13px;"/></span>
   <span style="float:left;width:1px;height:13px;background-color:black;"></span>
 </span>
-<span style="font-family:Arial;font-size:11px;float:left;"><div style="position:relative;left:-40px;text-align:center;width:20px;">[% run.percent_complete %]</div></span>
+<span style="font-family:Arial;font-size:11px;float:left;"><div style="position:relative;left:-40px;text-align:center;width:20px;">[% run.percent_complete %]%</div></span>
 </div>
 <span dojoType="toolTip" connectId="bar_[% run.id FILTER none %]" id="tip_[% run.id FILTER none %]" style="display:none"> 
 <table>
-  <tr><th style="color:green" align="right">Passed:</th><td>[% run.passed_count %]</td><td>[% run.percent_passed %]%</td></tr>
-  <tr><th style="color:red" align="right">Failed:</th><td>[% run.failed_count %]</td><td>[% run.percent_failed %]%</td></tr>
-  <tr><th style="color:orange" align="right">Blocked:</th><td>[% run.blocked_count %]</td><td>[% run.percent_blocked %]%</td></tr>
-  <tr><th style="color:blue" align="right">Total:</th><th colspan="2">[% run.case_count %]</td></tr>
+  <tr><th style="color:green" align="right">Passed:</th><td>[% run.passed_count %]</td><td align="right" style="border: 1px solid #000">[% run.percent_passed %]%</td></tr>
+  <tr><th style="color:red" align="right">Failed:</th><td>[% run.failed_count %]</td><td align="right" style="border: 1px solid #000">[% run.percent_failed %]%</td></tr>
+  <tr><th style="color:orange" align="right">Blocked:</th><td>[% run.blocked_count %]</td><td align="right" style="border: 1px solid #000">[% run.percent_blocked %]%</td></tr>
+  <tr><th style="color:blue" align="right">Total:</th><th colspan="2">[% run.case_count %]</td align="right"></tr>
 </table> 
 </span>
