@@ -27,10 +27,19 @@
   </popupset>
 
   <menupopup id="menu_FilePopup">
-    <menu oncommand="inspector.setTargetDocument(event.target.doc);" id="mnInspectDocumentFile" label="&mnInspectDocument.label;"
-          accesskey="&mnInspectDocument.accesskey;">
-      <menupopup id="listDocuments-popup"
-                 onpopupshowing="inspector.showInspectDocumentList()"/>
+    <menu oncommand="inspector.setTargetDocument(event.target.doc);"
+          id="mnInspectContentDocumentFile"
+          label="&mnInspectContentDocument.label;"
+          accesskey="&mnInspectContentDocument.accesskey;">
+      <menupopup id="list-content-documents-popup"
+                 onpopupshowing="inspector.showInspectDocumentList(event, false);"/>
+    </menu>
+    <menu oncommand="inspector.setTargetDocument(event.target.doc);"
+          id="mnInspectChromeDocumentFile"
+          label="&mnInspectChromeDocument.label;"
+          accesskey="&mnInspectChromeDocument.accesskey;">
+      <menupopup id="list-chrome-documents-popup"
+                 onpopupshowing="inspector.showInspectDocumentList(event, true);"/>
     </menu>
     <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
               observes="cmdShowOpenURLDialog"/>
@@ -64,8 +73,6 @@
 
   <menupopup id="mppView">
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
-    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleChrome.label;" observes="cmdToggleChrome"
-              accesskey="&cmdToggleChrome.accesskey;"/>
     <!--
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
     -->

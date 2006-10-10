@@ -44,4 +44,3 @@ pref("inspector.blink.invert", false);
 pref("inspector.dom.showAnon", true);
 pref("inspector.dom.showWhitespaceNodes", true);
 pref("inspector.dom.showAccessibleNodes", false);
-pref("inspector.showChrome", false);

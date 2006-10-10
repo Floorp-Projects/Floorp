@@ -61,5 +61,3 @@
 
 <!ENTITY  mnInspectDocument.label "Επιθεώρηση εγγράφου">
 <!ENTITY  mnInspectDocument.accesskey "θ">
-<!ENTITY  cmdToggleChrome.label "Chrome">
-<!ENTITY  cmdToggleChrome.accesskey "C">
