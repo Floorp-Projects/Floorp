@@ -140,15 +140,26 @@ StyleRulesViewer.prototype =
 
   isCommandEnabled: function isCommandEnabled(aCommand)
   {
+    var declaration = this.getSelectedDec();
+    // if no declaration is selected, nothing is enabled
+    if (!declaration)
+      return false;
+
+    //XXX can't edit resource: stylesheets because of bug 343508
+    var rule = declaration.parentRule;
+    var isEditable = !(rule && rule.parentStyleSheet &&
+                       /^resource:/.test(rule.parentStyleSheet.href));
+
     switch (aCommand) {
       case "cmdEditCopy":
+        return this.mPropsTree.view.selection.count > 0;
       case "cmdEditDelete":
       case "cmdTogglePriority":
-        return this.mPropsTree.view.selection.count > 0;
+        return isEditable && this.mPropsTree.view.selection.count > 0;
       case "cmdEditInsert":
-        return this.mRuleTree.view.selection.count == 1;
+        return isEditable && this.mRuleTree.view.selection.count == 1;
       case "cmdEditEdit":
-        return this.mPropsTree.view.selection.count == 1;
+        return isEditable && this.mPropsTree.view.selection.count == 1;
     }
     return false;
   },
