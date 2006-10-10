@@ -88,3 +88,12 @@
   <!ENTITY findNodesDirectionDown.label "Ned">
   <!ENTITY findNodesFind.label "Find">
   <!ENTITY findNodesCancel.label "Afbryd">
+
+  <!ENTITY mnEditPasteMenu.label "Indsæt">
+  <!ENTITY mnEditPasteBefore.label "Før">
+  <!ENTITY mnEditPasteAfter.label "Efter">
+  <!ENTITY mnEditPasteReplace.label "I stedet for (erstat)">
+  <!ENTITY mnEditPasteFirstChild.label "Som første barn">
+  <!ENTITY mnEditPasteLastChild.label "Som sidste barn">
+  <!ENTITY mnEditPasteAsParent.label "Som forældre">
+  

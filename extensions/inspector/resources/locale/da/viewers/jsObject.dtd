@@ -42,6 +42,9 @@
 <!ENTITY jsProperty.label "Egenskab">
 <!ENTITY jsValue.label "Værdi">
 
-<!ENTITY jsEval.desc "Indtast et JavaScript udtryk. Variablen &quot;target&quot; er den egenskab som pt. er valgt. Enhver værdi som returneres vil blive vist i JavaScript Objektviseren.">
-
+<!ENTITY evaluateDialog.title "Evaluer udtryk">
+<!ENTITY jsEval.desc "Indtast et JavaScript udtryk. Variablen &quot;target&quot; er den egenskab som pt. er valgt.">
 <!ENTITY jsExecute.label "Udfør">
+<!ENTITY inspectReturn.label "Inspicér returværdi i">
+<!ENTITY inspectReturnNew.label "Nyt vindue">
+<!ENTITY inspectReturnExisting.label "Eksisterende vindue">
