@@ -22,6 +22,7 @@ composer.jar:
 	content/composer/utils/dgid.js					(content/composer/utils/dgid.js)
 	content/composer/utils/global.js				(content/composer/utils/global.js)
 	content/composer/utils/urls.js					(content/composer/utils/urls.js)
+	content/composer/utils/notifiers.js				(content/composer/utils/notifiers.js)
 	content/composer/editorUtils.js       			(content/composer/editorUtils.js)
 	content/composer/commands.js          			(content/composer/commands.js)
 	skin/classic/composer/composer.css				(skin/classic/composer/composer.css)
