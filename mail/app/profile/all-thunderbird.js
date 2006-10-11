@@ -276,10 +276,10 @@ pref("network.protocol-handler.warn-external.ftp", false);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 
-pref("security.warn_entering_secure.show_once", false);
-pref("security.warn_entering_weak.show_once", false);
-pref("security.warn_leaving_secure.show_once", false);
-pref("security.warn_viewing_mixed.show_once", false);
+pref("security.warn_entering_secure", false);
+pref("security.warn_entering_weak", false);
+pref("security.warn_leaving_secure", false);
+pref("security.warn_viewing_mixed", false);
 
 pref("general.config.obscure_value", 0); // for MCD .cfg files
 
