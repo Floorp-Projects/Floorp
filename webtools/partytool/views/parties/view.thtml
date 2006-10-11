@@ -81,7 +81,7 @@
       <div id="c<?php echo $comment['comments']['cid'];?>" class="comment <?php echo $class;?>">
         <span class="comment-content"><?php echo $comment['comments']['text']; ?></span>
         <span class="comment-tag"><br/><br/>Posted by <a href="<?php echo $html->url('/users/view/'.$comment['users']['uid']); ?>">
-        <?php echo $comment['users']['name']; ?></a> on <?php echo date('Y-m-d h:ia', $comment['comments']['time'] - (@$_SESSION['User']['tz'] * 60 * 60)); ?></span>
+        <?php echo $comment['users']['name']; ?></a> on <?php echo gmdate('Y-m-d h:ia', $comment['comments']['time'] + (@$_SESSION['User']['tz'] * 60 * 60)); ?></span>
         </span>
       </div>
     <?php endforeach; 

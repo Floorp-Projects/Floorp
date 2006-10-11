@@ -57,7 +57,7 @@ class CommentsController extends AppController {
       $this->data['Comment']['text'] = nl2br($text);
       $this->data['Comment']['owner'] = $uid;
       $this->data['Comment']['assoc'] = $pid;
-      $this->data['Comment']['time'] = gmmktime();
+      $this->data['Comment']['time'] = mktime();
 
       if ($this->Comment->save($this->data)) {
         $this->redirect('/parties/view/'.$pid.'#c'.$this->Comment->getLastInsertID());

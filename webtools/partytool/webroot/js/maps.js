@@ -30,7 +30,6 @@ function mapInit(aLat, aLng, aZoom, aState) {
 
 function geocode(aLoc) {
     var gcoder = new GClientGeocoder();
-    document.getElementById('geocoded').value = 1;
     gcoder.getLatLng(aLoc, function (point) {
       if (!point) {
         suggest(aLoc);
