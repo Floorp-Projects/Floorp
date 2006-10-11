@@ -106,6 +106,9 @@
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsDirectoryServiceDefs.h"
 
 // for relativization
 #include "nsUnicharUtils.h"
@@ -1114,7 +1117,10 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
       }
       (*aTransferable)->AddDataFlavor(kHTMLMime);
       (*aTransferable)->AddDataFlavor(kFileMime);
-      //(*aTransferable)->AddDataFlavor(kJPEGImageMime);
+#ifdef XP_WIN32
+      // image pasting from the clipboard is only implemented on Windows right now.
+      (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+#endif
     }
     (*aTransferable)->AddDataFlavor(kUnicodeMime);
   }
@@ -1255,10 +1261,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
                                                    PRBool aDoDeleteSelection)
 {
   nsresult rv = NS_OK;
-  char* bestFlavor = nsnull;
+  nsXPIDLCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
   PRUint32 len = 0;
-  if ( NS_SUCCEEDED(transferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
+  if ( NS_SUCCEEDED(transferable->GetAnyTransferData(getter_Copies(bestFlavor), getter_AddRefs(genericDataObj), &len)) )
   {
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
     nsAutoString flavor;
@@ -1381,15 +1387,53 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     }
     else if (0 == nsCRT::strcmp(bestFlavor, kJPEGImageMime))
     {
-      // need to provide a hook from here
-      // Insert Image code here
-      printf("Don't know how to insert an image yet!\n");
-      //nsIImage* image = (nsIImage *)data;
-      //NS_RELEASE(image);
-      rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
+      nsCOMPtr<nsIInputStream> imageStream(do_QueryInterface(genericDataObj));
+      NS_ENSURE_TRUE(imageStream, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIFile> fileToUse;
+      NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToUse));
+      fileToUse->Append(NS_LITERAL_STRING("moz-screenshot.jpg"));
+      nsCOMPtr<nsILocalFile> path = do_QueryInterface(fileToUse);
+      path->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+
+      nsCOMPtr<nsIOutputStream> outputStream;
+      rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), fileToUse);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 length;
+      imageStream->Available(&length);
+
+      nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+      rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), outputStream, length);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 numWritten;
+      rv = bufferedOutputStream->WriteFrom(imageStream, length, &numWritten);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewFileURI(getter_AddRefs(uri), fileToUse);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIURL> fileURL(do_QueryInterface(uri));
+      if (fileURL)
+      {
+        nsCAutoString urltext;
+        rv = fileURL->GetSpec(urltext);
+        if (NS_SUCCEEDED(rv) && !urltext.IsEmpty())
+        {
+          stuffToPaste.AssignLiteral("<IMG src=\"");
+          AppendUTF8toUTF16(urltext, stuffToPaste);
+          stuffToPaste.AppendLiteral("\" alt=\"\" >");
+          nsAutoEditBatch beginBatching(this);
+          rv = InsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(), 
+                                     NS_LITERAL_STRING(kFileMime),
+                                     aSourceDoc,
+                                     aDestinationNode, aDestOffset,
+                                     aDoDeleteSelection);
+        }
+      }
     }
   }
-  NS_Free(bestFlavor);
       
   // Try to scroll the selection into view if the paste/drop succeeded
   if (NS_SUCCEEDED(rv))
