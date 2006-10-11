@@ -571,14 +571,10 @@ struct MessageWindow {
             cmdlen + strlen(cmdbuf + cmdlen + 1) + 2,
             (void*) cmdbuf
         };
-        HWND newWin = (HWND)::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
-        if ( newWin ) {
-            // Restore the window if it is minimized.
-            if ( ::IsIconic( newWin ) ) {
-                ::ShowWindow( newWin, SW_RESTORE );
-            }
-            ::SetForegroundWindow( newWin );
-        }
+        // Bring the already running Mozilla process to the foreground.
+        // nsWindow will restore the window (if minimized) and raise it.
+        ::SetForegroundWindow( mHandle );
+        ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
         free (cmdbuf);
         return NS_OK;
     }

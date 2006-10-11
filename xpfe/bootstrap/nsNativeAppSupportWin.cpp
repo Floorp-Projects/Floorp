@@ -911,10 +911,10 @@ struct MessageWindow {
     // SendRequest: Pass string via WM_COPYDATA to message window.
     NS_IMETHOD SendRequest( const char *cmd ) {
         COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
-        HWND newWin = (HWND)::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
-        if ( newWin ) {
-            ::SetForegroundWindow( newWin );
-        }
+        // Bring the already running Mozilla process to the foreground.
+        // nsWindow will restore the window (if minimized) and raise it.
+        ::SetForegroundWindow( mHandle );
+        ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
         return NS_OK;
     }
 
