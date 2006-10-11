@@ -54,7 +54,8 @@
 ?>
 </p>
 <h2>Account Options</h2>
-<ul>
-  <li><a href="<?php echo $html->url('/users/edit'); ?>">Edit my account</a></li>
-  <li><a href="<?php echo $html->url('/users/logout'); ?>">Logout</a></li>
-</ul>
+<p>
+  <a href="<?php echo $html->url('/users/edit'); ?>">Edit my account</a>
+  <br/>
+  <a href="<?php echo $html->url('/users/logout'); ?>">Logout</a>
+</p>

@@ -6,16 +6,16 @@
     <?php
       if (!empty($party['Party']['address']))
         echo 'Location: '.$party['Party']['address']."<br/>\n";
-    
+
       if (!empty($party['Party']['vname']))
         echo 'Venue: '.$party['Party']['vname']."<br/>\n";
-        
+
       echo 'Date: '.(($party['Party']['confirmed'] == 1) ? gmdate('Y-m-d h:ia', $party['Party']['date'] + (@$_SESSION['User']['tz'] * 60 * 60))." GMT".@$_SESSION['User']['tz'] : "TBA")."<br/>\n";
-      echo 'Duration: '.$party['Party']['duration']." hours\n<br/>";
-      
+      echo 'Duration: '.$party['Party']['duration'].' hour'.(($party['Party']['duration'] == 1) ? '' : 's')."\n<br/>";
+
       if (!empty($party['Party']['website']))
         echo 'Website: <a href="'.$party['Party']['website'].'" rel="nofollow">'.$party['Party']['website']."</a><br/>\n";
-      
+
       if (!empty($party['Party']['notes']))
         echo 'Notes: '.$party['Party']['notes']."<br/>\n";
     ?>
@@ -54,8 +54,7 @@
     </div>
     <?php if (@$_SESSION['User']['id'] == $party['Party']['owner']):?>
     <h1>Party options</h1>
-    <a href="<?php echo $html->url('/parties/edit/'.$party['Party']['id']);?>">Edit party</a>
-    <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
+    <a href="<?php echo $html->url('/parties/edit/'.$party['Party']['id']);?>">Edit party</a> | <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
     <?php endif; ?>
     <?php if (isset($flickr)): ?>
     <h1 id="photos">Photos <a title="Photo Feed" href="<?php echo $html->url('/feeds/photos/'.$party['Party']['id']); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="Atom"/></a></h1>

@@ -57,7 +57,7 @@ class PartiesController extends AppController {
     $this->set('map', 'mapInit()');
 
     if(empty($this->data)) {
-      $this->set('utz', '0');
+      $this->set('utz', $_SESSION['User']['tz']);
       $this->render();
     }
 
