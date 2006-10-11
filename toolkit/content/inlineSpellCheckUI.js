@@ -201,7 +201,7 @@ var InlineSpellCheckerUI = {
 
     for (var i = 0; i < list.length; i ++) {
       // get the display name for this dictionary
-      var isoStrArray = list[i].split("-");
+      isoStrArray = list[i].split("-");
       var displayName = "";
       if (this.mLanguageBundle && isoStrArray[0]) {
         try {
@@ -211,6 +211,8 @@ var InlineSpellCheckerUI = {
           try {
             displayName += " / " + this.mRegionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
           } catch(e) {} // ignore region bundle errors
+          if (isoStrArray[2])
+            displayName += " (" + isoStrArray[2] + ")";
         }
       }
 
