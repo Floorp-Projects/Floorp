@@ -83,7 +83,8 @@ interface nsIPersistentProperties : nsIProperties
 
   /**
    * shortcut to nsIProperty's set() which sets a string value
-   * directly (and thus faster)
+   * directly (and thus faster). If the given property already exists,
+   * then the old value will be returned
    */
   AString setStringProperty(in AUTF8String key, in AString value);
 };
