@@ -211,16 +211,16 @@ public class ImporterTopLevel extends IdScriptableObject
 
     private void importPackage(NativeJavaPackage pkg)
     {
+        if(pkg == null) {
+            return;
+        }
         synchronized (importedPackages) {
             for (int j = 0; j != importedPackages.size(); j++) {
-                if (pkg == importedPackages.get(j)) {
-                    pkg = null;
-                    break;
+                if (pkg.equals(importedPackages.get(j))) {
+                    return;
                 }
             }
-            if (pkg != null) {
-                importedPackages.add(pkg);
-            }
+            importedPackages.add(pkg);
         }
     }
 

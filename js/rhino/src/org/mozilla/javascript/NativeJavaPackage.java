@@ -179,7 +179,18 @@ public class NativeJavaPackage extends ScriptableObject
         return "[JavaPackage " + packageName + "]";
     }
 
+    public boolean equals(Object obj) {
+        if(obj instanceof NativeJavaPackage) {
+            NativeJavaPackage njp = (NativeJavaPackage)obj;
+            return packageName.equals(njp.packageName) && classLoader == njp.classLoader;
+        }
+        return false;
+    }
+    
+    public int hashCode() {
+        return packageName.hashCode() ^ (classLoader == null ? 0 : classLoader.hashCode());
+    }
+
     private String packageName;
     private ClassLoader classLoader;
 }
-
