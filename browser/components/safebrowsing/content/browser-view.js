@@ -244,9 +244,13 @@ PROT_BrowserView.prototype.isProblemDocument_ = function(browser,
  */
 PROT_BrowserView.prototype.onNavAwayFromProblem_ = function(doc, browser) {
 
-  G_Debug(this, "User nav'd away from problem.");
   var problem = this.getProblem_(doc, browser);
-  (new PROT_Reporter).report("phishnavaway", problem.url_);
+  // We want to know if the user navigated away from the phish site
+  // before or after viewing the warning.
+  var message = problem.displayer_.messageShowing_ ? "phishnavaway"
+                                                   : "ignorenavaway";
+  G_Debug(this, "User nav'd away from problem: " + message);
+  (new PROT_Reporter).report(message, problem.url_);
 
   G_Assert(this, doc === problem.doc_, "State doc not equal to nav away doc?");
   G_Assert(this, browser === problem.browser_, 
