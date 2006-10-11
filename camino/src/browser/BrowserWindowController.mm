@@ -154,7 +154,10 @@ static NSString* const HistoryToolbarItemIdentifier     = @"History Toolbar Item
 int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 static const char* const gTabBarVisiblePref = "camino.tab_bar_always_visible";
 
-const float kMininumURLAndSearchBarWidth = 128.0;
+const float kMinimumLocationBarWidth = 250.0;
+const float kMinimumURLAndSearchBarWidth = 128.0;
+const float kDefaultSearchBarWidth = 192.0;
+const float kEpsilon = 0.001; //suitable for "equality"-testing pseudo-integer values up to ~10000
 
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 static NSString* const NavigatorWindowSearchBarWidth = @"SearchBarWidth";
@@ -893,12 +896,12 @@ enum BWCOpenDest {
       [mLocationToolbarView collapseSubviewAtIndex:1];
     else {
       float searchBarWidth = [[NSUserDefaults standardUserDefaults] floatForKey:NavigatorWindowSearchBarWidth];
-      if (searchBarWidth <= 0)
-        searchBarWidth = kMininumURLAndSearchBarWidth;
+      if (searchBarWidth < kEpsilon)
+        searchBarWidth = kDefaultSearchBarWidth;
       const float currentWidth = [mLocationToolbarView frame].size.width;
       float newDividerPosition = currentWidth - searchBarWidth - [mLocationToolbarView dividerThickness];
-      if (newDividerPosition < kMininumURLAndSearchBarWidth)
-        newDividerPosition = kMininumURLAndSearchBarWidth;
+      if (newDividerPosition < kMinimumURLAndSearchBarWidth)
+        newDividerPosition = kMinimumURLAndSearchBarWidth;
       [mLocationToolbarView setLeftWidth:newDividerPosition];
       [mLocationToolbarView adjustSubviews];
     }
@@ -1244,7 +1247,7 @@ enum BWCOpenDest {
     [toolbarItem setLabel:NSLocalizedString(@"Location", nil)];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", nil)];
     [toolbarItem setView:mLocationToolbarView];
-    [toolbarItem setMinSize:NSMakeSize(250, NSHeight([mLocationToolbarView frame]))];
+    [toolbarItem setMinSize:NSMakeSize(kMinimumLocationBarWidth, NSHeight([mLocationToolbarView frame]))];
     [toolbarItem setMaxSize:NSMakeSize(FLT_MAX, NSHeight([mLocationToolbarView frame]))];
 
     [mSearchBar setTarget:self];
@@ -1483,7 +1486,7 @@ enum BWCOpenDest {
 - (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedMin ofSubviewAt:(int)offset
 {
   if (sender == mLocationToolbarView)
-    return kMininumURLAndSearchBarWidth;
+    return kMinimumURLAndSearchBarWidth;
   return proposedMin;
 }
 
@@ -1498,7 +1501,7 @@ enum BWCOpenDest {
 - (float)splitView:(NSSplitView *)sender constrainMaxCoordinate:(float)proposedMax ofSubviewAt:(int)offset
 {
   if (sender == mLocationToolbarView)
-    return proposedMax - kMininumURLAndSearchBarWidth;
+    return proposedMax - kMinimumURLAndSearchBarWidth;
   return proposedMax;
 }
 
@@ -1522,6 +1525,16 @@ enum BWCOpenDest {
   float deltaX = newSize.width - oldSize.width;     // positive when window grows
   urlBarFrame.size.width += deltaX;
   searchFrame.origin.x += deltaX;
+  // each toolbar resize actually shrinks the splitview to its minwidth, then re-expands
+  // it to the new value; enforce min URL width only when not doing the min-size call
+  if (fabsf(newSize.width - kMinimumLocationBarWidth) > kEpsilon) {
+    if (urlBarFrame.size.width < kMinimumURLAndSearchBarWidth) {
+      float widthShortage = kMinimumURLAndSearchBarWidth - urlBarFrame.size.width;
+      searchFrame.origin.x += widthShortage;
+      searchFrame.size.width -= widthShortage;
+      urlBarFrame.size.width = kMinimumURLAndSearchBarWidth;
+    }
+  }
   [urlSuperview setFrame:urlBarFrame];
   [mSearchBar setFrame:searchFrame];
   [sender setNeedsDisplay:YES];
