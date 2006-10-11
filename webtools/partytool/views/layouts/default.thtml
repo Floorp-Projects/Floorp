@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title><?php echo APP_NAME." - ".$title_for_layout?></title>
-    <link rel="shortcut icon" href="<?php echo $html->url('/favicon.ico'); ?>" type="image/x-icon"/>
+    <link rel="shortcut icon" type="image/x-icon" href="<?php echo $html->url('/favicon.ico'); ?>"/>
     <link rel="stylesheet" type="text/css" href="<?php echo $html->url('/css/main.css'); ?>"/>
     <link rel="alternate" type="application/rss+xml" href="<?php echo $html->url('/feeds/latest'); ?>"/>
   </head>

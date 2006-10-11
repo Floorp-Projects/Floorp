@@ -3,13 +3,13 @@
   <channel>
     <pubDate><?php echo date('r'); ?></pubDate>
     <description><?php echo APP_NAME." - Upcoming Parties"; ?></description>
-    <link><?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/'); ?></link>
+    <link><?php echo APP_BASE.$html->url('/'); ?></link>
     <title><?php echo APP_NAME." - Upcoming Parties"; ?></title>
     <?php foreach($latest as $party): ?> 
     <item>
       <title><![CDATA[<?php echo $party['Feeds']['name'] ?>]]></title>
       <description><?php echo date('Y-m-d H:i', $party['Feeds']['date']); ?></description>
-      <link><?php echo "http://".$_SERVER["SERVER_NAME"].$html->url('/party/view/'.$party['Feeds']['id']); ?></link>
+      <link><?php echo APP_BASE.$html->url('/parties/view/'.$party['Feeds']['id']); ?></link>
     </item>
     <?php endforeach; ?>
    </channel>
