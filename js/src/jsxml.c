@@ -3708,9 +3708,6 @@ Equals(JSContext *cx, JSXML *xml, jsval v, JSBool *bp)
 }
 
 static JSBool
-Replace(JSContext *cx, JSXML *xml, jsval id, jsval v);
-
-static JSBool
 CheckCycle(JSContext *cx, JSXML *xml, JSXML *kid)
 {
     JS_ASSERT(kid->xml_class != JSXML_CLASS_LIST);
@@ -3748,6 +3745,13 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
                 n = vxml->xml_kids.length;
                 if (n == 0)
                     return JS_TRUE;
+                for (j = 0; j < n; j++) {
+                    kid = XMLARRAY_MEMBER(&vxml->xml_kids, j, JSXML);
+                    if (!kid)
+                        continue;
+                    if (!CheckCycle(cx, xml, kid))
+                        return JS_FALSE;
+                }
             } else if (vxml->xml_class == JSXML_CLASS_ELEMENT) {
                 /* OPTION: enforce that descendants have superset namespaces. */
                 if (!CheckCycle(cx, xml, vxml))
@@ -3777,8 +3781,6 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
             kid = XMLARRAY_MEMBER(&vxml->xml_kids, j, JSXML);
             if (!kid)
                 continue;
-            if (!CheckCycle(cx, xml, kid))
-                return JS_FALSE;
             kid->parent = xml;
             XMLARRAY_SET_MEMBER(&xml->xml_kids, i + j, kid);
 
@@ -3831,7 +3833,6 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
      * It should therefore constrain callers to pass in _i <= x.[[Length]]_.
      */
     n = xml->xml_kids.length;
-    JS_ASSERT(i <= n);
     if (i >= n) {
         if (!IndexToIdVal(cx, n, &id))
             return JS_FALSE;
@@ -5815,7 +5816,7 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
         } else {
             kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML);
             if (!kid) {
-                *rval = JSVAL_NULL;
+                *rval = JSVAL_VOID;
             } else {
                 kidobj = js_GetXMLObject(cx, kid);
                 if (!kidobj)
