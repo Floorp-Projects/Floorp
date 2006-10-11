@@ -56,6 +56,8 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 + (NSString*)bookmarkTitleForItem:(NSDictionary*)inItem;
 + (NSDictionary*)primaryBookmarkItem:(NSArray*)inItems;
 
+- (void)updateTitle:(BOOL)isTabGroup;
+
 - (void)buildBookmarksFolderPopup;
 - (void)createBookmarks;
 - (void)clearState;
@@ -115,14 +117,24 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 
 - (IBAction)toggleTabGroup:(id)sender
 {
+  BOOL isTabGroup = ([mTabGroupCheckbox state] == NSOnState);
+  [self updateTitle:isTabGroup];
+}
+
+- (void)makeTabGroup:(BOOL)isTabGroup
+{
+  [mTabGroupCheckbox setState:(isTabGroup ? NSOnState : NSOffState)];
+  [self updateTitle:isTabGroup];
+}
+
+- (void)updateTitle:(BOOL)isTabGroup
+{
   NSString* defaultGroupTitle = [NSString stringWithFormat:NSLocalizedString(@"defaultTabGroupTitle", @"[%d tabs] %@"), [mBookmarkItems count], mDefaultTitle];
 
-  // if title is unedited and we're bookmarking a tab group, prepend a prefix to indicate this
+  // If the title is unedited, update to the default name
   if ([[mTitleField stringValue] isEqualToString:mDefaultTitle] ||
       [[mTitleField stringValue] isEqualToString:defaultGroupTitle])
-  {
-    [mTitleField setStringValue:([mTabGroupCheckbox state] == NSOnState) ? defaultGroupTitle : mDefaultTitle];
-  }
+    [mTitleField setStringValue:(isTabGroup ? defaultGroupTitle : mDefaultTitle)];
 }
 
 - (void)setDefaultTitle:(NSString*)aString
@@ -226,17 +238,9 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
   if (!initialFolder)
     initialFolder = [bookmarkManager lastUsedBookmarkFolder];
 
-  if (initialFolder)
-  {
-    int initialItemIndex = [[mParentFolderPopup menu] indexOfItemWithRepresentedObject:initialFolder];
-    if (initialItemIndex != -1)
-      [mParentFolderPopup selectItemAtIndex:initialItemIndex];
-  }
-  else if ([mParentFolderPopup numberOfItems] > 0)
-  {
-    int initialItemIndex = [[mParentFolderPopup menu] indexOfItemWithRepresentedObject:[bookmarkManager toolbarFolder]];
+  int initialItemIndex = [[mParentFolderPopup menu] indexOfItemWithRepresentedObject:initialFolder];
+  if (initialItemIndex != -1)
     [mParentFolderPopup selectItemAtIndex:initialItemIndex];
-  }
 
   [mParentFolderPopup synchronizeTitleAndSelectedItem];
 }

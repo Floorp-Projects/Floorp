@@ -1564,6 +1564,13 @@ enum BWCOpenDest {
   if (action == @selector(fillForm:))
     return ![[[self getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
 
+  if(action == @selector(getInfo:)) {
+    if([self bookmarkManagerIsVisible])
+      [aMenuItem setTitle:NSLocalizedString(@"Bookmark Info", nil)];
+    else
+      [aMenuItem setTitle:NSLocalizedString(@"Page Info", nil)];
+  }
+
 
   return YES;
 }
@@ -2266,7 +2273,9 @@ enum BWCOpenDest {
 
 - (IBAction)viewPageSource:(id)aSender
 {
-  BOOL loadInBackground = (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0);
+  // If it's a capital V, shift is down
+  BOOL loadInBackground = ([[aSender keyEquivalent] isEqualToString:@"V"]);
+
   NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURI];
   [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
@@ -2586,8 +2595,49 @@ enum BWCOpenDest {
 
     [itemsArray addObject:itemInfo];
   }
-  
-  [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:itemsArray isFolder:NO onWindow:[self window]];
+
+  AddBookmarkDialogController* dlgController = [AddBookmarkDialogController sharedAddBookmarkDialogController];
+  [dlgController showDialogWithLocationsAndTitles:itemsArray isFolder:NO onWindow:[self window]];
+
+  if (([aSender keyEquivalentModifierMask] & NSAlternateKeyMask) != 0)
+    [dlgController makeTabGroup:YES];
+}
+
+- (IBAction)addBookmarkWithoutPrompt:(id)aSender
+{
+  BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
+  BookmarkFolder*  parentFolder = [bookmarkManager lastUsedBookmarkFolder];
+
+  NSString* itemTitle = nil;
+  NSString* itemURL = nil;
+  [[self getBrowserWrapper] getTitle:&itemTitle andHref:&itemURL];
+
+  [parentFolder addBookmark:itemTitle url:itemURL inPosition:[parentFolder count] isSeparator:NO];
+  [bookmarkManager setLastUsedBookmarkFolder:parentFolder];
+}
+
+- (IBAction)addTabGroupWithoutPrompt:(id)aSender
+{
+  BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
+  BookmarkFolder*  parentFolder = [bookmarkManager lastUsedBookmarkFolder];
+
+  unsigned int folderPosition = [parentFolder count];
+  unsigned int numItems = [mTabBrowser numberOfTabViewItems];
+  NSString* itemTitle = nil;
+  NSString* itemURL = nil;
+  [[self getBrowserWrapper] getTitle:&itemTitle andHref:&itemURL];
+
+  NSString* titleString = [NSString stringWithFormat:NSLocalizedString(@"defaultTabGroupTitle", nil), numItems, itemTitle];
+  BookmarkFolder* newGroup = [parentFolder addBookmarkFolder:titleString inPosition:folderPosition isGroup:YES];
+
+  for (unsigned int i = 0; i < numItems; i++) {
+    BrowserWrapper* browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
+    [browserWrapper getTitle:&itemTitle andHref:&itemURL];
+
+    [newGroup addBookmark:itemTitle url:itemURL inPosition:i isSeparator:NO];
+  }
+
+  [bookmarkManager setLastUsedBookmarkFolder:parentFolder];
 }
 
 - (IBAction)addBookmarkForLink:(id)aSender

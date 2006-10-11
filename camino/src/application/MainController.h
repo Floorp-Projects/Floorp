@@ -82,6 +82,9 @@ typedef enum EBookmarkOpenBehavior
 	
     IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
     IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
+    IBOutlet NSMenuItem*    mAddBookmarkWithoutPromptMenuItem;
+    IBOutlet NSMenuItem*    mAddTabGroupMenuItem;
+    IBOutlet NSMenuItem*    mAddTabGroupWithoutPromptMenuItem;
     IBOutlet NSMenuItem*    mCreateBookmarksFolderMenuItem;
     IBOutlet NSMenuItem*    mCreateBookmarksSeparatorMenuItem;  // unused
     IBOutlet NSMenuItem*    mShowAllBookmarksMenuItem;
@@ -106,6 +109,7 @@ typedef enum EBookmarkOpenBehavior
 }
 
 -(IBAction)aboutWindow:(id)sender;
+-(IBAction) feedbackLink:(id)aSender;
 
 // File menu actions.
 -(IBAction) newWindow:(id)aSender;
@@ -163,7 +167,6 @@ typedef enum EBookmarkOpenBehavior
 // Help menu actions
 -(IBAction) supportLink:(id)aSender;
 -(IBAction) infoLink:(id)aSender;
--(IBAction) feedbackLink:(id)aSender;
 -(IBAction) releaseNoteLink:(id)aSender;
 -(IBAction) tipsTricksLink:(id)aSender;
 -(IBAction) searchCustomizeLink:(id)aSender;

@@ -594,6 +594,9 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BookmarkFolder*)lastUsedBookmarkFolder
 {
+  if (!mLastUsedFolder)
+    return [self toolbarFolder];
+
   return mLastUsedFolder;
 }
 
@@ -781,7 +784,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [contextMenu addItem:shiftMenuItem];
 
   if (!outlineView || ([items count] == 1)) {
-    menuTitle = NSLocalizedString(@"Get Info", @"");
+    menuTitle = NSLocalizedString(@"Bookmark Info", @"");
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];

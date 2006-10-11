@@ -66,6 +66,7 @@ extern NSString* const kAddBookmarkItemPrimaryTabKey;   // NSNumber with book, t
 - (IBAction)parentFolderChanged:(id)sender;
 - (IBAction)toggleTabGroup:(id)sender;
 
+- (void)makeTabGroup:(BOOL)isTabGroup;
 - (void)setDefaultParentFolder:(BookmarkFolder*)inFolder andIndex:(int)inIndex;
 - (void)setBookmarkViewController:(BookmarkViewController*)inBMViewController;
 

@@ -105,6 +105,7 @@ static const int kEscapeKeyCode = 53;
 // Pass command-return off to the controller so that locations/searches may be opened in a new tab.
 // Pass command-plus off to the controller to enlarge the text size.
 // Pass command-1..9 to the controller to load that bookmark bar item
+// Pass command-D off to the controller to add a bookmark
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
   BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
@@ -127,6 +128,13 @@ static const int kEscapeKeyCode = 53;
       // use |forceReuse| to disable looking at the modifier keys since we know the command
       // key is down right now.
       [windowController loadBookmarkBarIndex:(keyChar - '1') openBehavior:eBookmarkOpenBehavior_ForceReuse];
+      handled = YES;
+    }
+  }
+  else if (keyChar == 'd') {
+    BOOL cmdKeyIsDown = (([theEvent modifierFlags] & NSCommandKeyMask) != 0);
+    if (cmdKeyIsDown) {
+      [windowController addBookmark:nil];
       handled = YES;
     }
   }

@@ -1009,14 +1009,24 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   // update our stand-in menu by hand (because it doesn't get autoupdated)
   [mBookmarksHelperMenu update];
 
-  [mAddBookmarkMenuItem               takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mAddBookmarkMenuItem target]
-                                                                                   andAction:[mAddBookmarkMenuItem action]]];
-  [mCreateBookmarksFolderMenuItem     takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksFolderMenuItem target]
-                                                                                   andAction:[mCreateBookmarksFolderMenuItem action]]];
-  [mCreateBookmarksSeparatorMenuItem  takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksSeparatorMenuItem target]
-                                                                                   andAction:[mCreateBookmarksSeparatorMenuItem action]]];
-  [mShowAllBookmarksMenuItem          takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mShowAllBookmarksMenuItem target]
-                                                                                   andAction:[mShowAllBookmarksMenuItem action]]];
+  // For the add bookmark menu items, target + action can't be used as a unique identifier, so use title instead
+  // This is safe, since we assume that we're keeping the "real" bookmarks menu and our stand-in synchronized
+  [mAddBookmarkMenuItem              takeStateFromItem:[mBookmarksHelperMenu itemWithTitle:[mAddBookmarkMenuItem title]]];
+  [mAddBookmarkWithoutPromptMenuItem takeStateFromItem:[mBookmarksHelperMenu itemWithTitle:[mAddBookmarkWithoutPromptMenuItem title]]];
+  [mAddTabGroupMenuItem              takeStateFromItem:[mBookmarksHelperMenu itemWithTitle:[mAddTabGroupMenuItem title]]];
+  [mAddTabGroupWithoutPromptMenuItem takeStateFromItem:[mBookmarksHelperMenu itemWithTitle:[mAddTabGroupWithoutPromptMenuItem title]]];
+
+  [mCreateBookmarksFolderMenuItem    takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksFolderMenuItem target]
+                                                                                  andAction:[mCreateBookmarksFolderMenuItem action]]];
+  [mCreateBookmarksSeparatorMenuItem takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksSeparatorMenuItem target]
+                                                                                  andAction:[mCreateBookmarksSeparatorMenuItem action]]];
+  [mShowAllBookmarksMenuItem         takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mShowAllBookmarksMenuItem target]
+                                                                                  andAction:[mShowAllBookmarksMenuItem action]]];
+
+  // Enable 'Create tab group' menu items based on number of tabs
+  int numberOfTabs = [[[self getKeyWindowBrowserController] getTabBrowser] numberOfTabViewItems];
+  [mAddTabGroupMenuItem setEnabled:(numberOfTabs > 1)];
+  [mAddTabGroupWithoutPromptMenuItem setEnabled:(numberOfTabs > 1)];
 
   // We enable bookmark items themselves from the carbon event handler that fires before the menu is shown.
   mBookmarksMenuUpdatePending = NO;
