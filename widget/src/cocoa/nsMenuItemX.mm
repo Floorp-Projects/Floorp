@@ -441,6 +441,12 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
       listener->SetRebuild(PR_TRUE);
     }
+    else if (aAttribute == nsWidgetAtoms::disabled) {
+      if (aContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters))
+        [mNativeMenuItem setEnabled:NO];
+      else
+        [mNativeMenuItem setEnabled:YES];
+    }
   }
   else if (aContent == mCommandContent) {
     // the only thing that really matters when the menu isn't showing is the
