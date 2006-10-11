@@ -2836,11 +2836,11 @@ public class ScriptRuntime {
 
 
     public static void enterActivationFunction(Context cx,
-                                               NativeCall call)
+                                               Scriptable scope)
     {
         if (cx.topCallScope == null)
             throw new IllegalStateException();
-
+        NativeCall call = (NativeCall)scope;
         call.parentActivationCall = cx.currentActivationCall;
         cx.currentActivationCall = call;
     }

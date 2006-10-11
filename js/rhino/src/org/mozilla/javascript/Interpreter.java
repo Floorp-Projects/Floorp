@@ -3879,7 +3879,7 @@ switch (op) {
             // since debugger should not interfere with activation 
             // chaining
             if (usesActivation) {
-                ScriptRuntime.enterActivationFunction(cx, (NativeCall)scope);
+                ScriptRuntime.enterActivationFunction(cx, scope);
             }
         }
     }
