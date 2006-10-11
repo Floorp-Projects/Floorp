@@ -152,6 +152,8 @@ enum
   BookmarkItem*           mItemToReveal;
   
   HistoryDataSource*      mHistoryDataSource;
+  
+  NSImage*                mSeparatorImage;
 }
 
 + (NSAttributedString*)greyStringWithItemCount:(int)itemCount;

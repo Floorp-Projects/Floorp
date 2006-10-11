@@ -91,16 +91,14 @@ static NSString* const kBookmarksSelectedContainerDefaultsKey = @"bookmarks_sele
 static NSString* const kBookmarksSelectedContainerIdentifierKey = @"identifier";
 static NSString* const kBookmarksSelectedContainerUUIDKey       = @"uuid";
 
-// minimum sizes for the search panel
 const long kMinContainerSplitWidth = 150;
-const long kMinSearchPaneHeight = 80;
+const int kMinSeparatorWidth = 16;
+const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn't seem to be in the API
 
 // The actual constant defined in 10.3.x and greater headers is NSTableViewSolidVerticalGridLineMask.
 // In order to compile with 10.2.x, the value has just been extracted and put here.
 // It is extremely unlikely that Apple will change it.
 static const unsigned int TableViewSolidVerticalGridLineMask = 1;
-
-static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 #pragma mark -
 
@@ -219,6 +217,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mSearchResultArray release];
 
   [mHistoryDataSource release];
+  
+  [mSeparatorImage release];
 
   [super dealloc];
 }
@@ -304,6 +304,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mHistoryOutlineView setAutosaveTableSort:YES];
 
   [[mSearchField cell] setControlSize:NSSmallControlSize];
+  
+  mSeparatorImage = [[NSImage imageNamed:@"bm_horizontal_separator"] retain];
+  [mSeparatorImage setScalesWhenResized:YES];
   
   mSetupComplete = YES;
 }
@@ -1497,8 +1500,20 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   // set the image on the name column. the url column doesn't have an image.
-  if ([[tableColumn identifier] isEqualToString: @"title"])
-    [cell setImage:[item icon]];
+  if ([[tableColumn identifier] isEqualToString: @"title"]) {
+    if ([item respondsToSelector:@selector(isSeparator)] && [item isSeparator]) {
+      [cell setTitle:@""];
+      float fullWidth = [tableColumn width] - kOutlineViewLeftMargin -
+                        [outlineView indentationPerLevel]*[outlineView levelForItem:item];
+      NSSize imageSize = [mSeparatorImage size];
+      imageSize.width = (fullWidth > kMinSeparatorWidth) ? fullWidth : kMinSeparatorWidth;
+      [mSeparatorImage setSize:imageSize];
+      [cell setImage:mSeparatorImage];
+    }
+    else {
+      [cell setImage:[item icon]];
+    }
+  }
 }
 
 - (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
