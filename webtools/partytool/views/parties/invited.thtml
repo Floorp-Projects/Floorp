@@ -5,7 +5,7 @@
 <div style="text-align: center">
   <div style="width: 50%; float: left;">
     <h2>New User</h2>
-    <p>Simply register for an account and you'll be added as a guest as soon as you finish.
+    <p>Simply register for an account, and you'll be added as a guest as soon as you finish.
       <a href="<?php echo $html->url('/users/register'); ?>">Create account &raquo;</a></p>
   </div>
   <div style="width: 50%; float: right">

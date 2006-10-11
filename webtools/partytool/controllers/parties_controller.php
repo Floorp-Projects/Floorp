@@ -243,8 +243,8 @@ class PartiesController extends AppController {
     $this->pageTitle = "Invite a Guest";
     if (is_numeric($id)) {
       $party = $this->Party->findById($id);
-      if (empty($party['Party']['id']) &&
-          $party['Party']['owner'] !== $_SESSION['User']['id'])
+      if (empty($party['Party']['id']) ||
+          $party['Party']['owner'] != $_SESSION['User']['id'])
         $this->redirect('/parties/view/all');
 
       else {
