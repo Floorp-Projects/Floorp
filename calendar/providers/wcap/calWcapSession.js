@@ -208,9 +208,10 @@ calWcapSession.prototype = {
         if ((bRefresh || !g_allSupportedTimezones[key]) &&
             this.m_sessionId != null)
         {
-            var url = this.sessionUri.spec +
-                "get_all_timezones.wcap?appid=mozilla-calendar" +
-                "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
+            var url = (this.sessionUri.spec +
+                       "get_all_timezones.wcap?appid=mozilla-calendar" +
+                       "&fmt-out=text%2Fcalendar&id=" +
+                       encodeURIComponent(this.m_sessionId));
             var str = issueSyncRequest( url );
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
@@ -252,10 +253,11 @@ calWcapSession.prototype = {
         var key = this.sessionUri.hostPort;
         if ((bRefresh || !g_serverTimeDiffs[key]) &&
             this.m_sessionId != null) {
-            var url = this.sessionUri.spec +
-                // xxx todo: assuming same diff for all calids:
-                "gettime.wcap?appid=mozilla-calendar" +
-                "&fmt-out=text%2Fcalendar&id=" + this.m_sessionId;
+            var url = (this.sessionUri.spec +
+                       // xxx todo: assuming same diff for all calids:
+                       "gettime.wcap?appid=mozilla-calendar" +
+                       "&fmt-out=text%2Fcalendar&id=" +
+                       encodeURIComponent(this.m_sessionId));
             // xxx todo: this is no solution!
             var localTime = getTime();
             var str = issueSyncRequest( url );
@@ -616,7 +618,7 @@ calWcapSession.prototype = {
         
         var this_ = this;
         issueFunc(
-            url + ("&id=" + sessionId),
+            url + ("&id=" + encodeURIComponent(sessionId)),
             function( data ) {
                 var wcapResponse = new WcapResponse();
                 try {
@@ -728,7 +730,8 @@ calWcapSession.prototype = {
             // set BEFORE notification (about to go offline, nsIOService.cpp).
             // WTF.
             var url = (this.sessionUri.spec +
-                       "logout.wcap?fmt-out=text%2Fxml&id=" + this.m_sessionId);
+                       "logout.wcap?fmt-out=text%2Fxml&id=" +
+                       encodeURIComponent(this.m_sessionId));
             try {
                 checkWcapXmlErrno( issueSyncXMLRequest(url),
                                    -1 /* logout successfull */ );
