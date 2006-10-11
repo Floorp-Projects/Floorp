@@ -44,7 +44,8 @@ $UseTimeStamp      = 0;      # Use the CVS 'pull-by-timestamp' option, or not
 # Tests
 $CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
-$ProductName              = "Sunbird";
+#$ProductName              = "Sunbird";
+$ProductName              = "Calendar";
 $VendorName               = 'Mozilla';
 
 $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
@@ -182,7 +183,7 @@ $BuildTree  = 'Sunbird';
 $LocaleTree = 'Mozilla-l10n';
 
 #$BuildName = '';
-$BuildTag = 'SUNBIRD_0_3_BRANCH';
+#$BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 

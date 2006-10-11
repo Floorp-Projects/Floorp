@@ -188,7 +188,7 @@ $BuildTree  = 'Sunbird';
 $LocaleTree = 'Mozilla-l10n';
 
 #$BuildName = '';
-$BuildTag = 'SUNBIRD_0_3_BRANCH';
+#$BuildTag = 'SUNBIRD_0_3_BRANCH';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
