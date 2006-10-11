@@ -46,15 +46,15 @@ Summary Information
   <div class="section-content">
 
 <table class="single-result">
-<tr class="[% result.result_status.class_name | html %]">
+<tr class="[% result.result_status_id.class_name | html %]">
 <td width="20%">Status:</td><td>
 [% IF show_admin OR defaultemail==result.user.user_id %]
-<input name="result_status" id="result_status" type="radio" value="pass" [% IF result.result_status.class_name=="pass" %]checked[% END %]> Pass 
-<input name="result_status" id="result_status" type="radio" value="fail" [% IF result.result_status.class_name=="fail" %]checked[% END %]> Fail 
-<input name="result_status" id="result_status" type="radio" value="unclear" [% IF result.result_status.class_name=="unclear" %]checked[% END %]> Unclear/Broken&nbsp;
+<input name="result_status" id="result_status" type="radio" value="pass" [% IF result.result_status_id.class_name=="pass" %]checked[% END %]> Pass 
+<input name="result_status" id="result_status" type="radio" value="fail" [% IF result.result_status_id.class_name=="fail" %]checked[% END %]> Fail 
+<input name="result_status" id="result_status" type="radio" value="unclear" [% IF result.result_status_id.class_name=="unclear" %]checked[% END %]> Unclear/Broken&nbsp;
 <input id="change_result_status" name="change_result_status" class="button" type="submit" value="Change Result Status">
 [% ELSE %]
-[% result.result_status.name | html %]
+[% result.result_status_id.name | html %]
 [% END %]
 </td>
 </tr>
