@@ -127,8 +127,6 @@
     [% ELSIF field == 'creation_ts' OR field == 'delta_ts' %]
       [% val = val FILTER time %]
     [% END %]
-    <[% field %]
-      [%+ IF name != '' %]name="[% name FILTER xml %]"[% END %]
-    >[% val FILTER xml %]</[% field %]>
+    <[% field %][% IF name != '' %] name="[% name FILTER xml %]"[% END -%]>[% val FILTER xml %]</[% field %]>
   [% END %]
 [% END %]
