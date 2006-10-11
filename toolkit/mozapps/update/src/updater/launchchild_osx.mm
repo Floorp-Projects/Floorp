@@ -47,9 +47,9 @@
 void LaunchChild(int argc, char **argv)
 {
   int i;
-  NSTask *child = [[NSTask alloc] init];
-  NSMutableArray *args = [[NSMutableArray alloc] init];
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  NSTask *child = [[[NSTask alloc] init] autorelease];
+  NSMutableArray *args = [[[NSMutableArray alloc] init] autorelease];
 
 #ifdef __ppc__
   // It's possible that the app is a universal binary running under Rosetta
