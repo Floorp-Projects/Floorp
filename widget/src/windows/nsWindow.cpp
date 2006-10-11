@@ -2242,7 +2242,7 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
     if (::IsIconic(toplevelWnd))
-      ::OpenIcon(toplevelWnd);
+      ::ShowWindow(toplevelWnd, SW_RESTORE);
     ::SetFocus(mWnd);
 
 #ifdef WINCE
