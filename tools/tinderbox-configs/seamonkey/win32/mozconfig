@@ -7,7 +7,7 @@
 mk_add_options MOZ_CO_PROJECT=suite
 ac_add_options --enable-application=suite
 
-ac_add_options --enable-default-toolkit=windows
+ac_add_options --enable-default-toolkit=cairo-windows
 
 ac_add_options --without-system-jpg
 ac_add_options --without-system-zlib
