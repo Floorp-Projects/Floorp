@@ -872,8 +872,8 @@ function delayedOnLoadMessenger()
   // if we should check for the default client, 
   // and we aren't already the default for all of our recognized types (mail, news, rss)
   if (accountManager.defaultAccount && shellService.shouldCheckDefaultClient 
-      && !shellService.isDefaultClient(false, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
-    window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "Default Client", 
+      && !shellService.isDefaultClient(true, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
+    window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "DefaultClient", 
                       "modal,centerscreen,chrome,resizable=no");
 #endif
 
