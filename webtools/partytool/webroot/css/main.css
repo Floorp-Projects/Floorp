@@ -122,6 +122,7 @@ a:hover { text-decoration: underline; }
 #mozilla-com a {
   float: right;
   display: block;
+  outline: none;
   text-indent: -5000em;
   width: 110px;
   height: 25px;
