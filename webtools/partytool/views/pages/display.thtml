@@ -10,19 +10,19 @@
     </div>
     <div id="f-right">
       <div class="cbox">
-        <span class="ctxt"><?php echo $pcount."</span><br/>".(($pcount == 1) ? ' party' : ' parties'); ?>
+        <span class="ctxt"><?php echo $pcount."</span><br/>".(($pcount == 1) ? ' Party' : ' Parties'); ?>
         <div class="ifeed">
           <a style="padding-right: 2px;" title="Party Calendar" href="<?php echo $html->url('/feeds/ical'); ?>"><img src="<?php echo $html->url('/img/ical.png'); ?>" alt="iCAL"/></a><a title="Party Count Feed" href="<?php echo $html->url('/feeds/'); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="RSS"/></a>
         </div>
       </div>
       <div class="cbox">
-        <span class="ctxt"><?php echo $ucount."</span><br/>".(($ucount == 1) ? ' partygoer' : ' partygoers'); ?>
+        <span class="ctxt"><?php echo $ucount."</span><br/>".(($ucount == 1) ? ' Partygoer' : ' Partygoers'); ?>
         <div class="cfeed">
           <a title="User Count Feed" href="<?php echo $html->url('/feeds/users/'); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="RSS"/></a>
         </div>
       </div>
       <div class="cbox">
-        <span class="ctxt"><?php echo $days_left."</span><br/>".(($days_left == 1) ? ' day' : ' days'); ?> left until Firefox 2!
+        <span class="ctxt"><?php echo $days_left."</span><br/>".(($days_left == 1) ? ' Day' : ' Days'); ?> left until Firefox 2!
       </div>
     </div>
     <div style="clear: both"></div>

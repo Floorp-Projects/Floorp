@@ -41,7 +41,9 @@
   margin: 10px;
 }
 
-.ctxt{
+.cbox a { outline: none; }
+
+.ctxt {
   font-size: 200%;
   font-weight: bold;
 }
@@ -59,7 +61,7 @@
   bottom: 15px;
   float: right;
   height: 16px;
-  width: 16px;
+  width: 34px;
 }
 
 .required { color: red; font-weight: bold;}
