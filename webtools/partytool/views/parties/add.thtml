@@ -68,7 +68,7 @@
     <label for="PartyWebsite" class="label-large">Web site:</label>
     <?php echo $html->input('Party/website', array('size' => 40)); ?>
   </div>
-  <p>If you choose to make your party invite only, you will have to send guests an invite containing a random invite code to allow them to join your party.</p> 
+  <p>If you choose to make your party invite only, you will have to send guests an invite containing a random invite code to allow them to join your party.</p>
   <div>
     <label for="PartyInviteonly" class="label-large">Invite only</label>
     <?php echo $html->checkbox('Party/inviteonly'); ?>
@@ -103,5 +103,5 @@
     <label for="PartyNotes" class="label-large">Additional Notes</label>
     <?php echo $html->textarea('Party/notes', array('rows' => 10, 'cols' => 50)); ?>
   </div>
-  <?php echo $html->submit('Register'); ?>
+  <?php echo $html->submit('Create Party'); ?>
 </form>

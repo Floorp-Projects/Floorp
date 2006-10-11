@@ -49,7 +49,7 @@
                  '12' => 'GMT+12');
       echo $html->selectTag('User/tz', $tzs, $utz, null, null, false); 
     ?>
-    (current time is <?php echo gmdate("Y-m-d H:i:s"); ?>GMT)
+    (current time is <?php echo gmdate("Y-m-d H:i:s"); ?> GMT)
   </div>
   <?php if(GMAP_API_KEY != null): ?>
   <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=<?php echo GMAP_API_KEY; ?>"
