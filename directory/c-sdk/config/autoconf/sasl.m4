@@ -35,7 +35,9 @@ AC_ARG_WITH(sasl,
         AC_MSG_RESULT([using $withval])
         HAVE_SASL=1
 
-        if test -f "$withval/include/sasl.h"; then
+        if test -f "$withval/include/sasl/sasl.h"; then
+          SASL_CFLAGS="-I$withval/include/sasl"
+        elif test -f "$withval/include/sasl.h"; then
           SASL_CFLAGS="-I$withval/include"
         else
           AC_MSG_ERROR(sasl.h not found)
