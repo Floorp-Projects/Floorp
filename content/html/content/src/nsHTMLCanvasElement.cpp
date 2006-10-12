@@ -305,29 +305,10 @@ nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
 
-  if (mWriteOnly || argc >= 2) {
-    // do a trust check if this is a write-only canvas
-    // or if we're trying to use the 2-arg form
-    nsCOMPtr<nsIScriptSecurityManager> ssm =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (!ssm)
-        return NS_ERROR_FAILURE;
-
-    PRBool isTrusted = PR_FALSE;
-    PRBool isChrome = PR_FALSE;
-    PRBool hasCap = PR_FALSE;
-
-    // The secman really should handle UniversalXPConnect case, since that
-    // should include UniversalBrowserRead... doesn't right now, though.
-    if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
-        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
-        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
-    {
-        isTrusted = PR_TRUE;
-    }
-
-    if (!isTrusted)
-      return NS_ERROR_DOM_SECURITY_ERR;
+  // do a trust check if this is a write-only canvas
+  // or if we're trying to use the 2-arg form
+  if ((mWriteOnly || argc >= 2) && !nsContentUtils::IsCallerTrustedForRead()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   // 0-arg case; convert to png
