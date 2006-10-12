@@ -1099,7 +1099,8 @@ nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Save()
 {
-    mStyleStack.AppendElement(CurrentState());
+    ContextState state = CurrentState();
+    mStyleStack.AppendElement(state);
     cairo_save (mCairo);
     mSaveCount++;
     return NS_OK;
