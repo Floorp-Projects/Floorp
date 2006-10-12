@@ -90,8 +90,10 @@ PROT_URLCanonicalizer.toHex_ = function(val) {
 }
 
 /**
- * Get the canonical version of the given URL for lookup in a table of 
- * type -url.
+ * Canonicalize a URL.  DON'T USE THIS DIRECTLY.  Use
+ * PROT_EnchashDecrypter.prototype.getCanonicalUrl instead.  This method
+ * url-decodes a string, but it doesn't normalize the hostname.  The method
+ * in EnchashDecrypter first calls this method, then normalizes the hostname.
  *
  * @param url String to canonicalize
  *
