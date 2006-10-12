@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const MOZILLA_CONTENT_PACK = "chrome://help/locale/mozillahelp.rdf";
+const MOZILLA_CONTENT_PACK = "chrome://communicator/locale/help/suitehelp.rdf";
 //Set the default content pack to the Mozilla content pack. Use the
 //setHelpFileURI function to set this value.
 var helpFileURI = MOZILLA_CONTENT_PACK;
