@@ -128,7 +128,7 @@ sub doPatch {
 
     } else {
       # Guess the patch file to use:
-      print "\nNo patch file especified, trying to determine the right one to use ...\n\n";
+      print "\nNo patch file specified, trying to determine the right one to use ...\n\n";
 
       print "Bugzilla version ".$Bugzilla::Config::VERSION." detected.\n";
 
@@ -241,12 +241,11 @@ sub doPatch {
     print MYOUTPUTFILE $VERSION;
     close(MYOUTPUTFILE);
 
-    print "\n";
-    print "Congratulations, patch worked flawless!\n";
-    print "\n";
+    print "\nCongratulations, patch worked flawlessly!\n\n";
     print "A backup copy of the modified files has been saved with the .orig sufix.\n";
-
-    1;
+    print "\nBecause tr_install has patched some Bugzilla files, please run tr_install\n";
+    print "again to finish the installation.\n";
+    exit 0;
 }
 
 sub isWindows {
