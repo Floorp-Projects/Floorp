@@ -380,7 +380,7 @@ GiveSystemInfo(void)
 #endif /* IBM R2 */
 
 #if defined(LINUX)
-#include <linux/kernel.h>
+#include <sys/sysinfo.h>
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -391,14 +391,10 @@ GetHighResClock(void *buf, size_t maxbytes)
 static void
 GiveSystemInfo(void)
 {
-    /* XXX sysinfo() does not seem be implemented anywhwere */
-#if 0
     struct sysinfo si;
-    char hn[2000];
     if (sysinfo(&si) == 0) {
 	RNG_RandomUpdate(&si, sizeof(si));
     }
-#endif
 }
 #endif /* LINUX */
 
@@ -950,7 +946,7 @@ for the small amount of entropy it provides.
     }
 
     /* Give in system information */
-    if (gethostname(buf, sizeof(buf)) > 0) {
+    if (gethostname(buf, sizeof(buf)) == 0) {
 	RNG_RandomUpdate(buf, strlen(buf));
     }
     GiveSystemInfo();
