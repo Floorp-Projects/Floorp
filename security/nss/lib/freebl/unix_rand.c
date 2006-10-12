@@ -43,8 +43,9 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <assert.h>
 #include "secrng.h"
+#include "secerr.h"
+#include "prerror.h"
 
 size_t RNG_FileUpdate(const char *fileName, size_t limit);
 
@@ -955,7 +956,7 @@ for the small amount of entropy it provides.
     GiveSystemInfo();
 
     /* grab some data from system's PRNG before any other files. */
-    bytes = RNG_FileUpdate("/dev/urandom", 1024);
+    bytes = RNG_FileUpdate("/dev/urandom", SYSTEM_RNG_SEED_COUNT);
 
     /* If the user points us to a random file, pass it through the rng */
     randfile = getenv("NSRANDFILE");
@@ -1129,4 +1130,32 @@ size_t RNG_FileUpdate(const char *fileName, size_t limit)
 void RNG_FileForRNG(const char *fileName)
 {
     RNG_FileUpdate(fileName, TOTAL_FILE_LIMIT);
+}
+
+size_t RNG_SystemRNG(void *dest, size_t maxLen)
+{
+    FILE *file;
+    size_t bytes;
+    size_t fileBytes = 0;
+    unsigned char *buffer = dest;
+
+    file = fopen("/dev/urandom", "r");
+    if (file == NULL) {
+	PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+	return fileBytes;
+    }
+    while (maxLen > fileBytes) {
+	bytes = maxLen - fileBytes;
+	bytes = fread(buffer, 1, bytes, file);
+	if (bytes == 0) 
+	    break;
+	fileBytes += bytes;
+	buffer += bytes;
+    }
+    fclose(file);
+    if (fileBytes != maxLen) {
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);  /* system RNG failed */
+	fileBytes = 0;
+    }
+    return fileBytes;
 }
