@@ -37,7 +37,8 @@
 #define INCL_DOS
 #define INCL_DOSERRORS
 #include <os2.h>
-#include <secrng.h>
+#include "secrng.h"
+#include "prerror.h"
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -330,4 +331,10 @@ void RNG_FileForRNG(const char *filename)
 
     nBytes = RNG_GetNoise(buffer, 20); 
     RNG_RandomUpdate(buffer, nBytes);
+}
+
+size_t RNG_SystemRNG(void *dest, size_t maxLen)
+{
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return 0;
 }

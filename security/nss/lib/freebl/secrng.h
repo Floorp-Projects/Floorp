@@ -40,7 +40,7 @@
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
  *
- * $Id: secrng.h,v 1.5 2004/04/25 15:03:08 gerv%gerv.net Exp $
+ * $Id: secrng.h,v 1.6 2006/10/12 02:23:49 wtchang%redhat.com Exp $
  */
 
 /******************************************/
@@ -51,11 +51,14 @@
 
 #include "blapi.h"
 
+/* the number of bytes to read from the system random number generator */
+#define SYSTEM_RNG_SEED_COUNT 1024
+
 SEC_BEGIN_PROTOS
 
 /*
-** The following 3 functions are provided by the security library
-** but are differently implemented for the UNIX, Mac and Win
+** The following functions are provided by the security library
+** but are differently implemented for the UNIX, Win, and OS/2
 ** versions
 */
 
@@ -79,6 +82,17 @@ extern void RNG_SystemInfoForRNG(void);
 ** global random number generator.
 */
 extern void RNG_FileForRNG(const char *filename);
+
+/*
+** Get maxbytes bytes of random data from the system random number
+** generator.
+** Returns the number of bytes copied into buf -- maxbytes if success
+** or zero if error.
+** Errors:
+**   PR_NOT_IMPLEMENTED_ERROR   There is no system RNG on the platform.
+**   SEC_ERROR_NEED_RANDOM      The system RNG failed.
+*/
+extern size_t RNG_SystemRNG(void *buf, size_t maxbytes);
 
 SEC_END_PROTOS
 
