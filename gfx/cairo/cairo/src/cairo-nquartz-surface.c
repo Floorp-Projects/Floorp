@@ -1242,7 +1242,9 @@ _cairo_nquartz_surface_stroke (void *abstract_surface,
 
     CGContextSaveGState (surface->cgContext);
 
-    CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
+    // Turning antialiasing off causes misrendering with
+    // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels)
+    //CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
     CGContextSetLineWidth (surface->cgContext, style->line_width);
     CGContextSetLineCap (surface->cgContext, _cairo_nquartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_nquartz_cairo_line_join_to_quartz (style->line_join));
@@ -1358,8 +1360,16 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetFontSize (surface->cgContext, 1.0);
 
     // XXXtodo/perf: stack storage for glyphs/sizes
-    CGGlyph *cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
-    CGSize *cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+#define STATIC_BUF_SIZE 64
+    CGGlyph glyphs_static[STATIC_BUF_SIZE];
+    CGSize cg_advances_static[STATIC_BUF_SIZE];
+    CGGlyph *cg_glyphs = &glyphs_static[0];
+    CGSize *cg_advances = &cg_advances_static[0];
+
+    if (num_glyphs > STATIC_BUF_SIZE) {
+	cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
+	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+    }
 
     double xprev = glyphs[0].x;
     double yprev = glyphs[0].y;
@@ -1387,8 +1397,10 @@ _cairo_nquartz_surface_show_glyphs (void *abstract_surface,
 				     cg_advances,
 				     num_glyphs);
 
-    free (cg_glyphs);
-    free (cg_advances);
+    if (cg_glyphs != &glyphs_static[0]) {
+	free (cg_glyphs);
+	free (cg_advances);
+    }
 
     if (action == DO_SHADING)
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
