@@ -142,13 +142,13 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     caret->GetCaretVisible(&visible);
   if (visible != mVisible) {
     mVisible = visible;
-#ifndef MOZ_ACCESSIBILITY_ATK
+#ifdef XP_WIN
     mRootAccessible->FireToolkitEvent(mVisible? nsIAccessibleEvent::EVENT_SHOW: 
                                       nsIAccessibleEvent::EVENT_HIDE, this, nsnull);
 #endif
   }
 
-#ifndef MOZ_ACCESSIBILITY_ATK
+#ifdef XP_WIN
   // Support old style MSAA caret move events, which utilize screen coodinates
   // rather than position within the text
   nsPresContext *presContext = presShell->GetPresContext();
