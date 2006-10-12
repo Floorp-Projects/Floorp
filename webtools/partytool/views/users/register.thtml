@@ -94,7 +94,7 @@
     //]]>
     </script>
     <p><span class="required">*</span> Required field</p>
-    <p>Drag the map or the marker to specify a location. Set the zoom by using the '+' or '-' buttons on the left.</p>
+    <p>Drag the map or the marker to specify your location. Set the zoom by using the '+' or '-' buttons on the left.</p>
     <p id="map" class="med-map-r"></p>
   <div>
     <?php echo $html->hidden('User/lat', array('id' => 'lat')); 
