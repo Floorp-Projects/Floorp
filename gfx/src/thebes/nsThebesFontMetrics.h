@@ -147,7 +147,7 @@ protected:
 
     const gfxFont::Metrics& GetMetrics() const;
 
-    nsRefPtr<gfxFontGroup> mFontGroup;
+    gfxFontGroup *mFontGroup;
     gfxFontStyle *mFontStyle;
 
 private:

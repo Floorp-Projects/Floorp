@@ -111,18 +111,6 @@ struct THEBES_API gfxFontStyle {
 
     void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
                                 PRInt8 *outOffset) const;
-
-    PRBool Equals(const gfxFontStyle& other) const {
-        return (size == other.size) &&
-            (style == other.style) &&
-            (systemFont == other.systemFont) &&
-            (variant == other.variant) &&
-            (familyNameQuirks == other.familyNameQuirks) &&
-            (weight == other.weight) &&
-            (decorations == other.decorations) &&
-            (langGroup.Equals(other.langGroup)) &&
-            (sizeAdjust == other.sizeAdjust);
-    }
 };
 
 
@@ -172,8 +160,6 @@ protected:
 
 
 class THEBES_API gfxFontGroup {
-    THEBES_INLINE_DECL_REFCOUNTING(gfxFontGroup)
-
 public:
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle);
 
@@ -186,11 +172,6 @@ public:
     }
     PRUint32 FontListLength() const {
         return mFonts.Length();
-    }
-
-    PRBool Equals(const gfxFontGroup& other) const {
-        return mFamilies.Equals(other.mFamilies) &&
-            mStyle.Equals(other.mStyle);
     }
 
     const gfxFontStyle *GetStyle() const { return &mStyle; }
@@ -215,8 +196,6 @@ public:
 
     /* this will call back fc with the a generic font based on the style's langgroup */
     void FindGenericFontFromStyle(FontCreationCallback fc, void *closure);
-
-    const nsString& GetFamilies() { return mFamilies; }
 
 protected:
     nsString mFamilies;

@@ -55,8 +55,6 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 #include "gfxAtsuiFonts.h"
 #endif
 
-#include "gfxTextRunCache.h"
-
 nsThebesFontMetrics::nsThebesFontMetrics()
 {
     mFontStyle = nsnull;
@@ -66,7 +64,7 @@ nsThebesFontMetrics::nsThebesFontMetrics()
 nsThebesFontMetrics::~nsThebesFontMetrics()
 {
     delete mFontStyle;
-    //delete mFontGroup;
+    delete mFontGroup;
 }
 
 NS_IMETHODIMP
@@ -297,8 +295,7 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
         return GetSpaceWidth(aWidth);
 
     const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 
@@ -322,8 +319,7 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
         return GetSpaceWidth(aWidth);
 
     const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 
@@ -383,8 +379,7 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     float app2dev = mDeviceContext->AppUnitsToDevUnits();
 
     const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 
@@ -419,8 +414,7 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     float app2dev = mDeviceContext->AppUnitsToDevUnits();
 
     const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
-    //nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
-    nsRefPtr<gfxTextRun> textrun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(mFontGroup, theString);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 
