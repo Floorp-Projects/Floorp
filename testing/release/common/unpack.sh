@@ -28,7 +28,7 @@ unpack_build () {
               done
             fi
             ;;
-        linux) 
+        linux-i686|linux) 
             tar xfz ../"$pkg_file" > /dev/null
             ;;
     esac

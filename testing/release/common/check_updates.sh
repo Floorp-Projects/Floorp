@@ -20,13 +20,13 @@ check_updates () {
   fi
   
   case $update_platform in
-      mac|mac-ppc) 
+      Darwin_ppc-gcc | Darwin_Universal-gcc3) 
           platform_dirname="*.app"
           ;;
-      win32) 
+      WINNT_x86-msvc) 
           platform_dirname="bin"
           ;;
-      linux) 
+      Linux_x86-gcc) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
           ;;
   esac
