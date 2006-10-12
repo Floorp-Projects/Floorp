@@ -57,7 +57,7 @@ class nsICSSStyleRule;
 class nsISVGValue;
 class nsIDocument;
 template<class E> class nsCOMArray;
-template<class E> class nsTConstPtrArray;
+class nsVoidArray;
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 
@@ -285,7 +285,7 @@ private:
   PRBool EnsureEmptyMiscContainer();
   PRBool EnsureEmptyAtomArray();
 
-  static nsTConstPtrArray<EnumTable>* sEnumTableArray;
+  static nsVoidArray* sEnumTableArray;
 
   PtrBits mBits;
 };

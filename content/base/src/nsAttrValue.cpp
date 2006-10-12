@@ -48,13 +48,12 @@
 #include "nsCSSDeclaration.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
-#include "nsTPtrArray.h"
 
 #ifdef MOZ_SVG
 #include "nsISVGValue.h"
 #endif
 
-nsTConstPtrArray<nsAttrValue::EnumTable>* nsAttrValue::sEnumTableArray = nsnull;
+nsVoidArray* nsAttrValue::sEnumTableArray = nsnull;
 
 nsAttrValue::nsAttrValue()
     : mBits(0)
@@ -98,7 +97,7 @@ nsAttrValue::Init()
 {
   NS_ASSERTION(!sEnumTableArray, "nsAttrValue already initialized");
 
-  sEnumTableArray = new nsTConstPtrArray<EnumTable>;
+  sEnumTableArray = new nsVoidArray;
   NS_ENSURE_TRUE(sEnumTableArray, NS_ERROR_OUT_OF_MEMORY);
   
   return NS_OK;
@@ -351,8 +350,8 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eEnum:
     {
       PRInt16 val = GetEnumValue();
-      const EnumTable* table = sEnumTableArray->
-          ElementAt(GetIntInternal() & NS_ATTRVALUE_ENUMTABLEINDEX_MASK);
+      EnumTable* table = NS_STATIC_CAST(EnumTable*, sEnumTableArray->
+          FastElementAt(GetIntInternal() & NS_ATTRVALUE_ENUMTABLEINDEX_MASK));
       while (table->tag) {
         if (table->value == val) {
           aResult.AssignASCII(table->tag);
@@ -833,18 +832,21 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
 {
   ResetIfSet();
 
+  // Have to const cast here since nsVoidArray can't deal with constpointers
+  EnumTable* tableStart = NS_CONST_CAST(EnumTable*, aTable);
+
   nsAutoString val(aValue);
   while (aTable->tag) {
     if (aCaseSensitive ? val.EqualsASCII(aTable->tag) :
                          val.EqualsIgnoreCase(aTable->tag)) {
 
       // Find index of EnumTable
-      PRInt16 index = sEnumTableArray->IndexOf(aTable);
+      PRInt16 index = sEnumTableArray->IndexOf(tableStart);
       if (index < 0) {
-        index = sEnumTableArray->Length();
+        index = sEnumTableArray->Count();
         NS_ASSERTION(index <= NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE,
                      "too many enum tables");
-        if (!sEnumTableArray->AppendElement(aTable)) {
+        if (!sEnumTableArray->AppendElement(tableStart)) {
           return PR_FALSE;
         }
       }
