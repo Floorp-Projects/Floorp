@@ -74,7 +74,10 @@ if ($action eq 'Add'){
     my $env      = $cgi->param('environment');
     
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if $summary  eq '';
+    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if $env  eq '';
     
+    validate_test_id($env, 'environment');
+     
     detaint_natural($status);
     detaint_natural($build);
     detaint_natural($pversion);
@@ -85,7 +88,6 @@ if ($action eq 'Add'){
     trick_taint($notes);
     trick_taint($prodver);
     
-    ThrowUserError('number_not_numeric', {'field' => 'environment', 'num' => $cgi->param('environment')}) if $env eq '';
     
     if ($cgi->param('new_build')){
         my $new_build   = $cgi->param('new_build');
