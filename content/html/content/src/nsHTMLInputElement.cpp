@@ -1531,8 +1531,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         // Fire event for the previous selected radio.
         nsCOMPtr<nsIDOMHTMLInputElement> previous =
           do_QueryInterface(aVisitor.mItemData);
-        FireEventForAccessibility(previous, aVisitor.mPresContext,
-                                  NS_LITERAL_STRING("RadioStateChange"));
+        if(previous) {
+          FireEventForAccessibility(previous, aVisitor.mPresContext,
+                                    NS_LITERAL_STRING("RadioStateChange"));
+        }
       }
 #endif
     }
