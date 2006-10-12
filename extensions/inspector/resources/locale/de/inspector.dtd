@@ -12,6 +12,10 @@
 
 <!ENTITY mnFile.label "Datei">
 <!ENTITY mnFile.accesskey "D">
+  <!ENTITY mnInspectContentDocument.label "Inhaltsdokument inspizieren">
+  <!ENTITY mnInspectContentDocument.accesskey "h">
+  <!ENTITY mnInspectChromeDocument.label "Chrome-Dokument inspizieren">
+  <!ENTITY mnInspectChromeDocument.accesskey "C">
   <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">
   <!ENTITY cmdClose.label "Schließen">
