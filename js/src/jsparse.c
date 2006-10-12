@@ -403,7 +403,8 @@ MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
          * the real variables objects and function that our new stack frame is
          * going to use.
          */
-        newfp->flags = oldfp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO);
+        newfp->flags = oldfp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO |
+                                       JSFRAME_SCRIPT_OBJECT);
         while (oldfp->flags & JSFRAME_SPECIAL) {
             oldfp = oldfp->down;
             if (!oldfp)
