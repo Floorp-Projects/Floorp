@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="cbox">
-        <span class="ctxt"><?php echo $days_left."</span><br/>".(($days_left == 1) ? ' Day' : ' Days'); ?> left until the parties start!
+        <span class="ctxt"><?php echo $days_left."</span><br/>".(($days_left == 1) ? ' Day' : ' Days'); ?> until we party!
       </div>
     </div>
     <div style="clear: both"></div>

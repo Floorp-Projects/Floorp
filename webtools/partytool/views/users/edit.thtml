@@ -88,11 +88,11 @@
   <h1>Password</h1>
   <div>
     <label for="UserPassword" class="label-large">New password:</label>
-    <?php echo $html->password('User/password', array('size' => 20)); ?>
+    <?php echo $html->password('User/password', array('size' => 20, 'autocomplete' => 'off')); ?>
   </div>
   <div>
-    <label for="UserConfpassword" class="label-large">Confirm  new password:</label>
-    <?php echo $html->password('User/confpassword', array('size' => 20)); ?>
+    <label for="UserConfpassword" class="label-large">Confirm new password:</label>
+    <?php echo $html->password('User/confpassword', array('size' => 20, 'autocomplete' => 'off')); ?>
     <?php echo $html->tagErrorMsg('User/confpassword', 'The supplied passwords do not match!')?>
   </div>
   <?php echo $html->submit('Update'); ?>
