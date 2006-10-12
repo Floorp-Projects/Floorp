@@ -21,7 +21,9 @@
 #include"PlugletsDir.h"
 #include "prenv.h"
 #include "PlugletLog.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsFileSpec.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIDirectoryService.h"
 
 PlugletsDir::PlugletsDir(void) {
     list = NULL;
@@ -43,19 +45,26 @@ void PlugletsDir::LoadPluglets() {
 	list = new List();
 	char * path = PR_GetEnv("PLUGLET");
 	if (!path) {
-	    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
-	    sysdir += "plugins"; 
-	    const char *pluginsDir = sysdir.GetCString(); // native path
-	    if (pluginsDir != NULL)
-	    {
-		const char* allocPath;
-		path = PL_strdup(pluginsDir);
-	    }
+	  nsCOMPtr<nsIFile> sysDir;
+	  nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR,
+					       getter_AddRefs(sysDir));
+          if (NS_FAILED(rv))
+	    return;
+
+	  rv = sysDir->AppendNative(NS_LITERAL_CSTRING("plugins"));
+	  if (NS_FAILED(rv))
+	    return;
+
+	  nsXPIDLCString pluginsDir;
+	  rv = sysDir->GetNativePath(pluginsDir);
+	  if (NS_FAILED(rv))
+	    return;
+
+	  path = PL_strdup(pluginsDir.get());
 	}
 	if (!path) {
 	    return;
 	}
-	int pathLength = strlen(path);
 	PlugletFactory *plugletFactory;
 	nsFileSpec dir(path);
 	for (nsDirectoryIterator iter(dir,PR_TRUE); iter.Exists(); iter++) {

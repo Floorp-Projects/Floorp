@@ -76,7 +76,7 @@ App_UsersPanels50          = App_FileBase   +  90
 App_SearchFile50           = App_FileBase   + 100
 App_SearchDirectory50      = App_FileBase   + 101
 
-# From nsSpecialSystemDirectory.h
+# From SpecialSystemDirectory.h
 OS_DriveDirectory         =   1
 OS_TemporaryDirectory     =   2
 OS_CurrentProcessDirectory=   3

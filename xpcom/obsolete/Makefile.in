@@ -68,7 +68,6 @@ CPPSRCS         = \
 		nsFileStream.cpp \
 		nsIFileStream.cpp \
 		nsFileSpecImpl.cpp \
-		nsSpecialSystemDirectory.cpp \
 		$(NULL)
 
 ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
@@ -83,7 +82,6 @@ EXPORTS		= \
 		nsFileSpec.h    \
 		nsFileStream.h  \
 		nsIFileStream.h \
-		nsSpecialSystemDirectory.h \
 		nsIRegistryUtils.h \
 		$(NULL)
 
