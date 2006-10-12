@@ -20,6 +20,8 @@ do
   do
     rm -rf target/*
     unpack_build ${platform} target $release/*.${locale}.${platform}.*
+    mkdir -p $release/diffs
+    diff -r source target > $release/diffs/${platform}.${locale}.diff
     diff -r source target > ${platform}.${locale}.diff
   done
 done
