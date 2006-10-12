@@ -385,6 +385,8 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
     nsCOMPtr<nsILocalFile> file = do_QueryInterface(aValue);
+    if (!file)
+      return NS_NOINTERFACE;
     nsCAutoString descriptorString;
 
     rv = file->GetPersistentDescriptor(descriptorString);
@@ -402,7 +404,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsILocalFile> file;
     relFilePref->GetFile(getter_AddRefs(file));
     if (!file)
-      return NS_ERROR_FAILURE;
+      return NS_NOINTERFACE;
     nsCAutoString relativeToKey;
     (void) relFilePref->GetRelativeToKey(relativeToKey);
 
@@ -459,6 +461,8 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
   // This is deprecated and you should not be using it
   if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
     nsCOMPtr<nsIFileSpec> file = do_QueryInterface(aValue);
+    if (!file)
+      return NS_NOINTERFACE;
     nsXPIDLCString descriptorString;
 
     rv = file->GetPersistentDescriptorString(getter_Copies(descriptorString));
