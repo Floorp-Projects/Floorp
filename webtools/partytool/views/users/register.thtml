@@ -22,7 +22,7 @@
     field is optional.
   <div>
     <label class="label-large" for="UserLocation">Location:</label>
-    <?php echo $html->input('User/location', array('id' => 'location', 'size' => 40, 'onkeypress' => 'capture(event)')); ?>
+    <?php echo $html->input('User/location', array('id' => 'location', 'size' => 40, 'onkeypress' => 'capture(event)', 'onblur' => 'update()')); ?>
     <div id="locerr" class="info" style="display: none">Did you mean: <a id="locerrlink" onclick="geocode_suggest()" href="#"></a>?  <a href="#" onclick="shide()"><span style="font-size: x-small">(close)</span></a></div>
   </div>
   <p>If you have a website, enter the URL here. (including the http:// ) Your website will be

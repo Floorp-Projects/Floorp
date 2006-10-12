@@ -12,7 +12,7 @@
     <?php echo $html->tagErrorMsg('User/name', 'You must enter a name.')?>
   </div>
   <div>
-    <label for="name" class="label-large">Website:</label>
+    <label for="UserWebsite" class="label-large">Website:</label>
     <?php echo $html->input('User/website', array('size' => 40)); ?>
   </div>
   <div>
@@ -80,8 +80,12 @@
   <div>
     <label for="UserShowemail" class="label-large">Show email:</label>
     <?php echo $html->checkbox('User/showemail'); ?><br/>
+  </div>
+  <div>
     <label for="UserShowloc" class="label-large">Show location:</label>
     <?php echo $html->checkbox('User/showloc'); ?><br/>
+  </div>
+  <div>
     <label for="UserShowmap" class="label-large">Show map:</label>
     <?php echo $html->checkbox('User/showmap'); ?><br/>
   </div>

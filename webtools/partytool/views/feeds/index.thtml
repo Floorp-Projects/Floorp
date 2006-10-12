@@ -8,7 +8,7 @@
     <item>
       <title><?php echo $count; ?></title>
       <description>Total Parties</description>
-      <link><?php echo APP_BASE.$html->url('/'); ?></link>
+      <link><?php echo APP_BASE.$html->url('/parties/view/all/'); ?></link>
     </item>
    </channel>
 </rss>
