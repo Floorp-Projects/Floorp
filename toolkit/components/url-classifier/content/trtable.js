@@ -46,6 +46,7 @@ function UrlClassifierTable() {
   this.debugZone = "urlclassifier-table";
   this.name = '';
   this.needsUpdate = false;
+  this.enchashDecrypter_ = new PROT_EnchashDecrypter();
 }
 
 UrlClassifierTable.prototype.QueryInterface = function(iid) {
@@ -74,7 +75,7 @@ UrlClassifierTableUrl.inherits(UrlClassifierTable);
  * Look up a URL in a URL table
  */
 UrlClassifierTableUrl.prototype.exists = function(url, callback) {
-  var canonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
+  var canonicalized = this.enchashDecrypter_.getCanonicalUrl(url);
   G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");
 
   var dbservice_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
@@ -124,7 +125,8 @@ UrlClassifierTableDomain.inherits(UrlClassifierTable);
  * @returns Boolean true if the url domain is in the table
  */
 UrlClassifierTableDomain.prototype.exists = function(url, callback) {
-  var urlObj = this.ioService_.newURI(url, null, null);
+  var canonicalized = this.enchashDecrypter_.getCanonicalUrl(url);
+  var urlObj = this.ioService_.newURI(canonicalized, null, null);
   var host = '';
   try {
     host = urlObj.host;
@@ -167,7 +169,6 @@ UrlClassifierTableDomain.prototype.exists = function(url, callback) {
 function UrlClassifierTableEnchash() {
   UrlClassifierTable.call(this);
   this.debugZone = "urlclassifier-table-enchash";
-  this.enchashDecrypter_ = new PROT_EnchashDecrypter();
 }
 UrlClassifierTableEnchash.inherits(UrlClassifierTable);
 
