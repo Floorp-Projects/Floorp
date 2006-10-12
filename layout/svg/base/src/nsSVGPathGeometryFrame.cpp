@@ -267,8 +267,6 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
   Render(canvas);
 
   if (NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->IsMarkable()) {
-    // Marker Property is added lazily and may have been removed by a restyle
-    UpdateMarkerProperty();
     nsSVGMarkerProperty *property = GetMarkerProperty();
       
     if (property &&
@@ -741,6 +739,8 @@ nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
       return NS_OK;
 
     outerSVGFrame->InvalidateRect(mRect);
+
+    UpdateMarkerProperty();
     UpdateCoveredRegion();
 
     nsRect filterRect;
