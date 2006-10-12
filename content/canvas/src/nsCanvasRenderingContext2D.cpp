@@ -2399,27 +2399,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     // -- rendering the user's theme and then extracting the results
     // -- rendering native anonymous content (e.g., file input paths;
     // scrollbars should be allowed)
-    nsCOMPtr<nsIScriptSecurityManager> ssm =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (!ssm)
-        return NS_ERROR_FAILURE;
-
-    PRBool isTrusted = PR_FALSE;
-    PRBool isChrome = PR_FALSE;
-    PRBool hasCap = PR_FALSE;
-
-    // The secman really should handle UniversalXPConnect case, since that
-    // should include UniversalBrowserRead... doesn't right now, though.
-    if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
-        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
-        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
-    {
-        isTrusted = PR_TRUE;
-    }
-
-    if (!isTrusted) {
-        // not permitted to use DrawWindow
-        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+    if (!nsContentUtils::IsCallerTrustedForRead()) {
+      // not permitted to use DrawWindow
+      // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SECURITY_ERR;
     }
     
@@ -2818,36 +2800,14 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetImageData()
 {
-    nsresult rv;
-
-    if (mCanvasElement->IsWriteOnly()) {
-        nsCOMPtr<nsIScriptSecurityManager> ssm =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (!ssm)
-            return NS_ERROR_FAILURE;
-
-        PRBool isTrusted = PR_FALSE;
-        PRBool isChrome = PR_FALSE;
-        PRBool hasCap = PR_FALSE;
-
-        // The secman really should handle UniversalXPConnect case, since that
-        // should include UniversalBrowserRead... doesn't right now, though.
-        if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
-            (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
-            (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
-        {
-            isTrusted = PR_TRUE;
-        }
-
-        if (!isTrusted) {
-            // not permitted to use DrawWindow
-            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-            return NS_ERROR_DOM_SECURITY_ERR;
-        }
+    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+      // not permitted to use DrawWindow
+      // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+      return NS_ERROR_DOM_SECURITY_ERR;
     }
 
     nsCOMPtr<nsIXPCNativeCallContext> ncc;
-    rv = nsContentUtils::XPConnect()->
+    nsresult rv = nsContentUtils::XPConnect()->
         GetCurrentNativeCallContext(getter_AddRefs(ncc));
     NS_ENSURE_SUCCESS(rv, rv);
 
