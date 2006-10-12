@@ -2419,6 +2419,8 @@ sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all)
 {
     SFTKSlot *slot;
     int index = sftk_GetModuleIndex(slotID);
+    
+    if (nscSlotHashTable[index] == NULL) return NULL;
     slot = (SFTKSlot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
 							(void *)slotID);
     /* cleared slots shouldn't 'show up' */
@@ -3236,9 +3238,11 @@ sftk_checkNeedLogin(SFTKSlot *slot, NSSLOWKEYDBHandle *keyHandle)
  * the system. */
 CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 {
-    SFTKSlot *slot = sftk_SlotFromID(slotID, PR_FALSE);
+    SFTKSlot *slot; 
     NSSLOWKEYDBHandle *handle;
 
+    if (!nsc_init && !nsf_init) return CKR_CRYPTOKI_NOT_INITIALIZED;
+    slot = sftk_SlotFromID(slotID, PR_FALSE);
     if (slot == NULL) return CKR_SLOT_ID_INVALID;
 
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
