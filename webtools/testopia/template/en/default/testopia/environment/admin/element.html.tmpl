@@ -24,15 +24,8 @@
   # ...
   #%]
 
-
-
-
-<form method="POST" action="tr_admin_environment.cgi" name="form1">
+<form method="POST" action="tr_admin_environment.cgi" name="form1" onsubmit="updateElement();return false">
 <h3>Element Administration</h3>
-  <input type="hidden" name="action" value="[% action FILTER none %]" />
-  <input type="hidden" name="id" value="[% element.id FILTER none %]" />
-  <input type="hidden" name="type" value="element" />
-
 
 <table>
 	<tr>
@@ -125,4 +118,5 @@
 	</tr>
 </table>
   <br />
- <input name="submit" id="element_submit" type="button" value="Submit" onClick="updateElement();">
+ <input name="submit" id="element_submit" type="submit" value="Submit" >
+</form>

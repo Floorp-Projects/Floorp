@@ -26,8 +26,6 @@
 
 <form method="POST" onsubmit="submit_valid_exp();" action="tr_admin_environment.cgi" name="form1">
 <h3>Property Value Administration</h3>
-
-
   <input type="hidden" name="action" value="do_edit" />
   <input type="hidden" name="id" value="[% property.id FILTER none %]" />
   <input type="hidden" name="type" value="validexp" />
@@ -68,3 +66,4 @@
 
   <input name="submit" type="submit" value="Save Changes">
 <p><b>You must click Save Changes for your changes to take effect</b></p>
+</form>

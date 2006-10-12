@@ -24,15 +24,8 @@
   # ...
   #%]
  
-
-<form method="POST" action="tr_admin_environment.cgi" name="form1">
+<form method="POST" action="tr_admin_environment.cgi" name="form1" onsubmit="updateProperty(); return false">
 <h3>Property Administration</h3>
-
-
-  <input type="hidden" name="action" value="[% action FILTER none %]" />
-  <input type="hidden" name="id" value="[% property.id FILTER none %]" />
-  <input type="hidden" name="type" value="property" />
-  
   <table border="0">
     <tr> 
     	<th class="bz_row_header" align="right">Assiged to Element:</th>
@@ -55,4 +48,4 @@
   
   <br />
   
-  <input name="submit" type="button" value="Submit" onclick="updateProperty()">
+  <input name="submit" type="submit" value="Submit">

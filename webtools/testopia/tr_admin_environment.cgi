@@ -520,7 +520,7 @@ sub add_validexp{
 #############################
 sub delete_category{
     my ($id) = (@_);
-    my $category = Bugzilla::Testopia::Environment::Category->new({});
+    my $category = Bugzilla::Testopia::Environment::Category->new($id);
     my $success = $category->obliterate;
     print $success == 1 ? "true" : "false";
 }

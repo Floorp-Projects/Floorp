@@ -22,16 +22,9 @@
 [%# INTERFACE:
   # ...
   #%]
-<script type="text/javascript">
 
-</script>
-
-<form method="POST" action="tr_admin_environment.cgi" name="form1">
+<form method="POST" action="tr_admin_environment.cgi" name="form1" onSubmit="updateCategory();return false;">
 <h3>Category Administration</h3>
-  <input type="hidden" name="action" value="[% action FILTER none %]" />
-  <input type="hidden" name="id" value="[% category.id FILTER none %]" />
-  <input type="hidden" name="type" value="category" />
-  
   <table border="0">
     <tr> 
     <th class="bz_row_header" align="right">Parent Product:</th>
@@ -53,13 +46,5 @@
   
   <br />
   
-  <input name="submit" type="button" value="Submit" onClick="updateCategory()">
-
-
-
-
-
-
-
-
-
+  <input name="submit" type="button" value="Submit">
+</form>
