@@ -27,7 +27,6 @@ CPPSRCS	= \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
 	gfxPlatform.cpp \
-	gfxTextRunCache.cpp \
 	$(NULL)
 
 DEFINES += -DIMPL_THEBES
