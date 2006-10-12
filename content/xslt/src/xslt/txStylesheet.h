@@ -43,7 +43,7 @@
 #include "txExpandedNameMap.h"
 #include "txList.h"
 #include "txXSLTPatterns.h"
-#include "nsTPtrArray.h"
+#include "nsVoidArray.h"
 
 class txInstruction;
 class txToplevelItem;
@@ -52,7 +52,6 @@ class txVariableItem;
 class txStripSpaceItem;
 class txAttributeSetItem;
 class txDecimalFormat;
-class txStripSpaceTest;
 
 class txStylesheet
 {
@@ -162,7 +161,7 @@ private:
     nsresult addGlobalVariable(txVariableItem* aVariable);
     nsresult addFrames(txListIterator& aInsertIter);
     nsresult addStripSpace(txStripSpaceItem* aStripSpaceItem,
-                           nsTPtrArray<txStripSpaceTest>& aFrameStripSpaceTests);
+                           nsVoidArray& frameStripSpaceTests);
     nsresult addAttributeSet(txAttributeSetItem* aAttributeSetItem);
 
     // Refcount
@@ -197,7 +196,7 @@ private:
     txExpandedNameMap mKeys;
     
     // Array of all txStripSpaceTests, sorted in acending order
-    nsTPtrArray<txStripSpaceTest> mStripSpaceTests;
+    nsVoidArray mStripSpaceTests;
     
     // Default templates
     nsAutoPtr<txInstruction> mContainerTemplate;

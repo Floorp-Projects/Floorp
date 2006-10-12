@@ -50,9 +50,9 @@ TX_IMPL_GETTYPE(txStripSpaceItem, txToplevelItem::stripSpace)
 
 txStripSpaceItem::~txStripSpaceItem()
 {
-    PRInt32 i, count = mStripSpaceTests.Length();
+    PRInt32 i, count = mStripSpaceTests.Count();
     for (i = 0; i < count; ++i) {
-        delete mStripSpaceTests[i];
+        delete NS_STATIC_CAST(txStripSpaceTest*, mStripSpaceTests[i]);
     }
 }
 

@@ -272,7 +272,7 @@ txStylesheet::getKeyMap()
 PRBool
 txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    PRInt32 frameCount = mStripSpaceTests.Length();
+    PRInt32 frameCount = mStripSpaceTests.Count();
     if (frameCount == 0) {
         return PR_FALSE;
     }
@@ -293,7 +293,8 @@ txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode, txIMatchContext* aCo
     // check Whitespace stipping handling list against given Node
     PRInt32 i;
     for (i = 0; i < frameCount; ++i) {
-        txStripSpaceTest* sst = mStripSpaceTests[i];
+        txStripSpaceTest* sst =
+            NS_STATIC_CAST(txStripSpaceTest*, mStripSpaceTests[i]);
         if (sst->matches(node, aContext)) {
             return sst->stripsSpace() && !XMLUtils::getXMLSpacePreserve(node);
         }
@@ -321,7 +322,7 @@ txStylesheet::doneCompiling()
     frameIter.reset();
     ImportFrame* frame;
     while ((frame = NS_STATIC_CAST(ImportFrame*, frameIter.next()))) {
-        nsTPtrArray<txStripSpaceTest> frameStripSpaceTests;
+        nsVoidArray frameStripSpaceTests;
 
         txListIterator itemIter(&frame->mToplevelItems);
         itemIter.resetToEnd();
@@ -506,19 +507,23 @@ txStylesheet::addFrames(txListIterator& aInsertIter)
 
 nsresult
 txStylesheet::addStripSpace(txStripSpaceItem* aStripSpaceItem,
-                            nsTPtrArray<txStripSpaceTest>& aFrameStripSpaceTests)
+                            nsVoidArray& frameStripSpaceTests)
 {
-    PRInt32 testCount = aStripSpaceItem->mStripSpaceTests.Length();
+    PRInt32 testCount = aStripSpaceItem->mStripSpaceTests.Count();
     for (; testCount > 0; --testCount) {
-        txStripSpaceTest* sst = aStripSpaceItem->mStripSpaceTests[testCount-1];
+        txStripSpaceTest* sst =
+            NS_STATIC_CAST(txStripSpaceTest*,
+                           aStripSpaceItem->mStripSpaceTests[testCount-1]);
         double priority = sst->getDefaultPriority();
-        PRInt32 i, frameCount = aFrameStripSpaceTests.Length();
+        PRInt32 i, frameCount = frameStripSpaceTests.Count();
         for (i = 0; i < frameCount; ++i) {
-            if (aFrameStripSpaceTests[i]->getDefaultPriority() < priority) {
+            txStripSpaceTest* fsst =
+                NS_STATIC_CAST(txStripSpaceTest*, frameStripSpaceTests[i]);
+            if (fsst->getDefaultPriority() < priority) {
                 break;
             }
         }
-        if (!aFrameStripSpaceTests.InsertElementAt(i, sst)) {
+        if (!frameStripSpaceTests.InsertElementAt(sst, i)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
