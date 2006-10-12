@@ -27,7 +27,7 @@ class PlugletLoader {
  public:
     static char * GetMIMEDescription(const char * path);
     static jobject GetPluglet(const char * path);
-    static void Initialize(void);
+    static NS_EXPORT void Initialize(void);
     static void Destroy(void);
  private:
     static jclass    clazz;

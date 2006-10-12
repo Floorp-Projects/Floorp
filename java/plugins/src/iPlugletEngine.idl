@@ -31,13 +31,12 @@ interface iPlugletEngine : nsISupports
 
     [noscript] void getJNIEnv(out JNIEnv outEnv);
     [noscript] void getPlugletManager(out voidPtr jobj);
-    void getEngine(out iPlugletEngine engine);
     void incObjectCount();
     void decObjectCount();
     readonly attribute boolean unloadable;
 %{C++
 
-     static NS_EXPORT nsresult GetInstance(iPlugletEngine* *result);
+     static NS_EXPORT nsresult GetInstance(void **result);
 
 %}
 };

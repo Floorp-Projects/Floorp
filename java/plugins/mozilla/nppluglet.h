@@ -44,7 +44,7 @@
 class nsPluginInstance : public nsPluginInstanceBase
 {
 public:
-  nsPluginInstance(NPP aInstance);
+  nsPluginInstance(nsPluginCreateData * aCreateDataStruct);
   ~nsPluginInstance();
 
   NPBool init(NPWindow* aWindow);
@@ -57,6 +57,7 @@ public:
   NPError	GetValue(NPPVariable variable, void *value);
 
   // locals
+  NS_IMETHOD HasPlugletForMimeType(const char *aMimeType, PRBool *outResult);
 
   nsScriptablePeer* getScriptablePeer();
 
@@ -64,6 +65,7 @@ private:
   NPP mInstance;
   NPBool mInitialized;
   nsScriptablePeer * mScriptablePeer;
+  nsPluginCreateData mCreateDataStruct;
 
 public:
   char mString[128];

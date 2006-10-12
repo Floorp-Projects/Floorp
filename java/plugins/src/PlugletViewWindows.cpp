@@ -23,6 +23,7 @@
 #include "iPlugletEngine.h"
 #include "nsCOMPtr.h"
 
+#include "nsServiceManagerUtils.h"
 
 jclass   PlugletViewWindows::clazz = NULL;
 jmethodID  PlugletViewWindows::initMID = NULL;
@@ -33,8 +34,9 @@ PlugletViewWindows::PlugletViewWindows() {
     isCreated = FALSE;
 }
 void PlugletViewWindows::Initialize() {
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -79,8 +81,9 @@ PRBool  PlugletViewWindows::SetWindow(nsPluginWindow* window) {
             return PR_FALSE;
         }
     }
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return PR_FALSE;
     }

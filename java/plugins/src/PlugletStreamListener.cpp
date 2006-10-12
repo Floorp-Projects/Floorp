@@ -24,6 +24,7 @@
 #include "PlugletInputStream.h"
 #include "PlugletLog.h"
 #include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
 
 jmethodID PlugletStreamListener::onStartBindingMID = NULL;
 jmethodID PlugletStreamListener::onDataAvailableMID = NULL;
@@ -34,8 +35,9 @@ jmethodID PlugletStreamListener::getStreamTypeMID = NULL;
 void PlugletStreamListener::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::Initialize\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -53,8 +55,9 @@ void PlugletStreamListener::Initialize(void) {
 }
 
 PlugletStreamListener::PlugletStreamListener(jobject object) {
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -71,8 +74,9 @@ PlugletStreamListener::PlugletStreamListener(jobject object) {
 }
 
 PlugletStreamListener::~PlugletStreamListener(void) {
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -88,8 +92,9 @@ PlugletStreamListener::~PlugletStreamListener(void) {
 NS_METHOD  PlugletStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnStartBinding\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return rv;
     }
@@ -109,8 +114,9 @@ NS_METHOD  PlugletStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnDataAvailable\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return rv;
     }
@@ -132,8 +138,9 @@ NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnFileAvailable\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return rv;
     }
@@ -155,8 +162,9 @@ NS_METHOD PlugletStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo
 NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::OnStopBinding\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return rv;
     }
@@ -176,8 +184,9 @@ NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
 NS_METHOD PlugletStreamListener::GetStreamType(nsPluginStreamType *result) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletStreamListener::GetStreamType\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return rv;
     }

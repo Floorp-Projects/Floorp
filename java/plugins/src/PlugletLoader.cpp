@@ -22,7 +22,9 @@
 #include "iPlugletEngine.h"
 #include "PlugletLoader.h"
 #include "PlugletLog.h"
-#include "nsCOMPtr.h"
+#include "nsCOMPtr.h"-
+
+#include "nsServiceManagerUtils.h"
 
 jclass PlugletLoader::clazz = nsnull;
 jmethodID PlugletLoader::getMIMEDescriptionMID = nsnull;
@@ -45,12 +47,17 @@ static char *ToString(jobject obj,JNIEnv *env) {
 	return res;
 }
 
-void PlugletLoader::Initialize(void) {
+NS_EXPORT void PlugletLoader::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::Initialize\n"));
     //nb errors handling
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine =
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
+
+    printf("debug: edburns: plugletEngine: %p", plugletEngine.get());
+    
+
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -88,8 +95,9 @@ void PlugletLoader::Initialize(void) {
 void PlugletLoader::Destroy(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::destroy\n"));
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -112,8 +120,9 @@ char * PlugletLoader::GetMIMEDescription(const char * path) {
 	    return nsnull;
 	}
     }
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return nsnull;
     }
@@ -134,6 +143,8 @@ char * PlugletLoader::GetMIMEDescription(const char * path) {
     }
     
     const char* str = env->GetStringUTFChars(mimeDescription,nsnull);
+
+    printf("debug: edburns: mime description: %s\n", str);
     char *res = nsnull;
     if(str) {
 	res = new char[strlen(str)+1];
@@ -153,8 +164,9 @@ jobject PlugletLoader::GetPluglet(const char * path) {
 	    return nsnull;
 	}
     }    
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return nsnull;
     }

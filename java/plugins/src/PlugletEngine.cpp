@@ -52,7 +52,6 @@ PRLogModuleInfo* PlugletLog::log = NULL;
 int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
 PRInt32 PlugletEngine::lockCount = 0;
-PlugletEngine * PlugletEngine::engine = NULL;
 nsCOMPtr<nsIPluginManager> PlugletEngine::pluginManager;
 jobject PlugletEngine::plugletManager = NULL;
 
@@ -62,7 +61,6 @@ PlugletEngine::PlugletEngine() {
     NS_INIT_ISUPPORTS();
     PlugletLog::log = PR_NewLogModule("pluglets");
     dir = new PlugletsDir();
-    engine = this;
     objectCount++;
 }
 
@@ -185,8 +183,13 @@ void PlugletEngine::StartJVM() {
         return;
     }
     char classpath[1024]="";
+    char debug[256]="";
+    char runjdwp[256]="";
+    sprintf(debug, "-Xdebug");
+    sprintf(runjdwp, 
+            "-Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=y");
     JavaVMInitArgs vm_args;
-    JavaVMOption options[2];
+    JavaVMOption options[4];
     char * classpathEnv = PR_GetEnv("CLASSPATH");
     if (classpathEnv != NULL) {
         sprintf(classpath, "-Djava.class.path=%s",classpathEnv);
@@ -194,11 +197,13 @@ void PlugletEngine::StartJVM() {
                ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
     }
     options[0].optionString = classpath;
-    options[1].optionString=""; //-Djava.compiler=NONE";
-    vm_args.version = 0x00010002;
+    options[1].optionString = debug;
+    options[2].optionString = runjdwp;
+    options[3].optionString=""; //-Djava.compiler=NONE";
+    vm_args.version = JNI_VERSION_1_4;
     vm_args.options = options;
-    vm_args.nOptions = 2;
-    vm_args.ignoreUnrecognized = JNI_TRUE;
+    vm_args.nOptions = 1; // EDBURNS: Change for debugging
+    vm_args.ignoreUnrecognized = JNI_FALSE;
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
     printf("--bcJavaGlobal::StartJVM jvm started res %d\n",res);
@@ -276,15 +281,6 @@ NS_IMETHODIMP PlugletEngine::GetPlugletManager(void * *jobj)
     return NS_OK;
 }
 
-NS_IMETHODIMP PlugletEngine::GetEngine(iPlugletEngine **outEngine)
-{
-    if (nsnull == outEngine) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    *outEngine = engine;
-    return NS_OK;
-}
-
 NS_IMETHODIMP PlugletEngine::IncObjectCount()
 {
     objectCount++;
@@ -317,14 +313,16 @@ static NS_METHOD PlugletEngineRegistration(nsIComponentManager *aCompMgr,
     nsresult rv;
     nsCOMPtr<nsIServiceManager> servman =
 	do_QueryInterface((nsISupports*)aCompMgr, &rv);
-    if (NS_FAILED(rv))
-	return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
     nsCOMPtr<nsICategoryManager> catman;
     servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
 				    NS_GET_IID(nsICategoryManager),
 				    getter_AddRefs(catman));
-    if (NS_FAILED(rv))
-	return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
     char* previous = nsnull;
     rv = catman->AddCategoryEntry("xpcom-startup",
 				  "PlugletEngine",
@@ -362,7 +360,7 @@ static NS_METHOD PlugletEngineUnregistration(nsIComponentManager *aCompMgr,
 
 NS_EXPORT
 nsresult
-iPlugletEngine::GetInstance(iPlugletEngine* *result)
+iPlugletEngine::GetInstance(void ** result)
 {
     nsIServiceManager *servman = nsnull;
     NS_GetServiceManager(&servman);
@@ -370,6 +368,9 @@ iPlugletEngine::GetInstance(iPlugletEngine* *result)
     rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
                                          NS_GET_IID(iPlugletEngine),
                                          (void **) &result);
+
+    printf("debug: edburns: plugletEngine instance rv: %d\n", rv);
+    printf("debug: edburns: plugletEngine instance result: %p\n", *result);
     if (NS_FAILED(rv)) {
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
                ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
@@ -386,8 +387,7 @@ PlugletEngine *PlugletEngine::_NewInstance()
     return result;
 }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(PlugletEngine, 
-                                         PlugletEngine::_NewInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PlugletEngine)
 
 static const nsModuleComponentInfo components[] =
 {

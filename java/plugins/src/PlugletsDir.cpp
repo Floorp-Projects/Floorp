@@ -25,91 +25,112 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIDirectoryService.h"
 
-PlugletsDir::PlugletsDir(void) {
-    list = NULL;
-    //nb ???
+static PRIntn DeleteEntryEnumerator(PLHashEntry *he, PRIntn i, void *arg)
+{
+    PLHashTable *hash = (PLHashTable *) arg;
+    PL_HashTableRemove(hash, he->key);
+
+    void *key = (void *) he->key;
+    nsMemory::Free(key);
+
+    PlugletFactory *toDelete = (PlugletFactory *) he->value;
+    delete toDelete;
+    return 0;
+}
+
+PlugletsDir::PlugletsDir(void) : mMimeTypeToPlugletFacoryHash(nsnull) {
 }
 
 PlugletsDir::~PlugletsDir(void) {
-    if (list) {
-	for (ListIterator *iter = list->GetIterator();iter->Get();delete iter->Get(),iter->Next())
-	    ;
-	delete list;
+    if (mMimeTypeToPlugletFacoryHash) {
+	PL_HashTableEnumerateEntries(mMimeTypeToPlugletFacoryHash,
+				     DeleteEntryEnumerator, 
+				     mMimeTypeToPlugletFacoryHash);
+	PL_HashTableDestroy(mMimeTypeToPlugletFacoryHash);
+	mMimeTypeToPlugletFacoryHash = nsnull;
     }
 }
 
-void PlugletsDir::LoadPluglets() {
+nsresult PlugletsDir::LoadPluglets() {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletsDir::LoadPluglets\n"));
-    if (!list) {
-	list = new List();
+    const char *mimeType = nsnull;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (!mMimeTypeToPlugletFacoryHash) {
+	mMimeTypeToPlugletFacoryHash = 
+	    PL_NewHashTable(20, PL_HashString, 
+			    PL_CompareStrings, 
+			    PL_CompareValues, 
+			    nsnull, nsnull);
 	char * path = PR_GetEnv("PLUGLET");
 	if (!path) {
 	  nsCOMPtr<nsIFile> sysDir;
 	  nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR,
 					       getter_AddRefs(sysDir));
-          if (NS_FAILED(rv))
-	    return;
+          if (NS_FAILED(rv)) {
+	    return rv;
+	  }
 
 	  rv = sysDir->AppendNative(NS_LITERAL_CSTRING("plugins"));
-	  if (NS_FAILED(rv))
-	    return;
+	  if (NS_FAILED(rv)) {
+	    return rv;
+	  }
 
 	  nsXPIDLCString pluginsDir;
 	  rv = sysDir->GetNativePath(pluginsDir);
-	  if (NS_FAILED(rv))
-	    return;
+	  if (NS_FAILED(rv)) {
+	    return rv;
+	  }
 
 	  path = PL_strdup(pluginsDir.get());
 	}
 	if (!path) {
-	    return;
+	    return rv;
 	}
 	PlugletFactory *plugletFactory;
 	nsFileSpec dir(path);
 	for (nsDirectoryIterator iter(dir,PR_TRUE); iter.Exists(); iter++) {
 	    const nsFileSpec& file = iter;
 	    const char* name = file.GetCString();
+		printf("debug: edburns: PlugletsDir::LoadPluglets: name: %s\n", name);
 	    int length;
 	    if((length = strlen(name)) <= 4  // if it's shorter than ".jar"
 	       || strcmp(name+length - 4,".jar") ) {
 		continue;
 	    }
 	    if ( (plugletFactory = PlugletFactory::Load(name)) ) {
-		list->Add(plugletFactory);
+		mimeType = nsnull;
+		rv = plugletFactory->GetMIMEDescription(&mimeType);
+		if (NS_SUCCEEDED(rv)) {
+		    PLHashEntry *entry = 
+			PL_HashTableAdd(mMimeTypeToPlugletFacoryHash,
+					(const void *) PL_strdup(mimeType), 
+					plugletFactory);
+		    rv = (nsnull != entry) ? NS_OK : NS_ERROR_FAILURE;
+		}
 	    }
 	}
     }
+    return rv;
 }
 
 nsresult PlugletsDir::GetPlugletFactory(const char * mimeType, PlugletFactory **plugletFactory) {
     if(!plugletFactory) {
 	return NS_ERROR_NULL_POINTER;
     }
-    *plugletFactory = NULL;
+    *plugletFactory = nsnull;
+    PlugletFactory *cur = nsnull;
     nsresult res = NS_ERROR_FAILURE;
-    if(!list) {
-	LoadPluglets();
+    if(!mMimeTypeToPlugletFacoryHash) {
+	res = LoadPluglets();
     }
-    for (ListIterator *iter = list->GetIterator();iter->Get();iter->Next()) {
-	if(((PlugletFactory*)(iter->Get()))->Compare(mimeType)) {
-	    *plugletFactory = (PlugletFactory*)iter->Get();
-	    res = NS_OK;
-	    break;
-	}
+    if (NS_SUCCEEDED(res) && mMimeTypeToPlugletFacoryHash) {
+	*plugletFactory = (PlugletFactory *) 
+	    PL_HashTableLookup(mMimeTypeToPlugletFacoryHash,
+			       (const void *)mimeType);
+	printf("debug: edburns: %p\n", *plugletFactory);
+	res = (nsnull != *plugletFactory) ? NS_OK : NS_ERROR_FAILURE;
     }
     return res;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

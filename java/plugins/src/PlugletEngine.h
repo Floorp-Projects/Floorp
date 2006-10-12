@@ -48,7 +48,6 @@ class PlugletEngine : public nsIObserver, public iPlugletEngine, public nsIPlugi
     static int objectCount;
     static PRInt32 lockCount;
     static PlugletsDir *dir;
-    static PlugletEngine * engine;
     static nsCOMPtr<nsIPluginManager>  pluginManager;
     static jobject plugletManager;
 #ifndef OJI_DISABLE

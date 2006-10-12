@@ -27,6 +27,8 @@
 #include "plstr.h"
 #include "PlugletLog.h"
 
+#include "nsServiceManagerUtils.h"
+
 jmethodID PlugletFactory::createPlugletMID = NULL;
 jmethodID PlugletFactory::initializeMID = NULL;  
 jmethodID PlugletFactory::shutdownMID = NULL;
@@ -40,7 +42,8 @@ nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void 
 	return NS_ERROR_FAILURE;
     }
     JNIEnv *env = nsnull;
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
+
     rv = plugletEngine->GetJNIEnv(&env);
 
     if (NS_FAILED(rv)) {
@@ -159,18 +162,15 @@ PlugletFactory::PlugletFactory(const char *mimeDescription, const char *path) : 
     this->mimeDescription = new char[strlen(mimeDescription)+1];
     strcpy(this->mimeDescription,mimeDescription);
 
-    nsIServiceManager *servman = nsnull;
-    NS_GetServiceManager(&servman);
-    nsresult rv;
-    rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
-					 NS_GET_IID(iPlugletEngine),
-					 getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
+    printf("debug: edburns: PlugletFactory ctor: rv: %d\n", rv);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	       ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
 	return;
     }
-    
+    printf("debug: edburns: PlugletFactory ctor: this: %p\n", this);
 }
  
 PlugletFactory::~PlugletFactory(void) {

@@ -22,12 +22,15 @@
 #include "nsCOMPtr.h"
 #include "iPlugletEngine.h"
 
+#include "nsServiceManagerUtils.h"
+
 jclass    PlugletInputStream::clazz = NULL;
 jmethodID PlugletInputStream::initMID = NULL;
 
 void PlugletInputStream::Initialize(void) {
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -55,8 +58,9 @@ void PlugletInputStream::Initialize(void) {
 
 void PlugletInputStream::Destroy(void) {
     //nb  who gonna cal it?
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -73,8 +77,9 @@ void PlugletInputStream::Destroy(void) {
 
 jobject PlugletInputStream::GetJObject(const nsIInputStream *stream) {
     jobject res = nsnull;
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return res;
     }

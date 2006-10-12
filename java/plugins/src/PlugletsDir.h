@@ -21,17 +21,17 @@
 #ifndef __PlugletsDir_h__
 #define __PlugletsDir_h__
 #include "PlugletFactory.h"
-#include "List.h"
+#include "plhash.h"
 
 class PlugletsDir {
     friend class PlugletsDirIterator;
  public:
     PlugletsDir(void);
     ~PlugletsDir(void);
-    void LoadPluglets();
+    nsresult LoadPluglets();
     nsresult GetPlugletFactory(const char * mimeType,PlugletFactory **plugletFactory);
  private:
-    List * list;
+    PLHashTable *mMimeTypeToPlugletFacoryHash;
 };
 #endif /* __PlugletsDir_h__ */
 

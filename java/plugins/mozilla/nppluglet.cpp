@@ -38,10 +38,14 @@
 #include "nppluglet.h"
 
 #include "PlugletLoader.h"
+#include "iPlugletEngine.h"
+#include "nsIPlugin.h"
 
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsISupportsUtils.h" // this is where some useful macros defined
+
+#include "nsServiceManagerUtils.h"
 
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
@@ -95,18 +99,17 @@ NPError NS_PluginInitialize()
   // in the future so we don't need to do casting of any sort.
   if(sm) {
     sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
+    printf("debug: edburns: gServiceManager: %p\n\n", gServiceManager);
     NS_RELEASE(sm);
   }
 
   PlugletLoader::Initialize();
-  
+
   return NPERR_NO_ERROR;
 }
 
 void NS_PluginShutdown()
 {
-
-  PlugletLoader::Destroy();
 
   // we should release the service manager
   NS_IF_RELEASE(gServiceManager);
@@ -119,11 +122,24 @@ void NS_PluginShutdown()
 //
 nsPluginInstanceBase * NS_NewPluginInstance(nsPluginCreateData * aCreateDataStruct)
 {
-  if(!aCreateDataStruct)
-    return NULL;
-
-  nsPluginInstance * plugin = new nsPluginInstance(aCreateDataStruct->instance);
-  return plugin;
+    nsPluginInstance * result = nsnull;
+    nsresult rv = NS_ERROR_FAILURE;
+    if(aCreateDataStruct) {
+        result = new nsPluginInstance(aCreateDataStruct);
+        PRBool isSupported = PR_FALSE;
+        rv = result->HasPlugletForMimeType(aCreateDataStruct->type, 
+                                           &isSupported);
+        if (NS_SUCCEEDED(rv)) {
+            if (!isSupported) {
+                result = nsnull;
+            }
+        }
+        else {
+            result = nsnull;
+        }
+    }
+    
+    return result;
 }
 
 void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
@@ -136,11 +152,17 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
 //
 // nsPluginInstance class implementation
 //
-nsPluginInstance::nsPluginInstance(NPP aInstance) : nsPluginInstanceBase(),
-  mInstance(aInstance),
+nsPluginInstance::nsPluginInstance(nsPluginCreateData * aCreateDataStruct) : nsPluginInstanceBase(),
+  mInstance(aCreateDataStruct->instance),
   mInitialized(FALSE),
   mScriptablePeer(NULL)
 {
+  mCreateDataStruct.instance = aCreateDataStruct->instance;
+  mCreateDataStruct.type = aCreateDataStruct->type;
+  mCreateDataStruct.mode = aCreateDataStruct->mode;
+  mCreateDataStruct.argc = aCreateDataStruct->argc;
+  mCreateDataStruct.argn = aCreateDataStruct->argn;
+  mCreateDataStruct.saved = aCreateDataStruct->saved;
   mString[0] = '\0';
 }
 
@@ -172,6 +194,29 @@ NPBool nsPluginInstance::isInitialized()
 {
   return mInitialized;
 }
+
+NS_IMETHODIMP nsPluginInstance::HasPlugletForMimeType(const char *aMimeType, 
+                                                      PRBool *outResult)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPlugin> pluglet =
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
+    void *outInstance = nsnull;
+    *outResult = PR_FALSE;
+    nsIID scriptableIID = NS_ISIMPLEPLUGIN_IID;    
+    
+    if (NS_SUCCEEDED(rv)) {
+        rv = pluglet->CreatePluginInstance(nsnull, scriptableIID, 
+                                           aMimeType, &outInstance);
+        if (NS_SUCCEEDED(rv) && outInstance) {
+            *outResult = PR_TRUE;
+        }
+    }
+
+    return rv;
+}
+
 
 
 // ==============================

@@ -78,7 +78,7 @@
   </target>
 
   <target name="main" 
-          depends="prepare,compile.classes,compile.src,compile.jni,compile.examples"/>
+          depends="prepare,compile.classes,compile.src,compile.jni,compile.mozilla,compile.examples"/>
 
   <target name="compile.classes">
 
@@ -122,6 +122,17 @@
 
   </target>
 
+  <target name="compile.mozilla">
+
+    <exec os="SunOS" dir="${basedir}/mozilla" failonerror="yes" 
+                     executable="gmake"/>
+    <exec os="Linux" dir="${basedir}/mozilla" failonerror="yes" 
+                     executable="make"/>
+    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+                     failonerror="yes"/>
+
+  </target>
+
   <target name="clean.classes">
     <delete dir="${build.home}/org/mozilla/pluglets"/>
   </target>
@@ -134,9 +145,14 @@
       </fileset>
     </delete>
 
-
     <delete >
       <fileset dir="${basedir}/jni">
+        <include name="*.ilk"/>
+      </fileset>
+    </delete>
+
+    <delete >
+      <fileset dir="${basedir}/mozilla">
         <include name="*.ilk"/>
       </fileset>
     </delete>
@@ -168,6 +184,20 @@
           failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
+
+    <exec os="SunOS" dir="${basedir}/mozilla" executable="gmake" 
+          failonerror="yes">
+      <arg line="clobber_all"/>
+    </exec>
+    <exec os="Linux" dir="${basedir}/mozilla" executable="make" 
+          failonerror="yes">
+      <arg line="clobber_all"/>
+    </exec>
+    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+                     failonerror="yes">
+      <arg line="clobber_all"/>
+    </exec>
+
 
   </target>
 

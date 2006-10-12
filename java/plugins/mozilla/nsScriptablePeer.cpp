@@ -121,3 +121,14 @@ void nsScriptablePeer::SetInstance(nsPluginInstance* plugin)
 //    mPlugin->getVersion(aVersion);
 //  return NS_OK;
 //}
+
+NS_IMETHODIMP nsScriptablePeer::HasPlugletForMimeType(const char *aMimeType, PRBool *isSupported)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mPlugin) {
+        rv = mPlugin->HasPlugletForMimeType(aMimeType, isSupported);
+    }
+    return rv;
+
+}
+

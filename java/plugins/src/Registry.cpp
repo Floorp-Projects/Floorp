@@ -23,6 +23,8 @@
 #include "Registry.h"
 #include "nsCOMPtr.h"
 
+#include "nsServiceManagerUtils.h"
+
 jclass Registry::clazz = NULL;
 jmethodID Registry::setPeerMID = NULL;
 jmethodID Registry::removeMID = NULL;
@@ -34,8 +36,9 @@ void Registry::SetPeer(jobject key, jlong peer) {
             return;
         }
     }
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -59,8 +62,9 @@ void Registry::Remove(jobject key) {
             return;
         }
     }
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -78,8 +82,9 @@ void Registry::Remove(jobject key) {
 }
 
 void Registry::Initialize() {
-    nsCOMPtr<iPlugletEngine> plugletEngine;
-    nsresult rv = iPlugletEngine::GetInstance(getter_AddRefs(plugletEngine));
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);;
     if (NS_FAILED(rv)) {
 	return;
     }
