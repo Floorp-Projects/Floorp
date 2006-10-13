@@ -207,7 +207,9 @@ class PartiesController extends AppController {
       if ($page < $pages)
         $this->set('next', $page + 1);
 
-      $this->set('parties', $this->Party->findAll(null, null, "name ASC", 10, $page));
+      $deck = $this->Party->findAll(null, null, "id ASC", 100, $page);
+      shuffle($deck);
+      $this->set('parties', $deck);
     }
 
     else if (is_numeric($id)) {
