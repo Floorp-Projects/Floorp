@@ -34,9 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+uses('sanitize');
 class AdminController extends AppController {
   var $name = 'Admin';
   var $uses = array('Party', 'User', 'Comment');
+  var $components = array('Unicode');
 
   function beforeFilter() {
     if (empty($_SESSION['User']) || $_SESSION['User']['role'] != 1) {

@@ -59,7 +59,8 @@
                  '9' => 'GMT+9',
                  '10' => 'GMT+10',
                  '11' => 'GMT+11',
-                 '12' => 'GMT+12');
+                 '12' => 'GMT+12',
+                 '13' => 'GMT+13');
       echo $html->selectTag('User/tz', $tzs, $utz, null, null, false); 
     ?>
     (this page was loaded at <?php echo gmdate("Y-m-d H:i:s"); ?> GMT)
