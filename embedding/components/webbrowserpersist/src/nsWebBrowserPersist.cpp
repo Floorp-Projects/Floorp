@@ -3930,22 +3930,19 @@ nsWebBrowserPersist::SetDocumentBase(
     // Add the BASE element
     if (!baseElement)
     {
-        if (!baseElement)
-        {
-            nsCOMPtr<nsIDOMNode> newNode;
-            if (xmlDoc)
-            {
-                aDocument->CreateElementNS(
-                    kXHTMLNS,
-                    kBase, getter_AddRefs(baseElement));
-            }
-            else
-            {
-                aDocument->CreateElement(
-                    kBase, getter_AddRefs(baseElement));
-            }
-            headElement->AppendChild(baseElement, getter_AddRefs(newNode));
-        }
+      nsCOMPtr<nsIDOMNode> newNode;
+      if (xmlDoc)
+      {
+          aDocument->CreateElementNS(
+              kXHTMLNS,
+              kBase, getter_AddRefs(baseElement));
+      }
+      else
+      {
+          aDocument->CreateElement(
+              kBase, getter_AddRefs(baseElement));
+      }
+      headElement->AppendChild(baseElement, getter_AddRefs(newNode));
     }
     if (!baseElement)
     {
