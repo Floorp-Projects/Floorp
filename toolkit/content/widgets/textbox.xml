@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
   <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
   %textcontextDTD;
 ]>

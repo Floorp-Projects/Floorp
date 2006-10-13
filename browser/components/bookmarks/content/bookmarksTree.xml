@@ -41,7 +41,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
   <!ENTITY % bookmarksDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd" >
   %bookmarksDTD;
 ]>

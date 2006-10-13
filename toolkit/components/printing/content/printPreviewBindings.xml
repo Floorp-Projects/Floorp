@@ -39,7 +39,7 @@
 
 # this file depends on printUtils.js
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
 <!ENTITY % printPreviewDTD SYSTEM "chrome://global/locale/printPreview.dtd" >
 %printPreviewDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">

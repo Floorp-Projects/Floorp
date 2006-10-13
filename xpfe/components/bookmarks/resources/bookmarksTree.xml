@@ -47,7 +47,7 @@
      Before use, these must be initialized by calling initServices() and 
      initBMService() -->
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
   <!ENTITY % bookmarksDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd" >
   %bookmarksDTD;
 ]>

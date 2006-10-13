@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/console.dtd">
+<!DOCTYPE bindings SYSTEM "chrome://global/locale/console.dtd">
 
 <bindings id="consoleBindings"
           xmlns="http://www.mozilla.org/xbl"

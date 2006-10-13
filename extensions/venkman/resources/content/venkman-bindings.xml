@@ -39,7 +39,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman.dtd">
+<!DOCTYPE bindings SYSTEM "chrome://venkman/locale/venkman.dtd">
 
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
