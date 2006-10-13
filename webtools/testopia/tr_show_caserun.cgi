@@ -142,7 +142,7 @@ elsif ($action eq 'delete'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
-    $caserun->do_delete;
+    $caserun->obliterate;
     $cgi->delete_all;
     $cgi->param('current_tab', 'case_run');
     $cgi->param('run_id', $caserun->run->id);

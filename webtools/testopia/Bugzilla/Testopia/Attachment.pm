@@ -311,10 +311,13 @@ safe way to do this.
 sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
+    return 0 unless $self->candelete;
+    
     $dbh->do("DELETE FROM test_attachment_data 
               WHERE attachment_id = ?", undef, $self->{'attachment_id'});
     $dbh->do("DELETE FROM test_attachments 
               WHERE attachment_id = ?", undef, $self->{'attachment_id'});
+    return 1;
 }
 
 =head2 canview

@@ -160,6 +160,9 @@
         <input type="submit" name="action" value="History">
         <input type="submit" name="action" value="Clone">
         <input type="submit" name="action" value="Print">
+      [% IF plan.candelete %]
+        <input type="submit" name="action" value="Delete">
+      [% END %]
       </div></td>
     </tr>
   </tbody>

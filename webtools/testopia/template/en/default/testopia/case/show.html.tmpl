@@ -169,6 +169,9 @@
         <input type="submit" name="action" value="Commit">
         <input type="submit" name="action" value="History">
         <input type="submit" name="action" value="Clone">
+      [% IF case.candelete %]
+        <input type="submit" name="action" value="Delete">
+      [% END %]
       </div></td>
     </tr>
   </tbody>

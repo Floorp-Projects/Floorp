@@ -403,6 +403,28 @@ sub history {
     return $ref;
 }
 
+=head2 obliterate
+
+Removes this run and all things that reference it.
+
+=cut
+
+sub obliterate {
+    my $self = shift;
+    return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_run_cc WHERE run_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_run_tags WHERE run_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_run_activity WHERE run_id = ?", undef, $self->id);
+    
+    foreach my $obj (@{$self->caseruns}){
+        $obj->obliterate;
+    }
+    
+    $dbh->do("DELETE FROM test_runs WHERE run_id = ?", undef, $self->id);
+    return 1;
+}
 
 =head2 Check_case
 
@@ -708,7 +730,8 @@ Returns true if the logged in user has rights to delete this test run.
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param('allow-test-deletion');
+    return $self->canedit && Param('allow-test-deletion') 
+      && (Bugzilla->user->id == $self->manager->id || Bugzilla->user->in_group('admin'));
 }
 
 ###############################
@@ -1132,6 +1155,29 @@ sub current_caseruns {
     }
     $self->{'current_caseruns'} = \@caseruns;
     return $self->{'current_caseruns'};
+}
+
+=head2 caseruns
+
+Returns a reference to a list of TestCaseRun objects that belong
+to this run
+
+=cut
+
+sub caseruns {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'caseruns'} if exists $self->{'caseruns'};
+    my $ref = $dbh->selectcol_arrayref(
+        "SELECT case_run_id FROM test_case_runs
+         WHERE run_id=?", undef, $self->{'run_id'});
+    my @caseruns;
+    
+    foreach my $id (@{$ref}){
+        push @caseruns, Bugzilla::Testopia::TestCaseRun->new($id);
+    }
+    $self->{'caseruns'} = \@caseruns;
+    return $self->{'caseruns'};
 }
 
 =head2 case_id_list

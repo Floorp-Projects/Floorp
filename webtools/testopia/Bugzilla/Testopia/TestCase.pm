@@ -1197,6 +1197,37 @@ sub can_unlink_plan {
     return !$res;
 }
 
+=head2 obliterate
+
+Removes this case and all things that reference it.
+
+=cut
+
+sub obliterate {
+    my $self = shift;
+    return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_case_texts WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_plans WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_components WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_tags WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_bugs WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_activity WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_dependencies 
+               WHERE dependson = ? OR blocked = ?", undef, ($self->id, $self->id));
+
+    foreach my $obj (@{$self->attachments}){
+        $obj->obliterate;
+    }
+    foreach my $obj (@{$self->caseruns}){
+        $obj->obliterate;
+    }
+    
+    $dbh->do("DELETE FROM test_cases WHERE case_id = ?", undef, $self->id);
+    return 1;
+}
+
 =head2 canedit
 
 Returns true if the logged in user has rights to edit this test case.
@@ -1235,7 +1266,8 @@ Returns true if the logged in user has rights to delete this test case.
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param("allow-test-deletion");
+    return $self->canedit && Param("allow-test-deletion")
+      && (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));
 }
 
 ###############################
@@ -1502,10 +1534,34 @@ sub bugs {
          undef, $self->{'case_id'});
     my @bugs;
     foreach my $id (@{$ref}){
-        push @bugs, Bugzilla::Bug->new($id, Bugzilla->user->id);
+        push @bugs, Bugzilla::Bug->new($id, Bugzilla->user->id) if Bugzilla->user->can_see_bug($id);
     }
     $self->{'bugs'} = \@bugs;
     return $self->{'bugs'};
+}
+
+=head2 bug_list
+
+Returns a comma separated list of bug ids associated with this case
+
+=cut
+
+sub bug_list {
+    my $self = shift;
+    return $self->{'bug_list'} if exists $self->{'bug_list'};
+    my $dbh = Bugzilla->dbh;
+    my @bugs;
+    my $bugids = $dbh->selectcol_arrayref("SELECT bug_id 
+                                     FROM test_case_bugs 
+                                     WHERE case_id=?", 
+                                     undef, $self->id);
+    my @visible;
+    foreach my $bugid (@{$bugids}){
+        push @visible, $bugid if Bugzilla->user->can_see_bug($bugid);
+    }
+    $self->{'bug_list'} = join(",", @$bugids);
+    
+    return $self->{'bug_list'};
 }
 
 =head2 text
@@ -1541,12 +1597,12 @@ sub runs {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
     return $self->{'runs'} if exists $self->{'runs'};
-    my $ref = $dbh->selectcol_arrayref("SELECT t.run_id
-                                       FROM test_runs t
-                                       INNER JOIN  test_case_runs r
-                                       ON r.run_id = t.run_id
-                                       WHERE case_id = ?", 
-                                       undef, $self->{'case_id'});
+    my $ref = $dbh->selectcol_arrayref(
+      "SELECT DISTINCT t.run_id
+       FROM test_runs t
+       INNER JOIN  test_case_runs r ON r.run_id = t.run_id
+       WHERE case_id = ?", 
+       undef, $self->{'case_id'});
     my @runs;
     foreach my $id (@{$ref}){
         push @runs, Bugzilla::Testopia::TestRun->new($id);

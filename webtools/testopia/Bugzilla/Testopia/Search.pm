@@ -406,8 +406,26 @@ sub init {
                       "ON case_plans.plan_id = test_plans.plan_id");
                $f = "test_plans.plan_id";
          },
+         "^plan_case_id," => sub {
+               push(@supptables,
+                      "INNER JOIN test_case_plans AS case_plans " .
+                      "ON test_plans.plan_id = case_plans.plan_id");
+               push(@supptables,
+                      "INNER JOIN test_cases " .
+                      "ON case_plans.case_id = test_cases.case_id");
+               $f = "test_cases.case_id";
+         },
          "^run_plan_id," => sub {
                $f = "test_runs.plan_id";
+         },
+         "^run_case_id," => sub {
+               push(@supptables,
+                      "INNER JOIN test_case_runs AS case_runs " .
+                      "ON test_runs.run_id = case_runs.run_id");
+               push(@supptables,
+                      "INNER JOIN test_cases " .
+                      "ON case_runs.case_id = test_cases.case_id");
+               $f = "test_cases.case_id";
          },
          "^case_prod," => sub {
                push(@supptables,
@@ -537,7 +555,15 @@ sub init {
             	$type = $cgi->param('caseidtype')
             } 
         }
-        push(@specialchart, ["case_id", $type, join(',', $cgi->param('case_id'))]);
+        if ($obj eq 'run'){
+            push(@specialchart, ["run_case_id", $type, join(',', $cgi->param('case_id'))]);
+        }
+        elsif ($obj eq 'plan'){
+            push(@specialchart, ["plan_case_id", $type, join(',', $cgi->param('case_id'))]);
+        }
+        else{
+            push(@specialchart, ["case_id", $type, join(',', $cgi->param('case_id'))]);
+        }
     }
     if ($cgi->param('run_id')) {
         my $type = "anyexact";

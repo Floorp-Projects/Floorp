@@ -34,29 +34,31 @@
 [%############################################################################%]
 
 [% PROCESS global/header.html.tmpl 
-  title = "Delete Test plan: $plan.name" 
+  title = "Delete Test Case: $case.summary" 
 %] 
 
 [% IF NOT deleted %]
-You are about to permanently delete this test plan with all its history. 
+You are about to permanently delete this test case with all its history. 
 <br>
-This test plan is used by <a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">[% plan.test_run_count FILTER none %] run(s)</a> which will also be deleted.<br/>
-There are <a href="tr_list_cases.cgi?plan_id=[% plan.id FILTER none %]">[% plan.test_case_count FILTER none %] cases(s)</a> in this plan. 
-<b>Any test case that is not linked to another test plan will also be deleted!</b><br/>
+This test case is used in <a href="tr_list_runs.cgi?case_id=[% case.id FILTER none %]">[% runcount FILTER none %] run(s)</a>
+in <a href="tr_list_plans.cgi?case_id=[% case.id FILTER none %]">[% plancount FILTER none %] plan(s)</a><br/>
+[% IF bugcount %]
+This case has <a href="buglist.cgi?bug_id=[% case.bug_list FILTER none %]">[% bugcount FILTER none %]&nbsp;[% terms.bugs %]</a> linked to it.<br/>
+[% END %]
 <span style="font-size:12pt; font-weight:bold; color:#cc0000;">Warning: This action cannot be undone</span>
 <br>
 <br>
-<form action="tr_show_plan.cgi">
-  <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]" />
+<form action="tr_show_case.cgi">
+  <input type="hidden" name="case_id" value="[% case.id FILTER none %]" />
   <input type="hidden" name="action" value="do_delete" />
-  <input type="submit" value="Delete This Test Plan" />
+  <input type="submit" value="Delete This Test Case" />
 </form>
 
-<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Go back</a>
+<a href="tr_show_case.cgi?case_id=[% case.id FILTER none %]">Go back</a>
 
 [% ELSE %]
 
-Test plan deleted.
+Test case deleted.
 
 [% END %]
 

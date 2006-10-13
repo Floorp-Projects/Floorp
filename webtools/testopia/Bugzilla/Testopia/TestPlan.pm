@@ -763,6 +763,39 @@ sub lookup_product_by_name {
     return $value;
 }
 
+
+
+=head2 obliterate
+
+Removes this plan and all things that reference it.
+
+=cut
+
+sub obliterate {
+    my $self = shift;
+    return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_plan_texts WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_tags WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_group_map WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_activity WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_plans WHERE plan_id = ?", undef, $self->id);
+    
+    foreach my $obj (@{$self->attachments}){
+        $obj->obliterate;
+    }
+    foreach my $obj (@{$self->test_runs}){
+        $obj->obliterate;
+    }
+    foreach my $obj (@{$self->test_cases}){
+        $obj->obliterate if (scalar @{$obj->plans} == 1);
+    }
+    
+    $dbh->do("DELETE FROM test_plans WHERE plan_id = ?", undef, $self->id);
+    return 1;
+}
+
 =head2 canedit
 
 Returns true if the logged in user has rights to edit this plan
@@ -774,7 +807,7 @@ sub canedit {
     return $self->canview && UserInGroup("managetestplans");
 }
 
-=head2 view
+=head2 canview
 
 Returns true if the logged in user has rights to view this plan
 
@@ -786,7 +819,7 @@ sub canview {
     return Bugzilla::Testopia::Util::can_view_product($self->product_id);
 }
 
-=head2 delete
+=head2 candelete
 
 Returns true if the logged in user has rights to delete this plan
 
@@ -794,7 +827,8 @@ Returns true if the logged in user has rights to delete this plan
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param("allow-test-deletion");    
+    return $self->canedit && Param("allow-test-deletion")
+      && (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));    
 }
   
     

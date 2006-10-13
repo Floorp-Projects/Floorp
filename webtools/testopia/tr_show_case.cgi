@@ -219,7 +219,27 @@ elsif ($action eq 'detach_bug'){
     }
     display(Bugzilla::Testopia::TestCase->new($case_id));
 }
-
+elsif ($action eq 'Delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
+    $vars->{'case'} = $case;
+    $vars->{'runcount'} = scalar @{$case->runs};
+    $vars->{'plancount'} = scalar @{$case->plans};
+    $vars->{'bugcount'} = scalar @{$case->bugs};
+    $template->process("testopia/case/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+    
+}
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $case = Bugzilla::Testopia::TestCase->new($case_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
+    $case->obliterate;
+    $vars->{'deleted'} = 1;
+    $template->process("testopia/case/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+}
 ####################
 ### Ajax Actions ###
 ####################

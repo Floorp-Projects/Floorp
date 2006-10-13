@@ -781,9 +781,8 @@ sub bugs {
                                      FROM test_case_bugs 
                                      WHERE case_run_id=?", 
                                      undef, $self->{'case_run_id'});
-    #TODO: Check that user can see bug                                     
     foreach my $bugid (@{$bugids}){
-        push @bugs, Bugzilla::Bug->new($bugid, Bugzilla->user->id);
+        push @bugs, Bugzilla::Bug->new($bugid, Bugzilla->user->id) if Bugzilla->user->can_see_bug($bugid);
     }
     $self->{'bugs'} = \@bugs; #join(",", @$bugids);
     
@@ -798,16 +797,16 @@ Returns a comma separated list of bug ids associated with this case-run
 
 sub bug_list {
     my $self = shift;
-    #return $self->{'bug'} if exists $self->{'bug'};
+    return $self->{'bug_list'} if exists $self->{'bug_list'};
     my $dbh = Bugzilla->dbh;
     my @bugs;
     my $bugids = $dbh->selectcol_arrayref("SELECT bug_id 
                                      FROM test_case_bugs 
                                      WHERE case_run_id=?", 
-                                     undef, $self->{'case_run_id'});
-    #TODO: Check that user can see bug                                     
+                                     undef, $self->id);
+    my @visible;
     foreach my $bugid (@{$bugids}){
-        push @bugs, Bugzilla::Bug->new($bugid, Bugzilla->user->id);
+        push @visible, $bugid if Bugzilla->user->can_see_bug($bugid);
     }
     $self->{'bug_list'} = join(",", @$bugids);
     
@@ -956,10 +955,20 @@ sub candelete {
             && $self->status eq 'IDLE');
 }
 
-sub do_delete {
+=head2 obliterate
+
+Removes this caserun and all things that reference it.
+
+=cut
+
+sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
+    return 0 unless $self->candelete;
+    
+    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_case_runs WHERE case_run_id = ?", undef, $self->id);
+    return 1;
 }
 
 =head1 SEE ALSO

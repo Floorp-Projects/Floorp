@@ -571,6 +571,30 @@ Completely removes this environment from the database.
 
 sub obliterate {
     my $self = shift;
+    return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("DELETE FROM test_environment_map WHERE environment_id = ?", undef, $self->id);
+    
+    foreach my $obj (@{$self->runs}){
+        $obj->obliterate;
+    }
+    foreach my $obj (@{$self->caseruns}){
+        $obj->obliterate;
+    }
+    
+    $dbh->do("DELETE FROM test_environments WHERE environment_id = ?", undef, $self->id);
+    return 1;
+}
+
+=head2 archive
+
+Archives this environment.
+
+=cut
+
+sub archive {
+    my $self = shift;
     my $dbh = Bugzilla->dbh;
 
     $dbh->bz_lock_tables('test_runs READ', 'test_environments WRITE','test_environment_map WRITE');
@@ -693,8 +717,53 @@ sub product {
     
 }
 
-=head1 TODO
+=head2 runs
 
+Returns a reference to a list of test runs useing this environment
+
+=cut
+
+sub runs {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'runs'} if exists $self->{'runs'};
+
+    my $runids = $dbh->selectcol_arrayref("SELECT run_id FROM test_runs
+                                          WHERE environment_id = ?", 
+                                          undef, $self->id);
+    my @runs;
+    foreach my $id (@{$runids}){
+        push @runs, Bugzilla::Testopia::TestRun->new($id);
+    }
+    
+    $self->{'runs'} = \@runs;
+    return $self->{'runs'};
+}
+
+=head2 runs
+
+Returns a reference to a list of test runs useing this environment
+
+=cut
+
+sub runs {
+    my ($self) = @_;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'caseruns'} if exists $self->{'caseruns'};
+
+    my $ids = $dbh->selectcol_arrayref("SELECT case_run_id FROM test_case_runs
+                                          WHERE environment_id = ?", 
+                                          undef, $self->id);
+    my @caseruns;
+    foreach my $id (@{$ids}){
+        push @caseruns, Bugzilla::Testopia::TestCaseRun->new($id);
+    }
+    
+    $self->{'caseruns'} = \@caseruns;
+    return $self->{'caseruns'};
+}
+
+=head1 TODO
 
 
 =head1 SEE ALSO

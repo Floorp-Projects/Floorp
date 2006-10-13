@@ -209,6 +209,24 @@ elsif ($action eq 'Attach'){
 elsif ($action eq 'import'){
     
 }
+elsif ($action eq 'Delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
+    $vars->{'plan'} = $plan;
+    $template->process("testopia/plan/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+    
+}
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
+    $plan->obliterate;
+    $vars->{'deleted'} = 1;
+    $template->process("testopia/plan/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+}
 ####################
 ### Ajax Actions ###
 ####################

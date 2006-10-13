@@ -185,6 +185,26 @@ elsif ($action eq 'removecc'){
     my $cc = get_cc_xml($run);
     print $cc;
 }
+elsif ($action eq 'Delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $run = Bugzilla::Testopia::TestRun->new($run_id);
+    ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
+    $vars->{'run'} = $run;
+    
+    $template->process("testopia/run/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+    
+}
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $run = Bugzilla::Testopia::TestRun->new($run_id);
+    ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
+    $run->obliterate;
+    $vars->{'deleted'} = 1;
+    $template->process("testopia/run/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+}
+
 ####################
 ### Just show it ###
 ####################
