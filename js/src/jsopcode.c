@@ -3860,9 +3860,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (!ATOM_IS_IDENTIFIER(atom) ||
-                        strncmp(rval, js_function_str, 8) ||
-                        rval[8] != ' ') {
+                    if (strncmp(rval, js_function_str, 8) || rval[8] != ' ') {
                         todo = Sprint(&ss->sprinter, "%s%s%s%s%s:%s", lval,
                                       (lval[1] != '\0') ? ", " : "", xval,
                                       (lastop == JSOP_GETTER ||
