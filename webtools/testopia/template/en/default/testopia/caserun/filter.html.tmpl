@@ -1,9 +1,12 @@
 <form method="GET" action="[% table.url_loc FILTER none %]">
 <input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
+[% query = table.get_query_part %]
+<div class="bz_row_header" style="font-size:12pt; font-weight: bold;">
+  <img src="[% query.match('assignee') ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="ft" onclick="_sr(document.getElementById('filter'),document.getElementById('ft'))">
+  <a href="javascript:_sr(document.getElementById('filter'),document.getElementById('ft'))" style="text-decoration:none;">Filter</a>
+</div>
+<div id="filter" [% query.match('assignee')? 'style="display:block"' : 'style="display:none"' %]>
 <table>
-  <tr>
-    <th colspan="6" class="bz_row_header">Filter</th>
-  </tr>
   <tr class="bz_row_header">
     <th>Status</th>
     <th>Category</th>
@@ -95,7 +98,8 @@
                   elements  => 5,
                   mult      => 1 } %]
     </td>
-    <td><input type="submit" value="Filter" /><input type="reset" value="Clear" /></td>
+    <td valign="bottom"><input type="reset" value="Clear" /><br/><input type="submit" value="Filter" /></td>
   </tr>
 </table>
+</div>
 </form>
