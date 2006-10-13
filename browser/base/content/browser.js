@@ -1007,28 +1007,10 @@ function delayedStartup()
   // initiated by a web page script
   window.addEventListener("fullscreen", onFullScreen, true);
 
-  var element;
   if (gIsLoadingBlank && gURLBar && isElementVisible(gURLBar))
-    element = gURLBar;
+    focusElement(gURLBar);
   else
-    element = content;
-
-  // This is a redo of the fix for jag bug 91884
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
-  if (window == ww.activeWindow) {
-    element.focus();
-  } else {
-    // set the element in command dispatcher so focus will restore properly
-    // when the window does become active
-    if (element instanceof Components.interfaces.nsIDOMWindow) {
-      document.commandDispatcher.focusedWindow = element;
-      document.commandDispatcher.focusedElement = null;
-    } else if (element instanceof Components.interfaces.nsIDOMElement) {
-      document.commandDispatcher.focusedWindow = element.ownerDocument.defaultView;
-      document.commandDispatcher.focusedElement = element;
-    }
-  }
+    focusElement(content);
 
   SetPageProxyState("invalid");
 
@@ -1950,7 +1932,7 @@ function BrowserLoadURL(aTriggeringEvent, aPostData) {
   else
     loadURI(url, null, aPostData, true /* allow third party fixup */);
 
-  content.focus();
+  focusElement(content);
 }
 
 function getShortcutOrURI(aURL, aPostDataRef)
