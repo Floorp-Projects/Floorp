@@ -31,17 +31,21 @@ class MailComponent extends Object {
 
     if (array_key_exists('type', $params)) {
       switch($params['type']) {
-        case "act":
+        case 'act':
           $this->message = $this->head."<br/>\nThank you for registering! To activate your account, <a href=\"".$params['link']."\">click here</a> or paste the link below into your browser:<br/> ".$params['link'].$this->foot;
           break;
 
-        case "prec":
+        case 'prec':
           $this->message = $this->head."<br/>\nTo reset your password, <a href=\"".$params['link']."\">click here</a> or paste the link below into your browser:<br/> ".$params['link'].$this->foot;
           break;
 
-        case "invite":
+        case 'invite':
           $this->message = $this->head."<br/>\nYou've been invited by a friend to join them in celebrating the release of Firefox 2. Simply <a href=\"".$params['link']."\">click here</a> to confirm or cancel this invitation. If you don't already have an account, you'll need to create one.\n
                            If you're unable to use the link above, simply paste the following URL into your browser: ".$params['link'].$this->foot;
+          break;
+
+        case 'cancel':
+          $this->message = $this->head."<br/>\nThe party you were attending has been cancelled. For more information, please <a href=\"".$params['link']."\">click here</a>, or see the link below.\n ".$params['link'].$this->foot;
           break;
       }
     }

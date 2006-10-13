@@ -244,7 +244,8 @@ class PartiesController extends AppController {
     if (is_numeric($id)) {
       $party = $this->Party->findById($id);
       if (empty($party['Party']['id']) ||
-          $party['Party']['owner'] != $_SESSION['User']['id'])
+          $party['Party']['owner'] != $_SESSION['User']['id'] ||
+          $party['Party']['cancelled'] == 1)
         $this->redirect('/parties/view/all');
 
       else {
@@ -366,6 +367,57 @@ class PartiesController extends AppController {
 
     else
       $this->redirect('/parties/view/all');
+  }
+  
+  function cancel($pid) {
+    $this->pageTitle = "Cancel Party";
+    if (!is_numeric($pid) || !isset($_SESSION['User']['id']))
+      $this->redirect('/');
+
+    else
+      $this->set('pid', $pid);
+
+    $party = $this->Party->findById($pid);
+    if ($_SESSION['User']['id'] != $party['Party']['owner'])
+      die();
+
+    if (!empty($this->data) && $_SESSION['User']['id'] == $party['Party']['owner']) {
+      if ($this->data['Party']['confcancel'] == 1) {
+        $guests = $this->Party->getGuests($pid);
+        $guest_count = count($guests);
+
+        foreach($guests as $guest) {
+          $message = array('from'     => APP_NAME.' <'.APP_EMAIL.'>',
+                           'envelope' => APP_EMAIL,
+                           'to'       => $guest['users']['email'],
+                           'reply'    => $_SESSION['User']['email'],
+                           'subject'  => 'Party Cancellation Notice',
+                           'link'     => APP_BASE.'/parties/view/'.$pid,
+                           'type'     => 'cancel');
+
+          $this->Mail->mail($message);
+          $this->Mail->send();
+        }
+
+        $this->Party->query("DELETE FROM guests WHERE pid = $pid LIMIT $guest_count");
+        $this->Party->query("UPDATE parties SET cancelled = '1', invitecode = '0' WHERE parties.id = $pid LIMIT 1");
+
+        $this->redirect('/parties/view/'.$pid);
+      }
+    }
+  }
+  
+  function uncancel($pid) {
+    if (!is_numeric($pid) || !isset($_SESSION['User']['id']))
+      $this->redirect('/');
+
+    $party = $this->Party->findById($pid);
+    if ($_SESSION['User']['id'] != $party['Party']['owner'])
+      die();
+
+    $key = $this->Hash->keygen(10);
+    $this->Party->query("UPDATE parties SET cancelled = '0', invitecode = '$key' WHERE parties.id = $pid LIMIT 1");
+    $this->redirect('/parties/view/'.$pid);
   }
 
   function js() {

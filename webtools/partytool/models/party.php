@@ -67,7 +67,7 @@ class Party extends AppModel {
   }
 
   function getGuests($pid) {
-    $rv = $this->query("SELECT users.id, users.name, guests.invited
+    $rv = $this->query("SELECT users.id, users.name, users.email, guests.invited
                         FROM users
                         LEFT JOIN guests 
                           ON users.id = guests.uid
