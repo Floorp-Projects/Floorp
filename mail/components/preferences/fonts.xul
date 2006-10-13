@@ -140,7 +140,9 @@
             </menulist>
    
             <hbox align="center" pack="end">
-              <label value="&sizes.label;"/>
+              <label value="&sizes.label;"
+                     accesskey="&proportionalSize.accesskey;"
+                     control="sizeVar"/>
             </hbox> 
 
             <menulist id="sizeVar" class="small-margin">
@@ -197,7 +199,7 @@
             <menulist id="monospace" flex="1" style="width: 0px;" crop="right"
                       onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
             <hbox align="center" pack="end">
-              <label>&sizes.label;</label>
+              <label accesskey="&monospaceSize.accesskey;" control="sizeMono">&sizes.label;</label>
             </hbox> 
             <menulist id="sizeMono" class="small-margin">
               <menupopup>
