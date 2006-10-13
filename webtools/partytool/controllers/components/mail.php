@@ -45,7 +45,7 @@ class MailComponent extends Object {
           break;
 
         case 'cancel':
-          $this->message = $this->head."<br/>\nThe party you were attending has been cancelled. For more information, please <a href=\"".$params['link']."\">click here</a>, or see the link below.\n ".$params['link'].$this->foot;
+          $this->message = $this->head."<br/>\nThe party you were attending has been canceled. For more information, please <a href=\"".$params['link']."\">click here</a>, or see the link below.\n ".$params['link'].$this->foot;
           break;
       }
     }

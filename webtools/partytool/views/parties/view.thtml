@@ -2,8 +2,8 @@
     if (isset($party)): ?>
     <h1><?php echo $party['Party']['name']; ?></h1>
     <br/>
-    <?php if ($party['Party']['cancelled']): ?>
-    <div class="error">This party has been cancelled</div>
+    <?php if ($party['Party']['canceled']): ?>
+    <div class="error">This party has been canceled</div>
     <?php endif; ?>
     Host: <a href="<?php echo $html->url('/users/view/'.$party['Party']['owner']).'">'.$host; ?></a><br/>
     <?php
@@ -40,7 +40,7 @@
         echo "No guests yet, be the first!";
     endif;
 
-    if (isset($_SESSION['User']['id']) && @$_SESSION['User']['id'] != $party['Party']['owner'] && ($party['Party']['inviteonly'] != 1 || $isguest && !$party['Party']['cancelled'])):?>
+    if (isset($_SESSION['User']['id']) && @$_SESSION['User']['id'] != $party['Party']['owner'] && ($party['Party']['inviteonly'] != 1 || $isguest && !$party['Party']['canceled'])):?>
     <br/><br/>
     <form action="<?php 
       echo $html->url('/parties/'.((!$isguest) ? 'rsvp/' : 'unrsvp/').$party['Party']['id']); ?>" method="post">
@@ -51,15 +51,15 @@
       <?php endif; ?>
     </form>
     <?php endif; ?>
-    <? if ($party['Party']['inviteonly'] == 1 && (!$isguest && @$_SESSION['User']['id'] != $party['Party']['owner'] && !$party['Party']['cancelled'])):?>
+    <? if ($party['Party']['inviteonly'] == 1 && (!$isguest && @$_SESSION['User']['id'] != $party['Party']['owner'] && !$party['Party']['canceled'])):?>
     <p>This party is invite only. You'll need an invite code from the host to join in.</p>
     <?php endif; ?>
     </div>
     <?php if (@$_SESSION['User']['id'] == $party['Party']['owner']):?>
     <h1>Party options</h1>
     <a href="<?php echo $html->url('/parties/edit/'.$party['Party']['id']);?>">Edit party</a>
-    <?php if (!$party['Party']['cancelled']): ?>| <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
-    <?php endif; echo (($party['Party']['cancelled'] == 1) ? ' | <a href="'.$html->url('/parties/uncancel/'.$party['Party']['id']).'">
+    <?php if (!$party['Party']['canceled']): ?>| <a href="<?php echo $html->url('/parties/invite/'.$party['Party']['id']);?>">Invite a guest</a>
+    <?php endif; echo (($party['Party']['canceled'] == 1) ? ' | <a href="'.$html->url('/parties/uncancel/'.$party['Party']['id']).'">
     Reactivate this party</a>' : '| <a href="'.$html->url('/parties/cancel/'.$party['Party']['id']).'" onclick="return confirm(\'Are you sure you want to cancel your party?\')"><span style="color: #bc1313">Cancel this party</span></a>'); ?>
     <?php endif; ?>
     <?php if (isset($flickr)): ?>
@@ -113,7 +113,7 @@
       echo '<a href="'.$html->url('/parties/view/all/'.$next).'">Next Page &raquo;</a>';
     $i = 0;
     foreach ($parties as $party): 
-      if ($party['Party']['cancelled'] != 1): ?>
+      if ($party['Party']['canceled'] != 1): ?>
     <div>
       <h1><?php echo $party['Party']['name']; ?></h1>
       <p>

@@ -245,7 +245,7 @@ class PartiesController extends AppController {
       $party = $this->Party->findById($id);
       if (empty($party['Party']['id']) ||
           $party['Party']['owner'] != $_SESSION['User']['id'] ||
-          $party['Party']['cancelled'] == 1)
+          $party['Party']['canceled'] == 1)
         $this->redirect('/parties/view/all');
 
       else {
@@ -400,7 +400,7 @@ class PartiesController extends AppController {
         }
 
         $this->Party->query("DELETE FROM guests WHERE pid = $pid LIMIT $guest_count");
-        $this->Party->query("UPDATE parties SET cancelled = '1', invitecode = '0' WHERE parties.id = $pid LIMIT 1");
+        $this->Party->query("UPDATE parties SET canceled = '1', invitecode = '0' WHERE parties.id = $pid LIMIT 1");
 
         $this->redirect('/parties/view/'.$pid);
       }
@@ -416,7 +416,7 @@ class PartiesController extends AppController {
       die();
 
     $key = $this->Hash->keygen(10);
-    $this->Party->query("UPDATE parties SET cancelled = '0', invitecode = '$key' WHERE parties.id = $pid LIMIT 1");
+    $this->Party->query("UPDATE parties SET canceled = '0', invitecode = '$key' WHERE parties.id = $pid LIMIT 1");
     $this->redirect('/parties/view/'.$pid);
   }
 
