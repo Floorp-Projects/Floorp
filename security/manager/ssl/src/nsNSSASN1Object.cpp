@@ -148,13 +148,6 @@ buildASN1ObjectFromDER(unsigned char *data,
   PRInt32 len;
   PRUint32 type;
 
-  if (parent == nsnull) {
-    parent = new nsNSSASN1Sequence();
-    NS_IF_ADDREF(parent);
-  }
-  if (parent == nsnull) 
-    return NS_ERROR_FAILURE;
-
   rv = parent->GetASN1Objects(getter_AddRefs(parentObjects));
   if (NS_FAILED(rv) || parentObjects == nsnull)
     return NS_ERROR_FAILURE;
