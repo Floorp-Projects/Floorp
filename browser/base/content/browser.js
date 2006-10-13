@@ -6849,7 +6849,8 @@ function undoCloseTab(aIndex) {
       !gPrefService.getBoolPref("browser.tabs.autoHide") &&
       tabbrowser.selectedBrowser.sessionHistory.count < 2 &&
       tabbrowser.selectedBrowser.currentURI.spec == "about:blank" &&
-      !tabbrowser.selectedBrowser.contentDocument.body.hasChildNodes())
+      !tabbrowser.selectedBrowser.contentDocument.body.hasChildNodes() &&
+      !tabbrowser.selectedTab.hasAttribute("busy"))
     blankTabToRemove = tabbrowser.selectedTab;
 
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
