@@ -40,6 +40,8 @@
 
 #include "pluginbase.h"
 #include "nsScriptablePeer.h"
+#include "nsCOMPtr.h"
+#include "nsIPluginInstance.h"
 
 class nsPluginInstance : public nsPluginInstanceBase
 {
@@ -64,6 +66,7 @@ public:
 private:
   NPP mInstance;
   NPBool mInitialized;
+  nsCOMPtr<nsIPluginInstance> mPluglet;
   nsScriptablePeer * mScriptablePeer;
   nsPluginCreateData mCreateDataStruct;
 

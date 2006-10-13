@@ -42,7 +42,7 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 
 NS_IMPL_ISUPPORTS1(Pluglet,nsIPluginInstance);
 
-Pluglet::Pluglet(jobject object) : plugletEngine(nsnull) {
+Pluglet::Pluglet(jobject object) : plugletEngine(nsnull), peer(nsnull) {
     nsIServiceManager *servman = nsnull;
     NS_GetServiceManager(&servman);
     nsresult rv;
@@ -66,7 +66,6 @@ Pluglet::Pluglet(jobject object) : plugletEngine(nsnull) {
     
     jthis = jniEnv->NewGlobalRef(object);
     //nb check for null
-    peer = NULL;
     view = PlugletViewFactory::GetPlugletView();
     Registry::SetPeer(jthis,(jlong)this);
 }
@@ -83,7 +82,7 @@ Pluglet::~Pluglet() {
     }
 
     jniEnv->DeleteGlobalRef(jthis);
-    NS_RELEASE(peer);
+    peer = nsnull;
 }
 
 NS_METHOD Pluglet::HandleEvent(nsPluginEvent* event, PRBool* handled) {
@@ -148,20 +147,20 @@ NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
         }
     }
     peer = _peer;
-    peer->AddRef();
-    jobject obj = PlugletPeer::GetJObject(peer);
-    if (!obj) {
-	return NS_ERROR_FAILURE;
+    if (peer) {
+	jobject obj = PlugletPeer::GetJObject(peer);
+	if (!obj) {
+	    return NS_ERROR_FAILURE;
+	}
+	env->CallVoidMethod(jthis,initializeMID,obj);
     }
-    env->CallVoidMethod(jthis,initializeMID,obj);
     return NS_OK;
 }
 
 NS_METHOD Pluglet::GetPeer(nsIPluginInstancePeer* *result) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("Pluglet::GetPeer\n"));
-    peer->AddRef();
-    *result = peer;
+    NS_ADDREF(*result = peer);
     return NS_OK;
 }
 

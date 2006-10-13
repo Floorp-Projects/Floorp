@@ -52,7 +52,7 @@ class Pluglet : public nsIPluginInstance {
     static  jmethodID setWindowMID;
     static  jmethodID printMID; 
     static  jmethodID getValueMID;
-    nsIPluginInstancePeer *peer;
+    nsCOMPtr<nsIPluginInstancePeer> peer;
     PlugletView *view;
     nsCOMPtr<iPlugletEngine> plugletEngine;
 };

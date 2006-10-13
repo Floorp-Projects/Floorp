@@ -154,8 +154,9 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
 //
 nsPluginInstance::nsPluginInstance(nsPluginCreateData * aCreateDataStruct) : nsPluginInstanceBase(),
   mInstance(aCreateDataStruct->instance),
-  mInitialized(FALSE),
-  mScriptablePeer(NULL)
+  mInitialized(PR_FALSE),
+  mScriptablePeer(nsnull),
+  mPluglet(nsnull)
 {
   mCreateDataStruct.instance = aCreateDataStruct->instance;
   mCreateDataStruct.type = aCreateDataStruct->type;
@@ -168,26 +169,82 @@ nsPluginInstance::nsPluginInstance(nsPluginCreateData * aCreateDataStruct) : nsP
 
 nsPluginInstance::~nsPluginInstance()
 {
+
+    if (mPluglet) {
+        mPluglet->Destroy();
+        mPluglet = nsnull;
+    }
+    mInitialized = PR_FALSE;
+
   // mScriptablePeer may be also held by the browser 
   // so releasing it here does not guarantee that it is over
   // we should take precaution in case it will be called later
   // and zero its mPlugin member
-  mScriptablePeer->SetInstance(NULL);
+  mScriptablePeer->SetInstance(nsnull);
   NS_IF_RELEASE(mScriptablePeer);
 }
 
 NPBool nsPluginInstance::init(NPWindow* aWindow)
 {
-  if(aWindow == NULL)
-    return FALSE;
+    nsresult rv = NS_ERROR_FAILURE;
+    nsPluginWindow pluginWindow;
 
-  mInitialized = TRUE;
-  return TRUE;
+    if (mInitialized) {
+        return PR_TRUE;
+    }
+
+    if(nsnull == aWindow || nsnull == mPluglet) {
+        return mInitialized;
+    }
+    
+    nsCOMPtr<nsIPluginInstance> ns4xPluginInst = 
+        do_QueryInterface((nsISupports*)mInstance->ndata, &rv);
+    if (NS_FAILED(rv)) {
+        return mInitialized;
+    }
+    nsCOMPtr<nsIPluginInstancePeer> peer = nsnull;
+    rv = ns4xPluginInst->GetPeer(getter_AddRefs(peer));
+    if(NS_FAILED(rv)) {
+        return mInitialized;
+    }
+    rv = mPluglet->Initialize(peer);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_WIN) || defined(XP_OS2)
+    pluginWindow.window = (nsPluginPort *) aWindow->window;
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+#else
+#endif
+    pluginWindow.x = aWindow->x;
+    pluginWindow.y = aWindow->y;
+    pluginWindow.width = aWindow->width;
+    pluginWindow.height = aWindow->height;
+    pluginWindow.clipRect.top = aWindow->clipRect.top;
+    pluginWindow.clipRect.left = aWindow->clipRect.left;
+    pluginWindow.clipRect.bottom = aWindow->clipRect.bottom;
+    pluginWindow.clipRect.right = aWindow->clipRect.right;
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    pluginWindow.ws_info = aWindow->ws_info;
+#endif
+    pluginWindow.type = aWindow->type == NPWindowTypeWindow ?
+        nsPluginWindowType_Window : nsPluginWindowType_Drawable;
+    rv = mPluglet->SetWindow(&pluginWindow);
+    if (NS_SUCCEEDED(rv)) {
+        rv = mPluglet->Start();
+        if (NS_SUCCEEDED(rv)) {
+            mInitialized = PR_TRUE;
+        }
+    }
+    
+    return mInitialized; 
 }
 
 void nsPluginInstance::shut()
 {
-  mInitialized = FALSE;
+    if (mInitialized) {
+        if (mPluglet) {
+            mPluglet->Stop();
+        }
+    }
 }
 
 NPBool nsPluginInstance::isInitialized()
@@ -200,16 +257,16 @@ NS_IMETHODIMP nsPluginInstance::HasPlugletForMimeType(const char *aMimeType,
 {
     nsresult rv = NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPlugin> pluglet =
+    nsCOMPtr<nsIPlugin> plugletEngine =
 	do_GetService(PLUGLETENGINE_ContractID, &rv);
-    void *outInstance = nsnull;
     *outResult = PR_FALSE;
     nsIID scriptableIID = NS_ISIMPLEPLUGIN_IID;    
     
     if (NS_SUCCEEDED(rv)) {
-        rv = pluglet->CreatePluginInstance(nsnull, scriptableIID, 
-                                           aMimeType, &outInstance);
-        if (NS_SUCCEEDED(rv) && outInstance) {
+        rv = plugletEngine->CreatePluginInstance(nsnull, scriptableIID, 
+                                                 aMimeType, 
+                                                 getter_AddRefs(mPluglet));
+        if (NS_SUCCEEDED(rv) && mPluglet) {
             *outResult = PR_TRUE;
         }
     }
