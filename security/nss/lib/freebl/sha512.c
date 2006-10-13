@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sha512.c,v 1.8 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: sha512.c,v 1.9 2006/10/13 16:54:04 wtchang%redhat.com Exp $ */
 #include "prcpucfg.h"
 #if defined(_X86_) || defined(SHA_NO_LONG_LONG)
 #define NOUNROLL512 1
@@ -45,6 +45,7 @@
 #include "prtypes.h"	/* for PRUintXX */
 #include "secport.h"	/* for PORT_XXX */
 #include "blapi.h"
+#include "sha256.h"	/* for struct SHA256ContextStr */
 
 /* ============= Common constants and defines ======================= */
 
@@ -90,15 +91,6 @@ static const PRUint32 K256[64] = {
 static const PRUint32 H256[8] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 
     0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
-};
-
-struct SHA256ContextStr {
-    union {
-	PRUint32 w[64];	    /* message schedule, input buffer, plus 48 words */
-	PRUint8  b[256];
-    } u;
-    PRUint32 h[8];		/* 8 state variables */
-    PRUint32 sizeHi,sizeLo;	/* 64-bit count of hashed bytes. */
 };
 
 #if defined(_MSC_VER) && defined(_X86_)

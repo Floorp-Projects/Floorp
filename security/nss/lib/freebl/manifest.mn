@@ -160,6 +160,7 @@ ALL_HDRS =  \
 	secmpi.h \
 	sha.h \
 	sha_fast.h \
+	sha256.h \
 	shsign.h \
 	vis_proto.h \
 	$(NULL)
