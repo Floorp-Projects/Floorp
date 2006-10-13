@@ -64,19 +64,7 @@ print "Done.\n\n";
 ##############################################################################
 print "Checking Testopia database ...\n";
 my $dbh = Bugzilla::DB::connect_main();
-my $rebuild_bz_schema = 0;
-# If bz_schema doesn't know about Testopia, it's either because
-# Testopia has never been installed, or because Testopia was installed
-# without using the methods in Bugzilla::DB. Either way, we need to
-# bring bz_schema up-to-date.
-if (!$dbh->bz_column_info('test_cases', 'case_id')) {
-    $rebuild_bz_schema = 1;
-    # Since we're going to rebuild bz_schema, we need to disconnect to
-    # forget what we know about the schema.
-    $dbh->disconnect;
-    $dbh = Bugzilla::DB::connect_main();
-}
-UpdateDB($dbh, $rebuild_bz_schema);
+UpdateDB($dbh);
 print "Done.\n\n";
 ##############################################################################
 print "Checking Testopia groups ...\n";
@@ -171,17 +159,15 @@ sub doPatch {
 
     print "Now patching ...\n\n";
 
-    my $patchPath = "patch";
-    if (isWindows()) {
-      $patchPath = "testopia\\tools\\patch.exe";
-    }
+    my $patchPath = isWindows() ?
+        "testopia\\tools\\patch.exe --binary" : "patch";
+    my $no_patch_msg = isWindows() ?
+        "Cannot find patch.exe. Please see testopia\\tools\\readme for " .
+            "instructions.\n" :
+        "Cannot find the patch command. Is it installed and in your PATH?\n";
+    `$patchPath -v` || DieWithStyle($no_patch_msg);
 
-    my $output;
-
-    # Check out if patch is installed:
-    $output = `$patchPath -v` || DieWithStyle("Patch failed. Is 'patch' installed and in your path?");
-
-    $output = `$patchPath -s -l --dry-run -bp 2 -i $fPatch 2>&1`;
+    my $output = `$patchPath -s -l --dry-run -bp 2 -i $fPatch 2>&1`;
 
     # If the output is empty, everything was perfect (the -s argument)
     chomp $output;
@@ -290,12 +276,24 @@ sub SetupPermissions_unix {
 }
 
 sub UpdateDB {
-    my ($dbh, $rebuild_bz_schema) = (@_);
+    my ($dbh) = (@_);
 
-    if ($rebuild_bz_schema) {
-        $dbh->do("TRUNCATE bz_schema");
-        $dbh->bz_setup_database();
+    # If the database contains Testopia tables but bz_schema doesn't
+    # know about them, then we need to update bz_schema.
+    if (grep(/^test_cases$/, $dbh->bz_table_list_real) and
+            !$dbh->_bz_real_schema->get_table_abstract('test_cases')) {
+        my $msg = "Sorry, we cannot upgrade from Testopia 1.0 using this " .
+            "database. Upgrades are supported only with MySQL.";
+        DieWithStyle($msg) unless $dbh->isa('Bugzilla::DB::Mysql');
+        my $built_schema = $dbh->_bz_build_schema_from_disk;
+        foreach my $table (grep(/^test_/, $built_schema->get_table_list())) {
+            $dbh->_bz_real_schema->add_table($table,
+                $built_schema->get_table_abstract($table));
+        }
+        $dbh->_bz_store_real_schema;
     }
+
+    $dbh->bz_setup_database();
 
     $dbh->bz_drop_table('test_case_group_map');
     $dbh->bz_drop_table('test_category_templates');
@@ -625,7 +623,7 @@ sub rollbackPatch {
     if (-e $file.".orig") {
       rename($file.".orig", $file);
     } else {
-       print "  Couldnt't restore file: $file because $file.orig doesn't exit!.\n";
+       print "  Couldn't restore file: $file because $file.orig doesn't exist!.\n";
     }
   }
   print "Done.\n";
