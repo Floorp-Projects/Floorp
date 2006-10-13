@@ -138,6 +138,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the try string */
     if (strncmp(line,"TRY",3) == 0) {
       if (parse_try(line)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -145,6 +146,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the name of the character set used by the .dict and .aff */
     if (strncmp(line,"SET",3) == 0) {
       if (parse_set(line)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -152,6 +154,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the flag used by the controlled compound words */
     if (strncmp(line,"COMPOUNDFLAG",12) == 0) {
       if (parse_cpdflag(line)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -159,6 +162,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the flag used by the controlled compound words */
     if (strncmp(line,"COMPOUNDMIN",11) == 0) {
       if (parse_cpdmin(line)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -166,6 +170,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the typical fault correcting table */
     if (strncmp(line,"REP",3) == 0) {
       if (parse_reptable(line, afflst)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -173,6 +178,7 @@ int  AffixMgr::parse_file(const char * affpath)
     /* parse in the related character map table */
     if (strncmp(line,"MAP",3) == 0) {
       if (parse_maptable(line, afflst)) {
+        fclose(afflst);
         return 1;
       }
     }
@@ -183,6 +189,7 @@ int  AffixMgr::parse_file(const char * affpath)
     if (strncmp(line,"SFX",3) == 0) ft = 'S';
     if (ft != ' ') {
       if (parse_affix(line, ft, afflst)) {
+        fclose(afflst);
         return 1;
       }
     }
