@@ -719,11 +719,31 @@ NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 }
 
 
-//
-// zoom/restore
-//
+// Note bug 278777, we need to update state when the window is unminimized
+// from the dock by users.
 NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 {
+  PRInt32 previousMode;
+  nsBaseWidget::GetSizeMode(&previousMode);
+
+  nsresult rv = nsBaseWidget::SetSizeMode(aMode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aMode == nsSizeMode_Normal) {
+    if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
+      [mWindow zoom:nil];
+  }
+  else if (aMode == nsSizeMode_Minimized) {
+    if (![mWindow isMiniaturized])
+      [mWindow miniaturize:nil];
+  }
+  else if (aMode == nsSizeMode_Maximized) {
+    if ([mWindow isMiniaturized])
+      [mWindow deminiaturize:nil];
+    if (![mWindow isZoomed])
+      [mWindow zoom:nil];
+  }
+
   return NS_OK;
 }
 
