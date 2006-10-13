@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,3 +40,23 @@
 <!ENTITY nodeName.label "Nom du nœud :">
 <!ENTITY namespaceURI.label "URI de l'espace de nom :">
 <!ENTITY nodeType.label "Type du nœud :">
+<!ENTITY nodeValue.label "Valeur du du nœud :">
+
+<!ENTITY namespaceTitle.null.label "null">
+<!ENTITY namespaceTitle.default.label "Document par défaut">
+
+<!-- LOCALIZATION NOTE: DO NOT LOCALIZE These are generic Namespaces -->
+<!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+<!ENTITY namespaceTitle.XML.label "XML">
+<!ENTITY namespaceTitle.XHTML.label "XHTML">
+<!ENTITY namespaceTitle.XLink.label "XLink">
+<!ENTITY namespaceTitle.XSLT.label "XSLT">
+<!ENTITY namespaceTitle.XBL.label "XBL">
+<!ENTITY namespaceTitle.MathML.label "MathML">
+<!ENTITY namespaceTitle.RDF.label "RDF">
+<!ENTITY namespaceTitle.XUL.label "XUL">
+<!ENTITY namespaceTitle.SVG.label "SVG">
+<!ENTITY namespaceTitle.XMLEvents.label "Événements XML">
+<!ENTITY namespaceTitle.WAIRoles.label "Rôles WAI">
+<!ENTITY namespaceTitle.WAIProperties.label "Propriétés WAI">
+<!ENTITY namespaceTitle.custom.label "Personnalisé">

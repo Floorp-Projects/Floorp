@@ -46,10 +46,10 @@
   <!ENTITY cmdToggleAnonContent.label "Afficher le contenu anonyme">
   <!ENTITY cmdToggleAnonContent.accesskey "a">
 
-  <!ENTITY cmdToggleWhitespaceNodes.label "Voir les nœuds vides">
+  <!ENTITY cmdToggleWhitespaceNodes.label "Afficher les nœuds vides">
   <!ENTITY cmdToggleWhitespaceNodes.accesskey "V">
 
-  <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
+  <!ENTITY cmdToggleAccessibleNodes.label "Afficher les nœuds accessibles">
   <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
 
   <!ENTITY cmdFlashSelected.label "Faire clignoter l'élément sélectionné">
@@ -88,3 +88,11 @@
   <!ENTITY findNodesDirectionDown.label "En bas">
   <!ENTITY findNodesFind.label "Rechercher">
   <!ENTITY findNodesCancel.label "Annuler">
+
+  <!ENTITY mnEditPasteMenu.label "Coller">
+  <!ENTITY mnEditPasteBefore.label "Avant">
+  <!ENTITY mnEditPasteAfter.label "Après">
+  <!ENTITY mnEditPasteReplace.label "À la place de (Remplacer)">
+  <!ENTITY mnEditPasteFirstChild.label "Comme premier enfant">
+  <!ENTITY mnEditPasteLastChild.label "Comme dernier enfant">
+  <!ENTITY mnEditPasteAsParent.label "Comme parent">
