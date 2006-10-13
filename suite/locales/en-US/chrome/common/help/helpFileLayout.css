@@ -45,6 +45,7 @@ body {
 
 dd { margin-left: 0px; margin-bottom: 1em; }
 dt { font-size: 10pt; font-weight: bold; }
+tt { font-size: 10pt; }
 
 :link:hover { color: red; }
 
