@@ -342,6 +342,7 @@ sub record_votes {
 
     $vars->{'type'} = "votes";
     $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login };
+    $vars->{'title_tag'} = 'change_votes';
 
     foreach my $bug_id (@updated_bugs) {
         $vars->{'id'} = $bug_id;
