@@ -199,7 +199,7 @@ class PartiesController extends AppController {
 
       //Paginate!
       $count = $this->Party->findCount();
-      $pages = ceil($count/10);
+      $pages = ceil($count/100);
       if ($page == null)
         $page = 1;
       if ($page > 1)
