@@ -49,7 +49,7 @@
 #define SHOW_ICONS
 #endif
 
-<!DOCTYPE window [
+<!DOCTYPE bindings [
   <!ENTITY % downloadDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd" >
   %downloadDTD;
 ]>

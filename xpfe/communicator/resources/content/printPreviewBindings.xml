@@ -37,7 +37,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/printPreview.dtd">
+<!DOCTYPE bindings SYSTEM "chrome://communicator/locale/printPreview.dtd">
 
 <bindings id="printPreviewBindings"
    xmlns="http://www.mozilla.org/xbl"
