@@ -1275,8 +1275,10 @@ SessionStoreService.prototype = {
         aTabs.unshift(aTabs.splice(aSelectTab, 1)[0]);
         tabbrowser.selectedTab = aTabs[0]._tab;
     }
-    
-    this.restoreHistory(aWindow, aTabs);
+
+    // helper hash for ensuring unique frame IDs
+    var aIdMap = { used: {} };
+    this.restoreHistory(aWindow, aTabs, aIdMap);
   },
 
   /**
@@ -1285,10 +1287,8 @@ SessionStoreService.prototype = {
    *        Window reference
    * @param aTabs
    *        Array of tab data
-   * @param aCurrentTabs
-   *        Array of tab references
-   * @param aSelectTab
-   *        Index of selected tab
+   * @param aIdMap
+   *        Hash for ensuring unique frame IDs
    */
   restoreHistory: function sss_restoreHistory(aWindow, aTabs, aIdMap) {
     var _this = this;
@@ -1301,9 +1301,6 @@ SessionStoreService.prototype = {
     
     var tabData = aTabs.shift();
 
-    // helper hash for ensuring unique frame IDs
-    var idMap = { used: {} };
-    
     var tab = tabData._tab;
     var browser = aWindow.getBrowser().getBrowserForTab(tab);
     var history = browser.webNavigation.sessionHistory;
@@ -1323,7 +1320,7 @@ SessionStoreService.prototype = {
     browser.markupDocumentViewer.textZoom = parseFloat(tabData.zoom || 1);
     
     for (var i = 0; i < tabData.entries.length; i++) {
-      history.addEntry(this._deserializeHistoryEntry(tabData.entries[i], idMap), true);
+      history.addEntry(this._deserializeHistoryEntry(tabData.entries[i], aIdMap), true);
     }
     
     // make sure to reset the capabilities and attributes, in case this tab gets reused
