@@ -770,10 +770,6 @@ MaybeSetForm(nsGenericHTMLElement* aContent, nsHTMLTag aNodeType,
   formControl->SetForm(formElement, PR_TRUE, PR_FALSE);
 }
 
-static already_AddRefed<nsGenericHTMLElement>
-MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  PRBool aFromParser);
-
 /**
  * Factory subroutine to create all of the html content objects.
  */
@@ -812,13 +808,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   NS_ENSURE_TRUE(nodeInfo, nsnull);
 
   // Make the content object
-  nsGenericHTMLElement* result = MakeContentObject(aNodeType, nodeInfo,
-                                                   PR_TRUE).get();
-  if (!result) {
-    return nsnull;
-  }
-
-  return result;
+  return CreateHTMLElement(aNodeType, nodeInfo, PR_TRUE);
 }
 
 nsresult
@@ -832,60 +822,35 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
   nsIAtom *name = aNodeInfo->NameAtom();
 
-  nsHTMLTag id;
-  nsRefPtr<nsGenericHTMLElement> result;
-  if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
-    // Find tag in tag table
-    id = nsHTMLTag(parserService->HTMLCaseSensitiveAtomTagToId(name));
-
-    result = MakeContentObject(id, aNodeInfo, PR_FALSE);
+#ifdef DEBUG
+  if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    nsAutoString nameStr, lname;
+    name->ToString(nameStr);
+    ToLowerCase(nameStr, lname);
+    NS_ASSERTION(nameStr.Equals(lname), "name should be lowercase by now");
+    NS_ASSERTION(!aNodeInfo->GetPrefixAtom(), "should not have a prefix");
   }
-  else {
-    // Find tag in tag table
-    id = nsHTMLTag(parserService->HTMLAtomTagToId(name));
-
-    // Reverse map id to name to get the correct character case in
-    // the tag name.
-
-    nsCOMPtr<nsINodeInfo> kungFuDeathGrip;
-    nsINodeInfo *nodeInfo = aNodeInfo;
-
-    if (id != eHTMLTag_userdefined) {
-      nsIAtom *tag = parserService->HTMLIdToAtomTag(id);
-      NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
-
-      if (name != tag) {
-        nsresult rv =
-          nsContentUtils::NameChanged(aNodeInfo, tag,
-                                      getter_AddRefs(kungFuDeathGrip));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nodeInfo = kungFuDeathGrip;
-      }
-    }
-
-    result = MakeContentObject(id, nodeInfo, PR_FALSE);
-  }
-
-  return result ? CallQueryInterface(result.get(), aResult)
-    : NS_ERROR_OUT_OF_MEMORY;
+#endif
+  
+  *aResult = CreateHTMLElement(parserService->
+                                 HTMLCaseSensitiveAtomTagToId(name),
+                               aNodeInfo, PR_FALSE).get();
+  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 already_AddRefed<nsGenericHTMLElement>
-MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
+CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
                   PRBool aFromParser)
 {
+  NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX, "aNodeType is out of bounds");
+
   contentCreatorCallback cb = sContentCreatorCallbacks[aNodeType];
 
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
   nsGenericHTMLElement* result = cb(aNodeInfo, aFromParser);
-  if (!result) {
-    return nsnull;
-  }
-
-  NS_ADDREF(result);
+  NS_IF_ADDREF(result);
 
   return result;
 }
