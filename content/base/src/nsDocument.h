@@ -665,9 +665,6 @@ protected:
   virtual nsStyleSet::sheetType GetAttrSheetType();
   void FillStyleSet(nsStyleSet* aStyleSet);
 
-  nsresult CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
-                         nsIContent** aResult);
-
   // Return whether all the presshells for this document are safe to flush
   PRBool IsSafeToFlush() const;
   

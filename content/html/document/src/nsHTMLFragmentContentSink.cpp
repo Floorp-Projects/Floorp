@@ -389,10 +389,13 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
     if (nodeType == eHTMLTag_userdefined) {
-      result =
-        mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
-                                      kNameSpaceID_None,
-                                      getter_AddRefs(nodeInfo));
+      NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
+      ToLowerCase(tmp);
+
+      nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+      result = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
+                                             getter_AddRefs(nodeInfo));
+      NS_ENSURE_SUCCESS(result, result);
     }
     else if (mNodeInfoCache[nodeType]) {
       nodeInfo = mNodeInfoCache[nodeType];
@@ -407,26 +410,27 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
       result = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                              getter_AddRefs(nodeInfo));
-      NS_IF_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
+      NS_ENSURE_SUCCESS(result, result);
+
+      NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
     }
 
-    NS_ENSURE_SUCCESS(result, result);
+    content = CreateHTMLElement(nodeType, nodeInfo, PR_FALSE).get();
+    NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
-    result = NS_NewHTMLElement(&content, nodeInfo);
-
-    if (NS_OK == result) {
-      result = AddAttributes(aNode, content);
-      if (NS_OK == result) {
-        nsIContent *parent = GetCurrentContent();
-
-        if (nsnull == parent) {
-          parent = mRoot;
-        }
-
-        parent->AppendChildTo(content, PR_FALSE);
-        PushContent(content);
-      }
+    result = AddAttributes(aNode, content);
+    if (NS_FAILED(result)) {
+      NS_RELEASE(content);
+      return result;
     }
+
+    nsIContent *parent = GetCurrentContent();
+    if (!parent) {
+      parent = mRoot;
+    }
+
+    parent->AppendChildTo(content, PR_FALSE);
+    PushContent(content);
 
     if (nodeType == eHTMLTag_table
         || nodeType == eHTMLTag_thead
@@ -478,7 +482,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         FlushText();
 
         // Create new leaf content object
-        nsCOMPtr<nsIContent> content;
+        nsRefPtr<nsGenericHTMLElement> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
         nsIParserService* parserService = nsContentUtils::GetParserService();
@@ -488,10 +492,14 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsCOMPtr<nsINodeInfo> nodeInfo;
 
         if (nodeType == eHTMLTag_userdefined) {
-          result =
-            mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
-                                          kNameSpaceID_None,
-                                          getter_AddRefs(nodeInfo));
+          NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
+          ToLowerCase(tmp);
+
+          nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+          result = mNodeInfoManager->GetNodeInfo(name, nsnull,
+                                                 kNameSpaceID_None,
+                                                 getter_AddRefs(nodeInfo));
+          NS_ENSURE_SUCCESS(result, result);
         }
         else if (mNodeInfoCache[nodeType]) {
           nodeInfo = mNodeInfoCache[nodeType];
@@ -503,33 +511,28 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           result = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                  kNameSpaceID_None,
                                                  getter_AddRefs(nodeInfo));
-          NS_IF_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
+          NS_ENSURE_SUCCESS(result, result);
+          NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
 
+        content = CreateHTMLElement(nodeType, nodeInfo, PR_FALSE);
+        NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
+
+        result = AddAttributes(aNode, content);
         NS_ENSURE_SUCCESS(result, result);
 
-        if(NS_SUCCEEDED(result)) {
-          result = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
-
-          if (NS_OK == result) {
-            result = AddAttributes(aNode, content);
-            if (NS_OK == result) {
-              nsIContent *parent = GetCurrentContent();
-
-              if (nsnull == parent) {
-                parent = mRoot;
-              }
-
-              parent->AppendChildTo(content, PR_FALSE);
-            }
-          }
-
-          if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
-              || nodeType == eHTMLTag_input)    // elements with 'SRC='
-              AddBaseTagInfo(content);
-          else if (nodeType == eHTMLTag_base)
-              ProcessBaseTag(content);
+        nsIContent *parent = GetCurrentContent();
+        if (!parent) {
+          parent = mRoot;
         }
+
+        parent->AppendChildTo(content, PR_FALSE);
+
+        if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
+            || nodeType == eHTMLTag_input)    // elements with 'SRC='
+            AddBaseTagInfo(content);
+        else if (nodeType == eHTMLTag_base)
+            ProcessBaseTag(content);
       }
       break;
     case eToken_text:

@@ -41,6 +41,7 @@
 #define nsContentCreatorFunctions_h__
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 
 /**
  * Functions to create content, to be used only inside Gecko
@@ -53,6 +54,7 @@ class nsIDocument;
 class nsINodeInfo;
 class imgIRequest;
 class nsNodeInfoManager;
+class nsGenericHTMLElement;
 
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
@@ -99,6 +101,12 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+
+// First argument should be nsHTMLTag, but that adds dependency to parser
+// for a bunch of files.
+already_AddRefed<nsGenericHTMLElement>
+CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
+                  PRBool aFromParser);
 
 #ifdef MOZ_MATHML
 nsresult
