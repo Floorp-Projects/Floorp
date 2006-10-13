@@ -985,7 +985,7 @@ public:
    * The frame is given a maximum size and asked for its desired size.
    * This is the frame's opportunity to reflow its children.
    *
-   * @param aDesiredSize <i>out</i> parameter where you should return the
+   * @param aReflowMetrics <i>out</i> parameter where you should return the
    *          desired size and ascent/descent info. You should include any
    *          space you want for border/padding in the desired size you return.
    *
