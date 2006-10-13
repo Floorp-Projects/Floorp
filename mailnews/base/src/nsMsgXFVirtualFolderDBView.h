@@ -81,8 +81,6 @@ protected:
   PRBool m_curFolderHasCachedHits;
   PRBool m_doingSearch;
   nsWeakPtr m_searchSession;
-  PRInt32 m_numUnread;
-  PRInt32 m_numTotal;
 };
 
 #endif
