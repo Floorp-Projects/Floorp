@@ -6,8 +6,8 @@
     <?php echo $html->input('Party/name', array('size' => 40)); ?>
   </div>
   <div>
-	<label for="PartyVname" class="label-large">Venue Name:</label>
-	<?php echo $html->input('Party/vname', array('size' => 40)); ?>
+    <label for="PartyVname" class="label-large">Venue Name:</label>
+    <?php echo $html->input('Party/vname', array('size' => 40)); ?>
   </div>
   <div>
     <label for="PartyWebsite" class="label-large">Web site:</label>

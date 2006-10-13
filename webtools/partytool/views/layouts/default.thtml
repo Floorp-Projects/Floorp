@@ -32,7 +32,7 @@
         <?php echo $content_for_layout; ?>
       </div>
       <div id="footer">
-        Copyright &copy; <?php echo date('Y'); ?> Mozilla Corporation<br/>
+        Copyright &copy; <?php echo date('Y'); ?> Mozilla<br/>
         <a href="<?php echo $html->url('/privacy-policy'); ?>">Privacy Policy</a>
       </div>
     </div>
