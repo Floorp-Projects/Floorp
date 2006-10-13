@@ -50,6 +50,12 @@
       [% message FILTER html %]
     </pre>
 
+  [% CASE "like_spam" %]
+    <p class="error">
+      Sorry, your message looks like some spam we've been receiving. Please
+      press Back, change the Summary to something else and try again.
+    </p>
+
   [% CASE DEFAULT %]
     The error is unknown. Please try again later.
 [% END %]
