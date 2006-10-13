@@ -37,7 +37,7 @@
 class Party extends AppModel {
   var $name = 'Party';
   var $validate = array(
-    'name' => VALID_NOT_EMPTY,
+    'name' => "/^\S/",
     'einvite' => VALID_EMAIL,
     'duration' => VALID_NUMBER
   );

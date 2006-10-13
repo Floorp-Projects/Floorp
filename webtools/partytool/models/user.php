@@ -38,7 +38,7 @@ class User extends AppModel {
   var $name = 'User';
   var $validate = array(
     'email' => VALID_EMAIL,
-    'name' => VALID_NOT_EMPTY
+    'name'  => "/^\S/"
   );
 
   function memberOf($uid) {
