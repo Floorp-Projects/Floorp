@@ -1198,8 +1198,8 @@
             // Remove our title change listener
             oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
-            // We are no longer the primary content area.
-            oldBrowser.setAttribute("type", "content-targetable");
+            // We are no longer a targetable content area
+            oldBrowser.setAttribute("type", "content");
 
             // Now select the new tab before nuking the old one.
             var currentIndex = this.mTabContainer.selectedIndex;
@@ -1265,7 +1265,7 @@
             //    and also saves RAM by allowing bfcache to evict the full page
 
             this.savedBrowsers.unshift({browser: oldBrowser, history: oldSH});
-              
+
             var newSH = Components.classes["@mozilla.org/browser/shistory;1"]
                                     .createInstance(Components.interfaces.nsISHistoryInternal);
             oldBrowser.webNavigation.sessionHistory = newSH;
