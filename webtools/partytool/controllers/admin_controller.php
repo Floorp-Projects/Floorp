@@ -78,6 +78,10 @@ class AdminController extends AppController {
           $this->Comment->id = $id;
           $comment = $this->Comment->read();
           $this->set('comment', $comment);
+
+          $uid = $this->User->findById($comment['Comment']['owner']);
+          $this->set('owner', $uid['User']['name']);
+
           $this->data = $comment;
           break;
       }

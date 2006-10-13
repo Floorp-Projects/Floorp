@@ -5,7 +5,8 @@
     <description><?php echo APP_NAME." - Upcoming Parties"; ?></description>
     <link><?php echo APP_BASE.$html->url('/'); ?></link>
     <title><?php echo APP_NAME." - Upcoming Parties"; ?></title>
-    <?php foreach($latest as $party): ?> 
+    <?php foreach($latest as $party): 
+      if ($party['Feeds']['canceled']) continue; ?> 
     <item>
       <title><![CDATA[<?php echo $party['Feeds']['name'] ?>]]></title>
       <description><?php echo date('Y-m-d H:i', $party['Feeds']['date']); ?></description>

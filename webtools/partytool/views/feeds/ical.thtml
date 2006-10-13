@@ -5,7 +5,8 @@ PRODID:-//MozillaPartyTool//calendar//EN
 VERSION:2.0
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-<?php foreach($events as $event): ?>
+<?php foreach($events as $event):
+  if ($event['Feeds']['canceled']) continue; ?>
 BEGIN:VEVENT
 UID:<?php echo APP_BASE.$html->url('/parties/view/'.$event['Feeds']['id'])."\n"; ?>
 DTSTAMP:<?php echo gmdate('Ymd\This\Z', $event['Feeds']['date'])."\n"; ?>

@@ -1,5 +1,5 @@
 <?php if (isset($user)): ?>
-<h1>User <?php echo $user['User']['id']; ?></h1>
+<h1>User <?php echo $user['User']['name'].' ('.$user['User']['id']; ?>)</h1>
 <form class="fxform" action="<?php echo $html->url('/admin/edit/user/'.$user['User']['id']); ?>" method="post">
   <div>
     <label for="UserName" class="label-large">Name:</label>
@@ -19,7 +19,7 @@
   </div>
   <div>
      <label for="location" class="label-large">Location:</label>
-    <?php echo $html->input('User/location'); ?>
+    <?php echo $html->input('User/location', array('size' => 40)); ?>
   </div>
   <div>
     <label for="UserShowemail" class="label-large">Show email:</label>
@@ -37,7 +37,7 @@
 </form>
 
 <?php endif; if (isset($party)): ?>
-<h1>Party <?php echo $party['Party']['id']; ?></h1>
+<h1>Party <?php echo $party['Party']['name'].' ('.$party['Party']['id']; ?>)</h1>
 <form class="fxform" action="<?php echo $html->url('/admin/edit/party/'.$party['Party']['id']); ?>" method="post">
   <div>
     <label for="PartyOwner" class="label-large">Party Owner:</label>
@@ -108,7 +108,7 @@
 </form>
 
 <?php endif; if(isset($comment)): ?>
-<h1>Comment <?php echo $comment['Comment']['id']; ?></h1>
+<h1>Comment by <?php echo $owner.' (<a href="'.APP_BASE.$html->url('/admin/edit/user/'.$comment['Comment']['owner']).'">'.$comment['Comment']['owner']; ?></a>)</h1>
 <form class="fxform" action="<?php echo $html->url('/admin/edit/comment/'.$comment['Comment']['id']); ?>" method="post">
   <div>
     <label for="CommentAssoc" class="label-large">Party:</label>
