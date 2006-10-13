@@ -178,9 +178,19 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
 			  continue;
 			}
 		  /* treat null bytes as spaces per bug 243199 comment 7 */
-		  *out++ = c || (data->objectToDecode && 
-                      data->objectToDecode->options->format_out != nsMimeOutput::nsMimeMessageBodyDisplay)
-                    ? (char) c : ' ';
+                  /* treat null bytes as null if data->objectToDecode is null
+		   * Reason: Null bytes shall only be displayed as " " when format_out equals nsMimeOutput::nsMimeMessageBodyDisplay
+		   * Bug 344102
+		   */
+		  *out++ =       c
+                               ||( 
+                                    ( 
+                                       data->objectToDecode && 
+                                       data->objectToDecode->options->format_out != nsMimeOutput::nsMimeMessageBodyDisplay
+                                     
+                                    ) || (! (data->objectToDecode ))
+                                 ) ? (char) c : ' ';
+
 		}
 	  else
 		{
