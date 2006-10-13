@@ -12,8 +12,12 @@
 
 <!ENTITY mnFile.label "Fichier">
 <!ENTITY mnFile.accesskey "F">
+<!ENTITY mnInspectContentDocument.label "Examiner le contenu d'un document">
+<!ENTITY mnInspectContentDocument.accesskey "E">
+<!ENTITY mnInspectChromeDocument.label "Examiner le Chrome d'un document">
+<!ENTITY mnInspectChromeDocument.accesskey "x">
   <!ENTITY cmdShowOpenURLDialog.label "Examiner une URL…">
-  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "U">
   <!ENTITY cmdClose.label "Fermer">
   <!ENTITY cmdClose.accesskey "m">
   <!ENTITY cmdExit.label "Quitter">
