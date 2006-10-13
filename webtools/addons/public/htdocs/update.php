@@ -13,6 +13,8 @@
 
 startProcessing('update.tpl', $memcacheId, $compileId, 'xml');
 
+include('version_comparison.inc.php');
+
 /**
  *  VARIABLES
  *
@@ -98,8 +100,7 @@ if (empty($errors)) {
             main.guid = '{$sql['id']}' AND
             applications.guid = '{$sql['appID']}' AND
             (version.OSID = 1 {$os_query} ) AND
-            version.approved = 'YES' AND
-            '{$sql['appVersion']}+' >= version.minappver
+            version.approved = 'YES'
         ORDER BY
             version.vid DESC
         LIMIT 1       
@@ -111,6 +112,8 @@ if (empty($errors)) {
         $errors[] = 'MySQL query for item information failed.'; 
     } elseif (empty($db->record)) {
         $errors[] = 'No matching update for given item/GUID.'; 
+    } elseif (NS_CompareVersions($db->record['appminver'],$sql['appVersion'])==1) {
+        $errors[] = 'This update is not compatible with the current client.';
     } else {
         $update = array();
         
