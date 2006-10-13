@@ -72,6 +72,24 @@ class AdminController extends AppController {
           $party = $this->Party->read();
           $this->set('party', $party);
           $this->data = $party;
+          $this->data['Party']['name'] = preg_replace("/&#(\d{2,5});/e", 
+                                                      '$this->Unicode->unicode2utf(${1})',
+                                                      html_entity_decode($this->data['Party']['name']));
+          $this->data['Party']['vname'] = preg_replace("/&#(\d{2,5});/e", 
+                                                       '$this->Unicode->unicode2utf(${1})',
+                                                       html_entity_decode($this->data['Party']['vname']));
+          $this->data['Party']['website'] = preg_replace("/&#(\d{2,5});/e", 
+                                                         '$this->Unicode->unicode2utf(${1})',
+                                                         html_entity_decode($this->data['Party']['website']));
+          $this->data['Party']['address'] = preg_replace("/&#(\d{2,5});/e", 
+                                                         '$this->Unicode->unicode2utf(${1})',
+                                                         html_entity_decode($this->data['Party']['address']));
+          $this->data['Party']['notes'] = preg_replace("/&#(\d{2,5});/e", 
+                                                       '$this->Unicode->unicode2utf(${1})',
+                                                       html_entity_decode($this->data['Party']['notes']));
+          $this->data['Party']['flickrusr'] = preg_replace("/&#(\d{2,5});/e", 
+                                                           '$this->Unicode->unicode2utf(${1})',
+                                                           html_entity_decode($this->data['Party']['flickrusr']));
           break;
         
         case 'comment':
@@ -96,6 +114,8 @@ class AdminController extends AppController {
       
         case 'party':
           $this->Party->id = $id;
+          $clean = new Sanitize();
+          $clean->cleanArray($this->data);
           $this->Party->save($this->data);
           break;
         
