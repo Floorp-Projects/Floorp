@@ -699,17 +699,17 @@
         nsIEvent = Components.interfaces.nsIDOMKeyEvent;
         switch (event.keyCode) {
           case nsIEvent.DOM_VK_RIGHT:
-          case nsIEvent.DOM_VK_DOWN:
+          case nsIEvent.DOM_VK_UP:
             this.value += this.step;
             break;
           case nsIEvent.DOM_VK_LEFT:
-          case nsIEvent.DOM_VK_UP:
+          case nsIEvent.DOM_VK_DOWN:
             this.value -= this.step;
             break;
-          case nsIEvent.DOM_VK_PAGE_DOWN:
+          case nsIEvent.DOM_VK_PAGE_UP:
             this.value += this.step * 2;
             break;
-          case nsIEvent.DOM_VK_PAGE_UP:
+          case nsIEvent.DOM_VK_PAGE_DOWN:
             this.value -= this.step * 2;
             break;
           case nsIEvent.DOM_VK_END:
