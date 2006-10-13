@@ -248,6 +248,7 @@ NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
     NS_ENSURE_TRUE(aTerm, NS_ERROR_NULL_POINTER);
     // invalidate expression tree if we're changing the terms
     delete m_expressionTree;
+    m_expressionTree = nsnull;
     return m_termList->AppendElement(NS_STATIC_CAST(nsISupports*,aTerm));
 }
 
@@ -389,6 +390,9 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
+    // caller can change m_termList, which can invalidate m_expressionTree.
+    delete m_expressionTree;
+    m_expressionTree = nsnull;
     NS_IF_ADDREF(*aResult = m_termList);
     return NS_OK;
 }
@@ -396,6 +400,7 @@ NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
 NS_IMETHODIMP nsMsgFilter::SetSearchTerms(nsISupportsArray *aSearchList)
 {
     delete m_expressionTree;
+    m_expressionTree = nsnull;
     m_termList = aSearchList;
     return NS_OK;
 }
