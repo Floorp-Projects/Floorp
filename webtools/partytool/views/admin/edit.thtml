@@ -108,7 +108,7 @@
 </form>
 
 <?php endif; if(isset($comment)): ?>
-<h1>Comment <?php echo '<a href="'.$html->url('/parties/view/'.$comment['Comment']['assoc'].'#c'.$comment['Comment']['id']).'">#'.$comment['Comment']['id']; ?> by <?php echo '<a href="'.$html->url('/admin/edit/user/'.$comment['Comment']['owner']).'">'.$owner; ?></a></h1>
+<h1>Comment <?php echo '<a href="'.$html->url('/parties/view/'.$comment['Comment']['assoc'].'#c'.$comment['Comment']['id']).'">#'.$comment['Comment']['id']; ?></a> by <?php echo '<a href="'.$html->url('/users/view/'.$comment['Comment']['owner']).'">'.$owner; ?></a></h1>
 <form class="fxform" action="<?php echo $html->url('/admin/edit/comment/'.$comment['Comment']['id']); ?>" method="post">
   <div>
     <label for="CommentAssoc" class="label-large">Party:</label>
