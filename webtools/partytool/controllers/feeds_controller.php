@@ -37,6 +37,7 @@
 vendor('webServices');
 class FeedsController extends AppController {
   var $name = 'Feeds';
+  var $components = array('Unicode');
 
   function index() {
     header('Content-type: application/rss+xml');
@@ -96,7 +97,26 @@ class FeedsController extends AppController {
     header('Content-type: text/calendar');
     header("Content-Disposition: inline; filename=partylist.ics");
     $weekago = time() - 604800;
-    $this->set('events', $this->Feed->findAll('WHERE date > '. $weekago, '', 'date ASC', 50, 1));
+    $events = $this->Feed->findAll('WHERE date > '. $weekago, '', 'date ASC', 50, 1);
+    
+    $cal = array();
+    
+    foreach($events as $event) {
+      $event['Feeds']['name'] = 
+        preg_replace(array("/&#(\d{2,5});/e", "/(\n|\r|\f)/", "/\,/"),
+                     array('$this->Unicode->unicode2utf(${1})', ' ', '\,'),
+                     html_entity_decode($event['Feeds']['name']));
+      $event['Feeds']['address'] = 
+        preg_replace(array("/&#(\d{2,5});/e", "/(\n|\r|\f)/", "/\,/"),
+                     array('$this->Unicode->unicode2utf(${1})', ' ', '\,'),
+                     html_entity_decode($event['Feeds']['address']));
+      $event['Feeds']['notes'] = 
+        preg_replace(array("/&#(\d{2,5});/e", "/(\n|\r|\f)/", "/\,/"),
+                     array('$this->Unicode->unicode2utf(${1})', ' ', '\,'),
+                     html_entity_decode($event['Feeds']['notes']));
+      array_push($cal, $event);
+    }
+    $this->set('events', $cal);
   }
 }
 ?>
