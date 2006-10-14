@@ -71,6 +71,7 @@
 #include "nsIImage.h"
 #include "nsIFrame.h"
 #include "nsDOMError.h"
+#include "nsIScriptError.h"
 
 #include "nsICSSParser.h"
 
@@ -543,28 +544,22 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhi
     rv = aStyle->GetDataType(&paramType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (paramType == nsIDataType::VTYPE_DOMSTRING) {
-        nsString str;
-        rv = aStyle->GetAsDOMString(str);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
-        if (NS_FAILED(rv))
-            return NS_ERROR_DOM_SYNTAX_ERR;
-
-        CurrentState().SetColorStyle(aWhichStyle, color);
-
-        mDirtyStyle[aWhichStyle] = PR_TRUE;
-        return NS_OK;
-    } else if (paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
+    if (paramType == nsIDataType::VTYPE_DOMSTRING ||
+        paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
         nsAutoString str;
 
-        rv = aStyle->GetAsAString(str);
+        if (paramType == nsIDataType::VTYPE_DOMSTRING) {
+            rv = aStyle->GetAsDOMString(str);
+        } else {
+            rv = aStyle->GetAsAString(str);
+        }
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
-        if (NS_FAILED(rv))
-            return NS_ERROR_DOM_SYNTAX_ERR;
+        if (NS_FAILED(rv)) {
+            // Error reporting happens inside the CSS parser
+            return NS_OK;
+        }
 
         CurrentState().SetColorStyle(aWhichStyle, color);
 
@@ -592,7 +587,16 @@ nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhi
         }
     }
 
-    return NS_ERROR_DOM_SYNTAX_ERR;
+    nsContentUtils::ReportToConsole(
+        nsContentUtils::eDOM_PROPERTIES,
+        "UnexpectedCanvasVariantStyle",
+        nsnull, 0,
+        nsnull,
+        EmptyString(), 0, 0,
+        nsIScriptError::warningFlag,
+        "Canvas");
+
+    return NS_OK;
 }
 
 void
