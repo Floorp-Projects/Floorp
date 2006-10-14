@@ -25,8 +25,10 @@
   #                      canbless) for viewed user.
   #%]
 
+[% title = BLOCK %]Edit user [% otheruser.login FILTER html %][% END %]
+
 [% PROCESS global/header.html.tmpl
-  title = "Edit user $login"
+  title = title
   message = message
   style_urls = ['skins/standard/editusers.css']
 %]

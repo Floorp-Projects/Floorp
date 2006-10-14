@@ -44,8 +44,10 @@
   #                           created
   #%]
 
+[% title = BLOCK %]Confirm deletion of user [% otheruser.login FILTER html %][% END %]
+
 [% PROCESS global/header.html.tmpl
-  title = "Confirm deletion of user $otheruser.login"
+  title = title
   style_urls = ['skins/standard/admin.css',
                 'skins/standard/editusers.css']
 %]

@@ -26,8 +26,10 @@
 
 [% PROCESS "global/field-descs.none.tmpl" %]
 
+[% title = BLOCK %]Enter [% terms.Bug %]: [% product.name FILTER html %][% END %]
+
 [% PROCESS global/header.html.tmpl
-  title = "Enter $terms.Bug: $product.name"
+  title = title
   style_urls = [ 'skins/standard/create_attachment.css' ]
   javascript_urls = [ "js/attachment.js" ]
 %]

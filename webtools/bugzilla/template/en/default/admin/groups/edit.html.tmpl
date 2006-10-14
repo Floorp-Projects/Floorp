@@ -41,9 +41,10 @@
   #                   be aware of the group being edited and its members.
   #%]
 
+[% title = BLOCK %]Change Group: [% name FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Change Group: $name"
+  title = title
   style = "tr.odd_row {
                background: #e9e9e9; 
            }

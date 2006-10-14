@@ -36,12 +36,15 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% IF query_products.size %]
-  [% title = "Most Frequently Reported $terms.Bugs for ${query_products.join(', ')}" %]
+  [% title = BLOCK %]
+    Most Frequently Reported [% terms.Bugs %] for [% query_products.join(', ') FILTER html %]
+  [% END %]
 [% ELSE %]
   [% title = "Most Frequently Reported $terms.Bugs" %]
 [% END%]
 
 [% PROCESS global/header.html.tmpl
+   title = title
    style = ".resolved { background-color: #d9d9d9; color: #000000; }"
 %]
 

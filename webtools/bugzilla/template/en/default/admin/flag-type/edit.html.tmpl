@@ -35,9 +35,9 @@
 [% END %]
 
 [% IF last_action == "copy" %]
-  [% title = "Create Flag Type Based on $type.name" %]
+  [% title = BLOCK %]Create Flag Type Based on [% type.name FILTER html %][% END %]
 [% ELSIF last_action == "edit" %]
-  [% title = "Edit Flag Type $type.name" %]
+  [% title = BLOCK %]Edit Flag Type [% type.name FILTER html %][% END %]
 [% END %]
 
 [% PROCESS global/header.html.tmpl
