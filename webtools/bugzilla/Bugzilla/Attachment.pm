@@ -20,6 +20,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Myk Melez <myk@mozilla.org>
 #                 Marc Schumann <wurblzap@gmail.com>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 
@@ -475,7 +476,8 @@ sub _validate_data {
 
 =item C<get_attachments_by_bug($bug_id)>
 
-Description: retrieves and returns the attachments for the given bug.
+Description: retrieves and returns the attachments the currently logged in
+             user can view for the given bug.
 
 Params:     C<$bug_id> - integer - the ID of the bug for which
             to retrieve and return attachments.
@@ -486,10 +488,22 @@ Returns:    a reference to an array of attachment objects.
 
 sub get_attachments_by_bug {
     my ($class, $bug_id) = @_;
-    my $attach_ids = Bugzilla->dbh->selectcol_arrayref("SELECT attach_id
-                                                        FROM attachments
-                                                        WHERE bug_id = ?",
-                                                       undef, $bug_id);
+    my $user = Bugzilla->user;
+    my $dbh = Bugzilla->dbh;
+
+    # By default, private attachments are not accessible, unless the user
+    # is in the insider group or submitted the attachment.
+    my $and_restriction = '';
+    my @values = ($bug_id);
+
+    unless ($user->is_insider) {
+        $and_restriction = 'AND (isprivate = 0 OR submitter_id = ?)';
+        push(@values, $user->id);
+    }
+
+    my $attach_ids = $dbh->selectcol_arrayref("SELECT attach_id FROM attachments
+                                               WHERE bug_id = ? $and_restriction",
+                                               undef, @values);
     my $attachments = Bugzilla::Attachment->get_list($attach_ids);
     return $attachments;
 }
@@ -597,33 +611,41 @@ sub validate_content_type {
 
 =item C<validate_can_edit()>
 
-Description: validates if the user is allowed to edit the attachment.
+Description: validates if the user is allowed to view and edit the attachment.
              Only the submitter or someone with editbugs privs can edit it.
+             Only the submitter and users in the insider group can view
+             private attachments.
 
 Returns:     1 on success. Else an error is thrown.
 
 =cut
 
 sub validate_can_edit {
-    my ($class, $attach_id) = @_;
+    my $attachment = shift;
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
 
-    # People in editbugs can edit all attachments
+    # Bug 97729 - the submitter can edit their attachments.
+    return if ($attachment->attacher->id == $user->id);
+
+    # Only users in the insider group can view private attachments.
+    if ($attachment->isprivate && !$user->is_insider) {
+        ThrowUserError('illegal_attachment_edit', {attach_id => $attachment->id});
+    }
+
+    # Users with editbugs privs can edit all attachments.
     return if $user->in_group('editbugs');
 
-    # Bug 97729 - the submitter can edit their attachments
-    my ($ref) = $dbh->selectrow_array('SELECT attach_id FROM attachments
-                                       WHERE attach_id = ? AND submitter_id = ?',
-                                       undef, ($attach_id, $user->id));
-
-    $ref || ThrowUserError('illegal_attachment_edit', { attach_id => $attach_id });
+    # If we come here, then this attachment cannot be seen by the user.
+    ThrowUserError('illegal_attachment_edit', { attach_id => $attachment->id });
 }
 
 =item C<validate_obsolete($bug_id)>
 
 Description: validates if attachments the user wants to mark as obsolete
              really belong to the given bug and are not already obsolete.
+             Moreover, a user cannot mark an attachment as obsolete if
+             he cannot view it (due to restrictions on it).
 
 Params:      $bug_id - The bug ID obsolete attachments should belong to.
 
@@ -636,7 +658,8 @@ sub validate_obsolete {
     my $cgi = Bugzilla->cgi;
 
     # Make sure the attachment id is valid and the user has permissions to view
-    # the bug to which it is attached.
+    # the bug to which it is attached. Make sure also that the user can view
+    # the attachment itself.
     my @obsolete_attachments;
     foreach my $attachid ($cgi->param('obsolete')) {
         my $vars = {};
@@ -650,6 +673,9 @@ sub validate_obsolete {
         # Make sure the attachment exists in the database.
         ThrowUserError('invalid_attach_id', $vars) unless $attachment;
 
+        # Check that the user can view and edit this attachment.
+        $attachment->validate_can_edit;
+
         $vars->{'description'} = $attachment->description;
 
         if ($attachment->bug_id != $bug_id) {
@@ -662,8 +688,6 @@ sub validate_obsolete {
           ThrowCodeError('attachment_already_obsolete', $vars);
         }
 
-        # Check that the user can modify this attachment.
-        $class->validate_can_edit($attachid);
         push(@obsolete_attachments, $attachment);
     }
     return @obsolete_attachments;
@@ -704,8 +728,10 @@ sub insert_attachment_for_bug {
     $class->validate_is_patch($throw_error) || return 0;
     $class->validate_description($throw_error) || return 0;
 
-    if (($attachurl =~ /^(http|https|ftp):\/\/\S+/)
-         && !(defined $cgi->upload('data'))) {
+    if (Bugzilla->params->{'allow_attach_url'}
+        && ($attachurl =~ /^(http|https|ftp):\/\/\S+/)
+        && !defined $cgi->upload('data'))
+    {
         $filename = '';
         $data = $attachurl;
         $isurl = 1;
@@ -727,6 +753,12 @@ sub insert_attachment_for_bug {
         trick_taint($filename);
         trick_taint($contenttype);
         $isurl = 0;
+    }
+
+    # Check attachments the user tries to mark as obsolete.
+    my @obsolete_attachments;
+    if ($cgi->param('obsolete')) {
+        @obsolete_attachments = $class->validate_obsolete($bug->bug_id);
     }
 
     # The order of these function calls is important, as Flag::validate
@@ -799,12 +831,6 @@ sub insert_attachment_for_bug {
         }
         close AH;
         close $fh;
-    }
-
-    # Now handle flags.
-    my @obsolete_attachments;
-    if ($cgi->param('obsolete')) {
-        @obsolete_attachments = $class->validate_obsolete($bug->bug_id);
     }
 
     # Make existing attachments obsolete.

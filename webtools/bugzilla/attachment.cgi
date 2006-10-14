@@ -137,7 +137,8 @@ sub validateID
 {
     my $param = @_ ? $_[0] : 'id';
     my $dbh = Bugzilla->dbh;
-    
+    my $user = Bugzilla->user;
+
     # If we're not doing interdiffs, check if id wasn't specified and
     # prompt them with a page that allows them to choose an attachment.
     # Happens when calling plain attachment.cgi from the urlbar directly
@@ -158,8 +159,8 @@ sub validateID
      || ThrowUserError("invalid_attach_id", { attach_id => $cgi->param($param) });
   
     # Make sure the attachment exists in the database.
-    my ($bugid, $isprivate) = $dbh->selectrow_array(
-                                    "SELECT bug_id, isprivate 
+    my ($bugid, $isprivate, $submitter_id) = $dbh->selectrow_array(
+                                    "SELECT bug_id, isprivate, submitter_id
                                      FROM attachments 
                                      WHERE attach_id = ?",
                                      undef, $attach_id);
@@ -167,15 +168,13 @@ sub validateID
         unless $bugid;
 
     # Make sure the user is authorized to access this attachment's bug.
-
     ValidateBugID($bugid);
-    if ($isprivate && Bugzilla->params->{"insidergroup"}) {
-        Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"})
-          || ThrowUserError("auth_failure", {action => "access",
-                                             object => "attachment"});
+    if ($isprivate && $user->id != $submitter_id && !$user->is_insider) {
+        ThrowUserError('auth_failure', {action => 'access',
+                                        object => 'attachment'});
     }
 
-    return ($attach_id,$bugid);
+    return ($attach_id, $bugid);
 }
 
 # Validates format of a diff/interdiff. Takes a list as an parameter, which
@@ -386,56 +385,27 @@ sub diff {
 
 # Display all attachments for a given bug in a series of IFRAMEs within one
 # HTML page.
-sub viewall
-{
+sub viewall {
     # Retrieve and validate parameters
     my $bugid = $cgi->param('bugid');
     ValidateBugID($bugid);
+    my $bug = new Bugzilla::Bug($bugid);
 
-    # Retrieve the attachments from the database and write them into an array
-    # of hashes where each hash represents one attachment.
-    my $privacy = "";
-    my $dbh = Bugzilla->dbh;
+    my $attachments = Bugzilla::Attachment->get_attachments_by_bug($bugid);
 
-    if ( Bugzilla->params->{"insidergroup"} 
-         && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}) )
-    {
-        $privacy = "AND isprivate < 1 ";
+    foreach my $a (@$attachments) {
+        $a->{'isviewable'} = isViewable($a->contenttype);
     }
-  my $attachments = $dbh->selectall_arrayref(
-           "SELECT attach_id AS attachid, " .
-            $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . " AS date,
-            mimetype AS contenttype, description, ispatch, isobsolete, isprivate, 
-            LENGTH(thedata) AS datasize
-            FROM attachments 
-            INNER JOIN attach_data
-            ON attach_id = id
-            WHERE bug_id = ? $privacy 
-            ORDER BY attach_id", {'Slice'=>{}}, $bugid);
 
-  foreach my $a (@{$attachments})
-  {
-    
-    $a->{'isviewable'} = isViewable($a->{'contenttype'});
-    $a->{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a->{'attachid'} });
-  }
+    # Define the variables and functions that will be passed to the UI template.
+    $vars->{'bug'} = $bug;
+    $vars->{'attachments'} = $attachments;
 
-  # Retrieve the bug summary (for displaying on screen) and assignee.
-  my ($bugsummary, $assignee_id) = $dbh->selectrow_array(
-          "SELECT short_desc, assigned_to FROM bugs " .
-          "WHERE bug_id = ?", undef, $bugid);
+    print $cgi->header();
 
-  # Define the variables and functions that will be passed to the UI template.
-  $vars->{'bugid'} = $bugid;
-  $vars->{'attachments'} = $attachments;
-  $vars->{'bugassignee_id'} = $assignee_id;
-  $vars->{'bugsummary'} = $bugsummary;
-
-  print $cgi->header();
-
-  # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/show-multiple.html.tmpl", $vars)
-    || ThrowTemplateError($template->error());
+    # Generate and return the UI (HTML page) from the appropriate template.
+    $template->process("attachment/show-multiple.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 # Display a form for entering a new attachment.
@@ -586,9 +556,9 @@ sub edit {
   # Retrieve a list of attachments for this bug as well as a summary of the bug
   # to use in a navigation bar across the top of the screen.
   my $bugattachments =
-      $dbh->selectcol_arrayref('SELECT attach_id FROM attachments
-                                WHERE bug_id = ? ORDER BY attach_id',
-                                undef, $attachment->bug_id);
+      Bugzilla::Attachment->get_attachments_by_bug($attachment->bug_id);
+  # We only want attachment IDs.
+  @$bugattachments = map { $_->id } @$bugattachments;
 
   my ($bugsummary, $product_id, $component_id) =
       $dbh->selectrow_array('SELECT short_desc, product_id, component_id
@@ -629,19 +599,34 @@ sub edit {
 # Users cannot edit the content of the attachment itself.
 sub update
 {
-  my $userid = Bugzilla->user->id;
+    my $user = Bugzilla->user;
+    my $userid = $user->id;
+    my $dbh = Bugzilla->dbh;
 
     # Retrieve and validate parameters
     ValidateComment(scalar $cgi->param('comment'));
     my ($attach_id, $bugid) = validateID();
-    Bugzilla::Attachment->validate_can_edit($attach_id);
+    my $attachment = Bugzilla::Attachment->get($attach_id);
+    $attachment->validate_can_edit;
     validateCanChangeAttachment($attach_id);
     Bugzilla::Attachment->validate_description(THROW_ERROR);
     Bugzilla::Attachment->validate_is_patch(THROW_ERROR);
     Bugzilla::Attachment->validate_content_type(THROW_ERROR) unless $cgi->param('ispatch');
     validateIsObsolete();
     validatePrivate();
-    my $dbh = Bugzilla->dbh;
+
+    # If the submitter of the attachment is not in the insidergroup,
+    # be sure that he cannot overwrite the private bit.
+    # This check must be done before calling Bugzilla::Flag*::validate(),
+    # because they will look at the private bit when checking permissions.
+    # XXX - This is a ugly hack. Ideally, we shouldn't have to look at the
+    # old private bit twice (first here, and then below again), but this is
+    # the less risky change.
+    unless ($user->is_insider) {
+        my $oldisprivate = $dbh->selectrow_array('SELECT isprivate FROM attachments
+                                                  WHERE attach_id = ?', undef, $attach_id);
+        $cgi->param('isprivate', $oldisprivate);
+    }
 
     # The order of these function calls is important, as Flag::validate
     # assumes User::match_field has ensured that the values in the
@@ -688,7 +673,6 @@ sub update
   # to attachments so that we can delete pending requests if the user
   # is obsoleting this attachment without deleting any requests
   # the user submits at the same time.
-  my $attachment = Bugzilla::Attachment->get($attach_id);
   Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
 
   # Update the attachment record in the database.
@@ -799,10 +783,10 @@ sub delete_attachment {
 
     # Make sure the administrator is allowed to edit this attachment.
     my ($attach_id, $bug_id) = validateID();
-    Bugzilla::Attachment->validate_can_edit($attach_id);
+    my $attachment = Bugzilla::Attachment->get($attach_id);
+    $attachment->validate_can_edit;
     validateCanChangeAttachment($attach_id);
 
-    my $attachment = Bugzilla::Attachment->get($attach_id);
     $attachment->datasize || ThrowUserError('attachment_removed');
 
     # We don't want to let a malicious URL accidentally delete an attachment.

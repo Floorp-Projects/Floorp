@@ -20,6 +20,7 @@ use strict;
 package Bugzilla::Attachment::PatchReader;
 
 use Bugzilla::Error;
+use Bugzilla::Attachment;
 
 
 sub process_diff {
@@ -41,32 +42,28 @@ sub process_diff {
         $reader->iterate_string('Attachment ' . $attachment->id, $attachment->data);
     }
     else {
-        $vars->{'other_patches'} = [];
+        my @other_patches = ();
         if ($lc->{interdiffbin} && $lc->{diffpath}) {
-            # Get list of attachments on this bug.
+            # Get the list of attachments that the user can view in this bug.
+            my @attachments =
+                @{Bugzilla::Attachment->get_attachments_by_bug($attachment->bug_id)};
+            # Extract patches only.
+            @attachments = grep {$_->ispatch == 1} @attachments;
+            # We want them sorted from newer to older.
+            @attachments = sort { $b->id <=> $a->id } @attachments;
+
             # Ignore the current patch, but select the one right before it
             # chronologically.
-            my $attachment_list =
-                $dbh->selectall_arrayref('SELECT attach_id, description
-                                            FROM attachments
-                                           WHERE bug_id = ?
-                                             AND ispatch = 1
-                                        ORDER BY creation_ts DESC',
-                                          undef, $attachment->bug_id);
-
             my $select_next_patch = 0;
-            foreach (@$attachment_list) {
-                my ($other_id, $other_desc) = @$_;
-                if ($other_id == $attachment->id) {
+            foreach my $attach (@attachments) {
+                if ($attach->id == $attachment->id) {
                     $select_next_patch = 1;
                 }
                 else {
-                    push(@{$vars->{'other_patches'}}, {'id'       => $other_id,
-                                                       'desc'     => $other_desc,
-                                                       'selected' => $select_next_patch});
-                    if ($select_next_patch) {
-                      $select_next_patch = 0;
-                    }
+                    push(@other_patches, { 'id'       => $attach->id,
+                                           'desc'     => $attach->description,
+                                           'selected' => $select_next_patch });
+                    $select_next_patch = 0;
                 }
             }
         }
@@ -74,6 +71,7 @@ sub process_diff {
         $vars->{'bugid'} = $attachment->bug_id;
         $vars->{'attachid'} = $attachment->id;
         $vars->{'description'} = $attachment->description;
+        $vars->{'other_patches'} = \@other_patches;
 
         setup_template_patch_reader($last_reader, $format, $context, $vars);
         # Actually print out the patch.
