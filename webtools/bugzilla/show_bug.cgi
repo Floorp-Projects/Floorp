@@ -120,7 +120,7 @@ if ($cgi->param("field")) {
 }
 
 unless (Bugzilla->user->in_group(Bugzilla->params->{"timetrackinggroup"})) {
-    @fieldlist = grep($_ !~ /_time$/, @fieldlist);
+    @fieldlist = grep($_ !~ /(^deadline|_time)$/, @fieldlist);
 }
 
 foreach (@fieldlist) {
