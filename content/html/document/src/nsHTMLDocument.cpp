@@ -2475,10 +2475,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
         return GetElementById(aElementId, aReturn);
       }
 
-      NS_ASSERTION(!aElementId.IsEmpty(),
-                   "getElementById(\"\") called, fix caller?");
-
-      if (mRootContent && !aElementId.IsEmpty()) {
+      if (mRootContent && CheckGetElementByIdArg(aElementId)) {
         e = nsContentUtils::MatchElementId(mRootContent, idAtom);
       }
     }

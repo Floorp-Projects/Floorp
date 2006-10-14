@@ -673,8 +673,7 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  NS_ASSERTION(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
-  if (aElementId.IsEmpty())
+  if (!CheckGetElementByIdArg(aElementId))
     return NS_OK;
 
   // If we tried to load a document and something went wrong, we might not have
