@@ -660,13 +660,13 @@ GetCJKLangGroupIndex(const char *aLangGroup)
  **/
 
 gfxXftTextRun::gfxXftTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
-    : mWString(aString, 0), mIsWide(PR_TRUE), mGroup(aGroup), mWidth(-1), mHeight(-1)
+    : mWString(aString), mIsWide(PR_TRUE), mGroup(aGroup), mWidth(-1), mHeight(-1)
 
 {
 }
 
 gfxXftTextRun::gfxXftTextRun(const nsACString& aString, gfxPangoFontGroup *aGroup)
-    : mCString(aString, 0), mIsWide(PR_FALSE), mGroup(aGroup), mWidth(-1), mHeight(-1)
+    : mCString(aString), mIsWide(PR_FALSE), mGroup(aGroup), mWidth(-1), mHeight(-1)
 {
 }
 
