@@ -4327,6 +4327,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     RecycleTree(group, tc);
                     pn2->pn_type = TOK_FILTER;
                     pn2->pn_op = JSOP_FILTER;
+
+                    /* A filtering predicate is like a with statement. */
+                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
                 } else {
                     js_ReportCompileErrorNumber(cx, ts,
                                                 JSREPORT_TS | JSREPORT_ERROR,
