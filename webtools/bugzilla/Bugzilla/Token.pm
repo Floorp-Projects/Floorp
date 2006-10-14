@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s):    Myk Melez <myk@mozilla.org>
+#                    Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Module Initialization
@@ -36,6 +37,11 @@ use Bugzilla::Util;
 
 use Date::Format;
 use Date::Parse;
+use File::Basename;
+
+use base qw(Exporter);
+
+@Bugzilla::Token::EXPORT = qw(issue_session_token check_token_data delete_token);
 
 ################################################################################
 # Public Functions
@@ -156,7 +162,7 @@ sub IssuePasswordToken {
     MessageToMTA($message);
 }
 
-sub IssueSessionToken {
+sub issue_session_token {
     # Generates a random token, adds it to the tokens table, and returns
     # the token to the caller.
 
@@ -243,7 +249,7 @@ sub Cancel {
     MessageToMTA($message);
 
     # Delete the token from the database.
-    DeleteToken($token);
+    delete_token($token);
 }
 
 sub DeletePasswordTokens {
@@ -279,6 +285,7 @@ sub GetTokenData {
     my $dbh = Bugzilla->dbh;
 
     return unless defined $token;
+    $token = clean_text($token);
     trick_taint($token);
 
     return $dbh->selectrow_array(
@@ -288,7 +295,7 @@ sub GetTokenData {
 }
 
 # Deletes specified token
-sub DeleteToken {
+sub delete_token {
     my ($token) = @_;
     my $dbh = Bugzilla->dbh;
 
@@ -298,6 +305,50 @@ sub DeleteToken {
     $dbh->bz_lock_tables('tokens WRITE');
     $dbh->do("DELETE FROM tokens WHERE token = ?", undef, $token);
     $dbh->bz_unlock_tables();
+}
+
+# Given a token, makes sure it comes from the currently logged in user
+# and match the expected event. Returns 1 on success, else displays a warning.
+# Note: this routine must not be called while tables are locked as it will try
+# to lock some tables itself, see CleanTokenTable().
+sub check_token_data {
+    my ($token, $expected_action) = @_;
+    my $user = Bugzilla->user;
+    my $template = Bugzilla->template;
+    my $cgi = Bugzilla->cgi;
+
+    my ($creator_id, $date, $token_action) = GetTokenData($token);
+    unless ($creator_id
+            && $creator_id == $user->id
+            && $token_action eq $expected_action)
+    {
+        # Something is going wrong. Ask confirmation before processing.
+        # It is possible that someone tried to trick an administrator.
+        # In this case, we want to know his name!
+        require Bugzilla::User;
+
+        my $vars = {};
+        $vars->{'abuser'} = Bugzilla::User->new($creator_id)->identity;
+        $vars->{'token_action'} = $token_action;
+        $vars->{'expected_action'} = $expected_action;
+        $vars->{'script_name'} = basename($0);
+
+        # Now is a good time to remove old tokens from the DB.
+        CleanTokenTable();
+
+        # If no token was found, create a valid token for the given action.
+        unless ($creator_id) {
+            $token = issue_session_token($expected_action);
+            $cgi->param('token', $token);
+        }
+
+        print $cgi->header();
+
+        $template->process('admin/confirm-action.html.tmpl', $vars)
+          || ThrowTemplateError($template->error());
+        exit;
+    }
+    return 1;
 }
 
 ################################################################################

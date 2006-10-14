@@ -825,7 +825,7 @@ sub delete_attachment {
         }
 
         # Now delete the token.
-        Bugzilla::Token::DeleteToken($token);
+        delete_token($token);
 
         # Paste the reason provided by the admin into a comment.
         AppendComment($bug_id, $user->id, $msg);
@@ -835,7 +835,7 @@ sub delete_attachment {
     }
     else {
         # Create a token.
-        $token = Bugzilla::Token::IssueSessionToken('attachment' . $attach_id);
+        $token = issue_session_token('attachment' . $attach_id);
 
         $vars->{'a'} = $attachment;
         $vars->{'token'} = $token;

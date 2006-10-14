@@ -31,6 +31,7 @@
 <form method="post" action="editproducts.cgi">
   <input type="hidden" name="action" value="updategroupcontrols">
   <input type="hidden" name="product" value="[% product.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
   <input type="hidden" name="classification" 
          value="[% classification.name FILTER html %]">
 

@@ -24,6 +24,7 @@ use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User::Setting;
+use Bugzilla::Token;
 
 my $template = Bugzilla->template;
 local our $vars = {};
@@ -79,9 +80,12 @@ $user->in_group('tweakparams')
                                      object => "settings"});
 
 my $action  = trim($cgi->param('action')  || 'load');
+my $token   = $cgi->param('token');
 
 if ($action eq 'update') {
+    check_token_data($token, 'edit_settings');
     SaveSettings();
+    delete_token($token);
     $vars->{'changes_saved'} = 1;
 
     $template->process("admin/settings/updated.html.tmpl", $vars)
@@ -92,6 +96,7 @@ if ($action eq 'update') {
 
 if ($action eq 'load') {
     LoadSettings();
+    $vars->{'token'} = issue_session_token('edit_settings');
 
     $template->process("admin/settings/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());

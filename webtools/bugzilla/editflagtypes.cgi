@@ -41,6 +41,7 @@ use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Bug;
 use Bugzilla::Attachment;
+use Bugzilla::Token;
 
 local our $cgi = Bugzilla->cgi;
 local our $template = Bugzilla->template;
@@ -63,11 +64,12 @@ $user->in_group('editcomponents')
 
 # Determine whether to use the action specified by the user or the default.
 my $action = $cgi->param('action') || 'list';
+my $token  = $cgi->param('token');
 my @categoryActions;
 
 if (@categoryActions = grep(/^categoryAction-.+/, $cgi->param())) {
     $categoryActions[0] =~ s/^categoryAction-//;
-    processCategoryChange($categoryActions[0]);
+    processCategoryChange($categoryActions[0], $token);
     exit;
 }
 
@@ -75,11 +77,11 @@ if    ($action eq 'list')           { list();           }
 elsif ($action eq 'enter')          { edit($action);    }
 elsif ($action eq 'copy')           { edit($action);    }
 elsif ($action eq 'edit')           { edit($action);    }
-elsif ($action eq 'insert')         { insert();         }
-elsif ($action eq 'update')         { update();         }
+elsif ($action eq 'insert')         { insert($token);   }
+elsif ($action eq 'update')         { update($token);   }
 elsif ($action eq 'confirmdelete')  { confirmDelete();  } 
-elsif ($action eq 'delete')         { deleteType();     }
-elsif ($action eq 'deactivate')     { deactivate();     }
+elsif ($action eq 'delete')         { deleteType(undef, $token); }
+elsif ($action eq 'deactivate')     { deactivate($token); }
 else { 
     ThrowCodeError("action_unrecognized", { action => $action });
 }
@@ -167,9 +169,11 @@ sub edit {
     $vars->{'last_action'} = $cgi->param('action');
     if ($cgi->param('action') eq 'enter' || $cgi->param('action') eq 'copy') {
         $vars->{'action'} = "insert";
+        $vars->{'token'} = issue_session_token('add_flagtype');
     }
     else { 
         $vars->{'action'} = "update";
+        $vars->{'token'} = issue_session_token('edit_flagtype');
     }
 
     # If copying or editing an existing flag type, retrieve it.
@@ -197,7 +201,7 @@ sub edit {
 }
 
 sub processCategoryChange {
-    my $categoryAction = shift;
+    my ($categoryAction, $token) = @_;
     validateIsActive();
     validateIsRequestable();
     validateIsRequesteeble();
@@ -252,7 +256,8 @@ sub processCategoryChange {
     $type->{'inclusions'} = \%inclusions;
     $type->{'exclusions'} = \%exclusions;
     $vars->{'type'} = $type;
-    
+    $vars->{'token'} = $token;
+
     # Return the appropriate HTTP response headers.
     print $cgi->header();
 
@@ -287,6 +292,8 @@ sub clusion_array_to_hash {
 }
 
 sub insert {
+    my $token = shift;
+    check_token_data($token, 'add_flagtype');
     my $name = validateName();
     my $description = validateDescription();
     my $cc_list = validateCCList();
@@ -329,6 +336,7 @@ sub insert {
 
     $vars->{'name'} = $cgi->param('name');
     $vars->{'message'} = "flag_type_created";
+    delete_token($token);
 
     # Return the appropriate HTTP response headers.
     print $cgi->header();
@@ -340,6 +348,8 @@ sub insert {
 
 
 sub update {
+    my $token = shift;
+    check_token_data($token, 'edit_flagtype');
     my $flag_type = validateID();
     my $id = $flag_type->id;
     my $name = validateName();
@@ -426,6 +436,7 @@ sub update {
 
     $vars->{'name'} = $cgi->param('name');
     $vars->{'message'} = "flag_type_changes_saved";
+    delete_token($token);
 
     # Return the appropriate HTTP response headers.
     print $cgi->header();
@@ -441,7 +452,7 @@ sub confirmDelete {
 
   if ($flag_type->flag_count) {
     $vars->{'flag_type'} = $flag_type;
-
+    $vars->{'token'} = issue_session_token('delete_flagtype');
     # Return the appropriate HTTP response headers.
     print $cgi->header();
 
@@ -450,13 +461,18 @@ sub confirmDelete {
       || ThrowTemplateError($template->error());
   } 
   else {
-    deleteType($flag_type);
+    # We should *always* ask if the admin really wants to delete
+    # a flagtype, even if there is no flag belonging to this type.
+    my $token = issue_session_token('delete_flagtype');
+    deleteType($flag_type, $token);
   }
 }
 
 
 sub deleteType {
     my $flag_type = shift || validateID();
+    my $token = shift;
+    check_token_data($token, 'delete_flagtype');
     my $id = $flag_type->id;
     my $dbh = Bugzilla->dbh;
 
@@ -474,6 +490,7 @@ sub deleteType {
     $dbh->bz_unlock_tables();
 
     $vars->{'message'} = "flag_type_deleted";
+    delete_token($token);
 
     # Return the appropriate HTTP response headers.
     print $cgi->header();
@@ -485,6 +502,8 @@ sub deleteType {
 
 
 sub deactivate {
+    my $token = shift;
+    check_token_data($token, 'delete_flagtype');
     my $flag_type = validateID();
     validateIsActive();
 
@@ -496,6 +515,7 @@ sub deactivate {
 
     $vars->{'message'} = "flag_type_deactivated";
     $vars->{'flag_type'} = $flag_type;
+    delete_token($token);
 
     # Return the appropriate HTTP response headers.
     print $cgi->header();

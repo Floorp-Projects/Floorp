@@ -37,6 +37,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Version;
+use Bugzilla::Token;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -63,6 +64,7 @@ my $product_name = trim($cgi->param('product') || '');
 my $version_name = trim($cgi->param('version') || '');
 my $action       = trim($cgi->param('action')  || '');
 my $showbugcounts = (defined $cgi->param('showbugcounts'));
+my $token        = $cgi->param('token');
 
 #
 # product = '' -> Show nice list of products
@@ -108,7 +110,7 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-
+    $vars->{'token'} = issue_session_token('add_version');
     $vars->{'product'} = $product;
     $template->process("admin/versions/create.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -123,8 +125,9 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-
+    check_token_data($token, 'add_version');
     my $version = Bugzilla::Version::create($version_name, $product);
+    delete_token($token);
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
@@ -149,6 +152,7 @@ if ($action eq 'del') {
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
+    $vars->{'token'} = issue_session_token('delete_version');
     $template->process("admin/versions/confirm-delete.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
@@ -162,9 +166,10 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
+    check_token_data($token, 'delete_version');
     my $version = Bugzilla::Version::check_version($product, $version_name);
     $version->remove_from_db;
+    delete_token($token);
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
@@ -189,6 +194,7 @@ if ($action eq 'edit') {
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;
+    $vars->{'token'} = issue_session_token('edit_version');
 
     $template->process("admin/versions/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -203,7 +209,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-
+    check_token_data($token, 'edit_version');
     my $version_old_name = trim($cgi->param('versionold') || '');
     my $version =
         Bugzilla::Version::check_version($product, $version_old_name);
@@ -213,6 +219,7 @@ if ($action eq 'update') {
     $vars->{'updated'} = $version->update($version_name, $product);
 
     $dbh->bz_unlock_tables();
+    delete_token($token);
 
     $vars->{'version'} = $version;
     $vars->{'product'} = $product;

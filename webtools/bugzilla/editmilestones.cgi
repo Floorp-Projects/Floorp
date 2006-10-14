@@ -26,6 +26,7 @@ use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Milestone;
 use Bugzilla::Bug;
+use Bugzilla::Token;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -54,6 +55,7 @@ my $milestone_name = trim($cgi->param('milestone')   || '');
 my $sortkey        = trim($cgi->param('sortkey')     || 0);
 my $action         = trim($cgi->param('action')      || '');
 my $showbugcounts = (defined $cgi->param('showbugcounts'));
+my $token          = $cgi->param('token');
 
 #
 # product = '' -> Show nice list of products
@@ -101,7 +103,7 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-
+    $vars->{'token'} = issue_session_token('add_milestone');
     $vars->{'product'} = $product;
     $template->process("admin/milestones/create.html.tmpl",
                        $vars)
@@ -117,7 +119,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-
+    check_token_data($token, 'add_milestone');
     $milestone_name || ThrowUserError('milestone_blank_name');
 
     if (length($milestone_name) > 20) {
@@ -145,6 +147,8 @@ if ($action eq 'new') {
 
     $milestone = new Bugzilla::Milestone($product->id,
                                          $milestone_name);
+    delete_token($token);
+
     $vars->{'milestone'} = $milestone;
     $vars->{'product'} = $product;
     $template->process("admin/milestones/created.html.tmpl",
@@ -174,6 +178,7 @@ if ($action eq 'del') {
     if ($product->default_milestone eq $milestone->name) {
         ThrowUserError("milestone_is_default", $vars);
     }
+    $vars->{'token'} = issue_session_token('delete_milestone');
 
     $template->process("admin/milestones/confirm-delete.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -187,7 +192,7 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
+    check_token_data($token, 'delete_milestone');
     my $milestone =
         Bugzilla::Milestone::check_milestone($product,
                                              $milestone_name);
@@ -223,6 +228,8 @@ if ($action eq 'delete') {
     $dbh->do("DELETE FROM milestones WHERE product_id = ? AND value = ?",
              undef, ($product->id, $milestone->name));
 
+    delete_token($token);
+
     $template->process("admin/milestones/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -244,6 +251,7 @@ if ($action eq 'edit') {
 
     $vars->{'milestone'} = $milestone;
     $vars->{'product'} = $product;
+    $vars->{'token'} = issue_session_token('edit_milestone');
 
     $template->process("admin/milestones/edit.html.tmpl",
                        $vars)
@@ -259,7 +267,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-
+    check_token_data($token, 'edit_milestone');
     my $milestone_old_name = trim($cgi->param('milestoneold') || '');
     my $milestone_old =
         Bugzilla::Milestone::check_milestone($product,
@@ -338,6 +346,8 @@ if ($action eq 'update') {
     my $milestone =
         Bugzilla::Milestone::check_milestone($product,
                                              $milestone_name);
+    delete_token($token);
+
     $vars->{'milestone'} = $milestone;
     $vars->{'product'} = $product;
     $template->process("admin/milestones/updated.html.tmpl",

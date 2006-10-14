@@ -335,7 +335,7 @@ $vars->{'qa_contact_disabled'}  = !Bugzilla->user->in_group('editbugs');
 
 $vars->{'cloned_bug_id'}         = $cloned_bug_id;
 
-$vars->{'token'}             = Bugzilla::Token::IssueSessionToken('createbug:');
+$vars->{'token'}             = issue_session_token('createbug:');
 
 
 my @enter_bug_fields = Bugzilla->get_fields({ custom => 1, obsolete => 0, 

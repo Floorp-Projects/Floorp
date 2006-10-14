@@ -39,6 +39,7 @@ use Bugzilla::User;
 use Bugzilla::Product;
 use Bugzilla::Component;
 use Bugzilla::Bug;
+use Bugzilla::Token;
 
 ###############
 # Subroutines #
@@ -86,6 +87,7 @@ my $product_name  = trim($cgi->param('product')     || '');
 my $comp_name     = trim($cgi->param('component')   || '');
 my $action        = trim($cgi->param('action')      || '');
 my $showbugcounts = (defined $cgi->param('showbugcounts'));
+my $token         = $cgi->param('token');
 
 #
 # product = '' -> Show nice list of products
@@ -130,7 +132,7 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-
+    $vars->{'token'} = issue_session_token('add_component');
     $vars->{'product'} = $product;
     $template->process("admin/components/create.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
@@ -145,7 +147,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    
+    check_token_data($token, 'add_component');
     # Do the user matching
     Bugzilla::User::match_field ($cgi, {
         'initialowner'     => { 'type' => 'single' },
@@ -244,6 +246,8 @@ if ($action eq 'new') {
 
     $vars->{'comp'} = $component;
     $vars->{'product'} = $product;
+    delete_token($token);
+
     $template->process("admin/components/created.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -260,7 +264,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    
+    $vars->{'token'} = issue_session_token('delete_component');
     $vars->{'comp'} =
         Bugzilla::Component::check_component($product, $comp_name);
 
@@ -279,7 +283,7 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-
+    check_token_data($token, 'delete_component');
     my $component =
         Bugzilla::Component::check_component($product, $comp_name);
 
@@ -313,6 +317,8 @@ if ($action eq 'delete') {
 
     $vars->{'comp'} = $component;
     $vars->{'product'} = $product;
+    delete_token($token);
+
     $template->process("admin/components/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -327,7 +333,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-
+    $vars->{'token'} = issue_session_token('edit_component');
     my $component =
         Bugzilla::Component::check_component($product, $comp_name);
     $vars->{'comp'} = $component;
@@ -351,7 +357,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-
+    check_token_data($token, 'edit_component');
     # Do the user matching
     Bugzilla::User::match_field ($cgi, {
         'initialowner'     => { 'type' => 'single' },
@@ -459,6 +465,8 @@ if ($action eq 'update') {
     $vars->{'initial_cc_names'} = 
         join(', ', map($_->login, @{$component->initial_cc}));
     $vars->{'product'} = $product;
+    delete_token($token);
+
     $template->process("admin/components/updated.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

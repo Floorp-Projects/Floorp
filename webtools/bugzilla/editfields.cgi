@@ -23,6 +23,7 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Field;
+use Bugzilla::Token;
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
@@ -36,6 +37,7 @@ $user->in_group('admin')
                                      object => 'custom_fields'});
 
 my $action = trim($cgi->param('action') || '');
+my $token  = $cgi->param('token');
 
 print $cgi->header();
 
@@ -46,10 +48,13 @@ if (!$action) {
 }
 # Interface to add a new custom field.
 elsif ($action eq 'add') {
+    $vars->{'token'} = issue_session_token('add_field');
+
     $template->process('admin/custom_fields/create.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
 }
 elsif ($action eq 'new') {
+    check_token_data($token, 'add_field');
     my $name = clean_text($cgi->param('name') || '');
     my $desc = clean_text($cgi->param('desc') || '');
     my $type = trim($cgi->param('type') || FIELD_TYPE_FREETEXT);
@@ -93,6 +98,7 @@ elsif ($action eq 'new') {
     $vars->{'is_obsolete'} = $cgi->param('obsolete') ? 1 : 0;
 
     Bugzilla::Field::create_or_update($vars);
+    delete_token($token);
 
     $vars->{'message'} = 'custom_field_created';
 
@@ -109,11 +115,13 @@ elsif ($action eq 'edit') {
     $field || ThrowUserError('customfield_nonexistent', {'name' => $name});
 
     $vars->{'field'} = $field;
+    $vars->{'token'} = issue_session_token('edit_field');
 
     $template->process('admin/custom_fields/edit.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
 }
 elsif ($action eq 'update') {
+    check_token_data($token, 'edit_field');
     my $name = $cgi->param('name');
     my $desc = clean_text($cgi->param('desc') || '');
     my $sortkey = $cgi->param('sortkey') || 0;
@@ -144,17 +152,12 @@ elsif ($action eq 'update') {
     $vars->{'is_obsolete'} = $cgi->param('obsolete') ? 1 : 0;
 
     Bugzilla::Field::create_or_update($vars);
+    delete_token($token);
 
     $vars->{'message'} = 'custom_field_updated';
 
     $template->process('admin/custom_fields/list.html.tmpl', $vars)
         || ThrowTemplateError($template->error());
-}
-elsif ($action eq 'del') {
-    die "not yet implemented...\n";
-}
-elsif ($action eq 'delete') {
-    die "not yet implemented...\n";
 }
 else {
     ThrowUserError('no_valid_action', {'field' => 'custom_field'});

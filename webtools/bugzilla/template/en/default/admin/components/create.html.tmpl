@@ -102,7 +102,7 @@
   <input type="hidden" name='open_name' value='All Open'>
   <input type="hidden" name='nonopen_name' value='All Closed'>
   <input type="hidden" name='product' value="[% product.name FILTER html %]">
-
+  <input type="hidden" name="token" value="[% token FILTER html %]">
 </form>
 
 [% PROCESS admin/components/footer.html.tmpl %]

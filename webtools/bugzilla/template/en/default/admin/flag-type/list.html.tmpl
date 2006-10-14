@@ -101,25 +101,6 @@
   <a href="editflagtypes.cgi?action=enter&amp;target_type=attachment">Create Flag Type For Attachments</a>
 </p>
 
-<script type="text/javascript">
-  <!--
-  function confirmDelete(id, name, count)
-  {
-    if (count > 0) {
-        var msg = 'There are ' + count + ' flags of type ' + name + '. ' +
-                  'If you delete this type, those flags will also be ' +
-                  'deleted.\n\nNote: to deactivate the type instead ' +
-                  'of deleting it, edit it and uncheck its "is active" ' +
-                  'flag.\n\nDo you really want to delete this flag type?';
-        if (!confirm(msg)) return false;
-    }
-    location.href = "editflagtypes.cgi?action=delete&id=" + id;
-    return false; // prevent strict JavaScript warning that this function
-                  // does not always return a value
-  }
-  //-->
-</script>
-
 [% PROCESS global/footer.html.tmpl %]
 
 
@@ -157,9 +138,7 @@
         <td>[% IF type.request_group %][% type.request_group.name FILTER html %][% END %]</td>
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
-          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"
-               onclick="return confirmDelete([% type.id %], '[% type.name FILTER js FILTER html %]',
-                                             [% type.flag_count %]);">Delete</a>
+          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]">Delete</a>
         </td>
       </tr>
 

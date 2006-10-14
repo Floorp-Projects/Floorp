@@ -41,6 +41,7 @@
 <p>
   <input type="submit" id="add" value="Add"/>
   <input type="hidden" name="action" value="new" />
+  <input type="hidden" name="token" value="[% token FILTER html %]">
   [% INCLUDE listselectionhiddenfields %]
 </p>
 </form>

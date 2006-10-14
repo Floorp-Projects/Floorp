@@ -60,7 +60,7 @@ if ($action eq 'prepare-sudo') {
     }
 
     # Keep a temporary record of the user visiting this page
-    $vars->{'token'} = Bugzilla::Token::IssueSessionToken('sudo_prepared');
+    $vars->{'token'} = issue_session_token('sudo_prepared');
 
     # Show the sudo page
     $vars->{'target_login_default'} = $cgi->param('target_login');
@@ -121,7 +121,7 @@ elsif ($action eq 'begin-sudo') {
                        { target_login => scalar $cgi->param('target_login'),
                                reason => scalar $cgi->param('reason')});
     }
-    Bugzilla::Token::DeleteToken($cgi->param('token'));
+    delete_token($cgi->param('token'));
 
     # Get & verify the target user (the user who we will be impersonating)
     my $target_user = 

@@ -378,7 +378,7 @@ sub confirm_create_account {
         cryptpassword => $cgi->param('passwd1')});
 
     # Now delete this token.
-    Bugzilla::Token::DeleteToken($::token);
+    delete_token($::token);
 
     # Let the user know that his user account has been successfully created.
     $vars->{'message'} = 'account_created';

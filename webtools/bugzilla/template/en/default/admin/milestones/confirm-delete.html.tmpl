@@ -90,6 +90,7 @@
   <input type="hidden" name="action" value="delete">
   <input type="hidden" name="product" value="[% product.name FILTER html %]">
   <input type="hidden" name="milestone" value="[% milestone.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
 </form>
 
 [% PROCESS admin/milestones/footer.html.tmpl %]

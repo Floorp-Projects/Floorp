@@ -82,6 +82,7 @@
 <input type="submit" value="Update / Commit" name="commit"
        style="display: none;" id="commit">
 <input type="hidden" name="update" value="1">
+<input type="hidden" name="token" value="[% token FILTER html %]">
 
 [% FOREACH event = events %]
 

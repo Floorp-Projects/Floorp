@@ -99,6 +99,7 @@
           [% PROCESS admin/params/common.html.tmpl panel = current_panel %]
           <input type="hidden" name="section" value="[% current_panel.name FILTER html %]">
           <input type="hidden" name="action" value="save">
+          <input type="hidden" name="token" value="[% token FILTER html %]">
           <input type="reset" value="Reset form">
           <input type="submit" name="action" value="Save Changes">
         </form>

@@ -289,3 +289,11 @@ span.quote {
 }
 
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }
+
+.throw_error {
+    background-color: #ff0000;
+    color: black;
+    font-size: 120%;
+    margin: 1em;
+    padding: 0.5em 1em;
+}
