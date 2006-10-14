@@ -23,6 +23,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxRect.h \
 			gfxRegion.h \
 			gfxTypes.h \
+			gfxTextRunCache.h \
 			$(NULL)
 
 ifdef MOZ_ENABLE_GLITZ

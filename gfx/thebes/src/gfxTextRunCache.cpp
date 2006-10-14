@@ -80,9 +80,9 @@ gfxTextRunCache::GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsAString& aS
         entry->Used();
         tr = entry->textRun.get();
     } else {
-        tr = aFontGroup->MakeTextRun(aString);
-        entry = new TextRunEntry(tr);
         key.Realize();
+        tr = aFontGroup->MakeTextRun(key.GetString());
+        entry = new TextRunEntry(tr);
         mHashTableUTF16.Put(key, entry);
     }
 
@@ -106,9 +106,9 @@ gfxTextRunCache::GetOrMakeTextRun (gfxFontGroup *aFontGroup, const nsACString& a
         entry->Used();
         tr = entry->textRun.get();
     } else {
-        tr = aFontGroup->MakeTextRun(aString);
-        entry = new TextRunEntry(tr);
         key.Realize();
+        tr = aFontGroup->MakeTextRun(key.GetString());
+        entry = new TextRunEntry(tr);
         mHashTableASCII.Put(key, entry);
     }
 
