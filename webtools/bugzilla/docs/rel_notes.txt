@@ -577,11 +577,10 @@ every login cookie Bugzilla has ever given out.)
 Version 2.22.1
 --------------
 
-The Bugzilla team fixed two Information Leaks and two Cross-Site
+The Bugzilla team fixed two Information Leaks and three Cross-Site
 Scripting vulnerabilities that existed in versions of Bugzilla
-prior to 2.22.1. None of them are considered to be of critical
-severity, but we still strongly recommend that you update any
-2.22 installation to 2.22.1.
+prior to 2.22.1. We strongly recommend that you update any 2.22 
+installation to 2.22.1, to be protected from these vulnerabilities.
 
 In addition, we have made an enhancement to security in this version
 of Bugzilla. In previous versions, it was possible for malicious

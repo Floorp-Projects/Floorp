@@ -276,7 +276,9 @@ foreach my $f (@files)
     }
 }
 
-$vars->{'bug_id'} = $cgi->param('id');
+# Make sure we only include valid integers (protects us from XSS attacks).
+my @bugs = grep(detaint_natural($_), split(/[\s,]+/, $cgi->param('id')));
+$vars->{'bug_id'} = join(', ', @bugs);
 $vars->{'multiple_bugs'} = ($cgi->param('id') =~ /[ ,]/);
 $vars->{'doall'} = $cgi->param('doall');
 $vars->{'rankdir'} = $rankdir;
