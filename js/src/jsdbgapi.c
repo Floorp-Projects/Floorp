@@ -906,7 +906,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     JSScript *script;
     JSBool ok;
 
-    scobj = js_GetScopeChain(cx, fp);
+    scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
         return JS_FALSE;
 

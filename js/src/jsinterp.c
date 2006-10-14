@@ -488,7 +488,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * if this frame is a call frame.
      */
     if (fp->fun && !fp->callobj) {
-        JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass);
+        JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
+                  JS_GetPrivate(cx, fp->scopeChain) != fp);
         if (!js_GetCallObject(cx, fp, fp->scopeChain))
             return NULL;
     }
@@ -1562,10 +1563,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     hook = cx->runtime->executeHook;
     hookData = mark = NULL;
     oldfp = cx->fp;
-    frame.callobj = frame.argsobj = NULL;
     frame.script = script;
     if (down) {
         /* Propagate arg/var state for eval and the debugger API. */
+        frame.callobj = down->callobj;
+        frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
         frame.fun = down->fun;
         frame.thisp = down->thisp;
@@ -1576,6 +1578,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.annotation = down->annotation;
         frame.sharpArray = down->sharpArray;
     } else {
+        frame.callobj = frame.argsobj = NULL;
         obj = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
             while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
