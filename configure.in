@@ -6820,6 +6820,9 @@ if test -n "$MOZ_ENABLE_LIBXUL"; then
     XPCOM_LIBS="$LIBXUL_LIBS"
     AC_DEFINE(MOZ_ENABLE_LIBXUL)
 else
+    if test -n "$BUILD_STATIC_LIBS"; then
+        AC_DEFINE(MOZ_STATIC_BUILD)
+    fi
     XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
 fi
 
@@ -7127,7 +7130,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        if test "$_WIN32_MSVC"; then
            MOZ_CAIRO_LIBS='$(LIBXUL_DIST)/lib/mozcairo.lib $(LIBXUL_DIST)/lib/mozlibpixman.lib'
            if test "$MOZ_ENABLE_GLITZ"; then
-               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $(LIBXUL_DIST)/lib/mozglitz.lib $(LIBXUL_DIST)/lib/mozglitzwgl.lib"
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS "'$(LIBXUL_DIST)/lib/mozglitz.lib $(LIBXUL_DIST)/lib/mozglitzwgl.lib'
            fi
        else
            MOZ_CAIRO_LIBS='-L$(LIBXUL_DIST)/lib'" -lmozcairo -lmozlibpixman $CAIRO_FT_LIBS"

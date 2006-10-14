@@ -47,56 +47,36 @@
 
 /* In libxul builds we don't ever want to export cairo symbols */
 #define cairo_public extern CVISIBILITY_HIDDEN
-#define CCALLBACK
-#define CCALLBACK_DECL
-#define CSTATIC_CALLBACK(__x) static __x
 
-#elif defined(XP_WIN)
-
-#define cairo_public extern __declspec(dllexport)
-#define CCALLBACK
-#define CCALLBACK_DECL
-#define CSTATIC_CALLBACK(__x) static __x
-
-#elif defined(XP_BEOS)
-
-#define cairo_public extern __declspec(dllexport)
-#define CCALLBACK
-#define CCALLBACK_DECL
-#define CSTATIC_CALLBACK(__x) static __x
-
-#elif defined(XP_MAC)
-
-#define cairo_public extern __declspec(export)
-#define CCALLBACK
-#define CCALLBACK_DECL
-#define CSTATIC_CALLBACK(__x) static __x
-
-#elif defined(XP_OS2) 
-
-#ifdef __declspec
-#define cairo_public extern __declspec(dllexport)
 #else
-#define cairo_public extern
-#endif
-#define CCALLBACK
-#define CCALLBACK_DECL
-#define CSTATIC_CALLBACK(__x) static __x CCALLBACK
 
-#else /* Unix */
-
-#ifdef HAVE_VISIBILITY_ATTRIBUTE
-#define CVISIBILITY_DEFAULT __attribute__((visibility("default")))
+#ifdef MOZ_STATIC_BUILD
+# define cairo_public
 #else
-#define CVISIBILITY_DEFAULT
+# if defined(XP_WIN) || defined(XP_BEOS)
+#  define cairo_public extern __declspec(dllexport)
+# elif defined(XP_MAC)
+#  define cairo_public extern __declspec(export)
+# elif defined(XP_OS2)
+#  ifdef __declspec
+#   define cairo_public extern __declspec(dllexport)
+#  else
+#   define cairo_public extern
+#  endif
+# else
+#  ifdef HAVE_VISIBILITY_ATTRIBUTE
+#   define cairo_public extern __attribute__((visibility("default")))
+#  else
+#   define cairo_public extern
+#  endif
+# endif
 #endif
 
-#define cairo_public extern CVISIBILITY_DEFAULT
+#endif
+
 #define CCALLBACK
 #define CCALLBACK_DECL
 #define CSTATIC_CALLBACK(__x) static __x
-
-#endif
 
 #ifdef MOZILLA_VERSION
 #include "cairo-rename.h"
