@@ -51,7 +51,7 @@
       [% p.name FILTER html %]</a>:&nbsp;
     </th>
 
-    <td valign="top">[% p.description FILTER none %]</td>
+    <td valign="top">[% p.description FILTER html_light %]</td>
   </tr>
 [% END %]
 

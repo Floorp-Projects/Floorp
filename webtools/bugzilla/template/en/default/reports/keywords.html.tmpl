@@ -24,7 +24,7 @@
   # keywords: array keyword objects. May be empty. Each has has four members:
   #   id: id of the keyword
   #   name: the name of the keyword
-  #   description: keyword description. May be HTML.
+  #   description: keyword description. Can contain some limited HTML code.
   #   bug_count: number of bugs with that keyword
   # caneditkeywords: boolean. True if this user can edit keywords
  %]
@@ -55,7 +55,7 @@
       <a name="[% keyword.name FILTER html %]">
         [% keyword.name FILTER html %]</a>
     </th>
-    <td>[% keyword.description %]</td>
+    <td>[% keyword.description FILTER html_light %]</td>
     <td align="center">
       [% IF keyword.bug_count > 0 %]
         <a href="buglist.cgi?keywords=[% keyword.name FILTER url_quote %]&amp;resolution=---">

@@ -50,7 +50,7 @@
           [% FOREACH component = product.components %]
             <b>[% component.name FILTER html %]:</b>&nbsp;
             [% IF component.description %]
-              [% component.description FILTER none %]
+              [% component.description FILTER html_light %]
             [% ELSE %]
               <font color="red">description missing</font>
             [% END %]

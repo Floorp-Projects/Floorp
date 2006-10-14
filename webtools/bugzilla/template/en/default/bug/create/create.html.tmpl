@@ -526,7 +526,7 @@ function handleWantsAttachment(wants_attachment) {
         <input type="checkbox" id="bit-[% g.bit %]"
           name="bit-[% g.bit %]" value="1"
           [% " checked=\"checked\"" IF g.checked %]>
-          <label for="bit-[% g.bit %]">[% g.description %]</label><br>
+          <label for="bit-[% g.bit %]">[% g.description FILTER html_light %]</label><br>
       [% END %]
       <br>
     [% END %]

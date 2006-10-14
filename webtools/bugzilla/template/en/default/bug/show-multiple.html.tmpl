@@ -303,7 +303,7 @@
     <th>[% terms.Bug %] [%+ field_descs.${name} FILTER html %]:</th>
     <td>
       [% FOREACH depbug = bug.${name} %]
-        [% depbug FILTER bug_link(depbug) %][% ", " IF not loop.last() %]
+        [% depbug FILTER bug_link(depbug) FILTER none %][% ", " IF not loop.last() %]
       [% END %]
     </td>
 

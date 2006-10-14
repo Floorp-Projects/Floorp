@@ -125,6 +125,18 @@ use constant OPTIONAL_MODULES => [
         name => 'SOAP::Lite',
         version => 0
     },
+    {
+        # Since Perl 5.8, we need the 'utf8_mode' method of HTML::Parser
+        # which has been introduced in version 3.39_92 and fixed in 3.40
+        # to not complain when running Perl 5.6.
+        # This module is required by HTML::Scrubber.
+        name => 'HTML::Parser',
+        version => ($] >= 5.008) ? '3.40' : 0
+    },
+    {
+        name => 'HTML::Scrubber',
+        version => 0
+    },
 ];
 
 # These are only required if you want to use Bugzilla with
@@ -303,6 +315,17 @@ sub check_requirements {
             print "If you wish to use LDAP authentication, then you must",
                   " install Net::LDAP\nby running (as $root):\n\n",
                   "    " . install_command('Net::LDAP') . "\n\n";
+        }
+
+        # HTML filtering
+        if (!$have_mod{'HTML::Parser'} || !$have_mod{'HTML::Scrubber'}) {
+            print "If you want additional HTML tags within product and group",
+                  " descriptions,\nyou should install:\n\n";
+            print "    HTML::Scrubber: " . install_command('HTML::Scrubber') . "\n"
+                if !$have_mod{'HTML::Scrubber'};
+            print "    HTML::Parser: " . install_command('HTML::Parser') . "\n"
+                if !$have_mod{'HTML::Parser'};
+            print "\n";
         }
 
         # mod_perl

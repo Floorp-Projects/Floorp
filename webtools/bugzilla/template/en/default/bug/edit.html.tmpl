@@ -198,7 +198,7 @@
             <td>
               [% get_resolution(bug.resolution) FILTER html %]
               [% IF bug.resolution == "DUPLICATE" %]
-                of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
+                of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) FILTER none %]
               [% END %]
             </td>
           </tr>
@@ -619,7 +619,7 @@
              name="bit-[% group.bit %]" id="bit-[% group.bit %]"
              [% " checked=\"checked\"" IF group.ison %]
              [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
-      <label for="bit-[% group.bit %]">[% group.description %]</label>
+      <label for="bit-[% group.bit %]">[% group.description FILTER html_light %]</label>
       <br>
       [% END %]
     [% END %]
@@ -683,7 +683,7 @@
   </th>
   <td>
   [% FOREACH depbug = bug.${dep.fieldname} %]
-    [% depbug FILTER bug_link(depbug) %][% " " %]
+    [% depbug FILTER bug_link(depbug) FILTER none %][% " " %]
   [% END %]
   </td>
   <td>

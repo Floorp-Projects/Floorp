@@ -256,11 +256,8 @@
       [% END %]
 
       <td>
-        [% IF group.isactive %]
-          [% group.description %]
-        [% ELSE %]
-          [% group.description FILTER inactive %]
-        [% END %]
+        [% SET inactive = !group.isactive %]
+        [% group.description FILTER html_light FILTER inactive(inactive) %]
       </td>
 
     </tr>

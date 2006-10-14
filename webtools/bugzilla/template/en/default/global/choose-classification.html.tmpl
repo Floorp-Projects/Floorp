@@ -54,7 +54,7 @@
     </th>
 
     [% IF class.description %]
-      <td valign="top">&nbsp;[% class.description %]</td>
+      <td valign="top">&nbsp;[% class.description FILTER html_light %]</td>
     [% END %]
   </tr>
 [% END %]

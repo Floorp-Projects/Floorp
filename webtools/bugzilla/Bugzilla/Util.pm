@@ -34,7 +34,7 @@ use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
                              detaint_signed
                              html_quote url_quote value_quote xml_quote
-                             css_class_quote
+                             css_class_quote html_light_quote
                              i_am_cgi get_netaddr correct_urlbase
                              lsearch
                              diff_arrays diff_strings
@@ -93,6 +93,93 @@ sub html_quote {
     $var =~ s/>/\&gt;/g;
     $var =~ s/\"/\&quot;/g;
     return $var;
+}
+
+sub html_light_quote {
+    my ($text) = @_;
+
+    # List of allowed HTML elements having no attributes.
+    my @allow = qw(b strong em i u p br abbr acronym ins del cite code var
+                   dfn samp kbd big small sub sup tt dd dt dl ul li ol);
+
+    # Are HTML::Scrubber and HTML::Parser installed?
+    eval { require HTML::Scrubber;
+           require HTML::Parser;
+    };
+
+    # We need utf8_mode() from HTML::Parser 3.40 if running Perl >= 5.8.
+    if ($@ || ($] >= 5.008 && $HTML::Parser::VERSION < 3.40)) { # Package(s) not installed.
+        my $safe = join('|', @allow);
+        my $chr = chr(1);
+
+        # First, escape safe elements.
+        $text =~ s#<($safe)>#$chr$1$chr#go;
+        $text =~ s#</($safe)>#$chr/$1$chr#go;
+        # Now filter < and >.
+        $text =~ s#<#&lt;#g;
+        $text =~ s#>#&gt;#g;
+        # Restore safe elements.
+        $text =~ s#$chr/($safe)$chr#</$1>#go;
+        $text =~ s#$chr($safe)$chr#<$1>#go;
+        return $text;
+    }
+    else { # Packages installed.
+        # We can be less restrictive. We can accept elements with attributes.
+        push(@allow, qw(a blockquote q span));
+
+        # Allowed protocols.
+        my $safe_protocols = join('|', SAFE_PROTOCOLS);
+        my $protocol_regexp = qr{(^(?:$safe_protocols):|^[^:]+$)}i;
+
+        # Deny all elements and attributes unless explicitly authorized.
+        my @default = (0 => {
+                             id    => 1,
+                             name  => 1,
+                             class => 1,
+                             '*'   => 0, # Reject all other attributes.
+                            }
+                       );
+
+        # Specific rules for allowed elements. If no specific rule is set
+        # for a given element, then the default is used.
+        my @rules = (a => {
+                           href  => $protocol_regexp,
+                           title => 1,
+                           id    => 1,
+                           name  => 1,
+                           class => 1,
+                           '*'   => 0, # Reject all other attributes.
+                          },
+                     blockquote => {
+                                    cite => $protocol_regexp,
+                                    id    => 1,
+                                    name  => 1,
+                                    class => 1,
+                                    '*'  => 0, # Reject all other attributes.
+                                   },
+                     'q' => {
+                             cite => $protocol_regexp,
+                             id    => 1,
+                             name  => 1,
+                             class => 1,
+                             '*'  => 0, # Reject all other attributes.
+                          },
+                    );
+
+        my $scrubber = HTML::Scrubber->new(default => \@default,
+                                           allow   => \@allow,
+                                           rules   => \@rules,
+                                           comment => 0,
+                                           process => 0);
+
+        # Avoid filling the web server error log with Perl 5.8.x.
+        # In HTML::Scrubber 0.08, the HTML::Parser object is stored in
+        # the "_p" key, but this may change in future versions.
+        if ($] >= 5.008 && ref($scrubber->{_p}) eq 'HTML::Parser') {
+            $scrubber->{_p}->utf8_mode(1);
+        }
+        return $scrubber->scrub($text);
+    }
 }
 
 # This originally came from CGI.pm, by Lincoln D. Stein
@@ -552,6 +639,12 @@ be done in the template where possible.
 
 Returns a value quoted for use in HTML, with &, E<lt>, E<gt>, and E<34> being
 replaced with their appropriate HTML entities.
+
+=item C<html_light_quote($val)>
+
+Returns a string where only explicitly allowed HTML elements and attributes
+are kept. All HTML elements and attributes not being in the whitelist are either
+escaped (if HTML::Scrubber is not installed) or removed.
 
 =item C<url_quote($val)>
 

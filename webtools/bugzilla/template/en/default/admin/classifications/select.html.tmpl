@@ -37,7 +37,7 @@
       <td valign="top"><a href="editclassifications.cgi?action=edit&amp;classification=[% cl.name FILTER url_quote %]"><b>[% cl.name FILTER html %]</b></a></td>
       <td valign="top"> 
       [% IF cl.description %]
-        [% cl.description %]
+        [% cl.description FILTER html_light %]
       [% ELSE %]
         <font color="red">none</font>
       [% END %]

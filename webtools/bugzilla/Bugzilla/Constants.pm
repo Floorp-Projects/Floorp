@@ -123,6 +123,8 @@ use File::Basename;
     ON_WINDOWS
 
     MAX_TOKEN_AGE
+
+    SAFE_PROTOCOLS
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -301,6 +303,11 @@ use constant FIELD_TYPE_SINGLE_SELECT => 2;
 
 # The maximum number of days a token will remain valid.
 use constant MAX_TOKEN_AGE => 3;
+
+# Protocols which are considered as safe.
+use constant SAFE_PROTOCOLS => ('afs', 'cid', 'ftp', 'gopher', 'http', 'https',
+                                'irc', 'mid', 'news', 'nntp', 'prospero', 'telnet',
+                                'view-source', 'wais');
 
 # States that are considered to be "open" for bugs.
 use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED', 

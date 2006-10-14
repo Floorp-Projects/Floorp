@@ -56,7 +56,7 @@
       [%# descriptions are intentionally not filtered to allow html content %]
       <td>
         [% IF classification.description %]
-          [% classification.description FILTER none %]
+          [% classification.description FILTER html_light %]
         [% ELSE %]
           <span style="color: red">missing</span>
         [% END %]
@@ -78,7 +78,7 @@
     [%# descriptions are intentionally not filtered to allow html content %]
     <td valign="top">
       [% IF product.description %]
-        [% product.description FILTER none %]
+        [% product.description FILTER html_light %]
       [% ELSE %]
         <span style="color: red">missing</span>
       [% END %]
@@ -132,7 +132,7 @@
               [%# descriptions are intentionally not filtered to allow html content %]
               <td>
                 [% IF c.description %]
-                  [% c.description FILTER none %]
+                  [% c.description FILTER html_light %]
                 [% ELSE %]
                   <span style="color: red">missing</span>
                 [% END %]

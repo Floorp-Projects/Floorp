@@ -289,7 +289,8 @@ sub quoteUrls {
               ~egox;
 
     # non-mailto protocols
-    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|irc|mid|news|nntp|prospero|telnet|view-source|wais)/i;
+    my $safe_protocols = join('|', SAFE_PROTOCOLS);
+    my $protocol_re = qr/($safe_protocols)/i;
 
     $text =~ s~\b(${protocol_re}:  # The protocol:
                   [^\s<>\"]+       # Any non-whitespace
@@ -734,7 +735,9 @@ sub create {
                 }
                 return $var;
             },
-            
+
+            html_light => \&Bugzilla::Util::html_light_quote,
+
             # iCalendar contentline filter
             ics => [ sub {
                          my ($context, @args) = @_;

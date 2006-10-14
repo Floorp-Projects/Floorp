@@ -36,7 +36,7 @@
 [% END %]
 
 <p>
-  [% product.description FILTER none %]
+  [% product.description FILTER html_light %]
 </p>
 
 <table>
@@ -87,7 +87,7 @@
   </tr>
   <tr>
     <td colspan="[% numcols - 1 %]">
-      [% comp.description FILTER none %]
+      [% comp.description FILTER html_light %]
     </td>
   </tr>
 [% END %]

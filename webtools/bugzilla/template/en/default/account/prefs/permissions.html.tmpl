@@ -42,8 +42,8 @@
         <table align="center">
           [% FOREACH bit_description = has_bits %]
             <tr>
-              <td>[% bit_description.name %]</td>
-              <td>[% bit_description.desc %]</td>
+              <td>[% bit_description.name FILTER html %]</td>
+              <td>[% bit_description.desc FILTER html_light %]</td>
             </tr>
           [% END %]
         </table>
@@ -63,8 +63,8 @@
           <table align="center">
           [% FOREACH bit_description = set_bits %]
             <tr>
-              <td>[% bit_description.name %]</td>
-              <td>[% bit_description.desc %]</td>
+              <td>[% bit_description.name FILTER html %]</td>
+              <td>[% bit_description.desc FILTER html_light %]</td>
             </tr>
           [% END %]
           </table>
