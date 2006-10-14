@@ -259,6 +259,21 @@ nsFontMetricsPS :: GetHeight(nscoord &aHeight)
   return NS_OK;
 }
 
+#ifdef FONT_LEADING_APIS_V2
+NS_IMETHODIMP
+nsFontMetricsPS :: GetInternalLeading(nscoord &aLeading)
+{
+  aLeading = mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsPS :: GetExternalLeading(nscoord &aLeading)
+{
+  aLeading = 0;
+  return NS_OK;
+}
+#else
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
  */
@@ -279,6 +294,7 @@ nsFontMetricsPS :: GetLeading(nscoord &aLeading)
   aLeading = mLeading;
   return NS_OK;
 }
+#endif
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
