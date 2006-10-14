@@ -129,8 +129,8 @@ public:
     virtual const nsTArray<gfxFloat> *const GetSpacing() const;
 
 private:
-    nsDependentSubstring mWString;
-    nsDependentCSubstring mCString;
+    nsString  mWString;
+    nsCString mCString;
 
     PRBool mIsWide;
 
