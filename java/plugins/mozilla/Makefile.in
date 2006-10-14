@@ -59,7 +59,7 @@ CPPSRCS = nsScriptablePeer.cpp \
 
 XPIDLSRCS = nsISimplePlugin.idl
 
-SHARED_LIBRARY_LIBS = $(PLUGIN_SDK)/samples/common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX) ../src/$(LIB_PREFIX)pluglet_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = $(PLUGIN_SDK)/samples/common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX) ../src/$(LIB_PREFIX)pluglet.$(LIB_SUFFIX) $(XPCOM_LIBS) $(NSPR_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
 DEFFILE = $(win_srcdir)/nppluglet.def

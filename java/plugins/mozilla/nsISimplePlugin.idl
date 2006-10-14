@@ -40,5 +40,5 @@
 
 [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0060b0fbd8ac)]
 interface nsISimplePlugin : nsISupports {
-  void hasPlugletForMimeType(in string aMimeType, out boolean isSupported);
+  boolean hasPlugletForMimeType(in string aMimeType);
 };

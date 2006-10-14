@@ -124,6 +124,9 @@ nsresult PlugletsDir::GetPlugletFactory(const char * mimeType, PlugletFactory **
     if(!mMimeTypeToPlugletFacoryHash) {
 	res = LoadPluglets();
     }
+    else {
+	res = NS_OK;
+    }
     if (NS_SUCCEEDED(res) && mMimeTypeToPlugletFacoryHash) {
 	*plugletFactory = (PlugletFactory *) 
 	    PL_HashTableLookup(mMimeTypeToPlugletFacoryHash,

@@ -47,6 +47,8 @@
 
 #include "nsServiceManagerUtils.h"
 
+#include "plstr.h"
+
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
 nsIServiceManager * gServiceManager = NULL;
@@ -153,17 +155,21 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
 // nsPluginInstance class implementation
 //
 nsPluginInstance::nsPluginInstance(nsPluginCreateData * aCreateDataStruct) : nsPluginInstanceBase(),
-  mInstance(aCreateDataStruct->instance),
   mInitialized(PR_FALSE),
   mScriptablePeer(nsnull),
   mPluglet(nsnull)
 {
+  mInstance = aCreateDataStruct->instance;
+
   mCreateDataStruct.instance = aCreateDataStruct->instance;
   mCreateDataStruct.type = aCreateDataStruct->type;
   mCreateDataStruct.mode = aCreateDataStruct->mode;
   mCreateDataStruct.argc = aCreateDataStruct->argc;
   mCreateDataStruct.argn = aCreateDataStruct->argn;
   mCreateDataStruct.saved = aCreateDataStruct->saved;
+
+  mCreateDataStruct.instance->pdata = this;
+  mInstance->pdata = this;
   mString[0] = '\0';
 }
 
@@ -256,19 +262,27 @@ NS_IMETHODIMP nsPluginInstance::HasPlugletForMimeType(const char *aMimeType,
                                                       PRBool *outResult)
 {
     nsresult rv = NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPlugin> plugletEngine =
-	do_GetService(PLUGLETENGINE_ContractID, &rv);
     *outResult = PR_FALSE;
+    nsCOMPtr<nsIPlugin> plugletEngine = nsnull;
     nsIID scriptableIID = NS_ISIMPLEPLUGIN_IID;    
+
+    if (!mPluglet) {
+        plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
     
-    if (NS_SUCCEEDED(rv)) {
-        rv = plugletEngine->CreatePluginInstance(nsnull, scriptableIID, 
-                                                 aMimeType, 
-                                                 getter_AddRefs(mPluglet));
-        if (NS_SUCCEEDED(rv) && mPluglet) {
+        if (NS_SUCCEEDED(rv)) {
+            rv = plugletEngine->CreatePluginInstance(nsnull, scriptableIID, 
+                                                     aMimeType, 
+                                                     getter_AddRefs(mPluglet));
+            if (NS_SUCCEEDED(rv) && mPluglet) {
+                *outResult = PR_TRUE;
+            }
+        }
+    }
+    else {
+        if (0 == PL_strcmp(aMimeType, mCreateDataStruct.type)) {
             *outResult = PR_TRUE;
         }
+		rv = NS_OK;
     }
 
     return rv;
