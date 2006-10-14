@@ -1053,7 +1053,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   nsCSSValue value;
   PRBool colorParsed = ParseColor(rv, value);
 
-  CLEAR_ERROR();
+  OUTPUT_ERROR();
   ReleaseScanner();
 
   mHandleAlphaColors = origHandleAlphaColors;
