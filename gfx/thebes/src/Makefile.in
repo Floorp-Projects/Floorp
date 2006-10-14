@@ -29,8 +29,6 @@ CPPSRCS	= \
 	gfxPlatform.cpp \
 	$(NULL)
 
-DEFINES += -DIMPL_THEBES
-
 ifdef MOZ_TREE_CAIRO
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/gfx/cairo/cairo/src/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
@@ -96,6 +94,12 @@ REQUIRES += 	glitz
 CPPSRCS +=	gfxGlitzSurface.cpp
 
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
+
+ifeq ($(MOZ_GFX_TOOLKIT),windows)
+REQUIRES +=	glitzwgl
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzwgl.$(LIB_SUFFIX)
+OS_LIBS += opengl32.lib 
+endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 REQUIRES +=	glitzglx

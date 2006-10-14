@@ -106,6 +106,10 @@ REQUIRES        += glitzwgl
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+
+ifdef MOZ_ENABLE_GLITZ
+OS_LIBS += opengl32.lib 
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)

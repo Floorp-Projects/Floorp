@@ -46,12 +46,12 @@
  */
 typedef double gfxFloat;
 
-#if defined(MOZ_ENABLE_LIBXUL)
-#define THEBES_API
+#if defined(MOZ_ENABLE_LIBXUL) || defined(MOZ_STATIC_BUILD)
+# define THEBES_API
 #elif defined(IMPL_THEBES)
-#define THEBES_API NS_EXPORT
+# define THEBES_API NS_EXPORT
 #else
-#define THEBES_API NS_IMPORT
+# define THEBES_API NS_IMPORT
 #endif
 
 /**
