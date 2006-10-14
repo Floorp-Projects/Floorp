@@ -90,6 +90,10 @@ protected:
             mString = &mRealString;
         }
 
+        const GenericString& GetString() {
+            return mRealString;
+        }
+
         nsRefPtr<gfxFontGroup> mFontGroup;
         RealString mRealString;
         const GenericString* mString;
