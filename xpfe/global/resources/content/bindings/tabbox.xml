@@ -353,13 +353,13 @@
         <body>
         <![CDATA[
           var startTab = this.selectedItem;
-          var next = startTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+          var next = aDir < 0 ? startTab.previousSibling : startTab.nextSibling;
 
           while (next != startTab && (!next || next.getAttribute("hidden"))) {
             if (next && next.getAttribute("hidden"))
-              next = next[aDir == -1 ? "previousSibling" : "nextSibling"];
+              next = aDir < 0 ? next.previousSibling : next.nextSibling;
             if (!next)
-              next = aDir == 1 ? this.childNodes[0] : this.childNodes[this.childNodes.length - 1];
+              next = aDir < 0 ? this.lastChild : this.firstChild;
           }
 
           if (next && next != startTab) {
@@ -416,6 +416,14 @@
         </body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+      <![CDATA[
+        this.advanceSelectedTab(event.detail);
+      ]]>
+      </handler>
+    </handlers>
   </binding>
   
   <binding id="tabs-closebutton" 
