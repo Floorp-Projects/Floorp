@@ -99,6 +99,7 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
+#include "nsIConsoleService.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -2299,6 +2300,22 @@ nsDocument::BeginLoad()
   BlockOnload();
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
+}
+
+PRBool
+nsDocument::CheckGetElementByIdArg(const nsAString& aId)
+{
+  if (aId.IsEmpty()) {
+    nsCOMPtr<nsIConsoleService> consoleService
+      (do_GetService("@mozilla.org/consoleservice;1"));
+
+    if (consoleService) {
+      consoleService->LogStringMessage(NS_LITERAL_STRING(
+        "Empty string passed to getElementById().").get());
+    }
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 static void
