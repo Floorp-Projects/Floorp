@@ -45,6 +45,10 @@
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 
+#ifdef MOZ_ENABLE_GLITZ
+#include "gfxGlitzSurface.h"
+#endif
+
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
@@ -443,7 +447,7 @@ gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
         NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
         return nsnull;
     }
-    return new gfxWindowsTextRun(&aString, this);
+    return new gfxWindowsTextRun(aString, this);
 }
 
 gfxTextRun *
@@ -453,7 +457,7 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
         NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
         return nsnull;
     }
-    return new gfxWindowsTextRun(&aString, this);
+    return new gfxWindowsTextRun(aString, this);
 }
 
 /**********************************************************************
@@ -462,13 +466,13 @@ gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
  *
  **********************************************************************/
 
-gfxWindowsTextRun::gfxWindowsTextRun(const nsAString *aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(aString), mCString(nsnull), mIsASCII(PR_FALSE), mLength(-1.0)
+gfxWindowsTextRun::gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup)
+    : mGroup(aFontGroup), mString(aString), mIsASCII(PR_FALSE), mLength(-1.0)
 {
 }
 
-gfxWindowsTextRun::gfxWindowsTextRun(const nsACString *aString, gfxWindowsFontGroup *aFontGroup)
-    : mGroup(aFontGroup), mString(nsnull), mCString(aString), mIsASCII(PR_TRUE), mLength(-1.0)
+gfxWindowsTextRun::gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup)
+    : mGroup(aFontGroup), mCString(aString), mIsASCII(PR_TRUE), mLength(-1.0)
 {
 }
 
@@ -535,11 +539,11 @@ gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
     PRUint32 aLength;
 
     if (mIsASCII) {
-        aCString = mCString->BeginReading();
-        aLength = mCString->Length();
+        aCString = mCString.BeginReading();
+        aLength = mCString.Length();
     } else {
-        aWString = mString->BeginReading();
-        aLength = mString->Length();
+        aWString = mString.BeginReading();
+        aLength = mString.Length();
         if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
             return -1; // try uniscribe instead
     }
@@ -649,11 +653,11 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     PRUint32 aLength;
 
     if (mIsASCII) {
-        aCString = mCString->BeginReading();
-        aLength = mCString->Length();
+        aCString = mCString.BeginReading();
+        aLength = mCString.Length();
     } else {
-        aWString = mString->BeginReading();
-        aLength = mString->Length();
+        aWString = mString.BeginReading();
+        aLength = mString.Length();
         if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
             return -1; // try uniscribe instead
     }
@@ -1445,10 +1449,10 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
     NS_ASSERTION(aDC, "No DC");
 
     /* we aren't going to change this. i swear */
-    nsAString *str = NS_CONST_CAST(nsAString*, mString);
+    nsAString *str = &mString;
     nsString buf;
     if (mIsASCII) {
-        CopyASCIItoUTF16(*mCString, buf);
+        CopyASCIItoUTF16(mCString, buf);
         str = &buf;
     }
  
