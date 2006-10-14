@@ -476,8 +476,8 @@ private:
 
 class THEBES_API gfxWindowsTextRun : public gfxTextRun {
 public:
-    gfxWindowsTextRun(const nsAString *aString, gfxWindowsFontGroup *aFontGroup);
-    gfxWindowsTextRun(const nsACString *aString, gfxWindowsFontGroup *aFontGroup);
+    gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
+    gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);
     ~gfxWindowsTextRun();
 
     virtual void Draw(gfxContext *aContext, gfxPoint pt);
@@ -495,8 +495,8 @@ private:
     nsTArray<gfxFloat> mSpacing;
 
     // These should probably be in a union
-    const nsAString *mString;
-    const nsACString *mCString;
+    nsString mString;
+    nsCString mCString;
 
     const PRBool mIsASCII;
 
