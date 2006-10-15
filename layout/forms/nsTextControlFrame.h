@@ -191,6 +191,11 @@ public: //for methods who access nsTextControlFrame directly
     mHasFocus = aHasFocus;
   };
 
+  PRBool GetHasFocus() const
+  {
+    return mHasFocus;
+  }    
+
   /* called to free up native keybinding services */
   static NS_HIDDEN_(void) ShutDown();
   
