@@ -59,6 +59,7 @@
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
 #include "nsISound.h"
+#include "nsAutoPtr.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 
@@ -163,7 +164,7 @@ public:
     mLastUpdate = aStartTime;
   }
 private:
-  nsDownloadManager* mDownloadManager;
+  nsRefPtr<nsDownloadManager> mDownloadManager;
 
   nsString mDisplayName;
 
