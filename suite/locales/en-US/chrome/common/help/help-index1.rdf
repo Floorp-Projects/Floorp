@@ -1492,6 +1492,11 @@
 <rdf:Description about="#passwords">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="passwords:choosing"
+         nc:name="Choosing a Good Password"
+         nc:link="passwords_help.xhtml#choosing_a_good_password"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="passwords:preferences"
          nc:name="Password Preferences"
          nc:link="passwords_help.xhtml#passwords"/>
