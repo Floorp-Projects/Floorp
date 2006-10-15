@@ -46,6 +46,7 @@
 <dialog id="cookieviewer"
         buttons="accept,help"
         title="&windowtitle.label;"
+        buttonlabelaccept="&buttonaccept.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         windowtype="mozilla:cookieviewer"
         style="width: 30em;"
@@ -65,8 +66,8 @@
            
   <tabbox id="tabbox" flex="1">
     <tabs>
-      <tab id="cookiesTab" label="&tab.cookiesonsystem.label;"/>
-      <tab id="permissionsTab" label="&tab.bannedservers.label;"/>
+      <tab id="cookiesTab" label="&tab.cookiesonsystem.label;" help="cookies_stored"/>
+      <tab id="permissionsTab" label="&tab.bannedservers.label;" help="cookie_sites"/>
     </tabs>
     <tabpanels id="panel" flex="1">
       <vbox class="tabpanel" id="system" flex="1">

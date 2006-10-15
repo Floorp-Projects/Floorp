@@ -21,18 +21,15 @@
 <!ENTITY     treehead.sitename.label        "Site">
 <!ENTITY     treehead.status.label          "Status">
 <!ENTITY     windowtitle.label              "Cookie Manager">
+<!ENTITY     buttonaccept.label             "Close">
 
 <!ENTITY     blockSite.label                "Block">
 <!ENTITY     allowSite.label                "Allow">
 <!ENTITY     allowSiteSession.label         "Session">
 <!ENTITY     removepermission.label         "Remove Site">
 <!ENTITY     removeallpermissions.label     "Remove All Sites">
-<!ENTITY     removeimage.label              "Remove Site">
-<!ENTITY     removeallimages.label          "Remove All Sites">
 
 <!ENTITY     canSet.label                   "can set cookies">
 <!ENTITY     cannotSet.label                "cannot set cookies">
-<!ENTITY     canLoad.label                  "can load images">
-<!ENTITY     cannotLoad.label               "cannot load images">
 
 <!ENTITY     checkbox.label                 "Don't allow sites that set removed cookies to set future cookies">

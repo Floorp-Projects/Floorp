@@ -44,7 +44,6 @@ var kObserverService;
 var cookiemanager         = null;          // cookiemanager interface
 var permissionmanager     = null;          // permissionmanager interface
 var promptservice         = null;          // promptservice interface
-var popupmanager          = null;          // popup manager
 var gDateService = null;
 
 // cookies and permissions list
@@ -53,19 +52,8 @@ var permissions          = [];
 var deletedCookies       = [];
 var deletedPermissions   = [];
 
-// differentiate between cookies, images, and popups
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 const nsICookiePermission = Components.interfaces.nsICookiePermission;
-const cookieType = "cookie";
-const imageType = "image";
-const popupType = "popup";
-
-
-var dialogType = cookieType;
-if (window.arguments[0] == "imageManager")
-  dialogType = imageType;
-else if (window.arguments[0] == "popupManager")
-  dialogType = popupType;
 
 var cookieBundle;
 var gUpdatingBatch = "";
@@ -75,17 +63,14 @@ function Startup() {
   // arguments passed to this routine:
   //   cookieManager 
   //   cookieManagerFromIcon
-  //   imageManager
  
-  // xpconnect to cookiemanager/permissionmanager/promptservice/popupmanager interfaces
+  // xpconnect to cookiemanager/permissionmanager/promptservice interfaces
   cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
   cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
   permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
   promptservice = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptservice = promptservice.QueryInterface(Components.interfaces.nsIPromptService);
-  popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
-  popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
 
   // intialize gDateService
   if (!gDateService) {
@@ -98,56 +83,10 @@ function Startup() {
   // intialize string bundle
   cookieBundle = document.getElementById("cookieBundle");
 
-  // label the close button
-  document.documentElement.getButton("accept").label = cookieBundle.getString("close");
-
-  // determine if labelling is for cookies or images
-  try {
-    var tabBox = document.getElementById("tabbox");
-    var element;
-    if (dialogType == cookieType) {
-      element = document.getElementById("cookiesTab");
-      tabBox.selectedTab = element;
-    } else if (dialogType == imageType) {
-      document.title = cookieBundle.getString("imageTitle");
-
-      element = document.getElementById("permissionsTab");
-      element.label = cookieBundle.getString("tabBannedImages");
-      tabBox.selectedTab = element;
-
-      element = document.getElementById("permissionsText");
-      element.value = cookieBundle.getString("textBannedImages");
-
-      // Hide a dummy vbox inside the real box
-      // If the actual box is hidden, the tabbox gets confused.
-      // The first tab now controls the second panel.
-      // Hiding the first tab doesn't help.
-      document.getElementById("dummyContainer").hidden = "true";
-      document.getElementById("cookiesTab").hidden = "true";
-
-      element = document.getElementById("btnSession");
-      element.hidden = "true";
-    } else {
-      document.title = cookieBundle.getString("popupTitle");
-
-      element = document.getElementById("permissionsTab");
-      element.label = cookieBundle.getString("tabBannedPopups");
-      tabBox.selectedTab = element;
-
-      element = document.getElementById("permissionsText");
-      element.value = cookieBundle.getString("textBannedPopups");
-
-      document.getElementById("dummyContainer").hidden = "true";
-      document.getElementById("cookiesTab").hidden = "true";
-    }
-  } catch(e) {
-  }
   // load in the cookies and permissions
   cookiesTree = document.getElementById("cookiesTree");
   permissionsTree = document.getElementById("permissionsTree");
-  if (dialogType == cookieType) {
-    loadCookies();
-  }
+  loadCookies();
   loadPermissions();
 
   // be prepared to reload the display if anything changes
@@ -519,30 +458,13 @@ function Permission(id, host, rawHost, type, capability) {
 function loadPermissions() {
   // load permissions into a table
   var enumerator = permissionmanager.enumerator;
-  var count = 0;
-  var contentStr;
-  var canStr, cannotStr, canSessionStr;
-  switch (dialogType) {
-    case cookieType:
-      canStr="can";
-      canSessionStr="canSession";
-      cannotStr="cannot";
-      break;
-    case imageType:
-      canStr="canImages";
-      cannotStr="cannotImages";
-      break;
-    case popupType:
-      canStr="canPopups";
-      cannotStr="cannotPopups";
-      break;
-    default:
-      return;
-  }
+  var canStr = cookieBundle.getString("can");
+  var canSessionStr = cookieBundle.getString("canSession");
+  var cannotStr = cookieBundle.getString("cannot");
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
-    if (nextPermission.type == dialogType) {
+    if (nextPermission.type == "cookie") {
       var host = nextPermission.host;
       var capability;
       switch (nextPermission.capability) {
@@ -553,17 +475,14 @@ function loadPermissions() {
           capability = cannotStr;
           break;
         case nsICookiePermission.ACCESS_SESSION:
-          // we should only hit this for cookies
           capability = canSessionStr;
           break;
         default:
-          return;
+          continue;
       }
-      permissions[count] = 
-        new Permission(count++, host,
-                       (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                       nextPermission.type,
-                       cookieBundle.getString(capability));
+      permissions.push(new Permission(permissions.length, host,
+                                      host.replace(/^\./, ""),
+                                      nextPermission.type, capability));
     }
   }
   permissionsTreeView.rowCount = permissions.length;
@@ -572,7 +491,7 @@ function loadPermissions() {
   permissionsTree.treeBoxObject.view = permissionsTreeView;
   PermissionColumnSort('rawHost', false);
 
-  // disable "remove all" button if there are no cookies/images
+  // disable "remove all" button if there are no cookies
   if (permissions.length == 0) {
     document.getElementById("removeAllPermissions").setAttribute("disabled", "true");
   } else {
@@ -604,8 +523,8 @@ function setCookiePermissions(action) {
   var uri = ioService.newURI(url, null, null);
   
   // only set the permission if the permission doesn't already exist
-  if (permissionmanager.testPermission(uri, dialogType) != action)
-    permissionmanager.add(uri, dialogType, action);
+  if (permissionmanager.testPermission(uri, "cookie") != action)
+    permissionmanager.add(uri, "cookie", action);
 
   site.focus();
   site.value = "";
@@ -618,15 +537,13 @@ function buttonEnabling(textfield) {
   var session = document.getElementById("btnSession");
   var allow = document.getElementById("btnAllow");
   block.disabled = !site;
-  if (dialogType == cookieType)
-    session.disabled = !site;
+  session.disabled = !site;
   allow.disabled = !site;
 }
 
 function DeleteAllPermissions() {
   var title = cookieBundle.getString("deleteAllSitesTitle");
-  var msgType = dialogType == cookieType ? "deleteAllCookiesSites" : "deleteAllImagesSites";
-  var msg = cookieBundle.getString(msgType);
+  var msg = cookieBundle.getString("deleteAllCookiesSites");
   if (!promptservice.confirm(window, title, msg ))
     return;
     
@@ -641,18 +558,8 @@ function FinalizePermissionDeletions() {
     return;
 
   gUpdatingBatch = "perm-changed";
-  var p;
-  if (deletedPermissions[0].type == popupType) {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-    for (p = 0; p < deletedPermissions.length; ++p)
-      // we lost the URI's original scheme, but this will do because the scheme
-      // is stripped later anyway.
-      popupmanager.remove(ioService.newURI("http://"+deletedPermissions[p].host, null, null));
-  } else {
-    for (p = 0; p < deletedPermissions.length; ++p)
-      permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
-  }
+  for (var p = 0; p < deletedPermissions.length; ++p)
+    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   deletedPermissions.length = 0;
   gUpdatingBatch = "";
 }
@@ -699,24 +606,9 @@ function PermissionColumnSort(column, updateSelection) {
 
 /*** ============ CODE FOR HELP BUTTON =================== ***/
 
-function getSelectedTab()
+function doHelpButton()
 {
   var selTab = document.getElementById('tabbox').selectedTab;
-  var selTabID = selTab.getAttribute('id');
-  if (selTabID == 'cookiesTab') {
-    key = "cookies_stored";
-  } else {
-    key = "cookie_sites";
-  }  
-  return key;
-}
-
-function doHelpButton() {
-  if (dialogType == imageType) {
-    openHelp("image_mgr");
-  } else {
-    var uri = getSelectedTab();
-    openHelp(uri);
-  }
-  // XXX missing popup help
+  var key = selTab.getAttribute('help');
+  openHelp(key, 'chrome://communicator/locale/help/suitehelp.rdf');
 }
