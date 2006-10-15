@@ -1504,7 +1504,7 @@
      <rdf:li>
        <rdf:Description ID="passwords:timeout_for_master_password"
          nc:name="Timeout for Master Password"
-         nc:link="passwords_help.xhtml#master_passwords"/>
+         nc:link="passwords_help.xhtml#master_password_timeout"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

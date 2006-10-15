@@ -892,25 +892,10 @@
         <rdf:li><rdf:Description ID="passwords_prefs" nc:name="Password Preferences" nc:link="passwords_help.xhtml#passwords"/> </rdf:li>
         <rdf:li><rdf:Description ID="password_mgr" nc:name="Password Manager" nc:link="passwords_help.xhtml#password_manager"/> </rdf:li>
         <rdf:li><rdf:Description ID="passwords_master" nc:name="Master Password Preferences" nc:link="passwords_help.xhtml#master_passwords"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-<rdf:Description about="#passwords_master">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd_1" nc:name="Change Master Password" nc:link="passwords_help.xhtml#change_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-timeout" nc:name="Master Password Timeout" nc:link="passwords_help.xhtml#master_password_timeout"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-reset" nc:name="Reset Master Password" nc:link="passwords_help.xhtml#reset_master_password"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-<rdf:Description about="#using-priv-help-password-settings">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd" nc:name="Change Master Password" nc:link="passwords_help.xhtml#change_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="reset_pwd" nc:name="Reset Master Password" nc:link="passwords_help.xhtml#reset_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="master-prefs-change" nc:name="Change Master Password" nc:link="passwords_help.xhtml#change_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="master-prefs-timeout" nc:name="Master Password Timeout" nc:link="passwords_help.xhtml#master_password_timeout"/> </rdf:li>
+        <rdf:li><rdf:Description ID="master-prefs-reset" nc:name="Reset Master Password" nc:link="passwords_help.xhtml#reset_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="choosing-good-password" nc:name="Choosing a Good Password" nc:link="passwords_help.xhtml#choosing_a_good_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
