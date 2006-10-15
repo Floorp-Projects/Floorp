@@ -6377,11 +6377,19 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       JSAutoRequest ar(cx);
 
-      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                ::JS_GetStringLength(str),
-                                OBJECT_TO_JSVAL(win->GetGlobalJSObject()),
-                                nsnull, nsnull,
-                                JSPROP_READONLY | JSPROP_ENUMERATE)) {
+      PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+      sDoSecurityCheckInAddProperty = PR_FALSE;
+
+      PRBool ok =
+        ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                              ::JS_GetStringLength(str),
+                              OBJECT_TO_JSVAL(win->GetGlobalJSObject()),
+                              nsnull, nsnull,
+                              JSPROP_READONLY | JSPROP_ENUMERATE);
+
+      sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+      if (!ok) {
         return NS_ERROR_FAILURE;
       }
       *objp = obj;
