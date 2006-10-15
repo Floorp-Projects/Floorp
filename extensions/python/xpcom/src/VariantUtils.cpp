@@ -112,8 +112,8 @@ PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_FALSE */)
 		Py_INCREF(Py_None);
 	} else {
 		if (bAssumeUTF8) {
-                        const nsCString temp(s);
-                        ret = PyUnicode_DecodeUTF8(temp.get(), temp.Length(), NULL);
+			const nsCString temp(s);
+			ret = PyUnicode_DecodeUTF8(temp.get(), temp.Length(), NULL);
 		} else {
 			nsAString::size_type len = s.Length();
 			ret = PyString_FromStringAndSize(NULL, len);
@@ -121,7 +121,7 @@ PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_FALSE */)
 				return NULL;
 			// Need "CopyAsciiTo"!?  Worse - since libxul,
 			// nsACString appears to have no const_iterator!
-                        char* dest = PyString_AS_STRING(ret);
+			char* dest = PyString_AS_STRING(ret);
 			nsAString::size_type i;
 			for (i=0;i<len;i++)
 				dest[i] = s[i];
@@ -1774,7 +1774,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 			ret = PyUnicode_FromPRUnichar( *((PRUnichar **)ns_v.ptr), string_size );
 		}
 		break;
-	default:
+	  default:
 		PyErr_Format(PyExc_ValueError, "Unknown XPCOM type code (0x%x)", XPT_TDP_TAG(ns_v.type));
 		/* ret remains nsnull */
 		break;
@@ -2125,7 +2125,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 		}
 		break;
 		}
-	default:
+	  default:
 		// As this is called by external components,
 		// we return _something_ rather than failing before any user code has run!
 		{
