@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 356085;
-var summary = '';
+var summary = 'js_obj_toString for getter/setter';
 var actual = '';
 var expect = '';
 
@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  expect = '({p setter: function y() { } })';
+  expect = '({ set p y() { } })';
   actual = uneval({p setter: function y() { } });
 
   compareSource(expect, actual, summary);
