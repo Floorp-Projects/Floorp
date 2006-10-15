@@ -199,6 +199,9 @@ sub read_localconfig {
     my %localconfig;
     if (-e $filename) {
         my $s = new Safe;
+        # Some people like to store their database password in another file.
+        $s->permit('dofile');
+
         $s->rdo($filename);
         if ($@ || $!) {
             my $err_msg = $@ ? $@ : $!;
