@@ -382,6 +382,9 @@ private:
     PRInt32             mSizeState;
     PluginType          mPluginType;
 
+    PRUint32            mTransparencyBitmapWidth;
+    PRUint32            mTransparencyBitmapHeight;
+
 #ifdef MOZ_CAIRO_GFX
     nsRefPtr<gfxASurface> mThebesSurface;
 #endif

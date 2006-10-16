@@ -333,6 +333,9 @@ nsWindow::nsWindow()
 
     mIsTranslucent = PR_FALSE;
     mTransparencyBitmap = nsnull;
+
+    mTransparencyBitmapWidth  = 0;
+    mTransparencyBitmapHeight = 0;
 }
 
 nsWindow::~nsWindow()
@@ -3194,6 +3197,8 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
         if (mTransparencyBitmap) {
             delete[] mTransparencyBitmap;
             mTransparencyBitmap = nsnull;
+            mTransparencyBitmapWidth = 0;
+            mTransparencyBitmapHeight = 0;
             gtk_widget_reset_shapes(mShell);
         }
     } // else the new default alpha values are "all 1", so we don't
@@ -3234,7 +3239,8 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     if (!mTransparencyBitmap)
         return;
 
-    if (aNewWidth == mBounds.width && aNewHeight == mBounds.height)
+    if (aNewWidth == mTransparencyBitmapWidth &&
+        aNewHeight == mTransparencyBitmapHeight)
         return;
 
     PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
@@ -3242,15 +3248,17 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     if (!newBits) {
         delete[] mTransparencyBitmap;
         mTransparencyBitmap = nsnull;
+        mTransparencyBitmapWidth = 0;
+        mTransparencyBitmapHeight = 0;
         return;
     }
     // fill new mask with "opaque", first
     memset(newBits, 255, newSize);
 
     // Now copy the intersection of the old and new areas into the new mask
-    PRInt32 copyWidth = PR_MIN(aNewWidth, mBounds.width);
-    PRInt32 copyHeight = PR_MIN(aNewHeight, mBounds.height);
-    PRInt32 oldRowBytes = (mBounds.width+7)/8;
+    PRInt32 copyWidth = PR_MIN(aNewWidth, mTransparencyBitmapWidth);
+    PRInt32 copyHeight = PR_MIN(aNewHeight, mTransparencyBitmapHeight);
+    PRInt32 oldRowBytes = (mTransparencyBitmapWidth+7)/8;
     PRInt32 newRowBytes = (aNewWidth+7)/8;
     PRInt32 copyBytes = (copyWidth+7)/8;
 
@@ -3265,6 +3273,8 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
     delete[] mTransparencyBitmap;
     mTransparencyBitmap = newBits;
+    mTransparencyBitmapWidth = aNewWidth;
+    mTransparencyBitmapHeight = aNewHeight;
 }
 
 static PRBool
@@ -3321,7 +3331,7 @@ nsWindow::ApplyTransparencyBitmap()
     gtk_widget_reset_shapes(mShell);
     GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
             mTransparencyBitmap,
-            mBounds.width, mBounds.height);
+            mTransparencyBitmapWidth, mTransparencyBitmapHeight);
     if (!maskBitmap)
         return;
 
@@ -3355,6 +3365,8 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
         if (mTransparencyBitmap == nsnull)
             return NS_ERROR_FAILURE;
         memset(mTransparencyBitmap, 255, size);
+        mTransparencyBitmapWidth = mBounds.width;
+        mTransparencyBitmapHeight = mBounds.height;
     }
 
     NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0
