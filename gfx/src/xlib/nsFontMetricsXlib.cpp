@@ -2302,6 +2302,19 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetHeight(nscoord &aHeight)
   return NS_OK;
 }
 
+#ifdef FONT_LEADING_APIS_V2
+NS_IMETHODIMP  nsFontMetricsXlib::GetInternalLeading(nscoord &aLeading)
+{
+  aLeading = mLeading;
+  return NS_OK;
+}
+NS_IMETHODIMP  nsFontMetricsXlib::GetExternalLeading(nscoord &aLeading)
+{
+  aLeading = 0;
+  return NS_OK;
+}
+#else
+
 NS_IMETHODIMP  nsFontMetricsXlib::GetNormalLineHeight(nscoord &aHeight)
 {
   aHeight = mEmHeight + mLeading;
@@ -2313,6 +2326,7 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetLeading(nscoord &aLeading)
   aLeading = mLeading;
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP  nsFontMetricsXlib::GetEmHeight(nscoord &aHeight)
 {
