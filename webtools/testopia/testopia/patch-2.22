@@ -594,3 +594,15 @@ Index: /bmo-2.22/Bugzilla/DB/Schema/Mysql.pm
  
          TINYTEXT =>     'tinytext',
          MEDIUMTEXT =>   'mediumtext',
+Index: /bmo-2.22/Bugzilla/DB/Schema/Pg.pm
+===================================================================
+--- /bmo-2.22/Bugzilla/DB/Schema/Pg.pm	2005-06-14 21:54:59.000000000 -0600
++++ /bmo-2.22-testopia/Bugzilla/DB/Schema/Pg.pm	2006-09-21 15:10:19.000000000 -0600
+@@ -69,6 +69,7 @@
+         INT3 =>         'integer',
+         INT4 =>         'integer',
+ 
++        TINYSERIAL =>   'serial unique',
+         SMALLSERIAL =>  'serial unique',
+         MEDIUMSERIAL => 'serial unique',
+         INTSERIAL =>    'serial unique',
