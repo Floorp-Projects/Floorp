@@ -15,27 +15,21 @@ instructions, it's a good sign you want to turn back as well.
 Required Perl Modules: 
 Class::DBI 
 Class::DBI::mysql 
-Template 
-Time::Piece 
-Time::Piece::mysql 
-Time::Seconds
 Date::Manip
 HTML::StripScripts
 HTML::StripScripts::Parser
+Template 
 Text::Markdown
+Time::HiRes
+Time::Piece 
+Time::Piece::mysql 
+Time::Seconds
 XML::XPath
 
-Once you've got everything installed, run: mysql < createdb.sql to
-create the Litmus database.
-
-Then edit Litmus/Config.pm to give it the information it needs to
+First edit Litmus/Config.pm to give it the information it needs to
 connect to the database.
 
-Run ./populatedb.pl to create products, testgroups, subgroups, etc...
-There is no UI at present for doing this.
-
-Edit the newly created 'localconfig' file and provide your database 
-configuration. 
+Run populatedb.pl. This will create a template configuration file, 'localconfig,' that contains variables to hold your database configuration information. Edit the newly created 'localconfig' file with your database configuration. Once 'localconfig' is populated with your database information, run the populatedb.pl again to populate the initial products, locales, etc... There is no UI at present for doing this.
 
 Then just pop the whole thing into a directory where your web server can
 get at it. Have fun!
