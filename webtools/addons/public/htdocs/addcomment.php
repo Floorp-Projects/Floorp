@@ -49,7 +49,7 @@ if (isset($_POST['c_submit'])) {
     // with an error message.  (By using booleans here, we keep the error messages in
     // the .tpl)
         $_bad_input = false;
-        if (!is_numeric($_POST['c_rating'])) {
+        if (!is_numeric($_POST['c_rating']) || $_POST['c_rating'] < 0 || $_POST['c_rating'] > 5) {
             $_errors['c_rating'] = true;
             $_bad_input = true;
         }
