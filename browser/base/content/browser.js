@@ -2305,12 +2305,26 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
 
       // Tack www. and suffix on.  If user has appended directories, insert
       // suffix before them (bug 279035).  Be careful not to get two slashes.
+      // Also, don't add the suffix if it's in the original url (bug 233853).
+      
       var firstSlash = url.indexOf("/");
-      if (firstSlash >= 0)
-        url = "http://www." + url.substring(0, firstSlash) + suffix +
-              url.substring(firstSlash + 1, url.length);
-      else
-        url = "http://www." + url + suffix;
+      var existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
+
+      // * Logic for slash and existing suffix (example)
+      // No slash, no suffix: Add suffix (mozilla)
+      // No slash, yes suffix: Add slash (mozilla.com)
+      // Yes slash, no suffix: Insert suffix (mozilla/stuff)
+      // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
+      // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
+      
+      if (firstSlash >= 0) {
+        if (existingSuffix == -1 || existingSuffix > firstSlash)
+          url = url.substring(0, firstSlash) + suffix +
+                url.substring(firstSlash + 1);
+      } else
+        url = url + (existingSuffix == -1 ? suffix : "/");
+
+      url = "http://www." + url;
     }
   }
 
