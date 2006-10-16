@@ -5917,14 +5917,18 @@ fi
 
 
 dnl ========================================================
-dnl = Disable feeds (new feed handling/processing) - Firefox
+dnl = Disable feed handling components
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(feeds,
-[  --disable-feeds        Disable in-page feed handling and processing],
+[  --disable-feeds        Disable feed handling and processing components],
     MOZ_FEEDS=,
     MOZ_FEEDS=1 )
 if test -n "$MOZ_FEEDS"; then
     AC_DEFINE(MOZ_FEEDS)
+else
+    if test "$MOZ_BUILD_APP" = "browser"; then
+        AC_MSG_ERROR([Cannot build Firefox with --disable-feeds.])
+    fi
 fi
 
 dnl ========================================================
