@@ -1389,7 +1389,7 @@ function updateCloseItems()
     document.getElementById('menu_closeOtherTabs').hidden = true;
   }
   var recentTabsItem = document.getElementById("menu_recentTabs");
-  recentTabsItem.setAttribute("disabled", browser.getUndoList().length == 0);
+  recentTabsItem.setAttribute("disabled", !browser || browser.getUndoList().length == 0);
 }
 
 function updateRecentTabs(menupopup)
