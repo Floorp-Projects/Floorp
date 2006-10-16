@@ -842,7 +842,9 @@ already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
                   PRBool aFromParser)
 {
-  NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX, "aNodeType is out of bounds");
+  NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
+               aNodeType == eHTMLTag_userdefined,
+               "aNodeType is out of bounds");
 
   contentCreatorCallback cb = sContentCreatorCallbacks[aNodeType];
 
