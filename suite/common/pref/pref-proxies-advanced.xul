@@ -46,7 +46,7 @@
         onload="onLoad();"
         buttons="accept,cancel,help"
         ondialogaccept="return sendSettingsToProxyPanel();"
-        ondialoghelp="openHelp('nav-prefs-advanced-proxy-advanced');"
+        ondialoghelp="openHelp('nav-prefs-advanced-proxy-advanced', 'chrome://communicator/locale/help/suitehelp.rdf');"
         style="width: 33em;"
         persist="screenX,screenY">
 

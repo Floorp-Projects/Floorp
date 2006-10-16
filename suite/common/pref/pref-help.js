@@ -58,11 +58,10 @@ var fm = {
 } 
 
 function doHelpButton() {
+  var topic = "prefs";
   var subsrc = document.getElementById("panelFrame").getAttribute("src");
-  if ( fm[subsrc] ) {
-  	openHelp(fm[subsrc]);  
-  } else { 
-	openHelp('prefs'); 
-  }
+  if (subsrc in fm)
+    topic = fm[subsrc];
+  openHelp(topic, "chrome://communicator/locale/help/suitehelp.rdf");
 }
 

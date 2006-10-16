@@ -351,6 +351,6 @@ function addPermission(aPermission) {
 }
 
 function doHelpButton() {
-  openHelp(permissionsBundle.getString(permissionType + "permissionshelp"));
+  openHelp(permissionsBundle.getString(permissionType + "permissionshelp"), "chrome://communicator/locale/help/suitehelp.rdf");
   return true;
 }

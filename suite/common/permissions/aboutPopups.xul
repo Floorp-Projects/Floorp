@@ -84,7 +84,7 @@
       }
 
       function doHelpButton() {
-        openHelp("pop_up_blocking");
+        openHelp("pop_up_blocking", "chrome://communicator/locale/help/suitehelp.rdf");
         return true;
       }
 

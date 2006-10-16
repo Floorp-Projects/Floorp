@@ -139,7 +139,7 @@
 
   function doHelpButton()
   {
-    openHelp('privacy_levels');
+    openHelp('privacy_levels', 'chrome://communicator/locale/help/suitehelp.rdf');
   }
 
   ]]>

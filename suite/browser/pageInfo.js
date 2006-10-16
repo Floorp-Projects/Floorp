@@ -350,7 +350,7 @@ function doHelpButton() {
       helpdoc = "pageinfo_general";
       break;
   }
-  openHelp(helpdoc);  
+  openHelp(helpdoc, "chrome://communicator/locale/help/suitehelp.rdf");
 }
  
 function makeGeneralTab()

@@ -94,7 +94,7 @@
 
   function doHelpButton()
   {
-    openHelp('cookie_notify');
+    openHelp('cookie_notify', 'chrome://communicator/locale/help/suitehelp.rdf');
   }
 
   ]]>

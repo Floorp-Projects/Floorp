@@ -113,7 +113,7 @@
     }
 
     function doHelpButton() {
-      openHelp('navigator_pref_autocomplete-adv');
+      openHelp('navigator_pref_autocomplete-adv', 'chrome://communicator/locale/help/suitehelp.rdf');
     }
 
   ]]></script>
