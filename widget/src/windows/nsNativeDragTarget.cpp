@@ -147,20 +147,26 @@ nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState,
   if (pData)
     canLink = (S_OK == ::OleQueryLinkFromData(pData) ? PR_TRUE : PR_FALSE);
 
-  // Given the key modifiers figure out what state we are in for both
-  // the native system and Gecko. Default is link if we can, otherwise copy.
-  if (grfKeyState & MK_CONTROL) {
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
-    *pdwEffect    = DROPEFFECT_COPY;
-  } else if (grfKeyState & MK_SHIFT && mCanMove) {
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
+  // Default is move if we can, in fact drop here,
+  // and if the drop source supports a move operation.
+  if (mCanMove) {
     *pdwEffect    = DROPEFFECT_MOVE;
-  } else if (canLink) {
-    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
-    *pdwEffect    = DROPEFFECT_LINK;
+    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
   } else {
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
     *pdwEffect    = DROPEFFECT_COPY;
+  }
+
+  // Given the key modifiers figure out what state we are in for both
+  // the native system and Gecko
+  if (grfKeyState & MK_CONTROL) {
+    if (canLink && (grfKeyState & MK_SHIFT)) {
+      *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
+      *pdwEffect    = DROPEFFECT_LINK;
+    } else {
+      *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
+      *pdwEffect    = DROPEFFECT_COPY;
+    }
   }
 }
 
