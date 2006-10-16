@@ -47,7 +47,7 @@ function Startup()
   if (window.opener &&
       "NotifierUtils" in window.opener)
     gMain = window.opener;
-  else if (window.top && window.top.opener
+  else if (window.top && window.top.opener &&
            "NotifierUtils" in window.top.opener)
     gMain = window.top.opener;
 
