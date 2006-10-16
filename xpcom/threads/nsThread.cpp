@@ -562,8 +562,10 @@ NS_IMETHODIMP
 nsThread::PushEventQueue(nsIThreadEventFilter *filter)
 {
   nsChainedEventQueue *queue = new nsChainedEventQueue(filter);
-  if (!queue || !queue->IsInitialized())
+  if (!queue || !queue->IsInitialized()) {
+    delete queue;
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsAutoLock lock(mLock);
   queue->mNext = mEvents;
