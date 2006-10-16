@@ -127,7 +127,7 @@ pref("browser.download.progressDnldDialog.bringToFront", true);
 
 // 0 = spellcheck nothing, 1 = check multi-line controls, 2 = check 
 //  multi/single line controls
-pref("layout.spellcheckDefault", 1);
+pref("layout.spellcheckDefault", 2);
 
 // enable the tab jumpback feature
 pref("camino.enable_tabjumpback", true);
