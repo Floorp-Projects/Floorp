@@ -3737,6 +3737,7 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
+   var location = aLocation ? aLocation.spec : "";
 
    if (document.tooltipNode) {
      // Optimise for the common case
@@ -3772,7 +3773,7 @@ nsBrowserStatusHandler.prototype =
       var oldIndexOfHash = oldSpec.indexOf("#");
       if (oldIndexOfHash != -1)
         oldSpec = oldSpec.substr(0, oldIndexOfHash);
-      var newSpec = aLocation.spec;
+      var newSpec = location;
       var newIndexOfHash = newSpec.indexOf("#");
       if (newIndexOfHash != -1)
         newSpec = newSpec.substr(0, newSpec.indexOf("#"));
@@ -3798,8 +3799,6 @@ nsBrowserStatusHandler.prototype =
     var browser = getBrowser().selectedBrowser;
     var findField = document.getElementById("find-field");
     if (aWebProgress.DOMWindow == content) {
-
-      var location = aLocation.spec;
 
       if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
         location = "";                                     //reload function is enabled until tab is refreshed
@@ -3831,11 +3830,11 @@ nsBrowserStatusHandler.prototype =
           if (!gURIFixup)
             gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                                   .getService(Components.interfaces.nsIURIFixup);
-          if (location && gURIFixup)
+          if (location && gURIFixup) {
             try {
-              var locationURI = gURIFixup.createExposableURI(aLocation);
-              location = locationURI.spec;
-            } catch (exception) {}
+              location = gURIFixup.createExposableURI(location).spec;
+            } catch (ex) {}
+          }
 
           if (getBrowser().forceSyncURLBarUpdate) {
             gURLBar.value = ""; // hack for bug 249322
