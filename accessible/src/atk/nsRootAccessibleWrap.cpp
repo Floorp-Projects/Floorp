@@ -104,17 +104,23 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     // we start doing platform-specific things
     nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
     
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+    nsAutoString localName;
+    aTargetNode->GetLocalName(localName);
+
+    if (eventType.LowerCaseEqualsLiteral("pagehide")) {
+      // nsRootAccessible::HandleEventWithTarget() has destoryed the accessible object
+      // we don't want to create it again
+      return NS_OK;
+    }
+    
     nsCOMPtr<nsIAccessible> accessible;
     nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
     if (NS_FAILED(accService->GetAccessibleFor(aTargetNode, getter_AddRefs(accessible))))
         return NS_OK;
     
     nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
-    
-    nsAutoString eventType;
-    aEvent->GetType(eventType);
-    nsAutoString localName;
-    aTargetNode->GetLocalName(localName);
     
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
