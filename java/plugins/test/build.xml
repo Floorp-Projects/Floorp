@@ -99,7 +99,7 @@
 
     <jar jarfile="${basedir}/build/test.jar">
        <manifest>
-        <attribute name="MIMEDescription" value="video/avi"/>
+        <attribute name="MIMEDescription" value="application/x-simple-pluglet"/>
         <attribute name="Pluglet-Class" value="test"/>
        </manifest>
       <fileset dir="${basedir}/build">

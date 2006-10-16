@@ -84,7 +84,9 @@
 
   <target name="compile.classes">
 
-    <javac destdir="${build.home}"
+    <mkdir dir="build" />
+
+    <javac destdir="${basedir}/build"
              debug="${compile.debug}"
             source="${compile.source}"
        deprecation="${compile.deprecation}"
@@ -95,10 +97,23 @@
       <include name="**/*.*"/>
     </javac>
 
+    <jar jarfile="${basedir}/build/mediaplayer.jar">
+       <manifest>
+        <attribute name="MIMEDescription" value="video/avi"/>
+        <attribute name="Pluglet-Class" value="test"/>
+       </manifest>
+      <fileset dir="${basedir}/build">
+        <include name="*.class" />
+      </fileset>
+    </jar>
+
+    <copy todir="${myenv.MOZ_SRC}/mozilla/dist/bin/plugins" 
+          file="${basedir}/build/mediaplayer.jar" />
+
   </target>
 
   <target name="clean.classes">
-    <delete dir="${build.home}/org/mozilla/mediaplayer"/>
+    <delete dir="${basedir}/build"/>
   </target>
 
   <target name="clean" depends="clean.classes">
