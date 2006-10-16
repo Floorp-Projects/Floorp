@@ -403,6 +403,9 @@ static BookmarkManager* gBookmarkManager = nil;
 - (void)shutdown
 {
   [self writeBookmarks:nil];
+  // Temporary logging to try to help nail down bug 337750
+  long long bmFileSize = [[NSFileManager defaultManager] sizeOfFileAtPath:mPathToBookmarkFile traverseLink:YES];
+  NSLog(@"Writing %qi byte bookmarks file '%@' on shutdown", bmFileSize, mPathToBookmarkFile);
 }
 
 - (BOOL)bookmarksLoaded
@@ -1276,7 +1279,7 @@ static BookmarkManager* gBookmarkManager = nil;
     {
       // save the corrupted bookmarks to a backup file
       long long bmFileSize = [fM sizeOfFileAtPath:bookmarkPath traverseLink:YES];
-      NSLog(@"Corrupted bookmarks.plist is %qi bytes", bmFileSize);
+      NSLog(@"Corrupted bookmarks file '%@' is %qi bytes", bookmarkPath, bmFileSize);
       NSDictionary* fileAttributesDict = [fM fileAttributesAtPath:bookmarkPath traverseLink:YES];
       NSDate* modificationDate = [fileAttributesDict objectForKey:NSFileModificationDate];
       NSLog(@"Corrupted bookmarks.plist was last modified %@", modificationDate);
