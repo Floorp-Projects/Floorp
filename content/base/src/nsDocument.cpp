@@ -3977,7 +3977,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   JSContext *cx = nsnull;
   JSObject *oldScope = nsnull;
   JSObject *newScope = nsnull;
-  if (!sameDocument) {
+  if (!sameDocument && oldDocument) {
     rv = nsContentUtils::GetContextAndScopes(oldDocument, this, &cx, &oldScope,
                                              &newScope);
     NS_ENSURE_SUCCESS(rv, rv);
