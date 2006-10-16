@@ -294,7 +294,7 @@ void FreeSingleArray(void *array_ptr, PRUint32 sequence_size, PRUint8 array_type
 
 
 PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence_size,
-                       PRUint32 array_element_size, PRUint8 array_type, nsIID *pIID)
+                       PRUint32 array_element_size, PRUint8 array_type)
 {
 	PRUint8 *pthis = (PRUint8 *)array_ptr;
 	NS_ABORT_IF_FALSE(pthis, "Don't have a valid array to fill!");
@@ -708,30 +708,36 @@ PyObject_AsVariant( PyObject *ob, nsIVariant **aRet)
 			break;
 		case nsIDataType::VTYPE_ARRAY:
 		{
+			// To support arrays holding different data types,
+			// each element itself is a variant.
 			int seq_length = PySequence_Length(ob);
-			NS_ABORT_IF_FALSE(seq_length!=0, "VTYPE_ARRAY assumes at least one element!");
-			PyObject *first = PySequence_GetItem(ob, 0);
-			if (!first) break;
-			int array_type = BestVariantTypeForPyObject(first);
-			Py_DECREF(first);
-			// Arrays can't handle all types.  This means we lost embedded NULLs.
-			// This should really be fixed in XPCOM.
-			if (array_type == nsIDataType::VTYPE_STRING_SIZE_IS) array_type = nsIDataType::VTYPE_CHAR_STR;
-			if (array_type == nsIDataType::VTYPE_WSTRING_SIZE_IS) array_type = nsIDataType::VTYPE_WCHAR_STR;
-			PRUint32 element_size = GetArrayElementSize(array_type);
-			int cb_buffer_pointer = seq_length * element_size;
-			void *buffer_pointer;
-			if ((buffer_pointer = (void *)nsMemory::Alloc(cb_buffer_pointer)) == nsnull) {
+			int i;
+
+			nsIVariant** buf = new nsIVariant*[seq_length];  //  Create variant array.
+			if (!buf) {
 				nr = NS_ERROR_OUT_OF_MEMORY;
 				break;
 			}
-			memset(buffer_pointer, 0, cb_buffer_pointer);
-			if (FillSingleArray(buffer_pointer, ob, seq_length, element_size, array_type, nsnull)) {
-				nr = v->SetAsArray(array_type, &NS_GET_IID(nsISupports), seq_length, buffer_pointer);
-				FreeSingleArray(buffer_pointer, seq_length, array_type);
-			} else
-				nr = NS_ERROR_UNEXPECTED;
-			nsMemory::Free(buffer_pointer);
+			memset(buf, 0, sizeof(nsIVariant *) * seq_length);
+			for (i=0;NS_SUCCEEDED(nr) && i<seq_length;i++) {
+				PyObject *sub = PySequence_GetItem(ob, i);
+				if (!sub) {
+					nr = PyXPCOM_SetCOMErrorFromPyException();
+					break;
+				}
+				nr = PyObject_AsVariant(sub, buf+i);
+				Py_DECREF(sub);
+			}
+			if (NS_SUCCEEDED(nr)) {
+				nr = v->SetAsArray(nsXPTType::T_INTERFACE_IS,
+				                   &NS_GET_IID(nsIVariant),
+				                   seq_length, buf);
+			}
+			// Clean things up.
+			for (i=0;i<seq_length;i++) {
+				NS_IF_RELEASE(buf[i]);
+			}
+			delete [] buf;
 			break;
 		}
 		case nsIDataType::VTYPE_EMPTY:
@@ -805,9 +811,11 @@ PyObject_FromVariant( Py_nsISupports *parent, nsIVariant *v)
 	switch (dt) {
 		case nsIDataType::VTYPE_VOID:
 		case nsIDataType::VTYPE_EMPTY:
-		case nsIDataType::VTYPE_EMPTY_ARRAY:
 			ret = Py_None;
 			Py_INCREF(Py_None);
+			break;
+		case nsIDataType::VTYPE_EMPTY_ARRAY:
+			ret = PyList_New(0);
 			break;
 		case nsIDataType::VTYPE_ARRAY:
 			ret = PyObject_FromVariantArray(parent, v);
@@ -1489,7 +1497,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				cb_this_buffer_pointer = 1; 
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
 			memset(this_buffer_pointer, 0, cb_this_buffer_pointer);
-			rc = FillSingleArray(this_buffer_pointer, val, seq_length, element_size, array_type&XPT_TDP_TAGMASK, nsnull);
+			rc = FillSingleArray(this_buffer_pointer, val, seq_length, element_size, array_type&XPT_TDP_TAGMASK);
 			if (!rc) break;
 			rc = SetSizeIs(value_index, PR_FALSE, seq_length);
 			if (!rc) break;
@@ -2591,7 +2599,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			bBackFill = pi->IsIn();
 		}
 		if (bBackFill)
-			rc = FillSingleArray(*(void **)ns_v.val.p, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK, piid);
+			rc = FillSingleArray(*(void **)ns_v.val.p, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK);
 		else {
 			// If it is an existing array, free it.
 			void **pp = (void **)ns_v.val.p;
@@ -2606,7 +2614,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (nbytes==0) nbytes = 1; // avoid assertion about 0 bytes
 			*pp = (void *)nsMemory::Alloc(nbytes);
 			memset(*pp, 0, nbytes);
-			rc = FillSingleArray(*pp, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK, piid);
+			rc = FillSingleArray(*pp, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK);
 			if (!rc) break;
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_FALSE, sequence_size);
