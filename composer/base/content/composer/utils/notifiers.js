@@ -38,10 +38,11 @@
 var NotifierUtils = {
 
   mKeywords: {},
+  mContexts: {},
 
   // PRIVATE
 
-  _error: function (aErrorString, aHelperString)
+  _error: function _error(aErrorString, aHelperString)
   {
     var caller = this._error.caller;
     var s = "";
@@ -58,21 +59,27 @@ var NotifierUtils = {
 
   // PUBLIC
 
-  cleanNotifier: function (aKeyword)
+  cleanNotifier: function cleanNotifier(aKeyword)
   {
     if (aKeyword in this.mKeywords)
+    {
       this.mKeywords[aKeyword] = [];
+      this.mContexts[aKeyword] = [];
+    }
     else
       this._error("called with unrecognized notifier id", aKeyword);
   },
 
-  addNotifier: function (aKeyword)
+  addNotifier: function addNotifier(aKeyword)
   {
     if (aKeyword)
+    {
       this.mKeywords[aKeyword] = [];
+      this.mContexts[aKeyword] = [];
+    }
   },
 
-  addNotifierCallback: function (aKeyword, aFn)
+  addNotifierCallback: function addNotifierCallback(aKeyword, aFn, aContext)
   {
     if (!aKeyword || !aFn || (typeof aFn != "function"))
     {
@@ -81,12 +88,15 @@ var NotifierUtils = {
     }
 
     if (aKeyword in this.mKeywords)
+    {
       this.mKeywords[aKeyword].push( aFn );
+      this.mContexts[aKeyword].push( aContext );
+    }
     else
       this._error("called with unrecognized notifier id", aKeyword);
   },
 
-  removeNotifierCallback: function (aKeyword, aFn)
+  removeNotifierCallback: function removeNotifierCallback(aKeyword, aFn)
   {
     if (!aKeyword || !aFn || (typeof aFn != "function"))
     {
@@ -98,7 +108,10 @@ var NotifierUtils = {
     {
       var index = this.mKeywords[aKeyword].indexOf(aFn);
       if (index != -1)
+      {
         this.mKeywords[aKeyword].splice(index, 1);
+        this.mContexts[aKeyword].splice(index, 1);
+      }
       else
         this._error("no such callback for notifier id", aKeyword);
     }
@@ -106,15 +119,16 @@ var NotifierUtils = {
       this._error("called with unrecognized notifier id", aKeyword);
   },
 
-  notify: function (aKeyword)
+  notify: function notify(aKeyword)
   {
     if (aKeyword in this.mKeywords)
     {
       var processes = this.mKeywords[aKeyword];
+      var contexts  = this.mContexts[aKeyword];
 
       for (var i = 0; i < processes.length; i++)
         try {
-          processes[i].apply(null, arguments);
+          processes[i].apply(contexts[i], arguments);
         }
         catch (e) {
           this._error("callback raised an exception for notifier id", aKeyword);
