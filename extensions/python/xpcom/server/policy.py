@@ -35,6 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
+import sys
 from xpcom import xpcom_consts, _xpcom, client, nsError, logger
 from xpcom import ServerException, COMException
 import xpcom
@@ -283,22 +284,31 @@ class DefaultPolicy:
             # considered 'normal' - however, we still write a debug log
             # record to help track these otherwise silent exceptions.
 
-            # Note that Python 2.3 does not allow an explicit exc_info tuple
-            # and passing 'True' will not work as there is no exception pending.
-            # Trick things!
-            if logger.isEnabledFor(logging.DEBUG):
-                try:
-                    raise exc_info[0], exc_info[1], exc_info[2]
-                except:
-                    logger.debug("'%s' raised COM Exception %s",
-                             func_name, exc_val, exc_info = 1)
+            if sys.version_info < (2,4):
+                # Note that Python 2.3 does not allow an explicit exc_info tuple
+                # and passing 'True' will not work as there is no exception pending.
+                # Trick things!
+                if logger.isEnabledFor(logging.DEBUG):
+                    try:
+                        raise exc_info[0], exc_info[1], exc_info[2]
+                    except:
+                        logger.debug("'%s' raised COM Exception %s",
+                                 func_name, exc_val, exc_info = 1)
+            else:
+                logger.debug("'%s' raised COM Exception %s",
+                             func_name, exc_val, exc_info=exc_info)
+
             return exc_val.errno
         # Unhandled exception - always print a warning and the traceback.
         # As above, trick the logging module to handle Python 2.3
-        try:
-            raise exc_info[0], exc_info[1], exc_info[2]
-        except:
-            logger.exception("Unhandled exception calling '%s'", func_name)
+        if sys.version_info < (2,4):
+            try:
+                raise exc_info[0], exc_info[1], exc_info[2]
+            except:
+                logger.exception("Unhandled exception calling '%s'", func_name)
+        else:
+            logger.error("Unhandled exception calling '%s'", func_name,
+                         exc_info=exc_info)
         return nsError.NS_ERROR_FAILURE
 
     # Called whenever an unhandled Python exception is detected as a result
