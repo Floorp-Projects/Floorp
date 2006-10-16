@@ -48,6 +48,9 @@ LOCALIZATION NOTE : Do not translate any of the occurrences of the word
 <!ENTITY importDialog.addressbookTitle "Address Books">
 <!ENTITY importDialog.settingsTitle "Settings">
 
+<!ENTITY  window.width            "40em">
+<!ENTITY  window.macWidth         "45em">
+
 <!ENTITY importTitle.label        "&brandShortName; Mail Import Wizard">
 <!ENTITY importDesc.label         "Import Mail, Address Books and Settings from other programs">
 

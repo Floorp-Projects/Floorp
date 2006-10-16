@@ -100,7 +100,7 @@ messenger.jar:
     content/messenger/junkLog.xul                   (/mailnews/base/resources/content/junkLog.xul)
     content/messenger/junkLog.js                    (/mailnews/base/resources/content/junkLog.js)
     content/messenger/importDialog.js               (/mailnews/import/resources/content/importDialog.js)
-    content/messenger/importDialog.xul              (/mailnews/import/resources/content/importDialog.xul)
+*   content/messenger/importDialog.xul              (/mailnews/import/resources/content/importDialog.xul)
     content/messenger/fieldMapImport.xul            (/mailnews/import/resources/content/fieldMapImport.xul)
     content/messenger/fieldMapImport.js             (/mailnews/import/resources/content/fieldMapImport.js)
     content/messenger/attach.js                     (/mailnews/mime/emitters/resources/content/attach.js)

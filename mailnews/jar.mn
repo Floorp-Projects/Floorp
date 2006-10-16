@@ -181,7 +181,7 @@ messenger.jar:
     content/messenger/messengercompose/mailComposeExtrasOverlay.xul            (compose/resources/content/mailComposeExtrasOverlay.xul)
     content/messenger/messengercompose/mailComposeEditorOverlay.xul            (compose/resources/content/mailComposeEditorOverlay.xul)
     content/messenger/importDialog.js                                          (import/resources/content/importDialog.js)
-    content/messenger/importDialog.xul                                         (import/resources/content/importDialog.xul)
+*   content/messenger/importDialog.xul                                         (import/resources/content/importDialog.xul)
     content/messenger/fieldMapImport.xul                                       (import/resources/content/fieldMapImport.xul)
     content/messenger/fieldMapImport.js                                        (import/resources/content/fieldMapImport.js)
     content/messenger/attach.js                                                (mime/emitters/resources/content/attach.js)

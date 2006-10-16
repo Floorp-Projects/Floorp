@@ -50,7 +50,11 @@
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="OnLoadImportDialog()"
-        style="width: 40em;"
+#ifdef XP_MACOSX
+        style="width: &window.macWidth; !important;"
+#else
+        style="width: &window.width; !important;"
+#endif
         title="&importDialog.windowTitle;">
 
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
