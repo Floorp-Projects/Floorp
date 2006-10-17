@@ -219,8 +219,8 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     }
     
     var ownerId = this.ownerId;
-    var orgUID = ((item.organizer == null || item.organizer.id == null)
-                    ? ownerId : item.organizer.id);
+    var orgUID = ((item.organizer && item.organizer.id)
+                  ? item.organizer.id : ownerId);
     
     // attendees:
     var attendees =  item.getAttendees({});
@@ -228,6 +228,7 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         // ORGANIZER is owner fo this cal?
         if (!oldItem || orgUID == ownerId) {
             url += "&method=2"; // REQUEST
+            url += ("&orgUID=" + encodeURIComponent(orgUID));
             url += "&attendees=";
             for ( var i = 0; i < attendees.length; ++i ) {
                 if (i > 0)
@@ -260,14 +261,16 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         }
     }
     else
-        url += "&attendees="; // using just PUBLISH (method=1)
+        url += "&orgUID=&attendees="; // using just PUBLISH (method=1)
     
     url += "&fetch=1&relativealarm=1&compressed=1&recurring=1";
-    url += ("&orgUID=" + encodeURIComponent(orgUID));
+    url += "&replace=1"; // (update) don't append to any lists
     
     // xxx todo: default prio is 0 (5 in sjs cs)
-    url += ("&priority=" + item.priority);
-    url += "&replace=1"; // (update) don't append to any lists
+    // save PRIORITY only if actually set, else delete:
+    url += "&priority=";
+    if (item.hasProperty("PRIORITY"))
+        url += encodeURIComponent( item.getProperty("PRIORITY") );
     
     var icsClass = ((item.privacy != null && item.privacy != "")
                     ? item.privacy : "PUBLIC");
@@ -346,8 +349,10 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         dtstart = item.startDate;
         var dtend = item.endDate;
         url += ("&dtend=" + getIcalUTC(dtend));
-//         url += ("&X-NSCP-DTEND-TZID=" + 
-//                 encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
+        url += ("&X-NSCP-DTEND-TZID=" +
+                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                encodeURIComponent(this.getAlignedTimezone(dtend.timezone)));
+        this.log("dtstart=" + dtstart + "\ndtend=" + dtend);
         bIsAllDay = (dtstart.isDate && dtend.isDate);
     }
     else { // calITodo:
@@ -356,10 +361,12 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         dtstart = item.entryDate;
         dtend = item.dueDate;
         url += ("&due=" + getIcalUTC(dtend));
-//         if (dtend) {
-//             url += ("&X-NSCP-DUE-TZID=" + encodeURIComponent(
-//                         this.getAlignedTimezone(dtend.timezone)));
-//         }
+        if (dtend) {
+            url += ("&X-NSCP-DUE-TZID=" +
+                    "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                    encodeURIComponent(
+                        this.getAlignedTimezone(dtend.timezone)));
+        }
         
         bIsAllDay = (dtstart && dtstart.isDate);
         if (item.isCompleted)
@@ -381,18 +388,17 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     //           until user can check this on/off in UI:
     url += ("&transparent=" +
             (((icsClass == "PRIVATE") || bIsAllDay) ? "1" : "0"));
-    if (bIsAllDay)
-        url += "&isAllDay=1";
+    
+    url += ("&isAllDay=" + (bIsAllDay ? "1" : "0"));
     
     url += ("&dtstart=" + getIcalUTC(dtstart));
     if (dtstart) {
         // important to provide tz info with entry date for proper
-        // occurrence calculation (daylight savings)
-        // xxx todo: setting X-NSCP-tz does not work.
-        //           i.e. for now no separate tz for start/end.
-//     url += ("&X-NSCP-DTSTART-TZID=" +
-//             encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
-        // currently the only way to influence X-NSCP-DTSTART-TZID:
+        // occurrence calculation (daylight savings):
+        url += ("&X-NSCP-DTSTART-TZID=" +
+                "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" + 
+                encodeURIComponent(this.getAlignedTimezone(dtstart.timezone)));
+        // xxx todo: still needed?
         url += ("&tzid=" + encodeURIComponent(
                     this.getAlignedTimezone(dtstart.timezone)));
     }
@@ -539,11 +545,7 @@ calWcapCalendar.prototype.adoptItem = function( item, listener )
 {
     this.log( "adoptItem() call: " + item.title );
     try {
-        if (this.readOnly) {
-            throw new Components.Exception(
-                "Calendar is read-only.",
-                Components.interfaces.calIErrors.CAL_IS_READONLY );
-        }
+        this.assureReadWrite();
         
         // xxx todo: workaround really necessary for adding an occurrence?
         var oldItem = null;
@@ -619,11 +621,7 @@ calWcapCalendar.prototype.modifyItem = function( newItem, oldItem, listener )
 {
     this.log( "modifyItem() call: " + newItem.id );    
     try {
-        if (this.readOnly) {
-            throw new Components.Exception(
-                "Calendar is read-only.",
-                Components.interfaces.calIErrors.CAL_IS_READONLY );
-        }
+        this.assureReadWrite();
         if (!newItem.id)
             throw new Components.Exception("new item has no id!");
         
@@ -683,11 +681,7 @@ calWcapCalendar.prototype.deleteItem = function( item, listener )
 {
     this.log( "deleteItem() call: " + item.id );
     try {
-        if (this.readOnly) {
-            throw new Components.Exception(
-                "Calendar is read-only.",
-                Components.interfaces.calIErrors.CAL_IS_READONLY );
-        }
+        this.assureReadWrite();
         if (item.id == null)
             throw new Components.Exception("no item id!");
         
@@ -960,8 +954,8 @@ calWcapCalendar.prototype.getItem = function( id, listener )
                     this_.superCalendar, Components.results.NS_OK,
                     Components.interfaces.calIOperationListener.GET,
                     items.length == 1 ? items[0].id : null, null );
+                this_.log( "item delivered." );
             }
-            this_.log( "item delivered." );
         };
         
         var params = ("&relativealarm=1&compressed=1&recurring=1" +
@@ -988,7 +982,13 @@ calWcapCalendar.prototype.getItem = function( id, listener )
                 Components.interfaces.calIOperationListener.GET,
                 null, exc );
         }
-        this.notifyError( exc );
+        if (testResultCode(exc, Components.interfaces.
+                           calIWcapErrors.WCAP_LOGIN_FAILED)) {
+            // silently ignore login failed, no calIObserver UI:
+            this.logError( "getItem() ignored: " + errorToString(exc) );
+        }
+        else
+            this.notifyError( exc );
     }
     this.log( "getItem() returning." );
 };
@@ -1032,8 +1032,8 @@ calWcapCalendar.prototype.getItems_resp = function(
                                 this_.superCalendar, Components.results.NS_OK,
                                 Components.interfaces.calIOperationListener.GET,
                                 items.length == 1 ? items[0].id : null, null );
-                            this_.log(
-                                items.length.toString() + " items delivered." );
+                            this_.log( items.length.toString() +
+                                       " freebusy items delivered." );
                         }
                         else {
                             // if even availability is denied:
@@ -1067,8 +1067,8 @@ calWcapCalendar.prototype.getItems_resp = function(
                 this.superCalendar, Components.results.NS_OK,
                 Components.interfaces.calIOperationListener.GET,
                 items.length == 1 ? items[0].id : null, null );
+            this.log( items.length.toString() + " items delivered." );
         }
-        this.log( items.length.toString() + " items delivered." );
     }
     catch (exc) {
         if (listener != null) {
@@ -1094,20 +1094,20 @@ function getItemFilterUrlPortions( itemFilter )
     
     const calIWcapCalendar = Components.interfaces.calIWcapCalendar;
     var compstate = "";
-    if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_DECLINED)
-        compstate += ";REPLY-DECLINED";
-    if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_ACCEPTED)
-        compstate += ";REPLY-ACCEPTED";
-    if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_COMPLETED)
-        compstate += ";REQUEST-COMPLETED";
+//     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_DECLINED)
+//         compstate += ";REPLY-DECLINED";
+//     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REPLY_ACCEPTED)
+//         compstate += ";REPLY-ACCEPTED";
+//     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_COMPLETED)
+//         compstate += ";REQUEST-COMPLETED";
     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_NEEDS_ACTION)
         compstate += ";REQUEST-NEEDS-ACTION";
     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_NEEDSNOACTION)
         compstate += ";REQUEST-NEEDSNOACTION";
-    if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_PENDING)
-        compstate += ";REQUEST-PENDING";
-    if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_WAITFORREPLY)
-        compstate += ";REQUEST-WAITFORREPLY";
+//     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_PENDING)
+//         compstate += ";REQUEST-PENDING";
+//     if (itemFilter & calIWcapCalendar.ITEM_FILTER_REQUEST_WAITFORREPLY)
+//         compstate += ";REQUEST-WAITFORREPLY";
     if (compstate.length > 0)
         url += ("&compstate=" + compstate.substr(1));
     return url;
@@ -1165,7 +1165,7 @@ calWcapCalendar.prototype.getItems = function(
         if (testResultCode(exc, Components.interfaces.
                            calIWcapErrors.WCAP_LOGIN_FAILED)) {
             // silently ignore login failed, no calIObserver UI:
-            this.log( "getItems_resp() ignored: " + errorToString(exc) );
+            this.logError( "getItems() ignored: " + errorToString(exc) );
         }
         else
             this.notifyError( exc );
@@ -1259,15 +1259,15 @@ calWcapCalendar.prototype.syncChangesTo_resp = function(
 };
 
 calWcapCalendar.prototype.syncChangesTo = function(
-    destCal, itemFilter, dtFrom, listener )
+    destCal, itemFilter, dtFrom_, listener )
 {
+    var dtFrom = dtFrom_;
 //     this.ensureOnline();
-    if (dtFrom != null) {
+    if (dtFrom) {
+        dtFrom = dtFrom.clone();
         // assure DATETIMEs:
-        if (dtFrom.isDate) {
-            dtFrom = dtFrom.clone();
+        if (dtFrom.isDate)
             dtFrom.isDate = false;
-        }
         dtFrom = this.session.getServerTime(dtFrom);
     }
     var zdtFrom = getIcalUTC(dtFrom);
@@ -1282,11 +1282,12 @@ calWcapCalendar.prototype.syncChangesTo = function(
     catch (exc) {
     }
     
+    const SYNC = Components.interfaces.calIWcapCalendar.SYNC;
+    
     try {
+        var this_ = this;
         // new stamp for this sync:
         var now = getTime(); // xxx todo: not exact
-        var this_ = this;
-        const SYNC = Components.interfaces.calIWcapCalendar.SYNC;
         
         var syncState = new SyncState(
             // finishFunc:
@@ -1418,13 +1419,26 @@ calWcapCalendar.prototype.syncChangesTo = function(
             } );
     }
     catch (exc) {
-        if (listener != null) {
-            listener.onOperationComplete(
-                this.superCalendar, Components.results.NS_ERROR_FAILURE,
-                Components.interfaces.calIWcapCalendar.SYNC,
-                null, exc );
+        if (testResultCode(exc, Components.interfaces.
+                           calIWcapErrors.WCAP_LOGIN_FAILED)) {
+            // silently ignore login failed, no calIObserver UI,
+            // state everything ok and return empty range:
+            if (listener) {
+                listener.onOperationComplete(
+                    this.superCalendar, Components.results.NS_OK,
+                    SYNC, null, dtFrom_ /* pass original stamp:
+                                           => empty sync range */ );
+            }
+            this.logError( "syncChangesTo() ignored: " + errorToString(exc) );
         }
-        this.notifyError( exc );
+        else {
+            if (listener) {
+                listener.onOperationComplete(
+                    this.superCalendar, Components.results.NS_ERROR_FAILURE,
+                    SYNC, null, exc );
+            }
+            this.notifyError( exc );
+        }
     }
     this.log( "syncChangesTo() returning." );
 };
