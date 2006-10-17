@@ -180,8 +180,26 @@ calWcapCalendar.prototype = {
     set superCalendar( cal ) { this.m_superCalendar = cal; },
     
     m_bReadOnly: false,
-    get readOnly() { return (this.m_bReadOnly || !this.isOwnedCalendar); },
+    get readOnly() {
+        return (this.m_bReadOnly ||
+                // read-only if not logged in, this flag is tested quite
+                // early, so don't log in here if not logged in already...
+                !this.session.isLoggedIn ||
+                // xxx todo: take permissions into account:
+                !this.isOwnedCalendar);
+    },
     set readOnly( bReadOnly ) { this.m_bReadOnly = bReadOnly; },
+    
+    assureReadWrite:
+    function()
+    {
+        this.session.getSessionId(); // assure being logged in
+        if (this.readOnly) {
+            throw new Components.Exception(
+                "Calendar is read-only.",
+                Components.interfaces.calIErrors.CAL_IS_READONLY );
+        }
+    },
     
     // xxx todo: will potentially vanish from calICalendar:
     get uri() { return this.session.uri; },
@@ -248,10 +266,14 @@ calWcapCalendar.prototype = {
     get ownerId() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
         if (ar.length < 1 || ar[0].length == 0) {
+            var calId = this.calId;
             this.notifyError(
-                "cannot determine primary owner of calendar " + this.calId );
-            // fallback to userId:
-            return this.session.userId;
+                "cannot determine primary owner of calendar " + calId );
+            // fallback to calId prefix:
+            var nColon = calId.indexOf(":");
+            if (nColon >= 0)
+                calId = calId.substring(0, nColon);
+            return calId;
         }
         return ar[0];
     },
@@ -279,11 +301,7 @@ calWcapCalendar.prototype = {
     },
     
     get isOwnedCalendar() {
-        if (!this.session.isLoggedIn)
-            return false;
-        var ownerId = this.ownerId;
-        return (this.calId == ownerId ||
-                this.calId.indexOf(ownerId + ":") == 0);
+        return (this.ownerId == this.session.userId);
     },
     
     getCalendarProperties:
@@ -318,7 +336,16 @@ calWcapCalendar.prototype = {
                             this_.m_calProps = xml;
                     }
                     catch (exc) {
-                        this_.notifyError( exc );
+                        // patch to read-only here, because error notification
+                        // call the readOnly attribute, thus we would run into
+                        // endless recursion here:
+                        this_.m_bReadOnly = true;
+//                         this_.notifyError( exc );
+                        // just logging here, because user may have dangling
+                        // users referred in his subscription list:
+                        this_.logError( exc );
+                        // though we continue to try to get that calprops
+                        // next time...
                     }
                 }
                 if (bAsync)
@@ -328,6 +355,9 @@ calWcapCalendar.prototype = {
             }
         }
         catch (exc) {
+            // patch to read-only here, because error notification call the
+            // readOnly attribute, thus we would run into endless recursion here
+            this.m_bReadOnly = true;
             this.notifyError( exc );
             throw exc;
         }
@@ -351,13 +381,23 @@ calWcapCalendar.prototype = {
     function( tzid )
     {
         // check whether it is one of cs:
-        if (tzid.indexOf("/mozilla.org/20050126_1/") == 0 ||
-            !this.session.isSupportedTimezone(tzid)) {
+        if (tzid.indexOf("/mozilla.org/") == 0) {
+            // cut mozilla prefix: assuming that the latter string portion
+            //                     semantically equals the demanded timezone
+            tzid = tzid.substring( // next slash after "/mozilla.org/"
+                tzid.indexOf("/", "/mozilla.org/".length) + 1 );
+        }
+        if (!this.session.isSupportedTimezone(tzid)) {
+            // xxx todo: we could further on search for a matching region,
+            //           e.g. CET (in TZNAME), but for now stick to
+            //           user's default if not supported directly
+            var ret = this.defaultTimezone;
             // use calendar's default:
-            return this.defaultTimezone;
+            this.log( tzid + " not supported, falling back to default: " + ret);
+            return ret;
         }
         else // is ok (supported):
             return tzid;
-    }    
+    }
 };
 

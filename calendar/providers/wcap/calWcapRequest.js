@@ -60,8 +60,12 @@ WcapResponse.prototype = {
     m_exc: null,
     
     get data() {
-        if (this.m_exc != null)
-            throw this.m_exc;
+        if (this.m_exc != null) {
+            // clear exception, so it is not thrown again on sync requests:
+            var exc = this.m_exc;
+            this.m_exc = null;
+            throw exc;
+        }
         return this.m_data;
     },
     set data(d) {
@@ -223,7 +227,7 @@ function issueSyncRequest( url, receiverFunc, bLogging )
     }
     else if (bLogging && LOG_LEVEL > 0) {
         logMessage( "issueSyncRequest( \"" + url + "\" )",
-                    "failed: " + status );
+                    "failed: " + errorToString(status) );
     }
     
     throw new Components.Exception(

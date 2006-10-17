@@ -90,16 +90,6 @@ function getWindowWatcher()
     return g_windowWatcher;
 }
 
-var g_ioService = null;
-function getIoService()
-{
-    if (g_ioService == null) {
-        g_ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-    }
-    return g_ioService;
-}
-
 var g_icsService = null;
 function getIcsService()
 {
@@ -170,17 +160,12 @@ function lockedExec( func )
     try {
         ret = func();
     }
-    catch (exc) {
+    finally {
         if (g_eventQueueService)
             g_eventQueueService.popThreadEventQueue(queue);
         else // we are on trunk using nsIThreadInternal
             g_threadManager.currentThread.popEventQueue();
-        throw exc;
     }
-    if (g_eventQueueService)
-        g_eventQueueService.popThreadEventQueue(queue);
-    else // we are on trunk using nsIThreadInternal
-        g_threadManager.currentThread.popEventQueue();
     return ret;
 }
 

@@ -76,10 +76,10 @@ interface calIWcapCalendar : calICalendar
      */
     readonly attribute string displayName;
     
-//     /**
-//      * Gets or sets this calendar's (calId) default timezone.
-//      */
-//     attribute string defaultTimezone;
+    /**
+     * Gets or sets this calendar's (calId) default timezone.
+     */
+    readonly attribute string defaultTimezone;
     
     /**
      * Gets calendar properties.
@@ -107,27 +107,29 @@ interface calIWcapCalendar : calICalendar
 
        xxx todo: ITEM_FILTER_CLASS_OCCURRENCES is not filter, rename?
     */
+
+    /* xxx todo: limit to currently needed ones: NEEDS-ACTION */
     
-    /**
-     * Scope: Attendee
-     * The event or todo is an invitation from another
-     * user and the current user has declined the invitation.
-     */
-    const unsigned long ITEM_FILTER_REPLY_DECLINED = 1 << 24;
+//     /**
+//      * Scope: Attendee
+//      * The event or todo is an invitation from another
+//      * user and the current user has declined the invitation.
+//      */
+//     const unsigned long ITEM_FILTER_REPLY_DECLINED = 1 << 24;
     
-    /**
-     * Scope: Attendee
-     * The event or todo is an invitation from another
-     * user and the current user has accepted the invitation.
-     */
-    const unsigned long ITEM_FILTER_REPLY_ACCEPTED = 1 << 25;
+//     /**
+//      * Scope: Attendee
+//      * The event or todo is an invitation from another
+//      * user and the current user has accepted the invitation.
+//      */
+//     const unsigned long ITEM_FILTER_REPLY_ACCEPTED = 1 << 25;
     
-    /**
-     * Scope: Organizer
-     * The event or todo is an invitation from the current
-     * user to other invitees, and all invitees have replied.
-     */
-    const unsigned long ITEM_FILTER_REQUEST_COMPLETED = 1 << 26;
+//     /**
+//      * Scope: Organizer
+//      * The event or todo is an invitation from the current
+//      * user to other invitees, and all invitees have replied.
+//      */
+//     const unsigned long ITEM_FILTER_REQUEST_COMPLETED = 1 << 26;
     
     /**
      * Scope: Attendee
@@ -143,20 +145,20 @@ interface calIWcapCalendar : calICalendar
      */
     const unsigned long ITEM_FILTER_REQUEST_NEEDSNOACTION  = 1 << 28;
     
-    /**
-     * Scope: Organizer
-     * The event or todo is an invitation from the current
-     * user to other invitees, and is currently in the
-     * process of sending out invitations.
-     */
-    const unsigned long ITEM_FILTER_REQUEST_PENDING = 1 << 29;
+//     /**
+//      * Scope: Organizer
+//      * The event or todo is an invitation from the current
+//      * user to other invitees, and is currently in the
+//      * process of sending out invitations.
+//      */
+//     const unsigned long ITEM_FILTER_REQUEST_PENDING = 1 << 29;
     
-    /**
-     * Scope: Organizer
-     * The event or todo is an invitation from the current
-     * user to other invitees, and is currently awaiting.
-     */
-    const unsigned long ITEM_FILTER_REQUEST_WAITFORREPLY = 1 << 30;
+//     /**
+//      * Scope: Organizer
+//      * The event or todo is an invitation from the current
+//      * user to other invitees, and is currently awaiting.
+//      */
+//     const unsigned long ITEM_FILTER_REQUEST_WAITFORREPLY = 1 << 30;
     
     
     /* xxx todo sync feature: separate into own interface? */

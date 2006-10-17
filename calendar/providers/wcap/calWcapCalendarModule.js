@@ -37,6 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var g_ioService = null;
+function getIoService()
+{
+    if (g_ioService == null) {
+        g_ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+    }
+    return g_ioService;
+}
+
 //
 // init code for globals, prefs:
 //
@@ -226,9 +236,7 @@ var calWcapCalendarModule = { // nsIModule:
             var scriptLoader =
                 Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                 .createInstance(Components.interfaces.mozIJSSubScriptLoader);
-            var ioService =
-                Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
+            var ioService = getIoService();
             var baseDir = __LOCATION__.parent.parent;
             baseDir.append("js");
             for each ( var script in scripts ) {
@@ -241,10 +249,10 @@ var calWcapCalendarModule = { // nsIModule:
             this.m_scriptsLoaded = true;
         }
         
-        if (!cid.equals( calWcapCalendar.prototype.classID ))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
         if (!iid.equals( Components.interfaces.nsIFactory ))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        if (!cid.equals( calWcapCalendar.prototype.classID ))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
         
         return { // nsIFactory:
             lockFactory: function( lock ) {},

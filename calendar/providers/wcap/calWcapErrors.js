@@ -108,10 +108,10 @@ const g_nsNetErrorCodes = [
 
 function netErrorToString( rc )
 {
-    if (getErrorModule(rc) == NS_ERROR_MODULE_NETWORK) {
+    if (!isNaN(rc) && getErrorModule(rc) == NS_ERROR_MODULE_NETWORK) {
         var i = 0;
         while (i < g_nsNetErrorCodes.length) {
-            // rc is kept unsigned, our generated code signed,
+            // however rc is kept unsigned, our generated code signed,
             // so == won't work here:
             if ((g_nsNetErrorCodes[i] ^ rc) == 0)
                 return g_nsNetErrorCodes[i + 1];
@@ -249,6 +249,8 @@ const g_wcapErrorCodes = [
 
 function wcapErrorToString( rc )
 {
+    if (isNaN(rc))
+        throw Components.results.NS_ERROR_INVALID_ARG;
     if (rc == Components.interfaces.calIWcapErrors.WCAP_NO_ERRNO)
         return "No WCAP errno (missing X-NSCP-WCAP-ERRNO).";
     
@@ -347,7 +349,10 @@ function errorToString( err )
         return "NS_ERROR_NOT_IMPLEMENTED";
     case Components.results.NS_ERROR_FAILURE:
         return "NS_ERROR_FAILURE";
-    default: // probe for WCAP error:
+    default:
+        if (isNaN(err))
+            return ("[" + err + "] Unknown error.");
+        // probe for WCAP error:
         try {
             return wcapErrorToString(err);
         }
@@ -356,7 +361,7 @@ function errorToString( err )
                 return netErrorToString(err);
             }
             catch (exc) {
-                return ("[" + err + "] Unknown error.");
+                return ("[0x" + err.toString(16) + "] Unknown error.");
             }
         }
     }
