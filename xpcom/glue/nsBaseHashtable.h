@@ -276,7 +276,7 @@ public:
   ~nsBaseHashtableMT();
 
   PRBool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
-  PRBool IsInitialized() const { return (PRBool) mLock; }
+  PRBool IsInitialized() const { return mLock != nsnull; }
   PRUint32 Count() const;
   PRBool Get(KeyType aKey, UserDataType* pData) const;
   PRBool Put(KeyType aKey, UserDataType aData);
