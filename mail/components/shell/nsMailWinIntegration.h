@@ -78,6 +78,7 @@ protected:
 private:
   PRBool mCheckedThisSession;
   nsCString mAppPath;
+  nsCString mMapiDLLPath;
   nsXPIDLString mBrandFullName;
   nsXPIDLString mBrandShortName;
  };

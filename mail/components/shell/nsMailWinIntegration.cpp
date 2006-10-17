@@ -110,7 +110,8 @@ OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool 
 typedef enum { NO_SUBSTITUTION    = 0x00,
                PATH_SUBSTITUTION  = 0x01,
                APPNAME_SUBSTITUTION = 0x02,
-               USE_FOR_DEFAULT_TEST = 0x04} SettingFlags;
+               MAPIDLLPATH_SUBSTITUTION = 0x04,
+               USE_FOR_DEFAULT_TEST = 0x08} SettingFlags;
 
 #define CLS "SOFTWARE\\Classes\\"
 #define MAILCLIENTS "SOFTWARE\\Clients\\Mail\\"
@@ -124,7 +125,6 @@ typedef enum { NO_SUBSTITUTION    = 0x00,
 #define VAL_FILE_ICON "%APPPATH%,1"
 #define VAL_OPEN "%APPPATH% \"%1\""
 #define VAL_OPEN_WITH_URL "%APPPATH% -url \"%1\""
-#define VAL_DLLPATH "%APPPATH%\\mozMapi32.dll"
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
@@ -146,8 +146,8 @@ static SETTING gMailSettings[] = {
   // Windows XP Start Menu
   { MAKE_KEY_NAME1(MAILCLIENTS, "%APPNAME%"),  
     "DLLPath", 
-    VAL_DLLPATH, 
-    PATH_SUBSTITUTION | APPNAME_SUBSTITUTION },
+    "%MAPIDLLPATH%", 
+    MAPIDLLPATH_SUBSTITUTION | APPNAME_SUBSTITUTION },
   { MAKE_KEY_NAME2(MAILCLIENTS, "%APPNAME%", DI),  
     "", 
     "%APPPATH%,0", 
@@ -181,8 +181,8 @@ static SETTING gNewsSettings[] = {
   // Client Keys
   { MAKE_KEY_NAME1(NEWSCLIENTS, "%APPNAME%"),  
     "DLLPath", 
-    VAL_DLLPATH, 
-    PATH_SUBSTITUTION | APPNAME_SUBSTITUTION },
+    "%MAPIDLLPATH%", 
+    MAPIDLLPATH_SUBSTITUTION | APPNAME_SUBSTITUTION },
   { MAKE_KEY_NAME2(NEWSCLIENTS, "%APPNAME%", DI),  
     "", 
     "%APPPATH%,0", 
@@ -214,6 +214,14 @@ nsWindowsShellService::nsWindowsShellService()
   ::GetModuleFileName(NULL, buf, sizeof(buf));
   ::GetShortPathName(buf, buf, sizeof(buf));
   ToUpperCase(mAppPath = buf);
+
+  mMapiDLLPath = mAppPath;
+  // remove the process name from the string (thunderbird.exe)
+  char* pathSep = (char *) _mbsrchr((const unsigned char *) mAppPath.get(), '\\');
+  if (pathSep)
+    mMapiDLLPath.Truncate(pathSep - mAppPath.get() + 1);
+  // now append mozMapi32.dll
+   mMapiDLLPath += "mozMapi32.dll";
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1", &rv));
   if (NS_SUCCEEDED(rv))
@@ -453,6 +461,10 @@ nsWindowsShellService::setKeysForSettings(SETTING aSettings[], PRInt32 aSize, co
     if (settings->flags & PATH_SUBSTITUTION) {
       PRInt32 offset = data.Find("%APPPATH%");
       data.Replace(offset, 9, mAppPath);
+    }
+    if (settings->flags & MAPIDLLPATH_SUBSTITUTION) {
+      PRInt32 offset = data.Find("%MAPIDLLPATH%");
+      data.Replace(offset, 13, mMapiDLLPath);
     }
     if (settings->flags & APPNAME_SUBSTITUTION) {
       PRInt32 offset = key.Find("%APPNAME%");
