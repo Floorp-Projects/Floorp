@@ -47,6 +47,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
+use Bugzilla::BugMail;
 use Bugzilla::Mailer;
 use Bugzilla::User;
 use Bugzilla::Util;
@@ -102,6 +103,20 @@ sub AnyDefaultGroups {
                                  $dbh->sql_limit(1),
                                  undef, (CONTROLMAPDEFAULT, CONTROLMAPDEFAULT));
     return $any_default;
+}
+
+# Used to send email when an update is done.
+sub send_results {
+    my ($bug_id, $vars) = @_;
+    my $template = Bugzilla->template;
+    if (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+         Bugzilla::BugMail::Send($bug_id, $vars->{'mailrecipients'});
+    }
+    else {
+        $template->process("bug/process/results.html.tmpl", $vars)
+            || ThrowTemplateError($template->error());
+    }
+    $vars->{'header_done'} = 1;
 }
 
 ######################################################################
@@ -231,7 +246,7 @@ Bugzilla::Flag::validate($cgi, $cgi->param('id'));
 # End Data/Security Validation
 ######################################################################
 
-print $cgi->header();
+print $cgi->header() unless Bugzilla->usage_mode == USAGE_MODE_EMAIL;
 $vars->{'title_tag'} = "bug_processed";
 
 # Set the title if we can see a mid-air coming. This test may have false
@@ -364,6 +379,24 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     # a verification form.
     if (!$vok || !$cok || !$mok || (AnyDefaultGroups()
         && !defined $cgi->param('addtonewgroup'))) {
+
+        if (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+            if (!$vok) {
+                ThrowUserError('version_not_valid', {
+                    version => $cgi->param('version'),
+                    product => $cgi->param('product')});
+            }
+            if (!$cok) {
+                ThrowUserError('component_not_valid', {
+                    product => $cgi->param('product'),
+                    name    => $cgi->param('component')});
+            }
+            if (!$mok) {
+                ThrowUserError('milestone_not_valid', {
+                    product   => $cgi->param('product'),
+                    milestone => $cgi->param('target_milestone')});
+            }
+        }
         
         if (!$vok || !$cok || !$mok) {
             $vars->{'verify_fields'} = 1;
@@ -431,6 +464,12 @@ sub DuplicateUserConfirm {
 
     if ($rep_user->can_see_bug($original)) {
         $cgi->param('confirm_add_duplicate', '1');
+        return;
+    }
+    elsif (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+        # The email interface defaults to the safe alternative, which is
+        # not CC'ing the user.
+        $cgi->param('confirm_add_duplicate', 0);
         return;
     }
 
@@ -548,10 +587,7 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
         $vars->{'mailrecipients'} = { 'changer' => $user->login };
         $vars->{'id'} = $id;
         $vars->{'type'} = "move";
-
-        $template->process("bug/process/results.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        $vars->{'header_done'} = 1;
+        send_results($id, $vars);
     }
     # Prepare and send all data about these bugs to the new database
     my $to = Bugzilla->params->{'move-to-address'};
@@ -578,10 +614,12 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
     MessageToMTA($msg);
 
     # End the response page.
-    $template->process("bug/navigate.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    $template->process("global/footer.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
+    unless (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+        $template->process("bug/navigate.html.tmpl", $vars)
+            || ThrowTemplateError($template->error());
+        $template->process("global/footer.html.tmpl", $vars)
+            || ThrowTemplateError($template->error());
+    }
     exit;
 }
 
@@ -2061,20 +2099,17 @@ foreach my $id (@idlist) {
     
     # Let the user know the bug was changed and who did and didn't
     # receive email about the change.
-    $template->process("bug/process/results.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    $vars->{'header_done'} = 1;
-    
+    send_results($id, $vars);
+ 
     if ($duplicate) {
         $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
 
         $vars->{'id'} = $duplicate;
         $vars->{'type'} = "dupe";
         
-        # Let the user know a duplication notation was added to the original bug.
-        $template->process("bug/process/results.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-        $vars->{'header_done'} = 1;
+        # Let the user know a duplication notation was added to the 
+        # original bug.
+        send_results($duplicate, $vars);
     }
 
     if ($check_dep_bugs) {
@@ -2083,12 +2118,11 @@ foreach my $id (@idlist) {
             $vars->{'id'} = $k;
             $vars->{'type'} = "dep";
 
-            # Let the user (if he is able to see the bug) know we checked to see 
-            # if we should email notice of this change to users with a relationship
-            # to the dependent bug and who did and didn't receive email about it.
-            $template->process("bug/process/results.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());
-            $vars->{'header_done'} = 1;
+            # Let the user (if he is able to see the bug) know we checked to 
+            # see if we should email notice of this change to users with a 
+            # relationship to the dependent bug and who did and didn't 
+            # receive email about it.
+            send_results($k, $vars);
         }
     }
 }
@@ -2107,7 +2141,10 @@ if (defined $cgi->param('id')) {
     $action = 'nothing';
 }
 
-if ($action eq 'next_bug') {
+if (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+    # Do nothing.
+}
+elsif ($action eq 'next_bug') {
     my $next_bug;
     my $cur = lsearch(\@bug_list, $cgi->param("id"));
     if ($cur >= 0 && $cur < $#bug_list) {
@@ -2144,7 +2181,11 @@ if ($action eq 'next_bug') {
 }
 
 # End the response page.
-$template->process("bug/navigate.html.tmpl", $vars)
-  || ThrowTemplateError($template->error());
-$template->process("global/footer.html.tmpl", $vars)
-  || ThrowTemplateError($template->error());
+unless (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+    $template->process("bug/navigate.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+    $template->process("global/footer.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+}
+
+1;

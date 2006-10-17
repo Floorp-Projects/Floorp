@@ -194,6 +194,66 @@ sub post_bug {
     require 'post_bug.cgi';
 }
 
+sub process_bug {
+    my ($fields_in) = @_; 
+
+    my %fields = %$fields_in;
+
+    my $bug_id = $fields{'bug_id'};
+    $fields{'id'} = $bug_id;
+    delete $fields{'bug_id'};
+
+    debug_print("Updating Bug $fields{id}...");
+
+    ValidateBugID($bug_id);
+    my $bug = new Bugzilla::Bug($bug_id);
+
+    if ($fields{'assigned_to'}) {
+        $fields{'knob'} = 'reassign';
+    }
+    if (my $status = $fields{'bug_status'}) {
+        $fields{'knob'} = 'confirm' if $status =~ /NEW/i;
+        $fields{'knob'} = 'accept'  if $status =~ /ASSIGNED/i;
+        $fields{'knob'} = 'clearresolution' if $status =~ /REOPENED/i;
+        $fields{'knob'} = 'verify'  if $status =~ /VERIFIED/i;
+        $fields{'knob'} = 'close'   if $status =~ /CLOSED/i;
+    }
+    if ($fields{'dup_id'}) {
+        $fields{'knob'} = 'duplicate';
+    }
+    if ($fields{'resolution'}) {
+        $fields{'knob'} = 'resolve';
+    }
+
+    # Make sure we don't get prompted if we have to change the default
+    # groups.
+    if ($fields{'product'}) {
+        $fields{'addtonewgroup'} = 0;
+    }
+
+    foreach my $field (REQUIRED_PROCESS_FIELDS) {
+        my $value = $bug->$field;
+        if (ref $value) {
+            $value = join(',', @$value);
+        }
+        $fields{$field} ||= $value;
+    }
+
+    # Make it possible to remove CCs.
+    if ($fields{'removecc'}) {
+        $fields{'cc'} = [split(',', $fields{'removecc'})];
+        $fields{'removecc'} = 1;
+    }
+
+    my $cgi = Bugzilla->cgi;
+    foreach my $field (keys %fields) {
+        $cgi->param(-name => $field, -value => $fields{$field});
+    }
+    $cgi->param('longdesclength', scalar $bug->longdescs);
+
+    require 'process_bug.cgi';
+}
+
 ######################
 # Helper Subroutines #
 ######################
@@ -318,7 +378,12 @@ my $user = Bugzilla::User->new({ name => $username })
 
 Bugzilla->set_user($user);
 
-post_bug($mail_fields);
+if ($mail_fields->{'bug_id'}) {
+    process_bug($mail_fields);
+}
+else {
+    post_bug($mail_fields);
+}
 
 __END__
 
@@ -382,6 +447,46 @@ C<account@domain.com> must be a valid Bugzilla account.
 
 Note that signatures must start with '-- ', the standard signature
 border.
+
+=head2 Modifying an Existing Bug
+
+Bugzilla determines what bug you want to modify in one of two ways:
+
+=over
+
+=item *
+
+Your subject starts with [Bug 123456] -- then it modifies bug 123456.
+
+=item *
+
+You include C<@bug_id = 123456> in the first lines of the email.
+
+=back
+
+If you do both, C<@bug_id> takes precedence.
+
+You send your email in the same format as for creating a bug, except
+that you only specify the fields you want to change. If the very
+first non-blank line of the email doesn't begin with C<@>, then it
+will be assumed that you are only adding a comment to the bug.
+
+Note that when updating a bug, the C<Subject> header is ignored,
+except for getting the bug ID. If you want to change the bug's summary,
+you have to specify C<@short_desc> as one of the fields to change.
+
+Please remember not to include any extra text in your emails, as that
+text will also be added as a comment. This includes any text that your
+email client automatically quoted and included, if this is a reply to
+another email.
+
+=head3 Adding/Removing CCs
+
+You can't just add CCs to a bug by using the C<@cc> parameter like you
+can when you're filing a bug. To add CCs, you can specify them in a
+comma-separated list in C<@newcc>.
+
+To remove CCs, specify them as a comma-separated list in C<@removecc>.
 
 =head2 Errors
 
