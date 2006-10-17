@@ -21,12 +21,12 @@
 
 [% PROCESS global/variables.none.tmpl %]
 [% filtered_summary = bugsummary FILTER html %]
-[% h1 = BLOCK %]View All Attachments for
+[% header = BLOCK %]View All Attachments for
   [%+ "$terms.Bug $bugid" FILTER bug_link(bugid) FILTER none %][% END %]
 [% PROCESS global/header.html.tmpl
   title = "View All Attachments for $terms.Bug #$bugid"
-  h1 = h1
-  h2 = filtered_summary
+  header = header
+  subheader = filtered_summary
   style = "
     table.attachment_info th { text-align: right; vertical-align: top; }
     table.attachment_info td { text-align: left; vertical-align: top; }

@@ -26,11 +26,11 @@
   #%]
   
 [% title = BLOCK %]Add component to Product '[% product.name FILTER html %]'[% END %]
-[% h2 = BLOCK %]This page allows you to add a new component to product
+[% subheader = BLOCK %]This page allows you to add a new component to product
                 '[% product.name FILTER html %]'.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
-  h2 = h2
+  subheader = subheader
 %]
 
 <form method="post" action="editcomponents.cgi">

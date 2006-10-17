@@ -25,11 +25,11 @@
   #%]
   
 [% title = BLOCK %]Add Milestone to Product '[% product.name FILTER html %]'[% END %]
-[% h2 = BLOCK %]This page allows you to add a new milestone to product
+[% subheader = BLOCK %]This page allows you to add a new milestone to product
                 '[% product.name FILTER html %]'.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
-  h2 = h2
+  subheader = subheader
   onload = "document.forms['f'].milestone.focus()"
 %]
 

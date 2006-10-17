@@ -24,10 +24,14 @@
   # This template has no interface.
   #%]
 
-[% PROCESS global/tabs.html.tmpl
+[% WRAPPER global/tabs.html.tmpl
      tabs = [ { name => 'specific', label => "Find a Specific $terms.Bug",
                 link => "query.cgi?format=specific" },
               { name => 'advanced', label => "Advanced Search",
                 link => "query.cgi?format=advanced" } ]
      current_tab_name = query_format || format || "advanced"
 %]
+
+[% content %]
+
+[% END %]

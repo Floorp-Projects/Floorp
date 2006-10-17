@@ -26,86 +26,87 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-<div id="useful-links">
-  <div id="links-actions">
+<ul id="useful-links">
+  <li id="links-actions">
     <div class="label">Actions:</div>
-    [% PROCESS "global/common-links.html.tmpl" btn_id = "find_bottom" %]
-  </div>
+      [% PROCESS "global/common-links.html.tmpl" btn_id = "find_bottom" %]
+  </li>
       
-    [% IF user.login %] 
-  <div id="links-edit">
-    <div class="label">Edit:</div>
-    <div class="links">
-
-        <a href="userprefs.cgi">Prefs</a>
-        [% ' | <a href="editparams.cgi">Parameters</a> ' _
-           ' | <a href="editsettings.cgi">User Preferences</a>' 
+  [% IF user.login %] 
+    <li id="links-edit">
+      <div class="label">Edit:</div>
+      <ul class="links">
+        <li><a href="userprefs.cgi">Prefs</a></li>
+        [% ' <li><span class="separator">| </span><a href="editparams.cgi">Parameters</a></li>' _
+           ' <li><span class="separator">| </span><a href="editsettings.cgi">User Preferences</a></li>'
                                                   IF user.groups.tweakparams %]
-        [% ' | <a href="editusers.cgi">Users</a>'     IF user.groups.editusers 
+        [% ' <li><span class="separator">| </span><a href="editusers.cgi">Users</a></li>'     IF user.groups.editusers
                                                   || user.can_bless %]
         [% IF Param('useclassification') && user.groups.editclassifications %]
-            [% ' | <a href="editclassifications.cgi">Classifications</a>' %]
-        [% END %] 
-        [% ' | <a href="editproducts.cgi">Products</a>' 
+            [% ' <li><span class="separator">| </span><a href="editclassifications.cgi">Classifications</a></li>' %]
+        [% END %]
+        [% ' <li><span class="separator">| </span><a href="editproducts.cgi">Products</a></li>'
                                                IF user.groups.editcomponents %]
-        [% ' | <a href="editflagtypes.cgi">Flags</a>'
+        [% ' <li><span class="separator">| </span><a href="editflagtypes.cgi">Flags</a></li>'
                                                IF user.groups.editcomponents %]
-        [% ' | <a href="editfields.cgi">Custom Fields</a>'
+        [% ' <li><span class="separator">| </span><a href="editfields.cgi">Custom Fields</a></li>'
                                                IF user.groups.admin %]
-        [% ' | <a href="editvalues.cgi">Field Values</a>'
+        [% ' <li><span class="separator">| </span><a href="editvalues.cgi">Field Values</a></li>'
                                                IF user.groups.editcomponents %]
-        [% ' | <a href="editgroups.cgi">Groups</a>' 
+        [% ' <li><span class="separator">| </span><a href="editgroups.cgi">Groups</a></li>'
                                                  IF user.groups.creategroups %]
-        [% ' | <a href="editkeywords.cgi">Keywords</a>' 
+        [% ' <li><span class="separator">| </span><a href="editkeywords.cgi">Keywords</a></li>'
                                                  IF user.groups.editkeywords %]
-        [% ' | <a href="editwhines.cgi">Whining</a>' 
+        [% ' <li><span class="separator">| </span><a href="editwhines.cgi">Whining</a></li>'
                                               IF user.groups.bz_canusewhines %]
-    </div>
-  </div>
-    [% END %]
+      </ul>
+    </li>
+  [% END %]
     
-
     [%# Saved searches %]
     
-  <div id="links-saved">
-    <div class="label">
-      [% IF user.showmybugslink OR user.queries.size %]
-        Saved&nbsp;Searches:
-      [% END %]
-    </div>
-    <div class="links">
-      [% IF user.showmybugslink %]
-        [% filtered_username = user.login FILTER url_quote %]
-        <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
-        [% print_pipe = 1 %]
-      [% END %]
-
-      [% FOREACH q = user.queries %]
-        [% NEXT IF q.userid != user.id %]
-        [% IF q.link_in_footer %]
-          [% " | " IF print_pipe %]
-          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
-                   [% q.name FILTER url_quote %]">[% q.name FILTER html FILTER no_break %]</a>
+  [% IF user.showmybugslink OR user.queries.size %]
+    <li id="links-saved">
+      <div class="label">
+          Saved Searches:
+      </div>
+      <ul class="links">
+        [% IF user.showmybugslink %]
+          [% filtered_username = user.login FILTER url_quote %]
+          <li><a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My [% terms.Bugs %]</a></li>
           [% print_pipe = 1 %]
         [% END %]
-      [% END %]
 
-      [% " <br> " IF print_pipe %]
-      [% print_pipe = 0 %]
-      [% FOREACH q = user.queries %]
-        [% NEXT IF q.userid == user.id %]
-        [% IF q.link_in_footer %]
-          [% " | " IF print_pipe %]
-          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
-                   [% q.name FILTER url_quote %]&amp;sharer_id=
-                   [% q.userid FILTER url_quote %]"
-             class="shared"
-             title="Shared by [% q.user.identity FILTER html %]">[% q.name FILTER html FILTER no_break %]</a>
-          [% print_pipe = 1 %]
+        [% FOREACH q = user.queries %]
+          [% NEXT IF q.userid != user.id %]
+          [% IF q.link_in_footer %]
+            <li>[% '<span class="separator">| </span>' IF print_pipe %]
+            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html %]</a></li>
+            [% print_pipe = 1 %]
+          [% END %]
         [% END %]
-      [% END %]
-    </div>
-  </div>
+        [% new_line = print_pipe %]
+        [% print_pipe = 0 %]
+        [% FOREACH q = user.queries %]
+          [% NEXT IF q.userid == user.id %]
+          [% IF q.link_in_footer %]
+            [% IF new_line %]
+              <br>
+              [% new_line = 0 %]
+            [% END %]
+            <li>
+            [% '<span class="separator">| </span>' IF print_pipe %]
+            <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                     [% q.name FILTER url_quote %]&amp;sharer_id=
+                     [% q.userid FILTER url_quote %]"
+               class="shared"
+               title="Shared by [% q.user.identity FILTER html %]">[% q.name FILTER html FILTER no_break %]</a></li>
+            [% print_pipe = 1 %]
+          [% END %]
+        [% END %]
+      </ul>
+    </li>
+  [% END %]
 
   [%# Individual bugs addition %]
 
@@ -113,4 +114,4 @@
 
   [%# Sections of links to more things users can do on this installation. %]
   [% Hook.process("end") %]
-</div>
+</ul>

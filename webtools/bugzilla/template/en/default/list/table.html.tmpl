@@ -160,14 +160,16 @@
     [% tableheader %]
   [% END %]
 
-  <tr class="bz_[% bug.bug_severity FILTER css_class_quote -%]
+  <tr class="clickable_area bz_bugitem
+             bz_[% bug.bug_severity FILTER css_class_quote -%]
              bz_[% bug.priority FILTER css_class_quote -%]
              bz_[% bug.bug_status FILTER css_class_quote -%]
              [%+ "bz_$bug.resolution" FILTER css_class_quote IF bug.resolution -%]
              [%+ "bz_secure" IF bug.secure_mode -%]
              [%+ "bz_secure_mode_$bug.secure_mode" FILTER css_class_quote IF bug.secure_mode -%]
              [%+ count % 2 == 1 ? "bz_row_odd" : "bz_row_even" -%]
-             ">
+             "
+      onClick="document.location='show_bug.cgi?id=[% bug.bug_id %]'">
              
 
     [% IF dotweak %]
@@ -176,7 +178,8 @@
     </td>
     [% END %]
     <td class="first-child">
-      <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
+      <a name="b[% bug.bug_id %]"
+         href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
       <span style="display: none">[%+ '[SEC]' IF bug.secure_mode %]</span>
     </td>
 

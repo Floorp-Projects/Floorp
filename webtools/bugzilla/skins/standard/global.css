@@ -19,30 +19,34 @@
   *                 Christian Reis <kiko@async.com.br>
   *                 Vitaly Harisov <vitaly@rathedg.com>
   *                 Svetlana Harisova <light@rathedg.com>
+  *                 Marc Schumann <wurblzap@gmail.com>
   */
 
-body
-{
-    color: #000;
-    background-color: #fff;
-}
+/* global (begin) */
+    body {
+        font-family: sans-serif;
+        color: #000;
+        background: #fff url("global/body-back.gif") repeat-x;
+    }
+/* global (end) */
 
 /* header (begin) */
-    #header
-    {
+    #header {
         margin-bottom: 1em;
         padding-bottom: 2px;
     }
 
-    #header form
-    {
+    #header form {
         font-size: 85%;
         display: inline;
     }
 
-    #header .links
-    {
-        font-family: sans-serif;
+    #header .btn,
+    #header .txt {
+        font-size: 80%;
+    }
+
+    #header .links {
         font-size: 85%;
         border-left: 1px solid silver;
         border-right: 1px solid silver;
@@ -52,8 +56,7 @@ body
         padding: 0.5em;
     }
 
-    #message
-    {
+    #message {
         border: 1px solid red;
 
         padding: 0.3em;
@@ -63,46 +66,45 @@ body
 /* header (end)   */
 
 /* banner (begin) */
-    #banner
-    {
+    #banner {
     }
 
 /* banner (end) */
 
 /* titles (begin) */
-    #titles
-    {
+    #titles {
         width: 100%;
         background-color: #404D6C;
         color: #fff;
-        -moz-border-radius: 5px;
-        font-family: sans-serif;
+        -moz-border-radius-topleft: 5px;
+        -moz-border-radius-topright: 5px;
         font-size: 110%;
         margin: 0;
         padding: 0.5em;
         vertical-align: bottom;
     }
 
-    #titles a
-    {
+    #titles a {
         color: #fff;
     }
 
-    #titles #title
-    {
+    #titles p {
+        margin: 0;
+        padding: 0;
+    }
+
+    #titles #title {
         font-weight: bold;
         white-space: nowrap;
     }
 
-    #titles #subtitle
-    {
+    #titles #subtitle {
         font-weight: normal;
         width: 100%;
         text-align: center;
     }
 
-    #titles #information
-    {
+    #titles #information {
         font-weight: normal;
         text-align: right;
         font-size: 90%;
@@ -112,101 +114,82 @@ body
 /* titles (end) */
 
 /* footer (begin) */
-    #footer
-    {
-        float: left;
+    #footer {
         margin-top: 5px;
         width: 100%;
-        font-family: sans-serif;
         background: #edf2f2;
         border-top: 1px solid #ddd;
         border-bottom: 1px solid #ddd;
     }
 
-    #footer form
-    {
+    #footer form {
         display: inline;
     }
 
-    #footer .btn, #footer .txt
-    {
-        font-size: 0.8em;
+    #footer .btn,
+    #footer .txt {
+        font-size: 80%;
     }
 
-    #footer #useful-links
-    {
-        padding: 0.3em;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#footer #useful-links
-    {
-        margin: 0.3em;
+    #footer #useful-links {
         display: table;
+        padding-left: 1ex;
+        padding-right: 1ex;
     }
 
     #footer #links-actions,
     #footer #links-edit,
     #footer #links-saved,
-    #footer #links-special
-    {
+    #footer #links-special {
         display: table-row;
+        list-style-type: none;
     }
 
-    #footer .label
-    {
-        width: 8.2em;
-        display: block;
-        float: left;
-
-        vertical-align: baseline;
-
-        padding: 0.1em 0.2em;
-    }
-
-    #footer #links-actions .label
-    {
-        padding-top: 0.45em;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#footer .label
-    {
+    #footer .label {
         display: table-cell;
-        float: none;
-        width: auto;
-
-        padding-top: 0;
+        white-space: nowrap;
+        vertical-align: top;
     }
 
-    #footer .links
-    {
+    #footer .links {
         display: table-cell;
-
-        padding: 0.1em 0.2em;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#footer .links
-    {
-        padding-top: 0;
-        
-        vertical-align: baseline;
-    }
-
-    /* hide from MSIE and NN4 */
-    #footer+*
-    {
-        clear: both;
+        vertical-align: top;
     }
 /* footer (end) */
 
-/* generic (begin) */
-    body
-    {
-        background: #fff url("global/body-back.gif") repeat-x;
+/* link lists (begin) */
+    ul.links {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
     }
 
+    ul.links li {
+        display: inline;
+        white-space: nowrap;
+    }
+/* link lists (end) */
+
+/* tabs (begin) */
+    .tabs td {
+        background: #eee;
+        text-align: center;
+        border-style: solid;
+        border-color: black;
+        border-width: 0px 0px 2px 0px;
+    }
+        
+    .tabs td.selected {
+        background: white;
+        border-width: 2px 2px 0px 2px;
+    }
+
+    .tabs td.spacer {
+        background: white;
+    }
+/* tabs (end) */
+
+/* generic (begin) */
     :link {
         color: #039;
     }
@@ -222,6 +205,10 @@ body
     :link:active, :link:active {
         color: #000;
     }
+
+    .clickable_area {
+        cursor: pointer;
+    }
 /* generic (end) */
 
 div#docslinks {
@@ -235,60 +222,46 @@ div#docslinks {
     margin: 0;
 }
 
-.bz_obsolete { text-decoration: line-through; }
-.bz_inactive { text-decoration: line-through; }
+.bz_obsolete {
+    text-decoration: line-through;
+}
+.bz_inactive {
+    text-decoration: line-through;
+}
 .bz_closed,
 .bz_CLOSED td {
     text-decoration: line-through;
 }
-.bz_private { color: darkred ; background : #f3eeee ; }
-.bz_disabled { color: #a0a0a0 ; }
-
-.bz_row_odd
-{
-    background-color: #F7F7F7;
-    color: #000000;
+.bz_private {
+    color: darkred;
+    background: #f3eeee;
+}
+.bz_disabled {
+    color: #a0a0a0;
 }
 
-.bz_row_even
-{
-    background-color: #FFFFFF;
-    color: #000000;
+.bz_comment {
+    margin-bottom: 2em;
 }
 
-.bz_comment { background-color: #e0e0e0; }
-.bz_comment_hilite pre
-{
+.bz_comment_head {
+    background-color: #e0e0e0;
+}
+.bz_comment_hilite pre {
     background-color: lightgreen;
     margin: 0;
     padding: 1em 0;
-}
-
-td.tab
-{
-    background: #eee;
-    text-align: center;
-    border-style: solid;
-    border-color: black;
-    border-width: 0px 0px 2px 0px;
-}
-    
-td.tab.selected
-{
-    background: white;
-    border-width: 2px 2px 0px 2px;
-}
-
-td.tab.spacer
-{
-    background: white;
 }
 
 span.quote {
     color: #65379c;
 }
 
-table#flags th, table#flags td { vertical-align: baseline; text-align: left; }
+table#flags th,
+table#flags td {
+    vertical-align: baseline;
+    text-align: left;
+}
 
 .throw_error {
     background-color: #ff0000;

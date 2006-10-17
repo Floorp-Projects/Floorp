@@ -25,11 +25,11 @@
   #%]
   
 [% title = BLOCK %]Add Version to Product '[% product.name FILTER html %]'[% END %]
-[% h2 = BLOCK %]This page allows you to add a new version to product
+[% subheader = BLOCK %]This page allows you to add a new version to product
                 '[% product.name FILTER html %]'.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
-  h2 = h2
+  subheader = subheader
 %]
 
 <form method="post" action="editversions.cgi">

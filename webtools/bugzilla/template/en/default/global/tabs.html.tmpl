@@ -18,6 +18,7 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Myk Melez <myk@mozilla.org>
+  #                 Marc Schumann <wurblzap@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -28,20 +29,25 @@
   # current_tab_name: string. name of the currently selected tab
   #%]
 
-<center>
-  <table cellspacing="0" cellpadding="10" border="0" width="100%">
+<div class="tabbed">
+  <table class="tabs" cellspacing="0" cellpadding="10" border="0" width="100%">
     <tr>
-      <td class="tab spacer">&nbsp;</td>
+      <td class="spacer">&nbsp;</td>
 
       [% FOREACH tab = tabs %]
         [% IF tab.name == current_tab_name %]
-          <td class="tab selected">[% tab.label FILTER html %]</td>
+          <td class="selected">[% tab.label FILTER html %]</td>
         [% ELSE %]
-          <td class="tab"><a href="[% tab.link FILTER html %]">[% tab.label FILTER html %]</a></td>
+          <td class="clickable_area" onClick="document.location='[% tab.link FILTER html %]'"><a href="[% tab.link FILTER html %]">[% tab.label FILTER html %]</a></td>
         [% END %]
       [% END %]
 
-       <td class="tab spacer">&nbsp;</td>
-     </tr>
-   </table>
-</center>
+      <td class="spacer">&nbsp;</td>
+    </tr>
+  </table>
+
+  <div class="tabbody">
+    [% content %]
+  </div>
+
+</div>

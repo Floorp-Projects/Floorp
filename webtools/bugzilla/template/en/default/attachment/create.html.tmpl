@@ -26,14 +26,14 @@
 
 [%# Define strings that will serve as the title and header of this page %]
 [% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bugid %][% END %]
-[% h1 = BLOCK %]Create New Attachment for
+[% header = BLOCK %]Create New Attachment for
   [%+ "$terms.Bug $bugid" FILTER bug_link(bugid) FILTER none %][% END %]
-[% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
+[% subheader = BLOCK %][% bugsummary FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
   title = title
-  h1 = h1
-  h2 = h2
+  header = header
+  subheader = subheader
   onload="setContentTypeDisabledState(document.entryform);"
   style_urls = [ 'skins/standard/create_attachment.css' ]
   javascript_urls = [ "js/attachment.js" ]

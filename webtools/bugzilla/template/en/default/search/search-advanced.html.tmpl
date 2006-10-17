@@ -37,7 +37,7 @@ var queryform = "queryform"
 
 [% PROCESS global/header.html.tmpl
   title = "Search for $terms.bugs"
-  h1 = ""
+  header = ""
   onload = "doOnSelectProduct(0); initHelp();"
   javascript = js_data
   javascript_urls = [ "js/productform.js" ]
@@ -46,7 +46,7 @@ var queryform = "queryform"
            }"
 %]
 
-[% PROCESS search/tabs.html.tmpl %]
+[% WRAPPER search/tabs.html.tmpl %]
 
 [% button_name = "Search" %]
 
@@ -83,5 +83,7 @@ var queryform = "queryform"
 </form>
 
 [% PROCESS "search/search-help.html.tmpl" IF cgi.param("help") %]
+
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]

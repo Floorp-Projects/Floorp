@@ -21,17 +21,17 @@
 [% title = "Time Summary " %]
 [% IF do_depends %]
     [% title = title _ "for " %]
-    [% h1 = title _ "$terms.Bug $ids.0" FILTER bug_link(ids.0) FILTER none %]
+    [% header = title _ "$terms.Bug $ids.0" FILTER bug_link(ids.0) FILTER none %]
     [% title = title _ "$terms.Bug $ids.0: " %]
-    [% h1 = (h1 _ " (and $terms.bugs blocking it)") IF do_depends %]
+    [% header = (header _ " (and $terms.bugs blocking it)") IF do_depends %]
 [% ELSE %]
     [% title = title _ "($ids.size $terms.bugs selected)" %]    
-    [% h1 = title %]
+    [% header = title %]
 [% END %]
 
 [% PROCESS global/header.html.tmpl 
     title = title 
-    h1 = h1 
+    header = header 
     style_urls = ["skins/standard/summarize-time.css"]
     %]
 

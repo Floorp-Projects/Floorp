@@ -102,12 +102,14 @@
 </tr>
 <tr [% IF !Param('usevotes') %]class="param_disabled" [% END %]>
   <th align="right">
-    Number of votes [% terms.abug %] in this product needs to
+    Confirmation threshold:
+  </th>
+  <td>
+    Enter the number of votes [% terms.abug %] in this product needs to
     automatically get out of the
     <a href="page.cgi?id=fields.html#status">[% status_descs.UNCONFIRMED FILTER html %]</a>
-    state:
-  </th>
-  <td><input size="5" maxlength="5" name="votestoconfirm" 
-             value="[% product.votestoconfirm FILTER html %]">
+    state.<br>
+    <input size="5" maxlength="5" name="votestoconfirm" 
+           value="[% product.votestoconfirm FILTER html %]">
   </td>
 </tr>

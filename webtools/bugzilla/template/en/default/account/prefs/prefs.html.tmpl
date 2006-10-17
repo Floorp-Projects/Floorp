@@ -39,7 +39,7 @@
 [% filtered_login = user.login FILTER html %]
 [% PROCESS global/header.html.tmpl
    title = "User Preferences"
-   h2 = filtered_login
+   subheader = filtered_login
    style_urls = ['skins/standard/admin.css']
  %]
 
@@ -61,7 +61,10 @@
   [% END %]
 [% END %]
 
-[% PROCESS global/tabs.html.tmpl %]
+[% WRAPPER global/tabs.html.tmpl
+   tabs        = tabs
+   current_tab = current_tab
+%]
 
 [% IF changes_saved %]
   <p>
@@ -102,6 +105,8 @@
       </table>
     [% END %]
   </form>
+[% END %]
+
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]

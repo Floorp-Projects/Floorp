@@ -39,7 +39,7 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% IF !header_done %]
-  [% h2 = voting_user.login FILTER html %]
+  [% subheader = voting_user.login FILTER html %]
   [% IF canedit %]
     [% title = "Change Votes" %]
     [% IF bug_id %]

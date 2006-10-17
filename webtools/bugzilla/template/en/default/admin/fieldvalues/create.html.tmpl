@@ -19,11 +19,11 @@
   #%]
   
 [% title = BLOCK %]Add Value for the '[% field FILTER html %]' field[% END %]
-[% h2 = BLOCK %]This page allows you to add a new value for the
+[% subheader = BLOCK %]This page allows you to add a new value for the
                 '[% field FILTER html %]' field.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
-  h2 = h2
+  subheader = subheader
 %]
 
 <form method="post" action="editvalues.cgi">

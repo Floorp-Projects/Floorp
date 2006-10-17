@@ -48,8 +48,9 @@
     [% ELSE %]
       enter the login of 
     [% END %]
-    the <u>u</u>ser to impersonate:
+    <label for="target_login">the <u>u</u>ser to impersonate</label>:
     [% INCLUDE global/userselect.html.tmpl
+       id => "target_login"
        name => "target_login"
        value => "$target_login_default"
        accesskey => "u"
@@ -65,9 +66,10 @@
   [% END %]
   
   <p>
-    Next, please take a moment to explain why you are doing this:<br>
-    <input type="text" name="reason" size="80" maxlength="200" value="
-    [%- reason_default FILTER html %]">
+    Next, please take a moment to explain <label for="reason">why you are doing
+    this:<br>
+    <input type="text" id="reason" name="reason" size="80" maxlength="200"
+           value="[% reason_default FILTER html %]">
   </p>
   
   <p>
@@ -78,10 +80,12 @@
   
   [% IF user.authorizer.can_login %]
     <p>
-      Finally, enter your [% terms.Bugzilla %] password: 
+      Finally, enter <label for="Bugzilla_password">your [% terms.Bugzilla %]
+      password</label>:
       <input type="hidden" name="Bugzilla_login" value="
       [%- user.login FILTER html %]">
-      <input type="password" name="Bugzilla_password" maxlength="20" size="20">
+      <input type="password" id="Bugzilla_password" name="Bugzilla_password"
+             maxlength="20" size="20">
       <br>
       This is done for two reasons.  First of all, it is done to reduce 
       the chances of someone doing large amounts of damage using your 

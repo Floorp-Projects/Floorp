@@ -25,9 +25,9 @@
 [%# INTERFACE:
   # (All the below interface elements are optional.)
   # title: string. Page title.
-  # h1: string. Main page header.
-  # h2: string. Page subheader.
-  # h3: string. Right-aligned subheader.
+  # header: string. Main page header.
+  # subheader: string. Page subheader.
+  # header_addl_info: string. Additional header information.
   # bodyclasses: array of extra CSS classes for the <body>
   # onload: string. JavaScript code to run when the page finishes loading.
   # javascript: string. Javascript to go in the header.
@@ -43,20 +43,20 @@
 [% END %]
 
 [% DEFAULT
-  h2 = ""
-  h3 = ""
+  subheader = ""
+  header_addl_info = ""
   onload = ""
   style_urls = []
 %]
 
-[%# We should be able to set the default value of the h1 variable
+[%# We should be able to set the default value of the header variable
   # to the value of the title variable using the DEFAULT directive,
-  # but that doesn't work if a caller sets h1 to the empty string
-  # to avoid h1 inheriting the value of title, since DEFAULT
-  # mistakenly treats empty strings as undefined and gives h1 the
+  # but that doesn't work if a caller sets header to the empty string
+  # to avoid header inheriting the value of title, since DEFAULT
+  # mistakenly treats empty strings as undefined and gives header the
   # value of title anyway.  To get around that problem we explicitly
-  # set h1's default value here only if it is undefined. %]
-[% IF !h1.defined %][% h1 = title %][% END %]
+  # set header's default value here only if it is undefined. %]
+[% IF !header.defined %][% header = title %][% END %]
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
                       "http://www.w3.org/TR/html4/loose.dtd">
@@ -106,6 +106,14 @@
             rel="stylesheet"
             type="text/css">
     [% END %]
+    <!--[if IE]>
+      [%# Internet Explorer treats [if IE] HTML comments as uncommented.
+        # Use it to import CSS fixes so that Bugzilla looks decent on IE, too.
+        #%]
+      <link href="skins/standard/IE-fixes.css"
+            rel="stylesheet"
+            type="text/css">
+    <![endif]-->
 
     [%# CSS cascade, part 2: Standard Bugzilla stylesheet set (selectable)
       # Present if skin selection is enabled.
@@ -117,6 +125,16 @@
               title="[% setting_descs.standard FILTER html %]"
               type="text/css">
       [% END %]
+      <!--[if IE]>
+        [%# Internet Explorer treats [if IE] HTML comments as uncommented.
+          # Use it to import CSS fixes so that Bugzilla looks decent on IE,
+          # too.
+          #%]
+        <link href="skins/standard/IE-fixes.css"
+              rel="[% 'alternate ' IF user_skin %]stylesheet"
+              title="[% setting_descs.standard FILTER html %]"
+              type="text/css">
+      <![endif]-->
     [% END %]
 
     [%# CSS cascade, part 3: Third-party stylesheet set (selectable).
@@ -145,6 +163,16 @@
                   type="text/css">
           [% END %]
         [% END %]
+        <!--[if IE]>
+          [%# Internet Explorer treats [if IE] HTML comments as uncommented.
+            # Use it to import CSS fixes so that Bugzilla looks decent on IE,
+            # too.
+            #%]
+          <link href="skins/contrib/[% contrib_skin FILTER html %]/IE-fixes.css"
+                rel="[% 'alternate ' UNLESS contrib_skin == user_skin %]stylesheet"
+                title="[% contrib_skin FILTER html %]"
+                type="text/css">
+        <![endif]-->
       [% END %]
     [% END %]
 
@@ -166,6 +194,14 @@
                        FILTER html %]" rel="stylesheet" type="text/css">
       [% END %]
     [% END %]
+    <!--[if IE]>
+      [%# Internet Explorer treats [if IE] HTML comments as uncommented.
+        # Use it to import CSS fixes so that Bugzilla looks decent on IE, too.
+        #%]
+      <link href="skins/custom/IE-fixes.css"
+            rel="stylesheet"
+            type="text/css">
+    <![endif]-->
 
     [%# this puts the live bookmark up on firefox for the Atom feed %]
     [% IF atomlink %]
@@ -200,25 +236,30 @@
 
 <table border="0" cellspacing="0" cellpadding="0" id="titles">
 <tr>
-  <td id="title">
-    [% terms.Bugzilla %][% IF h1 %] - [% h1 %] [% END %]
-  </td>
+    <td id="title">
+      <p>[% terms.Bugzilla %]
+      [% " &ndash; $header" IF header %]</p>
+    </td>
 
-  [% IF h2 %]
+  [% IF subheader %]
     <td id="subtitle">
-      [% h2 %]
+      <p class="subheader">[% subheader %]</p>
     </td>
   [% END %]
 
-  [% IF h3 %]
+  [% IF header_addl_info %]
     <td id="information">
-      [% h3 %]
+      <p class="header_addl_info">[% header_addl_info %]</p>
     </td>
   [% END %]
 </tr>
 </table>
 
 [% PROCESS "global/common-links.html.tmpl" btn_id = "find_top" %]
+
+</div>
+
+<div id="bugzilla-body">
 
 [% IF Param('announcehtml') %]
 [% Param('announcehtml') FILTER none %]
@@ -227,5 +268,3 @@
 [% IF message %]
 <div id="message">[% message %]</div>
 [% END %]
-
-</div>

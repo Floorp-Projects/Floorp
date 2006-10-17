@@ -23,10 +23,10 @@
 
 [% PROCESS global/header.html.tmpl 
   title = "Find a Specific " _ terms.Bug
-  h1 = ""
+  header = ''
 %]
 
-[% PROCESS search/tabs.html.tmpl %]
+[% WRAPPER search/tabs.html.tmpl %]
 
 <p>
 Find a specific [% terms.bug %] by entering words that describe it.  
@@ -115,6 +115,8 @@ for "crash secure SSL flash".
   </tr>
 </table>
 </form>
+
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]
 

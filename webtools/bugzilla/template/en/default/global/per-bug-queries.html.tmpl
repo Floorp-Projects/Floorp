@@ -58,10 +58,9 @@
     [% lists_of_bugs.push(q.name) %]
   [% END %]
 
-  <div id="links-special">
-    <div class="label">&nbsp;</div>
-    <div class="links">
-      <hr>
+  <li id="links-special">
+    <div class="label"></div>
+    <ul class="links"><li class="form">
       <form id="list_of_bugs" action="buglist.cgi" method="get">
         <input type="hidden" name="cmdtype" value="doit">
         <input type="hidden" name="remtype" value="asnamed">
@@ -84,11 +83,12 @@
         [% END %]
         <span id="lob_new_query_text">
           [% " or to" IF lists_of_bugs.size %] the new saved search:
-          <input type="text" id="lob_newqueryname" name="newqueryname" size="20" maxlength="64"
+          <input class="txt" type="text" id="lob_newqueryname"
+                 size="20" maxlength="64" name="newqueryname"
                  onkeyup="manage_old_lists();">
         </span>
         <input type="submit" value="Commit" id="commit_list_of_bugs">
       </form>
-    </div>
-  </div>
+    </li></ul>
+  </li>
 [% END %]

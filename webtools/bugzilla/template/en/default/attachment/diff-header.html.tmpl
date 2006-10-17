@@ -207,7 +207,7 @@ tbody.file pre:empty {
 [% BLOCK diffurl %][% PROCESS viewurl %]&amp;action=diff[% END %]
 
 [% IF headers %]
-  [% h1 = BLOCK %]
+  [% header = BLOCK %]
     [% IF attachid %]
       Attachment #[% attachid %]: [% description FILTER html %]
     [% ELSE %]
@@ -218,7 +218,7 @@ tbody.file pre:empty {
     [% END %]
     for <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] #[% bugid %]</a>
   [% END %]
-  [% h2 = BLOCK %]
+  [% subheader = BLOCK %]
     [% bugsummary FILTER html %]
   [% END %]
   [% PROCESS global/header.html.tmpl %]

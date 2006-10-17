@@ -85,6 +85,10 @@
   'status.name',
 ],
 
+'search/tabs.html.tmpl' => [
+  'content',
+],
+
 'request/queue.html.tmpl' => [
   'column_headers.$group_field', 
   'column_headers.$column', 
@@ -233,9 +237,9 @@
   'style', 
   'onload',
   'title',
-  'h1',
-  'h2',
-  'h3', 
+  '" &ndash; $header" IF header',
+  'subheader',
+  'header_addl_info', 
   'message', 
 ],
 
@@ -247,6 +251,10 @@
 'global/select-menu.html.tmpl' => [
   'options', 
   'size', 
+],
+
+'global/tabs.html.tmpl' => [
+  'content', 
 ],
 
 'global/common-links.html.tmpl' => [

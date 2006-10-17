@@ -22,54 +22,63 @@
 
 [% DEFAULT btn_id = "find" %]
 
-<div class="links">
-  <a href="./">Home</a> |
-  <a href="enter_bug.cgi">New</a> |
-  <a href="query.cgi">Search</a> |
+<ul class="links">
+  <li><a href="./">Home</a></li>
+  <li><span class="separator">| </span><a href="enter_bug.cgi">New</a></li>
+  <li><span class="separator">| </span><a href="query.cgi">Search</a></li>
 
-  <form action="buglist.cgi" method="get"
+  <li class="form">
+    <span class="separator">| </span>
+    <form action="buglist.cgi" method="get"
         onsubmit="if (this.quicksearch.value == '')
                   { alert('Please enter one or more search terms first.');
                     return false; } return true;">
     <input class="txt" type="text" name="quicksearch">
     <input class="btn" type="submit" value="Find" id="[% btn_id FILTER html %]">
-  </form> |
+    [%-# Work around FF bug: keep this on one line %]</form></li>
 
-  <a href="report.cgi">Reports</a>
+  <li><span class="separator">| </span><a href="report.cgi">Reports</a></li>
 
-  [% IF user.id %]
-    [% email = user.login FILTER url_quote %]
-    | <a href="request.cgi?requester=[% email %]&amp;requestee=
-               [%- email %]&amp;do_union=1&amp;group=type">My Requests</a>
-  [% ELSE %]
-    | <a href="request.cgi">Requests</a>
-  [% END %]
+  <li>
+    <span class="separator">| </span>
+    [% IF user.id %]
+      [% email = user.login FILTER url_quote %]
+      <a href="request.cgi?requester=[% email %]&amp;requestee=
+               [% email %]&amp;do_union=1&amp;group=type">My Requests</a>
+    [% ELSE %]
+      <a href="request.cgi">Requests</a>
+    [% END %]
+  [%-# Work around FF bug: keep this on one line %]</li>
 
   [% IF user.id && Param('usevotes') %]
-    | <a href="votes.cgi?action=show_user">My&nbsp;Votes</a>
+    <li><span class="separator">| </span><a href="votes.cgi?action=show_user">My&nbsp;Votes</a></li>
   [% END %]
 
   [% IF user.login %]
-    [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' IF user.groups.tweakparams %]
-    [% IF user.authorizer.can_logout %]
-      | <a href="relogin.cgi">Log&nbsp;out</a>
-    [% ELSE %]
-      | Logged&nbsp;in&nbsp;as
-    [% END %]
-    [% IF sudoer %]
-      [%+ sudoer.login FILTER html %] (<b>impersonating
-      [%+ user.login FILTER html %]</b>
-      <a href="relogin.cgi?action=end-sudo">end session</a>)
-    [% ELSE %]
-      [%+ user.login FILTER html %]
-    [% END %]
+    [% '<li><span class="separator">| </span><a href="sanitycheck.cgi">Sanity&nbsp;check</a></li>'
+       IF user.groups.tweakparams %]
+    <li>
+      <span class="separator">| </span>
+      [% IF user.authorizer.can_logout %]
+        <a href="relogin.cgi">Log&nbsp;out</a>
+      [% ELSE %]
+        Logged&nbsp;in&nbsp;as
+      [% END %]
+      [% IF sudoer %]
+        [%+ sudoer.login FILTER html %] (<b>impersonating
+        [%+ user.login FILTER html %]</b>
+        <a href="relogin.cgi?action=end-sudo">end session</a>)
+      [% ELSE %]
+        [%+ user.login FILTER html %]
+      [% END %]
+    [%-# Work around FF bug: keep this on one line %]</li>
   [% ELSE %]
     [% IF Param('createemailregexp')
           && user.authorizer.user_can_create_account %]
-      | <a href="createaccount.cgi">New&nbsp;Account</a>
+      <li><span class="separator">| </span><a href="createaccount.cgi">New&nbsp;Account</a></li>
     [% END %]
     [% IF user.authorizer.can_login %]
-      | <a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+      <li><span class="separator">| </span><a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a></li>
     [% END %]
   [% END %]
-</div>
+</ul>

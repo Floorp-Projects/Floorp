@@ -26,16 +26,16 @@
 [% title = BLOCK %]
   Attachment [% attachment.id %] Details for [% terms.Bug %] [%+ attachment.bug_id %]
 [% END %]
-[% h1 = BLOCK %]
+[% header = BLOCK %]
   Attachment [% attachment.id %] Details for
   [%+ "$terms.Bug ${attachment.bug_id}" FILTER bug_link(attachment.bug_id) FILTER none %]
 [% END %]
-[% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
+[% subheader = BLOCK %][% bugsummary FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
   title = title
-  h1 = h1
-  h2 = h2
+  header = header
+  subheader = subheader
   style = "
     table.attachment_info th { text-align: right; vertical-align: top; }
     table.attachment_info td { text-align: left; vertical-align: top; }
@@ -211,8 +211,9 @@
     <tr>
       <td width="25%">
         <small>
-        <b>Description:</b><br>
+        <b><label for="description">Description</label>:</b><br>
           [% INCLUDE global/textarea.html.tmpl
+            id             = 'description'
             name           = 'description'
             minrows        = 3
             cols           = 25
@@ -226,8 +227,8 @@
             <input type="hidden" name="contenttypeentry"
                    value="[% attachment.contenttype FILTER html %]"><br>
         [% ELSE %]
-          <b>Filename:</b><br>
-            <input type="text" size="20" name="filename"
+          <b><label for="filename">Filename</label>:</b><br>
+            <input type="text" size="20" id="filename" name="filename"
                    value="[% attachment.filename FILTER html %]"><br>
           <b>Size:</b>
           [% IF attachment.datasize %]
@@ -236,8 +237,9 @@
             <em>deleted</em>
           [% END %]<br>
 
-          <b>MIME Type:</b><br>
-            <input type="text" size="20" name="contenttypeentry"
+          <b><label for="contenttypeentry">MIME Type</label>:</b><br>
+            <input type="text" size="20"
+                   id="contenttypeentry" name="contenttypeentry"
                    value="[% attachment.contenttype FILTER html %]"><br>
 
           <input type="checkbox" id="ispatch" name="ispatch" value="1"
@@ -246,12 +248,13 @@
         [% END %]
           <input type="checkbox" id="isobsolete" name="isobsolete" value="1"
                  [% 'checked="checked"' IF attachment.isobsolete %]>
-          <label for="isobsolete">obsolete</label><br>
+          <label for="isobsolete">obsolete</label>
           [% IF (Param("insidergroup") && user.in_group(Param("insidergroup"))) %]
-            <input type="checkbox" name="isprivate" value="1"
-                   [% " checked" IF attachment.isprivate %]> private<br><br>
-          [% ELSE %]<br>
+            <input type="checkbox" id="isprivate" name="isprivate" value="1"
+                   [% " checked" IF attachment.isprivate %]>
+            <label for="isprivate">private</label><br>
           [% END %]
+          <br>
 
         [% IF flag_types.size > 0 %]
           [% PROCESS "flag/list.html.tmpl" bug_id = attachment.bug_id
@@ -259,8 +262,10 @@
         [% END %]
 
         <div id="smallCommentFrame">
-          <b>Comment (on the [% terms.bug %]):</b><br>
+          <b><label for="comment">Comment</label> (on the
+          [%+ terms.bug %]):</b><br>
             [% INCLUDE global/textarea.html.tmpl
+              id      = 'comment'
               name    = 'comment'
               minrows = 5
               cols    = 25
