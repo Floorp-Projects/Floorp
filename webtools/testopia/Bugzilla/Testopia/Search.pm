@@ -680,7 +680,7 @@ sub init {
     foreach my $profile ("author", "manager", "default_tester", 
                          "assignee", "testedby"){
         $t = $cgi->param($profile . "_type") || '';
-        if ($t eq "exact"  || '') {
+        if ($t eq "exact"  || $t eq '') {
             $t = "anyexact";
             foreach my $name (split(',', $cgi->param($profile))) {
                 $name = trim($name);
