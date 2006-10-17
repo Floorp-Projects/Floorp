@@ -25,13 +25,13 @@ package Bugzilla::Install::Requirements;
 
 use strict;
 
+use List::Util qw(max);
 use POSIX ();
 
 use base qw(Exporter);
 our @EXPORT = qw(
     REQUIRED_MODULES
     OPTIONAL_MODULES
-    MOD_PERL_MODULES
 
     check_requirements
     check_graphviz
@@ -42,351 +42,333 @@ our @EXPORT = qw(
 );
 
 use Bugzilla::Constants;
+
+# "package" is the perl package we're checking for. "module" is the name
+# of the actual module we load with "require" to see if the package is
+# installed or not. "version" is the version we need, or 0 if we'll accept
+# any version.
 use constant REQUIRED_MODULES => [
     {
-        name => 'CGI',
+        package => 'CGI',
+        module  => 'CGI',
         version => '2.93'
     },
     {
-        name => 'Date::Format',
+        package => 'TimeDate',
+        module  => 'Date::Format',
         version => '2.21'
     },
     {
-        name => 'DBI',
+        package => 'DBI',
+        module  => 'DBI',
         version => '1.41'
     },
     {
-        name => 'File::Spec',
+        package => 'PathTools',
+        module  => 'File::Spec',
         version => '0.84'
     },
     {
-        name => 'Template',
+        package => 'Template-Toolkit',
+        module  => 'Template',
         version => '2.12'
     },
     {
-        name => 'Mail::Mailer',
+        package => 'MailTools',
+        module  => 'Mail::Mailer',
         version => '1.67'
     },
     {
-        name => 'MIME::Base64',
+        package => 'MIME-Base64',
+        module  => 'MIME::Base64',
         version => '3.01'
     },
     {
+        package => 'MIME-tools',
         # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
-        name => $^O =~ /MSWin32/i ? 'MIME::Tools' : 'MIME::Parser',
+        module  => ON_WINDOWS ? 'MIME::Tools' : 'MIME::Parser',
         version => '5.406'
     },
 ];
 
 use constant OPTIONAL_MODULES => [
     {
-        name => 'GD',
-        version => '1.20'
+        package => 'GD',
+        module  => 'GD',
+        version => '1.20',
+        feature => 'Graphical Reports, New Charts, Old Charts'
     },
     {
+        package => 'Template-GD',
         # This module tells us whether or not Template-GD is installed
         # on Template-Toolkits after 2.14, and still works with 2.14 and lower.
-        name => 'Template::Plugin::GD::Image',
-        version => 0
+        module  => 'Template::Plugin::GD::Image',
+        version => 0,
+        feature => 'Graphical Reports'
     },
     {
-        name => 'Chart::Base',
-        version => '1.0'
+        package => 'Chart',
+        module  => 'Chart::Base',
+        version => '1.0',
+        feature => 'New Charts, Old Charts'
     },
     {
-        name => 'GD::Graph',
-        version => 0
+        package => 'GDGraph',
+        module  => 'GD::Graph',
+        version => 0,
+        feature => 'Graphical Reports'
     },
     { 
-        name => 'GD::Text::Align',
-        version => 0
+        package => 'GDTextUtil',
+        module  => 'GD::Text',
+        version => 0,
+        feature => 'Graphical Reports'
     },
     {
-        name => 'XML::Twig',
-        version => 0
+        package => 'XML-Twig',
+        module  => 'XML::Twig',
+        version => 0,
+        feature => 'Move Bugs Between Installations'
     },
     {
-        name => 'LWP::UserAgent',
-        version => 0
+        package => 'libwww-perl',
+        module  => 'LWP::UserAgent',
+        version => 0,
+        feature => 'Automatic Update Notifications'
     },
     {
-        name => 'PatchReader',
-        version => '0.9.4'
+        package => 'PatchReader',
+        module  => 'PatchReader',
+        version => '0.9.4',
+        feature => 'Patch Viewer'
     },
     {
-        name => 'Image::Magick',
-        version => 0
+        package => 'PerlMagick',
+        module  => 'Image::Magick',
+        version => 0,
+        feature => 'Optionally Convert BMP Attachments to PNGs'
     },
     {
-        name => 'Net::LDAP',
-        version => 0
+        package => 'perl-ldap',
+        module  => 'Net::LDAP',
+        version => 0,
+        feature => 'LDAP Authentication'
     },
     {
-        name => 'SOAP::Lite',
-        version => 0
+        package => 'SOAP-Lite',
+        module  => 'SOAP::Lite',
+        version => 0,
+        feature => 'XML-RPC Interface'
     },
     {
-        # Since Perl 5.8, we need the 'utf8_mode' method of HTML::Parser
-        # which has been introduced in version 3.39_92 and fixed in 3.40
-        # to not complain when running Perl 5.6.
-        # This module is required by HTML::Scrubber.
-        name => 'HTML::Parser',
-        version => ($] >= 5.008) ? '3.40' : 0
+        # We need the 'utf8_mode' method of HTML::Parser, for HTML::Scrubber.
+        package => 'HTML-Parser',
+        module  => 'HTML::Parser',
+        version => '3.40',
+        feature => 'More HTML in Product/Group Descriptions'
     },
     {
-        name => 'HTML::Scrubber',
-        version => 0
+        package => 'HTML-Scrubber',
+        module  => 'HTML::Scrubber',
+        version => 0,
+        feature => 'More HTML in Product/Group Descriptions'
     },
-];
-
-# These are only required if you want to use Bugzilla with
-# mod_perl.
-use constant MOD_PERL_MODULES => [
     {
-        name => 'mod_perl2', 
-        version => '1.999022'
+        package => 'mod_perl',
+        module  => 'mod_perl2',
+        version => '1.999022',
+        feature => 'mod_perl'
     },
     # Even very new releases of perl (5.8.5) don't come with this version,
     # so I didn't want to make it a general requirement just for
     # running under mod_cgi.
     {
-        name => 'CGI',
-        version => '3.11'
+        package => 'CGI',
+        module  => 'CGI',
+        version => '3.11',
+        feature => 'mod_perl'
     },
     {
-        name => 'Apache::DBI',
-        version => '0.96'
+        package => 'Apache-DBI',
+        module  => 'Apache::DBI',
+        version => '0.96',
+        feature => 'mod_perl'
     },
 ];
-
-# Remember that you only have to add modules to this hash if their
-# names are significantly different on ActiveState than on normal perl.
-# If it's just a difference between "::" and "-" in the name, don't worry
-# about it--install_command() handles that automatically.
-use constant WIN32_MODULE_NAMES => {
-    'Chart::Base'       => 'Chart',
-    'Date::Format'      => 'TimeDate',
-    'Template'          => 'Template-Toolkit',
-    'GD::Graph'         => 'GDGraph',
-    'GD::Text::Align'   => 'GDTextUtil',
-    'Mail::Mailer'      => 'MailTools',
-    'Net::LDAP'         => 'perl-ldap',
-    # We provide Template 2.14 or lower for Win32, so it still includes
-    # the GD plugin.
-    'Template::Plugin::GD' => 'Template-Toolkit',
-};
 
 sub check_requirements {
     my ($output) = @_;
 
     print "\nChecking perl modules...\n" if $output;
-    my $modules = REQUIRED_MODULES;
     my $root = ROOT_USER;
-    my %missing;
+    my %missing = _check_missing(REQUIRED_MODULES, $output);
 
-    foreach my $module (@{$modules}) {
-        unless (have_vers($module->{name}, $module->{version}, $output)) {
-            $missing{$module->{name}} = $module->{version};
-        }
-    }
-
-    print "\nYou need one of the following DBD modules installed, depending",
-          " on\nwhich database you are using with Bugzilla:\n" if $output;
-
+    print "\nChecking available perl DBD modules...\n" if $output;
     my $have_one_dbd = 0;
     my $db_modules = DB_MODULE;
     foreach my $db (keys %$db_modules) {
-        if (have_vers($db_modules->{$db}->{dbd},
-                      $db_modules->{$db}->{dbd_version}, $output))
-        {
-            $have_one_dbd = 1;
-        }
+        my %info = (module  => $db_modules->{$db}->{dbd},
+                    version => $db_modules->{$db}->{dbd_version});
+        $have_one_dbd = 1 if have_vers(\%info, $output);
     }
 
     print "\nThe following Perl modules are optional:\n" if $output;
-    my $opt_modules = OPTIONAL_MODULES;
-    my %have_mod;
-    foreach my $module (@$opt_modules) {
-        $have_mod{$module->{name}} =
-            have_vers($module->{name}, $module->{version}, $output);
-    }
-
-    print "\nThe following modules are required for mod_perl support:\n"
-        if $output;
-    my $mp_modules = MOD_PERL_MODULES;
-    foreach my $module (@$mp_modules) {
-        $have_mod{$module->{name}} =
-            have_vers($module->{name}, $module->{version}, $output);
-    }
+    my %missing_optional = _check_missing(OPTIONAL_MODULES, $output);
 
     # If we're running on Windows, reset the input line terminator so that
     # console input works properly - loading CGI tends to mess it up
     $/ = "\015\012" if ON_WINDOWS;
 
-    if ($output) {
-        print "\n";
-
-        if ($^O =~ /MSWin32/i) {
-            print "All the required modules are available at:\n",
-                  "    http://landfill.bugzilla.org/ppm/\n",
-                  "You can add the repository with the following command:\n",
-                  "    ppm rep add bugzilla http://landfill.bugzilla.org/ppm/",
-                  "\n\n";
-        }
-
-       # New/Old Charts
-       if ((!$have_mod{'GD'} || !$have_mod{'Chart::Base'})) {
-            print "If you you want to see graphical bug charts (plotting",
-                  " historical data over \ntime), you should install libgd",
-                  " and the following Perl modules (as $root):\n\n";
-            print "    GD:    " . install_command("GD") ."\n" 
-                if !$have_mod{'GD'};
-            print "    Chart: " . install_command("Chart::Base") . "\n"
-                if !$have_mod{'Chart::Base'};
-            print "\n";
-        }
-
-        # Bug Import/Export
-        if (!$have_mod{'XML::Twig'}) {
-            print "If you want to use the bug import/export feature to move",
-                  " bugs to or from\nother bugzilla installations, you will",
-                  " need to install the XML::Twig\nmodule by running",
-                  " (as $root):\n\n",
-                  "    " . install_command("XML::Twig") . "\n\n";
-         }
-
-         # Automatic Updates
-         if (!$have_mod{'LWP::UserAgent'}) {
-             print "If you want to use the automatic update notification",
-                   " feature you will\nneed to install the LWP::UserAgent",
-                   " module by running (as $root):\n\n",
-                   "    " . install_command("LWP::UserAgent") . "\n\n";
-        }
-
-        # BMP to PNG
-        if (!$have_mod{'Image::Magick'}) {
-            print "If you want to convert BMP image attachments to PNG to",
-                  " conserve\ndisk space, you will need to install the",
-                  " ImageMagick application\nAvailable from",
-                  " http://www.imagemagick.org, and the Image::Magick\n",
-                  "Perl module by running (as $root):\n\n",
-                  "    " . install_command("Image::Magick") . "\n\n";
-        }
-
-        # Web Services
-        if (!$have_mod{'SOAP::Lite'}) {
-            print "If you want your Bugzilla installation to be accessible\n",
-                  "via its Web Service interface, you will need to install\n",
-                  "the SOAP::Lite module by running (as $root):\n\n";
-            print "    SOAP::Lite:      " .
-                  install_command("SOAP::Lite") . "\n\n";
-        }
-
-        # Graphical Reports
-        if (!$have_mod{'GD'} || !$have_mod{'GD::Graph'}
-            || !$have_mod{'GD::Text::Align'}
-            || !$have_mod{'Template::Plugin::GD::Image'})
-        {
-            print "If you want to see graphical bug reports (bar, pie and",
-                  " line charts of \ncurrent data), you should install libgd",
-                  " and the following Perl modules:\n\n";
-            print "    GD:              " . install_command("GD") . "\n" 
-                if !$have_mod{'GD'};
-            print "    GD::Graph:       " . install_command("GD::Graph") . "\n"
-                if !$have_mod{'GD::Graph'};
-            print "    GD::Text::Align: " . install_command("GD::Text::Align") 
-                . "\n" if !$have_mod{'GD::Text::Align'};
-            print "    Template::Plugin::GD: " 
-                . install_command('Template::Plugin::GD') . "\n" 
-                if !$have_mod{'Template::Plugin::GD::Image'};
-            print "\n";
-        }
-
-        # Diff View
-        if (!$have_mod{'PatchReader'}) {
-            print "If you want to see pretty HTML views of patches, you",
-                  " should install the \nPatchReader module by running",
-                  " (as $root):\n\n",
-                  "    " . install_command("PatchReader") . "\n\n";
-        }
-
-        # LDAP
-        if (!$have_mod{'Net::LDAP'}) {
-            print "If you wish to use LDAP authentication, then you must",
-                  " install Net::LDAP\nby running (as $root):\n\n",
-                  "    " . install_command('Net::LDAP') . "\n\n";
-        }
-
-        # HTML filtering
-        if (!$have_mod{'HTML::Parser'} || !$have_mod{'HTML::Scrubber'}) {
-            print "If you want additional HTML tags within product and group",
-                  " descriptions,\nyou should install:\n\n";
-            print "    HTML::Scrubber: " . install_command('HTML::Scrubber') . "\n"
-                if !$have_mod{'HTML::Scrubber'};
-            print "    HTML::Parser: " . install_command('HTML::Parser') . "\n"
-                if !$have_mod{'HTML::Parser'};
-            print "\n";
-        }
-
-        # mod_perl
-        if (!$have_mod{'mod_perl2'}) {
-            print "If you would like mod_perl support, you must install at",
-                  " least the minimum\nrequired version of mod_perl. You",
-                  " can download mod_perl from:\n",
-                  "    http://perl.apache.org/download/binaries.html\n",
-                  "Make sure that you get the 2.0 version, not the 1.0",
-                  " version.\n\n";
-        }
-
-        if (!$have_mod{'Apache::DBI'} || !$have_mod{'CGI'}) {
-            print "For mod_perl support, you must install the following",
-                  " perl module(s):\n\n";
-            print "    Apache::DBI: " . install_command('Apache::DBI') . "\n"
-                if !$have_mod{'Apache::DBI'};
-            print "    CGI:         " . install_command('CGI') . "\n"
-                if !$have_mod{'CGI'};
-            print "\n";
-        }
-    }
-
-    if (!$have_one_dbd) {
-        print "\n";
-        print "Bugzilla requires that at least one DBD module be",
-              " installed in order to\naccess a database. You can install",
-              " the correct one by running (as $root) the\ncommand listed",
-              " below for your database:\n\n";
-
-        foreach my $db (keys %$db_modules) {
-            print $db_modules->{$db}->{name} . ": "
-                  . install_command($db_modules->{$db}->{dbd}) . "\n";
-            print "   Minimum version required: "
-                  . $db_modules->{$db}->{dbd_version} . "\n";
-        }
-        print "\n";
-    }
-
-    if (%missing) {
-        print "\n";
-        print "Bugzilla requires some Perl modules which are either",
-              " missing from your\nsystem, or the version on your system",
-              " is too old. They can be installed\nby running (as $root)",
-              " the following:\n";
-
-        foreach my $module (keys %missing) {
-            print "   " . install_command("$module") . "\n";
-            if ($missing{$module} > 0) {
-                print "   Minimum version required: $missing{$module}\n";
-            }
-        }
-        print "\n";
-    }
-
+    my $pass = !scalar(keys %missing) && $have_one_dbd;
     return {
-        pass     => !scalar(keys %missing) && $have_one_dbd,
+        pass     => $pass,
+        one_dbd  => $have_one_dbd,
         missing  => \%missing,
-        optional => \%have_mod,
+        optional => \%missing_optional,
+        any_missing => !$pass || scalar(keys %missing_optional),
+    };
+}
+
+# A helper for check_requirements
+sub _check_missing {
+    my ($modules, $output) = @_;
+
+    my %missing;
+    foreach my $module (@$modules) {
+        unless (have_vers($module, $output)) {
+            $missing{$module->{package}} = $module;
+        }
     }
 
+    return %missing;
+}
+
+sub print_module_instructions {
+    my ($check_results, $output) = @_;
+
+    # We only print these notes if we have to.
+    if ((!$output && %{$check_results->{missing}})
+        || ($output && $check_results->{any_missing}))
+    {
+        print "\n* NOTE: You must run any commands listed below as "
+              . ROOT_USER . ".\n\n";
+
+        if (ON_WINDOWS) {
+            print <<EOT;
+***********************************************************************
+* Note For Windows Users                                              *
+***********************************************************************
+* All the modules listed below are available at:                      *
+*                                                                     *
+*    http://landfill.bugzilla.org/ppm/                                *
+*                                                                     *
+* You can add the repository with the following command:              *
+*                                                                     *
+* ppm rep add bugzilla http://landfill.bugzilla.org/ppm/              *
+***********************************************************************
+EOT
+        }
+    }
+
+    # Required Modules
+    if (my %missing = %{$check_results->{missing}}) {
+        print <<EOT;
+***********************************************************************
+* REQUIRED MODULES                                                    *
+***********************************************************************
+* Bugzilla requires you to install some Perl modules which are either *
+* missing from your system, or the version on your system is too old. *
+*                                                                     *
+* The latest versions of each module can be installed by running the  *
+* commands below.                                                     *
+***********************************************************************
+EOT
+
+        print "COMMANDS:\n\n";
+        foreach my $package (keys %missing) {
+            my $command = install_command($missing{$package});
+            print "    $command\n";
+        }
+        print "\n";
+    }
+
+    if (!$check_results->{one_dbd}) {
+        print <<EOT;
+***********************************************************************
+* DATABASE ACCESS                                                     *
+***********************************************************************
+* In order to access your database, Bugzilla requires that the        *
+* correct "DBD" module be installed for the database that you are     *
+* running.                                                            *
+*                                                                     *
+* Pick and run the correct command below for the database that you    *
+* plan to use with Bugzilla.                                          *
+***********************************************************************
+COMMANDS:
+
+EOT
+
+        my %db_modules = %{DB_MODULE()};
+        foreach my $db (keys %db_modules) {
+            my $command = install_command(
+                { module  => $db_modules{$db}->{dbd},
+                  package => $db_modules{$db}->{dbd} });
+
+            printf "%10s: \%s\n", $db_modules{$db}->{name}, $command;
+            print ' ' x 12 . "Minimum version required: "
+                  . $db_modules{$db}->{dbd_version} . "\n";
+        }
+        print "\n";
+    }
+
+    return unless $output;
+
+    if (my %missing = %{$check_results->{optional}}) {
+        print <<EOT;
+**********************************************************************
+* OPTIONAL MODULES                                                   *
+**********************************************************************
+* Certain Perl modules are not required by Bugzilla, but by          *
+* installing the latest version you gain access to additional        *
+* features.                                                          *
+*                                                                    *
+* The optional modules you do not have installed are listed below,   *
+* with the name of the feature they enable. If you want to install   *
+* one of these modules, just run the appropriate command in the      *
+* "COMMANDS TO INSTALL" section.                                     *
+**********************************************************************
+
+EOT
+        # We want to sort them so that they are ordered by feature.
+        my @missing_names = sort {$missing{$a}->{feature} 
+                                  cmp $missing{$b}->{feature}} (keys %missing);
+
+        # Now we have to determine how large the table cols will be.
+        my $longest_name = max(map(length($_), @missing_names));
+
+        # The first column header is at least 11 characters long.
+        $longest_name = 11 if $longest_name < 11;
+
+        # The table is 71 characters long. There are seven mandatory
+        # characters (* and space) in the string. So, we have a total
+        # of 64 characters to work with.
+        my $remaining_space = 64 - $longest_name;
+        print '*' x 71 . "\n";
+        printf "* \%${longest_name}s * %-${remaining_space}s *\n",
+               'MODULE NAME', 'ENABLES FEATURE(S)';
+        print '*' x 71 . "\n";
+        foreach my $name (@missing_names) {
+            printf "* \%${longest_name}s * %-${remaining_space}s *\n",
+                   $name, $missing{$name}->{feature};
+        }
+        print '*' x 71 . "\n";
+
+        print "COMMANDS TO INSTALL:\n\n";
+        foreach my $module (@missing_names) {
+            my $command = install_command($missing{$module});
+            printf "%15s: $command\n", $module;
+        }
+    }
 }
 
 sub check_graphviz {
@@ -437,28 +419,29 @@ sub display_version_and_os {
 # This was originally clipped from the libnet Makefile.PL, adapted here to
 # use the below vers_cmp routine for accurate version checking.
 sub have_vers {
-    my ($pkg, $wanted, $output) = @_;
+    my ($params, $output) = @_;
+    my $module  = $params->{module};
+    my $package = $params->{package};
+    if (!$package) {
+        $package = $module;
+        $package =~ s/::/-/g;
+    }
+    my $wanted  = $params->{version};
+
     my ($msg, $vnum, $vstr);
     no strict 'refs';
-    printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") 
+    printf("Checking for %15s %-9s ", $package, !$wanted?'(any)':"(v$wanted)") 
         if $output;
 
-    # Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
-    # so that later errors display 'normally'
-    local $::SIG{__DIE__};
-    local $::SIG{__WARN__};
+    eval "require $module;";
 
-    eval "require $pkg;";
-
-    # do this twice to avoid a "used only once" error for these vars
-    $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
-    $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
-    $vnum = -1 if $@;
+    # VERSION is provided by UNIVERSAL::
+    $vnum = eval { $module->VERSION } || -1;
 
     # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
     # That breaks the standard version tests, so we need to manually correct
     # the version
-    if ($pkg eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
+    if ($module eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
         $vnum = $1 . "." . $2;
     }
 
@@ -522,14 +505,19 @@ sub vers_cmp {
 
 sub install_command {
     my $module = shift;
+    my ($command, $package);
+
     if (ON_WINDOWS) {
-        return "ppm install " . WIN32_MODULE_NAMES->{$module} if
-            WIN32_MODULE_NAMES->{$module};
-        $module =~ s/::/-/g;
-        return "ppm install " . $module;
-    } else {
-        return "$^X -MCPAN -e 'install \"$module\"'";
+        $command = 'ppm install %s';
+        $package = $module->{package};
     }
+    else {
+        $command = "$^X -MCPAN -e 'install \%s'";
+        # Non-Windows installations need to use module names, because
+        # CPAN doesn't understand package names.
+        $package = $module->{module};
+    }
+    return sprintf $command, $package;
 }
 
 
@@ -607,17 +595,15 @@ Returns:     C<1> if the check was successful, C<0> otherwise.
  Returns:     -1 if $a is less than $b, 0 if they are equal, and
               1 if $a is greater than $b.
 
-=item C<have_vers($pkg, $wanted, $output)>
+=item C<have_vers($module, $output)>
 
  Description: Tells you whether or not you have the appropriate
               version of the module requested. It also prints
               out a message to the user explaining the check
               and the result.
 
- Params:      C<$pkg> - A string, the name of the package you're checking.
-              C<$wanted> - The version of the package you require.
-                           Set this to 0 if you don't require any
-                           particular version.
+ Params:      C<$module> - A hashref, in the format of an item from 
+                           L</REQUIRED_MODULES>.
               C<$output> - Set to true if you want this function to
                            print information to STDOUT about what it's
                            doing.
@@ -631,7 +617,8 @@ Returns:     C<1> if the check was successful, C<0> otherwise.
               module specified, depending on whether you're
               on Windows or Linux.
 
- Params:      C<$module> - The name of the module.
+ Params:      C<$module> - A hashref, in the format of an item from
+                           L</REQUIRED_MODULES>.
 
  Returns:     nothing
 

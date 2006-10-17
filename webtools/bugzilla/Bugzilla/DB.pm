@@ -135,7 +135,7 @@ sub bz_check_requirements {
     my $dbd_ver    = $db->{dbd_version};
     my $sql_server = $db->{name};
     my $sql_want   = $db->{db_version};
-    unless (have_vers($dbd, $dbd_ver, $output)) {
+    unless (have_vers({ module => $dbd, version => $dbd_ver }, $output)) {
         my $command = install_command($dbd);
         my $root    = ROOT_USER;
         my $version = $dbd_ver ? " $dbd_ver or higher" : '';

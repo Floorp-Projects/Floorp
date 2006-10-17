@@ -48,7 +48,7 @@ if (eval { require Pod::Simple }) {
 };
 
 use Bugzilla::Install::Requirements 
-    qw(REQUIRED_MODULES OPTIONAL_MODULES MOD_PERL_MODULES);
+    qw(REQUIRED_MODULES OPTIONAL_MODULES);
 use Bugzilla::Constants qw(DB_MODULE BUGZILLA_VERSION);
 
 ###############################################################################
@@ -57,14 +57,13 @@ use Bugzilla::Constants qw(DB_MODULE BUGZILLA_VERSION);
 
 my $modules = REQUIRED_MODULES;
 my $opt_modules = OPTIONAL_MODULES;
-my $mod_perl_modules = MOD_PERL_MODULES;
 
 open(ENTITIES, '>', 'xml/bugzilla.ent') or die('Could not open xml/bugzilla.ent: ' . $!);
 print ENTITIES '<?xml version="1.0"?>' ."\n\n";
 print ENTITIES '<!-- Module Versions -->' . "\n";
 foreach my $module (@$modules, @$opt_modules)
 {
-    my $name = $module->{'name'};
+    my $name = $module->{'module'};
     $name =~ s/::/-/g;
     $name = lc($name);
     #This needs to be a string comparison, due to the modules having
@@ -73,17 +72,10 @@ foreach my $module (@$modules, @$opt_modules)
     print ENTITIES '<!ENTITY min-' . $name . '-ver "'.$version.'">' . "\n";
 }
 
-print ENTITIES "\n <!-- mod_perl Versions --> \n";
-foreach my $module (@$mod_perl_modules)
-{
-    my $name = $module->{'name'};
-    $name =~ s/::/-/g;
-    $name = lc($name);
-    #This needs to be a string comparison, due to the modules having
-    #version numbers like 0.9.4
-    my $version = $module->{'version'} eq 0 ? 'any' : $module->{'version'};
-    print ENTITIES '<!ENTITY min-mp-' . $name . '-ver "'.$version.'">' . "\n";
-}
+# CGI is a special case, because it has an optional version *and* a required
+# version.
+my ($cgi_opt) = grep($_->{package} eq 'CGI', @$opt_modules);
+print ENTITIES '<!ENTITY min-mp-cgi-ver "' . $cgi_opt->{version} . '">' . "\n";
 
 print ENTITIES "\n <!-- Database Versions --> \n";
 

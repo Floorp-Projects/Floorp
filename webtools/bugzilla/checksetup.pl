@@ -96,6 +96,8 @@ my $silent = scalar(keys %answer) && !$switch{'verbose'};
 display_version_and_os() unless $silent;
 # Check required --MODULES--
 my $module_results = check_requirements(!$silent);
+Bugzilla::Install::Requirements::print_module_instructions(
+    $module_results, !$silent);
 exit if !$module_results->{pass};
 # Break out if checking the modules is all we have been asked to do.
 exit if $switch{'check-modules'};

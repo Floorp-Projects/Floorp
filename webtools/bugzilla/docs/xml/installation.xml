@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.130 2006/10/08 18:41:45 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.131 2006/10/17 05:58:41 mkanat%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -373,8 +373,8 @@
 
         <listitem>
           <para>
-            <link linkend="install-modules-gd-text-align">GD::Text::Align</link>
-            (&min-gd-text-align-ver;) for bug charting
+            <link linkend="install-modules-gd-text">GD::Text</link>
+            (&min-gd-text-ver;) for bug charting
           </para>
         </listitem>
 
@@ -477,10 +477,10 @@
         </para>
       </section>
 
-      <section id="install-modules-gd-text-align">
-        <title>GD::Text::Align (&min-gd-text-align-ver;)</title>
+      <section id="install-modules-gd-text">
+        <title>GD::Text (&min-gd-text-ver;)</title>
 
-        <para>The GD::Text::Align module is only required if you want graphical 
+        <para>The GD::Text module is only required if you want graphical 
         reports.
         </para>
       </section>
@@ -575,14 +575,14 @@
       
       <para>Bugzilla requires <literal>mod_perl</literal> to be installed, which can be
       obtained from <ulink url="http://perl.apache.org"/> - Bugzilla requires
-      version &min-mp-mod_perl2-ver; (AKA 2.0.0-RC5) to be installed.</para>
+      version &min-mod_perl2-ver; (AKA 2.0.0-RC5) to be installed.</para>
       
       <para>Bugzilla also requires a more up-to-date version of the CGI
       perl module to be installed, version &min-mp-cgi-ver; as opposed to &min-cgi-ver;
       </para>
       
       <para>Finally, Bugzilla also requires <literal>Apache::DBI</literal>
-      (&min-mp-apache-dbi-ver;) to be installed as well.</para>
+      (&min-apache-dbi-ver;) to be installed as well.</para>
     </section>
   </section>
   
