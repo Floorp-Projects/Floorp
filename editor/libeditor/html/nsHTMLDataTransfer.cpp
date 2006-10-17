@@ -1410,6 +1410,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       PRUint32 numWritten;
       rv = bufferedOutputStream->WriteFrom(imageStream, length, &numWritten);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // force the stream close before we try to insert the image
+      // into the document.
+      rv = bufferedOutputStream->Close();
+      NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewFileURI(getter_AddRefs(uri), fileToUse);
