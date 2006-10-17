@@ -367,14 +367,13 @@ static const int kOverflowButtonMargin = 1;
     local = [self convertPoint:local fromView:nil];
     
     BrowserTabViewItem* tab = nil;
-    float rightEdge = NSMaxX([self tabsRect]);
     while ((tab = [tabEnumerator nextObject])) {
       TabButtonCell* tabButton = [tab tabButtonCell];
       if (tabButton) {
         NSRect trackingRect = [tabButton frame];
         // only track tabs that are onscreen
-        if (NSMaxX(trackingRect) > (rightEdge + 0.00001))
-          break;
+        if (trackingRect.size.width < 0.00001)
+          continue;
 
         [mTrackingCells addObject:tabButton];
         [tabButton addTrackingRectInView:self withFrame:trackingRect cursorLocation:local];
@@ -382,6 +381,20 @@ static const int kOverflowButtonMargin = 1;
       }
     }
   }
+}
+
+// causes tab buttons to stop reacting to mouse events
+-(void)unregisterTabButtonsForTracking
+{
+  if (mTrackingCells) {
+    NSEnumerator *tabEnumerator = [mTrackingCells objectEnumerator];
+    TabButtonCell *tab = nil;
+    while ((tab = (TabButtonCell *)[tabEnumerator nextObject]))
+      [tab removeTrackingRectFromView:self];
+    [mTrackingCells release];
+    mTrackingCells = nil;
+  }
+  [self removeAllToolTips];
 }
 
 - (void)viewDidMoveToWindow
@@ -410,20 +423,6 @@ static const int kOverflowButtonMargin = 1;
   // set tab bar dirty when the mouse is inside because the window does not respond to mouse hovering events when it is not key
   if ([self isMouseInside])
     [self setNeedsDisplay:YES];
-}
-
-// causes tab buttons to stop reacting to mouse events
--(void)unregisterTabButtonsForTracking
-{
-  if (mTrackingCells) {
-    NSEnumerator *tabEnumerator = [mTrackingCells objectEnumerator];
-    TabButtonCell *tab = nil;
-    while ((tab = (TabButtonCell *)[tabEnumerator nextObject]))
-      [tab removeTrackingRectFromView: self];
-    [mTrackingCells release];
-    mTrackingCells = nil;
-  }
-  [self removeAllToolTips];
 }
   
 // returns the height the tab bar should be if drawn
