@@ -35,24 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function Startup()
-{
-  var url = null;
-  // do we have a URL to open ?
-  if (window.arguments.length == 2)
-    url = window.arguments[1];
+#include observers.inc
 
-  GetUIElements();
+#include startup.inc
 
-  // let's finish with the url
-  if (url)
-    OpenFile(url, true);
+#include shutdown.inc
 
-    ComposerCommands.setupMainCommands();
-
-  gDialog.sidebar1.init(gDialog.sidebaritems, gDialog.sidebar2, gDialog.splitter1);
-  gDialog.sidebar2.init(gDialog.sidebaritems, gDialog.sidebar1, gDialog.splitter2);
-}
 
 function OpenLocation(aEvent, type)
 {
@@ -70,13 +58,13 @@ function OpenNewWindow(aURL)
 
 function NewDocument(aEvent)
 {
-  OpenFile("about:blank", true);
+  OpenFile("chrome://composer/content/blanks/transitional.html", true);
   if (aEvent) aEvent.stopPropagation();
 }
 
 function NewDocumentInNewWindow(aEvent)
 {
-  OpenFile("about:blank", false);
+  OpenFile("chrome://composer/content/blanks/transitional.html", false);
   if (aEvent) aEvent.stopPropagation();
 }
 
@@ -91,7 +79,8 @@ function OpenFile(aURL, aInTab)
   {
     var win    = alreadyEdited.window;
     var editor = alreadyEdited.editor;
-    win.focus();
+    var index  = alreadyEdited.index;
+    win.document.getElementById("tabeditor").selectedIndex = index;
     win.document.getElementById("tabeditor").mTabpanels.selectedPanel = editor;
 
     // nothing else to do here...
@@ -109,7 +98,7 @@ function EditorLoadUrl(aElt, aURL)
   try {
     if (aURL)
     {
-      var url = NormalizeURL(aURL);
+      var url = UrlUtils.normalizeURL(aURL);
 
       aElt.webNavigation.loadURI(url, // uri string
              Components.interfaces.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE,     // load flags
@@ -142,4 +131,12 @@ function OpenExtensionsManager()
 function StopLoadingPage()
 {
   document.getElementById("tabeditor").stopWebNavigation();
+}
+
+//--------------------------------------------------------------------
+function onButtonUpdate(button, commmandID)
+{
+  var commandNode = document.getElementById(commmandID);
+  var state = commandNode.getAttribute("state");
+  button.checked = state == "true";
 }

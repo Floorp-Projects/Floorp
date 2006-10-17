@@ -35,27 +35,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+var PromptUtils = {
 
-.sidebarcontent-name {
-  font-weight: bold;
-}
+  /********** ATTRIBUTES **********/
 
-label {
-  font-size: smaller;
-}
+  mPromptService: null,
 
-.titlebox {
-  padding-left: 1em;
-  background-color: #A0A0A0;
-}
+  /********** PRIVATE **********/
 
-.sidebar-arrowbutton {
-  border: thin groove;
-  -moz-border-radius: 3px;
-  -moz-margin-end: 4px;
-}
+  _getPromptService: function()
+  {
+    if (!this.mPromptService)
+    {
+      try {
+        this.mPromptService =
+          Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                    .getService(Components.interfaces.nsIPromptService);
+      }
+      catch(e) { dump("### cannot get a PromptService\n"); }
+    }
+    return this.mPromptService;
+  },
 
-.sidebar-arrowbutton > .toolbarbutton-menu-dropmarker {
-  -moz-margin-start: 2px;
-}
+  /********** PUBLIC **********/
+
+  alertWithTitle: function (aTitle, aMsg, aParentWindow)
+  {
+    var parentWindow = aParentWindow ? aParentWindow : window;
+
+    if (this._getPromptService())
+    {
+      if (!aTitle)
+        aTitle = L10NUtils.getString("Alert");
+
+      this.mPromptService.alert(parentWindow, aTitle, aMsg);
+    }
+  },
+
+  confirmWithTitle: function (aTitle, aMsg, aOkBtnText, aCancelBtnText)
+  {
+    const nsIPromptService = Components.interfaces.nsIPromptService;
+
+    var promptService = this._getPromptService();
+    if (promptService)
+    {
+      var okFlag = aOkBtnText ? nsIPromptService.BUTTON_TITLE_IS_STRING
+                              : nsIPromptService.BUTTON_TITLE_OK;
+      var cancelFlag = aCancelBtnText ? nsIPromptService.BUTTON_TITLE_IS_STRING
+                                      : nsIPromptService.BUTTON_TITLE_CANCEL;
+
+      return promptService.confirmEx(window, aTitle, aMsg,
+                                     (okFlag * nsIPromptService.BUTTON_POS_0) +
+                                     (cancelFlag * nsIPromptService.BUTTON_POS_1),
+                                     aOkBtnText, aCancelBtnText, null, null, {value:0}) == 0;
+    }
+    return false;
+  }
+
+
+};

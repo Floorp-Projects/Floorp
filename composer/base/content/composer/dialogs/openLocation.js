@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Composer.
+ * The Original Code is Composer.
  *
  * The Initial Developer of the Original Code is
  * Disruptive Innovations SARL.

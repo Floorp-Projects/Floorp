@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 @import url("chrome://composer/content/bindings/sidebar.css");
+@import url("chrome://composer/content/bindings/structurebar.css");
+@import url("chrome://composer/skin/formatToolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -49,8 +51,14 @@ tabeditor {
   -moz-binding: url('chrome://composer/content/bindings/tabeditor.xml#tabeditor');
 }
 
-tabeditor[visibility="hidden"] {
+tabeditor[visibility="hidden"]  tabs,
+tabeditor[visibility="hidden"]  tabpanels
+{
   visibility: hidden;
+}
+
+tabeditor[visibility="hidden"] {
+  background-color: rgb(128,128,128);
 }
 
 #composer-throbber {
@@ -92,3 +100,4 @@ tabeditor[visibility="hidden"] {
 sidebar {
   width: 200px;
 }
+

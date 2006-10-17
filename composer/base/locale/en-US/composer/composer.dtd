@@ -39,47 +39,55 @@
 
 <!ENTITY fileMenu.label         "File">
 <!ENTITY fileMenu.accesskey     "f">
-<!ENTITY newMenu.label          "New">
-<!ENTITY newMenu.accesskey      "n">
+<!ENTITY newMenu.label                    "New">
+<!ENTITY newMenu.accesskey                "n">
 
-<!ENTITY editMenu.label         "Edit">
-<!ENTITY editMenu.accesskey     "e">
+<!ENTITY editMenu.label                   "Edit">
+<!ENTITY editMenu.accesskey               "e">
 
-<!ENTITY viewMenu.label         "View">
-<!ENTITY viewMenu.accesskey     "v">
+<!ENTITY viewMenu.label                   "View">
+<!ENTITY viewMenu.accesskey               "v">
+<!ENTITY fullScreen.label                 "Full screen">
+<!ENTITY fullScreen.accesskey             "f">
+<!ENTITY customizeToolbar.label           "Customize">
+<!ENTITY customizeToolbar.accesskey       "c">
 
-<!ENTITY insertMenu.label       "Insert">
-<!ENTITY insertMenu.accesskey   "i">
+<!ENTITY insertMenu.label                 "Insert">
+<!ENTITY insertMenu.accesskey             "i">
 
-<!ENTITY formatMenu.label       "Format">
-<!ENTITY formatMenu.accesskey   "o">
+<!ENTITY formatMenu.label                 "Format">
+<!ENTITY formatMenu.accesskey             "o">
 
-<!ENTITY tableMenu.label        "Table">
-<!ENTITY tableMenu.accesskey    "b">
+<!ENTITY tableMenu.label                  "Table">
+<!ENTITY tableMenu.accesskey              "b">
 
-<!ENTITY toolsMenu.label        "Tools">
-<!ENTITY toolsMenu.accesskey    "t">
-<!ENTITY consoleMenu.label      "JavaScript Console">
+<!ENTITY toolsMenu.label                  "Tools">
+<!ENTITY toolsMenu.accesskey              "t">
+<!ENTITY consoleMenu.label                "JavaScript Console">
 
-<!ENTITY helpMenu.label         "Help">
-<!ENTITY helpMenu.accesskey     "h">
-<!ENTITY aboutComposer.label    "About Composer">
+<!ENTITY helpMenu.label                   "Help">
+<!ENTITY helpMenu.accesskey               "h">
+<!ENTITY aboutComposer.label              "About Composer">
 
-<!ENTITY throbber.tooltip       "Mozilla Composer">
+<!ENTITY throbber.tooltip                 "Mozilla Composer">
 
-<!ENTITY newMenu.label          "New">
-<!ENTITY newToolbarCmd.tooltip  "Create a new page">
-<!ENTITY newTab.label           "Page in New Tab">
-<!ENTITY newWindow.label        "Page in New Window">
-<!ENTITY newOtherCmd.label      "More Options...">
+<!ENTITY newMenu.label                    "New">
+<!ENTITY newToolbarCmd.tooltip            "Create a new page">
+<!ENTITY newTab.label                     "Page in New Tab">
+<!ENTITY newWindow.label                  "Page in New Window">
+<!ENTITY newOtherCmd.label                "More Options...">
 
-<!ENTITY openMenu.label         "Open">
-<!ENTITY openMenu.tooltip       "Open an existing page">
-<!ENTITY openTab.label           "Open in a New Tab">
-<!ENTITY openWindow.label        "Open in a New Window">
+<!ENTITY openMenu.label                   "Open">
+<!ENTITY openMenu.tooltip                 "Open an existing page">
+<!ENTITY openTab.label                    "Open in a New Tab">
+<!ENTITY openWindow.label                 "Open in a New Window">
 
-<!ENTITY quit.label             "Quit">
-<!ENTITY quit.accesskey         "q">
+<!ENTITY quit.label                       "Quit">
+<!ENTITY quit.accesskey                   "q">
 
-<!ENTITY stopButton.label       "Stop">
-<!ENTITY stopButton.tooltip     "Stop loading the page">
+<!ENTITY stopButton.label                 "Stop">
+<!ENTITY stopButton.tooltip               "Stop loading the page">
+
+<!ENTITY boldToolbarCmd.tooltip           "Bold">
+<!ENTITY italicToolbarCmd.tooltip         "Italic">
+<!ENTITY underlineToolbarCmd.tooltip      "Underline">

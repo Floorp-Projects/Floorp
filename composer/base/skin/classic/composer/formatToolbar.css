@@ -35,27 +35,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-.sidebarcontent-name {
-  font-weight: bold;
+#boldButton {
+  list-style-image: url("chrome://composer/skin/icons/btn2.png");
+  -moz-image-region: rect(16px 16px 32px 0);
+}
+#boldButton:hover {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+#boldButton:hover:active {
+  -moz-image-region: rect(16px 48px 32px 32px);
+}
+#boldButton[checked="true"] {
+  -moz-image-region: rect(16px 16px 32px 0);
+}
+#boldButton[disabled="true"] {
+  -moz-image-region: rect(16px 64px 32px 48px);
 }
 
-label {
-  font-size: smaller;
+#italicButton {
+  list-style-image: url("chrome://composer/skin/icons/btn2.png");
+  -moz-image-region: rect(98px 16px 114px 0);
+}
+#italicButton:hover {
+  -moz-image-region: rect(98px 32px 114px 16px);
+}
+#italicButton:hover:active {
+  -moz-image-region: rect(98px 48px 114px 32px);
+}
+#italicButton[checked="true"] {
+  -moz-image-region: rect(98px 16px 114px 0);
+}
+#italicButton[disabled="true"] {
+  -moz-image-region: rect(98px 64px 114px 48px);
 }
 
-.titlebox {
-  padding-left: 1em;
-  background-color: #A0A0A0;
+#underlineButton {
+  list-style-image: url("chrome://composer/skin/icons/btn2.png");
+  -moz-image-region: rect(114px 16px 130px 0);
 }
-
-.sidebar-arrowbutton {
-  border: thin groove;
-  -moz-border-radius: 3px;
-  -moz-margin-end: 4px;
+#underlineButton:hover {
+  -moz-image-region: rect(114px 32px 130px 16px);
 }
-
-.sidebar-arrowbutton > .toolbarbutton-menu-dropmarker {
-  -moz-margin-start: 2px;
+#underlineButton:hover:active {
+  -moz-image-region: rect(114px 48px 130px 32px);
+}
+#underlineButton[checked="true"] {
+  -moz-image-region: rect(114px 16px 130px 0);
+}
+#underlineButton[disabled="true"] {
+  -moz-image-region: rect(114px 64px 130px 48px);
 }

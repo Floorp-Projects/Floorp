@@ -1,6 +1,6 @@
-    <toolbarpalette id="ComposerToolbarPalette">
+  <toolbarpalette id="ComposerToolbarPalette">
 
-    <toolbarbutton id="newButton"
+      <toolbarbutton id="newButton"
                      label="&newMenu.label;" type="menu-button"
                      oncommand="NewDocument(event);"
                      tooltiptext="&newToolbarCmd.tooltip;">
@@ -33,4 +33,4 @@
         <image id="composer-throbber" tooltiptext="&throbber.tooltip;" onclick="AboutComposer()"/>
       </toolbaritem> 
 
-      </toolbarpalette>
+    </toolbarpalette>

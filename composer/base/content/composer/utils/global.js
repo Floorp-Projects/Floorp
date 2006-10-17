@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Composer.
+ * The Original Code is Composer.
  *
  * The Initial Developer of the Original Code is
  * Disruptive Innovations SARL.
@@ -42,6 +42,7 @@ const nsIWindowMediator = interfaces.nsIWindowMediator;
 const nsIDOMWindowInternal = interfaces.nsIDOMWindowInternal;
 const nsIPlaintextEditor = interfaces.nsIPlaintextEditor;
 const nsIHTMLEditor = interfaces.nsIHTMLEditor;
+const nsIEditingSession = interfaces.nsIEditingSession;
 
 function TrimStringLeft(string)
 {
@@ -101,6 +102,6 @@ function GetPrefs()
 
 function toOpenWindowByType(inType, uri)
 {
- window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+  window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 

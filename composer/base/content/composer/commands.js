@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Composer.
+ * The Original Code is Composer.
  *
  * The Initial Developer of the Original Code is
  * Disruptive Innovations SARL.
@@ -43,15 +43,16 @@ const nsIControllerCommandTable = interfaces.nsIControllerCommandTable;
 
 var ComposerCommands = {
 
-  _composerJSCommandControllerID: null,
+  mComposerJSCommandControllerID: null,
+  mSelectionTimeOutId: null,
 
-   getComposerCommandTable: function ()
+  getComposerCommandTable: function getComposerCommandTable()
   {
     var controller;
-    if (this._composerJSCommandControllerID)
+    if (this.mComposerJSCommandControllerID)
     {
       try { 
-        controller = window.content.controllers.getControllerById(this._composerJSCommandControllerID);
+        controller = window.content.controllers.getControllerById(this.mComposerJSCommandControllerID);
       } catch (e) {}
     }
     if (!controller)
@@ -65,7 +66,7 @@ var ComposerCommands = {
       window.controllers.insertControllerAt(0, controller);
     
       // Store the controller ID so we can be sure to get the right one later
-      this._composerJSCommandControllerID = window.controllers.getControllerId(controller);
+      this.mComposerJSCommandControllerID = window.controllers.getControllerId(controller);
     }
   
     if (controller)
@@ -76,20 +77,9 @@ var ComposerCommands = {
     return null;
   },
 
-   setupMainCommands: function ()
+  goUpdateComposerMenuItems: function goUpdateComposerMenuItems(commandset)
   {
-    var commandTable = this.getComposerCommandTable();
-    if (!commandTable)
-      return;
-    
-    //dump("Registering plain text editor commands\n");
-    commandTable.registerCommand("cmd_stopLoading", nsStopLoadingCommand);
-  },
-
-  goUpdateComposerMenuItems: function (commandset)
-  {
-    //dump("Updating commands for " + commandset.id + "\n");
-
+    dump("Updating commands for " + commandset.id + "\n");
     for (var i = 0; i < commandset.childNodes.length; i++)
     {
       var commandNode = commandset.childNodes[i];
@@ -103,7 +93,7 @@ var ComposerCommands = {
     }
   },
 
-  goUpdateCommandState: function(command)
+  goUpdateCommandState: function goUpdateCommandState(command)
   {
     try
     {
@@ -118,42 +108,135 @@ var ComposerCommands = {
 
       switch (command)
       {
+        case "cmd_bold":
+        case "cmd_italic":
+        case "cmd_underline":
+          this.pokeStyleUI(command, params.getBooleanValue("state_all"));
+          break;
+
         default: dump("no update for command: " +command+"\n");
       }
     }
     catch (e) { dump("An error occurred updating the "+command+" command: \n"+e+"\n"); }
   },
 
-  newCommandParams: function ()
+  pokeStyleUI: function pokeStyleUI(uiID, aDesiredState)
+  {
+   try {
+    var commandNode = top.document.getElementById(uiID);
+    if (!commandNode)
+      return;
+
+    var uiState = ("true" == commandNode.getAttribute("state"));
+    if (aDesiredState != uiState)
+    {
+      var newState;
+      if (aDesiredState)
+        newState = "true";
+      else
+        newState = "false";
+      commandNode.setAttribute("state", newState);
+    }
+   } catch(e) { dump("poking UI for "+uiID+" failed: "+e+"\n"); }
+  },
+
+  newCommandParams: function newCommandParams()
   {
     try {
       return Components.classes["@mozilla.org/embedcomp/command-params;1"].createInstance(Components.interfaces.nsICommandParams);
     }
     catch(e) { dump("error thrown in newCommandParams: "+e+"\n"); }
     return null;
-  }
-
-};
-
-var nsStopLoadingCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    var res = false;
-    try {
-      var tab = document.getElementById("tabeditor").selectedTab;
-      if (tab)
-        res = tab.hasAttribute("busy");
-    }
-    catch(e) {}
-    return res;
   },
 
-  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
-
-  doCommand: function(aCommand)
+  doStyleUICommand: function doStyleUICommand(cmdStr)
   {
-    document.getElementById("tabeditor").stopWebNavigation();
+    try
+    {
+      var cmdParams = this.newCommandParams();
+      this.goDoCommandParams(cmdStr, cmdParams);
+    } catch(e) {}
+  },
+
+  goDoCommandParams: function goDoCommandParams(command, params)
+  {
+    try
+    {
+      var controller = top.document.commandDispatcher.getControllerForCommand(command);
+      if (controller && controller.isCommandEnabled(command))
+      {
+        if (controller instanceof Components.interfaces.nsICommandController)
+        {
+          controller.doCommandWithParams(command, params);
+
+          // the following two lines should be removed when we implement observers
+          if (params)
+            controller.getCommandStateWithParams(command, params);
+        }
+        else
+        {
+          controller.doCommand(command);
+        }
+      }
+    }
+    catch (e)
+    {
+      dump("An error occurred executing the "+command+" command\n");
+    }
+  },
+
+  setupMainCommands: function setupMainCommands()
+  {
+    var commandTable = this.getComposerCommandTable();
+    if (!commandTable)
+      return;
+    
+    //dump("Registering plain text editor commands\n");
+    commandTable.registerCommand("cmd_stopLoading", cmdStopLoading);
+    commandTable.registerCommand("cmd_open",        cmdOpen);
+    commandTable.registerCommand("cmd_fullScreen",  cmdFullScreen);
+    commandTable.registerCommand("cmd_new",         cmdNew);
+  },
+
+  setupFormatCommands: function setupFormatCommands()
+  {
+    try {
+      var commandManager = EditorUtils.getCurrentCommandManager();
+
+      commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentCreated");
+      commandManager.addCommandObserver(gEditorDocumentObserver, "cmd_setDocumentModified");
+      commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentWillBeDestroyed");
+      commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentLocationChanged");
+
+      // cmd_bold is a proxy, that's the only style command we add here
+      commandManager.addCommandObserver(gEditorDocumentObserver, "cmd_bold");
+    } catch (e) { alert(e); }
+  },
+
+  updateSelectionBased: function updateSelectionBased()
+  {
+    try {
+      var mixed = EditorUtils.getSelectionContainer();
+      if (!mixed) return;
+      var element = mixed.node;
+      var oneElementSelected = mixed.oneElementSelected;
+
+      if (!element) return;
+
+      if (this.mSelectionTimeOutId)
+        clearTimeout(this.mSelectionTimeOutId);
+
+      this.mSelectionTimeOutId = setTimeout(this._updateSelectionBased, 500, element);
+    }
+    catch(e) {}
+  },
+
+  _updateSelectionBased: function _updateSelectionBased(element)
+  {
+    NotifierUtils.notify("selection", element);
   }
 };
+
+#include navigationCommands.inc
+#include fileCommands.inc
+#include viewCommands.inc

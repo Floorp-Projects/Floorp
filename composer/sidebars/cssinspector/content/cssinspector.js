@@ -44,9 +44,9 @@ function Startup()
 {
   GetUIElements();
 
-  if (window.opener &&
-      "NotifierUtils" in window.opener)
-    gMain = window.opener;
+  if (window.top &&
+      "NotifierUtils" in window.top)
+    gMain = window.top;
   else if (window.top && window.top.opener &&
            "NotifierUtils" in window.top.opener)
     gMain = window.top.opener;

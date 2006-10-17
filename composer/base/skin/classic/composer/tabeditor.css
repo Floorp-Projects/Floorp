@@ -57,3 +57,23 @@ tab[busy]  .tab-icon {
   list-style-image: url("chrome://composer/skin/icons/loading.gif");
   margin-right: 3px;
 }
+
+tab[modified]  .tab-icon {
+  list-style-image: url("chrome://composer/skin/icons/modified.gif");
+  margin-right: 3px;
+}
+
+tabpanels {
+  -moz-appearance: none; 
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  border-left: 1px solid;
+  border-top: 1px solid;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-top-colors: ThreeDDarkShadow;
+  -moz-border-left-colors: ThreeDShadow;
+  padding: 8px;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}

@@ -214,9 +214,12 @@
                     }
                   }
                   window.updateCommands("navigation");
+                  window.updateCommands("create");
+
                 }
               },
             
+
               onProgressChange : function(aWebProgress, aRequest,
                                           aCurSelfProgress, aMaxSelfProgress,
                                           aCurTotalProgress, aMaxTotalProgress)
@@ -274,6 +277,7 @@
             window.EditorLoadUrl(newEditorElement, aURL);
 
             this.setAttribute("visibility", "visible");
+            ComposerCommands.setupFormatCommands();
 
             return {tab: newTab, panel: newEditorElement};
           ]]>
@@ -303,7 +307,6 @@
             newEditorElement.setAttribute("type", "content-primary");
 
             return newEditorElement;
-          }
         ]]>
         </body>
       </method>
@@ -312,7 +315,6 @@
         <body>
         <![CDATA[
             return this.mTabpanels.selectedPanel;
-          }
         ]]>
         </body>
       </method>
@@ -330,7 +332,6 @@
                 return editorElt;
             }
             return null;
-          }
         ]]>
         </body>
       </method>
@@ -339,7 +340,62 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          window.updateCommands("navigation");
+           var editors = this.mTabpanels.childNodes;
+           for (var i = 0; i < editors.length; i++)
+             editors.item(i).removeAttribute("type");
+
+           this.getCurrentEditorElement().setAttribute("type", "content-primary");
+           window.content.focus();
+           window.updateCommands("navigation");
+           window.updateCommands("style");
+        ]]>
+        </body>
+      </method>
+
+      <method name="_trimTrailingSlash">
+        <parameter name="aURL" />
+        <body>
+        <![CDATA[
+          if (!aURL)
+            return aURL;
+          if (aURL.charAt(aURL.length - 1) == "/")
+            return aURL.substr(0, aURL.length - 1);
+          return aURL;
+        ]]>
+        </body>
+      </method>
+
+      <method name="isAlreadyEdited">
+        <parameter name="aURL" />
+        <body>
+        <![CDATA[
+          // always accept a new blank document
+          if (UrlUtils.isUrlAboutBlank(aURL))
+            return null;
+
+          var editors = this.mTabpanels.childNodes;
+          var i, l = editors.length;
+          for (i=0; i< l; i++)
+          {
+            var e = editors[i];
+            var elt = e.getEditor(e.contentWindow);
+            if (elt &&
+                this._trimTrailingSlash(elt.document.URL) == this._trimTrailingSlash(aURL))
+              return { index: i, editor: e };
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="showCurrentTabAsModified">
+        <parameter name="val" />
+        <body>
+        <![CDATA[
+          if (val)
+            this.selectedTab.setAttribute("modified", "true");
+          else
+            this.selectedTab.removeAttribute("modified");
         ]]>
         </body>
       </method>

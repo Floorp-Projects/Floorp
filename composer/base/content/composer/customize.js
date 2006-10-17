@@ -102,3 +102,18 @@ function UpdateMainToolbar(caller)
 {
     dump("===> UPDATING TOOLBAR\n");
 }
+
+function UpdateCustomizeMenuPopup(aPopup)
+{
+  while (aPopup.hasChildNodes())
+    aPopup.removeChild(aPopup.lastChild);
+
+  var toolboxes = document.getElementsByTagName("toolbox");
+  
+}
+
+function InstallCustomizationDoneCallbacks()
+{
+  gDialog.MainToolbox.customizeDone   = ToolboxCustomizeDone;
+  gDialog.FormatToolbox.customizeDone = ToolboxCustomizeDone;
+}

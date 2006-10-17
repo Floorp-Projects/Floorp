@@ -35,27 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+var L10NUtils = {
 
-.sidebarcontent-name {
-  font-weight: bold;
-}
+  /********** CONSTANTS **********/
 
-label {
-  font-size: smaller;
-}
+  kCOMPOSER_PROPERTIES: "chrome://composer/locale/composer.properties",
 
-.titlebox {
-  padding-left: 1em;
-  background-color: #A0A0A0;
-}
+  /********** ATTRIBUTES **********/
 
-.sidebar-arrowbutton {
-  border: thin groove;
-  -moz-border-radius: 3px;
-  -moz-margin-end: 4px;
-}
+  mStringBundleService: null,
+  mStringBundle: null,
 
-.sidebar-arrowbutton > .toolbarbutton-menu-dropmarker {
-  -moz-margin-start: 2px;
-}
+  /********** PRIVATE **********/
+
+  _getStringBundleService: function _getStringBundleService()
+  {
+    if (!this.mStringBundleService)
+    {
+      try {
+        this.mStringBundleService =
+            Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService); 
+      } catch (e) { dump (e)+"\n"; }
+    }
+    return this.mStringBundleService;
+  },
+
+  _getStringFromBundle: function _getStringFromBundle(aBundle, aName)
+  {
+    if (aBundle)
+    {
+      try {
+        return aBundle.GetStringFromName(aName);
+      } catch (e) { dump (e)+"\n"; }
+    }
+    return null;
+  },
+
+  _getBundleFromURL: function _getBundleFromURL(aProperties)
+  {
+    var stringBundle;
+    if (this._getStringBundleService())
+      try {
+        stringBundle = this.mStringBundleService.createBundle(this.kCOMPOSER_PROPERTIES);
+      } catch (e) { dump (e)+"\n"; }
+    return stringBundle;
+  },
+
+  /********** PUBLIC **********/
+
+  getString: function getString(aName)
+  {
+    return this.getStringFromURL(aName, this.kCOMPOSER_PROPERTIES);
+  },
+
+  getStringFromURL: function getStringFromURL(aName, aProperties)
+  {
+    var stringBundle;
+    try {
+      stringBundle = this._getBundleFromURL(aProperties); 
+    } catch (e) { dump (e)+"\n"; }
+
+    return this._getStringFromBundle(stringBundle, aName);
+  }
+
+};

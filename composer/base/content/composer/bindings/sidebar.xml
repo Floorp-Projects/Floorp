@@ -55,7 +55,8 @@
     </resources>
 
     <implementation>
-      <constructor>
+      <method name="init">
+        <body>
         <![CDATA[
           // let's find all sidebaritems living in their own window
           var items = this.getElementsByAttribute("standalone", "true");
@@ -76,7 +77,8 @@
                               label ? label : name, src, item);
           }
         ]]>
-        </constructor>
+        </body>
+      </method>
 
       <property name="mItems"
                 readonly="true"

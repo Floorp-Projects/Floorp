@@ -1,7 +1,0 @@
-content composer jar:composer.jar!/content/composer/
-locale composer en-US jar:en-US.jar!/locale/en-US/composer/
-locale branding en-US jar:en-US.jar!/locale/en-US/branding/
-skin   composer classic/1.0 jar:composer.jar!/skin/classic/composer/
-style  chrome://global/content/customizeToolbar.xul    chrome://global/skin/
-style  chrome://global/content/customizeToolbar.xul    chrome://composer/skin/composer.css
-

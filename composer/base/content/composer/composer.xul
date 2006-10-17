@@ -50,6 +50,7 @@
   height = "600"
   persist="screenX screenY width height"
   onload = "Startup()"
+  onunload = "Shutdown()"
   xmlns  = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 #include scripts.inc
@@ -59,9 +60,7 @@
 #include menubar.inc
 
   <toolbox class="toolbox-top" id="MainToolbox" mode="full">
-
 #include maintoolbarpalette.inc
-
     <toolbar id="MainToolbar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="Main"
              fullscreentoolbar="true"
@@ -70,9 +69,22 @@
              mode="full"
              context="main-toolbar-context-menu"
              customizable="true"
-             defaultset="newButton,openButton,stopButton,spring,throbber-box,spacer">
-    </toolbar>
-    <toolbarset id="customToolbars" context="format-toolbar-context-menu"/>
+             defaultset="newButton,openButton,stopButton,spring,throbber-box,spacer"/>
+    <toolbarset id="customMainToolbars" context="format-toolbar-context-menu"/>
+  </toolbox>
+
+  <toolbox class="toolbox-top" id="FormatToolbox" mode="full">
+#include formatbarpalette.inc
+    <toolbar id="FormatToolbar" class="toolbar-primary chromeclass-toolbar"
+             toolbarname="Format"
+             fullscreentoolbar="true"
+             persist="iconsize,mode"
+             iconsize="small"
+             mode="full"
+             context="format-toolbar-context-menu"
+             customizable="true"
+             defaultset="spacer,boldButton,italicButton,underlineButton"/>
+    <toolbarset id="customFormatToolbars" context="format-toolbar-context-menu"/>
   </toolbox>
 
   <!-- XXX the following sidebaritems element is here only for test purposes
@@ -85,14 +97,18 @@
 
   <hbox flex="1">
     <sidebar id="sidebar1" sidebaritems="" persist="sidebaritems"/>
-    <splitter id="splitter1" collapse="before" resizebefore="closest"/>
+    <splitter id="splitter1" collapse="before" resizebefore="closest">
+      <grippy/>
+    </splitter>
     <vbox flex="1">
       <tabeditor id="tabeditor" flex="1" visibility="hidden"/>
-      <hbox>
-        <label value="structure toolbar" />
-      </hbox>
+      <structurebar id="structurebar">
+        <label value="structure"/>
+      </structurebar>
     </vbox>
-    <splitter id="splitter2" collapse="after" resizeafter="closest"/>
+    <splitter id="splitter2" collapse="after" resizeafter="closest">
+      <grippy/>
+    </splitter>
     <sidebar id="sidebar2" sidebaritems="" persist="sidebaritems"/>
   </hbox>
 

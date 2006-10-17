@@ -37,25 +37,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.sidebarcontent-name {
-  font-weight: bold;
-}
-
-label {
-  font-size: smaller;
-}
-
-.titlebox {
-  padding-left: 1em;
-  background-color: #A0A0A0;
-}
-
-.sidebar-arrowbutton {
-  border: thin groove;
-  -moz-border-radius: 3px;
-  -moz-margin-end: 4px;
-}
-
-.sidebar-arrowbutton > .toolbarbutton-menu-dropmarker {
-  -moz-margin-start: 2px;
+structurebar {
+  -moz-box-orient: horizontal;
+  -moz-binding: url("chrome://composer/content/bindings/structurebar.xml#structurebar");
 }
