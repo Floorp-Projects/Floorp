@@ -52,9 +52,9 @@ class nsTPtrArray : public nsTArray<E*> {
   public:
     typedef nsTPtrArray<E> self_type;
     typedef nsTArray<E*> parent_type;
-    typedef parent_type::size_type size_type;
-    typedef parent_type::elem_type elem_type;
-    typedef parent_type::index_type index_type;
+    typedef typename parent_type::size_type size_type;
+    typedef typename parent_type::elem_type elem_type;
+    typedef typename parent_type::index_type index_type;
 
     //
     // Initialization methods
