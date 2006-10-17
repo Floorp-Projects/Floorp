@@ -3708,7 +3708,10 @@ PR_IMPLEMENT(PRDir*) PR_OpenDir(const char *name)
     else
     {
         dir = PR_NEWZAP(PRDir);
-        dir->md.d = osdir;
+        if (dir)
+            dir->md.d = osdir;
+        else
+            (void)closedir(osdir);
     }
     return dir;
 }  /* PR_OpenDir */
