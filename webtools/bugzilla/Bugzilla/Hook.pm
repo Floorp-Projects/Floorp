@@ -139,6 +139,30 @@ Params:
 
 =back
 
+=head2 install-requirements
+
+Because of the way Bugzilla installation works, there can't be a normal
+hook during the time that F<checksetup.pl> checks what modules are
+installed. (C<Bugzilla::Hook> needs to have those modules installed--it's
+a chicken-and-egg problem.)
+
+So instead of the way hooks normally work, this hook just looks for two 
+subroutines (or constants, since all constants are just subroutines) in 
+your file, called C<OPTIONAL_MODULES> and C<REQUIRED_MODULES>,
+which should return arrayrefs in the same format as C<OPTIONAL_MODULES> and
+C<REQUIRED_MODULES> in L<Bugzilla::Install::Requirements>.
+
+These subroutines will be passed an arrayref that contains the current
+Bugzilla requirements of the same type, in case you want to modify
+Bugzilla's requirements somehow. (Probably the most common would be to
+alter a version number or the "feature" element of C<OPTIONAL_MODULES>.)
+
+F<checksetup.pl> will add these requirements to its own.
+
+Please remember--if you put something in C<REQUIRED_MODULES>, then
+F<checksetup.pl> B<cannot complete> unless the user has that module
+installed! So use C<OPTIONAL_MODULES> whenever you can.
+
 =head2 install-update_db
 
 This happens at the very end of all the tables being updated

@@ -27,6 +27,7 @@ use strict;
 
 use List::Util qw(max);
 use POSIX ();
+use Safe;
 
 use base qw(Exporter);
 our @EXPORT = qw(
@@ -43,11 +44,15 @@ our @EXPORT = qw(
 
 use Bugzilla::Constants;
 
+# The below two constants are subroutines so that they can implement
+# a hook. Other than that they are actually constants.
+
 # "package" is the perl package we're checking for. "module" is the name
 # of the actual module we load with "require" to see if the package is
 # installed or not. "version" is the version we need, or 0 if we'll accept
 # any version.
-use constant REQUIRED_MODULES => [
+sub REQUIRED_MODULES {
+    my @modules = (
     {
         package => 'CGI',
         module  => 'CGI',
@@ -89,9 +94,15 @@ use constant REQUIRED_MODULES => [
         module  => ON_WINDOWS ? 'MIME::Tools' : 'MIME::Parser',
         version => '5.406'
     },
-];
+    );
 
-use constant OPTIONAL_MODULES => [
+    my $all_modules = _get_extension_requirements(
+        'REQUIRED_MODULES', \@modules);
+    return $all_modules;
+};
+
+sub OPTIONAL_MODULES {
+    my @modules = (
     {
         package => 'GD',
         module  => 'GD',
@@ -194,7 +205,39 @@ use constant OPTIONAL_MODULES => [
         version => '0.96',
         feature => 'mod_perl'
     },
-];
+    );
+
+    my $all_modules = _get_extension_requirements(
+        'OPTIONAL_MODULES', \@modules);
+    return $all_modules;
+};
+
+# This implements the install-requirements hook described in Bugzilla::Hook.
+sub _get_extension_requirements {
+    my ($function, $base_modules) = @_;
+    my @all_modules;
+    # get a list of all extensions
+    my @extensions = glob(bz_locations()->{'extensionsdir'} . "/*");
+    foreach my $extension (@extensions) {
+        my $file = "$extension/code/install-requirements.pl";
+        if (-e $file) {
+            my $safe = new Safe;
+            # This is a very liberal Safe.
+            $safe->permit(qw(:browse require entereval caller));
+            $safe->rdo($file);
+            if ($@) {
+                warn $@;
+                next;
+            }
+            my $modules = eval { &{$safe->varglob($function)}($base_modules) };
+            next unless $modules;
+            push(@all_modules, @$modules);
+        }
+    }
+
+    unshift(@all_modules, @$base_modules);
+    return \@all_modules;
+};
 
 sub check_requirements {
     my ($output) = @_;
