@@ -1028,26 +1028,24 @@ nsBookmarksService::UpdateLivemarkChildren(nsIRDFResource* aSource)
     }
 
     nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIChannel> uriChannel;
     rv = NS_NewURI(getter_AddRefs(uri), feedUrlString, nsnull, nsnull);
     if (NS_FAILED(rv)) UNLOCK_AND_RETURN_RV;
 
-    rv = NS_NewChannel(getter_AddRefs(uriChannel), uri, nsnull, nsnull, nsnull,
-                       nsIRequest::LOAD_BACKGROUND);
-    if (NS_FAILED(rv)) UNLOCK_AND_RETURN_RV;
-
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(uriChannel);
-    if (httpChannel) {
-        // XXXvladimir - handle POST livemarks
-        rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
-    }
-    
     nsCOMPtr<nsFeedLoadListener> listener = new nsFeedLoadListener(this, mInner, uri, aSource);
 
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, nsnull,
                        nsIRequest::LOAD_BACKGROUND | nsIRequest::VALIDATE_ALWAYS);
     if (NS_FAILED(rv)) UNLOCK_AND_RETURN_RV;
+
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+        // Add a request header so that the request can easily be detected as a
+        // live bookmark update request.
+        rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                           NS_LITERAL_CSTRING("livebookmarks"),
+                                           PR_FALSE);
+    }
 
     rv = channel->AsyncOpen(listener, nsnull);
     if (NS_FAILED(rv)) UNLOCK_AND_RETURN_RV;
