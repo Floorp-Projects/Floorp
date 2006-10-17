@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "nsTArray.h"
+#include "nsTPtrArray.h"
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -62,11 +63,21 @@ static PRBool test_basic_array(ElementType *data,
                                const ElementType& extra) {
   nsTArray<ElementType> ary;
   ary.AppendElements(data, dataLen);
+  if (ary.Length() != dataLen) {
+    return PR_FALSE;
+  }
   PRUint32 i;
   for (i = 0; i < ary.Length(); ++i) {
     if (ary[i] != data[i])
       return PR_FALSE;
   }
+  for (i = 0; i < ary.Length(); ++i) {
+    if (ary.SafeElementAt(i, extra) != data[i])
+      return PR_FALSE;
+  }
+  if (ary.SafeElementAt(ary.Length(), extra) != extra ||
+      ary.SafeElementAt(ary.Length() * 10, extra) != extra)
+    return PR_FALSE;
   // ensure sort results in ascending order
   ary.Sort();
   for (i = 1; i < ary.Length(); ++i) {
@@ -108,6 +119,9 @@ static PRBool test_basic_array(ElementType *data,
 
   ary.Clear();
   if (!ary.IsEmpty() || ary.Elements() == nsnull)
+    return PR_FALSE;
+  if (ary.SafeElementAt(0, extra) != extra ||
+      ary.SafeElementAt(10, extra) != extra)
     return PR_FALSE;
 
   ary = copy;
@@ -365,6 +379,37 @@ static PRBool test_refptr_array() {
 
 //----
 
+static PRBool test_ptrarray() {
+  nsTPtrArray<PRUint32> ary;
+  if (ary.SafeElementAt(0) != nsnull)
+    return PR_FALSE;
+  if (ary.SafeElementAt(1000) != nsnull)
+    return PR_FALSE;
+  PRUint32 a = 10;
+  ary.AppendElement(&a);
+  if (*ary[0] != a)
+    return PR_FALSE;
+  if (*ary.SafeElementAt(0) != a)
+    return PR_FALSE;
+
+  nsTPtrArray<const PRUint32> cary;
+  if (cary.SafeElementAt(0) != nsnull)
+    return PR_FALSE;
+  if (cary.SafeElementAt(1000) != nsnull)
+    return PR_FALSE;
+  const PRUint32 b = 14;
+  cary.AppendElement(&a);
+  cary.AppendElement(&b);
+  if (*cary[0] != a || *cary[1] != b)
+    return PR_FALSE;
+  if (*cary.SafeElementAt(0) != a || *cary.SafeElementAt(1) != b)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+//----
+
 typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
@@ -380,6 +425,7 @@ static const struct Test {
   DECL_TEST(test_string_array),
   DECL_TEST(test_comptr_array),
   DECL_TEST(test_refptr_array),
+  DECL_TEST(test_ptrarray),
   { nsnull, nsnull }
 };
 

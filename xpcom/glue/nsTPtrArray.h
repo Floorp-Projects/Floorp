@@ -51,6 +51,10 @@ template<class E>
 class nsTPtrArray : public nsTArray<E*> {
   public:
     typedef nsTPtrArray<E> self_type;
+    typedef nsTArray<E*> parent_type;
+    typedef parent_type::size_type size_type;
+    typedef parent_type::elem_type elem_type;
+    typedef parent_type::index_type index_type;
 
     //
     // Initialization methods
@@ -75,81 +79,17 @@ class nsTPtrArray : public nsTArray<E*> {
 
     // Forward SafeElementAt to avoid shadowing (and warnings thereof)
     elem_type& SafeElementAt(index_type i, elem_type& def) {
-      return nsTArray::SafeElementAt(i, def);
+      return parent_type::SafeElementAt(i, def);
     }
     const elem_type& SafeElementAt(index_type i, const elem_type& def) const {
-      return nsTArray::SafeElementAt(i, def);
+      return parent_type::SafeElementAt(i, def);
     }
 
     // This method provides direct access to the i'th element of the array in
     // a bounds safe manner. If the requested index is out of bounds null is
     // returned.
     // @param i  The index of an element in the array.
-    elem_type& SafeElementAt(index_type i) {
-      return SafeElementAt(i, nsnull);
-    }
-
-    // This method provides direct access to the i'th element of the array in
-    // a bounds safe manner. If the requested index is out of bounds null is
-    // returned.
-    // @param i  The index of an element in the array.
-    const elem_type& SafeElementAt(index_type i) const {
-      return SafeElementAt(i, nsnull);
-    }
-};
-
-//
-// The templatized array class for storing pointers to const objects. This
-// class is the same as nsTPtrArray except that it stores pointers to const
-// objects.
-//
-template<class E>
-class nsTConstPtrArray : public nsTArray<const E*> {
-  public:
-    typedef nsTConstPtrArray<E> self_type;
-
-    //
-    // Initialization methods
-    //
-
-    nsTConstPtrArray() {}
-
-    // Initialize this array and pre-allocate some number of elements.
-    explicit nsTConstPtrArray(size_type capacity) {
-      SetCapacity(capacity);
-    }
-    
-    // The array's copy-constructor performs a 'deep' copy of the given array.
-    // @param other  The array object to copy.
-    nsTConstPtrArray(const self_type& other) {
-      AppendElements(other);
-    }
-
-    //
-    // Accessor methods
-    //
-
-    // Forward SafeElementAt to avoid shadowing (and warnings thereof)
-    elem_type& SafeElementAt(index_type i, elem_type& def) {
-      return nsTArray::SafeElementAt(i, def);
-    }
-    const elem_type& SafeElementAt(index_type i, const elem_type& def) const {
-      return nsTArray::SafeElementAt(i, def);
-    }
-
-    // This method provides direct access to the i'th element of the array in
-    // a bounds safe manner. If the requested index is out of bounds null is
-    // returned.
-    // @param i  The index of an element in the array.
-    elem_type& SafeElementAt(index_type i) {
-      return SafeElementAt(i, nsnull);
-    }
-
-    // This method provides direct access to the i'th element of the array in
-    // a bounds safe manner. If the requested index is out of bounds null is
-    // returned.
-    // @param i  The index of an element in the array.
-    const elem_type& SafeElementAt(index_type i) const {
+    elem_type SafeElementAt(index_type i) const {
       return SafeElementAt(i, nsnull);
     }
 };

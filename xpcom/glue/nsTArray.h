@@ -275,6 +275,24 @@ class nsTArray : public nsTArray_base {
       return Elements()[i];
     }
 
+    // This method provides direct access to the i'th element of the array in
+    // a bounds safe manner. If the requested index is out of bounds the
+    // provided default value is returned.
+    // @param i  The index of an element in the array.
+    // @param def The value to return if the index is out of bounds.
+    elem_type& SafeElementAt(index_type i, elem_type& def) {
+      return i < Length() ? Elements()[i] : def;
+    }
+
+    // This method provides direct access to the i'th element of the array in
+    // a bounds safe manner. If the requested index is out of bounds the
+    // provided default value is returned.
+    // @param i  The index of an element in the array.
+    // @param def The value to return if the index is out of bounds.
+    const elem_type& SafeElementAt(index_type i, const elem_type& def) const {
+      return i < Length() ? Elements()[i] : def;
+    }
+
     // Shorthand for ElementAt(i)
     elem_type& operator[](index_type i) {
       return ElementAt(i);
