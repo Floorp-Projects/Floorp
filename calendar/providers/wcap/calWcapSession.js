@@ -285,28 +285,12 @@ calWcapSession.prototype = {
         return false;
     },
     
-    getRealmName:
-    function( uri )
-    {
-        // xxx todo: realm names must not have a trailing slash
-        var realm = uri.spec;
-        if (realm[realm.length - 1] == '/')
-            realm = realm.substr(0, realm.length - 1);
-        return realm;
-    },
-    
     m_sessionId: null,
     m_bNoLoginsAnymore: false,
     
     getSessionId:
     function( timedOutSessionId )
     {
-        if (this.m_bNoLoginsAnymore) {
-            this.log( "login has failed, no logins anymore for this user." );
-            throw new Components.Exception(
-                "Login failed. Invalid session ID.",
-                Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
-        }
         if (getIoService().offline) {
             this.log( "in offline mode." );
             throw new Components.Exception(
@@ -314,276 +298,287 @@ calWcapSession.prototype = {
                 "networking library is in the offline state.",
                 NS_ERROR_OFFLINE );
         }
+        if (this.m_bNoLoginsAnymore) {
+            this.log( "login has failed, no logins anymore for this user." );
+            throw new Components.Exception(
+                "Login failed. Invalid session ID.",
+                Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+        }
         
-        if (this.m_sessionId == null || this.m_sessionId == timedOutSessionId) {
+        if (!this.m_sessionId || this.m_sessionId == timedOutSessionId) {
             
             var this_ = this;
             lockedExec(
                 function() {
                     if (!this_.m_bNoLoginsAnymore &&
-                        (this_.m_sessionId == null ||
+                        (!this_.m_sessionId ||
                          this_.m_sessionId == timedOutSessionId)) {
-                        if (timedOutSessionId != null) {
-                            this_.m_sessionId = null;
-                            this_.log( "session timeout; " +
-                                       "prompting to reconnect." );
-                            var prompt =getWindowWatcher().getNewPrompter(null);
-                            var bundle = getWcapBundle();
-                            if (!prompt.confirm(
-                                    bundle.GetStringFromName(
-                                        "reconnectConfirmation.label"),
-                                    bundle.formatStringFromName(
-                                        "reconnectConfirmation.text",
-                                        [this_.uri.hostPort], 1 ) )) {
-                                this_.m_bNoLoginsAnymore = true;
-                            }
-                        }
-                        if (!this_.m_bNoLoginsAnymore)
-                            this_.getSessionId_();
                         
-                        if (this_.m_sessionId != null) {
-                            this_.getSupportedTimezones(true /* refresh */);
-                            this_.getServerTimeDiff(true /* refresh */);
-                            // preread calprops for subscribed calendars:
-                            var cals = this_.getSubscribedCalendars({});
-                            for each ( cal in cals ) {
-                                cal.getCalProps_(true /* async */);
+                        try {
+                            this_.m_sessionId = null;
+                            if (timedOutSessionId != null) {
+                                this_.log( "session timeout; " +
+                                           "prompting to reconnect." );
+                                var prompt =
+                                    getWindowWatcher().getNewPrompter(null);
+                                var bundle = getWcapBundle();
+                                if (!prompt.confirm(
+                                        bundle.GetStringFromName(
+                                            "reconnectConfirmation.label"),
+                                        bundle.formatStringFromName(
+                                            "reconnectConfirmation.text",
+                                            [this_.uri.hostPort], 1 ) )) {
+                                    this.log( "reconnect cancelled." );
+                                    throw new Components.Exception(
+                                        "Login failed. Invalid session ID.",
+                                        Components.interfaces.
+                                        calIWcapErrors.WCAP_LOGIN_FAILED );
+                                }
                             }
+                            
+                            // xxx todo: realm names must not have a
+                            //           trailing slash
+                            var sessionUri = this_.uri.clone();
+                            var spec = sessionUri.spec;
+                            if (spec[spec.length - 1] == '/')
+                                spec = spec.substr(0, spec.length - 1);
+                            sessionUri.spec = spec;
+                            sessionUri.userPass = "";
+                            if (sessionUri.scheme.toLowerCase() != "https" &&
+                                sessionUri.port == -1 /* no port specified */)
+                            {
+                                // silently probe for https support:
+                                try { // enforce https:
+                                    sessionUri.scheme = "https";
+                                    this_.getSessionId_(sessionUri);
+                                }
+                                catch (exc) {
+                                    // restore scheme:
+                                    sessionUri.scheme = this_.uri.scheme;
+                                    if (testResultCode(
+                                            exc, Components.interfaces.
+                                            calIWcapErrors.WCAP_LOGIN_FAILED))
+                                        throw exc; // forward login failures
+                                    // but ignore connection errors
+                                }
+                            }
+                            if (!this_.m_sessionId)
+                                this_.getSessionId_(sessionUri);
+                        }
+                        catch (exc) {
+                            this_.m_bNoLoginsAnymore = true;
+                            this_.logError( exc );
+                            this_.log( "no logins anymore." );
+                            throw exc;
+                        }
+                        
+                        this_.getSupportedTimezones(true /* refresh */);
+                        this_.getServerTimeDiff(true /* refresh */);
+                        // preread calprops for subscribed calendars:
+                        var cals = this_.getSubscribedCalendars({});
+                        for each ( cal in cals ) {
+                            cal.getCalProps_(true /* async */);
                         }
                     }
                 } );
         }
         
-        if (this.m_sessionId == null) {
+        if (!this.m_sessionId) {
             throw new Components.Exception(
                 "Login failed. Invalid session ID.",
                 Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
         }
         return this.m_sessionId;
     },
-    getSessionId_:
-    function()
+    
+    assureSecureLogin:
+    function( sessionUri )
     {
-        if (this.m_sessionId == null) {
-            
-            this.log( "attempting to get a session id..." );
-            
-            var passwordManager =
-                Components.classes["@mozilla.org/passwordmanager;1"]
-                .getService(Components.interfaces.nsIPasswordManager);
-            
-            var outUser = { value: this.userId };
-            var outPW = { value: null };
-            
-            var enumerator = passwordManager.enumerator;
-            var realm = this.getRealmName(this.uri);
-            while (enumerator.hasMoreElements()) {
-                var pwEntry = enumerator.getNext().QueryInterface(
-                    Components.interfaces.nsIPassword );
-                if (LOG_LEVEL > 1) {
-                    this.log( "pw entry:\n\thost=" + pwEntry.host +
-                              "\n\tuser=" + pwEntry.user );
-                }
-                if (pwEntry.host == realm) { // found an entry matching URI:
-                    outUser.value = pwEntry.user;
-                    outPW.value = pwEntry.password;
-                    break;
-                }
+        if (sessionUri.scheme.toLowerCase() != "https" &&
+            !confirmInsecureLogin(sessionUri)) {
+            this.log( "user rejected insecure login on " + sessionUri.spec );
+            throw new Components.Exception(
+                "Login failed. Invalid session ID.",
+                Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED );
+        }
+    },
+    
+    getSessionId_:
+    function( sessionUri )
+    {
+        this.log( "attempting to get a session id for " + sessionUri.spec );
+        
+        var outUser = { value: this.userId };
+        var outPW = { value: null };
+        
+        var passwordManager =
+            Components.classes["@mozilla.org/passwordmanager;1"]
+            .getService(Components.interfaces.nsIPasswordManager);
+        
+        var enumerator = passwordManager.enumerator;
+        this.log( "looking in pw db for: " + sessionUri.spec );
+        while (enumerator.hasMoreElements()) {
+            var pwEntry = enumerator.getNext().QueryInterface(
+                Components.interfaces.nsIPassword );
+            if (LOG_LEVEL > 1) {
+                this.log( "pw entry:\n\thost=" + pwEntry.host +
+                          "\n\tuser=" + pwEntry.user );
             }
-            
-            var loginUri = this.sessionUri.clone();
-            if (loginUri.scheme.toLowerCase() != "https") {
-                if (loginUri.port == -1) {
-                    // no https and no port specified
-                    // => enforce login via https:
-                    loginUri.scheme = "https";
-                }
-                else {
-                    // user has specified a specific port, but no https:
-                    // => leave it to her whether to connect...
-                    if (!confirmInsecureLogin( loginUri )) {
-                        this.m_bNoLoginsAnymore = true;
-                        this.log( "user rejected insecure login." );
-                        return null;
-                    }
-                }
-            }
-            
-            if (outUser.value == null || outPW.value == null) {
-                this.log( "no password entry found." );
-            }
-            else {
-                this.log( "password entry found for user " + outUser.value );
-                try {
-                    this.login_( loginUri, outUser.value, outPW.value );
-                }
-                catch (exc) { // ignore silently
-                }
-            }
-            
-            if (this.m_sessionId == null) {
-                // preparing login:
-                var loginText = null;
-                try {
-                    loginText = this.getServerInfo( loginUri );
-                    if (loginText == null) {
-                        if (loginUri.scheme.toLowerCase() == "https") {
-                            // gathering server info via https has failed,
-                            // try http:
-                            loginUri.scheme = "http";
-                            loginText = this.getServerInfo( loginUri );
-                        }
-                        if (loginText == null) {
-                            throw new Components.Exception(
-                                getWcapBundle().formatStringFromName(
-                                    "accessingServerFailedError.text",
-                                    [loginUri.hostPort], 1 ) );
-                        }
-                        if (this.sessionUri.scheme.toLowerCase() == "https") {
-                            // user specified https, so http is no option:
-                            loginText = null;
-                            throw new Components.Exception(
-                                getWcapBundle().formatStringFromName(
-                                    "mandatoryHttpsError.text",
-                                    [loginUri.hostPort], 1 ) );
-                        }
-                        // http possible, ask for it:
-                        if (confirmInsecureLogin( loginUri )) {
-                            if (outPW.value != null) {
-                                // user/pw has been found previously,
-                                // but no login was possible,
-                                // try again using http here:
-                                this.login_( loginUri,
-                                             outUser.value, outPW.value );
-                                if (this.m_sessionId != null)
-                                    return this.m_sessionId;
-                            }
-                        }
-                        else {
-                            this.m_bNoLoginsAnymore = true;
-                            this.log( "user rejected unsecure login." );
-                            return null;
-                        }
-                    }
-                }
-                catch (exc) {
-                    this.logError( exc );
-                    if (loginText == null) {
-                        // accessing server or invalid protocol,
-                        // no logins anymore:
-                        this.m_bNoLoginsAnymore = true;
-                        throw exc; // propagate error message
-                    }
-                    // else maybe user pw has changed or similar...
-                }
-                
-                if (outPW.value != null) {
-                    // login failed before, so try to remove from pw db:
-                    try {
-                        passwordManager.removeUser(
-                            this.getRealmName(this.uri), outUser.value );
-                    }
-                    catch (exc) {
-                        this.log( "error removing from pw db: " + exc );
-                    }
-                }
-                
-                var savePW = { value: false };
-                while (this.m_sessionId == null) {
-                    this.log( "prompting for user/pw..." );
-                    var prompt = getWindowWatcher().getNewPrompter(null);
-                    if (prompt.promptUsernameAndPassword(
-                            getWcapBundle().GetStringFromName(
-                                "loginDialog.label"),
-                            loginText, outUser, outPW,
-                            getWcapBundle().GetStringFromName(
-                                "loginDialog.check.text"),
-                            savePW ))
-                    {
-                        try {
-                            this.login_( loginUri, outUser.value, outPW.value );
-                        }
-                        catch (exc) {
-                            Components.utils.reportError( exc );
-                            // xxx todo: UI?
-                        }
-                    }
-                    else { // dialog cancelled, don't login anymore:
-                        this.m_bNoLoginsAnymore = true;
-                        this.log( "login cancelled, will not prompt again." );
-                        break;
-                    }
-                }
-                if (this.m_sessionId != null && savePW.value) {
-                    // save pw under session uri:
-                    passwordManager.addUser( this.getRealmName(this.uri),
-                                             outUser.value, outPW.value );
-                }
+            if (pwEntry.host == sessionUri.spec) {
+                // found an entry matching URI:
+                outUser.value = pwEntry.user;
+                outPW.value = pwEntry.password;
+                break;
             }
         }
         
+        if (outPW.value) {
+            this.log( "password entry found for host " + sessionUri.spec +
+                      "\nuser is " + outUser.value );
+            this.assureSecureLogin(sessionUri);
+            this.login_( sessionUri, outUser.value, outPW.value );
+        }
+        else
+            this.log( "no password entry found for " + sessionUri.spec );
+        
+        if (!this.m_sessionId) {
+            var loginText = this.getServerInfo(sessionUri);
+            if (outPW.value) {
+                // login failed before, so try to remove from pw db:
+                try {
+                    passwordManager.removeUser( sessionUri.spec,
+                                                outUser.value );
+                    this.log( "removed from pw db: " + sessionUri.spec );
+                }
+                catch (exc) {
+                    this.logError( "error removing from pw db: " + exc );
+                }
+            }
+            else // if not already checked in pw manager run
+                this.assureSecureLogin(sessionUri);
+            
+            var savePW = { value: false };
+            while (!this.m_sessionId) {
+                this.log( "prompting for user/pw..." );
+                var prompt = getWindowWatcher().getNewPrompter(null);
+                if (prompt.promptUsernameAndPassword(
+                        getWcapBundle().GetStringFromName(
+                            "loginDialog.label"),
+                        loginText, outUser, outPW,
+                        getWcapBundle().GetStringFromName(
+                            "loginDialog.check.text"),
+                        savePW ))
+                {
+                    if (this.login_( sessionUri, outUser.value, outPW.value ))
+                        break;
+                }
+                else {
+                    this.log( "login prompt cancelled." );
+                    throw new Components.Exception(
+                        "Login failed. Invalid session ID.",
+                        Components.interfaces.calIWcapErrors.WCAP_LOGIN_FAILED);
+                }
+            }
+            if (savePW.value) {
+                try { // save pw under session uri:
+                    passwordManager.addUser( sessionUri.spec,
+                                             outUser.value, outPW.value );
+                    this.log( "added to pw db: " + sessionUri.spec );
+                }
+                catch (exc) {
+                    this.logError( "error adding pw to db: " + exc );
+                }
+            }
+        }
         return this.m_sessionId;
     },
+    
     login_:
-    function( loginUri, user, pw )
+    function( sessionUri, user, pw )
     {
         if (this.m_sessionId != null) {
             this.logout();
         }
-        // currently, xml parsing at an early stage during process startup
-        // does not work reliably, so use libical parsing for now:
-        var str = issueSyncRequest(
-            loginUri.spec + "login.wcap?fmt-out=text%2Fcalendar&user=" +
-            encodeURIComponent(user) + "&password=" + encodeURIComponent(pw),
-            null /* receiverFunc */, false /* no logging */ );
-        var icalRootComp = getIcsService().parseICS( str );
-        checkWcapIcalErrno( icalRootComp );
-        var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAP-SESSION-ID" );
-        if (prop == null)
-            throw new Components.Exception("missing X-NSCP-WCAP-SESSION-ID!");
-        this.m_sessionId = prop.value;
-        
-//         var xml = issueSyncXMLRequest(
-//             loginUri.spec + "login.wcap?fmt-out=text%2Fxml&user=" +
-//             encodeURIComponent(user) + "&password=" + encodeURIComponent(pw) );
-//         checkWcapXmlErrno( xml );
-//         this.m_sessionId = xml.getElementsByTagName(
-//             "X-NSCP-WCAP-SESSION-ID" ).item(0).textContent;
+        var str;
+        var icalRootComp = null;
+        try {
+            // currently, xml parsing at an early stage during process startup
+            // does not work reliably, so use libical parsing for now:
+            str = issueSyncRequest(
+                sessionUri.spec + "login.wcap?fmt-out=text%2Fcalendar&user=" +
+                encodeURIComponent(user) +
+                "&password=" + encodeURIComponent(pw),
+                null /* receiverFunc */, false /* no logging */ );
+            if (str.indexOf("BEGIN:VCALENDAR") < 0)
+                throw new Components.Exception("no ical data returned!");
+            icalRootComp = getIcsService().parseICS( str );
+            checkWcapIcalErrno( icalRootComp );
+        }
+        catch (exc) {
+            if (testResultCode(exc, Components.interfaces.
+                               calIWcapErrors.WCAP_LOGIN_FAILED)) {
+                this.logError( exc ); // log wrong pw
+                return false;
+            }
+            if (!isNaN(exc) && getErrorModule(exc) == NS_ERROR_MODULE_NETWORK) {
+                // server seems unavailable:
+                throw new Components.Exception(
+                    getWcapBundle().formatStringFromName(
+                        "accessingServerFailedError.text", [uri.hostPort], 1 ),
+                    exc );
+            }
+            throw exc;
+        }
+        var prop = icalRootComp.getFirstProperty("X-NSCP-WCAP-SESSION-ID");
+        if (!prop) {
+            throw new Components.Exception(
+                "missing X-NSCP-WCAP-SESSION-ID in\n" + str );
+        }
+        this.m_sessionId = prop.value;        
         this.m_userId = user;
-        this.log( "WCAP login succeeded." );
-    },    
+        this.m_sessionUri = sessionUri;
+        this.log( "WCAP login succeeded, setting sessionUri to " +
+                  this.sessionUri.spec );
+        return true;
+    },
     
     getServerInfo:
     function( uri )
     {
-        var icalRootComp;
+        var str;
+        var icalRootComp = null;
         try {
             // currently, xml parsing at an early stage during process startup
-            // does not work reliably, so use libical parsing for now:
-            var str = issueSyncRequest(
+            // does not work reliably, so use libical:
+            str = issueSyncRequest(
                 uri.spec + "version.wcap?fmt-out=text%2Fcalendar" );
             if (str.indexOf("BEGIN:VCALENDAR") < 0)
-                return null; // no ical data returned
+                throw new Components.Exception("no ical data returned!");
             icalRootComp = getIcsService().parseICS( str );
-            if (icalRootComp == null)
-                throw new Components.Exception("invalid ical data!");
         }
-        catch (exc) { // soft error; request denied etc.
-            this.log( "server version request failed: " + errorToString(exc) );
-            return null;
+        catch (exc) {
+            this.log( exc ); // soft error; request denied etc.
+            throw new Components.Exception(
+                getWcapBundle().formatStringFromName(
+                    "accessingServerFailedError.text", [uri.hostPort], 1 ),
+                isNaN(exc) ? Components.results.NS_ERROR_FAILURE : exc );
         }
         
-        loginTextVars = [uri.hostPort];
-        var prop = icalRootComp.getFirstProperty( "PRODID" );
-        loginTextVars.push( prop ? prop.value : "<unknown>" );
-        prop = icalRootComp.getFirstProperty( "X-NSCP-SERVERVERSION" );
-        loginTextVars.push( prop ? prop.value : "<unknown>" );
-        prop = icalRootComp.getFirstProperty( "X-NSCP-WCAPVERSION" );
-        if (prop == null)
-            throw new Components.Exception("missing X-NSCP-WCAPVERSION!");
-        loginTextVars.push( prop.value );
+        var prop = icalRootComp.getFirstProperty( "X-NSCP-WCAPVERSION" );
+        if (!prop) {
+            throw new Components.Exception(
+                "missing X-NSCP-WCAPVERSION in\n" + str );
+        }
         var wcapVersion = parseInt(prop.value);
         if (wcapVersion < 3) {
+            var strVers = prop.value;
+            var vars = [uri.hostPort];
+            prop = icalRootComp.getFirstProperty( "PRODID" );
+            vars.push( prop ? prop.value : "<unknown>" );
+            prop = icalRootComp.getFirstProperty( "X-NSCP-SERVERVERSION" );
+            vars.push( prop ? prop.value : "<unknown>" );
+            vars.push( strVers );
+            
             var prompt = getWindowWatcher().getNewPrompter(null);
             var bundle = getWcapBundle();
             var labelText = bundle.GetStringFromName(
@@ -591,20 +586,20 @@ calWcapSession.prototype = {
             if (!prompt.confirm( labelText,
                                  bundle.formatStringFromName(
                                      "insufficientWcapVersionConfirmation.text",
-                                     loginTextVars, loginTextVars.length ) )) {
+                                     vars, vars.length ) )) {
                 throw new Components.Exception(labelText);
             }
         }
-        return getWcapBundle().formatStringFromName(
-            "loginDialog.text", loginTextVars, loginTextVars.length );
+        return getWcapBundle().formatStringFromName( "loginDialog.text",
+                                                     [uri.hostPort], 1 );
     },
     
     getCommandUrl:
     function( wcapCommand )
     {
-        if (this.sessionUri == null)
+        if (!this.uri)
             throw new Components.Exception("no URI!");
-        // ensure established session, so userId is set;
+        // ensure established session, so sesionUri and userId is set;
         // (calId defaults to userId) if not set:
         this.getSessionId();
         return (this.sessionUri.spec +
@@ -692,17 +687,13 @@ calWcapSession.prototype = {
                 // sensible default for user id login:
                 var username = decodeURIComponent( thatUri.username );
                 if (username != "") {
+                    this.m_defaultCalId = username;
                     var nColon = username.indexOf(':');
-                    this.m_userId =
-                        (nColon >= 0 ? username.substr(0, nColon) : username);
-                    if (this.m_userId.length > 0)
-                        this.m_defaultCalId = this.m_userId;
+                    this.m_userId = (nColon >= 0
+                                     ? username.substr(0, nColon) : username);
                 }
                 this.m_uri = thatUri.clone();
                 this.log( "setting uri to " + this.uri.spec );
-                this.m_sessionUri = thatUri.clone();
-                this.m_sessionUri.userPass = "";
-                this.log( "setting sessionUri to " + this.sessionUri.spec );
             }
         }
     },
@@ -726,6 +717,7 @@ calWcapSession.prototype = {
     function()
     {
         if (this.m_sessionId != null) {
+            this.log( "attempting to log out..." );
             // although io service's offline flag is already
             // set BEFORE notification (about to go offline, nsIOService.cpp).
             // WTF.
@@ -743,6 +735,7 @@ calWcapSession.prototype = {
             }
             this.m_sessionId = null;
         }
+        this.m_sessionUri = null;
         this.m_userId = null;
         this.m_userPrefs = null; // reread prefs
         this.m_defaultCalId = null;
