@@ -742,6 +742,14 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
+  // Initialize the DocShell / Request
+  if (aDocShell) {
+    *aDocShell = nsnull;
+  }
+  if (aRequest) {
+    *aRequest = nsnull;
+  }
+
   {
     // defer to an external protocol handler if necessary...
     nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
@@ -813,14 +821,6 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     anchor->GetType(typeHint);
   }
   
-  // Initialize the DocShell / Request
-  if (aDocShell) {
-    *aDocShell = nsnull;
-  }
-  if (aRequest) {
-    *aRequest = nsnull;
-  }
-
   switch(aVerb) {
     case eLinkVerb_New:
       NS_ASSERTION(target.IsEmpty(), "Losing window name information");
