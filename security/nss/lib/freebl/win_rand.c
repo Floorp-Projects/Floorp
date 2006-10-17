@@ -411,10 +411,14 @@ void RNG_SystemInfoForRNG(void)
     }
 #endif
 
-    hVal = GetCurrentProcess();               // 4 byte handle of current task
+    hVal = GetCurrentProcess();               // 4 or 8 byte pseudo handle (a
+                                              // constant!) of current process
     RNG_RandomUpdate(&hVal, sizeof(hVal));
 
     dwVal = GetCurrentProcessId();            // process ID (4 bytes)
+    RNG_RandomUpdate(&dwVal, sizeof(dwVal));
+
+    dwVal = GetCurrentThreadId();             // thread ID (4 bytes)
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));
 
 #if !defined(_WIN32_WCE)
