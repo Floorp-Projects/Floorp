@@ -72,6 +72,7 @@
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "nsThreadUtils.h"
 
 
 class nsJSThunk : public nsIInputStream
@@ -304,8 +305,17 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
                                            nsnull,
                                            &result,
                                            &isUndefined);
-    }
 
+        // If there's an error on cx as a result of that call, report
+        // it now -- either we're just running under the event loop,
+        // so we shouldn't propagate JS exceptions out of here, or we
+        // can't be sure that our caller is JS (and if it's not we'll
+        // lose the error), or it might be JS that then proceeds to
+        // cause an error of its own (which will also make us lose
+        // this error).
+        ::JS_ReportPendingException((JSContext*)scriptContext->GetNativeContext());
+    }
+    
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
     }
@@ -387,29 +397,36 @@ public:
 
     nsresult Init(nsIURI *aURI);
 
+    // Actually evaluate the script.
+    void EvaluateScript();
+    
 protected:
     virtual ~nsJSChannel();
 
     nsresult StopAll();
 
-    nsresult InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
-                          nsISupports *aContext, nsIInputStream **aResult);
-
+    void NotifyListener();
+    
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
     nsCOMPtr<nsIStreamListener> mListener;  // Our final listener
+    nsCOMPtr<nsISupports> mContext; // The context passed to AsyncOpen
+    nsresult mStatus; // Our status
 
     nsLoadFlags             mLoadFlags;
+    nsLoadFlags             mActualLoadFlags; // See AsyncOpen
 
     nsRefPtr<nsJSThunk>     mIOThunk;
     PRPackedBool            mIsActive;
-    PRPackedBool            mWasCanceled;
+    PRPackedBool            mOpenedStreamChannel;
 };
 
 nsJSChannel::nsJSChannel() :
+    mStatus(NS_OK),
     mLoadFlags(LOAD_NORMAL),
+    mActualLoadFlags(LOAD_NORMAL),
     mIsActive(PR_FALSE),
-    mWasCanceled(PR_FALSE)
+    mOpenedStreamChannel(PR_FALSE)
 {
 }
 
@@ -494,22 +511,19 @@ nsJSChannel::IsPending(PRBool *aResult)
 NS_IMETHODIMP
 nsJSChannel::GetStatus(nsresult *aResult)
 {
-    // We're always ok. Our status is independent of our underlying
-    // stream's status.
-    *aResult = NS_OK;
+    *aResult = mStatus;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::Cancel(nsresult aStatus)
 {
-    // If we're canceled just record the fact that we were canceled,
-    // the underlying stream will be canceled later, if needed. And we
-    // don't care about the reason for the canceling, i.e. ignore
-    // aStatus.
+    mStatus = aStatus;
 
-    mWasCanceled = PR_TRUE;
-
+    if (mOpenedStreamChannel) {
+        mStreamChannel->Cancel(aStatus);
+    }
+    
     return NS_OK;
 }
 
@@ -550,115 +564,159 @@ nsJSChannel::GetURI(nsIURI * *aURI)
 NS_IMETHODIMP
 nsJSChannel::Open(nsIInputStream **aResult)
 {
-    return InternalOpen(PR_FALSE, nsnull, nsnull, aResult);
+    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return mStreamChannel->Open(aResult);
 }
 
 NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
+    NS_ENSURE_ARG(aListener);
+    
     mListener = aListener;
-    nsresult rv = InternalOpen(PR_TRUE, this, aContext, nsnull);
-    if (NS_FAILED(rv)) {
-        mListener = nsnull;
-    }
-    return rv;
-}
+    mContext = aContext;
 
-nsresult
-nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
-                          nsISupports *aContext, nsIInputStream **aResult)
-{
-    nsCOMPtr<nsILoadGroup> loadGroup;
+    mIsActive = PR_TRUE;
 
     // Temporarily set the LOAD_BACKGROUND flag to suppress load group observer
     // notifications (and hence nsIWebProgressListener notifications) from
     // being dispatched.  This is required since we suppress LOAD_DOCUMENT_URI,
     // which means that the DocLoader would not generate document start and
     // stop notifications (see bug 257875).
-    PRUint32 oldLoadFlags = mLoadFlags;
+    mActualLoadFlags = mLoadFlags;
     mLoadFlags |= LOAD_BACKGROUND;
 
     // Add the javascript channel to its loadgroup so that we know if
     // network loads were canceled or not...
+    nsCOMPtr<nsILoadGroup> loadGroup;
     mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup) {
-        loadGroup->AddRequest(this, aContext);
+        loadGroup->AddRequest(this, nsnull);
     }
 
+    // post an event to do the rest
+    nsCOMPtr<nsIRunnable> ev =
+        new nsRunnableMethod<nsJSChannel>(this, &nsJSChannel::EvaluateScript);
+    nsresult rv = NS_DispatchToCurrentThread(ev);
+
+    if (NS_FAILED(rv)) {
+        loadGroup->RemoveRequest(this, nsnull, rv);
+        mIsActive = PR_FALSE;
+        mListener = nsnull;
+        mContext = nsnull;            
+    }
+
+    return rv;
+}
+
+void
+nsJSChannel::EvaluateScript()
+{
     // Synchronously execute the script...
     // mIsActive is used to indicate the the request is 'busy' during the
     // the script evaluation phase.  This means that IsPending() will 
     // indicate the the request is busy while the script is executing...
-    mIsActive = PR_TRUE;
-    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
 
+    // Note that we want to be in the loadgroup and pending while we evaluate
+    // the script, so that we find out if the loadgroup gets canceled by the
+    // script execution (in which case we shouldn't pump out data even if the
+    // script returns it).
+    
+    if (NS_SUCCEEDED(mStatus)) {
+        nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
+
+        // Note that evaluation may have canceled us, so recheck mStatus again
+        if (NS_FAILED(rv) && NS_SUCCEEDED(mStatus)) {
+            mStatus = rv;
+        }
+    }
+    
     // Remove the javascript channel from its loadgroup...
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup) {
-        loadGroup->RemoveRequest(this, aContext, rv);
+        loadGroup->RemoveRequest(this, nsnull, mStatus);
     }
 
     // Reset load flags to their original value...
-    mLoadFlags = oldLoadFlags;
+    mLoadFlags = mActualLoadFlags;
 
     // We're no longer active, it's now up to the stream channel to do
     // the loading, if needed.
     mIsActive = PR_FALSE;
 
-    if (NS_SUCCEEDED(rv) && !mWasCanceled) {
-        // EvaluateScript() succeeded, and we were not canceled, that
-        // means there's data to parse as a result of evaluating the
-        // script.
+    if (NS_FAILED(mStatus)) {
+        NotifyListener();
+        return;
+    }
+    
+    // EvaluateScript() succeeded, and we were not canceled, that
+    // means there's data to parse as a result of evaluating the
+    // script.
 
-        // Get the stream channels load flags (!= mLoadFlags).
-        nsLoadFlags loadFlags;
-        mStreamChannel->GetLoadFlags(&loadFlags);
+    // Get the stream channels load flags (!= mLoadFlags).
+    nsLoadFlags loadFlags;
+    mStreamChannel->GetLoadFlags(&loadFlags);
 
-        if (loadFlags & LOAD_DOCUMENT_URI) {
-            // We're loaded as the document channel. If we go on,
-            // we'll blow away the current document. Make sure that's
-            // ok. If so, stop all pending network loads.
+    if (loadFlags & LOAD_DOCUMENT_URI) {
+        // We're loaded as the document channel. If we go on,
+        // we'll blow away the current document. Make sure that's
+        // ok. If so, stop all pending network loads.
 
-            nsCOMPtr<nsIDocShell> docShell;
-            NS_QueryNotificationCallbacks(mStreamChannel, docShell);
-            if (docShell) {
-                nsCOMPtr<nsIContentViewer> cv;
-                docShell->GetContentViewer(getter_AddRefs(cv));
+        nsCOMPtr<nsIDocShell> docShell;
+        NS_QueryNotificationCallbacks(mStreamChannel, docShell);
+        if (docShell) {
+            nsCOMPtr<nsIContentViewer> cv;
+            docShell->GetContentViewer(getter_AddRefs(cv));
 
-                if (cv) {
-                    PRBool okToUnload;
+            if (cv) {
+                PRBool okToUnload;
 
-                    if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) &&
-                        !okToUnload) {
-                        // The user didn't want to unload the current
-                        // page, translate this into an undefined
-                        // return from the javascript: URL...
-                        rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
-                    }
+                if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) &&
+                    !okToUnload) {
+                    // The user didn't want to unload the current
+                    // page, translate this into an undefined
+                    // return from the javascript: URL...
+                    mStatus = NS_ERROR_DOM_RETVAL_UNDEFINED;
                 }
             }
-
-            if (NS_SUCCEEDED(rv)) {
-                rv = StopAll();
-            }
         }
 
-        if (NS_SUCCEEDED(rv)) {
-            // This will add mStreamChannel to the load group.
-
-            if (aIsAsync) {
-                rv = mStreamChannel->AsyncOpen(aListener, aContext);
-            } else {
-                rv = mStreamChannel->Open(aResult);
-            }
+        if (NS_SUCCEEDED(mStatus)) {
+            mStatus = StopAll();
         }
     }
 
-    if (NS_FAILED(rv)) {
-        // Propagate the failure down to the underlying channel...
-        mStreamChannel->Cancel(rv);
+    if (NS_FAILED(mStatus)) {
+        NotifyListener();
+        return;
+    }
+    
+    mStatus = mStreamChannel->AsyncOpen(this, mContext);
+    if (NS_FAILED(mStatus)) {
+        NotifyListener();
+    } else {
+        // mStreamChannel will call OnStartRequest and OnStopRequest on
+        // us, so we'll be sure to call them on our listener.
+        mOpenedStreamChannel = PR_TRUE;
     }
 
-    return rv;
+    return;
+}
+
+void
+nsJSChannel::NotifyListener()
+{
+    // Make sure to drop our ref to mListener
+    nsCOMPtr<nsIStreamListener> listener;
+    listener.swap(mListener);
+
+    listener->OnStartRequest(this, mContext);
+    listener->OnStopRequest(this, mContext, mStatus);
+
+    mContext = nsnull;
 }
 
 NS_IMETHODIMP
@@ -678,6 +736,9 @@ nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
     // 'document channels' in the loadgroup if a javascript: URL is
     // loaded while a document is being loaded in the same window.
 
+    // XXXbz this, and a whole lot of other hackery, could go away if we'd just
+    // cancel the current document load on javascript: load start like IE does.
+    
     mLoadFlags = aLoadFlags & ~LOAD_DOCUMENT_URI;
 
     // ... but the underlying stream channel should get this bit, if
@@ -797,6 +858,8 @@ nsJSChannel::OnStopRequest(nsIRequest* aRequest,
     // Make sure to drop our ref to mListener
     nsCOMPtr<nsIStreamListener> listener;
     listener.swap(mListener);
+
+    mContext = nsnull;
     
     return listener->OnStopRequest(this, aContext, aStatus);
 }

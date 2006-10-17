@@ -893,9 +893,8 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
     rv = channel->AsyncOpen(loader, nsnull);
 
     // no content from this load - that's OK.
-    if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED ||
-        rv == NS_ERROR_NO_CONTENT) {
-      LOG(("  rv is NS_ERROR_DOM_RETVAL_UNDEFINED or NS_ERROR_NO_CONTENT -- doing nothing"));
+    if (rv == NS_ERROR_NO_CONTENT) {
+      LOG(("  rv is NS_ERROR_NO_CONTENT -- doing nothing"));
       rv = NS_OK;
     }
   } else if (rv == NS_ERROR_WONT_HANDLE_CONTENT) {
