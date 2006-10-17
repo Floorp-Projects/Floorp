@@ -38,6 +38,7 @@ use Bugzilla::Bug;
 use Bugzilla::Field;
 
 my $user = Bugzilla->login(LOGIN_OPTIONAL);
+my $cgi  = Bugzilla->cgi;
 
 # If the 'requirelogin' parameter is on and the user is not
 # authenticated, return empty fields.
@@ -56,7 +57,20 @@ $vars->{'resolution'} = get_legal_field_values('resolution');
 $vars->{'status'}    = get_legal_field_values('bug_status');
 
 # Include a list of product objects.
-$vars->{'products'} = $user->get_selectable_products;
+if ($cgi->param('product')) {
+    my @products = $cgi->param('product');
+    foreach my $product_name (@products) {
+        # We don't use check_product because config.cgi outputs mostly
+        # in XML and JS and we don't want to display an HTML error
+        # instead of that.
+        my $product = new Bugzilla::Product({ name => $product_name });
+        if ($product && $user->can_see_product($product->name)) {
+            push (@{$vars->{'products'}}, $product);
+        }
+    }
+} else {
+    $vars->{'products'} = $user->get_selectable_products;
+}
 
 # Create separate lists of open versus resolved statuses.  This should really
 # be made part of the configuration.
@@ -78,7 +92,7 @@ display_data($vars);
 sub display_data {
     my $vars = shift;
 
-    my $cgi = Bugzilla->cgi;
+    my $cgi      = Bugzilla->cgi;
     my $template = Bugzilla->template;
 
     # Determine how the user would like to receive the output; 
