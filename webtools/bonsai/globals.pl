@@ -108,21 +108,59 @@ sub Param {
 sub ConnectToDatabase {
     my ($dsn);
 
-    if (!defined $::db) {
-        $dsn = Param('dbiparam');
+    if (!defined $::readdb) {
+        $dsn = Param('shadowdbiparam') || Param('dbiparam');
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
+	$::readdb = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
             || die "Can't connect to database server.";
+        $::db = $::readdb;
+    }
+}
+
+sub ConnectToWriteDatabase {
+    my ($dsn);
+
+    if (!defined $::writedb) {
+        $dsn = Param('dbiparam');
+        if (!Param('shadowdbiparam') && defined $::readdb) {
+            # If we don't have a shadowdb defined, and we're already connected to
+            # the database, just use the existing connection
+            $::writedb = $::readdb;
+        }
+        else {
+	    $::writedb = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
+            || die "Can't connect to shadow database server.";
+            $::db = $::writedb;
+        }
     }
 }
 
 sub DisconnectFromDatabase {
-    if (defined $::db) {
-        $::db->disconnect();
-        undef $::db;
+    if (defined $::readdb) {
+        $::readdb->disconnect();
+        undef $::db if ($::db == $::readdb);
+        undef $::readdb;
     }
+}
+
+sub DisconnectFromWriteDatabase {
+    if (defined $::writedb) {
+        $::writedb->disconnect();
+        undef $::db if ($::db == $::writedb);
+        undef $::writedb;
+    }
+}
+
+sub SwitchToShadowDB {
+    ConnectToDatabase() if !defined($::readdb);
+    $::db = $::readdb;
+}
+
+sub SwitchToWriteDB {
+    ConnectToWriteDatabase() if !defined($::writedb);
+    $::db = $::writedb;
 }
 
 sub SendSQL {
@@ -337,6 +375,8 @@ sub GetId {
      return ($lastidcache{$index})
           if (exists $lastidcache{$index});
 
+     SwitchToWriteDB();
+
      &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
      ($id) = &FetchSQLData();
 
@@ -346,6 +386,8 @@ sub GetId {
          ($id) = &FetchSQLData();
      }
 
+     SwitchToShadowDB();
+
      return ($lastidcache{$index} = $id);
 }
 
@@ -353,6 +395,8 @@ sub GetId {
 sub GetId_NoCache {
      my ($table, $field, $value) = @_;
      my ($id);
+
+     SwitchToWriteDB();
 
      &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
      ($id) = &FetchSQLData();
@@ -362,6 +406,8 @@ sub GetId_NoCache {
          &SendSQL("SELECT LAST_INSERT_ID()");
          ($id) = &FetchSQLData();
      }
+
+     SwitchToShadowDB();
 
      return $id;
 }
@@ -389,6 +435,8 @@ sub GetHashedId {
      my ($table, $field, $value) = @_;
      my (@bind_values, $id);
 
+     SwitchToWriteDB();
+
      @bind_values = (&MakeValueHash($value), $value);
      &SendSQL("SELECT id FROM $table WHERE hash = ? AND $field = ?", 
               @bind_values);
@@ -400,6 +448,8 @@ sub GetHashedId {
          &SendSQL("SELECT LAST_INSERT_ID()");
          ($id) = &FetchSQLData();
      }
+
+     SwitchToShadowDB();
 
      return $id;
 
@@ -415,6 +465,8 @@ sub AddToDatabase {
      my ($descid, $replacequery, $checkquery, $line, @bind_values);
      my ($chtype, $date, $name, $repository, $dir);
      my ($file, $version, $sticky, $branch, $addlines, $removelines);
+
+     SwitchToWriteDB();
 
      # Truncate/cleanup description
      $desc = substr($desc, 0, 60000)
@@ -507,6 +559,7 @@ sub AddToDatabase {
               print "." if $verbose;
           }
      }
+     SwitchToShadowDB();
 }
 
 sub assert {

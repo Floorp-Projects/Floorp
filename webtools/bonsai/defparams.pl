@@ -151,6 +151,11 @@ DefParam("dbiparam",
          "t",
          "DBI:mysql:database=bonsai;");
 
+DefParam("shadowdbiparam",
+         "The first parameter to pass to the DBI->connect() method of a read-only replicated slave database to use for queries, to help with performance on high-traffic systems.  If left blank, queries will be made against the primary database and this param will be ignored.<br>Example: <code>DBI:mysql:host=slaveserver;database=bonsai</code>",
+         "t",
+         "");
+
 DefParam("readonly",
          "Are the hook files readonly.  (This value gets changed on the fly,
 so it is ok to leave the way it is.)",

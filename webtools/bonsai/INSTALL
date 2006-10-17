@@ -435,3 +435,16 @@ typically write the following section in http.conf and restart the server:
       Order deny,allow
       Deny from All
    </Directory>
+
+8. APPENDIX: MySQL Replication
+
+If you have a really high-traffic site and bonsai is getting queried a lot
+(this typically happens if you have tinderbox set up with it, and there are
+a lot of tinderbox trees - since every report from a tinderbox will query
+bonsai), you can get a performance boost by having bonsai use the slave
+database (which is typically configured to give queries priority over
+updates - thus avoiding many lock contentions) for everything except write
+operations.  To do this, set the 'shadowdbiparam' parameter to point at
+the slave database.  The username and password used to access it must be
+the same.  Setting up replication in MySQL is beyond the scope of this
+document.  MySQL has plenty of docs on this subject on their website.
