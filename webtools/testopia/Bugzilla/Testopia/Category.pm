@@ -135,8 +135,8 @@ sub store {
     my $dbh = Bugzilla->dbh;
     $dbh->do("INSERT INTO test_case_categories ($columns)
               VALUES (?,?,?,?)",
-              undef, "NULL", $self->{'product_id'}, $self->{'name'}, 
-              $self->{'description'});
+              undef, (undef, $self->{'product_id'}, $self->{'name'}, 
+              $self->{'description'}));
     my $key = $dbh->bz_last_key( 'test_case_categories', 'category_id' );
     return $key;
 }
