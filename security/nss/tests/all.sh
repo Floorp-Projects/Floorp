@@ -78,7 +78,8 @@
 #
 ########################################################################
 
-TESTS="cipher perf cert dbtests tools fips sdr crmf smime ssl"
+tests="cipher perf cert dbtests tools fips sdr crmf smime ssl"
+TESTS=${TESTS-$tests}
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	# will cause problems if sourced 
@@ -93,12 +94,14 @@ for i in ${TESTS}
 do
     SCRIPTNAME=${i}.sh
     echo "Running Tests for $i"
+    echo "TIMESTAMP $i BEGIN: `date`"
     if [ "$O_CRON" = "ON" ]
     then
-        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file >> ${LOGFILE} 2>&1)
+        (cd ${QADIR}/$i ; time ./$SCRIPTNAME all file) >> ${LOGFILE} 2>&1
     else
-        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file 2>&1 | tee -a ${LOGFILE})
+        (cd ${QADIR}/$i ; time ./$SCRIPTNAME all file) 2>&1 | tee -a ${LOGFILE}
     fi
+    echo "TIMESTAMP $i END: `date`"
 done
 
 SCRIPTNAME=all.sh
