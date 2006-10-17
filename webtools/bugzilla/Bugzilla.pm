@@ -175,6 +175,11 @@ sub user {
     return request_cache()->{user};
 }
 
+sub set_user {
+    my ($class, $user) = @_;
+    $class->request_cache->{user} = $user;
+}
+
 sub sudoer {
     my $class = shift;    
     return request_cache()->{sudoer};
@@ -195,6 +200,8 @@ sub sudo_request {
 
 sub login {
     my ($class, $type) = @_;
+
+    return Bugzilla->user if Bugzilla->usage_mode == USAGE_MODE_EMAIL;
 
     my $authorizer = new Bugzilla::Auth();
     $type = LOGIN_REQUIRED if Bugzilla->cgi->param('GoAheadAndLogIn');
@@ -222,7 +229,7 @@ sub login {
         !($sudo_target->in_group('bz_sudo_protect'))
        )
     {
-        request_cache()->{user}   = $sudo_target;
+        Bugzilla->set_user($sudo_target);
         request_cache()->{sudoer} = $authenticated_user;
         # And make sure that both users have the same Auth object,
         # since we never call Auth::login for the sudo target.
@@ -231,10 +238,10 @@ sub login {
         # NOTE: If you want to do any special logging, do it here.
     }
     else {
-        request_cache()->{user} = $authenticated_user;
+        Bugzilla->set_user($authenticated_user);
     }
     
-    return request_cache()->{user};
+    return Bugzilla->user;
 }
 
 sub logout {
@@ -302,6 +309,9 @@ sub usage_mode {
         }
         elsif ($newval == USAGE_MODE_WEBSERVICE) {
             $class->error_mode(ERROR_MODE_DIE_SOAP_FAULT);
+        }
+        elsif ($newval == USAGE_MODE_EMAIL) {
+            $class->error_mode(ERROR_MODE_DIE);
         }
         else {
             ThrowCodeError('usage_mode_invalid',
@@ -475,6 +485,12 @@ C<undef> if there is no currently logged in user or if the login code has not
 yet been run.  If an sudo session is in progress, the C<Bugzilla::User>
 corresponding to the person who is being impersonated.  If no session is in
 progress, the current C<Bugzilla::User>.
+
+=item C<set_user>
+
+Allows you to directly set what L</user> will return. You can use this
+if you want to bypass L</login> for some reason and directly "log in"
+a specific L<Bugzilla::User>. Be careful with it, though!
 
 =item C<sudoer>
 

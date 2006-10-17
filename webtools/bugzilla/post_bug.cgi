@@ -29,6 +29,7 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Attachment;
+use Bugzilla::BugMail;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -243,8 +244,13 @@ if ($token) {
              ("createbug:$id", $token));
 }
 
-print $cgi->header();
-$template->process("bug/create/created.html.tmpl", $vars)
-  || ThrowTemplateError($template->error());
+if (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
+    Bugzilla::BugMail::Send($id, $vars->{'mailrecipients'});
+}
+else {
+    print $cgi->header();
+    $template->process("bug/create/created.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+}
 
-
+1;

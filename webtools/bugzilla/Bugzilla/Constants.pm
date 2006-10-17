@@ -113,6 +113,7 @@ use File::Basename;
     USAGE_MODE_BROWSER
     USAGE_MODE_CMDLINE
     USAGE_MODE_WEBSERVICE
+    USAGE_MODE_EMAIL
 
     ERROR_MODE_WEBPAGE
     ERROR_MODE_DIE
@@ -317,6 +318,7 @@ use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED',
 use constant USAGE_MODE_BROWSER    => 0;
 use constant USAGE_MODE_CMDLINE    => 1;
 use constant USAGE_MODE_WEBSERVICE => 2;
+use constant USAGE_MODE_EMAIL      => 3;
 
 # Error modes. Default set by Bugzilla->usage_mode (so ERROR_MODE_WEBPAGE
 # usually). Use with Bugzilla->error_mode.

@@ -380,6 +380,10 @@
     [% title = "Email Address Confirmation Failed" %]
     Email address confirmation failed.
 
+  [% ELSIF error == "email_no_text_plain" %]
+    Your message did not contain any text.[% terms.Bugzilla %] does not
+    accept HTML-only email, or HTML email with attachments.
+
   [% ELSIF error == "empty_group_description" %]
     [% title = "The group description can not be empty" %]
     You must enter a description for the group.

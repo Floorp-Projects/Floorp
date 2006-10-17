@@ -184,6 +184,39 @@ sub OPTIONAL_MODULES {
         version => 0,
         feature => 'More HTML in Product/Group Descriptions'
     },
+
+    # Inbound Email
+    {
+        # Attachment::Stripper requires this, but doesn't pull it in
+        # when you install it from CPAN.
+        package => 'MIME-Types',
+        module  => 'MIME::Types',
+        version => 0,
+        feature => 'Inbound Email',
+    },
+    {
+        # Email::MIME::Attachment::Stripper can throw an error with
+        # earlier versions.
+        # This also pulls in Email::MIME and Email::Address for us.
+        package => 'Email-MIME-Modifier',
+        module  => 'Email::MIME::Modifier',
+        version => '1.43',
+        feature => 'Inbound Email'
+    },
+    {
+        package => 'Email-MIME-Attachment-Stripper',
+        module  => 'Email::MIME::Attachment::Stripper',
+        version => 0,
+        feature => 'Inbound Email'
+    },
+    {
+        package => 'Email-Reply',
+        module  => 'Email::Reply',
+        version => 0,
+        feature => 'Inbound Email'
+    },
+
+    # mod_perl
     {
         package => 'mod_perl',
         module  => 'mod_perl2',
