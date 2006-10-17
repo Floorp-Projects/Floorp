@@ -29,6 +29,7 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
+use Bugzilla::Testopia::Constants;
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
@@ -37,30 +38,41 @@ my $cgi = Bugzilla->cgi;
 Bugzilla->login();
 print $cgi->header();
    
-my $plan_id = trim(Bugzilla->cgi->param('plan_id') || '');
+my $case_id = trim(Bugzilla->cgi->param('case_id') || '');
 
-unless ($plan_id){
-  $vars->{'form_action'} = 'tr_plan_reports.cgi';
-  $template->process("testopia/plan/choose.html.tmpl", $vars) 
+unless ($case_id){
+  $vars->{'form_action'} = 'tr_case_reports.cgi';
+  $template->process("testopia/case/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
   exit;
 }
-validate_test_id($plan_id, 'plan');
+validate_test_id($case_id, 'case');
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
-my $action = $cgi->param('action') || '';
-my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-my $report = {};
-my %buildseen;
-foreach my $case (@{$plan->test_cases}){
-    foreach my $cr (@{$case->caseruns}){
-        $buildseen{$cr->build->id} = $cr->build->name;
-        $report->{$case->id}->{$cr->build->id} = $cr;
-    }
-}
-$report->{'builds'} = \%buildseen;
-$vars->{'report'} = $report;
-$vars->{'plan'} = $plan;
-$template->process("testopia/reports/build-coverage.html.tmpl", $vars)
-   || ThrowTemplateError($template->error());
+my $case = Bugzilla::Testopia::TestCase->new($case_id);
 
+my $type = $cgi->param('type') || '';
+
+if ($type eq 'status-breakdown'){
+    
+    my @data;
+    my $caserun = Bugzilla::Testopia::TestCaseRun->new({});
+    
+    my @names;
+    my @values;
+    foreach my $status (@{$caserun->get_status_list}){
+         push @names, $status->{'name'};
+         push @values, $case->get_caserun_count($status->{'id'});
+    }
+    push @data, \@names;
+    push @data, \@values;
+
+    $vars->{'width'} = 200;
+    $vars->{'height'} = 150;
+    $vars->{'data'} = \@data;
+    $vars->{'chart_title'} = 'Historic Status Breakdown';
+    $vars->{'colors'} = (['#858aef', '#56e871', '#ed3f58', '#b8eae1', '#f1d9ab', '#e17a56']);
+    
+    $template->process("testopia/reports/pie.png.tmpl", $vars)
+       || ThrowTemplateError($template->error());
+}

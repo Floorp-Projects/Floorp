@@ -367,6 +367,32 @@ sub get_priority_list {
     return $ref
 }
 
+=head2 get_caserun_count
+
+Takes a status and returns the count of that status
+
+=cut
+
+sub get_caserun_count {
+    my $self = shift;
+    my ($status) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my $query = "SELECT COUNT(*) 
+                   FROM test_case_runs 
+                  WHERE case_id = ? ";
+       $query .= "AND case_run_status_id = ?" if $status;
+       
+    my $count;
+    if ($status){
+        ($count) = $dbh->selectrow_array($query,undef,($self->id,$status));
+    }
+    else {
+        ($count) = $dbh->selectrow_array($query,undef,$self->id);
+    }
+    return $count;
+}
+
 =head2 add_tag
 
 Associates a tag with this test case
