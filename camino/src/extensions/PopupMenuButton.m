@@ -69,6 +69,9 @@ NSString* const PopupMenuButtonWillDisplayMenu = @"PopupMenuButtonWillDisplayMen
     return;
   }
 
+  if (![self isEnabled])
+    return;
+
   [[NSNotificationCenter defaultCenter] postNotificationName:PopupMenuButtonWillDisplayMenu object:self];
 
   NSPoint menuLocation = NSMakePoint(0, NSHeight([self frame]) + 4.0);
@@ -91,8 +94,17 @@ NSString* const PopupMenuButtonWillDisplayMenu = @"PopupMenuButtonWillDisplayMen
   [[self cell] setHighlighted:NO];
 }
 
+- (NSMenu *)menuForEvent:(NSEvent *)theEvent
+{
+  // the menu should only show when we explicitly show it (not for events like right-click)
+  return nil;
+}
+
 - (void)mouseDown:(NSEvent *)event
 {
+  if (![self isEnabled])
+    return;
+
   [[NSNotificationCenter defaultCenter] postNotificationName:PopupMenuButtonWillDisplayMenu object:self];
 
   NSPoint menuLocation = NSMakePoint(0, NSHeight([self frame]) + 4.0);

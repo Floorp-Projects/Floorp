@@ -832,11 +832,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void) setCanEditSelectedContainerContents:(BOOL)inCanEdit
 {
   [mBookmarksOutlineView setAllowsEditing:inCanEdit];
-  // XXX update buttons
-//  [mAddBookmarkButton setEnabled:inCanEdit];
-//  [mAddFolderButton setEnabled:inCanEdit];
-  // if editable and something is selected, then enable get info button, otherwise disable it
-  //[mInfoButton setEnabled:(inCanEdit && ([mBookmarksOutlineView numberOfSelectedRows] == 1))];
+  [mAddButton setEnabled:inCanEdit];
+  [mSortButton setEnabled:inCanEdit];
 }
 
 -(void) setActiveCollection:(BookmarkFolder *)aFolder
@@ -1196,7 +1193,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     [mHistoryOutlineViewDelegate clearSearchResults];
     [mHistoryOutlineViewDelegate historyViewMadeVisible:YES];
     
+    [mAddButton    setEnabled:NO];
     [mActionButton setMenu:mActionMenuHistory];
+    [mSortButton   setEnabled:YES];
     [mSortButton   setMenu:mSortMenuHistory];
     [mSearchField  setPopupMenu:mQuickSearchMenuHistory];
     [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
@@ -1904,7 +1903,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     {
       actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItems:selectedBMs fromView:mBookmarksOutlineView target:self];
       // remove the arrange stuff, because it's on the sort button too
-      [actionMenu removeItemsFromIndex:[actionMenu indexOfItemWithTag:kBookmarksContextMenuArrangeSeparatorTag]];
+      int arrangeSeparatorIndex = [actionMenu indexOfItemWithTag:kBookmarksContextMenuArrangeSeparatorTag];
+      if (arrangeSeparatorIndex != -1)
+        [actionMenu removeItemsFromIndex:arrangeSeparatorIndex];
     }
     else
       actionMenu = mActionMenuBookmarks;
