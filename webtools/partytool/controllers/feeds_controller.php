@@ -86,10 +86,13 @@ class FeedsController extends AppController {
     }
   }
 
-  function upcoming() {
+  function upcoming($limit = null) {
     $this->layout = 'ajax';
     header('Content-type: application/rss+xml');
-    $this->set('latest', $this->Feed->findAll('WHERE date > '. time(), '', 'date ASC', 10, 1));
+
+    ($limit == null) ? $limit = 25 : $limit = intval($limit);
+
+    $this->set('latest', $this->Feed->findAll('WHERE date > '. time(), '', 'date ASC', $limit, 1));
   }
 
   function ical() {
