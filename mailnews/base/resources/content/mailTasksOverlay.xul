@@ -68,6 +68,7 @@
 
         var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
         observerService.addObserver(biffObserver, "mail:biff-state-changed", false);
+        biffObserver.observe(null, "mail:biff-state-changed", null);
         addEventListener("unload", mailTasksOnUnload, false);
       }
 
