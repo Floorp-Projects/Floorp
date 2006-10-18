@@ -34,37 +34,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom.internal;
+package org.mozilla.xpcom;
 
-import java.io.File;
+public class ProfileLock {
 
-import org.mozilla.xpcom.IAppFileLocProvider;
-import org.mozilla.xpcom.IXPCOM;
-import org.mozilla.xpcom.nsIComponentManager;
-import org.mozilla.xpcom.nsIComponentRegistrar;
-import org.mozilla.xpcom.nsILocalFile;
-import org.mozilla.xpcom.nsIServiceManager;
+  private long lock = 0;
 
-
-public class XPCOMImpl implements IXPCOM {
-
-  public nsIServiceManager initXPCOM(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider) {
-    return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
+  public ProfileLock(long aLockObject) {
+    lock = aLockObject;
   }
 
-  public native nsIServiceManager initXPCOMNative(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider);
+  public void release() {
+    releaseNative(lock);
+    lock = 0;
+  }
 
-  public native void shutdownXPCOM(nsIServiceManager aServMgr);
+  private native void releaseNative(long aLockObject);
 
-  public native nsIComponentManager getComponentManager();
+  public boolean isValid() {
+    return lock != 0;
+  }
 
-  public native nsIComponentRegistrar getComponentRegistrar();
-
-  public native nsIServiceManager getServiceManager();
-
-  public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
+  protected void finalize() throws Throwable {
+    release();
+    super.finalize();
+  }
 
 }
-

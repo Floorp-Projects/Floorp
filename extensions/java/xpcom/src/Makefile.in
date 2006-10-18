@@ -84,6 +84,7 @@ JARFILE = javaxpcom.jar
 JAVA_SRCS = \
 		org/mozilla/xpcom/internal/XPCOMJavaProxy.java \
 		org/mozilla/xpcom/internal/XPCOMJavaProxyBase.java \
+		org/mozilla/xpcom/internal/MozillaImpl.java \
 		org/mozilla/xpcom/internal/GREImpl.java \
 		org/mozilla/xpcom/internal/XPCOMImpl.java \
 		org/mozilla/xpcom/internal/JavaXPCOMMethods.java \

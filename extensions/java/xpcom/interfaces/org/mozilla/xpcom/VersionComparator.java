@@ -37,7 +37,8 @@
 
 package org.mozilla.xpcom;
 
-import java.util.*;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
 
 
 /**

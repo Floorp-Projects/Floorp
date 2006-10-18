@@ -38,33 +38,17 @@ package org.mozilla.xpcom.internal;
 
 import java.io.File;
 
-import org.mozilla.xpcom.IAppFileLocProvider;
-import org.mozilla.xpcom.IXPCOM;
-import org.mozilla.xpcom.nsIComponentManager;
-import org.mozilla.xpcom.nsIComponentRegistrar;
-import org.mozilla.xpcom.nsILocalFile;
-import org.mozilla.xpcom.nsIServiceManager;
+import org.mozilla.xpcom.IMozilla;
+import org.mozilla.xpcom.XPCOMInitializationException;
 
+public class MozillaImpl implements IMozilla {
 
-public class XPCOMImpl implements IXPCOM {
-
-  public nsIServiceManager initXPCOM(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider) {
-    return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
+  public void initialize(File aLibXULDirectory)
+      throws XPCOMInitializationException {
+    JavaXPCOMMethods.registerJavaXPCOMMethods(aLibXULDirectory);
+    initializeNative();
   }
 
-  public native nsIServiceManager initXPCOMNative(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider);
-
-  public native void shutdownXPCOM(nsIServiceManager aServMgr);
-
-  public native nsIComponentManager getComponentManager();
-
-  public native nsIComponentRegistrar getComponentRegistrar();
-
-  public native nsIServiceManager getServiceManager();
-
-  public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
+  private native void initializeNative();
 
 }
-

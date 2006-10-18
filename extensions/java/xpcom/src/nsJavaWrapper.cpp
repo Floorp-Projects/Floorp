@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -46,6 +45,8 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 
 static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
@@ -1742,3 +1743,17 @@ JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that,
   return JNI_FALSE;
 }
 
+/**
+ *  org.mozilla.xpcom.ProfileLock.release
+ */
+extern "C" NS_EXPORT void
+LOCKPROXY_NATIVE(release) (JNIEnv *env, jclass that, jlong aLockObject)
+{
+  // Need to release object on the main thread.
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIThread> thread = do_GetMainThread();
+  if (thread) {
+    rv = NS_ProxyRelease(thread, NS_REINTERPRET_CAST(nsISupports*, aLockObject));
+  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
+}

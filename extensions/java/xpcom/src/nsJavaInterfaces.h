@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -41,11 +40,16 @@
 #include "jni.h"
 #include "nscore.h"
 
+#define MOZILLA_NATIVE(func) Java_org_mozilla_xpcom_internal_MozillaImpl_##func
 #define GRE_NATIVE(func) Java_org_mozilla_xpcom_internal_GREImpl_##func
 #define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_internal_XPCOMImpl_##func
 #define JAVAPROXY_NATIVE(func) \
           Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
+#define LOCKPROXY_NATIVE(func) Java_org_mozilla_xpcom_ProfileLock_##func
 
+
+extern "C" NS_EXPORT void
+MOZILLA_NATIVE(initialize) (JNIEnv* env, jobject);
 
 extern "C" NS_EXPORT void
 GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
@@ -53,6 +57,12 @@ GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
 
 extern "C" NS_EXPORT void
 GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject);
+
+extern "C" NS_EXPORT jobject
+GRE_NATIVE(lockProfileDirectory) (JNIEnv *, jobject, jobject aDirectory);
+
+extern "C" NS_EXPORT void
+GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject);
 
 extern "C" NS_EXPORT jobject
 GRE_NATIVE(lockProfileDirectory) (JNIEnv *, jobject, jobject aDirectory);
@@ -90,5 +100,8 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy);
 extern "C" NS_EXPORT jboolean
 JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that, jobject aProxy1,
                                      jobject aProxy2);
+
+extern "C" NS_EXPORT void
+LOCKPROXY_NATIVE(release) (JNIEnv *env, jclass that, jlong aLockObject);
 
 #endif // _nsJavaInterfaces_h_

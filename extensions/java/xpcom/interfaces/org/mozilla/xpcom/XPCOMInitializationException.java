@@ -34,37 +34,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom.internal;
-
-import java.io.File;
-
-import org.mozilla.xpcom.IAppFileLocProvider;
-import org.mozilla.xpcom.IXPCOM;
-import org.mozilla.xpcom.nsIComponentManager;
-import org.mozilla.xpcom.nsIComponentRegistrar;
-import org.mozilla.xpcom.nsILocalFile;
-import org.mozilla.xpcom.nsIServiceManager;
+package org.mozilla.xpcom;
 
 
-public class XPCOMImpl implements IXPCOM {
+public class XPCOMInitializationException extends RuntimeException {
 
-  public nsIServiceManager initXPCOM(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider) {
-    return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
+  private static final long serialVersionUID = -7067350325909231055L;
+
+  public XPCOMInitializationException(String message) {
+    super(message);
   }
 
-  public native nsIServiceManager initXPCOMNative(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider);
+  public XPCOMInitializationException(Throwable cause) {
+    super(cause);
+  }
 
-  public native void shutdownXPCOM(nsIServiceManager aServMgr);
-
-  public native nsIComponentManager getComponentManager();
-
-  public native nsIComponentRegistrar getComponentRegistrar();
-
-  public native nsIServiceManager getServiceManager();
-
-  public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
+  public XPCOMInitializationException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }
-
