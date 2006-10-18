@@ -142,6 +142,17 @@ elsif ($action eq 'delete'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
+    $vars->{'title'} = 'Remove Test Case '. $caserun->case->id .' from Run: ' . $caserun->run->summary;
+    $vars->{'bugcount'} = scalar @{$caserun->bugs};
+    $vars->{'form_action'} = 'tr_show_caserun.cgi';
+    $vars->{'caserun'} = $caserun;
+    $template->process("testopia/caserun/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+}
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
+    ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
     $caserun->obliterate;
     $cgi->delete_all;
     $cgi->param('current_tab', 'case_run');

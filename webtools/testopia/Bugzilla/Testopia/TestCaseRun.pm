@@ -950,9 +950,8 @@ sub candelete {
     my $self = shift;
     
     return ($self->canedit 
-            && Param('allow-test-deletion') 
-            && scalar @{$self->get_case_run_list} == 1
-            && $self->status eq 'IDLE');
+            && Param('allow-test-deletion')); 
+
 }
 
 =head2 obliterate

@@ -49,6 +49,9 @@
 <br/>
 [% IF table.list_count %]
   [% PROCESS "testopia/caserun/case-history.html.tmpl" %]
+  [% IF Param('allow-test-deletion') %]
+    <p align="right"><input type="submit" name="action" value="Delete Selected" /></p>
+  [% END %]
 [% END %]
 <p>
 [% IF table.list_count == 0 %]

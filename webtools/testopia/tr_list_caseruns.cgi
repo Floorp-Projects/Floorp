@@ -33,7 +33,7 @@ use Bugzilla::Testopia::TestCaseRun;
 use Bugzilla::Testopia::Table;
 
 use vars qw($vars $template);
-require "globals.pl";
+require 'globals.pl';
 
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -46,6 +46,7 @@ $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
 Bugzilla->login();
 print $cgi->header;
+
 my $action = $cgi->param('action') || '';
 
 if ($action eq 'Commit'){
@@ -131,6 +132,43 @@ if ($action eq 'Commit'){
     }
     exit;
 }
+elsif ($action eq 'Delete Selected'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $reg = qr/r_([\d]+)/;
+    my @caseruns;
+    foreach my $p ($cgi->param()){
+        my $caserun = Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
+        ThrowUserError("testopia-read-only", {'object' => 'case run'}) if ($caserun && !$caserun->candelete);
+        push @caseruns, $caserun if $caserun;
+    }
+    ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) if (scalar @caseruns < 1);
+    $vars->{'caseruns'} = \@caseruns;
+    $vars->{'caseruncount'} = scalar @caseruns;
+    $vars->{'title'} = "Remove Test Cases from Run"; 
+    $vars->{'form_action'} = 'tr_list_caseruns.cgi';
+    $vars->{'run_id'} = $cgi->param('run_id');
+    $template->process("testopia/caserun/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+    exit;
+}
+elsif ($action eq 'do_delete'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my @caseruns;
+    foreach my $id ($cgi->param('caserun_id')){
+        my $caserun = Bugzilla::Testopia::TestCaseRun->new($id);
+        push @caseruns, $caserun;
+        ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
+    }
+    foreach my $c (@caseruns){
+        $c->obliterate;
+    }
+    $vars->{'deleted'} = 1;
+    $vars->{'run_id'} = $cgi->param('run_id');
+    $template->process("testopia/caserun/delete.html.tmpl", $vars) ||
+        ThrowTemplateError($template->error());
+    exit;
+}
+
 # Take the search from the URL params and convert it to SQL
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);
