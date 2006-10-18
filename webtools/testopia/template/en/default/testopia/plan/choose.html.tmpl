@@ -31,6 +31,9 @@
     Please enter a plan id:
     <input name="plan_id" size="6">
     <input type="submit" value="Use This Test Plan">
+    [% IF form_action == 'tr_new_run.cgi' %]
+      <input type="hidden" name="case_status_id" value="2" />
+    [% END %]
   </p>
 </form>
 
