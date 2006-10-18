@@ -202,7 +202,7 @@ function getBrowserURL()
                      .getCharPref("browser.chromeURL");
   } catch (e) {
   }
-  return "chrome://navigator/content/naviagator.xul";
+  return "chrome://navigator/content/navigator.xul";
 }
 
 function handURIToExistingBrowser(uri, location, features)
