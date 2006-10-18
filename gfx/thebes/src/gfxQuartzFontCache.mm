@@ -50,6 +50,7 @@
 gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
 
 gfxQuartzFontCache::gfxQuartzFontCache() {
+    mCache.Init();
 }
 
 #define SYNTHESIZED_FONT_TRAITS (NSBoldFontMask | NSItalicFontMask)
@@ -220,6 +221,27 @@ FindFontWeight (NSFontManager *fontManager, NSFont *font, int desiredWeight, int
 ATSUFontID
 gfxQuartzFontCache::FindATSUFontIDForFamilyAndStyle (const nsAString& aFamily,
                                                      const gfxFontStyle *aStyle)
+{
+    FontAndFamilyContainer key(aFamily, *aStyle);
+    ATSUFontID fid;
+
+    if (mCache.Get(key, &fid))
+        return fid;
+
+    // Prevent this from getting too big.  This is an arbitrary number,
+    // but it's not worth doing a more complex eviction policy for this.
+    if (mCache.Count() > 5000)
+        mCache.Clear();
+
+    fid = FindFromSystem(aFamily, aStyle);
+    mCache.Put(key, fid);
+
+    return fid;
+}
+
+ATSUFontID
+gfxQuartzFontCache::FindFromSystem (const nsAString& aFamily,
+                                    const gfxFontStyle *aStyle)
 {
     NSString *desiredFamily = [NSString stringWithCharacters:aFamily.BeginReading() length:aFamily.Length()];
     NSFontTraitMask desiredTraits = 0;

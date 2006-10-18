@@ -38,12 +38,11 @@
 #ifndef GFXQUARTZFONTCACHE_H_
 #define GFXQUARTZFONTCACHE_H_
 
+#include "nsDataHashtable.h"
+
 #include "gfxAtsuiFonts.h"
 
-// XXX this is called a Cache because optimistically it will
-// cache [family, weight, traits, language] -> fontid so that
-// it doesn't have to do the lookup each time.  It doesn't
-// do this yet.
+#include "nsUnicharUtils.h"
 
 class gfxQuartzFontCache {
 public:
@@ -62,6 +61,52 @@ private:
     static gfxQuartzFontCache *sSharedFontCache;
 
     gfxQuartzFontCache();
+
+    ATSUFontID FindFromSystem (const nsAString& aFamily,
+                               const gfxFontStyle* aStyle);
+
+    struct FontAndFamilyContainer {
+        FontAndFamilyContainer (const nsAString& family, const gfxFontStyle& style)
+            : mFamily(family), mStyle(style)
+        {
+            ToLowerCase(mFamily);
+        }
+
+        FontAndFamilyContainer (const FontAndFamilyContainer& other)
+            : mFamily(other.mFamily), mStyle(other.mStyle)
+        { }
+
+        nsString mFamily;
+        gfxFontStyle mStyle;
+    };
+
+    struct FontAndFamilyKey : public PLDHashEntryHdr {
+        typedef const FontAndFamilyContainer& KeyType;
+        typedef const FontAndFamilyContainer* KeyTypePointer;
+
+        FontAndFamilyKey(KeyTypePointer aObj) : mObj(*aObj) { }
+        FontAndFamilyKey(const FontAndFamilyKey& other) : mObj(other.mObj) { }
+        ~FontAndFamilyKey() { }
+
+        KeyType GetKey() const { return mObj; }
+        KeyTypePointer GetKeyPointer() const { return &mObj; }
+
+        PRBool KeyEquals(KeyTypePointer aKey) const {
+            return
+                aKey->mFamily.Equals(mObj.mFamily) &&
+                aKey->mStyle.Equals(mObj.mStyle);
+        }
+
+        static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+        static PLDHashNumber HashKey(KeyTypePointer aKey) {
+            return HashString(aKey->mFamily);
+        }
+        enum { ALLOW_MEMMOVE = PR_FALSE };
+    private:
+        const FontAndFamilyContainer mObj;
+    };
+
+    nsDataHashtable<FontAndFamilyKey, ATSUFontID> mCache;
 };
 
-#endif /* MACFONTCACHE_H_ */
+#endif /* GFXQUARTZFONTCACHE_H_ */
