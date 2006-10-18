@@ -158,9 +158,9 @@ sub store {
  
     $dbh->do("INSERT INTO test_attachments ($columns)
               VALUES (?,?,?,?,?,?,?,?)",
-              undef, "NULL", $self->{'plan_id'}, $self->{'case_id'}, 
+              undef, (undef, $self->{'plan_id'}, $self->{'case_id'}, 
               $self->{'submitter_id'}, $self->{'description'}, 
-              $self->{'filename'}, $timestamp, $self->{'mime_type'});
+              $self->{'filename'}, $timestamp, $self->{'mime_type'}));
  
     my $key = $dbh->bz_last_key( 'test_attachments', 'attachment_id' );
     $dbh->do("INSERT INTO test_attachment_data (attachment_id, contents) VALUES(?,?)",
