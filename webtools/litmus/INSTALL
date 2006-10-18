@@ -13,8 +13,11 @@ If at any point you find that you don't understand these installation
 instructions, it's a good sign you want to turn back as well.
 
 Required Perl Modules: 
+
+Apache::DBI
 Class::DBI 
 Class::DBI::mysql 
+Data::JavaScript
 Date::Manip
 HTML::StripScripts
 HTML::StripScripts::Parser
@@ -22,7 +25,7 @@ Template
 Text::Markdown
 Time::HiRes
 Time::Piece 
-Time::Piece::mysql 
+Time::Piece::MySQL 
 Time::Seconds
 XML::XPath
 

@@ -70,7 +70,7 @@ our \$bugzilla_pass = "litmus";
 EOT
         close(OUT);
         print "Go edit 'localconfig' with your configuration and \n";
-        print "run this script again.";
+        print "run this script again.\n";
         exit;
 } 
 
