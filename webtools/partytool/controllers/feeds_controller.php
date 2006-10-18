@@ -124,7 +124,7 @@ class FeedsController extends AppController {
   
   function topguests($limit = null) {
     $this->layout = 'ajax';
-    header('Content-type: text/xml');
+    header('Content-type: application/rss+xml');
 
     ($limit == null) ? $limit = 25 : $limit = intval($limit);
 
