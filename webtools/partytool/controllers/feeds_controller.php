@@ -118,5 +118,23 @@ class FeedsController extends AppController {
     }
     $this->set('events', $cal);
   }
+  
+  function topguests($limit = null) {
+    $this->layout = 'ajax';
+    header('Content-type: text/xml');
+
+    ($limit == null) ? $limit = 25 : $limit = intval($limit);
+
+    $rv = $this->Feed->query("SELECT parties.name AS name,
+                                guests.pid AS id,
+                                COUNT(guests.pid) AS count
+                              FROM guests
+                              LEFT JOIN parties
+                                ON guests.pid = parties.id
+                              GROUP BY guests.pid
+                              ORDER BY count DESC
+                              LIMIT $limit");
+    $this->set('items', $rv);
+  }
 }
 ?>
