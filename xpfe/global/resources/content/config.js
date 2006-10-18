@@ -367,8 +367,8 @@ function ShowPrefs()
   document.getElementById("configTree").view = view;
 
   document.getElementById("configDeck").setAttribute("selectedIndex", 1);
-  var showNextTime = document.getElementById("showWarningNextTime").checked;
-  gPrefBranch.setBoolPref("general.warnOnAboutConfig", showNextTime);
+  if (!document.getElementById("showWarningNextTime").checked)
+    gPrefBranch.setBoolPref("general.warnOnAboutConfig", false);
 
   document.getElementById("textbox").focus();
 }
