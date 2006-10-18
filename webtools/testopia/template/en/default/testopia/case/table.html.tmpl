@@ -82,7 +82,7 @@ Select:
     <td align="left" valign="top"><span id="sta[% case.status %]">[% case.status %]</span></td>
   </tr>
 
-  <tr class="[% rowclass %]_first">
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
     <td></td>
     <td colspan="10" style="margin:0px;padding:0px;">
       <div id="ra[% loop.count %]" class="ae_dv" style=
@@ -110,6 +110,14 @@ Select:
               <a href="tr_show_plan.cgi?plan_id=[% p.id FILTER none %]">[% p.id FILTER none %]</a>
             [% END %]
           </div>
+          <div style="float:right;">
+            [% IF case.can_unlink_plan(p.id) %]
+              <a href="tr_show_case.cgi?action=unlink&plan_id=[% p.id FILTER none %]&case_id=[% case.id FILTER none %]">Unlink</a>
+            [% END %]            
+            [% IF plan.candelete %]
+              <a href="tr_show_case.cgi?case_id=[% case.id FILTER none %]&action=Delete">Delete</a>
+            [% END %]
+          </span>    
         </div>
       </div>
     </td>
