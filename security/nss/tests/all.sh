@@ -93,15 +93,18 @@ fi
 for i in ${TESTS}
 do
     SCRIPTNAME=${i}.sh
-    echo "Running Tests for $i"
-    echo "TIMESTAMP $i BEGIN: `date`"
     if [ "$O_CRON" = "ON" ]
     then
-        (cd ${QADIR}/$i ; time ./$SCRIPTNAME all file) >> ${LOGFILE} 2>&1
+        echo "Running tests for $i" >> ${LOGFILE}
+        echo "TIMESTAMP $i BEGIN: `date`" >> ${LOGFILE}
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file) >> ${LOGFILE} 2>&1
+        echo "TIMESTAMP $i END: `date`" >> ${LOGFILE}
     else
-        (cd ${QADIR}/$i ; time ./$SCRIPTNAME all file) 2>&1 | tee -a ${LOGFILE}
+        echo "Running tests for $i" | tee -a ${LOGFILE}
+        echo "TIMESTAMP $i BEGIN: `date`" | tee -a ${LOGFILE}
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file) 2>&1 | tee -a ${LOGFILE}
+        echo "TIMESTAMP $i END: `date`" | tee -a ${LOGFILE}
     fi
-    echo "TIMESTAMP $i END: `date`"
 done
 
 SCRIPTNAME=all.sh
