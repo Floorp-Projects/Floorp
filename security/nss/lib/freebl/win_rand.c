@@ -324,6 +324,9 @@ ReadSystemFiles()
     RNG_RandomUpdate(&dwNumFiles, sizeof(dwNumFiles));
 
     // now read 10 files
+    // because of a programming error, the code actually reads the
+    // first 10 readable files, then 10 or 11 files spread throughout
+    // the system directory
     filesToRead = 10;
     if (dwNumFiles == 0)
         return;
