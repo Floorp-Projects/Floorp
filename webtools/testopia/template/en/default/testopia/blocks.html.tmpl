@@ -9,14 +9,14 @@
   # implied. See the License for the specific language governing
   # rights and limitations under the License.
   #
-  # The Original Code is the Bugzilla Test Runner System.
+  # The Original Code is the Bugzilla Testopia System
   #
-  # The Initial Developer of the Original Code is Maciej Maczynski.
-  # Portions created by Maciej Maczynski are Copyright (C) 2001
-  # Maciej Maczynski. All Rights Reserved.
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2001
+  # Greg Hendricks. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 Greg Hendricks <ghendricks@novell.com>
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #                 Karla Hendricks <palegreensocks@gmail.com>
   #%]
   
 [%############################################################################%]
@@ -46,6 +46,19 @@
    [% url = "$table.get_page_url&page="%]
    [%# url = "$table.url_loc?direction=$direction&getlist=1&page="%]
 [% END %]
+<script type='text/javascript'>
+  function jumpToPage(page){
+    var digit = /^\d+$/;
+    page = page - 1;
+    if ((page >= [% table.page_count %]) || (page < 0) || !digit.test(page)){
+      alert('Invalid page number. Please enter a vlue between 1 and [% table.page_count %] ');
+      return;
+    }
+    var url = '[% url %]' + page;
+    document.location = url;
+  }
+</script>
+
 <table align="center">
   <tr>
   [% IF table.page != 0 %]
@@ -56,8 +69,24 @@
     <td>&lt;&nbsp;Previous</td>
   [% END %]
     <td align="center">
-    [% SET p = 0 %]
-    [% WHILE p <= table.page_count - 1 %]
+    [% SET framewidth = 10 %]
+    [% IF (table.page_count - table.page) < (framewidth / 2) %]
+      [% SET p = table.page_count - framewidth %]
+      [% SET frame_end = table.page_count - 1 %]
+      [% SET start_mark = '...' %]
+    [% ELSIF table.page < (framewidth / 2) %]
+      [% SET p = 0 %]
+      [% SET frame_end = framewidth %]
+      [% SET end_mark = '...' %]
+    [% ELSE %]
+      [% SET p = table.page - (framewidth / 2) %]
+      [% SET frame_end = table.page + (framewidth / 2) %]
+      [% SET start_mark = '...' %]
+      [% SET end_mark = '...' %]
+    [% END %]
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    [% start_mark %]
+    [% WHILE p <= frame_end %]
       [% IF p != table.page %]
       <a href="[% url %][% p %][% pc %]">[% p + 1 %]</a>&nbsp;
       [% ELSE %]
@@ -65,6 +94,10 @@
       [% END %]
       [% p = p + 1 %]
     [% END %]
+    [% end_mark %]
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <input type="button" onclick="jumpToPage(document.getElementById('jump').value)" value="Jump To Page">
+    <input id="jump" size="4">
     [% IF ajax %]
     <a href="[% url %]null,1[% pc %]">All</a>&nbsp;
     [% ELSE %]
