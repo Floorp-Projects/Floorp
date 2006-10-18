@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,21 +36,56 @@
 
 package org.mozilla.xpcom;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.net.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Properties;
 
 
 /**
+ * A singleton class which provides access to the Mozilla browser.  Requires
+ * that XULRunner be installed on the user's system.
+ * <p>
+ * You would use to class to find a XULRunner installation, setup a profile (if
+ * necessary), and initialize embedding.  A typical scenario would look like
+ * this:
+ * </p><pre>
+ * Mozilla mozilla = Mozilla.getInstance();
+ * GREVersionRange[] range = new GREVersionRange[1];
+ * range[0] = new GREVersionRange("1.8.0.*", false, "1.8.1.*", true);
+ * try {
+ *    File grePath = Mozilla.getGREPathWithProperties(range, null);
+ *    mozilla.initialize(grePath);
+ *    profLock = mozilla.lockProfileDirectory(profileDir);
+ *    // LocationProvider is a user class that implements IAppFileLocProvider
+ *    LocationProvider locProvider = new LocationProvider(grePath, profileDir);
+ *    mozilla.initEmbedding(grePath, grePath, locProvider);
+ *    mozilla.notifyProfile();
+ * } catch (XPCOMInitializationException xie) {
+ *    // handle exception
+ * } catch (XPCOMException xe) {
+ *    // handle exception
+ * }
+ * </pre>
+ * 
  * @see http://www.mozilla.org/projects/embedding/GRE.html
  */
-public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
+public class Mozilla implements IMozilla, IGRE, IXPCOM, IXPCOMError {
 
   private static Mozilla mozillaInstance = new Mozilla();
 
   private static final String JAVAXPCOM_JAR = "javaxpcom.jar";
+
+  private IMozilla mozilla = null;
 
   private IGRE gre = null;
 
@@ -577,6 +611,53 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
   }
 
   /**
+   * Initialize the Mozilla object with the given XULRunner path.  All
+   * subsequent Mozilla method invocations be done against the given XULRunner
+   * version.
+   *
+   * @param aLibXULDirectory  path of XULRunner build to use
+   *
+   * @throws XPCOMInitializationException if failure occurred during
+   *         initialization
+   */
+  public void initialize(File aLibXULDirectory)
+  throws XPCOMInitializationException {
+    File jar = new File(aLibXULDirectory, JAVAXPCOM_JAR);
+    if (!jar.exists()) {
+      throw new XPCOMInitializationException("Could not find " + JAVAXPCOM_JAR +
+          " in " + aLibXULDirectory);
+    }
+
+    URL[] urls = new URL[1];
+    try {
+      urls[0] = jar.toURL();
+    } catch (MalformedURLException e) {
+      throw new XPCOMInitializationException(e);
+    }
+    ClassLoader loader = new URLClassLoader(urls,
+            this.getClass().getClassLoader());
+
+    try {
+      Class mozillaClass = Class.forName("org.mozilla.xpcom.internal.MozillaImpl",
+          true, loader);
+      mozilla  = (IMozilla) mozillaClass.newInstance();
+
+      Class greClass = Class.forName("org.mozilla.xpcom.internal.GREImpl",
+          true, loader);
+      gre = (IGRE) greClass.newInstance();
+
+      Class xpcomClass = Class.forName("org.mozilla.xpcom.internal.XPCOMImpl",
+                                       true, loader);
+      xpcom = (IXPCOM) xpcomClass.newInstance();
+    } catch (Exception e) {
+      throw new XPCOMInitializationException("Could not load " +
+          "org.mozilla.xpcom.internal.* classes", e);
+    }
+    
+    mozilla.initialize(aLibXULDirectory);
+  }
+
+  /**
    * Initializes libXUL for embedding purposes.
    * <p>
    * NOTE: This function must be called from the "main" thread.
@@ -594,49 +675,17 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    *                           provider will be aggregated by a libXUL provider
    *                           which will provide the base required GRE keys.
    *
-   * @throws IllegalArgumentException  if <code>aLibXULDirectory</code> is not
-   *                           a valid path
-   * @throws XPCOMException  if a failure occurred during initialization
+   * @throws XPCOMException if a failure occurred during initialization
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
           IAppFileLocProvider aAppDirProvider) throws XPCOMException {
-    loadJavaXPCOM(aLibXULDirectory, true);
-    gre.initEmbedding(aLibXULDirectory, aAppDirectory, aAppDirProvider);
-  }
-
-  /**
-   * @param aLibXULDirectory
-   * @param aLoadGREImpl
-   * @throws XPCOMException
-   */
-  private void loadJavaXPCOM(File aLibXULDirectory, boolean aLoadGREImpl)
-          throws XPCOMException {
-    File jar = new File(aLibXULDirectory, JAVAXPCOM_JAR);
-    if (!jar.exists()) {
-      throw new XPCOMException(NS_ERROR_FILE_INVALID_PATH);
-    }
-
-    URL[] urls = new URL[1];
     try {
-      urls[0] = jar.toURL();
-    } catch (MalformedURLException e) {
-      throw new XPCOMException(NS_ERROR_FILE_INVALID_PATH);
-    }
-    ClassLoader loader = new URLClassLoader(urls,
-            this.getClass().getClassLoader());
-
-    try {
-      if (aLoadGREImpl) {
-        Class greClass = Class.forName("org.mozilla.xpcom.internal.GREImpl",
-                                       true, loader);
-        gre = (IGRE) greClass.newInstance();
-      }
-      Class xpcomClass = Class.forName("org.mozilla.xpcom.internal.XPCOMImpl",
-                                       true, loader);
-      xpcom = (IXPCOM) xpcomClass.newInstance();
-    } catch (Exception e) {
-      throw new XPCOMException(NS_ERROR_FAILURE,
-              "failure creating org.mozilla.xpcom.internal.*");
+      gre.initEmbedding(aLibXULDirectory, aAppDirectory, aAppDirProvider);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -645,16 +694,92 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    * <p>
    * NOTE: Release any references to XPCOM objects that you may be holding
    *       before calling this function.
+   *
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
-  public void termEmbedding() throws XPCOMException {
+  public void termEmbedding() {
     try {
       gre.termEmbedding();
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized GRE object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     } finally {
+      mozilla = null;
       gre = null;
       xpcom = null;
+    }
+  }
+
+  /**
+   * Lock a profile directory using platform-specific semantics.
+   *
+   * @param aDirectory  The profile directory to lock.
+   *
+   * @return  A lock object. The directory will remain locked until the lock is
+   *          released by invoking the <code>release</code> method, or by the
+   *          termination of the JVM, whichever comes first.
+   *
+   * @throws XPCOMException if profile is already locked (with
+   *         <code>errorcode</code> == <code>NS_ERROR_FILE_ACCESS_DENIED</code>);
+   *         or if a failure occurred
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
+   */
+  public ProfileLock lockProfileDirectory(File aDirectory)
+  throws XPCOMException {
+	  try {
+     return gre.lockProfileDirectory(aDirectory);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);      
+    }
+  }
+
+  /**
+   * Fire notifications to inform the toolkit about a new profile. This
+   * method should be called after <code>initEmbedding</code> if the
+   * embedder wishes to run with a profile.
+   * <p>
+   * Normally the embedder should call <code>lockProfileDirectory</code>
+   * to lock the directory before calling this method.
+   * <p>
+   * NOTE: There are two possibilities for selecting a profile:
+   * <ul>
+   * <li>
+   *    Select the profile before calling <code>initEmbedding</code>.
+   *    The aAppDirProvider object passed to <code>initEmbedding</code>
+   *    should provide the NS_APP_USER_PROFILE_50_DIR key, and
+   *    may also provide the following keys:
+   *      <ul>
+   *        <li>NS_APP_USER_PROFILE_LOCAL_50_DIR
+   *        <li>NS_APP_PROFILE_DIR_STARTUP
+   *        <li>NS_APP_PROFILE_LOCAL_DIR_STARTUP
+   *      </ul>
+   *    In this scenario <code>notifyProfile</code> should be called
+   *    immediately after <code>initEmbedding</code>. Component
+   *    registration information will be stored in the profile and
+   *    JS components may be stored in the fastload cache.
+   * </li>
+   * <li>
+   * 	Select a profile some time after calling <code>initEmbedding</code>.
+   *    In this case the embedder must install a directory service 
+   *    provider which provides NS_APP_USER_PROFILE_50_DIR and optionally
+   *    NS_APP_USER_PROFILE_LOCAL_50_DIR. Component registration information
+   *    will be stored in the application directory and JS components will not
+   *    fastload.
+   * </li>
+   * </ul>
+   *
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
+   */
+  public void notifyProfile() {
+    try {
+      gre.notifyProfile();
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -674,17 +799,23 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    *
    * @return the service manager
    *
-   * @exception XPCOMException <ul>
+   * @throws XPCOMException <ul>
    *      <li> NS_ERROR_NOT_INITIALIZED - if static globals were not initialied,
    *            which can happen if XPCOM is reloaded, but did not completly
    *            shutdown. </li>
    *      <li> Other error codes indicate a failure during initialisation. </li>
    * </ul>
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public nsIServiceManager initXPCOM(File aMozBinDirectory,
           IAppFileLocProvider aAppFileLocProvider) throws XPCOMException {
-    loadJavaXPCOM(aMozBinDirectory, false);
-    return xpcom.initXPCOM(aMozBinDirectory, aAppFileLocProvider);
+    try {
+      return xpcom.initXPCOM(aMozBinDirectory, aAppFileLocProvider);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
+    }
   }
 
   /**
@@ -694,15 +825,19 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    * @param aServMgr    The service manager which was returned by initXPCOM.
    *                    This will release servMgr.
    *
-   * @exception XPCOMException  if a failure occurred during termination
+   * @throws XPCOMException if a failure occurred during termination
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public void shutdownXPCOM(nsIServiceManager aServMgr) throws XPCOMException {
     try {
       xpcom.shutdownXPCOM(aServMgr);
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized XPCOM object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     } finally {
+      mozilla = null;
+      gre = null;
       xpcom = null;
     }
   }
@@ -712,14 +847,16 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    *
    * @return the service manager
    *
-   * @exception XPCOMException
+   * @throws XPCOMException if a failure occurred
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public nsIServiceManager getServiceManager() throws XPCOMException {
     try {
       return xpcom.getServiceManager();
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized XPCOM object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -728,14 +865,16 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    *
    * @return the component manager
    *
-   * @exception XPCOMException
+   * @throws XPCOMException if a failure occurred
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public nsIComponentManager getComponentManager() throws XPCOMException {
     try {
       return xpcom.getComponentManager();
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized XPCOM object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -744,14 +883,16 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    * 
    * @return the component registration manager
    *
-   * @exception XPCOMException
+   * @throws XPCOMException if a failure occurred
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public nsIComponentRegistrar getComponentRegistrar() throws XPCOMException {
     try {
       return xpcom.getComponentRegistrar();
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized XPCOM object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -768,18 +909,20 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
    *
    * @return an instance of an nsILocalFile that points to given path
    *
-   * @exception XPCOMException <ul>
+   * @throws XPCOMException <ul>
    *      <li> NS_ERROR_FILE_UNRECOGNIZED_PATH - raised for unrecognized paths
    *           or relative paths (must supply full file path) </li>
    * </ul>
+   * @throws XPCOMInitializationException if Mozilla was not properly
+   *         initialized
    */
   public nsILocalFile newLocalFile(String aPath, boolean aFollowLinks)
           throws XPCOMException {
     try {
       return xpcom.newLocalFile(aPath, aFollowLinks);
     } catch (NullPointerException e) {
-      throw new XPCOMException(Mozilla.NS_ERROR_NULL_POINTER,
-          "Attempt to use unitialized XPCOM object");
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
     }
   }
 
@@ -882,22 +1025,5 @@ public class Mozilla implements IGRE, IXPCOM, IXPCOMError {
 
     return iid;
   }
-  
-  /**
-   * @see IGRE#lockProfileDirectory(File, nsISupports)
-   */
-  public nsISupports lockProfileDirectory(File aDirectory)
-    throws XPCOMException
-  {
-    return gre.lockProfileDirectory(aDirectory);
-  }
-
-  /**
-   * @see IGRE#notifyProfile()
-   */
-  public void notifyProfile() {
-    gre.notifyProfile();
-  }
 
 }
-

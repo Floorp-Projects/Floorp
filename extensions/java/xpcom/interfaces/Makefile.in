@@ -51,13 +51,16 @@ PACKAGE_DIR = org/mozilla/xpcom
 JAVA_SRCS = \
 		$(PACKAGE_DIR)/Mozilla.java \
 		$(PACKAGE_DIR)/GREVersionRange.java \
+		$(PACKAGE_DIR)/IMozilla.java \
 		$(PACKAGE_DIR)/IGRE.java \
 		$(PACKAGE_DIR)/IXPCOM.java \
-		$(PACKAGE_DIR)/XPCOMException.java \
 		$(PACKAGE_DIR)/IAppFileLocProvider.java \
 		$(PACKAGE_DIR)/INIParser.java \
 		$(PACKAGE_DIR)/VersionComparator.java \
 		$(PACKAGE_DIR)/IXPCOMError.java \
+		$(PACKAGE_DIR)/ProfileLock.java \
+		$(PACKAGE_DIR)/XPCOMException.java \
+		$(PACKAGE_DIR)/XPCOMInitializationException.java \
 		$(NULL)
 
 IFACES_JAR = MozillaInterfaces.jar

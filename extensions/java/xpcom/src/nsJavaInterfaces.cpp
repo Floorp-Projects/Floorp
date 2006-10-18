@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -50,13 +49,23 @@
 #include "nsILocalFile.h"
 
 
+extern "C" NS_EXPORT void
+MOZILLA_NATIVE(initialize) (JNIEnv* env, jobject)
+{
+  if (!InitializeJavaGlobals(env)) {
+    jclass clazz =
+        env->FindClass("org/mozilla/xpcom/XPCOMInitializationException");
+    if (clazz) {
+      env->ThrowNew(clazz, "Failed to initialize JavaXPCOM");
+    }
+  }
+}
+
 nsresult
 InitEmbedding_Impl(JNIEnv* env, jobject aLibXULDirectory,
                    jobject aAppDirectory, jobject aAppDirProvider)
 {
   nsresult rv;
-  if (!InitializeJavaGlobals(env))
-    return NS_ERROR_FAILURE;
 
   // create an nsILocalFile from given java.io.File
   nsCOMPtr<nsILocalFile> libXULDir;
@@ -110,8 +119,6 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
                jobject aAppFileLocProvider, jobject* aResult)
 {
   nsresult rv;
-  if (!InitializeJavaGlobals(env))
-    return NS_ERROR_FAILURE;
 
   // create an nsILocalFile from given java.io.File
   nsCOMPtr<nsILocalFile> directory;
@@ -268,37 +275,33 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
   return nsnull;
 }
 
-nsresult
-LockProfileDirectory_Impl(JNIEnv* env, jobject aDirectory, 
-                          jobject* aJavaLock)
-{
-
-  nsresult rv;
-
-  nsCOMPtr<nsILocalFile> profDir;
-  if (!aDirectory) return NS_ERROR_NULL_POINTER;
-  
-  rv = File_to_nsILocalFile(env, aDirectory, getter_AddRefs(profDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsISupports* lockObj;
-  rv = XRE_LockProfileDirectory(profDir, &lockObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = GetNewOrUsedJavaObject(env, lockObj, NS_GET_IID(nsISupports),
-                              nsnull, aJavaLock);
-  NS_IF_RELEASE(lockObj);
-  return rv;
-}
-
 extern "C" NS_EXPORT jobject
 GRE_NATIVE(lockProfileDirectory) (JNIEnv* env, jobject, jobject aDirectory)
 {
+  nsresult rv = NS_ERROR_FAILURE;
 
-  jobject profLock;
-  nsresult rv = LockProfileDirectory_Impl(env, aDirectory, &profLock);
-  if (NS_SUCCEEDED(rv)) {
-    return profLock;
+  if (aDirectory) {
+    nsCOMPtr<nsILocalFile> profileDir;
+    rv = File_to_nsILocalFile(env, aDirectory, getter_AddRefs(profileDir));
+
+    if (NS_SUCCEEDED(rv)) {
+      nsISupports* lock;
+      rv = XRE_LockProfileDirectory(profileDir, &lock);
+
+      if (NS_SUCCEEDED(rv)) {
+        jclass clazz =
+            env->FindClass("org/mozilla/xpcom/ProfileLock");
+        if (clazz) {
+          jmethodID mid = env->GetMethodID(clazz, "<init>", "(J)V");
+          if (mid) {
+            return env->NewObject(clazz, mid, NS_REINTERPRET_CAST(jlong, lock));
+          }
+        }
+
+        // if we get here, then something failed
+        rv = NS_ERROR_FAILURE;
+      }
+    }
   }
 
   ThrowException(env, rv, "Failure in lockProfileDirectory");

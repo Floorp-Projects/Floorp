@@ -37,7 +37,7 @@
 
 package org.mozilla.xpcom;
 
-import java.io.*;
+import java.io.File;
 
 
 /**
