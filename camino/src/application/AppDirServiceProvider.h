@@ -65,11 +65,11 @@ public:
 protected:
     virtual                 ~AppDirServiceProvider();
 
-    nsresult                GetProfileDirectory(nsILocalFile **outFolder);
+    nsresult                GetProfileDirectory(nsILocalFile** outFolder);
     nsresult                GetParentCacheDirectory(nsILocalFile** outFolder);
       
     nsresult                GetSystemDirectory(OSType inFolderType, nsILocalFile** outFolder);
-    static nsresult 				AppDirServiceProvider::EnsureExists(nsILocalFile* inFolder);
+    static nsresult         AppDirServiceProvider::EnsureExists(nsILocalFile* inFolder);
   
 protected:
     nsCOMPtr<nsILocalFile>  mProfileDir;

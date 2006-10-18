@@ -43,33 +43,33 @@ class nsIPref;
 
 extern NSString* const kPrefChangedNotificationName;
 // userInfo entries:
-  extern NSString* const kPrefChangedPrefNameUserInfoKey;   // NSString
+extern NSString* const kPrefChangedPrefNameUserInfoKey;   // NSString
 
 @interface PreferenceManager : NSObject
 {
 @private
-    NSUserDefaults*       mDefaults;
-    nsProfileDirServiceProvider* mProfileProvider;
-    nsIPref*              mPrefs;
+  NSUserDefaults*       mDefaults;
+  nsProfileDirServiceProvider* mProfileProvider;
+  nsIPref*              mPrefs;
 
-    NSMutableDictionary*  mPrefChangeObservers; // dict of NSMutableArray of PrefChangeObserverOwner, keyed by pref name.
+  NSMutableDictionary*  mPrefChangeObservers; // dict of NSMutableArray of PrefChangeObserverOwner, keyed by pref name.
 
-    long                  mLastRunPrefsVersion;
-    NSString*             mProfilePath;
+  long                  mLastRunPrefsVersion;
+  NSString*             mProfilePath;
 
-    // proxies notification stuff
-    CFRunLoopSourceRef    mRunLoopSource;
+  // proxies notification stuff
+  CFRunLoopSourceRef    mRunLoopSource;
 }
 
-+ (PreferenceManager *)sharedInstance;
-+ (PreferenceManager *)sharedInstanceDontCreate;
++ (PreferenceManager*)sharedInstance;
++ (PreferenceManager*)sharedInstanceDontCreate;
 
 - (BOOL)initMozillaPrefs;
 - (void)syncMozillaPrefs;
 - (void)savePrefsFile;
 
-- (NSString *)homePageUsingStartPage:(BOOL)checkStartupPagePref;
-- (NSString *)searchPage;
+- (NSString*)homePageUsingStartPage:(BOOL)checkStartupPagePref;
+- (NSString*)searchPage;
 
 - (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
 - (NSColor*)getColorPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
@@ -81,7 +81,7 @@ extern NSString* const kPrefChangedNotificationName;
 - (void)setPref:(const char*)prefName toBoolean:(BOOL)value;
 
 // the path to the user profile's root folder, used by camino 0.8+
-- (NSString*) profilePath;
+- (NSString*)profilePath;
 
 // turn notifications on and off when the given pref changes. 
 // if not nil, inObject is used at the 'object' of the resulting notification.

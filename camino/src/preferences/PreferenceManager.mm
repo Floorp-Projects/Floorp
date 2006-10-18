@@ -74,7 +74,7 @@ PRUint32 const kStaticModuleCount = 0;
 
 NSString* const kPrefChangedNotificationName = @"PrefChangedNotification";
 // userInfo entries:
-  NSString* const kPrefChangedPrefNameUserInfoKey = @"pref_name";
+NSString* const kPrefChangedPrefNameUserInfoKey = @"pref_name";
 
 
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
@@ -173,7 +173,7 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
   if (aAppDir)
     aAppDir->GetNativePath(appDir);
 
-  PRFileDesc *fd = nsnull;
+  PRFileDesc* fd = nsnull;
   lf->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
   if (!fd) {
     NS_ERROR("could not create output stream");
@@ -206,8 +206,8 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 
 - (void)registerNotificationListener;
 
-- (void)termEmbedding: (NSNotification*)aNotification;
-- (void)xpcomTerminate: (NSNotification*)aNotification;
+- (void)termEmbedding:(NSNotification*)aNotification;
+- (void)xpcomTerminate:(NSNotification*)aNotification;
 
 - (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat;
 
@@ -233,7 +233,7 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 // 
 // We create one of these each time someone adds a pref observer
 // 
-class PrefChangeObserver: public nsIObserver
+class PrefChangeObserver : public nsIObserver
 {
 public:
                         PrefChangeObserver(id inObject)  // inObject can be nil
@@ -276,7 +276,7 @@ PrefChangeObserver::UnregisterForPref(const char* inPrefName)
 }
 
 NS_IMETHODIMP
-PrefChangeObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aSomeData)
+PrefChangeObserver::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
 {
   if (nsCRT::strcmp(aTopic, "nsPref:changed") != 0)
     return NS_OK;   // not a pref changed notification
@@ -308,8 +308,7 @@ PrefChangeObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRU
 - (id)initWithPrefName:(NSString*)inPrefName object:(id)inObject
 {
   PrefChangeObserver* changeObserver = new PrefChangeObserver(inObject);
-  if ((self = [super initWithValue:(nsISupports*)changeObserver]))    // retains it
-  {
+  if ((self = [super initWithValue:(nsISupports*)changeObserver])) {   // retains it
     mPrefName = [inPrefName retain];
     NSLog(@"registering observer %@ on %@", self, mPrefName);
     changeObserver->RegisterForPref([mPrefName UTF8String]);
@@ -346,10 +345,9 @@ static PreferenceManager* gSharedInstance = nil;
 static BOOL gMadePrefManager;
 #endif
 
-+ (PreferenceManager *)sharedInstance
++ (PreferenceManager*)sharedInstance
 {
-  if (!gSharedInstance)
-  {
+  if (!gSharedInstance) {
 #if DEBUG
     if (gMadePrefManager)
       NSLog(@"Recreating preferences manager on shutdown!");
@@ -361,15 +359,14 @@ static BOOL gMadePrefManager;
   return gSharedInstance;
 }
 
-+ (PreferenceManager *)sharedInstanceDontCreate
++ (PreferenceManager*)sharedInstanceDontCreate
 {
   return gSharedInstance;
 }
 
-- (id) init
+- (id)init
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     mRunLoopSource = NULL;
     
     [self registerNotificationListener];
@@ -384,7 +381,7 @@ static BOOL gMadePrefManager;
   return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   if (self == gSharedInstance)
@@ -394,26 +391,24 @@ static BOOL gMadePrefManager;
   [super dealloc];
 }
 
-- (void)termEmbedding: (NSNotification*)aNotification
+- (void)termEmbedding:(NSNotification*)aNotification
 {
   NS_IF_RELEASE(mPrefs);
   // remove our runloop observer
-  if (mRunLoopSource)
-  {
+  if (mRunLoopSource) {
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
     CFRelease(mRunLoopSource);
     mRunLoopSource = NULL;
   }
 }
 
-- (void)xpcomTerminate: (NSNotification*)aNotification
+- (void)xpcomTerminate:(NSNotification*)aNotification
 {
   [mPrefChangeObservers release];
   mPrefChangeObservers = nil;
 
   // this will notify observers that the profile is about to go away.
-  if (mProfileProvider)
-  {
+  if (mProfileProvider) {
       mProfileProvider->Shutdown();
       // directory service holds a strong ref to this as well.
       NS_RELEASE(mProfileProvider);
@@ -427,20 +422,20 @@ static BOOL gMadePrefManager;
 
 - (void)registerNotificationListener
 {
-  [[NSNotificationCenter defaultCenter] addObserver:  self
-                                        selector:     @selector(termEmbedding:)
-                                        name:         TermEmbeddingNotificationName
-                                        object:       nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(termEmbedding:)
+                                               name:TermEmbeddingNotificationName
+                                             object:nil];
 
-  [[NSNotificationCenter defaultCenter] addObserver:  self
-                                        selector:     @selector(xpcomTerminate:)
-                                        name:         XPCOMShutDownNotificationName
-                                        object:       nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(xpcomTerminate:)
+                                               name:XPCOMShutDownNotificationName
+                                             object:nil];
 
-  [[NSNotificationCenter defaultCenter] addObserver:  self
-                                        selector:     @selector(adBlockingPrefChanged:)
-                                        name:         AdBlockingChangedNotificationName
-                                        object:       nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(adBlockingPrefChanged:)
+                                               name:AdBlockingChangedNotificationName
+                                             object:nil];
 
 }
 
@@ -466,12 +461,11 @@ static BOOL gMadePrefManager;
 {
     nsresult rv;
 
-    NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
-    const char *binDirPath = [path fileSystemRepresentation];
+    NSString* path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
+    const char* binDirPath = [path fileSystemRepresentation];
     nsCOMPtr<nsILocalFile> binDir;
     rv = NS_NewNativeLocalFile(nsDependentCString(binDirPath), PR_TRUE, getter_AddRefs(binDir));
-    if (NS_FAILED(rv))
-    {
+    if (NS_FAILED(rv)) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureBinPathMsg", @"")];
       // not reached
@@ -488,23 +482,20 @@ static BOOL gMadePrefManager;
     
     // Based on whether $CAMINO_PROFILE_DIR is set, figure out what the
     // profile path should be.
-    if (!customProfilePath)
-    {
+    if (!customProfilePath) {
       // If it isn't, we then check the 'mozProfileDirName' key in our Info.plist file
       // and use the regular Application Support/<mozProfileDirName>, and Caches/<mozProfileDirName> 
       // folders.
-      NSString *dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozProfileDirName"];
+      NSString* dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozProfileDirName"];
       if (dirString)
         profileDirectory = [dirString UTF8String];
-      else 
-      {
+      else {
         NSLog(@"mozNewProfileDirName key missing from Info.plist file. Using default profile directory");
         profileDirectory = "Camino";
       }
       isCustomProfile = NO;
     }
-    else
-    {
+    else {
       // If we have a custom profile path, let's just use that.
       profileDirectory = customProfilePath;
       isCustomProfile = YES;
@@ -512,10 +503,9 @@ static BOOL gMadePrefManager;
     
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
-    AppDirServiceProvider *provider = new AppDirServiceProvider(profileDirectory, isCustomProfile);
+    AppDirServiceProvider* provider = new AppDirServiceProvider(profileDirectory, isCustomProfile);
     
-    if (!provider) 
-    {
+    if (!provider) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
       // not reached
@@ -611,8 +601,7 @@ static BOOL gMadePrefManager;
     }
 
     rv = NS_NewProfileDirServiceProvider(PR_TRUE, &mProfileProvider);
-    if (NS_FAILED(rv))
-    {
+    if (NS_FAILED(rv)) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
       
@@ -636,8 +625,7 @@ static BOOL gMadePrefManager;
     }
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (!prefs)
-    {
+    if (!prefs) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureNoPrefsMsg", @"")];
       // not reached
@@ -662,15 +650,15 @@ static BOOL gMadePrefManager;
 // to the en-gb form required for HTTP accept-language headers.
 // If the locale isn't in the expected form we return nil. (Systems upgraded
 // from 10.1 report human readable locales (e.g. "English")).
-+ (NSString*)convertLocaleToHTTPLanguage: (NSString*)inAppleLocale
++ (NSString*)convertLocaleToHTTPLanguage:(NSString*)inAppleLocale
 {
     NSString* r = nil;
-    if ( inAppleLocale ) {
+    if (inAppleLocale) {
       NSMutableString* language = [NSMutableString string];
       NSArray* localeParts = [inAppleLocale componentsSeparatedByString:@"_"];
-			
+
       [language appendString:[localeParts objectAtIndex:0]];
-      if ( [localeParts count] > 1 ) {
+      if ([localeParts count] > 1) {
         [language appendString:@"-"];
         [language appendString:[[localeParts objectAtIndex:1] lowercaseString]];
       }
@@ -678,8 +666,8 @@ static BOOL gMadePrefManager;
       // We accept standalone primary subtags (e.g. "en") and also
       // a primary subtag with additional subtags of between two and eight characters long
       // We ignore i- and x- primary subtags
-      if ( [language length] == 2 ||
-           ( [language length] >= 5 && [language length] <= 13 && [language characterAtIndex:2] == '-' ) )
+      if ([language length] == 2 ||
+          ([language length] >= 5 && [language length] <= 13 && [language characterAtIndex:2] == '-'))
         r = [NSString stringWithString:language];
     }
     return r;
@@ -706,7 +694,7 @@ static BOOL gMadePrefManager;
     PRInt32 acceptCookies = 0;
     static const char* kCookieBehaviorPref = "network.cookie.cookieBehavior";
     mPrefs->GetIntPref(kCookieBehaviorPref, &acceptCookies);
-    if ( acceptCookies == 3 ) {     // p3p, assume all cookies on
+    if (acceptCookies == 3) {     // p3p, assume all cookies on
       acceptCookies = 0;
       mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
     }
@@ -722,7 +710,7 @@ static BOOL gMadePrefManager;
     // previous versions set capability.policy.* to turn off some web features regarding
     // windows, but that caused exceptions to be thrown that webpages weren't ready to 
     // handle. Clear those prefs with authority if they are set.
-    if ( [[self getStringPref:"capability.policy.default.Window.defaultStatus" withSuccess:nil] length] > 0 ) {
+    if ([[self getStringPref:"capability.policy.default.Window.defaultStatus" withSuccess:nil] length] > 0) {
       mPrefs->ClearUserPref("capability.policy.default.Window.defaultStatus");
       mPrefs->ClearUserPref("capability.policy.default.Window.status");
       mPrefs->ClearUserPref("capability.policy.default.Window.focus");
@@ -754,8 +742,8 @@ static BOOL gMadePrefManager;
     if (userProvidedLangOverride && [userLanguageOverride length] > 0)
       [self setPref:"intl.accept_languages" toString:userLanguageOverride];
     else {
-      NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
-      NSArray *languages = [defs objectForKey:@"AppleLanguages"];
+      NSUserDefaults* defs = [NSUserDefaults standardUserDefaults];
+      NSArray* languages = [defs objectForKey:@"AppleLanguages"];
       NSMutableArray* acceptableLanguages = [NSMutableArray array];
 
       // Build the list of languages the user understands (from System Preferences | International).
@@ -768,7 +756,7 @@ static BOOL gMadePrefManager;
           // If we don't understand a language don't set any, rather than risk leaving the user with
           // their n'th choice (which may be one Apple made and they don't actually read)
           // Mainly occurs on systems upgraded from 10.1, see convertLocaleToHTTPLanguage(). 
-          NSLog( @"Unable to set languages - language '%@' not a valid ISO language identifier", [languages objectAtIndex:i] );
+          NSLog(@"Unable to set languages - language '%@' not a valid ISO language identifier", [languages objectAtIndex:i]);
           languagesOkaySoFar = NO;
         }
       }
@@ -785,8 +773,7 @@ static BOOL gMadePrefManager;
     // load up the default stylesheet (is this the best place to do this?)
     BOOL prefExists = NO;
     BOOL enableAdBlocking = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&prefExists];
-    if (!prefExists)
-    {
+    if (!prefExists) {
       enableAdBlocking = [self cleanupUserContentCSS];
       [self setPref:"camino.enable_ad_blocking" toBoolean:enableAdBlocking];
     }
@@ -803,7 +790,7 @@ static BOOL gMadePrefManager;
   [self registerForProxyChanges];
 }
 
-static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void * /* info */)
+static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void* /* info */)
 {
   PreferenceManager* prefsManager = [PreferenceManager sharedInstanceDontCreate];
   [prefsManager readSystemProxySettings];
@@ -811,26 +798,23 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
   NSLog(@"Updating proxies");
 #endif
 }
-					
+
 - (void)registerForProxyChanges
 {
   if (mRunLoopSource)   // don't register twice
     return;
 
   SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
-  
+
   SCDynamicStoreRef dynamicStoreRef = SCDynamicStoreCreate(NULL, CFSTR("ChimeraProxiesNotification"), SCProxiesChangedCallback, &context);
-  if (dynamicStoreRef)
-  {
+  if (dynamicStoreRef) {
     CFStringRef proxyIdentifier = SCDynamicStoreKeyCreateProxies(NULL);
-    CFArrayRef  keyList = CFArrayCreate(NULL, (const void **)&proxyIdentifier, 1, &kCFTypeArrayCallBacks);
+    CFArrayRef  keyList = CFArrayCreate(NULL, (const void**)&proxyIdentifier, 1, &kCFTypeArrayCallBacks);
 
     Boolean set = SCDynamicStoreSetNotificationKeys(dynamicStoreRef, keyList, NULL);
-    if (set)
-    {
+    if (set) {
       mRunLoopSource = SCDynamicStoreCreateRunLoopSource(NULL, dynamicStoreRef, 0);
-      if (mRunLoopSource)
-      {
+      if (mRunLoopSource) {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
         // we keep the ref to the source, so that we can remove it when the prefs manager is cleaned up.
       }
@@ -851,12 +835,10 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
   BOOL gotProxy = NO;
 
   BOOL enabled = (BOOL)[[configDict objectForKey:enableKey] intValue];
-  if (enabled)
-  {
+  if (enabled) {
     NSString* protocolProxy = [configDict objectForKey:urlKey];
     int proxyPort = [[configDict objectForKey:portKey] intValue];
-    if ([protocolProxy length] > 0 && proxyPort != 0)
-    {
+    if ([protocolProxy length] > 0 && proxyPort != 0) {
       [self setPref:[[NSString stringWithFormat:@"network.proxy.%@", protocol] cString] toString:protocolProxy];
       [self setPref:[[NSString stringWithFormat:@"network.proxy.%@_port", protocol] cString] toInt:proxyPort];
       gotProxy = YES;
@@ -900,19 +882,16 @@ typedef enum EProxyConfig {
 
   // get proxies from SystemConfiguration
   NSDictionary* proxyConfigDict = (NSDictionary*)SCDynamicStoreCopyProxies(NULL);
-  if (proxyConfigDict)
-  {
+  if (proxyConfigDict) {
     // look for PAC
     NSNumber* proxyAutoConfig = (NSNumber*)[proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
     NSString* proxyURLString  = (NSString*)[proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
-    if ([proxyAutoConfig intValue] != 0 && [proxyURLString length] > 0)
-    {
+    if ([proxyAutoConfig intValue] != 0 && [proxyURLString length] > 0) {
       NSLog(@"Using Proxy Auto-Config (PAC) file %@", proxyURLString);
       [self setPref:"network.proxy.autoconfig_url" toString:proxyURLString];
       newProxyType = eProxyConfig_PAC;
     }
-    else
-    {
+    else {
       BOOL gotAProxy = NO;
       
       gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"http"
@@ -940,20 +919,17 @@ typedef enum EProxyConfig {
                                  proxyURLKey:(NSString*)kSCPropNetProxiesSOCKSProxy
                                 proxyPortKey:(NSString*)kSCPropNetProxiesSOCKSPort];
 
-      if (gotAProxy)
-      {
+      if (gotAProxy) {
         newProxyType = eProxyConfig_Manual;
 
         NSArray* exceptions = [proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesExceptionsList];
-        if (exceptions)
-        {
+        if (exceptions) {
           NSString* sitesList = [exceptions componentsJoinedByString:@", "];
           if ([sitesList length] > 0)
             [self setPref:"network.proxy.no_proxies_on" toString:sitesList];
         }
       }
-      else
-      {
+      else {
         // no proxy hosts found; turn them off
         newProxyType = eProxyConfig_Direct;
       }
@@ -984,8 +960,7 @@ typedef enum EProxyConfig {
   NSString* chromeDirPath = [profilePath stringByAppendingPathComponent:@"chrome"];
   NSString* userContentCSSPath = [chromeDirPath stringByAppendingPathComponent:@"userContent.css"];
   
-  if ([[NSFileManager defaultManager] fileExistsAtPath:userContentCSSPath])
-  {
+  if ([[NSFileManager defaultManager] fileExistsAtPath:userContentCSSPath]) {
     NSString* userContentBackPath = [chromeDirPath stringByAppendingPathComponent:@"userContent_unused.css"];
     BOOL moveSucceeded = [[NSFileManager defaultManager] movePath:userContentCSSPath toPath:userContentBackPath handler:nil];
     NSLog(@"Ad blocking now users a built-in CSS file; moving previous userContent.css file at\n  %@\nto\n  %@",
@@ -1008,8 +983,7 @@ typedef enum EProxyConfig {
 
   // the the uri of the sheet in our bundle
   NSString* cssFilePath = [[NSBundle mainBundle] pathForResource:@"ad_blocking" ofType:@"css"];
-  if (![[NSFileManager defaultManager] isReadableFileAtPath:cssFilePath])
-  {
+  if (![[NSFileManager defaultManager] isReadableFileAtPath:cssFilePath]) {
     NSLog(@"ad_blocking.css file not found; ad blocking will be disabled");
     return;
   }
@@ -1036,11 +1010,11 @@ typedef enum EProxyConfig {
 
 #pragma mark -
 
-- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+- (NSString*)getStringPref:(const char*)prefName withSuccess:(BOOL*)outSuccess
 {
-  NSString *prefValue = @"";
+  NSString* prefValue = @"";
 
-  char *buf = nsnull;
+  char* buf = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
   if (mPrefs)
     rv = mPrefs->GetCharPref(prefName, &buf);
@@ -1057,14 +1031,13 @@ typedef enum EProxyConfig {
   return prefValue;
 }
 
-- (NSColor*)getColorPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+- (NSColor*)getColorPref:(const char*)prefName withSuccess:(BOOL*)outSuccess
 {
   // colors are stored in HTML-like #FFFFFF strings
   NSString* colorString = [self getStringPref:prefName withSuccess:outSuccess];
   NSColor*  returnColor = [NSColor blackColor];
 
-  if ([colorString hasPrefix:@"#"] && [colorString length] == 7)
-  {
+  if ([colorString hasPrefix:@"#"] && [colorString length] == 7) {
     unsigned int redInt, greenInt, blueInt;
     sscanf([colorString cString], "#%02x%02x%02x", &redInt, &greenInt, &blueInt);
     
@@ -1075,15 +1048,14 @@ typedef enum EProxyConfig {
     returnColor = [NSColor colorWithCalibratedRed:redFloat green:greenFloat blue:blueFloat alpha:1.0f];
     if (outSuccess) *outSuccess = YES;
   }
-  else
-  {
+  else {
     if (outSuccess) *outSuccess = NO;
   }
 
   return returnColor;
 }
 
-- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+- (BOOL)getBooleanPref:(const char*)prefName withSuccess:(BOOL*)outSuccess
 {
   PRBool boolPref = PR_FALSE;
   nsresult rv = NS_ERROR_FAILURE;
@@ -1096,7 +1068,7 @@ typedef enum EProxyConfig {
   return boolPref ? YES : NO;
 }
 
-- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+- (int)getIntPref:(const char*)prefName withSuccess:(BOOL*)outSuccess
 {
   PRInt32 intPref = 0;
   nsresult rv = NS_ERROR_FAILURE;
@@ -1127,7 +1099,7 @@ typedef enum EProxyConfig {
     (void)mPrefs->SetBoolPref(prefName, (PRBool)value);
 }
 
-- (NSString *) homePageUsingStartPage:(BOOL)checkStartupPagePref
+- (NSString*)homePageUsingStartPage:(BOOL)checkStartupPagePref
 {
   if (!mPrefs)
     return @"about:blank";
@@ -1145,14 +1117,14 @@ typedef enum EProxyConfig {
 
   if (NS_FAILED(rv) || mode == 1) {
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
-    if (!prefBranch) return @"about:blank";
+    if (!prefBranch)
+      return @"about:blank";
     
     NSString* homepagePref = nil;
     PRInt32 haveUserPref;
-    if (NS_FAILED(prefBranch->PrefHasUserValue("browser.startup.homepage", &haveUserPref)) || !haveUserPref)
-    {
+    if (NS_FAILED(prefBranch->PrefHasUserValue("browser.startup.homepage", &haveUserPref)) || !haveUserPref) {
       // no home page pref is set in user prefs.
-      homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil);
+      homepagePref = NSLocalizedStringFromTable(@"HomePageDefault", @"WebsiteDefaults", nil);
       // and let's copy this into the homepage pref if it's not bad
       if (![homepagePref isEqualToString:@"HomePageDefault"])
         mPrefs->SetCharPref("browser.startup.homepage", [homepagePref UTF8String]);
@@ -1168,7 +1140,7 @@ typedef enum EProxyConfig {
   return @"about:blank";
 }
 
-- (NSString *)searchPage
+- (NSString*)searchPage
 {
   NSString* resultString = @"http://www.google.com/";
   if (!mPrefs)
@@ -1184,10 +1156,9 @@ typedef enum EProxyConfig {
   if (haveUserPref)
     searchPagePref = [self getStringPref:"chimera.search_page" withSuccess:NULL];
   
-  if (!haveUserPref || (searchPagePref == NULL) || ([searchPagePref length] == 0))
-  {
+  if (!haveUserPref || (searchPagePref == NULL) || ([searchPagePref length] == 0)) {
     // no home page pref is set in user prefs, or it's an empty string
-    searchPagePref = NSLocalizedStringFromTable( @"SearchPageDefault", @"WebsiteDefaults", nil);
+    searchPagePref = NSLocalizedStringFromTable(@"SearchPageDefault", @"WebsiteDefaults", nil);
     // and let's copy this into the homepage pref if it's not bad
     if (![searchPagePref isEqualToString:@"SearchPageDefault"])
       mPrefs->SetCharPref("chimera.search_page", [searchPagePref UTF8String]);
@@ -1207,10 +1178,9 @@ typedef enum EProxyConfig {
 // NS_APP_USER_PROFILES_ROOT_DIR - imposed by our own AppDirServiceProvider. Will
 // return |nil| if there is a problem.
 //
-- (NSString*) profilePath
+- (NSString*)profilePath
 {
-  if (!mProfilePath)
-  {
+  if (!mProfilePath) {
     nsCOMPtr<nsIFile> profileDir;
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
                                          getter_AddRefs(profileDir));
@@ -1227,7 +1197,7 @@ typedef enum EProxyConfig {
   return mProfilePath;
 }
 
-- (NSString*) cacheParentDirPath
+- (NSString*)cacheParentDirPath
 {
   nsCOMPtr<nsIFile> cacheParentDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_CACHE_PARENT_DIR,
@@ -1250,8 +1220,7 @@ typedef enum EProxyConfig {
 
   // get the array of pref observers for this pref
   NSMutableArray* existingObservers = [mPrefChangeObservers objectForKey:prefName];
-  if (!existingObservers)
-  {
+  if (!existingObservers) {
     existingObservers = [NSMutableArray arrayWithCapacity:1];
     [mPrefChangeObservers setObject:existingObservers forKey:prefName];
   }
@@ -1259,8 +1228,7 @@ typedef enum EProxyConfig {
   // look for an existing observer with this target object
   NSEnumerator* observersEnum = [existingObservers objectEnumerator];
   PrefChangeObserverOwner* curValue;
-  while ((curValue = [observersEnum nextObject]))
-  {
+  while ((curValue = [observersEnum nextObject])) {
     if ([curValue hasObject:inObject])
       return;   // found it; nothing to do
   }
@@ -1275,17 +1243,14 @@ typedef enum EProxyConfig {
 {
   NSEnumerator* observerArraysEnum = [mPrefChangeObservers objectEnumerator];
   NSMutableArray* curArray;
-  while ((curArray = [observerArraysEnum nextObject]))
-  {
+  while ((curArray = [observerArraysEnum nextObject])) {
     // look for an existing observer with this target object
     NSEnumerator* observersEnum = [curArray objectEnumerator];
     PrefChangeObserverOwner* prefObserverOwner = nil;
     
     PrefChangeObserverOwner* curValue;
-    while ((curValue = [observersEnum nextObject]))
-    {
-      if ([curValue hasObject:inObject])
-      {
+    while ((curValue = [observersEnum nextObject])) {
+      if ([curValue hasObject:inObject]) {
         prefObserverOwner = curValue;
         break;
       }
@@ -1301,17 +1266,16 @@ typedef enum EProxyConfig {
   NSString* prefName = [NSString stringWithUTF8String:inPrefName];
 
   NSMutableArray* existingObservers = [mPrefChangeObservers objectForKey:prefName];
-  if (!existingObservers) return;
+  if (!existingObservers)
+    return;
 
   // look for an existing observer with this target object
   NSEnumerator* observersEnum = [existingObservers objectEnumerator];
   PrefChangeObserverOwner* prefObserverOwner = nil;
   
   PrefChangeObserverOwner* curValue;
-  while ((curValue = [observersEnum nextObject]))
-  {
-    if ([curValue hasObject:inObject])
-    {
+  while ((curValue = [observersEnum nextObject])) {
+    if ([curValue hasObject:inObject]) {
       prefObserverOwner = curValue;
       break;
     }

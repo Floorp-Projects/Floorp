@@ -72,10 +72,9 @@ nsConsoleListener::~nsConsoleListener()
 }
 
 /* void observe (in nsIConsoleMessage aMessage); */
-NS_IMETHODIMP nsConsoleListener::Observe(nsIConsoleMessage *aMessage)
+NS_IMETHODIMP nsConsoleListener::Observe(nsIConsoleMessage* aMessage)
 {
-  if (aMessage)
-  {
+  if (aMessage) {
     nsXPIDLString msgString;
     aMessage->GetMessage(getter_Copies(msgString));
     NSLog(@"JS error: %@", [NSString stringWith_nsAString:msgString]);
@@ -113,8 +112,7 @@ static JSConsole* gJSConsole;
 
 - (id)init
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     [self registerNotificationListener];
     [self setupConsoleListener];
   }
@@ -134,13 +132,12 @@ static JSConsole* gJSConsole;
 // gets called before XPCOM shutdown
 - (void)cleanupConsoleService
 {
-  if (mConsoleListener)
-  {
+  if (mConsoleListener) {
     nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (consoleService)
       consoleService->UnregisterListener(mConsoleListener);
       
-    NS_RELEASE(mConsoleListener);		// nulls it out
+    NS_RELEASE(mConsoleListener);  // nulls it out
   }
 }
 
@@ -156,13 +153,13 @@ static JSConsole* gJSConsole;
 
 - (void)registerNotificationListener
 {
-  [[NSNotificationCenter defaultCenter] addObserver:  self
-                                        selector:     @selector(shutdown:)
-                                        name:         TermEmbeddingNotificationName
-                                        object:       nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(shutdown:)
+                                               name:TermEmbeddingNotificationName
+                                             object:nil];
 }
 
-- (void)shutdown: (NSNotification*)aNotification
+- (void)shutdown:(NSNotification*)aNotification
 {
   [self cleanupConsoleService];
   [gJSConsole autorelease];
