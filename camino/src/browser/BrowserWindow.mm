@@ -131,11 +131,17 @@ static const int kEscapeKeyCode = 53;
       handled = YES;
     }
   }
-  else if (keyChar == 'd') {
-    BOOL cmdKeyIsDown = (([theEvent modifierFlags] & NSCommandKeyMask) != 0);
-    if (cmdKeyIsDown) {
-      [windowController addBookmark:nil];
-      handled = YES;
+  //Alpha shortcuts need to be handled differently because layouts like Dvorak-Qwerty Command give
+  //completely different characters depending on whether or not you ignore the modifiers
+  else {
+    keyString = [theEvent characters];
+    keyChar = [keyString characterAtIndex:0];
+    if (keyChar == 'd') {
+      unsigned int standardModifierKeys = NSShiftKeyMask | NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask;
+      if (([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) {  
+        [windowController addBookmark:nil];
+        handled = YES;
+      }
     }
   }
   
