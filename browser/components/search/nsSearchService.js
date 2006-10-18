@@ -3015,17 +3015,20 @@ var engineUpdateService = {
       ULOG(engine.name + " has expired");
 
       var testEngine = null;
-      if (updateURL) {
+
+      var updateURI = makeURI(updateURL);
+      if (updateURI) {
         var dataType = engineMetadataService.getAttr(engine, "updatedatatype")
         if (!dataType) {
           ULOG("No loadtype to update engine!");
           continue;
         }
 
-        testEngine = new Engine(makeURI(updateURL), dataType, false);
+        testEngine = new Engine(updateURI, dataType, false);
         testEngine._engineToUpdate = engine;
         testEngine._initFromURI();
-      }
+      } else
+        ULOG("invalid updateURI");
 
       if (iconUpdateURL) {
         // If we're updating the engine too, use the new engine object,
@@ -3035,6 +3038,7 @@ var engineUpdateService = {
 
       // Schedule the next update
       this.scheduleNextUpdate(engine);
+
     } // end engine iteration
   }
 };
