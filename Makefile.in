@@ -141,7 +141,9 @@ endif # MOZILLA_OFFICIAL
 signnss:
 ifdef MOZILLA_OFFICIAL
 	echo signing NSS libs
+ifdef MSMANIFEST_TOOL
 	test -f $(DEPTH)/nss/shlibsign.exe.manifest && cp $(DEPTH)/nss/shlibsign.exe.manifest $(DIST)/bin
+endif
 	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
 	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
 endif # MOZILLA_OFFICIAL
