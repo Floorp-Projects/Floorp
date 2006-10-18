@@ -80,7 +80,7 @@
   in the OCSP section of Validation Settings:</p>
 
 <ul>
-  <li><strong>Do not use OCSP for certificate verification.</strong> Select
+  <li><strong>Do not use OCSP for certificate verification</strong>: Select
     this setting if you don&apos;t want Certificate Manager to perform an
     online status check each time it verifies a certificate. Instead, whenever
     Certificate Manager performs
@@ -90,14 +90,14 @@
     listed under the CA Certificates tab (in the main Certificate Manager
     window) and marked as trusted for issuing that kind of certificate.</li>
   <li><strong>Use OCSP to verify only certificates that specify an OCSP service
-    URL.</strong> Select this setting if you want Certificate Manager perform
+    URL</strong>: Select this setting if you want Certificate Manager perform
     an online status check each time it verifies a certificate that specifies a
     URL for the purpose of performing such a check. If a URL is specified by
     the certificate, Certificate Manager makes sure that the certificate is
     listed there as valid and checks the validity period and trust
     settings.</li>
   <li><strong>Use OCSP to verify all certificates, using the URL and signer
-    specified here.</strong> Select this setting if you want Certificate
+    specified here</strong>: Select this setting if you want Certificate
     Manager to perform an online status check each time it verifies any
     certificate. If you select this setting, you should also choose the
     certificate from the Response Signer pop-up menu that identifies the signer
@@ -137,16 +137,16 @@
 <p>To select a CRL, click it. You can then perform any of these actions:</p>
 
 <ul>
-  <li><strong>Delete:</strong> Deletes the CRL permanently from your hard disk.
+  <li><strong>Delete</strong>: Deletes the CRL permanently from your hard disk.
     Don&apos;t do this unless you&apos;re sure you no longer need the CRL for
     validating certificates. If in doubt, consult your system
     administrator.</li>
-  <li><strong>Settings:</strong> Opens the
+  <li><strong>Settings</strong>: Opens the
     <a href="#automatic_crl_update_preferences">Automatic CRL Update
     Preferences</a> dialog box, which allows you to activate automatic CRL
     updates for the selected CRL and specify how frequently they should be
     performed.</li>
-  <li><strong>Update:</strong> Immediately updates the selected CRL
+  <li><strong>Update</strong>: Immediately updates the selected CRL
   (if possible).</li>
 </ul>
 
@@ -154,19 +154,19 @@
   CRL:</p>
 
 <ul>
-  <li><strong>Organization (O):</strong> The name of the organization that
+  <li><strong>Organization (O)</strong>: The name of the organization that
     issued the CRL.</li>
-  <li><strong>Organizational Unit (OU):</strong> The name of the organizational
+  <li><strong>Organizational Unit (OU)</strong>: The name of the organizational
     unit that issued the CRL (such as the root CA for a particular kind of
     certificate).</li>
-  <li><strong>Last Update:</strong> The date on which the browser&apos;s copy
+  <li><strong>Last Update</strong>: The date on which the browser&apos;s copy
     of this CRL was last updated.</li>
-  <li><strong>Next Update:</strong> The next date on which an updated version
+  <li><strong>Next Update</strong>: The next date on which an updated version
     of this CRL will be published by the CRL issuer.</li>
-  <li><strong>Auto Update:</strong> Indicates whether Auto Update has been
+  <li><strong>Auto Update</strong>: Indicates whether Auto Update has been
     enabled for this CRL. To view the settings that control auto updating,
     select the CRL and click Settings.</li>
-  <li><strong>Auto Update Status:</strong>
+  <li><strong>Auto Update Status</strong>:
     <ul>
       <li>If Auto Update has not been enabled, or if it has been enabled but
         the next scheduled update has not yet occurrred, this field will be
@@ -196,10 +196,10 @@
 <p>If Automatic Update is not enabled, you can turn it on from here:</p>
 
 <ul>
-  <li><strong>Yes:</strong> Click Yes to enable automatic updating of this CRL.
+  <li><strong>Yes</strong>: Click Yes to enable automatic updating of this CRL.
     If you click this button, the Automatic CRL Update Preferences dialog box
     appears next. The next section describes how to set these preferences.</li>
-  <li><strong>No:</strong> Click No if you wish to leave Automatic Update
+  <li><strong>No</strong>: Click No if you wish to leave Automatic Update
     disabled.</li>
 </ul>
 
@@ -222,7 +222,7 @@
 <p>This dialog box displays the following options and information:</p>
 
 <ul>
-  <li><strong>Enable Automatic Update for this CRL:</strong> Select this option
+  <li><strong>Enable Automatic Update for this CRL</strong>: Select this option
     if you want the CRL you selected to be updated automatically according to
     the schedule you set here. (Note that you can&apos;t select this option if
     the CRL doesn&apos;t specify a Next Update date.)
@@ -230,19 +230,19 @@
     <p>If you enable Automatic Update, you must select one of these radio
       buttons:</p>
       <ul>
-        <li><strong>Update X days before Next Update date.</strong> Select this
+        <li><strong>Update X days before Next Update date</strong>: Select this
           option if you want to base the update frequency on the frequency with
           which the CRL publisher publishes a new version of the CRL.</li>
-        <li><strong>Update every X days.</strong> Select this option if you
+        <li><strong>Update every X days</strong>: Select this option if you
           want to specify an update interval unrelated to the CRL&apos;s Next
           Update date.</li>
       </ul>
   </li>
-  <li><strong>CRL would be imported from:</strong> Indicates the URL from which
+  <li><strong>CRL would be imported from</strong>: Indicates the URL from which
     the browser originally imported the CRL. This setting cannot be changed. To
     specify a different location, delete the CRL and re-import it from the new
     location.</li>
-  <li><strong>Previous Consecutive Update Failures:</strong> Indicates how
+  <li><strong>Previous Consecutive Update Failures</strong>: Indicates how
     many times update attempts for this CRL have failed consecutively,
     including the most recent failure:
     <ul>

@@ -68,31 +68,31 @@
   one of the following buttons:</p>
 
 <ul>
-  <li><strong>View:</strong> Display detailed information about the selected
+  <li><strong>View</strong>: Display detailed information about the selected
     certificates.</li>
-  <li><strong>Backup:</strong> Initiate the process of saving the selected
+  <li><strong>Backup</strong>: Initiate the process of saving the selected
     certificates. A window appears that allows you to choose a password to
     protect the backup. You can then save the backup in a directory of your
     choice.</li>
-  <li><strong>Delete:</strong> Delete the selected certificates.</li>
+  <li><strong>Delete</strong>: Delete the selected certificates.</li>
 </ul>
 
 <p>These actions do not require a certificate to be selected:</p>
 
 <ul>
-  <li><strong>Import:</strong> Import a file containing one or more
+  <li><strong>Import</strong>: Import a file containing one or more
     certificates that were previously backed up. When you click Import,
     Certificate Manager first asks you to locate the file that contains the
     backup. The names of certificate backup files typically end in
     <tt>.p12</tt>; for example, <tt>MyCert.p12</tt>. After you select the file
     to be imported, Certificate Manager asks you to enter the password that you
     set when you backed up the certificate.</li>
-  <li><strong>Backup All:</strong> Initiate the process of saving all the
+  <li><strong>Backup All</strong>: Initiate the process of saving all the
     certificates stored in the
     <a href="glossary.xhtml#software_security_device">Software Security
     Device</a>.
 
-    <p><strong>Note: Certificates on smart cards cannot be backed up.</strong>
+    <p><strong>Note</strong>: Certificates on smart cards cannot be backed up.
       Whether you select some of your certificates and click Backup, or click
       Backup All, the resulting backup file will not include any certificates
       stored on smart cards or other external security devices. You can only
@@ -113,9 +113,9 @@
   have previously been backed up.</p>
 
 <ul>
-  <li><strong>Certificate backup password:</strong> Type your backup password
+  <li><strong>Certificate backup password</strong>: Type your backup password
     into this field.</li>
-  <li><strong>Certificate backup password (again):</strong> Type your backup
+  <li><strong>Certificate backup password (again)</strong>: Type your backup
     password again. If you don&apos;t type it the second time exactly as you
     did the first time, the OK button remains inactive. If this happens, try
     typing the new password again.</li>
@@ -175,9 +175,9 @@
   one of the following buttons:</p>
 
 <ul>
-  <li><strong>View:</strong> Display detailed information about the selected
+  <li><strong>View</strong>: Display detailed information about the selected
     certificates.</li>
-  <li><strong>Delete:</strong> Delete the selected certificates.</li>
+  <li><strong>Delete</strong>: Delete the selected certificates.</li>
 </ul>
 
 <h3 id="delete_email_certificates">Delete Email Certificates</h3>
@@ -208,13 +208,13 @@
   one of the following buttons:</p>
 
 <ul>
-  <li><strong>View:</strong> Display detailed information about the selected
+  <li><strong>View</strong>: Display detailed information about the selected
     certificates.</li>
-  <li><strong>Edit:</strong> View or change the trust settings that Certificate
+  <li><strong>Edit</strong>: View or change the trust settings that Certificate
     Manager associates with the selected certificates. You can use these
     settings to designate a website certificate as one that you trust or
     don&apos;t trust for identification purposes.</li>
-  <li><strong>Delete:</strong> Delete the selected certificates.</li>
+  <li><strong>Delete</strong>: Delete the selected certificates.</li>
 </ul>
 
 <h3 id="edit_web_site_certificate_trust_settings">Edit Website Certificate
@@ -231,18 +231,18 @@
 
 <ul>
   <li><strong>The certificate <q><em>name of certificate</em></q> was
-    issued by:</strong> Provides information about the
+    issued by</strong>: Provides information about the
     <a href="glossary.xhtml#certificate_authority">certificate authority</a>
     that issued this certificate.</li>
-  <li><strong>Edit certificate trust settings:</strong>
+  <li><strong>Edit certificate trust settings</strong>:
     <ul>
-      <li><strong>Trust the authenticity of this certificate:</strong> If you
+      <li><strong>Trust the authenticity of this certificate</strong>: If you
         select this option, Certificate Manager will henceforth trust this
         certificate for the purposes of identifying this website or setting up
         an encrypted connection. If you select this option and then attempt to
         visit the website, your browser will access the site with few, if any,
         warnings.</li>
-      <li><strong>Do not trust the authenticity of this certificate:</strong>
+      <li><strong>Do not trust the authenticity of this certificate</strong>:
         If you select this option, Certificate Manager will no longer trust
         this certificate for the purposes of identifying this website or
         setting up an encrypted connection. If you select this option and
@@ -250,7 +250,7 @@
         messages before you can access the site.</li>
     </ul>
   </li>
-  <li><strong>Edit CA Trust:</strong> Click this button to specify trust
+  <li><strong>Edit CA Trust</strong>: Click this button to specify trust
     settings for the certificate authority (CA) that issued the website
     certificate. These settings allow you to trust or not to trust different
     kinds of certificates issued by that certificate authority. For example,
@@ -289,13 +289,13 @@
   and click one of these buttons:</p>
 
 <ul>
-  <li><strong>View:</strong> Display detailed information about the selected
+  <li><strong>View</strong>: Display detailed information about the selected
     certificates.</li>
-  <li><strong>Edit:</strong> View or change the settings that Certificate
+  <li><strong>Edit</strong>: View or change the settings that Certificate
     Manager associates with the selected certificates. You can use these
     settings to designate what kinds of certificates, if any, you trust that
     are issued by the corresponding CAs.</li>
-  <li><strong>Delete:</strong> Delete the selected certificates.</li>
+  <li><strong>Delete</strong>: Delete the selected certificates.</li>
 </ul>
 
 <p>To ensure that an entire
@@ -309,7 +309,7 @@
 <p>The root and intermediate CAs all appear under the same organization. The
   root certificate is the one that lists itself as the the issuer.</p>
 
-<p><strong>If you download an intermediate CA:</strong> If you download an
+<p><strong>If you download an intermediate CA</strong>: If you download an
   intermediate CA certificate that chains to a root certificate already marked
   as trusted in your browser, you don&apos;t have to indicate what purposes you
   trust it for. Intermediate certificates automatically inherit the trust
@@ -328,16 +328,16 @@
 <p>The settings have these effects:</p>
 
 <ul>
-  <li><strong>This certificate can identify websites:</strong> Certificate
+  <li><strong>This certificate can identify websites</strong>: Certificate
     Manager will trust certificates issued by this CA for the purpose of
     identifying websites and encrypting website connections. If you deselect
     this checkbox, Certificate Manager will not trust website certificates
     issued by this CA.</li>
-  <li><strong>This certificate can identify mail users:</strong> Certificate
+  <li><strong>This certificate can identify mail users</strong>: Certificate
     Manager will trust certificates issued by this CA for the purpose of
     signing or encrypting email. If you deselect this checkbox, Certificate
     Manager will not trust email certificates issued by this CA.</li>
-  <li><strong>This certificate can identify software makers:</strong>
+  <li><strong>This certificate can identify software makers</strong>:
     Certificate Manager will trust certificates issued by this CA for the
     purpose of identifying software makers. If you deselect this checkbox,
     Certificate Manager will not trust such certificates issued by this
@@ -385,25 +385,25 @@
   button:</p>
 
 <ul>
-  <li><strong>Log In:</strong> Log into the selected security device. After you
+  <li><strong>Log In</strong>: Log into the selected security device. After you
     have logged in to the device, the frequency with which you will be asked to
     enter the master password for the device depends on the
     <a href="passwords_help.xhtml#master_password_timeout">Master Password
     Timeout</a> settings.</li>
-  <li><strong>Log Out:</strong> Log out of the selected security device. After
+  <li><strong>Log Out</strong>: Log out of the selected security device. After
     you have logged out of the device, the device and the certificates it
     contains will not be available until you log in again.</li>
-  <li><strong>Change Password:</strong> Change the master password for the
+  <li><strong>Change Password</strong>: Change the master password for the
     selected security device.</li>
-  <li><strong>Load:</strong> Displays a dialog box that allows you to specify
+  <li><strong>Load</strong>: Displays a dialog box that allows you to specify
     the name and location of a new PKCS #11 module. Before adding a new module,
     you should first install the module software on your computer and if
     necessary connect any associated hardware device. Follow the instructions
     provided by the vendor.</li>
-  <li><strong>Unload:</strong> Unload the selected module. If you unload a
+  <li><strong>Unload</strong>: Unload the selected module. If you unload a
     module, both the module and its security devices are no longer available
     for use by the browser.</li>
-  <li><strong>Enable FIPS:</strong> Turns the FIPS mode on and off. For more
+  <li><strong>Enable FIPS</strong>: Turns the FIPS mode on and off. For more
     information, see
     <a href="using_certs_help.xhtml#enable_fips_mode">Enable FIPS
     Mode</a>.</li>
