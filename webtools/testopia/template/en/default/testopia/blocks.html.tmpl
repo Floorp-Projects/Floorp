@@ -51,7 +51,7 @@
     var digit = /^\d+$/;
     page = page - 1;
     if ((page >= [% table.page_count %]) || (page < 0) || !digit.test(page)){
-      alert('Invalid page number. Please enter a vlue between 1 and [% table.page_count %] ');
+      alert('Invalid page number. Please enter a value between 1 and [% table.page_count %] ');
       return;
     }
     var url = '[% url %]' + page;
@@ -70,7 +70,10 @@
   [% END %]
     <td align="center">
     [% SET framewidth = 10 %]
-    [% IF (table.page_count - table.page) < (framewidth / 2) %]
+    [% IF (table.page_count - 1) < framewidth %]
+      [% SET p = 0 %]
+      [% SET frame_end = table.page_count - 1 %]
+    [% ELSIF (table.page_count - table.page) < (framewidth / 2) %]
       [% SET p = table.page_count - framewidth %]
       [% SET frame_end = table.page_count - 1 %]
       [% SET start_mark = '...' %]
