@@ -191,8 +191,6 @@ static unsigned char * utf8_nextchar(unsigned char *str)
 static
 PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, char *output, PRInt32 outlen, PRInt32 output_carryoverlen, PRInt32 foldlen, PRBool foldingonly)
 {
-  NS_ASSERTION(output_carryoverlen > 0, "output_carryoverlen must be > 0"); 
-
   nsCOMPtr <nsISaveAsCharset> conv;
   PRUnichar *_pUCS2 = nsnull, *pUCS2 = nsnull, *pUCS2Head = nsnull, cUCS2Tmp = 0;
   char  *ibuf, *o = output;
