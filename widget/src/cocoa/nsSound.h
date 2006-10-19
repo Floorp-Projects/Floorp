@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -48,12 +49,12 @@ class nsSound : public nsISound,
 
 {
 public: 
-  nsSound();
-  virtual ~nsSound();
+    nsSound();
+    virtual ~nsSound();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISOUND
-  NS_DECL_NSISTREAMLOADEROBSERVER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISOUND
+    NS_DECL_NSISTREAMLOADEROBSERVER
 };
 
 #endif

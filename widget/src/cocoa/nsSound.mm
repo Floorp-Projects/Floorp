@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,6 +39,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSound.h"
+
+#include <Foundation/NSData.h>
+#include <AppKit/NSSound.h>
+
+#include "nsNetUtil.h"
+#include "nsCOMPtr.h"
+#include "nsIURL.h"
 
 NS_IMPL_ISUPPORTS1(nsSound, nsISound)
 
@@ -62,13 +70,23 @@ nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                           PRUint32 dataLen,
                           const PRUint8 *data)
 {
+    NSData *value = [NSData dataWithBytes:data length:dataLen];
+
+    NSSound *sound = [[NSSound alloc] initWithData:value];
+
+    [sound play];
+
+    [sound autorelease];
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSound::Play(nsIURL *aURL)
 {
-    return NS_OK;
+    nsCOMPtr<nsIURI> uri(do_QueryInterface(aURL));
+    nsCOMPtr<nsIStreamLoader> loader;
+    return NS_NewStreamLoader(getter_AddRefs(loader), uri, this);
 }
 
 NS_IMETHODIMP
