@@ -1746,6 +1746,10 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 
     moz_drawingarea_resize (mDrawingarea, rect.width, rect.height);
 
+    if (mTransparencyBitmap) {
+      ApplyTransparencyBitmap();
+    }
+
     nsEventStatus status;
     DispatchResizeEvent (rect, status);
 }
