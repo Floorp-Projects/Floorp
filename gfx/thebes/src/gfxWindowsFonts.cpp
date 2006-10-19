@@ -1057,16 +1057,32 @@ public:
     }
 
     PRBool IsMissingGlyphs() {
+        const DWORD invalidGlyph = ScriptProperties()->fInvalidGlyph;
         for (int i = 0; i < mNumGlyphs; ++i) {
-            if (mGlyphs[i] == 0)
+            if (mGlyphs[i] == invalidGlyph)
                 return PR_TRUE;
+            // I'm not sure that claiming glyphs are missing if they're zero width is valid
+            // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
+            // which are zero width and non-invalidGlyph.
+            else if (mAttr[i].fZeroWidth == PR_TRUE) {
+                PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width"));
+                return PR_TRUE;
+            }
+#ifdef DEBUG_pavlov // excess debugging code
+            else {
+                SCRIPT_FONTPROPERTIES sfp;
+                ScriptFontProperties(&sfp);
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("glyph%d - 0x%04x", i, mGlyphs[i]));
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x  --  %04x -- %04x", ScriptProperties()->fInvalidGlyph, mScriptItem->a.fNoGlyphIndex, mAttr[i].fZeroWidth));
+            }
+#endif
         }
         return PR_FALSE;
     }
 
     HRESULT Place() {
         HRESULT rv;
-        SCRIPT_CACHE sc = nsnull;
 
         mOffsets = (GOFFSET *)malloc(mNumGlyphs * sizeof(GOFFSET));
         mAdvances = (int *)malloc(mNumGlyphs * sizeof(int));
@@ -1109,6 +1125,16 @@ public:
         }
         return gScriptProperties[mScript];
     }
+
+#ifdef DEBUG_pavlov
+    void ScriptFontProperties(SCRIPT_FONTPROPERTIES *sfp) {
+        HRESULT rv;
+
+        SelectFont();
+        rv = ScriptGetFontProperties(mDC, mCurrentFont->ScriptCache(),
+                                     sfp);
+    }
+#endif
 
     cairo_glyph_t *GetCairoGlyphs(const gfxPoint& pt, gfxFloat &offset, PRUint32 *nglyphs) {
         const double cairoToPixels = 1.0;
