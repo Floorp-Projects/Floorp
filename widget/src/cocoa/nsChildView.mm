@@ -264,6 +264,7 @@ UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
   return attr;
 }
 
+
 static PRUint32
 CountRanges(NSAttributedString *aString)
 {
@@ -283,6 +284,7 @@ CountRanges(NSAttributedString *aString)
   }
   return count;
 }
+
 
 static void
 ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
@@ -311,6 +313,7 @@ ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSR
   aRanges[i].mEndOffset = 0;                         
   aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 }
+
 
 static void
 FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
@@ -489,21 +492,22 @@ nsChildView::CreateCocoaView(NSRect inFrame)
 //-------------------------------------------------------------------------
 void nsChildView::TearDownView()
 {
-  if (mView)
-  {
-    NSWindow* win = [mView window];
-    NSResponder* responder = [win firstResponder];
+  if (!mView)
+    return;
 
-    // We're being unhooked from the view hierarchy, don't leave our view
-    // or a child view as the window first responder.
-    if (responder && [responder isKindOfClass:[NSView class]] &&
-        [(NSView*)responder isDescendantOf:mView])
-      [win makeFirstResponder: [mView superview]];
-
-    [mView removeFromSuperviewWithoutNeedingDisplay];
-    [mView release];
-    mView = nil;
+  NSWindow* win = [mView window];
+  NSResponder* responder = [win firstResponder];
+  
+  // We're being unhooked from the view hierarchy, don't leave our view
+  // or a child view as the window first responder.
+  if (responder && [responder isKindOfClass:[NSView class]] &&
+      [(NSView*)responder isDescendantOf:mView]) {
+    [win makeFirstResponder: [mView superview]];
   }
+  
+  [mView removeFromSuperviewWithoutNeedingDisplay];
+  [mView release];
+  mView = nil;
 }
 
 //-------------------------------------------------------------------------
@@ -571,8 +575,7 @@ NS_IMETHODIMP nsChildView::Destroy()
 #if 0
 static void PrintViewHierarcy(NSView *view)
 {
-  while (view)
-  {
+  while (view) {
     NSLog(@"  view is %@, frame %@", view, NSStringFromRect([view frame]));
     view = [view superview];
   }
@@ -633,19 +636,16 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
     case NS_NATIVE_PLUGIN_PORT:
       // this needs to be a combination of the port and the offsets.
-      if (mPluginPort == nsnull)
-      {
+      if (mPluginPort == nsnull) {
         mPluginPort = new nsPluginPort;
         if ([mView isKindOfClass:[ChildView class]])
           [(ChildView*)mView setIsPluginView: YES];
       }
 
       NSWindow* window = [mView nativeWindow];
-      if (window)
-      {
+      if (window) {
         WindowRef topLevelWindow = (WindowRef)[window windowRef];
-        if (topLevelWindow)
-        {
+        if (topLevelWindow) {
           mPluginPort->port = ::GetWindowPort(topLevelWindow);
 
           NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
@@ -865,8 +865,7 @@ NS_IMETHODIMP nsChildView::GetBounds(nsRect &aRect)
 NS_METHOD nsChildView::SetBounds(const nsRect &aRect)
 {
   nsresult rv = Inherited::SetBounds(aRect);
-  if ( NS_SUCCEEDED(rv) ) {
-    //CalcWindowRegions();
+  if (NS_SUCCEEDED(rv)) {
     NSRect r;
     GeckoRectToNSRect(aRect, r);
     [mView setFrame:r];
@@ -894,8 +893,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
 
 NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool aRepaint)
 {
-  if ((mBounds.x != aX) || (mBounds.y != aY))
-  {
+  if ((mBounds.x != aX) || (mBounds.y != aY)) {
     // Invalidate the current location
     if (mVisible && aRepaint)
       [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
@@ -924,8 +922,7 @@ NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
-  {
+  if ((mBounds.width != aWidth) || (mBounds.height != aHeight)) {
     // Set the bounds
     mBounds.width  = aWidth;
     mBounds.height = aHeight;
@@ -1062,8 +1059,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   NSWindow* window = [mView nativeWindow];
   if (!window) return NS_ERROR_FAILURE;
 
-  if (window /* [mView lockFocusIfCanDraw] */)
-  {
+  if (window /* [mView lockFocusIfCanDraw] */) {
     // It appears that the WindowRef from which we get the plugin port undergoes the
     // traditional BeginUpdate/EndUpdate cycle, which, if you recall, sets the visible
     // region to the intersection of the visible region and the update region. Since
@@ -1072,8 +1068,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
     // of correctly doing Carbon invalidates of the plugin rect, we manually set the
     // visible region to be the entire port every time.
     RgnHandle pluginRegion = ::NewRgn();
-    if (pluginRegion)
-    {
+    if (pluginRegion) {
       StPortSetter setter(mPluginPort->port);
       ::SetOrigin(0, 0);
 
@@ -1261,7 +1256,7 @@ NS_IMETHODIMP nsChildView::Validate()
 
 NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
-  if ( !mView || !mVisible)
+  if (!mView || !mVisible)
     return NS_OK;
 
 //FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
@@ -1461,8 +1456,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   BOOL viewWasDirty = NO;
-  if (mVisible)
-  {
+  if (mVisible) {
     viewWasDirty = [mView needsDisplay];
 
     NSSize scrollVector = {aDx,aDy};
@@ -1481,14 +1475,11 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
   }
 
-  if (mVisible)
-  {
-    if (viewWasDirty)
-    {
+  if (mVisible) {
+    if (viewWasDirty) {
       [mView setNeedsDisplay:YES];
     }
-    else
-    {
+    else {
       NSRect frame = [mView visibleRect];
       NSRect horizInvalid = frame;
       NSRect vertInvalid = frame;
@@ -1598,32 +1589,31 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
-  if (! mDestructorCalled)
-  {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(event->widget);
-    nsCOMPtr<nsIWidget> kungFuDeathGrip2;
 
-    if (mParentWidget) {
-      nsWindowType type;
-      mParentWidget->GetWindowType(type);
-      if (type == eWindowType_popup) {
-        event->widget = mParentWidget;
-        kungFuDeathGrip2 = mParentWidget;
-      }
+  if (mDestructorCalled)
+    return NS_OK;
+  
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(event->widget);
+  nsCOMPtr<nsIWidget> kungFuDeathGrip2;
+  if (mParentWidget) {
+    nsWindowType type;
+    mParentWidget->GetWindowType(type);
+    if (type == eWindowType_popup) {
+      event->widget = mParentWidget;
+      kungFuDeathGrip2 = mParentWidget;
     }
-
-    if (mMenuListener != nsnull) {
-      if (NS_MENU_EVENT == event->eventStructType)
-        aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
-    }
-    if (mEventCallback)
-      aStatus = (*mEventCallback)(event);
-
-    // Dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eConsumeNoDefault) && (mEventListener != nsnull))
-      aStatus = mEventListener->ProcessEvent(*event);
-
   }
+  
+  if (mMenuListener && event->eventStructType == NS_MENU_EVENT)
+    aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
+  
+  if (mEventCallback)
+    aStatus = (*mEventCallback)(event);
+  
+  // dispatch to event listener if event was not consumed
+  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
+    mEventListener->ProcessEvent(*event);
+
   return NS_OK;
 }
 
@@ -1650,17 +1640,12 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus
 PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
   PRBool result = PR_FALSE;
-  
-  if (mEventCallback == nsnull && mMouseListener == nsnull)
-    return result;
 
   // call the event callback 
-  if (mEventCallback != nsnull) {
-    result = (DispatchWindowEvent(aEvent));
-    return result;
-  }
+  if (mEventCallback)
+    return DispatchWindowEvent(aEvent);
 
-  if (mMouseListener != nsnull) {
+  if (mMouseListener) {
     switch (aEvent.message) {
       case NS_MOUSE_MOVE:
         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
@@ -1679,7 +1664,8 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
         result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
     } // switch
-  } 
+  }
+
   return result;
 }
 
@@ -2192,13 +2178,11 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 //
 - (void)setNeedsDisplayWithValue:(NSValue*)inRectValue
 {
-  if (inRectValue)
-  {
+  if (inRectValue) {
     NSRect theRect = [inRectValue rectValue];
     [self setNeedsDisplayInRect:theRect];
   }
-  else
-  {
+  else {
     [self setNeedsDisplay:YES];
   }
 }
@@ -2229,8 +2213,7 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 
     nsISupports* data = (nsISupports*)clientData;
     nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-    if (req)
-    {
+    if (req) {
       req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
       if (scrollableView)
         break;
@@ -3121,8 +3104,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
       macEvent.what = keyUp;
 
     UInt32 charCode = [[cocoaEvent characters] characterAtIndex: 0];
-    if (charCode >= 0x0080)
-    {
+    if (charCode >= 0x0080) {
         switch (charCode) {
         case NSUpArrowFunctionKey:
             charCode = kUpArrowCharCode;
@@ -3181,7 +3163,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     FillTextRangeInTextEvent(&textEvent, aString, markRange, selRange);
 
   mGeckoChild->DispatchWindowEvent(textEvent);
-  if ( textEvent.rangeArray )
+  if (textEvent.rangeArray)
     delete [] textEvent.rangeArray;
 }
 
@@ -3206,8 +3188,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   [tmpStr getCharacters: bufPtr];
   bufPtr[len] = (PRUnichar)'\0';
 
-  if (len == 1 && !mInComposition)
-  {
+  if (len == 1 && !mInComposition) {
     // dispatch keypress event with char instead of textEvent
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
@@ -3220,18 +3201,15 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
         
     // plugins need a native keyDown or autoKey event here
     EventRecord macEvent;
-    if (mCurKeyEvent)
-    {
+    if (mCurKeyEvent) {
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
     }
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
-  else
-  {
-    if (!mInComposition)
-    {
+  else {
+    if (!mInComposition) {
       // send start composition event to gecko
       [self sendCompositionEvent: NS_COMPOSITION_START];
       mInComposition = YES;
@@ -3275,7 +3253,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" aString = '%@'", aString);
 #endif
 
-  if ( ![aString isKindOfClass:[NSAttributedString class]] )
+  if (![aString isKindOfClass:[NSAttributedString class]])
     aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
 
   mSelectedRange = selRange;
@@ -3299,8 +3277,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   mMarkedRange.location = 0;
   mMarkedRange.length = len;
 
-  if (!mInComposition)
-  {
+  if (!mInComposition) {
     [self sendCompositionEvent:NS_COMPOSITION_START];
     mInComposition = YES;
   }
@@ -3463,8 +3440,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   // since we have no character, there isn't any point to generating
   // a gecko event until they have dead key events
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-  if (!isARepeat && nonDeadKeyPress)
-  {
+  if (!isARepeat && nonDeadKeyPress) {
     // Fire a key down. We'll fire key presses via -insertText:
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
@@ -3491,8 +3467,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     return;
   }
     
-  if (nonDeadKeyPress)
-  {
+  if (nonDeadKeyPress) {
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
 
@@ -3504,8 +3479,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
-    if ((!geckoEvent.isChar || geckoEvent.isControl) && !mInComposition)
-    {
+    if ((!geckoEvent.isChar || geckoEvent.isControl) && !mInComposition) {
       // plugins need a native event, it will either be keyDown or autoKey
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
@@ -3525,7 +3499,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (void)keyUp:(NSEvent*)theEvent
 {
   // if we don't have any characters we can't generate a keyUp event
-  if (0 == [[theEvent characters] length])
+  if ([[theEvent characters] length] == 0)
     return;
 
   // Fire a key up.
@@ -3894,8 +3868,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     
   // Check to see if the message is a key press that does not involve
   // one of our special key codes.
-  if (aMessage == NS_KEY_PRESS && !IsSpecialRaptorKey([aKeyEvent keyCode])) 
-  {
+  if (aMessage == NS_KEY_PRESS && !IsSpecialRaptorKey([aKeyEvent keyCode])) {
     if (!outGeckoEvent->isControl && !outGeckoEvent->isMeta)
       outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
     
@@ -3917,8 +3890,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     if (outGeckoEvent->isShift && (outGeckoEvent->charCode >= 'a' && outGeckoEvent->charCode <= 'z'))
       outGeckoEvent->charCode -= 32;    // convert to uppercase
   }
-  else
-  {
+  else {
     outGeckoEvent->keyCode = ConvertMacToRaptorKeyCode([aKeyEvent keyCode], outGeckoEvent, [aKeyEvent characters]);
     outGeckoEvent->charCode = 0;
   } 
