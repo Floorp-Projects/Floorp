@@ -42,6 +42,7 @@
 
 #include <Foundation/NSData.h>
 #include <AppKit/NSSound.h>
+#include <AppKit/AppKit.h>
 
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
@@ -60,6 +61,7 @@ nsSound::~nsSound()
 NS_IMETHODIMP
 nsSound::Beep()
 {
+    NSBeep();
     return NS_OK;
 }
 
