@@ -4473,6 +4473,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
   gLastFocusedContent = aContent;
   NS_IF_ADDREF(gLastFocusedContent);
   SetFocusedContent(aContent);
+  EnsureFocusSynchronization();
 
   // Moved widget focusing code here, from end of SendFocusBlur
   // This fixes the order of accessibility focus events, so that
