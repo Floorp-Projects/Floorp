@@ -2453,14 +2453,15 @@ DocumentViewerImpl::CreateDocumentViewerUsing(nsPresContext* aPresContext,
 
 NS_IMETHODIMP DocumentViewerImpl::Search()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Nothing to do here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetSearchable(PRBool *aSearchable)
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Nothing to do here.
+  *aSearchable = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::ClearSelection()
@@ -2564,8 +2565,8 @@ NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 
 NS_IMETHODIMP DocumentViewerImpl::CutSelection()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Nothing to do here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
@@ -2576,8 +2577,8 @@ NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
 
 NS_IMETHODIMP DocumentViewerImpl::Paste()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Nothing to do here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
@@ -4010,7 +4011,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (!GetIsPrintPreview()) {
-    NS_ASSERTION(0, "Wow, we should never get here!");
+    NS_ERROR("Wow, we should never get here!");
     return;
   }
 
