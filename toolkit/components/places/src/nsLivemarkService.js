@@ -81,8 +81,8 @@ const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA;
 
-// Check every 1/2 hour
-const EXPIRATION = 1800000;
+// Check every hour
+const EXPIRATION = 3600000;
 // Check every 10 minutes on error
 const ERROR_EXPIRATION = 600000;
 
