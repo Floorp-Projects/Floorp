@@ -384,10 +384,21 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         // xxx todo: sentBy sentUID fields in cs: missing in cal api
     }
     
-    // xxx todo: force exclusion from free-busy calc for PRIVATE items
-    //           until user can check this on/off in UI:
-    url += ("&transparent=" +
-            (((icsClass == "PRIVATE") || bIsAllDay) ? "1" : "0"));
+    var strTransp = null;
+    if (item.hasProperty("TRANSP"))
+        strTransp = item.getProperty("TRANSP");
+    switch (strTransp) {
+    case "TRANSPARENT":
+        url += "&transparent=1";
+        break;
+    case "OPAQUE":
+        url += "&transparent=0";
+        break;
+    default:
+        url += ("&transparent=" +
+                (((icsClass == "PRIVATE") || bIsAllDay) ? "1" : "0"));
+        break;
+    }
     
     url += ("&isAllDay=" + (bIsAllDay ? "1" : "0"));
     
@@ -504,7 +515,22 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         url + "&fmt-out=text%2Fcalendar", stringToIcal, receiverFunc );
 };
 
-calWcapCalendar.prototype.adoptItem_resp = function( wcapResponse, listener )
+calWcapCalendar.prototype.tunnelXProps = function( destItem, srcItem )
+{
+    var enum = srcItem.propertyEnumerator;
+    while (enum.hasMoreElements()) {
+        var prop = enum.getNext().QueryInterface(
+            Components.interfaces.nsIProperty);
+        var name = prop.name;
+        if (name.indexOf("X-MOZ-") == 0) {
+            this.log( "tunneling " + name );
+            destItem.setProperty(name, prop.value);
+        }
+    }
+};
+
+calWcapCalendar.prototype.adoptItem_resp = function(
+    wcapResponse, newItem_, listener )
 {
     var item = null;
     try {
@@ -513,12 +539,14 @@ calWcapCalendar.prototype.adoptItem_resp = function( wcapResponse, listener )
         var items = this.parseItems(
             icalRootComp,
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
-            0, null, null );
+            0, null, null, true /* bLeaveMutable */ );
         if (items.length < 1)
             throw new Components.Exception("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
         item = items[0];
+        this.tunnelXProps(item, newItem_);
+        item.makeImmutable();
         
         this.log( "item.id=" + item.id );        
         if (listener != null) {
@@ -560,7 +588,7 @@ calWcapCalendar.prototype.adoptItem = function( item, listener )
         this.storeItem(
             item, oldItem,
             function( wcapResponse ) {
-                this_.adoptItem_resp( wcapResponse, listener );
+                this_.adoptItem_resp( wcapResponse, item, listener );
             } );
     }
     catch (exc) {
@@ -581,7 +609,7 @@ calWcapCalendar.prototype.addItem = function( item, listener )
 };
 
 calWcapCalendar.prototype.modifyItem_resp = function(
-    wcapResponse, oldItem, listener )
+    wcapResponse, newItem_, oldItem, listener )
 {
     var item = null;
     try {
@@ -590,12 +618,14 @@ calWcapCalendar.prototype.modifyItem_resp = function(
         var items = this.parseItems(
             icalRootComp,
             Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
-            0, null, null );
+            0, null, null, true /* bLeaveMutable */ );
         if (items.length < 1)
             throw new Components.Exception("empty VCALENDAR returned!");
         if (items.length > 1)
             this.notifyError( "unexpected number of items: " + items.length );
         item = items[0];
+        this.tunnelXProps(item, newItem_);
+        item.makeImmutable();
         
         if (listener != null) {
             listener.onOperationComplete(
@@ -629,7 +659,7 @@ calWcapCalendar.prototype.modifyItem = function( newItem, oldItem, listener )
         this.storeItem(
             newItem, oldItem,
             function( wcapResponse ) {
-                this_.modifyItem_resp( wcapResponse, oldItem, listener );
+                this_.modifyItem_resp(wcapResponse, newItem, oldItem, listener);
             } );
     }
     catch (exc) {
@@ -715,7 +745,8 @@ calWcapCalendar.prototype.deleteItem = function( item, listener )
 };
 
 calWcapCalendar.prototype.parseItems = function(
-    icalRootComp, itemFilter, maxResult, rangeStart, rangeEnd )
+    icalRootComp, itemFilter, maxResult, rangeStart, rangeEnd,
+    bLeaveMutable )
 {
     var unexpandedItems = [];
     var uid2parent = {};
@@ -867,7 +898,7 @@ calWcapCalendar.prototype.parseItems = function(
             }
         },
         maxResult );
-    
+
     // tag "exceptions", i.e. items with rid:
     for each ( var item in excItems ) {
         var parent = uid2parent[item.id];
@@ -889,7 +920,8 @@ calWcapCalendar.prototype.parseItems = function(
           ++i )
     {
         var item = unexpandedItems[i];
-        item.makeImmutable();
+        if (!bLeaveMutable)
+            item.makeImmutable();
         if (item.recurrenceInfo != null &&
             (itemFilter & Components.interfaces.calICalendar
              .ITEM_FILTER_CLASS_OCCURRENCES))
@@ -1287,7 +1319,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
     try {
         var this_ = this;
         // new stamp for this sync:
-        var now = getTime(); // xxx todo: not exact
+        var now = getTime();
         
         var syncState = new SyncState(
             // finishFunc:
@@ -1329,7 +1361,7 @@ calWcapCalendar.prototype.syncChangesTo = function(
         var params = ("&relativealarm=1&compressed=1&recurring=1&calid=" +
                       encodeURIComponent(this.calId));
         params += ("&fmt-out=text%2Fcalendar&dtstart=" + zdtFrom);
-        params += ("&dtend=" + getIcalUTC(now));
+        params += ("&dtend=" + getIcalUTC( this.session.getServerTime(now) ));
         
         syncState.acquire();
         this.session.issueAsyncRequest(
