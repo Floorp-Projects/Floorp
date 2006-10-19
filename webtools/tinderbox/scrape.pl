@@ -60,7 +60,7 @@ my $gz = gzopen("$tree/$logfile", "rb")
 $gz->gzclose();
 
 if (!defined(@scrape_data)) {
-    print "No scrape data found in log.\n";
+    print "No scrape data found in log.\n" if ($debug);
     exit(0);
 }
 
