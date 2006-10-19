@@ -24,6 +24,7 @@
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
    -   Simon Paquet <bugzilla@babylonsounds.com>
    -   Joey Minta <jminta@gmail.com>
+   -   Cédric Corazza <cedric.corazza@wanadoo.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,9 @@
 
       <rows>
         <row align="center">
-          <label value="&newevent.title.label;"/>
+          <label value="&newevent.title.label;"
+                 accesskey="&newevent.title.accesskey;"
+                 control="item-title"/>
           <hbox flex="1" align="center">
             <textbox id="item-title" oninput="updateAccept();" flex="1"/>
             <menulist id="component-type" crop="none" disabled="true"
@@ -100,20 +103,27 @@
         </row>
 
         <row align="center">
-          <label value="&newevent.location.label;"/>
+          <label value="&newevent.location.label;"
+                 accesskey="&newevent.location.accesskey;"
+                 control="item-location"/>
           <textbox id="item-location"/>
         </row>
 
         <row align ="center">
           <hbox align="center">
-            <label value="&newevent.from.label;" class="event-only"/>
-            <label value="&newevent.date.label;" class="todo-only"/>
+            <label value="&newevent.from.label;" class="event-only"
+                   accesskey="&newevent.from.accesskey;"
+                   control="event-starttime"/>
+            <label value="&newevent.date.label;" class="todo-only"
+                   accesskey="&newevent.date.accesskey;"
+                   control="todo-entrydate"/>
           </hbox>
           <hbox>
             <datetimepicker id="event-starttime" onchange="onStartTimeChange();" 
                             class="event-only"/>
             <checkbox id="event-all-day" oncommand="updateAllDay();" 
-                      class="event-only" label="&newevent.alldayevent.label;"/>
+                      class="event-only" label="&newevent.alldayevent.label;"
+                      accesskey="&newevent.alldayevent.accesskey;"/>
             <checkbox id="todo-has-entrydate" oncommand="updateEntryDate();" 
                       class="todo-only checkbox-no-label"/>
             <datetimepicker id="todo-entrydate" onchange="onStartTimeChange();" 
@@ -124,8 +134,12 @@
 
         <row>
           <hbox align="center">
-            <label value="&newevent.to.label;" class="event-only"/>
-            <label value="&newtodo.duedate.label;" class="todo-only"/>
+            <label value="&newevent.to.label;" class="event-only"
+                   accesskey="&newevent.to.accesskey;"
+                   control="event-endtime"/>
+            <label value="&newtodo.duedate.label;" class="todo-only"
+                   accesskey="&newtodo.duedate.accesskey;"
+                   control="todo-duedate"/>
           </hbox>
           <vbox>
             <hbox align="center">
@@ -133,8 +147,11 @@
               <checkbox id="todo-has-duedate" oncommand="updateDueDate();" class="todo-only checkbox-no-label"/>
               <datetimepicker id="todo-duedate" onchange="onEndTimeChange();" class="todo-only"/>
               <checkbox id="item-recurrence" oncommand="updateRecurrence();"
-                        label="&newevent.repeat.label2;"/>
-              <button id="set-recurrence" label="&newevent.set.label;" oncommand="editRecurrence();"/>
+                      label="&newevent.repeat2.label;"
+                      accesskey="&newevent.repeat2.accesskey;"/>
+              <button id="set-recurrence" label="&newevent.set.label;"
+                      oncommand="editRecurrence();"
+                      accesskey="&newevent.set.accesskey;"/>
             </hbox>
             <label id="end-time-warning" class="warning-text-class"
                    value="&newevent.endtime.warning;"/>
@@ -148,7 +165,9 @@
         </row>
 
         <row align="center">
-          <label value="&newevent.server.label;"/>
+          <label value="&newevent.server.label;"
+                 accesskey="&newevent.server.accesskey;"
+                 control="item-calendar"/>
           <hbox align="center">
             <menulist id="item-calendar" oncommand="updateAccept()"/>
             <label id="read-only-cal"
@@ -156,7 +175,9 @@
                    class="warning-text-class" hidden="true"/>
             <spacer flex="1"/>
             <hbox id="categories-box" align="center">
-                <label value="&newtodo.categories.label;" class="label"/>
+                <label value="&newtodo.categories.label;" class="label"
+                       accesskey="&newtodo.categories.accesskey;"
+                       control="item-categories"/>
                 <menulist id="item-categories" oncommand="categorySelect(this.value)"/>
             </hbox>
           </hbox>
@@ -171,12 +192,16 @@
         <!-- We work off of this row's collapsed state to determine whether or
              not to show details when loading the dialog -->
         <row id="description-row" details="true" collapsed="true" persist="collapsed" flex="1">
-          <label value="&newevent.description.label;"/>
+          <label value="&newevent.description.label;"
+                 accesskey="&newevent.description.accesskey;"
+                 control="item-description"/>
           <textbox id="item-description" multiline="true" rows="4" flex="1"/>
         </row>
 
         <row details="true">
-          <label value="&newevent.attendees.label;"/>
+          <label value="&newevent.attendees.label;"
+                 accesskey="&newevent.attendees.accesskey;"
+                 control="attendees-list"/>
           <hbox flex="1">
             <!-- XXX This should be changed to a richlistbox that actually
                -     works and doesn't need to be constrained by max-height.
@@ -193,7 +218,9 @@
 
               <rows>
                 <row align="center">
-                  <label value="&newevent.privacy.label;"/>
+                  <label value="&newevent.privacy.label;"
+                         accesskey="&newevent.privacy.accesskey;"
+                         control="privacy-menulist"/>
                   <menulist id="privacy-menulist" crop="none">
                     <menupopup>
                       <menuitem label="&newevent.public.label;" value="PUBLIC"/>
@@ -205,7 +232,9 @@
 
                 <row align="center">
                   <label id="priority-label"
-                         value="&newtodo.priority.label;"/>
+                         value="&newtodo.priority.label;"
+                         accesskey="&newtodo.priority.accesskey;"
+                         control="priority-levels"/>
                   <menulist id="priority-levels">
                     <menupopup>
                       <menuitem label="&priority.level.none;"   value="0"/>
@@ -218,7 +247,9 @@
 
                 <row align="center">
                   <label id="status-label" class="event-only"
-                         value="&newevent.status.label;"/>
+                         value="&newevent.status.label;"
+                         accesskey="&newevent.status.accesskey;"
+                         control="event-status"/>
                   <menulist id="event-status" class="event-only">
                     <menupopup>
                       <menuitem label="&newevent.status.none.label;"
@@ -234,7 +265,9 @@
                 </row>
 
                 <row align="center">
-                  <label value="&newevent.alarm.label;"/>
+                  <label value="&newevent.alarm.label;"
+                         accesskey="&newevent.alarm.accesskey;"
+                         control="item-alarm"/>
                   <hbox align="center">
                     <menulist id="item-alarm" oncommand="updateAlarm()">
                       <menupopup>
@@ -290,11 +323,13 @@
         </row>
 
         <row align="center" details="true">
-          <label value="&newevent.uri.label;"/>
+          <label value="&newevent.uri.label;"
+                 accesskey="&newevent.uri.accesskey;" control="item-url"/>
           <hbox flex="1">
             <textbox id="item-url" flex="1" oninput="updateURL(this.value)"/>
             <button id="load-url-button" oncommand="loadURL()"
-                    label="&newevent.uri.visit.label;"/>
+                    label="&newevent.uri.visit.label;"
+                    accesskey="&newevent.uri.visit.accesskey;"/>
           </hbox>
         </row>
 

@@ -84,30 +84,43 @@
 <!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "Title" >
+<!ENTITY newevent.title.accesskey    "i" >
 <!ENTITY newevent.location.label     "Location" >
+<!ENTITY newevent.location.accesskey "L" >
 <!ENTITY newevent.start.label        "Start" >
 <!ENTITY newevent.date.label         "Date" >
+<!ENTITY newevent.date.accesskey     "a" >
 <!ENTITY newevent.startdate.label    "Start" >
 <!ENTITY newevent.from.label         "From" >
+<!ENTITY newevent.from.accesskey     "F" >
 <!ENTITY newevent.to.label           "To" >
+<!ENTITY newevent.to.accesskey       "T" >
 <!ENTITY newevent.enddate.label      "End" >
 <!ENTITY newevent.set.label          "Set pattern..." >
+<!ENTITY newevent.set.accesskey      "n" >
 <!ENTITY newevent.settings.label     "General Settings" >
 <!ENTITY newevent.none.label         "none" >
 <!ENTITY newevent.custom.label       "Custom..." >
 <!ENTITY newevent.alldayevent.label  "All Day" >
+<!ENTITY newevent.alldayevent.accesskey "A" >
 <!ENTITY newevent.description.label  "Description" >
+<!ENTITY newevent.description.accesskey "D" >
 <!ENTITY newevent.uri.label          "URL" >
+<!ENTITY newevent.uri.accesskey      "U" >
 <!ENTITY newevent.uri.visit.label    "Visit URL" >
+<!ENTITY newevent.uri.visit.accesskey "V" >
 <!ENTITY newevent.before.label       "before" >
 <!ENTITY newevent.after.label        "after" >
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.privacy.label      "Privacy" >
+<!ENTITY newevent.privacy.accesskey  "P" >
 <!ENTITY newevent.private.note       "This event is private." >
 <!ENTITY newevent.public.label       "Public" >
 <!ENTITY newevent.confidential.label "Confidential" >
 <!ENTITY newevent.alarm.label        "Alarm" >
+<!ENTITY newevent.alarm.accesskey    "m" >
 <!ENTITY newevent.server.label       "Calendar" >
+<!ENTITY newevent.server.accesskey   "C" >
 <!ENTITY newevent.invite.label       "Invite" >
 <!ENTITY newevent.details.label      "Details" >
 <!ENTITY newevent.email.label        "Email Alarm To:" >
@@ -116,11 +129,11 @@
 <!ENTITY newevent.end.label          "ends" >
 <!ENTITY newevent.isdue.label        "is due" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
-<!ENTITY newevent.repeat.label2      "Repeat" >
+<!ENTITY newevent.repeat2.label      "Repeat" >
+<!ENTITY newevent.repeat2.accesskey  "R" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
 <!ENTITY newevent.numberoftimes.label "Number of times" >
-<!ENTITY newevent.category.label      "Category" >
 <!ENTITY newevent.popup.label         "Popup" >
 <!ENTITY newevent.popupsound.label    "Popup &amp; Play Sound" >
 <!ENTITY newevent.sendmail.label      "Send Email to:" >
@@ -163,11 +176,13 @@
 
 <!ENTITY newevent.attendees.tab.label       "Attendees" >
 <!ENTITY newevent.attendees.label           "Attendees" >
+<!ENTITY newevent.attendees.accesskey       "e" >
 <!ENTITY calendar.edit.attendees            "Edit Attendees" >
 <!ENTITY newevent.attachments.tab.label     "Attachments" >
 <!ENTITY newevent.advanced.tab.label        "Advanced" >
 <!ENTITY newevent.completed.label           "Completed" >
 <!ENTITY newevent.status.label "Status" >
+<!ENTITY newevent.status.accesskey "S" >
 <!ENTITY newevent.status.longlabel "Event Status">
 <!ENTITY newevent.status.needsaction.label "Needs Action" >
 <!ENTITY newevent.status.inprogress.label  "In Process" >
@@ -187,13 +202,15 @@
 
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
+<!ENTITY newtodo.duedate.accesskey "t">
 <!ENTITY newtodo.startdate.label "Start Date">
 <!ENTITY newtodo.priority.label "Priority">
+<!ENTITY newtodo.priority.accesskey "y">
 <!ENTITY newtodo.percentcomplete.label "&#37; complete">
 <!ENTITY newtodo.categories.label "Category">
+<!ENTITY newtodo.categories.accesskey "o">
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 <!ENTITY newtodo.cancelled.label "Cancelled">
-<!ENTITY newtodo.status.label "Status">
 <!ENTITY newtodo.beforealarm.label  "before this task" >
 <!ENTITY newtodo.beforealarmends.label  "before the task is due" >
 <!ENTITY newtodo.newtodo.tab.label "Task" >
@@ -208,7 +225,6 @@
 
 <!ENTITY event.alarm.checkbox.label "Remind me again in " >
 
-<!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "New Event" >
 <!ENTITY event.title.label       "Edit Item" >
 <!ENTITY event.title.edit        "Edit Event" >
