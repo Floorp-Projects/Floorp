@@ -69,7 +69,7 @@ for my $t (@changed_trees) {
     # Who data
     $err = system("./buildwho.pl", "$t");
     if ($err) {
-        warn "buildwho.pl returned an error on file $mail_file\n";
+        warn "buildwho.pl returned an error for tree $t\n";
     }
 }
 exit(0);
