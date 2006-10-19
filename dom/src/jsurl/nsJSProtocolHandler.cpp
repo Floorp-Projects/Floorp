@@ -84,7 +84,7 @@ public:
     NS_FORWARD_SAFE_NSIINPUTSTREAM(mInnerStream)
 
     nsresult Init(nsIURI* uri);
-    nsresult EvaluateScript(nsIChannel *aChannel);
+    nsresult EvaluateScript(nsIChannel *aChannel, PopupControlState aPopupState);
     nsresult BringUpConsole(nsIDOMWindow *aDomWindow);
 
 protected:
@@ -128,7 +128,30 @@ IsISO88591(const nsString& aString)
     return PR_TRUE;
 }
 
-nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
+static
+nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
+{
+    // Get the global object owner from the channel
+    nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
+    NS_QueryNotificationCallbacks(aChannel, globalOwner);
+    NS_ASSERTION(globalOwner, 
+                 "Unable to get an nsIScriptGlobalObjectOwner from the "
+                 "channel!");
+    if (!globalOwner) {
+        return nsnull;
+    }
+
+    // So far so good: get the script context from its owner.
+    nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
+
+    NS_ASSERTION(global,
+                 "Unable to get an nsIScriptGlobalObject from the "
+                 "ScriptGlobalObjectOwner!");
+    return global;
+}
+
+nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
+                                   PopupControlState aPopupState)
 {
     nsresult rv;
 
@@ -139,27 +162,16 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     rv = mURI->GetPath(script);
     if (NS_FAILED(rv)) return rv;
 
-    // The the global object owner from the channel
-    nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-    NS_QueryNotificationCallbacks(aChannel, globalOwner);
-    NS_ASSERTION(globalOwner, 
-                 "Unable to get an nsIScriptGlobalObjectOwner from the "
-                 "channel!");
-    if (!globalOwner) {
-        return NS_ERROR_FAILURE;
-    }
-
-    // So far so good: get the script context from its owner.
-    nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
-
-    NS_ASSERTION(global,
-                 "Unable to get an nsIScriptGlobalObject from the "
-                 "ScriptGlobalObjectOwner!");
+    // Get the global object we should be running on.
+    nsIScriptGlobalObject* global = GetGlobalObject(aChannel);
     if (!global) {
         return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+
+    // Push our popup control state
+    nsAutoPopupStatePusher popupStatePusher(win, aPopupState);
 
     // Make sure we create a new inner window if one doesn't already exist (see
     // bug 306630).
@@ -186,6 +198,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
+    // So far so good: get the script context from its owner.
     nsCOMPtr<nsIScriptContext> scriptContext = global->GetContext();
     if (!scriptContext)
         return NS_ERROR_FAILURE;
@@ -417,14 +430,16 @@ protected:
     nsLoadFlags             mActualLoadFlags; // See AsyncOpen
 
     nsRefPtr<nsJSThunk>     mIOThunk;
+    PopupControlState       mPopupState;
     PRPackedBool            mIsActive;
-    PRPackedBool            mOpenedStreamChannel;
+    PRPackedBool            mOpenedStreamChannel;    
 };
 
 nsJSChannel::nsJSChannel() :
     mStatus(NS_OK),
     mLoadFlags(LOAD_NORMAL),
     mActualLoadFlags(LOAD_NORMAL),
+    mPopupState(openOverridden),
     mIsActive(PR_FALSE),
     mOpenedStreamChannel(PR_FALSE)
 {
@@ -564,7 +579,7 @@ nsJSChannel::GetURI(nsIURI * *aURI)
 NS_IMETHODIMP
 nsJSChannel::Open(nsIInputStream **aResult)
 {
-    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
+    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return mStreamChannel->Open(aResult);
@@ -608,6 +623,11 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         mContext = nsnull;            
     }
 
+    nsCOMPtr<nsPIDOMWindow> domWin = do_QueryInterface(GetGlobalObject(this));
+    if (domWin) {
+        mPopupState = domWin->GetPopupControlState();
+    }
+
     return rv;
 }
 
@@ -625,7 +645,7 @@ nsJSChannel::EvaluateScript()
     // script returns it).
     
     if (NS_SUCCEEDED(mStatus)) {
-        nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
+        nsresult rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState);
 
         // Note that evaluation may have canceled us, so recheck mStatus again
         if (NS_FAILED(rv) && NS_SUCCEEDED(mStatus)) {
