@@ -23,6 +23,8 @@
 use Backwards;
 use Digest::MD5 qw(md5_hex);
 use Tie::IxHash;
+use FileHandle;
+use Fcntl qw(:DEFAULT :flock);
 
 #
 # Global variabls and functions for tinderbox
@@ -111,7 +113,7 @@ sub trick_taint{
 sub make_tree_list {
     my @result;
     while(<*>) {
-        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' && -f "$_/treedata.pl") {
+        if( -d $_ && $_ ne "$data_dir" && $_ ne 'CVS' && -f "$_/treedata.pl") {
             push @result, $_;
         }
     }
@@ -126,10 +128,24 @@ sub require_only_one_tree {
     &show_tree_selector, exit if $t eq '';
 }
 
-sub lock{
+sub lock_datafile {
+    my ($file) = @_;
+
+    my $lock_fh = new FileHandle ">>$file"
+      or die "Couldn't open semaphore file, $file: $!";
+
+    # Get an exclusive lock with a non-blocking request
+    unless (flock($lock_fh, LOCK_EX|LOCK_NB)) {
+        die "Lock unavailable: $!";
+    }
+    return $lock_fh;
 }
 
-sub unlock{
+sub unlock_datafile {
+    my ($lock_fh) = @_;
+
+    flock $lock_fh, LOCK_UN;  # Free the lock
+    close $lock_fh;
 }
 
 sub print_time {

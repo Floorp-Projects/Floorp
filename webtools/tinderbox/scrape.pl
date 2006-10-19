@@ -33,6 +33,7 @@ sub usage {
 use Compress::Zlib;
 use lib "@TINDERBOX_DIR@";
 require "tbglobals.pl";
+my $debug = 0;
 
 $ENV{PATH} = "@SETUID_PATH@";
 
@@ -42,6 +43,8 @@ unless ($#ARGV == 1) {
 }
 
 ($tree, $logfile) = @ARGV;
+
+print "scrape.pl($tree, $logfile)\n" if ($debug);
 
 $tree = &trick_taint($tree);
 $logfile = &trick_taint($logfile);
@@ -63,9 +66,13 @@ if (!defined(@scrape_data)) {
 
 # Save the scrape data to 'scrape.dat'
 #
+my $lockfile = "$tree/scrape.sem";
+my $lock = &lock_datafile($lockfile);
 open(SCRAPE, ">>", "$tree/scrape.dat") or die "Unable to open $tree/scrape.dat";
 print SCRAPE "$logfile|".join('|', @scrape_data)."\n";
 close SCRAPE;
+&unlock_datafile($lock);
+unlink($lockfile);
 
 #print "scrape_data = ";
 #my $i;
@@ -96,8 +103,7 @@ sub find_scrape_data {
           # No longer use ; to create separate lines.
           #@line = split(';', $_);
           
-          $line[0] = $gzline;
-          push(@rv, @line);
+          push(@rv, $gzline);
       }
   }
   return @rv;

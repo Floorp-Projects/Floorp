@@ -22,111 +22,160 @@
 
 use Compress::Zlib;
 use Compress::Bzip2;
+use Getopt::Long;
 use Time::Local;
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl'; # for $gzip
+#use strict;
 
 umask 002;
 
+# setuid globals
 $ENV{'PATH'} = "@SETUID_PATH@";
-
 $tinderboxdir = "@TINDERBOX_DIR@";
 
-chdir $tinderboxdir || die "Couldn't chdir to $tinderboxdir"; 
+# globals
+my ($only_check_mail);
+my @changed_trees=();
+my %scraped_trees;
+my $debug = 0;
 
-if ($ARGV[0] eq '--check-mail') {
-  $only_check_mail = 1;
-  shift @ARGV;
+chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
+
+# parse args
+GetOptions("check-mail" => \$only_check_mail) or die ("Error parsing args.");
+
+# Acquire a lock first so that we don't step on ourselves
+my $lockfile = "$data_dir/processbuild.sem";
+my $lock = &lock_datafile($lockfile);
+opendir(DIR, $data_dir) or die("Can't opendir($data_dir): $!");
+my @datafiles = 
+    sort(grep { /^tbx\.\d+\.\d+$/ && -f "$data_dir/$_" } readdir(DIR));
+closedir(DIR);
+print "Files: @datafiles\n" if ($debug && $#datafiles > 0);
+for my $file (@datafiles) {
+    &process_mailfile("$data_dir/$file");
 }
+&unlock_datafile($lock);
+unlink($lockfile);
 
-# If datafile is given on the commandline, use it.  Otherwise, read from STDIN
-$mail_file = shift;
-if (!defined($mail_file)) {
-    $mail_file = "data/tbx.$$";
-
-    open(DF, ">", $mail_file) || die "could not open $mail_file";
-    while(<STDIN>){
-        print DF $_;
-    }
-    close(DF);
-}
-
-%MAIL_HEADER = ();
-%tinderbox = ();
-
-# Scan the logfile once to get mail header and build variables
-#
-open(LOG, "<", $mail_file) or die "Can't open $!";
-
-parse_mail_header(*LOG, \%MAIL_HEADER);
-parse_log_variables(*LOG, \%tinderbox);
-
-close LOG;
-
-# If the mail does not contain any tinderbox header info, just drop it.
-@tbkeys = keys %tinderbox;
-if ($#tbkeys == -1) {
-    unlink $mail_file;
-    exit 0;
-}
-
-# Make sure variables are defined correctly
-#
-check_required_variables(\%tinderbox, \%MAIL_HEADER);
-
-die "Mail variables passed the test\n" if $only_check_mail;
-
-# Write data to "build.dat"
-#
-$tinderbox{logfile} = "$tinderbox{builddate}.$$.gz";
-write_build_data(\%tinderbox);
-
-# Compress the build log and put it in the tree
-#
-compress_log_file(\%tinderbox, $mail_file)
-  unless $tinderbox{status} =~ /building/;
-
-unlink $mail_file;
-
-
-# Who data
-#
-$err = system("./buildwho.pl", "$tinderbox{tree}");
-if ($err) {
-    die "buildwho.pl returned an error\n";
-}
-
-
-# Warnings
-#   Compare the name with $warning_buildnames_pat which is defined in
-#   $tinderbox{tree}/treedata.pl if at all.
-require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
-if (defined $warning_buildnames_pat
-    and $tinderbox{build} =~ /^$warning_buildnames_pat$/
-    and $tinderbox{status} ne 'failed') {
-    $err = system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
-    die "warnings.pl returned an error\n" if ($err);
-}
-
-# Scrape data
-#   Look for build name in scrapedata.pl.
-require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
-if ($scrape_builds->{$tinderbox{build}}
-    and $tinderbox{status} ne 'building') {
-    $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
-    die "scrape.pl returned an error\n" if ($err);
-}
-
-# Static pages
-#   For Sidebar flash and tinderbox panels.
-my $rel_path = ''; 
 require 'showbuilds.pl';
-$tree = $tinderbox{tree};
-&tb_build_static();
-
+for my $t (@changed_trees) {
+    $tree = $t;
+    print "Tree: $t\n" if ($debug);
+    # Static pages - For Sidebar flash and tinderbox panels.
+    $rel_path = ''; 
+    &tb_build_static();
+    # Who data
+    $err = system("./buildwho.pl", "$t");
+    if ($err) {
+        warn "buildwho.pl returned an error on file $mail_file\n";
+    }
+}
+exit(0);
 # end of main
 ######################################################################
 
+
+sub process_mailfile($) {
+    my ($mail_file) = @_;
+    my $err = 0;
+
+    print "process_mailfile($mail_file)\n" if ($debug);
+
+    %MAIL_HEADER = ();
+    %tinderbox = ();
+
+    # Scan the logfile once to get mail header and build variables
+    #
+    print "Parsing: begin\n" if ($debug);
+    unless (open(LOG, "<", $mail_file)) {
+        warn "Can't open $mail_file: $!";
+        return;
+    }
+    parse_mail_header(*LOG, \%MAIL_HEADER);
+    parse_log_variables(*LOG, \%tinderbox);
+    close LOG;
+
+    print "Parsing: end\n" if ($debug);
+
+    # If the mail does not contain any tinderbox header info, just drop it.
+    @tbkeys = keys %tinderbox;
+    if ($#tbkeys == -1) {
+        print "Dropping spam mail: $mail_file\n" if ($debug);
+        unlink $mail_file;
+        return;
+    }
+
+    # Make sure variables are defined correctly
+    #
+    return if (&check_required_variables(\%tinderbox, \%MAIL_HEADER));
+
+    if ($only_check_mail) {
+        warn "Mail variables passed the test\n";
+        return;
+    }
+
+    # Write data to "build.dat"
+    #
+    print "Write build.dat: $tinderbox{build}\n" if ($debug);
+    $tinderbox{logfile} = "$tinderbox{builddate}.$$.gz";
+    write_build_data(\%tinderbox);
+
+    # Add tree to changed trees list to later rebuild who.dat
+    # 
+    if (!grep(/$tinderbox{tree}/, @changed_trees)) {
+        push @changed_trees, $tinderbox{tree};
+    }
+
+    # Compress the build log and put it in the tree
+    #
+    print "Compress\n" if ($debug);
+    if ($tinderbox{status} =~ /building/) {
+        unlink $mail_file;
+        print "process_mailfile($mail_file) Building: END\n" if ($debug);
+        return;
+    } else {
+        return if (&compress_log_file(\%tinderbox, $mail_file));
+    }
+
+    # Warnings
+    #   Compare the name with $warning_buildnames_pat which is defined in
+    #   $tinderbox{tree}/treedata.pl if at all.
+    print "Warnings($tinderbox{tree}/$tinderbox{logfile})\n" if ($debug);
+    undef $warning_buildnames_pat;
+    open(TD, "$tinderbox{tree}/treedata.pl");
+    while ($line=<TD>) {
+        if ($line =~ m/^\$warning_build_names_pat\s*=.*;$/) {
+            eval($line);
+        }
+    }
+    close(TD);
+    if (defined $warning_buildnames_pat
+        and $tinderbox{build} =~ /^$warning_buildnames_pat$/
+        and $tinderbox{status} ne 'failed') {
+        $err = system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
+        warn "warnings.pl($tinderbox{tree}/$tinderbox{logfile} returned an error\n" if ($err);
+        undef $warning_buildnames_pat;
+    }
+
+    # Scrape data
+    #   Look for build name in scrapedata.pl.
+    print "Scrape($tinderbox{tree},$tinderbox{logfile})\n" if ($debug);
+    undef $scrape_builds;
+    require "$tinderbox{tree}/scrapebuilds.pl"
+        if -r "$tinderbox{tree}/scrapebuilds.pl";
+    # required files are only loaded once so preserve scraped_builds value
+    if (defined($scrape_builds)) {
+        $scraped_trees{$tinderbox{tree}} = $scrape_builds;
+    }
+    $sb = $scraped_trees{$tinderbox{tree}};
+    if (defined($sb) and $sb->{$tinderbox{build}}) {
+        $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
+        warn "scrape.pl($tinderbox{tree},$tinderbox{logfile}) returned an error\n" if ($err);
+    }
+    print "process_mailfile($mail_file) END\n" if ($debug);
+}
 
 # This routine will scan through log looking for 'tinderbox:' variables
 #
@@ -226,23 +275,40 @@ sub check_required_variables {
 
   # Report errors
   #
-  die $err_string unless $err_string eq '';
+  if ($err_string eq '') {
+      return 0;
+  } else {
+      warn $err_string;
+      return 1;
+  }
 }
 
 sub write_build_data {
   my $tbx = $_[0];
   $process_time = time;
-  open(BUILDDATA, ">>", "$tbx->{tree}/build.dat")
-    or die "can't open $! for writing";
+  my $lockfile = "$tbx->{tree}/builddat.sem";
+  my $lock = &lock_datafile($lockfile);
+  unless (open(BUILDDATA, ">>", "$tbx->{tree}/build.dat")) {
+      warn "can't open $tbx->{tree}/build.dat for writing: $!";
+      &unlock_datafile($lock);
+      return;
+  }
   print BUILDDATA "$process_time|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryurl}\n";
   close BUILDDATA;
+  &unlock_datafile($lock);
+  unlink($lockfile);
 }
 
 sub compress_log_file {
   my ($tbx, $maillog) = @_;
   local *LOG2;
+  my $err = 0;
 
-  open(LOG2, "<", $maillog) or die "cant open $!";
+  open(LOG2, "<", $maillog) or $err++;
+  if ($err) {
+    warn "Can't open $maillog: $!";
+    return 1;
+  }
 
   # Skip past the the RFC822.HEADER
   #
@@ -251,8 +317,12 @@ sub compress_log_file {
     last if /^$/;
   }
 
-  my $gz = gzopen("$tbx->{tree}/$tbx->{logfile}","wb") or 
-      die "gzopen($tbx->{tree}/$tbx->{logfile}): $!\n";
+  my $logfile = "$tbx->{tree}/$tbx->{logfile}";
+  my $gz = gzopen($logfile,"wb") or $err++;
+  if ($err) {
+    warn "gzopen($logfile): $!\n";
+    return 1;
+  }
 
   # If this log is compressed, we need to decode it and decompress
   # it before storing its contents into ZIPLOG.
@@ -270,16 +340,27 @@ sub compress_log_file {
     my $decoded = "$tbx->{tree}/$tbx->{logfile}.uncomp";
     if ($tbx->{logencoding} eq 'base64') {
       eval "use MIME::Base64 ();";
-      open(DECODED, ">", $decoded)
-        or die "Can't open $decoded for writing: $!";
+      open(DECODED, ">", $decoded) or $err++;
+      if ($err) {
+        warn "Can't open $decoded for writing: $!";
+        close(LOG2);
+        $gz->gzclose();
+        unlink $logfile;
+        return 1;
+      }
       while (<LOG2>) {
         print DECODED MIME::Base64::decode($_);
       }
       close DECODED;
     }
     elsif ($tbx->{logencoding} eq 'uuencode') {
-      open(DECODED, ">", $decoded)
-        or die "Can't open $decoded for writing: $!";
+      open(DECODED, ">", $decoded) or $err++;
+      if ($err) {
+        close(LOG2);
+        $gz->gzclose();
+        unlink $logfile;
+        return 1;
+      }
       while (<LOG2>) {
         print DECODED unpack("u*", $_);
       }
@@ -289,16 +370,30 @@ sub compress_log_file {
     # Decompress the log using the logcompression variable to determine
     # the type of compression used.
     if ($tbx->{logcompression} eq 'gzip') {
-      my $comp_gz = gzopen($decoded, "rb") or
-          die ("$decoded: $!\n");
+      my $comp_gz = gzopen($decoded, "rb") or $err++;
+      if ($err) {
+        warn ("$decoded: $!\n");
+        close(LOG2);
+        $gz->gzclose();
+        unlink $logfile;
+        unlink $decoded;
+        return 1;
+      }
       my ($bytesread, $line);
       while (($bytesread = $comp_gz->gzread($line)) > 0) {
           $gz->gzwrite($line);
       }
       $comp_gz->gzclose();
     } elsif ($tbx->{logcompression} eq 'bzip2') {
-      my $comp_bz = bzopen($decoded, "rb") or
-          die ("$decoded: $!\n");
+      my $comp_bz = bzopen($decoded, "rb") or $err++;
+      if ($err) {
+        warn ("$decoded: $!\n");
+        close(LOG2);
+        $gz->gzclose();
+        unlink $logfile;
+        unlink $decoded;
+        return 1;
+      }
       my ($bytesread, $line);
       while (($bytesread = $comp_bz->bzread($line)) > 0) {
           $gz->gzwrite($line);
@@ -317,4 +412,6 @@ sub compress_log_file {
   }
   $gz->gzclose();
   close LOG2;
+  unlink $maillog;
+  return 0;
 }

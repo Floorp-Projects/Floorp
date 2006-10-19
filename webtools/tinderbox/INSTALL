@@ -75,21 +75,35 @@ This is a quick guide for installing the tinderbox server.
    all mail through the handemail.pl script.
    Assuming that you're using sendmail, add the following line to /etc/aliases
 
-tinderbox-daemon:  "|/var/www/html/tinderbox/handlemail.pl /var/www/html/tinderbox"
+tinderbox-daemon:  "|/var/www/html/tinderbox/handlemail.pl"
 
    If sendmail uses smrsh, you may need to create a symlink under /etc/smrsh.
 	ln -sf /var/www/html/tinderbox/handlemail.pl /etc/smrsh/handlemail.pl
 
 8)
+   As the tinderbox user, add a cron job to call 'processbuild.pl'.
+   For example,
+       MAILTO="root"
+       USER=tinderbox
+       */5 * * * *     /var/www/html/tinderbox/processbuild.pl
+   This will cause the tinderbox mail to be processed every five minutes and
+      to mail the root user if any errors occur.
+
+9)
    Generate an admin password to be used to setup new trees
 	sudo make -C mozilla/webtools/tinderbox genpasswd
 
-9) 
+10) 
    Restart apache and go to http://tinderbox.company.com/tinderbox/ .
    Click on 'Create new tree' and enter the information for your 
       new tinderbox tree.
 
-10) 
+11) 
    Pull the tinderbox client source and start sending build reports
    to tinderbox-daemon@<tinderbox.server>
 	(cd /builds/cvs && cvs -z3 co mozilla/tools/tinderbox )
+
+12)
+   If you are migrating from an older tinderbox installation, you may need
+      to run ./checksetup.pl to make sure that your trees are using the
+      correct treedata.pl format.

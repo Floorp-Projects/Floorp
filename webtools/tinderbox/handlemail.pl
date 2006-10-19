@@ -20,13 +20,19 @@
 #
 # Contributor(s): 
 
-$ENV{'PATH'} = "@SETUID_PATH@";
+use lib "@TINDERBOX_DIR@";
+require 'tbglobals.pl';
 
+$ENV{'PATH'} = "@SETUID_PATH@";
 $tinderboxdir = "@TINDERBOX_DIR@";
 
-$err = system("cat | $tinderboxdir/processbuild.pl");
+chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
 
-if( $err ) {
-    die "processbuild.pl returned an error\n";
+$time = time();
+open(OUT, ">$data_dir/tbx.$time.$$") or die ("Could not open data file, tbx.$time.$$\n");
+while (<STDIN>) {
+    print OUT $_;
 }
+close(OUT);
 
+exit(0);

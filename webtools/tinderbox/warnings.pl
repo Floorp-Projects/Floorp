@@ -203,10 +203,14 @@ my $total_unignored_warnings = $total_warnings_count - $total_ignored_count;
 if ($total_unignored_warnings > 0) {
   # Add an entry to the warning log
   #
+  my $lockfile = "$tree/warnings.sem";
+  my $lock = &lock_datafile($lockfile);
   my $warn_log = "$tree/warnings.dat";
   $fh->open($warn_log, ">>") or die "Unable to open $warn_log: $!\n";
   print $fh "$log_file|$total_unignored_warnings\n";
   $fh->close;
+  &unlock_datafile($lock);
+  unlink($lockfile);
 }
 
 # end of main

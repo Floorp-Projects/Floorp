@@ -20,13 +20,11 @@
 #
 # Contributor(s): 
 
-use FileHandle;
 use File::Copy 'move';
-use Fcntl qw(:DEFAULT :flock);
 
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl';
-$F_DEBUG=1;
+$F_DEBUG=0;
 
 $ENV{'PATH'} = "@SETUID_PATH@";
 
@@ -59,7 +57,8 @@ exit 0 if (!$use_bonsai && !$use_viewvc);
 
 # Only allow one process at a time to re-write "who.dat".
 #
-my $lock = lock_datafile($tree);
+my $lockfile = "$tree/buildwho.sem";
+my $lock = lock_datafile($lockfile);
 
 if ($use_bonsai) {
     # Setup global variables for bonsai query
@@ -88,32 +87,12 @@ if ($use_bonsai) {
 build_who($tree);
 
 unlock_datafile($lock);
-
+unlink($lockfile);
 # End of main
 ##################################################################
 sub usage() {
     print "Usage: $0 [-days days_of_commitinfo] treename\n";
     exit 1;
-}
-
-sub lock_datafile {
-    my ($tree) = @_;
-
-    my $lock_fh = new FileHandle ">>$tree/buildwho.sem"
-      or die "Couldn't open semaphore file!";
-
-    # Get an exclusive lock with a non-blocking request
-    unless (flock($lock_fh, LOCK_EX|LOCK_NB)) {
-        die "buildwho.pl: Lock unavailable: $!";
-    }
-    return $lock_fh;
-}
-
-sub unlock_datafile {
-    my ($lock_fh) = @_;
-
-    flock $lock_fh, LOCK_UN;  # Free the lock
-    close $lock_fh;
 }
 
 sub build_who {
