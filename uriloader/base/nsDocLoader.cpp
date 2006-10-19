@@ -343,8 +343,8 @@ nsDocLoader::IsBusy()
   //
   //   1. One of its children is in the middle of an onload handler.  Note that
   //      the handler may have already removed this child from mChildList!
-  //   2. It is currently loading a document (ie. one or more URIs)
-  //   3. One of it's child document loaders is busy...
+  //   2. It is currently loading a document and either has parts of it still
+  //      loading, or has a busy child docloader.
   //
 
   if (mChildrenInOnload.Count()) {
@@ -352,16 +352,20 @@ nsDocLoader::IsBusy()
   }
 
   /* Is this document loader busy? */
-  if (mIsLoadingDocument) {
-    PRBool busy;
-    rv = mLoadGroup->IsPending(&busy);
-    if (NS_FAILED(rv))
-      return PR_FALSE;
-    if (busy)
-      return PR_TRUE;
+  if (!mIsLoadingDocument) {
+    return PR_FALSE;
+  }
+  
+  PRBool busy;
+  rv = mLoadGroup->IsPending(&busy);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+  if (busy) {
+    return PR_TRUE;
   }
 
-  /* Otherwise, check its child document loaders... */
+  /* check its child document loaders... */
   PRInt32 count, i;
 
   count = mChildList.Count();
@@ -372,7 +376,7 @@ nsDocLoader::IsBusy()
     // This is a safe cast, because we only put nsDocLoader objects into the
     // array
     if (loader && NS_STATIC_CAST(nsDocLoader*, loader)->IsBusy())
-        return PR_TRUE;
+      return PR_TRUE;
   }
 
   return PR_FALSE;
