@@ -1116,7 +1116,10 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
     sGraphicsMap,
     sTextContentElementsMap,
     sFontSpecificationMap,
-    sViewportsMap
+    sGradientStopMap,
+    sViewportsMap,
+    sMarkersMap,
+    sColorMap
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

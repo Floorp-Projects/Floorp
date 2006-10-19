@@ -175,3 +175,21 @@ nsSVGMaskElement::GetLengthInfo()
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sFontSpecificationMap,
+    sGradientStopMap,
+    sMarkersMap,
+    sTextContentElementsMap,
+    sViewportsMap
+  };
+
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGMaskElementBase::IsAttributeMapped(name);
+}

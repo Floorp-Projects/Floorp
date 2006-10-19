@@ -289,9 +289,13 @@ NS_IMETHODIMP_(PRBool)
 nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
-    sViewportsMap,
+    sFontSpecificationMap,
+    sGradientStopMap,
+    sMarkersMap,
+    sTextContentElementsMap,
+    sViewportsMap
   };
-  
+
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGMarkerElementBase::IsAttributeMapped(name);
 }

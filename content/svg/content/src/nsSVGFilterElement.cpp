@@ -262,6 +262,20 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sFontSpecificationMap,
+    sGradientStopMap,
+    sMarkersMap,
+    sTextContentElementsMap,
+    sViewportsMap
+  };
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGGraphicElementBase::IsAttributeMapped(name);
+}
+
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
