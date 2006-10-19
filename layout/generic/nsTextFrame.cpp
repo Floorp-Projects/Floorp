@@ -5523,6 +5523,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                                            aTs.mAveCharWidth);
     }
 #endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) */
+    ;
   }
 
   // If we didn't actually measure any text, then make sure it looks
