@@ -303,6 +303,14 @@ function selectMenulistFolder(aEvent)
 
 function selectTreeFolder()
 {
+  // If no item is selected, we obviously can't do anything with the selection.
+  // This happens when the bookmarks tree rebuilds, since the rebuild starts
+  // by removing all items from the tree, including the currently selected item,
+  // and removing the selection also triggers the "select" handler which calls
+  // this function.
+  if (gBookmarksTree.currentIndex == -1)
+    return;
+
   var resource = gBookmarksTree.currentResource;
   if (resource == gSelectedFolder)
     return;
