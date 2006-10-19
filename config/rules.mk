@@ -1941,15 +1941,6 @@ FORCE:
 # Delete target if error occurs when building target
 .DELETE_ON_ERROR:
 
-# pdbfiles are written to by every file when debugging in enabled,
-# so the files must be built serially
-# This requires a recent version of gmake 
-ifeq ($(OS_ARCH),WINNT)
-ifneq (,$(MOZ_DEBUG)$(MOZ_PROFILE))
-.NOTPARALLEL::
-endif
-endif
-
 # Properly set LIBPATTERNS for the platform
 .LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX) 
 
