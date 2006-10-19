@@ -487,7 +487,7 @@ LivemarkLoadListener.prototype = {
       // Enforce well-formedness because the existing code does
       if (!result || !result.doc || result.bozo) {
         this.insertLivemarkFailedItem(this._livemark.folderId);
-        this._ttl = ERROR_EXPIRATION;
+        this._ttl = EXPIRATION;
         throw Cr.NS_ERROR_FAILURE;
       }
 
