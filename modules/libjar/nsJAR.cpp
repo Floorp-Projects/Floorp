@@ -176,7 +176,10 @@ nsJAR::Open(nsIFile* zipFile)
   PRFileDesc *fd = OpenFile();
   NS_ENSURE_TRUE(fd, NS_ERROR_FAILURE);
 
-  return mZip.OpenArchive(fd);
+  nsresult rv = mZip.OpenArchive(fd);
+  if (NS_FAILED(rv)) Close();
+
+  return rv;
 }
 
 NS_IMETHODIMP
