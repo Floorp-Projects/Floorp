@@ -2393,9 +2393,11 @@
 
               var labelbox;
 
+              var df = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                 .getService(Components.interfaces.calIDateTimeFormatter);
               if (counter < labelboxkids.length) {
                   labelbox = labelboxkids[counter];
-                  labelbox.firstChild.setAttribute("value", (d.month + 1) + "/" + d.day);
+                  labelbox.firstChild.setAttribute("value", df.formatDateWithoutYear(d));
                   labelbox.childNodes[1].setAttribute("value", calGetString("dateFormat", "day."+ (d.weekday+1)+ ".Mmm"));
               } else {
                   labelbox = createXULElement("box");
@@ -2403,7 +2405,7 @@
                   labelbox.setAttribute("class", "calendar-day-label-box");
 
                   var label = createXULElement("label");
-                  label.setAttribute("value", (d.month + 1) + "/" + d.day);
+                  label.setAttribute("value", df.formatDateWithoutYear(d));
                   label.setAttribute("class", "calendar-day-label-date");
                   labelbox.appendChild(label);
                   labeldaybox.appendChild(labelbox);

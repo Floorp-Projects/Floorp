@@ -23,6 +23,7 @@
  *  Mike Potter <mikep@oeone.com>
  *  Eric Belhaire <belhaire@ief.u-psud.fr>
  *  Michiel van Leeuwen <mvl@exedo.nl>
+ *  Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,23 +51,50 @@ function calDateTimeFormatter() {
         Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
                   .getService(nsIScriptableDateFormat);
 
+    // Do does the month or day come first in this locale?
+    this.mMonthFirst = false;
+
     // If LONG FORMATTED DATE is same as short formatted date,
     // then OS has poor extended/long date config, so use workaround.
     this.mUseLongDateService = true;
     var probeDate = 
         Components.classes["@mozilla.org/calendar/datetime;1"]
                   .createInstance(Components.interfaces.calIDateTime);
-    probeDate.jsDate = new Date(2002,3,4);
-    try { 
-        var probeString = this.formatDateShort(probeDate);
+    probeDate.timezone = "UTC";
+    probeDate.year = 2002;
+    probeDate.month = 3;
+    probeDate.day = 5;
+    try {
+        // We're try/catching the calls to nsScriptableDateFormat since it's
+        // outside this module. We're also reusing probeDate rather than
+        // creating 3 discrete calDateTimes for performance.
+        var probeStringA = this.formatDateShort(probeDate);
         var longProbeString = this.formatDateLong(probeDate);
+        probeDate.month = 4;
+        var probeStringB = this.formatDateShort(probeDate);
+        probeDate.month = 3;
+        probeDate.day = 6;
+        var probeStringC = this.formatDateShort(probeDate);
+
+        // Compare the index of the first differing character between
+        // probeStringA to probeStringB and probeStringA to probeStringC. 
+        for (var i=0; i < probeStringA.length ; i++) {
+            if (probeStringA[i] != probeStringB[i]) {
+                this.mMonthFirst = true;
+                break;
+            } else if (probeStringA[i] != probeStringC[i]) {
+                this.mMonthFirst = false;
+                break;
+            }
+        }
+
         // On Unix extended/long date format may be created using %Ex instead
         // of %x. Some systems may not support it and return "Ex" or same as
         // short string. In that case, don't use long date service, use a
         // workaround hack instead.
         if (longProbeString == null ||
             longProbeString.length < 4 ||
-            longProbeString == probeString)
+            longProbeString == probeStringA)
            this.mUseLongDateService = false;
     } catch (e) {
         this.mUseLongDateService = false;
@@ -132,9 +160,13 @@ function formatDateLong(aDate) {
 
 calDateTimeFormatter.prototype.formatDateWithoutYear =
 function formatDateWithoutYear(aDate) {
-    // XXX Using a hardcoded format, because nsIScriptableDateFormat doesn't
-    //     have a way to leave out the year.
-    return this.shortMonthName(aDate.month) + " " + aDate.day;
+    // Doing this the hard way, because nsIScriptableDateFormat doesn't
+    // have a way to not include the year.
+    if (this.mMonthFirst) {
+        return this.shortMonthName(aDate.month) + " " + aDate.day;
+    } else {
+        return aDate.day + " " + this.shortMonthName(aDate.month);
+    }
 };
 
 
