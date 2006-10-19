@@ -96,7 +96,7 @@
 #include "nsIAnnotationService.h"
 #include "nsIFile.h"
 #include "nsIHTMLContentSink.h"
-#include "nsLivemarkService.h"
+#include "nsILivemarkService.h"
 #include "nsIParser.h"
 #include "nsIServiceManager.h"
 #include "nsNavBookmarks.h"
@@ -1455,7 +1455,7 @@ nsNavBookmarks::WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
   PRUint32 dummy;
   nsresult rv;
 
-  nsLivemarkService* livemarkService = nsLivemarkService::GetLivemarkService();
+  nsCOMPtr<nsILivemarkService> livemarkService(do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv));
   NS_ENSURE_TRUE(livemarkService, NS_ERROR_UNEXPECTED);
 
   // indent
@@ -1605,7 +1605,7 @@ nsNavBookmarks::WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent
       }
 
       // it could be a regular folder or it could be a livemark
-      nsLivemarkService* livemarkService = nsLivemarkService::GetLivemarkService();
+      nsCOMPtr<nsILivemarkService> livemarkService(do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv));
       NS_ENSURE_TRUE(livemarkService, NS_ERROR_UNEXPECTED);
       PRBool isLivemark;
       rv = livemarkService->IsLivemark(folderId, &isLivemark);

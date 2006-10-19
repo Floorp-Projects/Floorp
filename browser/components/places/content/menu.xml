@@ -234,7 +234,7 @@
                     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                     getService(Ci.nsINavBookmarksService);
                   var lms =
-                    Cc["@mozilla.org/browser/livemark-service;1"].
+                    Cc["@mozilla.org/browser/livemark-service;2"].
                     getService(Ci.nsILivemarkService);
                   var siteURI = lms.getSiteURI(folder);
                   if (siteURI) {            

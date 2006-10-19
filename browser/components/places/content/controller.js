@@ -241,7 +241,7 @@ var PlacesController = {
   get livemarks() {
     if (!this._livemarks) {
       this._livemarks = 
-        Cc["@mozilla.org/browser/livemark-service;1"].
+        Cc["@mozilla.org/browser/livemark-service;2"].
         getService(Ci.nsILivemarkService);
     }
     return this._livemarks;
@@ -575,7 +575,7 @@ var PlacesController = {
   */
   nodeIsLivemarkContainer: function PC_nodeIsLivemarkContainer(node) {
     return (this.nodeIsRemoteContainer(node) &&
-            asContainer(node).remoteContainerType == "@mozilla.org/browser/livemark-service;1");
+            asContainer(node).remoteContainerType == "@mozilla.org/browser/livemark-service;2");
   },
 
   /**
@@ -2248,7 +2248,7 @@ function PlacesBaseTransaction() {
 PlacesBaseTransaction.prototype = {
   bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
              getService(Ci.nsINavBookmarksService),
-  livemarks: Cc["@mozilla.org/browser/livemark-service;1"].
+  livemarks: Cc["@mozilla.org/browser/livemark-service;2"].
              getService(Ci.nsILivemarkService),
   LOG: LOG,
   redoTransaction: function PIT_redoTransaction() {

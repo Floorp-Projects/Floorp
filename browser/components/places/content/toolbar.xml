@@ -117,7 +117,7 @@
           Cc["@mozilla.org/browser/annotation-service;1"].
           getService(Ci.nsIAnnotationService);
         this._lms =
-          Cc["@mozilla.org/browser/livemark-service;1"].
+          Cc["@mozilla.org/browser/livemark-service;2"].
           getService(Ci.nsILivemarkService);
           
         this._bms.addObserver(this._observer, false);

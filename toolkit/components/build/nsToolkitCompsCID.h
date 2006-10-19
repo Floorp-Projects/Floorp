@@ -95,7 +95,7 @@
   "@mozilla.org/browser/nav-bookmarks-service;1"
 
 #define NS_LIVEMARKSERVICE_CONTRACTID \
-  "@mozilla.org/browser/livemark-service;1"
+  "@mozilla.org/browser/livemark-service;2"
 
 #define NS_MORKHISTORYIMPORTER_CONTRACTID \
   "@mozilla.org/browser/history-importer;1"
@@ -167,9 +167,6 @@
 
 #define NS_NAVBOOKMARKSSERVICE_CID \
 { 0x9de95a0c, 0x39a4, 0x4d64, {0x9a, 0x53, 0x17, 0x94, 0x0d, 0xd7, 0xca, 0xbb}}
-
-#define NS_LIVEMARKSERVICE_CID \
-{ 0xb1257934, 0x86cf, 0x4143, { 0x83, 0x86, 0x73, 0x4a, 0xc3, 0x52, 0xb6, 0xba } }
 
 #define NS_MORKHISTORYIMPORTER_CID \
 { 0x428e6d12, 0x9c6d, 0x436f, {0xb7, 0xa3, 0x6c, 0xa5, 0xf4, 0x80, 0x92, 0x12}}

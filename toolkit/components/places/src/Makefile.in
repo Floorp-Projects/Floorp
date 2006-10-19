@@ -89,14 +89,10 @@ CPPSRCS = \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
-          nsLivemarkService.cpp \
-          nsBookmarksFeedHandler.cpp \
           nsMaybeWeakPtr.cpp \
           nsMorkHistoryImporter.cpp \
           nsPlacesModule.cpp \
           $(NULL)
-
-include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += \
 	$(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
@@ -105,3 +101,7 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
+
+EXTRA_PP_COMPONENTS = nsLivemarkService.js
+
+include $(topsrcdir)/config/rules.mk
