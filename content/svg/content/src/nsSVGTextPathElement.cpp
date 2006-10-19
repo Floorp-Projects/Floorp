@@ -357,7 +357,8 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
     sFillStrokeMap,
     sGraphicsMap,
     sTextContentElementsMap,
-    sFontSpecificationMap
+    sFontSpecificationMap,
+    sColorMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

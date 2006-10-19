@@ -114,9 +114,13 @@ NS_IMETHODIMP_(PRBool)
 nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
-    sViewportsMap,
+    sFontSpecificationMap,
+    sGradientStopMap,
+    sMarkersMap,
+    sTextContentElementsMap,
+    sViewportsMap
   };
-  
+
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGForeignObjectElementBase::IsAttributeMapped(name);
 }
