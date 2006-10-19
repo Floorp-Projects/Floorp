@@ -1758,9 +1758,12 @@ NS_METHOD nsWindow::Show(PRBool bState)
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
             } else {
               // Place the window behind the foreground window
+              // (as long as it is not topmost)
               HWND wndAfter = ::GetForegroundWindow();
               if (!wndAfter)
                 wndAfter = HWND_BOTTOM;
+              else if (GetWindowLong(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST)
+                wndAfter = HWND_TOP;
               ::SetWindowPos(mWnd, wndAfter, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | 
                              SWP_NOMOVE | SWP_NOACTIVATE);
               GetAttention(2);
@@ -1836,9 +1839,12 @@ NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   if (!CanTakeFocus() && behind == HWND_TOP)
   {
     // Can't place the window to top so place it behind the foreground window
-    behind = ::GetForegroundWindow();
-    if (!behind)
+    // (as long as it is not topmost)
+    HWND wndAfter = ::GetForegroundWindow();
+    if (!wndAfter)
       behind = HWND_BOTTOM;
+    else if (!(GetWindowLong(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST))
+      behind = wndAfter;
     flags |= SWP_NOACTIVATE;
   }
 
