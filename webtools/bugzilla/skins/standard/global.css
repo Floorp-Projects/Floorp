@@ -270,3 +270,13 @@ table#flags td {
     margin: 1em;
     padding: 0.5em 1em;
 }
+
+dt {
+    font-weight: bolder;
+}
+body > dl > dt {
+    border-top: dotted gray thin;
+}
+dl dl > dt {
+    border-top: none;
+}

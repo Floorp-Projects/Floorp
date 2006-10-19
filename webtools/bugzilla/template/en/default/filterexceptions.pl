@@ -390,8 +390,8 @@
 
 'bug/process/results.html.tmpl' => [
   'title.$type', 
-  'id', 
-  'linktext.$type',
+  '"$terms.Bug $id" FILTER bug_link(id)',
+  '"$terms.bug $id" FILTER bug_link(id)',
 ],
 
 'bug/create/create.html.tmpl' => [
@@ -429,6 +429,7 @@
   'attachid', 
   'bugid', 
   'contenttype', 
+  '"$terms.bug $bugid" FILTER bug_link(bugid)',
 ],
 
 'attachment/edit.html.tmpl' => [
@@ -450,7 +451,7 @@
 
 'attachment/updated.html.tmpl' => [
   'attachid', 
-  'bugid', 
+  '"$terms.bug $bugid" FILTER bug_link(bugid)',
 ],
 
 'attachment/diff-header.html.tmpl' => [
