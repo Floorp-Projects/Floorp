@@ -126,7 +126,6 @@ function ics_importFromStream(aStream, aCount) {
         var isFromOldSunbird;
         if (prodId) {
             isFromOldSunbird = (prodId.value.indexOf("NONSGML Mozilla Calendar V1.0") > -1);
-            LOG("Old Sunbird file found...");
         }
 
         // Helper function to deal with the busted exdates from Sunbird 0.2
