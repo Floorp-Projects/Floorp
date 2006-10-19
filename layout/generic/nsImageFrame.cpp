@@ -1628,20 +1628,6 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
   return status;
 }
 
-NS_IMETHODIMP
-nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
-{
-  // images really CAN continue text runs, but the textFrame needs to be 
-  // educated before we can indicate that it can. For now, we handle the fixing up 
-  // of max element widths in nsLineLayout::VerticalAlignFrames, but hopefully
-  // this can be eliminated and the textFrame can be convinced to handle inlines
-  // that take up space in text runs.
-
-  aContinueTextRun = PR_FALSE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP  
 nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
                                  nsEvent* aEvent,

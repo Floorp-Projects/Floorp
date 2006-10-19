@@ -3811,6 +3811,8 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
   PRBool movedPastFloat = PR_FALSE;
   do {
     PRBool allowPullUp = aTryPull;
+    nsIContent* forceBreakInContent = nsnull;
+    PRInt32 forceBreakOffset = -1;
     do {
       nsSpaceManager::SavedState spaceManagerState;
       aState.mReflowState.mSpaceManager->PushState(&spaceManagerState);
@@ -3827,17 +3829,30 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                               &aState.mReflowState,
                               aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
       lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
+      if (forceBreakInContent) {
+        lineLayout.ForceBreakAtPosition(forceBreakInContent, forceBreakOffset);
+      }
       rv = DoReflowInlineFrames(aState, lineLayout, aLine,
                                 aKeepReflowGoing, &lineReflowStatus,
                                 aUpdateMaximumWidth, aDamageDirtyArea,
                                 allowPullUp);
       lineLayout.EndLineReflow();
-      
+
       if (LINE_REFLOW_REDO_NO_PULL == lineReflowStatus ||
           LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
+        if (lineLayout.NeedsBackup()) {
+          NS_ASSERTION(!forceBreakInContent, "Backuping up twice; this should never be necessary");
+          // If there is no saved break position, then this will set
+          // set forceBreakInContent to null and we won't back up, which is
+          // correct.
+          forceBreakInContent = lineLayout.GetLastOptionalBreakPosition(&forceBreakOffset);
+        } else {
+          forceBreakInContent = nsnull;
+        }
         // restore the space manager state
         aState.mReflowState.mSpaceManager->PopState(&spaceManagerState);
-        // Clear out below-current-line-floats
+        // Clear out float lists
+        aState.mCurrentLineFloats.DeleteAll();
         aState.mBelowCurrentLineFloats.DeleteAll();
       }
       
@@ -3886,6 +3901,13 @@ nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
   aKeepReflowGoing = PR_FALSE;
   aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
 }
+
+#ifdef DEBUG
+static const char* LineReflowStatusNames[] = {
+  "LINE_REFLOW_OK", "LINE_REFLOW_STOP", "LINE_REFLOW_REDO_NO_PULL",
+  "LINE_REFLOW_REDO_NEXT_BAND", "LINE_REFLOW_TRUNCATED"
+};
+#endif
 
 nsresult
 nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
@@ -3953,9 +3975,18 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // continuations
   PRBool isContinuingPlaceholders = PR_FALSE;
 
+  if (impactedByFloats) {
+    // There is a soft break opportunity at the start of the line, because
+    // we can always move this line down below float(s).
+    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0)) {
+      lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
+    }
+  }
+
   // need to repeatedly call GetChildCount here, because the child
   // count can change during the loop!
-  for (i = 0; i < aLine->GetChildCount(); i++) {
+  for (i = 0; LINE_REFLOW_OK == lineReflowStatus && i < aLine->GetChildCount();
+       i++, frame = frame->GetNextSibling()) {
     if (IsContinuationPlaceholder(frame)) {
       isContinuingPlaceholders = PR_TRUE;
     }
@@ -3986,9 +4017,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
           PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
         }
       }
-      break;
     }
-    frame = frame->GetNextSibling();
   }
 
   // Don't pull up new frames into lines with continuation placeholders
@@ -4022,6 +4051,20 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         }
       }
     }
+  }
+
+  if ((lineReflowStatus == LINE_REFLOW_STOP || lineReflowStatus == LINE_REFLOW_OK) &&
+      !aLineLayout.HaveForcedBreakPosition() && aLineLayout.NeedsBackup()) {
+    // We need to try backing up to before a text run
+    PRInt32 offset;
+    nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
+    if (breakContent) {
+      // We can back up!
+      lineReflowStatus = LINE_REFLOW_REDO_NO_PULL;
+    }
+  } else {
+    // Don't try to force any breaking if we are going to retry
+    aLineLayout.ClearOptionalBreakPosition();
   }
 
   if (LINE_REFLOW_REDO_NEXT_BAND == lineReflowStatus) {
@@ -4084,6 +4127,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       }
     }
   }
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    printf("Line reflow status = %s\n", LineReflowStatusNames[lineReflowStatus]);
+  }
+#endif
   *aLineReflowStatus = lineReflowStatus;
 
   return rv;

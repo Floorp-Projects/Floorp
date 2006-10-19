@@ -56,6 +56,8 @@
 #include "nsBlockReflowState.h"
 #include "plarena.h"
 
+class nsBlockFrame;
+
 class nsSpaceManager;
 class nsPlaceholderFrame;
 struct nsStyleText;
@@ -67,14 +69,6 @@ public:
                const nsHTMLReflowState* aOuterReflowState,
                PRBool aComputeMaxElementWidth);
   ~nsLineLayout();
-
-  class ArenaDeque : public nsDeque
-  {
-  public:
-    ArenaDeque() : nsDeque(nsnull) {}
-    void *operator new(size_t, PLArenaPool &pool);
-    void  operator delete(void *) {} // Dont do anything.  Its Arena memory
-  };
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
             PRInt32 aLineNumber) {
@@ -156,6 +150,7 @@ public:
 protected:
 #define LL_ENDSINWHITESPACE            0x00000001
 #define LL_UNDERSTANDSNWHITESPACE      0x00000002
+#define LL_INWORD                      0x00000004
 #define LL_FIRSTLETTERSTYLEOK          0x00000008
 #define LL_ISTOPOFPAGE                 0x00000010
 #define LL_UPDATEDBAND                 0x00000020
@@ -169,7 +164,9 @@ protected:
 // large, e.g., if a large word-spacing is set). LL should not be misled into 
 // placing something where the whitespace was trimmed. See bug 329987.
 #define LL_LINEENDSINSOFTBR            0x00000400
-#define LL_LASTFLAG                    LL_LINEENDSINSOFTBR
+#define LL_NEEDBACKUP                  0x00000800
+#define LL_LASTTEXTFRAME_WRAPPINGENABLED 0x00001000
+#define LL_LASTFLAG                    LL_LASTTEXTFRAME_WRAPPINGENABLED
 
   PRUint16 mFlags;
 
@@ -214,25 +211,6 @@ public:
     mTextJustificationNumSpaces = aNumSpaces;
     mTextJustificationNumLetters = aNumLetters;
   }
-
-  void RecordWordFrame(nsIFrame* aWordFrame) {
-    if(mWordFrames || AllocateDeque())
-      mWordFrames->Push(aWordFrame);
-  }
-
-  PRBool InWord() const {
-    return mWordFrames && 0 != mWordFrames->GetSize();
-  }
-
-  void ForgetWordFrame(nsIFrame* aFrame);
-
-  void ForgetWordFrames() {
-    if(mWordFrames) {
-      mWordFrames->Empty();
-    }
-  }
-
-  nsIFrame* FindNextText(nsPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool CanPlaceFloatNow() const;
 
@@ -279,6 +257,44 @@ public:
     return mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
   }
 
+  /**
+   * InWord is true when the last text frame reflowed ended in non-whitespace
+   * (so it has content that might form a word with subsequent text). The word width
+   * is the width of contiguous text up to the end of that last word, possibly
+   * including words from previous frames.
+   * 
+   * If GetTrailingTextFrame is null then InWord will be false.
+   */
+  PRBool InWord(nscoord* aWordWidth) {
+    if (!GetFlag(LL_INWORD))
+      return PR_FALSE;
+    *aWordWidth = mWordWidth;
+    return PR_TRUE;
+  }
+  void SetInWord(PRBool aInWord, nscoord aWordWidth) {
+    SetFlag(LL_INWORD, aInWord);
+    mWordWidth = aWordWidth;
+  }
+  
+  /**
+   * If the last content placed on the line (not counting inline containers)
+   * was text, and can form a contiguous text flow with the next content to be
+   * placed, and is not just a frame of all-skipped whitespace, this is the
+   * frame for that last content ... otherwise it's null.
+   *
+   * @param aWrappingEnabled whether that text had word-wrapping enabled
+   * (white-space:normal or -moz-pre-wrap)
+   */
+  nsIFrame* GetTrailingTextFrame(PRBool* aWrappingEnabled) {
+    *aWrappingEnabled = GetFlag(LL_LASTTEXTFRAME_WRAPPINGENABLED);
+    return mTrailingTextFrame;
+  }
+  void SetTrailingTextFrame(nsIFrame* aFrame, PRBool aWrappingEnabled)
+  { 
+    mTrailingTextFrame = aFrame;
+    SetFlag(LL_LASTTEXTFRAME_WRAPPINGENABLED, aWrappingEnabled);
+  }
+
   //----------------------------------------
 
   PRBool GetFirstLetterStyleOK() const {
@@ -307,11 +323,98 @@ public:
 
   nsPresContext* mPresContext;
 
+  /**
+   * Record where an optional break could have been placed. During line reflow,
+   * frames containing optional break points (e.g., whitespace in text frames)
+   * can call SetLastOptionalBreakPosition to record where a break could
+   * have been made, but wasn't because there appeared to be enough room
+   * to place more content on the line. For non-text frames, offset 0 means
+   * before the content, offset PR_INT32_MAX means after the content.
+   * 
+   * Currently this is used to handle cases where a single word comprises
+   * multiple frames, and the first frame fits on the line but the whole word
+   * doesn't. We look back to the last optional break position and
+   * reflow the whole line again, forcing a break at that position. The last
+   * optional break position could be in a text frame or else after a frame
+   * that cannot be part of a text run, so those are the positions we record.
+   * 
+   * It is imperative that this only gets called for break points that
+   * are within the available width.
+   * 
+   * @return PR_TRUE if we are actually reflowing with forced break position and we
+   * should break here
+   */
+  PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset) {
+    NS_ASSERTION(!GetFlag(LL_NEEDBACKUP),
+                  "Shouldn't be updating the break position after we've already flagged an overrun");
+    mLastOptionalBreakContent = aContent;
+    mLastOptionalBreakContentOffset = aOffset;
+    return aContent && mForceBreakContent == aContent &&
+      mForceBreakContentOffset == aOffset;
+  }
+  /**
+   * Like NotifyOptionalBreakPosition, but here it's OK for LL_NEEDBACKUP
+   * to be set, because the caller is merely pruning some saved break position(s)
+   * that are actually not feasible.
+   */
+  void RestoreSavedBreakPosition(nsIContent* aContent, PRInt32 aOffset) {
+    mLastOptionalBreakContent = aContent;
+    mLastOptionalBreakContentOffset = aOffset;
+  }
+  void ClearOptionalBreakPosition() {
+    mLastOptionalBreakContent = nsnull;
+    mLastOptionalBreakContentOffset = -1;
+  }
+  // Retrieve last set optional break position. When this returns null, no
+  // optional break has been recorded (which means that the line can't break yet).
+  nsIContent* GetLastOptionalBreakPosition(PRInt32* aOffset) {
+    *aOffset = mLastOptionalBreakContentOffset;
+    return mLastOptionalBreakContent;
+  }
+  
+  /**
+   * Check whether frames overflowed the available width and CanPlaceFrame
+   * requested backing up to a saved break position.
+   */  
+  PRBool NeedsBackup() { return GetFlag(LL_NEEDBACKUP); }
+  
+  // Line layout may place too much content on a line, overflowing its available
+  // width. When that happens, if SetLastOptionalBreakPosition has been
+  // used to record an optional break that wasn't taken, we can reflow the line
+  // again and force the break to happen at that point (i.e., backtracking
+  // to the last choice point).
+
+  // Record that we want to break at the given content+offset (which
+  // should have been previously returned by GetLastOptionalBreakPosition
+  // from another nsLineLayout).
+  void ForceBreakAtPosition(nsIContent* aContent, PRInt32 aOffset) {
+    mForceBreakContent = aContent;
+    mForceBreakContentOffset = aOffset;
+  }
+  PRBool HaveForcedBreakPosition() { return mForceBreakContent != nsnull; }
+  PRInt32 GetForcedBreakPosition(nsIContent* aContent) {
+    return mForceBreakContent == aContent ? mForceBreakContentOffset : -1;
+  }
+
+  /**
+   * This can't be null. It usually returns a block frame but may return
+   * some other kind of frame when inline frames are reflowed in a non-block
+   * context (e.g. MathML).
+   */
+  nsIFrame* GetLineContainerFrame() { return mBlockReflowState->frame; }
+  
 protected:
   // This state is constant for a given block frame doing line layout
   nsSpaceManager* mSpaceManager;
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
+
+  nsIContent* mLastOptionalBreakContent;
+  nsIContent* mForceBreakContent;
+  PRInt32     mLastOptionalBreakContentOffset;
+  PRInt32     mForceBreakContentOffset;
+  
+  nsIFrame* mTrailingTextFrame;
 
   // XXX remove this when landing bug 154892 (splitting absolute positioned frames)
   friend class nsInlineFrame;
@@ -333,14 +436,13 @@ protected:
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
+  nscoord mWordWidth;
   PRInt32 mTextJustificationNumSpaces;
   PRInt32 mTextJustificationNumLetters;
 
   nsLineBox* mLineBox;
 
   PRInt32 mTotalPlacedFrames;
-  ArenaDeque *mWordFrames;
-  PRBool  AllocateDeque();
 
   nscoord mTopEdge;
   nscoord mMaxTopBoxHeight;
@@ -395,7 +497,6 @@ protected:
 #define PFD_ISNONEMPTYTEXTFRAME         0x00000004
 #define PFD_ISNONWHITESPACETEXTFRAME    0x00000008
 #define PFD_ISLETTERFRAME               0x00000010
-#define PFD_ISSTICKY                    0x00000020
 #define PFD_ISBULLET                    0x00000040
 #define PFD_SKIPWHENTRIMMINGWHITESPACE  0x00000080
 #define PFD_LASTFLAG                    PFD_SKIPWHENTRIMMINGWHITESPACE
@@ -497,6 +598,7 @@ protected:
   PRBool CanPlaceFrame(PerFrameData* pfd,
                        const nsHTMLReflowState& aReflowState,
                        PRBool aNotSafeToBreak,
+                       PRBool aFrameCanContinueTextRun,
                        nsHTMLReflowMetrics& aMetrics,
                        nsReflowStatus& aStatus);
 

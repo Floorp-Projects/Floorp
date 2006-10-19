@@ -431,6 +431,27 @@ public:
    */
   static nsresult GetFontMetricsForFrame(nsIFrame* aFrame,
                                          nsIFontMetrics** aFontMetrics);
+
+  /**
+   * If aFrame is an out of flow frame, return its placeholder, otherwise
+   * return its parent.
+   */
+  static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
+                                             nsIFrame* aFrame);
+
+  /**
+   * Find the closest common ancestor of aFrame1 and aFrame2, following
+   * out of flow frames to their placeholders instead of their parents. Returns
+   * nsnull if the frames are in different frame trees.
+   * 
+   * @param aKnownCommonAncestorHint a frame that is believed to be on the
+   * ancestor chain of both aFrame1 and aFrame2. If null, or a frame that is
+   * not in fact on both ancestor chains, then this function will still return
+   * the correct result, but it will be slower.
+   */
+  static nsIFrame*
+  GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1, nsIFrame* aFrame2,
+                                          nsIFrame* aKnownCommonAncestorHint);
 };
 
 #endif // nsLayoutUtils_h__

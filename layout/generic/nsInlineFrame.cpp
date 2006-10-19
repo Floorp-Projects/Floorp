@@ -680,7 +680,9 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
   PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   PRBool pushedFrame;
-  nsresult rv = lineLayout->ReflowFrame(aFrame, aStatus, nsnull, pushedFrame);
+  nsresult rv =
+    lineLayout->ReflowFrame(aFrame, aStatus, nsnull, pushedFrame);
+  
   /* This next block is for bug 28811
      Test the child frame for %-awareness, 
      and mark this frame with a bit if it is %-aware.

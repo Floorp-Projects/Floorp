@@ -218,20 +218,6 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  nsISelectionDisplay::DISPLAY_IMAGES);
 }
 
-NS_IMETHODIMP
-nsHTMLCanvasFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
-{
-  // stolen from nsImageFrame.cpp
-  // images really CAN continue text runs, but the textFrame needs to be 
-  // educated before we can indicate that it can. For now, we handle the fixing up 
-  // of max element widths in nsLineLayout::VerticalAlignFrames, but hopefully
-  // this can be eliminated and the textFrame can be convinced to handle inlines
-  // that take up space in text runs.
-
-  aContinueTextRun = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP  
 nsHTMLCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
                                       nsEvent* aEvent,
