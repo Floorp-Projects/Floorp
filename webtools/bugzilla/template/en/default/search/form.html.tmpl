@@ -45,7 +45,7 @@ var tms = new Array();
   prods[[% nclass FILTER js %]] = [
     [% sep = '' %]
     [%- FOREACH item = c.products -%]
-      [%- IF user.can_see_product(item.name) -%]
+      [%- IF user.can_see_product(item.name) && item.components.size -%]
         [%- sep FILTER js %]'[% item.name FILTER js %]'
         [%- sep = ',' -%] 
       [%- END -%]
@@ -58,7 +58,7 @@ var tms = new Array();
 
 [% n = 0 %]
 [% FOREACH p = product %]
-  [% IF Param('useclassification') %]
+  [% IF Param('useclassification') && p.components.size %]
   prods['[% p.name FILTER js %]'] = [% n %]
   [% END %]
   cpts[[% n %]] = [
@@ -193,9 +193,11 @@ function doOnSelectProduct(selectmode) {
                   <select name="product" multiple="multiple" size="5" id="product"
                           onchange="doOnSelectProduct(2);">
                     [% FOREACH p = product %]
+                      [% IF p.components.size %]
                       <option value="[% p.name FILTER html %]"
                         [% " selected" IF lsearch(default.product, p.name) != -1 %]>
                         [% p.name FILTER html %]</option>
+                      [% END %]
                     [% END %]
                   </select>
                 </td>
