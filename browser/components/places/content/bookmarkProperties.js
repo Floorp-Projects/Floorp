@@ -96,7 +96,7 @@ var BookmarkPropertiesPanel = {
   get _livemarks() {
     if (!this.__livemarks) {
       this.__livemarks =
-        Cc["@mozilla.org/browser/livemark-service;1"].
+        Cc["@mozilla.org/browser/livemark-service;2"].
         getService(Ci.nsILivemarkService);
     }
     return this.__livemarks;
