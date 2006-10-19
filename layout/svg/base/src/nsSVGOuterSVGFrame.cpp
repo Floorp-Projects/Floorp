@@ -163,15 +163,6 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 {
 }
 
-nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
-{
-  // XXX XBL2/sXBL issue
-  nsIDocument *doc = mContent->GetOwnerDoc();
-  if (doc) {
-    doc->RemoveMutationObserver(&sSVGMutationObserver);
-  }
-}
-
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::InitSVG()
 {
@@ -191,7 +182,6 @@ nsSVGOuterSVGFrame::InitSVG()
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(this);
 
-  // XXX XBL2/sXBL issue
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
@@ -200,6 +190,9 @@ nsSVGOuterSVGFrame::InitSVG()
       SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
       SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
     }
+    // AddMutationObserver checks that the observer is not already added.
+    // sSVGMutationObserver has the same lifetime as the document so does
+    // not need to be removed
     doc->AddMutationObserver(&sSVGMutationObserver);
   }
 
