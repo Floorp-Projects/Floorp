@@ -110,7 +110,6 @@ MAC_LCPPSRCS = \
 
 ifndef MOZ_ENABLE_CAIRO_GFX
 MAC_LCPPSRCS +=	nsNativeThemeMac.cpp \
-		nsSound.cpp \
 		$(NULL)
 endif
 
@@ -139,6 +138,7 @@ CMMSRCS = \
 		nsMacCursor.mm \
 		nsScreenCocoa.mm \
 		nsScreenManagerCocoa.mm \
+		nsSound.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \
