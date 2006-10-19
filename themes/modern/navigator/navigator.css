@@ -589,3 +589,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://navigator/skin/icons/about-popups.gif");
   margin: 6px 0px;
 }
+
+/* For multi-line tooltips, we need our own style */
+.htmltooltip-label {
+  max-width: 40em;
+  margin: 0;
+  white-space: -moz-pre-wrap;
+}

@@ -366,3 +366,10 @@ toolbarbutton.chevron {
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
+
+/* For multi-line tooltips, we need our own style */
+.htmltooltip-label {
+  max-width: 40em;
+  margin: 0;
+  white-space: -moz-pre-wrap;
+}

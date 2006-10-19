@@ -269,14 +269,21 @@ function FillInHTMLTooltip(tipElement)
   }
 
   var texts = [titleText, XLinkTitleText];
-  var tipNode = document.getElementById("aHTMLTooltip");
-  tipNode.style.direction = direction;
 
   for (var i = 0; i < texts.length; ++i) {
     var t = texts[i];
     if (t && t.search(/\S/) >= 0) {
-      // XXX - Short-term fix to bug 67127: collapse whitespace here
-      tipNode.setAttribute("label", t.replace(/\s+/g, " ") );
+      var hbox = document.getElementById("aHTMLTooltip").firstChild;
+      hbox.style.direction = direction;
+      var label = hbox.firstChild;
+      label.textContent = t;
+
+      // Work around reflow bugs
+      hbox.width = "";
+      hbox.height = "";
+      hbox.width = label.boxObject.width;
+      hbox.height = label.boxObject.height;
+
       retVal = true;
     }
   }

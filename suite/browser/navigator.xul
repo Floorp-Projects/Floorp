@@ -39,7 +39,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/mailNavigatorOverlay.xul"?>
@@ -127,7 +127,11 @@
   
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);">
+    <hbox>
+      <label flex="1" class="htmltooltip-label"/>
+    </hbox>
+  </tooltip>
   <popup id="sidebarPopup"/>
 
   <popupset id="bookmarksPopupset"/>
