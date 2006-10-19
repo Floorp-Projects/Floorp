@@ -234,32 +234,25 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
   marker->SetParentCoordCtxProvider(ctx);
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
+    nsCOMPtr<nsIDOMSVGAnimatedRect> arect;
+    nsresult rv = marker->GetViewBox(getter_AddRefs(arect));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMSVGRect> rect;
+    rv = arect->GetAnimVal(getter_AddRefs(rect));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    float x, y, width, height;
+    rect->GetX(&x);
+    rect->GetY(&y);
+    rect->GetWidth(&width);
+    rect->GetHeight(&height);
+
+    nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+    NS_ENSURE_TRUE(matrix, NS_ERROR_OUT_OF_MEMORY);
+
     aCanvas->PushClip();
-
-    nsCOMPtr<nsIDOMSVGMatrix> parentTransform, markerTransform, clipTransform;
-    nsCOMPtr<nsIDOMSVGMatrix> viewTransform;
-
-    mMarkerParent->GetCanvasTM(getter_AddRefs(parentTransform));
-
-    nsSVGMarkerElement *element = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
-    element->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle,
-                                getter_AddRefs(markerTransform));
-
-    element->GetViewboxToViewportTransform(getter_AddRefs(viewTransform));
-
-    if (parentTransform && markerTransform)
-      parentTransform->Multiply(markerTransform,
-                                getter_AddRefs(clipTransform));
-
-    if (clipTransform && viewTransform) {
-      float x, y, width, height;
-
-      viewTransform->GetE(&x);
-      viewTransform->GetF(&y);
-      width = marker->mLengthAttributes[nsSVGMarkerElement::MARKERWIDTH].GetAnimValue(ctx);
-      height = marker->mLengthAttributes[nsSVGMarkerElement::MARKERHEIGHT].GetAnimValue(ctx);
-      aCanvas->SetClipRect(clipTransform, x, y, width, height);
-    }
+    aCanvas->SetClipRect(matrix, x, y, width, height);
   }
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
