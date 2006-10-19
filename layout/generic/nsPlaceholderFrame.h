@@ -99,6 +99,8 @@ public:
   virtual PRBool IsEmpty() { return PR_TRUE; }
   virtual PRBool IsSelfEmpty() { return PR_TRUE; }
 
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+
 #ifdef ACCESSIBILITY
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible)
   {

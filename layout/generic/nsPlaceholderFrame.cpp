@@ -105,6 +105,18 @@ nsPlaceholderFrame::GetType() const
   return nsLayoutAtoms::placeholderFrame; 
 }
 
+NS_IMETHODIMP
+nsPlaceholderFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  if (!mOutOfFlowFrame) {
+    aContinueTextRun = PR_FALSE;
+    return NS_OK;
+  }
+  // first-letter frames can continue text runs, and placeholders for floated
+  // first-letter frames can too
+  return mOutOfFlowFrame->CanContinueTextRun(aContinueTextRun);
+}
+
 #ifdef DEBUG
 static void
 PaintDebugPlaceholder(nsIFrame* aFrame, nsIRenderingContext* aCtx,

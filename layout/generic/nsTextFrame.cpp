@@ -540,61 +540,13 @@ public:
                       nsTextPaintStyle& aStyle,
                       nscoord dx, nscoord dy);
 
- /**
-  * ComputeTotalWordDimensions and ComputeWordFragmentDimensions work
-  * together to measure a text that spans multiple frames, e.g., as in
-  *   "baseText<b>moreText<i>moreDeepText</i></b>moreAlsoHere"
-  * where the total text shoudn't be broken (or the joined pieces should be
-  * passed to the linebreaker for examination, especially in i18n cases).
-  *
-  * ComputeTotalWordDimensions will loop over ComputeWordFragmentDimensions
-  * to look-ahead and accumulate the joining fragments.
-  *
-  * @param aNextFrame is the first textFrame after the baseText's textFrame.
-  *
-  * @param aBaseDimensions is the dimension of baseText.
-  *
-  * @param aCanBreakBefore is false when it is not possible to break before
-  * the baseText (e.g., when this is the first word on the line).
-  */
-  nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
-                                              nsLineLayout& aLineLayout,
-                                              const nsHTMLReflowState& aReflowState,
-                                              nsIFrame* aNextFrame,
-                                              const nsTextDimensions& aBaseDimensions,
-                                              PRUnichar* aWordBuf,
-                                              PRUint32   aWordBufLen,
-                                              PRUint32   aWordBufSize,
-                                              PRBool     aCanBreakBefore);
-
- /**
-  * @param aNextFrame is the textFrame following the current fragment.
-  *
-  * @param aMoreSize plays a double role. The process should continue
-  * normally when it is zero. But when it returns -1, it means that there is
-  * no more fragment of interest and the look-ahead should be stopped. When
-  * it returns a positive value, it means that the current buffer (aWordBuf 
-  * of size aWordBufSize) is not big enough to accumulate the current fragment. 
-  * The returned positive value is the shortfall. 
-  *
-  * @param aWordBufLen is the accumulated length of the fragments that have
-  * been accounted for so far.
-  */
-  nsTextDimensions ComputeWordFragmentDimensions(nsPresContext* aPresContext,
-                                                 nsLineLayout& aLineLayout,
-                                                 const nsHTMLReflowState& aReflowState,
-                                                 nsIFrame* aNextFrame,
-                                                 nsIContent* aContent,
-                                                 PRInt32* aMoreSize,
-                                                 const PRUnichar* aWordBuf,
-                                                 PRUint32 &aWordBufLen,
-                                                 PRUint32 aWordBufSize,
-                                                 PRBool aCanBreakBefore);
-  
 #ifdef DEBUG
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 #endif
-  
+
+  PRInt32 GetContentOffset() { return mContentOffset; }
+  PRInt32 GetContentLength() { return mContentLength; }
+
 protected:
     virtual ~nsTextFrame();
   
@@ -4907,21 +4859,6 @@ struct TextRun {
   }
 };
 
-// Transforms characters in place from ascii to Unicode
-static void
-TransformTextToUnicode(char* aText, PRInt32 aNumChars)
-{
-  // Go backwards over the characters and convert them.
-  unsigned char*  cp1 = (unsigned char*)aText + aNumChars - 1;
-  PRUnichar*      cp2 = (PRUnichar*)aText + (aNumChars - 1);
-  
-  while (aNumChars-- > 0) {
-    // XXX: If you crash here then you may see the issue described
-    // in http://bugzilla.mozilla.org/show_bug.cgi?id=36146#c44
-    *cp2-- = PRUnichar(*cp1--);
-  }
-}
- 
 PRUint32
 nsTextFrame::EstimateNumChars(PRUint32 aAvailableWidth,
                               PRUint32 aAverageCharWidth)
@@ -4951,6 +4888,85 @@ DEFINE_CCMAP(gPuncCharsCCMap, const);
   
 #define IsPunctuationMark(ch) (CCMAP_HAS_CHAR(gPuncCharsCCMap, ch))
 
+static PRBool CanBreakBetween(nsTextFrame* aBefore,
+                              PRBool aBreakWhitespaceBefore,
+                              nsTextFrame* aAfter,
+                              PRBool aBreakWhitespaceAfter,
+                              PRBool aSkipLeadingWhitespaceAfter,
+                              nsIFrame* aLineContainer)
+{
+  // This assumes text transforms don't change text breaking properties
+  const nsTextFragment* fragBefore = aBefore->GetContent()->GetText();
+  const nsTextFragment* fragAfter = aAfter->GetContent()->GetText();
+  NS_ASSERTION(fragBefore && fragAfter, "text frames with no text!");
+
+  // The end of the before-content
+  PRInt32 beforeOffset = aBefore->GetContentOffset() + aBefore->GetContentLength();
+  // The start of the after-content
+  PRInt32 afterOffset = aAfter->GetContentOffset();
+  PRInt32 afterLength = fragAfter->GetLength() - afterOffset;
+  
+  if (beforeOffset <= 0 || afterLength <= 0) {
+    // This shouldn't really happen, text frames shouldn't map no content
+    NS_WARNING("Textframe maps no content");
+    return PR_FALSE;
+  }
+
+  PRUnichar lastBefore = fragBefore->CharAt(beforeOffset - 1);
+  PRUnichar firstAfter = fragAfter->CharAt(afterOffset);
+  
+  // If we're skipping leading whitespace in the after-frame, and we actually
+  // have leading whitespace in the after-frame, then we can't break before
+  // it. We will rely on a saved break opportunity from the end of the last frame
+  // (if any). The problem is that we can't accurately figure out here whether
+  // a break is allowed.
+  if (aSkipLeadingWhitespaceAfter && XP_IS_SPACE(firstAfter))
+    return PR_FALSE;
+
+  while (IS_DISCARDED(firstAfter)) {
+    ++afterOffset;
+    --afterLength;
+    if (afterLength == 0) {
+      // aAfter will be entirely skipped. No breaking allowed here.
+      return PR_FALSE;
+    }
+    firstAfter = fragAfter->CharAt(afterOffset);
+  }
+  while (IS_DISCARDED(lastBefore)) {
+    NS_ASSERTION(beforeOffset > 0,
+                 "Before-textframe maps no content, should not have called SetTrailingTextFrame");
+    --beforeOffset;
+    lastBefore = fragBefore->CharAt(beforeOffset - 1);
+  }
+
+  // If the character before or after the boundary is a breakable whitespace
+  // character that's not skipped, we're good to break.
+  if ((XP_IS_SPACE(lastBefore) && aBreakWhitespaceBefore) ||
+      (XP_IS_SPACE(firstAfter) && aBreakWhitespaceAfter))
+    return PR_TRUE;
+  // See nsJISx4051LineBreaker::BreakInBetween ... characters 0-255 don't
+  // trigger complex line breaking behaviour. This is an approximation since
+  // currently nsJISx4051LineBreaker can look far along a line, but it'll do
+  // until the line breaker is sorted out.
+  if (!fragBefore->Is2b() && !fragAfter->Is2b())
+    return PR_FALSE;
+
+  nsIFrame* f =
+    nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(aBefore, aAfter, aLineContainer);
+  NS_ASSERTION(f, "Frames to check not in the same document???");
+  // Check if our nearest common ancestor allows wrapping between its children
+  if (f->GetStyleText()->WhiteSpaceCanWrap())
+    return PR_FALSE;
+
+  nsAutoString beforeStr;
+  nsAutoString afterStr;
+  fragBefore->AppendTo(beforeStr, 0, beforeOffset);
+  fragAfter->AppendTo(afterStr, afterOffset, afterLength);
+
+  return nsContentUtils::LineBreaker()->BreakInBetween(
+    beforeStr.get(), beforeStr.Length(), afterStr.get(), afterStr.Length());
+}
+
 nsReflowStatus
 nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
@@ -4963,9 +4979,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
   PRInt32 contentLength = aTx.GetContentLength();
   PRInt32 startingOffset = aTextData.mOffset;
-  PRInt32 prevOffset = -1;
   PRInt32 column = mColumn;
-  PRInt32 prevColumn = column;
   nscoord prevMaxWordWidth = 0, prevAscent = 0, prevDescent = 0;
   PRInt32 lastWordLen = 0;
   PRUnichar* lastWordPtr = nsnull;
@@ -4974,6 +4988,21 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
   PRBool  measureTextRuns = PR_FALSE;
+  nscoord lastWordWidth = NS_UNCONSTRAINEDSIZE;
+
+  // Check whether we can break between the last text frame (if any) and this one
+  PRBool trailingTextFrameCanWrap;
+  nsIFrame* lastTextFrame = lineLayout.GetTrailingTextFrame(&trailingTextFrameCanWrap);
+  PRBool canBreakBetweenTextFrames = PR_FALSE;
+  if (lastTextFrame) {
+    NS_ASSERTION(lastTextFrame->GetType() == nsGkAtoms::textFrame,
+                 "Trailing text frame isn't text!");
+    canBreakBetweenTextFrames =
+      CanBreakBetween(NS_STATIC_CAST(nsTextFrame*, lastTextFrame),
+                      trailingTextFrameCanWrap,
+                      this, aTextData.mWrapping, aTextData.mSkipWhitespace,
+                      lineLayout.GetLineContainerFrame());
+  }
 
   if (contentLength == 0) {
     aTextData.mX = 0;
@@ -5108,7 +5137,6 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       if ('\n' == firstChar) {
         // We hit a newline. Stop looping.
         NS_ASSERTION(aTs.mPreformatted, "newline w/o ts.mPreformatted");
-        prevOffset = aTextData.mOffset;
         aTextData.mOffset++;
         endsInWhitespace = PR_TRUE;
         endsInNewline = PR_TRUE;
@@ -5159,10 +5187,8 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 
       //Even if there is not enough space for this "space", we still put it 
       //here instead of next line
-      prevColumn = column;
       column += wordLen;
       endsInWhitespace = PR_TRUE;
-      prevOffset = aTextData.mOffset;
       aTextData.mOffset += contentLen;
 
       if (aTextData.mMeasureText) {
@@ -5193,7 +5219,9 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       } //(aTextData.mMeasureText)
     }
     else {
+      PRBool currentWordIsFirstThing = firstThing;
       firstThing = PR_FALSE;
+
       aTextData.mSkipWhitespace = PR_FALSE;
 
       if (aTextData.mFirstLetterOK) {
@@ -5269,20 +5297,47 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
               }
             }
           }
+
           lastWordDimensions = dimensions;
 
-          // See if there is room for the text
-          if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + dimensions.width > maxWidth)) {
-            // The text will not fit.
-            break;
+          PRBool canBreak;
+          if (0 == aTextData.mX) {
+            canBreak = canBreakBetweenTextFrames;
+            // Allow breaking between text frames even if mWrapping is false
+            // (e.g., we're white-space:pre). If canBreakBetweenTextFrames is
+            // true, then the previous text frame's mWrapping must have been
+            // true, and we allow breaking between text frames if at least
+            // one of them allows breaking.
+          } else {
+            canBreak = aTextData.mWrapping;
           }
+          if (canBreak) {
+            // Remember that we *could* have broken here, even if we choose not to
+            PRBool forceBreak =
+              lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset);
+            // See if there is room for the text
+            if (forceBreak || (aTextData.mX + dimensions.width > maxWidth)) {
+              // The text will not fit, or a break was forced.
+              break;
+            }
+          }
+
           prevMaxWordWidth = aTextData.mMaxWordWidth;
           prevAscent = aTextData.mAscent;
           prevDescent =  aTextData.mDescent;
 
           aTextData.mX += dimensions.width;
-          if (dimensions.width > aTextData.mMaxWordWidth) {
-            aTextData.mMaxWordWidth = dimensions.width;
+          if (aTextData.mComputeMaxWordWidth) {
+            lastWordWidth = dimensions.width;
+            if (currentWordIsFirstThing) {
+              nscoord incomingWordWidth;
+              if (lineLayout.InWord(&incomingWordWidth)) {
+                lastWordWidth += incomingWordWidth;
+              }
+            }
+            if (lastWordWidth > aTextData.mMaxWordWidth) {
+              aTextData.mMaxWordWidth = lastWordWidth;
+            }
           }
           if (aTextData.mAscent < dimensions.ascent) {
             aTextData.mAscent = dimensions.ascent;
@@ -5291,10 +5346,8 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
             aTextData.mDescent = dimensions.descent;
           }
 
-          prevColumn = column;
           column += wordLen;
           endsInWhitespace = PR_FALSE;
-          prevOffset = aTextData.mOffset;
           aTextData.mOffset += contentLen;
           if (justDidFirstLetter) {
             // Time to stop
@@ -5303,11 +5356,25 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
         }
       }
       else {
+        // Remember that we *could* have broken before this chunk of text.
+        PRBool canBreak;
+        if (aTextData.mOffset == startingOffset) {
+          canBreak = canBreakBetweenTextFrames;
+        } else {
+          canBreak = aTextData.mWrapping;
+        }
+        if (canBreak) {
+#ifdef DEBUG
+          PRBool forceBreak =
+#endif
+            lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset);
+          NS_ASSERTION(!forceBreak, "If we're supposed to break, we should be "
+                       "really measuring");
+        }
+          
         // We didn't measure the text, but we need to update our state
-        prevColumn = column;
         column += wordLen;
         endsInWhitespace = PR_FALSE;
-        prevOffset = aTextData.mOffset;
         aTextData.mOffset += contentLen;
         if (justDidFirstLetter) {
           // Time to stop
@@ -5319,119 +5386,142 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 
   MeasureTextRun:
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
-  // see if we have implementation for GetTextDimensions()
-  if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
-    PRInt32 numCharsFit;
-    // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
-    if (aTx.TransformedTextIsAscii()) {
-      aReflowState.rendContext->GetTextDimensions((char*)aTx.GetWordBuffer(), textRun.mTotalNumChars,
-                                         maxWidth - aTextData.mX,
-                                         textRun.mBreaks, textRun.mNumSegments,
-                                         dimensions, numCharsFit, lastWordDimensions);
-    } else {
-      aReflowState.rendContext->GetTextDimensions(aTx.GetWordBuffer(), textRun.mTotalNumChars,
-                                         maxWidth - aTextData.mX,
-                                         textRun.mBreaks, textRun.mNumSegments,
-                                         dimensions, numCharsFit, lastWordDimensions);
-    }
-    // See how much of the text fit
-    if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + dimensions.width > maxWidth)) {
-      // None of the text fits
-#ifdef IBMBIDI
-      nextBidi = nsnull;
-#endif // IBMBIDI
-      break;
-    }
+    // see if we have implementation for GetTextDimensions()
+    if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
+      PRInt32 numCharsFit;
 
-    // Find the index of the last segment that fit
-    PRInt32 lastSegment;
-    if (numCharsFit >= textRun.mTotalNumChars) { // fast path, normal case
-      NS_ASSERTION(numCharsFit == textRun.mTotalNumChars, "shouldn't overshoot");
-      lastSegment = textRun.mNumSegments - 1;
-    } else {
-      for (lastSegment = 0; textRun.mBreaks[lastSegment] < numCharsFit; lastSegment++) ;
-      NS_ASSERTION(lastSegment < textRun.mNumSegments, "failed to find segment");
-      // now we have textRun.mBreaks[lastSegment] >= numCharsFit
-      /* O'Callahan XXX: This snippet together with the snippet below prevents mail from loading
-         Justification seems to work just fine without these changes.
-         We get into trouble in a case where lastSegment gets set to -1
-
-      if (textRun.mBreaks[lastSegment] > numCharsFit) {
-        // NOTE: this segment did not actually fit!
-        lastSegment--;
+      PRInt32 forcedOffset = lineLayout.GetForcedBreakPosition(GetContent());
+      PRInt32 measureChars = textRun.mTotalNumChars;
+      if (forcedOffset == -1) {
+        forcedOffset -= aTextData.mOffset;
+        NS_ASSERTION(forcedOffset >= 0,
+                     "Overshot forced offset, we should have already exited");
+        if (forcedOffset >= 0 && forcedOffset < textRun.mTotalNumChars) {
+          // Only measure up to forcedOffset characters. We still need to measure
+          // to make sure we get the right text dimensions, even though we know
+          // where we're going to break. This will reduce the number of chars that
+          // fit, which we then detect as a required break.
+          measureChars = forcedOffset;
+        }
       }
-      */
-    }
 
-    /* O'Callahan XXX: This snippet together with the snippet above prevents mail from loading
-
-    if (lastSegment < 0) {        
-      // no segments fit
-      break;
-    } else */
-    if (lastSegment == 0) {
-      // Only one segment fit
-      prevColumn = column;
-      prevOffset = aTextData.mOffset;
-    } else {
-      // The previous state is for the next to last word
-      // NOTE: The textRun data are relative to the last updated column and offset!
-      prevColumn = column + textRun.mBreaks[lastSegment - 1];
-      prevOffset = aTextData.mOffset + textRun.mSegments[lastSegment - 1].ContentLen();
-    }
-
-    aTextData.mX += dimensions.width;
-    if (aTextData.mAscent < dimensions.ascent) {
-      aTextData.mAscent = dimensions.ascent;
-    }
-    if (aTextData.mDescent < dimensions.descent) {
-      aTextData.mDescent = dimensions.descent;
-    }
-    // this is where to backup if line-breaking happens to push the last word
-    prevAscent = aTextData.mAscent;
-    prevDescent = aTextData.mDescent;
-    // we can now consider the last word since we know where to backup
-    if (aTextData.mAscent < lastWordDimensions.ascent) {
-      aTextData.mAscent = lastWordDimensions.ascent;
-    }
-    if (aTextData.mDescent < lastWordDimensions.descent) {
-      aTextData.mDescent = lastWordDimensions.descent;
-    }
-
-    column += numCharsFit;
-    aTextData.mOffset += textRun.mSegments[lastSegment].ContentLen();
-    endsInWhitespace = textRun.mSegments[lastSegment].IsWhitespace();
-
-    // If all the text didn't fit, then we're done
-    if (numCharsFit != textRun.mTotalNumChars) {
+      // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
+      if (aTx.TransformedTextIsAscii()) {
+        aReflowState.rendContext->GetTextDimensions((char*)aTx.GetWordBuffer(), measureChars,
+                                           maxWidth - aTextData.mX,
+                                           textRun.mBreaks, textRun.mNumSegments,
+                                           dimensions, numCharsFit, lastWordDimensions);
+      } else {
+        aReflowState.rendContext->GetTextDimensions(aTx.GetWordBuffer(), measureChars,
+                                           maxWidth - aTextData.mX,
+                                           textRun.mBreaks, textRun.mNumSegments,
+                                           dimensions, numCharsFit, lastWordDimensions);
+      }
+      
+      // See how much of the text fit
+      PRBool canBreak;
+      if (0 == aTextData.mX) {
+        canBreak = canBreakBetweenTextFrames;
+      } else {
+        canBreak = aTextData.mWrapping;
+      }
+      if (canBreak && aTextData.mX + dimensions.width > maxWidth) {
+        // None of the text fits
 #ifdef IBMBIDI
-      nextBidi = nsnull;
+        nextBidi = nsnull;
 #endif // IBMBIDI
-      break;
-    }
-
+        break;
+      }
+  
+      // Find the index of the last segment that fit
+      PRInt32 lastSegment;
+      if (numCharsFit >= textRun.mTotalNumChars) { // fast path, normal case
+        NS_ASSERTION(numCharsFit == textRun.mTotalNumChars, "shouldn't overshoot");
+        lastSegment = textRun.mNumSegments - 1;
+      } else {
+        for (lastSegment = 0; textRun.mBreaks[lastSegment] < numCharsFit; lastSegment++) ;
+        NS_ASSERTION(lastSegment < textRun.mNumSegments, "failed to find segment");
+        // now we have textRun.mBreaks[lastSegment] >= numCharsFit
+        /* O'Callahan XXX: This snippet together with the snippet below prevents mail from loading
+           Justification seems to work just fine without these changes.
+           We get into trouble in a case where lastSegment gets set to -1
+  
+        if (textRun.mBreaks[lastSegment] > numCharsFit) {
+          // NOTE: this segment did not actually fit!
+          lastSegment--;
+        }
+        */
+      }
+  
+      /* O'Callahan XXX: This snippet together with the snippet above prevents mail from loading
+  
+      if (lastSegment < 0) {        
+        // no segments fit
+        break;
+      }  */
+  
+      aTextData.mX += dimensions.width;
+      if (aTextData.mAscent < dimensions.ascent) {
+        aTextData.mAscent = dimensions.ascent;
+      }
+      if (aTextData.mDescent < dimensions.descent) {
+        aTextData.mDescent = dimensions.descent;
+      }
+      // this is where to backup if line-breaking happens to push the last word
+      prevAscent = aTextData.mAscent;
+      prevDescent = aTextData.mDescent;
+      // we can now consider the last word since we know where to backup
+      if (aTextData.mAscent < lastWordDimensions.ascent) {
+        aTextData.mAscent = lastWordDimensions.ascent;
+      }
+      if (aTextData.mDescent < lastWordDimensions.descent) {
+        aTextData.mDescent = lastWordDimensions.descent;
+      }
+  
+      endsInWhitespace = textRun.mSegments[lastSegment].IsWhitespace();
+      
+      // Save last possible backup position. Whitespace segments are always
+      // breakable since nsTextTransformer reports preformatted spaces as
+      // "not whitespace". Note that each segment is either entirely whitespace
+      // or entirely non-whitespace.
+      PRInt32 lastWhitespaceSegment =
+        endsInWhitespace ? lastSegment : lastSegment - 1;
+      if (lastWhitespaceSegment >= 0) {
+        lineLayout.NotifyOptionalBreakPosition(GetContent(),
+            aTextData.mOffset + textRun.mSegments[lastWhitespaceSegment].ContentLen());
+      }
+  
+      column += numCharsFit;
+      aTextData.mOffset += textRun.mSegments[lastSegment].ContentLen();
+  
+      // If all the text didn't fit, then we're done
+      if (numCharsFit != textRun.mTotalNumChars) {
 #ifdef IBMBIDI
-    if (nextBidi && (mContentLength <= 0) ) {
-      break;
-    }
+        nextBidi = nsnull;
 #endif // IBMBIDI
-
-    if (nsnull == bp2) {
-      // No more text so we're all finished. Advance the offset in case the last
-      // call to GetNextWord() discarded characters
-      aTextData.mOffset += contentLen;
-      break;
+        break;
+      }
+      
+#ifdef IBMBIDI
+      if (nextBidi && (mContentLength <= 0) ) {
+        break;
+      }
+#endif // IBMBIDI
+  
+      if (nsnull == bp2) {
+        // No more text so we're all finished. Advance the offset in case the last
+        // call to GetNextWord() discarded characters
+        aTextData.mOffset += contentLen;
+        break;
+      }
+  
+      // Reset the number of text run segments
+      textRun.Reset();
+  
+      // Estimate the remaining number of characters we think will fit
+      estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
+                                           aTs.mAveCharWidth);
     }
-
-    // Reset the number of text run segments
-    textRun.Reset();
-
-    // Estimate the remaining number of characters we think will fit
-    estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
-                                         aTs.mAveCharWidth);
-  }
-#else /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) */
-    int unused = -1;
 #endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) */
   }
 
@@ -5448,160 +5538,24 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
     }
   }
   
-  // Post processing logic to deal with word-breaking that spans
-  // multiple frames.
-  if (lineLayout.InWord()) {
-    // We are already in a word. This means a text frame prior to this
-    // one had a fragment of a nbword that is joined with this
-    // frame. It also means that the prior frame already found this
-    // frame and recorded it as part of the word.
-#ifdef DEBUG_WORD_WRAPPING
-    ListTag(stdout);
-    printf(": in word; skipping\n");
-#endif
-    lineLayout.ForgetWordFrame(this);
-  }
-
-  if (!lineLayout.InWord()) {
-    // There is no currently active word. This frame may contain the
-    // start of one.
-    if (endsInWhitespace) {
-      // Nope, this frame doesn't start a word.
-      lineLayout.ForgetWordFrames();
-    }
-    else if ((aTextData.mOffset == contentLength) && (prevOffset >= 0)) {
-      // Force breakable to false when we aren't wrapping (this
-      // guarantees that the combined word will stay together)
-      if (!aTextData.mWrapping) {
-        aTextData.mCanBreakBefore = PR_FALSE;
-      }
-
-      // This frame does start a word. However, there is no point
-      // messing around with it if we are already out of room. We
-      // always have room if we are not breakable.
-      if (!aTextData.mCanBreakBefore || (aTextData.mX <= maxWidth)) {
-        // There is room for this word fragment. It's possible that
-        // this word fragment is the end of the text-run. If it's not
-        // then we continue with the look-ahead processing.
-        nsIFrame* next = lineLayout.FindNextText(aPresContext, this);
-        if (nsnull != next) {
-#ifdef DEBUG_WORD_WRAPPING
-          nsAutoString tmp(aTx.GetWordBuffer(), lastWordLen);
-          ListTag(stdout);
-          printf(": start='");
-          fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
-          printf("' lastWordLen=%d baseWidth=%d prevOffset=%d offset=%d next=",
-                 lastWordLen, lastWordDimensions.width, prevOffset, aTextData.mOffset);
-          ListTag(stdout, next);
-          printf("\n");
-#endif
-          PRUnichar* pWordBuf = lastWordPtr;
-          PRUint32   wordBufLen = aTx.GetWordBufferLength() -
-                                  (lastWordPtr - aTx.GetWordBuffer());
-
-          if (aTx.TransformedTextIsAscii()) {
-            // The text transform buffer contains ascii characters, so
-            // transform it to Unicode
-            NS_ASSERTION(wordBufLen >= PRUint32(lastWordLen), "no room to transform in place");
-            TransformTextToUnicode((char*)lastWordPtr, lastWordLen);
-          }
-
-          // Look ahead in the text-run and compute the final word
-          // width, taking into account any style changes and stopping
-          // at the first breakable point.
-          if (!aTextData.mMeasureText || (lastWordDimensions.width == -1)) {
-            // We either didn't measure any text or we measured multiple words
-            // at once so either way we don't know lastWordDimensions. We'll have to
-            // compute it now
-            if (prevOffset == startingOffset) {
-              // There's only one word, so we don't have to measure after all
-              lastWordDimensions.width = aTextData.mX;
-            }
-            else if (aTs.mSmallCaps) {
-              MeasureSmallCapsText(aReflowState, aTs, pWordBuf,
-                                   lastWordLen, PR_FALSE, &lastWordDimensions);
-            }
-            else {
-              aReflowState.rendContext->GetTextDimensions(pWordBuf, lastWordLen, lastWordDimensions);
-              if (aTs.mLetterSpacing) {
-                lastWordDimensions.width += aTs.mLetterSpacing * lastWordLen;
-              }
-              if (aTs.mWordSpacing) {
-                for (PRUnichar* bp = pWordBuf;
-                     bp < pWordBuf + lastWordLen; bp++) {
-                  if (*bp == ' ') // || *bp == CH_CJKSP)
-                    lastWordDimensions.width += aTs.mWordSpacing;
-                }
-              }
-            }
-          }
-          nsTextDimensions wordDimensions = ComputeTotalWordDimensions(aPresContext,
-                                                    lineLayout,
-                                                    aReflowState, next,
-                                                    lastWordDimensions,
-                                                    pWordBuf,
-                                                    lastWordLen,
-                                                    wordBufLen,
-                                                    aTextData.mCanBreakBefore);
-          if (!aTextData.mCanBreakBefore || (aTextData.mX - lastWordDimensions.width + wordDimensions.width <= maxWidth)) {
-            // The fully joined word has fit. Account for the joined
-            // word's affect on the max-element-size here (since the
-            // joined word is large than it's pieces, the right effect
-            // will occur from the perspective of the container
-            // reflowing this frame)
-            if (wordDimensions.width > aTextData.mMaxWordWidth) {
-              aTextData.mMaxWordWidth = wordDimensions.width;
-            }
-            // Now that we now that we will retain the last word, we should
-            // account for its ascent and descent
-            if (aTextData.mAscent < lastWordDimensions.ascent) {
-              aTextData.mAscent = lastWordDimensions.ascent;
-            }
-            if (aTextData.mDescent < lastWordDimensions.descent) {
-              aTextData.mDescent = lastWordDimensions.descent;
-            }
-          }
-          else {
-#ifdef NOISY_REFLOW
-            ListTag(stdout);
-            printf(": look-ahead (didn't fit) x=%d wordWidth=%d lastWordWidth=%d\n",
-                   aTextData.mX, wordDimensions.width, lastWordDimensions.width);
-#endif
-            // The fully joined word won't fit. We need to reduce our
-            // size by lastWordDimensions
-            aTextData.mX -= lastWordDimensions.width;
-            aTextData.mMaxWordWidth = prevMaxWordWidth;
-            aTextData.mOffset = prevOffset;
-            column = prevColumn;
-            if (aTextData.mMeasureText) {
-              aTextData.mAscent = prevAscent;
-              aTextData.mDescent = prevDescent;
-            }
-            // else {
-            // XXX we didn't measure the text, and so we don't know where to back up,
-            //     we will retain our current height. However, there is a possible
-            //     edge case that is not handled: since we just chopped the last word,
-            //     our remaining text could have got shorter.
-            // }
-#ifdef DEBUG_WORD_WRAPPING
-            printf("  x=%d maxWordWidth=%d len=%d\n", aTextData.mX, aTextData.mMaxWordWidth,
-                   aTextData.mOffset - startingOffset);
-#endif
-            lineLayout.ForgetWordFrames();
-          }
-        }
-      }
-    }
-  }
-
   // Inform line layout of how this piece of text ends in whitespace
   // (only text objects do this). Note that if x is zero then this
   // text object collapsed into nothingness which means it shouldn't
-  // effect the current setting of the ends-in-whitespace flag.
+  // effect the current setting of the ends-in-whitespace flag, nor should it
+  // be setting InWord state, and it should be ignored when subsequent text
+  // considers whether it can break-before.
   lineLayout.SetColumn(column);
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
   if (0 != aTextData.mX) {
+    lineLayout.SetTrailingTextFrame(this, aTextData.mWrapping);
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
+    lineLayout.SetInWord(!endsInWhitespace, lastWordWidth);
+  } else {
+    // Don't allow subsequent text frame to break-before. All our text is
+    // being skipped (usually whitespace, could be discarded Unicode control
+    // characters).
+    lineLayout.SetTrailingTextFrame(nsnull, PR_FALSE);
+    lineLayout.SetInWord(PR_FALSE, 0);
   }
   if (justDidFirstLetter) {
     lineLayout.SetFirstLetterFrame(this);
@@ -5616,21 +5570,35 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 #endif // IBMBIDI
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;
-  if (endsInNewline) {
-    rs = NS_INLINE_LINE_BREAK_AFTER(rs);
-    lineLayout.SetLineEndsInBR(PR_TRUE);
+
+  if (canBreakBetweenTextFrames && aTextData.mOffset == startingOffset) {
+    // Couldn't place any text but we can break between text frames, so do that.
+    return NS_INLINE_LINE_BREAK_BEFORE();
   }
-  else if (aTextData.mTrailingSpaceTrimmed && rs == NS_FRAME_COMPLETE) {
+
+  if (endsInNewline) {
+    lineLayout.SetLineEndsInBR(PR_TRUE);
+    return NS_INLINE_LINE_BREAK_AFTER(rs);
+  }
+
+  if (aTextData.mTrailingSpaceTrimmed && rs == NS_FRAME_COMPLETE) {
     // Flag a soft-break that we can check (below) if we come back here
     lineLayout.SetLineEndsInSoftBR(PR_TRUE);
-  }
-  else if (lineLayout.GetLineEndsInSoftBR() && !lineLayout.GetEndsInWhiteSpace()) {
+  } else if (lineLayout.GetLineEndsInSoftBR() && !lineLayout.GetEndsInWhiteSpace()) {
     // Break-before a word that follows the soft-break flagged earlier
-    rs = NS_INLINE_LINE_BREAK_BEFORE();
+    return NS_INLINE_LINE_BREAK_BEFORE();
   }
-  else if ((aTextData.mOffset != contentLength) && (aTextData.mOffset == startingOffset)) {
+
+  if (rs == NS_FRAME_COMPLETE && 0 != aTextData.mX && endsInWhitespace &&
+      aTextData.mWrapping && aTextData.mX <= maxWidth) {
+    // Remember the break opportunity at the end of this frame
+    if (lineLayout.NotifyOptionalBreakPosition(GetContent(), aTextData.mOffset))
+      return NS_INLINE_LINE_BREAK_AFTER(rs);
+  }
+
+  if ((aTextData.mOffset != contentLength) && (aTextData.mOffset == startingOffset)) {
     // Break-before a long-word that doesn't fit here
-    rs = NS_INLINE_LINE_BREAK_BEFORE();
+    return NS_INLINE_LINE_BREAK_BEFORE();
   }
 
   return rs;
@@ -5722,8 +5690,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  PRBool wrapping = (NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace) ||
-    (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == ts.mText->mWhiteSpace);
+  PRBool wrapping = ts.mText->WhiteSpaceCanWrap();
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
@@ -5757,12 +5724,13 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
   // Set inWord to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.
-  PRBool inWord = lineLayout.InWord() || ((nsnull != prevInFlow) && (NS_STATIC_CAST(nsTextFrame*, prevInFlow)->mState & TEXT_FIRST_LETTER));
+  nscoord currentWordWidth;
+  PRBool inWord = lineLayout.InWord(&currentWordWidth);
   if (inWord) {
     mState |= TEXT_IN_WORD;
   }
   mState &= ~TEXT_FIRST_LETTER;
-  
+
   PRInt32 column = lineLayout.GetColumn();
   PRInt32 prevColumn = mColumn;
   mColumn = column;
@@ -5793,6 +5761,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     if (!GetNextInFlow() &&
         (mState & TEXT_OPTIMIZE_RESIZE) &&
         !aMetrics.mComputeMEW &&
+        lineLayout.GetForcedBreakPosition(GetContent()) == -1 &&
         (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
         ((wrapping && (maxWidth >= realWidth)) ||
          (!wrapping && (prevColumn == column))) &&
@@ -6030,259 +5999,6 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   }
   aDeltaWidth = dw;
   return NS_OK;
-}
-
-static void
-RevertSpacesToNBSP(PRUnichar* aBuffer, PRInt32 aWordLen)
-{
-  PRUnichar* end = aBuffer + aWordLen;
-  for (; aBuffer < end; aBuffer++) {
-    PRUnichar ch = *aBuffer;
-    if (ch == ' ') {
-      *aBuffer = CH_NBSP;
-    }
-  }
-}
-
-nsTextDimensions
-nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
-                                   nsLineLayout& aLineLayout,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsIFrame* aNextFrame,
-                                   const nsTextDimensions& aBaseDimensions,
-                                   PRUnichar* aWordBuf,
-                                   PRUint32 aWordLen,
-                                   PRUint32 aWordBufSize,
-                                   PRBool aCanBreakBefore)
-{
-  // Before we get going, convert any spaces in the current word back
-  // to nbsp's. This keeps the breaking logic happy.
-  RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
-
-  nsTextDimensions addedDimensions;
-  PRUnichar *newWordBuf = aWordBuf;
-  PRUint32 newWordBufSize = aWordBufSize;
-  while (aNextFrame) {
-    nsIContent* content = aNextFrame->GetContent();
-
-#ifdef DEBUG_WORD_WRAPPING
-    printf("  next textRun=");
-    nsFrame::ListTag(stdout, aNextFrame);
-    printf("\n");
-#endif
-
-    if (content->IsNodeOfType(nsINode::eTEXT)) {
-      PRInt32 moreSize = 0;
-      nsTextDimensions moreDimensions;
-      moreDimensions = ComputeWordFragmentDimensions(aPresContext,
-                                                     aLineLayout,
-                                                     aReflowState,
-                                                     aNextFrame, content,
-                                                     &moreSize,
-                                                     newWordBuf,
-                                                     aWordLen,
-                                                     newWordBufSize,
-                                                     aCanBreakBefore);
-      if (moreSize > 0) {
-        //Oh, wordBuf is too small, we have to grow it
-        newWordBufSize += moreSize;
-        if (newWordBuf != aWordBuf) {
-          newWordBuf = (PRUnichar*)nsMemory::Realloc(newWordBuf, sizeof(PRUnichar)*newWordBufSize);
-          NS_ASSERTION(newWordBuf, "not enough memory");
-        } else {
-          newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
-          NS_ASSERTION(newWordBuf, "not enough memory");
-          if(newWordBuf)  {
-            memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
-          }
-        }
-
-        if(newWordBuf)  {
-          moreDimensions =
-            ComputeWordFragmentDimensions(aPresContext,
-                                          aLineLayout, aReflowState,
-                                          aNextFrame, content, &moreSize,
-                                          newWordBuf, aWordLen, newWordBufSize,
-                                          aCanBreakBefore);
-          NS_ASSERTION((moreSize <= 0),
-                       "ComputeWordFragmentDimensions is asking more buffer");
-        } else {
-          moreSize = -1;
-          moreDimensions.Clear();
-        }  
-      }
-
-      addedDimensions.Combine(moreDimensions);
-#ifdef DEBUG_WORD_WRAPPING
-      printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreDimensions.width,
-             addedDimensions.width, stop?'T':'F');
-#endif
-      if (moreSize == -1) {
-        goto done;
-      }
-    }
-    else {
-      // It claimed it was text but it doesn't contain a textfragment.
-      // Therefore I don't know what to do with it and can't look inside
-      // it. Oh well.
-      goto done;
-    }
-
-    // Move on to the next frame in the text-run
-    aNextFrame = aLineLayout.FindNextText(aPresContext, aNextFrame);
-  }
-
- done:;
-#ifdef DEBUG_WORD_WRAPPING
-  printf("  total word width=%d\n", aBaseDimensions.width + addedDimensions.width);
-#endif
-  if (newWordBuf && (newWordBuf != aWordBuf)) {
-    nsMemory::Free(newWordBuf);
-  }
-  addedDimensions.Combine(aBaseDimensions);
-  return addedDimensions;
-}
-                                    
-nsTextDimensions
-nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
-                                      nsLineLayout& aLineLayout,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nsIFrame* aNextFrame,
-                                      nsIContent* aContent,
-                                      PRInt32* aMoreSize,
-                                      const PRUnichar* aWordBuf,
-                                      PRUint32& aRunningWordLen,
-                                      PRUint32 aWordBufSize,
-                                      PRBool aCanBreakBefore)
-{
-  nsTextTransformer tx(aPresContext);
-  PRInt32 nextFrameStart, nextFrameEnd;
-  aNextFrame->GetOffsets(nextFrameStart, nextFrameEnd);
-  tx.Init(aNextFrame, aContent, nextFrameStart);
-  if (nextFrameEnd == 0) // uninitialized
-    nextFrameEnd = tx.GetContentLength();
-  PRBool isWhitespace, wasTransformed;
-  PRInt32 wordLen, contentLen;
-  nsTextDimensions dimensions;
-#ifdef IBMBIDI
-  if (aNextFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
-    wordLen = nextFrameEnd;
-  } else {
-    wordLen = -1;
-  }
-#endif // IBMBIDI
-  *aMoreSize = 0;
-  PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
-  if (!bp) {
-    //empty text node, but we need to continue lookahead measurement
-    // AND we need to remember the text frame for later so that we don't 
-    // bother doing the word look ahead.
-    aLineLayout.RecordWordFrame(aNextFrame);
-    return dimensions; // 0
-  }
-
-  if (isWhitespace) {
-    // Don't bother measuring nothing
-    *aMoreSize = -1; // flag that we should stop now
-    return dimensions; // 0
-  }
-
-  // We need to adjust the length by looking at the two pieces together. But if
-  // we have to grow aWordBuf, ask the caller to do it by returning the shortfall
-  if ((wordLen + aRunningWordLen) > aWordBufSize) {
-    *aMoreSize = wordLen + aRunningWordLen - aWordBufSize; 
-    return dimensions; // 0
-  }
-  if (nextFrameStart + contentLen < nextFrameEnd)
-    *aMoreSize = -1;
-
-  // Convert any spaces in the current word back to nbsp's. This keeps
-  // the breaking logic happy.
-  RevertSpacesToNBSP(bp, wordLen);
-
-  if (aCanBreakBefore) {
-    if(wordLen > 0)
-    {
-      memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
-      
-      PRInt32 breakP=0;
-      breakP = nsContentUtils::LineBreaker()->Next(aWordBuf, 
-                                         aRunningWordLen+wordLen, 0);
-      // when we look at two pieces text together, we might decide to break
-      // eariler than if we only look at the 2nd pieces of text
-      if (breakP != NS_LINEBREAKER_NEED_MORE_TEXT &&
-         (breakP < (aRunningWordLen + wordLen)))
-        {
-          wordLen = breakP - aRunningWordLen;
-          if(wordLen < 0)
-              wordLen = 0;
-          *aMoreSize = -1;
-        }
-      
-      // if we don't stop, we need to extend the buf so the next one can
-      // see this part otherwise, it does not matter since we will stop
-      // anyway
-      if (*aMoreSize != -1) 
-        aRunningWordLen += wordLen;
-    }
-  }
-  else {
-    // Even if the previous text fragment is not breakable, the connected pieces 
-    // can be breakable in between. This especially true for CJK.
-    PRBool canBreak;
-    canBreak = nsContentUtils::LineBreaker()->BreakInBetween(aWordBuf, 
-                                            aRunningWordLen, bp, wordLen);
-    if (canBreak) {
-      wordLen = 0;
-      *aMoreSize = -1;
-    }
-  }
-
-  if ((*aMoreSize == -1) && (wordLen == 0))
-    return dimensions; // 0;
-
-  nsStyleContext* sc = aNextFrame->GetStyleContext();
-  if (sc) {
-    // Measure the piece of text. Note that we have to select the
-    // appropriate font into the text first because the rendering
-    // context has our font in it, not the font that aText is using.
-    nsIRenderingContext& rc = *aReflowState.rendContext;
-    nsCOMPtr<nsIFontMetrics> oldfm;
-    rc.GetFontMetrics(*getter_AddRefs(oldfm));
-
-    nsTextStyle ts(aLineLayout.mPresContext, rc, sc);
-    if (ts.mSmallCaps) {
-      MeasureSmallCapsText(aReflowState, ts, bp, wordLen, PR_FALSE, &dimensions);
-    }
-    else {
-      rc.GetTextDimensions(bp, wordLen, dimensions);
-      // NOTE: Don't forget to add letter spacing for the word fragment!
-      dimensions.width += wordLen*ts.mLetterSpacing;
-      if (ts.mWordSpacing) {
-        for (PRUnichar* bp2 = bp; bp2 < bp + wordLen; bp2++) {
-          if (*bp2 == CH_NBSP) // || *bp2 == CH_CJKSP)
-            dimensions.width += ts.mWordSpacing;
-        }
-      }
-    }
-    rc.SetFont(oldfm);
-
-#ifdef DEBUG_WORD_WRAPPING
-    nsAutoString tmp(bp, wordLen);
-    printf("  fragment='");
-    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
-    printf("' width=%d [wordLen=%d contentLen=%d ContentLength=%d]\n",
-           dimensions.width, wordLen, contentLen, tx.GetContentLength());
-#endif
-
-    // Remember the text frame for later so that we don't bother doing
-    // the word look ahead.
-    aLineLayout.RecordWordFrame(aNextFrame);
-    return dimensions;
-  }
-
-  *aMoreSize = -1;
-  return dimensions; // 0
 }
 
 #ifdef DEBUG

@@ -156,11 +156,15 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   : mPresContext(aPresContext),
     mSpaceManager(aSpaceManager),
     mBlockReflowState(aOuterReflowState),
+    mLastOptionalBreakContent(nsnull),
+    mForceBreakContent(nsnull),
+    mLastOptionalBreakContentOffset(-1),
+    mForceBreakContentOffset(-1),
+    mTrailingTextFrame(nsnull),
     mBlockRS(nsnull),/* XXX temporary */
     mMinLineHeight(0),
     mComputeMaxElementWidth(aComputeMaxElementWidth),
-    mTextIndent(0),
-    mWordFrames(0)
+    mTextIndent(0)
 {
   MOZ_COUNT_CTOR(nsLineLayout);
 
@@ -195,8 +199,6 @@ nsLineLayout::~nsLineLayout()
 
   NS_ASSERTION(nsnull == mRootSpan, "bad line-layout user");
 
-  delete mWordFrames; // operator delete for this class just returns
-
   // PL_FreeArenaPool takes our memory and puts in on a global free list so
   // that the next time an arena makes an allocation it will not have to go
   // all the way down to malloc.  This is desirable as this class is created
@@ -208,22 +210,6 @@ nsLineLayout::~nsLineLayout()
   // since PL_FreeArenaPool() has done all the work.
   PL_FreeArenaPool(&mArena);
   PL_FinishArenaPool(&mArena);
-}
-
-void*
-nsLineLayout::ArenaDeque::operator new(size_t aSize, PLArenaPool &aPool)
-{
-  void *mem;
-
-  PL_ARENA_ALLOCATE(mem, &aPool, aSize);
-  return mem;
-}
-
-PRBool nsLineLayout::AllocateDeque()
-{
-  mWordFrames = new(mArena) ArenaDeque;
-
-  return mWordFrames != nsnull;
 }
 
 // Find out if the frame has a non-null prev-in-flow, i.e., whether it
@@ -282,8 +268,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
 
-  ForgetWordFrames();
-
   PerSpanData* psd;
   NewPerSpanData(&psd);
   mCurrentSpan = mRootSpan = psd;
@@ -313,7 +297,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   // If this is the first line of a block then see if the text-indent
   // property amounts to anything.
-  
+
   if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowState->frame)) {
     nscoord indent = 0;
     nsStyleUnit unit = mStyleText->mTextIndent.GetUnit();
@@ -936,17 +920,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // We want to guarantee that we always make progress when
   // formatting. Therefore, if the object being placed on the line is
-  // too big for the line, but it is the only thing on the line
-  // (including counting floats) then we go ahead and place it
-  // anyway. Its also true that if the object is a part of a larger
-  // object (a multiple frame word) then we will place it on the line
-  // too.
+  // too big for the line, but it is the only thing on the line and is not
+  // impacted by a float, then we go ahead and place it anyway. (If the line
+  // is impacted by one or more floats, then it is safe to break because
+  // we can move the line down below float(s).)
   //
   // Capture this state *before* we reflow the frame in case it clears
   // the state out. We need to know how to treat the current frame
   // when breaking.
-  PRBool notSafeToBreak = CanPlaceFloatNow() || InWord();
-
+  PRBool notSafeToBreak = CanPlaceFloatNow() && !GetFlag(LL_IMPACTEDBYFLOATS);
+  
   // Apply start margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
   ApplyStartMargin(pfd, reflowState);
@@ -991,32 +974,36 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #endif // IBMBIDI
 
   nsIAtom* frameType = aFrame->GetType();
+  
+  PRInt32 savedOptionalBreakOffset;
+  nsIContent* savedOptionalBreakContent =
+    GetLastOptionalBreakPosition(&savedOptionalBreakOffset);
 
   rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
   if (NS_FAILED(rv)) {
     NS_WARNING( "Reflow of frame failed in nsLineLayout" );
     return rv;
   }
-
+  
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;
   pfd->mJustificationNumLetters = mTextJustificationNumLetters;
 
   // XXX See if the frame is a placeholderFrame and if it is process
   // the float.
+  PRBool placedFloat = PR_FALSE;
   if (frameType) {
     if (nsLayoutAtoms::placeholderFrame == frameType) {
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aFrame);
-        PRBool didPlace;
         if (eReflowReason_Incremental == reason) {
-          didPlace = InitFloat(placeholder, aReflowStatus);
+          placedFloat = InitFloat(placeholder, aReflowStatus);
         }
         else {
-          didPlace = AddFloat(placeholder, aReflowStatus);
+          placedFloat = AddFloat(placeholder, aReflowStatus);
         }
-        if (!didPlace) {
+        if (!placedFloat) {
           aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
         }
         if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
@@ -1164,9 +1151,15 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
     }
 
+    // Check whether this frame breaks up text runs. All frames break up text
+    // runs (hence return false here) except for text frames and inline containers.
+    PRBool continuingTextRun;
+    aFrame->CanContinueTextRun(continuingTextRun);
+    
     // See if we can place the frame. If we can't fit it, then we
     // return now.
-    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, metrics, aReflowStatus)) {
+    if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, continuingTextRun,
+                      metrics, aReflowStatus)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -1178,16 +1171,34 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // so do most of it now.
         VerticalAlignFrames(span);
       }
+      
+      if (!continuingTextRun) {
+        SetFlag(LL_INWORD, PR_FALSE);
+        mTrailingTextFrame = nsnull;
+        if (!psd->mNoWrap && (!CanPlaceFloatNow() || placedFloat)) {
+          // record soft break opportunity after this content that can't be
+          // part of a text run. This is not a text frame so we know
+          // that offset PR_INT32_MAX means "after the content".
+          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX)) {
+            // If this returns true then we are being told to actually break here.
+            aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
+          }
+        }
+      }
     }
     else {
       PushFrame(aFrame);
       aPushedFrame = PR_TRUE;
+      // Undo any saved break positions that the frame might have told us about,
+      // since we didn't end up placing it
+      RestoreSavedBreakPosition(savedOptionalBreakContent,
+                                savedOptionalBreakOffset);
     }
   }
   else {
     PushFrame(aFrame);
   }
-
+  
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("End ReflowFrame ");
@@ -1262,6 +1273,7 @@ PRBool
 nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             const nsHTMLReflowState& aReflowState,
                             PRBool aNotSafeToBreak,
+                            PRBool aFrameCanContinueTextRun,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
 {
@@ -1297,6 +1309,9 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     return PR_TRUE;
   }
 
+  PRBool ltr = NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection;
+  nscoord endMargin = ltr ? pfd->mMargin.right : pfd->mMargin.left;
+
 #ifdef NOISY_CAN_PLACE_FRAME
   if (nsnull != psd->mFrame) {
     nsFrame::ListTag(stdout, psd->mFrame->mFrame);
@@ -1306,13 +1321,12 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   } 
   printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");
   nsFrame::ListTag(stdout, pfd->mFrame);
-  printf(" frameWidth=%d\n", pfd->mBounds.XMost() + rightMargin - psd->mX);
+  printf(" frameWidth=%d\n", pfd->mBounds.XMost() + endMargin - psd->mX);
 #endif
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
-  PRBool outside = pfd->mBounds.XMost() + (ltr ? pfd->mMargin.right : pfd->mMargin.left) > psd->mRightEdge;
+  PRBool outside = pfd->mBounds.XMost() + endMargin > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
 #ifdef NOISY_CAN_PLACE_FRAME
@@ -1342,75 +1356,20 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #endif
 
   if (aNotSafeToBreak) {
-    // There are no frames on the line or we are in the first word on
-    // the line. If the line isn't impacted by a float then the
-    // current frame fits.
-    if (!GetFlag(LL_IMPACTEDBYFLOATS)) {
+    // There are no frames on the line that take up width and the line is
+    // not impacted by floats, so we must allow the current frame to be
+    // placed on the line
 #ifdef NOISY_CAN_PLACE_FRAME
-      printf("   ==> not-safe and not-impacted fits: ");
-      while (nsnull != psd) {
-        printf("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
-        psd = psd->mParent;
-      }
-      printf("\n");
+    printf("   ==> not-safe and not-impacted fits: ");
+    while (nsnull != psd) {
+      printf("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
+      psd = psd->mParent;
+    }
+    printf("\n");
 #endif
-      return PR_TRUE;
-    }
-    else if (GetFlag(LL_LASTFLOATWASLETTERFRAME)) {
-      // Another special case: see if the float is a letter
-      // frame. If it is, then allow the frame next to it to fit.
-      if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
-        // This must be the first piece of non-empty text (because
-        // aNotSafeToBreak is true) or it's a piece of text that is
-        // part of a larger word.
-        pfd->SetFlag(PFD_ISSTICKY, PR_TRUE);
-      }
-      else if (pfd->mSpan) {
-        PerFrameData* pf = pfd->mSpan->mFirstFrame;
-        while (pf) {
-          if (pf->GetFlag(PFD_ISSTICKY)) {
-            // If one of the spans children was sticky then the span
-            // itself is sticky.
-            pfd->SetFlag(PFD_ISSTICKY, PR_TRUE);
-          }
-          pf = pf->mNext;
-        }
-      }
-
-      if (pfd->GetFlag(PFD_ISSTICKY)) {
-#ifdef NOISY_CAN_PLACE_FRAME
-        printf("   ==> last float was letter frame && frame is sticky\n");
-#endif
-        return PR_TRUE;
-      }
-    }
+    return PR_TRUE;
   }
-
-  // If this is a piece of text inside a letter frame...
-  if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
-    if (psd->mFrame && psd->mFrame->GetFlag(PFD_ISLETTERFRAME)) {
-      nsIFrame* prevInFlow = psd->mFrame->mFrame->GetPrevInFlow();
-      if (prevInFlow) {
-        nsIFrame* prevPrevInFlow = prevInFlow->GetPrevInFlow();
-        if (!prevPrevInFlow) {
-          // And it's the first continuation of the letter frame...
-          // Then make sure that the text fits
-          return PR_TRUE;
-        }
-      }
-    }
-  }
-  else if (pfd->GetFlag(PFD_ISLETTERFRAME)) {
-    // If this is the first continuation of the letter frame...
-    nsIFrame* prevInFlow = pfd->mFrame->GetPrevInFlow();
-    if (prevInFlow) {
-      nsIFrame* prevPrevInFlow = prevInFlow->GetPrevInFlow();
-      if (!prevPrevInFlow) {
-        return PR_TRUE;
-      }
-    }
-  }
-
+ 
   // Special check for span frames
   if (pfd->mSpan && pfd->mSpan->mContainsFloat) {
     // If the span either directly or indirectly contains a float then
@@ -1438,6 +1397,24 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // don't naturally fit.
     return PR_TRUE;
  }
+
+  if (aFrameCanContinueTextRun) {
+    // Let it fit, but we reserve the right to roll back
+    // to before the text run! Note that we usually won't get here because
+    // a text frame will break itself to avoid exceeding the available width.
+    // We'll only get here for text frames that couldn't break early enough.
+#ifdef NOISY_CAN_PLACE_FRAME
+    printf("   ==> placing overflowing textrun, requesting backup\n");
+#endif
+    if (!mLastOptionalBreakContent) {
+      // Nowhere to roll back to, so make this fit
+      return PR_TRUE;
+    }
+
+    // We have something to roll back to. So, signal that we will to roll back,
+    // and fall through to not place this frame.
+    SetFlag(LL_NEEDBACKUP, PR_TRUE);
+  }
 
 #ifdef NOISY_CAN_PLACE_FRAME
   printf("   ==> didn't fit\n");
@@ -3061,107 +3038,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
   aCombinedArea = combinedAreaResult;
 }
-
-void
-nsLineLayout::ForgetWordFrame(nsIFrame* aFrame)
-{
-  if (mWordFrames && 0 != mWordFrames->GetSize()) {
-    NS_ASSERTION((void*)aFrame == mWordFrames->PeekFront(), "forget-word-frame");
-    mWordFrames->PopFront();
-  }
-}
-
-nsIFrame*
-nsLineLayout::FindNextText(nsPresContext* aPresContext, nsIFrame* aFrame)
-{
-  // Grovel through the frame hierarchy to find a text frame that is
-  // "adjacent" to aFrame.
-
-  // So this is kind of funky. During reflow, overflow frames will
-  // have their parent pointers set up lazily. We assume that, on
-  // entry, aFrame has its parent pointer set correctly (as do all of
-  // its ancestors). Starting from that, we need to make sure that as
-  // we traverse through frames trying to find the next text frame, we
-  // leave the frames with their parent pointers set correctly, so the
-  // *next* time we come through here, we're good to go.
-
-  // Build a path from the enclosing block frame down to aFrame. We'll
-  // use this to walk the frame tree. (XXXwaterson if I was clever, I
-  // wouldn't need to build this up before hand, and could incorporate
-  // this logic into the walking code directly.)
-  nsAutoVoidArray stack;
-  for (;;) {
-    stack.InsertElementAt(aFrame, 0);
-
-    aFrame = aFrame->GetParent();
-
-    NS_ASSERTION(aFrame, "wow, no block frame found");
-    if (! aFrame)
-      break;
-
-    if (NS_STYLE_DISPLAY_INLINE != aFrame->GetStyleDisplay()->mDisplay)
-      break;
-  }
-
-  // Using the path we've built up, walk the frame tree looking for
-  // the text frame that follows aFrame.
-  PRInt32 count;
-  while ((count = stack.Count()) != 0) {
-    PRInt32 lastIndex = count - 1;
-    nsIFrame* top = NS_STATIC_CAST(nsIFrame*, stack.ElementAt(lastIndex));
-
-    // If this is a frame that'll break a word, then bail.
-    PRBool canContinue;
-    top->CanContinueTextRun(canContinue);
-    if (! canContinue)
-      return nsnull;
-
-    // Advance to top's next sibling
-    nsIFrame* next = top->GetNextSibling();
-
-    if (! next) {
-      // No more siblings. Pop the top element to walk back up the
-      // frame tree.
-      stack.RemoveElementAt(lastIndex);
-      continue;
-    }
-
-    // We know top's parent is good, but next's might not be. So let's
-    // set it to be sure.
-    next->SetParent(top->GetParent());
-
-    // Save next at the top of the stack...
-    stack.ReplaceElementAt(next, lastIndex);
-
-    // ...and prowl down to next's deepest child. We'll need to check
-    // for potential run-busters "on the way down", too.
-    for (;;) {
-      next->CanContinueTextRun(canContinue);
-      if (! canContinue)
-        return nsnull;
-
-      nsIFrame* child = next->GetFirstChild(nsnull);
-
-      if (! child)
-        break;
-
-      stack.AppendElement(child);
-      next = child;
-    }
-
-    // Ignore continuing frames
-    if (HasPrevInFlow(next))
-      continue;
-
-    // If this is a text frame, return it.
-    if (nsLayoutAtoms::textFrame == next->GetType())
-      return next;
-  }
-
-  // If we get here, then there are no more text frames in this block.
-  return nsnull;
-}
-
 
 PRBool
 nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)

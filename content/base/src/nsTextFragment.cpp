@@ -250,6 +250,16 @@ nsTextFragment::AppendTo(nsAString& aString) const
 }
 
 void
+nsTextFragment::AppendTo(nsAString& aString, PRInt32 aOffset, PRInt32 aLength) const
+{
+  if (mState.mIs2b) {
+    aString.Append(m2b + aOffset, aLength);
+  } else {
+    AppendASCIItoUTF16(Substring(m1b + aOffset, m1b + aOffset + aLength), aString);
+  }
+}
+
+void
 nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 {
   NS_ASSERTION(aOffset >= 0, "Bad offset passed to nsTextFragment::CopyTo()!");

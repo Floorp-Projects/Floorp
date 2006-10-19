@@ -748,6 +748,11 @@ struct nsStyleText : public nsStyleStruct {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
            mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
   }
+
+  PRBool WhiteSpaceCanWrap() const {
+    return mWhiteSpace == NS_STYLE_WHITESPACE_NORMAL ||
+           mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
+  }
 };
 
 struct nsStyleVisibility : public nsStyleStruct {

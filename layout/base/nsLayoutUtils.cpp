@@ -56,6 +56,7 @@
 #include "nsGUIEvent.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
+#include "nsFrameManager.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -994,4 +995,70 @@ nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
     GetMetricsFor(sc->GetStyleFont()->mFont,
                   sc->GetStyleVisibility()->mLangGroup,
                   *aFontMetrics);
+}
+
+nsIFrame*
+nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
+                                         nsIFrame* aFrame)
+{
+  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+    return aFrameManager->GetPlaceholderFrameFor(aFrame);
+  return aFrame->GetParent();
+}
+
+nsIFrame*
+nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
+                                                       nsIFrame* aFrame2,
+                                                       nsIFrame* aKnownCommonAncestorHint)
+{
+  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
+  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
+
+  nsPresContext* presContext = aFrame1->GetPresContext();
+  if (presContext != aFrame2->GetPresContext()) {
+    // different documents, no common ancestor
+    return nsnull;
+  }
+  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
+
+  nsAutoVoidArray frame1Ancestors;
+  nsIFrame* f1;
+  for (f1 = aFrame1; f1 && f1 != aKnownCommonAncestorHint;
+       f1 = GetParentOrPlaceholderFor(frameManager, f1)) {
+    frame1Ancestors.AppendElement(f1);
+  }
+  if (!f1 && aKnownCommonAncestorHint) {
+    // So, it turns out aKnownCommonAncestorHint was not an ancestor of f1. Oops.
+    // Never mind. We can continue as if aKnownCommonAncestorHint was null.
+    aKnownCommonAncestorHint = nsnull;
+  }
+
+  nsAutoVoidArray frame2Ancestors;
+  nsIFrame* f2;
+  for (f2 = aFrame2; f2 && f2 != aKnownCommonAncestorHint;
+       f2 = GetParentOrPlaceholderFor(frameManager, f2)) {
+    frame2Ancestors.AppendElement(f2);
+  }
+  if (!f2 && aKnownCommonAncestorHint) {
+    // So, it turns out aKnownCommonAncestorHint was not an ancestor of f2.
+    // We need to retry with no common ancestor hint.
+    return GetClosestCommonAncestorViaPlaceholders(aFrame1, aFrame2, nsnull);
+  }
+
+  // now frame1Ancestors and frame2Ancestors give us the parent frame chain
+  // up to aKnownCommonAncestorHint, or if that is null, up to and including
+  // the root frame. We need to walk from the end (i.e., the top of the
+  // frame (sub)tree) down to aFrame1/aFrame2 looking for the first difference.
+  nsIFrame* lastCommonFrame = aKnownCommonAncestorHint;
+  PRInt32 last1 = frame1Ancestors.Count() - 1;
+  PRInt32 last2 = frame2Ancestors.Count() - 1;
+  while (last1 >= 0 && last2 >= 0) {
+    nsIFrame* frame1 = NS_STATIC_CAST(nsIFrame*, frame1Ancestors.ElementAt(last1));
+    if (frame1 != frame2Ancestors.ElementAt(last2))
+      break;
+    lastCommonFrame = frame1;
+    last1--;
+    last2--;
+  }
+  return lastCommonFrame;
 }

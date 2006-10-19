@@ -161,6 +161,13 @@ public:
   void AppendTo(nsAString& aString) const;
 
   /**
+   * Append a substring of the contents of this string fragment to aString.
+   * @param aOffset where to start the substring in this text fragment
+   * @param aLength the length of the substring
+   */
+  void AppendTo(nsAString& aString, PRInt32 aOffset, PRInt32 aLength) const;
+
+  /**
    * Make a copy of the fragments contents starting at offset for
    * count characters. The offset and count will be adjusted to
    * lie within the fragments data. The fragments data is converted if

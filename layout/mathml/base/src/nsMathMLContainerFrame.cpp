@@ -1005,10 +1005,6 @@ nsMathMLContainerFrame::ReflowForeignChild(nsIFrame*                aChildFrame,
                                            const nsHTMLReflowState& aReflowState,
                                            nsReflowStatus&          aStatus)
 {
-  // don't bother trying to span words as if they were non-breaking beyond this point
-  if (aReflowState.mLineLayout)
-    aReflowState.mLineLayout->ForgetWordFrames();
-
   nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
   nsresult rv = autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -95,18 +95,11 @@ DestroyRectFunc(void*    aFrame,
   delete NS_STATIC_CAST(nsRect*, aPropertyValue);
 }
 
-static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
-                                           nsIFrame* aFrame) {
-  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    return aFrameManager->GetPlaceholderFrameFor(aFrame);
-  }
-  return aFrame->GetParent();
-}
-
 static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
   nsFrameManager* frameManager = aFrame->GetPresContext()->PresShell()->FrameManager();
 
-  for (nsIFrame* f = aFrame; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, f)) {
     if (f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)
       return;
     f->AddStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
@@ -135,7 +128,8 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 
   nsFrameManager* frameManager = aFrame->GetPresContext()->PresShell()->FrameManager();
 
-  for (nsIFrame* f = aFrame; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, f)) {
     if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO))
       return;
     f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
