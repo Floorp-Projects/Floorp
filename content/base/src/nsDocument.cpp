@@ -99,7 +99,7 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
-#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -2306,13 +2306,14 @@ PRBool
 nsDocument::CheckGetElementByIdArg(const nsAString& aId)
 {
   if (aId.IsEmpty()) {
-    nsCOMPtr<nsIConsoleService> consoleService
-      (do_GetService("@mozilla.org/consoleservice;1"));
-
-    if (consoleService) {
-      consoleService->LogStringMessage(NS_LITERAL_STRING(
-        "Empty string passed to getElementById().").get());
-    }
+    nsContentUtils::ReportToConsole(
+        nsContentUtils::eDOM_PROPERTIES,
+        "EmptyGetElementByIdParam",
+        nsnull, 0,
+        nsnull,
+        EmptyString(), 0, 0,
+        nsIScriptError::warningFlag,
+        "DOM");
     return PR_FALSE;
   }
   return PR_TRUE;
