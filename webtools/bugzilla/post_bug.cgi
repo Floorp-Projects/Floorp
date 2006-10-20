@@ -123,7 +123,10 @@ $template->process($format->{'template'}, $vars, \$comment)
 my @custom_bug_fields = Bugzilla->get_fields(
     { custom => 1, obsolete => 0, enter_bug => 1 });
 
-my @bug_fields = map { $_->name } @custom_bug_fields;
+# Undefined custom fields are ignored to ensure they will get their default
+# value (e.g. "---" for custom single select fields).
+my @bug_fields = grep { defined $cgi->param($_->name) } @custom_bug_fields;
+@bug_fields = map { $_->name } @bug_fields;
 
 # Custom tables must be locked (required when validating custom fields).
 my @custom_tables = grep { $_->type == FIELD_TYPE_SINGLE_SELECT } @custom_bug_fields;
