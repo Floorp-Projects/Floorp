@@ -67,8 +67,8 @@ use constant MATCH_SKIP_CONFIRM  => 1;
 
 use constant DEFAULT_USER => {
     'id'             => 0,
-    'name'           => '',
-    'login'          => '',
+    'realname'       => '',
+    'login_name'     => '',
     'showmybugslink' => 0,
     'disabledtext'   => '',
     'disable_mail'   => 0,
@@ -82,8 +82,8 @@ use constant DB_TABLE => 'profiles';
 # fixed one day.
 use constant DB_COLUMNS => (
     'profiles.userid     AS id',
-    'profiles.login_name AS login',
-    'profiles.realname   AS name',
+    'profiles.login_name',
+    'profiles.realname',
     'profiles.mybugslink AS showmybugslink',
     'profiles.disabledtext',
     'profiles.disable_mail',
@@ -99,6 +99,18 @@ use constant VALIDATORS => {
     disabledtext  => \&_check_disabledtext,
     login_name    => \&check_login_name_for_creation,
     realname      => \&_check_realname,
+};
+
+sub UPDATE_COLUMNS {
+    my $self = shift;
+    my @cols = qw(
+        disable_mail
+        disabledtext
+        login_name
+        realname
+    );
+    push(@cols, 'cryptpassword') if exists $self->{cryptpassword};
+    return @cols;
 };
 
 ################################################################################
@@ -117,6 +129,29 @@ sub new {
     return $class->SUPER::new(@_);
 }
 
+sub update {
+    my $self = shift;
+    my $changes = $self->SUPER::update(@_);
+    my $dbh = Bugzilla->dbh;
+
+    if (exists $changes->{login_name}) {
+        # If we changed the login, silently delete any tokens.
+        $dbh->do('DELETE FROM tokens WHERE userid = ?', undef, $self->id);
+        # And rederive regex groups
+        $self->derive_regexp_groups();
+    }
+
+    # Logout the user if necessary.
+    Bugzilla->logout_user($self) 
+        if (exists $changes->{login_name} || exists $changes->{disabledtext}
+            || exists $changes->{cryptpassword});
+
+    # XXX Can update profiles_activity here as soon as it understands
+    #     field names like login_name.
+
+    return $changes;
+}
+
 ################################################################################
 # Validators
 ################################################################################
@@ -127,13 +162,18 @@ sub _check_disabledtext { return trim($_[1]) || ''; }
 # This is public since createaccount.cgi needs to use it before issuing
 # a token for account creation.
 sub check_login_name_for_creation {
-    my ($self, $name) = @_;
+    my ($invocant, $name) = @_;
     $name = trim($name);
     $name || ThrowUserError('user_login_required');
     validate_email_syntax($name)
         || ThrowUserError('illegal_email_address', { addr => $name });
-    is_available_username($name) 
-        || ThrowUserError('account_exists', { email => $name });
+
+    # Check the name if it's a new user, or if we're changing the name.
+    if (!ref($invocant) || $invocant->login ne $name) {
+        is_available_username($name) 
+            || ThrowUserError('account_exists', { email => $name });
+    }
+
     return $name;
 }
 
@@ -153,12 +193,36 @@ sub _check_password {
 sub _check_realname { return trim($_[1]) || ''; }
 
 ################################################################################
+# Mutators
+################################################################################
+
+sub set_disabledtext { $_[0]->set('disabledtext', $_[1]); }
+sub set_disable_mail { $_[0]->set('disable_mail', $_[1]); }
+
+sub set_login {
+    my ($self, $login) = @_;
+    $self->set('login_name', $login);
+    delete $self->{identity};
+    delete $self->{nick};
+}
+
+sub set_name {
+    my ($self, $name) = @_;
+    $self->set('realname', $name);
+    delete $self->{identity};
+}
+
+sub set_password { $_[0]->set('cryptpassword', $_[1]); }
+
+
+################################################################################
 # Methods
 ################################################################################
 
 # Accessors for user attributes
-sub login { $_[0]->{login}; }
-sub email { $_[0]->{login} . Bugzilla->params->{'emailsuffix'}; }
+sub name  { $_[0]->{realname};   }
+sub login { $_[0]->{login_name}; }
+sub email { $_[0]->login . Bugzilla->params->{'emailsuffix'}; }
 sub disabledtext { $_[0]->{'disabledtext'}; }
 sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
@@ -187,7 +251,7 @@ sub identity {
 
     if (!defined $self->{identity}) {
         $self->{identity} = 
-          $self->{name} ? "$self->{name} <$self->{login}>" : $self->{login};
+          $self->name ? $self->name . " <" . $self->login. ">" : $self->login;
     }
 
     return $self->{identity};
@@ -199,7 +263,7 @@ sub nick {
     return "" unless $self->id;
 
     if (!defined $self->{nick}) {
-        $self->{nick} = (split(/@/, $self->{login}, 2))[0];
+        $self->{nick} = (split(/@/, $self->login, 2))[0];
     }
 
     return $self->{nick};
@@ -767,7 +831,7 @@ sub derive_regexp_groups {
                                          AND isbless = 0
                                          AND grant_type = ?});
     while (my ($group, $regexp, $present) = $sth->fetchrow_array()) {
-        if (($regexp ne '') && ($self->{login} =~ m/$regexp/i)) {
+        if (($regexp ne '') && ($self->login =~ m/$regexp/i)) {
             $group_insert->execute($id, $group, GRANT_REGEXP) unless $present;
         } else {
             $group_delete->execute($id, $group, GRANT_REGEXP) if $present;
@@ -1101,10 +1165,11 @@ sub match_field {
 
             # skip confirmation for exact matches
             if ((scalar(@{$users}) == 1)
-                && (lc(@{$users}[0]->{'login'}) eq lc($query)))
+                && (lc(@{$users}[0]->login) eq lc($query)))
+
             {
                 $cgi->append(-name=>$field,
-                             -values=>[@{$users}[0]->{'login'}]);
+                             -values=>[@{$users}[0]->login]);
 
                 next;
             }
@@ -1117,7 +1182,7 @@ sub match_field {
             if (scalar(@{$users}) == 1) { # exactly one match
 
                 $cgi->append(-name=>$field,
-                             -values=>[@{$users}[0]->{'login'}]);
+                             -values=>[@{$users}[0]->login]);
 
                 $need_confirm = 1 if $params->{'confirmuniqueusermatch'};
 
@@ -1282,7 +1347,7 @@ sub wants_bug_mail {
     # 
     # We do them separately because if _any_ of them are set, we don't want
     # the mail.
-    if ($wants_mail && $changer && ($self->{'login'} eq $changer)) {
+    if ($wants_mail && $changer && ($self->login eq $changer)) {
         $wants_mail &= $self->wants_mail([EVT_CHANGED_BY_ME], $relationship);
     }    
     

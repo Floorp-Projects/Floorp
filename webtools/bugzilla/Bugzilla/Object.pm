@@ -149,17 +149,28 @@ sub update {
     my $dbh      = Bugzilla->dbh;
     my $table    = $self->DB_TABLE;
     my $id_field = $self->ID_FIELD;
+
+    my $old_self = $self->new($self->id);
     
-    my $columns = join(', ', map {"$_ = ?"} $self->UPDATE_COLUMNS);
-    my @values;
+    my (@update_columns, @values, %changes);
     foreach my $column ($self->UPDATE_COLUMNS) {
-        my $value = $self->{$column};
-        trick_taint($value) if defined $value;
-        push(@values, $value);
+        if ($old_self->{$column} ne $self->{$column}) {
+            my $value = $self->{$column};
+            trick_taint($value) if defined $value;
+            push(@values, $value);
+            push(@update_columns, $column);
+            # We don't use $value because we don't want to detaint this for
+            # the caller.
+            $changes{$column} = [$old_self->{$column}, $self->{$column}];
+        }
     }
 
+    my $columns = join(', ', map {"$_ = ?"} @update_columns);
+
     $dbh->do("UPDATE $table SET $columns WHERE $id_field = ?", undef, 
-             @values, $self->id);
+             @values, $self->id) if @values;
+
+    return \%changes;
 }
 
 ###############################
@@ -452,9 +463,27 @@ data into the database. Returns a newly created object.
 
 =item C<update>
 
+=over
+
+=item B<Description>
+
 Saves the values currently in this object to the database.
 Only the fields specified in L</UPDATE_COLUMNS> will be
-updated. Returns nothing and takes no parameters.
+updated, and they will only be updated if their values have changed.
+
+=item B<Params> (none)
+
+=item B<Returns>
+
+A hashref showing what changed during the update. The keys are the column
+names from L</UPDATE_COLUMNS>. If a field was not changed, it will not be
+in the hash at all. If the field was changed, the key will point to an arrayref.
+The first item of the arrayref will be the old value, and the second item
+will be the new value.
+
+If there were no changes, we return a reference to an empty hash.
+
+=back
 
 =back
 

@@ -226,9 +226,6 @@ if ($action eq 'search') {
     my $otherUser = check_user($otherUserID, $otherUserLogin);
     $otherUserID = $otherUser->id;
 
-    my $logoutNeeded = 0;
-    my @changedFields;
-
     # Lock tables during the check+update session.
     $dbh->bz_lock_tables('profiles WRITE',
                          'profiles_activity WRITE',
@@ -245,73 +242,19 @@ if ($action eq 'search') {
                                            action => "modify",
                                            object => "user"});
 
-    my $login        = $cgi->param('login');
-    my $password     = $cgi->param('password');
-    my $realname     = trim($cgi->param('name')         || '');
-    my $disabledtext = trim($cgi->param('disabledtext') || '');
-    my $disable_mail = $cgi->param('disable_mail') ? 1 : 0;
+    $vars->{'loginold'} = $otherUser->login;
 
     # Update profiles table entry; silently skip doing this if the user
     # is not authorized.
+    my %changes;
     if ($editusers) {
-        my @values;
-
-        if ($login ne $otherUser->login) {
-            # Validating untaints for us.
-            $login || ThrowUserError('user_login_required');
-            validate_email_syntax($login)
-              || ThrowUserError('illegal_email_address', {addr => $login});
-            is_available_username($login)
-              || ThrowUserError('account_exists', {email => $login});
-
-            push(@changedFields, 'login_name');
-            push(@values, $login);
-            $logoutNeeded = 1;
-
-            # Since we change the login, silently delete any tokens.
-            $dbh->do('DELETE FROM tokens WHERE userid = ?', {}, $otherUserID);
-        }
-        if ($realname ne $otherUser->name) {
-            # The real name may be anything; we use a placeholder for our
-            # INSERT, and we rely on displaying code to FILTER html.
-            trick_taint($realname);
-            push(@changedFields, 'realname');
-            push(@values, $realname);
-        }
-        if ($password) {
-            # Validating untaints for us.
-            validate_password($password) if $password;
-            push(@changedFields, 'cryptpassword');
-            push(@values, bz_crypt($password));
-            $logoutNeeded = 1;
-        }
-        if ($disabledtext ne $otherUser->disabledtext) {
-            # The disable text may be anything; we use a placeholder for our
-            # INSERT, and we rely on displaying code to FILTER html.
-            trick_taint($disabledtext);
-            push(@changedFields, 'disabledtext');
-            push(@values, $disabledtext);
-            $logoutNeeded = 1;
-        }
-        if ($disable_mail != $otherUser->email_disabled) {
-            push(@changedFields, 'disable_mail');
-            push(@values, $disable_mail);
-        }
-        if (@changedFields) {
-            push (@values, $otherUserID);
-            $logoutNeeded && Bugzilla->logout_user($otherUser);
-            $dbh->do('UPDATE profiles SET ' .
-                     join(' = ?,', @changedFields).' = ? ' .
-                     'WHERE userid = ?',
-                     undef, @values);
-            # XXX: should create profiles_activity entries.
-            #
-            # We create a new user object here because it needs to
-            # read information that may have changed since this
-            # script started.
-            my $newprofile = new Bugzilla::User($otherUserID);
-            $newprofile->derive_regexp_groups();
-        }
+        $otherUser->set_login($cgi->param('login'));
+        $otherUser->set_name($cgi->param('name'));
+        $otherUser->set_password($cgi->param('password'))
+            if $cgi->param('password');
+        $otherUser->set_disabledtext($cgi->param('disabledtext'));
+        $otherUser->set_disable_mail($cgi->param('disable_mail'));
+        %changes = %{$otherUser->update()};
     }
 
     # Update group settings.
@@ -399,8 +342,7 @@ if ($action eq 'search') {
     delete_token($token);
 
     $vars->{'message'} = 'account_updated';
-    $vars->{'loginold'} = $otherUser->login;
-    $vars->{'changed_fields'} = \@changedFields;
+    $vars->{'changed_fields'} = [keys %changes];
     $vars->{'groups_added_to'} = \@groupsAddedTo;
     $vars->{'groups_removed_from'} = \@groupsRemovedFrom;
     $vars->{'groups_granted_rights_to_bless'} = \@groupsGrantedRightsToBless;
