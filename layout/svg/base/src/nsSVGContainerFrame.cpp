@@ -122,6 +122,13 @@ nsSVGDisplayContainerFrame::InitSVG()
   return NS_OK;
 }
 
+void
+nsSVGDisplayContainerFrame::Destroy()
+{
+  nsSVGUtils::StyleEffects(this);
+  nsSVGContainerFrame::Destroy();
+}
+
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
                                          nsIFrame* aPrevFrame,

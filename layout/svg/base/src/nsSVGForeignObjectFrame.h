@@ -68,6 +68,7 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:  
+  virtual void Destroy();
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);

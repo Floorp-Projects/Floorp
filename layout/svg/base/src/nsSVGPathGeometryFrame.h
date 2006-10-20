@@ -64,7 +64,6 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
 {
 public:
   nsSVGPathGeometryFrame(nsStyleContext* aContext);
-  virtual ~nsSVGPathGeometryFrame();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -72,6 +71,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
   // nsIFrame interface:
+  virtual void Destroy();
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -150,6 +150,8 @@ private:
                           nsSVGMarkerProperty *property,
                           nsIURI              *aURI);
   void UpdateMarkerProperty();
+
+  void RemovePathProperties();
 
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRPackedBool mPropagateTransform;
