@@ -10,6 +10,10 @@
     <?php echo $html->checkbox('User/role'); ?>
   </div>
   <div>
+    <label for="UserEmail" class="label-large">Email address:</label>
+    <?php echo $html->input('User/email', array('size' => 40)); ?>
+  </div>
+  <div>
     <label for="UserWebsite" class="label-large">Website:</label>
     <?php echo $html->input('User/website', array('size' => 40)); ?>
   </div>
