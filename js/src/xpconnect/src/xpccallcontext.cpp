@@ -97,7 +97,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
     // Get into the request as early as we can to avoid problems with scanning
     // callcontexts on other threads from within the gc callbacks.
 
-    if(mCallerLanguage == NATIVE_CALLER && JS_GetContextThread(mJSContext))
+    if(mCallerLanguage == NATIVE_CALLER)
         JS_BeginRequest(mJSContext);
 
     if(topJSContext != mJSContext)
@@ -325,7 +325,7 @@ XPCCallContext::~XPCCallContext()
 
     if(mJSContext)
     {
-        if(mCallerLanguage == NATIVE_CALLER && JS_GetContextThread(mJSContext))
+        if(mCallerLanguage == NATIVE_CALLER)
             JS_EndRequest(mJSContext);
         
         if(mDestroyJSContextInDestructor)
