@@ -258,9 +258,11 @@ calWcapSession.prototype = {
                        "gettime.wcap?appid=mozilla-calendar" +
                        "&fmt-out=text%2Fcalendar&id=" +
                        encodeURIComponent(this.m_sessionId));
-            // xxx todo: this is no solution!
-            var localTime = getTime();
             var str = issueSyncRequest( url );
+            // xxx todo: think about
+            // assure that locally calculated server time is smaller than the
+            // current (real) server time:
+            var localTime = getTime();
             var icalRootComp = getIcsService().parseICS( str );
             if (icalRootComp == null)
                 throw new Components.Exception("invalid data, expected ical!");
@@ -615,8 +617,7 @@ calWcapSession.prototype = {
                 var wcapResponse = new WcapResponse();
                 try {
                     try {
-                        wcapResponse.data = dataConvFunc(
-                            data, wcapResponse );
+                        wcapResponse.data = dataConvFunc( data );
                     }
                     catch (exc) {
                         if (testResultCode(
