@@ -6843,6 +6843,7 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
     m.setAttribute("label", undoItems[i].title);
     m.setAttribute("value", i);
     m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
+    m.addEventListener("click", undoCloseMiddleClick, false);
   }
 
   // "open in tabs"
@@ -6855,6 +6856,20 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
     for (var i = 0; i < undoItems.length; i++)
       undoCloseTab();
   }, false);
+}
+
+/**
+  * Re-open a closed tab and put it to the end of the tab strip. 
+  * Used for a middle click.
+  * @param aEvent
+  *        The event when the user clicks the menu item
+  */
+function undoCloseMiddleClick(aEvent) {
+  if (aEvent.button != 1)
+    return;
+
+  undoCloseTab(aEvent.originalTarget.value);
+  getBrowser().moveTabToEnd();
 }
 
 /**
