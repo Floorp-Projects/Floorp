@@ -37,6 +37,9 @@ use Bugzilla::Product;
 use Bugzilla::User;
 use Bugzilla::Token;
 
+use constant SPECIAL_GROUPS => ('chartgroup', 'insidergroup',
+                                'timetrackinggroup', 'querysharegroup');
+
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
@@ -316,7 +319,7 @@ if ($action eq 'del') {
     }
     # Groups having a special role cannot be deleted.
     my @special_groups;
-    foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+    foreach my $special_group (SPECIAL_GROUPS) {
         if ($name eq Bugzilla->params->{$special_group}) {
             push(@special_groups, $special_group);
         }
@@ -389,7 +392,7 @@ if ($action eq 'delete') {
     }
     # Groups having a special role cannot be deleted.
     my @special_groups;
-    foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+    foreach my $special_group (SPECIAL_GROUPS) {
         if ($name eq Bugzilla->params->{$special_group}) {
             push(@special_groups, $special_group);
         }
@@ -577,7 +580,11 @@ sub doGroupChanges {
 
     $dbh->bz_lock_tables('groups WRITE', 'group_group_map WRITE',
                          'bug_group_map WRITE', 'user_group_map WRITE',
-                         'group_control_map READ', 'bugs READ', 'profiles READ');
+                         'group_control_map READ', 'bugs READ', 'profiles READ',
+                         # Due to the way Bugzilla::Config::BugFields::get_param_list()
+                         # works, we need to lock these tables too.
+                         'priority READ', 'bug_severity READ', 'rep_platform READ',
+                         'op_sys READ');
 
     # Check that the given group ID and regular expression are valid.
     # If tests are successful, trimmed values are returned by CheckGroup*.
@@ -611,7 +618,7 @@ sub doGroupChanges {
             # If the group is used by some parameters, we have to update
             # these parameters too.
             my $update_params = 0;
-            foreach my $group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+            foreach my $group (SPECIAL_GROUPS) {
                 if ($cgi->param('oldname') eq Bugzilla->params->{$group}) {
                     SetParam($group, $name);
                     $update_params = 1;

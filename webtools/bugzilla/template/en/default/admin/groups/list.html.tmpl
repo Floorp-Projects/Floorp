@@ -103,6 +103,12 @@
      content => "(used as the 'timetrackinggroup')"
    },
    {
+     match_value => Param("querysharegroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'querysharegroup')"
+   },
+   {
      match_value => "1"
      match_field => 'isbuggroup'
      override_content => 1
