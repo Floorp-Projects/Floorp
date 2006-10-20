@@ -121,6 +121,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                     return PR_TRUE;
 
             family = Substring(nameStart, p);
+            generic = PR_FALSE;
             genericFamily.SetIsVoid(PR_TRUE);
 
             while (++p != p_end && *p != kComma)
