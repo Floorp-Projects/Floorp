@@ -84,3 +84,23 @@ function Shutdown()
   doc.persist(id, "width");
   doc.persist(id, "height");
 }
+
+function Reattach(aSide)
+{
+  var sidebar;
+  switch (aSide)
+  {
+    case "first":  sidebar = window.opener.gDialog.sidebar1; break;
+    case "second": sidebar = window.opener.gDialog.sidebar2; break;
+    default:
+      dump("bad sidebar descriptor\n");
+      return;
+  }
+  
+  var sidebaritem = gDialog.sidebaritem;
+  sidebaritem.removeAttribute("standalone");
+  sidebar.addContent( sidebaritem.getAttribute("name"),
+                      sidebaritem.getAttribute("title"),
+                      sidebaritem.getAttribute("src") );
+  window.close();
+}

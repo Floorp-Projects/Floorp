@@ -307,12 +307,12 @@
         <parameter name="aURL"/>
         <body>
         <![CDATA[
-          this.mOtherSidebar._addContent(aName, aTitle, aURL);
+          this.mOtherSidebar.addContent(aName, aTitle, aURL);
         ]]>
         </body>
       </method>
 
-      <method name="_addContent">
+      <method name="addContent">
         <parameter name="aName"/>
         <parameter name="aTitle"/>
         <parameter name="aURL"/>
@@ -356,7 +356,7 @@
         <parameter name="aMenuitem"/>
         <body>
         <![CDATA[
-          this._addContent( aMenuitem.getAttribute("name"),
+          this.addContent( aMenuitem.getAttribute("name"),
                             aMenuitem.getAttribute("label"),
                             aMenuitem.getAttribute("src") );
         ]]>

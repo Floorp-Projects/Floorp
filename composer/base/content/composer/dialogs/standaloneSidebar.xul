@@ -38,6 +38,9 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://composer/skin/standaloneSidebar.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://composer/locale/standaloneSidebar.dtd">
 
 <window
   id     = "standaloneSidebar"
@@ -53,6 +56,15 @@
   <script type="application/x-javascript" src="chrome://composer/content/utils/dgid.js"/>
   <script type="application/x-javascript" src="chrome://composer/content/dialogs/standaloneSidebar.js"/>
 
+  <hbox align="center" id="mainMenu">
+    <spacer flex="1"/>
+    <toolbarbutton label="&reattachMenu.label;" type="menu">
+      <menupopup>
+        <menuitem label="&intoFirstSidebar.label;"  oncommand="Reattach('first')"/>
+        <menuitem label="&intoSecondSidebar.label;" oncommand="Reattach('second')"/>
+      </menupopup>
+    </toolbarbutton>
+  </hbox>
   <iframe flex="1" id="iframe"/>
 
 </window>

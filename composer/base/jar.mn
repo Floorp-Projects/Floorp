@@ -55,6 +55,7 @@ composer.jar:
 	skin/classic/composer/structurebar.css			(skin/classic/composer/structurebar.css)
 	skin/classic/composer/sidebarcontent.css		(skin/classic/composer/sidebarcontent.css)
 	skin/classic/composer/sidebar.css				(skin/classic/composer/sidebar.css)
+	skin/classic/composer/standaloneSidebar.css		(skin/classic/composer/standaloneSidebar.css)
 	skin/classic/composer/tabeditor.css				(skin/classic/composer/tabeditor.css)
 	skin/classic/composer/formatToolbar.css			(skin/classic/composer/formatToolbar.css)
 
@@ -72,3 +73,4 @@ composer-locale.jar:
 	locale/en-US/branding/brand.properties			(locale/en-US/branding/brand.properties)
 	locale/en-US/composer/sidebar.dtd				(locale/en-US/composer/sidebar.dtd)
 	locale/en-US/composer/structurebar.dtd			(locale/en-US/composer/structurebar.dtd)
+	locale/en-US/composer/standaloneSidebar.dtd		(locale/en-US/composer/standaloneSidebar.dtd)
