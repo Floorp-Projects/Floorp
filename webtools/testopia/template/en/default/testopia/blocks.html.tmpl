@@ -39,6 +39,7 @@
 [% END %] 
 
 [% BLOCK navigation %]
+[% SET MAX_LIMIT = 10000 %]
 [% IF ajax %]
    [% url = "javascript:page(" %]
    [% pc  = ")" %]
@@ -101,15 +102,21 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <input type="button" onclick="jumpToPage(document.getElementById('jump').value)" value="Jump To Page">
     <input id="jump" size="4">
-    [% IF ajax %]
+    &nbsp;Out of [% table.page_count %]
+    &nbsp;&nbsp;&nbsp;
+  [% IF ajax %]
     <a href="[% url %]null,1[% pc %]">All</a>&nbsp;
-    [% ELSE %]
+  [% ELSE %]
+    [% IF table.list_count < MAX_LIMIT %]
     <a href="[% url %]&viewall=1">All</a>&nbsp;
+    [% ELSE %]
+    <span style="color:gray">All</span>
     [% END %]
+  [% END %]
     </td>
   [% IF table.page < table.page_count - 1 %]
     <td><a href="[% url %][% table.page + 1 %][% pc %]">Next&nbsp;&gt;</a></td>
-    <td><a href="[% url %][% table.page_count - 1 %][% pc %]">Last&nbsp;&gt;&gt;</a></td>
+    <td><a href="[% url %][% table.page_count - 1 %][% pc %]" title="Jump to Page [% table.page_count %]">Last&nbsp;&gt;&gt;</a></td>
   [% ELSE %]
     <td>Next&nbsp;&gt;</td>
     <td>Last&nbsp;&gt;&gt;</td>

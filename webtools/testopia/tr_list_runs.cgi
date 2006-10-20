@@ -38,9 +38,23 @@ require "globals.pl";
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $query_limit = 5000;
 
 Bugzilla->login();
-print $cgi->header;
+my $serverpush = support_server_push($cgi);
+if ($serverpush) {
+    print $cgi->multipart_init;
+    print $cgi->multipart_start;
+
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+}
+else {
+    print $cgi->header;
+}
+# prevent DOS attacks from multiple refreshes of large data
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
 
 my $action = $cgi->param('action') || '';
 if ($action eq 'Commit'){
@@ -48,14 +62,31 @@ if ($action eq 'Commit'){
     # Get the list of checked items. This way we don't have to cycle through 
     # every test case, only the ones that are checked.
     my $reg = qr/r_([\d]+)/;
-    my @runs;
-    foreach my $r ($cgi->param()){
-        push @runs, Bugzilla::Testopia::TestRun->new($1) if $r =~ $reg;
-    }
-    ThrowUserError('testopia-none-selected', {'object' => 'run'}) if (scalar @runs < 1);
+    my $params = join(" ", $cgi->param());
+    my @params = $cgi->param();
+    
+    ThrowUserError('testopia-none-selected', {'object' => 'run'}) unless $params =~ $reg;
     ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($cgi->param('environment') eq '');
-    foreach my $run (@runs){
-        ThowUserError('insufficient-perms') unless $run->canedit;
+    
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @params;
+
+    foreach my $p ($cgi->param()){
+        my $run = Bugzilla::Testopia::TestRun->new($1) if $p =~ $reg;
+        next unless $run;
+        
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+        
+        ThrowUserError("testopia-read-only", {'object' => 'run', 'id' => $run->id}) unless $run->canedit;
         my $manager   = DBNameToIdAndCheck(trim($cgi->param('manager'))) if $cgi->param('manager');
         my $status;
         if ($cgi->param('run_status')){
@@ -89,21 +120,28 @@ if ($action eq 'Commit'){
             }
         }     
     }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     my $run = Bugzilla::Testopia::TestRun->new({ 'run_id' => 0 });
     $vars->{'run'} = $run;
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = scalar @runs . " Test Runs Updated";
+    $vars->{'tr_message'} = "$i Test Runs Updated";
     $vars->{'current_tab'} = 'run';
     $vars->{'build_list'} = $run->get_distinct_builds();
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
+    print $cgi->multipart_final if $serverpush;
     exit;
-
+    
 }
 else {
     $cgi->param('current_tab', 'run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
-    my $table = Bugzilla::Testopia::Table->new('run', 'tr_list_runs.cgi', $cgi, undef, $search->query);    
+    my $table = Bugzilla::Testopia::Table->new('run', 'tr_list_runs.cgi', $cgi, undef, $search->query);
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    
     if ($table->list_count > 0){
         my $plan_id = $table->list->[0]->plan->product_id;
         foreach my $run (@{$table->list}){
@@ -131,7 +169,11 @@ else {
     $vars->{'fullwidth'} = 1; #novellonly
     $vars->{'dotweak'} = UserInGroup('runtests');
     $vars->{'table'} = $table;
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     $template->process("testopia/run/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error()); 
-
+    print $cgi->multipart_final if $serverpush;
 }

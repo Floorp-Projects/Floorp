@@ -142,6 +142,7 @@ sub init {
             push (@list, $o);
         }
         $self->{'list'} = \@list;
+        $self->{'view_count'} = scalar @list; 
         $self->{'id_list'} = join(",", @$count_res);
     }
     if ($cgi){
@@ -349,6 +350,7 @@ sub get_next{
 sub list       { return $_[0]->{'list'};       }
 sub id_list    { return $_[0]->{'id_list'};       }
 sub list_count { return $_[0]->{'list_count'}; }
+sub view_count { return $_[0]->{'view_count'}; }
 sub page       { return $_[0]->{'page'}; }
 sub url_loc    { return $_[0]->{'url_loc'}; }
 

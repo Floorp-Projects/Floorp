@@ -37,7 +37,7 @@ use Bugzilla::Testopia::Table;
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
-
+my $query_limit = 15000;
 require "globals.pl";
 
 Bugzilla->login();
@@ -392,6 +392,7 @@ sub display {
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_case.cgi', $cgi, undef, $search->query);
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
     $vars->{'case'} = $case;
     $vars->{'table'} = $table;
     $template->process("testopia/case/show.html.tmpl", $vars) ||

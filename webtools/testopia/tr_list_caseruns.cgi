@@ -38,6 +38,7 @@ require 'globals.pl';
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $query_limit = 15000;
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
@@ -45,7 +46,20 @@ $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -value => $cgi->param('order'),
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
 Bugzilla->login();
-print $cgi->header;
+my $serverpush = support_server_push($cgi);
+if ($serverpush) {
+    print $cgi->multipart_init;
+    print $cgi->multipart_start;
+
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+}
+else {
+    print $cgi->header;
+}
+# prevent DOS attacks from multiple refreshes of large data
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
 
 my $action = $cgi->param('action') || '';
 
@@ -54,20 +68,35 @@ if ($action eq 'Commit'){
     # Get the list of checked items. This way we don't have to cycle through 
     # every test case, only the ones that are checked.
     my $reg = qr/r_([\d]+)/;
-    my @caseruns;
-    foreach my $p ($cgi->param()){
-        push @caseruns, Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
-    }
-    ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) if (scalar @caseruns < 1);
+    my $params = join(" ", $cgi->param());
+    my @params = $cgi->param();
     my @buglist;
+
+    ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) unless $params =~ $reg;
     foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
         ValidateBugID($bug);
         push @buglist, $bug;
     }
 
-    foreach my $caserun (@caseruns){
-    
-        ThrowUserError("testopia-read-only", {'object' => 'Case Run'}) unless $caserun->canedit;
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @params;
+
+    foreach my $p ($cgi->param()){
+        my $caserun = Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
+        next unless $caserun;
+        
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+        
+        ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id}) unless $caserun->canedit;
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
         my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));
@@ -104,8 +133,11 @@ if ($action eq 'Commit'){
         $caserun->append_note($notes);
     }
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = scalar @caseruns . ' Test Case-Runs Updated';
-    
+    $vars->{'tr_message'} = "$i Test Case-Runs Updated";
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     if ($cgi->param('run_id')){
         my $run_id = $cgi->param('run_id');
         my $run = Bugzilla::Testopia::TestRun->new($run_id);
@@ -130,6 +162,7 @@ if ($action eq 'Commit'){
         $template->process("testopia/search/advanced.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
     }
+    print $cgi->multipart_final if $serverpush;
     exit;
 }
 elsif ($action eq 'Delete Selected'){
@@ -141,6 +174,10 @@ elsif ($action eq 'Delete Selected'){
         ThrowUserError("testopia-read-only", {'object' => 'case run'}) if ($caserun && !$caserun->candelete);
         push @caseruns, $caserun if $caserun;
     }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) if (scalar @caseruns < 1);
     $vars->{'caseruns'} = \@caseruns;
     $vars->{'caseruncount'} = scalar @caseruns;
@@ -149,6 +186,7 @@ elsif ($action eq 'Delete Selected'){
     $vars->{'run_id'} = $cgi->param('run_id');
     $template->process("testopia/caserun/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
+    print $cgi->multipart_final if $serverpush;
     exit;
 }
 elsif ($action eq 'do_delete'){
@@ -159,13 +197,30 @@ elsif ($action eq 'do_delete'){
         push @caseruns, $caserun;
         ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
     }
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @caseruns;
     foreach my $c (@caseruns){
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
         $c->obliterate;
+    }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
     }
     $vars->{'deleted'} = 1;
     $vars->{'run_id'} = $cgi->param('run_id');
     $template->process("testopia/caserun/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
+    print $cgi->multipart_final if $serverpush;
     exit;
 }
 
@@ -173,6 +228,7 @@ elsif ($action eq 'do_delete'){
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_list_caseruns.cgi', $cgi, undef, $search->query);
+ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
 
 if ($table->list_count > 0){
     my $prod_id = $table->list->[0]->run->plan->product_id;
@@ -198,6 +254,10 @@ $vars->{'component_list'} =  $case->get_available_components();
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';
+if ($serverpush) {
+    print $cgi->multipart_end;
+    print $cgi->multipart_start;
+}
 $template->process("testopia/caserun/list.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
- 
+print $cgi->multipart_final if $serverpush; 

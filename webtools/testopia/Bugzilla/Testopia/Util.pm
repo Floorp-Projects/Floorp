@@ -40,7 +40,7 @@ use base qw(Exporter);
                                          can_view_product GetProducts
                                          get_field_id get_time_stamp 
                                          validate_test_id validate_selection
-                                         validate_version);
+                                         validate_version support_server_push);
 
 use Bugzilla;
 use Bugzilla::Config;
@@ -236,6 +236,19 @@ sub validate_version {
     }
     
     return $res;
+}
+
+sub support_server_push {
+    my ($cgi) = @_;
+    my $serverpush =
+    exists $ENV{'HTTP_USER_AGENT'} 
+      && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
+        && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
+          && $ENV{'HTTP_USER_AGENT'} !~ /WebKit/
+            && !defined($cgi->param('serverpush'))
+              || $cgi->param('serverpush');
+              
+  return $serverpush;            
 }
 
 =head1 AUTHOR

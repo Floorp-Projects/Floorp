@@ -41,8 +41,15 @@
 [% PROCESS testopia/blocks.html.tmpl %]
 [% PROCESS testopia/messages.html.tmpl %]
 
+[%# More than this will cause your browser to get really slow 
+  # So we won't show the action and effects %]
+[% SET MAX_LIMIT = 500 %]
+
 <script src="testopia/js/util.js" type="text/javascript"></script>
+[% IF table.view_count < MAX_LIMIT %]
 <script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+[% END %] 
+
 <form id="table" action="tr_list_runs.cgi" method="POST">
 
 [% PROCESS testopia/run/table.html.tmpl %]

@@ -36,14 +36,16 @@ require "globals.pl";
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
+my $query_limit = 10000;
 
 Bugzilla->login(LOGIN_REQUIRED);
-ThrowUserError("testopia-create-denied", {'object' => 'Test Run'}) unless UserInGroup('edittestcases');
-
-print Bugzilla->cgi->header();
-   
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
+
+unless (UserInGroup('edittestcases')){
+    print $cgi->header;
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
+}
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
@@ -51,6 +53,7 @@ my $action = $cgi->param('action') || '';
 my $plan_id = $cgi->param('plan_id');
 unless ($plan_id){
   $vars->{'form_action'} = 'tr_new_run.cgi';
+  print $cgi->header;
   $template->process("testopia/plan/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
   exit;
@@ -59,11 +62,22 @@ unless ($plan_id){
 detaint_natural($plan_id);
 validate_test_id($plan_id, 'plan');
 
-ThrowUserError("testopia-missing-parameter", {'param' => 'plan_id'}) unless ($plan_id);
 my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-ThrowUserError('testopia-create-build', {'plan' => $plan}) unless (scalar @{$plan->builds} >0);
+unless (scalar @{$plan->builds} >0){
+    print $cgi->header;
+    ThrowUserError('testopia-create-build', {'plan' => $plan});
+}
 
 if ($action eq 'Add'){
+    my $serverpush = support_server_push($cgi);
+    if ($serverpush) {
+        print $cgi->multipart_init;
+        print $cgi->multipart_start;
+    
+        $template->process("list/server-push.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+    }
+
     my $manager  = DBNameToIdAndCheck($cgi->param('manager'));
     my $status   = $cgi->param('status');
     my $prodver  = $cgi->param('product_version');
@@ -121,23 +135,43 @@ if ($action eq 'Add'){
     });
     my $run_id = $run->store;
     $run = Bugzilla::Testopia::TestRun->new($run_id);
-    foreach my $case_id (@c){  
+
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @c;
+    foreach my $case_id (@c){
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }  
         $run->add_case_run($case_id);
     }
     # clear the params so we don't confuse search.
     $cgi->delete_all;
-
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    } else {
+        print $cgi->header;
+    }
     $cgi->param('current_tab', 'case_run');
     $cgi->param('run_id', $run_id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';
     $vars->{'form_action'} = 'tr_show_run.cgi';
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
+    print $cgi->multipart_final if $serverpush;
     
 }
 
@@ -160,6 +194,7 @@ else {
                          'plan'   => $plan,
                          'plan_text_version' => $plan->version } );
     ThrowUserError('testopia-create-environment') unless (scalar @{$run->environments} > 0);
+    print $cgi->header;
     $vars->{'run'} = $run;
     $template->process("testopia/run/add.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());

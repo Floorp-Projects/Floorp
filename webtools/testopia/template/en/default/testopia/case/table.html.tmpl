@@ -24,6 +24,13 @@
 [% PROCESS testopia/blocks.html.tmpl %]
 
 [% IF table.list_count > 0 %]
+[%# More than this will cause your browser to get really slow 
+  # So we won't show the action and effects %]
+[% SET MAX_LIMIT = 1000 %]
+
+[% IF table.view_count >= MAX_LIMIT %]
+<p><b>This list is too big to display quickly. Action and Effect will not be included.</b></p>
+[% END %] 
 <a href="javascript:coal()">Collapse All</a> 
 <a href="javascript:exal()">Expand All</a> 
 [% IF dotweak %]
@@ -58,14 +65,14 @@ Select:
     <th align="left"><a href="[% link %]priority[% paren %]">Priority[% table.arrow IF table.last_sort == 'priority' %]</a></th>
     <th align="left"><a href="[% link %]case_status[% paren %]">Status[% table.arrow IF table.last_sort == 'status' %]</a></th>
   </tr>
-  [% FOREACH case = table.list %] 
+[% FOREACH case = table.list %] 
   [% index = loop.count %] 
-  <tr id="trr[% index FILTER none %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" onclick="sr([% loop.count %]);" style="cursor:pointer;">
+  <tr id="trr[% index FILTER none %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" [% IF loop.size < MAX_LIMIT %]onclick="sr([% loop.count %]);" style="cursor:pointer;"[% END %]>
     <td class="cc_trg" valign="top" width="24">
       <table style="border-spacing:0px;border-collapse:collapse;" width="24">
         <tr>
           <td style="padding:0;border-width:0;">[% IF dotweak %]<input type="checkbox" id="c_[% case.id FILTER none %]" name="c_[% case.id FILTER none %]" onclick="[% IF canedit %]ck(this);[% ELSE %]_disable_sr=true;[% END %]">[% END %]</td>
-          <td style="padding:0;border-width:0;"><img id="id[% index FILTER none %]" src="testopia/img/tr.gif" width="11" height="11"></td>
+          <td style="padding:0;border-width:0;">[% IF loop.size < MAX_LIMIT %]<img id="id[% index FILTER none %]" src="testopia/img/tr.gif" width="11" height="11">[% END %]</td>
         </tr>
       </table>
     </td>
@@ -81,7 +88,7 @@ Select:
     <td align="left" valign="top">[% case.priority FILTER html %]</td>
     <td align="left" valign="top"><span id="sta[% case.status %]">[% case.status %]</span></td>
   </tr>
-
+  [% IF loop.size < MAX_LIMIT %]
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
     <td></td>
     <td colspan="10" style="margin:0px;padding:0px;">
@@ -122,7 +129,8 @@ Select:
       </div>
     </td>
   </tr>
-  [% END %] 
+  [% END %]
+[% END %] 
 </table>
   [% IF NOT table.viewall %]
     [% PROCESS navigation %]

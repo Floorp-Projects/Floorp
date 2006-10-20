@@ -434,6 +434,27 @@ sub get_product_components {
     return $ref;
 }
 
+=head2 get_case_ids_by_category
+
+Returns a list of case_ids in this plan from the selected categories.
+
+=cut
+
+sub get_case_ids_by_category {
+    my $self = shift;
+    my ($categories) = @_;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ref = $dbh->selectcol_arrayref(
+        "SELECT DISTINCT test_cases.case_id from test_cases
+           JOIN test_case_plans AS tcp ON tcp.case_id = test_cases.case_id
+          WHERE tcp.plan_id = ?
+            AND category_id in (". join(',',@$categories) . ")",
+           undef, $self->id);
+    
+    return $ref; 
+}
+
 =head2 get_plan_types
 
 Returns a list of types from the test_plan_types table

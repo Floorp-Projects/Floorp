@@ -36,7 +36,7 @@ use Bugzilla::Testopia::TestCaseRun;
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
-
+my $query_limit = 15000;
 # These are going away after 2.22
 require "globals.pl";
 
@@ -159,6 +159,7 @@ elsif ($action eq 'do_delete'){
     $cgi->param('run_id', $caserun->run->id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
     
     my @case_list;
     foreach my $cr (@{$table->list}){
@@ -329,6 +330,7 @@ sub display {
     my $caserun = shift;
     ThrowUserError('insufficient-view-perms') if !$caserun->canview;
     my $table = Bugzilla::Testopia::Table->new('case_run');
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
     $vars->{'table'} = $table;
     $vars->{'caserun'} = $caserun;
     $vars->{'action'} = 'tr_show_caserun.cgi';

@@ -88,7 +88,9 @@ sub init {
     my $page = $cgi->param('page') || 0;
     detaint_natural($page) if $page;
     $page = undef if ($cgi->param('viewall'));
-    my $pagesize = 25;
+    my $pagesize = $cgi->param('pagesize') if $cgi->param('pagesize');
+    detaint_natural($pagesize);
+    $pagesize ||= 25;
     
     my @specialchart;
     my @supptables;

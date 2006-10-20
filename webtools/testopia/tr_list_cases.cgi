@@ -40,6 +40,7 @@ require "globals.pl";
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $query_limit = 10000;
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
@@ -47,21 +48,56 @@ $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -value => $cgi->param('order'),
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
 Bugzilla->login();
-print $cgi->header;
-my $action = $cgi->param('action') || '';
 
+my $action = $cgi->param('action') || '';
+my $serverpush = support_server_push($cgi);
+if ($serverpush) {
+    print $cgi->multipart_init;
+    print $cgi->multipart_start;
+
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+}
+else {
+    print $cgi->header;
+}
+# prevent DOS attacks from multiple refreshes of large data
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
+
+###############
+### Actions ###
+###############
 if ($action eq 'Commit'){
     Bugzilla->login(LOGIN_REQUIRED);
-    # Get the list of checked items. This way we don't have to cycle through 
-    # every test case, only the ones that are checked.
+
+    # Match the list of checked items. 
     my $reg = qr/c_([\d]+)/;
-    my @cases;
+    my $params = join(" ", $cgi->param());
+    my @params = $cgi->param();
+    
+    ThrowUserError('testopia-none-selected', {'object' => 'case'}) unless $params =~ $reg;
+
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @params;
+
     foreach my $p ($cgi->param()){
-        push @cases, Bugzilla::Testopia::TestCase->new($1) if $p =~ $reg;
-    }
-    ThrowUserError('testopia-none-selected', {'object' => 'case'}) if (scalar @cases < 1);
-    foreach my $case (@cases){
-        ThowUserError('insufficient-perms') unless $case->canedit;
+        my $case = Bugzilla::Testopia::TestCase->new($1) if $p =~ $reg;
+        next unless $case;
+        
+        ThrowUserError("testopia-read-only", {'object' => 'case', 'id' => $case->id}) unless $case->canedit;
+        
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        } 
+
         my $requirement = $cgi->param('requirement') eq '--Do Not Change--' ? $case->requirement : $cgi->param('requirement');
         my $arguments = $cgi->param('arguments') eq '--Do Not Change--' ? $case->arguments : $cgi->param('requirement');
         my $script = $cgi->param('script') eq '--Do Not Change--' ? $case->script : $cgi->param('requirement');
@@ -121,6 +157,10 @@ if ($action eq 'Commit'){
             $case->link_plan($planid);
         }
     }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }    
     my @runlist = split(/[\s,]+/, $cgi->param('addruns'));
     if (scalar @runlist == 1){
         my $run_id = $cgi->param('addruns');
@@ -146,17 +186,20 @@ if ($action eq 'Commit'){
     my $case = Bugzilla::Testopia::TestCase->new({ 'case_id' => 0 });
     $vars->{'case'} = $case;
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = scalar @cases . " Test Cases Updated";
+    $vars->{'tr_message'} = "$i Test Cases Updated";
     $vars->{'current_tab'} = 'case';
+    
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
+    print $cgi->multipart_final if $serverpush;
     exit;
-}
 
+}
 # Take the search from the URL params and convert it to SQL
 $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, undef, $search->query);
+ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
 
 # Check that all of the test cases returned only belong to one product.
 if ($table->list_count > 0){
@@ -210,7 +253,11 @@ $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
-
+if ($serverpush) {
+    print $cgi->multipart_end;
+    print $cgi->multipart_start;
+}
 $template->process("testopia/case/list.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
- 
+
+print $cgi->multipart_final if $serverpush;

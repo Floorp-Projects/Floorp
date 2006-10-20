@@ -23,7 +23,7 @@
     You are not authorized to view this [% object FILTER html %]
   [% ELSIF error == "testopia-read-only" %]
     [% title = "Insufficient Permissions" %]
-    You are not authorized to edit this [% object FILTER html %]
+    You are not authorized to edit [% object FILTER html %]&nbsp;[% id FILTER html %]
   [% ELSIF error == "testopia-no-delete" %]
     [% title = "Insufficient Permissions" %]
     You are not authorized to delete this [% object FILTER html %]
@@ -109,5 +109,13 @@
   [% ELSIF error == "testopia-none-selected" %]
     [% title = "Nothing Selected" %]
     You did not select any [% object FILTER none %]s to change.
+  [% ELSIF error == "testopia-query-too-large" %]
+    This query returns more than [% limit FILTER none %] rows. <br>
+    Please do one of the following:
+    <ol>
+      <li>Try to narrow your search.</li>
+      <li>Try using the pagesize and page URL paramaters to limit your results.</li>
+      <li>Use the XML-RPC Interface.</li>
+    </ol>
   [% END %]
   

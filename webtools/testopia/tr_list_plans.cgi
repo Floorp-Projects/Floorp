@@ -37,9 +37,23 @@ require "globals.pl";
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $query_limit = 5000;
 
 Bugzilla->login();
-print $cgi->header;
+my $serverpush = support_server_push($cgi);
+if ($serverpush) {
+    print $cgi->multipart_init;
+    print $cgi->multipart_start;
+
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+}
+else {
+    print $cgi->header;
+}
+# prevent DOS attacks from multiple refreshes of large data
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
 
 my $action = $cgi->param('action') || '';
 if ($action eq 'Commit'){
@@ -47,13 +61,30 @@ if ($action eq 'Commit'){
     # Get the list of checked items. This way we don't have to cycle through 
     # every test case, only the ones that are checked.
     my $reg = qr/p_([\d]+)/;
-    my @plans;
+    my $params = join(" ", $cgi->param());
+    my @params = $cgi->param();
+    
+    ThrowUserError('testopia-none-selected', {'object' => 'plan'}) unless $params =~ $reg;
+
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @params;
+
     foreach my $p ($cgi->param()){
-        push @plans, Bugzilla::Testopia::TestPlan->new($1) if $p =~ $reg;
-    }
-    ThrowUserError('testopia-none-selected', {'object' => 'plan'}) if (scalar @plans < 1);
-    foreach my $plan (@plans){
-        ThowUserError('insufficient-perms') unless $plan->canedit;
+        my $plan = Bugzilla::Testopia::TestPlan->new($1) if $p =~ $reg;
+        next unless $plan;
+        
+        $i++;
+        if ($i % $progress_interval == 0 && $serverpush){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+        
+        ThrowUserError("testopia-read-only", {'object' => 'plan', 'id' => $plan->id}) unless $plan->canedit;
         my $plan_type = $cgi->param('plan_type')    == -1 ? $plan->type_id : $cgi->param('plan_type');
         my $product   = $cgi->param('product_id')   == -1 ? $plan->product_id : $cgi->param('product_id');
         my $prodver   = $cgi->param('prod_version') == -1 ? $plan->product_version : $cgi->param('prod_version');
@@ -80,20 +111,26 @@ if ($action eq 'Commit'){
             }
         }     
     }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
     $vars->{'plan'} = $plan;
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = scalar @plans . " Test Plan(s) Updated";
+    $vars->{'tr_message'} = "$i Test Plan(s) Updated";
     $vars->{'current_tab'} = 'plan';
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
+    print $cgi->multipart_final if $serverpush;
     exit;
-
+    
 }
 else {
     $cgi->param('current_tab', 'plan');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('plan', 'tr_list_plans.cgi', $cgi, undef, $search->query);    
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
 
     my $p = Bugzilla::Testopia::TestPlan->new({'plan_id' => 0 });
     my $product_list   = $p->get_available_products;
@@ -110,7 +147,11 @@ else {
     $vars->{'fullwidth'} = 1; #novellonly
     $vars->{'dotweak'} = UserInGroup('managetestplans');
     $vars->{'table'} = $table;
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    }
     $template->process("testopia/plan/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error()); 
-
+    print $cgi->multipart_final if $serverpush;
 }

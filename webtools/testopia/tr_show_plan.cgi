@@ -42,10 +42,11 @@ require "globals.pl";
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
+my $run_query_limit = 5000;
+my $case_query_limit = 10000;
 
 Bugzilla->login();
-print Bugzilla->cgi->header();
-   
+
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
@@ -53,12 +54,15 @@ my $plan_id = trim(Bugzilla->cgi->param('plan_id') || '');
 
 unless ($plan_id){
   $vars->{'form_action'} = 'tr_show_plan.cgi';
+  print $cgi->header;
   $template->process("testopia/plan/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
   exit;
 }
 validate_test_id($plan_id, 'plan');
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
+
+my $serverpush = support_server_push($cgi);
 
 my $action = $cgi->param('action') || '';
 $vars->{'action'} = "Commit";
@@ -78,6 +82,7 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
     $plan->toggle_archive(Bugzilla->user->id);
     $vars->{'tr_message'} = 
         $plan->isactive == 0 ? "Plan archived":"Plan Unarchived";
+    print $cgi->header;
     display($plan);
         
 }
@@ -90,6 +95,7 @@ elsif ($action eq 'Clone'){
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
     $vars->{'plan'} = $plan;
+    print $cgi->header;
     $template->process("testopia/plan/clone.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
     
@@ -99,6 +105,14 @@ elsif ($action eq 'do_clone'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     my $plan_name = $cgi->param('plan_name');
+    if ($serverpush) {
+        print $cgi->multipart_init();
+        print $cgi->multipart_start();
+    
+        $template->process("list/server-push.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+
+    }
 
     # All DB actions use place holders so we are OK doing this
     trick_taint($plan_name);
@@ -114,28 +128,49 @@ elsif ($action eq 'do_clone'){
         }
     }
     if ($cgi->param('copy_cases')){
-        my @caseids;
+        my @catids;
         #TODO: Copy case to the new category
         foreach my $id ($cgi->param('clone_categories')){
-            my $cat = Bugzilla::Testopia::Category->new($id);
-            push @caseids, @{$cat->case_ids};
+            detaint_natural($id);
+            validate_selection($id,'category_id','test_case_categories');
+            push @catids, $id;
         }
-        foreach my $case (@{$plan->test_cases}){
-            if (lsearch(\@caseids, $case->category->id)){
-                if ($cgi->param('copy_cases') == 2 ){
-                    my $caseid = $case->copy($newplan->id, 1);
-                    $case->link_plan($newplan->id, $caseid);
-                }
-                else {
-                    $case->link_plan($newplan->id);
-                }
+        my $caseids_ref = $plan->get_case_ids_by_category(\@catids); 
+        my $progress_interval = 250;
+        my $i = 0;
+        my $total = scalar @$caseids_ref;
+        foreach my $id (@$caseids_ref){
+            $i++;
+            if ($i % $progress_interval == 0 && $serverpush){
+                print $cgi->multipart_end;
+                print $cgi->multipart_start;
+                $vars->{'complete'} = $i;
+                $vars->{'total'} = $total;
+                $template->process("testopia/progress.html.tmpl", $vars)
+                  || ThrowTemplateError($template->error());
+            } 
+
+            my $case = Bugzilla::Testopia::TestCase->new($id);
+            if ($cgi->param('copy_cases') == 2 ){
+                my $caseid = $case->copy($newplan->id, 1);
+                $case->link_plan($newplan->id, $caseid);
+            }
+            else {
+                $case->link_plan($newplan->id);
             }
         }
     }
-    
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    } else {
+        print $cgi->header;
+    }
     $vars->{'tr_message'} = "Plan ". $plan->name ." cloned as " . $newplan->name .".";
     $cgi->param('plan_id', $newplan->id);
-    display($newplan);    
+    
+    display($newplan);   
+    print $cgi->multipart_final if $serverpush; 
 }
 
 ### Changes to Plan Attributes or Doc ###
@@ -145,13 +180,15 @@ elsif ($action eq 'Commit'){
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
     $vars->{'tr_message'} = "Test plan updated";
+    print $cgi->header;
     display($plan);    
 }
 
 elsif ($action eq 'Print'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    $vars->{'plan'} = $plan;    
+    $vars->{'plan'} = $plan; 
+    print $cgi->header;   
     $template->process("testopia/plan/show-document.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -163,6 +200,7 @@ elsif ($action eq 'History'){
     $vars->{'diff'} = $plan->diff_plan_doc($cgi->param('new'),$cgi->param('old'));
     $vars->{'new'} = $cgi->param('new');
     $vars->{'old'} = $cgi->param('old');
+    print $cgi->header;
     $template->process("testopia/plan/history.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
        
@@ -203,6 +241,7 @@ elsif ($action eq 'Attach'){
     $vars->{'tr_message'} = "Attachment added successfully";
     
     do_update($plan);
+    print $cgi->header;
     display(Bugzilla::Testopia::TestPlan->new($plan_id));
 }
 #TODO: Import plans
@@ -214,6 +253,7 @@ elsif ($action eq 'Delete'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
     $vars->{'plan'} = $plan;
+    print $cgi->header;
     $template->process("testopia/plan/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     
@@ -224,6 +264,7 @@ elsif ($action eq 'do_delete'){
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
     $plan->obliterate;
     $vars->{'deleted'} = 1;
+    print $cgi->header;
     $template->process("testopia/plan/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }
@@ -255,6 +296,7 @@ elsif ($action eq 'caselist'){
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, $plan->test_cases);
     $table->{'ajax'} = 1;
     $vars->{'table'} = $table;
+    print $cgi->header;
     $template->process("testopia/case/table.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
         
@@ -265,6 +307,7 @@ elsif ($action eq 'caselist'){
 else{
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    print $cgi->header;
     display($plan);
 }
 ###################
@@ -335,28 +378,32 @@ sub display {
     if (($cgi->param('order') || $cgi->param('page') || $cgi->param('viewall')) && $cgi->param('current_tab') eq 'case'){
         my $search = Bugzilla::Testopia::Search->new($cgi);
         my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $cgi, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $case_query_limit}) if $table->list_count > $case_query_limit;
+        
         $vars->{'case_table'} = $table;
-
         $runquery->delete('order');
         $runquery->delete('page');
         $runquery->delete('viewall');
         $runquery->param('current_tab', 'run');
         $search = Bugzilla::Testopia::Search->new($runquery);
         $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $runquery, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $run_query_limit}) if $table->list_count > $run_query_limit;
         $vars->{'run_table'} = $table;    
 
     }
     elsif (($cgi->param('order') || $cgi->param('page') || $cgi->param('viewall')) && $cgi->param('current_tab') eq 'run'){
         my $search = Bugzilla::Testopia::Search->new($cgi);
         my $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $cgi, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $run_query_limit}) if $table->list_count > $run_query_limit;
+        
         $vars->{'run_table'} = $table;
-
         $casequery->delete('order');
         $casequery->delete('page');
         $casequery->delete('viewall');
         $casequery->param('current_tab', 'case');
         $search = Bugzilla::Testopia::Search->new($casequery);
         $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $case_query_limit}) if $table->list_count > $case_query_limit;
         $vars->{'case_table'} = $table;    
     }
     else {
@@ -364,11 +411,13 @@ sub display {
         $casequery->param('current_tab', 'case');
         my $search = Bugzilla::Testopia::Search->new($casequery);
         my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $case_query_limit}) if $table->list_count > $case_query_limit;
         $vars->{'case_table'} = $table;    
       
         $runquery->param('current_tab', 'run');
         $search = Bugzilla::Testopia::Search->new($runquery);
         $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $runquery, undef, $search->query);
+        ThrowUserError('testopia-query-too-large', {'limit' => $run_query_limit}) if $table->list_count > $run_query_limit;
         $vars->{'run_table'} = $table;    
       
     }
@@ -379,6 +428,7 @@ sub display {
     push @dojo_search, "plandoc";
     $vars->{'dojo_search'} = objToJson(\@dojo_search);
     $vars->{'plan'} = $plan;
+    
     $template->process("testopia/plan/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }
