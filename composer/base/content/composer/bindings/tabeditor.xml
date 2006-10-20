@@ -58,7 +58,7 @@
       <xul:tabbox anonid="EditorTabbox" flex="1" onselect="">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar">
 
-          <xul:tabs flex="1" class="tabbrowser-tabs" anonid="EditorTabs" closebutton="true"
+          <xul:tabs flex="1" anonid="EditorTabs" closebutton="true"
                     setfocus="false" onselect="onTabSelected(event)"/>
         </xul:hbox>
         <xul:tabpanels anonid="EditorTabpanels" selectedIndex="0" flex="1" />
