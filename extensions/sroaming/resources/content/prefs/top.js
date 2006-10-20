@@ -131,7 +131,7 @@ function ActivationWarning()
        It being a pref also leaves admins the choice of suppressing it,
        e.g. when they set up appropriate backups on behalf of the user on
        the server or client in a large installation. */
-    var prefBranch = Components.classes["@mozilla.org/preferences;1"]
+    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
 		       .getService(Components.interfaces.nsIPrefBranch);
     try
     {

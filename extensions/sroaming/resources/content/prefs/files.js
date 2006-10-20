@@ -77,7 +77,7 @@ function Load()
 // some files have a non-static name. set these filenames here.
 function SetFiles()
 {
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
   try
   {
