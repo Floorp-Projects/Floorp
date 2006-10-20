@@ -25,7 +25,7 @@
   #                      canbless) for viewed user.
   #%]
 
-[% title = BLOCK %]Edit user [% otheruser.login FILTER html %][% END %]
+[% title = BLOCK %]Edit user [% otheruser.identity FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
   title = title
