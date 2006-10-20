@@ -595,7 +595,7 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell,
   PRBool ignore;
 
   if (aCellMap) 
-    return aCellMap->GetRowSpan(*tableCellMap, rowIndex, colIndex, PR_TRUE, ignore);
+    return aCellMap->GetRowSpan(rowIndex, colIndex, PR_TRUE, ignore);
   else
     return tableCellMap->GetEffectiveRowSpan(rowIndex, colIndex);
 }
@@ -1016,6 +1016,21 @@ nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
     if (numColsNotRemoved > 0) {
       aCellMap->AddColsAtEnd(numColsNotRemoved);
     }
+  }
+  if (numColsToAdd && HasZeroColSpans()) {
+    SetNeedColSpanExpansion(PR_TRUE);
+  }
+  if (NeedColSpanExpansion()) {
+    // This flag can be set in two ways -- either by changing
+    // the number of columns (that happens in the block above),
+    // or by adding a cell with colspan="0" to the cellmap.  To
+    // handle the latter case we need to explicitly check the
+    // flag here -- it may be set even if the number of columns
+    // did not change.
+    //
+    // @see nsCellMap::AppendCell
+
+    aCellMap->ExpandZeroColSpans();
   }
 }
 void
@@ -4933,7 +4948,8 @@ BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
   SetNewRowGroup(PR_TRUE); // sets mAtEnd
   while (!mAtEnd) {
     if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
-      CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, mAreaStart.y - mRowGroupStart, mAreaStart.x, PR_FALSE);
+      CellData* cellData = mCellMap->GetDataAt(mAreaStart.y - mRowGroupStart,
+                                               mAreaStart.x);
       if (cellData && cellData->IsOrig()) {
         SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
       }
@@ -4958,7 +4974,7 @@ BCMapCellIterator::Next(BCMapCellInfo& aMapInfo)
   while ((mRowIndex <= mAreaEnd.y) && !mAtEnd) {
     for (; mColIndex <= mAreaEnd.x; mColIndex++) {
       PRInt32 rgRowIndex = mRowIndex - mRowGroupStart;
-      CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, mColIndex, PR_TRUE);
+      CellData* cellData = mCellMap->GetDataAt(rgRowIndex, mColIndex);
       if (!cellData) { // add a dead cell data
         nsRect damageArea;
         cellData = mCellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT0();
@@ -4987,7 +5003,7 @@ BCMapCellIterator::PeekRight(BCMapCellInfo&   aRefInfo,
   PRInt32 colIndex = aRefInfo.colIndex + aRefInfo.colSpan;
   PRUint32 rgRowIndex = aRowIndex - mRowGroupStart;
 
-  CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, colIndex, PR_TRUE);
+  CellData* cellData = mCellMap->GetDataAt(rgRowIndex, colIndex);
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(colIndex < mTableCellMap->GetColCount(), "program error");
     nsRect damageArea;
@@ -4996,7 +5012,9 @@ BCMapCellIterator::PeekRight(BCMapCellInfo&   aRefInfo,
   nsTableRowFrame* row = nsnull;
   if (cellData->IsRowSpan()) {
     rgRowIndex -= cellData->GetRowSpanOffset();
-    cellData = mCellMap->GetDataAt(*mTableCellMap, rgRowIndex, colIndex, PR_FALSE); if (!cellData) ABORT0();
+    cellData = mCellMap->GetDataAt(rgRowIndex, colIndex);
+    if (!cellData)
+      ABORT0();
   }
   else {
     row = mRow;
@@ -5038,7 +5056,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
     }
   }
 
-  CellData* cellData = cellMap->GetDataAt(*mTableCellMap, rgRowIndex, aColIndex, PR_TRUE);
+  CellData* cellData = cellMap->GetDataAt(rgRowIndex, aColIndex);
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(rgRowIndex < cellMap->GetRowCount(), "program error");
     nsRect damageArea;
@@ -5046,7 +5064,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
   }
   if (cellData->IsColSpan()) {
     aColIndex -= cellData->GetColSpanOffset();
-    cellData = cellMap->GetDataAt(*mTableCellMap, rgRowIndex, aColIndex, PR_FALSE);
+    cellData = cellMap->GetDataAt(rgRowIndex, aColIndex);
   }
   SetInfo(nextRow, aColIndex, cellData, aAjaInfo, cellMap);
 }
