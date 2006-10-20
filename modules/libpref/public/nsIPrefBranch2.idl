@@ -56,7 +56,14 @@ interface nsIPrefBranch2 : nsIPrefBranch
    * arguments will be passed to the nsIObserver.observe() method:
    *   aSubject - The nsIPrefBranch object (this)
    *   aTopic   - The string defined by NS_PREFBRANCH_PREFCHANGE_TOPIC_ID
-   *   aData    - The preference which has changed
+   *   aData    - The name of the preference which has changed, relative to
+   *              the |root| of the aSubject branch.
+   *
+   * aSubject.get*Pref(aData) will get the new value of the modified
+   * preference. For example, if your observer is registered with
+   * addObserver("bar.", ...) on a branch with root "foo.", modifying
+   * the preference "foo.bar.baz" will trigger the observer, and aData
+   * parameter will be "bar.baz".
    *
    * @param aDomain   The preference on which to listen for changes. This can
    *                  be the name of an entire branch to observe.
@@ -80,7 +87,7 @@ interface nsIPrefBranch2 : nsIPrefBranch
    * 1) The nsPrefBranch object supports nsISupportsWeakReference. Any consumer
    *    may hold a weak reference to it instead of a strong one.
    * 2) The nsPrefBranch object listens for xpcom-shutdown and frees all of the
-   *    objects currently in its observer list. This insures that long lived
+   *    objects currently in its observer list. This ensures that long lived
    *    objects (services for example) will be freed correctly.
    * 3) The observer can request to be held as a weak reference when it is
    *    registered. This insures that shorter lived objects (say one tied to an
