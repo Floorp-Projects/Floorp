@@ -228,7 +228,13 @@ calWcapCalendar.prototype = {
     //           https://bugzilla.mozilla.org/show_bug.cgi?id=257428
     m_bSuppressAlarms: false,
     get suppressAlarms() {
-        return (this.m_bSuppressAlarms || this.readOnly);
+        return (this.m_bSuppressAlarms ||
+                // writing lastAck does currently not work on readOnly cals,
+                // so avoid alarms if not writable at all... discuss!
+                this.readOnly ||
+                // xxx todo: check write permissions in advance
+                // alarms only for own calendars:
+                !this.isOwnedCalendar);
     },
     set suppressAlarms( bSuppressAlarms ) {
         this.m_bSuppressAlarms = bSuppressAlarms;
