@@ -756,10 +756,10 @@ function JavaScriptOptions()
     // browser
     netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
 
-    var preferences = Components.classes['@mozilla.org/preferences;1'];
+    var preferences = Components.classes['@mozilla.org/preferences-service;1'];
     if (!preferences)
     {
-      throw 'JavaScriptOptions: unable to get @mozilla.org/preference;1';
+      throw 'JavaScriptOptions: unable to get @mozilla.org/preferences-service;1';
     }
 
     var prefService = preferences.
@@ -813,10 +813,10 @@ function (optionName, optionValue)
     // browser
     netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
 
-    var preferences = Components.classes['@mozilla.org/preferences;1'];
+    var preferences = Components.classes['@mozilla.org/preferences-service;1'];
     if (!preferences)
     {
-      throw 'setOption: unable to get @mozilla.org/preference;1';
+      throw 'setOption: unable to get @mozilla.org/preferences-service;1';
     }
 
     var prefService = preferences.
