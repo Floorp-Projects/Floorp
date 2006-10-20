@@ -97,6 +97,16 @@
         ]]>
       </constructor>
 
+      <destructor>
+        <![CDATA[
+          const editors = this.mTabPanels.childNodes;
+          for (var i = 0; i < editors.length; i++)
+          {
+            editors[i].removeEventListener("DOMTitleChanged", this.changeTabTitle, false);
+          }
+        ]]>
+      </destructor>
+
       <property name="selectedTab">
         <getter>
         <![CDATA[
@@ -259,6 +269,7 @@
             newTab.setAttribute("width", 0);
             newTab.setAttribute("minwidth", 30);
             newTab.setAttribute("flex", 100);
+            newTab.setAttribute("crop", "end");
 
             this.mTabpanels.appendChild(newEditorElement);
 
@@ -270,6 +281,7 @@
             progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
             newEditorElement.addEventListener("pageshow", function(evt) { if (evt.originalTarget == content.document){} }, true);
+            newEditorElement.addEventListener("DOMTitleChanged", this.changeTabTitle, false);
 
             // select that new tab
             this.selectedTab = newTab;
@@ -281,6 +293,33 @@
 
             return {tab: newTab, panel: newEditorElement};
           ]]>
+        </body>
+      </method>
+
+      <method name="changeTabTitle">
+        <parameter name="aEvent" />
+        <body>
+        <![CDATA[
+          var e     = aEvent.currentTarget;
+          var title = aEvent.target.title;
+
+          if (!e.getEditor(e.contentWindow) && !title)
+            return;
+
+          var tabeditor = this.parentNode.parentNode.parentNode;
+          var tabs      = tabeditor.mTabs.childNodes;
+          var editors   = tabeditor.mTabpanels.childNodes;
+          var l = editors.length;
+          for (var i = 0; i < l; i++)
+          {
+            if (editors.item(i) == e)
+            {
+              var tab = tabs.item(i);
+              tab.label = title;
+              return;
+            }
+          }          
+        ]]>
         </body>
       </method>
 
@@ -348,6 +387,8 @@
            window.content.focus();
            window.updateCommands("navigation");
            window.updateCommands("style");
+
+           window.UpdateWindowTitle();
         ]]>
         </body>
       </method>

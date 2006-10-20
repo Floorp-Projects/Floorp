@@ -140,3 +140,31 @@ function onButtonUpdate(button, commmandID)
   var state = commandNode.getAttribute("state");
   button.checked = state == "true";
 }
+
+function UpdateWindowTitle()
+{
+  try {
+    var windowTitle = EditorUtils.getDocumentTitle();
+    if (!windowTitle)
+      windowTitle = L10NUtils.getString("untitled");
+
+    // Append just the 'leaf' filename to the Doc. Title for the window caption
+    var docUrl = UrlUtils.getDocumentUrl();
+    if (docUrl && !UrlUtils.isUrlAboutBlank(docUrl))
+    {
+      var scheme = UrlUtils.getScheme(docUrl);
+      var filename = UrlUtils.getFilename(docUrl);
+      if (filename)
+        windowTitle += " [" + scheme + ":/.../" + filename + "]";
+
+      // TODO: 1. Save changed title in the recent pages data in prefs
+    }
+
+    // Set window title with
+    var titleModifier = L10NUtils.getString("titleModifier");
+    document.title    = L10NUtils.getBundle()
+                                 .formatStringFromName("titleFormat",
+                                                       [windowTitle, titleModifier],
+                                                       2);
+  } catch (e) { dump(e); }
+}

@@ -63,6 +63,9 @@ var gEditorDocumentObserver =
         if (editorStatus)
           return; 
 
+        // Set window title
+        UpdateWindowTitle();
+
         window.content.focus();
         break;
 

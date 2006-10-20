@@ -63,6 +63,7 @@ composer-locale.jar:
 % locale	branding	en-US		%locale/en-US/branding/
 	locale/en-US/composer/aboutDialog.dtd			(locale/en-US/composer/aboutDialog.dtd)
 	locale/en-US/composer/composer.dtd				(locale/en-US/composer/composer.dtd)
+	locale/en-US/composer/composer.properties		(locale/en-US/composer/composer.properties)
 	locale/en-US/composer/credits.html				(locale/en-US/composer/credits.html)
 	locale/en-US/composer/openLocation.dtd			(locale/en-US/composer/openLocation.dtd)
 	locale/en-US/composer/openLocation.properties	(locale/en-US/composer/openLocation.properties)

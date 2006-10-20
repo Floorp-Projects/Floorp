@@ -77,7 +77,7 @@ var L10NUtils = {
     var stringBundle;
     if (this._getStringBundleService())
       try {
-        stringBundle = this.mStringBundleService.createBundle(this.kCOMPOSER_PROPERTIES);
+        stringBundle = this.mStringBundleService.createBundle(aProperties);
       } catch (e) { dump (e)+"\n"; }
     return stringBundle;
   },
@@ -86,7 +86,7 @@ var L10NUtils = {
 
   getString: function getString(aName)
   {
-    return this.getStringFromURL(aName, this.kCOMPOSER_PROPERTIES);
+    return this._getStringFromBundle(this.getBundle(), aName);
   },
 
   getStringFromURL: function getStringFromURL(aName, aProperties)
@@ -97,6 +97,15 @@ var L10NUtils = {
     } catch (e) { dump (e)+"\n"; }
 
     return this._getStringFromBundle(stringBundle, aName);
-  }
+  },
 
+  getBundle: function getBundle()
+  {
+    if (!this.mStringBundle)
+      try {
+        this.mStringBundle = this._getBundleFromURL(this.kCOMPOSER_PROPERTIES); 
+      } catch (e) { dump (e)+"\n"; }
+
+    return this.mStringBundle;
+  }
 };

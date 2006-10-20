@@ -59,16 +59,19 @@ var EditorUtils = {
   getCurrentEditor: function getCurrentEditor()
   {
     // Get the active editor from the <editor> tag
-    var editor;
+    var editor = null;
     try {
       var editorElement = this.getCurrentEditorElement();
-      editor = editorElement.getEditor(editorElement.contentWindow);
-  
-      // Do QIs now so editor users won't have to figure out which interface to use
-      // Using "instanceof" does the QI for us.
-      editor instanceof nsIPlaintextEditor;
-      editor instanceof nsIHTMLEditor;
-    } catch (e) { dump("Error in GetCurrentEditor: " + e); }
+      if (editorElement)
+      {
+        editor = editorElement.getEditor(editorElement.contentWindow);
+    
+        // Do QIs now so editor users won't have to figure out which interface to use
+        // Using "instanceof" does the QI for us.
+        editor instanceof nsIPlaintextEditor;
+        editor instanceof nsIHTMLEditor;
+      }
+    } catch (e) { dump("Error in GetCurrentEditor: " + e + "\n"); }
   
     return editor;
   },
@@ -167,6 +170,35 @@ var EditorUtils = {
     } catch (e) { dump (e)+"\n"; }
 
     return "";
+  },
+
+  isHTMLEditor: function isHTMLEditor()
+  {
+    // We don't have an editorElement, just return false
+    if (!this.getCurrentEditorElement())
+      return false;
+
+    var editortype = this.getCurrentEditorType();
+    switch (editortype)
+    {
+        case "html":
+        case "htmlmail":
+          return true;
+
+        case "text":
+        case "textmail":
+          return false
+
+        default:
+          dump("INVALID EDITOR TYPE: " + editortype + "\n");
+          break;
+    }
+    return false;
+  },
+
+  isEditingRenderedHTML: function isEditingRenderedHTML()
+  {
+    return this.isHTMLEditor(); // && !this.isInHTMLSourceMode();
   },
 
   setDocumentTitle: function setDocumentTitle(title)

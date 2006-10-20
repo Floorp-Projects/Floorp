@@ -11,7 +11,7 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Mozilla Composer.
+   - The Original Code is Composer.
    -
    - The Initial Developer of the Original Code is
    - Disruptive Innovations SARL.
@@ -35,7 +35,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY window.title           "Mozilla Composer">
+<!ENTITY window.title           "Composer">
 
 <!ENTITY fileMenu.label         "File">
 <!ENTITY fileMenu.accesskey     "f">
@@ -69,7 +69,7 @@
 <!ENTITY helpMenu.accesskey               "h">
 <!ENTITY aboutComposer.label              "About Composer">
 
-<!ENTITY throbber.tooltip                 "Mozilla Composer">
+<!ENTITY throbber.tooltip                 "Composer">
 
 <!ENTITY newMenu.label                    "New">
 <!ENTITY newToolbarCmd.tooltip            "Create a new page">
