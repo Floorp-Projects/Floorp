@@ -96,7 +96,16 @@ sub AddLink {
     }
 }
 
+# The list of valid directions. Some are not proposed in the dropdrown
+# menu despite they are valid ones.
+my @valid_rankdirs = ('LR', 'RL', 'TB', 'BT');
+
 my $rankdir = $cgi->param('rankdir') || "LR";
+# Make sure the submitted 'rankdir' value is valid.
+if (lsearch(\@valid_rankdirs, $rankdir) < 0) {
+    $rankdir = 'LR';
+}
+
 my $webdotdir = bz_locations()->{'webdotdir'};
 
 if (!defined $cgi->param('id') && !defined $cgi->param('doall')) {
