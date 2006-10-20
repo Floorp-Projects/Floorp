@@ -781,6 +781,12 @@ public:
   PRBool NeedToCollapse() const;
   void SetNeedToCollapse(PRBool aValue);
 
+  PRBool HasZeroColSpans() const;
+  void SetHasZeroColSpans(PRBool aValue);
+
+  PRBool NeedColSpanExpansion() const;
+  void SetNeedColSpanExpansion(PRBool aValue);
+
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
@@ -918,7 +924,9 @@ protected:
     PRUint32 mNeedToCalcBCBorders:1;
     PRUint32 mLeftContBCBorder:8;
     PRUint32 mNeedToCollapse:1;    // rows, cols that have visibility:collapse need to be collapsed
-    PRUint32 :10;                       // unused
+    PRUint32 mHasZeroColSpans:1;
+    PRUint32 mNeedColSpanExpansion:1;
+    PRUint32 :8;                       // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -1045,6 +1053,27 @@ inline PRBool nsTableFrame::NeedToCollapse() const
 {
   return (PRBool)mBits.mNeedToCollapse;
 }
+
+inline void nsTableFrame::SetHasZeroColSpans(PRBool aValue)
+{
+  mBits.mHasZeroColSpans = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::HasZeroColSpans() const
+{
+  return (PRBool)mBits.mHasZeroColSpans;
+}
+
+inline void nsTableFrame::SetNeedColSpanExpansion(PRBool aValue)
+{
+  mBits.mNeedColSpanExpansion = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::NeedColSpanExpansion() const
+{
+  return (PRBool)mBits.mNeedColSpanExpansion;
+}
+
 
 inline nsFrameList& nsTableFrame::GetColGroups()
 {
