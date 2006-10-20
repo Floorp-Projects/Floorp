@@ -63,8 +63,8 @@ elsif ($action eq 'new') {
     # Validate these fields.
     $name || ThrowUserError('customfield_missing_name');
     # Don't want to allow a name that might mess up SQL.
-    $name =~ /^\w+$/ || ThrowUserError('customfield_invalid_name',
-                                       { name => $name });
+    $name =~ /^\w+$/ && $name ne "cf_"
+      || ThrowUserError('customfield_invalid_name', { name => $name });
     # Prepend cf_ to the custom field name to distinguish it from standard fields.
     if ($name !~ /^cf_/) {
         $name = 'cf_' . $name;

@@ -319,7 +319,8 @@
   [% ELSIF error == "customfield_invalid_name" %]
     [% title = "Invalid Custom Field Name" %]
     '[% name FILTER html %]' is not a valid name for a custom field.
-    A name may contain only letters, numbers, and the underscore character.
+    A name may contain only letters, numbers, and the underscore character. The
+    name should also be different from 'cf_'.
 
   [% ELSIF error == "customfield_nonexistent" %]
     [% title = "Unknown Custom Field" %]
