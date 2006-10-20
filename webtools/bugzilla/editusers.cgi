@@ -257,14 +257,13 @@ if ($action eq 'search') {
         my @values;
 
         if ($login ne $otherUser->login) {
-            # Validate, then trick_taint.
+            # Validating untaints for us.
             $login || ThrowUserError('user_login_required');
             validate_email_syntax($login)
               || ThrowUserError('illegal_email_address', {addr => $login});
             is_available_username($login)
               || ThrowUserError('account_exists', {email => $login});
 
-            trick_taint($login);
             push(@changedFields, 'login_name');
             push(@values, $login);
             $logoutNeeded = 1;
@@ -280,9 +279,8 @@ if ($action eq 'search') {
             push(@values, $realname);
         }
         if ($password) {
-            # Validate, then trick_taint.
+            # Validating untaints for us.
             validate_password($password) if $password;
-            trick_taint($password);
             push(@changedFields, 'cryptpassword');
             push(@values, bz_crypt($password));
             $logoutNeeded = 1;
@@ -296,7 +294,6 @@ if ($action eq 'search') {
             $logoutNeeded = 1;
         }
         if ($disable_mail != $otherUser->email_disabled) {
-            trick_taint($disable_mail);
             push(@changedFields, 'disable_mail');
             push(@values, $disable_mail);
         }

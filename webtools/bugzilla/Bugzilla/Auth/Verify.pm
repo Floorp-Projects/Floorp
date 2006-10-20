@@ -77,6 +77,11 @@ sub create_or_update_user {
               || return { failure => AUTH_ERROR, 
                           error   => 'auth_invalid_email',
                           details => {addr => $username} };
+            # Usually we'd call validate_password, but external authentication
+            # systems might follow different standards than ours. So in this
+            # place here, we call trick_taint without checks.
+            trick_taint($password);
+
             # XXX Theoretically this could fail with an error, but the fix for
             # that is too involved to be done right now.
             my $user = Bugzilla::User->create({ 
@@ -111,9 +116,6 @@ sub create_or_update_user {
         validate_email_syntax($username)
           || return { failure => AUTH_ERROR, error => 'auth_invalid_email',
                       details => {addr => $username} };
-        # Username is more than likely tainted, but we only use it in a
-        # placeholder, and we've already validated it, so it's safe.
-        trick_taint($username);
         $dbh->do('UPDATE profiles SET login_name = ? WHERE userid = ?',
                  undef, $username, $user->id);
     }

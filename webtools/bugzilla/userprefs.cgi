@@ -100,7 +100,6 @@ sub SaveAccount {
 
             if ($cgi->param('Bugzilla_password') ne $pwd1) {
                 my $cryptedpassword = bz_crypt($pwd1);
-                trick_taint($cryptedpassword); # Only used in a placeholder
                 $dbh->do(q{UPDATE profiles
                               SET cryptpassword = ?
                             WHERE userid = ?},
@@ -129,7 +128,6 @@ sub SaveAccount {
             # Before changing an email address, confirm one does not exist.
             validate_email_syntax($new_login_name)
               || ThrowUserError('illegal_email_address', {addr => $new_login_name});
-            trick_taint($new_login_name);
             is_available_username($new_login_name)
               || ThrowUserError("account_exists", {email => $new_login_name});
 

@@ -59,7 +59,6 @@ sub issue_new_user_account_token {
     # an error because the user may have lost his email with the token inside.
     # But to prevent using this way to mailbomb an email address, make sure
     # the last request is at least 10 minutes old before sending a new email.
-    trick_taint($login_name);
 
     my $pending_requests =
         $dbh->selectrow_array('SELECT COUNT(*)

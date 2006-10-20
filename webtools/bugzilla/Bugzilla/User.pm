@@ -1490,7 +1490,8 @@ sub is_available_username {
 sub login_to_id {
     my ($login, $throw_error) = @_;
     my $dbh = Bugzilla->dbh;
-    # $login will only be used by the following SELECT statement, so it's safe.
+    # No need to validate $login -- it will be used by the following SELECT
+    # statement only, so it's safe to simply trick_taint.
     trick_taint($login);
     my $user_id = $dbh->selectrow_array("SELECT userid FROM profiles WHERE " .
                                         $dbh->sql_istrcmp('login_name', '?'),
@@ -1525,6 +1526,8 @@ sub validate_password {
     } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
         ThrowUserError('passwords_dont_match');
     }
+    # Having done these checks makes us consider the password untainted.
+    trick_taint($_[0]);
     return 1;
 }
 
@@ -1966,6 +1969,7 @@ we return an empty string.
 
 Returns true if a password is valid (i.e. meets Bugzilla's
 requirements for length and content), else returns false.
+Untaints C<$passwd1> if successful.
 
 If a second password is passed in, this function also verifies that
 the two passwords match.

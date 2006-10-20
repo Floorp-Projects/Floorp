@@ -456,6 +456,10 @@ sub validate_email_syntax {
     my ($addr) = @_;
     my $match = Bugzilla->params->{'emailregexp'};
     my $ret = ($addr =~ /$match/ && $addr !~ /[\\\(\)<>&,;:"\[\] \t\r\n]/);
+    if ($ret) {
+        # We assume these checks to suffice to consider the address untainted.
+        trick_taint($_[0]);
+    }
     return $ret ? 1 : 0;
 }
 
@@ -893,6 +897,7 @@ and tokens.
 
 Do a syntax checking for a legal email address and returns 1 if
 the check is successful, else returns 0.
+Untaints C<$email> if successful.
 
 =item C<validate_date($date)>
 
