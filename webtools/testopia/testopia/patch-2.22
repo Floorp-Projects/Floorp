@@ -342,7 +342,7 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 +            table_name  => {TYPE => 'varchar(100)', NOTNULL => 1},
 +        ],
 +        INDEXES => [
-+            fielddefs_name_idx => ['name'],
++            test_fielddefs_name_idx => ['name'],
 +        ],
 +    },
 +    

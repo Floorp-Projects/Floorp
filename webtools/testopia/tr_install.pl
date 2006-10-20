@@ -382,6 +382,11 @@ sub UpdateDB {
         $dbh->bz_drop_index('test_environments', 'environment_name_idx');
         $dbh->bz_add_index('test_environments', 'environment_name_idx', ['name']);
     }
+    if ($dbh->isa('Bugzilla::DB::Mysql') and
+            $dbh->bz_index_info('test_fielddefs', 'fielddefs_name_idx')) {
+        $dbh->bz_drop_index('test_fielddefs', 'fielddefs_name_idx');
+        $dbh->bz_add_index('test_fielddefs', 'test_fielddefs_name_idx', ['name']);
+    }
 
     populateMiscTables($dbh);
     populateEnvTables($dbh);
