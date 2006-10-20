@@ -99,17 +99,6 @@ nsSVGPathGeometryFrame::nsSVGPathGeometryFrame(nsStyleContext* aContext)
 #endif
 }
 
-nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
-{
-#ifdef DEBUG
-//  printf("~nsSVGPathGeometryFrame %p\n", this);
-#endif
-  
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS) {
-    DeleteProperty(nsGkAtoms::marker);
-  }
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -119,6 +108,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
+
+void
+nsSVGPathGeometryFrame::Destroy()
+{
+  RemovePathProperties();
+  nsSVGPathGeometryFrameBase::Destroy();
+}
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
@@ -139,12 +135,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
 {
   nsSVGPathGeometryFrameBase::DidSetStyleContext();
 
-  nsSVGUtils::StyleEffects(this);
-
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS) {
-    DeleteProperty(nsGkAtoms::marker);
-    RemoveStateBits(NS_STATE_SVG_HAS_MARKERS);
-  }
+  RemovePathProperties();
 
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
@@ -250,6 +241,17 @@ nsSVGPathGeometryFrame::UpdateMarkerProperty()
     GetMarkerFromStyle(&property->mMarkerStart, property, style->mMarkerStart);
     GetMarkerFromStyle(&property->mMarkerMid, property, style->mMarkerMid);
     GetMarkerFromStyle(&property->mMarkerEnd, property, style->mMarkerEnd);
+  }
+}
+
+void
+nsSVGPathGeometryFrame::RemovePathProperties()
+{
+  nsSVGUtils::StyleEffects(this);
+
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS) {
+    DeleteProperty(nsGkAtoms::marker);
+    RemoveStateBits(NS_STATE_SVG_HAS_MARKERS);
   }
 }
 

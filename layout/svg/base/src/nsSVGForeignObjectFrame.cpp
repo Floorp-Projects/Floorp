@@ -97,6 +97,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 
+void nsSVGForeignObjectFrame::Destroy()
+{
+  nsSVGUtils::StyleEffects(this);
+  nsSVGForeignObjectFrameBase::Destroy();
+}
+
 nsIAtom *
 nsSVGForeignObjectFrame::GetType() const
 {
