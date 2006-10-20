@@ -53,9 +53,9 @@ my $id = $cgi->param('id') || ThrowUserError('invalid_bug_id_or_alias');
 ValidateBugID($id);
 my $current_bug = new Bugzilla::Bug($id);
 
-my $hide_resolved = $cgi->param('hide_resolved') ? 1 : 0;
+local our $hide_resolved = $cgi->param('hide_resolved') ? 1 : 0;
 
-my $maxdepth = $cgi->param('maxdepth') || 0;
+local our $maxdepth = $cgi->param('maxdepth') || 0;
 if ($maxdepth !~ /^\d+$/) { $maxdepth = 0 };
 
 ################################################################################
@@ -63,7 +63,7 @@ if ($maxdepth !~ /^\d+$/) { $maxdepth = 0 };
 ################################################################################
 
 # Stores the greatest depth to which either tree goes.
-my $realdepth = 0;
+local our $realdepth = 0;
 
 # Generate the tree of bugs that this bug depends on and a list of IDs
 # appearing in the tree.

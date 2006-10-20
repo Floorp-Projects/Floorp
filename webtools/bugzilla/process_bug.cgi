@@ -71,7 +71,7 @@ $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 my @editable_bug_fields = editable_bug_fields();
 
 my $requiremilestone = 0;
-my $PrivilegesRequired = 0;
+local our $PrivilegesRequired = 0;
 
 ######################################################################
 # Subroutines
@@ -729,7 +729,7 @@ sub ChangeStatus {
 }
 
 sub ChangeResolution {
-    my ($str) = (@_);
+    my ($bug, $str) = (@_);
     my $dbh = Bugzilla->dbh;
     my $cgi = Bugzilla->cgi;
 
@@ -1053,7 +1053,7 @@ SWITCH: for ($cgi->param('knob')) {
         last SWITCH;
     };
     /^clearresolution$/ && CheckonComment( "clearresolution" ) && do {
-        ChangeResolution('');
+        ChangeResolution($bug, '');
         last SWITCH;
     };
     /^(resolve|change_resolution)$/ && CheckonComment( "resolve" ) && do {
@@ -1081,7 +1081,7 @@ SWITCH: for ($cgi->param('knob')) {
             ChangeStatus('RESOLVED');
         }
 
-        ChangeResolution($cgi->param('resolution'));
+        ChangeResolution($bug, $cgi->param('resolution'));
         last SWITCH;
     };
     /^reassign$/ && CheckonComment( "reassign" ) && do {
@@ -1125,7 +1125,7 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^reopen$/  && CheckonComment( "reopen" ) && do {
         ChangeStatus('REOPENED');
-        ChangeResolution('');
+        ChangeResolution($bug, '');
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -1184,7 +1184,7 @@ SWITCH: for ($cgi->param('knob')) {
         _remove_remaining_time();
 
         ChangeStatus('RESOLVED');
-        ChangeResolution('DUPLICATE');
+        ChangeResolution($bug, 'DUPLICATE');
         my $comment = $cgi->param('comment');
         $comment .= "\n\n" 
                     . get_text('bug_duplicate_of', { dupe_of => $duplicate });
