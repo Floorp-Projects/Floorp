@@ -20,10 +20,11 @@
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
-From: bugzilla-daemon
+From: [% Param('mailfrom') %]
 To: [% to %]
 Subject: [[% terms.Bug %] [%+ bugid %]] [% neworchanged %][%+ summary %]
 X-Bugzilla-Reason: [% reasonsheader %]
+X-Bugzilla-Type: newchanged
 X-Bugzilla-Watch-Reason: [% reasonswatchheader %]
 X-Bugzilla-Product: [% product %]
 X-Bugzilla-Component: [% comp %]

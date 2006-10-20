@@ -36,9 +36,10 @@
   [% END %]
   [% subject_status = statuses.${flag.status} %]
 [% END %]
-From: bugzilla-request-daemon
+From: [% Param('mailfrom') %]
 To: [% to %]
 Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ bug.bug_id %]] [% bug.short_desc %]
+X-Bugzilla-Type: request
 [%- IF attachment %] :
   [Attachment [% attachment.id %]] [% attachment.description %][% END %]
 

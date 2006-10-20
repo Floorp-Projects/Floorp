@@ -23,9 +23,10 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% expiration_ts = token_ts + (constants.MAX_TOKEN_AGE * 86400) %]
-From: bugzilla-admin-daemon
+From: [% Param('mailfrom') %]
 To: [% email %]
 Subject: [% terms.Bugzilla %]: confirm account creation
+X-Bugzilla-Type: admin
 
 [%+ terms.Bugzilla %] has received a request to create a user account
 using your email address ([% email %]).

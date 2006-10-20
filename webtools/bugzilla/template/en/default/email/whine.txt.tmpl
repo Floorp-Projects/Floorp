@@ -20,9 +20,10 @@
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
-From: [% Param("maintainer") %]
+From: [% Param("mailfrom") %]
 To: [% email %][% Param("emailsuffix") %]
 Subject: Your [% terms.Bugzilla %] buglist needs attention.
+X-Bugzilla-Type: whine
 
 [This e-mail has been automatically generated.]
 

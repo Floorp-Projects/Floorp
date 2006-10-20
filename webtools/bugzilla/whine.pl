@@ -93,13 +93,13 @@ my $sth_schedules_by_event = $dbh->prepare(
 # After that, it looks over each user to see if they have schedules that need
 # running, then runs those and generates the email messages.
 
-# Send whines from the address in the 'maintainer' Parameter so that all
+# Send whines from the address in the 'mailfrom' Parameter so that all
 # Bugzilla-originated mail appears to come from a single address.
-my $fromaddress = Bugzilla->params->{'maintainer'};
+my $fromaddress = Bugzilla->params->{'mailfrom'};
 
 if ($fromaddress !~ Bugzilla->params->{'emailregexp'}) {
     die "Cannot run.  " .
-        "The maintainer email address has not been properly set!\n";
+        "The Bugzilla email address has not been properly set!\n";
 }
 
 # get the current date and time

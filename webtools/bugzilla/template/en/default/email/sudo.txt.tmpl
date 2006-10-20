@@ -22,10 +22,11 @@
 [% PROCESS global/variables.none.tmpl %]
 
 Content-Type: text/plain
-From: [% Param("maintainer") %]
+From: [% Param('mailfrom') %]
 To: [% user.email %]
 Subject: [[% terms.Bugzilla %]] Your account [% user.login -%]
  is being impersonated
+X-Bugzilla-Type: admin
 
     [%+ sudoer.identity %] has used the 'sudo' feature to access 
 [%+ terms.Bugzilla %] using your account.

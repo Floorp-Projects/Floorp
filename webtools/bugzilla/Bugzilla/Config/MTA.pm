@@ -51,6 +51,12 @@ sub get_param_list {
   },
 
   {
+   name => 'mailfrom',
+   type => 't',
+   default => 'bugzilla-daemon'
+  },
+
+  {
    name => 'sendmailnow',
    type => 'b',
    default => 1
