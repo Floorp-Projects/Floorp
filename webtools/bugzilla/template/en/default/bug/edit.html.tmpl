@@ -405,7 +405,7 @@
             [% FOREACH field = fields %]
               <tr>
                 [% PROCESS bug/field.html.tmpl value=bug.${field.name}
-                                               editable = 1
+                                               editable = bug.check_can_change_field(field.name, 0, 1) || !user.id
                                                value_span = 2 %]
               </tr>
             [% END %]
