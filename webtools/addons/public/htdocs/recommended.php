@@ -7,7 +7,7 @@
  * @todo make this dynamic based on an SQL field (recommended)
  */
 
-startProcessing('recommended.tpl', 'recommended', $compileId, 'nonav');
+startProcessing('recommended.tpl', 'recommended', $compileId, 'rustico');
 require_once('includes.php');
 
 // If app is not set or empty, set it to null for our switch.
@@ -35,9 +35,8 @@ $amo = new AMO_Object();
 
 // Assign template variables.
 $tpl->assign(
-    array(  'recommendedExtensions'  => $amo->getRecommendedAddons($sql['app'],'E',100),
-            'title'             => 'Recommended '.$clean['app'].' Add-ons',
-            'content'           => 'recommended.tpl',
-            'cats'              => $amo->getCats('E'))
+    array(  'recommended'       => $amo->getRecommendedAddons($sql['app'],'E',100),
+            'title'             => 'Recommended Firefox Add-ons',
+            'content'           => 'recommended.tpl')
 );
 ?>

@@ -3,17 +3,27 @@
 
 <p>With over a thousand extensions available, there's something for everyone. To get you started, here's a list of some of our recommended extensions that make use of popular online services.</p>
 
-{section name=re loop=$recommendedExtensions step=1 start=0}
-<div class="recommended">
-
-<a href="{$config.webpath}/{$app}/{$recommendedExtensions[re].id}/previews/"><img class="recommended-img" alt="" src="{$config.webpath}{$recommendedExtensions[re].previewuri}"/></a>
-<h2><a href="{$config.webpath}/{$app}/{$recommendedExtensions[re].id}/">{$recommendedExtensions[re].name}</a></h2>
-<div class="recommended-download">
-<h3><a href="{$recommendedExtensions[re].uri}" onclick="return install(event,'{$recommendedExtensions[re].name} {$recommendedExtensions[re].version}', '{$config.webpath}/images/default.png', '{$recommendedExtensions[re].hash}');" title="Install {$recommendedExtensions[re].name} {$recommendedExtensions[re].version} (Right-Click to Download)">Install Extension ({$recommendedExtensions[re].size} KB)</a></h3>
-</div>
-<p>{$recommendedExtensions[re].body|nl2br}</p>
-</div>
+{section name=re loop=$recommended step=1 start=0}
+	<div class="addon-feature clearfix">
+		<img src="{$config.webpath}{$recommended[re].previewuri}" alt="" class="addon-feature-image" />
+		<div class="addon-feature-text corner-box">
+			<h4>{$recommended[re].name} <span>by {$recommended[re].username}</span></h4>
+			<p>{$recommended[re].body}</p>
+			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span>Install now ({$recommended[re].size} KB)</span></a></p>
+		</div>
+	</div>
 {/section}
-</div>
 
-<br class="clear-both"/>
+<div class="search-container corner-box">
+	<img src="images/featured/firefox-featured-mglass.png" width="37" height="31" alt="" />
+	<h3>Find more Add-ons:</h3>
+	<form id="extensions-search" method="get" action="" title="Search Mozilla Add-ons">
+	    <input id="q2" type="text" name="q" accesskey="s" class="keywords" />
+	    <select name="type">
+        	<option value="A">all Add-ons</option>
+        	<option value="E">just Extensions</option>
+			<option value="T">just Themes</option>
+			</select>
+	    <input type="submit" value="Search" />
+	</form>
+</div>
