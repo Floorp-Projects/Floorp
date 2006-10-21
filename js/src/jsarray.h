@@ -47,6 +47,9 @@
 
 JS_BEGIN_EXTERN_C
 
+/* Generous sanity-bound on length (in elements) of array initialiser. */
+#define ARRAY_INIT_LIMIT        JS_BIT(24)
+
 extern JSBool
 js_IdIsIndex(jsval id, jsuint *indexp);
 
