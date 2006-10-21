@@ -173,6 +173,17 @@ static void printRange(nsIDOMRange *aDomRange);
 
 //#define DEBUG_TABLE_SELECTION 1
 
+static PRInt32
+CompareDOMPoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                 nsIDOMNode* aParent2, PRInt32 aOffset2)
+{
+  nsCOMPtr<nsINode> parent1 = do_QueryInterface(aParent1);
+  nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
+
+  NS_ASSERTION(parent1 && parent2, "not real nodes?");
+
+  return nsContentUtils::ComparePoints(parent1, aOffset1, parent2, aOffset2);
+}
 
 struct CachedOffsetForFrame {
   CachedOffsetForFrame()
@@ -1628,8 +1639,8 @@ nsFrameSelection::SelectLines(nsDirection        aSelectionDirection,
   nsresult result;
 
   // normalize the order before we start to avoid piles of conditions later
-  relativePosition = nsRange::ComparePoints(aAnchorNode, aAnchorOffset,
-                                            aCurrentNode, aCurrentOffset);
+  relativePosition = CompareDOMPoints(aAnchorNode, aAnchorOffset,
+                                      aCurrentNode, aCurrentOffset);
   if (0 == relativePosition)
     return NS_ERROR_FAILURE;
   else if (relativePosition < 0)
@@ -1679,7 +1690,7 @@ nsFrameSelection::SelectLines(nsDirection        aSelectionDirection,
   startNode = do_QueryInterface(startContent);
 
   // If we have already overshot the endpoint, back out
-  if (nsRange::ComparePoints(startNode, startOffset, endNode, endOffset) >= 0)
+  if (CompareDOMPoints(startNode, startOffset, endNode, endOffset) >= 0)
     return NS_ERROR_FAILURE;
 
   aPos.mStartOffset = endOffset;
@@ -1706,7 +1717,7 @@ nsFrameSelection::SelectLines(nsDirection        aSelectionDirection,
   endContent = aPos.mResultContent;
   endNode = do_QueryInterface(endContent);
 
-  if (nsRange::ComparePoints(startNode, startOffset, endNode, endOffset) < 0)
+  if (CompareDOMPoints(startNode, startOffset, endNode, endOffset) < 0)
   {
     TakeFocus(startContent, startOffset, startOffset, PR_FALSE, PR_TRUE);
     return TakeFocus(endContent, endOffset, endOffset, PR_TRUE, PR_TRUE);
@@ -2189,8 +2200,8 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
       }
     }
 
-    PRInt32 relativePosition = nsRange::ComparePoints(rangenode, rangeOffset,
-                                                      domNode, aOffset);
+    PRInt32 relativePosition = CompareDOMPoints(rangenode, rangeOffset,
+                                                domNode, aOffset);
     // if == 0 or -1 do nothing if < 0 then we need to swap direction
     if (relativePosition > 0
         && (mDomSelections[index]->GetDirection() == eDirNext))
@@ -2272,8 +2283,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     mMaintainRange->GetStartContainer(getter_AddRefs(rangenode));
     mMaintainRange->GetStartOffset(&rangeOffset);
     nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(offsets.content);
-    PRInt32 relativePosition = nsRange::ComparePoints(rangenode, rangeOffset,
-                                                      domNode, offsets.offset);
+    PRInt32 relativePosition = CompareDOMPoints(rangenode, rangeOffset,
+                                                domNode, offsets.offset);
 
     nsDirection direction = relativePosition > 0 ? eDirPrevious : eDirNext;
     nsSelectionAmount amount = mMaintainedAmount;
@@ -4220,8 +4231,8 @@ CompareToRangeStart(nsIDOMNode* aCompareNode, PRInt32 aCompareOffset,
   rv = aRange->GetStartOffset(&startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *cmp = nsRange::ComparePoints(aCompareNode, aCompareOffset,
-                                startNode, startOffset);
+  *cmp = CompareDOMPoints(aCompareNode, aCompareOffset,
+                          startNode, startOffset);
   return NS_OK;
 }
 
@@ -4237,8 +4248,8 @@ CompareToRangeEnd(nsIDOMNode* aCompareNode, PRInt32 aCompareOffset,
   rv = aRange->GetEndOffset(&endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *cmp = nsRange::ComparePoints(aCompareNode, aCompareOffset,
-                                endNode, endOffset);
+  *cmp = CompareDOMPoints(aCompareNode, aCompareOffset,
+                          endNode, endOffset);
   return NS_OK;
 }
 
@@ -6404,18 +6415,18 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   if (NS_FAILED(res))
     return res;
-  PRInt32 result1 = nsRange::ComparePoints(FetchAnchorNode(),
-                                           FetchAnchorOffset(),
-                                           FetchFocusNode(),
-                                           FetchFocusOffset());
+  PRInt32 result1 = CompareDOMPoints(FetchAnchorNode(),
+                                     FetchAnchorOffset(),
+                                     FetchFocusNode(),
+                                     FetchFocusOffset());
   //compare old cursor to new cursor
-  PRInt32 result2 = nsRange::ComparePoints(FetchFocusNode(),
-                                           FetchFocusOffset(),
-                                           aParentNode, aOffset);
+  PRInt32 result2 = CompareDOMPoints(FetchFocusNode(),
+                                     FetchFocusOffset(),
+                                     aParentNode, aOffset);
   //compare anchor to new cursor
-  PRInt32 result3 = nsRange::ComparePoints(FetchAnchorNode(),
-                                           FetchAnchorOffset(),
-                                           aParentNode, aOffset);
+  PRInt32 result3 = CompareDOMPoints(FetchAnchorNode(),
+                                     FetchAnchorOffset(),
+                                     aParentNode, aOffset);
 
   if (result2 == 0) //not selecting anywhere
     return NS_OK;

@@ -60,6 +60,7 @@ nsIMutationObserver.h \
 nsINameSpaceManager.h \
 nsINode.h \
 nsINodeInfo.h \
+nsIRange.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \
 nsIStyleSheetLinkingElement.h \

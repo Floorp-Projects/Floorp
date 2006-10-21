@@ -53,9 +53,9 @@ class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 class nsIEventListenerManager;
 class nsIPrincipal;
-class nsIDOMRange;
 class nsVoidArray;
 class nsIMutationObserver;
+class nsIRange;
 
 // This bit will be set if the node doesn't have nsSlots
 #define NODE_DOESNT_HAVE_SLOTS       0x00000001U
@@ -446,13 +446,13 @@ public:
    * Inform node that it owns one or both range endpoints
    * @param aRange the range the node owns
    */
-  virtual nsresult RangeAdd(nsIDOMRange* aRange);
+  virtual nsresult RangeAdd(nsIRange* aRange);
 
   /**
    * Inform node that it no longer owns either range endpoint
    * @param aRange the range the node no longer owns
    */
-  virtual void RangeRemove(nsIDOMRange* aRange);
+  virtual void RangeRemove(nsIRange* aRange);
 
   /**
    * Get the list of ranges that have either endpoint in this node

@@ -42,6 +42,7 @@
 #ifndef nsRange_h___
 #define nsRange_h___
 
+#include "nsIRange.h"
 #include "nsIDOMRange.h"
 #include "nsIRangeUtils.h"
 #include "nsIDOMNSRange.h"
@@ -60,9 +61,6 @@ class nsRangeUtils : public nsIRangeUtils
 public:
   NS_DECL_ISUPPORTS
 
-  nsRangeUtils();
-  virtual ~nsRangeUtils();
-
   // nsIRangeUtils interface
   NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                      nsIDOMNode* aParent2, PRInt32 aOffset2);
@@ -77,14 +75,17 @@ public:
 
 // -------------------------------------------------------------------------------
 
-class nsRange : public nsIDOMRange,
+class nsRange : public nsIRange,
+                public nsIDOMRange,
                 public nsIDOMNSRange
 {
 public:
-  NS_DECL_ISUPPORTS
-
-  nsRange();
+  nsRange()
+  {
+  }
   virtual ~nsRange();
+
+  NS_DECL_ISUPPORTS
 
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
@@ -101,12 +102,6 @@ public:
   NS_IMETHOD    NSDetach();
 /*END nsIDOMNSRange interface implementations*/
   
-  NS_IMETHOD    GetHasGeneratedBefore(PRBool *aBool);
-  NS_IMETHOD    GetHasGeneratedAfter(PRBool *aBool);
-  NS_IMETHOD    SetHasGeneratedBefore(PRBool aBool);
-  NS_IMETHOD    SetHasGeneratedAfter(PRBool aBool);
-  NS_IMETHOD    SetBeforeAndAfter(PRBool aBefore, PRBool aAfter);
-
   // nsRange interface extensions
   
   static NS_METHOD    OwnerGone(nsIContent* aParentNode);
@@ -115,52 +110,18 @@ public:
   
   static NS_METHOD    OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aRemovedNode);
   
-  static NS_METHOD    OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aReplacedNode);
-  
   static nsresult TextOwnerChanged(nsIContent *aTextNode,
                                    const nsVoidArray *aRangeList,
                                    PRInt32 aStartOffset,
                                    PRInt32 aEndOffset,
                                    PRInt32 aReplaceLength);
 
-protected:
-
-  PRPackedBool mBeforeGenContent;
-  PRPackedBool mAfterGenContent;
-
-  PRPackedBool mIsPositioned;
-  PRPackedBool mIsDetached;
-
-  PRInt32      mStartOffset;
-  PRInt32      mEndOffset;
-
-  nsCOMPtr<nsIDOMNode> mStartParent;
-  nsCOMPtr<nsIDOMNode> mEndParent;
-
+private:
   // no copy's or assigns
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
  
 public:
-  // helper routines
-  
-  static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
-
-  static nsresult CloneParentsBetween(nsIDOMNode* aAncestor, 
-                                      nsIDOMNode* aNode,
-                                      nsIDOMNode** closestAncestor,
-                                      nsIDOMNode** farthestAncestor);
-
-  /**
-   *  Utility routine to compare two "points", where a point is a
-   *  node/offset pair
-   *  Returns -1 if point1 < point2, 1, if point1 > point2,
-   *  0 if error or if point1 == point2.
-   */
-  static PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                               nsIDOMNode* aParent2, PRInt32 aOffset2);
-
   /**
    *  Utility routine to detect if a content node intersects a range
    */
@@ -178,34 +139,8 @@ public:
                                      PRBool *outNodeAfter);
 
 protected:
-
-  // CollapseRangeAfterDelete() should only be called from DeleteContents()
-  // or ExtractContents() since it makes certain assumptions about the state
-  // of the range used. It's purpose is to collapse the range according to
-  // the range spec after the removal of nodes within the range.
-  static nsresult CollapseRangeAfterDelete(nsIDOMRange *aRange);
-
-  static PRInt32  GetNodeLength(nsIDOMNode *aNode);
-  
-  nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
-                             nsIDOMNode* aEndN, PRInt32 aEndOffset);
-
-  static PRBool IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
-                             nsIDOMNode* aEndN, PRInt32 aEndOff);
-  PRBool        IsDetached(){return mIsDetached;}
-                       
-  nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
-  
-  
-  nsresult      AddToListOf(nsIDOMNode* aNode);
-  
-  void          RemoveFromListOf(nsIDOMNode* aNode);
- 
-  nsresult      ContentOwnsUs(nsIDOMNode* domNode);
-
-  nsresult      GetIsPositioned(PRBool* aIsPositioned);
-
-  nsresult      IsValidBoundary(nsIDOMNode* aNode);
+  void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
+                  nsINode* aEndN, PRInt32 aEndOffset);
 };
 
 // Make a new nsIDOMRange object
@@ -213,16 +148,5 @@ nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
 
 // Make a new nsIRangeUtils object
 nsresult NS_NewRangeUtils(nsIRangeUtils** aInstancePtrResult);
-
-
-/*************************************************************************************
- * Utility routine to create a pair of dom points to represent 
- * the start and end locations of a single node.  Return false
- * if we dont' succeed.
- ************************************************************************************/
-PRBool GetNodeBracketPoints(nsIContent* aNode, 
-                            nsCOMPtr<nsIDOMNode>* outParent,
-                            PRInt32* outStartOffset,
-                            PRInt32* outEndOffset);
 
 #endif /* nsRange_h___ */

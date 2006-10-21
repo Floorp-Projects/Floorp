@@ -88,6 +88,7 @@ class nsIScriptGlobalObject;
 template<class E> class nsCOMArray;
 class nsIPref;
 class nsVoidArray;
+class nsIRange;
 struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
@@ -142,14 +143,6 @@ public:
   static PRBool   IsCallerTrustedForRead();
 
   static PRBool   IsCallerTrustedForWrite();
-
-  /*
-   * Returns true if the nodes are both in the same document or
-   * if neither is in a document.
-   * Returns false if the nodes are not in the same document.
-   */
-  static PRBool   InSameDoc(nsIDOMNode *aNode,
-                            nsIDOMNode *aOther);
 
   /**
    * Do not ever pass null pointers to this method.  If one of your
@@ -240,6 +233,17 @@ public:
        nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED)) ==
       nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
   }
+
+  /**
+   *  Utility routine to compare two "points", where a point is a
+   *  node/offset pair
+   *  Returns -1 if point1 < point2, 1, if point1 > point2,
+   *  0 if error or if point1 == point2.
+   *  NOTE! The two nodes MUST be in the same connected subtree!
+   *  if they are not the result is undefined.
+   */
+  static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
+                               nsINode* aParent2, PRInt32 aOffset2);
 
   /**
    * Find the first child of aParent with a resolved tag matching
@@ -787,7 +791,7 @@ public:
    * @param aRange The range containing aNode in its start- or endpoint.
    * @param aCreated [out] Set to PR_TRUE if a new list was created.
    */
-  static nsresult AddToRangeList(nsINode *aNode, nsIDOMRange *aRange,
+  static nsresult AddToRangeList(nsINode *aNode, nsIRange *aRange,
                                  PRBool *aCreated);
 
   /**
@@ -798,7 +802,7 @@ public:
    * @param aRange The range to remove.
    * @return PR_TRUE if aRange was the last range in the list.
    */
-  static PRBool RemoveFromRangeList(nsINode *aNode, nsIDOMRange *aRange);
+  static PRBool RemoveFromRangeList(nsINode *aNode, nsIRange *aRange);
 
   /**
    * Look up the list of ranges containing aNode.

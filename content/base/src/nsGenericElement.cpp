@@ -200,7 +200,7 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
 }
 
 nsresult
-nsINode::RangeAdd(nsIDOMRange* aRange)
+nsINode::RangeAdd(nsIRange* aRange)
 {
   PRBool created;
   nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
@@ -213,7 +213,7 @@ nsINode::RangeAdd(nsIDOMRange* aRange)
 }
 
 void
-nsINode::RangeRemove(nsIDOMRange* aRange)
+nsINode::RangeRemove(nsIRange* aRange)
 {
   if (!HasFlag(NODE_HAS_RANGELIST)) {
     return;
