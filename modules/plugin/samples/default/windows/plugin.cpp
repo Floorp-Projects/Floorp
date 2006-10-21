@@ -46,7 +46,8 @@
 #include "dialogs.h"
 #include "dbg.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 nsIServiceManager * gServiceManager = NULL;
 
@@ -218,7 +219,7 @@ BOOL CPlugin::init(HWND hWndParent)
   dbgOut1("CPlugin::init()");
 
   nsISupports * sm = NULL;
-  nsIPref * nsPrefService = NULL;
+  nsIPrefBranch * prefBranch = NULL;
   PRBool bSendUrls = PR_FALSE; // default to false if problem getting pref
 
   // note that Mozilla will add reference, so do not forget to release
@@ -232,10 +233,12 @@ BOOL CPlugin::init(HWND hWndParent)
   
   if (gServiceManager) {
     // get service using its contract id and use it to allocate the memory
-    gServiceManager->GetServiceByContractID(NS_PREF_CONTRACTID, NS_GET_IID(nsIPref), (void **)&nsPrefService);
-    if(nsPrefService) {      
-      nsPrefService->GetBoolPref("application.use_ns_plugin_finder", &bSendUrls);
-      NS_RELEASE(nsPrefService);
+    gServiceManager->GetServiceByContractID(NS_PREFSERVICE_CONTRACTID,
+                                            NS_GET_IID(nsIPrefBranch),
+                                            (void **)&prefBranch);
+    if(prefBranch) {
+      prefBranch->GetBoolPref("application.use_ns_plugin_finder", &bSendUrls);
+      NS_RELEASE(prefBranch);
     }
   }
   m_bSmartUpdate = bSendUrls;
