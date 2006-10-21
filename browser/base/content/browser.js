@@ -3850,17 +3850,9 @@ nsBrowserStatusHandler.prototype =
             } catch (ex) {}
           }
 
-          if (getBrowser().forceSyncURLBarUpdate) {
-            gURLBar.value = ""; // hack for bug 249322
-            gURLBar.value = location;
-            SetPageProxyState("valid");
-          } else {
-            setTimeout(function(loc) {
-                         gURLBar.value = ""; // hack for bug 249322
-                         gURLBar.value = loc;
-                         SetPageProxyState("valid");
-                       }, 0, location);
-          }
+          gURLBar.value = ""; // hack for bug 249322
+          gURLBar.value = location;
+          SetPageProxyState("valid");
 
           // Setting the urlBar value in some cases causes userTypedValue to
           // become set because of oninput, so reset it to its old value.

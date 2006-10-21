@@ -180,9 +180,6 @@
       <field name="mContextTab">
         null
       </field>
-      <field name="mModalDialogShowing">
-        false
-      </field>
       <field name="arrowKeysShouldWrap" readonly="true">
 #ifdef XP_MACOSX
         true
@@ -1699,6 +1696,8 @@
         </body>
       </method>
 
+      <field name="mDragTime">0</field>
+      <field name="mDragOverDelay">350</field>
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
@@ -1726,8 +1725,13 @@
               }
 
               var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
-              if (!isTabDrag)
+              if (!isTabDrag && aEvent.target.localName == "tab") {
+                if (!this.mDragTime) 
+                  this.mDragTime = Date.now();
+                if (Date.now() >= this.mDragTime + this.mDragOverDelay)
+                  this.mTabContainer.selectedItem = aEvent.target;
                 return;
+              }
 
               var newIndex = this.getNewIndex(aEvent);
 
@@ -1886,6 +1890,8 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
+            this.mDragTime = 0;
+
             if (aDragSession.sourceNode &&
                 aDragSession.sourceNode.parentNode == this.mTabContainer &&
                 aDragSession.canDrop) {
@@ -2382,9 +2388,6 @@
                 onget="return this.mCurrentBrowser.userTypedValue;"
                 onset="return this.mCurrentBrowser.userTypedValue = val;"/>
 
-      <property name="forceSyncURLBarUpdate"
-                onget="return this.mModalDialogShowing;"/>
-
       <method name="createTooltip">
         <parameter name="event"/>
         <body>
@@ -2478,20 +2481,11 @@
 
           for (var i = 0; i < browsers.length; ++i) {
             if (this.getBrowserAtIndex(i).contentWindow == targetTop) {
-              this.mModalDialogShowing = true;
               this.selectedTab = this.mTabContainer.childNodes[i];
 
               break;
             }
           }
-        ]]>
-      </handler>
-      <handler event="DOMModalDialogClosed" phase="capturing">
-        <![CDATA[
-          if (!event.isTrusted)
-            return;
-
-          this.mModalDialogShowing = false;
         ]]>
       </handler>
     </handlers>
