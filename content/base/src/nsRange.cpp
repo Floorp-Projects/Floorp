@@ -1650,10 +1650,10 @@ nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
   nsRange* range = new nsRange();
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
 
-  range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset);
-
   NS_ADDREF(*aReturn = range);
   
+  range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset);
+
   return NS_OK;
 }
 
