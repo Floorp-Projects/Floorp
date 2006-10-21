@@ -234,19 +234,6 @@ public:
    */
   void ForgetCurrentSubmission();
 
-  /**
-   * Compare two nodes in the same tree (Negative result means a < b, 0 ==,
-   * positive >).  This function may fail if the nodes are not in a tree
-   * or are in different trees.
-   *
-   * @param a the first node
-   * @param b the second node
-   * @param retval whether a < b (negative), a == b (0), or a > b (positive)
-   */
-  static nsresult CompareNodes(nsIDOMNode* a,
-                               nsIDOMNode* b,
-                               PRInt32* retval);
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -1105,55 +1092,6 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   }
 
   return rv;
-}
-
-
-// static
-nsresult
-nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIDOMNode> parentANode;
-  PRInt32 indexA;
-  rv = a->GetParentNode(getter_AddRefs(parentANode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!parentANode) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  {
-    // To get the index, we must turn them both into contents
-    // and do IndexOf().  Ick.
-    nsCOMPtr<nsIContent> parentA(do_QueryInterface(parentANode));
-    nsCOMPtr<nsIContent> contentA(do_QueryInterface(a));
-    if (!parentA || !contentA) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    indexA = parentA->IndexOf(contentA);
-  }
-
-  nsCOMPtr<nsIDOMNode> parentBNode;
-  PRInt32 indexB;
-  rv = b->GetParentNode(getter_AddRefs(parentBNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!parentBNode) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  {
-    // To get the index, we must turn them both into contents
-    // and do IndexOf().  Ick.
-    nsCOMPtr<nsIContent> parentB(do_QueryInterface(parentBNode));
-    nsCOMPtr<nsIContent> bContent(do_QueryInterface(b));
-    if (!parentB || !bContent) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    indexB = parentB->IndexOf(bContent);
-  }
-
-  *retval = nsRange::ComparePoints(parentANode, indexA, parentBNode, indexB);
-  return NS_OK;
 }
 
 

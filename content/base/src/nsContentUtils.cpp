@@ -1122,27 +1122,6 @@ nsContentUtils::IsCallerTrustedForWrite()
 
 // static
 PRBool
-nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
-{
-  if (!aNode || !aOther) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
-
-  if (content && other) {
-    // XXXcaa Don't bother to check that either node is in a
-    // document.  Editor relies on us returning true if neither
-    // node is in a document.  See bug 154401.
-    return content->GetDocument() == other->GetDocument();
-  }
-
-  return PR_FALSE;
-}
-
-// static
-PRBool
 nsContentUtils::ContentIsDescendantOf(nsINode* aPossibleDescendant,
                                       nsINode* aPossibleAncestor)
 {
@@ -1386,6 +1365,63 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
      nsIDOM3Node::DOCUMENT_POSITION_CONTAINS) :
     (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
      nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);    
+}
+
+/* static */
+PRInt32
+nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
+                              nsINode* aParent2, PRInt32 aOffset2)
+{
+  if (aParent1 == aParent2) {
+    return aOffset1 < aOffset2 ? -1 :
+           aOffset1 > aOffset2 ? 1 :
+           0;
+  }
+
+  nsTArray<nsINode*> parents1, parents2;
+  nsINode* node1 = aParent1;
+  nsINode* node2 = aParent2;
+  do {
+    parents1.AppendElement(node1);
+    node1 = node1->GetNodeParent();
+  } while (node1);
+  do {
+    parents2.AppendElement(node2);
+    node2 = node2->GetNodeParent();
+  } while (node2);
+
+  PRUint32 pos1 = parents1.Length() - 1;
+  PRUint32 pos2 = parents2.Length() - 1;
+
+  NS_ASSERTION(parents1.ElementAt(pos1) == parents2.ElementAt(pos2),
+               "disconnected nodes");
+
+  // Find where the parent chains differ
+  nsINode* parent = parents1.ElementAt(pos1);
+  PRUint32 len;
+  for (len = PR_MIN(pos1, pos2); len > 0; --len) {
+    nsINode* child1 = parents1.ElementAt(--pos1);
+    nsINode* child2 = parents2.ElementAt(--pos2);
+    if (child1 != child2) {
+      return parent->IndexOf(child1) < parent->IndexOf(child2) ? -1 : 1;
+    }
+    parent = child1;
+  }
+
+  
+  // The parent chains never differed, so one of the nodes is an ancestor of
+  // the other
+
+  NS_ASSERTION(!pos1 || !pos2,
+               "should have run out of parent chain for one of the nodes");
+
+  if (!pos1) {
+    nsINode* child2 = parents2.ElementAt(--pos2);
+    return aOffset1 <= parent->IndexOf(child2) ? -1 : 1;
+  }
+
+  nsINode* child1 = parents1.ElementAt(--pos1);
+  return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
 }
 
 nsIContent*
@@ -3064,7 +3100,7 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
 
 /* static */
 nsresult
-nsContentUtils::AddToRangeList(nsINode *aNode, nsIDOMRange *aRange,
+nsContentUtils::AddToRangeList(nsINode *aNode, nsIRange *aRange,
                                PRBool *aCreated)
 {
   *aCreated = PR_FALSE;
@@ -3125,7 +3161,7 @@ nsContentUtils::AddToRangeList(nsINode *aNode, nsIDOMRange *aRange,
 
 /* static */
 PRBool
-nsContentUtils::RemoveFromRangeList(nsINode *aNode, nsIDOMRange *aRange)
+nsContentUtils::RemoveFromRangeList(nsINode *aNode, nsIRange *aRange)
 {
   if (!sRangeListsHash.ops) {
     // We've already been shut down, don't bother removing a range...
