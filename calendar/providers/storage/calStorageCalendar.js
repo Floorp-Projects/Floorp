@@ -741,8 +741,8 @@ calStorageCalendar.prototype = {
             sp = this.mSelectTodosByRange.params;
             sp.cal_id = this.mCalId;
             sp.range_start = startTime;
-            sp.end_offset = aRangeStart ? aRangeStart.timezoneOffset * USECS_PER_SECOND : 0;
             sp.range_end = endTime;
+            sp.start_offset = aRangeStart ? aRangeStart.timezoneOffset * USECS_PER_SECOND : 0;
             sp.end_offset = aRangeEnd ? aRangeEnd.timezoneOffset * USECS_PER_SECOND : 0;
 
             while (this.mSelectTodosByRange.step()) {
