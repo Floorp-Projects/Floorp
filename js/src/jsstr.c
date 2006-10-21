@@ -2301,7 +2301,7 @@ str_fromCharCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uint16 code;
     JSString *str;
 
-    JS_ASSERT(argc < ARGC_LIMIT);
+    JS_ASSERT(argc < ARRAY_INIT_LIMIT);
     chars = (jschar *) JS_malloc(cx, (argc + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
