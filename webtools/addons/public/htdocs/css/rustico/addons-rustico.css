@@ -1,0 +1,435 @@
+/* General Structure */
+/* copied from Mozilla.com */
+
+body, td, th, input { /* redundant rules for bad browsers  */
+	font-family: verdana, sans-serif;
+	font-size: x-small;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	font-size: small;
+}
+
+body {
+	background: #fff;
+	color: #333;
+	min-width: 610px;
+	margin: 0 0 1em 0;
+	padding: 0; /* need for Opera */
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: arial, verdana, sans-serif;
+	margin: 1em 0 0.2em 0;
+}
+
+li h1, li h2, li h3, li h4, li h5, li h6 {
+	border: none;
+}
+
+#header h1 { border: 0; }
+
+h1 { font-size: 160%; font-weight: normal; }
+h2 { font-size: 150%; font-weight: normal; }
+h3 { font-size: 120%; }
+h4 { font-size: 100%; }
+h5 { font-size: 90%; }
+h6 { font-size: 90%; border: 0; }
+	
+/* Navigation */
+
+:link { color: #039; }
+:visited { color: #636; }
+:link:hover, :visited:hover { color: #333; }
+:link:active, :link:active { color: #000; }
+
+/* header copied from Mozilla.com */
+
+#header {
+	background: #33415d url("../../images/rustico/header/header-background.png") top repeat-x;
+	position: relative;
+	height: 38px;
+	padding: 0 50px;
+	border-bottom: 1px solid #a1a6b1;
+	z-index: 1;
+}
+
+#header div {
+	position: relative;
+	max-width: 900px; 
+	margin: 0 auto;
+}
+
+#header h1 { margin: 0;	}
+
+#header h1 img {
+	font-weight: bold;
+	color: #7f7c45;
+}
+
+#header ul {
+	position: absolute;
+	top: 0;
+	right: 0;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-left: 1px solid #576178;
+	border-right: 1px solid #1f2635;
+} * html #header ul { right: 50px; } 
+
+#header li {
+	float: left;
+	margin: 0;
+	padding: 0;
+}
+
+#header ul a:link, #header ul a:visited {
+	display: block;
+	float: left;
+	padding: 10px 15px;
+	text-decoration: none;
+	border-right: 1px solid #576178;
+	border-left: 1px solid #1f2635;
+	color: #dee0e5;
+	height: 36px;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	height: 16px;
+} #ignored {}
+
+#header ul li a:hover {
+	background: #475470;
+	color: #fff;
+	text-decoration: underline;
+}
+
+/* page title */
+
+#page-title {
+	background: url("../../images/rustico/common/bg-header-small.jpg") repeat-x 50% 0;
+}
+
+#page-title div, #container {
+	max-width: 750px; 
+	margin: 0 auto;
+	padding: 0 50px;
+}
+
+#page-title div {
+	background: url("../../images/rustico/common/firefox-addons-hdr.jpg") no-repeat 50% 0;
+	height: 170px;
+} body>#page-title div { height: auto; min-height: 170px; }
+
+#page-title div h2 {
+	margin: 0;
+	padding: 40px 0;
+	border: 0;
+}
+
+#page-title div h2 img {
+	border: 0;
+}
+
+/* mainContent */
+
+#mainContent {
+	color: #3c475b;
+	line-height: 150%;
+	margin-left: 180px;
+}
+
+#mainContent hr {
+	margin: 2em;
+}
+
+#mainContent h3 {
+	font-weight: normal;
+}
+
+/* front page features */
+
+.frontpage-intro {
+	margin-top: 0;
+}
+
+.front-recommended {
+	float: left;
+	width: 45%;
+	margin-right: 4%;
+}
+
+.front-recommended img {
+	float: right;
+	margin: 0 20px;
+}
+
+.front-recommended h3 {
+	padding-top: 5px;
+}
+
+.front-search-container {
+	float: left;
+	width: 45%;
+}
+
+.front-search-container img {
+	float: left;
+}
+
+.front-search-container h3 {
+	margin-left: 40px;
+	padding-top: 5px;
+}
+
+/* addon features */
+
+.addon-feature,
+.bookmarkaddon-feature {
+	background: url(../../images/rustico/firefox-featured-divider.png) no-repeat bottom center;
+
+	margin-bottom: 1.5em;
+	padding-bottom: 10px;
+}
+
+.addon-feature h3,
+.bookmarkaddon-feature h3 {
+	margin: 0 0 10px 0;
+}
+
+.addon-feature h4,
+.bookmarkaddon-feature h4 {
+	margin: 0 0 10px 0;
+}
+
+.addon-feature h4 span,
+.bookmarkaddon-feature h4 span {
+	font-weight: normal;
+}
+
+.addon-feature .addon-feature-image,
+.bookmarkaddon-feature .addon-feature-image {
+	float: left;
+	margin: 0 10px 0 0;
+}
+
+.addon-feature .addon-feature-text { margin-left: 220px; }
+.bookmarkaddon-feature .addon-feature-text { margin-left: 190px; }
+
+.addon-feature a, .bookmarkaddon-feature a { color: #f7941d; }
+.addon-feature a:visited, .bookmarkaddon-feature a:visited { color: #f7941d; }
+.addon-feature a:hover, .bookmarkaddon-feature a:hover { color: #333; }
+
+.recommended a, .recommended a:visited { color: #f7941d; }
+.recommended a:hover { color: #333; }
+
+.bookmarkstitle {
+	background: url(../../images/rustico/bookmarks/firefox-bm-puzzle-ico.png) no-repeat top left;
+	height: 27px;
+	padding: 5px 0 0 35px;
+}
+
+/* install button */
+.install-button,
+p.install-button {
+	width: 230px;
+	margin: 0;
+}
+
+.install-button a:link span,
+.install-button a:visited span,
+.install-button a:hover span,
+.install-button a:active span {
+	background: url(../../images/rustico/install-button.png) no-repeat bottom left;
+	display: block;
+	min-height: 20px;
+	padding: 10px;
+} 
+* html .install-button a:link span,
+* html .install-button a:visited span,
+* html .install-button a:hover span,
+* html .install-button a:active span { height: 20px; }
+
+.install-button a:link,
+.install-button a:visited,
+.install-button a:hover,
+.install-button a:active {
+	background: #a8ed2d url(../../images/rustico/install-button.png) no-repeat top left;
+	display: block;
+	color: #005825;
+	text-decoration: none;
+}
+
+.install-button a:hover span,
+.install-button a:active span {
+	background: url(../../images/rustico/install-button.png) no-repeat bottom right;
+}
+
+.install-button a:hover,
+.install-button a:active {
+	background: #89dc29 url(../../images/rustico/install-button.png) no-repeat top right;
+	color: #000;
+	cursor: hand;
+}
+
+/* corner box */
+
+.corner-box {
+	background: url(../../images/rustico/left-top-corner-box.jpg) top left no-repeat;
+	margin: 0 0 10px 0;
+	padding: 12px 0 12px 15px;
+}
+
+.corner-box h3 {
+	margin-top: 0;
+}
+
+/* front page search */
+
+#front-search {
+	margin-top: 1.5em;
+}
+
+#front-search label {
+	float: left;
+	width: 25%;
+}
+
+#front-search div {
+	float: left;
+	width: 70%
+}
+
+#front-search div .keywords {
+	margin-bottom: 0.5em;
+}
+
+/* search box */
+
+.search-container img {
+	float: left;
+}
+
+.search-container h3 {
+	margin-left: 40px;
+	padding-top: 5px;
+}
+
+#extensions-search {
+	margin-top: 1.5em;
+}
+
+#extensions-search .keywords {
+	width: 40%;
+}
+
+/* menu box */
+
+#menu-box {
+	background: url(../../images/rustico/menu-box/menu-box-top.png) top left no-repeat;
+	float: left;
+	font-size: 80%;
+	font-weight: bold;
+	width: 160px;
+}
+
+#menu-box ul {
+	background: url(../../images/rustico/menu-box/menu-box-bottom.png) bottom left no-repeat;
+	list-style-type: none;
+	margin: 0;
+	padding: 4px 0;
+}
+
+#menu-box ul li a:link,
+#menu-box ul li a:visited,
+#menu-box ul li span {
+	background: url(../../images/rustico/menu-box/menu-box-background.png) 0 0 no-repeat;
+	display: block;
+	width: 136px;
+	margin: 0;
+	padding: 8px 12px;
+	text-decoration: none;
+}
+
+#menu-box ul li span {
+	background: url(../../images/rustico/menu-box/menu-box-background.png) -400px 0 no-repeat;
+}
+
+#menu-box ul li a:hover,
+#menu-box ul li a:active {
+	background: url(../../images/rustico/menu-box/menu-box-background.png) -200px 0 no-repeat;
+}
+
+/* footer */
+
+#footer {
+	clear: both;
+	color: #888;
+	font-size: 85%;
+	text-align: center;
+	margin: 0;
+	padding: 2em 0;
+}
+
+#footer ul {
+	margin: 1.5em 0;
+}
+
+#footer ul li {
+	display: inline;
+	margin: 0 0.5em;
+}
+
+#footer-addons-menu {
+	font-size: 110%;
+	padding: 0;
+}
+
+#footer-addons-menu li {
+	white-space: nowrap;
+	padding: 10px 0 5px 25px;
+}
+
+#footer-addons-menu li.firefox { background: url(../../images/rustico/footer/footer-icon-firefox.png) no-repeat center left; }
+#footer-addons-menu li.thunderbird { background: url(../../images/rustico/footer/footer-icon-thunderbird.png) no-repeat center left; }
+#footer-addons-menu li.mozilla { background: url(../../images/rustico/footer/footer-icon-mozilla.png) no-repeat center left; }
+
+/* disclaimer */
+
+#disclaimer {
+	clear: both;
+	background: url(../../images/rustico/footer/disclaimer.png) top repeat-x;
+}
+
+#disclaimer form {
+	float: right;
+	margin: 1em 50px 2em 25px;
+}
+
+#disclaimer form select {
+	font-size: 80%;
+}
+
+#disclaimer p {
+	max-width: 750px; 
+	font-size: 80%;
+	margin: 0 auto;
+	padding: 10px 50px 20px 50px;
+}
+
+#disclaimer a { color: #f7941d; }
+
+.clearfix:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+
+.clearfix {display: inline-block;}
+
+/* Hides from IE-mac \*/
+* html .clearfix {height: 1%;}
+.clearfix {display: block;}
+/* End hide from IE-mac */
+

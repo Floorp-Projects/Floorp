@@ -349,10 +349,13 @@ class AMO_Object
                 v.size,
                 v.version,
                 v.hash,
-                p.previewuri
+                p.previewuri,
+                u.username
             FROM
                 main m
             INNER JOIN version v ON m.id = v.id
+            INNER JOIN authorxref ax ON ax.id = m.id
+            INNER JOIN userprofiles u ON u.userid = ax.userid
             INNER JOIN (
                 SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
                 FROM version v       
