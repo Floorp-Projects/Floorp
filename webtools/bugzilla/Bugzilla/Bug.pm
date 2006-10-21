@@ -283,6 +283,8 @@ sub create {
 
     $dbh->do('UPDATE bugs SET creation_ts = ? WHERE bug_id = ?', undef,
              $timestamp, $bug->bug_id);
+    # Update the bug instance as well
+    $bug->{creation_ts} = $timestamp;
 
     # Add the CCs
     my $sth_cc = $dbh->prepare('INSERT INTO cc (bug_id, who) VALUES (?,?)');
