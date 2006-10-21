@@ -149,7 +149,32 @@ class AMO_Smarty extends Smarty
     }
 }
 
+/**
+ * Set $clean['app'] and $sql['app'] based on incoming params.
+ */
+function setApp()
+{
+    global $clean, $sql;
+    // If app is not set or empty, set it to null for our switch.
+    $_GET['app'] = (!empty($_GET['app'])) ? $_GET['app'] : null;
 
+    // Determine our application.
+    switch( $_GET['app'] ) {
+        case 'mozilla':
+            $clean['app'] = 'Mozilla';
+            break;
+        case 'thunderbird':
+            $clean['app'] = 'Thunderbird';
+            break;
+        case 'firefox':
+        default:
+            $clean['app'] = 'Firefox';
+            break;
+    }
+
+    // $sql['app'] can equal $clean['app'] since it was assigned in a switch().
+    $sql['app'] = $clean['app'];
+}
 
 /**
  * Begin template processing.

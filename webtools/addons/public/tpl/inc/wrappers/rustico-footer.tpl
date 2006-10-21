@@ -1,3 +1,13 @@
+{if $smarty.get.app eq "thunderbird"}
+    {assign var="app" value="thunderbird"}
+{elseif $smarty.get.app eq "mozilla"}
+    {assign var="app" value="mozilla"}
+{elseif $smarty.get.app eq "seamonkey"}
+    {assign var="app" value="mozilla"}
+{else}
+    {assign var="app" value="firefox"}
+{/if}
+{if $app eq "firefox"}
 		</div><!-- end #maincontent div -->
 	
 	</div><!-- end #content div -->
@@ -10,3 +20,6 @@
 
 </body>
 </html>
+{else}
+{include file="inc/wrappers/default-footer.tpl"}
+{/if}

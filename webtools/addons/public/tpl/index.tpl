@@ -1,4 +1,39 @@
+{if $app eq "firefox"}
+<div id="mBody">
+<h1>Firefox Add-ons</h1>
+<p class="frontpage-intro">Firefox Add-ons allow you to extend the functionality of Firefox to add new features, and personalize the overall look and feel of the browser to suit your style.  They can make a tiny tweak, or add a whole new range of features to your favorite browser.</p>
 
+<div class="addon-feature clearfix">
+	<div class="corner-box">
+		<h3>Featured Add-on: {$feature.name}</h3>
+		<img src="{$config.webpath}{$feature.previewuri}" width="205" height="152" alt="" class="addon-feature-image" />
+		<div class="addon-feature-text">
+			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
+			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');"><span>Install add-on ({$feature.size} KB)</span></a></p>
+		</div>
+	</div>
+</div>
+
+<div class="front-recommended corner-box">
+	<h3>We Recommend&hellip;</h3>
+	<img src="{$config.webpath}/images/rustico/addons/firefox-addons-puzzle-ico.png" width="50" height="50" alt="" />
+	<p>See some of our favorite add-ons to get you started.</p>
+</div>
+
+<div class="search-container corner-box">
+	<img src="{$config.webpath}/images/rustico/featured/firefox-featured-mglass.png" width="37" height="31" alt="" />
+	<h3>Find more Add-ons:</h3>
+	<form id="extensions-search" method="get" action="" title="Search Mozilla Add-ons">
+	    <input id="q2" type="text" name="q" accesskey="s" class="keywords" />
+	    <select name="type">
+        	<option value="A">all Add-ons</option>
+        	<option value="E">just Extensions</option>
+			<option value="T">just Themes</option>
+			</select>
+	    <input type="submit" value="Search" />
+	</form>
+</div>
+{else} 
 <div class="split-feature">
     <div class="split-feature-one">
         <div class="feature-download">
@@ -56,4 +91,4 @@
     <li><a href="http://developer.mozilla.org/en/docs/Themes">Theme Documentation on MDC</a></li>
     </ul>
 </div>
-
+{/if}

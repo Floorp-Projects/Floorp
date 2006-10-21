@@ -1,7 +1,7 @@
 <div id="mBody">
-<h1>Getting Started with Extensions</h1>
+<h1>Recommended Add-ons</h1>
 
-<p>With over a thousand extensions available, there's something for everyone. To get you started, here's a list of some of our recommended extensions that make use of popular online services.</p>
+<p>With over a thousand add-ons available, there's something for everyone. To get you started, here's a list of some of our favorite add-ons.</p>
 
 {section name=re loop=$recommended step=1 start=0}
 	<div class="addon-feature clearfix">
@@ -15,7 +15,7 @@
 {/section}
 
 <div class="search-container corner-box">
-	<img src="images/featured/firefox-featured-mglass.png" width="37" height="31" alt="" />
+	<img src="{$config.webpath}/images/rustico/featured/firefox-featured-mglass.png" width="37" height="31" alt="" />
 	<h3>Find more Add-ons:</h3>
 	<form id="extensions-search" method="get" action="" title="Search Mozilla Add-ons">
 	    <input id="q2" type="text" name="q" accesskey="s" class="keywords" />

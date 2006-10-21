@@ -8,28 +8,10 @@
 
 $currentTab = 'home';
 
-startProcessing('index.tpl', 'home', $compileId, 'nonav');
+setApp();
+$pageType = ($clean['app'] === 'Firefox' ? 'rustico' : 'nonav');
+startProcessing('index.tpl', 'home', $compileId, $pageType);
 require_once('includes.php');
-
-// If app is not set or empty, set it to null for our switch.
-$_GET['app'] = (!empty($_GET['app'])) ? $_GET['app'] : null;
-
-// Determine our application.
-switch( $_GET['app'] ) {
-    case 'mozilla':
-        $clean['app'] = 'Mozilla';
-        break;
-    case 'thunderbird':
-        $clean['app'] = 'Thunderbird';
-        break;
-    case 'firefox':
-    default:
-        $clean['app'] = 'Firefox';
-        break;
-}
-
-// $sql['app'] can equal $clean['app'] since it was assigned in a switch().
-$sql['app'] = $clean['app'];
 
 $amo = new AMO_Object();
 
@@ -38,6 +20,7 @@ $tpl->assign(
     array(  'popularExtensions' => $amo->getPopularAddons($sql['app'],'E',5),
             'feature'           => $amo->getFeature($sql['app']),
             'title'             => $clean['app'].' Addons',
-            'currentTab'        => $currentTab)
+            'currentTab'        => $currentTab,
+            'app'               => $sql['app'])
 );
 ?>
