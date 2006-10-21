@@ -1,7 +1,7 @@
 {if $app eq "firefox"}
 <div id="mBody">
 <h1>Firefox Add-ons</h1>
-<p class="frontpage-intro">Firefox Add-ons allow you to extend the functionality of Firefox to add new features, and personalize the overall look and feel of the browser to suit your style.  They can make a tiny tweak, or add a whole new range of features to your favorite browser.</p>
+<p class="frontpage-intro">Add-ons extend Firefox, letting you personalize your browsing experience.  They can make a tiny tweak, or bring a whole new range of features to your favorite browser.  Take a look around and make Firefox your own.</p>
 
 <div class="addon-feature clearfix">
 	<div class="corner-box">
@@ -9,7 +9,7 @@
 		<img src="{$config.webpath}{$feature.previewuri}" width="205" height="152" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text">
 			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
-			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');"><span>Install add-on ({$feature.size} KB)</span></a></p>
+			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');"><span>Install now ({$feature.size} KB)</span></a></p>
 		</div>
 	</div>
 </div>

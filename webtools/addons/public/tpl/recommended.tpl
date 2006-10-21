@@ -1,7 +1,7 @@
 <div id="mBody">
 <h1>Recommended Add-ons</h1>
 
-<p>With over a thousand add-ons available, there's something for everyone. To get you started, here's a list of some of our favorite add-ons.</p>
+<p>With over a thousand add-ons available, there's something for everyone. To get you started, here's a list of some of our favorites.  Enjoy!</p>
 
 {section name=re loop=$recommended step=1 start=0}
 	<div class="addon-feature clearfix">
