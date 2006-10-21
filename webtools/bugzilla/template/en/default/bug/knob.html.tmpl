@@ -161,28 +161,11 @@
 
   <div id="knob-buttons">
   <input type="submit" value="Commit" id="commit">
-  <p>
-    <font size="+1">
-      <b>
-        <a href="show_activity.cgi?id=[% bug.bug_id %]">View [% terms.Bug %] Activity</a>
-        &nbsp; | &nbsp;
-        <a href="show_bug.cgi?format=multiple&amp;id=[% bug.bug_id %]">Format For Printing</a>
-        &nbsp; | &nbsp;
-        <a href="show_bug.cgi?ctype=xml&amp;id=[% bug.bug_id %]">XML</a>
-        &nbsp; | &nbsp;
-        <a href="enter_bug.cgi?cloned_bug_id=[% bug.bug_id %]">Clone This [% terms.Bug %]</a>
-
-        [%# Links to more things users can do with this bug. %]
-        [% Hook.process("links") %]
-      </b>
-    </font>
-
     [% IF bug.user.canmove %]
       &nbsp; <font size="+1"><b> | </b></font> &nbsp;
       <input type="submit" name="action" id="action"
              value="[% Param("move-button-text") %]">
     [% END %]
-  </p>
   </div>
 </div>
 
