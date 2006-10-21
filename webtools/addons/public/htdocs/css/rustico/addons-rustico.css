@@ -206,6 +206,10 @@ h6 { font-size: 90%; border: 0; }
 	font-weight: normal;
 }
 
+.addon-feature h1 span {
+    font-size: small;
+}
+
 .addon-feature .addon-feature-image,
 .bookmarkaddon-feature .addon-feature-image {
 	float: left;
