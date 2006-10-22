@@ -139,7 +139,7 @@
   [%# That's the main table, which contains all editable fields. %]
   <table>
     <tr>
-      <td valign="top" rowspan="2">
+      <td valign="top">
         <fieldset>
           <legend>Details</legend>
           <table>
@@ -250,18 +250,13 @@
         </fieldset>
       </td>
 
-      [%# *** Reporter, owner and QA contact *** %]
       <td valign="top">
+        [%# *** Reporter, owner and QA contact *** %]
         <fieldset>
           <legend>People</legend>
           [% PROCESS section_people %]
         </fieldset>
-      </td>
-    </tr>
-
-    <tr>
-      [%# *** Flags *** %]
-      <td valign="top">
+        [%# *** Flags *** %]
         <fieldset>
           <legend>Flags</legend>
           <table cellspacing="1" cellpadding="1">
