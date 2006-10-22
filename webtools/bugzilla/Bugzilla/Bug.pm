@@ -1192,14 +1192,7 @@ sub user {
     my $user = Bugzilla->user;
     my $canmove = Bugzilla->params->{'move-enabled'} && $user->is_mover;
 
-    # In the below, if the person hasn't logged in, then we treat them
-    # as if they can do anything.  That's because we don't know why they
-    # haven't logged in; it may just be because they don't use cookies.
-    # Display everything as if they have all the permissions in the
-    # world; their permissions will get checked when they log in and
-    # actually try to make the change.
-    my $unknown_privileges = !$user->id
-                             || $user->in_group("editbugs");
+    my $unknown_privileges = $user->in_group("editbugs");
     my $canedit = $unknown_privileges
                   || $user->id == $self->{assigned_to_id}
                   || (Bugzilla->params->{'useqacontact'}

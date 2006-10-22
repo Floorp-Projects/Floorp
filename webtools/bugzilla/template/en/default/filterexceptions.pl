@@ -319,7 +319,8 @@
   'inputname',
   '" colspan=\"$colspan\"" IF colspan',
   '" size=\"$size\"" IF size',
-  '" maxlength=\"$maxlength\"" IF maxlength'
+  '" maxlength=\"$maxlength\"" IF maxlength',
+  'flag.status',
 ],
 
 'bug/knob.html.tmpl' => [
