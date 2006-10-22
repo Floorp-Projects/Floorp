@@ -515,7 +515,8 @@ class AMO_Object
          $this->db->query("
              SELECT
                 REPLACE(m.guid, '{$suffix}', '') as code,
-                v.uri                
+                v.uri,
+                v.size
              FROM
                 main m
              INNER JOIN version v ON m.id = v.id

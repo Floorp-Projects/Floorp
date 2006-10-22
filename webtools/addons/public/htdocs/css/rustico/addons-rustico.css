@@ -441,3 +441,70 @@ p.install-button {
 .clearfix {display: block;}
 /* End hide from IE-mac */
 
+table {
+	border-collapse: collapse;
+	border: none;
+	margin: 1em 0;
+}
+
+table.dalvay-table {
+	border-collapse: separate;
+}
+
+table.dalvay-table thead th {
+	background: none;
+}
+
+table.dalvay-table thead td,
+table.dalvay-table thead th {
+	background: #f9fafa url(/img/dalvay/table/header.png) top repeat-x;
+	border: 0;
+}
+
+table.dalvay-table thead .top-left {
+	background: url(/img/dalvay/table/top-left.png) top left no-repeat;
+}
+
+table.dalvay-table thead .top-right {
+	background: url(/img/dalvay/table/top-right.png) top right no-repeat;
+}
+
+td.left  { border-left:  1px solid #d7d7d7; }
+td.right { border-right: 1px solid #d7d7d7; }
+
+table.dalvay-table tfoot td {
+	background: #f9fafa url(/img/dalvay/table/footer.png) bottom repeat-x;
+	border: 0;
+}
+
+table.dalvay-table tfoot .bottom-left {
+	background: url(/img/dalvay/table/bottom-left.png) bottom left no-repeat;
+}
+
+table.dalvay-table tfoot .bottom-right {
+	background: url(/img/dalvay/table/bottom-right.png) bottom right no-repeat;
+}
+
+table.dalvay-table tfoot td { height: 12px; }
+
+
+table.dalvay-table tr.odd td { background: #fff; }
+table.dalvay-table tr.even td { background: #eee; }
+table.dalvay-table tr:target td { background: yellow; }
+table.dalvay-table td.curVersion { font-weight: bold; }
+table.dalvay-table td.nya { text-align: center; }
+
+table.dalvay-table td,
+table.dalvay-table th {
+	margin: 0;
+	padding: 0.5em;
+}
+
+table.dalvay-table td.dl,
+table.dalvay-table th.dl {
+  white-space: nowrap;
+}
+
+table.dalvay-table th {
+  text-align: left;
+}

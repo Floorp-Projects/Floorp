@@ -1,6 +1,31 @@
 function writeCurrentDictionary()
 {
-   document.writeln("<div class='corner-box'>Man, there is so going to be a special link here!</div>");
+    var q = document.location.search.substring(1);
+    var paramStrings = q.split("&");
+    var params = { };
+    for (var i = 0; i < paramStrings.length; i++) {
+        var asunder = paramStrings[i].split("=");
+        params[asunder[0]] = asunder[1];
+    }
+    var lang = params.lang || 'en-US';
+
+    if (!(lang in allDictionaries)) {
+        // Try just the language without region.
+        lang = lang.replace(/-.*/, "");
+        if (!(lang in allDictionaries))
+            return; // alas, nothing to be done...
+    }
+
+    dict = allDictionaries[lang];
+    document.write("<div class='corner-box'>Install dictionary");
+    if (dict.size)
+        document.write(" (", dict.size, "KB)");
+    document.write("<div class='install-button'><a href='",
+                   dict.link, "'><span>", dict.entry.name);
+    if (dict.entry.localName != dict.entry.name)
+        document.write(" / ", dict.entry.localName);
+    document.writeln("</span></a>");
+    document.writeln("</div></div>");       
 }
 
 function regionForCode(code)
@@ -34,6 +59,9 @@ function regionForCode(code)
     return { name: code, localName: code };
 }
 
+var allDictionariesOrdered = [];
+var allDictionaries = { };
+
 function addDictionary(code, link, size)
 {
     // Sometimes, there is more than one code in the name, yay
@@ -46,6 +74,25 @@ function addDictionary(code, link, size)
     }
 
     var region = regionForCode(code);
-    document.writeln("<tr id='", code, "'><td><a href='", link, "' title='", code, "'>", region.name, ' / ',
-                     region.localName, "</td></tr>");
+    var dict = {code: code, link: link, size: size, entry: region};
+    allDictionariesOrdered.push(dict);
+    allDictionaries[code] = dict;
+}
+
+function writeAllDictionaries()
+{
+    for (var i = 0; i < allDictionariesOrdered.length; i++) {
+        var dict = allDictionariesOrdered[i];
+        var alt = i % 2 ? "even" : "odd";
+        document.write("<tr class='", alt, "'>");
+        document.write("<td class='left'>", dict.entry.name, "</td>");
+        document.write("<td>", dict.entry.localName, "</td>");
+        document.write("<td class='right'><a href='", dict.link,
+                       "'>Install</a> (", dict.size, " KB)</td></tr>");
+/*
+        document.writeln("<tr id='", dict.code, "'><td><a href='", dict.link,
+                         "' title='", dict.code, "'>", dict.entry.name, '<br>',
+                         dict.entry.localName, "</a> </td><td>", dict.size, "KB</td></tr>");
+*/
+    }
 }
