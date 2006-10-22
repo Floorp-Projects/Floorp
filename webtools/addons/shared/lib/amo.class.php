@@ -471,10 +471,13 @@ class AMO_Object
                 r.title,
                 v.size,
                 v.version,
-                p.previewuri
+                p.previewuri,
+                u.username
             FROM
                 main m
             INNER JOIN version v ON m.id = v.id
+            INNER JOIN authorxref ax ON ax.id = m.id
+            INNER JOIN userprofiles u ON u.userid = ax.userid
             INNER JOIN (
                 SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
                 FROM version v       
@@ -500,6 +503,53 @@ class AMO_Object
 
         return $this->db->record;
      }
+
+     /**
+      * Get feature details for specified addons.
+      *
+      * @param array $ids array of addon ids to fetch
+      * @return array
+      */
+      function getAddons($ids) {
+         $ids_sql = implode(", ", $ids);
+
+         $sql = "
+             SELECT
+                 m.id, 
+                 m.name, 
+                 m.downloadcount,
+                 v.dateupdated,
+                 v.uri,
+                 r.body,
+                 r.title,
+                 v.size,
+                 v.version,
+                 p.previewuri,
+                 u.username
+             FROM
+                 main m
+             INNER JOIN version v ON m.id = v.id
+             INNER JOIN authorxref ax ON ax.id = m.id
+             INNER JOIN userprofiles u ON u.userid = ax.userid
+             INNER JOIN (
+                 SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                 FROM version v       
+                 WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+                     ON vv.mxvid = v.vid AND vv.id = v.id
+             INNER JOIN applications TA ON v.AppID = TA.AppID
+             INNER JOIN os o ON v.OSID = o.OSID
+             INNER JOIN reviews r ON m.ID = r.ID
+             INNER JOIN previews p ON p.ID = m.ID
+             WHERE
+                 m.ID in ({$ids_sql})
+             GROUP BY
+                 m.ID
+         ";
+
+         $this->db->query($sql, SQL_ALL, SQL_ASSOC);
+
+         return $this->db->record;
+      }
 
     /**
      * Get the name of an application from the GUID
