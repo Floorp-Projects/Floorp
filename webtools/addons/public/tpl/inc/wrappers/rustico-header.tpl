@@ -16,6 +16,7 @@
 	<title>{$app|capitalize} Add-ons | Mozilla Corporation</title>
 	<link rel="stylesheet" type="text/css" href="/css/rustico/addons-rustico.css" media="screen">
   <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
+  <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>  
 </head>
 
 <body id="mozilla-com">

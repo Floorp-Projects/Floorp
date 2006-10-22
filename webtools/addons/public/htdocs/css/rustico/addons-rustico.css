@@ -217,6 +217,11 @@ h6 { font-size: 90%; border: 0; }
     font-size: smaller;
 }
 
+.addon-feature .search-result-image {
+    float: right;
+    margin: 0 0 0 10px;
+}
+
 .addon-feature .addon-feature-image,
 .bookmarkaddon-feature .addon-feature-image {
 	float: left;
@@ -332,6 +337,25 @@ p.install-button {
 #extensions-search .keywords {
 	width: 40%;
 }
+
+#hide-search-options,
+#search-options {
+    display: none;
+}
+
+#search-results .desc {
+    font-size: 80%;
+}
+
+#search-results .desc p {
+    margin-bottom: 0px;
+}
+
+#pages #next-page {
+    float: right;
+}
+
+/* various lists */
 
 .compact-list {
     font-size: 80%;

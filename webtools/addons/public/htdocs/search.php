@@ -6,7 +6,7 @@
  * @subpackage docs
  */
 
-startProcessing('search.tpl',$memcacheId,$compileId,'nonav');
+startProcessing('search.tpl',$memcacheId,$compileId,'rustico');
 require_once('includes.php');
 
 // Instantiate AMO_Object so we can get our categories and platforms.
