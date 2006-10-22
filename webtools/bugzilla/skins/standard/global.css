@@ -280,3 +280,15 @@ body > dl > dt {
 dl dl > dt {
     border-top: none;
 }
+
+/* Rules specific for printing */
+@media print {
+    #header, #footer {
+        display: none;
+    }
+
+    body {
+        background-image: none;
+        background-color: #fff;
+    }
+}
