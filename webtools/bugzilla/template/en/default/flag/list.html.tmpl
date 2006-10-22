@@ -75,16 +75,18 @@
 [% DEFAULT flag_table_id = "flags" %]
 
 <table id="[% flag_table_id FILTER html %]">
-  <tr>
-    <th colspan="3">
-      Flags:
-    </th>
-    [% IF any_flags_requesteeble %]
-      <th>
-        Requestee:
+  [% UNLESS flag_no_header %]
+    <tr>
+      <th colspan="3">
+        Flags:
       </th>
-    [% END %]
-  </tr>
+      [% IF any_flags_requesteeble %]
+        <th>
+          Requestee:
+        </th>
+      [% END %]
+    </tr>
+  [% END %]
 
   [%# Step 1: Display every flag type (except inactive types with no flags). %]
   [% FOREACH type = flag_types %]
