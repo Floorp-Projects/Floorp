@@ -97,11 +97,6 @@ my $sth_schedules_by_event = $dbh->prepare(
 # Bugzilla-originated mail appears to come from a single address.
 my $fromaddress = Bugzilla->params->{'mailfrom'};
 
-if ($fromaddress !~ Bugzilla->params->{'emailregexp'}) {
-    die "Cannot run.  " .
-        "The Bugzilla email address has not been properly set!\n";
-}
-
 # get the current date and time
 my ($now_sec, $now_minute, $now_hour, $now_day, $now_month, $now_year, 
     $now_weekday) = localtime;
