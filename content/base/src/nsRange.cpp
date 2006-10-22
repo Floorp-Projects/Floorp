@@ -713,17 +713,14 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   if (aOffset < 0 || aOffset > len)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-  // Collapse if not positioned yet, or if positioned in another doc.
-  if (!mIsPositioned || !InSameDoc(parent, mEndParent)) {
+  // Collapse if not positioned yet, if positioned in another doc or
+  // if the new start is after end.
+  if (!mIsPositioned || !InSameDoc(parent, mEndParent) ||
+      nsContentUtils::ComparePoints(parent, aOffset,
+                                    mEndParent, mEndOffset) == 1) {
     DoSetRange(parent, aOffset, parent, aOffset);
 
     return NS_OK;
-  }
-
-  // the start must be before the end
-  if (nsContentUtils::ComparePoints(parent, aOffset,
-                                    mEndParent, mEndOffset) == 1) {
-    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   DoSetRange(parent, aOffset, mEndParent, mEndOffset);
@@ -770,18 +767,15 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   if (aOffset < 0 || aOffset > len) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-    
-  // Collapse if not positioned yet, or if positioned in another doc.
-  if (!mIsPositioned || !InSameDoc(parent, mStartParent)) {
+
+  // Collapse if not positioned yet, if positioned in another doc or
+  // if the new end is before start.
+  if (!mIsPositioned || !InSameDoc(parent, mStartParent) ||
+      nsContentUtils::ComparePoints(mStartParent, mStartOffset,
+                                    parent, aOffset) == 1) {
     DoSetRange(parent, aOffset, parent, aOffset);
 
     return NS_OK;
-  }
-
-  // the start must be before the end
-  if (nsContentUtils::ComparePoints(mStartParent, mStartOffset,
-                                    parent, aOffset) == 1) {
-    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   DoSetRange(mStartParent, mStartOffset, parent, aOffset);
