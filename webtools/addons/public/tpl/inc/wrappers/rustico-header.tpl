@@ -56,11 +56,15 @@
 {if $currentTab eq "extensions"}
 				<li><span>Extensions</span></li>
 {else}
-  			<li><a href="{$config.webpath}/{$app}/extensions/">Extensions</li>
+  			<li><a href="{$config.webpath}/{$app}/extensions/">Extensions</a></li>
 {/if}
-				<li><a href="{$config.webpath}/firefox/plugins/">Plugins</a></li>
-				<li><a href="{$config.webpath}/firefox/search-engines/">Search Engines</a></li>
+{if $currentTab eq "themes"}
+        <li><span>Themes</span></li>
+{else}
 				<li><a href="{$config.webpath}/firefox/themes/">Themes</a></li>
+{/if}
+        <li><a href="{$config.webpath}/firefox/search-engines/">Search Engines</a></li>
+				<li><a href="{$config.webpath}/firefox/plugins/">Plugins</a></li>
 				<li><a href="http://developer.mozilla.org/en/docs/Extensions">Build Your Own</a></li>
 			</ul>
 		</div>

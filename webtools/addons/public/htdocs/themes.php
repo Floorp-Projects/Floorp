@@ -9,7 +9,7 @@
 
 $currentTab = 'themes';
 
-startProcessing('themes.tpl', 'themes', $compileId);
+startProcessing('themes.tpl', 'themes', $compileId, "rustico");
 require_once('includes.php');
 
 $_app = array_key_exists('app', $_GET) ? $_GET['app'] : null;

@@ -152,6 +152,7 @@ h6 { font-size: 90%; border: 0; }
 	margin-top: 0;
 }
 
+#top-extensions,
 .front-recommended {
 	float: left;
 	width: 45%;
@@ -163,6 +164,8 @@ h6 { font-size: 90%; border: 0; }
 	margin: 0 20px;
 }
 
+.newest-extensions h3,
+.top-extensions h3,
 .front-recommended h3 {
 	padding-top: 5px;
 }
@@ -330,11 +333,29 @@ p.install-button {
 	width: 40%;
 }
 
+.compact-list {
+    font-size: 80%;
+    font-weight: bold;
+}
+
+.compact-list td {
+    font-size: inherit;
+}
+
+.compact-list a:link,
+.compact-list a:visited {
+    text-decoration: none;
+}
+
+.compact-list span {
+    font-size: smaller;
+}
+
 /* menu box */
 
 #menu-box {
+    float: left;
 	background: url(../../images/rustico/menu-box/menu-box-top.png) top left no-repeat;
-	float: left;
 	font-size: 80%;
 	font-weight: bold;
 	width: 160px;

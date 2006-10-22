@@ -9,7 +9,7 @@
 
 $currentTab = 'extensions';
 
-startProcessing('extensions.tpl', 'extensions', $compileId);
+startProcessing('extensions.tpl', 'extensions', $compileId, "rustico");
 require_once('includes.php');
 
 $_app = array_key_exists('app', $_GET) ? $_GET['app'] : null;
