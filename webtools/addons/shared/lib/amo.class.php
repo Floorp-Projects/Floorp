@@ -505,6 +505,38 @@ class AMO_Object
      }
 
      /**
+      * Get all dictionaries.
+      *
+      * @return array
+      */
+     function getDictionaries() {
+         $suffix = "@dictionaries.addons.mozilla.org";
+
+         $this->db->query("
+             SELECT
+                REPLACE(m.guid, '{$suffix}', '') as code,
+                v.uri                
+             FROM
+                main m
+             INNER JOIN version v ON m.id = v.id
+             INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+                    ON vv.mxvid = v.vid AND vv.id = v.id
+             WHERE
+                approved = 'YES' AND
+                m.guid LIKE '%{$suffix}'
+             GROUP BY
+                m.id
+             ORDER BY
+                code
+         ", SQL_ALL, SQL_ASSOC);
+         
+         return $this->db->record;
+     }
+
+     /**
       * Get feature details for specified addons.
       *
       * @param array $ids array of addon ids to fetch
