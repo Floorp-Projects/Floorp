@@ -64,7 +64,11 @@
 {else}
 				<li><a href="{$config.webpath}/firefox/themes/">Themes</a></li>
 {/if}
+{if $currentTab eq "search-engines"}
+        <li><span>Search Engines</span></li>
+{else}
         <li><a href="{$config.webpath}/firefox/search-engines/">Search Engines</a></li>
+{/if}
 				<li><a href="{$config.webpath}/firefox/plugins/">Plugins</a></li>
 				<li><a href="http://developer.mozilla.org/en/docs/Extensions">Build Your Own</a></li>
 			</ul>
