@@ -29,6 +29,7 @@
   # format: string. Format of the individual reports.
   # width: integer. For image charts, height of the image.
   # height: integer. For image charts, width of the image.
+  # imagebase: string. Base URL for chart image.
   # switchbase: string. Base URL for format switching.
   # cumulate: boolean. For bar/line charts, whether to cumulate data sets.
   #%]
@@ -97,7 +98,7 @@
         <h2>[% tbl_disp FILTER html %]</h2>
       [% END %]
       
-      [% imageurl = BLOCK %]report.cgi?[% imagebase %]&amp;format=
+      [% imageurl = BLOCK %]report.cgi?[% imagebase FILTER html %]&amp;format=
         [% format FILTER url_quote %]&amp;ctype=png&amp;action=plot&amp;
         [% IF tbl_field %]
           [% IF tbl != "-total-" %]

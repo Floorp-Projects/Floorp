@@ -137,7 +137,6 @@
 ],
 
 'reports/report.html.tmpl' => [
-  'imagebase', 
   'width', 
   'height', 
   'imageurl', 
