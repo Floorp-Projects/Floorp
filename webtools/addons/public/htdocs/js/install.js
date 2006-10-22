@@ -35,12 +35,17 @@ function install( aEvent, extName, iconURL, extHash)  {
     if (aEvent.altKey)
         return true;
 
-    if (aEvent.target.href.match(/^.+\.xpi$/)) {
+    var url = aEvent.target.href;
+    if (!url) {
+        // rustico puts it somewhere else, of course
+        url = aEvent.target.parentNode.href;
+    }
+    if (url.match(/^.+\.xpi$/)) {
 
         var params = new Array();
 
         params[extName] = {
-            URL: aEvent.target.href,
+            URL: url,
             IconURL: iconURL,
             toString: function () { return this.URL; }
         };
@@ -57,7 +62,7 @@ function install( aEvent, extName, iconURL, extHash)  {
 
         try {
             var p = new XMLHttpRequest();
-            p.open("GET", "/install.php?uri="+aEvent.target.href, true);
+            p.open("GET", "/install.php?uri=" + url, true);
             p.send(null);
         } catch(e) { }
 
@@ -67,11 +72,16 @@ function install( aEvent, extName, iconURL, extHash)  {
 }
 
 function installTheme( aEvent, extName) {
-    InstallTrigger.installChrome(InstallTrigger.SKIN,aEvent.target.href,extName);
+    var url = aEvent.target.href;
+    if (!url) {
+        // rustico puts it somewhere else, of course
+        url = aEvent.target.parentNode.href;
+    }
+    InstallTrigger.installChrome(InstallTrigger.SKIN,url,extName);
 
     try {
         var p = new XMLHttpRequest();
-        p.open("GET", "/install.php?uri="+aEvent.target.href, true);
+        p.open("GET", "/install.php?uri="+url, true);
         p.send(null);
     } catch(e) { }
     return false;

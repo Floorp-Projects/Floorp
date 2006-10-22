@@ -1,7 +1,7 @@
 {if $app eq "firefox"}
 <h1>Themes</h1>
 
-<p>Themes are new clothes for your Firefox, another great way to personalize it to your tastes.  A theme can change only a few colors, or it can change every piece of Firefox's appearance.</p>
+<p>Themes are like new clothes for your Firefox. A theme can change only a few colors, or every piece of Firefox's appearance. It's another great way to personalize Firefox to your tastes.</p>
 
 <div class='corner-box compact-list'>
 <h3>Browse Themes by Category</h3>

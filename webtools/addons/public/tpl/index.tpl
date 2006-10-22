@@ -1,6 +1,5 @@
 {if $app eq "firefox"}
 <div id="mBody">
-<h1>Firefox Add-ons</h1>
 <p class="frontpage-intro">Add-ons extend Firefox, letting you personalize your browsing experience.  They can make a tiny tweak, or bring a whole new range of features to your favorite browser.  Take a look around and make Firefox your own.</p>
 
 <div class="addon-feature clearfix">
