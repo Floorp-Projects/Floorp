@@ -14,13 +14,15 @@ setApp();
 
 $amo = new AMO_Object();
 
-$primary = $amo->getRecommendedAddons($sql['app'],'E',1);
+$primary = $amo->getAddons(array(1532));
 $primary = $primary[0];
+
+$other = $amo->getAddons(array(2410, 1833));
 
 // Assign template variables.
 $tpl->assign(
     array(  'primary'           => $primary,
-            'other'             => $amo->getRecommendedAddons($sql['app'],'E',3),
+            'other'             => $other,
             'content'           => 'bookmarks.tpl',
             'currentTab'        => 'bookmarks')
 );

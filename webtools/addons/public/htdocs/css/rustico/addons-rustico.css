@@ -210,6 +210,10 @@ h6 { font-size: 90%; border: 0; }
     font-size: small;
 }
 
+.addon-feature h1 span.author {
+    font-size: smaller;
+}
+
 .addon-feature .addon-feature-image,
 .bookmarkaddon-feature .addon-feature-image {
 	float: left;
