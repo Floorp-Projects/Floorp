@@ -524,8 +524,10 @@ class AMO_Object
                 FROM version v       
                 WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
                     ON vv.mxvid = v.vid AND vv.id = v.id
+             INNER JOIN applications TA ON v.AppID = TA.AppID
              WHERE
                 approved = 'YES' AND
+                AppName = 'Firefox' AND 
                 m.guid LIKE '%{$suffix}'
              GROUP BY
                 m.id
