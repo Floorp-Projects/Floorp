@@ -166,8 +166,12 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   
   // Here, we may actually get useful args.
   // Copy them first to mArgv.
-  for (int arg = 0; arg < argc; arg++)
-    AddToCommandLine(argv[arg]);
+  for (int arg = 0; arg < argc; arg++) {
+    char* flag = argv[arg];
+    // don't pass on the psn (Process Serial Number) flag from the OS
+    if (strncmp(flag, "-psn_", 5) != 0)
+      AddToCommandLine(flag);
+  }
 
   // Set up AppleEvent handling.
   OSErr err = CreateAEHandlerClasses(false);
