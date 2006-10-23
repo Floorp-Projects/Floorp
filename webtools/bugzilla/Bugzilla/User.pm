@@ -90,6 +90,7 @@ use constant DB_COLUMNS => (
 );
 use constant NAME_FIELD => 'login_name';
 use constant ID_FIELD   => 'userid';
+use constant LIST_ORDER => NAME_FIELD;
 
 use constant REQUIRED_CREATE_FIELDS => qw(login_name cryptpassword);
 
