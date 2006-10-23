@@ -1931,7 +1931,9 @@
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab.selected = false;
-          this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes[aIndex]);
+          // use .item() instead of [] because dragging to the end of the strip goes out of
+          // bounds: .item() returns null (so it acts like appendChild), but [] throws
+          this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes.item(aIndex));
           // invalidate cache, because mTabContainer is about to change
           this._browsers = null;
 
