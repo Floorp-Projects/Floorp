@@ -9,7 +9,7 @@
  *   $_GET['aid'] = Addon ID (integer)
  */
 
-startProcessing('addcomment.tpl', null, null);
+startProcessing('addcomment.tpl', null, null,'rustico');
 require_once 'includes.php';
 
 session_start();

@@ -590,9 +590,18 @@ table.dalvay-table th {
 
 
 /* search-engines */
+
 .front-section {
 	width: 220px;
 	padding: 5px 0 5px 25px;
 	float: left;
 	color: #666;
+}
+
+/* previews */
+
+div.rating {
+    float:right;
+    font-size:85%;
+    font-weight:bold;
 }

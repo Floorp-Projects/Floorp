@@ -7,7 +7,7 @@
  *
  */
 
-startProcessing('createaccount.tpl', null, null, 'nonav');
+startProcessing('createaccount.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 // If there are problems, these will be set to true and used in the template.  By

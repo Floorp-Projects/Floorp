@@ -8,7 +8,7 @@
  *
  */
 
-startProcessing('login.tpl', null, null, 'nonav');
+startProcessing('login.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 // When the template is drawn, if this isn't null, it will print out a "failure to
