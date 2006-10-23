@@ -86,6 +86,11 @@
   visibility: hidden;
 }
 
+#navigator-toolbox[inFullscreen="true"],
+#navigator-toolbox[inFullscreen="true"] > #nav-bar {
+  border-top: none;
+}
+
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item {
@@ -789,11 +794,8 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 /* ::::: fullscreen window controls ::::: */
 
 #window-controls {
-  -moz-box-align: center;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  -moz-box-align: start;
+  padding: 0;
   border-left: 2px solid;
   -moz-border-left-colors: ThreeDHighlight ThreeDShadow;
 }
