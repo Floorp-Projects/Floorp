@@ -43,8 +43,6 @@
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
 
-class nsIPref;
-
 #ifdef NS_DEBUG
 struct nsSize;
 #endif

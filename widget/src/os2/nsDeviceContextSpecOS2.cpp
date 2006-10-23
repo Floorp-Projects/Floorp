@@ -42,7 +42,8 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsPrintfCString.h"
@@ -524,7 +525,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
      return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   BOOL prefFailed = NS_FAILED(rv); // don't return on failure, optional feature
 
   for (ULONG i = 0; i < mGlobalNumPrinters; i++) {

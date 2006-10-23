@@ -45,7 +45,6 @@
 #include "nsIFileURL.h"
 #include "nsSound.h"
 #include "nsNetUtil.h"
-#include "nsIPref.h"
 
 #include "nsDirectoryServiceDefs.h"
 

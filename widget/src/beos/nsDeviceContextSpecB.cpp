@@ -39,7 +39,8 @@
 #include "nsIWidget.h"
 #include "nsDeviceContextSpecB.h"
  
-#include "nsIPref.h" 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "prenv.h" /* for PR_GetEnv */ 
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
@@ -158,7 +159,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS)
   if (aPS != nsnull) {
     PRBool isOn;
     aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
     }
@@ -508,9 +509,10 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   
   if (!printerList) {
     nsresult rv;
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID,
+                                                   &rv);
     if (NS_SUCCEEDED(rv)) {
-      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
+      (void) pPrefs->GetCharPref("print.printer_list", &printerList);
     }
   }  
 
@@ -533,7 +535,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
       mGlobalNumPrinters++;      
     }
 
-    free(printerList);
+    NS_Free(printerList);
   }
 #endif /* USE_POSTSCRIPT */
       

@@ -4251,7 +4251,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (didChange)  {
           // update device context font cache
           // Dirty but easiest way:
-          // Changing nsIPref entry which triggers callbacks
+          // Changing nsIPrefBranch entry which triggers callbacks
           // and flows into calling mDeviceContext->FlushFontCache()
           // to update the font cache in all the instance of Browsers
           nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
