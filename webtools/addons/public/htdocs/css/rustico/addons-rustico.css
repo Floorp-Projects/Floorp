@@ -577,3 +577,12 @@ table.dalvay-table th.dl {
 table.dalvay-table th {
   text-align: left;
 }
+
+
+/* search-engines */
+.front-section {
+	width: 220px;
+	padding: 5px 0 5px 25px;
+	float: left;
+	color: #666;
+}
