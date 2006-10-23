@@ -71,7 +71,7 @@ var reporterListener = {
 }
 
 function onBrowserLoad() {
-  if (gBrowser)
+  if ("undefined" != typeof(gBrowser))
     gBrowser.addProgressListener(reporterListener);
 }
 
