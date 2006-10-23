@@ -2616,9 +2616,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
-  
-  NSPoint mouseLoc = [theEvent locationInWindow];
-  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
 
   EventRecord macEvent;
   macEvent.what = mouseDown;
@@ -2645,9 +2642,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
-  
-  NSPoint mouseLoc = [theEvent locationInWindow];
-  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
 
   EventRecord macEvent;
   macEvent.what = mouseUp;
@@ -2686,9 +2680,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
-
-  NSPoint mouseLoc = [theEvent locationInWindow];
-  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
 
   EventRecord macEvent;
   macEvent.what = nullEvent;
