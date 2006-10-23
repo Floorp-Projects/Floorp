@@ -110,28 +110,6 @@ h6 { font-size: 90%; border: 0; }
 	text-decoration: none;
 }
 
-/*
-#header ul a:link, #header ul a:visited {
-	display: block;
-	float: left;
-	padding: 10px 15px;
-	text-decoration: none;
-	border-right: 1px solid #576178;
-	border-left: 1px solid #1f2635;
-	color: #dee0e5;
-	height: 36px;
-	voice-family: "\"}\"";
-	voice-family: inherit;
-	height: 16px;
-} #ignored {}
-
-#header ul li a:hover {
-	background: #475470;
-	color: #fff;
-	text-decoration: underline;
-}
-*/
-
 /* page title */
 
 #page-title {
@@ -186,6 +164,12 @@ h6 { font-size: 90%; border: 0; }
 	float: left;
 	width: 45%;
 	margin-right: 4%;
+}
+
+#home-rec-link img {
+    border: none;
+    float: right;
+    text-decoration: none;
 }
 
 .front-recommended img {
