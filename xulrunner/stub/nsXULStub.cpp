@@ -49,6 +49,7 @@
 #include <windows.h>
 #include <io.h>
 #define snprintf _snprintf
+#define vsnprintf _vsnprintf
 #define PATH_SEPARATOR_CHAR '\\'
 #include "nsWindowsRestart.cpp"
 #define R_OK 04
