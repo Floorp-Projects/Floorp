@@ -1,0 +1,11 @@
+# verify the tests work
+== data:text/html,<body> about:blank
+== data:text/plain, about:blank
+!= data:text/plain,HELLO about:blank
+
+# bugs/
+== bugs/351641-1a.html bugs/351641-1-ref.html
+== bugs/351641-1b.html bugs/351641-1-ref.html
+== bugs/351641-2a.html bugs/351641-2-ref.html
+== bugs/351641-2b.html bugs/351641-2-ref.html
+# adding tests for 339289 would be good too
