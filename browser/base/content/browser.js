@@ -3422,18 +3422,16 @@ var FullScreen =
     var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var els = document.getElementsByTagNameNS(XULNS, aTag);
 
-    var i, savedMode, savedIconSize;
-    for (i = 0; i < els.length; ++i) {
+    for (var i = 0; i < els.length; ++i) {
       // XXX don't interfere with previously collapsed toolbars
       if (els[i].getAttribute("fullscreentoolbar") == "true") {
         if (!aShow) {
-          var toolbarMode = els[i].getAttribute("mode");
-          var iconSize = els[i].getAttribute("iconsize");
-          var contextMenu = els[i].getAttribute("context");
 
+          var toolbarMode = els[i].getAttribute("mode");
           if (toolbarMode != "text") {
             els[i].setAttribute("saved-mode", toolbarMode);
-            els[i].setAttribute("saved-iconsize", iconSize);
+            els[i].setAttribute("saved-iconsize",
+                                els[i].getAttribute("iconsize"));
             els[i].setAttribute("mode", "icons");
             els[i].setAttribute("iconsize", "small");
           }
@@ -3441,28 +3439,29 @@ var FullScreen =
           // XXX See bug 202978: we disable the context menu
           // to prevent customization while in fullscreen, which
           // causes menu breakage.
-          els[i].setAttribute("saved-context", contextMenu);
+          els[i].setAttribute("saved-context",
+                              els[i].getAttribute("context"));
           els[i].removeAttribute("context");
+
+          // Set the inFullscreen attribute to allow specific styling
+          // in fullscreen mode
+          els[i].setAttribute("inFullscreen", true);
         }
         else {
-          if (els[i].hasAttribute("saved-mode")) {
-            savedMode = els[i].getAttribute("saved-mode");
-            els[i].setAttribute("mode", savedMode);
-            els[i].removeAttribute("saved-mode");
+          function restoreAttr(attrName) {
+            var savedAttr = "saved-" + attrName;
+            if (els[i].hasAttribute(savedAttr)) {
+              var savedValue = els[i].getAttribute(savedAttr);
+              els[i].setAttribute(attrName, savedValue);
+              els[i].removeAttribute(savedAttr);
+            }
           }
 
-          if (els[i].hasAttribute("saved-iconsize")) {
-            savedIconSize = els[i].getAttribute("saved-iconsize");
-            els[i].setAttribute("iconsize", savedIconSize);
-            els[i].removeAttribute("saved-iconsize");
-          }
+          restoreAttr("mode");
+          restoreAttr("iconsize");
+          restoreAttr("context"); // XXX see above
 
-          // XXX see above.
-          if (els[i].hasAttribute("saved-context")) {
-            var savedContext = els[i].getAttribute("saved-context");
-            els[i].setAttribute("context", savedContext);
-            els[i].removeAttribute("saved-context");
-          }
+          els[i].removeAttribute("inFullscreen");
         }
       } else {
         // use moz-collapsed so it doesn't persist hidden/collapsed,
@@ -3473,38 +3472,18 @@ var FullScreen =
           els[i].setAttribute("moz-collapsed", "true");
       }
     }
+
+    var toolbox = document.getElementById("navigator-toolbox");
+    if (aShow)
+      toolbox.removeAttribute("inFullscreen");
+    else
+      toolbox.setAttribute("inFullscreen", true);
+
 #ifndef XP_MACOSX
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
-    for (i = 0; i < controls.length; ++i)
+    for (var i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
 #endif
-
-    // XXXvladimir this was a fix for bug 174174, but I don't think it's necessary
-    // any more?
-    var toolbox = document.getElementById("navigator-toolbox");
-    if (!aShow) {
-      var toolboxMode = toolbox.getAttribute("mode");
-      var toolboxIconSize = toolbox.getAttribute("iconsize");
-      if (toolboxMode != "text") {
-        toolbox.setAttribute("saved-mode", toolboxMode);
-        toolbox.setAttribute("saved-iconsize", toolboxIconSize);
-        toolbox.setAttribute("mode", "icons");
-        toolbox.setAttribute("iconsize", "small");
-      }
-      else {
-        if (toolbox.hasAttribute("saved-mode")) {
-          savedMode = toolbox.getAttribute("saved-mode");
-          toolbox.setAttribute("mode", savedMode);
-          toolbox.removeAttribute("saved-mode");
-        }
-
-        if (toolbox.hasAttribute("saved-iconsize")) {
-          savedIconSize = toolbox.getAttribute("saved-iconsize");
-          toolbox.setAttribute("iconsize", savedIconSize);
-          toolbox.removeAttribute("saved-iconsize");
-        }
-      }
-    }
   }
 };
 
