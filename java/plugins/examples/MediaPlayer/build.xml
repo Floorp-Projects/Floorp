@@ -59,6 +59,7 @@
   <!-- Construct compile classpath -->
   <path id="compile.classpath">
     <pathelement location="${build.home}"/>
+    <pathelement location="${jmf.jar}"/>
   </path>
 
   <target name="prepare">
@@ -100,10 +101,10 @@
     <jar jarfile="${basedir}/build/mediaplayer.jar">
        <manifest>
         <attribute name="MIMEDescription" value="video/avi"/>
-        <attribute name="Pluglet-Class" value="test"/>
+        <attribute name="Pluglet-Class" value="JMPlayer"/>
        </manifest>
       <fileset dir="${basedir}/build">
-        <include name="*.class" />
+        <include name="**/*.*" />
       </fileset>
     </jar>
 

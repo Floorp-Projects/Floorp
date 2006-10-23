@@ -44,6 +44,8 @@
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsISupportsUtils.h" // this is where some useful macros defined
+#include "ns4xPluginStreamListener.h"
+#include "nsIPluginStreamInfo.h"
 
 #include "nsServiceManagerUtils.h"
 
@@ -214,30 +216,16 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
         return mInitialized;
     }
     rv = mPluglet->Initialize(peer);
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#elif defined(XP_WIN) || defined(XP_OS2)
-    pluginWindow.window = (nsPluginPort *) aWindow->window;
-#elif defined(XP_UNIX) && defined(MOZ_X11)
-#else
-#endif
-    pluginWindow.x = aWindow->x;
-    pluginWindow.y = aWindow->y;
-    pluginWindow.width = aWindow->width;
-    pluginWindow.height = aWindow->height;
-    pluginWindow.clipRect.top = aWindow->clipRect.top;
-    pluginWindow.clipRect.left = aWindow->clipRect.left;
-    pluginWindow.clipRect.bottom = aWindow->clipRect.bottom;
-    pluginWindow.clipRect.right = aWindow->clipRect.right;
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    pluginWindow.ws_info = aWindow->ws_info;
-#endif
-    pluginWindow.type = aWindow->type == NPWindowTypeWindow ?
-        nsPluginWindowType_Window : nsPluginWindowType_Drawable;
-    rv = mPluglet->SetWindow(&pluginWindow);
     if (NS_SUCCEEDED(rv)) {
-        rv = mPluglet->Start();
+        rv = this->CopyNPWindowToNsPluginWindow(aWindow, &pluginWindow);
         if (NS_SUCCEEDED(rv)) {
-            mInitialized = PR_TRUE;
+            rv = mPluglet->Start();
+            if (NS_SUCCEEDED(rv)) {
+                rv = mPluglet->SetWindow(&pluginWindow);
+                if (NS_SUCCEEDED(rv)) {
+                    mInitialized = PR_TRUE;
+                }
+            }
         }
     }
     
@@ -256,6 +244,90 @@ void nsPluginInstance::shut()
 NPBool nsPluginInstance::isInitialized()
 {
   return mInitialized;
+}
+
+NPError nsPluginInstance::SetWindow(NPWindow* pNPWindow)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    nsPluginWindow pluginWindow;
+
+    if (!this->isInitialized()) {
+        return rv;
+    }
+
+    rv = this->CopyNPWindowToNsPluginWindow(pNPWindow, &pluginWindow);
+    if (NS_SUCCEEDED(rv)) {
+        rv = mPluglet->SetWindow(&pluginWindow);
+    }
+
+    return (NPError) rv;
+}
+
+NPError nsPluginInstance::NewStream(NPMIMEType type, NPStream* stream, 
+                                    NPBool seekable, uint16* stype)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (!this->isInitialized()) {
+        return rv;
+    }
+
+    nsCOMPtr<nsIPluginStreamListener> listener = nsnull;
+    rv = mPluglet->NewStream(getter_AddRefs(listener));
+    if (NS_SUCCEEDED(rv)) {
+        ns4xPluginStreamListener * hostListener = 
+            (ns4xPluginStreamListener *) stream->ndata;
+        if (hostListener) {
+            nsCOMPtr<nsIPluginStreamInfo> hostStreamInfo = 
+                hostListener->mStreamInfo;
+            if (hostStreamInfo) {
+                rv = listener->OnStartBinding(hostStreamInfo);
+                if (NS_SUCCEEDED(rv)) {
+                    stream->pdata = (void *) listener.get();
+                    nsCOMPtr<nsISupports> toCast = 
+                        do_QueryInterface(listener);
+                    nsISupports *toAddRef = (nsISupports *) toCast.get();
+                    NS_ADDREF(toAddRef);
+                }
+            }
+        }
+    }
+
+    return rv;
+}
+
+NPError nsPluginInstance::DestroyStream(NPStream *stream, NPError reason) 
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (!this->isInitialized()) {
+        return rv;
+    }
+
+    nsCOMPtr<nsIPluginStreamListener> listener = 
+        (nsIPluginStreamListener *) stream->pdata;
+    nsCOMPtr<nsISupports> toCast = do_QueryInterface(listener);
+    nsISupports *toRelease = (nsISupports *) toCast.get();
+    NS_RELEASE(toRelease);
+    listener = nsnull;
+    stream->pdata = nsnull;
+
+    return NS_OK;
+}
+
+int32 nsPluginInstance::WriteReady(NPStream *stream) {
+    int32 result = 65536;
+    return result;
+}
+
+int32 nsPluginInstance::Write(NPStream *stream, int32 offset, 
+                              int32 len, void *buffer)
+{
+    int32 result = len;
+    nsCOMPtr<nsIPluginStreamListener> listener = 
+        (nsIPluginStreamListener *) stream->pdata;
+    
+    return result;
 }
 
 NS_IMETHODIMP nsPluginInstance::HasPlugletForMimeType(const char *aMimeType, 
@@ -284,6 +356,39 @@ NS_IMETHODIMP nsPluginInstance::HasPlugletForMimeType(const char *aMimeType,
         }
 		rv = NS_OK;
     }
+
+    return rv;
+}
+
+nsresult nsPluginInstance::CopyNPWindowToNsPluginWindow(NPWindow *aWindow,
+                                                        nsPluginWindow *pluginWindow)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+
+    if (nsnull == aWindow || nsnull == pluginWindow) {
+        return rv;
+    }
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_WIN) || defined(XP_OS2)
+    pluginWindow->window = (nsPluginPort *) aWindow->window;
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+#else
+#endif
+    pluginWindow->x = aWindow->x;
+    pluginWindow->y = aWindow->y;
+    pluginWindow->width = aWindow->width;
+    pluginWindow->height = aWindow->height;
+    pluginWindow->clipRect.top = aWindow->clipRect.top;
+    pluginWindow->clipRect.left = aWindow->clipRect.left;
+    pluginWindow->clipRect.bottom = aWindow->clipRect.bottom;
+    pluginWindow->clipRect.right = aWindow->clipRect.right;
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    pluginWindow->ws_info = aWindow->ws_info;
+#endif
+    pluginWindow->type = aWindow->type == NPWindowTypeWindow ?
+        nsPluginWindowType_Window : nsPluginWindowType_Drawable;
+    rv = NS_OK;
 
     return rv;
 }

@@ -18,7 +18,14 @@ public class JMPlayer implements PlugletFactory {
     public JMPlayer() {
     }
     public Pluglet createPluglet(String mimeType) {
- 	return new Player();
+        Pluglet player = null;
+        try {
+            player = new Player();
+        }
+        catch (Throwable e) {
+            System.out.println("debug: edburns: " + e.getMessage());
+        }
+ 	return player;
     }
     public void initialize(PlugletManager manager) {	
     }

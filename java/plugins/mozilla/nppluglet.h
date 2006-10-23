@@ -53,6 +53,15 @@ public:
   void shut();
   NPBool isInitialized();
 
+  NPError SetWindow(NPWindow* pNPWindow);
+
+  NPError NewStream(NPMIMEType type, NPStream* stream, 
+                    NPBool seekable, uint16* stype);
+
+  NPError DestroyStream(NPStream *stream, NPError reason);
+  int32   WriteReady(NPStream *stream);
+  int32   Write(NPStream *stream, int32 offset, int32 len, void *buffer);
+
   // we need to provide implementation of this method as it will be
   // used by Mozilla to retrive the scriptable peer
   // and couple of other things on Unix
@@ -69,6 +78,9 @@ private:
   nsCOMPtr<nsIPluginInstance> mPluglet;
   nsScriptablePeer * mScriptablePeer;
   nsPluginCreateData mCreateDataStruct;
+
+  nsresult CopyNPWindowToNsPluginWindow(NPWindow *npWindow, 
+                                        nsPluginWindow *nsWindow);
 
 public:
   char mString[128];
