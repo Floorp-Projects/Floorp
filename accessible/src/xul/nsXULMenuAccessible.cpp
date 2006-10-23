@@ -99,8 +99,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   // Offscreen?
   // If parent or grandparent menuitem is offscreen, then we're offscreen too
   // We get it by replacing the current offscreen bit with the parent's
-  nsCOMPtr<nsIAccessible> parentAccessible;
-  GetParent(getter_AddRefs(parentAccessible));
+  nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
   if (parentAccessible) {
     *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
     *_retval |= (State(parentAccessible) & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
@@ -143,8 +142,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
     if (accesskey.IsEmpty())
       return NS_OK;
 
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    GetParent(getter_AddRefs(parentAccessible));
+    nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
     if (parentAccessible) {
       PRUint32 role;
       parentAccessible->GetRole(&role);
@@ -267,8 +265,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Select) {   // default action
     DoCommand();
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    GetParent(getter_AddRefs(parentAccessible));
+    nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
     if (parentAccessible) {
       PRUint32 role;
       parentAccessible->GetRole(&role);
@@ -362,10 +359,9 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetState(PRUint32 *_retval)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   element->HasAttribute(NS_LITERAL_STRING("menuactive"), &isActive);
   if (!isActive) {
-    nsCOMPtr<nsIAccessible> parentAccessible;
+    nsCOMPtr<nsIAccessible> parent(GetParent());
     nsCOMPtr<nsIDOMNode> parentNode;
-    GetParent(getter_AddRefs(parentAccessible));
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parentAccessible));
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parent));
     if (accessNode) 
       accessNode->GetDOMNode(getter_AddRefs(parentNode));
     element = do_QueryInterface(parentNode);

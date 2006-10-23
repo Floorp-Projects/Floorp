@@ -148,6 +148,12 @@ public:
   static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == ROLE_TEXT_LEAF || role == ROLE_STATICTEXT; }
   static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != ROLE_TEXT_LEAF && role != ROLE_WHITESPACE && role != ROLE_STATICTEXT; }
   static PRInt32 TextLength(nsIAccessible *aAccessible);
+  
+  already_AddRefed<nsIAccessible> GetParent() {
+    nsIAccessible *parent = nsnull;
+    GetParent(&parent);
+    return parent;
+  }
 
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
@@ -185,7 +191,11 @@ protected:
 
   // Helpers for dealing with children
   virtual void CacheChildren();
+  
+  // nsCOMPtr<>& is useful here, because getter_AddRefs() nulls the comptr's value, and NextChild
+  // depends on the passed-in comptr being null or already set to a child (finding the next sibling).
   nsIAccessible *NextChild(nsCOMPtr<nsIAccessible>& aAccessible);
+    
   already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
 
   // Selection helpers

@@ -684,8 +684,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
   if (isFinished) {
     // Need to wait until scrollable view is available
     AddScrollListener();
-    nsCOMPtr<nsIAccessible> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessible> parent(nsAccessible::GetParent());
     nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(parent));
     if (privateAccessible) {
       // Make the parent forget about the old document as a child

@@ -156,8 +156,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                       
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
-    nsCOMPtr<nsIAccessible> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessible> parent(GetParent());
     nsCOMPtr<nsIAccessibleHyperText> hyperTextParent(do_QueryInterface(parent));
     if (hyperTextParent) {
       *aInstancePtr = NS_STATIC_CAST(nsIAccessibleHyperLink*, this);
@@ -532,8 +531,7 @@ NS_IMETHODIMP nsAccessible::GetNextSibling(nsIAccessible * *aNextSibling)
     return NS_ERROR_FAILURE;
   }
   if (!mParent) {
-    nsCOMPtr<nsIAccessible> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessible> parent(GetParent());
     if (parent) {
       PRInt32 numChildren;
       parent->GetChildCount(&numChildren);  // Make sure we cache all of the children
@@ -2749,8 +2747,7 @@ NS_IMETHODIMP nsAccessible::IsSelected(PRBool *aIsSelected)
 nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
 {
   *aStartOffset = *aEndOffset = 0;
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIAccessible> parent(GetParent());
   if (!parent) {
     return NS_ERROR_FAILURE;
   }
