@@ -52,6 +52,7 @@ public:
     NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
     NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
     NS_IMETHOD LookAndFeelChanged();
+    virtual PRUnichar GetPasswordCharacter();
 
 protected:
     GtkStyle *mStyle;
@@ -59,7 +60,7 @@ protected:
 
     // Cached colors, we have to create a dummy widget to actually
     // get the style
-    static PRBool sColorsInitialized;
+
     static nscolor sInfoBackground;
     static nscolor sInfoText;
     static nscolor sMenuBackground;
@@ -70,8 +71,9 @@ protected:
     static nscolor sButtonText;
     static nscolor sButtonOuterLightBorder;
     static nscolor sButtonInnerDarkBorder;
+    static PRUnichar sInvisibleCharacter;
 
-    static void InitColors();
+    static void InitLookAndFeel();
     void InitWidget() {
         mWidget = gtk_invisible_new();
         gtk_object_ref(GTK_OBJECT(mWidget));

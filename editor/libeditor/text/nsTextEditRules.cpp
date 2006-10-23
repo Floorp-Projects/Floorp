@@ -60,10 +60,14 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
 #include "nsFrameSelection.h"
+
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if ((mFlags & nsIPlaintextEditor::eEditorReadonlyMask) || (mFlags & nsIPlaintextEditor::eEditorDisabledMask)) \
@@ -1420,13 +1424,20 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *
   // manage the password buffer
   mPasswordText.Insert(*aOutString, aStart);
 
-  // change the output to '*' only
+  // change the output to the platform password character
+  PRUnichar passwordChar = PRUnichar('*');
+  nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+  if (lookAndFeel)
+  {
+    passwordChar = lookAndFeel->GetPasswordCharacter();
+  }
+
   PRInt32 length = aOutString->Length();
   PRInt32 i;
   aOutString->Truncate();
   for (i=0; i<length; i++)
   {
-    aOutString->Append(PRUnichar('*'));
+    aOutString->Append(passwordChar);
   }
 
   return NS_OK;
