@@ -387,6 +387,10 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     EXT_SERVERDIR=${HOSTDIR}/ext_server
     EXT_CLIENTDIR=${HOSTDIR}/ext_client
 
+    IOPR_CADIR=${HOSTDIR}/CA_iopr
+    IOPR_SERVERDIR=${HOSTDIR}/server_iopr
+    IOPR_CLIENTDIR=${HOSTDIR}/client_iopr
+
     CERT_EXTENSIONS_DIR=${HOSTDIR}/cert_extensions
 
     PWFILE=${TMP}/tests.pw.$$
@@ -420,6 +424,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_CADIR=../CA
     R_SERVERDIR=../server
     R_CLIENTDIR=../client
+    R_IOPR_CADIR=../CA_iopr
+    R_IOPR_SERVERDIR=../server_iopr
+    R_IOPR_CLIENTDIR=../client_iopr
     R_ALICEDIR=../alicedir
     R_BOBDIR=../bobdir
     R_DAVEDIR=../dave
@@ -523,6 +530,20 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     TOTAL_GRP_NUM=3
     
     RELOAD_CRL=1
+
+    #################################################
+    # Interoperability testing constatnts
+    #
+    # if suite is setup for testing, IOPR_HOSTADDR_LIST should have
+    # at least one host name(FQDN)
+    # Example   IOPR_HOSTADDR_LIST="goa1.SFBay.Sun.COM"
+
+    if [ -z "`echo ${IOPR_HOSTADDR_LIST} | grep '[A-Za-z]'`" ]; then
+        IOPR=0
+    else
+        IOPR=1
+    fi
+    #################################################
 
     SCRIPTNAME=$0
     INIT_SOURCED=TRUE   #whatever one does - NEVER export this one please
