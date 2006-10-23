@@ -214,8 +214,7 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
     }
   }
 
-  nsCOMPtr<nsIAccessible> xpParentAccessible;
-  GetParent(getter_AddRefs(xpParentAccessible));
+  nsCOMPtr<nsIAccessible> xpParentAccessible(GetParent());
   NS_ASSERTION(xpParentAccessible, "No parent accessible where we're not direct child of window");
   if (!xpParentAccessible) {
     return E_UNEXPECTED;
@@ -330,8 +329,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIAccessible> parent(GetParent());
   if (!parent) {
     return NS_ERROR_FAILURE;
   }

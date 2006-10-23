@@ -603,8 +603,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
       return NS_ERROR_FAILURE;
     // Clear old selection
     nsCOMPtr<nsIDOMNode> oldHTMLOptionNode, selectNode;
-    nsCOMPtr<nsIAccessible> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessible> parent(GetParent());
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parent));
     NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
     accessNode->GetDOMNode(getter_AddRefs(selectNode));

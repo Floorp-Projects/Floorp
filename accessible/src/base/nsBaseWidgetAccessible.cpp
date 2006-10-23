@@ -125,8 +125,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
     PRUint32 role;
     GetRole(&role);
     if (role != ROLE_LINK) {
-      nsCOMPtr<nsIAccessible> parentAccessible;
-      GetParent(getter_AddRefs(parentAccessible));
+      nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
       if (parentAccessible) {
         PRUint32 orState = 0;
         parentAccessible->GetFinalState(&orState);
