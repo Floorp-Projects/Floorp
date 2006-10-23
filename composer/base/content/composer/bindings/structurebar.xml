@@ -61,30 +61,57 @@
       <method name="selectionChanged">
         <parameter name="aArguments"/>
         <parameter name="aNode"/>
+        <parameter name="aOneElementSelected"/>
         <body>
         <![CDATA[
           var node = aNode;
           if (this.mLastNode == node)
           {
-            
+            // avoid rebuilding the whole structure toolbar if possible
+            var toolbarbutton = this.lastChild;
+            while (node && toolbarbutton &&
+                   node == toolbarbutton.getUserData("node") &&
+                   node.nodeName.toLowerCase() != "html")
+            {
+              node = node.parentNode;
+              toolbarbutton = toolbarbutton.previousSibling;
+            }
+            // so we rebuild from toolbarbutton up to the root
+            while (toolbarbutton)
+            {
+              var tmp = toolbarbutton.previousSibling;
+              this.removeChild(toolbarbutton);
+              toolbarbutton = tmp;
+            }
           }
           else
           {
+            // the deepest node is not the one the toolbar is currently showing,
+            // so let's clear all
             this.mLastNode = node;
             while (this.hasChildNodes())
               this.removeChild(this.lastChild);
+          }
 
-            while (node.nodeName.toLowerCase() != "html")
-            {
-              var newLabel = document.createElement("toolbarbutton");
-              newLabel.setAttribute("label", node.nodeName.toLowerCase());
-              var variant = Components.classes["@mozilla.org/variant;1"].createInstance(Components.interfaces.nsIWritableVariant);
-              variant.setAsISupports(node);
-              newLabel.setUserData("node", variant, null);
-              this.insertBefore(newLabel, this.firstChild);
+          while (node.nodeName.toLowerCase() != "html")
+          {
+            var newLabel = document.createElement("toolbarbutton");
 
-              node = node.parentNode;
-            }
+            var text = "<" + node.nodeName.toLowerCase();
+            if (node.id)
+              text += "#" + node.id;
+            if (node.className)
+              text += "." + node.className.replace( / /g, ".");
+            text += ">"
+
+            newLabel.setAttribute("label",     text);
+            if (aOneElementSelected && aNode == node)
+              newLabel.setAttribute("checked", "true");
+
+            newLabel.setUserData("node", node, null);
+            this.insertBefore(newLabel, this.firstChild);
+
+            node = node.parentNode;
           }
         ]]>
         </body>
@@ -106,7 +133,29 @@
         </body>
       </method>
 
+      <method name="selectNode">
+        <parameter name="aNode"/>
+        <body>
+        <![CDATA[
+          var editor = EditorUtils.getCurrentEditor();
+          var node   = aNode.getUserData("node");
+          if (editor && node)
+            editor.selectElement(node);
+        ]]>
+        </body>
+      </method>
+
     </implementation>
+
+    <handlers>
+      <handler event="command">
+        <![CDATA[
+          var elt = event.target;
+          if (elt.localName == "toolbarbutton")
+            this.selectNode(elt);
+        ]]>
+      </handler>
+    </handlers>
 
   </binding>
 

@@ -41,3 +41,7 @@ structurebar {
   -moz-box-orient: horizontal;
   -moz-binding: url("chrome://composer/content/bindings/structurebar.xml#structurebar");
 }
+
+toolbarbutton {
+  padding: 0px;
+}

@@ -226,17 +226,18 @@ var ComposerCommands = {
       if (this.mSelectionTimeOutId)
         clearTimeout(this.mSelectionTimeOutId);
 
-      this.mSelectionTimeOutId = setTimeout(this._updateSelectionBased, 500, element);
+      this.mSelectionTimeOutId = setTimeout(this._updateSelectionBased, 500, element, oneElementSelected);
     }
     catch(e) {}
   },
 
-  _updateSelectionBased: function _updateSelectionBased(element)
+  _updateSelectionBased: function _updateSelectionBased(aElement, aOneElementSelected)
   {
-    NotifierUtils.notify("selection", element);
+    NotifierUtils.notify("selection", aElement, aOneElementSelected);
   }
 };
 
 #include navigationCommands.inc
 #include fileCommands.inc
 #include viewCommands.inc
+#include dummyCommands.inc
