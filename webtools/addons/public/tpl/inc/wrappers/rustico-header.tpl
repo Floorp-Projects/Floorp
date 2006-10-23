@@ -78,6 +78,12 @@
 			</ul>
 		</div>
 
+{if $extraMenu}
+    <div id="extra-menu">
+{include file=$extraMenu}
+  </div>
+{/if}
+
 		<div id="mainContent">
 {else}
 {include file="inc/wrappers/default-header.tpl"}

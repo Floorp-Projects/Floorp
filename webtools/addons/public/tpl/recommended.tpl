@@ -1,5 +1,4 @@
 {if $app eq "firefox"}
-<div id="mBody">
 <h1>Recommended Add-ons</h1>
 
 <p>With over a thousand add-ons available, there's something for everyone. To get you started, here's a list of some of our favorites.  Enjoy!</p>

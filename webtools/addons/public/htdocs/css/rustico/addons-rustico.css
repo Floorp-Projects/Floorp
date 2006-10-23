@@ -170,6 +170,7 @@ h6 { font-size: 90%; border: 0; }
     border: none;
     float: right;
     text-decoration: none;
+    margin-left: 10px;
 }
 
 .front-recommended img {
@@ -373,6 +374,15 @@ p.install-button {
 
 #search-results .desc p {
     margin-bottom: 0px;
+}
+
+#search-results h2 {
+    font-weight: bold;
+}
+
+#search-results h2 span {
+    font-weight: normal;
+    font-size: 80%;
 }
 
 #pages #next-page {

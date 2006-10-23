@@ -1,6 +1,6 @@
 {if $app eq "firefox"}
-<div id="mBody">
-  
+<h1>Welcome to Firefox Add-ons</h1>
+
 <a href="{$config.webpath}/{$app}/recommended/" id="home-rec-link"><img src="{$config.webpath}/images/rustico/addons/firefox-addons-puzzle-ico.png" width="50" height="50" alt="" /></a>
   
 <p class="frontpage-intro">Add-ons extend Firefox, letting you personalize your browsing experience.  They can make a tiny tweak, or bring a whole new range of features to your favorite browser.  Take a look around and make Firefox your own.</p>
@@ -9,7 +9,7 @@
 
 <div class="addon-feature clearfix">
 	<div class="corner-box">
-		<h3>Featured Add-on: {$feature.name}</h3>
+		<h3>Featured Add-on: <a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h3>
 		<img src="{$config.webpath}{$feature.previewuri}" width="205" height="152" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text">
 			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
@@ -19,6 +19,7 @@
 </div>
 
 {include file="inc/search-box.tpl"}
+
 {else} 
 <div class="split-feature">
     <div class="split-feature-one">

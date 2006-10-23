@@ -5,8 +5,8 @@
   <form action="{$smarty.server.PHP_SELF}" method="get" class="amo-form">  
 <input type="hidden" name="app" value="{$app}"/>
 <input type="text" name="q" value="{$clean.q}" maxlength="32"/><input class="amo-submit" type="submit" value="Search"/> 
-<span id="show-search-options"><a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Advanced Options&hellip;</a></span>
-<span id="hide-search-options"><a href="javascript:toggle('show-search-options','hide-search-options','inline');hide('search-options');">Hide Options</a></span>
+<span id="show-search-options" class="compact-list"><a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Advanced Options &darr;</a></span>
+<span id="hide-search-options" class="compact-list"><a href="javascript:toggle('show-search-options','hide-search-options','inline');hide('search-options');">Hide Options &uarr;</a></span>
 </div>
 
 <div id="search-options">
@@ -102,11 +102,11 @@
 {section name=r loop=$results}
 <div class="addon-feature clearfix">
 	<div class="corner-box">
-		<h4><a href="{$config.webpath}/{$app}/{$results[r]->ID}/">{$results[r]->Name} <span>{$results[r]->Version}</span></a> <span>by
+		<h2><a href="{$config.webpath}/{$app}/{$results[r]->ID}/">{$results[r]->Name}</a> <span>{$results[r]->Version}</span> <span>by
       {foreach key=key item=item from=$results[r]->Authors}
               <a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a>{if $item != end($results[r]->Authors)},{/if}
       {/foreach}
-		  </span></h4>
+		  </span></h2>
       {if $results[r]->PreviewURI}
       	<img src="{$config.webpath}{$results[r]->PreviewURI}" alt="" class="search-result-image" />
       {/if}
