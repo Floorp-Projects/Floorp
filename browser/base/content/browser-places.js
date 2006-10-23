@@ -646,8 +646,8 @@ var PlacesMenuDNDController = {
   // Whether or not drag and drop to menus is supported on this platform
   // Dragging in menus is disabled on OS X due to various repainting issues.
 #ifdef XP_MACOSX
-  _dragSupported: false,
+  _dragSupported: false
 #else
-  _dragSupported: true,
+  _dragSupported: true
 #endif
 };
