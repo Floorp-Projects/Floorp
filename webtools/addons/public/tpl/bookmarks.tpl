@@ -3,7 +3,7 @@
 
 <p>We've collected some of our favorite bookmark-related add-ons here for you to explore.  They can help you sync your bookmarks everywhere you use Firefox, keep things organized, or share your bookmarks with friends &#8211; or the whole world!</p>
 
-<div class="addon-feature clearfix">
+<div id="primary-feature" class="addon-feature clearfix">
 	<h1>{$primary.name} <span>by</span> <span class="author">{$primary.username}</span></h1>
 	<img src="{$config.webpath}{$primary.previewuri}" alt="" class="addon-feature-image" />
 	<div class="addon-feature-text corner-box">
