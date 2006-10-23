@@ -52,6 +52,7 @@ const nsPaperSizePS_ nsPaperSizePS::mList[] =
     { "A3",             SIZE_MM(297),   SIZE_MM(420),   PR_TRUE },
     { "Letter",         SIZE_INCH(8.5), SIZE_INCH(11),  PR_FALSE },
     { "Legal",          SIZE_INCH(8.5), SIZE_INCH(14),  PR_FALSE },
+    { "Tabloid",        SIZE_INCH(11),  SIZE_INCH(17),  PR_FALSE },
     { "Executive",      SIZE_INCH(7.5), SIZE_INCH(10),  PR_FALSE },
 #undef SIZE_INCH
 #undef SIZE_MM
