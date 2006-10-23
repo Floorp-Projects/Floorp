@@ -36,7 +36,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 #expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
-<!ENTITY  brandShortName        "Mail/News">
-<!ENTITY  brandFullName         "Mail/News Client">
-<!ENTITY  vendorShortName       "Mail/News Client">
+<!ENTITY  brandShortName        "Composer">
+<!ENTITY  brandFullName         "Composer">
+<!ENTITY  vendorShortName       "Disruptive Innovations">
 <!ENTITY  sidebarName           "Sidebar">

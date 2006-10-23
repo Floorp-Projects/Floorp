@@ -1,3 +1,5 @@
+#filter substitution
+
 pref("toolkit.defaultChromeURI", "chrome://composer/content/composer.xul");
 
 /* debugging prefs */
@@ -7,7 +9,7 @@ pref("javascript.options.strict", true);
 pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
 
-pref("general.useragent.extra.mybrowser", "MyBrowser/0.1");
+pref("general.useragent.extra.mybrowser", "@MOZ_APP_NAME@/@COMPOSER_VERSION@");
 
 pref("extensions.update.enabled", true);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");

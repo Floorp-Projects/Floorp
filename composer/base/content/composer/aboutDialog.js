@@ -1,5 +1,3 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -37,55 +35,60 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-#filter substitution
+var gSelectedPage = 0;
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://composer/content/aboutDialog.css" type="text/css"?> 
+function init(aEvent) 
+{
+  if (aEvent.target != document)
+    return;
+  var userAgentField = document.getElementById("userAgent");
+  var userAgentString = document.createTextNode(navigator.userAgent);
+  userAgentField.appendChild(userAgentString);
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % aboutDialogDTD SYSTEM "chrome://composer/locale/aboutDialog.dtd" >
-%aboutDialogDTD;
-]>
+  var button = document.documentElement.getButton("extra2");
+  button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
+  button.addEventListener("command", switchPage, false);
 
-<dialog xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="aboutDialog"
-        windowtype="Composer:About"
-        onload="init(event);" onunload="uninit(event);"
+  document.documentElement.getButton("accept").focus();
 #ifdef XP_MACOSX
-        buttons="extra2"
-        align="end"
-#else
-        title="&aboutDialog.title;"
-        buttons="accept,extra2"
+  // it may not be sized at this point, and we need its width to calculate its position
+  window.sizeToContent();
+  window.moveTo((screen.availWidth / 2) - (window.outerWidth / 2), screen.availHeight / 5);
 #endif
-        creditslabel="&copyright;"
-        aboutlabel="&aboutLink;">
-    
-  <script type="application/x-javascript" src="chrome://composer/content/aboutDialog.js"/>
+}
 
-  <deck id="modes" flex="1">
-    <vbox id="clientBox">
-      <hbox>
-        <image src="chrome://composer/content/about-logo.png"/>
-      </hbox>
+function uninit(aEvent)
+{
+  if (aEvent.target != document)
+    return;
+  var iframe = document.getElementById("creditsIframe");
+  iframe.setAttribute("src", "");
+}
 
-      <label id="version" value="&aboutVersion; @COMPOSER_VERSION@"/>
+function switchPage(aEvent)
+{
+  var button = aEvent.target;
+  if (button.localName != "button")
+    return;
 
-      <description id="copyright">&copyrightText;</description>
-      <vbox id="detailsBox" align="center" flex="1">
-        <spacer flex="1"/>
-        <description id="userAgent"/>
-      </vbox>
-    </vbox>
-    <vbox flex="1" id="creditsBox">
-      <iframe id="creditsIframe" src="about:blank" flex="1"/>
-    </vbox>    
-  </deck>
-  <separator class="groove" id="groove"/>
+  var iframe = document.getElementById("creditsIframe");
+  if (gSelectedPage == 0) { 
+    iframe.setAttribute("src", "chrome://composer/content/credits.xhtml");
+    button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
+    gSelectedPage = 1;
+  }
+  else {
+    iframe.setAttribute("src", ""); 
+    button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
+    gSelectedPage = 0;
+  }
+  var modes = document.getElementById("modes");
+  modes.setAttribute("selectedIndex", gSelectedPage);
+}
 
-
-</dialog>
+function openURL(aUrl)
+{
+  var iframe = document.getElementById("creditsIframe");
+  iframe.setAttribute("src", aUrl);
+}
 

@@ -42,5 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DEFINES += \
+    -DCOMPOSER_VERSION=$(COMPOSER_VERSION) \
+    $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
