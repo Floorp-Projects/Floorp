@@ -239,8 +239,24 @@ function safeHTML(str)
 
         return "?";
     };
-        
+
     return String(str).replace(/[<>&"']/g, replaceChars);
+}
+
+function safeCSV(str)
+{
+    function replaceChars(ch)
+    {
+        switch (ch)
+        {
+            case '"':
+                return '""';
+        }
+
+        return "?";
+    }
+
+    return '"' + String(str).replace(/"/g, replaceChars) + '"';
 }
 
 function alert(msg, parent, title)

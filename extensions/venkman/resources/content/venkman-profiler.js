@@ -61,9 +61,11 @@ function ProfileReport (reportTemplate, file, rangeList, scriptInstanceList)
     this.scriptInstanceList = scriptInstanceList;
     this.key = "total";
 
-    // Escape bad characters for HTML and XML profiles.
+    // Escape bad characters for HTML, XML and CSV profiles.
     if (/\.(html|xml)\.tpl$/.test(this.reportTemplate.__url__))
         this.escape = safeHTML;
+    else if (/\.csv\.tpl$/.test(this.reportTemplate.__url__))
+        this.escape = safeCSV;
     else
         this.escape = function _nop_escape(s) { return s };
 }
