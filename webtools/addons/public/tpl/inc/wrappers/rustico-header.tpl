@@ -14,7 +14,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<title>{$app|capitalize} Add-ons | Mozilla Corporation</title>
-	<link rel="stylesheet" type="text/css" href="/css/rustico/addons-rustico.css" media="screen">
+	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/rustico/addons-rustico.css" media="screen">
   <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
   <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>  
 </head>
@@ -23,7 +23,7 @@
 
 	<div id="header">
 		<div>
-			<h1><img src="/images/rustico/header/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation" /></h1>
+			<h1><img src="{$config.webpath}/images/rustico/header/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation" /></h1>
 			<ul>
 				<li id="menu-products"><a href="http://www.mozilla.com/products/">Products</a></li>
 				<li id="menu-extensions"><a href="{$config.webpath}/firefox/">Add-ons</a></li>
