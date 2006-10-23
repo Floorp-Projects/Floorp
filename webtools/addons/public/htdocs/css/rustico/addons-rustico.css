@@ -83,6 +83,34 @@ h6 { font-size: 90%; border: 0; }
 	padding: 0;
 }
 
+#header ul span, #header ul a:link, #header ul a:visited {
+	display: block;
+	float: left;
+	padding: 10px 15px;
+	text-decoration: none;
+	border-right: 1px solid #576178;
+	border-left: 1px solid #1f2635;
+	color: #dee0e5;
+	height: 36px;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	height: 16px;
+} #ignored {}
+
+#header ul li span,
+#header ul li a.current,
+#header ul li a:hover {
+	background: #475470;
+	color: #fff;
+	text-decoration: underline;
+}
+
+#header ul li span,
+#header ul li a.current {
+	text-decoration: none;
+}
+
+/*
 #header ul a:link, #header ul a:visited {
 	display: block;
 	float: left;
@@ -102,6 +130,7 @@ h6 { font-size: 90%; border: 0; }
 	color: #fff;
 	text-decoration: underline;
 }
+*/
 
 /* page title */
 
@@ -356,10 +385,6 @@ p.install-button {
 #hide-search-options,
 #search-options {
     display: none;
-}
-
-#search-results .desc {
-    font-size: 80%;
 }
 
 #search-results .desc p {

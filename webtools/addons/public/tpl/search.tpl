@@ -298,8 +298,8 @@ Next Page &raquo;
 
 {else}
 
-<h2>Addon Search</h2>
-<p class="first">There are currently no results.  Please use the options above to adjust your search terms.</p>
+<h2>Add-on Search</h2>
+<p class="first">Sorry, no add-ons found that match your search.</p>
 
 {/if}
 

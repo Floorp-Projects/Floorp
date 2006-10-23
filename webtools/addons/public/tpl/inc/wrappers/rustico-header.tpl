@@ -26,7 +26,11 @@
 			<h1><img src="{$config.webpath}/images/rustico/header/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation" /></h1>
 			<ul>
 				<li id="menu-products"><a href="http://www.mozilla.com/products/">Products</a></li>
-				<li id="menu-extensions"><a href="{$config.webpath}/firefox/">Add-ons</a></li>
+{if $currentTab eq "home"}
+				<li id="menu-extensions"><span class="current">Add-ons</span></li>
+{else}
+				<li id="menu-extensions"><a class="current" href="{$config.webpath}/firefox/">Add-ons</a></li>
+{/if}
 				<li id="menu-support"><a href="http://www.mozilla.com/support/">Support</a></li>
 				<li id="menu-developers"><a href="http://developer.mozilla.org/">Developers</a></li>
 				<li id="menu-aboutus"><a href="http://www.mozilla.com/about/">About</a></li>
