@@ -46,17 +46,17 @@
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
-nscolor nsLookAndFeel::sInfoText = 0;
-nscolor nsLookAndFeel::sInfoBackground = 0;
-nscolor nsLookAndFeel::sMenuText = 0;
-nscolor nsLookAndFeel::sMenuHover = 0;
-nscolor nsLookAndFeel::sMenuHoverText = 0;
-nscolor nsLookAndFeel::sMenuBackground = 0;
-nscolor nsLookAndFeel::sButtonBackground = 0;
-nscolor nsLookAndFeel::sButtonText = 0;
-nscolor nsLookAndFeel::sButtonOuterLightBorder = 0;
-nscolor nsLookAndFeel::sButtonInnerDarkBorder = 0;
-PRBool  nsLookAndFeel::sColorsInitialized = PR_FALSE;
+nscolor   nsLookAndFeel::sInfoText = 0;
+nscolor   nsLookAndFeel::sInfoBackground = 0;
+nscolor   nsLookAndFeel::sMenuText = 0;
+nscolor   nsLookAndFeel::sMenuHover = 0;
+nscolor   nsLookAndFeel::sMenuHoverText = 0;
+nscolor   nsLookAndFeel::sMenuBackground = 0;
+nscolor   nsLookAndFeel::sButtonBackground = 0;
+nscolor   nsLookAndFeel::sButtonText = 0;
+nscolor   nsLookAndFeel::sButtonOuterLightBorder = 0;
+nscolor   nsLookAndFeel::sButtonInnerDarkBorder = 0;
+PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 
 //-------------------------------------------------------------------------
 //
@@ -67,8 +67,12 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
     InitWidget();
 
-    if (!sColorsInitialized)
-        InitColors();
+    static PRBool sInitialized = PR_FALSE;
+
+    if (!sInitialized) {
+        sInitialized = PR_TRUE;
+        InitLookAndFeel();
+    }
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -582,9 +586,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
 }
 
 void
-nsLookAndFeel::InitColors()
+nsLookAndFeel::InitLookAndFeel()
 {
-    sColorsInitialized = PR_TRUE;
     GtkStyle *style;
 
     // tooltip foreground and background
@@ -649,6 +652,21 @@ nsLookAndFeel::InitColors()
         GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
 
     gtk_widget_destroy(window);
+
+    // invisible character styles
+    GtkWidget *entry = gtk_entry_new();
+    guint value;
+    g_object_get (entry, "invisible-char", &value, NULL);
+    sInvisibleCharacter = PRUnichar(value);
+    gtk_widget_destroy(entry);
+    
+}
+
+// virtual
+PRUnichar
+nsLookAndFeel::GetPasswordCharacter()
+{
+    return sInvisibleCharacter;
 }
 
 NS_IMETHODIMP
@@ -660,7 +678,7 @@ nsLookAndFeel::LookAndFeelChanged()
         gtk_widget_unref(mWidget);
  
     InitWidget();
-    InitColors();
+    InitLookAndFeel();
 
     return NS_OK;
 }

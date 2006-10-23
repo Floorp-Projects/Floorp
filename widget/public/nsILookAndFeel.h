@@ -268,7 +268,11 @@ public:
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric) = 0;
-  
+  virtual PRUnichar GetPasswordCharacter()
+  {
+    return PRUnichar('*');
+  }
+
   NS_IMETHOD LookAndFeelChanged() = 0;
 
 
