@@ -51,7 +51,6 @@
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIPref.h"
 
 #include "nsDirectoryServiceDefs.h"
 

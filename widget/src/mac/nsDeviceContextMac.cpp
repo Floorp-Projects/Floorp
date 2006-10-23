@@ -52,7 +52,8 @@
 #include <Resources.h>
 #include <MacWindows.h>
 #include <FixMath.h>
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsQuickSort.h"
 #include "nsUnicodeMappingUtil.h"
@@ -871,7 +872,7 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	initialized = PR_TRUE;
 
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
 		if (NS_SUCCEEDED(prefs->GetIntPref("layout.css.dpi", &intVal)) && intVal > 0) {

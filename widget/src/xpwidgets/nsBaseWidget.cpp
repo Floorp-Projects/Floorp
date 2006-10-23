@@ -50,7 +50,9 @@
 
 #ifdef DEBUG
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
+#include "nsIObserver.h"
 
 static void debug_RegisterPrefCallbacks();
 
@@ -1025,7 +1027,7 @@ static PRUint32 debug_NumPrefValues =
 
 
 //////////////////////////////////////////////////////////////
-static PRBool debug_GetBoolPref(nsIPref * aPrefs,const char * aPrefName)
+static PRBool debug_GetBoolPref(nsIPrefBranch * aPrefs,const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
   NS_ASSERTION(nsnull != aPrefs,"cmon, prefs are null.");
@@ -1074,30 +1076,29 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 }
 
 //////////////////////////////////////////////////////////////
-/* static */ int PR_CALLBACK 
-debug_PrefChangedCallback(const char * name,void * closure)
+class Debug_PrefObserver : public nsIObserver {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(Debug_PrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+Debug_PrefObserver::Observe(nsISupports* subject, const char* topic,
+                            const PRUnichar* data)
 {
+  nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(subject));
+  NS_ASSERTION(branch, "must implement nsIPrefBranch");
 
-  nsIPref * prefs = nsnull;
-  
-  nsresult rv = CallGetService(NS_PREF_CONTRACTID, &prefs);
-  
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-  NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+  NS_ConvertUTF16toUTF8 prefName(data);
 
-  if (NS_SUCCEEDED(rv))
-  {
-    PRBool value = PR_FALSE;
-
-    prefs->GetBoolPref(name,&value);
-
-    debug_SetCachedBoolPref(name,value);
-
-    NS_RELEASE(prefs);
-  }
-
-     return 0;
+  PRBool value = PR_FALSE;
+  branch->GetBoolPref(prefName.get(), &value);
+  debug_SetCachedBoolPref(prefName.get(), value);
+  return NS_OK;
 }
+
 //////////////////////////////////////////////////////////////
 /* static */ void
 debug_RegisterPrefCallbacks()
@@ -1108,28 +1109,24 @@ debug_RegisterPrefCallbacks()
   {
     once = PR_FALSE;
 
-    nsIPref * prefs = nsnull;
-
-    nsresult rv = CallGetService(NS_PREF_CONTRACTID, &prefs);
+    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-    NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+    NS_ASSERTION(prefs, "Prefs services is null.");
 
-    if (NS_SUCCEEDED(rv))
+    if (prefs)
     {
+      nsCOMPtr<nsIObserver> obs(new Debug_PrefObserver());
       for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
       {
         // Initialize the pref values
         debug_PrefValues[i].value = 
           debug_GetBoolPref(prefs,debug_PrefValues[i].name);
 
-        // Register callbacks for when these change
-        prefs->RegisterCallback(debug_PrefValues[i].name,
-                    debug_PrefChangedCallback,
-                    NULL);
+        if (obs) {
+          // Register callbacks for when these change
+          prefs->AddObserver(debug_PrefValues[i].name, obs, PR_FALSE);
+        }
       }
-      
-      NS_RELEASE(prefs);
     }
   }
 }

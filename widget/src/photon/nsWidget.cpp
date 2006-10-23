@@ -59,7 +59,6 @@
 #endif
 #include "nsReadableUtils.h"
 
-#include "nsIPref.h"
 #include "nsClipboard.h"
 
 #include <errno.h>

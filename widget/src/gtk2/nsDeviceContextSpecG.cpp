@@ -52,7 +52,8 @@
 
 #include "nsDeviceContextSpecG.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsPrintfCString.h"
@@ -185,8 +186,8 @@ private:
   void SetIntValue(  const char *tagname, PRInt32 value );
   void SetCharValue(  const char *tagname, const char *value );
 
-  nsXPIDLCString    mPrinterName;
-  nsCOMPtr<nsIPref> mPrefs;
+  nsXPIDLCString          mPrinterName;
+  nsCOMPtr<nsIPrefBranch> mPrefs;
 };
 
 void nsPrinterFeatures::SetBoolValue( const char *tagname, PRBool value )
@@ -208,7 +209,7 @@ nsPrinterFeatures::nsPrinterFeatures( const char *printername )
 {
   DO_PR_DEBUG_LOG(("nsPrinterFeatures::nsPrinterFeatures('%s')\n", printername));
   mPrinterName.Assign(printername);
-  mPrefs = do_GetService(NS_PREF_CONTRACTID);
+  mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
  
   SetBoolValue("has_special_printerfeatures", PR_TRUE);
 }
@@ -720,7 +721,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
  * - Get prefs
  */
 static
-nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *printername, const char *prefname, char **return_buf)
+nsresult CopyPrinterCharPref(nsIPrefBranch *pref, const char *modulename, const char *printername, const char *prefname, char **return_buf)
 {
   DO_PR_DEBUG_LOG(("CopyPrinterCharPref('%s', '%s', '%s')\n", modulename, printername, prefname));
 
@@ -733,7 +734,7 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
     /* Get prefs per printer name and module name */
     name = nsPrintfCString(512, "print.%s.printer_%s.%s", modulename, printername, prefname);
     DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-    rv = pref->CopyCharPref(name, return_buf);
+    rv = pref->GetCharPref(name, return_buf);
   }
   
   if (NS_FAILED(rv)) { 
@@ -741,7 +742,7 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
       /* Get prefs per printer name */
       name = nsPrintfCString(512, "print.printer_%s.%s", printername, prefname);
       DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-      rv = pref->CopyCharPref(name, return_buf);
+      rv = pref->GetCharPref(name, return_buf);
     }
 
     if (NS_FAILED(rv)) {
@@ -749,14 +750,14 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
         /* Get prefs per module name */
         name = nsPrintfCString(512, "print.%s.%s", modulename, prefname);
         DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = pref->CopyCharPref(name, return_buf);
+        rv = pref->GetCharPref(name, return_buf);
       }
       
       if (NS_FAILED(rv)) {
         /* Get prefs */
         name = nsPrintfCString(512, "print.%s", prefname);
         DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = pref->CopyCharPref(name, return_buf);
+        rv = pref->GetCharPref(name, return_buf);
       }
     }
   }
@@ -857,7 +858,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   NS_ENSURE_TRUE(*aPrinterName, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(aPrintSettings, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1339,7 +1340,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
       

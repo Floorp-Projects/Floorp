@@ -57,8 +57,6 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
-#include "nsIPref.h"
-
 static void
 ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
                                   nsMouseEvent* outCMEvent);
