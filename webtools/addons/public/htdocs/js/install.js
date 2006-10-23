@@ -86,3 +86,22 @@ function installTheme( aEvent, extName) {
     } catch(e) { }
     return false;
 }
+
+function fixPlatformLinks(addonID, name)
+{
+    var platform = getPlatformName();
+    var outer = document.getElementById("install-"+ addonID);
+    var installs = outer.getElementsByTagName("p");
+    var found = false;
+    for (var i = 0; i < installs.length; i++) {
+        var className = installs[i].className;
+        if (className.indexOf("platform-" + platform) != -1 ||
+            className.indexOf("platform-ALL") != -1) {
+                found = true;
+        } else {
+                installs[i].style.display = "none";
+        }
+    }
+    if (!found)
+        outer.appendChild(document.createTextNode(name + " is not available for " + platform)); 
+}

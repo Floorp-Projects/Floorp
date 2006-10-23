@@ -7,7 +7,7 @@
 	<div class="addon-feature clearfix">
 		<img src="{$config.webpath}{$recommended[re].previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text corner-box">
-			<h4>{$recommended[re].name} <span>by {$recommended[re].username}</span></h4>
+			<h4><a href="{$config.webpath}/{$app}/{$recommended[re].id}">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h4>
 			<p>{$recommended[re].body}</p>
 			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span>Install now ({$recommended[re].size} KB)</span></a></p>
 		</div>

@@ -10,7 +10,7 @@
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
-startProcessing('addon.tpl',$clean['ID'],$compileId);
+startProcessing('addon.tpl',$clean['ID'],$compileId,"rustico");
 require_once('includes.php');
 
 // Create our AddOn object using the ID.
