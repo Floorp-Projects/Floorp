@@ -17,10 +17,36 @@
   # Rights Reserved.
   #
   # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
+<script type="text/javascript">
+  <!--
+  function toggle_display(link) {
+    var table = document.getElementById("attachment_table");
+    var rows = table.getElementsByTagName("tr");
+
+    var toggle;
+    if (link.innerHTML == "Show Obsolete") {
+      toggle = ""; // This should be 'table-row', but IE 6 doesn't understand it.
+      link.innerHTML = "Hide Obsolete";
+    }
+    else {
+      toggle = "none";
+      link.innerHTML = "Show Obsolete";
+    }
+
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].className.match('bz_tr_obsolete'))
+        rows[i].style.display = toggle;
+    }
+    return true;
+  }
+  //-->
+</script>
+
 <br>
-<table cellspacing="0" cellpadding="4" border="1">
+<table id="attachment_table" cellspacing="0" cellpadding="4" border="1">
   <tr>
     <th bgcolor="#cccccc" align="left"><a name="a0" id="a0">Attachment</a></th>
     <th bgcolor="#cccccc" align="left">Type</th>
@@ -33,10 +59,14 @@
     <th bgcolor="#cccccc" align="left">Actions</th>
   </tr>
   [% count = 0 %]
+  [% has_obsolete_attachments = 0 %]
+
   [% FOREACH attachment = attachments %]
     [% count = count + 1 %]
     [% IF !attachment.isprivate || user.is_insider || attachment.attacher.id == user.id %]
-      <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
+      [% SET has_obsolete_attachments = 1 IF attachment.isobsolete %]
+      <tr class="[% "bz_private" IF attachment.isprivate %][%-%]
+                 [%+ "bz_tr_obsolete" IF attachment.isobsolete %]">
         <td valign="top">
           <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
         </td>
@@ -99,6 +129,9 @@
     [% IF attachments.size %]
       <td>
         <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
+        [% IF has_obsolete_attachments %]
+          <br><a href="#a0" onClick="return toggle_display(this);">Hide Obsolete</a>
+        [% END %]
       </td>
     [% ELSE %]
       <td class="bz_disabled">
