@@ -40,6 +40,8 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Product;
+use Bugzilla::Component;
+use Bugzilla::Group;
 
 use List::Util qw(min);
 
