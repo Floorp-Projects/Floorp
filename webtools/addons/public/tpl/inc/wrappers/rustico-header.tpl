@@ -17,7 +17,8 @@
 	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/rustico/addons-rustico.css" media="screen">
 	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
   <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
-  <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>  
+  <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>
+  <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>  
 </head>
 
 <body id="mozilla-com">
