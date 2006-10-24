@@ -375,7 +375,7 @@ class AMO_Object
             GROUP BY
                 m.ID
             ORDER BY
-                m.Name
+                rand(now())
             LIMIT 
                 {$limit}
         ", SQL_ALL, SQL_ASSOC);
