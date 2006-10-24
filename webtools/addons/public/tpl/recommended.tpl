@@ -7,7 +7,7 @@
 	<div class="addon-feature clearfix divider-bottom">
 		<img src="{$config.webpath}{$recommended[re].previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text corner-box">
-			<h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h2>
+			<h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}/">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h2>
 			<p>{$recommended[re].body}</p>
 			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span>Install now ({$recommended[re].size} KB)</span></a></p>
       {if $recommended[re].id eq SUPER_MAGIC_YAHOO_ID}
