@@ -113,11 +113,8 @@ switch ($clean['updateVersion']) {
         // Instantiate our complete patch.
         $completePatch = new Patch($branchVersions,$nightlyChannels,'complete');
 
-        // Find our complete patch.
-        $completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']);
-
-        // If our complete patch is valid, set the patch line.
-        if ($completePatch->isPatch() && $completePatch->isNewBuild($clean['build'])) {
+        // If our complete patch exists and is valid, set the patch line.
+        if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) && $completePatch->isPatch($clean['build'],$clean['channel'])) {
             
             // Set our patchLine.
             $xml->setPatchLine($completePatch);
@@ -146,15 +143,15 @@ switch ($clean['updateVersion']) {
         }
 
         // We only check for a partial patch if the complete patch was successfully retrieved.
-        if ($completePatch->isPatch()) {
+        if ($completePatch->isPatch($clean['build'],$clean['channel'])) {
 
             // Instantiate our partial patch.
             $partialPatch = new Patch($branchVersions,$nightlyChannels,'partial');
-            $partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']);
 
-            // If our partial patch is valid, set the patch line.
-            // We only want to deliver the partial patch if the destination build for the partial patch is equal to the build in the complete patch (which will always point to the latest).
-            if ($partialPatch->isPatch() && $partialPatch->isNewBuild($clean['build']) && $partialPatch->isOneStepFromLatest($completePatch->build)) {
+            // If our partial patch exists and is valid, set the patch line.
+            if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
+                  && $partialPatch->isPatch($clean['build'],$clean['channel']) 
+                  && $partialPatch->isOneStepFromLatest($completePatch->build)) {
                 $xml->setPatchLine($partialPatch);
             }
         }
@@ -182,13 +179,13 @@ switch ($clean['updateVersion']) {
 
         $patch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],null);
 
-        if ($patch->isPatch()) {
+        if ($patch->isPatch($clean['build'])) {
             $xml->setPatchLine($patch);
         }
 
         // If we have a new build, draw the update block and patch line.
         // If there is no valid patch file, client will receive no updates by default.
-        if ($xml->hasPatchLine() && $patch->isNewBuild($clean['build'])) {
+        if ($xml->hasPatchLine()) {
             $xml->startUpdate($update);
             $xml->drawPatchLines();
             $xml->endUpdate();

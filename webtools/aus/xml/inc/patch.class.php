@@ -65,9 +65,6 @@ class Patch extends AUS_Object {
     // Array the defines which channels are flagged as 'nightly' channels.
     var $nightlyChannels;
 
-    // Valid patch flag.
-    var $isPatch;
-
     // Is this patch a complete or partial patch?
     var $patchType;
 
@@ -160,12 +157,13 @@ class Patch extends AUS_Object {
                 $this->setVar('hasUpdateInfo',true,true);
             }
             
-            // Pull updat emetadata if it exists, and the patch is a complete patch.
+            // Pull update metadata if it exists, and the patch is a complete patch.
             if ($this->isComplete() && isset($file[8])) {
                 $this->setVar('detailsUrl',$file[8],true);
                 $this->setVar('hasDetailsUrl',true,true);
             }
             
+            $this->setVar('isPatch',true,true);
             return true;
         } 
         
@@ -202,6 +200,7 @@ class Patch extends AUS_Object {
                 }
             }
 
+            $this->setVar('isPatch',true,true);
             return true;
         } else {
             error_log("Unknown snippet schema version: $snippetSchemaVersion");
@@ -229,9 +228,7 @@ class Patch extends AUS_Object {
 
         // If a specific update exists for the specified channel, it takes priority over the branch update.
         if (!empty($channel) && $this->setPath($product,$platform,$locale,$version,$build,3,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-            $this->setSnippet($this->path); 
-            $this->setVar('isPatch',true,true);
-            return true;
+            return $this->setSnippet($this->path); 
         } 
 
         // Determine the branch of the client's version.
@@ -245,17 +242,13 @@ class Patch extends AUS_Object {
 
             // If we have the latest complete build, the path is valid, the file exists, and the filesize is greater than zero, we have a valid complete patch.
             if ($latestCompleteBuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestCompleteBuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-                $this->setSnippet($this->path); 
-                $this->setVar('isPatch',true,true);
-                return true;
+                return $this->setSnippet($this->path); 
             }
         } 
 
         // Otherwise, check for the partial snippet info.  If an update exists, pass it along.
         if ($this->isPartial() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-                $this->setSnippet($this->path); 
-                $this->setVar('isPatch',true,true);
-                return true;
+                return $this->setSnippet($this->path); 
         } 
 
         // Note: Other data sets were made obsolete in 0.6.  May incoming/0,1 rest in peace.
@@ -330,9 +323,28 @@ class Patch extends AUS_Object {
 
     /**
      * Does this object contain a valid patch file?
+     * The build id check only happens for nightly channels.
+     *
+     * For business logic that doesn't exist yet, this is also a good place to extend overriding reasons why
+     * a patch should be invalid even if the data exists.
+     * 
+     * @TODO migrate the os compatibility stuff here
+     * @param string $build
+     * @param string $channel
      */
-    function isPatch() {
-       return $this->isPatch;
+    function isPatch($build, $channel=null) {
+
+            // For nightlies, we only want to deliver the complete patch if the destination build is newer than the client build.
+            if ($this->isNightlyChannel($channel) && $this->isComplete()) {
+                return $this->isNewBuild($build);
+            }
+
+            // For nightlies, we only want to deliver the partial patch if the destination build for the partial patch is equal to the build in the complete patch (which will always point to the latest).
+            elseif ($this->isNightlyChannel($channel) && $this->isPartial()) {
+                return $this->isNewBuild($build);
+            } else {
+                return $this->isPatch;
+            }
     }
 
     /**
