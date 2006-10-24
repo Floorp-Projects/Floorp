@@ -328,10 +328,13 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 			MP_CHECKOK(ec_group_set_gf2m233(group, name));
 		}
 #endif
+	} else {
+		res = MP_UNDEF;
+		goto CLEANUP;
 	}
 
 	/* set name, if any */
-	if (params->text != NULL) {
+	if ((group != NULL) && (params->text != NULL)) {
 		group->text = strdup(params->text);
 		if (group->text == NULL) {
 			res = MP_MEM;
