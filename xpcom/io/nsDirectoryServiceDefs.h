@@ -181,6 +181,7 @@
     #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
     #define NS_WIN_PRINTHOOD                    "PrntHd"
     #define NS_WIN_COOKIES_DIR                  "CookD"
+    #define NS_WIN_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
 #elif defined (XP_UNIX)
     #define NS_UNIX_LOCAL_DIR                   "Locl"
     #define NS_UNIX_LIB_DIR                     "LibD"

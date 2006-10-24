@@ -395,6 +395,7 @@ nsIAtom*  nsDirectoryService::sAppdata = nsnull;
 nsIAtom*  nsDirectoryService::sLocalAppdata = nsnull;
 nsIAtom*  nsDirectoryService::sPrinthood = nsnull;
 nsIAtom*  nsDirectoryService::sWinCookiesDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
 #elif defined (XP_UNIX)
 nsIAtom*  nsDirectoryService::sLocalDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sLibDirectory = nsnull;
@@ -501,6 +502,7 @@ static const nsStaticAtom directory_atoms[] = {
     { NS_WIN_LOCAL_APPDATA_DIR,    &nsDirectoryService::sLocalAppdata },
     { NS_WIN_PRINTHOOD,            &nsDirectoryService::sPrinthood },
     { NS_WIN_COOKIES_DIR,          &nsDirectoryService::sWinCookiesDirectory },
+    { NS_WIN_DEFAULT_DOWNLOAD_DIR, &nsDirectoryService::sDefaultDownloadDirectory },
 #elif defined (XP_UNIX)
     { NS_UNIX_LOCAL_DIR,           &nsDirectoryService::sLocalDirectory },
     { NS_UNIX_LIB_DIR,             &nsDirectoryService::sLibDirectory },
@@ -1162,6 +1164,10 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sWinCookiesDirectory)
     {
         rv = GetSpecialSystemDirectory(Win_Cookies, getter_AddRefs(localFile)); 
+    }
+    else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
+    {
+        rv = GetSpecialSystemDirectory(Win_Downloads, getter_AddRefs(localFile));
     }
 #elif defined (XP_UNIX)
 
