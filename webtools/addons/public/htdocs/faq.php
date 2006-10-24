@@ -8,7 +8,7 @@
  * @todo FAQ search?
  */
 
-startProcessing('faq.tpl','faq',$compileId);
+startProcessing('faq.tpl','faq',$compileId, "rustico");
 require_once('includes.php');
 
 $db->query("
