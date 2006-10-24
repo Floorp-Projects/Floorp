@@ -53,13 +53,10 @@
         windowtype="mailnews:mailviewlist"
         title="&mailViewListTitle.label;"
         width="400" height="340"
-        buttons="accept,help"
-        ondialogaccept="window.close();"
-        ondialoghelp="return openHelp('message-views-using');"
+        buttons="accept"
         persist="screenX screenY width height">
 
   <script type="application/x-javascript" src="chrome://messenger/content/mailViewList.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <vbox flex="1">
     <hbox flex="1">

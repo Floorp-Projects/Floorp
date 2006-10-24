@@ -38,6 +38,17 @@
     <RDF:li resource="chrome://pippki/content/crlManager.xul"/>
     <RDF:li resource="chrome://pippki/content/resetpassword.xul"/>
     <RDF:li resource="chrome://pippki/content/downloadcert.xul"/>
+    <RDF:li resource="chrome://messenger/content/addressbook/pref-editdirectories.xul"/>
+    <RDF:li resource="chrome://messenger/content/addressbook/pref-directory-add.xul"/>
+    <RDF:li resource="chrome://messenger/content/AccountManager.xul"/>
+    <RDF:li resource="chrome://messenger/content/FilterEditor.xul"/>
+    <RDF:li resource="chrome://messenger/content/junkMailInfo.xul"/>
+    <RDF:li resource="chrome://messenger/content/msgSelectOffline.xul"/>
+    <RDF:li resource="chrome://messenger/content/subscribe.xul"/>
+    <RDF:li resource="chrome://messenger/content/mailViewList.xul"/>
+    <RDF:li resource="chrome://messenger/content/mailViewSetup.xul"/>
+    <RDF:li resource="chrome://messenger-smime/content/msgCompSecurityInfo.xul"/>
+    <RDF:li resource="chrome://messenger-smime/content/msgReadSecurityInfo.xul"/>
   </RDF:Seq>
 
   <!-- Define the local overlay file(s) for each overlay point -->
@@ -131,5 +142,49 @@
 
   <RDF:Seq about="chrome://pippki/content/downloadcert.xul">
     <RDF:li>chrome://help/content/helpSecurityOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/addressbook/pref-editdirectories.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/addressbook/pref-directory-add.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/AccountManager.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/FilterEditor.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/junkMailInfo.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/msgSelectOffline.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/subscribe.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/mailViewList.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/mailViewSetup.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger-smime/content/msgCompSecurityInfo.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger-smime/content/msgReadSecurityInfo.xul">
+    <RDF:li>chrome://help/content/helpMessengerOverlay.xul</RDF:li>
   </RDF:Seq>
 </RDF:RDF>

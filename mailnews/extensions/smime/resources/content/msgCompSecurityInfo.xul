@@ -44,11 +44,9 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 50em;"
   persist="width height"
-  buttons="accept,help"
-  ondialoghelp="doHelpButton();"
+  buttons="accept"
   onload="onLoad();">
 
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSecurityInfo.js"/>
 
   <stringbundle id="bundle_smime_comp_info" src="chrome://messenger-smime/locale/msgCompSecurityInfo.properties"/> 

@@ -49,8 +49,7 @@
         onload="mailViewOnLoad();"
         onunload="mailViewOnUnLoad();"
         ondialogaccept="return onOK();"
-        ondialoghelp="doHelpButton();"
-        buttons="accept,cancel,help"
+        buttons="accept,cancel"
         buttonalign="right"
         windowtype="mailnews:mailview"
         title="&mailViewSetupTitle.label;"
@@ -65,7 +64,6 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailViewSetup.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <dummy class="usesMailWidgets"/>
     

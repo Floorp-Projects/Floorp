@@ -51,11 +51,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
         windowtype="mailnews:junkmailinfo"
-        buttons="accept,help"
-        ondialogaccept="return window.close();"
-        ondialoghelp="return openHelp('mail-junk');">
-
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+        buttons="accept">
 
   <vbox flex="1" width="&window.width;">
       <spacer/>

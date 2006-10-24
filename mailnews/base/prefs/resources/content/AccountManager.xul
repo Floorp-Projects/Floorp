@@ -13,10 +13,9 @@
         style="&macAccountManager.size;"
 #endif
         persist="screenX screenY"
-        buttons="accept,cancel,help"
+        buttons="accept,cancel"
         onload="onLoad(event);"
-        ondialogaccept="return onAccept();"
-        ondialoghelp="return doHelpButton();">
+        ondialogaccept="return onAccept();">
 <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
@@ -24,7 +23,6 @@
 <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/am-help.js"/>
-<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <hbox flex="1">
     <vbox style="&accountTree.width;">

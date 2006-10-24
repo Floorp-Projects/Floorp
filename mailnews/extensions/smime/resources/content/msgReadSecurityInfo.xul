@@ -43,11 +43,9 @@
 <dialog id="msgReadSecurityInfo" title="&status.label;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 40em;"
-  buttons="accept,help"
-  ondialoghelp="doHelpButton();"
+  buttons="accept"
   onload="onLoad();">
 
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://messenger-smime/content/msgReadSecurityInfo.js"/>
 
   <stringbundle id="bundle_smime_read_info" src="chrome://messenger-smime/locale/msgSecurityInfo.properties"/> 

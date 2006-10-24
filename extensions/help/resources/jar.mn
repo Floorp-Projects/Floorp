@@ -27,11 +27,12 @@ help.jar:
 #else
 *       content/help/contents.rdf                       (content/contents.rdf)
 #endif
-        content/help/help.xul                           (content/help.xul)
         content/help/contextHelp.js                     (content/contextHelp.js)
         content/help/help.js                            (content/help.js)
-*       content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
+        content/help/help.xul                           (content/help.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
+*       content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
+        content/help/helpMessengerOverlay.xul           (content/helpMessengerOverlay.xul)
         content/help/helpSecurityOverlay.xul            (content/helpSecurityOverlay.xul)
 *       content/help/platformClasses.css                (content/platformClasses.css)
 
@@ -50,5 +51,3 @@ modern.jar:
 
 classic.jar:
         skin/classic/communicator/help.css              (skin/classic/help.css)
-
-

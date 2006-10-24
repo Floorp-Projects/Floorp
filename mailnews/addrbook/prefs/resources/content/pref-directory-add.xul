@@ -49,13 +49,11 @@
         title="&newDirectoryTitle.label;"
         onload="Startup();"
         onunload="onUnload();"
-        buttons="accept,cancel,help"
+        buttons="accept,cancel"
         ondialogaccept="return onAccept();"
-        ondialogcancel="return onCancel();"
-        ondialoghelp="return doHelpButton();">
+        ondialogcancel="return onCancel();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory-add.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   <stringbundle id="bundle_replication" src="chrome://messenger/locale/addressbook/replicationProgress.properties"/>
 

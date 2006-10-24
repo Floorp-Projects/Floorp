@@ -289,11 +289,7 @@
                           disclosure: false, extra1: false, extra2: false };
             for (i = 0; i < list.length; ++i)
               shown[list[i].replace(/ /g, "")] = true;
-            
-#ifdef MOZ_THUNDERBIRD
-          shown['help'] = false;
-          buttons.help.hidden = true; 
-#endif
+
             // hide/show the buttons we want
             for (dlgtype in buttons) 
               buttons[dlgtype].hidden = !shown[dlgtype];
