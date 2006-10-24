@@ -42,7 +42,7 @@
 	
 	<div id="page-title">
 		<div>
-			<h2><a href="firefox/"><img src="{$config.webpath}/images/rustico/common/addons-title.png" width="288" height="61" alt="" /></a></h2>
+			<h2><a href="{$config.webpath}/firefox/"><img src="{$config.webpath}/images/rustico/common/addons-title.png" width="288" height="61" alt="" /></a></h2>
 		</div>
 	</div>
 
