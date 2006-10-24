@@ -7,12 +7,13 @@
  */
 
 $currentTab = 'plugins';
-startProcessing('plugins.tpl',$memcacheId,$compileId,'nonav');
+startProcessing('plugins.tpl',$memcacheId,$compileId,'rustico');
 
 // Assign template variables.
 $tpl->assign(
     array(  'currentTab'=> $currentTab,
             'title'     => 'Plugins',
-            'content'   => 'plugins.tpl')
+            'content'   => 'plugins.tpl',
+            'currentTab'=> 'plugins')
 );
 ?>

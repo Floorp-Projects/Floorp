@@ -12,8 +12,6 @@
 	
   	</div><!-- end #content div -->
 	
-  </div><!-- end #container div -->
-
 <div id="footer">
   <div class="compact-list">
 

@@ -14,11 +14,11 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<title>{$app|capitalize} Add-ons | Mozilla Corporation</title>
-	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/rustico/addons-rustico.css" media="screen">
-	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
-  <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
-  <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>
-  <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>  
+	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/rustico/addons-rustico.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen"/>
+    <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
+    <script src="{$config.webpath}/js/search.js" type="text/javascript"></script>
+    <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>  
 </head>
 
 <body id="mozilla-com">
@@ -75,7 +75,11 @@
 {else}
         <li><a href="{$config.webpath}/firefox/search-engines/">Search Engines</a></li>
 {/if}
-				<li><a href="{$config.webpath}/firefox/plugins/">Plugins</a></li>
+{if $currentTab eq "plugins"}
+        <li><span>Plugins</span></li>
+{else}
+        <li><a href="{$config.webpath}/firefox/plugins/">Plugins</a></li>
+{/if}
 				<li><a href="http://developer.mozilla.org/en/docs/Extensions">Build Your Own</a></li>
 			</ul>
 		</div>

@@ -660,3 +660,45 @@ div.rating {
     font-size:85%;
     font-weight:bold;
 }
+
+
+/* ported from cavendish */
+
+.item {
+    border: #D2D6D6 1px solid;
+    padding-left: 5px;
+    padding-right: 6px;
+    MARGIN-bottom: 10px;
+    -moz-border-radius: 10px;
+}
+
+.item a {
+    color: #00129c;
+    text-decoration: none;
+}
+.item a:visited {
+    color: #00129c;
+    text-decoration: none;
+}
+.item a:hover {
+    color: #fc5900;
+}
+
+.item h2 {
+    margin-top: 0.2em;
+}
+
+.iconbar {
+	padding-right: 15px;
+    float: left;
+    width: auto;
+    height: 34px;
+}
+
+.iconbar img {
+    float:left;
+}
+
+.iconbar a {
+    text-decoration: none;
+}
