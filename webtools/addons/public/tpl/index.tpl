@@ -10,7 +10,7 @@
 <div class="addon-feature clearfix">
 	<div class="corner-box">
 		<h3>Featured Add-on: <a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h3>
-		<img src="{$config.webpath}{$feature.previewuri}" width="205" height="152" alt="" class="addon-feature-image" />
+		<img src="{$config.webpath}{$feature.previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text">
 			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
 			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');"><span>Install now ({$feature.size} KB)</span></a></p>
