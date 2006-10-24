@@ -102,9 +102,4 @@
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
 }
 
-/* XXX: would be nice to find a common place for this XXX ::::captions in tabs ::::: */
-
-.tab-caption {
-  -moz-appearance: tabpanels;
-}
 
