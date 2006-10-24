@@ -7,7 +7,7 @@
  *
  */
 
-startProcessing('logout.tpl', null, null, 'nonav');
+startProcessing('logout.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 session_start();
