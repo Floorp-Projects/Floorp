@@ -3,9 +3,9 @@
 
 <p>Themes are like new clothes for your Firefox. A theme can change only a few colors, or every piece of Firefox's appearance. It's another great way to personalize Firefox to your tastes.</p>
 
-<div class='corner-box compact-list'>
+<div class='corner-box'>
 <h3>Browse Themes by Category</h3>
-<table cellpadding="5">
+<table cellpadding="5" class="category-list">
 {foreach name=cats key=id item=name from=$cats}
 {if $smarty.foreach.cats.index % 4 eq 0}
 <tr>
