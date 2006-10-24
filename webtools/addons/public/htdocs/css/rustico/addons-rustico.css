@@ -200,6 +200,7 @@ h6 { font-size: 90%; border: 0; }
 
 /* addon features */
 
+.divider-bottom,
 .addon-feature,
 .bookmarkaddon-feature {
 	background: url(../../images/rustico/firefox-featured-divider.png) no-repeat bottom center;
@@ -588,7 +589,6 @@ table.dalvay-table th {
   text-align: left;
 }
 
-
 /* search-engines */
 
 .front-section {
@@ -596,6 +596,26 @@ table.dalvay-table th {
 	padding: 5px 0 5px 25px;
 	float: left;
 	color: #666;
+}
+
+#switch-links {
+    align: right;
+    padding-left: 5em;
+}
+
+#switch-links .switch-tb, 
+#switch-links .switch-suite  {
+	padding-left: 30px;
+	font-size: 100%;
+	background: #fff 9px 0 no-repeat;
+}
+
+#switch-links .switch-tb {
+	background-image: url("../../images/switch-tb.gif");
+}
+
+#switch-links .switch-suite {
+	background-image: url("../../images/switch-suite.gif");
 }
 
 /* previews */
