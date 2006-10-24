@@ -26,7 +26,7 @@
 </div>
 
 	<div id="disclaimer">
-		<p>Mozilla is providing links to these applications as a courtesy, and makes no representations regarding the applications or any information related there to. Any questions, complaints or claims regarding the applications must be directed to the appropriate software vendor. See our <a href="http://www.mozilla.com/support/">Support Page</a> for support information and contacts.</p>
+		<p>Mozilla is providing links to these applications as a courtesy, and makes no representations regarding the applications or any information related there to. Any questions, complaints or claims regarding the applications must be directed to the appropriate software vendor. See our <a href="{$config.webpath}/{$app}/support/">Support Page</a> for support information and contacts.</p>
 	</div>
 </div>
 
