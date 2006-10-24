@@ -17,13 +17,16 @@ function writeCurrentDictionary()
     }
 
     dict = allDictionaries[lang];
+    var prettyName = dict.entry.name;
+    if (dict.entry.localName != dict.entry.name)
+        prettyName += " / " + dict.entry.localName;
+        
     document.write("<div class='corner-box'>Install dictionary");
     if (dict.size)
         document.write(" (", dict.size, "KB)");
     document.write("<div class='install-button'><a href='",
-                   dict.link, "'><span>", dict.entry.name);
-    if (dict.entry.localName != dict.entry.name)
-        document.write(" / ", dict.entry.localName);
+                   dict.link,
+                   "' onclick='return install(event, \"Dictionary: ", prettyName, "\")'><span>", prettyName);
     document.writeln("</span></a>");
     document.writeln("</div></div>");       
 }
@@ -84,15 +87,16 @@ function writeAllDictionaries()
     for (var i = 0; i < allDictionariesOrdered.length; i++) {
         var dict = allDictionariesOrdered[i];
         var alt = i % 2 ? "even" : "odd";
+
+        var prettyName = dict.entry.name;
+        if (dict.entry.localName != dict.entry.name)
+            prettyName += " / " + dict.entry.localName;
+
         document.write("<tr class='", alt, "'>");
         document.write("<td class='left'>", dict.entry.name, "</td>");
         document.write("<td>", dict.entry.localName, "</td>");
-        document.write("<td class='right'><a href='", dict.link,
-                       "'>Install</a> (", dict.size, " KB)</td></tr>");
-/*
-        document.writeln("<tr id='", dict.code, "'><td><a href='", dict.link,
-                         "' title='", dict.code, "'>", dict.entry.name, '<br>',
-                         dict.entry.localName, "</a> </td><td>", dict.size, "KB</td></tr>");
-*/
+        document.write("<td class='right'><a href='",
+                       dict.link,
+                       "' onclick='return install(event, \"Dictionary: ", prettyName, "\")'>Install</a> (", dict.size, " KB)</td></tr>");
     }
 }
