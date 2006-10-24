@@ -124,9 +124,15 @@ typedef BOOL (WINAPI * nsGetSpecialFolderPathA) (HWND hwndOwner,
                                                  BOOL fCreate);
 
 
+typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
+                                               DWORD dwFlags,
+                                               HANDLE hToken,
+                                               PWSTR *ppszPath);
+
 static GetSpecialPathProc gGetSpecialPathProc = NULL;
 static nsGetSpecialFolderPathA gGetSpecialFolderPathA = NULL;
 static nsGetSpecialFolderPathW gGetSpecialFolderPath  = NULL;
+static nsGetKnownFolderPath gGetKnownFolderPath = NULL;
 
 static HINSTANCE gShell32DLLInst = NULL;
 
@@ -159,6 +165,9 @@ NS_COM void StartupSpecialSystemDirectory()
             if (gGetSpecialFolderPathA)
                 gGetSpecialFolderPath = NS_GetSpecialFolderPath;
         }
+        
+        gGetKnownFolderPath = (nsGetKnownFolderPath) 
+            GetProcAddress(gShell32DLLInst, "SHGetKnownFolderPath");
     }
 #endif
 }
@@ -171,11 +180,31 @@ NS_COM void ShutdownSpecialSystemDirectory()
         FreeLibrary(gShell32DLLInst);
         gShell32DLLInst = NULL;
         gGetSpecialFolderPath = NULL;
+        gGetKnownFolderPath = NULL;
     }
 #endif
 }
 
 #if defined (XP_WIN)
+
+static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
+{
+    if (!guid || !gGetKnownFolderPath)
+        return NS_ERROR_FAILURE;
+
+    PWSTR path = NULL;
+    gGetKnownFolderPath(*guid, 0, NULL, &path);
+
+    if (!path)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv = NS_NewLocalFile(nsDependentString(path), 
+                                  PR_TRUE, 
+                                  aFile);
+
+    CoTaskMemFree(path);
+    return rv;
+}
 
 //----------------------------------------------------------------------------------------
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
@@ -525,6 +554,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_PROGRAMS, aFile);
         }
+
+        case Win_Downloads:
+        {
+            // Defined in KnownFolders.h.
+            GUID folderid_downloads = {0x374de290, 0x123f, 0x4565, {0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b}};
+            return GetKnownFolder(&folderid_downloads, aFile);
+        }
+
         case Win_Controls:
         {
             return GetWindowsFolder(CSIDL_CONTROLS, aFile);
