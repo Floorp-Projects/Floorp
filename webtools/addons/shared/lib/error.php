@@ -23,6 +23,7 @@ function triggerError($errorMessage=null,$errorTemplate='error.tpl')
         )
     );
 
+    header("Cache-Control: no-store, no-cache");
     $tpl->display('inc/wrappers/nonav.tpl');
     exit;
 }
