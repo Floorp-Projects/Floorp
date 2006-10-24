@@ -3728,9 +3728,9 @@ nsBrowserStatusHandler.prototype =
     }
   },
 
-  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  onLocationChange : function(aWebProgress, aRequest, aLocationURI)
   {
-   var location = aLocation ? aLocation.spec : "";
+   var location = aLocationURI ? aLocationURI.spec : "";
 
    if (document.tooltipNode) {
      // Optimise for the common case
@@ -3774,7 +3774,7 @@ nsBrowserStatusHandler.prototype =
         gBrowser.getNotificationBox(selectedBrowser).removeAllNotifications(true);
       }
     }
-    selectedBrowser.lastURI = aLocation;
+    selectedBrowser.lastURI = aLocationURI;
 
     // Disable menu entries for images, enable otherwise
     if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
@@ -3823,9 +3823,9 @@ nsBrowserStatusHandler.prototype =
           if (!gURIFixup)
             gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                                   .getService(Components.interfaces.nsIURIFixup);
-          if (location && gURIFixup) {
+          if (aLocationURI && gURIFixup) {
             try {
-              location = gURIFixup.createExposableURI(location).spec;
+              location = gURIFixup.createExposableURI(aLocationURI).spec;
             } catch (ex) {}
           }
 
