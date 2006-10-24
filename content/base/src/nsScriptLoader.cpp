@@ -607,7 +607,9 @@ nsScriptLoader::DoProcessScriptElement(nsIScriptElement *aElement,
                                         PR_FALSE);
           httpChannel->SetReferrer(mDocument->GetDocumentURI());
         }
-        rv = NS_NewStreamLoader(getter_AddRefs(loader), channel, this, request);
+        rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
+        if (NS_SUCCEEDED(rv))
+          rv = channel->AsyncOpen(loader, request);
       }
       if (NS_FAILED(rv)) {
         mPendingRequests.RemoveObject(request);

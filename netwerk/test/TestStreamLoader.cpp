@@ -72,7 +72,11 @@ int main(int argc, char **argv)
       return -1;
 
     nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), chan, observer, nsnull);
+    rv = NS_NewStreamLoader(getter_AddRefs(loader), observer);
+    if (NS_FAILED(rv))
+      return -1;
+
+    rv = chan->AsyncOpen(loader, nsnull);
     if (NS_FAILED(rv))
       return -1;
 
