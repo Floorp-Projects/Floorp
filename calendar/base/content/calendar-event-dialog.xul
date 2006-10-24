@@ -116,7 +116,7 @@
                    control="event-starttime"/>
             <label value="&newevent.date.label;" class="todo-only"
                    accesskey="&newevent.date.accesskey;"
-                   control="todo-entrydate"/>
+                   control="todo-has-entrydate"/>
           </hbox>
           <hbox>
             <datetimepicker id="event-starttime" onchange="onStartTimeChange();" 
@@ -139,7 +139,7 @@
                    control="event-endtime"/>
             <label value="&newtodo.duedate.label;" class="todo-only"
                    accesskey="&newtodo.duedate.accesskey;"
-                   control="todo-duedate"/>
+                   control="todo-has-duedate"/>
           </hbox>
           <vbox>
             <hbox align="center">
