@@ -24,7 +24,7 @@ document.writeln("</table>");
 <noscript>
 <ul>
 {section name=d loop=$dicts step=1 start=0}
-  <li><a href="{$dicts[d].uri}">{$dicts[d].code}</a> ($dicts[d].size)KB)</li>
+  <li><a href="{$dicts[d].uri}">{$dicts[d].code}</a> {$dicts[d].size)KB)</li>
 {/section}
 </ul>
 </noscript>
