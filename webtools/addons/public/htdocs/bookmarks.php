@@ -14,7 +14,7 @@ setApp();
 
 $amo = new AMO_Object();
 
-$primary = $amo->getAddons(array(1407));
+$primary = $amo->getAddons(array(1833));
 $primary = $primary[0];
 
 $other = $amo->getAddons(array(2410, 1833, 1532));

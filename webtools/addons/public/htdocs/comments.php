@@ -26,7 +26,7 @@ $page['right'] = $page['left'] + 10;
 // Order by.
 $page['orderby'] = (!empty($_GET['orderby'])&&ctype_alpha($_GET['orderby'])) ? $_GET['orderby'] : "";
 
-startProcessing('comments.tpl',$clean['id'],$compileId);
+startProcessing('comments.tpl',$clean['id'],$compileId,'rustico');
 require_once('includes.php');
 
 $addon = new AddOn($sql['id']);

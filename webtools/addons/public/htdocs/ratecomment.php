@@ -8,7 +8,7 @@
  * @TODO Throttle for comment ratings.
  */
 
-startProcessing('ratecomment.tpl', null, null);
+startProcessing('ratecomment.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 session_start();

@@ -14,7 +14,7 @@
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
-startProcessing('history.tpl',$clean['ID'],$compileId);
+startProcessing('history.tpl',$clean['ID'],$compileId, 'rustico');
 require_once('includes.php');
 
 $addon = new AddOn($sql['ID']);

@@ -7,7 +7,7 @@
  *
  */
 
-startProcessing('verifyaccount.tpl', null, null, 'nonav');
+startProcessing('verifyaccount.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 if (! (array_key_exists('email', $_GET) && array_key_exists('confirmationcode', $_GET)) ) {
@@ -26,7 +26,7 @@ $confirmed = $user->confirm($_GET['confirmationcode']);
 
 // Assign template variables.
 $tpl->assign(
-    array(  'title'      => 'Verify your Mozilla Addons Account',
+    array(  'title'      => 'Verify your Firefox Add-ons Account',
             'currentTab' => null,
             'email'      => $_GET['email'],
             'confirmed'  => $confirmed

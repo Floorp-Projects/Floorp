@@ -7,7 +7,7 @@
  *
  */
 
-startProcessing('resetpassword.tpl', null, null, 'nonav');
+startProcessing('resetpassword.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 if (! (array_key_exists('email', $_GET) && array_key_exists('code', $_GET)) ) {

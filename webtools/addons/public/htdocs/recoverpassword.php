@@ -7,7 +7,7 @@
  *
  */
 
-startProcessing('recoverpassword.tpl', null, null, 'nonav');
+startProcessing('recoverpassword.tpl', null, null, 'rustico');
 require_once 'includes.php';
 
 $bad_input = false;
