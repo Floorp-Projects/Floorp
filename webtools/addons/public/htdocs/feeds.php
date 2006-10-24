@@ -6,7 +6,7 @@
  * @subpackage docs
  */
 
-startProcessing('feeds.tpl', null, $compileId,'nonav');
+startProcessing('feeds.tpl', null, $compileId,'rustico');
 require_once('includes.php');
 
 // Assign template variables.
