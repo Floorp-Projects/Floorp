@@ -460,6 +460,9 @@
             var tabBrowser = this.getTabBrowser();
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
+
+            if (this._isScrolling)
+              this.stopScroll();
          ]]>
         </body>
       </method>
