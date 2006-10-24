@@ -4,7 +4,7 @@
 <p>With over a thousand add-ons available, there's something for everyone. To get you started, here's a list of some of our favorites.  Enjoy!</p>
 
 {section name=re loop=$recommended step=1 start=0}
-	<div class="addon-feature clearfix">
+	<div class="addon-feature clearfix divider-bottom">
 		<img src="{$config.webpath}{$recommended[re].previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text corner-box">
 			<h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h2>
