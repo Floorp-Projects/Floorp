@@ -15,6 +15,7 @@ require_once('includes.php');
 
 $amo = new AMO_Object();
 
+header("Cache-Control: max-age=120, must-revalidate");
 // Assign template variables.
 $tpl->assign(
     array(  'popularExtensions' => $amo->getPopularAddons($sql['app'],'E',5),
