@@ -1,12 +1,3 @@
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b2.en-US.linux-i686.tar.gz
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b2.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b3.en-US.linux-i686.tar.gz
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b3.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b4.en-US.linux-i686.tar.gz
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b4.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a1.en-US.linux-i686.tar.gz
+/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a1.en-US.linux-i686.tar.bz2
 /pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a1.en-US.mac.dmg
 /pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a1.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9a1.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b5.en-US.linux-i686.tar.gz
-/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.8b5.en-US.mac.dmg
