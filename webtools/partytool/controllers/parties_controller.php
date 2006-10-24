@@ -88,6 +88,10 @@ class PartiesController extends AppController {
         $this->data['Party']['invitecode'] = $this->Hash->keygen(10);
         $this->data['Party']['owner'] = $_SESSION['User']['id'];
 
+        if (!preg_match("/^(http|https)\:\/\//i", $this->data['Party']['website']) &&
+          !empty($this->data['Party']['website']))
+          $this->Party->invalidate('website');
+
         if ($this->Party->validates($this->data)) {
           if($this->Party->save($this->data)) {
             $this->Session->setFlash('Your party has been created!', 'infoFlash');
@@ -96,7 +100,7 @@ class PartiesController extends AppController {
         }
         
         else {
-          $this->Session->setFlash('Please correct errors below.', 'errorFlash');
+          $this->Session->setFlash('Please correct the errors below.', 'errorFlash');
         }
     }
   }
@@ -178,15 +182,29 @@ class PartiesController extends AppController {
         $this->data['Party']['owner'] = $party['Party']['owner'];
         $this->data['Party']['duration'] = intval($this->data['Party']['duration']);
 
+        $date = array('hour' => intval(date('h', $party['Party']['date'])),
+                      'min'  => intval(date('i', $party['Party']['date'])),
+                      'mon'  => intval(date('m', $party['Party']['date'])),
+                      'day'  => intval(date('d', $party['Party']['date'])),
+                      'year' => intval(date('Y', $party['Party']['date'])),
+                      'tz'   => $party['Party']['tz']);
+        $this->set('date', $date);
+
+        if (!preg_match("/^(http|https)\:\/\//i", $this->data['Party']['website']) &&
+          !empty($this->data['Party']['website']))
+          $this->Party->invalidate('website');
+
         if ($this->data['Party']['flickrusr'] != $party['Party']['flickrusr']) {
           $params = array('type' => 'flickr', 'username' => $this->data['Party']['flickrusr']);
           $flick = new webServices($params);
           $this->data['Party']['flickrid'] = $flick->getFlickrId();
         }
 
-        if ($this->Party->save($this->data)) {
-          $this->Session->setFlash('Party edited successfully.', 'infoFlash');
-          $this->redirect('parties/view/'.$id);
+        if ($this->Party->validates($this->data)) {
+          if ($this->Party->save($this->data)) {
+            $this->Session->setFlash('Party edited successfully.', 'infoFlash');
+            $this->redirect('parties/view/'.$id);
+          }
         }
       }
     }

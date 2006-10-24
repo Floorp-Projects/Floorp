@@ -14,6 +14,7 @@
   <div>
     <label for="UserWebsite" class="label-large">Website:</label>
     <?php echo $html->input('User/website', array('size' => 40)); ?>
+    <?php echo $html->tagErrorMsg('User/website', 'Invalid URL.')?>
   </div>
   <div>
      <label for="location" class="label-large">Location:</label>

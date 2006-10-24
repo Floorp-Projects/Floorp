@@ -12,6 +12,7 @@
   <div>
     <label for="PartyWebsite" class="label-large">Web site:</label>
     <?php echo $html->input('Party/website', array('size' => 40)); ?>
+    <?php echo $html->tagErrorMsg('Party/website', 'Invalid URL.')?>
   </div>
   <div>
     <label for="PartyAddress" class="label-large">Address:</label>
@@ -102,7 +103,7 @@
     <label for="PartyUseflickr" class="label-large">Show photostream:</label>
     <?php echo $html->checkbox('Party/useflickr'); ?>
   </div>
-  <p>To show photos from anyone using your party's tag, please note that no photos will show until two or more people are using the tag.</p>
+  <p>If you choose to show photos from anyone using your party's tag please note that no photos will show until two or more people are using the tag.</p>
   <div>
     <label for="PartyFlickrperms" class="label-large">Show:</label>
     <?php echo $html->radio('Party/flickrperms', array(0 => 'Only my photos', 1 => 'Anyone\'s photos')); ?>

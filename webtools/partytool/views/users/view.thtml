@@ -8,7 +8,7 @@
   if ($user['User']['showloc'] == 1 && !empty($user['User']['location']))
     echo "Location: ".$user['User']['location']."<br/>";
   
-  if (!empty($user['User']['website']))
+  if (!empty($user['User']['website']) && preg_match("/^(http|https)\:\/\//i", $user['User']['website']))
     echo 'Website: <a href="'.$user['User']['website'].'" rel="nofollow">'.$user['User']['website'].'</a><br/>';
   
   if (!empty($parties)) {

@@ -70,6 +70,10 @@ class UsersController extends AppController {
       if ($this->data['User']['email'] !== $this->data['User']['confemail'])
         $this->User->invalidate('confemail');
 
+      if (!preg_match("/^(http|https)\:\/\//i", $this->data['User']['website']) &&
+        !empty($this->data['User']['website']))
+        $this->User->invalidate('website');
+
       if ($this->data['User']['password'] !== $this->data['User']['confpass'])
         $this->User->invalidate('confpass');
       
@@ -189,6 +193,10 @@ class UsersController extends AppController {
       $this->data['User']['long'] = floatval($temp['long']);
       $this->data['User']['tz'] = intval($temp['tz']);
       $this->data['User']['role'] = $user['User']['role'];
+
+      if (!preg_match("/^(http|https)\:\/\//i", $this->data['User']['website']) &&
+        !empty($this->data['User']['website']))
+        $this->User->invalidate('website');
 
       if ($this->data['User']['password'] === $this->data['User']['confpassword'] &&
         !empty($this->data['User']['password'])) {
