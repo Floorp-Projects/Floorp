@@ -1331,7 +1331,8 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
 
 #define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
     prefBranch->GetBoolPref(feature, &forceEnable);               \
-    if (forceEnable && !(isChrome && aHasChromeParent)) {         \
+    if (forceEnable && !aDialog &&                                \
+        !(isChrome && aHasChromeParent)) {                        \
       chromeFlags |= flag;                                        \
     } else {                                                      \
       chromeFlags |= WinHasOption(aFeatures, feature,             \
