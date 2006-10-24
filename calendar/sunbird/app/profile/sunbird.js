@@ -189,3 +189,10 @@ pref("browser.preferences.animateFadeIn", false);
 #endif
 
 pref("calendar.wcap.enabled", false);
+
+// Used by view-source
+pref("accessibility.typeaheadfind.flashBar", 1);
+pref("view_source.editor.path", "");
+pref("view_source.editor.external", false);
+pref("view_source.syntax_highlight", true);
+pref("view_source.wrap_long_lines", false);
