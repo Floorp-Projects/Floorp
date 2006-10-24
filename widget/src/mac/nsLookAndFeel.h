@@ -67,6 +67,11 @@ protected:
   NS_IMETHOD GetMacBrushColor(const PRInt32 aBrushType, nscolor & aColor, const nscolor & aDefaultColor);
   NS_IMETHOD GetMacTextColor(const PRInt32 aTextType, nscolor & aColor, const nscolor & aDefaultColor);
   NS_IMETHOD GetMacAccentColor(const nsMacAccentColorOffset aAccent, nscolor & aColor, const nscolor & aDefaultColor);
+  
+  PRUnichar GetPasswordCharacter() {
+    // unicode value for the bullet character, used for password textfields.
+    return 0x2022;
+  }
 };
 
 #endif
