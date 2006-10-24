@@ -5,15 +5,15 @@ Firefox, from a simple toolbar button to a completely new feature.
 They allow you to customize Firefox to fit your own needs and
 preferences, while letting us keep Firefox itself light and lean.</p>
 
-<div class='corner-box compact-list'>
+<div class='corner-box'>
 <h3>Browse Extensions by Category</h3>
-<table cellpadding="5">
+<table cellpadding="5" class="category-list">
 {foreach name=cats key=id item=name from=$cats}
-{if $smarty.foreach.cats.index % 4 eq 0}
+{if $smarty.foreach.cats.index % 3 eq 0}
 <tr>
 {/if}
 <td><a href="{$config.webpath}/search.php?cat={$id}&amp;app={$app}&amp;appfilter={$app}&amp;type={$type}">{$name}</a></td>
-{if $smarty.foreach.cats.index % 4 eq 3}
+{if $smarty.foreach.cats.index % 3 eq 2}
 </tr>
 {/if}
 {/foreach}

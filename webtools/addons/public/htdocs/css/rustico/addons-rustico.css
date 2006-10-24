@@ -414,10 +414,24 @@ p.install-button {
     font-weight: bold;
 }
 
+.category-list {
+    padding-left: 3em;
+    text-align: center;
+    font-weight: bold;
+    font-size: 90%;
+}
+
+.category-list td,
 .compact-list td {
     font-size: inherit;
 }
 
+.category-list td {
+    padding: 0 1.5em 0 1.5em;
+}
+
+.category-list a:link,
+.category-list a:visited,
 .compact-list a:link,
 .compact-list a:visited {
     text-decoration: none;
