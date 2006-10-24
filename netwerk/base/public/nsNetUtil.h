@@ -465,15 +465,13 @@ NS_NewDownloader(nsIStreamListener   **result,
 
 inline nsresult
 NS_NewStreamLoader(nsIStreamLoader        **result,
-                   nsIChannel              *channel,
-                   nsIStreamLoaderObserver *observer,
-                   nsISupports             *context)
+                   nsIStreamLoaderObserver *observer)
 {
     nsresult rv;
     nsCOMPtr<nsIStreamLoader> loader =
         do_CreateInstance(NS_STREAMLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(channel, observer, context);
+        rv = loader->Init(observer);
         if (NS_SUCCEEDED(rv)) {
             *result = nsnull;
             loader.swap(*result);
@@ -504,23 +502,23 @@ NS_NewStreamLoader(nsIStreamLoader        **result,
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
         if (httpChannel)
             httpChannel->SetReferrer(referrer);
-        rv = NS_NewStreamLoader(result, channel, observer, context);
+        rv = NS_NewStreamLoader(result, observer);
+        if (NS_SUCCEEDED(rv))
+          rv = channel->AsyncOpen(*result, context);
     }
     return rv;
 }
 
 inline nsresult
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **result,
-                          nsIChannel                     *channel,
                           nsIUnicharStreamLoaderObserver *observer,
-                          nsISupports                    *context     = nsnull,
                           PRUint32                        segmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE)
 {
     nsresult rv;
     nsCOMPtr<nsIUnicharStreamLoader> loader =
         do_CreateInstance(NS_UNICHARSTREAMLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(channel, observer, context, segmentSize);
+        rv = loader->Init(observer, segmentSize);
         if (NS_SUCCEEDED(rv)) {
             *result = nsnull;
             loader.swap(*result);

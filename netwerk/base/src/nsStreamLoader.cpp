@@ -40,19 +40,11 @@
 #include "nsIChannel.h"
 
 NS_IMETHODIMP
-nsStreamLoader::Init(nsIChannel *channel,
-                     nsIStreamLoaderObserver* observer,
-                     nsISupports* context)
+nsStreamLoader::Init(nsIStreamLoaderObserver* observer)
 {
-  NS_ENSURE_ARG_POINTER(channel);
   NS_ENSURE_ARG_POINTER(observer);
-
-  nsresult rv = channel->AsyncOpen(this, context);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mObserver = observer;
-  mContext  = context;
-  return rv;
+  return NS_OK;
 }
 
 NS_METHOD
@@ -83,8 +75,8 @@ nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
 NS_IMETHODIMP 
 nsStreamLoader::GetRequest(nsIRequest **aRequest)
 {
-    NS_IF_ADDREF(*aRequest = mRequest);
-    return NS_OK;
+  NS_IF_ADDREF(*aRequest = mRequest);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -92,13 +84,14 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
   if (chan) {
-      PRInt32 contentLength = -1;
-      chan->GetContentLength(&contentLength);
-      if (contentLength >= 0) {
-          // preallocate buffer
-          mData.SetCapacity(contentLength + 1);
-      }
+    PRInt32 contentLength = -1;
+    chan->GetContentLength(&contentLength);
+    if (contentLength >= 0) {
+      // preallocate buffer
+      mData.SetCapacity(contentLength + 1);
+    }
   }
+  mContext = ctxt;
   return NS_OK;
 }
 

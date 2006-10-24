@@ -36,20 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
 
 interface nsIUnicharInputStream;
 interface nsIUnicharStreamLoader;
 interface nsIChannel;
 
-[scriptable, uuid(e06e8b08-8cdd-4503-a0a0-6f3b943602af)]
+[scriptable, uuid(6bb3e55b-69c0-4fc9-87e5-bed780d997ce)]
 interface nsIUnicharStreamLoaderObserver : nsISupports
 {
   /**
    * Called when the first full segment of data if available.
    *
    * @param aLoader the unichar stream loader
-   * @param aContext the aContext parameter passed to the loader's init method
+   * @param aContext the context parameter of the underlying channel
    * @param aFirstSegment the raw bytes of the first full data segment
    * @param aLength the length of aFirstSegment
    *
@@ -64,7 +64,7 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
    * Called when the entire stream has been loaded.
    *
    * @param aLoader the unichar stream loader
-   * @param aContext the aContext parameter passed to the loader's init method
+   * @param aContext the context parameter of the underlying channel
    * @param aStatus the status of the underlying channel
    * @param aUnicharData the unichar input stream containing the data.  This
    *        can be null in some failure conditions.
@@ -79,29 +79,29 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
                         in nsIUnicharInputStream aUnicharData);
 };
 
-[scriptable, uuid(8a3eca16-167e-443d-9485-7e84ed822e95)]
-interface nsIUnicharStreamLoader : nsISupports
+/**
+ * Asynchronously load a channel, converting the data to UTF-16.
+ *
+ * To use this interface, first call init() with a
+ * nsIUnicharStreamLoaderObserver that will be notified when the data has been
+ * loaded. Then call asyncOpen() on the channel with the nsIUnicharStreamLoader
+ * as the listener. The context argument in the asyncOpen() call will be
+ * passed to the onStreamComplete() callback.
+ */
+[scriptable, uuid(9037f476-7c08-4729-b690-3e425269802b)]
+interface nsIUnicharStreamLoader : nsIStreamListener
 {
   const unsigned long DEFAULT_SEGMENT_SIZE = 4096;
 
   /**
    * Initializes the unichar stream loader
    *
-   * @param aChannel the channel to read data from.  This should _not_ be
-   *        opened; the loader will open the channel itself.
    * @param aObserver the observer to notify when a charset is needed and when
    *        the load is complete
-   * @param aContext an opaque context pointer
    * @param aSegmentSize the size of the segments to use for the data, in bytes
-   *
-   * @note Failure to open the channel will cause init() to throw.  A
-   *       successful call to init() means that onStreamComplete is guaranteed
-   *       to be called on aObserver asynchronously (i.e. after init() returns).
    */
   
-  void init(in nsIChannel aChannel,
-            in nsIUnicharStreamLoaderObserver aObserver,
-            in nsISupports aContext,
+  void init(in nsIUnicharStreamLoaderObserver aObserver,
             in unsigned long aSegmentSize);
 
   /**

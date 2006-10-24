@@ -90,6 +90,7 @@
 #include "nsILoadGroup.h"
 #include "nsTObserverArray.h"
 #include "nsStubMutationObserver.h"
+#include "nsIChannel.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"

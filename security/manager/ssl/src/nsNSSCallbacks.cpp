@@ -148,9 +148,10 @@ nsHTTPDownloadEvent::Run()
   mListener->mResponsibleForDoneSignal = PR_TRUE;
 
   rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader), 
-                          hchan, 
-                          mListener, 
-                          nsnull);
+                          mListener);
+
+  if (NS_SUCCEEDED(rv))
+    rv = hchan->AsyncOpen(mListener->mLoader, nsnull);
 
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = PR_FALSE;

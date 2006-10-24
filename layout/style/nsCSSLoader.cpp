@@ -1360,7 +1360,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   // which owns us
   nsCOMPtr<nsIUnicharStreamLoader> streamLoader;
   rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader),
-                                 channel, aLoadData);
+                                 aLoadData);
+
+  if (NS_SUCCEEDED(rv))
+    rv = channel->AsyncOpen(streamLoader, nsnull);
 
 #ifdef DEBUG
   mSyncCallback = PR_FALSE;

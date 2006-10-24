@@ -35,14 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIChannel.idl"
+#include "nsIStreamListener.idl"
 
 interface nsIRequest;
-interface nsIURI;
-interface nsILoadGroup;
 interface nsIStreamLoader;
-interface nsIInterfaceRequestor;
 
 [scriptable, uuid(359F7990-D4E9-11d3-A1A5-0050041CAF44)]
 interface nsIStreamLoaderObserver : nsISupports
@@ -51,7 +47,7 @@ interface nsIStreamLoaderObserver : nsISupports
      * Called when the entire stream has been loaded.
      *
      * @param loader the stream loader that loaded the stream.
-     * @param context the aContext parameter passed to the loader's init method
+     * @param ctxt the context parameter of the underlying channel
      * @param status the status of the underlying channel
      * @param resultLength the length of the data loaded
      * @param result the data
@@ -70,29 +66,24 @@ interface nsIStreamLoaderObserver : nsISupports
 /**
  * Asynchronously loads a channel into a memory buffer.
  *
+ * To use this interface, first call init() with a nsIStreamLoaderObserver
+ * that will be notified when the data has been loaded. Then call asyncOpen()
+ * on the channel with the nsIStreamLoader as the listener. The context
+ * argument in the asyncOpen() call will be passed to the onStreamComplete()
+ * callback.
+ *
  * XXX define behaviour for sizes >4 GB
  */
-[scriptable, uuid(31d37360-8e5a-11d3-93ad-00104ba0fd40)]
-interface nsIStreamLoader : nsISupports
+[scriptable, uuid(8ea7e890-8211-11d9-8bde-f66bad1e3f3a)]
+interface nsIStreamLoader : nsIStreamListener
 {
     /**
      * Initialize this stream loader, and start loading the data.
      *
-     * @param aChannel
-     *        A Channel to load data from. This must not be asyncOpen'd yet!
      * @param aObserver
      *        An observer that will be notified when the data is complete.
-     * @param aContext
-     *        May be null. Will be passed to the observer.
-     *
-     * @note Failure to open the channel will cause init() to throw.  A
-     *       successful call to init() means that onStreamComplete is
-     *       guaranteed to be called on aObserver asynchronously (i.e. after
-     *       init() returns).
      */
-    void init(in nsIChannel aChannel,
-              in nsIStreamLoaderObserver aObserver,
-              in nsISupports aContext);
+    void init(in nsIStreamLoaderObserver aObserver);
 
     /**
      * Gets the number of bytes read so far.
