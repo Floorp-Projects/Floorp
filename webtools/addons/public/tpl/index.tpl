@@ -14,6 +14,9 @@
 		<div class="addon-feature-text">
 			<p>{$feature.body} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more&hellip;</a></p>
 			<p class="install-button"><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');"><span>Install now ({$feature.size} KB)</span></a></p>
+      {if $feature.id eq SUPER_MAGIC_YAHOO_ID}
+      <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
+      {/if}
 		</div>
 	</div>
 </div>

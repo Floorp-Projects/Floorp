@@ -201,12 +201,29 @@ h6 { font-size: 90%; border: 0; }
 /* addon features */
 
 .divider-bottom,
-.addon-feature,
 .bookmarkaddon-feature {
 	background: url(../../images/rustico/firefox-featured-divider.png) no-repeat bottom center;
 
 	margin-bottom: 1.5em;
 	padding-bottom: 10px;
+}
+
+#primary-feature {
+    margin-top: 2em;
+}
+
+.addon-feature h2 {
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+
+.eula {
+    font-size: 75%;
+}
+
+.addon-feature h2 span {
+    font-weight: normal;
+    font-size: 80%;
 }
 
 .addon-feature h3,
@@ -234,7 +251,7 @@ h6 { font-size: 90%; border: 0; }
 
 .addon-feature .search-result-image {
     float: right;
-    margin: 0 0 0 10px;
+    margin: 10px 0 5px 10px;
 }
 
 .addon-feature .addon-feature-image,

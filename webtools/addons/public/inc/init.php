@@ -32,7 +32,11 @@ ini_set('magic_quotes_gpc',0);
  */
 define('SCRIPT_NAME',basename($_SERVER['PHP_SELF']));
 
-
+/*
+ * Add-on ID for which we show the extra EULA link and text -- do not look directly into
+ * this code with remaining eye.
+ */
+define('SUPER_MAGIC_YAHOO_ID', 1833);
 
 /**
  * Page output caching.

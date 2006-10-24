@@ -14,10 +14,10 @@ setApp();
 
 $amo = new AMO_Object();
 
-$primary = $amo->getAddons(array(1532));
+$primary = $amo->getAddons(array(1407));
 $primary = $primary[0];
 
-$other = $amo->getAddons(array(2410, 1833));
+$other = $amo->getAddons(array(2410, 1833, 1532));
 
 // Assign template variables.
 $tpl->assign(

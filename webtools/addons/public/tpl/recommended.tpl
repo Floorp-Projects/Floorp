@@ -7,9 +7,12 @@
 	<div class="addon-feature clearfix">
 		<img src="{$config.webpath}{$recommended[re].previewuri}" alt="" class="addon-feature-image" />
 		<div class="addon-feature-text corner-box">
-			<h4><a href="{$config.webpath}/{$app}/{$recommended[re].id}">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h4>
+			<h2><a href="{$config.webpath}/{$app}/{$recommended[re].id}">{$recommended[re].name}</a> <span>by {$recommended[re].username}</span></h2>
 			<p>{$recommended[re].body}</p>
 			<p class="install-button"><a href="{$recommended[re].uri}" onclick="return install(event,'{$recommended[re].name} {$recommended[re].version}', '{$config.webpath}/images/default.png', '{$recommended[re].hash}');" title="Install {$recommended[re].name} {$recommended[re].version} (Right-Click to Download)"><span>Install now ({$recommended[re].size} KB)</span></a></p>
+      {if $recommended[re].id eq SUPER_MAGIC_YAHOO_ID}
+      <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
+      {/if}			
 		</div>
 	</div>
 {/section}
