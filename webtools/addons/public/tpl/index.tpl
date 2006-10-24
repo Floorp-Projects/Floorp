@@ -18,9 +18,7 @@
 	</div>
 </div>
 
-{include file="inc/search-box.tpl" extraClass="divider-bottom"}
-
-<p id="switch-links" class="compact-list"><a href="{$config.webpath}/developers/" class="switch-devcp">Developer Login</a><a href="{$config.webpath}/thunderbird/" class="switch-tb">Thunderbird Add-ons </a><a href="{$config.webpath}/mozilla/" class="switch-suite">Mozilla Suite Add-ons </a></p>
+{include file="inc/search-box.tpl"}
 
 {else} 
 <div class="split-feature">

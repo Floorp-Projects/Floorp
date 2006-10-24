@@ -449,13 +449,18 @@ p.install-button {
 
 /* footer */
 
+#doc-links a,
+#switch-links a,
+#tool-links a {
+    padding: 0 1em;
+}
+
 #footer {
 	clear: both;
 	color: #888;
-	font-size: 85%;
 	text-align: center;
 	margin: 0;
-	padding: 2em 0;
+	padding: 1em 0;
 }
 
 #footer ul {

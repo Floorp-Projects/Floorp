@@ -1,4 +1,4 @@
-<div class="search-container{if $extraClass} {$extraClass}{/if}">
+<div class="search-container corner-box">
 	<img src="{$config.webpath}/images/rustico/featured/firefox-featured-mglass.png" width="37" height="31" alt="" />
 	<h3>Find more Add-ons:</h3>
 	<form id="extensions-search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Add-ons">
