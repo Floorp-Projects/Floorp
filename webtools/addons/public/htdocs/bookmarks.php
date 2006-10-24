@@ -15,7 +15,9 @@ setApp();
 $amo = new AMO_Object();
 
 $primary = $amo->getAddons(array(3615));
-$primary = $primary[0];
+if (is_array($primary) && !is_empty($primary)) {
+    $primary = $primary[0];
+}
 
 $other = $amo->getAddons(array(2410, 1833));
 

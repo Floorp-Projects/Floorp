@@ -576,7 +576,8 @@ class AMO_Object
              INNER JOIN reviews r ON m.ID = r.ID
              INNER JOIN previews p ON p.ID = m.ID
              WHERE
-                 m.ID in ({$ids_sql})
+                 m.ID in ({$ids_sql}) AND
+                 p.preview = 'YES'
              GROUP BY
                  m.ID
          ";
