@@ -5,16 +5,6 @@
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/firefox-1.5.0.8.en-US.win32.installer.exe
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/firefox-1.5.0.8.en-US.win32.complete.mar
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/firefox-1.5.0.8.en-US.win32.zip
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/adt.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/browser.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/en-US.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/talkback.xpi
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/xforms.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/linux-xpi/xpcom.xpi
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/mac-xpi/xforms.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/adt.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/browser.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/en-US.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/talkback.xpi
 /pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/xforms.xpi
-/pub/mozilla.org/firefox/nightly/latest-mozilla1.8.0/windows-xpi/xpcom.xpi
