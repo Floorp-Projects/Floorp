@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(70378b9a-6480-11d3-a533-0060b0fc04b7)]
+[scriptable, uuid(d4ba3414-fe9e-436b-a01b-bd446e737d04)]
 interface nsIImapFlagAndUidState : nsISupports 
 {
   readonly attribute long numberOfMessages;
@@ -46,7 +46,7 @@ interface nsIImapFlagAndUidState : nsISupports
   void getMessageFlags(in long zeroBasedIndex, out unsigned short result);
   void setMessageFlags(in long zeroBasedIndex, in unsigned short flags);
   void expungeByIndex(in unsigned long zeroBasedIndex);
-  void addUidFlagPair(in unsigned long uid, in unsigned short flags);
+  void addUidFlagPair(in unsigned long uid, in unsigned short flags, in unsigned long zeroBasedIndex);
   void addUidCustomFlagPair(in unsigned long uid, in string customFlag);
   string getCustomFlags(in unsigned long uid); // returns space-separated keywords
   void reset(in unsigned long howManyLeft);

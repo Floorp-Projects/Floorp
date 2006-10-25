@@ -1322,7 +1322,7 @@ void nsImapServerResponseParser::msg_fetch()
           if (CurrentResponseUID() && CurrentResponseUID() != nsMsgKey_None 
             && fCurrentLineContainedFlagInfo && fFlagState)
           {
-            fFlagState->AddUidFlagPair(CurrentResponseUID(), fSavedFlagInfo);
+            fFlagState->AddUidFlagPair(CurrentResponseUID(), fSavedFlagInfo, fFetchResponseIndex - 1);
             for (PRInt32 i = 0; i < fCustomFlags.Count(); i++)
               fFlagState->AddUidCustomFlagPair(CurrentResponseUID(), fCustomFlags.CStringAt(i)->get());
             fCustomFlags.Clear();

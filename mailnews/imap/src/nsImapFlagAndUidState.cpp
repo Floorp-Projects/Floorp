@@ -212,61 +212,27 @@ NS_IMETHODIMP nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
 
 
 // adds to sorted list.  protects against duplicates and going past fNumberOfMessageSlotsAllocated  
-NS_IMETHODIMP nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags)
+NS_IMETHODIMP nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags, PRUint32 zeroBasedIndex)
 {
   if (uid == nsMsgKey_None) // ignore uid of -1
     return NS_OK;
   PR_CEnterMonitor(this);
+  if (zeroBasedIndex > fNumberOfMessagesAdded)
+    fNumberOfMessagesAdded = zeroBasedIndex + 1;
   // make sure there is room for this pair
   if (fNumberOfMessagesAdded >= fNumberOfMessageSlotsAllocated)
   {
     fNumberOfMessageSlotsAllocated += kImapFlagAndUidStateSize;
     fUids.SetSize(fNumberOfMessageSlotsAllocated);
     fFlags = (imapMessageFlagsType*) PR_REALLOC(fFlags, sizeof(imapMessageFlagsType) * fNumberOfMessageSlotsAllocated); // new imapMessageFlagsType[fNumberOfMessageSlotsAllocated];
+    if (!fFlags)
+      return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  // optimize the common case of placing on the end
-  if (!fNumberOfMessagesAdded || (uid > (PRUint32) fUids[fNumberOfMessagesAdded - 1]))
-  {	
-    fUids.SetAt(fNumberOfMessagesAdded, uid);
-    fFlags[fNumberOfMessagesAdded] = flags;
-    fNumberOfMessagesAdded++;
-    if (flags & kImapMsgDeletedFlag)
-      fNumberDeleted++;
-    PR_CExitMonitor(this);
-    return NS_OK;
-  }
-  
-  // search for the slot for this uid-flag pair
-  
-  PRInt32 insertionIndex = -1;
-  PRBool foundIt = PR_FALSE;
-  
-  GetMessageFlagsFromUID(uid, &foundIt, &insertionIndex);
-  // Hmmm, is the server sending back unordered fetch responses?
-  if (((PRUint32) fUids[insertionIndex]) != uid)
-  {
-    // shift the uids and flags to the right
-    for (PRInt32 shiftIndex = fNumberOfMessagesAdded; shiftIndex > insertionIndex; shiftIndex--)
-    {
-      fUids.SetAt(shiftIndex, fUids[shiftIndex - 1]);
-      fFlags[shiftIndex] = fFlags[shiftIndex - 1];
-    }
-    fFlags[insertionIndex] = flags;
-    fUids.SetAt(insertionIndex, uid);
-    fNumberOfMessagesAdded++;
-    if (fFlags[insertionIndex] & kImapMsgDeletedFlag)
-      fNumberDeleted++;
-  }
-  else 
-  {
-    if ((fFlags[insertionIndex] & kImapMsgDeletedFlag) && !(flags & kImapMsgDeletedFlag))
-      fNumberDeleted--;
-    else
-      if (!(fFlags[insertionIndex] & kImapMsgDeletedFlag) && (flags & kImapMsgDeletedFlag))
-        fNumberDeleted++;
-      fFlags[insertionIndex] = flags;
-  }
+
+  fUids.SetAt(zeroBasedIndex, uid);
+  fFlags[zeroBasedIndex] = flags;
+  if (flags & kImapMsgDeletedFlag)
+    fNumberDeleted++;
   PR_CExitMonitor(this);
   return NS_OK;
 }

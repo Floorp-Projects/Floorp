@@ -3985,7 +3985,7 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
        ((flags & kImapMsgDeletedFlag) && !showDeletedMessages) )
     {
       nsMsgKey doomedKey = existingKeys[keyIndex];
-      if ((PRInt32) doomedKey < 0 && doomedKey != nsMsgKey_None)
+      if ((PRInt32) doomedKey <= 0 && doomedKey != nsMsgKey_None)
         continue;
       else
         keysToDelete.Add(existingKeys[keyIndex]);
@@ -4023,7 +4023,7 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
       imapMessageFlagsType flags;
       flagState->GetMessageFlags(flagIndex, &flags);
       NS_ASSERTION(uidOfMessage != nsMsgKey_None, "got invalid msg key");
-      if (uidOfMessage != nsMsgKey_None && (showDeletedMessages || ! (flags & kImapMsgDeletedFlag)))
+      if (uidOfMessage && uidOfMessage != nsMsgKey_None && (showDeletedMessages || ! (flags & kImapMsgDeletedFlag)))
       {
         if (mDatabase)
         {
