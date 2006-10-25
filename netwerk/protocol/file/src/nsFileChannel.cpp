@@ -49,6 +49,7 @@
 #include "nsNetSegmentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
+#include "nsStandardURL.h"
 
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
@@ -332,8 +333,10 @@ nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result)
     nsFileUploadContentStream *uploadStream =
         new nsFileUploadContentStream(async, fileStream, mUploadStream,
                                       mUploadLength, this);
-    if (!uploadStream || !uploadStream->IsInitialized())
+    if (!uploadStream || !uploadStream->IsInitialized()) {
+      delete uploadStream;
       return NS_ERROR_OUT_OF_MEMORY;
+    }
     stream = uploadStream;
 
     SetContentLength64(0);
