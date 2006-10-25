@@ -200,11 +200,14 @@ endif
 endif
 endif
 
+ifdef MOZ_STORAGE
+COMPONENT_LIBS += storagecomps
+endif
+
 ifdef MOZ_PLACES
 STATIC_LIBS += morkreader_s
 
 COMPONENT_LIBS += \
-	storagecomps \
 	places \
 	$(NULL)
 else
