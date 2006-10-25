@@ -5376,6 +5376,11 @@ void nsImapProtocol::OnAppendMsgFromFile()
       // convert msg flag label (0xE000000) to imap flag label (0x0E00)
       if (msgFlags & MSG_FLAG_LABELS)
         flagsToSet |= (msgFlags & MSG_FLAG_LABELS) >> 16;
+      // If the message copied was a draft, flag it as such
+      nsImapAction imapAction;
+      rv = m_runningUrl->GetImapAction(&imapAction);
+      if (NS_SUCCEEDED(rv) && (imapAction == nsIImapUrl::nsImapAppendDraftFromFile))
+        flagsToSet |= kImapMsgDraftFlag;
       UploadMessageFromFile(fileSpec, mailboxName, date, flagsToSet);
       PR_Free( mailboxName );
     }
