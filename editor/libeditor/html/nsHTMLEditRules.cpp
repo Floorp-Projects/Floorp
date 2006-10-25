@@ -338,20 +338,15 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     mDidDeleteSelection = PR_FALSE;
     
     // clear out mDocChangeRange and mUtilRange
-    nsCOMPtr<nsIDOMNSRange> nsrange;
     if(mDocChangeRange)
     {
-      nsrange = do_QueryInterface(mDocChangeRange);
-      if (!nsrange)
-        return NS_ERROR_FAILURE;
-      nsrange->NSDetach();  // clear out our accounting of what changed
+      // Ignore failure code returned if the range is already detached
+      mDocChangeRange->Detach(); // clear out our accounting of what changed
     }
     if(mUtilRange)
     {
-      nsrange = do_QueryInterface(mUtilRange);
-      if (!nsrange)
-        return NS_ERROR_FAILURE;
-      nsrange->NSDetach();  // ditto for mUtilRange.  
+      // Ignore failure code returned if the range is already detached
+      mUtilRange->Detach(); // ditto for mUtilRange.
     }
 
     // remember current inline styles for deletion and normal insertion operations
