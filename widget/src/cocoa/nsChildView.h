@@ -128,6 +128,7 @@ class nsChildView;
 - (void)viewsWindowDidBecomeKey;
 - (void)viewsWindowDidResignKey;
 
+- (BOOL)isComposing;
 @end
 
 
