@@ -61,8 +61,8 @@
 
 #include "nsFilePicker.h"
 
-#define ACCESSORY_VIEW_PADDING 5
-#define SAVE_TYPE_CONTROL_TAG 1
+const float kAccessoryViewPadding = 5;
+const int   kSaveTypeControlTag = 1;
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -132,28 +132,29 @@ NSView* nsFilePicker::GetAccessoryView()
   PRInt32 numMenuItems = mTitles.Count();
   for (int i = 0; i < numMenuItems; i++) {
     const nsString& currentTitle = *mTitles[i];
-    NSString *titleString = [[[NSString alloc] initWithCharacters:currentTitle.get()
-                                                           length:currentTitle.Length()] autorelease];
+    NSString *titleString = [[NSString alloc] initWithCharacters:currentTitle.get()
+                                                          length:currentTitle.Length()];
     [popupButton addItemWithTitle:titleString];
+    [titleString release];
   }
-  [popupButton setTag:SAVE_TYPE_CONTROL_TAG];
+  [popupButton setTag:kSaveTypeControlTag];
   [popupButton sizeToFit];
 
-  // position everything based on control sizes with ACCESSORY_VIEW_PADDING pix padding
-  // on each side ACCESSORY_VIEW_PADDING pix horizontal padding between controls
+  // position everything based on control sizes with kAccessoryViewPadding pix padding
+  // on each side kAccessoryViewPadding pix horizontal padding between controls
   float greatestHeight = [textField frame].size.height;
   if ([popupButton frame].size.height > greatestHeight)
     greatestHeight = [popupButton frame].size.height;
 
-  float totalViewHeight = greatestHeight + ACCESSORY_VIEW_PADDING * 2;
-  float totalViewWidth  = [textField frame].size.width + [popupButton frame].size.width + ACCESSORY_VIEW_PADDING * 3;
+  float totalViewHeight = greatestHeight + kAccessoryViewPadding * 2;
+  float totalViewWidth  = [textField frame].size.width + [popupButton frame].size.width + kAccessoryViewPadding * 3;
   [accessoryView setFrameSize:NSMakeSize(totalViewWidth, totalViewHeight)];
 
-  float textFieldOriginY = ((greatestHeight - [textField frame].size.height) / 2 + 1) + ACCESSORY_VIEW_PADDING;
-  [textField setFrameOrigin:NSMakePoint(ACCESSORY_VIEW_PADDING, textFieldOriginY)];
+  float textFieldOriginY = ((greatestHeight - [textField frame].size.height) / 2 + 1) + kAccessoryViewPadding;
+  [textField setFrameOrigin:NSMakePoint(kAccessoryViewPadding, textFieldOriginY)];
   
-  float popupOriginX = [textField frame].size.width + ACCESSORY_VIEW_PADDING * 2;
-  float popupOriginY = ((greatestHeight - [popupButton frame].size.height) / 2) + ACCESSORY_VIEW_PADDING;
+  float popupOriginX = [textField frame].size.width + kAccessoryViewPadding * 2;
+  float popupOriginY = ((greatestHeight - [popupButton frame].size.height) / 2) + kAccessoryViewPadding;
   [popupButton setFrameOrigin:NSMakePoint(popupOriginX, popupOriginY)];
 
   [accessoryView addSubview:textField];
@@ -356,7 +357,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
     return retVal;
 
   // get the save type
-  NSPopUpButton* popupButton = [accessoryView viewWithTag:SAVE_TYPE_CONTROL_TAG];
+  NSPopUpButton* popupButton = [accessoryView viewWithTag:kSaveTypeControlTag];
   if (popupButton)
     mSelectedType = [popupButton indexOfSelectedItem];
 
