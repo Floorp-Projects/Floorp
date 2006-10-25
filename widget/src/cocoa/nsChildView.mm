@@ -57,9 +57,8 @@
 #include "nsIScrollableView.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
-
 #include "nsMacResources.h"
-
+#include "nsDragService.h"
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"
 
@@ -2100,6 +2099,20 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 
 @implementation ChildView
 
+// globalDragPboard is non-null during native drag sessions that did not originate
+// in our native NSView (it is set in |draggingEntered:|). It is unset when the
+// drag session ends for this view, either with the mouse exiting or when a drop
+// occurs in this view.
+NSPasteboard* globalDragPboard = nil;
+
+// globalDragView and globalDragEvent are only non-null during calls to |mouseDragged:|
+// in our native NSView. They are used to communicate information to the drag service
+// during drag invocation (starting a drag in from the view). All drag service drag
+// invocations happen only while these two global variables are non-null, while |mouseDragged:|
+// is on the stack.
+NSView* globalDragView = nil;
+NSEvent* globalDragEvent = nil;
+
 //
 // initWithFrame:geckoChild:eventSink:
 //
@@ -2119,8 +2132,15 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
     mSelectedRange.length = 0;
     mInComposition = NO;
     mLastMenuForEventEvent = nil;
+    mDragService = nsnull;
   }
   
+  // register for things we'll take from other applications
+  [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
+                                                          NSStringPboardType,
+                                                          NSURLPboardType,
+                                                          nil]];
+
   return self;
 }
 
@@ -2491,7 +2511,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   paintEvent.renderingContext = rc;
   paintEvent.rect = &r;
 
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
   mGeckoChild->DispatchWindowEvent(paintEvent);
 
   paintEvent.renderingContext = nsnull;
@@ -2709,6 +2728,10 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
     [self updateHandScroll:theEvent];
     return;
   }
+
+  globalDragView = self;
+  globalDragEvent = theEvent;
+
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
 
@@ -2724,6 +2747,8 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);    
 
+  globalDragView = nil;
+  globalDragEvent = nil;
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
@@ -3902,6 +3927,144 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
       outGeckoEvent->keyCode != NS_VK_PAGE_DOWN)
     ::ObscureCursor();
 }
+
+
+#pragma mark -
+// drag'n'drop stuff
+
+
+#define kDragServiceContractID "@mozilla.org/widget/dragservice;1"
+
+
+// This is a utility function used by NSView drag event methods
+// to send events. It contains all of the logic needed for Gecko
+// dragging to work. Returns YES if the event was handled, NO
+// if it wasn't.
+- (BOOL)doDragAction:(PRUint32)aMessage sender:(id)aSender
+{
+  if (!mDragService)
+    return NO;
+
+  if (aMessage == NS_DRAGDROP_ENTER)
+    mDragService->StartDragSession();
+
+  nsCOMPtr<nsIDragSession> dragSession;
+  mDragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
+    if (aMessage == NS_DRAGDROP_OVER)
+      dragSession->SetCanDrop(PR_FALSE);
+    else if (aMessage == NS_DRAGDROP_DROP) {
+      // We make the assuption that the dragOver handlers have correctly set
+      // the |canDrop| property of the Drag Session.
+      PRBool canDrop = PR_FALSE;
+      if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop)
+        return NO;
+    }
+    
+    unsigned int modifierFlags = [[NSApp currentEvent] modifierFlags];
+    PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
+    // force copy = option, alias = cmd-option, default is move
+    if (modifierFlags & NSAlternateKeyMask) {
+      if (modifierFlags & NSCommandKeyMask)
+        action = nsIDragService::DRAGDROP_ACTION_LINK;
+      else
+        action = nsIDragService::DRAGDROP_ACTION_COPY;
+    }
+    dragSession->SetDragAction(action);
+  }
+
+  NSPoint dragLocation = [aSender draggingLocation];
+  dragLocation = [[self window] convertBaseToScreen:dragLocation];
+  FlipCocoaScreenCoordinate(dragLocation);
+
+  // Pass into Gecko for handling.
+  PRBool handled = PR_FALSE;
+  mGeckoChild->DragEvent(aMessage, (PRInt16)dragLocation.x,
+                         (PRInt16)dragLocation.y, 0, &handled);
+
+  if (aMessage == NS_DRAGDROP_EXIT && dragSession) {
+    nsCOMPtr<nsIDOMNode> sourceNode;
+    dragSession->GetSourceNode(getter_AddRefs(sourceNode));
+    if (!sourceNode) {
+      // We're leaving a window while doing a drag that was
+      // initiated in a different app. End the drag session,
+      // since we're done with it for now (until the user
+      // drags back into mozilla).
+      mDragService->EndDragSession();
+    }
+  }
+
+  return handled ? YES : NO;
+}
+
+
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  CallGetService(kDragServiceContractID, &mDragService);
+  NS_ASSERTION(mDragService, "Couldn't get a drag service - big problem!");
+  if (!mDragService)
+    return NSDragOperationNone;
+
+  // there should never be a globalDragPboard when "draggingEntered:" is
+  // called, but just in case we'll take care of it here.
+  [globalDragPboard release];
+
+  // Set the global drag pasteboard that will be used for this drag session.
+  // This will be set back to nil when the drag session ends (mouse exits
+  // the view or a drop happens within the view).
+  globalDragPboard = [[sender draggingPasteboard] retain];
+
+  BOOL handled = [self doDragAction:NS_DRAGDROP_ENTER sender:sender];
+
+  return handled ? NSDragOperationGeneric : NSDragOperationNone;
+}
+
+
+- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
+{
+  if (!mDragService)
+    return NSDragOperationNone;
+
+  BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
+
+  return handled ? NSDragOperationGeneric : NSDragOperationNone;
+}
+
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender
+{
+  if (!mDragService)
+    return;
+
+  [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
+
+  // Gecko event handling for this drag session is over. Release our
+  // cached drag service and set globalDragPboard back to nil.
+  NS_IF_RELEASE(mDragService);
+  [globalDragPboard release];
+  globalDragPboard = nil;
+}
+
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  if (!mDragService)
+    return NO;
+
+  BOOL rv = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+
+  // Gecko event handling for this drag session is over. Release our
+  // cached drag service and set globalDragPboard back to nil.
+  NS_IF_RELEASE(mDragService);
+  [globalDragPboard release];
+  globalDragPboard = nil;
+
+  return rv;
+}
+
+
+#pragma mark -
+
 
 //
 // -_destinationFloatValueForScroller

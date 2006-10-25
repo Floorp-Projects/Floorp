@@ -92,13 +92,9 @@ EXPORTS = \
 
 MAC_LCPPSRCS = \
 		nsBidiKeyboard.cpp \
-		nsDragService.cpp \
-		nsDragHelperService.cpp \
 		nsLookAndFeel.cpp \
 		nsMacNativeUnicodeConverter.cpp \
 		nsMacResources.cpp \
-		nsMimeMapper.cpp \
-		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
 		nsDeviceContextSpecX.cpp \
@@ -127,6 +123,7 @@ CMMSRCS = \
 		nsMenuBarX.mm \
 		nsMenuItemX.mm \
 		nsFilePicker.mm \
+		nsDragService.mm \
 		nsToolkit.mm \
 		nsAppShell.mm \
 		nsCocoaWindow.mm \
@@ -144,7 +141,6 @@ CMMSRCS = \
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		nsIMenuCommandDispatcher.idl \
-		nsIDragHelperService.idl \
 		nsPIWidgetCocoa.idl \
 		$(NULL)
 
