@@ -13,7 +13,7 @@
 
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-	<title>{$app|capitalize} Add-ons | Mozilla Corporation</title>
+	<title>{if $title}{$title} | {/if}{$app|capitalize} Add-ons | Mozilla Corporation</title>
 	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/rustico/addons-rustico.css" media="screen"/>
 	<link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen"/>
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
