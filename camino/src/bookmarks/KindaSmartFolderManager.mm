@@ -130,14 +130,14 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
   while ((curItem = [bookmarksEnum nextObject]))
   {
     if ([curItem isKindOfClass:[Bookmark class]])
-      [self checkForNewTop10:curItem];
+      [self checkForNewTop10:(Bookmark *)curItem];
   }
 
   bookmarksEnum = [[manager toolbarFolder] objectEnumerator];
   while ((curItem = [bookmarksEnum nextObject]))
   {
     if ([curItem isKindOfClass:[Bookmark class]])
-      [self checkForNewTop10:curItem];
+      [self checkForNewTop10:(Bookmark *)curItem];
   }
 }
 
@@ -338,7 +338,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 {
   BookmarkItem *anItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
   if (![anItem parent] && [anItem isKindOfClass:[Bookmark class]]) {
-    [self removeBookmark:anItem fromSmartFolder:mTop10Folder];
+    [self removeBookmark:(Bookmark *)anItem fromSmartFolder:mTop10Folder];
   }
 }
 
@@ -349,7 +349,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   {
     BookmarkItem *anItem = [note object];
     if ([anItem isKindOfClass:[Bookmark class]])
-      [self checkForNewTop10:anItem];
+      [self checkForNewTop10:(Bookmark *)anItem];
   }
 }
 

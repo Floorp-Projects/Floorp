@@ -140,7 +140,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   // the title bar and toolbar will have a different (inactive) appearance, so
   // so the gradient won't be used.
 
-  BrowserWindow* browserWin = [self window];
+  BrowserWindow* browserWin = (BrowserWindow*)[self window];
   if ([browserWin hasUnifiedToolbarAppearance] && [browserWin isMainWindow]) {
     float grays[2] = {235.0/255.0, 214.0/255.0};
 
@@ -510,7 +510,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 {
   NSView* foundView = [self hitTest:testPoint];
   if (foundView && [foundView isMemberOfClass:[BookmarkButton class]]) {
-    BookmarkButton* targetButton = foundView;
+    BookmarkButton* targetButton = (BookmarkButton*)foundView;
     
     // if over current position, leave mDragInsertButton unset but return success so nothing happens
     if (targetButton == sourceButton)
@@ -556,21 +556,21 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
   if ([types containsObject: kCaminoBookmarkListPBoardType]) {
     NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType: kCaminoBookmarkListPBoardType]];
-    BookmarkItem* destItem = nil;
+    BookmarkFolder* destFolder = nil;
 
     if (mDragInsertionButton == nil) {
       return NO;
     }
     else if (mDragInsertionPosition == CHInsertInto) {
       // drop onto folder
-      destItem = [mDragInsertionButton bookmarkItem];
+      destFolder = (BookmarkFolder*)[mDragInsertionButton bookmarkItem];
     }
     else if (mDragInsertionPosition == CHInsertBefore ||
              mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
-      destItem = toolbar;
+      destFolder = toolbar;
     }
     
-    return [bmManager isDropValid:draggedItems toFolder:destItem];
+    return [bmManager isDropValid:draggedItems toFolder:destFolder];
   }
 
   return [draggingPasteboard containsURLData];
@@ -678,9 +678,9 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     id aKid;
     while ((aKid = [enumerator nextObject])) {
       if (isCopy)
-        [[aKid parent] copyChild:aKid toBookmarkFolder:toolbar atIndex:index];
+        [(BookmarkFolder*)[aKid parent] copyChild:aKid toBookmarkFolder:toolbar atIndex:index];
       else
-        [[aKid parent] moveChild:aKid toBookmarkFolder:toolbar atIndex:index];
+        [(BookmarkFolder*)[aKid parent] moveChild:aKid toBookmarkFolder:toolbar atIndex:index];
     }
     dropHandled = YES;
   }

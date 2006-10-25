@@ -1110,7 +1110,7 @@ static BookmarkManager* gBookmarkManager = nil;
     if ([NSWorkspace supportsSpotlight])
       [bmItem writeBookmarksMetadataToPath:mMetadataPath];
 
-    [self registerBookmarkForLoads:bmItem];
+    [self registerBookmarkForLoads:(Bookmark*)bmItem];
   }
   
   [self noteBookmarksChanged];
@@ -1138,7 +1138,7 @@ static BookmarkManager* gBookmarkManager = nil;
     if ([NSWorkspace supportsSpotlight])
       [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
 
-    [self unregisterBookmarkForLoads:bmItem ignoringURL:YES];
+    [self unregisterBookmarkForLoads:(Bookmark*)bmItem ignoringURL:YES];
   }
   
   [self noteBookmarksChanged];

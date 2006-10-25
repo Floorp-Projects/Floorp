@@ -260,7 +260,7 @@
 //
 - (void)showFolderPopup:(NSEvent*)event
 {
-  BookmarkMenu* bmMenu = [[[BookmarkMenu alloc] initWithTitle:@"" bookmarkFolder:[self bookmarkItem]] autorelease];
+  BookmarkMenu* bmMenu = [[[BookmarkMenu alloc] initWithTitle:@"" bookmarkFolder:(BookmarkFolder*)[self bookmarkItem]] autorelease];
   // dummy first item
   id dummyItem = [bmMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
   [bmMenu setItemBeforeCustomItems:dummyItem];
