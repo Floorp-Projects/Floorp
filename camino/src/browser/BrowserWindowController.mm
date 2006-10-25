@@ -416,6 +416,18 @@ public:
     [target validateToolbarItem:self];
 }
 
+//
+// -setEnabled:
+//
+// Make sure that the menu form, which is used for the text-only view,
+// is enabled and disabled with the rest of the toolbar item.
+//
+- (void)setEnabled:(BOOL)enabled
+{
+  [super setEnabled:enabled];
+  [[self menuFormRepresentation] setEnabled:enabled];
+}
+
 @end
 
 #pragma mark -
