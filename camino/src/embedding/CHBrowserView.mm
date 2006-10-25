@@ -51,6 +51,7 @@
 #include "nsIDocCharset.h"
 
 #include "nsIURI.h"
+#include "nsIURIFixup.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -537,6 +538,10 @@ const long NSFindPanelActionSetFindString = 7;
     browserSetup->SetProperty(property, value);
 }
 
+// Gets the current URI in fixed-up form, suitable for display to the user.
+// In the case of wyciwyg: URIs, this will not be the actual URI of the page
+// according to gecko.
+//
 // should we be using the window.location URL instead? see nsIDOMLocation.h
 - (NSString*)getCurrentURI
 {
@@ -550,7 +555,13 @@ const long NSFindPanelActionSetFindString = 7;
     return @"";
 
   nsCAutoString spec;
-  uri->GetSpec(spec);
+  nsCOMPtr<nsIURI> exposableURI;
+  nsCOMPtr<nsIURIFixup> fixup(do_GetService("@mozilla.org/docshell/urifixup;1"));
+  if (fixup && NS_SUCCEEDED(fixup->CreateExposableURI(uri, getter_AddRefs(exposableURI))) && exposableURI)
+    exposableURI->GetSpec(spec);
+  else
+    uri->GetSpec(spec);
+  
 	return [NSString stringWithUTF8String:spec.get()];
 }
 

@@ -41,6 +41,7 @@
 
 #include "nsDownloadListener.h"
 
+#include "nsIURIFixup.h"
 #include "nsIWebProgress.h"
 #include "nsIFileURL.h"
 #include "netCore.h"
@@ -312,8 +313,14 @@ nsDownloadListener::InitDialog()
       spec.Append(hostport);
       spec.Append(path);
     }
-    else
-      mURI->GetSpec(spec);
+    else {
+      nsCOMPtr<nsIURI> exposableURI;
+      nsCOMPtr<nsIURIFixup> fixup(do_GetService("@mozilla.org/docshell/urifixup;1"));
+      if (fixup && NS_SUCCEEDED(fixup->CreateExposableURI(mURI, getter_AddRefs(exposableURI))) && exposableURI)
+        exposableURI->GetSpec(spec);
+      else
+        mURI->GetSpec(spec);
+    }
 
     [mDownloadDisplay setSourceURL: [NSString stringWithUTF8String:spec.get()]];
   }

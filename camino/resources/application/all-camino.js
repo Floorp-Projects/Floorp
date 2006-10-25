@@ -135,3 +135,6 @@ pref("browser.link.open_newwindow.restriction", 2);
 
 // enable popup blocking
 pref("dom.disable_open_during_load", true);
+
+// don't hide user:pass when fixing up URIs
+pref("browser.fixup.hide_user_pass", false);

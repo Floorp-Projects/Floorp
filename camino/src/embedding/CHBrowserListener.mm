@@ -46,6 +46,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
 #include "nsIURI.h"
+#include "nsIURIFixup.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -708,7 +709,13 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   }
   
   nsCAutoString spec;
-  aLocation->GetSpec(spec);
+  nsCOMPtr<nsIURI> exposableLocation;
+  nsCOMPtr<nsIURIFixup> fixup(do_GetService("@mozilla.org/docshell/urifixup;1"));
+  if (fixup && NS_SUCCEEDED(fixup->CreateExposableURI(aLocation, getter_AddRefs(exposableLocation))) && exposableLocation)
+    exposableLocation->GetSpec(spec);
+  else
+    aLocation->GetSpec(spec);
+
   NSString* str = [NSString stringWithUTF8String:spec.get()];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
