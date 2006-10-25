@@ -46,10 +46,6 @@
 
 #include "nsITimer.h"
 
-#ifndef __gen_nsIURIContentListener_h__
-#include "nsIURIContentListener.h"
-#endif
-
 #ifndef __gen_nsIWebProgressListener_h__
 #include "nsIWebProgressListener.h"
 #endif
@@ -75,7 +71,6 @@ class nsComposerCommandsUpdater;
 
 class nsEditingSession : public nsIEditingSession,
                          public nsIWebProgressListener,
-                         public nsIURIContentListener,
                          public nsSupportsWeakReference
 {
 public:
@@ -85,9 +80,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  // nsIURIContentListener
-  NS_DECL_NSIURICONTENTLISTENER
 
   // nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
