@@ -1893,6 +1893,9 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   NSLog(@"**** ResetInputState");
 #endif
 
+  if (![mView isComposing])
+    return NS_OK;
+
   NSInputManager *currentIM = [NSInputManager currentInputManager];
   
   // commit the current text
@@ -1938,6 +1941,10 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
 #ifdef DEBUG_IME
   NSLog(@"**** CancelIMEComposition");
 #endif
+
+  if (![mView isComposing])
+    return NS_OK;
+
   NSInputManager *currentIM = [NSInputManager currentInputManager];
   [currentIM markedTextAbandoned:mView];
   
@@ -3590,6 +3597,11 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   nsFocusEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(unfocusEvent);
+}
+
+- (BOOL)isComposing
+{
+  return mInComposition;
 }
 
 //-------------------------------------------------------------------------
