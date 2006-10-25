@@ -1,0 +1,84 @@
+<html>
+<head>
+    <!-- This harness does not work locally in Safari -->
+    <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="SimpleTest/TestRunner.js"></script>
+    <script type="text/javascript" src="SimpleTest/MozillaFileLogger.js"></script>
+    <script type="text/javascript" src="SimpleTest/quit.js"></script>
+</head>
+<body>
+<p><a href="#" id="runtests">Click To Run Tests</a></p>
+<script type="text/javascript">
+
+TestRunner.logEnabled = true;
+TestRunner.logger = new Logger();
+
+// Check the query string for arguments
+var params = parseQueryString(location.search.substring(1), true);
+
+// log levels for console and logfile
+var fileLevel =  params.fileLevel || null;
+var consoleLevel = params.consoleLevel || null;
+
+// closeWhenDone tells us to call quit.js when complete
+if (params.closeWhenDone) {
+  TestRunner.onComplete = goQuitApplication;
+}
+
+// logFile to write our results
+if (params.logFile) {
+  MozillaFileLogger.init(params.logFile);
+  TestRunner.logger.addListener("mozLogger", fileLevel, MozillaFileLogger.getLogCallback());
+}
+
+// if we get a quiet param, don't log to the console
+if (!params.quiet) {
+  function dumpListener(msg) {
+    dump("*** " + msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
+  }
+  TestRunner.logger.addListener("dumpListener", consoleLevel + "", dumpListener);
+}
+
+var RunSet = {}
+RunSet.runall = function() {
+  TestRunner.runTests(
+      'test_bug338679.html',
+      'test_bug339350.xhtml',
+      'test_bug355026.html',
+      'test_bug357509.html',
+      'test_bug357776.html',
+      'test_MochiKit-Async.html',
+      'test_MochiKit-Base.html',
+      'test_MochiKit-DateTime.html',
+      'test_MochiKit-DOM.html',
+      'test_MochiKit-Style.html',
+      'test_MochiKit-Format.html',
+      'test_MochiKit-Iter.html',
+      'test_MochiKit-Logging.html',
+      'test_MochiKit-MochiKit.html',
+      'test_MochiKit-Color.html',
+      'test_MochiKit-Signal.html'
+  );
+};
+RunSet.reloadAndRunAll = function() {
+  if (params.autorun) {
+    window.location.href = window.location.href;
+  } else if (location.search) {
+    window.location.href = window.location.href + "&autorun=1";
+  } else {
+    window.location.href = window.location.href + "?autorun=1";
+  }
+};
+
+// run automatically if 
+if (params.autorun) {
+  RunSet.runall();
+}
+
+// hook up our buttons
+connect("runtests", "onclick", RunSet, "reloadAndRunAll");
+
+</script>
+<small>Based on the <a href="http://www.mochikit.com/">MochiKit</a> unit tests.</small>
+</body>
+</html>
