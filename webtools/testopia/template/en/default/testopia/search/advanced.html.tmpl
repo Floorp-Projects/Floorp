@@ -134,7 +134,7 @@
         </td>
       [% ELSE %]
         <td align="center" bgcolor="#BBBBEE" class="unselected_tab">
-          <a href="tr_query.cgi?current_tab=[% tab.name %]" >
+          <a href="tr_query.cgi?current_tab=[% tab.name %][% '&report=1' IF report %]" >
             [% tab.description %]
           </a>
         </td>

@@ -1,5 +1,23 @@
 [%# 1.0@bugzilla.org %]
-
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Testopia System.
+  #
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2001
+  # Greg Hendricks. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
 [% IF plan_id %]
   [% plan_id = plan_id %]
 [% ELSIF plan %]
@@ -17,6 +35,7 @@
   </div>
   <div class="links">
     <a href="tr_query.cgi">Search</a>&nbsp;|&nbsp;
+    <a href="tr_query.cgi?report=1">Reports</a>&nbsp;|&nbsp;
     <a href="tr_new_plan.cgi">New Plan</a>&nbsp;|&nbsp;
     <a href="tr_new_case.cgi?plan_id=[% plan_id FILTER none %]">New Case</a>&nbsp;|&nbsp;
     <a href="tr_new_run.cgi?plan_id=[% plan_id FILTER none %]&case_status_id=2">New Run</a>&nbsp;|&nbsp;

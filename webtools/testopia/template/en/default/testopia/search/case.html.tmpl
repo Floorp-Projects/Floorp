@@ -17,8 +17,61 @@
   #
   # Contributor(s): Greg Hendricks <ghendricks@novell.com>
   #%]
-  
-<form action="tr_list_cases.cgi" method="GET">  
+
+
+[% IF report %]
+<form action="tr_case_reports.cgi" method="GET">    
+<p>
+  Choose one or more fields as your axes, and then refine your set of 
+  cases using the rest of the form.
+</p>
+
+
+<table align="center">
+  <tr>
+    <td>
+    </td>
+    <td align="center">
+      <b>Horizontal Axis:</b>
+          [% PROCESS select sel = { name  => 'x_axis_field',
+                                list      => case.report_columns } %]
+
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="middle" align="center">
+      <b>Vertical Axis:</b><br>
+          [% PROCESS select sel = { name  => 'y_axis_field',
+                                list      => case.report_columns } %]
+
+    </td>
+    <td width="150" height="150">
+      <table border="1" width="100%" height="100%">
+        <tr>
+          <td align="center" valign="middle">
+            <b>Multiple Tables:</b><br>
+          [% PROCESS select sel = { name  => 'z_axis_field',
+                                list      => case.report_columns } %]
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+<br>
+<input type="submit" value="Submit">
+<input type="hidden" name="format" value="table">
+<input type="hidden" name="report_action" value="data">
+<input type="hidden" name="report" value="1" />
+<hr>
+[% ELSE %]
+<form action="tr_list_cases.cgi" method="GET">
+[% END %]
   <input type="hidden" name="current_tab" value="[% current_tab FILTER none %]" />
 <fieldset>
     <legend><strong>Product</strong></legend>

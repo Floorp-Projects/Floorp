@@ -87,6 +87,22 @@ use constant DB_COLUMNS => qw(
 
 our $columns = join(", ", DB_COLUMNS);
 
+sub report_columns {
+    my $self = shift;
+    my %columns;
+    # Changes here need to match Report.pm
+    $columns{'Type'}          = "plan_type";        
+    $columns{'Version'}       = "default_product_version";
+    $columns{'Product'}       = "product";
+    $columns{'Archived'}      = "archived";
+    $columns{'Tags'}          = "tags";
+    $columns{'Author'}        = "author";
+    $columns{'<none>'}        = '';
+    my @result;
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (keys %columns);
+    return \@result;     
+        
+}
 
 ###############################
 ####       Methods         ####

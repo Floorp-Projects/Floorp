@@ -121,6 +121,27 @@ $self->{'display_columns'} = \@columns;
 return $self->{'display_columns'};
 }
 
+sub report_columns {
+    my $self = shift;
+    my %columns;
+    # Changes here need to match Report.pm
+    $columns{'Status'}          = "case_status";        
+    $columns{'Priority'}        = "priority";
+    $columns{'Product'}         = "product_id";
+    $columns{'Component'}       = "component";
+    $columns{'Category'}        = "category";
+    $columns{'Automated'}       = "isautomated";
+    $columns{'Tags'}            = "tags";
+    $columns{'Requirement'}     = "requirement";
+    $columns{'Author'}          = "author";
+    $columns{'Default tester'}  = "default_tester";
+    $columns{'<none>'}          = '';
+    my @result;
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (keys %columns);
+    return \@result;     
+        
+}
+
 =head1 METHODS
 
 =cut

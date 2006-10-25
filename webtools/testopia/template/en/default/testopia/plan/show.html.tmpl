@@ -254,7 +254,8 @@
 [%### Reports ###%]
 <br><br>
 <h3>Reports</h3>
-<a href="tr_plan_reports.cgi?plan_id=[% plan.id FILTER none %]">Build Coverage</a>
+<a href="tr_plan_reports.cgi?plan_id=[% plan.id FILTER none %]&type=build_coverage">Build Coverage</a>
+<a href="tr_query.cgi?current_tab=plan&report=1">General Reports</a>
 [%##### Edit Plan #####%]
 <br><br>
 [% IF plan.canedit %]

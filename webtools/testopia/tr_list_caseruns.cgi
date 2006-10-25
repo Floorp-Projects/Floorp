@@ -228,7 +228,7 @@ elsif ($action eq 'do_delete'){
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_list_caseruns.cgi', $cgi, undef, $search->query);
-ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
 
 if ($table->list_count > 0){
     my $prod_id = $table->list->[0]->run->plan->product_id;

@@ -221,7 +221,7 @@ else{
         $vars->{'case'} = $case;
         $vars->{'title'} = "Search For Test Cases";
     }
-    
+    $vars->{'report'} = $cgi->param('report');
     $vars->{'current_tab'} = $tab;
     $template->process("testopia/search/advanced.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 

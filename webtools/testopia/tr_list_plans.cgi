@@ -111,7 +111,7 @@ if ($action eq 'Commit'){
             }
         }     
     }
-    if ($serverpush) {
+    if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }
@@ -130,7 +130,7 @@ else {
     $cgi->param('current_tab', 'plan');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('plan', 'tr_list_plans.cgi', $cgi, undef, $search->query);    
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
 
     my $p = Bugzilla::Testopia::TestPlan->new({'plan_id' => 0 });
     my $product_list   = $p->get_available_products;
@@ -147,7 +147,7 @@ else {
     $vars->{'fullwidth'} = 1; #novellonly
     $vars->{'dotweak'} = UserInGroup('managetestplans');
     $vars->{'table'} = $table;
-    if ($serverpush) {
+    if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }

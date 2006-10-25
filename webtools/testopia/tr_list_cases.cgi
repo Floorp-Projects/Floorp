@@ -157,7 +157,7 @@ if ($action eq 'Commit'){
             $case->link_plan($planid);
         }
     }
-    if ($serverpush) {
+    if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }    
@@ -199,7 +199,7 @@ if ($action eq 'Commit'){
 $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, undef, $search->query);
-ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
 
 # Check that all of the test cases returned only belong to one product.
 if ($table->list_count > 0){
@@ -253,7 +253,7 @@ $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
-if ($serverpush) {
+if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;
     print $cgi->multipart_start;
 }
