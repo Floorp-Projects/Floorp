@@ -27,6 +27,40 @@
         </getter>
       </property>
 
+      <field name="_editorContentListener">
+        <![CDATA[
+          ({
+            QueryInterface: function(iid)
+            {
+              if (iid.equals(Components.interfaces.nsIURIContentListener) ||
+                  iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+                  iid.equals(Components.interfaces.nsISupports))
+              return this;
+
+              Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+              return null;
+            },
+            onStartURIOpen: function(uri)
+            {
+              return false;
+            },
+            doContent: function(contentType, isContentPreferred, request, contentHandler)
+            {
+              return false;
+            },
+            isPreferred: function(contentType, desiredContentType)
+            {
+              return false;
+            },
+            canHandleContent: function(contentType, isContentPreferred, desiredContentType)
+            {
+              return false;
+            },
+            loadCookie: null,
+            parentContentListener: null
+          })
+        ]]>
+      </field>
       <method name="makeEditable">
         <parameter name="editortype"/>
         <parameter name="waitForUrlLoad"/>
@@ -34,6 +68,10 @@
         <![CDATA[
           this.editingSession.makeWindowEditable(this.contentWindow, editortype, waitForUrlLoad);
           this.setAttribute("editortype", editortype);
+
+          this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIURIContentListener)
+              .parentContentListener = this._editorContentListener;
         ]]>
         </body>
       </method>
