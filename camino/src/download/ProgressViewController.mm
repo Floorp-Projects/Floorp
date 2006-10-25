@@ -373,8 +373,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
     mDownloadTime = -[mStartTime timeIntervalSinceNow];
     [mProgressBar stopAnimation:self];
     
-    // get the Finder to update - doesn't work on some earlier version of Mac OS X
-    // (I think it was fixed by 10.2.2 or so)
+    // get the Finder to update
     [[NSWorkspace sharedWorkspace] noteFileSystemChanged:mDestPath];
     
     mRefreshIcon = YES; // let the icon know to update

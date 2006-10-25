@@ -72,50 +72,6 @@ const int kWarnAboutCookies = 1;
 // sort order indicators
 const int kSortReverse = 1;
 
-//
-// category on NSTableView for 10.2+ that reveals private api points to
-// get the sort indicators. These are named images on 10.3 but we can use
-// these as a good fallback
-//
-@interface NSTableView(Undocumented)
-+ (NSImage*)_defaultTableHeaderSortImage;
-+ (NSImage*)_defaultTableHeaderReverseSortImage;
-@end
-
-@interface NSTableView(Extensions)
-+ (NSImage*)indicatorImage:(BOOL)inSortAscending;
-@end
-
-@implementation NSTableView(Extensions)
-
-//
-// +indicatorImage:
-//
-// Tries two different methods to get the sort indicator image. First it tries
-// the named image, which is only available on 10.3+. If that fails, it tries a
-// private api available on 10.2+. If that fails, setting the indicator to a nil
-// image is still fine, it just clears it.
-//
-+ (NSImage*)indicatorImage:(BOOL)inSortAscending
-{
-  NSImage* image = nil;
-  if (inSortAscending) {
-    image = [NSImage imageNamed:@"NSAscendingSortIndicator"];
-    if (!image && [NSTableView respondsToSelector:@selector(_defaultTableHeaderSortImage)])
-      image = [NSTableView _defaultTableHeaderSortImage];
-  }
-  else {
-    image = [NSImage imageNamed:@"NSDescendingSortIndicator"];
-    if (!image && [NSTableView respondsToSelector:@selector(_defaultTableHeaderReverseSortImage)])
-      image = [NSTableView _defaultTableHeaderReverseSortImage];
-  }
-  return image;
-}
-
-@end
-
-#pragma mark -
-
 @interface OrgMozillaChimeraPreferencePrivacy(Private)
 
 - (void)addPermission:(int)inPermission forHost:(NSString*)inHost;
@@ -387,22 +343,19 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   NSTableColumn* sortedColumn = [mCookiesTable tableColumnWithIdentifier:@"Website"];
   [mCookiesTable setHighlightedTableColumn:sortedColumn];
   if ([mCookiesTable respondsToSelector:@selector(setIndicatorImage:inTableColumn:)])
-    [mCookiesTable setIndicatorImage:[NSTableView indicatorImage:YES] inTableColumn:sortedColumn];
+    [mCookiesTable setIndicatorImage:[NSImage imageNamed:@"NSAscendingSortIndicator"] inTableColumn:sortedColumn];
   mSortedAscending = YES;
   
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
   [mCookiesTable selectRow: 0 byExtendingSelection: NO];
   
-  // use alternating row colors on 10.3+
-  if ([mCookiesTable respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)]) {
-    [mCookiesTable setUsesAlternatingRowBackgroundColors:YES];
-    NSArray* columns = [mCookiesTable tableColumns];
-    if (columns) {
-      int numColumns = [columns count];
-      for (int i = 0; i < numColumns; ++i)
-        [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
-    }
+  [mCookiesTable setUsesAlternatingRowBackgroundColors:YES];
+  NSArray* columns = [mCookiesTable tableColumns];
+  if (columns) {
+    int numColumns = [columns count];
+    for (int i = 0; i < numColumns; ++i)
+      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
   }
   
   //clear the filter field
@@ -590,16 +543,14 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   NSTableColumn* sortedColumn = [mPermissionsTable tableColumnWithIdentifier:@"Website"];
   [mPermissionsTable setHighlightedTableColumn:sortedColumn];
   if ([mPermissionsTable respondsToSelector:@selector(setIndicatorImage:inTableColumn:)])
-    [mPermissionsTable setIndicatorImage:[NSTableView indicatorImage:YES] inTableColumn:sortedColumn];
+    [mPermissionsTable setIndicatorImage:[NSImage imageNamed:@"NSAscendingSortIndicator"] inTableColumn:sortedColumn];
   mSortedAscending = YES;
   
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
   [mPermissionsTable selectRow:0 byExtendingSelection:NO];
   
-  // use alternating row colors on 10.3+
-  if ([mPermissionsTable respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)])
-    [mPermissionsTable setUsesAlternatingRowBackgroundColors:YES];
+  [mPermissionsTable setUsesAlternatingRowBackgroundColors:YES];
   
   //clear the filter field
   [mPermissionFilterField setStringValue: @""];
@@ -910,7 +861,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   // adjust sort indicator on new column, removing from old column
   if ([aTableView respondsToSelector:@selector(setIndicatorImage:inTableColumn:)]) {
     [aTableView setIndicatorImage:nil inTableColumn:[aTableView highlightedTableColumn]];
-    [aTableView setIndicatorImage:[NSTableView indicatorImage:mSortedAscending] inTableColumn:aTableColumn];
+    NSImage *sortIndicator = [NSImage imageNamed:(mSortedAscending ? @"NSAscendingSortIndicator" : @"NSDescendingSortIndicator")];
+    [aTableView setIndicatorImage:sortIndicator inTableColumn:aTableColumn];
   }
   
   if (aTableView == mPermissionsTable) {

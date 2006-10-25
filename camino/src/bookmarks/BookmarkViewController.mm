@@ -322,11 +322,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   NSTableColumn* itemNameColumn = [tableView tableColumnWithIdentifier: @"title"];
   [itemNameColumn setDataCell:imageAndTextCell];
 
-  if ([tableView respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)]) {
-    [tableView setUsesAlternatingRowBackgroundColors:YES];
-    // if it responds to the above selector, then it will respond to this too...
-    [tableView setGridStyleMask:TableViewSolidVerticalGridLineMask];
-  }
+  [tableView setUsesAlternatingRowBackgroundColors:YES];
+  [tableView setGridStyleMask:TableViewSolidVerticalGridLineMask];
   
   // set up the font on the item & search views to be smaller
   // also don't let the cells draw their backgrounds

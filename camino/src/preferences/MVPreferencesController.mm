@@ -226,8 +226,7 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
       mPendingPaneIdentifier = [identifier retain];
 
       // set the selected toolbar item back
-      if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
-        [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
+      [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
       return;
     }
     
@@ -273,8 +272,7 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 
       [mWindow setInitialFirstResponder:[pane initialKeyView]];
       [mWindow makeFirstResponder:[pane initialKeyView]];
-      if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
-        [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
+      [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
     }
     else
     {
@@ -360,8 +358,8 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   return mToolbarItemIdentifiers;
 }
 
-// For OS X 10.3, set the selectable toolbar items (draws a gray rect around the active icon in the toolbar)
-- (NSArray *) toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
+// set the selectable toolbar items (draws a gray rect around the active icon in the toolbar)
+- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
 {
   NSMutableArray* items = [NSMutableArray array];
   NSEnumerator* enumerator = [mPaneBundles objectEnumerator];

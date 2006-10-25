@@ -331,24 +331,12 @@ const long NSFindPanelActionSetFindString = 7;
 {
   [[NSColor whiteColor] set];
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
-  // if we're on panther, only draw the rects that need drawing
-  if ([self respondsToSelector:@selector(getRectsBeingDrawn:count:)])
-#endif
-  {
-    const NSRect *rects;
-    int numRects;
-    [self getRectsBeingDrawn:&rects count:&numRects];
+  const NSRect *rects;
+  int numRects;
+  [self getRectsBeingDrawn:&rects count:&numRects];
 
-    for (int i = 0; i < numRects; ++i)
-      NSRectFill(rects[i]);
-  }
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
-  else
-  {
-    NSRectFill(inRect);
-  }
-#endif
+  for (int i = 0; i < numRects; ++i)
+    NSRectFill(rects[i]);
 }
 
 - (void)addListener:(id <CHBrowserListener>)listener
