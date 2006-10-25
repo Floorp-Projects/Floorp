@@ -164,6 +164,7 @@ function setApp()
 
     // Determine our application.
     switch( $_GET['app'] ) {
+        case 'seamonkey':
         case 'mozilla':
             $clean['app'] = 'Mozilla';
             break;
