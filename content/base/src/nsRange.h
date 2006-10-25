@@ -65,8 +65,6 @@ public:
   NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                      nsIDOMNode* aParent2, PRInt32 aOffset2);
                                
-  NS_IMETHOD_(PRBool) IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
-  
   NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
                                 nsIDOMRange* aRange,
                                 PRBool *outNodeBefore,
@@ -90,17 +88,8 @@ public:
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
 
-/*BEGIN nsIDOMNSRange interface implementations*/
-  NS_IMETHOD    CreateContextualFragment(const nsAString& aFragment, 
-                                         nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset,
-                               PRBool* aResult);
-  NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset,
-                             PRInt16* aResult);
-  NS_IMETHOD    IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn);
-  NS_IMETHOD    CompareNode(nsIDOMNode* aNode, PRUint16* aReturn);
-  NS_IMETHOD    NSDetach();
-/*END nsIDOMNSRange interface implementations*/
+  // nsIDOMNSRange interface
+  NS_DECL_NSIDOMNSRANGE
   
   // nsRange interface extensions
   
@@ -122,11 +111,6 @@ private:
   nsRange& operator=(const nsRange&);
  
 public:
-  /**
-   *  Utility routine to detect if a content node intersects a range
-   */
-  static PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
-
 /******************************************************************************
  *  Utility routine to detect if a content node starts before a range and/or 
  *  ends after a range.  If neither it is contained inside the range.

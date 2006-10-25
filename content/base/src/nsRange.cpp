@@ -79,57 +79,7 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
     }                                                                              \
   PR_END_MACRO
 
-// Utility routine to create a pair of dom points to represent 
-// the start and end locations of a single node.  Return false
-// if we dont' succeed.
-// NOTE! This does NOT follow XPCOM rules in that it doesn't
-// addref |outParent|
-static PRBool
-GetNodeBracketPoints(nsIContent* aNode, 
-                     nsINode** outParent,
-                     PRInt32* outStartOffset,
-                     PRInt32* outEndOffset);
-
 static nsresult ContentOwnsRange(nsIRange* aRange, nsINode* aNode);
-
-// Utility routine to detect if a content node intersects a range
-/* static */
-PRBool
-nsRange::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
-{
-  // create a pair of dom points that expresses location of node:
-  //     NODE(start), NODE(end)
-  // Let incoming range be:
-  //    {RANGE(start), RANGE(end)}
-  // if (RANGE(start) < NODE(end))  and (RANGE(end) > NODE(start))
-  // then the Node intersect the Range.
-  
-  nsCOMPtr<nsIRange> range = do_QueryInterface(aRange);
-  NS_ENSURE_TRUE(range, PR_FALSE);
-
-  nsINode *parent, *rangeStartParent, *rangeEndParent;
-  PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
-  
-  // gather up the dom point info
-  if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
-    return PR_FALSE;
-  
-  rangeStartParent = range->GetStartParent();
-  rangeEndParent = range->GetEndParent();
-
-  if (!rangeStartParent || !rangeEndParent) {
-    return PR_FALSE;
-  }
-
-  rangeStartOffset = range->StartOffset();
-  rangeEndOffset = range->EndOffset();
-
-  // False if range start is after node end or range end is before node start
-  return nsContentUtils::ComparePoints(rangeStartParent, rangeStartOffset,
-                                       parent, nodeEnd) < 0 &&
-         nsContentUtils::ComparePoints(parent, nodeStart,
-                                       rangeEndParent, rangeEndOffset) > 0;
-}
 
 // Utility routine to detect if a content node is completely contained in a range
 // If outNodeBefore is returned true, then the node starts before the range does.
@@ -157,22 +107,29 @@ nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
   if (!range->IsPositioned()) 
     return NS_ERROR_UNEXPECTED; 
   
-  nsINode *parent, *rangeStartParent, *rangeEndParent;
-  PRInt32 nodeStart, nodeEnd, rangeStartOffset, rangeEndOffset; 
-  
   // gather up the dom point info
-  if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
-    return NS_ERROR_FAILURE;
-  
-  rangeStartParent = range->GetStartParent();
-  rangeEndParent = range->GetEndParent();
-
-  if (!rangeStartParent || !rangeEndParent) {
-    return NS_ERROR_FAILURE;
+  PRInt32 nodeStart, nodeEnd;
+  nsINode* parent = aNode->GetNodeParent();
+  if (!parent) {
+    // can't make a parent/offset pair to represent start or 
+    // end of the root node, becasue it has no parent.
+    // so instead represent it by (node,0) and (node,numChildren)
+    parent = aNode;
+    nodeStart = 0;
+    nodeEnd = aNode->GetChildCount();
+    if (!nodeEnd) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  else {
+    nodeStart = parent->IndexOf(aNode);
+    nodeEnd = nodeStart + 1;
   }
 
-  rangeStartOffset = range->StartOffset();
-  rangeEndOffset = range->EndOffset();
+  nsINode* rangeStartParent = range->GetStartParent();
+  nsINode* rangeEndParent = range->GetEndParent();
+  PRInt32 rangeStartOffset = range->StartOffset();
+  PRInt32 rangeEndOffset = range->EndOffset();
 
   // is RANGE(start) <= NODE(start) ?
   *outNodeBefore = nsContentUtils::ComparePoints(rangeStartParent,
@@ -184,37 +141,6 @@ nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
                                                 parent, nodeEnd) < 0;
 
   return NS_OK;
-}
-
-// Utility routine to create a pair of dom points to represent 
-// the start and end locations of a single node.  Return false
-// if we dont' succeed.
-// NOTE! This does NOT follow XPCOM rules in that it doesn't
-// addref |outParent|
-static PRBool
-GetNodeBracketPoints(nsIContent* aNode, 
-                     nsINode** outParent,
-                     PRInt32* outStartOffset,
-                     PRInt32* outEndOffset)
-{
-  nsINode* parent = aNode->GetNodeParent();
-
-  if (!parent) {
-    // can't make a parent/offset pair to represent start or 
-    // end of the root node, becasue it has no parent.
-    // so instead represent it by (node,0) and (node,numChildren)
-    *outParent = aNode;
-    *outStartOffset = 0;
-    *outEndOffset = aNode->GetChildCount();
-    if (!*outEndOffset)
-      return PR_FALSE;
-  }
-  else {
-    *outParent = parent;
-    *outStartOffset = parent->IndexOf(aNode);
-    *outEndOffset = *outStartOffset + 1;
-  }
-  return PR_TRUE;
 }
 
 /******************************************************
@@ -253,12 +179,6 @@ nsRangeUtils::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
   NS_ENSURE_TRUE(parent1 && parent2, -1);
 
   return nsContentUtils::ComparePoints(parent1, aOffset1, parent2, aOffset2);
-}
-
-NS_IMETHODIMP_(PRBool) 
-nsRangeUtils::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
-{
-  return nsRange::IsNodeIntersectsRange( aNode,  aRange);
 }
 
 NS_IMETHODIMP
@@ -354,59 +274,6 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
   return NS_OK;
 }
   
-NS_IMETHODIMP
-nsRange::IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn)
-{
-  nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
-  if (!cont) {
-    *aReturn = PR_FALSE;
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  *aReturn = IsNodeIntersectsRange(cont, this);
-
-  return NS_OK;
-}
-
-// HOW does the node intersect the range?
-NS_IMETHODIMP
-nsRange::CompareNode(nsIDOMNode* aNode, PRUint16* aReturn)
-{
-  *aReturn = 0;
-
-  PRBool nodeBefore, nodeAfter;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
-
-  nsresult rv = CompareNodeToRange(content, this, &nodeBefore, &nodeAfter);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // nodeBefore -> range start after node start, i.e. node starts before range.
-  // nodeAfter -> range end before node end, i.e. node ends after range.
-  // But I know that I get nodeBefore && !nodeAfter when the node is
-  // entirely inside the selection!  This doesn't make sense.
-  if (nodeBefore && !nodeAfter)
-    *aReturn = nsIDOMNSRange::NODE_BEFORE;  // May or may not intersect
-  else if (!nodeBefore && nodeAfter)
-    *aReturn = nsIDOMNSRange::NODE_AFTER;   // May or may not intersect
-  else if (nodeBefore && nodeAfter)
-    *aReturn = nsIDOMNSRange::NODE_BEFORE_AND_AFTER;  // definitely intersects
-  else
-    *aReturn = nsIDOMNSRange::NODE_INSIDE;            // definitely intersects
-
-  return NS_OK;
-}
-
-nsresult
-nsRange::NSDetach()
-{
-  DoSetRange(nsnull, 0, nsnull, 0);
-  
-  return NS_OK;
-}
-
-
-
 /******************************************************
  * Private helper routines
  ******************************************************/
