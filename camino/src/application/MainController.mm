@@ -391,22 +391,19 @@ const int kReuseWindowOnAE = 2;
 
 - (void)setupRendezvous // aka "Bonjour"
 {
-  BOOL doingRendezvous = NO;
-
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
-    NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
-    [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
-    [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
-    doingRendezvous = YES;
-  }
-
-  if (!doingRendezvous) {
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.disable_bonjour" withSuccess:NULL]) {
     // remove rendezvous items
     int itemIndex;
-    while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
-      [mGoMenu removeItemAtIndex:itemIndex];
+    while ((itemIndex = [mBookmarksMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
+      [mBookmarksMenu removeItemAtIndex:itemIndex];
+
+    return;
   }
+
+  NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
+  [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+  [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
 }
 
 - (void)checkDefaultBrowser

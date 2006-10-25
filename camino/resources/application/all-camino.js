@@ -78,8 +78,6 @@ pref("browser.download.progressDnldDialog.keepAlive", true);
 // Download removing policy
 pref("browser.download.downloadRemoveAction", 0);
 
-pref("chimera.enable_rendezvous", true);
-
 // set typeahead find to search all text by default, but not invoke
 // unless you type '/'
 pref("accessibility.typeaheadfind.linksonly", false);
