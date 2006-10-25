@@ -1143,10 +1143,6 @@ public:
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
 
-  NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
-                                         GeneratedContentType aType,
-                                         nsIContentIterator** aIterator) const;
- 
   NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements);
   NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements);
   NS_IMETHOD ReleaseAnonymousContent();
@@ -4746,52 +4742,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
  
   return NS_OK;
 }
-
-NS_IMETHODIMP
-PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
-                                       GeneratedContentType aType,
-                                       nsIContentIterator** aIterator) const
-{
-  nsresult  rv = NS_OK;
-
-  // Initialize OUT parameter
-  *aIterator = nsnull;
-
-  // Get the primary frame associated with the content object
-  nsIFrame* primaryFrame = GetPrimaryFrameFor(aContent);
-  if (primaryFrame) {
-    // See whether it's a request for the before or after generated content
-    if (Before == aType) {
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame);
-      if (beforeFrame) {
-        // Create an iterator
-        rv = NS_NewFrameContentIterator(mPresContext, beforeFrame, aIterator);
-      }
-      
-    } else {
-      // Avoid finding the :after frame unless we need to (it's
-      // expensive). Instead probe for the existence of the pseudo-element
-      nsStyleContext *styleContext;
-      
-      styleContext = primaryFrame->GetStyleContext();
-      if (nsLayoutUtils::HasPseudoStyle(aContent, styleContext,
-                                        nsCSSPseudoElements::after,
-                                        mPresContext)) {
-        nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(primaryFrame);
-        if (afterFrame)
-        {
-          NS_ASSERTION(afterFrame->IsGeneratedContentFrame(),
-                       "can't find generated content frame");
-          // Create an iterator
-          rv = NS_NewFrameContentIterator(mPresContext, afterFrame, aIterator);
-        }
-      }
-    }
-  }
-
-  return rv;
-}
-
 
 NS_IMETHODIMP
 PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements)

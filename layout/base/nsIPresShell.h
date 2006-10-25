@@ -100,9 +100,8 @@ typedef short SelectionType;
 
 // 0d8a87aa-3e6f-409f-a518-96fd8a29b423
 #define NS_IPRESSHELL_IID     \
-{ 0x0d8a87aa, 0x3e6f, 0x409f, \
-  { 0xa5, 0x18, 0x96, 0xfd, 0x8a, 0x29, 0xb4, 0x23 } }
-
+{ 0x79433b66, 0xe8a4, 0x442f, \
+  { 0x9c, 0x6e, 0x2f, 0xb2, 0x8d, 0x5e, 0x84, 0xd7 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -548,19 +547,6 @@ public:
    * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
-
-  /**
-   * Returns a content iterator to iterate the generated content nodes.
-   * You must specify whether you want to iterate the "before" generated
-   * content or the "after" generated content. If there is no generated
-   * content of the specified type for the promary frame associated with
-   * with the content object then NULL is returned
-   */
-  enum GeneratedContentType {Before, After};
-  NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
-                                         GeneratedContentType aType,
-                                         nsIContentIterator** aIterator) const = 0;
-
 
   /**
    * Store the nsIAnonymousContentCreator-generated anonymous

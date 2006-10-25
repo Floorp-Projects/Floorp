@@ -73,13 +73,6 @@ class nsIChannel;
 // next-in-flows and are not private to blocks
 #define NS_BLOCK_FLAGS_MASK                 0xF0F00000
 
-// Factory method for creating a content iterator for generated
-// content
-nsresult
-NS_NewFrameContentIterator(nsPresContext*      aPresContext,
-                           nsIFrame*            aFrame,
-                           nsIContentIterator** aIterator);
-
 // Factory methods for creating html layout objects
 
 // These are variations on AreaFrame with slightly different layout
