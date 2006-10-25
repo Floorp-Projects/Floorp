@@ -640,7 +640,7 @@ table.dalvay-table th {
 
 #switch-links .switch-tb, 
 #switch-links .switch-suite  {
-	padding-left: 30px;
+	padding: 1px 0 1px 30px;
 	font-size: 100%;
 	background: #fff 9px 0 no-repeat;
 }
