@@ -24,6 +24,7 @@
  *   Steve Dagley <sdagley@netscape.com>
  *   David Haas <haasd@cae.wisc.edu>
  *   Simon Fraser <sfraser@netscape.com>
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,9 +57,12 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsArrayEnumerator.h"
+#include "nsIStringBundle.h"
 
 #include "nsFilePicker.h"
 
+#define ACCESSORY_VIEW_PADDING 5
+#define SAVE_TYPE_CONTROL_TAG 1
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -95,6 +99,68 @@ nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
 }
 
 
+NSView* nsFilePicker::GetAccessoryView()
+{
+  NSView* accessoryView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
+
+  // get the localized string for "Save As:"
+  NSString* saveAsLabel = @"Save As:"; // backup in case we can't get a localized string
+  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = sbs->CreateBundle("chrome://global/locale/filepicker.properties", getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv)) {
+    nsXPIDLString label;
+    bundle->GetStringFromName(NS_LITERAL_STRING("saveAsLabel").get(), getter_Copies(label));
+    if (label)
+      saveAsLabel = [NSString stringWithCharacters:label.get() length:label.Length()];
+  }
+
+  // set up label text field
+  NSTextField* textField = [[[NSTextField alloc] init] autorelease];
+  [textField setEditable:NO];
+  [textField setSelectable:NO];
+  [textField setDrawsBackground:NO];
+  [textField setBezeled:NO];
+  [textField setBordered:NO];
+  [textField setFont:[NSFont labelFontOfSize:13.0]];
+  [textField setStringValue:saveAsLabel];
+  [textField setTag:0];
+  [textField sizeToFit];
+
+  // set up popup button
+  NSPopUpButton* popupButton = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 0, 0) pullsDown:NO] autorelease];
+  PRInt32 numMenuItems = mTitles.Count();
+  for (int i = 0; i < numMenuItems; i++) {
+    const nsString& currentTitle = *mTitles[i];
+    NSString *titleString = [[[NSString alloc] initWithCharacters:currentTitle.get()
+                                                           length:currentTitle.Length()] autorelease];
+    [popupButton addItemWithTitle:titleString];
+  }
+  [popupButton setTag:SAVE_TYPE_CONTROL_TAG];
+  [popupButton sizeToFit];
+
+  // position everything based on control sizes with ACCESSORY_VIEW_PADDING pix padding
+  // on each side ACCESSORY_VIEW_PADDING pix horizontal padding between controls
+  float greatestHeight = [textField frame].size.height;
+  if ([popupButton frame].size.height > greatestHeight)
+    greatestHeight = [popupButton frame].size.height;
+
+  float totalViewHeight = greatestHeight + ACCESSORY_VIEW_PADDING * 2;
+  float totalViewWidth  = [textField frame].size.width + [popupButton frame].size.width + ACCESSORY_VIEW_PADDING * 3;
+  [accessoryView setFrameSize:NSMakeSize(totalViewWidth, totalViewHeight)];
+
+  float textFieldOriginY = ((greatestHeight - [textField frame].size.height) / 2 + 1) + ACCESSORY_VIEW_PADDING;
+  [textField setFrameOrigin:NSMakePoint(ACCESSORY_VIEW_PADDING, textFieldOriginY)];
+  
+  float popupOriginX = [textField frame].size.width + ACCESSORY_VIEW_PADDING * 2;
+  float popupOriginY = ((greatestHeight - [popupButton frame].size.height) / 2) + ACCESSORY_VIEW_PADDING;
+  [popupButton setFrameOrigin:NSMakePoint(popupOriginX, popupOriginY)];
+
+  [accessoryView addSubview:textField];
+  [accessoryView addSubview:popupButton];
+  return accessoryView;
+}
+
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
@@ -107,7 +173,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   *retval = returnCancel;
 
   PRInt16 userClicksOK = returnCancel;
-//
+
 // Random questions from DHH:
 //
 // Why do we pass mTitle, mDefault to the functions?  Can GetLocalFile. PutLocalFile,
@@ -117,8 +183,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 // I think we could easily combine GetLocalFile and GetLocalFolder together, just
 // setting panel pick options based on mMode.  I didn't do it here b/c I wanted to 
 // make this look as much like Carbon nsFilePicker as possible.  
-//  
-//  
 
   mFiles.Clear();
   nsCOMPtr<nsILocalFile> theFile;
@@ -192,11 +256,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
     return retVal;
   
   // append each chosen file to our list
-  for (unsigned int i = 0; i < [[thePanel URLs] count]; i ++)
-  {
+  for (unsigned int i = 0; i < [[thePanel URLs] count]; i++) {
     NSURL *theURL = [[thePanel URLs] objectAtIndex:i];
-    if (theURL)
-    {
+    if (theURL) {
       nsCOMPtr<nsILocalFile> localFile;
       NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
       nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
@@ -246,16 +308,14 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
-    
+
   // get FSRef for folder (we allow just 1, so that's all we get)
   NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
-  if (theURL)
-  {
+  if (theURL) {
     nsCOMPtr<nsILocalFile> localFile;
     NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
-    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL)))
-    {
+    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL))) {
       *outFile = localFile;
       NS_ADDREF(*outFile);
       retVal = returnOK;
@@ -269,13 +329,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 //
 // PutLocalFile
 //
-// Use SavePanel to do a PutFile. Returns returnOK if the user presses OK in the dialog. If
-// they do so, the folder location is in the FSSpec.
-//
-// Note: I don't think Chimera is using this at all.  So - it hasn't been tested.
-//       If you end up calling it, let me know how it turns out.
 //-------------------------------------------------------------------------
-
 PRInt16
 nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
 {
@@ -284,40 +338,45 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   PRInt16 retVal = returnCancel;
   NSSavePanel *thePanel = [NSSavePanel savePanel];
-  
-  // set up save panel options & whatnot.
+
   SetDialogTitle(inTitle, thePanel);
-  
+
+  // set up accessory view for file format options
+  NSView* accessoryView = GetAccessoryView();
+  [thePanel setAccessoryView:accessoryView];
+
   // set up default file name
   NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get() length:inDefaultName.Length()];
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
-  
-  // load the panel.
-  int result = [thePanel runModalForDirectory:theDir file:defaultFilename];
-  if (result == NSFileHandlingPanelCancelButton)
+
+  // load the panel
+  if ([thePanel runModalForDirectory:theDir file:defaultFilename] == NSFileHandlingPanelCancelButton)
     return retVal;
 
-  // Get the NSURL for the directory where the file to be saved
-  NSURL *dirURL = [NSURL fileURLWithPath:[thePanel directory]];
-  // append the filename
-  NSURL *fileURL = [[NSURL alloc] initWithString:[thePanel filename] relativeToURL:dirURL];
-  if (fileURL)
-  { 
+  // get the save type
+  NSPopUpButton* popupButton = [accessoryView viewWithTag:SAVE_TYPE_CONTROL_TAG];
+  if (popupButton)
+    mSelectedType = [popupButton indexOfSelectedItem];
+
+  NSURL* fileURL = [thePanel URL];
+  if (fileURL) { 
     nsCOMPtr<nsILocalFile> localFile;
     NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
-    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL)))
-    {
+    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL))) {
       *outFile = localFile;
       NS_ADDREF(*outFile);
-      // XXX how can we tell if we're replacing? Need to return returnReplace
-      retVal = returnOK;
+      // We tell if we are replacing or not by just looking to see if the file exists.
+      // The user could not have hit OK and not meant to replace the file.
+      if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]])
+        retVal = returnReplace;
+      else
+        retVal = returnOK;
     }
+  }
 
-    [fileURL release];
-  }      
   return retVal;    
 }
 
