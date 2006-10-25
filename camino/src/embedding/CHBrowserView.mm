@@ -107,12 +107,11 @@
 
 #import "mozView.h"
 
-typedef unsigned int DragReference;
-#include "nsIDragHelperService.h"
-
 // Cut/copy/paste
 #include "nsIClipboardCommands.h"
 #include "nsIInterfaceRequestorUtils.h"
+
+#include "nsIEventSink.h"
 
 // Undo/redo
 #include "nsICommandManager.h"
@@ -239,10 +238,6 @@ const long NSFindPanelActionSetFindString = 7;
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
     baseWin->InitWindow((NSView*)self, nsnull, 0, 0, (int)frame.size.width, (int)frame.size.height);
     baseWin->Create();
-    
-// register the view as a drop site for text, files, and urls. 
-    [self registerForDraggedTypes: [NSArray arrayWithObjects:
-              NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
               
     // The value of mUseGlobalPrintSettings can't change during our lifetime. 
     nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
@@ -1298,98 +1293,6 @@ const long NSFindPanelActionSetFindString = 7;
   markupViewer->SetTextZoom(zoom);
 }
 
-
-#pragma mark -
-
-- (BOOL)shouldAcceptDrag:(id <NSDraggingInfo>)sender
-{
-  id<CHBrowserContainer> browserContainer = [self getBrowserContainer];
-  if (browserContainer)
-    return [browserContainer shouldAcceptDragFromSource:[sender draggingSource]];
-
-  return YES;
-}
-
-- (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
-{
-  if (![self shouldAcceptDrag:sender])
-    return NSDragOperationNone;
-
-//  NSLog(@"draggingEntered");  
-  nsCOMPtr<nsIDragHelperService> helper(do_GetService("@mozilla.org/widget/draghelperservice;1"));
-  mDragHelper = helper.get();
-  NS_IF_ADDREF(mDragHelper);
-  NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in big trouble" );
-  
-  if ( mDragHelper ) {
-    mLastTrackedLocation = [sender draggingLocation];
-    mLastTrackedWindow   = [sender draggingDestinationWindow];
-    nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:mLastTrackedLocation inWindow:mLastTrackedWindow];
-    if (sink)
-      mDragHelper->Enter ( [sender draggingSequenceNumber], sink );
-  }
-  
-  return NSDragOperationCopy;
-}
-
-- (void)draggingExited:(id <NSDraggingInfo>)sender
-{
-//  NSLog(@"draggingExited");
-  if ( mDragHelper ) {
-    nsCOMPtr<nsIEventSink> sink;
-    
-    [self findEventSink:getter_AddRefs(sink)
-            forPoint:mLastTrackedLocation /* [sender draggingLocation] */
-            inWindow:mLastTrackedWindow   /* [sender draggingDestinationWindow] */
-            ];
-    if (sink)
-      mDragHelper->Leave( [sender draggingSequenceNumber], sink );
-    NS_RELEASE(mDragHelper);     
-  }
-}
-
-- (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
-{
-  if (![self shouldAcceptDrag:sender])
-    return NSDragOperationNone;
-
-//  NSLog(@"draggingUpdated");
-  PRBool dropAllowed = PR_FALSE;
-  if ( mDragHelper ) {
-    mLastTrackedLocation = [sender draggingLocation];
-    mLastTrackedWindow   = [sender draggingDestinationWindow];
-    nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:mLastTrackedLocation inWindow:mLastTrackedWindow];
-    if (sink)
-      mDragHelper->Tracking([sender draggingSequenceNumber], sink, &dropAllowed);
-  }
-  
-  return dropAllowed ? NSDragOperationCopy : NSDragOperationNone;
-}
-
-- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
-{
-  return YES;
-}
-
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
-{
-  if (![self shouldAcceptDrag:sender])
-    return NO;
-
-  PRBool dragAccepted = PR_FALSE;
-    
-  if ( mDragHelper ) {
-    nsCOMPtr<nsIEventSink> sink;
-    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
-            inWindow:[sender draggingDestinationWindow]];
-    if (sink)
-      mDragHelper->Drop([sender draggingSequenceNumber], sink, &dragAccepted);
-  }
-  
-  return dragAccepted ? YES : NO;
-}
 
 #pragma mark -
 

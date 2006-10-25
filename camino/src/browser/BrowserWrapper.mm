@@ -808,16 +808,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mWindow;
 }
 
-- (BOOL)shouldAcceptDragFromSource:(id)dragSource
-{
-  if ((dragSource == self) || (dragSource == mTabItem) || (dragSource  == [[mWindow delegate] proxyIconView]))
-    return NO;
-  
-  if ([mTabItem isMemberOfClass:[BrowserTabViewItem class]] && (dragSource == [(BrowserTabViewItem*)mTabItem tabItemContentsView]))
-    return NO;
-  
-  return YES;
-}
 
 //
 // closeBrowserWindow
