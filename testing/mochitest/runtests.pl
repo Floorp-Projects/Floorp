@@ -3,6 +3,7 @@ use File::Path;
 
 # URL parameters:
 #
+# autorun -- kick off tests automatically
 # closeWhenDone -- runs quit.js after tests 
 # logFile -- logs test run to an absolute path
 # quiet -- turns of console dumps
@@ -10,11 +11,9 @@ use File::Path;
 # consoleLevel, fileLevel -- set the logging level of the console and file logs, if activated.
 #                            <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
-$test_url = "http://localhost:8888/tests/index.html";
-#$test_url = "about:blank";
+$test_url = "http://localhost:8888/tests/index.html?autorun=1&closeWhenDone=1";
 # XXXsayrer these are specific to my mac, need to make them general
-#$app = "/Applications/Firefox.app/Contents/MacOS/firefox-bin";
-$app = "/Users/sayrer/firefox/mozilla/fb-debug/dist/MinefieldDebug.app/Contents/MacOS/firefox-bin";
+$app = "/Applications/Firefox.app/Contents/MacOS/firefox-bin";
 $profile = "dhtml_test_profile";
 $profile_dir = "/tmp/$profile";
 
