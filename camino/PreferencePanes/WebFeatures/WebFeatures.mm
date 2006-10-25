@@ -334,7 +334,8 @@ const int kAnnoyancePrefSome = 3;
       mCachedPermissions->Clear();
       [self populatePermissionCache:mCachedPermissions];
 
-      [mAddField setStringValue:@""];      
+      [mAddField setStringValue:@""];
+      [mAddButton setEnabled:NO];
       [mWhitelistTable reloadData];
     }
   }
