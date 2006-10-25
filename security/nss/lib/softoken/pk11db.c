@@ -74,7 +74,7 @@ CK_RV
 secmod_parseTokenParameters(char *param, sftk_token_parameters *parsed) 
 {
     int next;
-    char *tmp;
+    char *tmp = NULL;
     char *index;
     index = secmod_argStrip(param);
 
@@ -85,12 +85,14 @@ secmod_parseTokenParameters(char *param, sftk_token_parameters *parsed)
 	SECMOD_HANDLE_STRING_ARG(index,parsed->tokdes,"tokenDescription=",;)
 	SECMOD_HANDLE_STRING_ARG(index,parsed->slotdes,"slotDescription=",;)
 	SECMOD_HANDLE_STRING_ARG(index,tmp,"minPWLen=", 
-			if(tmp) { parsed->minPW=atoi(tmp); PORT_Free(tmp); })
+			               if (tmp) { parsed->minPW=atoi(tmp); })
 	SECMOD_HANDLE_STRING_ARG(index,tmp,"flags=", 
-	   if(tmp) { secmod_parseTokenFlags(param,parsed); PORT_Free(tmp); })
+	                  if (tmp) { secmod_parseTokenFlags(param,parsed); })
 	SECMOD_HANDLE_FINAL_ARG(index)
-   }
-   return CKR_OK;
+    }
+    if (tmp) 
+	PORT_Free(tmp);
+    return CKR_OK;
 }
 
 static void
@@ -143,7 +145,7 @@ CK_RV
 secmod_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS) 
 {
     int next;
-    char *tmp;
+    char *tmp = NULL;
     char *index;
     char *certPrefix = NULL, *keyPrefix = NULL;
     char *tokdes = NULL, *ptokdes = NULL;
@@ -171,11 +173,13 @@ secmod_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
 	SECMOD_HANDLE_STRING_ARG(index,minPW,"minPWLen=",;)
 
 	SECMOD_HANDLE_STRING_ARG(index,tmp,"flags=", 
-		if(tmp) { secmod_parseFlags(param,parsed); PORT_Free(tmp); })
+		             if (tmp) { secmod_parseFlags(param,parsed); })
 	SECMOD_HANDLE_STRING_ARG(index,tmp,"tokens=", 
-		if(tmp) { secmod_parseTokens(tmp,parsed); PORT_Free(tmp); })
+		             if (tmp) { secmod_parseTokens(tmp,parsed); })
 	SECMOD_HANDLE_FINAL_ARG(index)
     }
+    if (tmp) 
+	PORT_Free(tmp); 
     if (parsed->tokens == NULL) {
 	int  count = isFIPS ? 1 : 2;
 	int  index = count-1;
