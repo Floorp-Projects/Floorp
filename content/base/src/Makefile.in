@@ -115,7 +115,6 @@ CPPSRCS		= \
 		nsDocumentFragment.cpp \
 		nsFrameLoader.cpp \
 		nsGenConImageContent.cpp \
-		nsGeneratedIterator.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \

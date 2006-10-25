@@ -130,7 +130,6 @@ CPPSRCS		= \
 		nsCounterManager.cpp \
                 nsDisplayList.cpp \
 		nsDocumentViewer.cpp \
-		nsFrameContentIterator.cpp \
 		nsFrameManager.cpp \
 		nsFrameTraversal.cpp \
 		nsGenConList.cpp \

@@ -47,12 +47,6 @@ class nsIDOMRange;
 {0xa6cf90e4, 0x15b3, 0x11d2,   \
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-// {B4BC9F63-D9BA-11d3-9938-00108301233C}
-#define NS_IGENERATEDCONTENTITERTOR_IID \
-{ 0xb4bc9f63, 0xd9ba, 0x11d3,  \
-{ 0x99, 0x38, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c } }
-
-
 class nsIContentIterator : public nsISupports
 {
 public:
@@ -99,23 +93,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERTOR_IID)
-
-class nsIPresShell;
-
-class nsIGeneratedContentIterator : public nsISupports {
-public:
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGENERATEDCONTENTITERTOR_IID)
-
-  /* Initializes an iterator for the subtree rooted by the node aRoot
-   */
-  virtual nsresult Init(nsIPresShell *aShell, nsIDOMRange* aRange) = 0;
-
-  virtual nsresult Init(nsIPresShell *aShell, nsIContent* aContent) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIGeneratedContentIterator,
-                              NS_IGENERATEDCONTENTITERTOR_IID)
 
 #endif // __nsIContentIterator_h___
 
