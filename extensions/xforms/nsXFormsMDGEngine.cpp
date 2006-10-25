@@ -674,6 +674,7 @@ nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
     break;
 
   case nsIDOMNode::ELEMENT_NODE:
+
     rv = aContextNode->GetFirstChild(getter_AddRefs(childNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -684,19 +685,41 @@ nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
       PRUint16 childType;
       rv = childNode->GetNodeType(&childType);
       NS_ENSURE_SUCCESS(rv, rv);
-      
-      if (   childType == nsIDOMNode::TEXT_NODE
-          || childType == nsIDOMNode::CDATA_SECTION_NODE) {
+
+      if (childType == nsIDOMNode::TEXT_NODE ||
+          childType == nsIDOMNode::CDATA_SECTION_NODE) {
         rv = childNode->SetNodeValue(aNodeValue);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // Remove all leading text child nodes except first one (see
+        // nsXFormsUtils::GetNodeValue method for motivation).
+        nsCOMPtr<nsIDOMNode> siblingNode;
+        while (true) {
+          rv = childNode->GetNextSibling(getter_AddRefs(siblingNode));
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (!siblingNode)
+            break;
+
+          rv = siblingNode->GetNodeType(&childType);
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (childType != nsIDOMNode::TEXT_NODE &&
+              childType != nsIDOMNode::CDATA_SECTION_NODE) {
+            break;
+          }
+          nsCOMPtr<nsIDOMNode> stubNode;
+          rv = aContextNode->RemoveChild(siblingNode,
+                                         getter_AddRefs(stubNode));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         // Not a text child, create a new one
         rv = CreateNewChild(aContextNode, aNodeValue, childNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
+
     break;
-          
+
   default:
     /// Unsupported nodeType
     /// @todo Should return more specific error? (XXX)

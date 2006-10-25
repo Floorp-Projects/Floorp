@@ -759,8 +759,22 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
 
   case nsIDOMNode::ELEMENT_NODE:
     {
-      // "If text child nodes are present, returns the string-value of the
-      // first text child node.  Otherwise, returns "" (the empty string)".
+      // XForms specs 8.1.1 (http://www.w3.org/TR/xforms/slice8.html#ui-processing)
+      // says: 'if text child nodes are present, returns the string-value of the
+      // first text child node. Otherwise, returns "" (the empty string)'.
+      // The 'text child node' that is mentioned above is from the xforms
+      // instance document which is, according to spec, is formed by
+      // 'creating an XPath data model'. So we need to treat 'text node' in
+      // this case as an XPath text node and not a DOM text node.
+      // DOM XPath specs (http://www.w3.org/TR/2002/WD-DOM-Level-3-XPath-20020328/xpath.html#TextNodes)
+      // says:
+      // 'Applications using XPath in an environment with fragmented text nodes
+      // must manually gather the text of a single logical text node possibly
+      // from multiple nodes beginning with the first Text node or CDATASection
+      // node returned by the implementation'.
+
+      // Therefore we concatenate contiguous CDATA/DOM text nodes and return
+      // as node value.
 
       // Find the first child text node.
       nsCOMPtr<nsIDOMNodeList> childNodes;
@@ -771,6 +785,7 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
         PRUint32 childCount;
         childNodes->GetLength(&childCount);
 
+        nsAutoString value;
         for (PRUint32 i = 0; i < childCount; ++i) {
           childNodes->Item(i, getter_AddRefs(child));
           NS_ASSERTION(child, "DOMNodeList length is wrong!");
@@ -778,7 +793,9 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
           child->GetNodeType(&nodeType);
           if (nodeType == nsIDOMNode::TEXT_NODE ||
               nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
-            child->GetNodeValue(aNodeValue);
+            child->GetNodeValue(value);
+            aNodeValue.Append(value);
+          } else {
             break;
           }
         }
