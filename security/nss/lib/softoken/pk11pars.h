@@ -92,6 +92,7 @@ static struct secmodargSlotFlagTable secmod_argSlotFlagTable[] = {
 #define SECMOD_HANDLE_STRING_ARG(param,target,value,command) \
     if (PORT_Strncasecmp(param,value,sizeof(value)-1) == 0) { \
 	param += sizeof(value)-1; \
+	if (target) PORT_Free(target); \
 	target = secmod_argFetchValue(param,&next); \
 	param += next; \
 	command ;\
