@@ -204,19 +204,11 @@ calWcapSession.prototype = {
     getSupportedTimezones:
     function( bRefresh )
     {
+        var url = this.getCommandUrl("get_all_timezones"); // + logged in
         var key = this.sessionUri.hostPort;
-        if ((bRefresh || !g_allSupportedTimezones[key]) &&
-            this.m_sessionId != null)
-        {
-            var url = (this.sessionUri.spec +
-                       "get_all_timezones.wcap?appid=mozilla-calendar" +
-                       "&fmt-out=text%2Fcalendar&id=" +
-                       encodeURIComponent(this.m_sessionId));
-            var str = issueSyncRequest( url );
-            var icalRootComp = getIcsService().parseICS( str );
-            if (icalRootComp == null)
-                throw new Components.Exception("invalid data, expected ical!");
-            checkWcapIcalErrno( icalRootComp );
+        if (bRefresh || !g_allSupportedTimezones[key]) {   
+            url += "&fmt-out=text%2Fcalendar";
+            var icalRootComp = this.issueSyncRequest( url, stringToIcal );
             var tzids = [];
             var this_ = this;
             forEachIcalComponent(
@@ -231,7 +223,7 @@ calWcapSession.prototype = {
                         tzids.push( subComp.getFirstProperty("TZID").value );
                     }
                     catch (exc) { // ignore errors:
-                        this_.log( "error: " + exc );
+                        this_.logError( exc );
                     }
                 } );
             g_allSupportedTimezones[key] = tzids;
@@ -250,23 +242,15 @@ calWcapSession.prototype = {
     getServerTimeDiff:
     function( bRefresh )
     {
+        var url = this.getCommandUrl("gettime"); // + logged in
         var key = this.sessionUri.hostPort;
-        if ((bRefresh || !g_serverTimeDiffs[key]) &&
-            this.m_sessionId != null) {
-            var url = (this.sessionUri.spec +
-                       // xxx todo: assuming same diff for all calids:
-                       "gettime.wcap?appid=mozilla-calendar" +
-                       "&fmt-out=text%2Fcalendar&id=" +
-                       encodeURIComponent(this.m_sessionId));
+        if (bRefresh || !g_serverTimeDiffs[key]) {
+            url += "&fmt-out=text%2Fcalendar";
             // xxx todo: think about
             // assure that locally calculated server time is smaller than the
             // current (real) server time:
-            var str = issueSyncRequest( url );
+            var icalRootComp = this.issueSyncRequest( url, stringToIcal );
             var localTime = getTime();
-            var icalRootComp = getIcsService().parseICS( str );
-            if (icalRootComp == null)
-                throw new Components.Exception("invalid data, expected ical!");
-            checkWcapIcalErrno( icalRootComp );
             var serverTime = getDatetimeFromIcalProp(
                 icalRootComp.getFirstProperty( "X-NSCP-WCAPTIME" ) );
             var diff = serverTime.subtractDate( localTime );
@@ -368,8 +352,8 @@ calWcapSession.prototype = {
                             throw exc;
                         }
                         
-                        this_.getSupportedTimezones(true /* refresh */);
                         this_.getServerTimeDiff(true /* refresh */);
+                        this_.getSupportedTimezones(true /* refresh */);
                         // preread calprops for subscribed calendars:
                         var cals = this_.getSubscribedCalendars({});
                         for each ( cal in cals ) {
@@ -598,7 +582,7 @@ calWcapSession.prototype = {
     {
         if (!this.uri)
             throw new Components.Exception("no URI!");
-        // ensure established session, so sesionUri and userId is set;
+        // ensure established session, so sessionUri and userId are set;
         // (calId defaults to userId) if not set:
         this.getSessionId();
         return (this.sessionUri.spec +
