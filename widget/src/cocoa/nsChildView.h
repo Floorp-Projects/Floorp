@@ -59,7 +59,7 @@
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
-
+#include "nsIDragService.h"
 #include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
@@ -121,10 +121,16 @@ class nsChildView;
   
   // when menuForEvent: is called, we store its event here (strong)
   NSEvent* mLastMenuForEventEvent;
+
+  // Holds our drag service across multiple drag calls. The reference to the
+  // service is obtained when the mouse enters the view and is released when
+  // the mouse exits or there is a drop. This prevents us from having to
+  // re-establish the connection to the service manager many times per second
+  // when handling |draggingUpdated:| messages.
+  nsIDragService* mDragService;
 }
 
-// these are sent to the first responder when the window key status
-// changes
+// these are sent to the first responder when the window key status changes
 - (void)viewsWindowDidBecomeKey;
 - (void)viewsWindowDidResignKey;
 
