@@ -50,25 +50,21 @@ button {
   margin: 6px;
   min-width: 6.3em;
   -moz-appearance: button;
- padding: 0px 4px;
+  padding: 0;
   color: #000000;
 }
 
 .button-text {
-  margin: 0 !important;
+  margin: 0 2px 0 3px !important;
   text-align: center;
 }
 
-button[type="default"] {
-	font: menu;
+.button-icon {
+  margin-left: 1px;
 }
 
-/* .......... active/open/checked state .......... */
-
-button:hover:active,
-button[open="true"],
-button[checked="true"] {
-
+button[type="default"] {
+  font: menu;
 }
 
 /* .......... disabled state .......... */
