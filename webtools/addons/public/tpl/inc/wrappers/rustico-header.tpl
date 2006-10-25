@@ -25,7 +25,7 @@
 
 	<div id="header">
 		<div>
-			<h1><img src="{$config.webpath}/images/rustico/header/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation" /></h1>
+			<h1><a href="http://www.mozilla.com"><img src="{$config.webpath}/images/rustico/header/moz-com-logo.png" height="38" width="89" border="0" alt="Mozilla Corporation" /></a></h1>
 			<ul>
 				<li id="menu-products"><a href="http://www.mozilla.com/products/">Products</a></li>
 {if $currentTab eq "home"}
