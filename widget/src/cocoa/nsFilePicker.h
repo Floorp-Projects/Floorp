@@ -92,6 +92,7 @@ protected:
   NSArray  *GenerateFilterList();
   void     SetDialogTitle(const nsString& inTitle, id aDialog);
   NSString *PanelDefaultDirectory();
+  NSView* nsFilePicker::GetAccessoryView();
                                                 
   PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
