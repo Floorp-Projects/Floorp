@@ -50,7 +50,7 @@ ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_NO_ACTIVEX_SUPPORT
 tier_app_dirs += \
 		embedding/browser/activex/src/control \
-		embedding/browser/activex/src/control_xulrunner/kicker \
+		embedding/browser/activex/src/control_kicker \
 		$(NULL)
 endif # MOZ_NO_ACTIVEX_SUPPORT
 endif # WINNT
