@@ -2752,10 +2752,11 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIAccessible> accessible, nextSibling;
   PRInt32 characterCount = 0;
+  parent->GetFirstChild(getter_AddRefs(accessible));
 
-  while (NextChild(accessible)) {
+  while (accessible) {
     if (IsText(accessible)) {
       characterCount += TextLength(accessible);
     }
@@ -2767,6 +2768,8 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
     else {
       ++ characterCount;
     }
+    accessible->GetNextSibling(getter_AddRefs(nextSibling));
+    accessible.swap(nextSibling);
   }
 
   return NS_ERROR_FAILURE;
