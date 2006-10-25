@@ -4,7 +4,8 @@
 
 Steps to get started:
 
- 1.) Right now, you will need to edit some constants in runtests.pl.
+ 1.) Right now, you will need to edit some constants in runtests.pl. Windows
+     is not yet supported.
 
  2.) Start the python server in a separate console:
      
