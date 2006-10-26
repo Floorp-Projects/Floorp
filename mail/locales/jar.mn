@@ -10,7 +10,6 @@
   locale/@AB_CD@/messenger/virtualFolderListDialog.dtd                  (%chrome/messenger/virtualFolderListDialog.dtd)
   locale/@AB_CD@/messenger/mailOverlay.dtd                              (%chrome/messenger/mailOverlay.dtd)
   locale/@AB_CD@/messenger/messenger.dtd                                (%chrome/messenger/messenger.dtd)
-  locale/@AB_CD@/messenger/mailTasksOverlay.dtd                         (%chrome/messenger/mailTasksOverlay.dtd)
   locale/@AB_CD@/messenger/msgAccountCentral.dtd                        (%chrome/messenger/msgAccountCentral.dtd)
   locale/@AB_CD@/messenger/SearchDialog.dtd                             (%chrome/messenger/SearchDialog.dtd)
   locale/@AB_CD@/messenger/AccountManager.dtd                           (%chrome/messenger/AccountManager.dtd)
