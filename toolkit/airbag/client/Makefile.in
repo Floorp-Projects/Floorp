@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is Mozilla Toolkit Crash Reporter
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Ted Mielczarek <ted.mielczarek@gmail.com>
+
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,33 +36,31 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-		content \
-		locales \
-		obsolete \
-		profile \
-		themes \
-		$(NULL)
+PROGRAM = crashreporter$(BIN_SUFFIX)
+DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
+REQUIRES = sender
 
-ifdef MOZ_AIRBAG
-DIRS += airbag
-endif
+#XXX: should move to toolkit/locale
+DIST_FILES = crashreporter.ini
 
-ifndef MINIMO
-DIRS += \
-	xre \
-        mozapps \
-        $(NULL)
+LOCAL_INCLUDES = -I$(srcdir)/../airbag/src
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS = crashreporter_win.cpp
+LIBS += $(DEPTH)/toolkit/airbag/airbag/src/client/windows/sender/$(LIB_PREFIX)crash_report_sender.$(LIB_SUFFIX)
+LIBS += $(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)airbag_common_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)
+RCINCLUDE = crashreporter.rc
+DEFINES += -DUNICODE -D_UNICODE
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 shell32 wininet)
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-export::
-	@$(MAKE) -C xre export

@@ -5492,6 +5492,23 @@ if test -n "${MOZ_JAVAXPCOM}"; then
 fi
 
 dnl ========================================================
+dnl = Airbag crash reporting (on by default on supported platforms)
+dnl ========================================================
+
+if test "$OS_ARCH" = "WINNT"; then
+   MOZ_AIRBAG=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(airbag,
+[  --disable-airbag          Disable airbag crash reporting],
+    MOZ_AIRBAG=,
+    MOZ_AIRBAG=1)
+
+if test -n "$MOZ_AIRBAG"; then
+   AC_DEFINE(MOZ_AIRBAG)
+fi
+
+dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
@@ -7580,6 +7597,7 @@ AC_SUBST(MOZ_SINGLE_PROFILE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
+AC_SUBST(MOZ_AIRBAG)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)

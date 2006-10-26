@@ -183,6 +183,10 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #include "jprof.h"
 #endif
 
+#ifdef MOZ_AIRBAG
+#include "nsAirbagExceptionHandler.h"
+#endif
+
 // on x86 linux, the current builds of some popular plugins (notably
 // flashplayer and real) expect a few builtin symbols from libgcc
 // which were available in some older versions of gcc.  However,
@@ -1863,6 +1867,32 @@ static void RestoreStateForAppInitiatedRestart()
   }
 }
 
+#ifdef MOZ_AIRBAG
+// When we first initialize airbag we don't have a profile,
+// so we set the minidump path to $TEMP.  Once we have a profile,
+// we set it to $PROFILE/minidumps, creating the directory
+// if needed.
+static void MakeOrSetMinidumpPath(nsIFile* profD)
+{
+  nsCOMPtr<nsIFile> dumpD;
+  nsresult rv = profD->Clone(getter_AddRefs(dumpD));
+  
+  if(dumpD) {
+    PRBool fileExists;
+    //XXX: do some more error checking here
+    dumpD->Append(NS_LITERAL_STRING("minidumps"));
+    rv = dumpD->Exists(&fileExists);
+    if(!fileExists) {
+      dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    }
+
+    nsAutoString pathStr;
+    if(NS_SUCCEEDED(dumpD->GetPath(pathStr)))
+      SetAirbagMinidumpPath(&pathStr);
+  }
+}
+#endif
+
 const nsXREAppData* gAppData = nsnull;
 
 #if defined(XP_OS2)
@@ -1891,6 +1921,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef DEBUG
   if (PR_GetEnv("XRE_MAIN_BREAK"))
     NS_BREAK();
+#endif
+
+#ifdef MOZ_AIRBAG
+  //XXX: check failure?
+  SetAirbagExceptionHandler();
 #endif
 
 #ifdef XP_WIN32
@@ -2237,6 +2272,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_ENSURE_SUCCESS(rv, 1);
 
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
+
+#ifdef MOZ_AIRBAG
+    MakeOrSetMinidumpPath(profD);
+#endif
 
     PRBool upgraded = PR_FALSE;
 
