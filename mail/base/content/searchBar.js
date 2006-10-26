@@ -186,9 +186,10 @@ function createQuickSearchView()
     }
     // if grouped by sort, turn that off, as well as threaded, since we don't
     // group quick search results yet.
-    if (gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort)
-      gDBView.viewFlags &= ~(nsMsgViewFlagsType.kGroupBySort | nsMsgViewFlagsType.kThreadedDisplay);
-    CreateDBView(gDBView.msgFolder, (gXFVirtualFolderTerms) ? nsMsgViewType.eShowVirtualFolderResults : nsMsgViewType.eShowQuickSearchResults, gDBView.viewFlags, gDBView.sortType, gDBView.sortOrder);
+    var viewFlags = gDBView.viewFlags;
+    if (viewFlags & nsMsgViewFlagsType.kGroupBySort)
+      viewFlags &= ~(nsMsgViewFlagsType.kGroupBySort | nsMsgViewFlagsType.kThreadedDisplay);
+    CreateDBView(gDBView.msgFolder, (gXFVirtualFolderTerms) ? nsMsgViewType.eShowVirtualFolderResults : nsMsgViewType.eShowQuickSearchResults, viewFlags, gDBView.sortType, gDBView.sortOrder);
   }
 }
 
