@@ -34,6 +34,8 @@ use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Attachment;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
+use Bugzilla::Testopia::Product;
+use JSON;
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
@@ -252,14 +254,36 @@ elsif ($action eq 'addcomponent' || $action eq 'removecomponent'){
     validate_selection($comp, 'id', 'components');
     
     if ($action eq 'addcomponent'){
+        foreach my $c (@{$case->components}){
+            if ($c->id == $comp){
+                print "{ignore:1}";
+                exit;
+            }   
+        }
         $case->add_component($comp);
     }
     else {
         $case->remove_component($comp);
     }
-
-    my $xml = get_components_xml($case);
-    print $xml;   
+    my @comps;
+    foreach my $c (@{$case->components}){
+        push @comps, {'id' => $c->id, 'name' => $c->name};
+    }
+    my $json = new JSON;
+    print $json->objToJson(\@comps);   
+}
+elsif ($action eq 'getcomps'){
+    Bugzilla->login;
+    my $product_id = $cgi->param('product_id');
+    detaint_natural($product_id);
+    my $product = Bugzilla::Testopia::Product->new($product_id);
+    my @comps;
+    foreach my $c (@{$product->components}){
+        push @comps, {'id' => $c->id, 'name' => $c->name};
+    }
+    my $json = new JSON;
+    print $json->objToJson(\@comps);
+    exit;
 }
 
 #TODO: Clean up styles and put them in skins
@@ -272,27 +296,6 @@ else{
 #######################
 ### Helper Routines ###
 #######################
-
-sub get_components_xml {
-    my ($case) = @_;
-    my $ret = "<components>";
-    foreach my $c (@{$case->components}){
-        $ret .= "<selected>";
-        $ret .= "<id>". $c->{'id'} ."</id>";
-        $ret .= "<name>". xml_quote($c->{'name'}) ."</name>";
-        $ret .= "</selected>";
-    }
-
-    foreach my $c (@{$case->get_selectable_components}){
-        $ret .= "<nonselected>";
-        $ret .= "<id>". $c->{'id'} ."</id>";
-        $ret .= "<name>". xml_quote($c->{'name'}) ."</name>";
-        $ret .= "</nonselected>";
-    }
-  
-    $ret .= "</components>";
-    return $ret;
-}
 
 sub do_update{
     my ($case) = @_;
@@ -395,6 +398,7 @@ sub display {
     ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
     $vars->{'case'} = $case;
     $vars->{'table'} = $table;
+    $vars->{'user'} = Bugzilla->user;
     $template->process("testopia/case/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }

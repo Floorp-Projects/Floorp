@@ -236,6 +236,31 @@ sub get_selectable_components {
     return \@comps;
 }
 
+=head2 get_product_components
+
+Returns a list of components divided by product
+
+=cut
+
+sub get_product_components {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my @exclusions;
+    my $products = $dbh->selectall_arrayref(
+            "SELECT id,name FROM products ORDER BY name",{'Slice' => {}});
+    my %prods;
+    foreach my $p (@$products){
+        my $comps = $dbh->selectall_arrayref(
+            "SELECT id,name FROM components 
+             WHERE product_id = ?
+             ORDER BY name",
+             {'Slice' => {}},$p->{'id'});
+        
+        $prods{$p->{'name'}} = $comps;
+    }
+    return \%prods;
+}
+ 
 =head2 get_available_components
 
 Returns a list of all user visible components for use in searches
@@ -514,7 +539,8 @@ sub add_component {
     my $dbh = Bugzilla->dbh;
     #TODO: Check for existing component
     $dbh->do("INSERT INTO test_case_components (case_id, component_id)
-              VALUES (?,?)",undef,  $self->{'case_id'}, $comp_id);    
+              VALUES (?,?)",undef,  $self->{'case_id'}, $comp_id);
+    delete $self->{'components'};          
 }
 
 =head2 remove_component
