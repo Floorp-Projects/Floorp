@@ -89,6 +89,7 @@ var gPromptService;
 var gLDAPPrefsService;
 var gWindowLocked;
 var gContentChanged;
+var gAutoSaving;
 var gCurrentIdentity;
 var defaultSaveOperation;
 var gSendOrSaveOperationInProgress;
@@ -149,6 +150,7 @@ function InitializeGlobalVariables()
   gCurrentIdentity = null;
   defaultSaveOperation = "draft";
   gSendOrSaveOperationInProgress = false;
+  gAutoSaving = false;
   gCloseWindowAfterSave = false;
   gIsOffline = gIOService.offline;
   gSessionAdded = false;
@@ -297,7 +299,8 @@ var stateListener = {
 
     if (aResult== Components.results.NS_OK)
     {
-      SetContentAndBodyAsUnmodified();
+      if (!gAutoSaving)
+        SetContentAndBodyAsUnmodified();
      
       if (gCloseWindowAfterSave)
       {
@@ -311,9 +314,17 @@ var stateListener = {
           }
         }
         MsgComposeCloseWindow(true);
+      }
     }
+    // else if we failed to save, and we're autosaving, need to re-mark the editor
+    // as changed, so that we won't lose the changes.
+    else if (gAutoSaving)
+    {
+      gMsgCompose.bodyModified = true; 
+      gContentChanged = true;
     }
-   
+    
+    gAutoSaving = false;
     gCloseWindowAfterSave = false;
   },
 
@@ -1856,10 +1867,21 @@ function GenericSendMessage( msgType )
           gMsgCompose.SetDocumentCharset(fallbackCharset.value);
       }
       try {
-        gWindowLocked = true;
-        disableEditableFields();
-        updateComposeItems();
-
+        gAutoSaving = msgType == nsIMsgCompDeliverMode.AutoSaveAsDraft;
+        // if we're auto saving, mark the body as not changed here, and not
+        // when the save is done, because the user might change it between now
+        // and when the save is done.
+        if (gAutoSaving)
+        {
+          SetContentAndBodyAsUnmodified();
+        }
+        else 
+        {
+          // disable the ui if we're not auto-saving
+          gWindowLocked = true;
+          disableEditableFields();
+          updateComposeItems();
+        }
         var progress = Components.classes["@mozilla.org/messenger/progress;1"].createInstance(Components.interfaces.nsIMsgProgress);
         if (progress)
         {
