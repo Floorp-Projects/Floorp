@@ -7,7 +7,7 @@ function writeCurrentDictionary()
         var asunder = paramStrings[i].split("=");
         params[asunder[0]] = asunder[1];
     }
-    var lang = params.lang || 'en-US';
+    var lang = (params.lang || 'en-US').toLowerCase();
 
     if (!(lang in allDictionaries)) {
         // Try just the language without region.
@@ -67,6 +67,8 @@ var allDictionaries = { };
 
 function addDictionary(code, link, size)
 {
+    code = code.toLowerCase();
+
     // Sometimes, there is more than one code in the name, yay
     if (code.indexOf("_") != -1) {
         var codes = code.split("_");
