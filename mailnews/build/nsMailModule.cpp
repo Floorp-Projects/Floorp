@@ -185,8 +185,6 @@
 #include "nsMsgAttachment.h"
 #include "nsMsgSend.h"
 #include "nsMsgQuote.h"
-#include "nsIMsgDraft.h"
-#include "nsMsgCreate.h"
 #include "nsURLFetcher.h"
 #include "nsSmtpServer.h"
 #include "nsSmtpDataSource.h"
@@ -415,7 +413,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAttachment)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDraft)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgComposeService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeContentHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote)
@@ -986,8 +983,6 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_MSGCOMPFIELDS_CONTRACTID, nsMsgCompFieldsConstructor },
     { "Msg Compose Attachment", NS_MSGATTACHMENT_CID, 
       NS_MSGATTACHMENT_CONTRACTID, nsMsgAttachmentConstructor },
-    { "Msg Draft", NS_MSGDRAFT_CID, 
-      NS_MSGDRAFT_CONTRACTID, nsMsgDraftConstructor },
     { "Msg Send", NS_MSGSEND_CID,
       NS_MSGSEND_CONTRACTID, nsMsgComposeAndSendConstructor },
     { "Msg Send Later", NS_MSGSENDLATER_CID,
