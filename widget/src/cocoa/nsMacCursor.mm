@@ -165,8 +165,6 @@
 @interface nsResourceCursor : nsMacCursor
 {
   @private
-  short mRefNum;
-  short mSaveResFile;
   int mFirstFrame;
   int mLastFrame;
 }
@@ -382,20 +380,14 @@
 @end
 
 @implementation nsResourceCursor
--(id) initWithFirstFrame: (int) aFirstFrame lastFrame: (int) aLastFrame
-{
-  self= [super init];
-  //Appearance Manager cursors all fall into the range 0..127. Custom application CURS resources begin at id 128.
-  NS_ASSERTION(aFirstFrame >= 128 && aLastFrame >= 128 && aLastFrame >= aFirstFrame, "Nonsensical frame indicies");
-  mFirstFrame = aFirstFrame;
-  mLastFrame = aLastFrame;
-  return self;
-}
+
+static short sRefNum = kResFileNotOpened;
+static short sSaveResFile = 0;
 
 // this could be simplified if it was rewritten using Cocoa
--(void)openLocalResourceFile
++(void)openLocalResourceFile
 {
-  if (mRefNum == kResFileNotOpened) {
+  if (sRefNum == kResFileNotOpened) {
     CFBundleRef appBundle = ::CFBundleGetMainBundle();
     if (appBundle) {
       CFURLRef executable = ::CFBundleCopyExecutableURL(appBundle);
@@ -407,7 +399,7 @@
           if (resourceFile) {
             FSRef resourceRef;
             if (::CFURLGetFSRef(resourceFile, &resourceRef))
-              ::FSOpenResourceFile(&resourceRef, 0, NULL, fsRdPerm, &mRefNum);
+              ::FSOpenResourceFile(&resourceRef, 0, NULL, fsRdPerm, &sRefNum);
             ::CFRelease(resourceFile);
           }
           ::CFRelease(binDir);
@@ -417,31 +409,42 @@
     }
   }
 
-  if (mRefNum == kResFileNotOpened)
+  if (sRefNum == kResFileNotOpened)
     return;
   
-  mSaveResFile = ::CurResFile();
-  ::UseResFile(mRefNum);
+  sSaveResFile = ::CurResFile();
+  ::UseResFile(sRefNum);
 }
 
--(void)closeLocalResourceFile
++(void)closeLocalResourceFile
 {
-  if (mRefNum == kResFileNotOpened)
+  if (sRefNum == kResFileNotOpened)
     return;
 
-  ::UseResFile(mSaveResFile);
+  ::UseResFile(sSaveResFile);
+}
+
+-(id) initWithFirstFrame: (int) aFirstFrame lastFrame: (int) aLastFrame
+{
+  if ((self = [super init])) {
+    //Appearance Manager cursors all fall into the range 0..127. Custom application CURS resources begin at id 128.
+    NS_ASSERTION(aFirstFrame >= 128 && aLastFrame >= 128 && aLastFrame >= aFirstFrame, "Nonsensical frame indicies");
+    mFirstFrame = aFirstFrame;
+    mLastFrame = aLastFrame;
+  }
+  return self;
 }
 
 - (void) setFrame: (int) aFrameIndex
 {
-  [self openLocalResourceFile];
+  [nsResourceCursor openLocalResourceFile];
   CursHandle cursHandle = ::GetCursor(mFirstFrame + aFrameIndex);
   NS_ASSERTION(cursHandle, "Can't load cursor, is the resource file installed correctly?");
   if (cursHandle)
   {
     ::SetCursor(*cursHandle);
   }
-  [self closeLocalResourceFile];
+  [nsResourceCursor closeLocalResourceFile];
 }
 
 - (int) numFrames
