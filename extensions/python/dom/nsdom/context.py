@@ -66,7 +66,9 @@ def dump(fmt, *args):
 # The event listener class we attach to an object for addEventListener
 class EventListener:
     _com_interfaces_ = components.interfaces.nsIDOMEventListener
-    def __init__(self, context, evt_name, handler, globs = None):
+    def __init__(self, context, evt_name, handler, globs):
+        # 'globs' are the globals the event handler will use, or None
+        # if the handler should use the globals it was compiled with.
         self.context = context
         if callable(handler):
             self.func = handler
@@ -90,7 +92,7 @@ class EventListener:
 
     def handleEvent(self, event):
         # Although handler is already a function object, we must re-bind to
-        # new globals
+        # new globals if necessary.
         if self.globals is not None:
             f = new.function(self.func.func_code, self.globals, 
                             self.func.func_name, self.func.func_closure)
@@ -147,7 +149,7 @@ class WrappedNative(Component):
         except AttributeError:
             # Set it as an 'expando'.  It looks like we should delegate *all*
             # to the outside object.
-            logger.debug("%s set expando property %r=%r for object %r",
+            logger.debug("setting expando %s.%r=%r for object %r",
                          self, attr, value, self._comobj_)
             # and register if an event.
             if attr.startswith("on"):
@@ -185,7 +187,7 @@ class WrappedNative(Component):
         else:
             logger.info("Not a DOM element - not hooking extra interfaces")
 
-    def addEventListener(self, event, handler, useCapture=False):
+    def addEventListener(self, event, handler, useCapture=False, globs=None):
         # We need to transform string or function objects into
         # nsIDOMEventListener interfaces.
         logger.debug("addEventListener for %r, event=%r, handler=%r, cap=%s",
@@ -194,11 +196,16 @@ class WrappedNative(Component):
         if not hasattr(handler, "handleEvent"): # may already be a handler instance.
             # Wrap it in our instance, which knows how to convert strings and
             # function objects.
-            # Unlike JS, we always want to execute in the context of our
-            # "window" (which the user sees very much like a "module")
-            ns = self._context_.globalNamespace
-            ns = ns.get("_inner_", ns) # If available, use inner!
-            handler = EventListener(self._context_, event, handler, ns)
+
+            # Handle semantics for event handler globals:
+            # * If a function, then function globals are used, as per normal.
+            # * If a string object and no explicit globals param, use the
+            #   caller's globals
+            if globs is None and not callable(handler):
+                globs = sys._getframe().f_back.f_globals
+            handler = EventListener(self._context_, event, handler, globs)
+        else:
+            assert not globs, "can't specify a handler instance and globals"
 
         base = self.__getattr__('addEventListener')
         base(event, handler, useCapture)
@@ -439,27 +446,36 @@ class ScriptContext:
         return domcompile.compile(text, url, lineno=lineno-1)
 
     def CompileEventHandler(self, name, argNames, body, url, lineno):
+        if __debug__:
+            logger.debug("%s.CompileEventHandler %s %s:%s ('%s')",
+                         self, name, url, lineno, body[:100])
         co = domcompile.compile_function(body, url, name, argNames,
                                          lineno=lineno-1)
         g = {}
         exec co in g
+        handler = g[name]
+        # Flag that this function started life as inline script code,
+        # so we later ensure the correct globals are used when the event fires
+        handler._nsdom_compiled = True
         return g[name]
 
     def CallEventHandler(self, target, scope, handler, argv):
         if __debug__:
             logger.debug("CallEventHandler %r on target %s in scope %s",
                          handler, target, id(scope))
-        # Event handlers must fire in our real globals (not a copy) so
+        # Event handlers must fire in their real globals (not a copy) so
         # it can set global vars!
-        globs = scope
-        # Although handler is already a function object, we must re-bind to
-        # new globals
-        f = new.function(handler.func_code, globs, handler.func_name,
-                         handler.func_defaults)
+        # If this was an inline event handler, re-bind to the window's globals.
+        if hasattr(handler, '_nsdom_compiled'):
+            globs = scope
+            # re-bind to new globals
+            f = new.function(handler.func_code, globs, handler.func_name,
+                             handler.func_defaults)
+            handler = f
         args = tuple(self._fixArg(argv))
         # We support having less args declared than supplied, a-la JS.
         args = args[:handler.func_code.co_argcount]
-        return f(*args)
+        return handler(*args)
 
     def BindCompiledEventHandler(self, target, scope, name, handler):
         if __debug__:
