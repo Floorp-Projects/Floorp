@@ -32,6 +32,14 @@ objects re
 
 use Bugzilla::Testopia::Xml;
 
+=head1 SEE ALSO
+
+Testopia::(TestPlan, TestCase, TestRun, Category, Build, Environment)
+
+=head1 AUTHOR
+
+David Koenig <dkoenig@novell.com>
+
 =cut
 
 package Bugzilla::Testopia::Xml;
@@ -571,19 +579,5 @@ sub parse()
 	
 	$twig->purge;
 }
-
-=head1 TODO
-
-Use Bugzilla::Product and Version in 2.22
-
-=head1 SEE ALSO
-
-Testopia::(TestRun, TestCase, Category, Build, Evnironment)
-
-=head1 AUTHOR
-
-David Koenig <dkoenig@novell.com>
-
-=cut
 
 1;

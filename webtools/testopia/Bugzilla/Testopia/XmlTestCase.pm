@@ -312,10 +312,17 @@ sub store_relationships()
 {
 	my ($self, @new_testcases) = @_;
 
-	my $blocks = $self->testcase->blocked_list_uncached() . " " . join(' ',$self->get_testcase_ids("blocks",@new_testcases));
-    my $dependson = $self->testcase->dependson_list_uncached() . " " . join(' ',$self->get_testcase_ids("dependson",@new_testcases));
+	my $blocks = join(' ',$self->get_testcase_ids("blocks",@new_testcases));
+    my $dependson = join(' ',$self->get_testcase_ids("dependson",@new_testcases));
 
-	$self->testcase->update_deps($dependson,$blocks);
+	if ( $blocks ne "" || $dependson ne "" )
+	{
+		# Need to add the current blocks and dependson from the Test Case; otherwise, they will
+		# be removed.
+		$blocks .= $self->testcase->blocked_list_uncached();
+    	$dependson .= $self->testcase->dependson_list_uncached();
+		$self->testcase->update_deps($dependson,$blocks);
+	}
 }
 
 1;
