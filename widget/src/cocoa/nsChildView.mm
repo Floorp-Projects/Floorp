@@ -57,7 +57,6 @@
 #include "nsIScrollableView.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
-#include "nsMacResources.h"
 #include "nsDragService.h"
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"

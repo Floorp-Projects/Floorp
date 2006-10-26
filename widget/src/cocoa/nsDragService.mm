@@ -52,7 +52,6 @@
 #include "nsPoint.h"
 #include "nsIWidget.h"
 #include "nsIImage.h"
-#include "nsMacNativeUnicodeConverter.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
