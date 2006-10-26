@@ -160,7 +160,10 @@ gfxWindowsFont::CairoScaledFont()
 void
 gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
 {
-    if (aMatrix.ToCairoMatrix().yy == mCTM.ToCairoMatrix().yy)
+    if (aMatrix.yy() == mCTM.yy() &&
+        aMatrix.xx() == mCTM.xx() &&
+        aMatrix.xy() == mCTM.xy() &&
+        aMatrix.yx() == mCTM.yx())
         return;
 
     Destroy();
@@ -553,6 +556,7 @@ gfxWindowsTextRun::MeasureOrDrawReallyFast(gfxContext *aContext,
     NS_ASSERTION(aDC, "No DC");
 
     nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
+    currentFont->UpdateCTM(aContext->CurrentMatrix());
 
     HFONT hfont = currentFont->GetHFONT();
     SelectObject(aDC, hfont);
