@@ -143,6 +143,13 @@ public:
     gfxFloat& x0() { return mat.x0; }
     gfxFloat& y0() { return mat.y0; }
 
+    const gfxFloat& xx() const { return mat.xx; }
+    const gfxFloat& xy() const { return mat.xy; }
+    const gfxFloat& yx() const { return mat.yx; }
+    const gfxFloat& yy() const { return mat.yy; }
+    const gfxFloat& x0() const { return mat.x0; }
+    const gfxFloat& y0() const { return mat.y0; }
+
     // matrix operations
     /**
      * Resets this matrix to the identity matrix.
