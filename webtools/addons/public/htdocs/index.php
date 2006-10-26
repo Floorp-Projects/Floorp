@@ -20,7 +20,6 @@ header("Cache-Control: max-age=120, must-revalidate");
 $tpl->assign(
     array(  'popularExtensions' => $amo->getPopularAddons($sql['app'],'E',5),
             'feature'           => $amo->getFeature($sql['app']),
-            'title'             => $clean['app'].' Addons',
             'currentTab'        => $currentTab,
             'app'               => $sql['app'])
 );
