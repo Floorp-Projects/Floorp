@@ -635,6 +635,8 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
     // if this request is done, or failed, clear it.
       if (copyRequest->m_processed || NS_FAILED(result))
         ClearRequest(copyRequest, result);
+      else 
+        break;
     }
     else
       break;
