@@ -41,6 +41,8 @@
 <!ENTITY viewFrameInfoCmd.accesskey   "I">
 <!ENTITY fitImageCmd.label            "Fit Image to Window">
 <!ENTITY fitImageCmd.accesskey        "F">
+<!ENTITY reloadImageCmd.label         "Reload Image">
+<!ENTITY reloadImageCmd.accesskey     "R">
 <!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
