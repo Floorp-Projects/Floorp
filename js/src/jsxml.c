@@ -3664,7 +3664,7 @@ retry:
             n = xml->xml_attrs.length;
             if (n != vxml->xml_attrs.length)
                 *bp = JS_FALSE;
-            for (i = 0; i < n; i++) {
+            for (i = 0; *bp && i < n; i++) {
                 attr = XMLARRAY_MEMBER(&xml->xml_attrs, i, JSXML);
                 if (!attr)
                     continue;
@@ -3677,8 +3677,6 @@ retry:
                 if (!vattr)
                     continue;
                 *bp = js_EqualStrings(attr->xml_value, vattr->xml_value);
-                if (!*bp)
-                    break;
             }
         }
     }
