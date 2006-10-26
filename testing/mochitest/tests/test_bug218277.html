@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=218277
+-->
+<head>
+  <title>Test for Bug 218277</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=218277">Mozilla Bug 218277</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+  <input id="ctrl" name="ctrl" size="20" value="keep&nbsp;together" readonly />
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 218277 **/
+
+is(escape($('ctrl').value), "keep%A0together", "nbsp preserved in form submissions");
+
+</script>
+</pre>
+</body>
+</html>
+
