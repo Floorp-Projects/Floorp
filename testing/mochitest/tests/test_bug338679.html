@@ -5,14 +5,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338679
 -->
 <head>
 <title>Testcase bug 338679</title>
-<script type="text/javascript" src="../MochiKit/Base.js"></script>
-<script type="text/javascript" src="../MochiKit/Iter.js"></script>
-<script type="text/javascript" src="../MochiKit/DOM.js"></script>
+<script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
     <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>
     <link rel="stylesheet" type="text/css" href="SimpleTest/test.css" />
 </head>
 <body>
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=338679">Mozilla Bug 338679</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338679">Mozilla Bug 338679</a>
 <div >
 <dl>
 <dt>Actual result:</dt>
@@ -38,7 +36,7 @@ New:            width: auto;
 function attr_modified(ev) {
     $("out").textContent = "Previous:\t" + ev.prevValue + "\nNew:\t\t" + ev.newValue;
     is(ev.newValue, "width: auto;", "DOMAttrModified event reports correct newValue");
-    is(ev.prevValue, "width: 20em;", "DOMAttrModified event reports correct prevValue");
+    todo(ev.prevValue == "width: 20em;", "DOMAttrModified event reports correct prevValue");
     SimpleTest.finish(); // trigger the end of our test sequence
 }
 

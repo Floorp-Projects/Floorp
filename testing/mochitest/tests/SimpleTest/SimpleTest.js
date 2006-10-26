@@ -27,16 +27,8 @@ SimpleTest._stopOnLoad = true;
 **/
 SimpleTest.ok = function (condition, name, diag) {
     var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
-    if (SimpleTest._logEnabled) {
-        var msg = test.result ? "PASS" : "FAIL";
-        msg += " | " + test.name;
-        if (test.result) {
-            parent.TestRunner.logger.log(msg);
-        } else {
-            msg += " | " + test.diag;
-            parent.TestRunner.logger.error(msg);
-        }
-    }
+    if (SimpleTest._logEnabled)
+        SimpleTest._logResult(test, "PASS", "FAIL");
     SimpleTest._tests.push(test);
 };
 
@@ -48,6 +40,32 @@ SimpleTest.is = function (a, b, name) {
     SimpleTest.ok(a == b, name, "got " + repr(a) + ", expected " + repr(b));
 };
 
+//  --------------- Test.Builder/Test.More todo() -----------------
+
+SimpleTest.todo = function(condition, name, diag) {
+  var test = {'result': !!condition, 'name': name, 'diag': diag || "", todo: true};
+  if (SimpleTest._logEnabled)
+      SimpleTest._logResult(test, "TODO WORKED?", "TODO");
+  SimpleTest._tests.push(test);
+}
+
+SimpleTest._logResult = function(test, passString, failString) {
+  var msg = test.result ? passString : failString;
+  msg += " | " + test.name;
+  if (test.result) {
+      if (test.todo)
+          parent.TestRunner.logger.error(msg)
+      else
+          parent.TestRunner.logger.log(msg);
+  } else {
+      msg += " | " + test.diag;
+      if (test.todo)
+          parent.TestRunner.logger.log(msg)
+      else
+          parent.TestRunner.logger.error(msg);
+  }
+}
+
 
 /**
  * Makes a test report, returns it as a DIV element.
@@ -56,10 +74,15 @@ SimpleTest.report = function () {
     var DIV = MochiKit.DOM.DIV;
     var passed = 0;
     var failed = 0;
+    var todo = 0;
     var results = MochiKit.Base.map(
         function (test) {
             var cls, msg;
-            if (test.result) {
+            if (test.todo && !test.result) {
+                todo++;
+                cls = "test_todo"
+                msg = "todo - " + test.name;   
+            } else if (test.result &&!test.todo) {
                 passed++;
                 cls = "test_ok";
                 msg = "ok - " + test.name;
@@ -76,7 +99,8 @@ SimpleTest.report = function () {
     return DIV({'class': 'tests_report'},
         DIV({'class': 'tests_summary ' + summary_class},
             DIV({'class': 'tests_passed'}, "Passed: " + passed),
-            DIV({'class': 'tests_failed'}, "Failed: " + failed)),
+            DIV({'class': 'tests_failed'}, "Failed: " + failed),
+            DIV({'class': 'tests_todo'}, "Todo: " + todo)),
         results
     );
 };
@@ -363,4 +387,5 @@ SimpleTest.isa = function (object, clas) {
 // Global symbols:
 var ok = SimpleTest.ok;
 var is = SimpleTest.is;
+var todo = SimpleTest.todo;
 var isDeeply = SimpleTest.isDeeply;

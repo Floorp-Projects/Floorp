@@ -84,6 +84,14 @@ ok(true, "checking to see if true is true);
 //
 ok(1==2, "1 equals 2?");
 
+
+//
+// this will be marked as a todo.
+// When we fix 1 so it equals 2, we'll need to change this 
+// function to ok() or is().
+//
+todo(1==2, "1 equals 2?");
+
 //
 // is() takes two args
 //

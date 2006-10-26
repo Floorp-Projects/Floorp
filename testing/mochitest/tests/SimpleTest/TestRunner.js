@@ -22,7 +22,8 @@ TestRunner._summaryDiv = DIV({'id': "summaryDiv"},
             TR(null,
                 TH(null, "Test"), 
                 TH(null, "Passed"), 
-                TH(null, "Failed")
+                TH(null, "Failed"),
+                TH(null, "Todo")
             )
         ),
         TBODY()
@@ -62,7 +63,7 @@ TestRunner._makeIframe = function (url) {
     iframe.name = url;
     iframe.width = "500";
     var tbody = TestRunner._summaryDiv.getElementsByTagName("tbody")[0];
-    var tr = TR(null, TD({'colspan': '3'}, iframe));
+    var tr = TR(null, TD({'colspan': '4'}, iframe));
     iframe._row = tr;
     tbody.appendChild(tr);
     return iframe;
@@ -144,13 +145,17 @@ TestRunner.makeSummary = function() {
         var nNotOK = withDocument(doc,
             partial(getElementsByTagAndClassName, 'div', 'test_not_ok')
         ).length;
+        var nTodo = withDocument(doc,
+            partial(getElementsByTagAndClassName, 'div', 'test_todo')
+        ).length;
         var toggle = partial(TestRunner._toggle, TestRunner._iframes[url]);
         var jsurl = "TestRunner._toggle(TestRunner._iframes['" + url + "'])";
         var row = TR(
             {'style': {'backgroundColor': nNotOK > 0 ? "#f00":"#0f0"}}, 
             TD(null, url),
             TD(null, nOK),
-            TD(null, nNotOK)
+            TD(null, nNotOK),
+            TD({'style': {'backgroundColor': nTodo > 0 ? "orange":"transparent"}}, nTodo)
         );
         row.onclick = toggle;
         var tbody = TestRunner._summaryDiv.getElementsByTagName("tbody")[0];
