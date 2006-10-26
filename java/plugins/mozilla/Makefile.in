@@ -55,6 +55,7 @@ NO_DIST_INSTALL = 1
 
 CPPSRCS = nsScriptablePeer.cpp \
           nppluglet.cpp \
+	  npAPInsIInputStreamShim.cpp \
           $(NULL)
 
 XPIDLSRCS = nsISimplePlugin.idl
@@ -89,4 +90,5 @@ endif
 
 LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
                  -I$(PLUGIN_SDK)/samples/include \
+		 -I$(PLUGIN_SDK)/../../base/src \
                  $(NULL)

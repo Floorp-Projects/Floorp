@@ -185,6 +185,9 @@ class TestStreamListener implements PlugletStreamListener {
 	org.mozilla.util.DebugPluglet.print("--TestStreamListener.onStartBinding ");
 	org.mozilla.util.DebugPluglet.print("length "+streamInfo.getLength());
 	org.mozilla.util.DebugPluglet.print(" contenet type "+ streamInfo.getContentType());
+        org.mozilla.util.DebugPluglet.print(" url "+ streamInfo.getURL());
+        org.mozilla.util.DebugPluglet.print(" seekable "+ streamInfo.isSeekable());
+        
     }
     /**
      * Notify the client that data is available in the input stream.  This
@@ -199,12 +202,18 @@ class TestStreamListener implements PlugletStreamListener {
 	try{
 	    org.mozilla.util.DebugPluglet.print("--TestStreamListener.onDataAvailable ");
 	    org.mozilla.util.DebugPluglet.print("--length "+input.available()+"\n");
+            String cur = null;
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(input));
+            while (null != (cur = bufferedReader.readLine())) {
+                org.mozilla.util.DebugPluglet.print(cur);
+            }
 	} catch(Exception e) {
 	    ;
 	}
     }
     public void onFileAvailable(PlugletStreamInfo plugletInfo, String fileName) {
 	org.mozilla.util.DebugPluglet.print("--TestStreamListener.onFileAvailable\n");
+        org.mozilla.util.DebugPluglet.print(" fileName" + fileName);
     }
     /**
      * Notify the observer that the URL has finished loading. 

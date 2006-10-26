@@ -51,6 +51,8 @@
 
 #include "plstr.h"
 
+#include "npAPInsIInputStreamShim.h"
+
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
 nsIServiceManager * gServiceManager = NULL;
@@ -283,11 +285,10 @@ NPError nsPluginInstance::NewStream(NPMIMEType type, NPStream* stream,
             if (hostStreamInfo) {
                 rv = listener->OnStartBinding(hostStreamInfo);
                 if (NS_SUCCEEDED(rv)) {
-                    stream->pdata = (void *) listener.get();
-                    nsCOMPtr<nsISupports> toCast = 
-                        do_QueryInterface(listener);
-                    nsISupports *toAddRef = (nsISupports *) toCast.get();
-                    NS_ADDREF(toAddRef);
+                    npAPInsIInputStreamShim *shim = 
+                        new npAPInsIInputStreamShim(listener,
+                                                    hostStreamInfo);
+                    stream->pdata = (void *) shim;
                 }
             }
         }
@@ -304,12 +305,9 @@ NPError nsPluginInstance::DestroyStream(NPStream *stream, NPError reason)
         return rv;
     }
 
-    nsCOMPtr<nsIPluginStreamListener> listener = 
-        (nsIPluginStreamListener *) stream->pdata;
-    nsCOMPtr<nsISupports> toCast = do_QueryInterface(listener);
-    nsISupports *toRelease = (nsISupports *) toCast.get();
-    NS_RELEASE(toRelease);
-    listener = nsnull;
+    npAPInsIInputStreamShim *shim = 
+        (npAPInsIInputStreamShim *) stream->pdata;
+    delete shim;
     stream->pdata = nsnull;
 
     return NS_OK;
@@ -324,8 +322,15 @@ int32 nsPluginInstance::Write(NPStream *stream, int32 offset,
                               int32 len, void *buffer)
 {
     int32 result = len;
-    nsCOMPtr<nsIPluginStreamListener> listener = 
-        (nsIPluginStreamListener *) stream->pdata;
+    npAPInsIInputStreamShim *shim = 
+        (npAPInsIInputStreamShim *) stream->pdata;
+    nsCOMPtr<nsIPluginStreamListener> listener = nsnull;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+
+    rv = shim->AllowStreamToReadFromBuffer(len, buffer, &result);
+    if (NS_SUCCEEDED(rv)) {
+        printf("debug: edburns: passed %d bytes to pluglet\n", result);
+    }
     
     return result;
 }
