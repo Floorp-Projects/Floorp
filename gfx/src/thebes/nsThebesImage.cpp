@@ -384,11 +384,83 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     return NS_OK;
 }
 
-/* DrawTile is always relative to the device; never relative to the current
- * transformation matrix on the device.  This is where the IdentityMatrix() bits
- * come from.
- */
-/* NB: Still pixels! */
+nsresult
+nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
+                              const gfxPoint& offset,
+                              const gfxRect& targetRect,
+                              const PRInt32 xPadding,
+                              const PRInt32 yPadding)
+{
+    if (targetRect.size.width <= 0.0 || targetRect.size.height <= 0.0)
+        return NS_OK;
+
+    // don't do anything if we have a transparent pixel source
+    if (mSinglePixel && mSinglePixelColor.a == 0.0)
+        return NS_OK;
+
+    // so we can hold on to this for a bit longer; might not be needed
+    nsRefPtr<gfxPattern> pat;
+
+    PRBool doSnap = !(thebesContext->CurrentMatrix().HasNonTranslation());
+    PRBool hasPadding = ((xPadding != 0) || (yPadding != 0));
+
+    if (mSinglePixel && !hasPadding) {
+        thebesContext->SetColor(mSinglePixelColor);
+    } else {
+        nsRefPtr<gfxASurface> surface;
+        PRInt32 width, height;
+
+        if (hasPadding) {
+            /* Ugh we have padding; create a temporary surface that's the size of the surface + pad area,
+             * and render the image into it first.  Then we'll tile that surface. */
+            width = mWidth + xPadding;
+            height = mHeight + xPadding;
+            surface = new gfxImageSurface(gfxASurface::ImageFormatARGB32,
+                                          width, height);
+
+            nsRefPtr<gfxContext> tmpContext = new gfxContext(surface);
+            if (mSinglePixel) {
+                tmpContext->SetColor(mSinglePixelColor);
+            } else {
+                tmpContext->SetSource(ThebesSurface());
+            }
+            tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+            tmpContext->Rectangle(gfxRect(0, 0, mWidth, mHeight));
+            tmpContext->Fill();
+        } else {
+            width = mWidth;
+            height = mHeight;
+            surface = ThebesSurface();
+        }
+
+        gfxMatrix patMat;
+        gfxPoint p0;
+
+        if (offset.x > width || offset.y > height) {
+            p0.x = - floor(fmod(offset.x, gfxFloat(width)) + 0.5);
+            p0.y = - floor(fmod(offset.y, gfxFloat(height)) + 0.5);
+        } else {
+            p0.x = - floor(offset.x + 0.5);
+            p0.y = - floor(offset.y + 0.5);
+        }
+
+        patMat.Translate(p0);
+
+        pat = new gfxPattern(surface);
+        pat->SetExtend(CAIRO_EXTEND_REPEAT);
+        pat->SetMatrix(patMat);
+
+        thebesContext->SetPattern(pat);
+    }
+
+    thebesContext->NewPath();
+    thebesContext->Rectangle(targetRect, doSnap);
+    thebesContext->Fill();
+
+    return NS_OK;
+}
+
+/* This function is going away; it's been replaced by ThebesDrawTile above. */
 NS_IMETHODIMP
 nsThebesImage::DrawTile(nsIRenderingContext &aContext,
                         nsIDrawingSurface *aSurface,
@@ -396,67 +468,7 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
                         PRInt32 aPadX, PRInt32 aPadY,
                         const nsRect &aTileRect)
 {
-    nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
-    gfxContext *ctx = thebesRC->Thebes();
-
-    if (aTileRect.width <= 0 || aTileRect.height <= 0)
-        return NS_OK;
-
-    if (aPadX || aPadY)
-        fprintf (stderr, "Warning: nsThebesImage::DrawTile given padX(%d)/padY(%d), ignoring\n", aPadX, aPadY);
-
-#if 0
-    fprintf (stderr, "****** nsThebesImage::DrawTile: (%d,%d [%d, %d]) -> (%d,%d,%d,%d)\n",
-             aSXOffset, aSYOffset, mWidth, mHeight,
-             aTileRect.x, aTileRect.y,
-             aTileRect.width, aTileRect.height);
-#endif
-
-    gfxMatrix savedMatrix = ctx->CurrentMatrix();
-    PRBool reallyRepeating = PR_FALSE;
-
-    PRInt32 x0 = aTileRect.x - aSXOffset;
-    PRInt32 y0 = aTileRect.y - aSYOffset;
-
-    // Let's figure out if this really needs to repeat,
-    // or if we're just drawing a subrect
-    if (aSXOffset + aTileRect.width > mWidth ||
-        aSYOffset + aTileRect.height > mHeight)
-    {
-        reallyRepeating = PR_TRUE;
-    } else {
-        // nope, just drawing a subrect, so let's not set CAIRO_EXTEND_REPEAT
-        // so that we don't get screwed by image surface fallbacks due to
-        // buggy RENDER implementations
-        if (aSXOffset > mWidth)
-            aSXOffset = aSXOffset % mWidth;
-        if (aSYOffset > mHeight)
-            aSYOffset = aSYOffset % mHeight;
-    }
-
-    ctx->IdentityMatrix();
-
-    ctx->Translate(gfxPoint(x0, y0));
-
-    nsRefPtr<gfxPattern> pat = new gfxPattern(ThebesSurface());
-    if (reallyRepeating)
-        pat->SetExtend(CAIRO_EXTEND_REPEAT);
-
-    ctx->NewPath();
-    ctx->Rectangle(gfxRect(aSXOffset, aSYOffset,
-                           aTileRect.width, aTileRect.height),
-                   PR_TRUE);
-    ctx->SetPattern(pat);
-#if 0
-    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(aSXOffset, aSYOffset,
-                                                    aTileRect.width, aTileRect.height),
-                                            pat);
-#endif
-    ctx->Fill();
-
-    ctx->SetMatrix(savedMatrix);
-
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* This is only used by the GIF decoder, via gfxImageFrame::DrawTo */
