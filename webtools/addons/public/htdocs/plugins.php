@@ -14,6 +14,7 @@ $tpl->assign(
     array(  'currentTab'=> $currentTab,
             'title'     => 'Plugins',
             'content'   => 'plugins.tpl',
+            'sidebar'   => 'inc/plugin-sidebar.tpl',
             'currentTab'=> 'plugins')
 );
 ?>

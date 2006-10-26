@@ -105,17 +105,7 @@
 <p class="first">This page only lists the most common and most popular plugins. For more information about other plugins available for Mozilla-based Browsers, visit <a href="http://plugindoc.mozdev.org">PluginDoc</a>.</p>
 
 {else}
-<div id="mBody">
     
-<div id="side">
-    <ul id="nav">
-        <li><a href="http://plugindoc.mozdev.org" title="Plugin Support for Mozilla-based Browsers">Plugin Documentation</a></li>
-        <li><a href="../">Mozilla Add-ons Home</a></li>
-    </ul>
-</div>
-
-<div id="mainContent">
-
 <h2 class="first">Common Plugins for Mozilla Firefox and Mozilla Suite</h2>
 <p class="first">Plugins help your browser perform specific functions like viewing special graphic formats or playing multimedia files. Plugins are slightly different from extensions, which modify or add to existing functionality.</p>
 
