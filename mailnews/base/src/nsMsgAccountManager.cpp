@@ -3135,9 +3135,12 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemRemoved(nsIRDFResource *parentItem, nsI
   PRUint32 folderFlags;
   folder->GetFlags(&folderFlags);
   if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL) // if we removed a VF, flush VF list to disk.
+  {
     rv = SaveVirtualFolders();
-  // clear flags on deleted folder, especially MSG_FOLDER_FLAG_VIRTUAL
-  folder->SetFlags(0);
+    // clear flags on deleted folder if it's a virtual folder, so that creating a new folder
+    // with the same name doesn't cause confusion.
+    folder->SetFlags(0);
+  }
   // need to check if the underlying folder for a VF was removed, in which case we need to
   // remove the virtual folder.
 
