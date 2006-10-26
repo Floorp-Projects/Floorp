@@ -23,8 +23,8 @@ function triggerError($errorMessage=null,$errorTemplate='error.tpl')
         )
     );
 
-    header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0, private');
-    header('Pragma: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0, private',true);
+    header('Pragma: no-cache',true);
     $tpl->display('inc/wrappers/nonav.tpl');
     exit;
 }
