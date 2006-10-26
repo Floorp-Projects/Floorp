@@ -26,7 +26,7 @@
  *   Simon Woodside <sbwoodside@yahoo.com>
  *   Josh Aas <josha@mac.com>
  *   Bruce Davidson <Bruce.Davidson@ipl.com>
- *   Hakan Waara <hwaara@gmail.com>
+ *   Håkan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -442,7 +442,6 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // A cheap way of having to avoid scanning the list to remove children is to have the
   // outliner collapse all items that are being deleted. This will cull the selection
   // for us and eliminate any children that happened to be selected.
-
   BOOL allCollapsed = NO;
   id doomedItem;
   NSEnumerator* selRows;
@@ -458,21 +457,35 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     }
   }
 
-  // create array of items we need to delete.
-  NSArray* itemsToDelete = [mBookmarksOutlineView selectedItems];
-
+  [[BookmarkManager sharedBookmarkManager] startSuppressingChangeNotifications];
+  
+  // all the parents of the children we need to notify, some may overlap, but in general
+  // that's pretty uncommon, so this is good enough.
+  NSMutableSet *parentsToNotify = [NSMutableSet set];
+  
   // delete all bookmarks that are in our array
-  int count = [itemsToDelete count];
-  for (int i = 0; i < count; i++) {
-    doomedItem = [itemsToDelete objectAtIndex:i];
-    [(BookmarkFolder*)[doomedItem parent] deleteChild:doomedItem];
+  NSEnumerator *e = [[mBookmarksOutlineView selectedItems] objectEnumerator];
+  BookmarkItem *doomedBookmark = nil;
+  
+  while ((doomedBookmark = [e nextObject])) {
+    BookmarkFolder *currentParent = [doomedBookmark parent];
+    [parentsToNotify addObject:currentParent];
+    [currentParent deleteChild:doomedBookmark];
   }
-
+  
+  [[BookmarkManager sharedBookmarkManager] stopSuppressingChangeNotifications];
+  
+  // notify observers that the parents have changed
+  e = [parentsToNotify objectEnumerator];
+  BookmarkFolder *currentParent = nil;
+  while ((currentParent = [e nextObject]))
+    [currentParent notifyChildrenChanged];
+  
   // restore selection to location near last item deleted or last item
   int total = [mBookmarksOutlineView numberOfRows];
   if (index >= total)
     index = total - 1;
-  [mBookmarksOutlineView selectRow: index byExtendingSelection: NO];
+  [mBookmarksOutlineView selectRow:index byExtendingSelection:NO];
 }
 
 -(IBAction)openBookmark: (id)aSender

@@ -119,6 +119,9 @@ enum {
 // Used for deleting bookmarks/bookmark arrays
 -(BOOL) deleteChild:(BookmarkItem *)aChild;
 
+// used for batch notifying about changes to this folder's children (and descendants)
+-(void) notifyChildrenChanged;
+
 // Smart Folder only methods
 -(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem;
 -(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex;

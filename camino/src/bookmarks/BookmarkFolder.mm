@@ -1117,6 +1117,11 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [self itemUpdatedNote:kBookmarkItemChildrenChangedMask];
 }
 
+-(void) notifyChildrenChanged
+{
+  [self itemUpdatedNote:kBookmarkItemChildrenChangedMask];
+}
+
 -(void) dockMenuChanged:(NSNotification *)note
 {
   if (([self isDockMenu]) && ([note object] != self))
