@@ -256,7 +256,7 @@ _OBJS			= \
 	$(JRI_STUB_CFILES) \
 	$(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) \
 	$(CSRCS:.c=.$(OBJ_SUFFIX)) \
-	$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) \
+	$(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:.cpp=.$(OBJ_SUFFIX))) \
 	$(CMSRCS:.m=.$(OBJ_SUFFIX)) \
 	$(CMMSRCS:.mm=.$(OBJ_SUFFIX)) \
 	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))

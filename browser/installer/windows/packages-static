@@ -342,6 +342,10 @@ bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 ; [Additional Browsing Enhancements]
 [abe]
 
+; [airbag]
+bin\crashreporter.exe
+bin\crashreporter.ini
+
 [talkback]
 bin\extensions\talkback@mozilla.org\install.rdf
 bin\extensions\talkback@mozilla.org\chrome.manifest
