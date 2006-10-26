@@ -528,6 +528,22 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   return res;
 }
 
+/* virtual */
+PRUnichar nsLookAndFeel::GetPasswordCharacter()
+{
+  static PRUnichar passwordCharacter = 0;
+  if (!passwordCharacter) {
+    passwordCharacter = '*';
+#ifndef WINCE
+    OSVERSIONINFO osversion = { sizeof(OSVERSIONINFO) };
+    ::GetVersionEx(&osversion);
+    if (osversion.dwMajorVersion > 5 ||
+        osversion.dwMajorVersion == 5 && osversion.dwMinorVersion > 0)
+      passwordCharacter = 0x25cf;
+#endif
+  }
+  return passwordCharacter;
+}
 
 #ifdef NS_DEBUG
 
