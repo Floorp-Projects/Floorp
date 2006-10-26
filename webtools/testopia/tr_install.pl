@@ -432,7 +432,10 @@ sub populateEnvTables {
     print "Populating test_environment_category table ...\n";
     $dbh->do("INSERT INTO test_environment_category " .
         "(env_category_id, product_id, name) " .
-        "VALUES (1, 0, 'Operating System'), (2, 0, 'Hardware')");
+        "VALUES (1, 0, 'Operating System')");
+    $dbh->do("INSERT INTO test_environment_category " .
+        "(env_category_id, product_id, name) " .
+        "VALUES (2, 0, 'Hardware')");
 
     print "Populating test_environment_element table ...\n";
     $sth = $dbh->prepare("INSERT INTO test_environment_element " .
