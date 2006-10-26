@@ -406,7 +406,8 @@ NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageContent);
-  image->SetWidth(NSToCoordFloor(GetRatio() * mImageWidth));
+  image->SetWidth(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
+  image->SetHeight(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
   
   mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
                          NS_LITERAL_STRING("cursor: -moz-zoom-in"), PR_TRUE);
@@ -458,6 +459,7 @@ NS_IMETHODIMP
 nsImageDocument::RestoreImage()
 {
   mImageContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::width, PR_TRUE);
+  mImageContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::height, PR_TRUE);
   
   if (mImageIsOverflowing) {
     mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
