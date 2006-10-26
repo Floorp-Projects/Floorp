@@ -93,8 +93,6 @@ EXPORTS = \
 MAC_LCPPSRCS = \
 		nsBidiKeyboard.cpp \
 		nsLookAndFeel.cpp \
-		nsMacNativeUnicodeConverter.cpp \
-		nsMacResources.cpp \
 		nsToolkitBase.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
 		nsDeviceContextSpecX.cpp \

@@ -19,6 +19,7 @@
  * Andrew Thompson. All Rights Reserved.
  * 
  * Contributor(s):
+ *    Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "nsMacCursor.h"
-#import "nsMacResources.h"
 #import "nsDebug.h"
 
 /*! @category   nsMacCursor (PrivateMethods)
@@ -165,6 +165,8 @@
 @interface nsResourceCursor : nsMacCursor
 {
   @private
+  short mRefNum;
+  short mSaveResFile;
   int mFirstFrame;
   int mLastFrame;
 }
@@ -390,16 +392,56 @@
   return self;
 }
 
+// this could be simplified if it was rewritten using Cocoa
+-(void)openLocalResourceFile
+{
+  if (mRefNum == kResFileNotOpened) {
+    CFBundleRef appBundle = ::CFBundleGetMainBundle();
+    if (appBundle) {
+      CFURLRef executable = ::CFBundleCopyExecutableURL(appBundle);
+      if (executable) {
+        CFURLRef binDir = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, executable);
+        if (binDir) {
+          CFURLRef resourceFile = ::CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, binDir,
+                                                                          CFSTR("libwidget.rsrc"), PR_FALSE);
+          if (resourceFile) {
+            FSRef resourceRef;
+            if (::CFURLGetFSRef(resourceFile, &resourceRef))
+              ::FSOpenResourceFile(&resourceRef, 0, NULL, fsRdPerm, &mRefNum);
+            ::CFRelease(resourceFile);
+          }
+          ::CFRelease(binDir);
+        }
+        ::CFRelease(executable);
+      }
+    }
+  }
+
+  if (mRefNum == kResFileNotOpened)
+    return;
+  
+  mSaveResFile = ::CurResFile();
+  ::UseResFile(mRefNum);
+}
+
+-(void)closeLocalResourceFile
+{
+  if (mRefNum == kResFileNotOpened)
+    return;
+
+  ::UseResFile(mSaveResFile);
+}
+
 - (void) setFrame: (int) aFrameIndex
 {
-  nsMacResources::OpenLocalResourceFile();
+  [self openLocalResourceFile];
   CursHandle cursHandle = ::GetCursor(mFirstFrame + aFrameIndex);
   NS_ASSERTION(cursHandle, "Can't load cursor, is the resource file installed correctly?");
   if (cursHandle)
   {
     ::SetCursor(*cursHandle);
   }
-  nsMacResources::CloseLocalResourceFile();
+  [self closeLocalResourceFile];
 }
 
 - (int) numFrames

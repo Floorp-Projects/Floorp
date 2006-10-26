@@ -60,8 +60,6 @@
 #include "nsIDOMDocument.h"
 #include "nsWidgetAtoms.h"
 
-#include "nsMacResources.h"
-
 #include "nsGUIEvent.h"
 
 // CIDs
