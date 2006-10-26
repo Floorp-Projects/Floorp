@@ -718,7 +718,7 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
 
     cairo_matrix_multiply (&matrix_inverse, &gstate->ctm_inverse,
                            &gstate->target->device_transform_inverse);
-    _cairo_matrix_transform_bounding_box (
+    cairo_matrix_transform_bounding_box (
         &matrix_inverse, x1, y1, &width, &height, is_tight);
 
     *x2 = *x1 + width;

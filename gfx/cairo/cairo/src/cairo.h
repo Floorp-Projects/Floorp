@@ -1670,6 +1670,12 @@ cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
 
+cairo_public void
+cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
+                                     double *x, double *y,
+                                     double *width, double *height,
+                                     cairo_bool_t *is_tight);
+
 /* Functions to be used while debugging (not intended for use in production code) */
 cairo_public void
 cairo_debug_reset_static_data (void);
