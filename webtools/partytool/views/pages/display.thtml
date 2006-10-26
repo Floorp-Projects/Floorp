@@ -21,8 +21,10 @@
           <a title="User Count Feed" href="<?php echo $html->url('/feeds/users/'); ?>"><img src="<?php echo $html->url('/img/feed16.png'); ?>" alt="RSS"/></a>
         </div>
       </div>
+      <?php if ($days_left <= 0): ?>
       <div class="cbox">
         <span class="ctxt"><?php echo $days_left."</span><br/>".(($days_left == 1) ? ' Day' : ' Days'); ?> until we party!
       </div>
+      <?php endif; ?>
     </div>
     <div style="clear: both"></div>
