@@ -213,7 +213,7 @@ public:
     /**
      * Transforms a point according to this matrix.
      */
-    gfxPoint Transform(const gfxPoint point) const {
+    gfxPoint Transform(const gfxPoint& point) const {
         gfxPoint ret = point;
         cairo_matrix_transform_point(&mat, &ret.x, &ret.y);
         return ret;
@@ -223,7 +223,7 @@ public:
      * Transform a distance according to this matrix. This does not apply
      * any translation components.
      */
-    gfxSize Transform(const gfxSize size) const {
+    gfxSize Transform(const gfxSize& size) const {
         gfxSize ret = size;
         cairo_matrix_transform_distance(&mat, &ret.width, &ret.height);
         return ret;
@@ -232,9 +232,20 @@ public:
     /**
      * Transforms both the point and distance according to this matrix.
      */
-    gfxRect Transform(const gfxRect rect) const {
+    gfxRect Transform(const gfxRect& rect) const {
         gfxRect ret(Transform(rect.pos), Transform(rect.size));
         return ret;
+    }
+
+    gfxRect TransformBounds(const gfxRect& rect) const {
+        double x = rect.pos.x;
+        double y = rect.pos.y;
+        double width = rect.size.width;
+        double height = rect.size.height;
+
+        cairo_matrix_transform_bounding_box (&mat, &x, &y, &width, &height, NULL);
+
+        return gfxRect(x, y, width, height);
     }
 
     /**

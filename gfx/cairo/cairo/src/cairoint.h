@@ -2383,6 +2383,7 @@ slim_hidden_proto (cairo_matrix_multiply);
 slim_hidden_proto (cairo_matrix_scale);
 slim_hidden_proto (cairo_matrix_transform_distance);
 slim_hidden_proto (cairo_matrix_transform_point);
+slim_hidden_proto (cairo_matrix_transform_bounding_box);
 slim_hidden_proto (cairo_matrix_translate);
 slim_hidden_proto (cairo_move_to);
 slim_hidden_proto (cairo_new_path);
