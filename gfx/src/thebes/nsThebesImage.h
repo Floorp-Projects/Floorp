@@ -87,6 +87,12 @@ public:
     NS_IMETHOD DrawToImage(nsIImage* aDstImage,
                            PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
+    nsresult ThebesDrawTile(gfxContext *thebesContext,
+                            const gfxPoint& aOffset,
+                            const gfxRect& aTileRect,
+                            const PRInt32 aXPadding,
+                            const PRInt32 aYPadding);
+
     virtual PRInt8 GetAlphaDepth();
     virtual void* GetBitInfo();
     NS_IMETHOD LockImagePixels(PRBool aMaskPixels);

@@ -1026,91 +1026,52 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
                                    nscoord twXOffset, nscoord twYOffset,
                                    const nsRect *twTargetRect)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawTile %p %d %d [%d,%d,%d,%d]\n",
-           this, aImage, twXOffset, twYOffset,
-           twTargetRect->x, twTargetRect->y, twTargetRect->width, twTargetRect->height));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawTile %p %f %f [%f,%f,%f,%f]\n",
+                                         this, aImage, FROM_TWIPS(twXOffset), FROM_TWIPS(twYOffset),
+                                         FROM_TWIPS(twTargetRect->x), FROM_TWIPS(twTargetRect->y),
+                                         FROM_TWIPS(twTargetRect->width), FROM_TWIPS(twTargetRect->height)));
 
-#if 0
-    PRInt32 pxWidth, pxHeight;
-    aImage->GetWidth(&pxWidth);
-    aImage->GetHeight(&pxHeight);
+    nscoord containerWidth, containerHeight;
+    aImage->GetWidth(&containerWidth);
+    aImage->GetHeight(&containerHeight);
 
     nsCOMPtr<gfxIImageFrame> imgFrame;
     aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
     if (!imgFrame) return NS_ERROR_FAILURE;
+
+    nsRect imgFrameRect;
+    imgFrame->GetRect(imgFrameRect);
 
     nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
     if (!img) return NS_ERROR_FAILURE;
     
-    nsIImage *q = (nsIImage*) img.get();
+    nsThebesImage *thebesImage = NS_STATIC_CAST(nsThebesImage*, (nsIImage*) img.get());
 
-    nsThebesImage *thbimg = NS_STATIC_CAST(nsThebesImage*, q);
-    nsRefPtr<gfxPattern> pat = new gfxPattern(thbimg->ThebesSurface());
+    /* Phase offset of the repeated image from the origin */
+    gfxPoint phase(FROM_TWIPS(twXOffset), FROM_TWIPS(twYOffset));
 
-    gfxMatrix m;
-    m.Translate(gfxPoint(FROM_TWIPS(twXOffset % TO_TWIPS(pxWidth)), FROM_TWIPS(twYOffset % TO_TWIPS(pxHeight))));
-    m.Scale(FROM_TWIPS(twTargetRect->width) / pxWidth,
-            FROM_TWIPS(twTargetRect->height) / pxHeight);
-    pat->SetMatrix(m);
+    /* The image may be smaller than the container (bug 113561),
+     * so we need to make sure that there is the right amount of padding
+     * in between each tile of the nsIImage.  This problem goes away
+     * when we change the way the GIF decoder works to have it store
+     * full frames that are ready to be composited.
+     */
+    PRInt32 xPadding = 0;
+    PRInt32 yPadding = 0;
 
-    mThebes->SetPattern(pat);
-    mThebes->NewPath();
-    mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(*twTargetRect));
-    mThebes->Fill();
+    if (imgFrameRect.width != containerWidth ||
+        imgFrameRect.height != containerHeight)
+    {
+        xPadding = containerWidth - imgFrameRect.width;
+        yPadding = containerHeight - imgFrameRect.height;
 
-    return NS_OK;
+        phase.x -= imgFrameRect.x;
+        phase.y -= imgFrameRect.y;
+    }
 
-#else
-#if 0
-    fprintf (stderr, "DrawTile: %d %d [%d %d %d %d]\n",
-             twXOffset, twYOffset, twTargetRect->x,
-             twTargetRect->y, twTargetRect->width, twTargetRect->height);
-#endif
-
-    /* Almost verbatim from nsRenderingContextImpl */
-    UpdateTempTransformMatrix();
-
-    nsRect twDr(*twTargetRect);
-    mTempTransform.TransformCoord(&twDr.x, &twDr.y, &twDr.width, &twDr.height);
-    mTempTransform.TransformCoord(&twXOffset, &twYOffset);
-
-    // may have become empty due to transform shinking small number to 0
-    if (twDr.IsEmpty())
-        return NS_OK;
-
-    PRInt32 pxWidth, pxHeight;
-    aImage->GetWidth(&pxWidth);
-    aImage->GetHeight(&pxHeight);
-
-    if (pxWidth == 0 || pxHeight == 0)
-        return NS_OK;
-
-    PRInt32 pxXOffset = NSToIntRound(FROM_TWIPS((twDr.x - twXOffset) % TO_TWIPS(pxWidth)));
-    PRInt32 pxYOffset = NSToIntRound(FROM_TWIPS((twDr.y - twYOffset) % TO_TWIPS(pxHeight)));
-
-    nsCOMPtr<gfxIImageFrame> imgFrame;
-    aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
-    if (!imgFrame) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
-    if (!img) return NS_ERROR_FAILURE;
-
-    /* bug 113561 - frame can be smaller than container */
-    nsIntRect pxImgFrameRect;
-    imgFrame->GetRect(pxImgFrameRect);
-    PRInt32 pxPadX = pxWidth - pxImgFrameRect.width;
-    PRInt32 pxPadY = pxHeight - pxImgFrameRect.height;
-
-    nsIntRect pxDr(NSToIntRound(FROM_TWIPS(twDr.x)),
-                   NSToIntRound(FROM_TWIPS(twDr.y)),
-                   NSToIntRound(FROM_TWIPS(twDr.width)),
-                   NSToIntRound(FROM_TWIPS(twDr.height)));
-
-    return img->DrawTile(*this, NULL,
-                         pxXOffset - pxImgFrameRect.x, pxYOffset - pxImgFrameRect.y,
-                         pxPadX, pxPadY,
-                         pxDr);
-#endif
+    return thebesImage->ThebesDrawTile (mThebes, phase,
+                                        GFX_RECT_FROM_TWIPS_RECT(*twTargetRect),
+                                        xPadding, yPadding);
 }
 
 //
