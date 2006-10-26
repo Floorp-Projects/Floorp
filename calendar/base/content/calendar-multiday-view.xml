@@ -605,10 +605,15 @@
               box.setAttribute("orient", orient);
               box.setAttribute("class", "calendar-event-column-linebox");
 
+              // calculate duration pixel as the difference between
+              // start pixel and end pixel to avoid rounding errors.
+              var startPix = Math.round(theMin * this.mPixPerMin);
+              var endPix   = Math.round((theMin + dur) * this.mPixPerMin);
+              var durPix   = endPix - startPix;
               if (orient == "vertical")
-                  box.setAttribute("height", dur * this.mPixPerMin);
+                  box.setAttribute("height", durPix);
               else
-                  box.setAttribute("width", dur * this.mPixPerMin);
+                  box.setAttribute("width", durPix);
 
               box.setAttribute("style", "min-width: 1px; min-height: 1px;");
 
@@ -658,15 +663,21 @@
                       }
                   }
 
+                  // calculate duration pixel as the difference between
+                  // start pixel and end pixel to avoid rounding errors.
+                  var startPix = Math.round(curTime * this.mPixPerMin);
+                  var endPix   = Math.round((curTime + duration) * this.mPixPerMin);
+                  var durPix   = endPix - startPix;
                   if (chunk.event) {
                       var chunkBox = createXULElement("calendar-event-box");
                       chunkBox.setAttribute("context", this.getAttribute("item-context") || this.getAttribute("context"));
                       chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
+
                       if (orient == "vertical")
-                          chunkBox.setAttribute("height", duration * this.mPixPerMin);
+                          chunkBox.setAttribute("height", durPix);
                       else
-                          chunkBox.setAttribute("width", duration * this.mPixPerMin);
+                          chunkBox.setAttribute("width", durPix);
 
                       xulColumn.appendChild(chunkBox);
 
@@ -692,9 +703,9 @@
                       xulColumn.appendChild(chunkBox);
 
                       if (orient == "vertical")
-                          chunkBox.setAttribute("height", duration * this.mPixPerMin);
+                          chunkBox.setAttribute("height", durPix);
                       else
-                          chunkBox.setAttribute("width", duration * this.mPixPerMin);
+                          chunkBox.setAttribute("width", durPix);
                   }
 
                   numBlocksInserted++;
