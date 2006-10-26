@@ -23,11 +23,15 @@ Steps to get started:
  5.) Write a test.
 
 
-Checkin rules (FIXME: strawman -- davel needs to review):
+Checkin rules:
 
  1.) Any module owner/peer/member should feel free to check in a test case.
 
- 2.) Modifications to Makefiles, Perl, or JS code need a bugzilla bug with 
+ 2.) Tests should always be passing, and failing tests will make the tree
+     turn orange (very soon). If you have tests that you know are going to
+     fail, use the todo() function.
+
+ 3.) Modifications to Makefiles, Perl, or JS code need a bugzilla bug with 
      davel and sayrer cc'd.
 
 Example test:
