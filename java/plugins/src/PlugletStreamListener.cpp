@@ -26,6 +26,8 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 
+#include "prlog.h"
+
 jmethodID PlugletStreamListener::onStartBindingMID = NULL;
 jmethodID PlugletStreamListener::onDataAvailableMID = NULL;
 jmethodID PlugletStreamListener::onFileAvailableMID = NULL;
@@ -54,7 +56,10 @@ void PlugletStreamListener::Initialize(void) {
     onStopBindingMID = env->GetMethodID(clazz,"onStopBinding","(Lorg/mozilla/pluglet/mozilla/PlugletStreamInfo;I)V");
 }
 
-PlugletStreamListener::PlugletStreamListener(jobject object) {
+PlugletStreamListener::PlugletStreamListener(jobject object) : 
+    jthis(nsnull),
+    jPlugletInputStream(nsnull)
+{
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<iPlugletEngine> plugletEngine = 
 	do_GetService(PLUGLETENGINE_ContractID, &rv);;
@@ -125,9 +130,9 @@ NS_METHOD PlugletStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo
     if (NS_FAILED(rv)) {
 	return rv;
     }
-
+    jPlugletInputStream = PlugletInputStream::GetJObject(input);
     env->CallVoidMethod(jthis,onDataAvailableMID,PlugletStreamInfo::GetJObject(pluginInfo), 
-			PlugletInputStream::GetJObject(input),(jint)length);
+			jPlugletInputStream,(jint)length);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
 	return NS_ERROR_FAILURE;
@@ -178,6 +183,10 @@ NS_METHOD PlugletStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
 	env->ExceptionDescribe();
 	return NS_ERROR_FAILURE;
     }
+
+    PR_ASSERT(nsnull != jPlugletInputStream);
+    PlugletInputStream::Destroy(jPlugletInputStream);
+
     return NS_OK;
 }
 

@@ -288,6 +288,7 @@ NPError nsPluginInstance::NewStream(NPMIMEType type, NPStream* stream,
                     npAPInsIInputStreamShim *shim = 
                         new npAPInsIInputStreamShim(listener,
                                                     hostStreamInfo);
+                    shim->AddRef();
                     stream->pdata = (void *) shim;
                 }
             }
@@ -307,7 +308,9 @@ NPError nsPluginInstance::DestroyStream(NPStream *stream, NPError reason)
 
     npAPInsIInputStreamShim *shim = 
         (npAPInsIInputStreamShim *) stream->pdata;
-    delete shim;
+    shim->Close();
+    shim->DoClose();
+    shim->Release();
     stream->pdata = nsnull;
 
     return NS_OK;
@@ -324,7 +327,6 @@ int32 nsPluginInstance::Write(NPStream *stream, int32 offset,
     int32 result = len;
     npAPInsIInputStreamShim *shim = 
         (npAPInsIInputStreamShim *) stream->pdata;
-    nsCOMPtr<nsIPluginStreamListener> listener = nsnull;
     nsresult rv = NS_ERROR_NULL_POINTER;
 
     rv = shim->AllowStreamToReadFromBuffer(len, buffer, &result);

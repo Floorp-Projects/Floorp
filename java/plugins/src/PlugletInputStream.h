@@ -27,10 +27,11 @@ class PlugletInputStream {
  public:
 
     static jobject GetJObject(const nsIInputStream *stream);
+    static void Destroy(jobject);
  private:
     static void Initialize(void);
-    static void Destroy(void);
     static jclass    clazz;
     static jmethodID initMID;
+    static jmethodID closeMID;
 };
 #endif /*  __PlugletInputStream_h__ */

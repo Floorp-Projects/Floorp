@@ -42,6 +42,7 @@ class PlugletStreamListener : public nsIPluginStreamListener {
     static void Initialize(void);
  private:
     jobject jthis;
+    jobject jPlugletInputStream;
     static jmethodID onStartBindingMID;
     static jmethodID onDataAvailableMID;
     static jmethodID onFileAvailableMID;

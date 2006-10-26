@@ -26,6 +26,7 @@
 
 jclass    PlugletInputStream::clazz = NULL;
 jmethodID PlugletInputStream::initMID = NULL;
+jmethodID PlugletInputStream::closeMID = NULL;
 
 void PlugletInputStream::Initialize(void) {
     nsresult rv = NS_ERROR_FAILURE;
@@ -54,9 +55,17 @@ void PlugletInputStream::Initialize(void) {
         clazz = NULL;
 	return;
     }
+    closeMID =  env->GetMethodID(clazz,"close","()V");
+    if (env->ExceptionOccurred()
+	|| !closeMID) {
+	env->ExceptionDescribe();
+        clazz = NULL;
+	return;
+    }
+
 }
 
-void PlugletInputStream::Destroy(void) {
+void PlugletInputStream::Destroy(jobject jthis) {
     //nb  who gonna cal it?
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<iPlugletEngine> plugletEngine = 
@@ -71,8 +80,18 @@ void PlugletInputStream::Destroy(void) {
     }
 
     if(clazz) {
+
+	if (closeMID) {
+	    env->CallVoidMethod(jthis,closeMID);
+	    if (env->ExceptionOccurred()) {
+		env->ExceptionDescribe();
+	    }
+	}
+
 	env->DeleteGlobalRef(clazz);
+	clazz = nsnull;
     }
+    initMID = nsnull;
 }
 
 jobject PlugletInputStream::GetJObject(const nsIInputStream *stream) {

@@ -48,10 +48,12 @@ npAPInsIInputStreamShim::npAPInsIInputStreamShim(nsIPluginStreamListener *plugle
 
 npAPInsIInputStreamShim::~npAPInsIInputStreamShim()
 {
+    PR_Lock(mLock);
+
+    DoClose();
+
     mPlugletListener = nsnull;
     mStreamInfo = nsnull;
-
-    PR_Lock(mLock);
 
     delete [] mBuffer;
     mBuffer = nsnull;

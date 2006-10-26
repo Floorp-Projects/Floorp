@@ -49,9 +49,9 @@ public:
 
     NS_IMETHOD AllowStreamToReadFromBuffer(int32 len, void* buf, int32* outWritten);
 
+    NS_IMETHOD DoClose(void);
 private:
 
-    NS_IMETHOD DoClose(void);
 
     NS_IMETHOD CopyFromPluginHostToBuffer(int32 len, void* buf, 
                                           int32* outWritten);
