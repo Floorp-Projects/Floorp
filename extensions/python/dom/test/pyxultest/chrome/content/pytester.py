@@ -197,9 +197,12 @@ def do_onload(event):
     # the test to run.
     tests = find_tests()
     func_name = None
-    if len(window.arguments)==1 and not window.arguments[0]:
+    # Only 'dialogs' have window arguments, not 'windows'
+    if not hasattr(window, 'arguments') or \
+       (len(window.arguments)==1 and not window.arguments[0]):
         try:
             # This is an embedding component - it may not always be there.
+            # ACK - and is no longer available with firefox...
             contract_id = "@mozilla.org/app-startup/commandLineService;1"
             cmdline_svc = components.classes[contract_id] \
                            .getService(components.interfaces.nsICmdLineService)
