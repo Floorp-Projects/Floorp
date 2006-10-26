@@ -55,7 +55,6 @@ calendar.jar:
 #expand    skin/classic/calendar/all_day_event.png  (/calendar/resources/skin/classic/all_day_event.png)
 #expand    skin/classic/calendar/all_day_event_down.png  (/calendar/resources/skin/classic/all_day_event_down.png)
 #expand    skin/classic/calendar/all_day_event_hover.png  (/calendar/resources/skin/classic/all_day_event_hover.png)
-#expand    skin/classic/calendar/calendartoolbar.png  (/calendar/resources/skin/classic/calendartoolbar.png)
 #expand    skin/classic/calendar/checkbox_checked.png  (/calendar/resources/skin/classic/unifinder/checkbox_checked.png)
 #expand    skin/classic/calendar/checkbox_unchecked.png  (/calendar/resources/skin/classic/unifinder/checkbox_unchecked.png)
 #expand    skin/classic/calendar/dot.png         (/calendar/resources/skin/classic/dot.png)

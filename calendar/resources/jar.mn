@@ -58,9 +58,6 @@ calendar.jar:
     skin/classic/calendar/preferences/Options.png  (/calendar/base/themes/winstripe/preferences/Options.png)
     skin/classic/calendar/preferences/preferences.css  (/calendar/base/themes/winstripe/preferences/preferences.css)
 #endif
-    skin/classic/calendar/calendar-button.css (skin/classic/calendar-button.css)
-    skin/classic/calendar/calendartoolbar.png (skin/classic/calendartoolbar.png)
-    skin/classic/calendar/calendartoolbar_small.png (skin/classic/calendartoolbar_small.png)
     skin/classic/calendar/dialogOverlay.css (skin/classic/dialogOverlay.css)
     skin/classic/calendar/synch_animated.gif (skin/classic/synch_animated.gif)
     skin/classic/calendar/datetimepickers/datetimepickers.css (skin/classic/datetimepickers/datetimepickers.css)
