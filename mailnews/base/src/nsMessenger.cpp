@@ -121,7 +121,6 @@
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIMsgSendLater.h" 
 #include "nsIMsgSendLaterListener.h"
-#include "nsIMsgDraft.h"
 #include "nsIUrlListener.h"
 
 // undo

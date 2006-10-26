@@ -1578,23 +1578,17 @@ mime_parse_stream_complete (nsMIMESession *stream)
       //
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
-#ifdef NS_DEBUG
-        printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
-#endif
         fields->SetDraftId(mdd->url_name);
-        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity, nsnull);
+        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity, mdd->originalMsgURI);
       }
       else
       {
-#ifdef NS_DEBUG
-        printf("Time to create the composition window WITH a body!!!!\n");
-#endif
         if (mdd->forwardInline)
           CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity, mdd->originalMsgURI);
-          else
+        else
         {
           fields->SetDraftId(mdd->url_name);
-          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity, nsnull);
+          CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity, mdd->originalMsgURI);
         }
       }
     }

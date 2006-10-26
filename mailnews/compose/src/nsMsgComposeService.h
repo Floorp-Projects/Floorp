@@ -44,6 +44,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIMimeStreamConverter.h"
+#include "nsInterfaceHashtable.h"
 
 #ifdef MOZ_XUL_APP
 #include "nsICommandLineHandler.h"
@@ -74,7 +76,7 @@ public:
   PRBool                                    htmlCompose;
 };
 
-class nsMsgComposeService :
+class nsMsgComposeService : 
   public nsIMsgComposeService,
   public nsIObserver,
   public ICOMMANDLINEHANDLER,
@@ -109,7 +111,15 @@ private:
   nsresult OpenWindow( const char *chrome, nsIMsgComposeParams *params);
   void CloseHiddenCachedWindow(nsIDOMWindowInternal *domWindow);
 
+  nsresult LoadDraftOrTemplate(const nsACString& aMsgURI, nsMimeOutputType aOutType, 
+                               nsIMsgIdentity * aIdentity, const char * aOriginalMsgURI, 
+                               PRBool aAddInlineHeaders,
+                               nsIMsgWindow *aMsgWindow);
+
   nsresult ShowCachedComposeWindow(nsIDOMWindowInternal *aComposeWindow, PRBool aShow);
+
+  // hash table mapping dom windows to nsIMsgCompose objects
+  nsInterfaceHashtable<nsISupportsHashKey, nsIWeakReference> mOpenComposeWindows;
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
   PRIntervalTime            mStartTime;

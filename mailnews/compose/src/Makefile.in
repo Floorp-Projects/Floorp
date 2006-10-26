@@ -100,7 +100,6 @@ CPPSRCS		= \
 		nsMsgSendPart.cpp \
 		nsMsgSendReport.cpp \
 		nsSmtpService.cpp \
-		nsMsgCreate.cpp \
 		nsMsgCopy.cpp \
 		nsMsgSendLater.cpp \
 		nsMsgDeliveryListener.cpp \

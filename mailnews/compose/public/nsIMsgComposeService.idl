@@ -47,7 +47,7 @@ interface nsIMsgIdentity;
 interface nsIMsgIncomingServer;
 interface nsIMsgDBHdr;
 
-[scriptable, uuid(acb1a30a-466e-4809-bb59-f9b7946f6cf6)]
+[scriptable, uuid(BC1C0379-82EF-45ae-9710-DD4FA93252F7)]
 interface nsIMsgComposeService : nsISupports {
 
   /* we need a msg window because when we forward inline we may need progress */
@@ -94,9 +94,37 @@ interface nsIMsgComposeService : nsISupports {
   nsIMsgComposeParams getParamsForMailto(in nsIURI aURI); 
 
   void forwardMessage(in AString forwardTo, in nsIMsgDBHdr aMsgHdr, 
-                                             in nsIMsgWindow aMsgWindow, in nsIMsgIncomingServer aServer);
+                      in nsIMsgWindow aMsgWindow, in nsIMsgIncomingServer aServer);
 
   void replyWithTemplate(in nsIMsgDBHdr msgHdr, in string templateUri,
-                                             in nsIMsgWindow aMsgWindow, in nsIMsgIncomingServer server);
-};
+                         in nsIMsgWindow aMsgWindow, in nsIMsgIncomingServer server);
 
+  /** 
+   * Every open compose window registers itself with the compose service 
+   * This allows consumers to get the msg compose object associated with a dom window
+   *
+   * @param aWindow The DOM Window 
+   * @param aMsgCompose The compose object associated with the compose window
+   *
+   */
+  void registerComposeWindow(in nsIDOMWindowInternal aWindow, in nsIMsgCompose aMsgCompose);
+
+  /** 
+   * When a compose window is being closed (or recyled), it unregisters itself
+   * from the compose service. 
+   *
+   * @param aWindow The DOM Window 
+   *
+   */
+  void unregisterComposeWindow(in nsIDOMWindowInternal aWindow);
+  
+  /**
+   * For aWindow, returns the nsIMsgCompose object associated with the window.
+   *
+   * @param aWindow The DOMWindow associated with the compose window.
+   *
+   * @return NS_ERROR_FAILURE if we could not find a nsIMsgCompose for the passed in
+   *         DOM Window.
+   */
+  nsIMsgCompose getMsgComposeForWindow(in nsIDOMWindowInternal aWindow);
+};

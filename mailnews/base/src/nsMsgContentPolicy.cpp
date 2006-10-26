@@ -58,6 +58,10 @@
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 
+#include "nsIMsgComposeService.h"
+#include "nsIMsgCompose.h"
+#include "nsMsgCompCID.h"
+
 // needed by the content load policy manager
 #include "nsIExternalProtocolService.h"
 #include "nsCExternalHandlerService.h"
@@ -131,6 +135,10 @@ nsresult nsMsgContentPolicy::Init()
   return prefInternal->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
 }
 
+/** 
+ * returns true if the sender referenced by aMsgHdr is in one of our 
+ * trusted white lists.
+ */
 nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed)
 {
   *aWhiteListed = PR_FALSE;
@@ -166,20 +174,21 @@ nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool *
   return rv;
 }
 
-nsresult nsMsgContentPolicy::IsTrustedDomain(nsIURI * aContentLocation, PRBool * aTrustedDomain)
+/**
+ * Extract the host name from aContentLocation, and look it up in our list
+ * of trusted domains.
+ */
+PRBool nsMsgContentPolicy::IsTrustedDomain(nsIURI * aContentLocation)
 {
-  *aTrustedDomain = PR_FALSE;
-  NS_ENSURE_ARG_POINTER(aContentLocation); 
-  nsresult rv = NS_OK;
-
+  PRBool trustedDomain = PR_FALSE;
   // get the host name of the server hosting the remote image
   nsCAutoString host;
-  aContentLocation->GetHost(host);
+  nsresult rv = aContentLocation->GetHost(host);
 
-  if (!mTrustedMailDomains.IsEmpty()) 
-    *aTrustedDomain = MsgHostDomainIsTrusted(host, mTrustedMailDomains);
+  if (NS_SUCCEEDED(rv) && !mTrustedMailDomains.IsEmpty()) 
+    trustedDomain = MsgHostDomainIsTrusted(host, mTrustedMailDomains);
 
-  return rv;
+  return trustedDomain;
 }
 
 
@@ -198,27 +207,16 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   NS_ENSURE_ARG_POINTER(aContentLocation);
 
   // NOTE: Not using NS_ENSURE_ARG_POINTER because this is a legitimate case
-  // that can happen, and it shouldn't print a warning message.
+  // that can happen.
   if (!aRequestingLocation)
     return NS_ERROR_INVALID_POINTER;
 
 #ifndef MOZ_THUNDERBIRD
   // Go find out if we are dealing with mailnews. Anything else
   // isn't our concern and we accept content.
-  nsIDocShell *shell = NS_CP_GetDocShellFromContext(aRequestingContext);
-  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(shell));
-  if (!docshellTreeItem)
-    return NS_OK;
-
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  // we want the app docshell, so don't use GetSameTypeRootTreeItem
-  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(rootItem));
-  if (!docshell)
-    return NS_OK;
+  nsCOMPtr<nsIDocShell> docshell;
+  rv = GetRootDocShellForContext(aRequestingContext, getter_AddRefs(docshell));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 appType;
   rv = docshell->GetAppType(&appType);
@@ -235,32 +233,35 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
     return NS_OK;
   }
 
-  // if aRequestingLocation is chrome, about or resource, allow aContentLocation to load
-  PRBool isChrome = PR_FALSE;
-  PRBool isRes = PR_FALSE;
-  PRBool isAbout = PR_FALSE;
+  // if aRequestingLocation is chrome or resource, allow aContentLocation to load
+  PRBool isChrome;
+  PRBool isRes;
 
   rv = aRequestingLocation->SchemeIs("chrome", &isChrome);
   rv |= aRequestingLocation->SchemeIs("resource", &isRes);
-  rv |= aRequestingLocation->SchemeIs("about", &isAbout);
 
-  if (NS_SUCCEEDED(rv) && (isChrome || isRes || isAbout))
+  if (NS_SUCCEEDED(rv) && (isChrome || isRes))
     return rv;
 
-  // Now default to reject so when NS_ENSURE_SUCCESS errors content is rejected
+  // Now default to reject so early returns via NS_ENSURE_SUCCESS 
+  // cause content to be rejected.
   *aDecision = nsIContentPolicy::REJECT_REQUEST;
+  // From here on out, be very careful about returning error codes.
+  // An error code will cause the content policy manager to ignore our
+  // decision. In most cases, if we get an error code, it's something
+  // we didn't expect which means we should be rejecting the request anyway...
 
   // if aContentLocation is a protocol we handle (imap, pop3, mailbox, etc)
   // or is a chrome url, then allow the load
   nsCAutoString contentScheme;
   PRBool isExposedProtocol = PR_FALSE;
   rv = aContentLocation->GetScheme(contentScheme);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
 #ifdef MOZ_THUNDERBIRD
   nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
   rv = extProtService->IsExposedProtocol(contentScheme.get(), &isExposedProtocol);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 #else
   if (contentScheme.LowerCaseEqualsLiteral("mailto") ||
       contentScheme.LowerCaseEqualsLiteral("news") ||
@@ -275,35 +276,99 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
 #endif
     
   rv = aContentLocation->SchemeIs("chrome", &isChrome);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   if (isExposedProtocol || isChrome)
   {
     *aDecision = nsIContentPolicy::ACCEPT;
-    return rv;
+    return NS_OK;
   }
 
-  // for unexposed protocols, we never try to load any of them with the exception of http and https.
-  // this means we never even try to load urls that we don't handle ourselves like ftp and gopher.
-  PRBool isHttp = PR_FALSE;
-  PRBool isHttps = PR_FALSE;
-
+  // never load unexposed protocols except for http and https. 
+  // Protocols like ftp, gopher are always blocked.
+  PRBool isHttp;
+  PRBool isHttps;
   rv = aContentLocation->SchemeIs("http", &isHttp);
   rv |= aContentLocation->SchemeIs("https", &isHttps);
+  if (NS_FAILED(rv) || (!isHttp && !isHttps))
+    return NS_OK;
 
-  if (!NS_SUCCEEDED(rv) || (!isHttp && !isHttps))
-    return rv;
-
-  // Look into http and https more closely to determine if the load should be allowed
-
-  // If we do not block remote content then return with an accept content here
+  // If we are allowing all remote content...
   if (!mBlockRemoteImages)
   {
     *aDecision = nsIContentPolicy::ACCEPT;
     return NS_OK;
   }
 
-  // now do some more detective work to better refine our decision...
+  // Extract the windowtype to handle compose windows separately from mail
+  nsCOMPtr<nsIDocShell> rootDocShell;
+  rv = GetRootDocShellForContext(aRequestingContext, getter_AddRefs(rootDocShell));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+   
+  // get the dom document element
+  nsCOMPtr<nsIDOMDocument> domDocument = do_GetInterface(rootDocShell, &rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsCOMPtr<nsIDOMElement> windowEl;
+  rv = domDocument->GetDocumentElement(getter_AddRefs(windowEl));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsAutoString windowType;
+  rv = windowEl->GetAttribute(NS_LITERAL_STRING("windowtype"), windowType);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  if (windowType.Equals(NS_LITERAL_STRING("msgcompose")))
+    ComposeShouldLoad(rootDocShell, aContentLocation, aDecision);
+  else 
+    MailShouldLoad(aRequestingLocation, aContentLocation, aDecision);
+
+  return NS_OK;
+}
+
+/**
+ * For a given msg hdr, iterate through the list of remote content blocking criteria.
+ * returns nsIContentPolicy::REJECT if the msg hdr fails any of these tests.
+ *
+ * @param aRequestingLocation cannot be null
+ */
+nsresult nsMsgContentPolicy::AllowRemoteContentForMsgHdr(nsIMsgDBHdr * aMsgHdr, nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 *aDecision)
+{
+  NS_ENSURE_ARG_POINTER(aMsgHdr);
+
+  PRBool allowRemoteContent = PR_FALSE;
+
+  // Case #1, check the db hdr for the remote content policy on this particular message
+  PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
+  aMsgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy);
+
+  // Case #2, check if the message is in an RSS folder
+  PRBool isRSS = PR_FALSE;
+  IsRSSArticle(aRequestingLocation, &isRSS);
+
+  // Case #3, author is in our white list..
+  PRBool authorInWhiteList = PR_FALSE;
+  IsSenderInWhiteList(aMsgHdr, &authorInWhiteList);
+
+  // Case #4, the domain for the remote image is in our white list
+  PRBool trustedDomain = IsTrustedDomain(aContentLocation);
+
+  *aDecision = (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain) 
+               ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_REQUEST;
+
+  if (*aDecision == nsIContentPolicy::REJECT_REQUEST && !remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
+    aMsgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent);
+
+  return NS_OK; // always return success
+}
+
+/** 
+ * Content policy logic for mail windows
+ * 
+ */
+nsresult nsMsgContentPolicy::MailShouldLoad(nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 * aDecision)
+{
+  NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
+
   // (1) examine the msg hdr value for the remote content policy on this particular message to
   //     see if this particular message has special rights to bypass the remote content check
   // (2) special case RSS urls, always allow them to load remote images since the user explicitly
@@ -312,7 +377,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   //     who are allowed to send us remote images
 
   // get the msg hdr for the message URI we are actually loading
-  NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
+  nsresult rv;
   nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -331,44 +396,90 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Case #1, check the db hdr for the remote content policy on this particular message
-  PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
-  msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy);
+  AllowRemoteContentForMsgHdr(msgHdr, aRequestingLocation, aContentLocation, aDecision);
 
-  // Case #2, check if the message is in an RSS folder
-  PRBool isRSS = PR_FALSE;
-  IsRSSArticle(aRequestingLocation, &isRSS);
-
-  // Case #3, author is in our white list..
-  PRBool authorInWhiteList = PR_FALSE;
-  IsSenderInWhiteList(msgHdr, &authorInWhiteList);
-
-  // Case #4, the domain for the remote image is in our white list
-  PRBool trustedDomain = PR_FALSE;
-  IsTrustedDomain(aContentLocation, &trustedDomain);
-
-  // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
-  // Honor the message specific remote content policy
-  if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain)
+  if (*aDecision == nsIContentPolicy::REJECT_REQUEST)
   {
-    *aDecision = nsIContentPolicy::ACCEPT;
-    return rv;
+    // now we need to call out the msg sink informing it that this message has remote content
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); 
+    if (msgWindow)
+    {
+      nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
+      rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
+      if (msgHdrSink)
+        msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
+    }
   }
 
-  if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
-    msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent);
+  return NS_OK;
+}
 
-  // now we need to call out the msg sink informing it that this message has remote content
-  nsCOMPtr<nsIMsgWindow> msgWindow;
-  rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); 
-  NS_ENSURE_TRUE(msgWindow, NS_OK); // it's not an error for the msg window to be null
+/** 
+ * Content policy logic for compose windows
+ * 
+ */
+nsresult nsMsgContentPolicy::ComposeShouldLoad(nsIDocShell * aRootDocShell, nsIURI * aContentLocation, 
+                                               PRInt16 * aDecision)
+{
+  nsresult rv;
 
-  nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
-  rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
-  NS_ENSURE_TRUE(msgHdrSink, rv);
-  msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
+  PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
+  PRBool authorInWhiteList = PR_FALSE;
+  PRBool trustedDomain = PR_FALSE;
 
-  return rv;
+  nsCOMPtr<nsIDOMWindowInternal> window(do_GetInterface(aRootDocShell, &rv));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsCOMPtr<nsIMsgCompose> msgCompose;
+  rv = composeService->GetMsgComposeForWindow(window, getter_AddRefs(msgCompose));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  nsXPIDLCString originalMsgURI;
+  msgCompose->GetOriginalMsgURI(getter_Copies(originalMsgURI));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  MSG_ComposeType composeType;
+  rv = msgCompose->GetType(&composeType);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  // Only allow remote content for new mail compositions.
+  // Block remote content for all other types (drafts, templates, forwards, replies, etc)
+  // unless there is an associated msgHdr which allows the load...
+  if (composeType == nsIMsgCompType::New)
+    *aDecision = nsIContentPolicy::ACCEPT;
+  else if (!originalMsgURI.IsEmpty())
+  {
+    nsCOMPtr<nsIMsgDBHdr> msgHdr;
+    rv = GetMsgDBHdrFromURI(originalMsgURI.get(), getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+    AllowRemoteContentForMsgHdr(msgHdr, nsnull, aContentLocation, aDecision);
+  }
+
+  return NS_OK;
+}
+
+/**
+ * helper routine to get the root docshell for the window requesting the load
+ */
+nsresult nsMsgContentPolicy::GetRootDocShellForContext(nsISupports * aRequestingContext, nsIDocShell ** aDocShell)
+{
+  NS_ENSURE_ARG_POINTER(aRequestingContext);
+  nsresult rv;
+
+  nsIDocShell *shell = NS_CP_GetDocShellFromContext(aRequestingContext);
+  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(shell, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  // we want the app docshell, so don't use GetSameTypeRootTreeItem
+  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void**) aDocShell);
 }
 
 NS_IMETHODIMP
