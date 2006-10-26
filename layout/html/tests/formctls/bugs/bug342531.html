@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #2 for bug 342531</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color: white; font-size:16px; padding:0; margin:0;
+        }
+
+	.float { float:left; clear:both; width:200px; border:solid red 2px; }
+	.block  { display:block; margin-left: 250px; background: yellow; border: solid blue 2px;}
+	.inline {display:inline; margin-left: 250px; background: yellow; border: solid blue 2px;}
+	.wrap {overflow:hidden;}
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="float">float</div>
+    <span class="block">non-replaced block</span>
+    <div class="float">float</div>
+    <span class="inline">non-replaced inline</span>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <input class="block" value="INPUT block">
+    <div class="float">float</div>
+    <input class="inline" value="INPUT inline">
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <textarea class="block">TEXTAREA block</textarea>
+    <div class="float">float</div>
+    <textarea class="inline">TEXTAREA inline</textarea>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <select size="1" class="block"><option>Combobox block</option></select>
+    <div class="float">float</div>
+    <select size="1" class="inline"><option>Combobox inline</option></select>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <select multiple class="block"><option>List block</option></select>
+    <div class="float">float</div>
+    <select multiple class="inline"><option>List inline</option></select>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <button class="block">BUTTON block</button>
+    <div class="float">float</div>
+    <button class="inline">BUTTON inline</button>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <fieldset class="block">FIELDSET block</fieldset>
+    <div class="float">float</div>
+    <fieldset class="inline">FIELDSET inline</fieldset>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <input type="radio" class="block">
+    <div class="float">float</div>
+    <input type="radio" class="inline">
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <input type="checkbox" class="block">
+    <div class="float">float</div>
+    <input type="checkbox" class="inline">
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <label type="checkbox" class="block">LABEL block</label>
+    <div class="float">float</div>
+    <label type="checkbox" class="inline">LABEL inline</label>
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <isindex class="block" prompt="ISINDEX block">
+    <div class="float">float</div>
+    <isindex class="inline" prompt="ISINDEX inline">
+</div>
+<div class="wrap">
+    <div class="float">float</div>
+    <img src="http://www.mozilla.org/images/hack.gif" class="block">
+    <div class="float">float</div>
+    <img src="http://www.mozilla.org/images/hack.gif" class="inline">
+</div>
+<div class="wrap">
+HR:
+    <div class="float">float</div>
+    <hr class="block">
+    <div class="float">float</div>
+    <hr class="inline">
+</div>
+
+
+
+</body>
+</html>
