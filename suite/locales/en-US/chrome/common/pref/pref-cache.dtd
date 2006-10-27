@@ -24,6 +24,6 @@
 <!ENTITY autoRadio.accesskey             "W">
 
 <!ENTITY prefetchTitle.label             "Link Prefetching">
-<!ENTITY enablePrefetch.label            "Prefetch web pages when idle, so that links in web pages designed for prefetching can load more quickly.">
+<!ENTITY enablePrefetch.label            "Prefetch web pages when idle, so that links in web pages designed for prefetching can load more quickly">
 <!ENTITY enablePrefetch.accesskey        "P">
 <!-- <!ENTITY prefetchDesc.label              "If you check this item, &brandShortName; will follow special directives from websites to prefetch content while the browser is idle.  Websites designed to take advantage of this feature will appear to load quicker."> -->

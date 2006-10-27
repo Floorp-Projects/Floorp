@@ -12,8 +12,8 @@
 <!ENTITY scroll.label                    "Scroll the document by ">
 <!ENTITY scroll.accesskey                "S">
 <!ENTITY scrollHoriz.accesskey           "c">
-<!ENTITY scrollLines.label               " lines. ">
-<!ENTITY scrollChars.label               " characters. ">
+<!ENTITY scrollLines.label               " lines">
+<!ENTITY scrollChars.label               " characters">
 <!ENTITY useSystemDefault.label          "Use system default">
 <!ENTITY useSystemDefault.accesskey      "U">
 <!ENTITY useSystemDefaultHoriz.accesskey "d">
