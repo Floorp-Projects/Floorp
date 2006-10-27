@@ -353,6 +353,9 @@ typedef enum
 // cache the toolbar defaults we parse from a plist
 + (NSArray*) toolbarDefaults;
 
+// Get the load-in-background pref
++ (BOOL)shouldLoadInBackground;
+
 // Accessor to get the proxy icon view
 - (PageProxyIcon *)proxyIconView;
 

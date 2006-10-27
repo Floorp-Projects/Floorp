@@ -189,7 +189,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     return;
   }
 
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground];
   BOOL openInTabs       = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
   BOOL cmdKeyDown       = (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0);
   
@@ -250,7 +250,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
-  BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
 
   NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
   HistoryItem* curItem;
@@ -266,7 +266,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   NSArray* itemsArray = [mHistoryOutlineView selectedItems];
 
-  BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
 
   NSEnumerator* itemsEnum = [itemsArray objectEnumerator];
   HistoryItem* curItem;
@@ -293,7 +293,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   }
 
   // make new window
-  BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL loadNewTabsInBackgroundPref = [BrowserWindowController shouldLoadInBackground];
 
   NSWindow* behindWindow = nil;
   if (loadNewTabsInBackgroundPref)

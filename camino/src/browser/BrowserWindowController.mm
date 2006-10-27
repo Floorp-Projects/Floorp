@@ -1130,6 +1130,20 @@ enum BWCOpenDest {
   return sToolbarDefaults;
 }
 
+// +shouldLoadInBackground
+//
+// gets the foreground/background tab loading pref
+//
+
++ (BOOL)shouldLoadInBackground
+{
+  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+
+  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+    loadInBackground = !loadInBackground;
+
+  return loadInBackground;
+}
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
@@ -3283,7 +3297,7 @@ enum BWCOpenDest {
     if (tabViewItem)
     {
       NSString* url = [[tabViewItem view] getCurrentURI];
-      BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+      BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
 
       [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
 
@@ -3507,9 +3521,7 @@ enum BWCOpenDest {
   
   // if we replace all tabs (because we opened a tab group), or we open additional tabs
   // with the "focus new tab"-pref on, focus the first new tab.
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-  
-  if (!((tabPolicy == eAppendTabs) && loadInBackground))
+  if (!((tabPolicy == eAppendTabs) && [BrowserWindowController shouldLoadInBackground]))
     [mTabBrowser selectTabViewItem:tabViewToSelect];
     
 }
@@ -4072,7 +4084,7 @@ enum BWCOpenDest {
   if ([hrefStr length] == 0)
     return;
 
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground];
 
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
@@ -4162,9 +4174,7 @@ enum BWCOpenDest {
 
     if (modifiers & NSCommandKeyMask) {
       BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
-      BOOL loadInBG  = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-      if (modifiers & NSShiftKeyMask)
-        loadInBG = !loadInBG; // shift key should toggle the foreground/background pref as it does elsewhere
+      BOOL loadInBG = [BrowserWindowController shouldLoadInBackground];
       if (loadInTab)
         [self openNewTabWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO setJumpback:NO];
       else

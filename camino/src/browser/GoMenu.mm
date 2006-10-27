@@ -430,7 +430,7 @@ static const unsigned int kMaxTitleLength = 50;
     {
       if ([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask)
       {
-        BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+        BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
         if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
           [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO setJumpback:NO];
         else
