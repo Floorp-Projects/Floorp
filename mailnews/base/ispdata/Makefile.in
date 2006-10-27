@@ -52,6 +52,10 @@ ifdef MOZ_MOVEMAIL
 EXPORT_RESOURCE_FILES += movemail.rdf
 endif
 
+ifeq (,$(filter-out mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXPORT_RESOURCE_FILES += dotmac.rdf
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
