@@ -42,9 +42,9 @@
 [% PROCESS testopia/messages.html.tmpl %]
 
 <script src="testopia/js/util.js" type="text/javascript"></script>
-
+[% IF table.list_count %]
 [% PROCESS "testopia/caserun/filter.html.tmpl" %]
-
+[% END %]
 <form id="table" action="tr_list_caseruns.cgi" method="POST">
 <br/>
 [% IF table.list_count %]

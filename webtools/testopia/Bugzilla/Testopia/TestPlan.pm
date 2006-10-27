@@ -97,9 +97,9 @@ sub report_columns {
     $columns{'Archived'}      = "archived";
     $columns{'Tags'}          = "tags";
     $columns{'Author'}        = "author";
-    $columns{'<none>'}        = '';
     my @result;
-    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (keys %columns);
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (sort(keys %columns));
+    unshift @result, {'name' => '<none>', 'id'=> ''};
     return \@result;     
         
 }
@@ -449,6 +449,30 @@ sub get_product_components {
            
     return $ref;
 }
+
+=head2 get_product_environments
+
+Returns al list of environments for the given product. If one
+is not specified, use the plan product.
+
+=cut
+
+sub get_product_environments {
+#TODO: 2.22 use product.pm
+    my $self = shift;
+    my ($product_id) = @_;
+    $product_id ||= $self->{'product_id'};
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT name AS id, name 
+               FROM test_environments
+              WHERE product_id IN($product_id)
+           ORDER BY name",
+           {'Slice'=>{}});
+           
+    return $ref;
+}
+
 
 =head2 get_case_ids_by_category
 
@@ -916,6 +940,18 @@ sub author          { return Bugzilla::User->new($_[0]->{'author_id'});  }
 sub name            { return $_[0]->{'name'};    }
 sub type_id         { return $_[0]->{'type_id'};    }
 sub isactive        { return $_[0]->{'isactive'};  }
+
+=head2 type
+
+Returns 'case'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'plan';
+    return $self->{'type'};
+}
 
 =head2 attachments
 

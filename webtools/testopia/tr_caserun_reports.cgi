@@ -11,13 +11,15 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Testopia System.
+# The Original Code is the Bugzilla Test Runner System.
 #
-# The Initial Developer of the Original Code is Greg Hendricks.
-# Portions created by Greg Hendricks are Copyright (C) 2001
-# Greg Hendricks. All Rights Reserved.
+# The Initial Developer of the Original Code is Maciej Maczynski.
+# Portions created by Maciej Maczynski are Copyright (C) 2001
+# Maciej Maczynski. All Rights Reserved.
 #
-# Contributor(s): Greg Hendricks <ghendricks@novell.com>
+# Contributor(s): Maciej Maczynski <macmac@xdsnet.pl>
+#                 Ed Fuentetaja <efuentetaja@acm.org>
+#                 Greg Hendricks <ghendricks@novell.com>
 
 use strict;
 use lib ".";
@@ -27,6 +29,7 @@ use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
+use Bugzilla::Testopia::Constants;
 use Bugzilla::Testopia::Report;
 
 use vars qw($template $vars);
@@ -34,50 +37,15 @@ my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
 
 Bugzilla->login();
-   
+
 my $type = $cgi->param('type') || '';
 
-if ($type eq 'build_coverage'){
-    my $plan_id = trim(Bugzilla->cgi->param('plan_id') || '');
-    
-    unless ($plan_id){
-      $vars->{'form_action'} = 'tr_plan_reports.cgi';
-      $template->process("testopia/plan/choose.html.tmpl", $vars) 
-          || ThrowTemplateError($template->error());
-      exit;
-    }
-    validate_test_id($plan_id, 'plan');
-    push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
-    
-    my $action = $cgi->param('action') || '';
-    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    my $report = {};
-    my %buildseen;
-    foreach my $case (@{$plan->test_cases}){
-        foreach my $cr (@{$case->caseruns}){
-            $buildseen{$cr->build->id} = $cr->build->name;
-            $report->{$case->id}->{$cr->build->id} = $cr;
-        }
-    }
-       
-    $report->{'builds'} = \%buildseen;
-    $vars->{'report'} = $report;
-    $vars->{'plan'} = $plan;
-
-    print $cgi->header();
-    if ($cgi->param('debug')){
-        use Data::Dumper;
-        print Dumper(\%buildseen);
-        print Dumper($report);
-    }
-    $template->process("testopia/reports/build-coverage.html.tmpl", $vars)
-       || ThrowTemplateError($template->error());
-    
+if ($type eq 'status-breakdown'){
 }
 else{
-    $cgi->param('current_tab', 'plan');
+    $cgi->param('current_tab', 'case_run');
     $cgi->param('viewall', 1);
-    my $report = Bugzilla::Testopia::Report->new('plan', 'tr_list_plans.cgi', $cgi);
+    my $report = Bugzilla::Testopia::Report->new('caserun', 'tr_list_caseruns.cgi', $cgi);
     $vars->{'report'} = $report;
 
     ### From Bugzilla report.cgi by Gervase Markham

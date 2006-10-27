@@ -253,6 +253,7 @@ my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
 $vars->{'component_list'} =  $case->get_available_components();
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
+$vars->{'hide_filter'} = $cgi->param('hide_filter');
 $vars->{'action'} = 'tr_list_caserun.cgi';
 if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;

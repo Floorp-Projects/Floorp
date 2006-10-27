@@ -197,7 +197,7 @@ sub init {
         }
         if (grep(/map_run_milestone/, @$fields)) {
             push @supptables, "INNER JOIN test_builds AS map_run_milestone " .
-                              "ON test_runs.build_id = map_run_build.build_id";
+                              "ON test_runs.build_id = map_run_milestone.build_id";
         }
         if (grep(/map_run_environment/, @$fields)) {
             push @supptables, "INNER JOIN test_environments AS map_run_environment " .
@@ -233,6 +233,74 @@ sub init {
             push @supptables, "INNER JOIN profiles AS map_plan_author " .
                               "ON test_plans.author_id = map_plan_author.userid";
         }
+        ## Case-runs ##
+        if (grep(/map_caserun_assignee/, @$fields)) {
+            push @supptables, "INNER JOIN profiles AS map_caserun_assignee " .
+                              "ON test_case_runs.assignee = map_caserun_assignee.userid";
+        }
+        if (grep(/map_caserun_testedby/, @$fields)) {
+            push @supptables, "INNER JOIN profiles AS map_caserun_testedby " .
+                              "ON test_case_runs.testedby = map_caserun_testedby.userid";
+        }
+        if (grep(/map_caserun_build/, @$fields)) {
+            push @supptables, "INNER JOIN test_builds AS map_caserun_build " .
+                              "ON test_case_runs.build_id = map_caserun_build.build_id";
+        }
+        if (grep(/map_caserun_environment/, @$fields)) {
+            push @supptables, "INNER JOIN test_environments AS map_caserun_environment " .
+                              "ON test_case_runs.environment_id = map_caserun_environment.environment_id";
+        }
+        if (grep(/map_caserun_status/, @$fields)) {
+            push @supptables, "INNER JOIN test_case_run_status AS map_caserun_status " .
+                              "ON test_case_runs.case_run_status_id = map_caserun_status.case_run_status_id";
+        }
+        if (grep(/map_caserun_milestone/, @$fields)) {
+            push @supptables, "INNER JOIN test_builds AS map_caserun_milestone " .
+                              "ON test_case_runs.build_id = map_caserun_milestone.build_id";
+        }
+        if (grep(/map_caserun_case_tags/, @$fields)) {
+            push @supptables, "INNER JOIN test_case_tags AS tctags " .
+                              "ON test_case_runs.case_id = tctags.case_id";
+            push @supptables, "INNER JOIN test_tags AS map_caserun_case_tags " .
+                              "ON tctags.tag_id = map_caserun_case_tags.tag_id";
+        }
+        if (grep(/map_caserun_run_tags/, @$fields)) {
+            push @supptables, "INNER JOIN test_run_tags " .
+                              "ON test_case_runs.run_id = test_run_tags.run_id";
+            push @supptables, "INNER JOIN test_tags AS map_run_tags " .
+                              "ON test_run_tags.tag_id = map_caserun_run_tags.tag_id";
+        }
+        if (grep(/map_caserun_cases/, @$fields)) {
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON test_case_runs.case_id = map_caserun_cases.case_id";
+        }
+        if (grep(/map_caserun_priority/, @$fields)) {
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON test_case_runs.case_id = map_caserun_cases.case_id";
+            push @supptables, "INNER JOIN priority AS map_caserun_priority " .
+                              "ON map_caserun_cases.priority_id = map_caserun_priority.case_id";
+        }
+        if (grep(/map_caserun_default_tester/, @$fields)) {
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON test_case_runs.case_id = map_caserun_cases.case_id";
+            push @supptables, "INNER JOIN profiles AS map_caserun_default_tester " .
+                              "ON map_caserun_cases.default_tester = map_caserun_default_tester.userid";
+        }
+        if (grep(/map_caserun_category/, @$fields)) {
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON test_case_runs.case_id = map_caserun_cases.case_id";
+            push @supptables, "INNER JOIN test_case_categories AS map_caserun_category " .
+                              "ON map_caserun_cases.category_id = map_caserun_category.category_id";
+        }
+        if (grep(/map_caserun_components/, @$fields)) {
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON test_case_runs.case_id = map_caserun_cases.case_id";
+            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
+                              "ON map_caserun_cases.case_id = test_case_components.case_id";
+            push @supptables, "INNER JOIN components AS map_caserun_components " .
+                              "ON map_caserun_cases.component_id = map_caserun_components.id";
+        }
+        
     }
     
     # Set up tables for field sort order
@@ -529,6 +597,14 @@ sub init {
                    }
                $f = "test_tags.tag_name";
          },
+         "^requirement," => sub {
+             if ($obj eq 'case_run'){
+                   push(@supptables,
+                      "INNER JOIN test_cases " .
+                      "ON test_case_runs.case_id = test_cases.case_id");
+             }
+             $f = "test_cases.requirement"; 
+         },
          "^case_plan_id," => sub {
                push(@supptables,
                       "INNER JOIN test_case_plans AS case_plans " .
@@ -568,6 +644,15 @@ sub init {
                       "ON case_runs.case_id = test_cases.case_id");
                $f = "test_cases.case_id";
          },
+         "^caserun_plan_id," => sub {
+               push(@supptables,
+                      "INNER JOIN test_runs " .
+                      "ON test_case_runs.run_id = test_runs.run_id");
+               push(@supptables,
+                      "INNER JOIN test_plans " .
+                      "ON test_runs.plan_id = test_plans.plan_id");
+               $f = "test_plans.plan_id";
+         },
          "^case_prod," => sub {
                push(@supptables,
                       "INNER JOIN test_case_plans AS case_plans " .
@@ -575,6 +660,24 @@ sub init {
                push(@supptables,
                       "INNER JOIN test_plans " .
                       "ON case_plans.plan_id = test_plans.plan_id");
+               push(@supptables,
+                      "INNER JOIN products " .
+                      "ON test_plans.product_id = products.id");
+               if ($cgi->param('product_id')){
+                   $f = "test_plans.product_id"; 
+               }
+               else {
+                   $f = "products.name";
+               }
+
+         },
+         "^caserun_prod," => sub {
+               push(@supptables,
+                      "INNER JOIN test_runs " .
+                      "ON test_case_runs.run_id = test_runs.run_id");
+               push(@supptables,
+                      "INNER JOIN test_plans " .
+                      "ON test_runs.plan_id = test_plans.plan_id");
                push(@supptables,
                       "INNER JOIN products " .
                       "ON test_plans.product_id = products.id");
@@ -599,6 +702,20 @@ sub init {
                else {
                    $f = "products.name";
                }
+         },
+         "^stop_date," => sub {
+            if ($obj eq 'case_run'){
+                push(@supptables,
+                      "INNER JOIN test_runs " .
+                      "ON test_case_runs.run_id = test_runs.run_id");
+                $f = "test_runs.stop_date";
+            }
+         },
+         "^run_product_version," => sub {
+               push(@supptables,
+                      "INNER JOIN test_runs " .
+                      "ON test_case_runs.run_id = test_runs.run_id");
+               $f = "test_runs.product_version";
          },
          "^(author|manager|default_tester)," => sub {
                push(@supptables,
@@ -763,6 +880,9 @@ sub init {
         elsif ($obj eq 'run'){
             push(@specialchart, ["run_plan_id", $type, join(',', $cgi->param('plan_id'))]);
         }
+        elsif ($obj eq 'case_run'){
+            push(@specialchart, ["caserun_plan_id", $type, join(',', $cgi->param('plan_id'))]);
+        }
         else{
             push(@specialchart, ["plan_id", $type, join(',', $cgi->param('plan_id'))]);
         }
@@ -786,6 +906,9 @@ sub init {
         elsif ($obj eq 'case'){
             push(@specialchart, ["case_prod", $type, join(',', $cgi->param($attribute))]);
         }
+        elsif ($obj eq 'case_run'){
+            push(@specialchart, ["caserun_prod", $type, join(',', $cgi->param($attribute))]);
+        }
         else{
             if ($cgi->param("product")){
                 push(@specialchart, ["prod_name", $type, join(',', $cgi->param($attribute))]);
@@ -798,7 +921,7 @@ sub init {
     # Check the Multi select fields and add them to the chart
     my @legal_fields = ("case_status_id", "category", "category_id", "priority_id",
                         "component", "isautomated", "case_run_status_id",
-                        "default_product_version", "type_id", 
+                        "default_product_version", "run_product_version", "type_id", 
                         "build", "build_id", "environment_id", "milestone", "env_products",
                         "env_categories", "env_elements", "env_properties", 
                         "env_expressions", "case_status", "priority", "environment",

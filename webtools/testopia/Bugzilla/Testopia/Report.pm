@@ -138,7 +138,7 @@ sub init {
         $columns{'component'}       = "map_case_components.name";
         $columns{'category'}        = "map_categories.name";
         $columns{'isautomated'}     = "test_cases.isautomated";
-        $columns{'tags'}            = "map_case_tags.name";
+        $columns{'tags'}            = "map_case_tags.tag_name";
         $columns{'requirement'}     = "test_cases.requirement";
         $columns{'author'}          = "map_case_author.login_name";
         $columns{'default_tester'}  = "map_default_tester.login_name";
@@ -147,9 +147,9 @@ sub init {
         $columns{'run_status'}      = "test_runs.close_date";        
         $columns{'product'}         = "map_run_product.name";
         $columns{'build'}           = "map_run_build.name";
-        $columns{'milestone'}       = "map_run_milestone.value";
+        $columns{'milestone'}       = "map_run_milestone.milestone";
         $columns{'environment'}     = "map_run_environment.name";
-        $columns{'tags'}            = "map_run_tags.name";
+        $columns{'tags'}            = "map_run_tags.tag_name";
         $columns{'manager'}         = "map_run_manager.login_name";
         $columns{'default_product_version'} = "test_runs.product_version";
     }
@@ -157,9 +157,26 @@ sub init {
         $columns{'plan_type'}       = "map_plan_type.name";        
         $columns{'product'}         = "map_plan_product.name";
         $columns{'archived'}        = "test_plans.isactive";
-        $columns{'tags'}            = "map_plan_tags.name";
+        $columns{'tags'}            = "map_plan_tags.tag_name";
         $columns{'author'}          = "map_plan_author.login_name";
         $columns{'default_product_version'} = "test_plans.default_product_version";        
+    }
+    elsif ($type eq 'caserun'){
+        $columns{'build'}           = "map_caserun_build.name";        
+        $columns{'case'}            = "map_caserun_case.summary";
+        $columns{'run'}             = "map_caserun_run.summary";
+        $columns{'environment'}     = "map_caserun_environment.name";
+        $columns{'assignee'}        = "map_caserun_assignee.login_name";
+        $columns{'testedby'}        = "map_caserun_testedby.login_name";
+        $columns{'status'}          = "map_caserun_status.name";
+        $columns{'milestone'}       = "map_caserun_milestone.milestone";
+        $columns{'case_tags'}       = "map_caserun_case_tags.tag_name";
+        $columns{'run_tags'}        = "map_caserun_run_tags.tag_name";
+        $columns{'requirement'}     = "map_caserun_cases.requirement";
+        $columns{'priority'}        = "map_caserun_priority.value";
+        $columns{'default_tester'}  = "map_caserun_default_tester.login_name";
+        $columns{'category'}        = "map_caserun_category.name";
+        $columns{'componnet'}       = "map_caserun_components.name";
     }
     # One which means "nothing". Any number would do, really. It just gets SELECTed
     # so that we always select 3 items in the query.

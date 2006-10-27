@@ -38,11 +38,11 @@
 
 [% PROCESS testopia/style.none.tmpl %]
 
-<table border="1">
+<table border="0">
   <tr>  
-    <td>&nbsp;&nbsp;&nbsp;&nbsp;Build<br>Case</td>
+    <td>&nbsp;</td>
 [% FOREACH b = report.builds %]
-    <td>[% b.value %]</td>
+    <td><img src=tr_draw.cgi?text=[% b.value %]"/></td>
 [% END %]
   </tr>
 [% FOREACH case = report.keys %]

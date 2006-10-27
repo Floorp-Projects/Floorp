@@ -91,6 +91,29 @@ use constant DB_COLUMNS => qw(
 
 our $columns = join(", ", DB_COLUMNS);
 
+sub report_columns {
+    my $self = shift;
+    my %columns;
+    # Changes here need to match Report.pm
+    $columns{'Build'}           = "build";
+    $columns{'Status'}          = "status";        
+    $columns{'Environment'}     = "environment";
+    $columns{'Assignee'}        = "assignee";
+    $columns{'Tested By'}       = "testedby";
+    $columns{'Milestone'}       = "milestone";
+    $columns{'Case Tags'}       = "case_tags";
+    $columns{'Run Tags'}        = "run_tags";
+    $columns{'Requirement'}     = "requirement";
+    $columns{'Priority'}        = "priority";
+    $columns{'Default tester'}  = "default_tester";
+    $columns{'Category'}        = "category";
+    $columns{'Component'}       = "component";
+    my @result;
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (sort(keys %columns));
+    unshift @result, {'name' => '<none>', 'id'=> ''};
+    return \@result;     
+        
+}
 
 ###############################
 ####       Methods         ####
@@ -676,6 +699,18 @@ sub status_id         { return $_[0]->{'case_run_status_id'};   }
 sub sortkey           { return $_[0]->{'sortkey'};   }
 sub isprivate         { return $_[0]->{'isprivate'};   }
 sub updated_deps      { return $_[0]->{'updated_deps'};   }
+
+=head2 type
+
+Returns 'case'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'caserun';
+    return $self->{'type'};
+}
 
 =head2 notes
 

@@ -135,9 +135,9 @@ sub report_columns {
     $columns{'Requirement'}     = "requirement";
     $columns{'Author'}          = "author";
     $columns{'Default tester'}  = "default_tester";
-    $columns{'<none>'}          = '';
     my @result;
-    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (keys %columns);
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (sort(keys %columns));
+    unshift @result, {'name' => '<none>', 'id'=> ''};
     return \@result;     
         
 }

@@ -20,14 +20,15 @@
 
 
 [% IF report %]
-<form action="tr_case_reports.cgi" method="GET"> 
+<form action="tr_caserun_reports.cgi" method="GET"> 
 [% PROCESS "testopia/search/report-matrix.html.tmpl" 
-   obj = case 
+   obj = caserun
 %]   
 [% ELSE %]
-<form action="tr_list_cases.cgi" method="GET">
+<form action="tr_list_caseruns.cgi" method="GET">
 [% END %]
   <input type="hidden" name="current_tab" value="[% current_tab FILTER none %]" />
+  <input type="hidden" name="hide_filter" value="1" />
 <fieldset>
     <legend><strong>Product</strong></legend>
 <table>
@@ -41,11 +42,11 @@
   </tr>
   <tr>
     <td style="padding-right: 30px;">
-    [% PROCESS select sel = { name  => 'case_status_id',
-                  accesskey => 'c', 
-                  list      => case.get_status_list,
-                  elements  => 5,
-                  mult      => 1 } %]
+      [% PROCESS select sel = { name => "case_run_status_id", 
+                                list => caserun.get_status_list,
+                                elements => 6,
+                                mult => 1, }
+      %]
     </td>
     <td style="padding-right: 30px;">
     [% PROCESS select sel = { name  => 'product_id',
@@ -86,113 +87,138 @@
                   mult      => 1 } %]
     </td>
   </tr>
+  <tr class="bz_row_header">
+    <th>Run Status</th>
+    <th>Version</th>
+    <th>Build</th>
+    <th>Milestone</th>
+    <th>Environment</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'run_status',
+                              accesskey => 's', 
+                              list      => run.get_status_list
+                              elements  => 5,
+                              mult      => 1 } %]
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'run_product_version',
+                              accesskey => 'v', 
+                              list      => product_versions,
+                              elements  => 5,
+                              mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'build',
+                              accesskey => 't', 
+                              list      => run.get_distinct_builds,
+                              elements  => 5,
+                              mult      => 1 } %]   
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'milestone',
+                              accesskey => 'm', 
+                              list      => run.get_distinct_milestones,
+                              elements  => 5,
+                              mult      => 1 } %] 
+    </td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'environment',
+                              accesskey => 'e', 
+                              list      => run.get_environments,
+                              elements  => 5,
+                              mult      => 1 } %] 
+    </td>  
+
+  </tr>
 </table>
+
 </fieldset>
 <fieldset>
     <legend><strong>Attributes</strong></legend>
 <table>
   <tr>
-    <th align="right">Summary:</tH>
+    <th align="right">Assignee</th>
     <td>
-    [% PROCESS select sel = { name => 'summary_type',
-                              list => query_variants } %]</td>
-    <td><input name="summary"></td>
-  </tr>
-  <tr>
-    <th align="right">Action:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'tcaction_type',
-                              list => query_variants } %]</td>
-    <td><input name="tcaction"></td>
-  </tr>
-  <tr>
-    <th align="right">Expected Results:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'tceffect_type',
-                              list => query_variants } %]</td>
-    <td><input name="tceffect"></td>
-  </tr>
-  <tr>
-    <th align="right">Script:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'script_type',
-                              list => query_variants } %]</td>
-    <td><input name="script"></td>
-  </tr>
-  <tr>
-    <th align="right">Requirement:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'requirement_type',
-                              list => query_variants } %]</td>
-    <td><input name="requirement"></td>
-  </tr>
-  <tr>
-    <th align="right">Tags:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'tags_type',
-                              list => tag_variants } %]</td>
-    <td><input name="tags"></td>
-  </tr>
-  <tr>
-    <th align="right">Author:</tH>
-    <td>
-    [% PROCESS select sel = { name => 'author_type',
+    [% PROCESS select sel = { name => 'assignee_type',
                               list => email_variants } %]</td>
-    <td><input name="author"></td>
+    <td>
+        <input name="assignee">
+    </td>
     <th><input type="radio" name="andor" value="1"/>AND
         <input type="radio" name="andor" value="0"  checked="checked"/>OR</th>
   </tr>
   <tr>
-    <th align="right">Default Tester:</th>
+    <th align="right">Tested By</th>
     <td>
-    [% PROCESS select sel = { name => 'default_tester_type',
-                      list => email_variants } %]</td>
-  <td><input name="default_tester"></td>
+    [% PROCESS select sel = { name => 'testedby_type',
+                              list => email_variants } %]</td>
+    <td>
+        <input name="testedby">
+    </td>
   </tr>
-  
+  <tr>
+    <th align="right">Case Summary</th>
+    <td>
+    [% PROCESS select sel = { name => 'case_summary_type',
+                              list => query_variants } %]</td>
+    <td>
+        <input name="case_summary">
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Requirement</th>
+    <td>
+    [% PROCESS select sel = { name => 'requirement_type',
+                              list => query_variants } %]</td>
+    <td>
+        <input name="requirement">
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Environment</th>
+    <td>
+    [% PROCESS select sel = { name => 'environment_type',
+                              list => query_variants } %]</td>
+    <td>
+        <input name="environment">
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Case Tags</th>
+    <td>
+    [% PROCESS select sel = { name => 'tags_type',
+                              list => tag_variants } %]</td>
+    <td>
+        <input name="tags">
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Notes</th>
+    <td>
+    [% PROCESS select sel = { name => 'notes_type',
+                              list => query_variants } %]</td>
+    <td>
+        <input name="notes">
+    </td>
   </tr>
 </table>
 </fieldset>
-<!--
-  <fieldset>
-    <legend><strong>Case Changes</strong></legend>
 
-<dl class="bug_changes">
-  <dt>Only cases changed between:</dt>
-  <dd>
-    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
-    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
-    (YYYY-MM-DD or relative dates)
-  </dd>
-  <dt>where one or more of the following changed:</dt>
-  <dd>
-    [% PROCESS select sel = { name  => 'chfield_type',
-                  accesskey => 'p', 
-                  list      => case.get_fields
-                  elements  => 5,
-                  mult      => 1 } %]
-  </dd>
-  <dt>and the new value was:</dt>
-  <dd>
-    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
-  </dd>
-</dl>
-
-   </fieldset>
--->
 <p style="font-weight: bold;">
   <label for="case_id">
-     Include cases numbered: 
+     Include case-runs from cases numbered: 
   </label>
   <input name="case_id" id="case_id">
   <br/><br/>
   <label for="plan_id">
-     Include cases from plans numbered: 
+     Include case-runs from plans numbered: 
   </label>
   <input name="plan_id" id="plan_id">
   <br/><br/>
   <label for="run_id">
-     Include cases in runs numbered: 
+     Include case-runs in runs numbered: 
   </label>
   <input name="run_id" id="run_id">
   <br/><br/>

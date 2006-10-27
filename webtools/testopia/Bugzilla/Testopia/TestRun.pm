@@ -100,9 +100,9 @@ sub report_columns {
     $columns{'Environment'}   = "environment";
     $columns{'Tags'}          = "tags";
     $columns{'Manager'}       = "manager";
-    $columns{'<none>'}        = '';
     my @result;
-    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (keys %columns);
+    push @result, {'name' => $_, 'id' => $columns{$_}} foreach (sort(keys %columns));
+    unshift @result, {'name' => '<none>', 'id'=> ''};
     return \@result;     
         
 }
@@ -810,6 +810,18 @@ sub stop_date         { return $_[0]->{'stop_date'}; }
 sub summary           { return $_[0]->{'summary'};  }
 sub notes             { return $_[0]->{'notes'};  }
 sub product_version   { return $_[0]->{'product_version'};  }
+
+=head2 type
+
+Returns 'case'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'run';
+    return $self->{'type'};
+}
 
 =head2 plan
 

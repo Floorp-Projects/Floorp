@@ -59,11 +59,12 @@ if ($action eq 'getversions'){
         push @validated, $p if can_view_product($p);
     }
     my $prodlist = join(",", @validated);
-    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan');
-    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run');
-    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run');
-    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '');
-    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '');
+    my $versions   = $plan->get_product_versions($prodlist) if ($tab eq 'run' || $tab eq 'plan' || $tab eq 'case_run');
+    my $milestones = $plan->get_product_milestones($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
+    my $builds     = $plan->get_product_builds($prodlist) if ($tab eq 'run' || $tab eq 'case_run');
+    my $components = $plan->get_product_components($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
+    my $categories = $plan->get_product_categories($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
+    my $environments = $plan->get_product_environments($prodlist) if ($tab eq 'case' || '' || $tab eq 'case_run');
 
     my $ret = "<product>";
     foreach my $value (@$versions){
@@ -80,6 +81,9 @@ if ($action eq 'getversions'){
     }
     foreach my $value (@$categories){
         $ret .= "<category>". xml_quote($value->{'name'}) ."</category>";
+    }
+    foreach my $value (@$environments){
+        $ret .= "<environment>". xml_quote($value->{'name'}) ."</environment>";
     }
     $ret .= "</product>";
     
@@ -214,6 +218,12 @@ else{
         $vars->{'products'} = Bugzilla->user->get_selectable_products;
         $vars->{'env'} = Bugzilla::Testopia::Environment->new({'environment_id' => 0 });
         $vars->{'title'} = "Search For Test Run Environments";
+    }
+    elsif ($tab eq 'case_run'){
+        $vars->{'case'} = Bugzilla::Testopia::TestCase->new({});
+        $vars->{'run'} = Bugzilla::Testopia::TestRun->new({});
+        $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({});
+        $vars->{'title'} = "Search For Test Cases";
     }
     else { # show the case form
         $tab = 'case';
