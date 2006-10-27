@@ -134,7 +134,7 @@ if ($action eq 'Commit'){
     }
     $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = "$i Test Case-Runs Updated";
-    if ($serverpush) {
+    if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }
@@ -254,7 +254,7 @@ $vars->{'component_list'} =  $case->get_available_components();
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
 $vars->{'action'} = 'tr_list_caserun.cgi';
-if ($serverpush) {
+if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;
     print $cgi->multipart_start;
 }
