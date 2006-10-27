@@ -26,6 +26,7 @@ calendar-@AB_CD@.jar:
     locale/@AB_CD@/calendar/global.dtd           (%chrome/calendar/global.dtd)
     locale/@AB_CD@/calendar/menuOverlay.dtd      (%chrome/calendar/menuOverlay.dtd)
     locale/@AB_CD@/calendar/overlay.dtd          (%chrome/calendar/overlay.dtd)
+    locale/@AB_CD@/calendar/preferences/advanced.dtd  (%chrome/calendar/preferences/advanced.dtd)
     locale/@AB_CD@/calendar/preferences/alarms.dtd  (%chrome/calendar/preferences/alarms.dtd)
     locale/@AB_CD@/calendar/preferences/categories.dtd  (%chrome/calendar/preferences/categories.dtd)
 *   locale/@AB_CD@/calendar/preferences/connection.dtd  (%chrome/calendar/preferences/connection.dtd)

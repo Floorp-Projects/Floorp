@@ -58,11 +58,5 @@ var gGeneralPane = {
         var selectedIndex = dateFormatMenuList.selectedIndex;
         dateFormatMenuList.selectedIndex = -1;
         dateFormatMenuList.selectedIndex = selectedIndex;
-    },
-
-    showConnections: function () {
-        var url = "chrome://calendar/content/preferences/connection.xul";
-        document.documentElement.openSubDialog(url, "", "chrome,dialog");
     }
-
 };

@@ -188,3 +188,7 @@ prefpane description {
     -moz-margin-start: 10px;
 }
 
+tabpanels {
+    padding: 18px 10px 10px 10px;
+    margin: 0 6px 6px 6px;
+}

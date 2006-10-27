@@ -90,5 +90,8 @@
     <prefpane id="paneTimezones"
               label="&paneTimezones.title;"
               src="chrome://calendar/content/preferences/timezones.xul"/>
+    <prefpane id="paneAdvanced"
+              label="&paneAdvanced.title;"
+              src="chrome://calendar/content/preferences/advanced.xul"/>
 
 </prefwindow>

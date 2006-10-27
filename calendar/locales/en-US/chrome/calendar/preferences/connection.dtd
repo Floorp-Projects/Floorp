@@ -41,8 +41,7 @@
 
 <!ENTITY  pref.showConnections.label    "Connection Settings…">
 <!ENTITY  pref.showConnections.accesskey "o">
-<!ENTITY  pref.proxiesInfo.label        "Determine how &brandShortName; connects to the Internet.">
-<!ENTITY  pref.connectionsInfo.caption  "Connection">
+<!ENTITY  pref.proxiesInfo.label        "Determine how &brandShortName; connects to the Internet">
 
 <!ENTITY  connectionsDialog.title       "Connection Settings">
 <!ENTITY  window.width                  "37em">

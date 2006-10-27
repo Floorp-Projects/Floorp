@@ -41,10 +41,6 @@
     <!ENTITY % generalDTD SYSTEM "chrome://calendar/locale/preferences/general.dtd">
     <!ENTITY % globalDTD SYSTEM "chrome://calendar/locale/global.dtd">
     <!ENTITY % preferencesDTD SYSTEM "chrome://calendar/locale/preferences/preferences.dtd">
-#ifdef MOZ_SUNBIRD
-    <!ENTITY % connectionDTD SYSTEM "chrome://calendar/locale/preferences/connection.dtd">
-    %connectionDTD;
-#endif
     %brandDTD;
     %generalDTD;
     %globalDTD;
@@ -120,19 +116,6 @@
             </hbox>
 
         </groupbox>
-
-#ifdef MOZ_SUNBIRD
-        <groupbox>
-            <caption label="&pref.connectionsInfo.caption;"/>
-            <hbox align="center">
-                <caption flex="1" label="&pref.proxiesInfo.label;"/>
-                <button id="catProxiesButton"
-                        label="&pref.showConnections.label;"
-                        accesskey="&pref.showConnections.accesskey;"
-                        oncommand="gGeneralPane.showConnections();"/>
-            </hbox>
-        </groupbox>
-#endif
 
         <separator/>
 
