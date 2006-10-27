@@ -371,6 +371,7 @@ CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
   }
 
   CToken* target = mTokenAllocator->CreateTokenOfType(aType, aTarget);
+  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
   mTokenizer->PushTokenFront(target);
   return BuildModel(aParser, mTokenizer, 0, aSink);
 }
@@ -1156,10 +1157,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
           // <OPTION>s and </SELECT>.
           theToken = mTokenAllocator->CreateTokenOfType(eToken_end,
                                                         eHTMLTag_select);
-          if (!theToken) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-
+          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
           mTokenizer->PushTokenFront(theToken);
 
           for (theIndex = theContent.Count()-1; theIndex > -1; --theIndex) {
@@ -1167,16 +1165,12 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
             theToken = mTokenAllocator->CreateTokenOfType(eToken_text,
                                                           eHTMLTag_text,
                                                           *theTextValue);
-            if (!theToken) {
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
+            NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
             mTokenizer->PushTokenFront(theToken);
 
             theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
                                                           eHTMLTag_option);
-            if (!theToken) {
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
+            NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
             mTokenizer->PushTokenFront(theToken);
           }
 
@@ -1186,9 +1180,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
           theToken = mTokenAllocator->CreateTokenOfType(eToken_attribute,
                                                         eHTMLTag_unknown,
                                                         theAttribute);
-          if (!theToken) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
+          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
 
           ((CAttributeToken*)theToken)->SetKey(NS_LITERAL_STRING("_moz-type"));
           mTokenizer->PushTokenFront(theToken);
@@ -1202,6 +1194,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
 
           theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
                                                         eHTMLTag_select);
+          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
 
           // Increment the count because of the additional attribute from the form processor.
           theToken->SetAttributeCount(theAttrCount + 1);
@@ -1238,6 +1231,7 @@ CNavDTD::HandleStartToken(CToken* aToken)
   NS_PRECONDITION(nsnull != aToken, kNullToken);
 
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
   eHTMLTags     theChildTag = (eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount   = aToken->GetAttributeCount();
@@ -1646,6 +1640,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
               if (!CanOmit(theParentTag, theChildTag, theParentContains)) {
                 CToken* theStartToken =
                   mTokenAllocator->CreateTokenOfType(eToken_start, theChildTag);
+                NS_ENSURE_TRUE(theStartToken, NS_ERROR_OUT_OF_MEMORY);
 
                 // This check for NS_DTD_FLAG_IN_MISPLACED_CONTENT was added
                 // to fix bug 142965.
@@ -1831,9 +1826,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
     entityName.Append(theStr);
     theToken = mTokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_text,
                                                   entityName);
-    if (!theToken) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
 
     // theToken should get recycled automagically...
     return HandleToken(theToken, mParser);
@@ -1841,17 +1834,16 @@ CNavDTD::HandleEntityToken(CToken* aToken)
 
   eHTMLTags theParentTag = mBodyContext->Last();
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
-  if (theNode) {
-    PRBool theParentContains = -1;
-    if (CanOmit(theParentTag, eHTMLTag_entity, theParentContains)) {
-      eHTMLTags theCurrTag = (eHTMLTags)aToken->GetTypeID();
-      HandleOmittedTag(aToken, theCurrTag, theParentTag, theNode);
-    } else {
-      result = AddLeaf(theNode);
-    }
-    IF_FREE(theNode, &mNodeAllocator);
+  PRBool theParentContains = -1;
+  if (CanOmit(theParentTag, eHTMLTag_entity, theParentContains)) {
+    eHTMLTags theCurrTag = (eHTMLTags)aToken->GetTypeID();
+    HandleOmittedTag(aToken, theCurrTag, theParentTag, theNode);
+  } else {
+    result = AddLeaf(theNode);
   }
+  IF_FREE(theNode, &mNodeAllocator);
   return result;
 }
 
@@ -1870,23 +1862,18 @@ CNavDTD::HandleCommentToken(CToken* aToken)
 {
   NS_PRECONDITION(nsnull != aToken, kNullToken);
 
-  nsresult result = NS_OK;
-
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
-  if (theNode) {
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
+  STOP_TIMER();
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
 
-    result = mSink
-             ? mSink->AddComment(*theNode)
-             : NS_OK;
+  nsresult result = mSink ? mSink->AddComment(*theNode) : NS_OK;
 
-    IF_FREE(theNode, &mNodeAllocator);
+  IF_FREE(theNode, &mNodeAllocator);
 
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
-    START_TIMER();
-  }
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
+  START_TIMER();
 
   return result;
 }
@@ -1922,24 +1909,19 @@ CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
 {
   NS_PRECONDITION(nsnull != aToken, kNullToken);
 
-  nsresult result = NS_OK;
-
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
 
-  if (theNode) {
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
+  STOP_TIMER();
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
 
-    result = mSink
-             ? mSink->AddProcessingInstruction(*theNode)
-             : NS_OK;
+  nsresult result = mSink ? mSink->AddProcessingInstruction(*theNode) : NS_OK;
 
-    IF_FREE(theNode, &mNodeAllocator);
+  IF_FREE(theNode, &mNodeAllocator);
 
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
-    START_TIMER();
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
+  START_TIMER();
 
-  }
   return result;
 }
 
@@ -1955,8 +1937,6 @@ nsresult
 CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
 {
   NS_PRECONDITION(nsnull != aToken, kNullToken);
-
-  nsresult result = NS_OK;
 
   CDoctypeDeclToken* theToken = NS_STATIC_CAST(CDoctypeDeclToken*, aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
@@ -1977,19 +1957,17 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
   theToken->SetStringValue(docTypeStr);
 
   nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
-  if (theNode) {
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
+  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
+  STOP_TIMER();
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
 
-    result = mSink
-             ? mSink->AddDocTypeDecl(*theNode)
-             : NS_OK;
+  nsresult result = mSink ? mSink->AddDocTypeDecl(*theNode) : NS_OK;
 
-    IF_FREE(theNode, &mNodeAllocator);
+  IF_FREE(theNode, &mNodeAllocator);
 
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
-    START_TIMER();
-  }
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
+  START_TIMER();
+
   return result;
 }
 

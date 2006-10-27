@@ -797,6 +797,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
                      theAllocator->CreateTokenOfType(eToken_start,
                                                      eHTMLTag_span,
                                                      NS_LITERAL_STRING("SPAN")));
+    NS_ENSURE_TRUE(theTagToken, NS_ERROR_OUT_OF_MEMORY);
     theContext.mErrorNode.Init(theTagToken, theAllocator);
     AddAttrToNode(theContext.mErrorNode, theAllocator,
                   NS_LITERAL_STRING("class"),
@@ -826,6 +827,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
                      theAllocator->CreateTokenOfType(eToken_start,
                                                      eHTMLTag_span,
                                                      NS_LITERAL_STRING("SPAN")));
+    NS_ENSURE_TRUE(theTagToken, NS_ERROR_OUT_OF_MEMORY);
     theContext.mStartNode.Init(theTagToken, theAllocator);
     AddAttrToNode(theContext.mStartNode, theAllocator,
                   NS_LITERAL_STRING("class"),
