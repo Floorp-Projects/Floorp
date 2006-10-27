@@ -646,7 +646,7 @@ nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
       NS_STATIC_CAST(CAttributeToken*,
                      theAllocator->CreateTokenOfType(eToken_attribute,
                                                      eHTMLTag_unknown));
-    if (theToken) {
+    if (NS_LIKELY(theToken != nsnull)) {
       // Tell the new token to finish consuming text...
       result = theToken->Consume(aChar, aScanner, mFlags);
 
@@ -660,6 +660,9 @@ nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
           result = NS_OK;
         }
       }
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
     }
 
 #ifdef DEBUG
@@ -719,163 +722,167 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
 
   nsTokenAllocator* theAllocator = this->GetTokenAllocator();
   aToken = theAllocator->CreateTokenOfType(eToken_start, eHTMLTag_unknown);
+  NS_ENSURE_TRUE(aToken, NS_ERROR_OUT_OF_MEMORY);
 
-  if (aToken) {
-    // Tell the new token to finish consuming text...
-    result = aToken->Consume(aChar, aScanner, mFlags);
+  // Tell the new token to finish consuming text...
+  result = aToken->Consume(aChar, aScanner, mFlags);
 
-    if (NS_SUCCEEDED(result)) {
-      AddToken(aToken, result, &mTokenDeque, theAllocator);
+  if (NS_SUCCEEDED(result)) {
+    AddToken(aToken, result, &mTokenDeque, theAllocator);
 
-      eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
+    eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
 
-      // Good. Now, let's see if the next char is ">".
-      // If so, we have a complete tag, otherwise, we have attributes.
-      result = aScanner.Peek(aChar);
-      if (NS_FAILED(result)) {
-        aToken->SetInError(PR_TRUE);
+    // Good. Now, let's see if the next char is ">".
+    // If so, we have a complete tag, otherwise, we have attributes.
+    result = aScanner.Peek(aChar);
+    if (NS_FAILED(result)) {
+      aToken->SetInError(PR_TRUE);
 
-        // Don't return early here so we can create a text and end token for
-        // the special <iframe>, <script> and similar tags down below.
-        result = NS_OK;
-      } else {
-        if (kGreaterThan != aChar) { // Look for a '>'
-          result = ConsumeAttributes(aChar, aToken, aScanner);
-        } else {
-          aScanner.GetChar(aChar);
-        }
-      }
-
-      /*  Now that that's over with, we have one more problem to solve.
-          In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
-          consume all the content itself.
-          But XML doesn't treat these tags differently, so we shouldn't if the
-          document is XML.
-       */
-      if (NS_SUCCEEDED(result) && !(mFlags & NS_IPARSER_FLAG_XML)) {
-        PRBool isCDATA = gHTMLElements[theTag].CanContainType(kCDATA);
-        PRBool isPCDATA = eHTMLTag_textarea == theTag ||
-                          eHTMLTag_title    == theTag;
-
-        // XXX This is an evil hack, we should be able to handle these properly
-        // in the DTD.
-        if ((eHTMLTag_iframe == theTag &&
-              (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
-            (eHTMLTag_noframes == theTag &&
-              (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
-            (eHTMLTag_noscript == theTag &&
-              (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED)) ||
-            (eHTMLTag_noembed == theTag)) {
-          isCDATA = PR_TRUE;
-        }
-
-        // Plaintext contains CDATA, but it's special, so we handle it
-        // differently than the other CDATA elements
-        if (eHTMLTag_plaintext == theTag) {
-          isCDATA = PR_FALSE;
-
-          // Note: We check in ConsumeToken() for this flag, and if we see it
-          // we only construct text tokens (which is what we want).
-          mFlags |= NS_IPARSER_FLAG_PLAIN_TEXT;
-        }
-
-
-        if (isCDATA || isPCDATA) {
-          PRBool done = PR_FALSE;
-          nsDependentString endTagName(nsHTMLTags::GetStringValue(theTag)); 
-
-          CToken* text =
-              theAllocator->CreateTokenOfType(eToken_text, eHTMLTag_text);
-          CTextToken* textToken = NS_STATIC_CAST(CTextToken*, text);
-
-          if (isCDATA) {
-            result = textToken->ConsumeCharacterData(theTag != eHTMLTag_script,
-                                                     aScanner,
-                                                     endTagName,
-                                                     mFlags,
-                                                     done);
-
-            // Only flush tokens for <script>, to give ourselves more of a
-            // chance of allowing inlines to contain blocks.
-            aFlushTokens = done && theTag == eHTMLTag_script;
-          } else if (isPCDATA) {
-            // Title is consumed conservatively in order to not regress
-            // bug 42945
-            result = textToken->ConsumeParsedCharacterData(
-                                                    theTag == eHTMLTag_textarea,
-                                                    theTag == eHTMLTag_title,
-                                                    aScanner,
-                                                    endTagName,
-                                                    mFlags,
-                                                    done);
-
-            // Note: we *don't* set aFlushTokens here.
-          }
-
-          // We want to do this unless result is kEOF, in which case we will
-          // simply unwind our stack and wait for more data anyway.
-          if (kEOF != result) {
-            AddToken(text, NS_OK, &mTokenDeque, theAllocator);
-            CToken* endToken = nsnull;
-
-            if (NS_SUCCEEDED(result) && done) {
-              PRUnichar theChar;
-              // Get the <
-              result = aScanner.GetChar(theChar);
-              NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kLessThan,
-                           "CTextToken::Consume*Data is broken!");
-#ifdef DEBUG
-              // Ensure we have a /
-              PRUnichar tempChar;  // Don't change non-debug vars in debug-only code
-              result = aScanner.Peek(tempChar);
-              NS_ASSERTION(NS_SUCCEEDED(result) && tempChar == kForwardSlash,
-                           "CTextToken::Consume*Data is broken!");
-#endif
-              result = ConsumeEndTag(PRUnichar('/'), endToken, aScanner);
-              if (!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) &&
-                  NS_SUCCEEDED(result)) {
-                // If ConsumeCharacterData returned a success result (and
-                // we're not in view source), then we want to make sure that
-                // we're going to execute this script (since the result means
-                // that we've found an end tag that satisfies all of the right
-                // conditions).
-                endToken->SetInError(PR_FALSE);
-              }
-            } else if (result == kFakeEndTag &&
-                      !(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-              result = NS_OK;
-              endToken = theAllocator->CreateTokenOfType(eToken_end, theTag,
-                                                         endTagName);
-              AddToken(endToken, result, &mTokenDeque, theAllocator);
-              if (endToken) {
-                endToken->SetInError(PR_TRUE);
-              }
-            } else if (result == kFakeEndTag) {
-              // If we are here, we are both faking having seen the end tag
-              // and are in view-source.
-              result = NS_OK;
-            }
-          } else {
-            IF_FREE(text, mTokenAllocator);
-          }
-        }
-      }
-
-      // This code is confusing, so pay attention.
-      // If you're here, it's because we were in the midst of consuming a start
-      // tag but ran out of data (not in the stream, but in this *part* of the
-      // stream. For simplicity, we have to unwind our input. Therefore, we pop
-      // and discard any new tokens we've cued this round. Later we can get
-      // smarter about this.
-      if (NS_FAILED(result)) {
-        while (mTokenDeque.GetSize()>theDequeSize) {
-          CToken* theToken = (CToken*)mTokenDeque.Pop();
-          IF_FREE(theToken, mTokenAllocator);
-        }
-      }
+      // Don't return early here so we can create a text and end token for
+      // the special <iframe>, <script> and similar tags down below.
+      result = NS_OK;
     } else {
-      IF_FREE(aToken, mTokenAllocator);
+      if (kGreaterThan != aChar) { // Look for a '>'
+        result = ConsumeAttributes(aChar, aToken, aScanner);
+      } else {
+        aScanner.GetChar(aChar);
+      }
     }
+
+    /*  Now that that's over with, we have one more problem to solve.
+        In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
+        consume all the content itself.
+        But XML doesn't treat these tags differently, so we shouldn't if the
+        document is XML.
+     */
+    if (NS_SUCCEEDED(result) && !(mFlags & NS_IPARSER_FLAG_XML)) {
+      PRBool isCDATA = gHTMLElements[theTag].CanContainType(kCDATA);
+      PRBool isPCDATA = eHTMLTag_textarea == theTag ||
+                        eHTMLTag_title    == theTag;
+
+      // XXX This is an evil hack, we should be able to handle these properly
+      // in the DTD.
+      if ((eHTMLTag_iframe == theTag &&
+            (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
+          (eHTMLTag_noframes == theTag &&
+            (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
+          (eHTMLTag_noscript == theTag &&
+            (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED)) ||
+          (eHTMLTag_noembed == theTag)) {
+        isCDATA = PR_TRUE;
+      }
+
+      // Plaintext contains CDATA, but it's special, so we handle it
+      // differently than the other CDATA elements
+      if (eHTMLTag_plaintext == theTag) {
+        isCDATA = PR_FALSE;
+
+        // Note: We check in ConsumeToken() for this flag, and if we see it
+        // we only construct text tokens (which is what we want).
+        mFlags |= NS_IPARSER_FLAG_PLAIN_TEXT;
+      }
+
+
+      if (isCDATA || isPCDATA) {
+        PRBool done = PR_FALSE;
+        nsDependentString endTagName(nsHTMLTags::GetStringValue(theTag)); 
+
+        CToken* text =
+            theAllocator->CreateTokenOfType(eToken_text, eHTMLTag_text);
+        NS_ENSURE_TRUE(text, NS_ERROR_OUT_OF_MEMORY);
+
+        CTextToken* textToken = NS_STATIC_CAST(CTextToken*, text);
+
+        if (isCDATA) {
+          result = textToken->ConsumeCharacterData(theTag != eHTMLTag_script,
+                                                   aScanner,
+                                                   endTagName,
+                                                   mFlags,
+                                                   done);
+
+          // Only flush tokens for <script>, to give ourselves more of a
+          // chance of allowing inlines to contain blocks.
+          aFlushTokens = done && theTag == eHTMLTag_script;
+        } else if (isPCDATA) {
+          // Title is consumed conservatively in order to not regress
+          // bug 42945
+          result = textToken->ConsumeParsedCharacterData(
+                                                  theTag == eHTMLTag_textarea,
+                                                  theTag == eHTMLTag_title,
+                                                  aScanner,
+                                                  endTagName,
+                                                  mFlags,
+                                                  done);
+
+          // Note: we *don't* set aFlushTokens here.
+        }
+
+        // We want to do this unless result is kEOF, in which case we will
+        // simply unwind our stack and wait for more data anyway.
+        if (kEOF != result) {
+          AddToken(text, NS_OK, &mTokenDeque, theAllocator);
+          CToken* endToken = nsnull;
+
+          if (NS_SUCCEEDED(result) && done) {
+            PRUnichar theChar;
+            // Get the <
+            result = aScanner.GetChar(theChar);
+            NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kLessThan,
+                         "CTextToken::Consume*Data is broken!");
+#ifdef DEBUG
+            // Ensure we have a /
+            PRUnichar tempChar;  // Don't change non-debug vars in debug-only code
+            result = aScanner.Peek(tempChar);
+            NS_ASSERTION(NS_SUCCEEDED(result) && tempChar == kForwardSlash,
+                         "CTextToken::Consume*Data is broken!");
+#endif
+            result = ConsumeEndTag(PRUnichar('/'), endToken, aScanner);
+            if (!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) &&
+                NS_SUCCEEDED(result)) {
+              // If ConsumeCharacterData returned a success result (and
+              // we're not in view source), then we want to make sure that
+              // we're going to execute this script (since the result means
+              // that we've found an end tag that satisfies all of the right
+              // conditions).
+              endToken->SetInError(PR_FALSE);
+            }
+          } else if (result == kFakeEndTag &&
+                    !(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+            result = NS_OK;
+            endToken = theAllocator->CreateTokenOfType(eToken_end, theTag,
+                                                       endTagName);
+            AddToken(endToken, result, &mTokenDeque, theAllocator);
+            if (NS_LIKELY(endToken != nsnull)) {
+              endToken->SetInError(PR_TRUE);
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          } else if (result == kFakeEndTag) {
+            // If we are here, we are both faking having seen the end tag
+            // and are in view-source.
+            result = NS_OK;
+          }
+        } else {
+          IF_FREE(text, mTokenAllocator);
+        }
+      }
+    }
+
+    // This code is confusing, so pay attention.
+    // If you're here, it's because we were in the midst of consuming a start
+    // tag but ran out of data (not in the stream, but in this *part* of the
+    // stream. For simplicity, we have to unwind our input. Therefore, we pop
+    // and discard any new tokens we've cued this round. Later we can get
+    // smarter about this.
+    if (NS_FAILED(result)) {
+      while (mTokenDeque.GetSize()>theDequeSize) {
+        CToken* theToken = (CToken*)mTokenDeque.Pop();
+        IF_FREE(theToken, mTokenAllocator);
+      }
+    }
+  } else {
+    IF_FREE(aToken, mTokenAllocator);
   }
 
   return result;
@@ -899,45 +906,45 @@ nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,
 
   nsTokenAllocator* theAllocator = this->GetTokenAllocator();
   aToken = theAllocator->CreateTokenOfType(eToken_end, eHTMLTag_unknown);
+  NS_ENSURE_TRUE(aToken, NS_ERROR_OUT_OF_MEMORY);
+
   // Remember this for later in case you have to unwind...
   PRInt32 theDequeSize = mTokenDeque.GetSize();
   nsresult result = NS_OK;
 
-  if (aToken) {
-    // Tell the new token to finish consuming text...
-    result = aToken->Consume(aChar, aScanner, mFlags);
-    AddToken(aToken, result, &mTokenDeque, theAllocator);
-    if (NS_FAILED(result)) {
-      // Note that this early-return here is safe because we have not yet
-      // added any of our tokens to the queue (AddToken only adds the token if
-      // result is a success), so we don't need to fall through.
-      return result;
-    }
+  // Tell the new token to finish consuming text...
+  result = aToken->Consume(aChar, aScanner, mFlags);
+  AddToken(aToken, result, &mTokenDeque, theAllocator);
+  if (NS_FAILED(result)) {
+    // Note that this early-return here is safe because we have not yet
+    // added any of our tokens to the queue (AddToken only adds the token if
+    // result is a success), so we don't need to fall through.
+    return result;
+  }
 
-    result = aScanner.Peek(aChar);
-    if (NS_FAILED(result)) {
-      aToken->SetInError(PR_TRUE);
+  result = aScanner.Peek(aChar);
+  if (NS_FAILED(result)) {
+    aToken->SetInError(PR_TRUE);
 
-      // Note: We know here that the scanner is not incremental since if
-      // this peek fails, then we've already masked over a kEOF coming from
-      // the Consume() call above.
-      return NS_OK;
-    }
+    // Note: We know here that the scanner is not incremental since if
+    // this peek fails, then we've already masked over a kEOF coming from
+    // the Consume() call above.
+    return NS_OK;
+  }
 
-    if (kGreaterThan != aChar) {
-      result = ConsumeAttributes(aChar, aToken, aScanner);
-    } else {
-      aScanner.GetChar(aChar);
-    }
+  if (kGreaterThan != aChar) {
+    result = ConsumeAttributes(aChar, aToken, aScanner);
+  } else {
+    aScanner.GetChar(aChar);
+  }
 
-    // Do the same thing as we do in ConsumeStartTag. Basically, if we've run
-    // out of room in this *section* of the document, pop all of the tokens
-    // we've consumed this round and wait for more data.
-    if (NS_FAILED(result)) {
-      while (mTokenDeque.GetSize() > theDequeSize) {
-        CToken* theToken = (CToken*)mTokenDeque.Pop();
-        IF_FREE(theToken, mTokenAllocator);
-      }
+  // Do the same thing as we do in ConsumeStartTag. Basically, if we've run
+  // out of room in this *section* of the document, pop all of the tokens
+  // we've consumed this round and wait for more data.
+  if (NS_FAILED(result)) {
+    while (mTokenDeque.GetSize() > theDequeSize) {
+      CToken* theToken = (CToken*)mTokenDeque.Pop();
+      IF_FREE(theToken, mTokenAllocator);
     }
   }
 
@@ -965,6 +972,7 @@ nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,
   if (NS_SUCCEEDED(result)) {
     if (nsCRT::IsAsciiAlpha(theChar) || theChar == kHashsign) {
       aToken = theAllocator->CreateTokenOfType(eToken_entity, eHTMLTag_entity);
+      NS_ENSURE_TRUE(aToken, NS_ERROR_OUT_OF_MEMORY);
       result = aToken->Consume(theChar, aScanner, mFlags);
 
       if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
