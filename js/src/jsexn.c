@@ -1253,9 +1253,10 @@ out:
 JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
-    jsval exn, *vp;
+    jsval exn;
     JSObject *exnObject;
-    void *mark;
+    jsval vp[5];
+    JSTempValueRooter tvr;
     JSErrorReport *reportp, report;
     JSString *str;
     const char *bytes;
@@ -1275,18 +1276,11 @@ js_ReportUncaughtException(JSContext *cx)
      */
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
-        vp = NULL;
-#ifdef __GNUC__         /* suppress bogus gcc warnings */
-        mark = NULL;
-#endif
     } else {
         exnObject = JSVAL_TO_OBJECT(exn);
-        vp = js_AllocStack(cx, 5, &mark);
-        if (!vp) {
-            ok = JS_FALSE;
-            goto out;
-        }
         vp[0] = exn;
+        memset(vp + 1, 0, sizeof vp - sizeof vp[0]);
+        JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(vp), vp, &tvr);
     }
 
     JS_ClearPendingException(cx);
@@ -1297,7 +1291,7 @@ js_ReportUncaughtException(JSContext *cx)
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        if (vp)
+        if (exnObject)
             vp[1] = STRING_TO_JSVAL(str);
         bytes = js_GetStringBytes(cx->runtime, str);
     }
@@ -1349,6 +1343,6 @@ js_ReportUncaughtException(JSContext *cx)
 
 out:
     if (exnObject)
-        js_FreeStack(cx, mark);
+        JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 }

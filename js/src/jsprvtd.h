@@ -91,8 +91,6 @@ typedef uint32 jsatomid;
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSCodeGenerator      JSCodeGenerator;
 typedef struct JSDependentString    JSDependentString;
-typedef struct JSGCLockHashEntry    JSGCLockHashEntry;
-typedef struct JSGCRootHashEntry    JSGCRootHashEntry;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSParseNode          JSParseNode;

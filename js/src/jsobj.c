@@ -2348,7 +2348,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
      * GC calling JS_ClearNewbornRoots. There's also the possibilty of things
      * happening under the objectHook call-out further below.
      */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, obj, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
     /*
      * Share proto's map only if it has the same JSObjectOps, and only if
