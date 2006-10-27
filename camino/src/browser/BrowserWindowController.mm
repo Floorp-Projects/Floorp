@@ -3917,7 +3917,8 @@ enum BWCOpenDest {
     NSMenuItem* menuItem = [menuArray objectAtIndex:i];
 
     if ([menuItem tag] == kItemsNeedingForceAlternateTag) {
-      NSString* title = [NSString stringWithFormat:NSLocalizedString(@"Force Format", "Force %@"), [menuItem title]];
+      // @"Force Format" = @"Force %@", so this gives the menu's title prepended with "Force"
+      NSString* title = [NSString stringWithFormat:NSLocalizedString(@"Force Format", nil), [menuItem title]];
 
       NSMenuItem* forceReloadItem = [NSMenu alternateMenuItemWithTitle:title
                                                                 action:[menuItem action]
