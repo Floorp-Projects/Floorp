@@ -82,34 +82,53 @@ class webServices {
   }
 
   function fetchPhotos($tags, $num_results, $single_user) {
-    $head  = "GET /services/rest/?method=flickr.photos.search&api_key=".FLICKR_API_KEY.(($single_user) ? "&user_id=" : '').$this->userid."&tags=".$tags."&per_page=".$num_results." HTTP/1.1\r\n";
-    $head .= "Host: ".$this->host."\r\n";
+    $params = array('api_key'  => FLICKR_API_KEY,
+                    'method'   => 'flickr.photos.search',
+                    'format'   => 'php_serial',
+                    'tags'     => $tags,
+                    'per_page' => $num_results);
+
+    if ($single_user)
+      $params['user_id'] = $this->userid;
+
+    $encoded_params = array();
+    foreach ($params as $k => $v)
+      $encoded_params[] = urlencode($k).'='.urlencode($v);
+
+    $head  = 'GET /services/rest/?'.implode('&', $encoded_params)." HTTP/1.1 \r\n";
+    $head .= 'Host: '.$this->host."\r\n";
     $head .= "Connection: Close\r\n\r\n";
 
     if ($results = $this->fetchResults($head)) {
-      preg_match_all('/id="(.*)" own/', $results, $ids, PREG_SET_ORDER);
-      preg_match_all('/owner="(.*)" sec/', $results, $owners, PREG_SET_ORDER);
-      preg_match_all('/secret="(.*)" ser/', $results, $secrets, PREG_SET_ORDER);
-      preg_match_all('/server="(.*)" tit/', $results, $servers, PREG_SET_ORDER);
-      preg_match_all('/title="(.*)" isp/', $results, $titles, PREG_SET_ORDER);
+      $resp = split("\r\n\r\n", $results);
+      $data = unserialize($resp[1]);
 
-      $arr = array();
-      for ($i = 0; $i < count($ids); $i++) {
-        $arr[$i] = array('id'    => $ids[$i][1],
-                         'owner' => $owners[$i][1],
-                         'secret' => $secrets[$i][1],
-                         'server' => $servers[$i][1],
-                         'title'  => $titles[$i][1]);
+      if ($data['stat'] == 'ok') {
+        $arr = array();
+        for ($i = 0; $i < $data['photos']['total']; $i++) {
+          $p = $data['photos']['photo'][$i];
+          $arr[$i] = array('id'     => $p['id'],
+                           'owner'  => $p['owner'],
+                           'secret' => $p['secret'],
+                           'server' => $p['server'],
+                           'farm'   => $p['farm'],
+                           'title'  => $p['title']);
+        }
+
+        if ($this->randomize) {
+          // Randomize the results
+          shuffle($arr);
+        }
+
+        return $arr;
       }
 
-      if ($this->randomize) {
-        // Randomize the results
-        shuffle($arr);
-      }
-
-      return $arr;
+      else
+        return 0;
     }
-    return 0;
+    
+    else
+      return 0;
   }
 
   function GSuggest($phrase) {
@@ -165,6 +184,7 @@ class webServices {
 
     else {
       fwrite($fs, $headers);
+      stream_set_timeout($fs, 2);
 
       $buffer = null;
       while (!feof($fs))

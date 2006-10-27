@@ -76,12 +76,12 @@ class FeedsController extends AppController {
     $party = $this->Feed->findById($id);
     $this->set('party', $party);
 
-    if (FLICKR_API_KEY != null && !$party['Party']['canceled']) {
+    if (FLICKR_API_KEY != null && !$party['Feeds']['canceled']) {
       if ($party['Feeds']['useflickr'] == 1) {
         $data = array('type' => 'flickr', 'userid' => $party['Feeds']['flickrid'], 'randomize' => false);
         $flickr = new webServices($data);
         $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$id, 10, (($party['Feeds']['flickrperms']) ? false : true));
-        $this->set('flickr', $photoset, 0, 9);
+        $this->set('flickr', $photoset);
       }
     }
   }
