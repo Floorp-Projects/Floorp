@@ -101,7 +101,7 @@
             this.range.updateInstanceData(true);
           }
         };
-        this.control.addEventListener("change", changeHandler, false);
+        this.control.addEventListener("ValueChange", changeHandler, false);
       </constructor>
     </implementation>
 

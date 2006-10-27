@@ -181,7 +181,7 @@
       -->
       <property name="accessibleType" readonly="true">
         <getter>
-          return Components.interfaces.nsIAccessibleProvider.XFormsRange;
+          return Components.interfaces.nsIAccessibleProvider.XFormsSliderRange;
         </getter>
       </property>
 

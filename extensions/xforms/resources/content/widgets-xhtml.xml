@@ -608,8 +608,10 @@
 
       <method name="dispatchChangeEvent">
         <body>
+          // We fire 'ValueChange' event because this event is handled by
+          // accessibility to know when value of widget is changed.
           var event = this.ownerDocument.createEvent("Events");
-          event.initEvent("change", false, false);
+          event.initEvent("ValueChange", false, false);
           this.dispatchEvent(event);
         </body>
       </method>
