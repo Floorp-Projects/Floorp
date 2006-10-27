@@ -48,15 +48,15 @@ class AdminController extends AppController {
   }
 
   function index() {
-    $this->set('parties', $this->Party->findAll());
+    $this->set('parties', $this->Party->findAll(null, null, "id ASC"));
   }
   
   function users() {
-    $this->set('users', $this->User->findAll());
+    $this->set('users', $this->User->findAll(null, null, "id ASC"));
   }
   
   function comments() {
-    $this->set('comments', $this->Comment->findAll());
+    $this->set('comments', $this->Comment->findAll(null, null, "id ASC"));
   }
   
   function edit($type, $id) {

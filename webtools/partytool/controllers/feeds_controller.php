@@ -99,8 +99,8 @@ class FeedsController extends AppController {
     $this->layout = 'ajax';
     header('Content-type: text/calendar');
     header("Content-Disposition: inline; filename=partylist.ics");
-    $weekago = time() - 604800;
-    $events = $this->Feed->findAll('WHERE date > '. $weekago, '', 'date ASC', 50, 1);
+    $back = time() - 172800;
+    $events = $this->Feed->findAll('WHERE date > '. $back, '', 'date ASC', null, 1);
     
     $cal = array();
     
