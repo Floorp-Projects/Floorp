@@ -12,6 +12,7 @@ ecma_3/Date/15.9.5.6.js
 ecma_3/RegExp/regress-307456.js
 ecma_3/RegExp/regress-330684.js
 js1_5/Array/regress-330812.js
+js1_5/Array/regress-350256-03.js
 js1_5/Function/regress-338121-01.js
 js1_5/Function/regress-338121-02.js
 js1_5/GC/regress-345967.js
