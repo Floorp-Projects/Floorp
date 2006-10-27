@@ -138,11 +138,13 @@ _purge_one(PLHashEntry* he, PRIntn cnt, void* arg)
 }
 
 PR_STATIC_CALLBACK(void)
-OnMonitorRecycle(void* addr)
+OnSemaphoreRecycle(void* addr)
 {
-    PR_Lock(OrderTableLock);
-    PL_HashTableEnumerateEntries(OrderTable, _purge_one, addr);
-    PR_Unlock(OrderTableLock);
+    if (OrderTable) { 
+        PR_Lock(OrderTableLock);
+        PL_HashTableEnumerateEntries(OrderTable, _purge_one, addr);
+        PR_Unlock(OrderTableLock);
+    }
 }
 
 PR_STATIC_CALLBACK(PLHashNumber)
@@ -162,7 +164,7 @@ static void InitAutoLockStatics()
         PL_HashTableDestroy(OrderTable);
         OrderTable = 0;
     }
-    PR_CSetOnMonitorRecycle(OnMonitorRecycle);
+    PR_CSetOnMonitorRecycle(OnSemaphoreRecycle);
 }
 
 void _FreeAutoLockStatics()
@@ -189,6 +191,18 @@ static nsNamedVector* GetVector(PLHashTable* table, const void* key)
     if (vec)
         PL_HashTableRawAdd(table, hep, hash, key, vec);
     return vec;
+}
+
+static void OnSemaphoreCreated(const void* key, const char* name )
+{
+    if (key && OrderTable) {
+        nsNamedVector* value = new nsNamedVector(name);
+        if (value) {
+            PR_Lock(OrderTableLock);
+            PL_HashTableAdd(OrderTable, key, value);
+            PR_Unlock(OrderTableLock);
+        }
+    }
 }
 
 // We maintain an acyclic graph in OrderTable, so recursion can't diverge.
@@ -374,18 +388,28 @@ nsAutoUnlockBase::~nsAutoUnlockBase()
 
 #endif /* DEBUG */
 
+PRLock* nsAutoLock::NewLock(const char* name)
+{
+    PRLock* lock = PR_NewLock();
+#ifdef DEBUG
+    OnSemaphoreCreated(lock, name);
+#endif
+    return lock;
+}
+
+void nsAutoLock::DestroyLock(PRLock* lock)
+{
+#ifdef DEBUG
+    OnSemaphoreRecycle(lock);
+#endif
+    PR_DestroyLock(lock);
+}
+
 PRMonitor* nsAutoMonitor::NewMonitor(const char* name)
 {
     PRMonitor* mon = PR_NewMonitor();
 #ifdef DEBUG
-    if (mon && OrderTable) {
-        nsNamedVector* value = new nsNamedVector(name);
-        if (value) {
-            PR_Lock(OrderTableLock);
-            PL_HashTableAdd(OrderTable, mon, value);
-            PR_Unlock(OrderTableLock);
-        }
-    }
+    OnSemaphoreCreated(mon, name);
 #endif
     return mon;
 }
@@ -393,8 +417,7 @@ PRMonitor* nsAutoMonitor::NewMonitor(const char* name)
 void nsAutoMonitor::DestroyMonitor(PRMonitor* mon)
 {
 #ifdef DEBUG
-    if (OrderTable)
-        OnMonitorRecycle(mon);
+    OnSemaphoreRecycle(mon);
 #endif
     PR_DestroyMonitor(mon);
 }

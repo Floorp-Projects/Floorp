@@ -186,6 +186,20 @@ private:
     static void operator delete(void* /*memory*/) {}
 
 public:
+
+    /**
+     * NewLock
+     * Allocates a new PRLock for use with nsAutoLock. name is
+     * not checked for uniqueness.
+     * @param name A name which can reference this lock
+     * @param lock A valid PRLock* that was created by nsAutoLock::NewLock()
+     * @returns nsnull if failure
+     *          A valid PRLock* if successful, which must be destroyed
+     *          by nsAutoLock::DestroyLock()
+     **/
+    static PRLock* NewLock(const char* name);
+    static void    DestroyLock(PRLock* lock);
+
     /**
      * Constructor
      * The constructor aquires the given lock.  The destructor
