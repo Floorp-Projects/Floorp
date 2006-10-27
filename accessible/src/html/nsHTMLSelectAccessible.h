@@ -46,6 +46,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
 #include "nsIAccessibilityService.h"
+#include "nsAccessibleTreeWalker.h"
 
 class nsIMutableArray;
 
@@ -225,7 +226,7 @@ protected:
  * A class the represents the text field in the Select to the left
  *     of the drop down button
  */
-class nsHTMLComboboxTextFieldAccessible  : public nsLeafAccessible
+class nsHTMLComboboxTextFieldAccessible  : public nsHTMLTextFieldAccessible
 {
 public:
   
@@ -235,13 +236,12 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetParent(nsIAccessible **_retval);
-  NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetValue(nsAString& _retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
+
+protected:
+  void CacheChildren();
 };
 
 /**

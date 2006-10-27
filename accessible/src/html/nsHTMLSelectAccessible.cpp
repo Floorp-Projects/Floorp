@@ -952,7 +952,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
 nsHTMLComboboxTextFieldAccessible::nsHTMLComboboxTextFieldAccessible(nsIAccessible* aParent, 
                                                                      nsIDOMNode* aDOMNode, 
                                                                      nsIWeakReference* aShell):
-nsLeafAccessible(aDOMNode, aShell)
+nsHTMLTextFieldAccessible(aDOMNode, aShell)
 {
   // There is no cache entry for this item. 
   // It's generated and ref'd by  nsHTMLComboboxAccessible
@@ -980,31 +980,9 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetNextSibling(nsIAccessible **
   return NS_OK;
 } 
 
-/**
-  * Currently gets the text from the first option, needs to check for selection
-  *     and then return that text.
-  *     Walks the Frame tree and checks for proper frames.
-  */
-NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetValue(nsAString& _retval)
-{
-  nsIFrame* frame = nsAccessible::GetBoundsFrame();
-  if (!frame)
-    return NS_ERROR_FAILURE;
-
-  frame = frame->GetFirstChild(nsnull)->GetFirstChild(nsnull);
-  nsIContent* content = frame->GetContent();
-
-  if (!content) 
-    return NS_ERROR_FAILURE;
-
-  AppendFlatStringFromSubtree(content, &_retval);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetUniqueID(void **aUniqueID)
 {
-  // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
+  // Since mDOMNode is same as for our parent, use |this| pointer as the unique Id
   *aUniqueID = NS_STATIC_CAST(void*, this);
   return NS_OK;
 }
@@ -1026,12 +1004,33 @@ void nsHTMLComboboxTextFieldAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame*
   aBounds = frame->GetRect();
 }
 
-/** Return our cached parent */
-NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetParent(nsIAccessible **_retval)
-{   
-    *_retval = mParent;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
+void nsHTMLComboboxTextFieldAccessible::CacheChildren()
+{
+  // Allow single text anonymous child, so that nsHyperTextAccessible can operate correctly
+  // We must override this otherwise we get the dropdown button as a child of the textfield,
+  // and at least for now we want to keep it as a sibling
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = eChildCountUninitialized;
+    return;
+  }
+
+  // Allows only 1 child
+  if (mAccChildCount == eChildCountUninitialized) {
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+    // Seed the frame hint early while we're still on a container node.
+    // This is better than doing the GetPrimaryFrameFor() later on
+    // a text node, because text nodes aren't in the frame map.
+    walker.mState.frame = GetFrame();
+
+    walker.GetFirstChild();
+    SetFirstChild(walker.mState.accessible);
+    nsCOMPtr<nsPIAccessible> privateChild = 
+      do_QueryInterface(walker.mState.accessible);
+    privateChild->SetParent(this);
+    privateChild->SetNextSibling(nsnull);
+    mAccChildCount = 1;
+  }
 }
 
 /**
@@ -1042,33 +1041,6 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetPreviousSibling(nsIAccessibl
   *_retval = nsnull;
   return NS_OK;
 } 
-
-/**
-  * Our role is currently only static text, but we should be able to have
-  *     editable text here and we need to check that case.
-  */
-NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_ENTRY;
-  return NS_OK;
-}
-
-/**
-  * As a nsHTMLComboboxTextFieldAccessible we can have the following states:
-  *     STATE_READONLY
-  *     STATE_FOCUSED
-  *     STATE_FOCUSABLE
-  */
-NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetState(PRUint32 *_retval)
-{
-  // Get focus status from base class
-  nsAccessible::GetState(_retval);
-
-  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
-
-  return NS_OK;
-}
-
 
 /** -----ComboboxButtonAccessible ----- */
 
