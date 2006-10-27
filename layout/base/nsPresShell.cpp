@@ -1453,9 +1453,8 @@ protected:
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
-  nsresult RetargetEventToParent(nsIView *aView, nsGUIEvent* aEvent, 
-                                 nsEventStatus*  aEventStatus,
-                                 nsIContent *aZombieFocusedContent);
+  nsresult RetargetEventToParent(nsGUIEvent* aEvent,
+                                 nsEventStatus*  aEventStatus);
 
   void FreeDynamicStack();
 
@@ -5746,53 +5745,18 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   return !doc || !doc->GetWindow();
 }
 
-nsresult PresShell::RetargetEventToParent(nsIView         *aView,
-                                          nsGUIEvent*     aEvent,
-                                          nsEventStatus*  aEventStatus,
-                                          nsIContent*     aZombieFocusedContent)
+nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
+                                          nsEventStatus*  aEventStatus)
 {
   // Send this events straight up to the parent pres shell.
-  // We do this for non-mouse events in zombie documents.
+  // We do this for keystroke events in zombie documents or if either a frame
+  // or a root content is not present.
   // That way at least the UI key bindings can work.
 
-  // First, eliminate the focus ring in the current docshell, which is
-  // now a zombie. If we key navigate, it won't be within this
-  // docshell, until the newly loading document is displayed or we
-  // have a root content again.
-
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-  // hold a reference to the ESM across event dispatch
-  nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
-
-  esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-  esm->SetFocusedContent(nsnull);
-  if (aZombieFocusedContent) {
-    ContentStatesChanged(mDocument, aZombieFocusedContent,
-                         nsnull, NS_EVENT_STATE_FOCUS);
-  }
-
-  // Next, update the display so the old focus ring is no longer visible
-
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (!container)
     container = do_QueryReferent(mForwardingContainer);
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-  if (!docShell) {
-    // We don't have any place to send this event.
-    NS_WARNING("dropping event, no forwarding shell");
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (contentViewer) {
-    nsCOMPtr<nsIContentViewer> zombieViewer;
-    contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-    if (zombieViewer) {
-      zombieViewer->Show();
-    }
-  }
 
   // Now, find the parent pres shell and send the event there
   nsCOMPtr<nsIDocShellTreeItem> treeItem = 
@@ -5814,8 +5778,11 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
     return NS_ERROR_FAILURE;
   }
 
-  PopCurrentEventInfo();
-  return parentViewObserver->HandleEvent(aView, aEvent, 
+  // Fake the event as though it'ss from the parent pres shell's root view.
+  nsIView *parentRootView;
+  parentPresShell->GetViewManager()->GetRootView(parentRootView);
+  
+  return parentViewObserver->HandleEvent(parentRootView, aEvent, 
                                          aEventStatus);
 }
 
@@ -5974,8 +5941,9 @@ PresShell::HandleEvent(nsIView         *aView,
         mCurrentEventFrame = nsnull; // XXXldb Isn't it already?
       }
       if (!mCurrentEventContent || InZombieDocument(mCurrentEventContent)) {
-        return RetargetEventToParent(aView, aEvent, aEventStatus,
-                                     mCurrentEventContent);
+        rv = RetargetEventToParent(aEvent, aEventStatus);
+        PopCurrentEventInfo();
+        return rv;
       }
     } else {
       mCurrentEventFrame = frame;
@@ -5999,8 +5967,7 @@ PresShell::HandleEvent(nsIView         *aView,
     else if (NS_IS_KEY_EVENT(aEvent)) {
       // Keypress events in new blank tabs should not be completely thrown away.
       // Retarget them -- the parent chrome shell might make use of them.
-      return RetargetEventToParent(aView, aEvent, aEventStatus,
-                                   mCurrentEventContent);
+      return RetargetEventToParent(aEvent, aEventStatus);
     }
   }
 
