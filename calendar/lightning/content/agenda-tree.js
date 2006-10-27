@@ -218,7 +218,15 @@ agendaTreeView.getImageSrc =
 function getImageSrc(row, column) { return null; };
 
 agendaTreeView.getCellProperties =
-function getCellProperties(row, column) { return null; };
+function getCellProperties(row, column, props) {
+    if (!this.isContainer(row)) {
+        return;
+    }
+
+    var atomSvc = Components.classes["@mozilla.org/atom-service;1"]
+                            .getService(Components.interfaces.nsIAtomService);
+    props.AppendElement(atomSvc.getAtom("agenda-header"));
+};
 
 agendaTreeView.getRowProperties =
 function getRowProperties(row) { return null; };
