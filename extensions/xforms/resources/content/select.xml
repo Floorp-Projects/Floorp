@@ -23,6 +23,7 @@
    - Contributor(s):
    -  Doron Rosenberg <doronr@us.ibm.com>
    -  Olli Pettay <Olli.Pettay@helsinki.fi>
+   -  Alexander Surkov <surkov.alexander@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,8 +52,6 @@
   The interface of object returned by getElementControl() method is:
 
     readonly - set/get readonly state
-
-    selectedIndex - selects item by index / returns index of first selected item
 
     appendItem(label, value, group) - appends item, returns item control
       @param label - label control
@@ -88,15 +87,11 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <!-- SELECT BASE -->
-  <binding id="xformswidget-select-base"
+  <!-- BASE for select/select1 elements. -->
+  <binding id="xformswidget-selectcontrols-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
     <implementation implements="nsIXFormsUIWidget">
-
-      <property name="selectedIndex"
-                onget="return this.control.selectedIndex"
-                onset="this.control.selectedIndex = val;"/>
 
       <!-- Make sure we don't refresh while we are refreshing (race condition).
            This happens when we are inside a repeat for example. We use the
@@ -629,6 +624,33 @@
         </body>
       </method>
 
+      <!-- Updates the instance data bound to this control.
+
+        @param aIncremental - if true then it means the update is additional and
+          instance data will be updated only if @incremental attribute value of
+          this control is not false.
+      -->
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
+        <body>
+        <![CDATA[
+          // Fire 'xfroms-select'/'xforms-deselect' events and unselect illegaly
+          // selected items.
+          var copySelectedOrDeselected = new Boolean();
+          copySelectedOrDeselected.value = false;
+          var contentEnvelope =
+            this._processSelectedValues(copySelectedOrDeselected);
+
+          if (!aIncremental || this.incremental) {
+            if (contentEnvelope) {
+              this._setBoundValue(contentEnvelope,
+                                  copySelectedOrDeselected.value);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="_setBoundValue">
         <parameter name="aContentEnvelope"/>
         <parameter name="aCopySelectedOrDeselected"/>
@@ -855,7 +877,15 @@
         </body>
       </method>
 
+      <!-- Array of objects that contains objects for all items of this control,
+        serves to keep xforms items and native items together.
+        Object has next properties:
+          control - xforms:item element
+          option - native widget for xforms:item
+          wasSelected - flag specifies whether native item was selected or not.
+      -->
       <field name="_controlArray">new Array()</field>
+
       <field name="_selectedElementArray">new Array()</field>
       <field name="_defaultHash">null</field>
       <field name="_accessorValueCache">null</field>
@@ -869,6 +899,162 @@
 
     </implementation>
 
+  </binding>
+
+
+  <!-- SELECT BASE
+    Implements nsIXFormsNSSelectElement interface.
+  -->
+  <binding id="xformswidget-select-base"
+           extends="#xformswidget-selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelectElement">
+
+    <!-- nsIXFormsNSSelectElement -->
+      <property name="selectedItems" readonly="true">
+        <getter>
+        <![CDATA[
+          var items = [];
+          for (var i = 0; i < this._controlArray.length; i++) {
+            var nativeitem = this._controlArray[i].option;
+            if (this.control.isItemSelected(nativeitem)) {
+              var item = this._controlArray[i].control;
+              items.push(item);
+            }
+          }
+          return items;
+        ]]>
+        </getter>
+      </property>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          var nativeitem = this.getNativeItem(aItem);
+          if (!this.control.isItemSelected(nativeitem)) {
+            this.control.addItemToSelection(nativeitem);
+            this.updateInstanceData();
+          }
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          var nativeitem = this.getNativeItem(aItem);
+          if (this.control.isItemSelected(nativeitem)) {
+            this.control.removeItemFromSelection(nativeitem);
+            this.updateInstanceData();
+          }
+        </body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+        <![CDATA[
+          changed = false;
+          for (var i = 0; i < this._controlArray.length; i++) {
+            var nativeitem = this._controlArray[i].option;
+            if (this.control.isItemSelected(nativeitem)) {
+              this.control.removeItemFromSelection(nativeitem);
+              changed = true;
+            }
+          }
+          if (changed)
+            this.updateInstanceData();
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectAll">
+        <body>
+        <![CDATA[
+          var changed = false;
+          for (var i = 0; i < this._controlArray.length; i++) {
+            var nativeitem = this._controlArray[i].option;
+            if (!this.control.isItemSelected(nativeitem)) {
+              this.control.addItemToSelection(nativeitem);
+              changed = true;
+            }
+          }
+          if (changed)
+            this.updateInstanceData();
+        ]]>
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return this.control.isItemSelected(this.getNativeItem(aItem));
+        </body>
+      </method>
+
+    <!-- private -->
+      <method name="getNativeItem">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            for (var i = 0; i < this._controlArray.length; i++) {
+              if (this._controlArray[i].control == aItem)
+                return this._controlArray[i].option;
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- SELECT1 BASE
+    Implements nsIXFormsNSSelect1Element interface.
+  -->
+  <binding id="xformswidget-select1-base"
+           extends="#xformswidget-selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelect1Element">
+      <property name="selectedItem">
+        <getter>
+        <![CDATA[
+          for (var i = 0; i < this._controlArray.length; i++) {
+            var nativeitem = this._controlArray[i].option;
+            var item = this._controlArray[i].control;
+            if (this.control.isItemSelected(nativeitem)) {
+              return item;
+            }
+          }
+          return null;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          var changed = false;
+          for (var i = 0; i < this._controlArray.length; i++) {
+            var nativeitem = this._controlArray[i].option;
+            var item = this._controlArray[i].control;
+            if (!this.control.isItemSelected(nativeitem)) {
+              if (item == val) {
+                this.control.addItemToSelection(nativeitem);
+                if (changed)
+                  break;
+                changed = true;
+              }
+            } else {
+              if (item != val) {
+                this.control.removeItemFromSelection(nativeitem);
+                if (changed)
+                  break;
+                changed = true;
+              }
+            }
+          }
+          if (changed)
+            this.updateInstanceData();
+        ]]>
+        </setter>
+      </property>
+    </implementation>
   </binding>
 
 
@@ -958,18 +1144,7 @@
           if (this.parentControl.incremental && !aIncremental)
             return;
 
-          // Fire 'xfroms-select'/'xforms-deselect' events and unselect illegaly
-          // selected items.
-          var copySelectedOrDeselected = new Boolean();
-          copySelectedOrDeselected.value = false;
-          var contentEnvelope =
-            this.parentControl._processSelectedValues(copySelectedOrDeselected);
-
-          if (!aIncremental || this.parentControl.incremental) {
-            if (contentEnvelope) {
-              this.parentControl._setBoundValue(contentEnvelope, copySelectedOrDeselected.value);
-            }
-          }
+          this.parentControl.updateInstanceData(aIncremental);
         ]]>
         </body>
       </method>
@@ -978,7 +1153,8 @@
       <method name="dispatchDOMUIEvent">
         <parameter name="aType"/>
         <body>
-          this.parentControl.dispatchDOMUIEvent(aType);
+          if (this.parentControl)
+            this.parentControl.dispatchDOMUIEvent(aType);
         </body>
       </method>
 

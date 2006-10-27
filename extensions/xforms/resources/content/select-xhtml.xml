@@ -56,7 +56,7 @@
   All controls are inherited from interface bindings realized in select.xml.
 -->
 
-  <!-- SELECT/SELECT1 APPEARANCE='COMPACT' : <DEFAULT> -->
+  <!-- SELECT APPEARANCE='COMPACT' : <DEFAULT> -->
   <binding id="xformswidget-select-compact"
            extends="chrome://xforms/content/select.xml#xformswidget-select-base">
     <content>
@@ -70,9 +70,39 @@
     </content>
   </binding>
 
-  <!-- SELECT/SELECT1 APPEARANCE='FULL' -->
+  <!-- SELECT APPEARANCE='FULL' -->
   <binding id="xformswidget-select-full"
            extends="chrome://xforms/content/select.xml#xformswidget-select-base">
+    <content>
+      <html:table xbl:inherits="style">
+        <html:tr>
+          <html:td valign="top"><children includes="label"/></html:td>
+          <html:td>
+            <html:span anonid="control" xbl:inherits="style, accesskey"/>
+          </html:td>
+        </html:tr>
+      </html:table>
+      <children/>
+    </content>
+  </binding>
+
+  <!-- SELECT1 APPEARANCE='COMPACT' : <DEFAULT> -->
+  <binding id="xformswidget-select1-compact"
+           extends="chrome://xforms/content/select.xml#xformswidget-select1-base">
+    <content>
+      <html:label>
+        <html:span class="label-container">
+           <children includes="label"/>
+        </html:span>
+        <html:span anonid="control" xbl:inherits="style, accesskey"/>
+        <children/>
+      </html:label>
+    </content>
+  </binding>
+
+  <!-- SELECT1 APPEARANCE='FULL' -->
+  <binding id="xformswidget-select1-full"
+           extends="chrome://xforms/content/select.xml#xformswidget-select1-base">
     <content>
       <html:table xbl:inherits="style">
         <html:tr>
@@ -111,10 +141,6 @@
     </content>
 
     <implementation>
-      <property name="selectedIndex"
-                onget="return this.control.selectedIndex;"
-                onset="this.control.selectedIndex = val;"/>
-
       <method name="removeAllItems">
         <body>
           for (var i = this.control.childNodes.length; i > 0; i--) {
@@ -212,17 +238,6 @@
            extends="chrome://xforms/content/select.xml#controlwidget-nonativewidget-base">
 
     <implementation>
-      <!-- XXX: not implemented -->
-      <property name="selectedIndex"
-                onget="throw new Error(this.selectedIndexErrorMsg);"
-                onset="throw new Error(this.selectedIndexErrorMsg);"/>
-
-      <field name="selectedIndexErrorMsg">
-      <![CDATA[
-        "<xforms:select appearance='full'/>: 'selectedIndex' property isn't implemented."
-      ]]>
-      </field>
-
       <method name="removeAllItems">
         <body>
           for (var i = this.control.childNodes.length; i > 0; i--) {

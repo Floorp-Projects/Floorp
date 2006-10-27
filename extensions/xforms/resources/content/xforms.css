@@ -500,7 +500,7 @@ html|*:root select1[appearance='minimal'] item {
 }
 
 xul|*:root select1 {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-minimal');
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select1-minimal');
 }
 xul|*:root select1 xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-minimal');
@@ -508,14 +508,14 @@ xul|*:root select1 xul|box[anonid="control"] {
 
   /* select1 appearance='compact' */
 html|*:root select1[appearance="compact"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-compact');
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select1-compact');
 }
 html|*:root select1[appearance="compact"] html|span[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select1-compact');
 }
 
 xul|*:root select1[appearance="compact"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-compact');
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select1-compact');
 }
 xul|*:root select1[appearance="compact"] xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-compact');
@@ -523,14 +523,14 @@ xul|*:root select1[appearance="compact"] xul|box[anonid="control"] {
 
   /* select1 appearance='full' */
 html|*:root select1[appearance="full"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-full');
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select1-full');
 }
 html|*:root select1[appearance="full"] html|span[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select1-full');
 }
 
 xul|*:root select1[appearance="full"] {
-  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-full');
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select1-full');
 }
 xul|*:root select1[appearance="full"] xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-full');

@@ -78,7 +78,29 @@
                              this.previousSibling.focus();"
         /></html:span></content>
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element">
+    <!-- nsIXFormsNSSelect1Element -->
+      <property name="selectedItem">
+        <getter>
+          return this._selected;
+        </getter>
+        <setter>
+          if (this._selected == val)
+            return;
+
+          if (this._selected)
+            this._selected.setActive(false);
+
+          this._selected =
+            val.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+          if (this._selected) {
+            this._selected.setActive(true);
+            this.updateInputField();
+            this._handleSelection(true);
+          }
+        </setter>
+      </property>
+
       <field name="_inputField">null</field>
       <field name="_dropMarker">null</field>
       <field name="_popup">null</field>

@@ -66,7 +66,18 @@
       </xul:hbox>
       <children/>
     </content>
+  </binding>
 
+  <binding id="xformswidget-select1"
+           extends="chrome://xforms/content/select.xml#xformswidget-select1-base">
+    <content>
+      <xul:hbox flex="1">
+        <children includes="label"/>
+        <xul:box anonid="control" xbl:inherits="style, accesskey"
+                 class="xf-value" flex="1"/>
+      </xul:hbox>
+      <children/>
+    </content>
   </binding>
 
 
@@ -75,8 +86,6 @@
     separate binding for each appearance attribute value then it will be happen
     automatically.
   -->
-  <binding id="xformswidget-select-minimal"
-           extends="#xformswidget-select"/>
 
   <binding id="xformswidget-select-compact"
            extends="#xformswidget-select"/>
@@ -84,6 +93,14 @@
   <binding id="xformswidget-select-full"
            extends="#xformswidget-select"/>
 
+  <binding id="xformswidget-select1-minimal"
+           extends="#xformswidget-select1"/>
+
+  <binding id="xformswidget-select1-compact"
+           extends="#xformswidget-select1"/>
+
+  <binding id="xformswidget-select1-full"
+           extends="#xformswidget-select1"/>
 
 <!-- CONTROL WIDGETS FOR SELECT CONTROLS
   The section contains underlying widgets implementations needed for xforms
@@ -110,10 +127,6 @@
     </content>
 
     <implementation>
-      <property name="selectedIndex"
-                onget="return this.control.selectedIndex;"
-                onset="this.control.selectedIndex = val;"/>
-
       <method name="removeAllItems">
         <body>
           // removeItemAt fires 'select' event event if 'suppressonselect'
@@ -237,17 +250,6 @@
     </content>
 
     <implementation>
-      <!-- XXX: Property 'selectedIndex' is not implemented -->
-      <property name="selectedIndex"
-                onget="throw new Error(this.selectedIndexErrorMsg);"
-                onset="throw new Error(this.selectedIndexErrorMsg);"/>
-
-      <field name="selectedIndexErrorMsg">
-      <![CDATA[
-        "<xforms:select appearance='full'/>: 'selectedIndex' property isn't implemented."
-      ]]>
-      </field>
-
       <method name="removeAllItems">
         <body>
           for (var i = this.control.childNodes.length; i > 0; i--) {
@@ -402,10 +404,6 @@
     </content>
 
     <implementation>
-      <property name="selectedIndex"
-                onget="return this.control.selectedIndex;"
-                onset="this.control.selectedIndex = val;"/>
-
       <method name="removeAllItems">
         <body>
           var popup = this.control.menupopup;
@@ -544,17 +542,6 @@
     </content>
 
     <implementation>
-      <!-- XXX: Property 'selectedIndex' is not implemented -->
-      <property name="selectedIndex"
-                onget="throw new Error(this.selectedIndexErrorMsg);"
-                onset="throw new Error(this.selectedIndexErrorMsg);"/>
-
-      <field name="selectedIndexErrorMsg">
-      <![CDATA[
-        "<xforms:select1 appearance='full'/>: 'selectedIndex' property isn't implemented."
-      ]]>
-      </field>
-
       <method name="removeAllItems">
         <body>
           for (var i = this.control.childNodes.length; i > 0; i--) {
