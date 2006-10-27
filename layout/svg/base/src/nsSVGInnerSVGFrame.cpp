@@ -173,9 +173,7 @@ nsSVGInnerSVGFrame::GetType() const
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 {
-#ifdef DEBUG
-//  printf("nsSVGInnerSVG(%p)::Paint\n", this);
-#endif
+  nsresult rv = NS_OK;
 
   canvas->PushClip();
 
@@ -194,15 +192,18 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
       clipTransform = parent->GetCanvasTM();
     }
 
-    if (clipTransform)
-      canvas->SetClipRect(clipTransform, x, y, width, height);
+    if (clipTransform) {
+      rv = canvas->SetClipRect(clipTransform, x, y, width, height);
+    }
   }
 
-  nsSVGInnerSVGFrameBase::PaintSVG(canvas, aDirtyRect);
+  if (NS_SUCCEEDED(rv)) {
+    rv = nsSVGInnerSVGFrameBase::PaintSVG(canvas, aDirtyRect);
+  }
 
   canvas->PopClip();
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

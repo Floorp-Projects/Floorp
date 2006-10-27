@@ -1466,8 +1466,7 @@ nsSVGGlyphFrame::GetGlobalTransform(cairo_t *ctx,
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }
 
-  cairo_matrix_t inverse = matrix;
-  if (cairo_matrix_invert(&inverse)) {
+  if (nsSVGUtils::IsSingular(&matrix)) {
     cairo_identity_matrix(ctx);
     return NS_ERROR_FAILURE;
   }

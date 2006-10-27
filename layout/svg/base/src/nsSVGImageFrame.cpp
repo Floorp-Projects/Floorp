@@ -254,6 +254,8 @@ nsSVGImageFrame::GetImageTransform()
 NS_IMETHODIMP
 nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 {
+  nsresult rv = NS_OK;
+
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
@@ -292,17 +294,19 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
 
     if (GetStyleDisplay()->IsScrollableOverflow()) {
       canvas->PushClip();
-      canvas->SetClipRect(ctm, x, y, width, height);
+      rv = canvas->SetClipRect(ctm, x, y, width, height);
     }
 
-    canvas->CompositeSurfaceMatrix(mSurface, fini,
-                                   mStyleContext->GetStyleDisplay()->mOpacity);
+    if (NS_SUCCEEDED(rv)) {
+      rv = canvas->CompositeSurfaceMatrix(mSurface, fini,
+                                          mStyleContext->GetStyleDisplay()->mOpacity);
+    }
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       canvas->PopClip();
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -918,6 +918,18 @@ nsSVGUtils::GetCairoComputationalSurface()
   return mCairoComputationalSurface;
 }
 
+PRBool
+nsSVGUtils::IsSingular(const cairo_matrix_t *aMatrix)
+{
+  double a, b, c, d;
+
+  a = aMatrix->xx; b = aMatrix->yx;
+  c = aMatrix->xy; d = aMatrix->yy;
+
+  // if the determinant (ad - bc) is zero it's singular
+  return a * d == b * c;
+}
+
 cairo_matrix_t
 nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
 {

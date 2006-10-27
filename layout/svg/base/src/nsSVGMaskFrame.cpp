@@ -143,6 +143,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
 {
   nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
   cairo_t *ctx = cairoCanvas->GetContext();
+  cairo_pattern_t *pattern = nsnull;
 
   cairo_push_group(ctx);
 
@@ -202,7 +203,12 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
     fprintf(stderr, "mask clip: %f,%f %fx%f\n", x, y, width, height);
 #endif
 
-    aCanvas->SetClipRect(aMatrix, x, y, width, height);
+    if (NS_FAILED(aCanvas->SetClipRect(aMatrix, x, y, width, height))) {
+      pattern = cairo_pop_group(ctx);
+      if (pattern)
+        cairo_pattern_destroy(pattern);
+      return nsnull;
+    }
   }
 
   mMaskParent = aParent,
@@ -213,7 +219,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
     nsSVGUtils::PaintChildWithEffects(aCanvas, nsnull, kid);
   }
 
-  cairo_pattern_t *pattern = cairo_pop_group(ctx);
+  pattern = cairo_pop_group(ctx);
   if (!pattern)
     return nsnull;
 

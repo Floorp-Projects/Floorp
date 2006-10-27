@@ -249,6 +249,12 @@ public:
   GetCairoComputationalSurface();
 
   /*
+   * A singular matrix is a non invertible square matrix.
+   */
+  static PRBool
+  IsSingular(const cairo_matrix_t *aMatrix);
+
+  /*
    * Convert a nsIDOMSVGMatrix to a cairo_matrix_t.
    */
   static cairo_matrix_t

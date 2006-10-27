@@ -133,7 +133,7 @@ public:
   NS_IMETHOD AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix);
 
 protected:
-  void SetupCairoMatrix(nsIDOMSVGMatrix *aCTM);
+  nsresult SetupCairoMatrix(nsIDOMSVGMatrix *aCTM);
   
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
@@ -451,11 +451,17 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGRendererCanvas methods:
 
-void nsSVGCairoCanvas::SetupCairoMatrix(nsIDOMSVGMatrix *aCTM)
+nsresult
+nsSVGCairoCanvas::SetupCairoMatrix(nsIDOMSVGMatrix *aCTM)
 {
   cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(aCTM);
   AdjustMatrixForInitialTransform(&matrix);
+
+  if (nsSVGUtils::IsSingular(&matrix)) {
+    return NS_ERROR_FAILURE;
+  }
   cairo_set_matrix(mCR, &matrix);
+  return NS_OK;
 }
 
 /** Implements [noscript] nsIRenderingContext lockRenderingContext(const in nsRectRef rect); */
@@ -463,7 +469,11 @@ NS_IMETHODIMP
 nsSVGCairoCanvas::LockRenderingContext(nsIDOMSVGMatrix* aCTM,
                                        nsIRenderingContext **_retval)
 {
-  SetupCairoMatrix(aCTM);  
+  nsresult rv = SetupCairoMatrix(aCTM);
+  if (NS_FAILED(rv)) {
+    *_retval = nsnull;
+    return rv;
+  }
   *_retval = mMozContext;
   NS_ADDREF(*_retval);
   return NS_OK;
@@ -701,7 +711,10 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   cairo_matrix_t oldMatrix;
   cairo_get_matrix(mCR, &oldMatrix);
 
-  SetupCairoMatrix(aCTM);  
+  nsresult rv = SetupCairoMatrix(aCTM);  
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   cairo_new_path(mCR);
   cairo_rectangle(mCR, aX, aY, aWidth, aHeight);
@@ -775,7 +788,11 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(cairo_surface_t *aSurface,
 {
   cairo_save(mCR);
 
-  SetupCairoMatrix(aCTM);
+  nsresult rv = SetupCairoMatrix(aCTM);
+  if (NS_FAILED(rv)) {
+    cairo_restore(mCR);
+    return rv;
+  }
 
   cairo_set_source_surface(mCR, aSurface, 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);
