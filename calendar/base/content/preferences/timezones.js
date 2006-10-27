@@ -47,21 +47,5 @@ var gTimezonesPane = {
             prefValue = calendarDefaultTimezone();
             tzMenuList.value = prefValue;
         }
-    },
-
-    getTimezoneResult: function() {
-        var tzMenuList = document.getElementById("calendar.timezone.menulist");
-        if (tzMenuList.selectedItem != null) {
-            var value = tzMenuList.value
-            return value;
-        }
-        return undefined;
-    },
-
-    setTimezone: function() {
-        var prefValue = document.getElementById("calendar.timezone.local").value;
-        var tzMenuList = document.getElementById("calendar.timezone.menulist");
-        
-        prefValue = tzMenuList.value;
     }
 };
