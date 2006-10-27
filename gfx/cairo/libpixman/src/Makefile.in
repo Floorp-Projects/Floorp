@@ -77,6 +77,11 @@ ifdef MOZ_X11
 #DEFINES += -DUSE_MMX
 endif
 
+ifdef _MSC_VER
+CSRCS   += fbmmx.c
+DEFINES += -DUSE_MMX
+endif
+
 EXPORTS		= pixman.h pixman-remap.h
 
 LOCAL_INCLUDES	= -I$(srcdir)

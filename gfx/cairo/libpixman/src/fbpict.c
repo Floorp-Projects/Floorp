@@ -1922,8 +1922,13 @@ enum CPUFeatures {
 static unsigned int detectCPUFeatures(void) {
     unsigned int result, features;
     char vendor[13];
+#ifdef _MSC_VER
+    int vendor0 = 0, vendor1, vendor2;
+#endif
     vendor[0] = 0;
     vendor[12] = 0;
+
+#ifdef __GNUC__
     /* see p. 118 of amd64 instruction set manual Vol3 */
     /* We need to be careful about the handling of %ebx and
      * %esp here. We can't declare either one as clobbered
@@ -1965,6 +1970,41 @@ static unsigned int detectCPUFeatures(void) {
              :
              : "%eax", "%ecx", "%edx"
         );
+#elif defined (_MSC_VER)
+    _asm {
+      pushfd
+      pop eax
+      mov ecx, eax
+      xor eax, 00200000h
+      push eax
+      popfd
+      pushfd
+      pop eax
+      mov edx, 0
+      xor eax, ecx
+      jz nocpuid
+
+      mov eax, 0
+      push ebx
+      cpuid
+      mov eax, ebx
+      pop ebx
+      mov vendor0, eax
+      mov vendor1, edx
+      mov vendor2, ecx
+      mov eax, 1
+      push ebx
+      cpuid
+      pop ebx
+    nocpuid:
+      mov result, edx
+    }
+    memmove (vendor+0, &vendor0, 4);
+    memmove (vendor+4, &vendor1, 4);
+    memmove (vendor+8, &vendor2, 4);
+#else
+#error unsupported compiler
+#endif
 
     features = 0;
     if (result) {
@@ -1979,6 +2019,7 @@ static unsigned int detectCPUFeatures(void) {
             features |= SSE2;
         if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
             /* check for AMD MMX extensions */
+#ifdef __GNUC__
 
             unsigned int result;
             __asm__("push %%ebx\n"
@@ -1996,6 +2037,22 @@ static unsigned int detectCPUFeatures(void) {
                     :
                     : "%eax", "%ecx", "%edx"
                 );
+#endif
+#ifdef _MSC_VER
+	    _asm {
+	      push ebx
+	      mov eax, 80000000h
+	      cpuid
+	      xor edx, edx
+	      cmp eax, 1
+	      jge notamd
+	      mov eax, 80000001h
+	      cpuid
+	    notamd:
+	      pop ebx
+	      mov result, edx
+	    }
+#endif
             if (result & (1<<22))
                 features |= MMX_Extensions;
         }

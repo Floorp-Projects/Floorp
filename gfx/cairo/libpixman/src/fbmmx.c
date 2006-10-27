@@ -80,32 +80,41 @@
 
 /* --------------- MMX primitivess ------------------------------------ */
 
+#ifdef __GNUC__
 typedef unsigned long long ullong;
+typedef ullong mmxdatafield;
+#endif
+#ifdef _MSC_VER
+typedef unsigned __int64 ullong;
+typedef __m64 mmxdatafield;
+#endif
 
 typedef struct
 {
-    ullong mmx_4x00ff;
-    ullong mmx_4x0080;
-    ullong mmx_565_rgb;
-    ullong mmx_565_unpack_multiplier;
-    ullong mmx_565_r;
-    ullong mmx_565_g;
-    ullong mmx_565_b;
-    ullong mmx_mask_0;
-    ullong mmx_mask_1;
-    ullong mmx_mask_2;
-    ullong mmx_mask_3;
-    ullong mmx_full_alpha;
-    ullong mmx_ffff0000ffff0000;
-    ullong mmx_0000ffff00000000;
-    ullong mmx_000000000000ffff;
+    mmxdatafield mmx_4x00ff;
+    mmxdatafield mmx_4x0080;
+    mmxdatafield mmx_565_rgb;
+    mmxdatafield mmx_565_unpack_multiplier;
+    mmxdatafield mmx_565_r;
+    mmxdatafield mmx_565_g;
+    mmxdatafield mmx_565_b;
+    mmxdatafield mmx_mask_0;
+    mmxdatafield mmx_mask_1;
+    mmxdatafield mmx_mask_2;
+    mmxdatafield mmx_mask_3;
+    mmxdatafield mmx_full_alpha;
+    mmxdatafield mmx_ffff0000ffff0000;
+    mmxdatafield mmx_0000ffff00000000;
+    mmxdatafield mmx_000000000000ffff;
 } MMXData;
 
 static const MMXData c =
 {
+#ifdef __GNUC__
     .mmx_4x00ff =			0x00ff00ff00ff00ffULL,
     .mmx_4x0080 =			0x0080008000800080ULL,
     .mmx_565_rgb =			0x000001f0003f001fULL,
+    .mmx_565_unpack_multiplier =	0x0000008404100840ULL,
     .mmx_565_r =			0x000000f800000000ULL,
     .mmx_565_g =			0x0000000000fc0000ULL,
     .mmx_565_b =			0x00000000000000f8ULL,
@@ -114,13 +123,39 @@ static const MMXData c =
     .mmx_mask_2 =			0xffff0000ffffffffULL,
     .mmx_mask_3 =			0x0000ffffffffffffULL,
     .mmx_full_alpha =			0x00ff000000000000ULL,
-    .mmx_565_unpack_multiplier =	0x0000008404100840ULL,
     .mmx_ffff0000ffff0000 =		0xffff0000ffff0000ULL,
     .mmx_0000ffff00000000 =		0x0000ffff00000000ULL,
     .mmx_000000000000ffff =		0x000000000000ffffULL,
+#endif
+#ifdef _MSC_VER
+    { 0x00ff00ff00ff00ffUI64 },
+    { 0x0080008000800080UI64 },
+    { 0x000001f0003f001fUI64 },
+    { 0x0000008404100840UI64 },
+    { 0x000000f800000000UI64 },
+    { 0x0000000000fc0000UI64 },
+    { 0x00000000000000f8UI64 },
+    { 0xffffffffffff0000UI64 },
+    { 0xffffffff0000ffffUI64 },
+    { 0xffff0000ffffffffUI64 },
+    { 0x0000ffffffffffffUI64 },
+    { 0x00ff000000000000UI64 },
+    { 0xffff0000ffff0000UI64 },
+    { 0x0000ffff00000000UI64 },
+    { 0x000000000000ffffUI64 },
+#endif
 };
 
+#ifdef _MSC_VER
+#define __inline__ __forceinline
+#endif
+
+#ifdef __GNUC__
 #define MC(x) ((__m64) c.mmx_##x)
+#endif
+#ifdef _MSC_VER
+#define MC(x) c.mmx_##x
+#endif
 
 static __inline__ __m64
 shift (__m64 v, int s)
@@ -255,6 +290,7 @@ in (__m64 src,
     return pix_multiply (src, mask);
 }
 
+#ifndef _MSC_VER
 static __inline__ __m64
 in_over (__m64 src,
 	 __m64 srca,
@@ -263,6 +299,9 @@ in_over (__m64 src,
 {
     return over(in(src, mask), pix_multiply(srca, mask), dest);
 }
+#else
+#define in_over(src, srca, mask, dest) over(in(src, mask), pix_multiply(srca, mask), dest)
+#endif
 
 static __inline__ __m64
 load8888 (CARD32 v)
@@ -355,6 +394,7 @@ pack565 (__m64 pixel, __m64 target, int pos)
     return _mm_or_si64 (b, p);
 }
 
+#ifndef _MSC_VER
 static __inline__ __m64
 pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 {
@@ -367,6 +407,15 @@ pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 
     return x;
 }
+#else
+#define pix_add_mul(x, a, y, b) \
+( x = _mm_mullo_pi16 (x, a), \
+  y = _mm_mullo_pi16 (y, b), \
+  x = _mm_adds_pu16 (x, MC(4x0080)), \
+  x = _mm_adds_pu16 (x, y), \
+  x = _mm_adds_pu16 (x, _mm_srli_pi16 (x, 8)), \
+  _mm_srli_pi16 (x, 8) )
+#endif
 
 /* --------------- MMX code patch for fbcompose.c --------------------- */
 
@@ -981,10 +1030,9 @@ fbCompositeSolid_nx0565mmx (pixman_operator_t	op,
 
 	while (w && (unsigned long)dst & 7)
 	{
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64 (*dst), 0);
 	    vdest = pack565(over(vsrc, vsrca, vdest), vdest, 0);
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32 (vdest);
 
 	    w--;
 	    dst++;
@@ -1011,10 +1059,9 @@ fbCompositeSolid_nx0565mmx (pixman_operator_t	op,
 
 	while (w)
 	{
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64 (*dst), 0);
 	    vdest = pack565(over(vsrc, vsrca, vdest), vdest, 0);
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32 (vdest);
 
 	    w--;
 	    dst++;
@@ -1187,7 +1234,7 @@ fbCompositeSrc_8888x8x8888mmx (pixman_operator_t	op,
 	    __m64 vsrc0 = expand8888 (vs, 0);
 	    __m64 vsrc1 = expand8888 (vs, 1);
 
-	    *(__m64 *)dst = (__m64)pack8888 (
+	    *(__m64 *)dst = pack8888 (
 		in_over (vsrc0, expand_alpha (vsrc0), vmask, expand8888 (vd, 0)),
 		in_over (vsrc1, expand_alpha (vsrc1), vmask, expand8888 (vd, 1)));
 
@@ -1285,35 +1332,35 @@ fbCompositeSrc_x888x8x8888mmx (pixman_operator_t	op,
 	    __m64 vs6 = *(__m64 *)(src + 12);
 	    __m64 vs7 = *(__m64 *)(src + 14);
 
-	    vd0 = (__m64)pack8888 (
+	    vd0 = pack8888 (
 		in_over (expand8888 (vs0, 0), srca, vmask, expand8888 (vd0, 0)),
 		in_over (expand8888 (vs0, 1), srca, vmask, expand8888 (vd0, 1)));
 
-	    vd1 = (__m64)pack8888 (
+	    vd1 = pack8888 (
 		in_over (expand8888 (vs1, 0), srca, vmask, expand8888 (vd1, 0)),
 		in_over (expand8888 (vs1, 1), srca, vmask, expand8888 (vd1, 1)));
 
-	    vd2 = (__m64)pack8888 (
+	    vd2 = pack8888 (
 		in_over (expand8888 (vs2, 0), srca, vmask, expand8888 (vd2, 0)),
 		in_over (expand8888 (vs2, 1), srca, vmask, expand8888 (vd2, 1)));
 
-	    vd3 = (__m64)pack8888 (
+	    vd3 = pack8888 (
 		in_over (expand8888 (vs3, 0), srca, vmask, expand8888 (vd3, 0)),
 		in_over (expand8888 (vs3, 1), srca, vmask, expand8888 (vd3, 1)));
 
-	    vd4 = (__m64)pack8888 (
+	    vd4 = pack8888 (
 		in_over (expand8888 (vs4, 0), srca, vmask, expand8888 (vd4, 0)),
 		in_over (expand8888 (vs4, 1), srca, vmask, expand8888 (vd4, 1)));
 
-	    vd5 = (__m64)pack8888 (
+	    vd5 = pack8888 (
 		in_over (expand8888 (vs5, 0), srca, vmask, expand8888 (vd5, 0)),
 		in_over (expand8888 (vs5, 1), srca, vmask, expand8888 (vd5, 1)));
 
-	    vd6 = (__m64)pack8888 (
+	    vd6 = pack8888 (
 		in_over (expand8888 (vs6, 0), srca, vmask, expand8888 (vd6, 0)),
 		in_over (expand8888 (vs6, 1), srca, vmask, expand8888 (vd6, 1)));
 
-	    vd7 = (__m64)pack8888 (
+	    vd7 = pack8888 (
 		in_over (expand8888 (vs7, 0), srca, vmask, expand8888 (vd7, 0)),
 		in_over (expand8888 (vs7, 1), srca, vmask, expand8888 (vd7, 1)));
 
@@ -1450,7 +1497,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 
 	    if (m)
 	    {
-		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m), load8888(*dst));
+		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m)), load8888(*dst));
 		*dst = store8888(vdest);
 	    }
 
@@ -1478,8 +1525,8 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 
 		vdest = *(__m64 *)dst;
 
-		dest0 = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m0), expand8888(vdest, 0));
-		dest1 = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m1), expand8888(vdest, 1));
+		dest0 = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m0)), expand8888(vdest, 0));
+		dest1 = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m1)), expand8888(vdest, 1));
 
 		*(__m64 *)dst = pack8888(dest0, dest1);
 	    }
@@ -1498,7 +1545,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 	    if (m)
 	    {
 		__m64 vdest = load8888(*dst);
-		vdest = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m), vdest);
+		vdest = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m)), vdest);
 		*dst = store8888(vdest);
 	    }
 
@@ -1568,7 +1615,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 
 	    if (m)
 	    {
-		  __m64 vdest = in(vsrc, expand_alpha_rev ((__m64)m));
+		  __m64 vdest = in(vsrc, expand_alpha_rev (*(__m64*)(&m)));
 		  *dst = store8888(vdest);
 	    }
 	    else
@@ -1600,8 +1647,8 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 
 		vdest = *(__m64 *)dst;
 
-		dest0 = in(vsrc, expand_alpha_rev ((__m64)m0));
-		dest1 = in(vsrc, expand_alpha_rev ((__m64)m1));
+		dest0 = in(vsrc, expand_alpha_rev (*(__m64*)(&m0)));
+		dest1 = in(vsrc, expand_alpha_rev (*(__m64*)(&m1)));
 
 		*(__m64 *)dst = pack8888(dest0, dest1);
 	    }
@@ -1624,7 +1671,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 	    if (m)
 	    {
 		__m64 vdest = load8888(*dst);
-		vdest = in(vsrc, expand_alpha_rev ((__m64)m));
+		vdest = in(vsrc, expand_alpha_rev (*(__m64*)(&m)));
 		*dst = store8888(vdest);
 	    }
 	    else
@@ -1661,7 +1708,8 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
     FbStride	dstStride, maskStride;
     CARD16	w;
     __m64	vsrc, vsrca;
-    unsigned long long srcsrcsrcsrc, src16;
+    ullong srcsrcsrcsrc, src16;
+    __m64 vsrc16;
 
     CHECKPOINT();
 
@@ -1677,7 +1725,8 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
     vsrc = load8888 (src);
     vsrca = expand_alpha (vsrc);
 
-    src16 = (ullong)pack565(vsrc, _mm_setzero_si64(), 0);
+    vsrc16 = pack565(vsrc, _mm_setzero_si64(), 0);
+    src16 = *(ullong*)(&vsrc16);
 
     srcsrcsrcsrc = (ullong)src16 << 48 | (ullong)src16 << 32 |
 	(ullong)src16 << 16 | (ullong)src16;
@@ -1698,10 +1747,9 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
 
 	    if (m)
 	    {
-		ullong d = *dst;
-		__m64 vd = (__m64)d;
-		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m), expand565(vd, 0));
-		*dst = (ullong)pack565(vdest, _mm_setzero_si64(), 0);
+		__m64 vd = _mm_cvtsi32_si64 (*dst);
+		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m)), expand565(vd, 0));
+		*dst = _mm_cvtsi64_si32 (pack565(vdest, _mm_setzero_si64(), 0));
 	    }
 
 	    w--;
@@ -1730,13 +1778,13 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
 
 		vdest = *(__m64 *)dst;
 
-		vm0 = (__m64)m0;
+		vm0 = *(__m64*)(&m0);
 		vdest = pack565(in_over(vsrc, vsrca, expand_alpha_rev(vm0), expand565(vdest, 0)), vdest, 0);
-		vm1 = (__m64)m1;
+		vm1 = *(__m64*)(&m1);
 		vdest = pack565(in_over(vsrc, vsrca, expand_alpha_rev(vm1), expand565(vdest, 1)), vdest, 1);
-		vm2 = (__m64)m2;
+		vm2 = *(__m64*)(&m2);
 		vdest = pack565(in_over(vsrc, vsrca, expand_alpha_rev(vm2), expand565(vdest, 2)), vdest, 2);
-		vm3 = (__m64)m3;
+		vm3 = *(__m64*)(&m3);
 		vdest = pack565(in_over(vsrc, vsrca, expand_alpha_rev(vm3), expand565(vdest, 3)), vdest, 3);
 
 		*(__m64 *)dst = vdest;
@@ -1755,10 +1803,9 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
 
 	    if (m)
 	    {
-		ullong d = *dst;
-		__m64 vd = (__m64)d;
-		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev ((__m64)m), expand565(vd, 0));
-		*dst = (ullong)pack565(vdest, _mm_setzero_si64(), 0);
+		__m64 vd = _mm_cvtsi32_si64 (*dst);
+		__m64 vdest = in_over(vsrc, vsrca, expand_alpha_rev (*(__m64*)(&m)), expand565(vd, 0));
+		*dst = _mm_cvtsi64_si32 (pack565(vdest, _mm_setzero_si64(), 0));
 	    }
 
 	    w--;
@@ -1809,12 +1856,11 @@ fbCompositeSrc_8888RevNPx0565mmx (pixman_operator_t      op,
 	while (w && (unsigned long)dst & 7)
 	{
 	    __m64 vsrc = load8888 (*src);
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64 (*dst), 0);
 
 	    vdest = pack565(over_rev_non_pre(vsrc, vdest), vdest, 0);
 
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32 (vdest);
 
 	    w--;
 	    dst++;
@@ -1870,12 +1916,11 @@ fbCompositeSrc_8888RevNPx0565mmx (pixman_operator_t      op,
 	while (w)
 	{
 	    __m64 vsrc = load8888 (*src);
-	    ullong d = *dst;
-	    __m64 vdest = expand565 ((__m64)d, 0);
+	    __m64 vdest = expand565 (_mm_cvtsi32_si64 (*dst), 0);
 
 	    vdest = pack565(over_rev_non_pre(vsrc, vdest), vdest, 0);
 
-	    *dst = (ullong)vdest;
+	    *dst = _mm_cvtsi64_si32 (vdest);
 
 	    w--;
 	    dst++;
@@ -2030,10 +2075,9 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
 
 	    if (m)
 	    {
-		ullong d = *q;
-		__m64 vdest = expand565 ((__m64)d, 0);
+		__m64 vdest = expand565 (_mm_cvtsi32_si64 (*q), 0);
 		vdest = pack565 (in_over (vsrc, vsrca, load8888 (m), vdest), vdest, 0);
-		*q = (ullong)vdest;
+		*q = _mm_cvtsi64_si32 (vdest);
 	    }
 
 	    twidth--;
@@ -2073,10 +2117,9 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
 	    m = *(CARD32 *)p;
 	    if (m)
 	    {
-		ullong d = *q;
-		__m64 vdest = expand565((__m64)d, 0);
+		__m64 vdest = expand565(_mm_cvtsi32_si64 (*q), 0);
 		vdest = pack565 (in_over(vsrc, vsrca, load8888(m), vdest), vdest, 0);
-		*q = (ullong)vdest;
+		*q = _mm_cvtsi64_si32 (vdest);
 	    }
 
 	    twidth--;
@@ -2206,7 +2249,7 @@ fbCompositeSrcAdd_8888x8888mmx (pixman_operator_t		op,
 
 	while (w >= 2)
 	{
-	    *(ullong*)dst = (ullong) _mm_adds_pu8(*(__m64*)src, *(__m64*)dst);
+	    *(__m64*)dst =  _mm_adds_pu8(*(__m64*)src, *(__m64*)dst);
 	    dst += 2;
 	    src += 2;
 	    w -= 2;
@@ -2266,7 +2309,7 @@ fbSolidFillmmx (FbPixels	*pDraw,
     }
 
     fill = ((ullong)xor << 32) | xor;
-    vfill = (__m64)fill;
+    vfill = *(__m64*)&fill;
 
     while (height--)
     {
