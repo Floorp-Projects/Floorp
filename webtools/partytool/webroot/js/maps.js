@@ -1,5 +1,20 @@
 var map;
 var marker;
+var mouseloc;
+
+function wheelZoom(event) {
+  function out() {
+    map.setCenter(mouseloc);
+    map.zoomOut();
+  }
+
+  if (event.cancelable) event.preventDefault();
+  {
+    (event.detail || -event.wheelDelta) < 0 ? map.zoomIn(mouseloc, true) : out();
+  }
+
+  return false; 
+}
 
 function mapInit(aLat, aLng, aZoom, aState) {
   map = new GMap2(document.getElementById("map"));
@@ -26,6 +41,28 @@ function mapInit(aLat, aLng, aZoom, aState) {
     GEvent.addListener(marker, "dragend", function() { onDragEnd(); });
     GEvent.addListener(map, "moveend", function(){ onMoveEnd(); });
   }
+}
+
+function search(event) {
+  document.getElementById('map-load').setAttribute('style', '');
+  
+  if (event.cancelable) event.preventDefault();
+  {
+    var q = document.getElementById('location').value;
+    var gcoder = new GClientGeocoder();
+    gcoder.getLatLng(q, function (point) {
+      if (!point) {
+        suggest(q);
+        document.getElementById('map-load').setAttribute('style', 'visibility: hidden');
+      }
+      else {
+        map.setZoom(10);
+        map.panTo(point);
+        document.getElementById('map-load').setAttribute('style', 'visibility: hidden');
+      }
+    });
+  }
+  return false;
 }
 
 function geocode(aLoc) {
@@ -75,11 +112,29 @@ function onDragEnd() {
   map.panTo(point);
 }
 
-function initMashUp() {
+function initMashUp(lat, lng) {
   map = new GMap2(document.getElementById("map"));
+  map.enableDoubleClickZoom();
+  map.enableContinuousZoom();
   map.addControl(new GLargeMapControl());
   map.addControl(new GMapTypeControl());
   map.setCenter(new GLatLng(0, -5.25), 1);
+  GEvent.addDomListener(document.getElementById("map"), "DOMMouseScroll", wheelZoom);
+  GEvent.addDomListener(document.getElementById("map"), "mousewheel",     wheelZoom);
+  GEvent.addListener(map, "mousemove", function(point) { mouseloc = point; });
+  GEvent.addListener(map, "click", function(overlay, point) {
+    if (overlay) {
+      if (overlay.mid) {
+        downloadMarker(overlay.mid, overlay);
+      }
+    }
+  });
+
+  if (lat && lng)
+    map.setCenter(new GLatLng(lat, lng), 10);
+  else
+    map.setCenter(new GLatLng(0, -5.25), 1);
+
   addParties();
 }
 
@@ -94,11 +149,24 @@ function shide() {
   document.getElementById('locerr').setAttribute('style', 'display: none');
 }
 
-function addParty(aLat, aLng, aTxt) {
-  var point = new GLatLng(aLat, aLng);
-  var mark = new GMarker(point);
-  GEvent.addListener(mark, "click", function() {
-    mark.openInfoWindowHtml(aTxt);
+function downloadMarker(mid, overlay) {
+  document.getElementById('map-load').setAttribute('style', '');
+  GDownloadUrl("/parties/js/html/" + mid, function(data, responseCode) {
+    if (data != "" && responseCode == 200) {
+      document.getElementById('map-load').setAttribute('style', 'visibility: hidden');
+      overlay.openInfoWindowHtml(data);
+    }
   });
+}
+
+function addParty(aLat, aLng, aId) {
+  var point = new GLatLng(aLat, aLng);
+  var icon = new GIcon();
+  icon.image = "/img/marker.png";
+  icon.iconSize = new GSize(12, 20);
+  icon.iconAnchor = new GPoint(6, 20);
+  icon.infoWindowAnchor = new GPoint(5, 1);
+  var mark = new GMarker(point, icon);
+  mark.mid = aId;
   map.addOverlay(mark);
 }

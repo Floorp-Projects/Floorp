@@ -151,7 +151,7 @@ class webServices {
       if (stristr($results, '<code>200</code>')) {
         preg_match('/coordinates>(.*)</', $results, $matches);
         $ll = explode(',', $matches[1]);          
-        $rv = array('lat' => $ll[0], 'lng' => $ll[1]);
+        $rv = array('lat' => $ll[1], 'lng' => $ll[0]);
         return $rv;
       }
     }

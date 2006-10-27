@@ -45,7 +45,20 @@ class PartiesController extends AppController {
   function index() {
     $this->pageTitle = 'Party Map';
     $this->set('current', 'map');
-    $this->set('map', 'initMashUp()');
+
+    if (!empty($this->data)) {
+      $gcoder = new webServices(array('type' => 'geocode'));
+      $loc = $gcoder->geocode($this->data['Party']['mloc']);
+      
+      if ($loc)
+        $this->set('map', 'initMashUp('.$loc['lat'].', '.$loc['lng'].');');
+
+      else
+        $this->set('map', 'initMashUp();');
+    }
+
+    else
+      $this->set('map', 'initMashUp();');
   }
 
   function add() {
@@ -440,11 +453,20 @@ class PartiesController extends AppController {
     $this->redirect('/parties/view/'.$pid);
   }
 
-  function js() {
+  function js($type = null, $data = null) {
     $this->layout = 'ajax';
-    header('Content-type: text/javascript');
-    $parties = $this->Party->findAll();
-    $this->set('parties', $parties);
+
+    if ($type == 'html') {
+      header('Content-type: text/plain');
+      $party = $this->Party->findById($data);
+      $this->set('party', $party);
+    }
+
+    else {
+      header('Content-type: text/javascript');
+      $parties = $this->Party->findAll();
+      $this->set('parties', $parties);
+    }
   }
 }
 ?>
