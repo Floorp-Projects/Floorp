@@ -8,4 +8,4 @@
 == bugs/351641-1a.html bugs/351641-1-ref.html
 == bugs/351641-1b.html bugs/351641-1-ref.html
 == bugs/351641-2a.html bugs/351641-2-ref.html
-== bugs/351641-2b.html bugs/351641-2-ref.html
+f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
