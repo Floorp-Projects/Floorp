@@ -136,6 +136,7 @@ typedef enum
   IBOutlet NSMenu*              mImageLinkMenu;
   IBOutlet NSMenu*              mImageMailToLinkMenu;
   IBOutlet NSMenu*              mTabMenu;
+  IBOutlet NSMenu*              mTabBarMenu;
 
   // Context menu item outlets
   IBOutlet NSMenuItem*          mBackItem;

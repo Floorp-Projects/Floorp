@@ -97,9 +97,10 @@
                 addBookmarkFolder = id; 
                 addBookmarkForLink = id; 
                 addBookmarkSeparator = id; 
+                addBookmarkWithoutPrompt = id; 
+                addTabGroupWithoutPrompt = id; 
                 addToAddressBook = id; 
                 back = id; 
-                biggerTextSize = id; 
                 cancelLocationSheet = id; 
                 cancelSearchSheet = id; 
                 closeCurrentTab = id; 
@@ -118,11 +119,15 @@
                 getInfo = id; 
                 goToLocationFromToolbarURLField = id; 
                 home = id; 
+                makeTextBigger = id; 
+                makeTextDefaultSize = id; 
+                makeTextSmaller = id; 
                 manageBookmarks = id; 
                 manageHistory = id; 
                 moveTabToNewWindow = id; 
                 newTab = id; 
                 nextTab = id; 
+                openFeedPrefPane = id; 
                 openLinkInNewTab = id; 
                 openLinkInNewWindow = id; 
                 pageSetup = id; 
@@ -143,7 +148,6 @@
                 showBookmarksInfo = id; 
                 showPageInfo = id; 
                 showSiteCertificate = id; 
-                smallerTextSize = id; 
                 stop = id; 
                 viewOnlyThisImage = id; 
                 viewPageSource = id; 
@@ -174,6 +178,7 @@
                 mSearchSheetWindow = NSWindow; 
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
+                mTabBarMenu = NSMenu; 
                 mTabBrowser = BrowserTabView; 
                 mTabMenu = NSMenu; 
                 mURLBar = AutoCompleteTextField; 

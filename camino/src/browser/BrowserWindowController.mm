@@ -167,6 +167,14 @@ const unsigned long kNoToolbarsChromeMask = (nsIWebBrowserChrome::CHROME_ALL & ~
                                                                                  nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR |
                                                                                  nsIWebBrowserChrome::CHROME_LOCATIONBAR)); 
 
+// context menu items tags
+const int kFrameRelatedItemsTag = 100;
+const int kFrameInapplicableItemsTag = 101;
+const int kSelectionRelatedItemsTag = 102;
+const int kSpellingRelatedItemsTag = 103;
+const int kItemsNeedingOpenBehaviorAlternatesTag = 104;
+const int kItemsNeedingForceAlternateTag = 105;
+
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
@@ -542,6 +550,7 @@ enum BWCOpenDest {
 - (void)buildFeedsDetectedListMenu:(NSNotification*)notifer; 
 - (IBAction)openFeedInExternalApp:(id)sender;
 
+- (void)insertForceAlternatesIntoMenu:(NSMenu *)inMenu;
 - (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag;
 
 @end
@@ -894,7 +903,13 @@ enum BWCOpenDest {
     [[self window] setAcceptsMouseMovedEvents:YES];
 
     [self setupToolbar];
-    
+
+    // Insert alternate menu items for force reload into the context menus that have reload items
+    // This is necessary because IB won't accept shift modifiers on menu items that don't have keyEquivalents
+    [self insertForceAlternatesIntoMenu:mPageMenu];
+    [self insertForceAlternatesIntoMenu:mTabMenu];
+    [self insertForceAlternatesIntoMenu:mTabBarMenu];
+
     // Listen to the context menu events from the URL bar for the feed icon
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(buildFeedsDetectedListMenu:)
@@ -2839,11 +2854,17 @@ enum BWCOpenDest {
 - (IBAction)reload:(id)aSender
 {
   unsigned int reloadFlags = NSLoadFlagsNone;
-  
-  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+
+  if ([aSender respondsToSelector:@selector(keyEquivalent)]) {
+    // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
+    if ([[aSender keyEquivalent] isEqualToString:@"R"] || ([aSender keyEquivalentModifierMask] & NSShiftKeyMask))
+      reloadFlags = NSLoadFlagsBypassCacheAndProxy;
+  }
+  // It's a toolbar button, so we test for shift using modifierFlags
+  else if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     reloadFlags = NSLoadFlagsBypassCacheAndProxy;
-  
-  [[mBrowserView getBrowserView] reload: reloadFlags];
+
+  [[mBrowserView getBrowserView] reload:reloadFlags];
 }
 
 - (IBAction)stop:(id)aSender
@@ -3207,12 +3228,15 @@ enum BWCOpenDest {
 
 - (IBAction)reloadSendersTab:(id)sender
 {
-  if ([sender isMemberOfClass:[NSMenuItem class]])
-  {
+  if ([sender isMemberOfClass:[NSMenuItem class]]) {
     BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
-    if (tabViewItem)
-    {
-      [[[tabViewItem view] getBrowserView] reload: NSLoadFlagsNone];
+    if (tabViewItem) {
+      unsigned int reloadFlags = NSLoadFlagsNone;
+      // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
+      if ([[sender keyEquivalent] isEqualToString:@"R"] || ([sender keyEquivalentModifierMask] & NSShiftKeyMask))
+        reloadFlags = NSLoadFlagsBypassCacheAndProxy;
+
+      [[[tabViewItem view] getBrowserView] reload:reloadFlags];
     }
   }
 }
@@ -3220,13 +3244,19 @@ enum BWCOpenDest {
 - (IBAction)reloadAllTabs:(id)sender
 {
   unsigned int reloadFlags = NSLoadFlagsNone;
-  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+
+  if ([sender respondsToSelector:@selector(keyEquivalent)]) {
+    // Capital R tests for shift when there's a keyEquivalent, keyEquivalentModifierMask tests when there isn't
+    if ([[sender keyEquivalent] isEqualToString:@"R"] || ([sender keyEquivalentModifierMask] & NSShiftKeyMask))
+      reloadFlags = NSLoadFlagsBypassCacheAndProxy;
+  }
+  // It's a toolbar button, so we test for shift using modifierFlags
+  else if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     reloadFlags = NSLoadFlagsBypassCacheAndProxy;
 
   NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];
   BrowserTabViewItem* curTabItem;
-  while ((curTabItem = [tabsEnum nextObject]))
-  {
+  while ((curTabItem = [tabsEnum nextObject])) {
     if ([curTabItem isKindOfClass:[BrowserTabViewItem class]])
       [[[curTabItem view] getBrowserView] reload:reloadFlags];
   }
@@ -3734,15 +3764,15 @@ enum BWCOpenDest {
   BOOL showFrameItems = NO;
   BOOL showSpellingItems = NO;
   BOOL needsAlternates = NO;
-  
+
   NSMenu* menuPrototype = nil;
   int contextMenuFlags = mDataOwner->mContextMenuFlags;
-  
+
   NSArray* emailAddresses = nil;
   unsigned numEmailAddresses = 0;
 
   BOOL hasSelection = [[mBrowserView getBrowserView] canCopy];
-  
+
   if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
   {
     emailAddresses = [self mailAddressesInContextMenuLinkNode];
@@ -3782,29 +3812,23 @@ enum BWCOpenDest {
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
     [mCopyItem    setEnabled:hasSelection];
   }
-    
+
   if (mDataOwner->mContextMenuNode) {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
-  
+
     nsCOMPtr<nsIDOMWindow> contentWindow = [[mBrowserView getBrowserView] getContentWindow];
 
     nsCOMPtr<nsIDOMDocument> contentDoc;
     if (contentWindow)
       contentWindow->GetDocument(getter_AddRefs(contentDoc));
-    
+
     showFrameItems = (contentDoc != ownerDoc);
   }
 
   // we have to clone the menu and return that, so that we don't change
   // our only copy of the menu
   NSMenu* result = [[menuPrototype copy] autorelease];
-
-  const int kFrameRelatedItemsTag = 100;
-  const int kFrameInapplicableItemsTag = 101;
-  const int kSelectionRelatedItemsTag = 102;
-  const int kSpellingRelatedItemsTag = 103;
-  const int kItemsNeedingAlternatesTag = 104;
 
   if (showSpellingItems)
     showSpellingItems = [self prepareSpellingSuggestionMenu:result tag:kSpellingRelatedItemsTag];
@@ -3857,7 +3881,7 @@ enum BWCOpenDest {
       NSMenuItem* menuItem = [menuArray objectAtIndex:i];
 
       // Only create alternates for the items that need them
-      if ([menuItem tag] == kItemsNeedingAlternatesTag) {
+      if ([menuItem tag] == kItemsNeedingOpenBehaviorAlternatesTag) {
         NSString* altMenuItemTitle;
         if (inNewTab)
           altMenuItemTitle = [NSString stringWithFormat:NSLocalizedString(@"Action in New Tab", nil), [menuItem title]];
@@ -3872,17 +3896,37 @@ enum BWCOpenDest {
                                                               action:action
                                                               target:target
                                                            modifiers:NSCommandKeyMask];
-        [result insertItem:cmdMenuItem atIndex:i + 1];
+        [result insertItem:cmdMenuItem atIndex:(i + 1)];
         NSMenuItem* cmdShiftMenuItem = [NSMenu alternateMenuItemWithTitle:altMenuItemTitle
                                                                    action:action
                                                                    target:target
                                                                 modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
-        [result insertItem:cmdShiftMenuItem atIndex:i + 2];
+        [result insertItem:cmdShiftMenuItem atIndex:(i + 2)];
       }
     }
   }
 
   return result;
+}
+
+- (void)insertForceAlternatesIntoMenu:(NSMenu *)inMenu
+{
+  NSArray* menuArray = [inMenu itemArray];
+
+  for (unsigned int i = 0; i < [menuArray count]; i++) {
+    NSMenuItem* menuItem = [menuArray objectAtIndex:i];
+
+    if ([menuItem tag] == kItemsNeedingForceAlternateTag) {
+      NSString* title = [NSString stringWithFormat:NSLocalizedString(@"Force Format", "Force %@"), [menuItem title]];
+
+      NSMenuItem* forceReloadItem = [NSMenu alternateMenuItemWithTitle:title
+                                                                action:[menuItem action]
+                                                                target:[menuItem target]
+                                                             modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
+
+      [inMenu insertItem:forceReloadItem atIndex:(i + 1)];
+    }
+  }
 }
 
 //
