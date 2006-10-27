@@ -129,4 +129,9 @@ y = <alpha>one</alpha>;
 
 TEST(19, true, (x == y) && (y == x));
 
+// bug 358183
+x = <a b="1"/>;
+y = <a b="1" c="2"/>;
+TEST(20, false,(x == y));
+
 END();
