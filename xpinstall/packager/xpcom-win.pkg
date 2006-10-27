@@ -24,5 +24,9 @@ bin\components\xpinstal.dll
 bin\xpcom_compat.dll
 bin\components\xpcom_compat_c.dll
 bin\components\xpcom_obsolete.xpt
+bin\Microsoft.VC80.CRT.manifest
+bin\msvcm80.dll
+bin\msvcp80.dll
+bin\msvcr80.dll
 ;install\ren8dot3.exe,bin\ren8dot3.exe
 
