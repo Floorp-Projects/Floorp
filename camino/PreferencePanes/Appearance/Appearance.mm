@@ -175,6 +175,7 @@
 
   // we use the dictionaries in this array as temporary storage of font
   // values until the pane is unloaded, at which time they are saved
+  [mRegionMappingTable release];
   mRegionMappingTable = [[NSArray arrayWithContentsOfFile:resPath] retain];
 
   [self loadFontPrefs];
