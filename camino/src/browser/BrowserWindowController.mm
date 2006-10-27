@@ -3855,6 +3855,13 @@ enum BWCOpenDest {
   // our only copy of the menu
   NSMenu* result = [[menuPrototype copy] autorelease];
 
+  // validate View Page/Frame Source
+  BrowserWrapper* browser = [self getBrowserWrapper];
+  if ([browser isInternalURI] || ![[browser getBrowserView] isTextBasedContent]) {
+    [[result itemWithTarget:self andAction:@selector(viewPageSource:)] setEnabled:NO];
+    [[result itemWithTarget:self andAction:@selector(viewSource:)] setEnabled:NO];
+  }
+
   if (showSpellingItems)
     showSpellingItems = [self prepareSpellingSuggestionMenu:result tag:kSpellingRelatedItemsTag];
 
