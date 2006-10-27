@@ -433,13 +433,13 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
 
   ctm->Multiply(scale, getter_AddRefs(fini));
 
-  aCanvas->CompositeSurfaceMatrix(filterResult, fini, 1.0);
+  nsresult rv = aCanvas->CompositeSurfaceMatrix(filterResult, fini, 1.0);
 
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP_(nsRect)

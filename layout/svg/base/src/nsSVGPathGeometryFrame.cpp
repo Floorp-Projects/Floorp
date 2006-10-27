@@ -647,8 +647,7 @@ nsSVGPathGeometryFrame::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }
 
-  cairo_matrix_t inverse = matrix;
-  if (cairo_matrix_invert(&inverse)) {
+  if (nsSVGUtils::IsSingular(&matrix)) {
     cairo_identity_matrix(ctx);
     cairo_new_path(ctx);
     return;
