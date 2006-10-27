@@ -105,6 +105,8 @@ function ReadManifest(aURL)
         ++lineNo;
         var str = line.value;
         str = /^[^#]*/.exec(str)[0]; // strip everything after "#"
+        if (!str)
+            continue; // entire line was a comment
         str = /\S.*/.exec(str)[0]; // strip initial whitespace
         if (!str || str == "")
             continue;
