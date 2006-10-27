@@ -1091,25 +1091,19 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
-- (IBAction)closeTab:(id)aSender
+- (IBAction)closeCurrentTab:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController closeCurrentTab:aSender];
+  [[self getMainWindowBrowserController] closeCurrentTab:aSender];
 }
 
 - (IBAction)savePage:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController saveDocument:NO filterView:[self getSavePanelView]];
+  [[self getMainWindowBrowserController] saveDocument:NO filterView:[self getSavePanelView]];
 }
 
 - (IBAction)sendURL:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController sendURL:aSender];
+  [[self getMainWindowBrowserController] sendURL:aSender];
 }
 - (IBAction)importBookmarks:(id)aSender
 {
@@ -1144,16 +1138,12 @@ const int kReuseWindowOnAE = 2;
 
 - (IBAction)pageSetup:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController pageSetup:aSender];
+  [[self getMainWindowBrowserController] pageSetup:aSender];
 }
 
-- (IBAction)printPage:(id)aSender
+- (IBAction)printDocument:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController printDocument:aSender];
+  [[self getMainWindowBrowserController] printDocument:aSender];
 }
 
 - (IBAction)toggleOfflineMode:(id)aSender
@@ -1215,25 +1205,19 @@ const int kReuseWindowOnAE = 2;
   [defaults setInteger:((showToolbar) ? 0 : 1) forKey:USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
-- (IBAction)doStop:(id)aSender
+- (IBAction)stop:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController stop:aSender];
+  [[self getMainWindowBrowserController] stop:aSender];
 }
 
-- (IBAction)doReload:(id)aSender
+- (IBAction)reload:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController reload:aSender];
+  [[self getMainWindowBrowserController] reload:aSender];
 }
 
-- (IBAction)doReloadAllTabs:(id)aSender
+- (IBAction)reloadAllTabs:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController reloadAllTabs:aSender];
+  [[self getMainWindowBrowserController] reloadAllTabs:aSender];
 }
 
 - (IBAction)makeTextBigger:(id)aSender
@@ -1251,11 +1235,9 @@ const int kReuseWindowOnAE = 2;
   [[self getMainWindowBrowserController] makeTextSmaller:aSender];
 }
 
-- (IBAction)viewSource:(id)aSender
+- (IBAction)viewPageSource:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController viewPageSource:aSender];  // top-level page, not focussed frame
+  [[self getMainWindowBrowserController] viewPageSource:aSender];  // top-level page, not focussed frame
 }
 
 - (IBAction)reloadWithCharset:(id)aSender
@@ -1277,7 +1259,7 @@ const int kReuseWindowOnAE = 2;
   NSString* newValue = universalChardetOn ? @"" : @"universal_charset_detector";
   [[PreferenceManager sharedInstance] setPref:"intl.charset.detector" toString:newValue];
   // and reload
-  [self doReload:nil];
+  [self reload:nil];
 }
 
 #pragma mark -
@@ -1303,16 +1285,12 @@ const int kReuseWindowOnAE = 2;
 
 - (IBAction)goBack:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController back:aSender];
+  [[self getMainWindowBrowserController] back:aSender];
 }
 
 - (IBAction)goForward:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController forward:aSender];
+  [[self getMainWindowBrowserController] forward:aSender];
 }
 
 //
@@ -1425,16 +1403,12 @@ const int kReuseWindowOnAE = 2;
 
 - (IBAction)previousTab:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController previousTab:aSender];
+  [[self getMainWindowBrowserController] previousTab:aSender];
 }
 
 - (IBAction)nextTab:(id)aSender
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController nextTab:aSender];
+  [[self getMainWindowBrowserController] nextTab:aSender];
 }
 
 - (IBAction)downloadsWindow:(id)aSender
@@ -1500,30 +1474,6 @@ const int kReuseWindowOnAE = 2;
 
   // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
 
-  // disable items that aren't relevant if there's no main browser window open
-  // or the bookmark/history manager is open
-  // XXX some of these should be wired to the First Responder (like reload:).
-  if (action == @selector(printPage:) ||
-      /* ... many more items go here ... */
-      action == @selector(pageSetup:) ||
-      action == @selector(findInPage:) ||
-      action == @selector(savePage:))
-  {
-    return (browserController && ![browserController bookmarkManagerIsVisible]);
-  }
-
-  if (action == @selector(doReload:))
-    return (browserController && [[browserController getBrowserWrapper] canReload]);
-
-  if (action == @selector(doReloadAllTabs:))
-    return (browserController != nil);
-
-  // disable open menu items if a sheet is up (maybe disable others too)
-  if (action == @selector(openFile:) ||
-      action == @selector(openLocation:)) {
-    return (!browserController || [[browserController window] attachedSheet] == nil);
-  }
-
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray
   // out this menu.
@@ -1543,50 +1493,6 @@ const int kReuseWindowOnAE = 2;
     return NO;
   }
 
-  // only enable newTab if there is a browser window frontmost, or if there is no window
-  // (i.e. disable it for non-browser windows).
-  if (action == @selector(newTab:))
-    return (browserController || ![NSApp mainWindow]);
-
-  if (action == @selector(closeTab:)) {
-    BrowserWindowController* keyBWC = [self getKeyWindowBrowserController];
-    return (keyBWC && [[keyBWC getTabBrowser] numberOfTabViewItems] > 1);
-  }
-
-  // only activate if we've got multiple tabs open.
-  if (action == @selector(nextTab:) || action == @selector(previousTab:))
-    return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
-
-  if (action == @selector(makeTextBigger:))
-    return (browserController && [browserController canMakeTextBigger]);
-
-  if (action == @selector(makeTextSmaller:))
-    return (browserController && [browserController canMakeTextSmaller]);
-
-  if (action == @selector(makeTextDefaultSize:))
-    return (browserController && [browserController canMakeTextDefaultSize]);
-
-  // don't allow View Source on the bookmark manager or on non-text content
-  if (action == @selector(viewSource:)) {
-    return (browserController &&
-            ![browserController bookmarkManagerIsVisible] &&
-            [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
-  }
-
-  if (action == @selector(doStop:))
-    return (browserController && [[browserController getBrowserWrapper] isBusy]);
-
-  if (action == @selector(goBack:) || action == @selector(goForward:)) {
-    if (browserController) {
-      CHBrowserView* browserView = [[browserController getBrowserWrapper] getBrowserView];
-      if (action == @selector(goBack:))
-        return [browserView canGoBack];
-      else if (action == @selector(goForward:))
-        return [browserView canGoForward];
-    }
-    return NO;
-  }
-
   if (action == @selector(manageBookmarks:)) {
     BOOL showingBookmarks = (browserController && [browserController bookmarkManagerIsVisible]);
     NSString* showBMLabel = showingBookmarks ? NSLocalizedString(@"Hide All Bookmarks", @"")
@@ -1595,9 +1501,6 @@ const int kReuseWindowOnAE = 2;
     return showingBookmarks ? [browserController canHideBookmarks] : YES;
   }
 
-  if (action == @selector(sendURL:))
-    return ![[[browserController getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
-
   // key alternates
   if (action == @selector(openMenuBookmark:) && [aMenuItem isAlternate]) {
     if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
@@ -1605,6 +1508,53 @@ const int kReuseWindowOnAE = 2;
     else
       [aMenuItem setTitle:NSLocalizedString(@"Open in Tabs in New Window", nil)];
   }
+
+  // disable open menu items if a sheet is up (maybe disable others too)
+  if (action == @selector(openFile:) ||
+      action == @selector(openLocation:)) {
+    return (!browserController || [[browserController window] attachedSheet] == nil);
+  }
+
+  // only enable newTab if there is a browser window frontmost, or if there is no window
+  // (i.e., disable it for non-browser windows).
+  if (action == @selector(newTab:))
+    return (browserController || ![NSApp mainWindow]);
+
+  // disable non-BWC items that aren't relevant if there's no main browser window open
+  // or the bookmark/history manager is open
+  if (action == @selector(findInPage:) ||
+      action == @selector(savePage:))
+  {
+    return (browserController && ![browserController bookmarkManagerIsVisible]);
+  }
+
+  // BrowserWindowController decides about actions that are just sent on to
+  // the front window's BrowserWindowController. This works because the selectors
+  // of these actions are the same here and in BrowserWindowController.
+  if (action == @selector(stop:) ||
+      action == @selector(reload:) ||
+      action == @selector(reloadAllTabs:) ||
+      action == @selector(nextTab:) ||
+      action == @selector(previousTab:) || 
+      action == @selector(closeCurrentTab:) ||
+      action == @selector(makeTextBigger:) ||
+      action == @selector(makeTextSmaller:) ||
+      action == @selector(makeTextDefaultSize:) ||
+      action == @selector(viewPageSource:) ||
+      action == @selector(sendURL:) ||
+      action == @selector(printDocument:) ||
+      action == @selector(pageSetup:) ||
+      action == @selector(findInPage:) ||
+      action == @selector(savePage:))
+  {
+    return (browserController && [browserController validateActionBySelector:action]);
+  }
+  // goBack: and goForward: don't match; for now we translate them, but eventually
+  // BrowserWindowController's methods should be renamed.
+  if (action == @selector(goBack:))
+    return (browserController && [browserController validateActionBySelector:@selector(back:)]);
+  if (action == @selector(goForward:))
+    return (browserController && [browserController validateActionBySelector:@selector(forward:)]);
 
   // default return
   return YES;

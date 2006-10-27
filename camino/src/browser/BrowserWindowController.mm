@@ -1450,28 +1450,8 @@ enum BWCOpenDest {
 
     return ![self bookmarkManagerIsVisible] || [self canHideBookmarks];
   }
-  else if (action == @selector(reload:))
-    return [[self getBrowserWrapper] canReload];
-  else if (action == @selector(stop:))
-    return [mBrowserView isBusy];
-  else if (action == @selector(addBookmark:))
-    return ![mBrowserView isEmpty];
-  else if (action == @selector(biggerTextSize:))
-    return [self canMakeTextBigger];
-  else if ( action == @selector(smallerTextSize:))
-    return [self canMakeTextSmaller];
-  else if (action == @selector(newTab:))
-    return YES;
-  else if (action == @selector(closeCurrentTab:))
-    return ([mTabBrowser numberOfTabViewItems] > 1 && [[self window] isKeyWindow]);
-  else if (action == @selector(sendURL:) || action == @selector(fillForm:))
-    return ![[[self getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
-  else if (action == @selector(viewSource:)) {
-    return (![self bookmarkManagerIsVisible] &&
-            [[[self getBrowserWrapper] getBrowserView] isTextBasedContent]);
-  }
-  else
-    return YES;
+
+  return [self validateActionBySelector:action];
 }
 
 //
@@ -1574,22 +1554,10 @@ enum BWCOpenDest {
 {
   SEL action = [aMenuItem action];
 
-  if (action == @selector(moveTabToNewWindow:) ||
-      action == @selector(closeCurrentTab:)    ||
-      action == @selector(closeSendersTab:)    ||
-      action == @selector(closeOtherTabs:))
-    return ([mTabBrowser numberOfTabViewItems] > 1);
-
   if (action == @selector(reloadSendersTab:)) {
     BrowserTabViewItem* sendersTab = [[self getTabBrowser] itemWithTag:[aMenuItem tag]];
     return [[sendersTab view] canReload];
   }
-
-  if (action == @selector(reload:))
-    return [[self getBrowserWrapper] canReload];
-
-  if (action == @selector(fillForm:))
-    return ![[[self getBrowserWrapper] getCurrentURI] hasPrefix:@"about:"];
 
   if(action == @selector(getInfo:)) {
     if([self bookmarkManagerIsVisible])
@@ -1598,6 +1566,51 @@ enum BWCOpenDest {
       [aMenuItem setTitle:NSLocalizedString(@"Page Info", nil)];
   }
 
+  return [self validateActionBySelector:action];
+}
+
+- (BOOL)validateActionBySelector:(SEL)action
+{
+  if (action == @selector(back:))
+    return [[mBrowserView getBrowserView] canGoBack];
+  if (action == @selector(forward:))
+    return [[mBrowserView getBrowserView] canGoForward];
+  if (action == @selector(stop:))
+    return [mBrowserView isBusy];
+  if (action == @selector(reload:))
+    return [[self getBrowserWrapper] canReload];
+  if (action == @selector(moveTabToNewWindow:) ||
+      action == @selector(closeSendersTab:) ||
+      action == @selector(closeOtherTabs:) ||
+      action == @selector(nextTab:) ||
+      action == @selector(previousTab:))
+  {
+    return ([mTabBrowser numberOfTabViewItems] > 1);
+  }
+  if (action == @selector(closeCurrentTab:))
+    return ([mTabBrowser numberOfTabViewItems] > 1 && [[self window] isKeyWindow]);
+  if (action == @selector(addBookmark:))
+    return ![mBrowserView isEmpty];
+  if (action == @selector(makeTextBigger:))
+    return [self canMakeTextBigger];
+  if (action == @selector(makeTextSmaller:))
+    return [self canMakeTextSmaller];
+  if (action == @selector(makeTextDefaultSize:))
+    return [self canMakeTextDefaultSize];
+  if (action == @selector(sendURL:))
+    return ![[self getBrowserWrapper] isInternalURI];
+  if (action == @selector(viewSource:) ||
+      action == @selector(viewPageSource:) ||
+      action == @selector(fillForm:))
+  {
+    BrowserWrapper* browser = [self getBrowserWrapper];
+    return (![browser isInternalURI] && [[browser getBrowserView] isTextBasedContent]);
+  }
+  if (action == @selector(printDocument:) ||
+      action == @selector(pageSetup:))
+  {
+    return ![self bookmarkManagerIsVisible];
+  }
 
   return YES;
 }

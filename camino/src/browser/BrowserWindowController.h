@@ -223,6 +223,7 @@ typedef enum
 - (void)stopThrobber;
 - (void)clickThrobber:(id)aSender;
 
+- (BOOL)validateActionBySelector:(SEL)action;
 - (BOOL)canMakeTextBigger;
 - (BOOL)canMakeTextSmaller;
 - (BOOL)canMakeTextDefaultSize;

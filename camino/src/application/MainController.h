@@ -121,13 +121,13 @@ typedef enum EBookmarkOpenBehavior
 - (IBAction)openLocation:(id)aSender;
 - (IBAction)doSearch:(id)aSender;
 - (IBAction)closeAllWindows:(id)aSender;
-- (IBAction)closeTab:(id)aSender;
+- (IBAction)closeCurrentTab:(id)aSender;
 - (IBAction)savePage:(id)aSender;
 - (IBAction)sendURL:(id)aSender;
 - (IBAction)importBookmarks:(id)aSender;
 - (IBAction)exportBookmarks:(id)aSender;
 - (IBAction)pageSetup:(id)aSender;
-- (IBAction)printPage:(id)aSender;
+- (IBAction)printDocument:(id)aSender;
 - (IBAction)toggleOfflineMode:(id)aSender; // unused
 
 // Edit menu actions
@@ -135,13 +135,13 @@ typedef enum EBookmarkOpenBehavior
 
 // View menu actions.
 - (IBAction)toggleBookmarksToolbar:(id)aSender;
-- (IBAction)doStop:(id)aSender;
-- (IBAction)doReload:(id)aSender;
-- (IBAction)doReloadAllTabs:(id)aSender;
+- (IBAction)stop:(id)aSender;
+- (IBAction)reload:(id)aSender;
+- (IBAction)reloadAllTabs:(id)aSender;
 - (IBAction)makeTextBigger:(id)aSender;
 - (IBAction)makeTextDefaultSize:(id)aSender;
 - (IBAction)makeTextSmaller:(id)aSender;
-- (IBAction)viewSource:(id)aSender;
+- (IBAction)viewPageSource:(id)aSender;
 - (IBAction)reloadWithCharset:(id)aSender;
 - (IBAction)toggleAutoCharsetDetection:(id)aSender;
 

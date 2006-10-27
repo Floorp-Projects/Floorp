@@ -1025,7 +1025,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     if (iconImage == nil)
       siteIconURI = @"";	// go back to default image
   
-    if ([pageURI isEqualToString:[[self getBrowserView] getCurrentURI]]) // make sure it's for the current page
+    if ([pageURI isEqualToString:[self getCurrentURI]]) // make sure it's for the current page
       [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
   }
 }
@@ -1038,12 +1038,18 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 //
 - (BOOL) isEmpty
 {
-  return [[[self getBrowserView] getCurrentURI] isEqualToString:@"about:blank"];
+  return [[self getCurrentURI] isEqualToString:@"about:blank"];
+}
+
+- (BOOL)isInternalURI
+{
+  NSString* currentURI = [self getCurrentURI];
+  return ([currentURI hasPrefix:@"about:"] || [currentURI hasPrefix:@"view-source:"]);
 }
 
 - (BOOL)canReload
 {
-  NSString* curURI = [[[self getBrowserView] getCurrentURI] lowercaseString];
+  NSString* curURI = [[self getCurrentURI] lowercaseString];
   return (![self isEmpty] &&
           !([curURI isEqualToString:@"about:bookmarks"] ||
             [curURI isEqualToString:@"about:history"] ||
