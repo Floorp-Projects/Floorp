@@ -423,7 +423,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 return JS_FALSE;
 
             /* Protect iter against GC in OBJ_DELETE_PROPERTY. */
-            JS_PUSH_SINGLE_TEMP_ROOT(cx, iter, &tvr);
+            JS_PUSH_TEMP_ROOT_OBJECT(cx, iter, &tvr);
             gap = oldlen - newlen;
             for (;;) {
                 ok = JS_NextProperty(cx, iter, &id2);

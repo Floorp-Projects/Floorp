@@ -88,19 +88,6 @@ js_GetGCThingFlags(void *thing);
 JSRuntime*
 js_GetGCStringRuntime(JSString *str);
 
-/* These are compatible with JSDHashEntryStub. */
-struct JSGCRootHashEntry {
-    JSDHashEntryHdr hdr;
-    void            *root;
-    const char      *name;
-};
-
-struct JSGCLockHashEntry {
-    JSDHashEntryHdr hdr;
-    const JSGCThing *thing;
-    uint32          count;
-};
-
 #if 1
 /*
  * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
@@ -130,6 +117,16 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name);
 
 extern JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp);
+
+#ifdef DEBUG
+extern void
+js_DumpNamedRoots(JSRuntime *rt,
+                  void (*dump)(const char *name, void *rp, void *data),
+                  void *data);
+#endif
+
+extern uint32
+js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
 
 /* Table of pointers with count valid members. */
 typedef struct JSPtrTable {

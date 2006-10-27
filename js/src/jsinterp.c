@@ -526,7 +526,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
             obj = cursor;
             if (!parent)
                 break;
-            JS_PUSH_SINGLE_TEMP_ROOT(cx, obj, &tvr);
+            JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
         } else {
             /*
              * Avoid OBJ_SET_PARENT overhead as clonedChild cannot escape to

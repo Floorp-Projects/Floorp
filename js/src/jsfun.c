@@ -1260,7 +1260,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     /* From here on, control flow must flow through label out. */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, fun->object, &tvr);
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, fun->object, &tvr);
     ok = JS_TRUE;
 
     if (!JS_XDRUint32(xdr, &nullAtom))
@@ -2299,7 +2299,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
                                      *vp,
                                      NULL);
     if (str) {
-        JS_PUSH_SINGLE_TEMP_ROOT(cx, str, &tvr);
+        JS_PUSH_TEMP_ROOT_STRING(cx, str, &tvr);
         bytes = JS_GetStringBytes(str);
         if (flags & JSV2F_ITERATOR) {
             source = js_ValueToPrintableSource(cx, *vp);

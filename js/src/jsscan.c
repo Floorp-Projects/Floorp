@@ -531,6 +531,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                          uintN errorNumber, JSErrorReport *report,
                          JSBool charArgs, va_list ap)
 {
+    JSTempValueRooter linetvr;
     JSString *linestr = NULL;
     JSTokenStream *ts = NULL;
     JSCodeGenerator *cg = NULL;
@@ -553,7 +554,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         return JS_FALSE;
     }
 
-    js_AddRoot(cx, &linestr, "error line buffer");
+    JS_PUSH_TEMP_ROOT_STRING(cx, NULL, &linetvr);
 
     switch (flags & JSREPORT_HANDLE) {
       case JSREPORT_TS:
@@ -588,6 +589,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                                                 ts->linebuf.base,
                                                 jschar),
                                         0);
+            linetvr.u.string = linestr;
             report->linebuf = linestr
                               ? JS_GetStringBytes(linestr)
                               : NULL;
@@ -693,7 +695,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
     if (report->ucmessage)
         JS_free(cx, (void *)report->ucmessage);
 
-    js_RemoveRoot(cx->runtime, &linestr);
+    JS_POP_TEMP_ROOT(cx, &linetvr);
 
     if (ts && !JSREPORT_IS_WARNING(flags)) {
         /* Set the error flag to suppress spurious reports. */
