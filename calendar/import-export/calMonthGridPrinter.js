@@ -148,7 +148,7 @@ function monthPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
 
     while (date.compare(end) <= 0) {
         var monthName = calGetString("dateFormat", "month." + (date.month +1)+ ".name");
-        monthName += " " + start.year;
+        monthName += " " + date.year;
         body.appendChild(
                      <table border='0' width='100%' class='main-table'>
                          <tr> 
