@@ -18,6 +18,7 @@
 # Maciej Maczynski. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+#                 Tyler Peterson <typeterson@novell.com>
 
 use strict;
 use lib ".";
@@ -86,12 +87,12 @@ elsif ($action eq 'do_clone'){
             validate_test_id($p, 'plan');
             $planseen{$p} = 1;
         }
-        push @planids, keys %planseen;
         if ($cgi->param('existing')){
             foreach my $p (@{$case->plans}){
-                push @planids, $p->id;
+		$planseen{$p->id} = 1;
             }
         }
+        push @planids, keys %planseen;
         my $newcase;
         foreach my $pid (@planids){
             $count++;
