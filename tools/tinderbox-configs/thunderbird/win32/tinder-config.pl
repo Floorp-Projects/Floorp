@@ -166,8 +166,8 @@ $package_creation_path = "/mail/installer";
 $ssh_version   = "2";
 $ssh_user      = "cltbld";
 $ssh_server    = "stage.mozilla.org";
-$ftp_path      = "/home/ftp/pub/thunderbird/nightly/experimental/";
-$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/experimental/";
+$ftp_path      = "/home/ftp/pub/thunderbird/nightly";
+$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly";
 $tbox_ftp_path      = "/home/ftp/pub/thunderbird/tinderbox-builds";
 $tbox_url_path      = "http://ftp.mozilla.org/pub/mozilla.org/thunderbird/tinderbox-builds";
 $milestone     = "trunk";
@@ -184,7 +184,7 @@ $update_ver_file = "mail/config/version.txt";
 $update_platform = "WINNT_x86-msvc";
 $update_hash = "md5";
 $update_filehost = "ftp.mozilla.org";
-$update_pushinfo = 0;
+$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
