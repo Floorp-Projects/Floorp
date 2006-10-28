@@ -56,7 +56,7 @@
   
   <groupbox id="tabNavigationPrefs" align="start">
     <caption label="&tabNavigationBehavior.label;"/>
-    <description value="&tabNavigationDesc.label;"/>
+    <description>&tabNavigationDesc.label;</description>
     <!-- gData var and kTabTo* consts are declared in pref-keynav.js -->
     <checkbox id="tabNavigationLinks" label="&tabNavigationLinks.label;" 
               accesskey="&tabNavigationLinks.accesskey;" 
@@ -64,7 +64,7 @@
     <checkbox id="tabNavigationForms" label="&tabNavigationForms.label;" 
               accesskey="&tabNavigationForms.accesskey;" 
               oncommand="gData.tabNavPref ^= kTabToForms;"/>
-    <description value="&tabNavigationTextboxes.label;"/>
+    <description>&tabNavigationTextboxes.label;</description>
   </groupbox>
 
   <groupbox align="start">
