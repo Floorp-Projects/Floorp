@@ -1810,7 +1810,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 JS_PUBLIC_API(uint32)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
-    return JS_MapGCRoots(rt, map, data);
+    return js_MapGCRoots(rt, map, data);
 }
 
 JS_PUBLIC_API(JSBool)
