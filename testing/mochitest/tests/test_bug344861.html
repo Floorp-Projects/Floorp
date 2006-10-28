@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 var newwindow = window.open("/", "testwindow", "width=200,height=200");
 newwindow.onload = function() { 
-  todo(newwindow.innerHeight == 200, "window.open has correct height dimensions");
+  is(newwindow.innerHeight, 200, "window.open has correct height dimensions");
   is(newwindow.innerWidth, 200, "window.open has correct width dimensions");
   SimpleTest.finish();
   newwindow.close();
@@ -33,3 +33,4 @@ newwindow.onload = function() {
 </body>
 </html>
 
+   
