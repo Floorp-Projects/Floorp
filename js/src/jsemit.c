@@ -3122,8 +3122,6 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
         return JS_FALSE;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
-        fun->flags |= JSFUN_HEAVYWEIGHT;
     return JS_TRUE;
 }
 
@@ -3976,6 +3974,26 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             slot = sprop->shortid;
             OBJ_DROP_PROPERTY(cx, pobj, prop);
 
+            /*
+             * If this local function is in a body block, flag cg so that any
+             * outer function will be flagged with JSFUN_BLOCKLOCALFUN, which
+             * helps JSOP_DEFLOCALFUN capture the body block including any let
+             * variables in the local function's scope chain.
+             */
+            stmt = cg->treeContext.topStmt;
+            if (stmt && stmt->type == STMT_BLOCK &&
+                stmt->down && stmt->down->type == STMT_BLOCK &&
+                (stmt->down->flags & SIF_SCOPE)) {
+#ifdef DEBUG
+                jsbytecode *pc = cg->main.base;
+
+                JS_ASSERT(*pc == JSOP_ENTERBLOCK ||
+                          (*pc == JSOP_LITOPX &&
+                           pc[1 + LITERAL_INDEX_LEN] == JSOP_ENTERBLOCK));
+#endif
+                cg->treeContext.flags |= TCF_HAS_BLOCKLOCALFUN;
+            }
+
             if (atomIndex >= JS_BIT(16)) {
                 /*
                  * Lots of literals in the outer function, so we have to emit
@@ -3999,6 +4017,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 SET_ATOM_INDEX(pc, atomIndex);
             }
         } else {
+            JS_ASSERT(!cg->treeContext.topStmt);
             EMIT_ATOM_INDEX_OP(JSOP_DEFFUN, atomIndex);
         }
 

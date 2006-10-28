@@ -1347,6 +1347,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     if (fun) {
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         fun->u.i.script = script;
+        if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
+            fun->flags |= JSFUN_HEAVYWEIGHT;
+        if (cg->treeContext.flags & TCF_HAS_BLOCKLOCALFUN)
+            fun->flags |= JSFUN_BLOCKLOCALFUN;
     }
 
     /* Tell the debugger about this compiled script. */
