@@ -107,7 +107,8 @@ function ReadManifest(aURL)
         str = /^[^#]*/.exec(str)[0]; // strip everything after "#"
         if (!str)
             continue; // entire line was a comment
-        str = /\S.*/.exec(str)[0]; // strip initial whitespace
+        // strip leading and trailing whitespace
+        str = str.replace(/^\s*/, '').replace(/\s*$/, '');
         if (!str || str == "")
             continue;
         var items = str.split(/\s+/); // split on whitespace
