@@ -410,8 +410,9 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
     LOG(("response for %s: %d", href.get(), statusCode));
 
     nsCOMPtr<nsIDOMNodeList> proplist;
-    rv = responseElt->GetElementsByTagName(NS_LITERAL_STRING("propstat"),
-                                           getter_AddRefs(proplist));
+    rv = responseElt->GetElementsByTagNameNS(NS_LITERAL_STRING("DAV:"),
+                                             NS_LITERAL_STRING("propstat"),
+                                             getter_AddRefs(proplist));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 length;
