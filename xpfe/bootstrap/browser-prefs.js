@@ -189,6 +189,7 @@ pref("mail.directory",                  "");
 pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
+pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.org/%LOCALE%/%APP%/%VERSION%/dictionaries/");
 
 // this will automatically enable inline spellchecking (if it is available) for
 // editable elements in HTML

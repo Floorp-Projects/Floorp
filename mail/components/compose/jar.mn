@@ -14,5 +14,4 @@ messenger.jar:
     content/messenger/messengercompose/mailComposeEditorOverlay.xul (/mailnews/compose/resources/content/mailComposeEditorOverlay.xul)
 
 comm.jar:
-+   content/editor/EdSpellCheck.js                                 (content/EdSpellCheck.js) 
 *+  content/editor/editorOverlay.xul                               (content/editorOverlay.xul) 

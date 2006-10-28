@@ -52,7 +52,6 @@
            
   <prefpane id="paneCompose" onpaneload="gComposePane.init();">
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/compose.js"/>
-    <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
 
     <stringbundle id="languageBundle" src="chrome://global/locale/languageNames.properties"/>
     <stringbundle id="regionBundle" src="chrome://global/locale/regionNames.properties"/>
@@ -162,7 +161,6 @@
                   </menupopup>
                 </menulist>
                 <button id="editButton" label="&editDirectories.label;" 
-                        preference="pref.ldap.disable_button.edit_directories" 
                         oncommand="gComposePane.editDirectories();"
                         accesskey="&editDirectories.accesskey;"/>
               </hbox>

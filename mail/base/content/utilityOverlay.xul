@@ -15,7 +15,6 @@
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
 
   <!-- online/offline status indicators -->   
   <broadcaster id="Communicator:WorkMode"
