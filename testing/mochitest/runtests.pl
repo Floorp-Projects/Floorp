@@ -16,7 +16,8 @@ use File::Path;
 $test_url = "http://localhost:8888/tests/index.html?autorun=1";
 
 # XXXsayrer these are specific to my mac, need to make them general
-$app = "/Users/sayrer/Desktop/Minefield.app/Contents/MacOS/firefox-bin";
+#$app = "/Users/sayrer/Desktop/Minefield.app/Contents/MacOS/firefox-bin";
+$app = "/home/sayrer/firefox/mozilla/fb-debug/dist/bin/firefox";
 $profile = "dhtml_test_profile";
 $profile_dir = "/tmp/$profile";
 $chrome_dir = "$profile_dir/chrome";
@@ -58,7 +59,7 @@ mkdir($chrome_dir);
 @args = ($app, '-CreateProfile', "$profile $profile_dir");
 $rc = 0xffff & system @args;
 if ($rc != 0) {
-  die("Creating profile failed!\n");
+  die("FAIL Creating profile failed!\n");
 } else {
   print "Creating profile succeeded\n";
 }
@@ -76,6 +77,9 @@ close(CRHOMEOUTFILE);
 # now run with the profile we created
 @runargs = ($app, '-P', "$profile", $test_url);
 $rc = 0xffff & system @runargs;
+if ($rc != 0) {
+ print "FAIL Exited with code $rc during test run\n";
+}
 
 # remove the profile we created
 rmtree($profile_dir, 0, 0);
