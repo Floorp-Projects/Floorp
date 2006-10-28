@@ -1424,11 +1424,10 @@
     <content>
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
         <xul:calendar-event-gripbar anonid="gripbar1" whichside="start" xbl:inherits="parentorient=orient"/>
-        <xul:vbox class="calendar-event-box-container" xbl:inherits="context,parentorient=orient" flex="1" align="left">
-          <xul:label anonid="event-name" flex="1" crop="right"/>
-          <xul:textbox class="plain" style="background: transparent !important"
-            anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>
-          <xul:spacer flex="1"/>
+        <xul:vbox class="calendar-event-box-container" xbl:inherits="context,parentorient=orient" flex="1" align="stretch">
+          <xul:description anonid="event-name" flex="1" style="margin: 0px;"/>
+          <xul:textbox class="plain" style="background: transparent !important;"
+            anonid="event-name-textbox" flex="1" hidden="true" wrap="true"/>
         </xul:vbox>
         <xul:calendar-event-gripbar anonid="gripbar2" whichside="end" xbl:inherits="parentorient=orient"/>
       </xul:box>
@@ -1509,6 +1508,20 @@
             return endDate.hour * 60 + endDate.minute;
         ]]></getter>
       </property>
+
+      <method name="setEditableLabel">
+        <body><![CDATA[
+          var evl = this.eventNameLabel;
+          var item = this.mOccurrence;
+
+          if (item.title && item.title != "") {
+            // Use <description> textContent so it can wrap.
+            evl.textContent = item.title;
+          } else {
+            evl.textContent = calGetString("calendar", "eventUntitled");
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
