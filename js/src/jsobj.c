@@ -2529,6 +2529,10 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
         }
     }
 
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    if (!obj)
+        return JS_FALSE;
+
     if (JSID_IS_INT(id)) {
         key = JSID_TO_INT(id);
         JS_ASSERT(key != JSProto_Null);
