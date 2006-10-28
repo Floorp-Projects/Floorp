@@ -8,10 +8,13 @@ use File::Path;
 # logFile -- logs test run to an absolute path
 # quiet -- turns of console dumps
 #
-# consoleLevel, fileLevel -- set the logging level of the console and file logs, if activated.
-#                            <http://mochikit.com/doc/html/MochiKit/Logging.html>
+
+# consoleLevel, fileLevel: set the logging level of the console and
+# file logs, if activated.
+# <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
 $test_url = "http://localhost:8888/tests/index.html?autorun=1";
+
 # XXXsayrer these are specific to my mac, need to make them general
 $app = "/Users/sayrer/Desktop/Minefield.app/Contents/MacOS/firefox-bin";
 $profile = "dhtml_test_profile";
@@ -65,7 +68,7 @@ open(PREFOUTFILE, ">>$profile_dir/user.js") || die("Could not open user.js file 
 print PREFOUTFILE ($pref_content);
 close(PREFOUTFILE);
 
-# append magic prefs to user.js
+# add userChrome.css
 open(CRHOMEOUTFILE, ">>$chrome_dir/userChrome.css") || die("Could not open userChrome.css file $!");
 print CRHOMEOUTFILE ($chrome_content);
 close(CRHOMEOUTFILE);
