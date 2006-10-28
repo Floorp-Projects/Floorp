@@ -718,11 +718,11 @@ calDavCalendar.prototype = {
                         items = [ item ];
                     }
                     rv = Components.results.NS_OK;
-                } else if (item.instanceof Ci.calIEvent) {
+                } else if (item instanceof Ci.calIEvent) {
                     iid = Ci.calIEvent;
                     rv = Components.results.NS_OK;
                     items = [ item ];
-                } else if (item.instanceof Ci.calITodo) {
+                } else if (item instanceof Ci.calITodo) {
                     iid = Ci.calITodo;
                     rv = Components.results.NS_OK;
                     items = [ item ];
