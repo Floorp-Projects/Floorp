@@ -78,7 +78,6 @@ function getInvalidAccounts(accounts)
     return invalidAccounts;
 }
 
-#ifndef MOZ_THUNDERBIRD
 // This function gets called from verifyAccounts.
 // We do not have to do anything on
 // unix and mac but on windows we have to bring up a 
@@ -122,7 +121,6 @@ function showMailIntegrationDialog() {
         }
     }
 }
-#endif
 
 function verifyAccounts(wizardcallback) 
 {
@@ -219,11 +217,13 @@ function verifyAccounts(wizardcallback)
           }
         }
         
-#ifndef MOZ_THUNDERBIRD
-        // seamonkey still uses this...
-        // hack, set a time out to do this, so that the window can load first
-        setTimeout("showMailIntegrationDialog();",0);
-#endif
+        // This will only succeed on SeaMonkey windows builds
+        var mapiRegistryProgID = "@mozilla.org/mapiregistry;1" 
+        if (mapiRegistryProgID in Components.classes)
+        {
+          // hack, set a time out to do this, so that the window can load first
+          setTimeout(showMailIntegrationDialog, 0);
+        }
 
         return ret;
     }

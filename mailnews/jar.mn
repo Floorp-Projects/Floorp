@@ -82,7 +82,7 @@ messenger.jar:
     content/messenger/aw-login.js                                              (base/prefs/resources/content/aw-login.js)
     content/messenger/aw-accname.js                                            (base/prefs/resources/content/aw-accname.js)
     content/messenger/aw-done.js                                               (base/prefs/resources/content/aw-done.js)
-*   content/messenger/accountUtils.js                                          (base/prefs/resources/content/accountUtils.js)
+    content/messenger/accountUtils.js                                          (base/prefs/resources/content/accountUtils.js)
     content/messenger/amUtils.js                                               (base/prefs/resources/content/amUtils.js)
     content/messenger/ispUtils.js                                              (base/prefs/resources/content/ispUtils.js)
     content/messenger/SmtpServerEdit.xul                                       (base/prefs/resources/content/SmtpServerEdit.xul)
