@@ -1042,6 +1042,8 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(THISP_STRING);
                 SHOW_FLAG(THISP_NUMBER);
                 SHOW_FLAG(THISP_BOOLEAN);
+                SHOW_FLAG(BLOCKLOCALFUN);
+                SHOW_FLAG(INTERPRETED);
 
 #undef SHOW_FLAG
                 putchar('\n');

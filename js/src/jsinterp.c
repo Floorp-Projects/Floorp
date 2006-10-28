@@ -4873,15 +4873,23 @@ interrupt:
 
             /* If re-parenting, store a clone of the function object. */
             JS_ASSERT(!fp->blockChain);
-            parent = fp->scopeChain;
+            if (fp->fun && (fp->fun->flags & JSFUN_BLOCKLOCALFUN)) {
+                JS_ASSERT(ATOM_IS_OBJECT(fp->script->atomMap.vector[0]));
+                fp->blockChain = ATOM_TO_OBJECT(fp->script->atomMap.vector[0]);
+                JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
+            }
+            obj2 = fp->scopeChain;
+            parent = js_GetScopeChain(cx, fp);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
-                if (!obj) {
+                if (!obj)
                     ok = JS_FALSE;
-                    goto out;
-                }
             }
+            fp->blockChain = NULL;
+            fp->scopeChain = obj2;
+            if (!ok)
+                goto out;
             fp->vars[slot] = OBJECT_TO_JSVAL(obj);
           END_LITOPX_CASE(JSOP_DEFLOCALFUN)
 
