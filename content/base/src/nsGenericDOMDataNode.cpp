@@ -124,7 +124,8 @@ nsGenericDOMDataNode::GetNodeValue(nsAString& aNodeValue)
 nsresult
 nsGenericDOMDataNode::SetNodeValue(const nsAString& aNodeValue)
 {
-  return SetData(aNodeValue);
+  return SetTextInternal(0, mText.GetLength(), aNodeValue.BeginReading(),
+                         aNodeValue.Length(), PR_TRUE);
 }
 
 nsresult
@@ -320,18 +321,8 @@ nsGenericDOMDataNode::GetData(nsAString& aData) const
 nsresult
 nsGenericDOMDataNode::SetData(const nsAString& aData)
 {
-  // inform any enclosed ranges of change
-  // we can lie and say we are deleting all the text, since in a total
-  // text replacement we should just collapse all the ranges.
-
-  const nsVoidArray *rangeList = GetRangeList();
-  if (rangeList) {
-    nsRange::TextOwnerChanged(this, rangeList, 0, mText.GetLength(), 0);
-  }
-
-  SetText(aData, PR_TRUE);
-
-  return NS_OK;
+  return SetTextInternal(0, mText.GetLength(), aData.BeginReading(),
+                         aData.Length(), PR_TRUE);
 }
 
 nsresult
@@ -376,15 +367,50 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
 nsresult
 nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
-  // Apparently this is called often enough that we don't want to just simply
-  // call SetText like ReplaceData does. See bug 77585 and comment in
-  // ReplaceData.
-  
-  // FIXME, but 330872: We can't call BeginUpdate here because it confuses the
-  // poor little nsHTMLContentSink.
-  // mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, PR_TRUE);
+  return SetTextInternal(mText.GetLength(), 0, aData.BeginReading(),
+                         aData.Length(), PR_TRUE);
+}
 
-  PRBool haveMutationListeners =
+nsresult
+nsGenericDOMDataNode::InsertData(PRUint32 aOffset,
+                                 const nsAString& aData)
+{
+  return SetTextInternal(aOffset, 0, aData.BeginReading(),
+                         aData.Length(), PR_TRUE);
+}
+
+nsresult
+nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
+{
+  return SetTextInternal(aOffset, aCount, nsnull, 0, PR_TRUE);
+}
+
+nsresult
+nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
+                                  const nsAString& aData)
+{
+  return SetTextInternal(aOffset, aCount, aData.BeginReading(),
+                         aData.Length(), PR_TRUE);
+}
+
+nsresult
+nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
+                                      const PRUnichar* aBuffer,
+                                      PRUint32 aLength, PRBool aNotify)
+{
+  NS_PRECONDITION(aBuffer || !aLength,
+                  "Null buffer passed to SetTextInternal!");
+
+  // sanitize arguments
+  PRUint32 textLength = mText.GetLength();
+  if (aOffset > textLength) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsIDocument *document = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+
+  PRBool haveMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
@@ -393,92 +419,70 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     oldValue = GetCurrentValueAtom();
   }
     
-  mText.Append(aData);
-
-  SetBidiStatus();
-
-  if (haveMutationListeners) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
-
-    mutation.mPrevAttrValue = oldValue;
-    mutation.mNewAttrValue = GetCurrentValueAtom();
-
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
-  }
-
-  // Notify observers
-  nsNodeUtils::CharacterDataChanged(this, PR_TRUE);
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::InsertData(PRUint32 aOffset,
-                                 const nsAString& aData)
-{
-  return ReplaceData(aOffset, 0, aData);
-}
-
-nsresult
-nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
-{
-  return ReplaceData(aOffset, aCount, EmptyString());
-}
-
-nsresult
-nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
-                                  const nsAString& aData)
-{
-  // sanitize arguments
-  PRUint32 textLength = mText.GetLength();
-  if (aOffset > textLength) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  // Fast path (hit by editor when typing at the end of the paragraph, for
-  // example): aOffset == textLength (so just doing an append; note that in
-  // this case any value of aCount would just get converted to 0 by the very
-  // next if block).  Call AppendData so that we pass PR_TRUE for our aAppend
-  // arg to CharacterDataChanged.
-  if (aOffset == textLength) {
-    return AppendData(aData);
-  }
-
-  // Allocate new buffer
   PRUint32 endOffset = aOffset + aCount;
   if (endOffset > textLength) {
     aCount = textLength - aOffset;
     endOffset = textLength;
   }
-  PRInt32 dataLength = aData.Length();
-  PRInt32 newLength = textLength - aCount + dataLength;
-  PRUnichar* to = new PRUnichar[newLength + 1];
-  if (!to) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (aOffset == 0 && endOffset == textLength) {
+    // Replacing whole text or old text was empty
+    mText.SetTo(aBuffer, aLength);
   }
+  else if (aOffset == textLength) {
+    // Appending to existing
+    mText.Append(aBuffer, aLength);
+  }
+  else {
+    // Merging old and new
+
+    // Allocate new buffer
+    PRInt32 newLength = textLength - aCount + aLength;
+    PRUnichar* to = new PRUnichar[newLength];
+    NS_ENSURE_TRUE(to, NS_ERROR_OUT_OF_MEMORY);
+
+    // Copy over appropriate data
+    if (0 != aOffset) {
+      mText.CopyTo(to, 0, aOffset);
+    }
+    if (0 != aLength) {
+      memcpy(to + aOffset, aBuffer, aLength * sizeof(PRUnichar));
+    }
+    if (endOffset != textLength) {
+      mText.CopyTo(to + aOffset + aLength, endOffset, textLength - endOffset);
+    }
+
+    // XXX Add OOM checking to this
+    mText.SetTo(to, newLength);
+
+    delete [] to;
+  }
+
+  SetBidiStatus();
 
   // inform any enclosed ranges of change
   const nsVoidArray *rangeList = GetRangeList();
   if (rangeList) {
-    nsRange::TextOwnerChanged(this, rangeList, aOffset, endOffset, dataLength);
+    nsRange::TextOwnerChanged(this, rangeList, aOffset, endOffset, aLength);
   }
 
-  // Copy over appropriate data
-  if (0 != aOffset) {
-    mText.CopyTo(to, 0, aOffset);
-  }
-  if (0 != dataLength) {
-    CopyUnicodeTo(aData, 0, to+aOffset, dataLength);
-  }
-  if (endOffset != textLength) {
-    mText.CopyTo(to + aOffset + dataLength, endOffset, textLength - endOffset);
-  }
+  // Notify observers
+  if (aNotify) {
+    if (haveMutationListeners) {
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
-  // Null terminate the new buffer...
-  to[newLength] = (PRUnichar)0;
+      mutation.mPrevAttrValue = oldValue;
+      if (aLength > 0) {
+        nsAutoString val;
+        mText.AppendTo(val);
+        mutation.mNewAttrValue = do_GetAtom(val);
+      }
 
-  SetText(to, newLength, PR_TRUE);
-  delete [] to;
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    }
+
+    nsNodeUtils::CharacterDataChanged(this, aOffset == textLength);
+  }
 
   return NS_OK;
 }
@@ -945,49 +949,15 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
                               PRUint32 aLength,
                               PRBool aNotify)
 {
-  if (!aBuffer) {
-    NS_ERROR("Null buffer passed to SetText()!");
+  return SetTextInternal(0, mText.GetLength(), aBuffer, aLength, aNotify);
+}
 
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIDocument *document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-
-  PRBool haveMutationListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-      NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
-
-  nsCOMPtr<nsIAtom> oldValue;
-  if (haveMutationListeners) {
-    oldValue = GetCurrentValueAtom();
-  }
-    
-  // XXX Add OOM checking to this
-  mText.SetTo(aBuffer, aLength);
-
-  SetBidiStatus();
-
-  if (haveMutationListeners) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
-
-    mutation.mPrevAttrValue = oldValue;
-    if (aLength > 0) {
-      // Must use Substring() since nsDependentString() requires null
-      // terminated strings.
-      mutation.mNewAttrValue =
-        do_GetAtom(Substring(aBuffer, aBuffer + aLength));
-    }
-
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
-  }
-
-  // Trigger a reflow
-  if (aNotify) {
-    nsNodeUtils::CharacterDataChanged(this, PR_FALSE);
-  }
-
-  return NS_OK;
+nsresult
+nsGenericDOMDataNode::AppendText(const PRUnichar* aBuffer,
+                                 PRUint32 aLength,
+                                 PRBool aNotify)
+{
+  return SetTextInternal(mText.GetLength(), 0, aBuffer, aLength, aNotify);
 }
 
 PRBool

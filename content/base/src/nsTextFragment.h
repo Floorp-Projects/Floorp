@@ -138,22 +138,21 @@ public:
    * Get the length of the fragment. The length is the number of logical
    * characters, not the number of bytes to store the characters.
    */
-  PRInt32 GetLength() const
+  PRUint32 GetLength() const
   {
-    return PRInt32(mState.mLength);
+    return mState.mLength;
   }
 
   /**
    * Change the contents of this fragment to be a copy of the given
-   * buffer. Like operator= except a length is specified instead of
-   * assuming 0 termination.
+   * buffer.
    */
   void SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
 
   /**
    * Append aData to the end of this fragment.
    */
-  void Append(const nsAString& aData);
+  void Append(const PRUnichar* aBuffer, PRUint32 aLength);
 
   /**
    * Append the contents of this string fragment to aString

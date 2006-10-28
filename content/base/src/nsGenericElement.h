@@ -369,6 +369,8 @@ public:
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
+  virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+                              PRBool aNotify);
   virtual PRBool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
   virtual void SetFocus(nsPresContext* aContext);

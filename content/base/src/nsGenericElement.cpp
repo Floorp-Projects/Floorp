@@ -3534,6 +3534,15 @@ nsGenericElement::SetText(const PRUnichar* aBuffer, PRUint32 aLength,
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsGenericElement::AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+                             PRBool aNotify)
+{
+  NS_ERROR("called nsGenericElement::AppendText");
+
+  return NS_ERROR_FAILURE;
+}
+
 PRBool
 nsGenericElement::TextIsOnlyWhitespace()
 {
