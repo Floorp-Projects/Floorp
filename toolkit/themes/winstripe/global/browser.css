@@ -64,25 +64,13 @@
   -moz-border-radius-topright: 3px;
 }
 
-.tabbrowser-tab:not([selected="true"]) > .tab-image-left {
-  height: 23px;
-  margin-bottom: 1px;
+.tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-left {
   background: url("chrome://global/skin/icons/tab-left-bkgnd.png") no-repeat;
   background-color: -moz-dialog;
 }
 
-.tabbrowser-tab[chromedir="rtl"]:not([selected="true"]) > .tab-image-left {
+.tabbrowser-tab[chromedir="rtl"]:not([selected="true"]):not(:hover) > .tab-image-left {
   background: url("chrome://global/skin/icons/tab-right-bkgnd.png") no-repeat;
-  background-color: -moz-dialog;
-}
-
-.tabbrowser-tab:hover:not([selected="true"]) > .tab-image-left {
-  background: url("chrome://global/skin/icons/tab-left-hover.png") no-repeat;
-  background-color: -moz-dialog;
-}
-
-.tabbrowser-tab[chromedir="rtl"]:hover:not([selected="true"]) > .tab-image-left {
-  background: url("chrome://global/skin/icons/tab-right-hover.png") no-repeat;
   background-color: -moz-dialog;
 }
 
@@ -92,15 +80,8 @@
   background-color: -moz-dialog;
 }
 
-.tabbrowser-tab:not([selected="true"]) > .tab-image-middle {
-  height: 23px;
-  margin-bottom: 1px;
+.tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-middle {
   background: url("chrome://global/skin/icons/tab-middle-bkgnd.png") repeat-x;
-  background-color: -moz-dialog;
-}
-
-.tabbrowser-tab:hover:not([selected="true"]) > .tab-image-middle {
-  background: url("chrome://global/skin/icons/tab-middle-hover.png") repeat-x;
   background-color: -moz-dialog;
 }
 
@@ -119,26 +100,21 @@
   -moz-border-radius-topright: 0px;
 }
 
-.tabbrowser-tab:not([selected="true"]) > .tab-image-right {
-  height: 23px;
-  margin-bottom: 1px;
+.tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-right {
   background: url("chrome://global/skin/icons/tab-right-bkgnd.png") no-repeat;
   background-color: -moz-dialog;
 }
 
-.tabbrowser-tab[chromedir="rtl"]:not([selected="true"]) > .tab-image-right {
+.tabbrowser-tab[chromedir="rtl"]:not([selected="true"]):not(:hover) > .tab-image-right {
   background: url("chrome://global/skin/icons/tab-left-bkgnd.png") no-repeat;
   background-color: -moz-dialog;
 }
 
-.tabbrowser-tab:hover:not([selected="true"]) > .tab-image-right {
-  background: url("chrome://global/skin/icons/tab-right-hover.png") no-repeat;
-  background-color: -moz-dialog;
-}
-
-.tabbrowser-tab[chromedir="rtl"]:hover:not([selected="true"]) > .tab-image-right {
-  background: url("chrome://global/skin/icons/tab-left-hover.png") no-repeat;
-  background-color: -moz-dialog;
+.tabbrowser-tab:not([selected="true"]) > .tab-image-left,
+.tabbrowser-tab:not([selected="true"]) > .tab-image-middle,
+.tabbrowser-tab:not([selected="true"]) > .tab-image-right {
+  height: 23px;
+  margin-bottom: 1px;
 }
 
 .tab-icon-image {
@@ -245,7 +221,7 @@ tabpanels {
 }
 
 .tabbrowser-tab:hover > .tab-close-button {
-  background-image: url("chrome://global/skin/icons/tab-middle-hover.png");
+  background-image: url("chrome://global/skin/icons/tab-middle.png");
 }
 
 .tabbrowser-tab[selected="true"] > .tab-close-button {
@@ -405,14 +381,14 @@ tabpanels {
   margin-bottom: 4px;
   width: 18px !important;
   height: 23px !important;
-  background-image: url("chrome://global/skin/icons/alltabs-box-end-bkgnd.png");
+  background-image: url("chrome://global/skin/icons/tab-arrow-end-bkgnd-enabled.png");
   background-repeat: no-repeat;
   background-color: -moz-dialog; 
   -moz-border-radius-topleft: 5px;
 }
 
 stack[chromedir="rtl"] > hbox > .tabs-alltabs-box {
-  background-image: url("chrome://global/skin/icons/alltabs-box-start-bkgnd.png");
+  background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-enabled.png");
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-topright: 5px;
 }
@@ -453,12 +429,12 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box {
 }
 
 .tabs-alltabs-button:hover {
-  background-image: url("chrome://global/skin/icons/alltabs-box-end-bkgnd-hover.png");
+  background-image: url("chrome://global/skin/icons/tab-arrow-end-bkgnd-hover.png");
   background-repeat: no-repeat;
 }
 
 stack[chromedir="rtl"] > hbox > .tabs-alltabs-button:hover {
-  background-image: url("chrome://global/skin/icons/alltabs-box-start-bkgnd-hover.png");
+  background-image: url("chrome://global/skin/icons/tab-arrow-start-bkgnd-hover.png");
 }
 
 .tabbrowser-tabs[overflow="true"] .tabs-alltabs-button:hover {
