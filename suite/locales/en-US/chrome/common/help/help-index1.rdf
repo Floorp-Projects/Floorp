@@ -1412,6 +1412,11 @@
          nc:link="using_priv_help.xhtml#using_the_password_manager"/>
      </rdf:li>
      <rdf:li>
+       <rdf:Description ID="phishing"
+         nc:name="phishing"
+         nc:link="mail_help.xhtml#phishing_detection"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="plugins"
          nc:name="plug-ins"
          nc:link="nav_help.xhtml#plugins_and_downloads"/>

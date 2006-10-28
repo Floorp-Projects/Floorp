@@ -364,6 +364,7 @@
         <rdf:li> <rdf:Description ID="mail-junk-controls" nc:name="Using Junk Mail Controls" nc:link="mail_help.xhtml#using_junk_mail_controls" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-junk-options" nc:name="Junk Mail Controls Options" nc:link="mail_help.xhtml#junk_controls_options" /> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-junk-filters" nc:name="Junk Mail Controls and Filters" nc:link="mail_help.xhtml#junk_controls_and_filters" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk-phishing" nc:name="Phishing Detection" nc:link="mail_help.xhtml#phishing_detection" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

@@ -75,6 +75,7 @@
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.xhtml#password-based_authentication"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Password Manager" nc:link="glossary.xhtml#password_manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Personal Toolbar" nc:link="glossary.xhtml#personal_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="phishing" nc:link="glossary.xhtml#phishing"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.xhtml#pkcs_11"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.xhtml#pkcs_11_module"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKI" nc:link="glossary.xhtml#pki"/> </rdf:li>
