@@ -28,6 +28,15 @@ if (typeof(MochiKit.DOM) == 'undefined') {
     MochiKit.DOM = {};
 }
 
+var kXHTMLNSURI = "http://www.w3.org/1999/xhtml";
+var kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+if (document.documentElement &&
+    document.documentElement.namespaceURI == kXULNSURI) {
+    MochiKit.DOM.useNS = true;
+} else {
+    MochiKit.DOM.useNS = false;
+}
+
 MochiKit.DOM.NAME = "MochiKit.DOM";
 MochiKit.DOM.VERSION = "1.4";
 MochiKit.DOM.__repr__ = function () {
@@ -498,7 +507,11 @@ MochiKit.Base.update(MochiKit.DOM, {
                     name = "<" + name + contents + ">";
                 }
             }
-            elem = self._document.createElement(name);
+	    if (self.useNS) {
+		elem = self._document.createElementNS(kXHTMLNSURI, name);
+	    } else {
+	        elem = self._document.createElement(name);
+	    }
         } else {
             elem = name;
         }
