@@ -3492,6 +3492,20 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
     return NS_OK;
   }
 
+  PRBool childIsSpecialContent = PR_FALSE; // lazy lookup
+  // Only use the outer table frame as parent if the child is going to use a
+  // tableCaptionFrame, otherwise the inner table frame is the parent
+  // (bug 341858).
+  if (aParentFrame->GetType() == nsLayoutAtoms::tableOuterFrame) {
+    childIsSpecialContent = IsSpecialContent(aChildContent, aTag, aNameSpaceID,
+                                             aChildStyle);
+    if (childIsSpecialContent ||
+       (aChildStyle->GetStyleDisplay()->mDisplay !=
+       NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+      aParentFrame = aParentFrame->GetContentInsertionFrame();
+    }
+  }
+ 
   // If our parent is a table, table-row-group, or table-row, and
   // we're not table-related in any way, we have to create table
   // pseudo-frames so that we have a table cell to live in.
@@ -3499,6 +3513,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
       (!IsTableRelated(aChildStyle->GetStyleDisplay()->mDisplay, PR_TRUE) ||
        // Also need to create a pseudo-parent if the child is going to end up
        // with a frame based on something other than display.
+       childIsSpecialContent || // looked it up before
        IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle))) {
     nsTableCreator theTableCreator(aState.mPresShell);
     nsTableCreator* tableCreator = &theTableCreator;
@@ -9282,7 +9297,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
   }
 
-  nsFrameItems            frameItems;
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame),
@@ -9379,17 +9393,17 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
   
-  nsFrameItems tempItems, captionItems;
+  nsFrameItems frameItems, captionItems;
 
-  ConstructFrame(state, aChild, parentFrame, tempItems);
-  if (tempItems.childList) {
-    InvalidateCanvasIfNeeded(tempItems.childList);
+  ConstructFrame(state, aChild, parentFrame, frameItems);
+  if (frameItems.childList) {
+    InvalidateCanvasIfNeeded(frameItems.childList);
     
-    if (nsLayoutAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
-      captionItems.AddChild(tempItems.childList);
-    }
-    else {
-      frameItems.AddChild(tempItems.childList);
+    if (nsLayoutAtoms::tableCaptionFrame == frameItems.childList->GetType()) {
+      NS_ASSERTION(frameItems.childList == frameItems.lastChild ,
+                   "adding a non caption frame to the caption childlist?");
+      captionItems.AddChild(frameItems.childList);
+      frameItems = nsFrameItems();
     }
   }
 
@@ -9402,6 +9416,21 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty())
     ProcessPseudoFrames(state, frameItems);
+
+  // If the final parent frame (decided by AdjustParentFrame()) is different
+  // from the parent of the insertion point we calculated above then
+  // parentFrame/prevSibling/appendAfterFrame are now invalid and  as it is
+  // unknown where to insert correctly we append instead (bug 341858).
+  if (frameItems.childList &&
+      frameItems.childList->GetParent() != parentFrame) {
+    prevSibling = nsnull;
+    isAppend = PR_TRUE;
+    parentFrame =
+      ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
+                                          aContainer,
+                                          frameItems.childList->GetParent(),
+                                          &appendAfterFrame);
+  }
 
   // Perform special check for diddling around with the frames in
   // a special inline frame.
@@ -9425,6 +9454,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       
   nsIFrame* newFrame = frameItems.childList;
   if (NS_SUCCEEDED(rv) && newFrame) {
+    NS_ASSERTION(!captionItems.childList, "leaking caption frames");
     // Notify the parent frame
     if (isAppend) {
       AppendFrames(state, aContainer, parentFrame, newFrame, appendAfterFrame);
