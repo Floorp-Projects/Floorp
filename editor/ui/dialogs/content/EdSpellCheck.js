@@ -458,14 +458,32 @@ function SelectLanguage()
       gLastSelectedLang = item;
     }
     else {
-      opener.open(GetPrefs().getComplexValue("editor.spellcheckers.url",
-                  Components.interfaces.nsIPrefLocalizedString).data);
+      var dictionaryUrl = getDictionaryURL();
+                      
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+      uri = ioService.newURI(dictionaryUrl, null, null);
+      var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                  .getService(Components.interfaces.nsIExternalProtocolService);
+      if (protocolSvc.isExposedProtocol(uri.scheme))
+        opener.openDialog(getBrowserURL(), "_blank", "all,dialog=no", dictionaryUrl);
+      else
+        protocolSvc.loadUrl(uri);
+
       if (gLastSelectedLang)
         gDialog.LanguageMenulist.selectedItem = gLastSelectedLang;
     }
   } catch (ex) {
     dump(ex);
   }
+}
+
+function getDictionaryURL()
+{
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                  .getService(Components.interfaces.nsIURLFormatter);
+                  
+  return formatter.formatURLPref("spellchecker.dictionaries.download.url");
 }
 
 function Recheck()
