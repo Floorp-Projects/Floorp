@@ -1935,7 +1935,7 @@ nsCellMap::GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
   PRInt32 rowSpan = aCellFrameToAdd->GetRowSpan();
   if (0 == rowSpan) {
     // use a min value of 2 for a zero rowspan to make computations easier elsewhere 
-    rowSpan = PR_MAX(2, mRows.Count() - aRowIndex);
+    rowSpan = PR_MAX(2, mRowCount - aRowIndex);
     aIsZeroRowSpan = PR_TRUE;
   }
   return rowSpan;
@@ -2190,8 +2190,6 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
                                         nsRect&         aDamageArea)
 {
   NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
-  // copy the old cell map into a new array
-  PRInt32 mRowCountOrig = mRowCount;
   PRInt32 numOrigRows   = mRows.Count();
  
   void** origRows = new void*[numOrigRows];
@@ -2204,7 +2202,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
 
   // reinitialize data members
   mRows.Clear();
-  mRowCount = 0;
+  
 
   PRInt32 numNewCells = (aCellFrames) ? aCellFrames->Count() : 0;
   
@@ -2245,9 +2243,6 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       }
     }
   } 
-  // For cell deletion, since the row is not being deleted, 
-  // keep mRowCount the same as before. 
-  mRowCount = PR_MAX(mRowCount, mRowCountOrig);
 
   // delete the old cell map
   for (rowX = 0; rowX < numOrigRows; rowX++) {
