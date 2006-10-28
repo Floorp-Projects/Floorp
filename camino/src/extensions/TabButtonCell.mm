@@ -172,11 +172,35 @@ static NSImage* gTabButtonDividerImage = nil;
 -(void)addTrackingRectInView:(NSView *)aView withFrame:(NSRect)trackingRect cursorLocation:(NSPoint)currentLocation
 {
   [super addTrackingRectInView:aView withFrame:trackingRect cursorLocation:currentLocation];
+  if (NSPointInRect(currentLocation, trackingRect))
+    [mCloseButton setTrackingEnabled:YES];
 }
 
 -(void)removeTrackingRectFromView:(NSView *)aView
 {
   [super removeTrackingRectFromView:aView];
+  [mCloseButton setTrackingEnabled:NO];
+}
+
+-(void)updateHoverState:(BOOL)isHovered
+{
+  [mCloseButton setTrackingEnabled:isHovered];
+}
+
+- (void)mouseEntered:(NSEvent *)theEvent
+{
+  [super mouseEntered:theEvent];
+  NSView *view = [(NSDictionary*)[theEvent userData] objectForKey:@"view"];
+  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent])
+    [mCloseButton setTrackingEnabled:YES];
+}
+
+- (void)mouseExited:(NSEvent*)theEvent
+{
+  [super mouseExited:theEvent];
+  NSView *view = [(NSDictionary*)[theEvent userData] objectForKey:@"view"];
+  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent])
+    [mCloseButton setTrackingEnabled:NO];
 }
 
 -(void)hideCloseButton

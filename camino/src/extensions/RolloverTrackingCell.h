@@ -49,6 +49,8 @@
 -(void)setFrame:(NSRect)newFrame;
 -(NSRect)frame;
 -(NSSize)size;
+-(void)mouseEntered:(NSEvent*)theEvent;
+-(void)mouseExited:(NSEvent*)theEvent;
 -(BOOL)mouseWithin;
 -(void)addTrackingRectInView:(NSView*)aView withFrame:(NSRect)trackingRect cursorLocation:(NSPoint)currentLocation;
 -(void)removeTrackingRectFromView:(NSView*)aView;

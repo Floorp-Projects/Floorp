@@ -40,8 +40,8 @@
 @interface RolloverImageButton (Private)
   - (void)updateImage:(BOOL)inIsInside;
   - (BOOL)isMouseInside;
-  - (void)removeTrackingRectFromView:(NSView *)inView;
-  - (void)updateTrackingRectInSuperview;
+  - (void)removeTrackingRect;
+  - (void)updateTrackingRect;
 @end
 
 @implementation RolloverImageButton
@@ -52,6 +52,7 @@
     mImage = nil;
     mHoverImage = nil;
     mTrackingTag = -1;
+    mTrackingIsEnabled = YES;
   }
   return self;
 }
@@ -68,7 +69,7 @@
 
 - (void)removeFromSuperview
 {
-  [self removeTrackingRectFromView:[self superview]];
+  [self removeTrackingRect];
   [super removeFromSuperview];
 }
 
@@ -76,16 +77,25 @@
 {
   [super setEnabled:inStatus];
   if ([self isEnabled])
-    [self updateTrackingRectInSuperview];
+    [self updateTrackingRect];
   else {
     [self updateImage:NO];
-    [self removeTrackingRectFromView:[self superview]];
+    [self removeTrackingRect];
   }
+}
+
+- (void)setTrackingEnabled:(BOOL)enableTracking
+{
+  mTrackingIsEnabled = enableTracking;
+  if (mTrackingIsEnabled)
+    [self updateTrackingRect];
+  else
+    [self removeTrackingRect];
 }
 
 - (void)viewDidMoveToWindow
 {
-  [self updateTrackingRectInSuperview];
+  [self updateTrackingRect];
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   // unregister the button from observering the current window just in case a tab moves from one window to another
   [nc removeObserver:self];
@@ -100,25 +110,29 @@
 - (void)setFrame:(NSRect)inFrame
 {
   NSRect oldFrame = [self frame];
+  // setFrame: is implemented in terms of setFrameOrigin: and setFrameSize:, so
+  // track when it's being called to avoid updating the tracking rect three times
+  mSettingFrame = YES;
   [super setFrame:inFrame];
+  mSettingFrame = NO;
   if (!NSEqualRects(oldFrame, [self frame]))
-    [self updateTrackingRectInSuperview];
+    [self updateTrackingRect];
 }
 
 - (void)setFrameOrigin:(NSPoint)inOrigin
 {
   NSPoint oldOrigin = [self frame].origin;
   [super setFrameOrigin:inOrigin];
-  if (!NSEqualPoints(oldOrigin,[self frame].origin))
-    [self updateTrackingRectInSuperview];
+  if (!mSettingFrame && !NSEqualPoints(oldOrigin,[self frame].origin))
+    [self updateTrackingRect];
 }
 
 - (void)setFrameSize:(NSSize)inSize
 {
   NSSize oldSize = [self frame].size;
   [super setFrameSize:inSize];
-  if (!NSEqualSizes(oldSize,[self frame].size))
-    [self updateTrackingRectInSuperview];
+  if (!mSettingFrame && !NSEqualSizes(oldSize,[self frame].size))
+    [self updateTrackingRect];
 }
 
 - (void)mouseEntered:(NSEvent*)theEvent
@@ -178,7 +192,7 @@
 
 - (void)resetCursorRects
 {
-  [self updateTrackingRectInSuperview];
+  [self updateTrackingRect];
 }
 
 @end
@@ -202,16 +216,19 @@
   return NSMouseInRect(mousePointInView, [self frame], NO);
 }
 
-- (void)removeTrackingRectFromView:(NSView *)inView
+- (void)removeTrackingRect
 {
-  [inView removeTrackingRect:mTrackingTag];
-  mTrackingTag = -1;
+  if (mTrackingTag != -1) {
+    [[self superview] removeTrackingRect:mTrackingTag];
+    mTrackingTag = -1;
+  }
 }
 
-- (void)updateTrackingRectInSuperview
+- (void)updateTrackingRect
 {
-  if (mTrackingTag != -1)
-    [self removeTrackingRectFromView:[self superview]];
+  if (!mTrackingIsEnabled)
+    return;
+  [self removeTrackingRect];
   BOOL mouseInside = [self isMouseInside];
   mTrackingTag = [[self superview] addTrackingRect:[self frame] owner:self userData:nil assumeInside:mouseInside];
   [self updateImage:mouseInside];

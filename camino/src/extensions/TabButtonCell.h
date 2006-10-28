@@ -55,5 +55,6 @@
 -(BOOL)willTrackMouse:(NSEvent*)theEvent inRect:(NSRect)cellFrame ofView:(NSView*)controlView;
 -(void)hideCloseButton;
 -(void)setDrawDivider:(BOOL)willDraw;
+-(void)updateHoverState:(BOOL)isHovered;
 
 @end

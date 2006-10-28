@@ -42,6 +42,9 @@
     NSImage* mImage;               //STRONG Refrence
     NSImage* mHoverImage;          //STRONG Refrence
     NSTrackingRectTag mTrackingTag;
+    BOOL mTrackingIsEnabled;
+    BOOL mSettingFrame;
 }
-- (void)setHoverImage:(NSImage*)inImage;  
+- (void)setHoverImage:(NSImage*)inImage;
+- (void)setTrackingEnabled:(BOOL)enableTracking;
 @end
