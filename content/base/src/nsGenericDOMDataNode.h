@@ -218,6 +218,8 @@ public:
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
+  virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+                              PRBool aNotify);
   virtual PRBool TextIsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
 #ifdef DEBUG
@@ -302,6 +304,10 @@ protected:
   }
 
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+
+  nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
+                           const PRUnichar* aBuffer, PRUint32 aLength,
+                           PRBool aNotify);
 
   /**
    * Method to clone this node. This needs to be overriden by all derived

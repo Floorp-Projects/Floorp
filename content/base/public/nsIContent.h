@@ -62,9 +62,8 @@ class nsTextFragment;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x4e5f17a1, 0x68c5, 0x4d9b, \
-  { 0xbf, 0x5b, 0xf6, 0x05, 0x10, 0xee, 0xc0, 0x41 } }
-
+{ 0x7796e67b, 0xdc73, 0x4b3d, \
+  { 0xb8, 0x34, 0xcc, 0x9f, 0x96, 0xf7, 0x25, 0x56 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -405,6 +404,14 @@ public:
    */
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
                            PRBool aNotify) = 0;
+
+  /**
+   * Append the given value to the current text. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
+   * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
+   */
+  virtual nsresult AppendText(const PRUnichar* aBuffer, PRUint32 aLength,
+                              PRBool aNotify) = 0;
 
   /**
    * Set the text to the given value. If aNotify is PR_TRUE then

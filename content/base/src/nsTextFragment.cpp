@@ -287,15 +287,12 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 }
 
 void
-nsTextFragment::Append(const nsAString& aData)
+nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
 {
-  PRUint32 len = aData.Length();
-  const PRUnichar* start = aData.BeginReading();
-
   // This is a common case because some callsites create a textnode
   // with a value by creating the node and then calling AppendData.
   if (mState.mLength == 0) {
-    SetTo(start, len);
+    SetTo(aBuffer, aLength);
 
     return;
   }
@@ -304,13 +301,13 @@ nsTextFragment::Append(const nsAString& aData)
 
   if (mState.mIs2b) {
     // Already a 2-byte string so the result will be too
-    PRUnichar* buff = (PRUnichar*)nsMemory::Realloc(m2b, (mState.mLength + len) * sizeof(PRUnichar));
+    PRUnichar* buff = (PRUnichar*)nsMemory::Realloc(m2b, (mState.mLength + aLength) * sizeof(PRUnichar));
     if (!buff) {
       return;
     }
     
-    memcpy(buff + mState.mLength, start, len * sizeof(PRUnichar));
-    mState.mLength += len;
+    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
+    mState.mLength += aLength;
     m2b = buff;
 
     return;
@@ -318,8 +315,8 @@ nsTextFragment::Append(const nsAString& aData)
 
   // Current string is a 1-byte string, check if the new data fits in one byte too.
 
-  const PRUnichar* ucp = start;
-  const PRUnichar* uend = ucp + len;
+  const PRUnichar* ucp = aBuffer;
+  const PRUnichar* uend = ucp + aLength;
   PRBool need2 = PR_FALSE;
   while (ucp < uend) {
     PRUnichar ch = *ucp++;
@@ -332,7 +329,7 @@ nsTextFragment::Append(const nsAString& aData)
   if (need2) {
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    PRUnichar* buff = (PRUnichar*)nsMemory::Alloc((mState.mLength + len) *
+    PRUnichar* buff = (PRUnichar*)nsMemory::Alloc((mState.mLength + aLength) *
                                                   sizeof(PRUnichar));
     if (!buff) {
       return;
@@ -343,9 +340,9 @@ nsTextFragment::Append(const nsAString& aData)
       buff[i] = (unsigned char)m1b[i];
     }
     
-    memcpy(buff + mState.mLength, start, len * sizeof(PRUnichar));
+    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
 
-    mState.mLength += len;
+    mState.mLength += aLength;
     mState.mIs2b = PR_TRUE;
 
     if (mState.mInHeap) {
@@ -362,13 +359,13 @@ nsTextFragment::Append(const nsAString& aData)
   char* buff;
   if (mState.mInHeap) {
     buff = (char*)nsMemory::Realloc(NS_CONST_CAST(char*, m1b),
-                                    (mState.mLength + len) * sizeof(char));
+                                    (mState.mLength + aLength) * sizeof(char));
     if (!buff) {
       return;
     }
   }
   else {
-    buff = (char*)nsMemory::Alloc((mState.mLength + len) * sizeof(char));
+    buff = (char*)nsMemory::Alloc((mState.mLength + aLength) * sizeof(char));
     if (!buff) {
       return;
     }
@@ -377,12 +374,12 @@ nsTextFragment::Append(const nsAString& aData)
     mState.mInHeap = PR_TRUE;
   }
     
-  for (PRUint32 i = 0; i < len; ++i) {
-    buff[mState.mLength + i] = (char)start[i];
+  for (PRUint32 i = 0; i < aLength; ++i) {
+    buff[mState.mLength + i] = (char)aBuffer[i];
   }
 
   m1b = buff;
-  mState.mLength += len;
+  mState.mLength += aLength;
 
 }
 

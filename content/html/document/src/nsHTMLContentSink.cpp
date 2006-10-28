@@ -1675,15 +1675,21 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         mLastTextNode = nsnull;
         FlushText(aDidFlush, aReleaseLast);
       } else {
-        nsCOMPtr<nsIDOMCharacterData> cdata(do_QueryInterface(mLastTextNode));
-
-        if (cdata) {
-          rv = cdata->AppendData(Substring(mText, mText + mTextLength));
-
-          mLastTextNodeSize += mTextLength;
-          mTextLength = 0;
-          didFlush = PR_TRUE;
+        PRBool notify = HaveNotifiedForCurrentContent();
+        // We could probably always increase mInNotification here since
+        // if AppendText doesn't notify it shouldn't trigger evil code.
+        // But just in case it does, we don't want to mask any notifications.
+        if (notify) {
+          ++mSink->mInNotification;
         }
+        rv = mLastTextNode->AppendText(mText, mTextLength, notify);
+        if (notify) {
+          --mSink->mInNotification;
+        }
+
+        mLastTextNodeSize += mTextLength;
+        mTextLength = 0;
+        didFlush = PR_TRUE;
       }
     } else {
       nsCOMPtr<nsIContent> textContent;
