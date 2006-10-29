@@ -220,6 +220,12 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
             mSinglePixelColor = gfxRGBA(*pxl);
             if (mFormat == gfxImageSurface::ImageFormatRGB24)
                 mSinglePixelColor.a = 1.0;
+            else if (mSinglePixelColor.a != 0.0) {
+                // unpremultiply alpha
+                mSinglePixelColor.r = mSinglePixelColor.r / mSinglePixelColor.a;
+                mSinglePixelColor.g = mSinglePixelColor.g / mSinglePixelColor.a;
+                mSinglePixelColor.b = mSinglePixelColor.b / mSinglePixelColor.a;
+            }
 
             mSinglePixel = PR_TRUE;
 
