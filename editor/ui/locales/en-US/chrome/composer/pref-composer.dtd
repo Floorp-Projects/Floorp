@@ -28,6 +28,8 @@
 <!ENTITY  showPublishDialog.accesskey   "A">
 
 <!ENTITY  composerEditing.label         "Editing">
+<!ENTITY  spellCheckInline.label        "Check spelling as you type">
+<!ENTITY  spellCheckInline.accesskey    "C">
 <!ENTITY  maintainStructure.label       "Maintain table layout when inserting or deleting cells">
 <!ENTITY  maintainStructure.tooltip     "Preserves table's rectangular shape by automatically adding cells after inserting or deleting cells">
 <!ENTITY  maintainStructure.accesskey   "M">
