@@ -262,7 +262,7 @@ calCalendarManager.prototype = {
         }
 
         throw "cal_calendar_schema_version SELECT returned no results";
-     },
+    },
 
     findCalendarID: function(calendar) {
         var stmt = this.mFindCalendar;
