@@ -138,7 +138,7 @@ function Startup()
       document.title = dialogElement.getAttribute("selectFolderTitle");
       shouldSetOKButton = false;
       if (window.arguments[2])
-        folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
+        folderItem = RDF.GetResource(window.arguments[2]);
       if (folderItem) {
         ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
         bookmarkView.tree.view.selection.select(ind);
@@ -166,7 +166,7 @@ function Startup()
       setupFields();
       if (window.arguments[2]) {
         gCreateInFolder = window.arguments[2];
-        folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
+        folderItem = RDF.GetResource(gCreateInFolder);
         if (folderItem) {
           ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
           bookmarkView.tree.view.selection.select(ind);
