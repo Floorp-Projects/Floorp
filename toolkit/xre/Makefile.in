@@ -223,5 +223,9 @@ endif
 
 DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))\"
 
+ifdef WRAP_SYSTEM_INCLUDES
+DEFINES        	+= -DWRAP_SYSTEM_INCLUDES
+endif
+
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
 	$(INSTALL) $^ .
