@@ -535,7 +535,7 @@ DestroyPropTreeKidsChunk(JSRuntime *rt, PropTreeKidsChunk *chunk)
 /* NB: Called with the runtime lock held. */
 static JSBool
 InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
-                        JSScopeProperty *child)
+                        JSScopeProperty *child, PropTreeKidsChunk *sweptChunk)
 {
     JSPropertyTreeEntry *entry;
     JSScopeProperty **childp, *kids, *sprop;
@@ -601,9 +601,13 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
                     chunkp = &chunk->next;
                 } while ((chunk = *chunkp) != NULL);
 
-                chunk = NewPropTreeKidsChunk(rt);
-                if (!chunk)
-                    return JS_FALSE;
+                if (sweptChunk) {
+                    chunk = sweptChunk;
+                } else {
+                    chunk = NewPropTreeKidsChunk(rt);
+                    if (!chunk)
+                        return JS_FALSE;
+                }
                 *chunkp = chunk;
                 childp = &chunk->kids[0];
             } else {
@@ -783,7 +787,7 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
     if (!parent) {
         entry->child = sprop;
     } else {
-        if (!InsertPropertyTreeChild(rt, parent, sprop))
+        if (!InsertPropertyTreeChild(rt, parent, sprop, NULL))
             goto out_of_memory;
     }
 
@@ -1551,27 +1555,78 @@ js_SweepScopeProperties(JSRuntime *rt)
             /* Ok, sprop is garbage to collect: unlink it from its parent. */
             RemovePropertyTreeChild(rt, sprop);
 
-            /* Take care to reparent all sprop's kids to their grandparent. */
+            /*
+             * Take care to reparent all sprop's kids to their grandparent.
+             * InsertPropertyTreeChild can potentially fail for two reasons:
+             *
+             * 1. If parent is null, insertion into the root property hash
+             *    table may fail. We are forced to leave the kid out of the
+             *    table (as can already happen with duplicates) but ensure
+             *    that the kid's parent pointer is set to null.
+             *
+             * 2. If parent is non-null, allocation of a new KidsChunk can
+             *    fail. To prevent this from happening, we allow sprops's own
+             *    chunks to be reused by the grandparent, which removes the
+             *    need for InsertPropertyTreeChild to malloc a new KidsChunk.
+             *
+             * We also require the grandparent to have either no kids or else
+             * chunky kids. A single non-chunky kid would force a new chunk to
+             * be malloced in some cases (if sprop had a single non-chunky
+             * kid, or a multiple of MAX_KIDS_PER_CHUNK kids). Note that
+             * RemovePropertyTreeChild never converts a single entry chunky
+             * kid back to a non-chunky kid, so we are assured of correct
+             * behaviour.
+             */
             kids = sprop->kids;
             if (kids) {
                 sprop->kids = NULL;
                 parent = sprop->parent;
+                /* Validate that grandparent has no kids or chunky kids. */
+                JS_ASSERT(!parent || !parent->kids ||
+                          KIDS_IS_CHUNKY(parent->kids));
                 if (KIDS_IS_CHUNKY(kids)) {
                     chunk = KIDS_TO_CHUNK(kids);
                     do {
+                        nextChunk = chunk->next;
+                        chunk->next = NULL;
                         for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
                             kid = chunk->kids[i];
                             if (!kid)
                                 break;
                             JS_ASSERT(kid->parent == sprop);
-                            InsertPropertyTreeChild(rt, parent, kid);
+
+                            /*
+                             * Clear a space in the kids array for possible
+                             * re-use by InsertPropertyTreeChild.
+                             */
+                            chunk->kids[i] = NULL;
+                            if (!InsertPropertyTreeChild(rt, parent, kid,
+                                                         chunk)) {
+                                /*
+                                 * This can happen only if we failed to add an
+                                 * entry to the root property hash table.
+                                 */
+                                JS_ASSERT(!parent);
+                                kid->parent = NULL;
+                            }
                         }
-                        nextChunk = chunk->next;
-                        DestroyPropTreeKidsChunk(rt, chunk);
+                        if (!chunk->kids[0]) {
+                            /* The chunk wasn't reused so we can free it */
+                            DestroyPropTreeKidsChunk(rt, chunk);
+                        }
                     } while ((chunk = nextChunk) != NULL);
                 } else {
                     kid = kids;
-                    InsertPropertyTreeChild(rt, parent, kid);
+                    if (!InsertPropertyTreeChild(rt, parent, kid, NULL)) {
+                        /*
+                         * The removal of sprop should have left a free space
+                         * for kid to be inserted into parent, unless the root
+                         * hash table was shrunk. In this case we allow for
+                         * failure only when parent is null.
+                         */
+                        JS_ASSERT(!parent);
+                        kid->parent = NULL;
+                    }
                 }
             }
 
