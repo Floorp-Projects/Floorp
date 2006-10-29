@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -115,26 +116,78 @@ calCalendarManager.prototype = {
         }
     },
 
+    DB_SCHEMA_VERSION: 5,
+
     initDB: function() {
+        var dbService = Components.classes[kStorageServiceContractID]
+                                  .getService(kStorageServiceIID);
+
+        if ("getProfileStorage" in dbService) {
+            // 1.8 branch
+            this.mDB = dbService.getProfileStorage("profile");
+        } else {
+            // trunk
+            this.mDB = dbService.openSpecialDatabase("profile");
+        }
+
         var sqlTables = { cal_calendars: "id INTEGER PRIMARY KEY, type STRING, uri STRING",
                           cal_calendars_prefs: "id INTEGER PRIMARY KEY, calendar INTEGER, name STRING, value STRING"
         };
 
-        var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
-
-	if ( "getProfileStorage" in dbService ) {
-	  // 1.8 branch
-	  this.mDB = dbService.getProfileStorage("profile");
-	} else {
-	  // trunk 
-	  this.mDB = dbService.openSpecialDatabase("profile");
-	}
+        // Should we check the schema version to see if we need to upgrade?
+        var checkSchema = true;
 
         for (table in sqlTables) {
-            try {
+            if (!this.mDB.tableExists(table)) {
                 this.mDB.createTable(table, sqlTables[table]);
-            } catch (ex) {
-                dump("error creating table " + table + " -- probably already exists\n");
+                checkSchema = false;
+            }
+        }
+
+        if (checkSchema) {
+            // Check if we need to upgrade
+            var version = this.getSchemaVersion();
+            //dump ("*** Calendar schema version is: " + version + "\n");
+
+            if (version < this.DB_SCHEMA_VERSION) {
+                // Upgrader goes here.
+            } else if (version > this.DB_SCHEMA_VERSION) {
+                // Schema version is newer than what we know how to deal with.
+                // Alert the user, and quit the app.
+                var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                    .getService(Components.interfaces.nsIStringBundleService);
+
+                var brandSb = sbs.createBundle("chrome://branding/locale/brand.properties");
+                var calSb = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+
+                var shortName = brandSb.GetStringFromName("brandShortName");
+
+                var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                          .getService(Components.interfaces.nsIPromptService);
+
+                buttonFlags = promptSvc.BUTTON_POS_0 *
+                              promptSvc.BUTTON_TITLE_IS_STRING +
+                              promptSvc.BUTTON_POS_0_DEFAULT;
+
+                var choice = promptSvc.confirmEx(
+                                null,
+                                calSb.formatStringFromName("tooNewSchemaErrorTitle",
+                                                           [shortName], 1),
+                                calSb.formatStringFromName("tooNewSchemaErrorText",
+                                                           [shortName], 1),
+                                buttonFlags,
+                                calSb.formatStringFromName("tooNewSchemaButtonQuit",
+                                                           [shortName], 1),
+                                null, // No second button text
+                                null, // No third button text
+                                null, // No checkbox
+                                {value: false}); // Unnecessary checkbox state
+
+                if (choice == 0) {
+                    var startup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                                            .getService(Components.interfaces.nsIAppStartup);
+                    startup.quit(Components.interfaces.nsIAppStartup.eForceQuit);
+                }
             }
         }
 
@@ -175,6 +228,41 @@ calCalendarManager.prototype = {
             "DELETE FROM cal_calendars_prefs WHERE calendar = :calendar");
 
     },
+
+    /** 
+     * @return      db schema version
+     * @exception   various, depending on error
+     */
+    getSchemaVersion: function calMgrGetSchemaVersion() {
+        var stmt;
+        var version = null;
+
+        try {
+            stmt = createStatement(this.mDB,
+                    "SELECT version FROM cal_calendar_schema_version LIMIT 1");
+            if (stmt.step()) {
+                version = stmt.row.version;
+            }
+            stmt.reset();
+
+            if (version !== null) {
+                // This is the only place to leave this function gracefully.
+                return version;
+            }
+        } catch (e) {
+            if (stmt) {
+                stmt.reset();
+            }
+            dump ("++++++++++++ calMgrGetSchemaVersion() error: " +
+                  this.mDB.lastErrorString + "\n");
+            Components.utils.reportError("Error getting calendar " +
+                                         "schema version! DB Error: " + 
+                                         this.mDB.lastErrorString);
+            throw e;
+        }
+
+        throw "cal_calendar_schema_version SELECT returned no results";
+     },
 
     findCalendarID: function(calendar) {
         var stmt = this.mFindCalendar;
