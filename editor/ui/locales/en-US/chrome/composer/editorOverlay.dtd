@@ -136,12 +136,14 @@
 <!ENTITY editfindprev.accesskey "v">
 <!ENTITY editfindprev.keybinding "g">
 <!ENTITY editfindprev.keybinding2 "VK_F3">
+<!ENTITY enableInlineSpellChecker.label "Spellcheck As You Type">
+<!ENTITY enableInlineSpellChecker.accesskey "S">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
+<!ENTITY editcheckspelling.accesskey "h">
+<!ENTITY editcheckspelling.keybinding "k">
 <!ENTITY validateCmd.label "Validate HTML">
 <!ENTITY validate.accesskey "v">
 <!ENTITY checkLinksCmd.label "Check Links">
-<!ENTITY editcheckspelling.accesskey "s">
-<!ENTITY editcheckspelling.keybinding "k">
 
 <!-- View menu items -->
 <!ENTITY viewPageSource.label "Page Source">
@@ -196,6 +198,11 @@
 <!ENTITY insertisindex.accesskey "x">
 
 <!-- Used just in context popup. -->
+<!ENTITY spellCheckNoSuggestions.label "(No Suggestions Found)">
+<!ENTITY spellCheckIgnoreWord.label "Ignore Word">
+<!ENTITY spellCheckIgnoreWord.accesskey "I">
+<!ENTITY spellCheckAddToDictionary.label "Add to Dictionary">
+<!ENTITY spellCheckAddToDictionary.accesskey "n">
 <!ENTITY createLinkCmd.label "Create Link...">
 <!ENTITY createlink.accesskey "k">
 <!ENTITY editLinkCmd.label "Edit Link in New Composer">
