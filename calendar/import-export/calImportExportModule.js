@@ -75,6 +75,13 @@ const componentData =
      category: "cal-print-formatters",
      categoryEntry: "cal-month-printer",
      service: false},
+    {cid: Components.ID("{2d6ec97b-9109-4b92-89c5-d4b4806619ce}"),
+     contractid: "@mozilla.org/calendar/printformatter;1?type=weekplan",
+     script: "calWeekPrinter.js",
+     constructor: "calWeekPrinter",
+     category: "cal-print-formatters",
+     categoryEntry: "cal-week-planner-printer",
+     service: false},
 
     {cid: Components.ID("{64a5d17a-0497-48c5-b54f-72b15c9e9a14}"),
      contractid: "@mozilla.org/calendar/import;1?type=csv",

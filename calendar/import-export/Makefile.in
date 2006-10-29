@@ -52,6 +52,7 @@ EXTRA_SCRIPTS = \
     calListFormatter.js \
     calMonthGridPrinter.js \
     calOutlookCSVImportExport.js \
+    calWeekPrinter.js \
     $(NULL)
 
 # Use NSINSTALL to make the directory, as there's no mtime to preserve.
