@@ -434,10 +434,10 @@ function openPreferences(paneID)
  */
 function openReleaseNotes(event)
 {
-  var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
-                          .getService(Components.interfaces.nsIXULAppInfo);
-  var regionBundle = document.getElementById("bundle_browser_region");
-  var relnotesURL = formatURL("app.releaseNotesURL", true);
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  var relnotesURL = formatter.formatURLPref("app.releaseNotesURL");
+  
   openUILink(relnotesURL, event, false, true);
 }
   
