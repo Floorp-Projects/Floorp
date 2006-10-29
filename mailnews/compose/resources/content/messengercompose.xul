@@ -99,7 +99,6 @@
 
 <!-- drag and drop -->
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
 <commandset id="composeCommands">
   <commandset id="msgComposeCommandUpdate"

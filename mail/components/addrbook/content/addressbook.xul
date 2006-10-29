@@ -78,7 +78,6 @@
 
 <!-- move needed functions into a single js file -->
 <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>

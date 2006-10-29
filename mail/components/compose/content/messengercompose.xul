@@ -81,7 +81,6 @@
 <!-- drag and drop -->
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
 <!-- move needed functions into a single js file -->
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>

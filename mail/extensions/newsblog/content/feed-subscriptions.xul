@@ -64,7 +64,6 @@
   <script type="application/x-javascript" src="FeedItem.js"/>
   <script type="application/x-javascript" src="feed-parser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;" modifiers="accel" oncommand="window.close();"/>

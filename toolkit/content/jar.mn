@@ -2,6 +2,9 @@ toolkit.jar:
 %  content global %content/global/ xpcnativewrappers=yes
 %  content global-platform %content/global-platform/ platform xpcnativewrappers=yes
 %  content global-region %content/global-region/ xpcnativewrappers=yes
+# provide the nsTransferable in nsDragAndDrop.js to extensions that have to
+# work with Geckos from before 1.9, when there was a separate file
+%  override chrome://global/content/nsTransferable.js chrome://global/content/nsDragAndDrop.js
 +  content/global/license.html                (license.html)
    content/global/XPCNativeWrapper.js         (XPCNativeWrapper.js)
 *  content/global/xul.css                     (xul.css)
@@ -29,7 +32,6 @@ toolkit.jar:
 *+ content/global/inlineSpellCheckUI.js       (inlineSpellCheckUI.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
 *+ content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
-+  content/global/nsTransferable.js           (nsTransferable.js)
 *+ content/global/nsWidgetStateManager.js     (nsWidgetStateManager.js)
 +  content/global/selectDialog.js             (selectDialog.js)
 +  content/global/selectDialog.xul            (selectDialog.xul)

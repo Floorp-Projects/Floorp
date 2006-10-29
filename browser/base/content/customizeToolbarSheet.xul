@@ -62,8 +62,6 @@
   <script type="application/x-javascript"
           src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript"
-          src="chrome://global/content/nsTransferable.js"/>
-  <script type="application/x-javascript"
           src="chrome://browser/content/customizeToolbarSheet.js"/>
 
   <stringbundle id="stringBundle"

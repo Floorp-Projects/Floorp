@@ -74,7 +74,6 @@
 
   <!-- Generic Utility -->
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

@@ -66,7 +66,6 @@
 
   <!-- Bookmarks Panel Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
   <!-- context menu, tooltips, etc -->
   <popupset id="bookmarksPopupset"/>

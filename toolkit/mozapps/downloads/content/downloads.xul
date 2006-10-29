@@ -67,7 +67,6 @@
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <stringbundleset id="downloadSet">
