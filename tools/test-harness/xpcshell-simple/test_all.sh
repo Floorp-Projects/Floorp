@@ -86,7 +86,12 @@ do
     $bin/xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
-        echo "FAIL (see $t.log)"
+        echo "FAIL"
+        echo "$t.log:"
+        echo ">>>>>>>"
+        cat $t.log
+        echo ""
+        echo "<<<<<<<"
         exit_status=1
     else
         echo "PASS"
