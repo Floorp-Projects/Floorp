@@ -3859,9 +3859,6 @@ nsBrowserStatusHandler.prototype =
   asyncUpdateUI : function () {
     FeedHandler.updateFeeds();
     BrowserSearch.updateSearchButton();
-#ifdef ALTSS_ICON
-    updatePageStyles();
-#endif
 #ifdef MOZ_PLACES
     PlacesCommandHook.updateTagButton();
 #endif
@@ -5872,36 +5869,6 @@ function setStyleDisabled(disabled) {
   getMarkupDocumentViewer().authorStyleDisabled = disabled;
 }
 
-#ifdef ALTSS_ICON
-function updatePageStyles(evt) {
-  if (!gPageStyleButton)
-    gPageStyleButton = document.getElementById("page-theme-button");
-
-  var hasAltSS = false;
-  var stylesheets = window.content.document.styleSheets;
-  var preferredSheet = window.content.document.preferredStylesheetSet;
-  for (var i = 0; i < stylesheets.length; ++i) {
-    var currentStyleSheet = stylesheets[i];
-
-    if (currentStyleSheet.title && currentStyleSheet.title != preferredSheet) {
-        // Skip any stylesheets that don't match the screen media type.
-        var media = currentStyleSheet.media.mediaText.toLowerCase();
-        if (media && (media.indexOf("screen") == -1) && (media.indexOf("all") == -1))
-            continue;
-        hasAltSS = true;
-        break;
-    }
-  }
-
-  if (hasAltSS) {
-    gPageStyleButton.setAttribute("themes", "true");
-    // FIXME: Do a first-time explanation of page styles here perhaps?
-    // Avoid for now since Firebird's default home page has an alt sheet.
-  }
-  else
-    gPageStyleButton.removeAttribute("themes");
-}
-#endif
 /* End of the Page Style functions */
 
 var BrowserOffline = {
