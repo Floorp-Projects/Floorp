@@ -6,7 +6,11 @@
  * @subpackage docs
  */
 
-startProcessing('search.tpl',$memcacheId,$compileId,'rustico');
+// App.
+$clean['app'] = isset($app) ? $app : 'firefox';
+
+$pageType = ($clean['app'] == 'firefox' ? 'rustico' : 'nonav');
+startProcessing('search.tpl', $memcacheId, $compileId, $pageType);
 require_once('includes.php');
 
 // Instantiate AMO_Object so we can get our categories and platforms.
@@ -20,9 +24,6 @@ foreach ($appList as $id=>$name) {
 
 // Array to store our page information.
 $page = array();
-
-// App.
-$clean['app'] = isset($app) ? $app : 'firefox';
 
 // Category.
 if (isset($_GET['cat'])&&ctype_digit($_GET['cat'])) {
