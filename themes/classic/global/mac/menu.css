@@ -56,13 +56,13 @@ menuitem {
 
 menuitem[default="true"] {
   font-weight: bold;
-}  
-  
+}
+
 menu[disabled="true"],
 menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
-  color: GrayText !important;
+  color: -moz-mac-menutextdisable !important;
 }
 
 .menu-iconic,
@@ -73,10 +73,8 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ..... internal content .... */
 
 .menu-text, 
-.menu-accel,
-.menu-iconic-text,
-.menu-iconic-accel {
-  margin: 0px 2px 0px 0px !important;
+.menu-iconic-text {
+  margin: 0px 4px 0px 0px !important;
   color: inherit;
 }
 
@@ -85,8 +83,15 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   font-weight: inherit;
 }
 
+.menu-accel,
+.menu-iconic-accel {
+  margin: 0px 2px 0px 2px !important;
+  padding-right: 10px;
+  color: inherit;
+}
+
 .menu-iconic-left {
-  margin: 1px 2px 1px 18px !important;
+  margin: 2px 4px 1px 18px !important;
   color: inherit;
 }
 
@@ -99,18 +104,8 @@ menuitem[type="radio"] > .menu-iconic-left {
 
 .menu-description {
   font-style: italic;
-  color: GrayText;
+  color: -moz-mac-menutextdisable;
   margin-left: 1ex !important;
-}
-
-.menu-accel {
-  margin-left: 4px;
-  padding-right: 14px;
-}
-
-.menu-iconic-accel {
-  margin-left: 4px;
-  padding-right: 14px;
 }
 
 .menu-iconic-icon {
@@ -170,7 +165,7 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
-  padding: 1px 3px 1px 3px;
+  padding: 0px 3px 2px 3px !important;
   max-width: 42em;
 }
 
@@ -188,13 +183,13 @@ menuitem[checked="true"] {
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-dis.png");
+menuitem[checked="true"][_moz-menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.png");
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hov.png");
+menuitem[checked="true"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-dis.png");
   -moz-image-region: auto;
 }
 
@@ -203,7 +198,7 @@ menuitem[checked="true"][_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menuitem {
   max-width: none;
-  padding-right: 28px;
+  padding-right: 28px !important;
   font: message-box;
 }
 
