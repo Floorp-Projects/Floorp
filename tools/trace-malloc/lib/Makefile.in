@@ -69,5 +69,9 @@ EXTRA_DSO_LDOPTS += $(XPCOM_LIBS)
 OS_LIBS		+= shell32.lib ole32.lib uuid.lib imagehlp.lib
 endif
 
+ifdef WRAP_SYSTEM_INCLUDES
+DEFINES        	+= -DWRAP_SYSTEM_INCLUDES
+endif
+
 include $(topsrcdir)/config/rules.mk
 

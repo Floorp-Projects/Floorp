@@ -87,10 +87,16 @@
 char *nsDemangle(const char *);
 #endif
 
+#ifdef WRAP_SYSTEM_INCLUDES
+#pragma GCC visibility push(default)
+#endif
 extern __ptr_t __libc_malloc(size_t);
 extern __ptr_t __libc_calloc(size_t, size_t);
 extern __ptr_t __libc_realloc(__ptr_t, size_t);
 extern void    __libc_free(__ptr_t);
+#ifdef WRAP_SYSTEM_INCLUDES
+#pragma GCC visibility pop
+#endif
 
 /* XXX I wish dladdr could find local text symbols (static functions). */
 #define __USE_GNU 1
