@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=589
+-->
+<head>
+  <title>Test for Bug 589</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+.letters {list-style-type: upper-alpha;}
+.numbers {list-style-type: decimal;}
+</style>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589">Mozilla Bug 589</a>
+<p id="display"></p>
+<div id="content" >
+
+<OL id="thelist" class="letters">
+<LI id="liA">This list should feature...
+<LI id="liB">...letters for each item...
+<LI id="li3" class="numbers">...except this one.
+</OL>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 589 **/
+
+is(computedStyle($("liA"),"list-style-type"),"upper-alpha");
+is(computedStyle($("liB"),"list-style-type"),"upper-alpha");
+is(computedStyle($("li3"),"list-style-type"),"decimal");
+
+</script>
+</pre>
+</body>
+</html>
+
