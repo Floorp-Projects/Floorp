@@ -1134,8 +1134,8 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
   
 }
 
-// XXXmano: hack until we figure out why the throbber uses a button instead
-// of a toolbarbutton
+/* XXXmano: hack until we figure out why the throbber uses a button instead
+   of a toolbarbutton */
 #navigator-throbber .button-text {
   display: none;
   margin: 0 !important;
