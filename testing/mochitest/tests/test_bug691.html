@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=691
+-->
+<head>
+  <title>Test for Bug 691</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="text/javascript">
+
+function show(what) {
+  var stage = document.getElementById("stage");
+  if (what == "modularity") {
+    var spaghetti = document.createElement("IMG",null);
+    spaghetti.setAttribute("SRC","/static/nnc_lockup.gif");
+    spaghetti.setAttribute("id","foo");
+    stage.insertBefore(spaghetti,stage.firstChild);
+  }
+}
+
+function remove() {
+  var stage = document.getElementById("stage");
+  var body = document.getElementsByTagName("BODY")[0];
+  while (stage.firstChild) {
+    stage.removeChild(stage.firstChild);
+  }
+}
+
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=691">Mozilla Bug 691</a>
+<p id="display"></p>
+<div id="content" >
+<ul>
+<li >foo</li>   
+</ul>
+<div id="stage">
+</div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 691 **/
+
+show("modularity");
+remove();
+show("modularity");
+remove();
+show("modularity");
+remove();
+show("modularity");
+
+ok($("foo"), "basic DOM manipulation doesn't crash");
+
+</script>
+</pre>
+</body>
+</html>
+
