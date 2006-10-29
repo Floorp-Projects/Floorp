@@ -29,6 +29,7 @@ user_pref("capability.principal.codebase.p1.id", "http://localhost:8888");
 user_pref("capability.principal.codebase.p1.subjectName", "");
 user_pref("dom.disable_open_during_load", false);
 user_pref("signed.applets.codebase_principal_support", true);
+user_pref("security.warn_submit_insecure", false);
 PREFEND
 
 $chrome_content = <<CHROMEEND;
