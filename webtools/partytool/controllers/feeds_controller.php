@@ -80,7 +80,7 @@ class FeedsController extends AppController {
       if ($party['Feeds']['useflickr'] == 1) {
         $data = array('type' => 'flickr', 'userid' => $party['Feeds']['flickrid'], 'randomize' => false);
         $flickr = new webServices($data);
-        $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$id, 10, (($party['Feeds']['flickrperms']) ? false : true));
+        $photoset = $flickr->fetchPhotos(FLICKR_TAG_PREFIX.$id, 30, !$party['Feeds']['flickrperms']);
         $this->set('flickr', $photoset);
       }
     }

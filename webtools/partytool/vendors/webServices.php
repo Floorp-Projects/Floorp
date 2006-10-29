@@ -105,7 +105,7 @@ class webServices {
 
       if ($data['stat'] == 'ok') {
         $arr = array();
-        for ($i = 0; $i < $data['photos']['total']; $i++) {
+        for ($i = 0; $i < count($data['photos']['photo']); $i++) {
           $p = $data['photos']['photo'][$i];
           $arr[$i] = array('id'     => $p['id'],
                            'owner'  => $p['owner'],
