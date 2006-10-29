@@ -4851,7 +4851,8 @@ nsChildWindow::~nsChildWindow()
 void
 nsWindow::IMEInitData(void)
 {
-    NS_ASSERTION(!mIMEData, "This window was already initialized.");
+    if (mIMEData)
+        return;
     nsWindow *win = IMEGetOwningWindow();
     if (!win)
         return;
@@ -4925,9 +4926,7 @@ nsWindow::IMEDestroyContext(void)
 void
 nsWindow::IMESetFocus(void)
 {
-    // Initialize mIMEData for this window
-    if (!mIMEData)
-        IMEInitData();
+    IMEInitData();
 
     LOGIM(("IMESetFocus %p\n", (void *)this));
     GtkIMContext *im = IMEGetContext();
@@ -5154,6 +5153,8 @@ nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
 NS_IMETHODIMP
 nsWindow::ResetInputState()
 {
+    IMEInitData();
+
     nsWindow *win = IMEComposingWindow();
     if (win) {
         GtkIMContext *im = IMEGetContext();
@@ -5193,6 +5194,8 @@ nsWindow::GetIMEOpenState(PRBool* aState)
 NS_IMETHODIMP
 nsWindow::SetIMEEnabled(PRBool aState)
 {
+    IMEInitData();
+
     if (!mIMEData || mIMEData->mEnabled == aState)
         return NS_OK;
 
@@ -5227,6 +5230,9 @@ NS_IMETHODIMP
 nsWindow::GetIMEEnabled(PRBool* aState)
 {
     NS_ENSURE_ARG_POINTER(aState);
+
+    IMEInitData();
+
     *aState = IMEIsEnabled();
     return NS_OK;
 }
@@ -5234,6 +5240,8 @@ nsWindow::GetIMEEnabled(PRBool* aState)
 NS_IMETHODIMP
 nsWindow::CancelIMEComposition()
 {
+    IMEInitData();
+
     GtkIMContext *im = IMEGetContext();
     if (!im)
         return NS_OK;
