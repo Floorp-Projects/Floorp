@@ -426,6 +426,25 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
          aFormat->mAlphaShift    = 0;
          break;
 
+      case 32:
+         aFormat->mRedZeroMask   = 0x000000FF;
+         aFormat->mGreenZeroMask = 0x000000FF;
+         aFormat->mBlueZeroMask  = 0x000000FF;
+         aFormat->mAlphaZeroMask = 0x000000FF;
+         aFormat->mRedMask       = 0x00FF0000;
+         aFormat->mGreenMask     = 0x0000FF00;
+         aFormat->mBlueMask      = 0x000000FF;
+         aFormat->mAlphaMask     = 0xFF000000;
+         aFormat->mRedCount      = 8;
+         aFormat->mGreenCount    = 8;
+         aFormat->mBlueCount     = 8;
+         aFormat->mAlphaCount    = 8;
+         aFormat->mRedShift      = 16;
+         aFormat->mGreenShift    = 8;
+         aFormat->mBlueShift     = 0;
+         aFormat->mAlphaShift    = 24;
+         break;
+
       default:
 #ifdef DEBUG
          printf( "Bad bit-depth for GetPixelFormat (%d)\n", bih.cBitCount);
