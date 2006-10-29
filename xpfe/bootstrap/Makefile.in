@@ -214,6 +214,10 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
+ifdef WRAP_SYSTEM_INCLUDES
+DEFINES        	+= -DWRAP_SYSTEM_INCLUDES
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 CPPSRCS += nsNativeAppSupportBeOS.cpp

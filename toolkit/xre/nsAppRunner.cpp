@@ -234,7 +234,13 @@ extern "C" {
 
 # ifndef HAVE___PURE_VIRTUAL
   void __pure_virtual(void) {
+#ifdef WRAP_SYSTEM_INCLUDES
+#pragma GCC visibility push(default)
+#endif
     extern void __cxa_pure_virtual(void);
+#ifdef WRAP_SYSTEM_INCLUDES
+#pragma GCC visibility pop
+#endif
 
     __cxa_pure_virtual();
   }
