@@ -3984,13 +3984,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (stmt && stmt->type == STMT_BLOCK &&
                 stmt->down && stmt->down->type == STMT_BLOCK &&
                 (stmt->down->flags & SIF_SCOPE)) {
-#ifdef DEBUG
-                jsbytecode *pc = cg->main.base;
-
-                JS_ASSERT(*pc == JSOP_ENTERBLOCK ||
-                          (*pc == JSOP_LITOPX &&
-                           pc[1 + LITERAL_INDEX_LEN] == JSOP_ENTERBLOCK));
-#endif
                 cg->treeContext.flags |= TCF_HAS_BLOCKLOCALFUN;
             }
 

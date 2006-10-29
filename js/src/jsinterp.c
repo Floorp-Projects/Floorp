@@ -4871,13 +4871,29 @@ interrupt:
             slot = GET_VARNO(pc2);
             obj = ATOM_TO_OBJECT(atom);
 
-            /* If re-parenting, store a clone of the function object. */
+            /*
+             * Handle the hard case of a local function defined in a body that
+             * contains direct let declarations. In this case, we must search
+             * the script's constants for the first block object, and clone it
+             * onto the scope chain, so that the local function being defined
+             * here captures the let variables.
+             */
             JS_ASSERT(!fp->blockChain);
             if (fp->fun && (fp->fun->flags & JSFUN_BLOCKLOCALFUN)) {
-                JS_ASSERT(ATOM_IS_OBJECT(fp->script->atomMap.vector[0]));
-                fp->blockChain = ATOM_TO_OBJECT(fp->script->atomMap.vector[0]);
-                JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
+                jsatomid aid;
+
+                obj2 = NULL;
+                for (aid = 0; aid < script->atomMap.length; aid++) {
+                    if (ATOM_IS_OBJECT(script->atomMap.vector[aid])) {
+                        obj2 = ATOM_TO_OBJECT(script->atomMap.vector[aid]);
+                        if (OBJ_GET_CLASS(cx, obj2) == &js_BlockClass)
+                            break;
+                    }
+                }
+                fp->blockChain = obj2;
             }
+
+            /* If re-parenting, store a clone of the function object. */
             obj2 = fp->scopeChain;
             parent = js_GetScopeChain(cx, fp);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
