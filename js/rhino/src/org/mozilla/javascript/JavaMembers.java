@@ -40,8 +40,11 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Map;
 
 /**
  *
@@ -305,13 +308,97 @@ class JavaMembers
         return member;
     }
 
+    /**
+     * Retrieves mapping of methods to accessible methods for a class.
+     * In case the class is not public, retrieves methods with same 
+     * signature as its public methods from public superclasses and 
+     * interfaces (if they exist). Basically upcasts every method to the 
+     * nearest accessible method.
+     */
+    private static Method[] discoverAccessibleMethods(Class clazz)
+    {
+        Map map = new HashMap();
+        discoverAccessibleMethods(clazz, map);
+       return (Method[])map.values().toArray(new Method[map.size()]);
+    }
+    
+    private static void discoverAccessibleMethods(Class clazz, Map map)
+    {
+        if(Modifier.isPublic(clazz.getModifiers()))
+        {
+            try
+            {
+                Method[] methods = clazz.getMethods();
+                for(int i = 0; i < methods.length; i++)
+                {
+                    Method method = methods[i];
+                    MethodSignature sig = new MethodSignature(method);
+                    map.put(sig, method);
+                }
+                return;
+            }
+            catch(SecurityException e)
+            {
+                Context.reportWarning(
+                        "Could not discover accessible methods of class " + 
+                        clazz.getName() + " due to lack of privileges, " + 
+                        "attemping superclasses/interfaces.");
+                // Fall through and attempt to discover superclass/interface 
+                // methods
+            }
+        }
+
+        Class[] interfaces = clazz.getInterfaces();
+        for(int i = 0; i < interfaces.length; i++)
+        {
+            discoverAccessibleMethods(interfaces[i], map);
+        }
+        Class superclass = clazz.getSuperclass();
+        if(superclass != null)
+        {
+            discoverAccessibleMethods(superclass, map);
+        }
+    }
+
+    private static final class MethodSignature
+    {
+        private final String name;
+        private final Class[] args;
+        
+        private MethodSignature(String name, Class[] args)
+        {
+            this.name = name;
+            this.args = args;
+        }
+        
+        MethodSignature(Method method)
+        {
+            this(method.getName(), method.getParameterTypes());
+        }
+        
+        public boolean equals(Object o)
+        {
+            if(o instanceof MethodSignature)
+            {
+                MethodSignature ms = (MethodSignature)o;
+                return ms.name.equals(name) && Arrays.equals(args, ms.args);
+            }
+            return false;
+        }
+        
+        public int hashCode()
+        {
+            return name.hashCode() ^ args.length;
+        }
+    }
+    
     private void reflect(Scriptable scope)
     {
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
 
-        Method[] methods = cl.getMethods();
+        Method[] methods = discoverAccessibleMethods(cl);
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
             int mods = method.getModifiers();
