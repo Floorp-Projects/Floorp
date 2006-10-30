@@ -52,6 +52,7 @@
         ]]></destructor>
 
         <field name="mCalendar">null</field>
+        <field name="mShowCompleted">true</field>
         <field name="mOperationListener"><![CDATA[
         ({
             todoList: this,
@@ -167,6 +168,14 @@
             ]]></setter>
         </property>
 
+        <property name="showCompleted">
+            <getter><![CDATA[ return this.mShowCompleted; ]]></getter>
+            <setter><![CDATA[
+                this.mShowCompleted = val;
+                this.rebuildDisplay();
+            ]]></setter>
+        </property>
+
         <method name="fireEvent">
             <parameter name="aEventType"/>
             <body><![CDATA[
@@ -207,7 +216,12 @@
                 if (!this.mCalendar)
                     return;
                 const cIC = Components.interfaces.calICalendar;
-                var filter = cIC.ITEM_FILTER_TYPE_TODO | cIC.ITEM_FILTER_COMPLETED_ALL;
+                var filter = cIC.ITEM_FILTER_TYPE_TODO;
+                if (this.mShowCompleted) {
+                    filter |= cIC.ITEM_FILTER_COMPLETED_ALL;
+                } else {
+                    filter |= cIC.ITEM_FILTER_COMPLETED_NO;
+                }
                 this.mCalendar.getItems(filter, 0, null, null, this.mOperationListener);
             ]]></body>
         </method>

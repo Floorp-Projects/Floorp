@@ -70,6 +70,15 @@ function initializeTodoList()
     todoList.addEventListener("todo-item-open", editTodoItem, false);
     todoList.addEventListener("todo-item-delete", deleteTodoItem, false);
     todoList.addEventListener("todo-empty-dblclick", newTodoItem, false);
+    todoList.showCompleted = document.getElementById("completed-tasks-checkbox").checked;
+    return;
+}
+
+function toggleCompletedTasks()
+{
+    document.getElementById("calendar-todo-list").showCompleted =
+        !document.getElementById("calendar-todo-list").showCompleted;
+    return;
 }
 
 window.addEventListener("load", initializeTodoList, false);

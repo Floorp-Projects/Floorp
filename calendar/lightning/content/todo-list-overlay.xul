@@ -45,6 +45,10 @@
 
 <script type="application/x-javascript" src="chrome://lightning/content/todo-list.js"/>
 <vbox id="todo-tab-panel" flex="1">
+  <checkbox id="completed-tasks-checkbox"
+            label="&lightning.sidebar.showCompletedTasks.label;"
+            persist="checked"
+            oncommand="toggleCompletedTasks()" />
   <calendar-todo-list id="calendar-todo-list" flex="1"/>
 </vbox>
 </overlay>

@@ -69,6 +69,7 @@
 <!ENTITY lightning.sidebar.edit.label        "Edit…">
 <!ENTITY lightning.sidebar.delete.label      "Delete">
 <!ENTITY lightning.calendar.label            "Calendar">
+<!ENTITY lightning.sidebar.showCompletedTasks.label "Show completed tasks">
 
 <!-- Messenger Toolbar -->
 <!ENTITY lightning.toolbar.dayview.label     "Day View">
