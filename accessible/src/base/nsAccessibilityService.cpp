@@ -1563,7 +1563,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsSecret:
       *aAccessible = new nsXFormsSecretAccessible(aNode, weakShell);
       break;
-    case nsIAccessibleProvider::XFormsRange:
+    case nsIAccessibleProvider::XFormsSliderRange:
       *aAccessible = new nsXFormsRangeAccessible(aNode, weakShell);
       break;
 #endif
