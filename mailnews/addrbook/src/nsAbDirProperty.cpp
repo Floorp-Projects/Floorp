@@ -299,7 +299,9 @@ NS_IMETHODIMP nsAbDirProperty::DropCard(nsIAbCard *childCard, PRBool needToCopyC
 NS_IMETHODIMP nsAbDirProperty::GetSupportsMailingLists(PRBool *aSupportsMailingsLists)
 {
   NS_ENSURE_ARG_POINTER(aSupportsMailingsLists);
-  *aSupportsMailingsLists = PR_TRUE;
+  // We don't currently support nested mailing lists, so only return true if
+  // we're not a mailing list.
+  *aSupportsMailingsLists = !m_IsMailList;
   return NS_OK;
 }
 

@@ -184,7 +184,12 @@ interface nsIAbDirectory : nsISupports {
    */
   readonly attribute boolean searchDuringLocalAutocomplete;
 
-  // Mail list specific
+  /** 
+   * Does this directory support mailing lists? Note that in the case
+   * this directory is a mailing list and nested mailing lists are not
+   * supported, this will return false rather than true which the parent
+   * directory might.
+   */
   readonly attribute boolean supportsMailingLists;
 
   // XXX todo
