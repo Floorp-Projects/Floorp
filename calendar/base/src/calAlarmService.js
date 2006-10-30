@@ -354,9 +354,14 @@ calAlarmService.prototype = {
     addAlarm: function(aItem) {
         var alarmTime;
         if (aItem.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
-            alarmTime = aItem.startDate || aItem.entryDate;
+            alarmTime = aItem.startDate || aItem.entryDate || aItem.dueDate;
         } else {
-            alarmTime = aItem.endDate || aItem.dueDate;
+            alarmTime = aItem.endDate || aItem.dueDate || aItem.entryDate;
+        }
+
+        if (!alarmTime) {
+dump("Error: Could not determine alarm time for item '"+aItem.title+"'\n");
+            return;
         }
 
         // Check for snooze
