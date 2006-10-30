@@ -52,7 +52,7 @@
    {name               => 'userregexp'
     heading            => 'User RegExp'
    }
-   {name               => 'use_for'
+   {name               => 'is_active_bug_group'
     heading            => "Use For $terms.Bugs"
     align              => 'center'
    }
@@ -66,15 +66,15 @@
   ]
 %]
 
-[% overrides.use_for = [ {
+[% overrides.is_active_bug_group = [ {
      match_value => "0"
-     match_field => 'use_for'
+     match_field => 'is_active_bug_group'
      override_content => 1
      content => "&nbsp;"
    },
    {
      match_value => "1"
-     match_field => 'use_for'
+     match_field => 'is_active_bug_group'
      override_content => 1
      content => "X"
    }]
@@ -129,10 +129,6 @@
      content => "user"
    }]
 %] 
-
-[% FOREACH group = groups %]
-  [% group.use_for = (group.isactive != 0) && (group.isbuggroup) %]
-[% END %]
 
 [% PROCESS admin/table.html.tmpl
   columns = columns
