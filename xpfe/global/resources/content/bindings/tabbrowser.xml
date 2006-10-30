@@ -1013,6 +1013,11 @@
               t.setAttribute("afterselected", true);
 
             if (!blank) {
+              // Stop the existing about:blank load.  Otherwise, if aURI
+              // doesn't stop in-progress loads on its own, we'll get into
+              // trouble with multiple parallel loads running at once.
+              b.stop();
+
               // pretend the user typed this so it'll be available till
               // the document successfully loads
               b.userTypedValue = aURI;
