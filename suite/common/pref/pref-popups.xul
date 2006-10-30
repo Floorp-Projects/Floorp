@@ -224,6 +224,7 @@
     <description id="whenBlock">&whenBlock.description;</description>
     <hbox align="center">
       <checkbox id="playSound" label="&playSound.label;"
+                accesskey="&playSound.accesskey;"
                 oncommand="enableSoundUrl(this.checked);"
                 preftype="bool" prefstring="privacy.popups.sound_enabled"
                 prefattribute="checked"/>
@@ -238,6 +239,7 @@
     </hbox>
     <hbox align="center">
       <checkbox id="displayIcon" label="&displayIcon.label;"
+                accesskey="&displayIcon.accesskey;"
                 preftype="bool" prefstring="privacy.popups.statusbar_icon_enabled"
                 prefattribute="checked"/>
     </hbox>
