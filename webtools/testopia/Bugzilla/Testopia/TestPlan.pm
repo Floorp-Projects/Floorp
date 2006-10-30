@@ -225,7 +225,7 @@ sub clone {
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_plans ($columns)
               VALUES (?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'product_id'}, $self->{'author_id'}, 
+              undef, (undef, $self->{'product_id'}, Bugzilla->user->id, 
               $self->{'type_id'}, $self->{'default_product_version'}, $name,
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );

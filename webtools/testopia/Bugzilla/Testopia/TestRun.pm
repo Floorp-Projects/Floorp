@@ -379,7 +379,7 @@ sub clone {
               VALUES (?,?,?,?,?,?,?,?,?,?,?)",
               undef, (undef, $self->{'plan_id'}, $self->{'environment_id'}, 
               $self->{'product_version'}, $build, 
-              $self->{'plan_text_version'}, $self->{'manager_id'}, 
+              $self->{'plan_text_version'}, Bugzilla->user->id, 
               $timestamp, undef, $summary, undef));
     my $key = $dbh->bz_last_key( 'test_runs', 'run_id' );
     return $key;   
