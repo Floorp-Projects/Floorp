@@ -89,5 +89,26 @@
 <!ENTITY stopButton.tooltip               "Stop loading the page">
 
 <!ENTITY boldToolbarCmd.tooltip           "Bold">
+<!ENTITY boldToolbarCmd.label             "Bold">
 <!ENTITY italicToolbarCmd.tooltip         "Italic">
+<!ENTITY italicToolbarCmd.label           "Italic">
 <!ENTITY underlineToolbarCmd.tooltip      "Underline">
+<!ENTITY underlineToolbarCmd.label        "Underline">
+<!ENTITY strongToolbarCmd.tooltip         "Strong emphasis">
+<!ENTITY strongToolbarCmd.label           "Strong emphasis">
+<!ENTITY emToolbarCmd.tooltip             "Emphasis">
+<!ENTITY emToolbarCmd.label               "Emphasis">
+
+<!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
+<!-- Shared in Paragraph, and Toolbar menulist -->
+<!ENTITY bodyTextCmd.label "Body Text">
+<!ENTITY paragraphParagraphCmd.label "Paragraph">  
+<!ENTITY heading1Cmd.label "Heading 1">
+<!ENTITY heading2Cmd.label "Heading 2">
+<!ENTITY heading3Cmd.label "Heading 3">
+<!ENTITY heading4Cmd.label "Heading 4">
+<!ENTITY heading5Cmd.label "Heading 5">
+<!ENTITY heading6Cmd.label "Heading 6">
+<!ENTITY paragraphAddressCmd.label "Address">
+<!ENTITY paragraphPreformatCmd.label "Preformat">
+<!ENTITY genericContainerCmd.label "Generic container (div)">

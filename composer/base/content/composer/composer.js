@@ -130,13 +130,13 @@ function OpenExtensionsManager()
 
 function StopLoadingPage()
 {
-  document.getElementById("tabeditor").stopWebNavigation();
+  gDialog.tabeditor.stopWebNavigation();
 }
 
 //--------------------------------------------------------------------
 function onButtonUpdate(button, commmandID)
 {
-  var commandNode = document.getElementById(commmandID);
+  var commandNode = gDialog[commmandID];
   var state = commandNode.getAttribute("state");
   button.checked = state == "true";
 }
@@ -167,4 +167,38 @@ function UpdateWindowTitle()
                                                        [windowTitle, titleModifier],
                                                        2);
   } catch (e) { dump(e); }
+}
+
+function onParagraphFormatChange(paraMenuList, commandID)
+{
+  if (!paraMenuList)
+    return;
+
+  var commandNode = gDialog[commandID];
+  var state = commandNode.getAttribute("state");
+
+  // force match with "normal"
+  if (state == "body")
+    state = "";
+
+  if (state == "mixed")
+  {
+    //Selection is the "mixed" ( > 1 style) state
+    paraMenuList.selectedItem = null;
+    paraMenuList.setAttribute("label",GetString('Mixed'));
+  }
+  else
+  {
+    var menuPopup = gDialog.ParagraphPopup;
+    var menuItems = menuPopup.childNodes;
+    for (var i=0; i < menuItems.length; i++)
+    {
+      var menuItem = menuItems.item(i);
+      if ("value" in menuItem && menuItem.value == state)
+      {
+        paraMenuList.selectedItem = menuItem;
+        break;
+      }
+    }
+  }
 }

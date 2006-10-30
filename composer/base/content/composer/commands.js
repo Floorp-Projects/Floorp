@@ -111,7 +111,13 @@ var ComposerCommands = {
         case "cmd_bold":
         case "cmd_italic":
         case "cmd_underline":
+        case "cmd_strong":
+        case "cmd_em":
           this.pokeStyleUI(command, params.getBooleanValue("state_all"));
+          break;
+
+        case "cmd_paragraphState":
+          this.pokeMultiStateUI(command, params);
           break;
 
         default: dump("no update for command: " +command+"\n");
@@ -149,6 +155,29 @@ var ComposerCommands = {
     return null;
   },
 
+  pokeMultiStateUI: function pokeMultiStateUI(uiID, cmdParams)
+  {
+    try
+    {
+      var commandNode = document.getElementById(uiID);
+      if (!commandNode)
+        return;
+
+      var isMixed = cmdParams.getBooleanValue("state_mixed");
+      var desiredAttrib;
+      if (isMixed)
+        desiredAttrib = "mixed";
+      else
+        desiredAttrib = cmdParams.getCStringValue("state_attribute");
+
+      var uiState = commandNode.getAttribute("state");
+      if (desiredAttrib != uiState)
+      {
+        commandNode.setAttribute("state", desiredAttrib);
+      }
+    } catch(e) {}
+  },
+
   doStyleUICommand: function doStyleUICommand(cmdStr)
   {
     try
@@ -156,6 +185,25 @@ var ComposerCommands = {
       var cmdParams = this.newCommandParams();
       this.goDoCommandParams(cmdStr, cmdParams);
     } catch(e) {}
+  },
+
+  doStatefulCommand: function doStatefulCommand(commandID, newState)
+  {
+    var commandNode = document.getElementById(commandID);
+    if (commandNode)
+        commandNode.setAttribute("state", newState);
+
+    try
+    {
+      var cmdParams = this.newCommandParams();
+      if (!cmdParams) return;
+
+      cmdParams.setCStringValue("state_attribute", newState);
+      this.goDoCommandParams(commandID, cmdParams);
+
+      this.pokeMultiStateUI(commandID, cmdParams);
+
+    } catch(e) { dump("error thrown in doStatefulCommand: "+e+"\n"); }
   },
 
   goDoCommandParams: function goDoCommandParams(command, params)
@@ -196,6 +244,7 @@ var ComposerCommands = {
     commandTable.registerCommand("cmd_open",        cmdOpen);
     commandTable.registerCommand("cmd_fullScreen",  cmdFullScreen);
     commandTable.registerCommand("cmd_new",         cmdNew);
+    commandTable.registerCommand("cmd_renderedHTMLEnabler", cmdDummyHTML);
   },
 
   setupFormatCommands: function setupFormatCommands()

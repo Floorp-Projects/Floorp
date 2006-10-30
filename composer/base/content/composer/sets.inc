@@ -14,7 +14,7 @@
   <command id="cmd_new"                         oncommand="goDoCommand('cmd_new')"/>
 </commandset>
 
-<commandset id="commonEditorMenuItems" 
+<commandset id="commonEditorMenuItems"
             commandupdater="true"
             events="create"
             oncommandupdate="ComposerCommands.goUpdateComposerMenuItems(this)">
@@ -28,6 +28,10 @@
   <command id="cmd_bold"         state="false"     oncommand="ComposerCommands.doStyleUICommand('cmd_bold')"/>
   <command id="cmd_italic"       state="false"     oncommand="ComposerCommands.doStyleUICommand('cmd_italic')"/>
   <command id="cmd_underline"    state="false"     oncommand="ComposerCommands.doStyleUICommand('cmd_underline')"/>
+  <command id="cmd_strong"       state="false"     oncommand="ComposerCommands.doStyleUICommand('cmd_strong')"/>
+  <command id="cmd_em"           state="false"     oncommand="ComposerCommands.doStyleUICommand('cmd_em')"/>
+  <command id="cmd_paragraphState" state=""        oncommand="ComposerCommands.doStatefulCommand('cmd_paragraphState', event.target.value)"/>
+  <command id="cmd_renderedHTMLEnabler"/>
 </commandset>
 
 <commandset id="selectionBasedCommands"

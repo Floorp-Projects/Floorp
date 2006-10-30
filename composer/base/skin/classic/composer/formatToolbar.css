@@ -35,53 +35,96 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#boldButton {
-  list-style-image: url("chrome://composer/skin/icons/btn2.png");
+#FormatToolbox .toolbarbutton-text {
+  display: none;
+}
+
+#CustomizeToolbarWindow toolbarbutton,
+#CustomizeToolbarWindow toolbarpalette {
+  -moz-box-orient: vertical;
+}
+
+#boldButton, #italicButton, #underlineButton,
+#strongButton, #emButton {
+  list-style-image: url("chrome://composer/skin/icons/btn3.png");
+}
+
+#emButton {
+  -moz-image-region: rect(0px 16px 16px 0);
+}
+#emButton:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+#emButton:hover:active {
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+#emButton[checked="true"] {
+  -moz-image-region: rect(0px 16px 16px 0);
+}
+#emButton[disabled="true"] {
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+
+#strongButton {
   -moz-image-region: rect(16px 16px 32px 0);
 }
-#boldButton:hover {
+#strongButton:hover {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
-#boldButton:hover:active {
+#strongButton:hover:active {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
-#boldButton[checked="true"] {
+#strongButton[checked="true"] {
   -moz-image-region: rect(16px 16px 32px 0);
 }
-#boldButton[disabled="true"] {
+#strongButton[disabled="true"] {
   -moz-image-region: rect(16px 64px 32px 48px);
 }
 
-#italicButton {
-  list-style-image: url("chrome://composer/skin/icons/btn2.png");
-  -moz-image-region: rect(98px 16px 114px 0);
+#boldButton{
+  -moz-image-region: rect(32px 16px 48px 0);
 }
-#italicButton:hover {
-  -moz-image-region: rect(98px 32px 114px 16px);
+#boldButton:hover {
+  -moz-image-region: rect(32px 32px 48px 16px);
 }
-#italicButton:hover:active {
-  -moz-image-region: rect(98px 48px 114px 32px);
+#boldButton:hover:active {
+  -moz-image-region: rect(32px 48px 48px 32px);
 }
-#italicButton[checked="true"] {
-  -moz-image-region: rect(98px 16px 114px 0);
+#boldButton[checked="true"] {
+  -moz-image-region: rect(32px 16px 48px 0);
 }
-#italicButton[disabled="true"] {
-  -moz-image-region: rect(98px 64px 114px 48px);
+#boldButton[disabled="true"] {
+  -moz-image-region: rect(32px 64px 48px 48px);
 }
 
-#underlineButton {
-  list-style-image: url("chrome://composer/skin/icons/btn2.png");
-  -moz-image-region: rect(114px 16px 130px 0);
+#italicButton{
+  -moz-image-region: rect(48px 16px 64px 0);
+}
+#italicButton:hover {
+  -moz-image-region: rect(48px 32px 64px 16px);
+}
+#italicButton:hover:active {
+  -moz-image-region: rect(48px 48px 64px 32px);
+}
+#italicButton[checked="true"] {
+  -moz-image-region: rect(48px 16px 64px 0);
+}
+#italicButton[disabled="true"] {
+  -moz-image-region: rect(48px 64px 64px 48px);
+}
+
+#underlineButton{
+  -moz-image-region: rect(64px 16px 80px 0);
 }
 #underlineButton:hover {
-  -moz-image-region: rect(114px 32px 130px 16px);
+  -moz-image-region: rect(64px 32px 80px 16px);
 }
 #underlineButton:hover:active {
-  -moz-image-region: rect(114px 48px 130px 32px);
+  -moz-image-region: rect(64px 48px 80px 32px);
 }
 #underlineButton[checked="true"] {
-  -moz-image-region: rect(114px 16px 130px 0);
+  -moz-image-region: rect(64px 16px 80px 0);
 }
 #underlineButton[disabled="true"] {
-  -moz-image-region: rect(114px 64px 130px 48px);
+  -moz-image-region: rect(64px 64px 80px 48px);
 }

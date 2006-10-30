@@ -83,7 +83,7 @@
              mode="full"
              context="format-toolbar-context-menu"
              customizable="true"
-             defaultset="spacer,boldButton,italicButton,underlineButton"/>
+             defaultset="spacer,ParagraphSelectBox,emButton,strongButton,underlineButton"/>
     <toolbarset id="customFormatToolbars" context="format-toolbar-context-menu"/>
   </toolbox>
 
