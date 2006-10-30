@@ -26,19 +26,7 @@
 [% IF case.canedit %]
 <script type="text/javascript">
     dojo.require("dojo.widget.Editor2");
-    function updateScript() {
-      var rm = document.getElementById('isautomated').value;
-      var o;
-      o = document.getElementById('script');
-      if (o) {
-        o.disabled = (rm != 1);
-      }
-      o = document.getElementById('arguments');
-      if (o) {
-        o.disabled = (rm != 1);
-      }
-    }
-    
+   
     function chgTester(obj) {
       [% IF Param("useqacontact") AND action == 'Add' %]
         var components = [% components FILTER none %];
@@ -87,7 +75,7 @@
                                   default   => status_default } %]
       </td>
       <td align="right"><b>Automatic</b></td>
-      <td><select name="isautomated" id="isautomated" onchange="updateScript();">
+      <td><select name="isautomated" id="isautomated">
             <option value="0">Manual</option>
             <option value="1" [% 'selected' IF case.isautomated %]>Automatic</option>
           </select>
@@ -104,7 +92,7 @@
       </td>
       
       <td align="right"><b>Script</b></td>
-      <td><input name="script" id="script" value="[% case.script FILTER none %]" [%- 'disabled="disabled"' IF NOT case.isautomated %]></td>
+      <td><input name="script" id="script" value="[% case.script FILTER none %]"></td>
     </tr>
 
     <tr>
@@ -116,7 +104,7 @@
                                   default   => case.category.name } %]
       </td>
       <td align="right"><b>Arguments:</b></td>
-      <td><input name="arguments" id="arguments" value="[% case.arguments FILTER none %]" [%- 'disabled="disabled"' IF NOT case.isautomated %]></td>
+      <td><input name="arguments" id="arguments" value="[% case.arguments FILTER none %]"></td>
     </tr>
   
   </table> 
