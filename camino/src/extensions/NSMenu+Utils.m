@@ -139,7 +139,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   unsigned int i;
   for (i = inFirstItem; i < [menuItems count]; i ++)
   {
-    id<NSMenuItem> curItem = [self itemAtIndex:i];
+    NSMenuItem* curItem = [self itemAtIndex:i];
     [curItem setEnabled:inEnable];
     if (includeSubmenus && [curItem hasSubmenu])
     {
@@ -148,13 +148,13 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   }
 }
 
-- (id<NSMenuItem>)itemWithTarget:(id)anObject andAction:(SEL)actionSelector
+- (NSMenuItem*)itemWithTarget:(id)anObject andAction:(SEL)actionSelector
 {
   int itemIndex = [self indexOfItemWithTarget:anObject andAction:actionSelector];
   return (itemIndex == -1) ? nil : [self itemAtIndex:itemIndex];
 }
 
-- (void)removeItemsAfterItem:(id<NSMenuItem>)inItem
+- (void)removeItemsAfterItem:(NSMenuItem*)inItem
 {
   int firstItemToRemoveIndex = 0;
 
@@ -200,7 +200,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   return ([self tag] & ~tagMask);
 }
 
-- (void)takeStateFromItem:(id<NSMenuItem>)inItem
+- (void)takeStateFromItem:(NSMenuItem*)inItem
 {
   [self setTitle:[inItem title]];
   [self setEnabled:[inItem isEnabled]];

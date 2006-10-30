@@ -468,7 +468,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 #pragma mark -
 
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
   SEL action = [menuItem action];
 

@@ -59,10 +59,10 @@ extern NSString* const NSMenuClosedNotification;
 - (void)setAllItemsEnabled:(BOOL)inEnable startingWithItemAtIndex:(int)inFirstItem includingSubmenus:(BOOL)includeSubmenus;
 
 // return the first item (if any) with the given target and action.
-- (id<NSMenuItem>)itemWithTarget:(id)anObject andAction:(SEL)actionSelector;
+- (NSMenuItem*)itemWithTarget:(id)anObject andAction:(SEL)actionSelector;
 
 // remove items after the given item, or all items if nil
-- (void)removeItemsAfterItem:(id<NSMenuItem>)inItem;
+- (void)removeItemsAfterItem:(NSMenuItem*)inItem;
 
 // remove all items including and after the given index (i.e. all items if index is 0)
 - (void)removeItemsFromIndex:(int)inItemIndex;
@@ -82,6 +82,6 @@ extern NSString* const NSMenuClosedNotification;
 - (int)tagRemovingMask:(int)tagMask;
 
 // copy the title and enabled state from the given item
-- (void)takeStateFromItem:(id<NSMenuItem>)inItem;
+- (void)takeStateFromItem:(NSMenuItem*)inItem;
 
 @end

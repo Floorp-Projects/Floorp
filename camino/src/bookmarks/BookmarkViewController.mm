@@ -1643,7 +1643,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
 }
 
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
   SEL action = [menuItem action];
 

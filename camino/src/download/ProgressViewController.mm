@@ -661,7 +661,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   return [menu autorelease];    
 }
 
-- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
   SEL action = [menuItem action];
   if (action == @selector(cancel:)) {
