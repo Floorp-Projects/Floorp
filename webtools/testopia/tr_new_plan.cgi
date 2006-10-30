@@ -26,6 +26,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use JSON;
 
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestPlan;
@@ -83,6 +84,8 @@ if ($action eq 'Add'){
     $vars->{'action'} = "Commit";
     $vars->{'form_action'} = "tr_show_plan.cgi";
     $vars->{'plan'} = Bugzilla::Testopia::TestPlan->new($plan_id);
+    $vars->{'tr_message'} = "Test Plan: \"". $plan->name ."\" created successfully.";
+    $vars->{'backlink'} = $vars->{'plan'};
     $template->process("testopia/plan/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     
@@ -91,16 +94,24 @@ if ($action eq 'Add'){
 ### Ajax Actions ###
 ####################
 elsif ($action eq 'getversions'){
-    my $plan = Bugzilla::Testopia::TestPlan->new(
-        {'plan_id'    => 0, 
-         'product_id' => $product});
-    my $versions = $plan->get_product_versions($product);
-    my $ret;
-    foreach my $v (@{$versions}){
-        $ret .= $v->{'id'} . "|";
+    print $cgi->header;
+    my $plan = Bugzilla::Testopia::TestPlan->new({});
+    my $prod_id = $cgi->param("product_id");
+    my @versions;
+    if ($prod_id == -1){
+        # For update multiple from tr_list_plans
+        push @versions, {'id' => "--Do Not Change--", 'name' => "--Do Not Change--"};
     }
-    chop($ret);
-    print $ret;
+    else{
+        detaint_natural($prod_id);
+        my $prod = $plan->lookup_product($prod_id);
+        unless (Bugzilla->user->can_see_product($prod)){
+            print '{ERROR:"You do not have permission to view this product"}';
+            exit;
+        }
+        @versions = @{$plan->get_product_versions($prod_id)};
+    }
+    print objToJson(\@versions);
 }
 ####################
 ### Display Form ###

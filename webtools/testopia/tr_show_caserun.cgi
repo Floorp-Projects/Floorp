@@ -136,6 +136,7 @@ if ($action eq 'Commit'){
     }
     
     $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun->update(\%newfields));
+    $vars->{'tr_message'} = "Case-run updated.";
     display($caserun);
 }
 elsif ($action eq 'delete'){

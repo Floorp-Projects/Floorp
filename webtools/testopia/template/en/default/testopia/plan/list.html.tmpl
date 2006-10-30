@@ -45,27 +45,7 @@
 <script src="testopia/dojo/dojo.js" type="text/javascript"></script>
 <script src="testopia/js/util.js" type="text/javascript"></script>
 <script type="text/javascript">
-
-    function getProdVers(product, plan){
-      document.getElementById("prod_version").disabled = true;
-      dojo.io.bind({
-      url:   "tr_show_plan.cgi",
-      content: {  product_id: product, plan_id: plan, action: "getversions" },
-      load:  function(type, data, evt){
-               var prodvers = document.getElementById("prod_version");
-               prodvers.options.length = 0;
-               var vers = data.split("|");
-               for (i=0; i < vers.length; i++){
-                 var myOp = new Option(vers[i], vers[i]);
-                 addOption(prodvers, myOp);
-               }
-               document.getElementById("prod_version").disabled = false;
-             },
-      error: function(type, error){ alert("ERROR");},
-      mimetype: "text/plain"
-      });
-    }
-    
+    dojo.require("dojo.io");    
 </script>
 <form id="table" action="tr_list_plans.cgi" method="POST">
 

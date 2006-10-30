@@ -185,7 +185,7 @@ if ($action eq 'Add'){
     $vars->{'case'} = $case;
     $vars->{'tr_message'} = "Case $case_id Created. 
         <a href=\"tr_new_case.cgi?plan_id=" . join(",", @plan_ids) . "\">Add another</a>";
-        
+    $vars->{'backlink'} = $case;
     $template->process("testopia/case/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     

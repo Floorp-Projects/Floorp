@@ -85,6 +85,7 @@ if ($action eq 'Add'){
 
 else {
     $vars->{'environment'} = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
+    $vars->{'backlink'} = $vars->{'environment'};
     $vars->{'products'} = Bugzilla->user->get_selectable_products;
     
     $template->process("testopia/environment/add.html.tmpl", $vars)

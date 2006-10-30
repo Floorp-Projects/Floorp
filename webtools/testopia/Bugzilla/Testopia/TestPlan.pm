@@ -1220,17 +1220,17 @@ Returns the type of this plan
 
 =cut
 
-sub type {
+sub plan_type {
     my ($self) = @_;
     my $dbh = Bugzilla->dbh;
-    return $self->{'type'} if exists $self->{'type'};
+    return $self->{'plan_type'} if exists $self->{'plan_type'};
     my ($type) = $dbh->selectrow_array("SELECT name
                                        FROM test_plan_types
                                        WHERE type_id = ?", 
                                        undef, $self->{'type_id'});
 
-    $self->{'type'} = $type;
-    return $self->{'type'};
+    $self->{'plan_type'} = $type;
+    return $self->{'plan_type'};
 }
 
 =head1 TODO

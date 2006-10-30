@@ -67,6 +67,7 @@ if ($action eq 'Commit'){
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
     do_update($run);
     $vars->{'tr_message'} = "Test run updated";
+    $vars->{'backlink'} = $run;
     display($run);    
 }
 
@@ -152,6 +153,8 @@ elsif ($action eq 'do_clone'){
     }
     $cgi->delete_all;
     $cgi->param('run_id', $newrun->id);
+    $vars->{'tr_message'} = "Test run cloned";
+    $vars->{'backlink'} = $run;
     display($newrun);
 }
 ####################

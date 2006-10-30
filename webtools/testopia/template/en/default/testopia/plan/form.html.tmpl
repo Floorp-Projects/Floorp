@@ -23,29 +23,6 @@
 <script type="text/javascript">
     dojo.require("dojo.io");
     dojo.require("dojo.widget.Editor2");
-    function getProdVers(product, plan){
-        document.getElementById("prod_version").disabled = true;
-        dojo.io.bind({
-            url:   "[% form_action %]",
-            content: {  product_id: product, plan_id: plan, action: "getversions" },
-            load:  function(type, data, evt){
-                     var prodvers = document.getElementById("prod_version");
-                     prodvers.options.length = 0;
-                     var vers = data.split("|");
-                     for (i=0; i < vers.length; i++){
-                       var myOp = new Option(vers[i], vers[i]);
-                       addOption(prodvers, myOp);
-                       if (vers[i] == '[% plan.product_version FILTER none %]'){
-                          prodvers.options[i].selected = true;
-                       }
-                     }
-                     document.getElementById("prod_version").disabled = false;
-                   },
-            error: function(type, error){ alert("ERROR");},
-            mimetype: "text/plain"
-        });
-    }
-   
 </script>
 <a name="attributes"></a>
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
@@ -64,7 +41,7 @@
                                   list      =>  plan.get_available_products,
                                   accesskey => 'p' 
                                   default   => plan.product_id 
-                                  events    => "onChange='getProdVers(this.value, $plan.id)'"} %]</td>
+                                  events    => "onChange='getProdVers(this.value)'"} %]</td>
         [% END %]
   </tr>
   <tr>
@@ -78,7 +55,7 @@
     <td>[% PROCESS select sel = { name      => 'type',
                                   list      =>  plan.get_plan_types,
                                   accesskey => 't' 
-                                  default   => plan.type } %]</td>
+                                  default   => plan.plan_type } %]</td>
 
     <th class="bz_row_header" align="right" width="100">Product Version</th>
     <td>[% PROCESS select sel = { name      => 'prod_version',
@@ -90,7 +67,7 @@
 </table>
 [% UNLESS plan.test_case_count OR plan.test_run_count %]
 <script type="text/javascript">
-  getProdVers(document.getElementById('product_id').value, [% plan.id FILTER none %]);
+  getProdVers(document.getElementById('product_id').value);
 </script>
 [% END %]
 <br><br>

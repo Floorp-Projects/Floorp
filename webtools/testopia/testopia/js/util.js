@@ -199,3 +199,30 @@ function nb(obj) {
   //obj.rows=1;
   obj.style.height='20px';
 }
+
+function getProdVers(product, plan){
+    document.getElementById("prod_version").disabled = true;
+    dojo.io.bind({
+        url:   "tr_new_plan.cgi",
+        content: {  product_id: product, action: "getversions" },
+        load:  function(type, data, evt){
+                 if (data.error){
+                   alert(data.error);
+                   document.getElementById("prod_version").disabled = false;
+                   return;
+                 }
+                 var prodvers = document.getElementById("prod_version");
+                 prodvers.options.length = 0;
+                 for (i in data){
+                   var myOp = new Option(data[i].name, data[i].id);
+                   addOption(prodvers, myOp);
+                   if (data[i].name == '[% plan.product_version FILTER none %]'){
+                      prodvers.options[i].selected = true;
+                   }
+                 }
+                 document.getElementById("prod_version").disabled = false;
+               },
+        error: function(type, error){ alert("ERROR");},
+        mimetype: "text/json"
+    });
+}

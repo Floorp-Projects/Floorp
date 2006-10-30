@@ -51,7 +51,7 @@ my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 
 my $plan_id = trim(Bugzilla->cgi->param('plan_id') || '');
-
+my $action = $cgi->param('action') || '';
 unless ($plan_id){
   $vars->{'form_action'} = 'tr_show_plan.cgi';
   print $cgi->header;
@@ -82,6 +82,7 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
     $plan->toggle_archive(Bugzilla->user->id);
     $vars->{'tr_message'} = 
         $plan->isactive == 0 ? "Plan archived":"Plan Unarchived";
+    $vars->{'backlink'} = $plan;
     print $cgi->header;
     display($plan);
         
@@ -167,6 +168,7 @@ elsif ($action eq 'do_clone'){
         print $cgi->header;
     }
     $vars->{'tr_message'} = "Plan ". $plan->name ." cloned as " . $newplan->name .".";
+    $vars->{'backlink'} = $plan;
     $cgi->param('plan_id', $newplan->id);
     
     display($newplan);   
@@ -180,6 +182,7 @@ elsif ($action eq 'Commit'){
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
     $vars->{'tr_message'} = "Test plan updated";
+    $vars->{'backlink'} = $plan;
     print $cgi->header;
     display($plan);    
 }
@@ -239,7 +242,7 @@ elsif ($action eq 'Attach'){
 
     $attachment->store;    
     $vars->{'tr_message'} = "Attachment added successfully";
-    
+    $vars->{'backlink'} = $plan;
     do_update($plan);
     print $cgi->header;
     display(Bugzilla::Testopia::TestPlan->new($plan_id));
@@ -271,25 +274,6 @@ elsif ($action eq 'do_delete'){
 ####################
 ### Ajax Actions ###
 ####################
-elsif ($action eq 'getversions'){
-    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    my $prod_id = $cgi->param("product_id");
-    detaint_natural($prod_id);
-    my $versions = $plan->get_product_versions($prod_id);
-    my $ret;
-    if ($cgi->param("product_id") == -1){
-        # For update multiple from tr_list_plans
-        $ret = "--Do Not Change--";
-    }
-    else{
-        foreach my $v (@{$versions}){
-            $ret .= $v->{'id'} . "|";
-        }
-        chop($ret);
-    }
-    print $ret;
-}
 elsif ($action eq 'caselist'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;

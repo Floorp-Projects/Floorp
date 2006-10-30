@@ -169,6 +169,8 @@ if ($action eq 'Add'){
     $vars->{'table'} = $table;
     $vars->{'action'} = 'Commit';
     $vars->{'form_action'} = 'tr_show_run.cgi';
+    $vars->{'tr_message'} = "Test Case: \"". $run->summary ."\" created successfully.";
+    $vars->{'backlink'} = $run;
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     print $cgi->multipart_final if $serverpush;

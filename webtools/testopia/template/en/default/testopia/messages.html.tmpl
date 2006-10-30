@@ -22,10 +22,18 @@
   # ...
   #%]
 
+[% goback=BLOCK %]
+  <br/>
+  <a href="tr_show_[% backlink.type FILTER none %].cgi?[% backlink.type FILTER none %]_id=[% backlink.id %]">Back to [% backlink.type FILTER none %]&nbsp;[% backlink.id FILTER none %]</a>
+[% END %]
+
 [% IF tr_message %]  
   <p>
   <table style="border-collapse:collapse;" border="1" bordercolor="black" width="100%" cellspacing="0" cellpadding="6"><tr><td>
   <font color="green">[% tr_message %]</font>
+  [% IF backlink %]
+    [% goback %]
+  [% END %]
   </td></tr></table>
   </p>
 [% END %]
@@ -34,6 +42,9 @@
   <p>
   <table style="border-collapse:collapse;" border="1" bordercolor="red" width="100%" cellspacing="0" cellpadding="6"><tr><td>
   <font color="red">[% tr_error %]</font>
+  [% IF backlink %]
+    [% goback %]
+  [% END %]
   </td></tr></table>
   </p>
 [% END %]

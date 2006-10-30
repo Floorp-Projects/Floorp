@@ -740,13 +740,13 @@ sub runs {
     return $self->{'runs'};
 }
 
-=head2 runs
+=head2 caseruns
 
-Returns a reference to a list of test runs useing this environment
+Returns a reference to a list of test caseruns useing this environment
 
 =cut
 
-sub runs {
+sub caseruns {
     my ($self) = @_;
     my $dbh = Bugzilla->dbh;
     return $self->{'caseruns'} if exists $self->{'caseruns'};
