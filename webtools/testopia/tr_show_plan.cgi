@@ -359,7 +359,7 @@ sub do_update {
     $plan->update(\%newvalues);
     
     # Add new tags 
-    foreach my $tag_name (split(/[\s,]+/, $cgi->param('newtag'))){
+    foreach my $tag_name (split(/[,]+/, $cgi->param('newtag'))){
         trick_taint($tag_name);
         my $tag = Bugzilla::Testopia::TestTag->new({tag_name => $tag_name});
         my $tag_id = $tag->store;

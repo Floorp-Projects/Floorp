@@ -103,7 +103,7 @@ if ($action eq 'Commit'){
         $plan->update(\%newvalues);
         $plan->toggle_archive if $cgi->param('togglearch');
         if ($cgi->param('addtags')){
-            foreach my $name (split(/[\s,]+/, $cgi->param('addtags'))){
+            foreach my $name (split(/[,]+/, $cgi->param('addtags'))){
                 trick_taint($name);
                 my $tag = Bugzilla::Testopia::TestTag->new({'tag_name' => $name});
                 my $tag_id = $tag->store;
