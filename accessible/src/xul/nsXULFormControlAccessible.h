@@ -166,6 +166,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
 protected:
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor

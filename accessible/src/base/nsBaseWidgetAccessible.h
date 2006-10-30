@@ -50,6 +50,7 @@ class nsIDOMNode;
   *  classes for the different accessibility implementations of
   *  the HTML and XUL widget sets.  --jgaunt
   */
+
 /** 
   * Leaf version of DOM Accessible -- has no children
   */
@@ -61,6 +62,7 @@ public:
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 };
 
 /**
