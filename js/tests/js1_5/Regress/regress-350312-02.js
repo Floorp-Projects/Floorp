@@ -54,7 +54,7 @@ function test()
   function createPrint(obj)
     {
       return new Function("actual += " + obj + " + ','; " + 
-                          "writeLineToLog(" + obj + ");");
+                          "print(" + obj + ");");
     }
 
   function createThrow(obj)
@@ -74,7 +74,7 @@ function test()
       }
     }
 
-  writeLineToLog('test 1');
+  print('test 1');
   expect = 'a,c,';
   actual = '';
   try
@@ -87,7 +87,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 1');
 
-  writeLineToLog('test 2');
+  print('test 2');
   expect = 'c,caught a';
   actual = '';
   try
@@ -100,7 +100,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 2');
 
-  writeLineToLog('test 3');
+  print('test 3');
   expect = 'b,c,';
   actual = '';
   try
@@ -113,7 +113,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 3');
 
-  writeLineToLog('test 4');
+  print('test 4');
   expect = 'a,c,';
   actual = '';
   try
@@ -126,7 +126,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 4');
 
-  writeLineToLog('test 5');
+  print('test 5');
   expect = 'c,caught b';
   actual = '';
   try

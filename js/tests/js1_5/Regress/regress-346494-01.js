@@ -52,10 +52,10 @@ function test()
   printStatus (summary);
   
   var pfx = "(function (x) {try {throw x}",
-    cg1 = " catch (e if e === 42) {var v = 'catch guard 1 ' + e; actual += v + ','; writeLineToLog(v);}"
-    cg2 = " catch (e if e === 43) {var v = 'catch guard 2 ' + e; actual += v + ','; writeLineToLog(v);}"
-    cat = " catch (e) {var v = 'catch all ' + e; actual += v + ','; writeLineToLog(v);}"
-    fin = " finally{var v = 'fin'; actual += v + ','; writeLineToLog(v)}",
+    cg1 = " catch (e if e === 42) {var v = 'catch guard 1 ' + e; actual += v + ','; print(v);}"
+    cg2 = " catch (e if e === 43) {var v = 'catch guard 2 ' + e; actual += v + ','; print(v);}"
+    cat = " catch (e) {var v = 'catch all ' + e; actual += v + ','; print(v);}"
+    fin = " finally{var v = 'fin'; actual += v + ','; print(v)}",
     end = "})";
 
   var exphash = {
@@ -96,23 +96,23 @@ function test()
     ];
 
   for (var i in src) {
-    writeLineToLog("\n=== " + src[i]);
+    print("\n=== " + src[i]);
     var f = eval(src[i]);
-    writeLineToLog(src[i]);
+    print(src[i]);
     var exp = eval(expsrc[i]);
     // dis(f);
-    writeLineToLog('decompiling: ' + f);
+    print('decompiling: ' + f);
 
     actual = '';
-    try { expect = exp(42); f(42) } catch (e) { writeLineToLog('tried f(42), caught ' + e) }
+    try { expect = exp(42); f(42) } catch (e) { print('tried f(42), caught ' + e) }
     reportCompare(expect, actual, summary);
 
     actual = '';
-    try { expect = exp(43); f(43) } catch (e) { writeLineToLog('tried f(43), caught ' + e) }
+    try { expect = exp(43); f(43) } catch (e) { print('tried f(43), caught ' + e) }
     reportCompare(expect, actual, summary);
 
     actual = '';
-    try { expect = exp(44); f(44) } catch (e) { writeLineToLog('tried f(44), caught ' + e) }
+    try { expect = exp(44); f(44) } catch (e) { print('tried f(44), caught ' + e) }
     reportCompare(expect, actual, summary);
   }
 

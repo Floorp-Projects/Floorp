@@ -87,7 +87,7 @@ function TestCase( n, d, e, a ) {
 
   this.passed = getTestCaseResult( this.expect, this.actual );
   if ( DEBUG ) {
-    writeLineToLog( "added " + this.description );
+    print( "added " + this.description );
   }
   /*
    * testcases are solely maintained in the TestCase
@@ -125,7 +125,7 @@ version ( 110 );
 
   writeHeaderToLog( SECTION + " "+ TITLE);
   if ( BUGNUMBER ) {
-    writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+    print ("BUGNUMBER: " + BUGNUMBER );
   }
 }
 
@@ -143,7 +143,7 @@ function test() {
     }
     catch(e)
     {
-      writeLineToLog('test(): empty testcase for tc = ' + tc + ' ' + e);
+      print('test(): empty testcase for tc = ' + tc + ' ' + e);
     }
   }
   stopTest();
@@ -206,12 +206,10 @@ function writeTestCaseResult( expect, actual, string ) {
 function writeFormattedResult( expect, actual, string, passed ) {
   var s = string ;
   s += ( passed ) ? PASSED : FAILED + expect;
-  writeLineToLog( s);
+  print( s);
   return passed;
 }
-function writeLineToLog( string	) {
-	print( string );
-}
+
 function writeHeaderToLog( string )	{
 	print( string );
 }
@@ -237,7 +235,7 @@ function stopTest() {
 function getFailedCases() {
   for ( var i = 0; i < testcases.length; i++ ) {
     if ( ! testcases[i].passed ) {
-      writeLineToLog( testcases[i].description +" = " +testcases[i].actual +" expected: "+ testcases[i].expect );
+      print( testcases[i].description +" = " +testcases[i].actual +" expected: "+ testcases[i].expect );
     }
   }
 }

@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  writeLineToLog('If the test harness fails, this test fails.');
+  print('If the test harness fails, this test fails.');
   expect = 4;  
   z = {valueOf: Function};
   actual = 2;
@@ -61,7 +61,7 @@ function test()
   catch(e) 
   { 
     actual = 3; 
-    writeLineToLog(e); 
+    print(e); 
   } 
   actual = 4;
 

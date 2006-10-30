@@ -109,7 +109,7 @@ function tryThis()
     }
     finally
     {
-     writeLineToLog("In finally case of tryThis() function");
+     print("In finally case of tryThis() function");
     }
   }
   return i;
@@ -130,7 +130,7 @@ function myTest(x)
   with (obj)
   {
     msg = (x != null) ? "NO" : "YES";
-    writeLineToLog("Is the provided argument to myTest() null? : " + msg);
+    print("Is the provided argument to myTest() null? : " + msg);
 
     try
     {
@@ -138,7 +138,7 @@ function myTest(x)
     }
     catch(e)
     {
-      writeLineToLog("Caught thrown exception = " + e);
+      print("Caught thrown exception = " + e);
     }
   }
 
@@ -172,7 +172,7 @@ function addValues_2(obj)
           }
           catch(e)
           {
-            writeLineToLog('Caught an exception in addValues_2() function: ' + e);
+            print('Caught an exception in addValues_2() function: ' + e);
           }
         }
       }
@@ -337,7 +337,7 @@ function addValues_3(obj)
           catch (e)
           {
             sum += 1;
-            writeLineToLog(e);
+            print(e);
           }
         }
       }
@@ -347,17 +347,17 @@ function addValues_3(obj)
       try 
       { 
         sum +=1;
-        writeLineToLog("In finally block of addValues_3() function: sum = " + sum);
+        print("In finally block of addValues_3() function: sum = " + sum);
       } 
       catch (e if e == 42) 
       {
         sum +=1;
-        writeLineToLog('In finally catch block of addValues_3() function: sum = ' + sum + ', e = ' + e);
+        print('In finally catch block of addValues_3() function: sum = ' + sum + ', e = ' + e);
       } 
       finally 
       {
         sum +=1;
-        writeLineToLog("In finally finally block of addValues_3() function: sum = " + sum);
+        print("In finally finally block of addValues_3() function: sum = " + sum);
         return sum;
       }
     }
@@ -400,7 +400,7 @@ function addValues_4(obj)
           catch (e)
           {
             sum += 1;
-            writeLineToLog(e);
+            print(e);
           }
         }
       }
@@ -410,22 +410,22 @@ function addValues_4(obj)
       try 
       {
         sum += 1;
-        writeLineToLog("In finally block of addValues_4() function: sum = " + sum);
+        print("In finally block of addValues_4() function: sum = " + sum);
       }
       catch (e if e == 42)
       {
         sum += 1;
-        writeLineToLog("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+        print("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
       } 
       catch (e if e == 43)
       {
         sum += 1;
-        writeLineToLog("In 2nd finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+        print("In 2nd finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
       }
       finally
       {
         sum += 1;
-        writeLineToLog("In finally finally block of addValues_4() function: sum = " + sum);
+        print("In finally finally block of addValues_4() function: sum = " + sum);
         return sum;
       }
     }
@@ -468,7 +468,7 @@ function addValues_5(obj)
           catch (e)
           {
             sum += 1;
-            writeLineToLog(e);
+            print(e);
           }
         }
       }
@@ -478,17 +478,17 @@ function addValues_5(obj)
       try
       {
         sum += 1;
-        writeLineToLog("In finally block of addValues_5() function: sum = " + sum);
+        print("In finally block of addValues_5() function: sum = " + sum);
       }
       catch (e)
       {
         sum += 1;
-        writeLineToLog("In finally catch block of addValues_5() function: sum = " + sum + ", e = " + e);
+        print("In finally catch block of addValues_5() function: sum = " + sum + ", e = " + e);
       }
       finally
       {
         sum += 1;
-        writeLineToLog("In finally finally block of addValues_5() function: sum = " + sum);
+        print("In finally finally block of addValues_5() function: sum = " + sum);
         return sum;
       }
     }
@@ -524,7 +524,7 @@ function testObj(obj)
   }
   finally
   {
-    writeLineToLog("in finally block of testObj() function");
+    print("in finally block of testObj() function");
     return 999;
   }
 }
@@ -555,7 +555,7 @@ function a120571()
 }
 
 // this caused a crash! Test to see that it doesn't now.
-writeLineToLog(a120571);
+print(a120571);
 
 // Now test that we have a non-null value for a120571.toString()
 status = inSection(13);
@@ -588,7 +588,7 @@ function b()
 }
 
 // this caused a crash!!! Test to see that it doesn't now.
-writeLineToLog(b);
+print(b);
 
 // Now test that we have a non-null value for b.toString()
 status = inSection(14);

@@ -54,12 +54,12 @@ function test()
   var f;
   f = function() { 
     window.foo getter = function() { return 5; }; 
-    writeLineToLog(window.foo); 
+    print(window.foo); 
   }
 
   actual = f + '';
   expect = 'function () {\n    window.foo getter= ' + 
-    'function () {return 5;};\n    writeLineToLog(window.foo);\n}';
+    'function () {return 5;};\n    print(window.foo);\n}';
 
   compareSource(expect, actual, summary);
 

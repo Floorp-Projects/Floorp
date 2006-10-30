@@ -77,7 +77,7 @@ function testSource(n)
   
   var end = new Date();
 
-  writeLineToLog("Size: " + n + ", Time: " + (end - start) + " ms");
+  print("Size: " + n + ", Time: " + (end - start) + " ms");
 
   return end - start;
 }

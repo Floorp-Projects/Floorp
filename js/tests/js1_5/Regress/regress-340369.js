@@ -50,7 +50,7 @@ try
 }
 catch(ex)
 {
-  writeLineToLog(ex+'');
+  print(ex+'');
 }
 
 reportCompare(expect, actual, summary);

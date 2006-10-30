@@ -70,19 +70,19 @@ function test()
 
   for (i = 0; i < table.length; i++) {
     var src = pfx + table[i][0] + decl + table[i][1] + end;
-    writeLineToLog('src: ' + src);
+    print('src: ' + src);
     var fun = eval(src);
     var testval = fun();
     reportCompare(expect, testval, summary + ': ' + src);
     if (testval != expect) {
       break;
     }
-    writeLineToLog('uneval: ' + uneval(fun));
+    print('uneval: ' + uneval(fun));
     var declsrc = '(' + 
       src.slice(1, -1).replace('function f', 'function f' + i) + ')';
-    writeLineToLog('declsrc: ' + declsrc);
+    print('declsrc: ' + declsrc);
     this['f' + i] = eval(declsrc);
-    writeLineToLog('f' + i + ': ' + this['f' + i]);
+    print('f' + i + ': ' + this['f' + i]);
   }
 
   exitFunc ('test');

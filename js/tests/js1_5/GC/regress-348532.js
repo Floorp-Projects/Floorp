@@ -70,7 +70,7 @@ function test()
   //  2^23 * 256 or 2^31 in length
   var error = err(s,s);
 
-  writeLineToLog(error.stack.length);
+  print(error.stack.length);
 
   expect = true;
   actual = (error.stack.length > 0);

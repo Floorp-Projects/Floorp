@@ -62,10 +62,14 @@ function htmlesc(str) {
   return str; 
 }
 
-function writeLineToLog( string ) {
-  string = String(string);
-  string = string.replace(/[<>&]/g, htmlesc);
-  document.write( string + "<br>\n");
+function print() { 
+  var s = ''; 
+  var a; for (var i = 0; i < arguments.length; i++) 
+  { 
+    a = arguments[i]; 
+    s += String(a) + ' '; 
+  } 
+  DocumentWrite(s);
 }
 
 function writeHeaderToLog( string ) {
@@ -104,7 +108,7 @@ function err( msg, page, line ) {
     /*
      * an unexpected exception occured
      */
-    writeLineToLog( "Test failed with the message: " + msg );
+    print( "Test failed with the message: " + msg );
     testcase = new TestCase(SECTION, "unknown", "unknown", "unknown");
     testcase.passed = false;
     testcase.reason = "Error: " + msg + 

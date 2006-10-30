@@ -67,7 +67,7 @@ DESCRIPTION = "var class = true";
 EXPECTED = "error";
 
 
-writeLineToLog("This test requires option javascript.options.strict enabled");
+print("This test requires option javascript.options.strict enabled");
 var jsOptions = new JavaScriptOptions();
 jsOptions.setOption('strict', true);
 jsOptions.setOption('werror', true);

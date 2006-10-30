@@ -54,7 +54,7 @@ catch (LN2)
 {
 }
 actual = Math.LN2;
-writeLineToLog("Math.LN2 = " + Math.LN2)
+print("Math.LN2 = " + Math.LN2)
 reportCompare(expect, actual, summary);
 
 var s = new String("abc");
@@ -68,7 +68,7 @@ catch (length)
 {
 }
 actual = s.length;
-writeLineToLog("length of '" + s + "' = " + s.length)
+print("length of '" + s + "' = " + s.length)
 reportCompare(expect, actual, summary);
 
 var re = /xy/m;
@@ -82,7 +82,7 @@ catch (multiline)
 {
 }
 actual = re.multiline;
-writeLineToLog("re.multiline = " + re.multiline)
+print("re.multiline = " + re.multiline)
 reportCompare(expect, actual, summary);
 
 if ("document" in this) {
@@ -97,7 +97,7 @@ if ("document" in this) {
     {
     }
     actual = document.documentElement + '';
-    writeLineToLog("document.documentElement = " + document.documentElement)
+    print("document.documentElement = " + document.documentElement)
 }
 else
     Object = this.constructor

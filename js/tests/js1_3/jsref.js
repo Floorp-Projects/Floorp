@@ -56,7 +56,7 @@ function TestCase( n, d, e, a ) {
 
     this.passed = getTestCaseResult( this.expect, this.actual );
     if ( DEBUG ) {
-        writeLineToLog( "added " + this.description );
+        print( "added " + this.description );
     }
 }
 function startTest() {
@@ -130,14 +130,11 @@ function writeFormattedResult( expect, actual, string, passed ) {
         s += B ;
         s += ( passed ) ? FONT_GREEN + NBSP + PASSED : FONT_RED + NBSP + FAILED + expect + TT_ ;
 
-        writeLineToLog( s + FONT_ + B_ + TT_ );
+        print( s + FONT_ + B_ + TT_ );
 
         return passed;
 }
 
-function writeLineToLog( string ) {
-    print( string + BR + CR );
-}
 function writeHeaderToLog( string ) {
     print( H2 + string + H2_ );
 }
@@ -193,6 +190,6 @@ function err( msg, page, line ) {
 function Enumerate ( o ) {
     var p;
     for ( p in o ) {
-        writeLineToLog( p +": " + o[p] );
+        print( p +": " + o[p] );
     }
 }

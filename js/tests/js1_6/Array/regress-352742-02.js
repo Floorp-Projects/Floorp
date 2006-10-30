@@ -54,7 +54,7 @@ function test()
   expect = 3;
   var j = ({toString: function() { eval("return"); }});
   actual = 2; 
-  try { "" + j; } catch(e){writeLineToLog(e)} 
+  try { "" + j; } catch(e){print(e)} 
   actual = 3;
 
   reportCompare(expect, actual, summary);

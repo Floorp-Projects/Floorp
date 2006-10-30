@@ -14,7 +14,7 @@ var TITLE   = "Keywords";
 
 startTest();
 
-writeLineToLog("This test requires option javascript.options.strict enabled");
+print("This test requires option javascript.options.strict enabled");
 
 var jsOptions = new JavaScriptOptions();
 jsOptions.setOption('strict', true);

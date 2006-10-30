@@ -72,7 +72,7 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 dec1 = "function f1(x,y){++x, --y}";
-dec2 = "function f2(){var y; f1(1,2); y=new Date(); writeLineToLog(y.toString())}";
+dec2 = "function f2(){var y; f1(1,2); y=new Date(); print(y.toString())}";
 
 eval(dec1);
 eval(dec2);

@@ -89,10 +89,10 @@ function test()
     finally3;
 
   if (!passed) {
-    writeLineToLog("Failed!");
-    writeLineToLog("catch1=" + catch1 + " catch2=" + catch2 + " catch3=" + 
+    print("Failed!");
+    print("catch1=" + catch1 + " catch2=" + catch2 + " catch3=" + 
                    catch3);
-    writeLineToLog("finally1=" + finally1 + " finally2=" + finally2 + 
+    print("finally1=" + finally1 + " finally2=" + finally2 + 
                    " finally3=" + finally3);
   }
 
@@ -111,10 +111,10 @@ function test()
     finally3;
 
   if (!passed) {
-    writeLineToLog("Failed!");
-    writeLineToLog("catch1=" + catch1 + " catch2=" + catch2 + " catch3=" + 
+    print("Failed!");
+    print("catch1=" + catch1 + " catch2=" + catch2 + " catch3=" + 
                    catch3);
-    writeLineToLog("finally1=" + finally1 + " finally2=" + finally2 + 
+    print("finally1=" + finally1 + " finally2=" + finally2 + 
                    " finally3="+finally3);
   }
   reportCompare(true, passed, 'test GC-invoke close');

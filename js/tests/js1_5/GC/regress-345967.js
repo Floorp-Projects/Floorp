@@ -54,8 +54,8 @@ function test()
   expectExitCode(0);
   expectExitCode(3);
 
-  writeLineToLog('This test will probably run out of memory');
-  writeLineToLog('This test really should only fail on 64 bit machines');
+  print('This test will probably run out of memory');
+  print('This test really should only fail on 64 bit machines');
   
   var JSVAL_INT_MAX = (1 << 30) - 1;
 
@@ -90,7 +90,7 @@ function test()
   expect = 0;
   actual = a[JSVAL_INT_MAX];
   if (expect !== actual)
-    writeLineToLog("BAD");
+    print("BAD");
 
   reportCompare(expect, actual, summary);
 

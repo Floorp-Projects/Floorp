@@ -84,7 +84,7 @@ function startTest() {
     // print out bugnumber
 
     if ( BUGNUMBER ) {
-            writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+            print ("BUGNUMBER: " + BUGNUMBER );
     }
 
     testcases = new Array();
@@ -156,12 +156,10 @@ function writeTestCaseResult( expect, actual, string ) {
 function writeFormattedResult( expect, actual, string, passed ) {
         var s = string ;
         s += ( passed ) ? PASSED : FAILED + expect;
-        writeLineToLog( s);
+        print( s);
         return passed;
 }
-function writeLineToLog( string	) {
-	print( string );
-}
+
 function writeHeaderToLog( string )	{
 	print( string );
 }

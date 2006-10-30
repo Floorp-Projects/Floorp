@@ -57,8 +57,8 @@ function test()
       function g() {} 
     }
     var a = i;
-    writeLineToLog(a);
-    writeLineToLog(i);
+    print(a);
+    print(i);
     return i;
   }
 

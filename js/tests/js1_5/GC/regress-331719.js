@@ -42,7 +42,7 @@ var expect = '';
 
 printBugNumber (bug);
 printStatus (summary);
-writeLineToLog('This test requires WAY_TOO_MUCH_GC');
+print('This test requires WAY_TOO_MUCH_GC');
   
 expect = 'No';
 actual = 'No'.replace(/\&\&/g, '&');

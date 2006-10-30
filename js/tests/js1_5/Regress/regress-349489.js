@@ -54,13 +54,13 @@ function test()
   expect = 'function () {\nL:\n    3;\n}';
   var f = function() { L: 3; };
   actual = f.toString();
-  writeLineToLog(f.toString());
+  print(f.toString());
   compareSource(expect, actual, summary);
 
   expect = 'function () {\nL:\n    3;\n    alert(5);\n}';
   f = function() { L: 3; alert(5); }
   actual = f.toString();
-  writeLineToLog(f.toString());
+  print(f.toString());
   compareSource(expect, actual, summary);
 
   exitFunc ('test');

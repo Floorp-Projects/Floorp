@@ -73,7 +73,7 @@ function test()
         ++count;
       }
       if (count != LOOPS) {
-        writeLineToLog("Test run " + c + ": test failed, count = " + count +
+        print("Test run " + c + ": test failed, count = " + count +
                        ", should be " + LOOPS);
         var failed = true;
       }
@@ -81,7 +81,7 @@ function test()
     actual = !failed;
     if (!failed) 
     {
-      writeLineToLog("Test passed.");
+      print("Test passed.");
     }
   }
 

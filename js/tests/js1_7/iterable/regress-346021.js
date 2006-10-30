@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  var o = { __iterator__: function () { writeLineToLog(12); yield 42; } };
+  var o = { __iterator__: function () { print(12); yield 42; } };
 
   expect = 42;
   actual = 0;

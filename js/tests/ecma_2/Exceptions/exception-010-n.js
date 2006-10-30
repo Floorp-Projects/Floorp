@@ -44,8 +44,8 @@ startTest();
 var TITLE   = "Don't Crash throwing null";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
-writeLineToLog("Null throw test.");
-writeLineToLog("BUGNUMBER: 21799");
+print("Null throw test.");
+print("BUGNUMBER: 21799");
 
 DESCRIPTION = "throw null";
 EXPECTED = "error";
@@ -54,6 +54,6 @@ new TestCase( SECTION,  "throw null",     "error",    eval("throw null" ));
 
 test();
 
-writeLineToLog("FAILED!: Should have exited with uncaught exception.");
+print("FAILED!: Should have exited with uncaught exception.");
 
 

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 355341;
-var summary = 'Do not crash with watch adn setter';
+var summary = 'Do not crash with watch and setter';
 var actual = '';
 var expect = '';
 

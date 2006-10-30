@@ -71,7 +71,7 @@ function G(obj)
 {
   if(!obj)
     obj = {};
-  writeLineToLog(obj);
+  print(obj);
   gc();
-  writeLineToLog(obj);
+  print(obj);
 }

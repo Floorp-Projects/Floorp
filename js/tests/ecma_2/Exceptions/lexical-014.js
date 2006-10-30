@@ -25,7 +25,7 @@ var TITLE   = "Future Reserved Words";
 startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-writeLineToLog("This test requires option javascript.options.strict enabled");
+print("This test requires option javascript.options.strict enabled");
 
 var jsOptions = new JavaScriptOptions();
 jsOptions.setOption('strict', true);

@@ -180,14 +180,11 @@ function writeFormattedResult( expect, actual, string, passed ) {
         s += B ;
         s += ( passed ) ? FONT_GREEN + NBSP + PASSED : FONT_RED + NBSP + FAILED + expect + TT_ ;
 
-        writeLineToLog( s + FONT_ + B_ + TT_ );
+        print( s + FONT_ + B_ + TT_ );
 
         return passed;
 }
 
-function writeLineToLog( string ) {
-    print( string + BR + CR );
-}
 function writeHeaderToLog( string ) {
     print( H2 + string + H2_ );
 }

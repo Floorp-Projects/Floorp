@@ -74,7 +74,7 @@ function test()
       catch(e2) 
       { 
         actual += e2;
-        writeLineToLog(e2); 
+        print(e2); 
         if (++counter > 10)
         {
           throw 'Infinite loop...';
@@ -89,7 +89,7 @@ function test()
 
   try
   {
-    writeLineToLog('test 1');
+    print('test 1');
     f(2, 1);
   }
   catch(ex)
@@ -100,7 +100,7 @@ function test()
   actual = '';
   try
   {
-    writeLineToLog('test 2');
+    print('test 2');
     f(2, 0);
   }
   catch(ex)

@@ -1357,9 +1357,6 @@ sub report_failure {
     $failures_reported++;
 
     $message =~ s/\n+/\n/g;
-    $message =~ s/&/&amp;/g;
-    $message =~ s/</&lt;/g;
-    $message =~ s/>/&gt;/g;
     $test =~ s/\:/\//g;
 
     if ($opt_console_failures) {
@@ -1378,6 +1375,9 @@ sub report_failure {
         }
     }
 
+    $message =~ s/&/&amp;/g;
+    $message =~ s/</&lt;/g;
+    $message =~ s/>/&gt;/g;
     $message =~ s/\n/<br>\n/g;
 
     if ($bug_number) {

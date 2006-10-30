@@ -53,9 +53,6 @@ var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test -';
 var callStack = new Array();
 
-function writeLineToLog( string ) {
-    print( string + "\n");
-}
 /*
  * The test driver searches for such a phrase in the test output.
  * If such phrase exists, it will set n as the expected exit code.
@@ -63,7 +60,7 @@ function writeLineToLog( string ) {
 function expectExitCode(n)
 {
 
-    writeLineToLog('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
+    print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
 
 }
 
@@ -96,7 +93,7 @@ function reportFailure (msg)
     var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
     
     for (var i=0; i<lines.length; i++)
-        writeLineToLog (FAILED + prefix + lines[i]);
+        print (FAILED + prefix + lines[i]);
 
 }
 
@@ -111,7 +108,7 @@ function printStatus (msg)
     var l;
 
     for (var i=0; i<lines.length; i++)
-        writeLineToLog (STATUS + lines[i]);
+        print (STATUS + lines[i]);
 
 }
 
@@ -121,7 +118,7 @@ function printStatus (msg)
 function printBugNumber (num)
 {
 
-    writeLineToLog (BUGNUMBER + num);
+    print (BUGNUMBER + num);
 
 }
 
@@ -161,7 +158,7 @@ function reportCompare (expected, actual, description)
     }
     else
     {
-        writeLineToLog('PASSED! ' + description);
+        print('PASSED! ' + description);
     }
     return (output == ""); // true if passed
 }
@@ -504,8 +501,8 @@ function compareSource(expect, actual, summary)
         replace(/\s+/mg, ' ').
         replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
 
-    writeLineToLog('expect:\n' + expectP);
-    writeLineToLog('actual:\n' + actualP);
+    print('expect:\n' + expectP);
+    print('actual:\n' + actualP);
 
     reportCompare(expectP, actualP, summary + ': compare source');
 

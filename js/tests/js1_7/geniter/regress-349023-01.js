@@ -60,7 +60,7 @@ function test()
   {
     var g = gen();
     for (var i = 0; i < 10; i++) {
-      writeLineToLog(g.next());
+      print(g.next());
     }
   }
   catch(ex)

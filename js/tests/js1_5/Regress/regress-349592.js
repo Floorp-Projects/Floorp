@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 349592;
-var summary = 'decompilation of try/finally inside finally';
+var summary = 'Do not assert with try/finally inside finally';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

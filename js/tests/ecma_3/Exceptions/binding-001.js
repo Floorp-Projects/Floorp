@@ -66,7 +66,7 @@ var expect= ERR_REF_YES;
 try
 {
   var f = function sum(){};
-  writeLineToLog(sum);
+  print(sum);
 }
 catch (e)
 {

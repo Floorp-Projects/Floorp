@@ -79,7 +79,7 @@ function test()
     var x = {};
   }
 
-  writeLineToLog('done');
+  print('done');
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

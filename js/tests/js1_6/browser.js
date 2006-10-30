@@ -71,19 +71,27 @@ function DocumentWrite(s)
   }
   catch(excp)
   {
-    document.write(s + "<br>\n");
+    document.write(s + '<br>\n');
   }
 }
 
-function writeLineToLog( string ) {
-  string = String(string);
-  string = string.replace(/[<>&]/g, htmlesc);
-  DocumentWrite( string + "<br>\n");
+function print() { 
+  var s = ''; 
+  var a;
+  for (var i = 0; i < arguments.length; i++) 
+  { 
+    a = arguments[i]; 
+    s += String(a) + ' '; 
+  } 
 
   if (typeof dump == 'function')
   {
-    dump( string + '\n');
+    dump( s + '\n');
   }
+
+  s = s.replace(/[<>&]/g, htmlesc);
+
+  DocumentWrite(s);
 }
 
 var testcases = new Array();
@@ -177,6 +185,16 @@ reportFailure = function (msg, page, line)
 
 function gc()
 {
+  // Thanks to igor.bukanov@gmail.com
+  var tmp = Math.PI * 1e500, tmp2;
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    tmp2 = tmp * 1.5;
+  }
+}
+
+function jsdgc()
+{
   try
   {
     // Thanks to dveditz
@@ -188,13 +206,7 @@ function gc()
   }
   catch(ex)
   {
-    writeLineToLog('gc: ' + ex);
-    // Thanks to igor.bukanov@gmail.com
-    var tmp = Math.PI * 1e500, tmp2;
-    for (var i = 0; i != 1 << 15; ++i) 
-    {
-      tmp2 = tmp * 1.5;
-    }
+    print('gc: ' + ex);
   }
 }
 

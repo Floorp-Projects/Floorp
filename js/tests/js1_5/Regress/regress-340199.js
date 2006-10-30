@@ -47,7 +47,7 @@ if (typeof window != 'undefined' &&
     typeof XPCNativeWrapper != 'undefined')
 {
   Object.prototype.__iterator__ = 
-    function () { actual = "User code called"; writeLineToLog(actual); };
+    function () { actual = "User code called"; print(actual); };
 
   try
   {
@@ -55,11 +55,11 @@ if (typeof window != 'undefined' &&
     {
       try 
       { 
-        writeLineToLog(i);
+        print(i);
       } 
       catch(ex)
       {
-        writeLineToLog(ex);
+        print(ex);
       }
     }
   }
