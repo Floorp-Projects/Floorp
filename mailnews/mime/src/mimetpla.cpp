@@ -52,6 +52,7 @@
 #include "nsIPrefBranch.h"
 #include "prprf.h"
 #include "nsMsgI18N.h"
+#include "nsMimeTypes.h"
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -270,6 +271,11 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
 
+  // if this part has a name and it's not a message/rfc822, don't quote
+  if (quoting && obj->headers && MimeHeaders_get_name(obj->headers, obj->options) 
+      && PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
+    return 0;
+
   if (!obj->output_p) return 0;
 
   if (obj->options &&
@@ -335,6 +341,11 @@ MimeInlineTextPlain_parse_line (const char *line, PRInt32 length, MimeObject *ob
 
   char *mailCharset = NULL;
   nsresult rv;
+
+  // if this part has a name and it's not a message/rfc822, don't quote
+  if (quoting && obj->headers && MimeHeaders_get_name(obj->headers, obj->options) 
+      && PL_strcasecmp(obj->content_type, MESSAGE_RFC822))
+    return 0;
 
   if (!skipConversion)
   {
