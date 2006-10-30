@@ -120,8 +120,8 @@ interface nsIAccessibleProvider : nsISupports
    const long XFormsInputBoolean = 0x00002005;
    /** Used for secret element */
    const long XFormsSecret = 0x00002006;
-   /** Used for range element */
-   const long XFormsRange = 0x00002007;
+   /** Used for range element represented by slider */
+   const long XFormsSliderRange = 0x00002007;
 
   /**
    * Return one of constants declared above.
