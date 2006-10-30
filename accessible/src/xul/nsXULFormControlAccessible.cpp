@@ -774,6 +774,13 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
+NS_IMETHODIMP
+nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  *aAllowsAnonChildren = PR_FALSE;
+  return NS_OK;
+}
+
 void nsXULTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
@@ -809,3 +816,4 @@ void nsXULTextFieldAccessible::CheckForEditor()
     SetEditor(editor);
   }
 }
+
