@@ -97,6 +97,7 @@ a:link[href*="eyereturn.com"] img,
 a:link[href*="save.TV"] img,
 a:link[href*="exclick."] img,
 a:link[href*="adclick."] img,
+a:link[href*="clickbank.net"] img,
 
 embed[src*="/us.yimg.com/a/"],
 embed[type="application/x-shockwave-flash"][src*="/ad."],
@@ -148,7 +149,6 @@ object[type="application/x-shockwave-flash"][data*="content.valencemedia.com/"],
 object[type="application/x-shockwave-flash"][id*="adTower"],
 object[type="application/x-shockwave-flash"][id*="728x90"],
 object[type="application/x-shockwave-flash"][id*="171x600"],
-object[type="application/x-shockwave-flash"][id*="banner"],
 object[type="application/x-shockwave-flash"][id*="400x250"],
 object[type="application/x-shockwave-flash"][id*="160x600"],
 object[type="application/x-shockwave-flash"][id*="adbox"],
@@ -163,6 +163,7 @@ embed[type="application/x-shockwave-flash"][src*="adsys.townnews.com"],
 embed[type="application/x-shockwave-flash"][src*="images.anandtech.com/banners"],
 embed[type="application/x-shockwave-flash"][src*="precisionclick.com"],
 embed[type="application/x-shockwave-flash"][src*="adsatt.espn.go.com"],
+embed[type="application/x-shockwave-flash"][src*="blogsmithmedia.com"],
 
 img[src*="googlesyndication.com"],
 img[src*=".doubleclick.net"],
@@ -214,6 +215,9 @@ img[src*="yceml.net"],
 img[src*="adjuggler.com"],
 img[src*="sharesale.com"],
 img[src*="content.ipro.com/images"],
+img[src*="static.fmpub.net/banners"],
+img[src*="content.cpxinteractive.com"],
+img[src*="righthandads"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
@@ -285,6 +289,11 @@ iframe[src*="mm.chitika.net"],
 iframe[src*="/RealMedia/ads/"],
 iframe[src*="precisionclick.com/ad/"],
 iframe[src*="adsatt.espn.go.com"],
+iframe[src*="rcm.amazon.com"],
+iframe[src*="adspace"],
+iframe[src*="AdPlaceholder"],
+iframe[src*="ffxcam.fairfax.com.au"],
+iframe[src*="contextweb.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -301,7 +310,6 @@ div#rh>div.rh,
 div#sponsorsAd,
 div#leaderboardAd,
 div[id^="ads_"],
-div[id^="ad_"],
 div[id*="ad440x160"],
 div[id*="ad300x100"],
 div.werbeblock,
@@ -319,7 +327,9 @@ div[id*="swf_adbox"],
 div[id*="swf_perma_flash"],
 div[id*="swf_skyscraper"],
 div[id*="km_main_div"],
-div#ad * object > embed[type="application/x-shockwave-flash"] 
+div#ad * object > embed[type="application/x-shockwave-flash"],
+div[id*="adSpot"],
+div[id*="StripAd"]
 
 { display: none ! important }
 
@@ -329,10 +339,9 @@ a:link[href*="mozilla.org"] img,
 a:link[href*="netflix.com/addtoqueue"] img,
 a:link[href*="click.mp3"] img,
 a:link[href*="linksynergy.com"] img[src*="apple.com"],
+img[src*="wikipedia"],
+img[src*="images.ucomics.com"],
+img[src*="buttons.googlesyndication.com"],
 iframe[src*="mozilla.org"]
 
 { display: inline ! important }
-
-@-moz-document domain(mail.google.com) {
-div[id^="ad_"] {display: block ! important }
-}
