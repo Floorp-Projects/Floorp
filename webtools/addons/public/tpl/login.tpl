@@ -23,7 +23,7 @@
         <input class="amo-submit" type="submit" value="Go &raquo;"/>
         </div>
         
-        <p><strong><a href="createaccount.php">Create an account &raquo;</a></strong></p>
+        <p><strong><a href="{$config.webpath}/createaccount.php">Create an account &raquo;</a></strong></p>
 
     </form>
 </div>
