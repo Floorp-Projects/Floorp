@@ -126,13 +126,13 @@ protected:
   nsString mBulletText;
 };
 
-class nsHTMLListAccessible : public nsAccessibleWrap
+class nsHTMLListAccessible : public nsHyperTextAccessible
 {
 public:
   nsHTMLListAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-    nsAccessibleWrap(aDOMNode, aShell) { }
+    nsHyperTextAccessible(aDOMNode, aShell) { }
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_LIST; return NS_OK; }
-  NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
+  NS_IMETHOD GetState(PRUint32 *aState) { nsHyperTextAccessible::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
 };
 
 class nsHTMLLIAccessible : public nsHyperTextAccessible
