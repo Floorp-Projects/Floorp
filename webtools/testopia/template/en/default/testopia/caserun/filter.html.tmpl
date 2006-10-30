@@ -1,11 +1,44 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Testopia System
+  #
+  # The Initial Developer of the Original Code is Greg Hendricks.
+  # Portions created by Greg Hendricks are Copyright (C) 2006 Novell.
+  # All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
 <form method="GET" action="[% table.url_loc FILTER none %]" id="filter_form">
 <input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
+<input type="hidden" name="expand_filter" id="expand_filter" value="[% expand_filter FILTER none %]" />
+<script type="text/javascript">
+  function toggleExp(obj){
+    if (obj.value == 1){
+      obj.value = 0;
+    }
+    else {
+      obj.value = 1;
+    }
+  } 
+</script>
 [% query = table.get_query_part %]
+[% IF table.url_loc == 'tr_show_run.cgi' %]
+<input type="hidden" name="expand_report" id="expand_report" value="[% expand_report FILTER none %]" />
 <div class="bz_row_header" style="font-size:12pt; font-weight: bold;">
-  <img src="[% query.match('assignee') AND NOT hide_filter ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="cft" onclick="_sr(document.getElementById('caserun_report'),document.getElementById('cft'))">
-  <a href="javascript:_sr(document.getElementById('caserun_report'),document.getElementById('cft'))" style="text-decoration:none;">Reports</a>
+  <img src="[% query.match('assignee') AND expand_report ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="cft" onclick="_sr(document.getElementById('caserun_report'),document.getElementById('cft')); toggleExp(document.getElementById('expand_report'))">
+  <a href="javascript:_sr(document.getElementById('caserun_report'),document.getElementById('cft'));  toggleExp(document.getElementById('expand_report'))" style="text-decoration:none;">Reports</a>
 </div>
-<div id="caserun_report" [% query.match('assignee') AND NOT hide_filter ? 'style="display:block"' : 'style="display:none"' %]>
+<div id="caserun_report" [% query.match('assignee') AND expand_report ? 'style="display:block"' : 'style="display:none"' %]>
 [% PROCESS "testopia/search/report-matrix.html.tmpl" 
    obj = table.list.0
 %]
@@ -13,11 +46,12 @@
   <input type="button" value="Report" onclick="document.getElementById('filter_form').action='tr_caserun_reports.cgi';document.getElementById('filter_form').submit();">
 </p>
 </div>
+[% END %]
 <div class="bz_row_header" style="font-size:12pt; font-weight: bold;">
-  <img src="[% query.match('assignee') AND NOT hide_filter ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="ft" onclick="_sr(document.getElementById('filter'),document.getElementById('ft'))">
-  <a href="javascript:_sr(document.getElementById('filter'),document.getElementById('ft'))" style="text-decoration:none;">Filter</a>
+  <img src="[% query.match('assignee') AND expand_filter ? 'testopia/img/td.gif' : 'testopia/img/tr.gif' %]" id="ft" onclick="_sr(document.getElementById('filter'),document.getElementById('ft')); toggleExp(document.getElementById('expand_filter'))">
+  <a href="javascript:_sr(document.getElementById('filter'),document.getElementById('ft')); toggleExp(document.getElementById('expand_filter'))" style="text-decoration:none;">Filter</a>
 </div>
-<div id="filter" [% query.match('assignee') AND NOT hide_filter ? 'style="display:block"' : 'style="display:none"' %]>
+<div id="filter" [% query.match('assignee') AND expand_filter ? 'style="display:block"' : 'style="display:none"' %]>
 <table>
   <tr class="bz_row_header">
     <th>Status</th>
@@ -116,7 +150,9 @@
                   elements  => 5,
                   mult      => 1 } %]
     </td>
-    <td valign="bottom"><input type="reset" value="Clear" /><br/><input type="submit" value="Filter" /></td>
+    <td valign="bottom">
+      <input type="button" value="Clear" onclick="document.location='[% table.url_loc FILTER none %]?run_id=[% run.id FILTER none %]'"/><br/>
+      <input type="submit" value="Filter" /></td>
   </tr>
 </table>
 </div>

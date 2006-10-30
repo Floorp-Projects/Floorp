@@ -305,6 +305,8 @@ sub display {
         push @case_list, $caserun->case_id;
     }
     my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
+    $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
+    $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
     $vars->{'case_list'} = join(",", @case_list);
