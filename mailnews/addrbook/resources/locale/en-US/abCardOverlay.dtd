@@ -82,6 +82,9 @@
 <!ENTITY ScreenName.label               "Screen Name:">
 <!ENTITY ScreenName.accesskey           "S">
 
+<!ENTITY allowRemoteContent.label       "Allow remote images in HTML mail.">
+<!ENTITY allowRemoteContent.accesskey   "g">
+
 <!ENTITY Phones.box                     "Phones">
 <!ENTITY WorkPhone.label                "Work:">
 <!ENTITY WorkPhone.accesskey            "W">
