@@ -38,10 +38,41 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 structurebar {
-  -moz-box-orient: horizontal;
   -moz-binding: url("chrome://composer/content/bindings/structurebar.xml#structurebar");
+  overflow: -moz-hidden-unscrollable;
+  min-width: 1px;
+  -moz-box-pack: end;
 }
 
 toolbarbutton {
   padding: 0px;
+}
+
+autorepeatbutton {
+  -moz-border-radius: 3px;
+  width: 1.5em;
+}
+
+.autorepeatbutton-up {
+  margin-right: 1em;
+}
+
+.autorepeatbutton-down {
+  margin-left: 1em;
+}
+
+autorepeatbutton:not([disabled]) {
+  background-color: #e0e0e0;
+}
+
+autorepeatbutton[disabled]:hover,
+autorepeatbutton[disabled]:hover:active {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 2px;
+  border: 1px solid transparent;
+  padding: 1px;
 }

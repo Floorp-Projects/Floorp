@@ -102,8 +102,8 @@
     </splitter>
     <vbox flex="1">
       <tabeditor id="tabeditor" flex="1" visibility="hidden"/>
-      <structurebar id="structurebar">
-        <label value="structure"/>
+      <structurebar id="structurebar" orient="horizontal">
+        <spacer id="structbarflexer" flex="1"/>
       </structurebar>
     </vbox>
     <splitter id="splitter2" collapse="after" resizeafter="closest">

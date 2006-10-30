@@ -48,7 +48,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="structurebar">
+  <binding id="structurebar" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
 
     <resources>
       <stylesheet src="chrome://composer/skin/structurebar.css"/>
@@ -65,10 +65,11 @@
         <body>
         <![CDATA[
           var node = aNode;
+          var toolbarbutton;
           if (this.mLastNode == node)
           {
             // avoid rebuilding the whole structure toolbar if possible
-            var toolbarbutton = this.lastChild;
+            toolbarbutton = this.lastChild;
             while (node && toolbarbutton &&
                    node == toolbarbutton.getUserData("node") &&
                    node.nodeName.toLowerCase() != "html")
@@ -77,20 +78,21 @@
               toolbarbutton = toolbarbutton.previousSibling;
             }
             // so we rebuild from toolbarbutton up to the root
-            while (toolbarbutton)
-            {
-              var tmp = toolbarbutton.previousSibling;
-              this.removeChild(toolbarbutton);
-              toolbarbutton = tmp;
-            }
           }
           else
           {
             // the deepest node is not the one the toolbar is currently showing,
             // so let's clear all
             this.mLastNode = node;
-            while (this.hasChildNodes())
-              this.removeChild(this.lastChild);
+            toolbarbutton = this.lastChild;
+          }
+
+          while (toolbarbutton)
+          {
+            var tmp = toolbarbutton.previousSibling;
+            if (toolbarbutton.localName == "toolbarbutton")
+              this.removeChild(toolbarbutton);
+            toolbarbutton = tmp;
           }
 
           while (node.nodeName.toLowerCase() != "html")
@@ -113,6 +115,12 @@
 
             node = node.parentNode;
           }
+
+          // make sure the deepest element is visible;
+          // we always have a lastChild here
+          var lastButton = this.lastChild.previousSibling;
+          if (lastButton)
+            this.ensureElementIsVisible(lastButton);
         ]]>
         </body>
       </method>
