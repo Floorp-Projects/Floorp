@@ -368,6 +368,8 @@ pref("ldap_2.prefs_migrated",      false);
 
 pref("mailnews.confirm.moveFoldersToTrash", true);
 
+pref("mailnews.customDBHeaders", "");
+
 pref("mailnews.reuse_message_window", true);
 pref("mailnews.reuse_thread_window2", false);
 pref("mailnews.open_window_warning", 10); // warn user if they attempt to open more than this many messages at once

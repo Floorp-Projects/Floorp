@@ -475,6 +475,28 @@ nsParseMailMessageState::nsParseMailMessageState()
   m_position = 0;
   m_IgnoreXMozillaStatus = PR_FALSE;
   m_state = nsIMsgParseMailMsgState::ParseBodyState;
+
+  // setup handling of custom db headers, headers that are added to .msf files
+  // as properties of the nsMsgHdr objects, controlled by the 
+  // pref mailnews.customDBHeaders.
+  // E.g., if mailnews.customDBHeaders is "X-Spam-Score", and we're parsing
+  // a mail message with the X-Spam-Score header, we'll set the 
+  // "x-spam-score" property of nsMsgHdr to the value of the header.
+  m_customDBHeaderValues = nsnull;
+  nsXPIDLCString customDBHeaders;
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pPrefBranch)
+  {
+     pPrefBranch->GetCharPref("mailnews.customDBHeaders",  getter_Copies(customDBHeaders));
+     ToLowerCase(customDBHeaders);
+     m_customDBHeaders.ParseString(customDBHeaders, ", ");
+     if (m_customDBHeaders.Count())
+     {
+       m_customDBHeaderValues = new struct message_header [m_customDBHeaders.Count()];
+       if (!m_customDBHeaderValues)
+         m_customDBHeaders.Clear();
+     }
+  }
   Clear();
 
   m_HeaderAddressParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
@@ -484,6 +506,7 @@ nsParseMailMessageState::~nsParseMailMessageState()
 {
   ClearAggregateHeader (m_toList);
   ClearAggregateHeader (m_ccList);
+  delete [] m_customDBHeaderValues;
 }
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
@@ -524,6 +547,9 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
   m_headers.ResetWritePos();
   m_envelope.ResetWritePos();
   m_receivedTime = LL_ZERO;
+  for (PRInt32 i = 0; i < m_customDBHeaders.Count(); i++)
+    m_customDBHeaderValues[i].length = 0;
+
   return NS_OK;
 }
 
@@ -946,6 +972,15 @@ int nsParseMailMessageState::ParseHeaders ()
         header = &m_keywords;
       break;
     }
+    if (!header && m_customDBHeaders.Count())
+    {
+      nsDependentCSubstring headerStr(buf, end);
+
+      ToLowerCase(headerStr);
+      PRInt32 customHeaderIndex = m_customDBHeaders.IndexOf(headerStr);
+      if (customHeaderIndex != kNotFound)
+        header = & m_customDBHeaderValues[customHeaderIndex];
+    }
     
     buf = colon + 1;
     while (*buf == ' ' || *buf == '\t')
@@ -954,6 +989,9 @@ int nsParseMailMessageState::ParseHeaders ()
     value = buf;
     if (header)
       header->value = value;
+    else
+    {
+    }
     
 SEARCH_NEWLINE:
     while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
@@ -1425,6 +1463,11 @@ int nsParseMailMessageState::FinalizeHeaders()
           m_newMsgHdr->SetPriority(nsMsgPriority::none);
         if (keywords)
           m_newMsgHdr->SetStringProperty("keywords", keywords->value);
+        for (PRInt32 i = 0; i < m_customDBHeaders.Count(); i++)
+        {
+          if (m_customDBHeaderValues[i].length)
+            m_newMsgHdr->SetStringProperty((m_customDBHeaders[i])->get(), m_customDBHeaderValues[i].value);
+        }
         if (content_type)
         {
           char *substring = PL_strstr(content_type->value, "charset");
