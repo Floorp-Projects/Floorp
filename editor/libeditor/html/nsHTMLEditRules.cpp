@@ -6860,7 +6860,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
         nsHTMLEditUtils::IsFormatNode(curNode))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
-      res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag);
+      res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag,
+                                          nsnull, nsnull, PR_TRUE);
       if (NS_FAILED(res)) return res;
     }
     else if (nsHTMLEditUtils::IsTable(curNode)                    || 
