@@ -58,10 +58,10 @@ function test()
       var b = [];
       for (var k = 0; k <= i; k++)
         b.push(a[k]());
-      writeLineToLog(b.join());
+      print(b.join());
     }
     actual = a[0]();
-    writeLineToLog(actual);
+    print(actual);
   }
   f();
 

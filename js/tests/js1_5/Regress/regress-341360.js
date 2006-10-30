@@ -48,14 +48,14 @@ function xxx()
 {
   if(t != null) 
   {
-    writeLineToLog('Clearing interval...');
+    print('Clearing interval...');
     window.clearInterval(t);
     t = null;
     setTimeout('yyy()', 2000);
     
   }
   else {
-    writeLineToLog('Clearing interval failed...');
+    print('Clearing interval failed...');
     actual = "Broken";
     gDelayTestDriverEnd = false;
     reportCompare(expect, actual, summary);
@@ -65,7 +65,7 @@ function xxx()
 
 function yyy()
 {
-  writeLineToLog('Checking result...');
+  print('Checking result...');
   actual = 'Ok';
   gDelayTestDriverEnd = false;
   reportCompare(expect, actual, summary);
@@ -79,7 +79,7 @@ if (typeof window == 'undefined')
 }
 else
 {
-  writeLineToLog('Start...');
+  print('Start...');
   gDelayTestDriverEnd = true;
   var t = window.setInterval(xxx, 1000);
 }

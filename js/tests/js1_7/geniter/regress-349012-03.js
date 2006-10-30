@@ -64,7 +64,7 @@ function test()
   var iter = gen();
   iter.next();
   var ex = iter.send(iter);
-  writeLineToLog(ex + '');
+  print(ex + '');
   actual = (ex instanceof TypeError);
 
   reportCompare(expect, actual, summary);

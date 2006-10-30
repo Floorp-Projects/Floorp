@@ -43,7 +43,7 @@ var expect = 'Normal Exit';
 
 printBugNumber (bug);
 printStatus (summary);
-writeLineToLog ('This test should never fail explicitly. ' +
+print ('This test should never fail explicitly. ' +
              'You must view the memory usage during the test. ' + 
              'This test fails if memory usage for each subtest grows');
 
@@ -89,7 +89,7 @@ function testFuncWatcher()
   }
   ++currTest;
   
-  writeLineToLog('Executing test ' + currTest + '\n');
+  print('Executing test ' + currTest + '\n');
 
   testFuncWatcherId = setTimeout("testFuncWatcher()", timeOut);
   testFuncTimerId = setTimeout(testFunc, interval); 

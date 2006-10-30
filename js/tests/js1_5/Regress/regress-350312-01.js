@@ -72,8 +72,8 @@ function test()
 
   var passed = ex === 1;
   if (!passed) {
-    writeLineToLog("Failed!");
-    writeLineToLog("ex="+uneval(ex));
+    print("Failed!");
+    print("ex="+uneval(ex));
   }
   reportCompare(true, passed, summary);
 

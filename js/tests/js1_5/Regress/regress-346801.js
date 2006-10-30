@@ -62,21 +62,21 @@ function test()
     }
 
     Object.extend = function(destination, source) {
-      writeLineToLog("Start");
-//      writeLineToLog(destination);
-//      writeLineToLog(source);
+      print("Start");
+//      print(destination);
+//      print(source);
       if(destination==source)
-        writeLineToLog("Same desination and source!");
+        print("Same desination and source!");
       var i = 0;
       for (property in source) {
-//        writeLineToLog("  " + property);
+//        print("  " + property);
         destination[property] = source[property];
         ++i;
         if (i > 1000) {
           throw "Hang";
         }
       }
-      writeLineToLog("Finish");
+      print("Finish");
       return destination;
     }
 

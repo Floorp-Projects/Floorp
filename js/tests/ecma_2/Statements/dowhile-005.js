@@ -41,7 +41,7 @@ outer: {
     }
     result2 = "pass";
     break outer;
-    writeLineToLog(i);
+    print(i);
     } while ( i++ < 100 );
 
   }

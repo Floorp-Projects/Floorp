@@ -55,7 +55,7 @@ function test()
 
   var f = function(x) { new let (x = 3) x };
   actual = f.toString();
-  writeLineToLog(f.toString());
+  print(f.toString());
   compareSource(expect, actual, summary);
 
   exitFunc ('test');

@@ -236,9 +236,9 @@ function MyObject( stringValue ) {
 function TestObject( description, javaField, javaMethod, javaType,
 		     jsValue, jsType )
 {
-    writeLineToLog("hi");
+    print("hi");
     eval (description);
-    writeLineToLog("bye")
+    print("bye")
 	this.description = description;
     this.javaFieldName = javaField;
     this.javaFieldValue = eval( javaField );

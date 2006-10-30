@@ -52,7 +52,7 @@ function test()
   printStatus (summary);
   
   var f = function() { for(p in {})   try{}catch(e){}   };
-  writeLineToLog(f.toString());
+  print(f.toString());
 
   reportCompare(expect, actual, summary);
 

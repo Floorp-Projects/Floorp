@@ -51,13 +51,13 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  writeLineToLog('If the test harness fails on this bug, the test fails.');
+  print('If the test harness fails on this bug, the test fails.');
   
   expect = 'SyntaxError: invalid getter usage';
   z = ({});
   try { eval('z.x getter= /g/i;'); } catch(ex) { actual = ex + '';}
-  writeLineToLog("This line should not be the last output you see."); 
-  try { writeLineToLog(uneval(z)); } catch(e) { writeLineToLog("Threw!"); writeLineToLog(e); }
+  print("This line should not be the last output you see."); 
+  try { print(uneval(z)); } catch(e) { print("Threw!"); print(e); }
 
   reportCompare(expect, actual, summary);
 

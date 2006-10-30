@@ -52,7 +52,7 @@ function test()
   printStatus (summary);
   
   for (j in ((function() { yield 3; })().__proto__)) 
-    writeLineToLog(j);
+    print(j);
 
   reportCompare(expect, actual, summary);
 

@@ -45,7 +45,7 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary + ': top level');
 
-String.prototype.trim = function() { writeLineToLog('hallo'); };
+String.prototype.trim = function() { print('hallo'); };
 
 String.prototype.trim = function() { return 'hallo'; };
 

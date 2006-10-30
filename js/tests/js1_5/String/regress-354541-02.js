@@ -52,14 +52,14 @@ function test()
   printBugNumber (bug);
   printStatus (summary + ': in function');
 
-  String.prototype.trim = function() { writeLineToLog('hallo'); };
+  String.prototype.trim = function() { print('hallo'); };
 
   const S = String;
   const Sp = String.prototype;
 
   expect = 'No Error';
   actual = 'No Error';
-  var s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; writeLineToLog(String === S); writeLineToLog(String.prototype === Sp); "".trim();');
+  var s = Script('var tmp = function(o) { switch(o) { case String: case 1: return ""; } }; print(String === S); print(String.prototype === Sp); "".trim();');
   s();
 
   reportCompare(expect, actual, summary);

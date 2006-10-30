@@ -58,10 +58,10 @@ function test()
         yield iter;
       } catch (e if e == null) {
         actual += 'CATCH,';
-        writeLineToLog("CATCH");
+        print("CATCH");
       } finally {
         actual += 'FINALLY';
-        writeLineToLog("FINALLY");
+        print("FINALLY");
       }
     }
 

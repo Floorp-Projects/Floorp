@@ -77,7 +77,7 @@ function test()
   }
   catch(ex)
   {
-    writeLineToLog(ex+'');
+    print(ex+'');
     actual = ex.name;
   }
   reportCompare(expect, actual, summary);

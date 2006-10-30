@@ -60,7 +60,7 @@ function test()
   compareSource(expect, actual, summary);
 
   expect = actual = 'No Crash';
-  writeLineToLog(uneval(f));
-  reportCompare(expect, actual, 'writeLineToLog(uneval(f))');
+  print(uneval(f));
+  reportCompare(expect, actual, 'print(uneval(f))');
   exitFunc ('test');
 }

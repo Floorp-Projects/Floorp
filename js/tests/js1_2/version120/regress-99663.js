@@ -151,8 +151,8 @@ function addThis()
 
 function test()
 {
-  writeLineToLog ('Bug Number ' + bug);
-  writeLineToLog ('STATUS: ' + summary);
+  print ('Bug Number ' + bug);
+  print ('STATUS: ' + summary);
 
   for (var i=0; i<UBound; i++)
   {

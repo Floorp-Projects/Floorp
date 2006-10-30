@@ -59,7 +59,7 @@ function test()
   expect = f + '';
   actual = g + '';
 
-  writeLineToLog(f);
+  print(f);
   compareSource(expect, actual, summary);
 
   exitFunc ('test');

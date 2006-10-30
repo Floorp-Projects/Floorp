@@ -52,7 +52,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  writeLineToLog("SECTION 1");
+  print("SECTION 1");
   try {
     let (a = 2, b = 3) { function f() { return String([a,b]); } f(); throw 42; }
   } catch (e) {
@@ -61,16 +61,16 @@ function test()
 
   reportCompare(expect, actual, summary);
 
-  writeLineToLog("SECTION 2");
+  print("SECTION 2");
   try {
     with ({a:2,b:3}) { function f() { return String([a,b]); } f(); throw 42; }
   } catch (e) {
     f();
   }
 
-  writeLineToLog("SECTION 3");
+  print("SECTION 3");
   function g3() {
-    writeLineToLog("Here!");
+    print("Here!");
     with ({a:2,b:3}) {
       function f() {
         return String([a,b]);
@@ -84,9 +84,9 @@ function test()
   k = g3();
   k();
 
-  writeLineToLog("SECTION 4");
+  print("SECTION 4");
   function g4() {
-    writeLineToLog("Here!");
+    print("Here!");
     let (a=2,b=3) {
       function f() {
         return String([a,b]);
@@ -100,9 +100,9 @@ function test()
   k = g4();
   k();
 
-  writeLineToLog("SECTION 5");
+  print("SECTION 5");
   function g5() {
-    writeLineToLog("Here!");
+    print("Here!");
     let (a=2,b=3) {
       function f() {
         return String([a,b]);

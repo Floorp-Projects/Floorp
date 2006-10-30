@@ -63,7 +63,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var actual = 'no error';
 var prefValue;
 
-writeLineToLog("This test requires option javascript.options.strict enabled");
+print("This test requires option javascript.options.strict enabled");
 var jsOptions = new JavaScriptOptions();
 jsOptions.setOption('strict', true);
 jsOptions.setOption('werror', true);

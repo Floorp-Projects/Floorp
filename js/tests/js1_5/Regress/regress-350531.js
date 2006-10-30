@@ -145,6 +145,7 @@ next_subset:
     gc();
 
     for each (var set in sets) {
+      print('for each set in sets: ' + (uneval(set)) );
       var src = "(function () {";
       for (j in set) {
         var op = set[j], op2 = set[j-1];
@@ -172,7 +173,7 @@ next_subset:
         var ref = uneval(eval(src)).replace(/\s+/g, ' ');
         if (ref != src) {
           actual += "BROKEN! input: " + src + " output: " + ref + " ";
-          writeLineToLog("BROKEN! input: " + src + " output: " + ref);
+          print("BROKEN! input: " + src + " output: " + ref);
           break next_subset;
         }
       } catch (e) {}

@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-writeLineToLog("STATUS: f.apply crash test.");
+print("STATUS: f.apply crash test.");
 
-writeLineToLog("BUGNUMBER: 21836");
+print("BUGNUMBER: 21836");
 
 function f ()
 {

@@ -181,7 +181,7 @@ case 1:
 }
 new TestCase(SECTION, 'switch statement',
 	     se, 2);
-writeLineToLog("hi");
+print("hi");
 
 test();
 

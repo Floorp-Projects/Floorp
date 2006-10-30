@@ -62,11 +62,11 @@ function test()
   {
     iter = gen();
     var i = iter.next();
-    writeLineToLog("i="+i);
+    print("i="+i);
   }
   catch(ex)
   {
-    writeLineToLog(ex + '');
+    print(ex + '');
     actual = (ex instanceof TypeError) && (ex + '').indexOf(' already executing generator') != -1;
   }
   

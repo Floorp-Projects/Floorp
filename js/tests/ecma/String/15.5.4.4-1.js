@@ -84,7 +84,7 @@ for ( i = 0x0020; i < 0x007e; i++, item++) {
 
 new TestCase( SECTION,  "String.prototype.charAt.length",       1,  String.prototype.charAt.length );
 
-writeLineToLog( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );
+print( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );
 
 test();
 

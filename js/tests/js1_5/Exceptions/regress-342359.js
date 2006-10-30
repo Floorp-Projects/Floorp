@@ -51,7 +51,7 @@ try
 }
 catch(ex)
 {
-  writeLineToLog(ex + '');
+  print(ex + '');
 }
 
 expect = 5;

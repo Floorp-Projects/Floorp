@@ -45,7 +45,7 @@ var TITLE   = "Don't Crash throwing undefined";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-writeLineToLog("Undefined throw test.");
+print("Undefined throw test.");
 
 DESCRIPTION = "throw undefined";
 EXPECTED = "error";
@@ -54,7 +54,7 @@ new TestCase( SECTION,  "throw undefined",  "error", eval("throw (void 0)") );
 
 test();
 
-writeLineToLog("FAILED!: Should have exited with uncaught exception.");
+print("FAILED!: Should have exited with uncaught exception.");
 
 
 

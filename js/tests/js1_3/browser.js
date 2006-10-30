@@ -73,42 +73,60 @@ function DocumentWrite(s)
   }
   catch(excp)
   {
-    document.write(s + "<br>\n");
+    document.write(s + '<br>\n');
   }
 }
 
-function writeLineToLog( string ) {
-  string = String(string);
-  string = string.replace(/[<>&]/g, htmlesc);
-  string = string.replace(/[<>&]/g, htmlesc);
-  DocumentWrite( string + "<br>\n");
+function print() { 
+  var s = ''; 
+  var a;
+  for (var i = 0; i < arguments.length; i++) 
+  { 
+    a = arguments[i]; 
+    s += String(a) + ' '; 
+  } 
 
   if (typeof dump == 'function')
   {
-    dump( string + '\n');
+    dump( s + '\n');
   }
+
+  s = s.replace(/[<>&]/g, htmlesc);
+
+  DocumentWrite(s);
 }
 
 function writeHeaderToLog( string ) {
   string = String(string);
-  DocumentWrite( "<h2>" + string + "</h2>" );
-}
-function writeFormattedResult( expect, actual, string, passed ) {
-  string = String(string);
-  string = string.replace(/[<>&]/g, htmlesc);
-  var s = "<tt>"+ string ;
-  s += "<b>" ;
-  s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
-    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
-  DocumentWrite( s + "</font></b></tt><br>" );
 
   if (typeof dump == 'function')
   {
     dump( string + '\n');
   }
-  return passed;
+
+  string = string.replace(/[<>&]/g, htmlesc);
+
+  DocumentWrite( "<h2>" + string + "</h2>" );
 }
 
+function writeFormattedResult( expect, actual, string, passed ) {
+  string = String(string);
+
+  if (typeof dump == 'function')
+  {
+    dump( string + '\n');
+  }
+
+  string = string.replace(/[<>&]/g, htmlesc);
+
+  var s = "<tt>"+ string ;
+  s += "<b>" ;
+  s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
+    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
+
+  DocumentWrite( s + "</font></b></tt><br>" );
+  return passed;
+}
 
 /*
  * The earlier versions of the test code used exceptions
@@ -133,7 +151,7 @@ function err( msg, page, line ) {
     /*
      * an unexpected exception occured
      */
-    writeLineToLog( "Test failed with the message: " + msg );
+    print( "Test failed with the message: " + msg );
     testcase = new TestCase(SECTION, "unknown", "unknown", "unknown");
     testcase.passed = false;
     testcase.reason = "Error: " + msg + 
@@ -179,6 +197,16 @@ function version(v)
 
 function gc()
 {
+  // Thanks to igor.bukanov@gmail.com
+  var tmp = Math.PI * 1e500, tmp2;
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    tmp2 = tmp * 1.5;
+  }
+}
+
+function jsdgc()
+{
   try
   {
     // Thanks to dveditz
@@ -190,12 +218,6 @@ function gc()
   }
   catch(ex)
   {
-    writeLineToLog('gc: ' + ex);
-    // Thanks to igor.bukanov@gmail.com
-    var tmp = Math.PI * 1e500, tmp2;
-    for (var i = 0; i != 1 << 15; ++i) 
-    {
-      tmp2 = tmp * 1.5;
-    }
+    print('gc: ' + ex);
   }
 }

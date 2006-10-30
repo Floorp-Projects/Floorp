@@ -74,7 +74,7 @@ function test()
   if (n == 0)
     throw "unexpected";
 
-  writeLineToLog("Max nested function leveles:"+n);
+  print("Max nested function leveles:"+n);
 
   n = findActionMax(function(n) {
     try {
@@ -87,11 +87,11 @@ function test()
     }
   });
 
-  writeLineToLog("Max callAfterConsumingCStack levels:"+n);
+  print("Max callAfterConsumingCStack levels:"+n);
 
 // Here n is max possible value when callAfterConsumingCStack(n, emptyFunction)
-// does not trigger stackOverflow. Decrease it slightly to give some C stack space
-// for deepestFunction.toSource()
+// does not trigger stackOverflow. Decrease it slightly to give some C stack 
+// space for deepestFunction.toSource()
   
   n = Math.max(0, n - 10);
   try {
@@ -104,7 +104,7 @@ function test()
       throw e;
   }
 
-  writeLineToLog('Done');
+  print('Done');
   expect = true;
   actual = true;
   reportCompare(expect, true, summary);

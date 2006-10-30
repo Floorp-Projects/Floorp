@@ -55,7 +55,7 @@ function validId(IDtext)
 var res = "";
 
 if(IDText.value==""){
-                        writeLineToLog("You must enter a valid battery #")
+                        print("You must enter a valid battery #")
                         return false
 }
 else if(IDText.value=="x522"){
@@ -1653,1851 +1653,1851 @@ else if(IDText.value=="erd300"){
 
 else if(IDText.value=="164"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="201"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="216"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="226"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="228"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="311"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="314"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 
 else if(IDText.value=="313"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="323"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="325"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="333cz"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="343"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="354"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="355"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="387"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="388"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="417"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="420"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="457"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="460"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="477"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="479"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="482"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="484"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="487"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="490"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="491"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="496"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="509"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="510f"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="520"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="523"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="531"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="532"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="537"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="538"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="544"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="560"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="561"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="563"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="564"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="565"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="646"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="703"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="706"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="714"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="715"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="716"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="717"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="724"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="731"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="735"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="736"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="738"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="742"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="744"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="750"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="762s"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="773"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="778"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="781"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="812"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="815"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="835"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="850"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="904"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="912"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="915"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="935"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="950"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1015"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1035"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1050"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1150"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1231"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1461"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1463"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1562"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="1862"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2356n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2709n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2744n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2745n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2746n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="2780n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ac41e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cc1096"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ccm1460"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ccm2460"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ccm4060a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ccm4060m"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cdc100"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch12"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch15"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch2aa"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch22"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch35"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch4"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ch50"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm1060"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm1560"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm2360"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm4160"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm6036"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm9072"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cm9172"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp2360"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp3336"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp3536"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp3736"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp5036"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp5160"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp5648"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp5960"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp6072"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp6172"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7049"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7072"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7148"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7149"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7160"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7172"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7248"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7261"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7348"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7548"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7661"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp7960"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8049"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8136"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8160"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8172"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8248"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8661"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8748"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 
 else if(IDText.value=="cp8948"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp8960"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp9061"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp9148"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp9161"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cp9360"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs3336"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs5036"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs5460"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7048"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7072"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7148"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7149"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7160"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7248"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7261"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7348"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7448"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7548"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs7661"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs8136"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs8648"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs9061"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs9148"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cs9161"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv2012"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv2096"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv3010s"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv3012"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv3060"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv3112"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="cv3212"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e1"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e1n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e3"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e4"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e9"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e12"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e12n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e13e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e41e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e42"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e42n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e89"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e115"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e115n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e126"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e132"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e132n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e133"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e133n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e134"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e134n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e135"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e135n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e136"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e137"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e137n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e146x"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e152"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e163"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e164"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e164n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e165"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e169"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e177"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e233"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e233n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e235n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e236n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e286"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e289"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e312e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e340e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e400"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e400n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e401e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e401n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e450"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e502"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e601"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e625"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e630"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e640"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e640n"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e675e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302157"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302250"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302358"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302435"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302462"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302465"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302478"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302642"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302651"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302702"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302904"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302905"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e302908"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303145"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303236"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303314"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303394"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303496"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="e303996"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ea6"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ea6f"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ea6ft"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ea6st"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en1a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en132a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en133a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en134a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en135a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en136a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en164a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en165a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en175a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en177a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="en640a"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ep175"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ep401e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ep675e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx1"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx4"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx13"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx14"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx23"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx25"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx27"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx29"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx30"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx625"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx640"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx675"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="epx825"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev6"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev9"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev10s"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev15"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev22"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev31"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev35"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev50"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev90"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="ev90hp"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="fcc2"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs6"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs10s"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs15"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs31"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs35"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs50"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs90"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs95"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs150"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="hs6571"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="if6"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="is6"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="is6t"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="p2321m"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="p2322"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="p2326m"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="p7307"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="p7507"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="qcc4"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="s13e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="s312e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="s41e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="s76e"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="t35"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="t50"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
 else if(IDText.value=="w353"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/contents/discontinued_battery_index.htm"
                         return true
                 }
@@ -4142,283 +4142,283 @@ else if(IDText.value=="LED"){
 
 else if(IDText.value=="108"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="209"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="330"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="330y"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="331"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="331y"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="1251bk"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="2253"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="3233"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="3253"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="3415"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="3452"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="4220"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="4453"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="5154"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="5251"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="7369"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="8115"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="8415"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="b170"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="bkc1"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="d620"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="d820"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="e100"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="e252"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="e350"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="e420"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="em290"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="em420"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="f100"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="f215"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="f250"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="f415"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="h100"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="h250"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="h350"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="in25t"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="kcdb"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="kcsg"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="kctw"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="rc100"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="rc251"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="rc290"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="t430"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="v235"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="x250"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
 else if(IDText.value=="x350"){
                         //Checks for id entry
-                        writeLineToLog("You have entered a Discontinued Product Number")
+                        print("You have entered a Discontinued Product Number")
                         res="../datasheets/flashlights/discontinued_flashlight_index.htm"
                         return true
                 }
@@ -4426,7 +4426,7 @@ else if(IDText.value=="x350"){
 
 
 else            {
-                        writeLineToLog("You have entered an Invalid Product Number...Please try 'Select Product Group' search.")
+                        print("You have entered an Invalid Product Number...Please try 'Select Product Group' search.")
                         return false
                 }
 

@@ -72,7 +72,7 @@ var z = 0;
 
 new TestCase(
   SECTION,
-  "var z = 0; writeLineToLog(1/-z)",
+  "var z = 0; print(1/-z)",
   -Infinity,
   1/-z );
 
@@ -182,8 +182,8 @@ new TestCase( SECTION,
 s =
 "17976931348623158079372897140530341507993413271003782693617377898044496829276475094664901797758720709633028641669288791094655554785194040263065748867150582068";
 
-writeLineToLog("s = " + s);
-writeLineToLog("-s = " + (-s));
+print("s = " + s);
+print("-s = " + (-s));
 
 new TestCase( SECTION,
 	      "s = " + s +"; s +="+
@@ -197,8 +197,8 @@ new TestCase( SECTION,
 
 s1 = s+1;
 
-writeLineToLog("s1 = " + s1);
-writeLineToLog("-s1 = " + (-s1));
+print("s1 = " + s1);
+print("-s1 = " + (-s1));
 
 new TestCase( SECTION,
 	      "s1 = s+1; s1",
@@ -214,8 +214,8 @@ new TestCase( SECTION,
 
 s2 = s + 2;
 
-writeLineToLog("s2 = " + s2);
-writeLineToLog("-s2 = " + (-s2));
+print("s2 = " + s2);
+print("-s2 = " + (-s2));
 
 new TestCase( SECTION,
 	      "s2 = s+2; s2",
@@ -230,8 +230,8 @@ new TestCase( SECTION,
 
 s3 = s+3;
 
-writeLineToLog("s3 = " + s3);
-writeLineToLog("-s3 = " + (-s3));
+print("s3 = " + s3);
+print("-s3 = " + (-s3));
 
 new TestCase( SECTION,
 	      "s3 = s+3; s3",

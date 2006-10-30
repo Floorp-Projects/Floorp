@@ -94,7 +94,7 @@ function TestCase( n, d, e, a ) {
 
   this.passed = getTestCaseResult( this.expect, this.actual );
   if ( DEBUG ) {
-    writeLineToLog( "added " + this.description );
+    print( "added " + this.description );
   }
   /*
    * testcases are solely maintained in the TestCase
@@ -134,7 +134,7 @@ function startTest() {
 
     writeHeaderToLog( SECTION + " "+ TITLE);
   if ( BUGNUMBER ) {
-    writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+    print ("BUGNUMBER: " + BUGNUMBER );
   }
 
 
@@ -163,7 +163,7 @@ function test() {
     }
     catch(e)
     {
-      writeLineToLog('test(): empty testcase for tc = ' + tc + ' ' + e);
+      print('test(): empty testcase for tc = ' + tc + ' ' + e);
     }
   }
   stopTest();
@@ -239,14 +239,11 @@ function writeFormattedResult( expect, actual, string, passed ) {
         s += B ;
         s += ( passed ) ? FONT_GREEN + NBSP + PASSED : FONT_RED + NBSP + FAILED + expect + TT_ ;
 
-        writeLineToLog( s + FONT_ + B_ + TT_ );
+        print( s + FONT_ + B_ + TT_ );
 
         return passed;
 }
 
-function writeLineToLog( string ) {
-    print( string + BR + CR );
-}
 function writeHeaderToLog( string ) {
     print( H2 + string + H2_ );
 }

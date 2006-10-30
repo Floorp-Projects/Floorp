@@ -46,7 +46,7 @@ printStatus (summary);
 with (this) 
 with (this) {
   eval("function outer() { function inner() { " +
-       "writeLineToLog('inner');} inner(); writeLineToLog('outer');} outer()");
+       "print('inner');} inner(); print('outer');} outer()");
 }
 
 reportCompare(expect, actual, summary);

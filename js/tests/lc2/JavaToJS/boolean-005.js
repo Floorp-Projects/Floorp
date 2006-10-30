@@ -134,7 +134,7 @@ function JavaValue( value ) {
 //    this.jsclass = value.getJSClass();
 
     this.string = value + "";
-    writeLineToLog( this.string );
+    print( this.string );
     this.value  = value.booleanValue();
     this.type   = typeof value;
 

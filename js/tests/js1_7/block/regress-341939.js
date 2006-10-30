@@ -45,7 +45,7 @@ printStatus (summary);
 
 try
 {  
-  eval('let (a) {} writeLineToLog(42);');
+  eval('let (a) {} print(42);');
   actual = 'No Error';
 }
 catch(ex)
