@@ -6,9 +6,8 @@
 . ../common/download_builds.sh
 . ../common/check_updates.sh
 
-product="Firefox"
-channel="release"
-latest="1.5.0.7"
+ftp_server="http://stage.mozilla.org/pub/mozilla.org"
+aus_server="https://aus2.mozilla.org"
 
 runmode=0
 UPDATE_ONLY=1
@@ -68,54 +67,56 @@ fi
 
 while read entry
 do
-  release=`echo $entry | cut -d' ' -f 1`
-  platforms=`echo $entry | cut -d' ' -f 2`
-  build_id=`echo $entry | cut -d' ' -f 3`
-  locales=`echo $entry | cut -d' ' -f 4-`
-  for platform in $platforms
+  eval $entry
+  for locale in $locales
   do
-    for locale in $locales
+    for patch_type in partial complete
     do
-      for patch_type in partial complete
-      do
-        if [ "$runmode" == "$MARS_ONLY" ] || [ "$runmode" == "$COMPLETE" ] ||
-           [ "$runmode" == "$TEST_ONLY" ]
+      if [ "$runmode" == "$MARS_ONLY" ] || [ "$runmode" == "$COMPLETE" ] ||
+         [ "$runmode" == "$TEST_ONLY" ]
+      then
+        if [ "$runmode" == "$TEST_ONLY" ]
         then
-          if [ "$runmode" == "$TEST_ONLY" ]
-          then
-            download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type 1
-            err=$?
-          else
-            download_mars "https://aus2.mozilla.org/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type
-            err=$?
-          fi
-          if [ "$err" != "0" ]; then
-            echo "FAIL: download_mars returned non-zero exit code: $err" |tee /dev/stderr
-            continue
-          fi
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type 1
+          err=$?
         else
-          update_path="$product/$release/$build_id/$platform/$locale/$channel"
-          mkdir -p updates/$update_path/complete
-          mkdir -p updates/$update_path/partial
-          curl -ks "https://aus2.mozilla.org/update/1/$update_path/update.xml" $patch_type > updates/$update_path/$patch_type/update.xml
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type
+          err=$?
+        fi
+        if [ "$err" != "0" ]; then
+          echo "FAIL: download_mars returned non-zero exit code: $err" |tee /dev/stderr
+          continue
+        fi
+      else
+        update_path="$product/$release/$build_id/$platform/$locale/$channel"
+        mkdir -p updates/$update_path/complete
+        mkdir -p updates/$update_path/partial
+        curl -ks "${aus_server}/update/1/$update_path/update.xml" $patch_type > updates/$update_path/$patch_type/update.xml
 
-        fi
-        if [ "$runmode" == "$COMPLETE" ]
+      fi
+      if [ "$runmode" == "$COMPLETE" ]
+      then
+        if [ -z "$from" ] || [ -z "$to" ]
         then
-          download_builds
-          err=$?
-          if [ "$err" != "0" ]; then
-            echo "FAIL: download_builds returned non-zero exit code: $err" |tee /dev/stderr
-            continue
-          fi
-          check_updates "$source_platform" "downloads/$source_file" "downloads/$target_file"
-          err=$?
-          if [ "$err" != "0" ]; then
-            echo "FAIL: check_update returned non-zero exit code for $source_platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
-            continue
-          fi
+          continue
         fi
-      done
+        from=`echo $from | sed "s/%locale%/${locale}/"`
+        to=`echo $to | sed "s/%locale%/${locale}/"`
+        download_builds "${ftp_server}/${from}" "${ftp_server}/${to}"
+        err=$?
+        if [ "$err" != "0" ]; then
+          echo "FAIL: download_builds returned non-zero exit code: $err" |tee /dev/stderr
+          continue
+        fi
+        source_file=`basename "$from"`
+        target_file=`basename "$to"`
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file"
+        err=$?
+        if [ "$err" != "0" ]; then
+          echo "FAIL: check_update returned non-zero exit code for $source_platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
+          continue
+        fi
+      fi
     done
   done
 done < updates.cfg
