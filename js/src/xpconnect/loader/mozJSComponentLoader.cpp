@@ -173,10 +173,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     char *bytes = JS_GetStringBytes(str);
-    bytes = nsCRT::strdup(bytes);
-
     fputs(bytes, stderr);
-    nsMemory::Free(bytes);
     return JS_TRUE;
 }
 
