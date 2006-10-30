@@ -225,6 +225,15 @@ $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
 $push_raw_xpis = 0;
+$update_package = 1;
+$update_product = "Sunbird";
+$update_version = "trunk";
+$update_platform = "Darwin_ppc-gcc3";
+$update_hash = "md5";
+$update_filehost = "ftp.mozilla.org";
+$update_appv = "0.4a1";
+$update_extv = "0.4a1";
+$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
@@ -249,4 +258,4 @@ $push_raw_xpis = 0;
 
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill.
-#$ENV{NO_EM_RESTART} = '1';
+$ENV{NO_EM_RESTART} = '1';
