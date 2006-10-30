@@ -54,7 +54,7 @@ interface nsIAccessNode;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(663CA4A8-D219-4000-925D-D8F66406B626)]
+[scriptable, uuid(2d8c1b1b-7a3f-4962-8a88-81ca019c11e9)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -65,6 +65,30 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return The nsIAccessible for the given DOM node.
    */
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
+
+  /**
+   * The same like getAccessibleFor method except it returns accessible only if
+   * it is attached, i.e. accessible is certified to be a descendent of the root
+   * accessible.
+   *
+   * @param aNode - the DOM node to get an accessible for.
+   *
+   * @return - the accessible for the given DOM node.
+   */
+  nsIAccessible getAttachedAccessibleFor(in nsIDOMNode aNode);
+
+  /**
+   * Return an DOM node that is relevant to attached accesible check. This
+   * node is either from bindings chain if given node is anonymous and owner
+   * binding denies accessible in anonymous content or given node (it's not
+   * important whether it is accessible or not). This method doesn't create
+   * accessible object for returned node.
+   *
+   * @param aNode - the DOM node to get relevant content node.
+   *
+   * @return - the DOM node for parent attached accessible
+   */
+  nsIDOMNode getRelevantContentNodeFor(in nsIDOMNode aNode);
 
   /**
    * Return an nsIAccessible for a DOM node in pres shell for this DOM window.
