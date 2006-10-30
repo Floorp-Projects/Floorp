@@ -45,7 +45,6 @@
 var gTempFile = null;
 
 var gPrintSettings = null;
-var gCalendarWindow = window.opener.gCalendarWindow;
 
 function loadCalendarPrintDialog()
 {
@@ -213,6 +212,6 @@ function refreshHtml()
  * Called when once a date has been selected in the datepicker.
  */
 function onDatePick() {
-    radioGroupSelectItem("view-field", "custom-range");
+    calRadioGroupSelectItem("view-field", "custom-range");
     refreshHtml();
 }

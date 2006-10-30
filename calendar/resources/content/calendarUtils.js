@@ -542,3 +542,26 @@ function calPrint()
     window.openDialog("chrome://calendar/content/printDialog.xul", "Print",
                       "centerscreen,chrome,resizable");
 }
+
+function calRadioGroupSelectItem(radioGroupId, id)
+{
+    var radioGroup = document.getElementById(radioGroupId);
+    var index = calRadioGroupIndexOf(radioGroup, id);
+    if (index != -1) {
+        radioGroup.selectedIndex = index;
+    } else {
+        throw "radioGroupSelectItem: No such Element: "+id;
+    }
+}
+
+function calRadioGroupIndexOf(radioGroup, id)
+{
+    var items = radioGroup.getElementsByTagName("radio");
+    var i;
+    for (i in items) {
+        if (items[i].getAttribute("id") == id) {
+            return i;
+        }
+    }
+    return -1; // not found
+}

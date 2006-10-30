@@ -116,6 +116,9 @@
         <menuitem id="calendar-export-menu"
                   label="&calendar.export.calendar;"
                   observes="export_command"/>
+        <menuitem id="calendar-print-menu"
+                  label="&lightning.toolbar.print.label;"
+                  observes="print_command"/>
       </menupopup>
     </menu>
   </menubar>

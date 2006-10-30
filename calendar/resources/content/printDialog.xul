@@ -75,7 +75,6 @@
    xmlns:nc="http://home.netscape.com/NC-rdf#">
 
   <script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
 
