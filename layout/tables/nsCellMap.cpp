@@ -1513,7 +1513,7 @@ void nsCellMap::CollapseZeroColSpan(nsTableCellMap& aMap,
   NS_ASSERTION(aOrigData && aOrigData->IsZeroColSpan(),
                "zero colspan should have been passed");
   // find the originating cellframe
-  nsTableCellFrame* cell = aOrigData->GetCellFrame();
+  nsTableCellFrame* cell = GetCellFrame(aRowIndex, aColIndex, *aOrigData, PR_TRUE);
   NS_ASSERTION(cell, "originating cell not found");
   
   // find the clearing region
