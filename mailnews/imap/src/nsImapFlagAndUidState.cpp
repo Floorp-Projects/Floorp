@@ -217,7 +217,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFla
   if (uid == nsMsgKey_None) // ignore uid of -1
     return NS_OK;
   PR_CEnterMonitor(this);
-  if (zeroBasedIndex > fNumberOfMessagesAdded)
+  if (zeroBasedIndex + 1 > fNumberOfMessagesAdded)
     fNumberOfMessagesAdded = zeroBasedIndex + 1;
   // make sure there is room for this pair
   if (fNumberOfMessagesAdded >= fNumberOfMessageSlotsAllocated)
