@@ -105,7 +105,8 @@
             var accService =
               Components.classes['@mozilla.org/accessibilityService;1']
                         .getService(Components.interfaces.nsIAccessibilityService);
-            return accService.getAccessibleFor(object);
+
+            return accService.getAttachedAccessibleFor(object);
           } catch(e) {
             return false;
           }

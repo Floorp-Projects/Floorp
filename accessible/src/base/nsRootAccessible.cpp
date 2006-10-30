@@ -791,27 +791,24 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
 
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
 
-  if (nsevent) {
-    nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-    nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(domEventTarget));
-    nsIContent *bindingParent;
-    if (content && content->IsNodeOfType(nsINode::eHTML) &&
-      (bindingParent = content->GetBindingParent()) != nsnull) {
-      // Use binding parent when the event occurs in 
-      // anonymous HTML content.
-      // This gets the following important cases correct:
-      // 1. Inserted <dialog> buttons like OK, Cancel, Help.
-      // 2. XUL menulists and comboboxes.
-      // 3. The focused radio button in a group.
-      CallQueryInterface(bindingParent, aTargetNode);
-      NS_ASSERTION(*aTargetNode, "No target node for binding parent of anonymous event target");
+  if (!nsevent)
+    return;
+
+  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
+  nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
+  nsCOMPtr<nsIDOMNode> eventTarget(do_QueryInterface(domEventTarget));
+  if (!eventTarget)
+    return;
+
+  nsIAccessibilityService* accService = GetAccService();
+  if (accService) {
+    nsresult rv = accService->GetRelevantContentNodeFor(eventTarget,
+                                                        aTargetNode);
+    if (NS_SUCCEEDED(rv) && *aTargetNode)
       return;
-    }
-    if (domEventTarget) {
-      CallQueryInterface(domEventTarget, aTargetNode);
-    }
   }
+
+  NS_ADDREF(*aTargetNode = eventTarget);
 }
 
 void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)

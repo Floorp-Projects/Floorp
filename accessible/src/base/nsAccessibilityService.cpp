@@ -968,11 +968,12 @@ NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
   * GetAccessibleFor - get an nsIAccessible from a DOM node
   */
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode, 
-                                                       nsIAccessible **aAccessible)
+NS_IMETHODIMP
+nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
+                                         nsIAccessible **aAccessible)
 {
-  // It's not ideal to call this -- it will assume shell #0
-  // Some of our old test scripts still use it
+  // We use presentation shell #0 because we assume that is presentation of
+  // given node window.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   nsCOMPtr<nsIDocument> doc;
   if (content) {
@@ -986,6 +987,25 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 
   nsIPresShell *presShell = doc->GetShellAt(0);
   return GetAccessibleInShell(aNode, presShell, aAccessible);
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
+                                                 nsIAccessible **aAccessible)
+{
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  *aAccessible = nsnull;
+
+  nsCOMPtr<nsIDOMNode> relevantNode;
+  nsresult rv = GetRelevantContentNodeFor(aNode, getter_AddRefs(relevantNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (relevantNode != aNode)
+    return NS_OK;
+
+  return GetAccessibleFor(aNode, aAccessible);
 }
 
 NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWindow(nsIDOMNode *aNode, 
@@ -1301,6 +1321,73 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   return InitAccessible(newAcc, aAccessible);
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::GetRelevantContentNodeFor(nsIDOMNode *aNode,
+                                                  nsIDOMNode **aRelevantNode)
+{
+  // The method returns node that is relevant for attached accessible check.
+  // Sometimes element that is XBL widget hasn't accessible children in
+  // anonymous content. This method check whether given node can be accessible
+  // by looking through all nested bindings that given node is anonymous for. If
+  // there is XBL widget that deniedes to be accessible for given node then the
+  // method returns that XBL widget otherwise it returns given node.
+
+  // For example, the algorithm allows us to handle following cases:
+  // 1. xul:dialog element has buttons (like 'ok' and 'cancel') in anonymous
+  // content. When node is dialog's button then we dialog's button since button
+  // of xul:dialog is accessible anonymous node.
+  // 2. xul:texbox has html:input in anonymous content. When given node is
+  // html:input elmement then we return xul:textbox since xul:textbox doesn't
+  // allow accessible nodes in anonymous content.
+  // 3. xforms:input that is hosted in xul document contains xul:textbox
+  // element. When given node is html:input or xul:textbox then we return
+  // xforms:input element since xforms:input hasn't accessible anonymous
+  // children.
+
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG_POINTER(aRelevantNode);
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (content) {
+    // Build stack of binding parents so we can walk it in reverse.
+    nsIContent *bindingParent;
+    nsCOMArray<nsIContent> bindingsStack;
+
+    for (bindingParent = content->GetBindingParent(); bindingParent != nsnull;
+         bindingParent = bindingParent->GetBindingParent()) {
+      bindingsStack.AppendObject(bindingParent);
+    }
+
+    PRInt32 bindingsCount = bindingsStack.Count();
+    for (PRInt32 index = bindingsCount - 1; index >= 0 ; index--) {
+      bindingParent = bindingsStack[index];
+      nsCOMPtr<nsIDOMNode> bindingNode(do_QueryInterface(bindingParent));
+      if (bindingNode) {
+        // Try to get an accessible by type since XBL widget can be accessible
+        // only if it implements nsIAccessibleProvider interface.
+        nsCOMPtr<nsIAccessible> accessible;
+        rv = GetAccessibleByType(bindingNode, getter_AddRefs(accessible));
+
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsPIAccessible> paccessible(do_QueryInterface(accessible));
+          if (paccessible) {
+            PRBool allowsAnonChildren = PR_FALSE;
+            paccessible->GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+            if (!allowsAnonChildren) {
+              NS_ADDREF(*aRelevantNode = bindingNode);
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  NS_ADDREF(*aRelevantNode = aNode);
+  return NS_OK;
 }
 
 nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,

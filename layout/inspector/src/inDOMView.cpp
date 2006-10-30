@@ -400,8 +400,10 @@ inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *
     NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIAccessible> accessible;
-    accService->GetAccessibleFor(node->node, getter_AddRefs(accessible));
-    if (accessible)
+    nsresult rv =
+      accService->GetAttachedAccessibleFor(node->node,
+                                           getter_AddRefs(accessible));
+    if (NS_SUCCEEDED(rv) && accessible)
       properties->AppendElement(kAccessibleNodeAtom);
   }
 #endif
