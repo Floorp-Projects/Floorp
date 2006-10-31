@@ -39,6 +39,7 @@
 #define nsNodeUtils_h___
 
 #include "nsDOMAttributeMap.h"
+#include "nsIDOMNode.h"
 
 struct JSContext;
 struct JSObject;
