@@ -55,8 +55,7 @@
   [% END %]
 
   [% IF user.login %]
-    [% '<li><span class="separator">| </span><a href="sanitycheck.cgi">Sanity&nbsp;check</a></li>'
-       IF user.groups.tweakparams %]
+    <li><span class="separator">| </span><a href="userprefs.cgi">Preferences</a></li>
     <li>
       <span class="separator">| </span>
       [% IF user.authorizer.can_logout %]

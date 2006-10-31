@@ -28,37 +28,58 @@
 
 <ul id="useful-links">
   <li id="links-actions">
-    <div class="label">Actions:</div>
+    <div class="label">Actions: </div>
       [% PROCESS "global/common-links.html.tmpl" btn_id = "find_bottom" %]
   </li>
-      
-  [% IF user.login %] 
+
+  [%# We have no other choices than enumerating all required privileges to have
+    # at least one link in this section. %]
+  [% IF user.login
+     && (user.groups.tweakparams || user.groups.editusers || user.can_bless
+         || (Param('useclassification') && user.groups.editclassifications)
+         || user.groups.editcomponents || user.groups.admin || user.groups.creategroups
+         || user.groups.editkeywords || user.groups.bz_canusewhines) %]
+
+    [% sep = "" FILTER html %]
     <li id="links-edit">
-      <div class="label">Edit:</div>
+      <div class="label">Edit: </div>
       <ul class="links">
-        <li><a href="userprefs.cgi">Prefs</a></li>
-        [% ' <li><span class="separator">| </span><a href="editparams.cgi">Parameters</a></li>' _
-           ' <li><span class="separator">| </span><a href="editsettings.cgi">User Preferences</a></li>'
-                                                  IF user.groups.tweakparams %]
-        [% ' <li><span class="separator">| </span><a href="editusers.cgi">Users</a></li>'     IF user.groups.editusers
-                                                  || user.can_bless %]
-        [% IF Param('useclassification') && user.groups.editclassifications %]
-            [% ' <li><span class="separator">| </span><a href="editclassifications.cgi">Classifications</a></li>' %]
+        [% IF user.groups.tweakparams %]
+          <li><span class="separator">[% sep %]</span><a href="editparams.cgi">Parameters</a></li>
+          [% sep = "| " %]
+          <li><span class="separator">[% sep %]</span><a href="editsettings.cgi">User Preferences</a></li>
+          <li><span class="separator">[% sep %]</span><a href="sanitycheck.cgi">Sanity Check</a></li>
         [% END %]
-        [% ' <li><span class="separator">| </span><a href="editproducts.cgi">Products</a></li>'
-                                               IF user.groups.editcomponents %]
-        [% ' <li><span class="separator">| </span><a href="editflagtypes.cgi">Flags</a></li>'
-                                               IF user.groups.editcomponents %]
-        [% ' <li><span class="separator">| </span><a href="editfields.cgi">Custom Fields</a></li>'
-                                               IF user.groups.admin %]
-        [% ' <li><span class="separator">| </span><a href="editvalues.cgi">Field Values</a></li>'
-                                               IF user.groups.admin %]
-        [% ' <li><span class="separator">| </span><a href="editgroups.cgi">Groups</a></li>'
-                                                 IF user.groups.creategroups %]
-        [% ' <li><span class="separator">| </span><a href="editkeywords.cgi">Keywords</a></li>'
-                                                 IF user.groups.editkeywords %]
-        [% ' <li><span class="separator">| </span><a href="editwhines.cgi">Whining</a></li>'
-                                              IF user.groups.bz_canusewhines %]
+        [% IF user.groups.editusers || user.can_bless %]
+          <li><span class="separator">[% sep %]</span><a href="editusers.cgi">Users</a></li>
+          [% sep = "| " %]
+        [% END %]
+        [% IF Param('useclassification') && user.groups.editclassifications %]
+          <li><span class="separator">[% sep %]</span><a href="editclassifications.cgi">Classifications</a></li>
+          [% sep = "| " %]
+        [% END %]
+        [% IF user.groups.editcomponents %]
+          <li><span class="separator">[% sep %]</span><a href="editproducts.cgi">Products</a></li>
+          [% sep = "| " %]
+          <li><span class="separator">[% sep %]</span><a href="editflagtypes.cgi">Flags</a></li>
+        [% END %]
+        [% IF user.groups.admin %]
+          <li><span class="separator">[% sep %]</span><a href="editfields.cgi">Custom Fields</a></li>
+          [% sep = "| " %]
+          <li><span class="separator">[% sep %]</span><a href="editvalues.cgi">Field Values</a></li>
+        [% END %]
+        [% IF user.groups.creategroups %]
+          <li><span class="separator">[% sep %]</span><a href="editgroups.cgi">Groups</a></li>
+          [% sep = "| " %]
+        [% END %]
+        [% IF user.groups.editkeywords %]
+          <li><span class="separator">[% sep %]</span><a href="editkeywords.cgi">Keywords</a></li>
+          [% sep = "| " %]
+        [% END %]
+        [% IF user.groups.bz_canusewhines %]
+          <li><span class="separator">[% sep %]</span><a href="editwhines.cgi">Whining</a></li>
+          [% sep = "| " %]
+        [% END %]
       </ul>
     </li>
   [% END %]
