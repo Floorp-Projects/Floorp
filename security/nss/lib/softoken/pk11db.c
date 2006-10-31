@@ -267,7 +267,7 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
     char *secmodName = NULL;
     char *value = NULL;
     char *save_params = param;
-    const char *lconfigdir;
+    const char *lconfigdir = NULL;
     param = secmod_argStrip(param);
 	
 
@@ -287,7 +287,9 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
    }
    *filename = secmodName;
 
-   lconfigdir = sftk_EvaluateConfigDir(configdir, appName);
+   if (configdir) {
+       lconfigdir = sftk_EvaluateConfigDir(configdir, appName);
+   }
 
    if (lconfigdir) {
 	value = PR_smprintf("%s" PATH_SEPARATOR "%s",lconfigdir,secmodName);
