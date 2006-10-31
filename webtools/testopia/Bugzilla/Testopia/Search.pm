@@ -284,7 +284,7 @@ sub init {
             push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
                               "ON test_case_runs.case_id = map_caserun_cases.case_id";
             push @supptables, "INNER JOIN profiles AS map_caserun_default_tester " .
-                              "ON map_caserun_cases.default_tester = map_caserun_default_tester.userid";
+                              "ON map_caserun_cases.default_tester_id = map_caserun_default_tester.userid";
         }
         if (grep(/map_caserun_category/, @$fields)) {
             push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
