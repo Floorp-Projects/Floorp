@@ -25,6 +25,7 @@ download_mars () {
 
       if [ "$test_only" == "1" ]
       then
+        echo "Testing $URL"
         curl -sIL $URL
         return
       else
