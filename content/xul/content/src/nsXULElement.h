@@ -576,6 +576,10 @@ public:
     virtual void RecompileScriptEventListeners();
 
 protected:
+    // XXX This can be removed when nsNodeUtils::CloneAndAdopt doesn't need
+    //     access to mPrototype anymore.
+    friend class nsNodeUtils;
+
     nsXULElement(nsINodeInfo* aNodeInfo);
     virtual ~nsXULElement(void);
 

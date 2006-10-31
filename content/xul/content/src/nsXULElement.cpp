@@ -465,27 +465,12 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
     *aResult = nsnull;
 
-    // XXX setting document on some nodes not in a document so XBL will bind
-    // and chrome won't break. Make XBL bind to document-less nodes!
-    // XXXbz Once this is fixed, fix up the asserts in all implementations of
-    // BindToTree to assert what they would like to assert, and fix the
-    // ChangeDocumentFor() call in nsXULElement::BindToTree as well.  Also,
-    // remove the UnbindFromTree call in ~nsXULElement, and add back in the
-    // precondition in nsXULElement::UnbindFromTree.
-    // Note: Make sure to do this witchery _after_ we've done any deep
-    // cloning, so kids of the new node aren't confused about whether they're
-    // in a document.
-    
-    PRBool fakeBeingInDocument = PR_TRUE;
-    
     // If we have a prototype, so will our clone.
     nsRefPtr<nsXULElement> element;
     if (mPrototype) {
         element = nsXULElement::Create(mPrototype, aNodeInfo, PR_TRUE);
         NS_ASSERTION(GetScriptTypeID() == mPrototype->mScriptTypeID,
                      "Didn't get the default language from proto?");
-
-        fakeBeingInDocument = IsInDoc();
     }
     else {
         element = new nsXULElement(aNodeInfo);
@@ -510,12 +495,6 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     nsresult rv = CopyInnerTo(element);
     if (NS_SUCCEEDED(rv)) {
         NS_ADDREF(*aResult = element);
-    }
-
-    if (fakeBeingInDocument) {
-        // Don't use BindToTree here so we don't confuse the descendant
-        // non-XUL nodes.
-        element->mParentPtrBits |= PARENT_BIT_INDOCUMENT;
     }
 
     return rv;
