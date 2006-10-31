@@ -133,7 +133,11 @@ xul|*:root alert {
   -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-alert');
 }
 
-html|*:root message[level="ephemeral"], html|*:root hint {
+html|*:root hint {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-hint');
+}
+
+html|*:root message[level="ephemeral"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-ephemeral-message');
 }
 xul|*:root message[level="ephemeral"], xul|*:root hint {

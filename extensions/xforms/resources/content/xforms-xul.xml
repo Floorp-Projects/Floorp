@@ -355,7 +355,10 @@
   <!-- ALERT: <DEFAULT> -->
   <binding id="xformswidget-alert"
            extends="chrome://xforms/content/xforms.xml#xformswidget-alert-base">
-    <content>
+
+    <content xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+             xhtml:role="wairole:alert">
       <xul:deck anonid="contentswitcher" flex="1" selectedIndex="1">
         <xul:label anonid="implicitcontent" xbl:inherits="orient"/>
         <xul:label xbl:inherits="orient"><children/></xul:label>

@@ -54,7 +54,8 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type"
+          xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
 
 
   <!-- OUTPUT: <DEFAULT> -->
@@ -432,7 +433,7 @@
   <!-- ALERT: <DEFAULT> -->
   <binding id="xformswidget-alert"
            extends="chrome://xforms/content/xforms.xml#xformswidget-alert-base">
-    <content>
+    <content html:role="wairole:alert">
       <html:div anonid="container" class="-moz-xforms-message-container">
         <html:div anonid="inlineData" style="display: inherit;">
           <children/>
@@ -449,6 +450,8 @@
               getAnonymousElementByAttribute(this, "anonid", "inlineData"),
             bindingData: this.ownerDocument.
               getAnonymousElementByAttribute(this, "anonid", "bindingData"),
+            container: this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "container"),
 
             setValue: function setValue(aUseInlineValue, aValue) {
               if (aUseInlineValue) {
@@ -467,44 +470,44 @@
   </binding>
 
 
-  <!-- MESSAGE: EPHEMERAL, HINT: <DEFAULT>
-    The widget reuses content of xformswidget-alert.
-  -->
-  <binding id="xformswidget-ephemeral-message"
+  <!-- HINT: <DEFAULT> -->
+  <binding id="xformswidget-hint"
            extends="#xformswidget-alert">
-
     <implementation implements="nsIXFormsEphemeralMessageUI">
       <method name="show">
         <parameter name="aPosX"/>
         <parameter name="aPosY"/>
         <body>
-          this.container.style.visibility = "visible";
-          this.container.style.display = "inherit";
-          this.container.style.left = aPosX + "px";
-          this.container.style.top = aPosY + "px";
+          this.control.container.style.visibility = "visible";
+          this.control.container.style.display = "inherit";
+          this.control.container.style.left = aPosX + "px";
+          this.control.container.style.top = aPosY + "px";
         </body>
       </method>
 
       <method name="hide">
         <body>
-          this.container.style.left = "0px";
-          this.container.style.top = "0px";
-          this.container.style.visibility = "hidden";
-          this.container.style.display = "none";
+          this.control.container.style.left = "0px";
+          this.control.container.style.top = "0px";
+          this.control.container.style.visibility = "hidden";
+          this.control.container.style.display = "none";
         </body>
       </method>
+    </implementation>
+  </binding>
 
-    <!-- internal -->
-      <property name="container" readonly="true">
-        <getter>
-          if (!this._container) {
-            this._container = this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", "container");
-          }
-          return this._container;
-        </getter>
-      </property>
-      <field name="_container"/>
+
+  <!-- MESSAGE: EPHEMERAL: <DEFAULT> -->
+  <binding id="xformswidget-ephemeral-message"
+           extends="#xformswidget-hint">
+
+    <implementation>
+      <constructor>
+        // xforms:message[level="ephemeral"] element should fire accessibility
+        // alert event when it appears, so we add role='wairole:alert'
+        // attribute.
+        this.control.container.setAttribute("role", "wairole:alert");
+      </constructor>
     </implementation>
   </binding>
 
