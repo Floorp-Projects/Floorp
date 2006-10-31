@@ -92,8 +92,16 @@ sub _initialize {
 
 sub get_rename_column_ddl {
     my ($self, $table, $old_name, $new_name) = @_;
-
-    return ("ALTER TABLE $table RENAME COLUMN $old_name TO $new_name");
+    my @sql = ("ALTER TABLE $table RENAME COLUMN $old_name TO $new_name");
+    my $def = $self->get_column_abstract($table, $old_name);
+    if ($def->{TYPE} =~ /SERIAL/i) {
+        # We have to rename the series also, and fix the default of the series.
+        push(@sql, "ALTER TABLE ${table}_${old_name}_seq 
+                      RENAME TO ${table}_${new_name}_seq");
+        push(@sql, "ALTER TABLE $table ALTER COLUMN $new_name 
+                    SET DEFAULT NEXTVAL('${table}_${new_name}_seq')");
+    }
+    return @sql;
 }
 
 sub _get_alter_type_sql {

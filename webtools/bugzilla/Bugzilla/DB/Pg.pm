@@ -207,6 +207,15 @@ sub bz_unlock_tables {
     }
 }
 
+# Tell us whether or not a particular sequence exists in the DB.
+sub bz_sequence_exists {
+    my ($self, $seq_name) = @_;
+    my $exists = $self->selectrow_array(
+        'SELECT 1 FROM pg_statio_user_sequences WHERE relname = ?',
+        undef, $seq_name);
+    return $exists || 0;
+}
+
 #####################################################################
 # Custom Database Setup
 #####################################################################
@@ -236,6 +245,16 @@ sub bz_setup_database {
     _fix_case_differences('products', 'name');
     $self->bz_add_index('products', 'products_name_lower_idx',
         {FIELDS => ['LOWER(name)'], TYPE => 'UNIQUE'});
+
+    # bz_rename_column didn't correctly rename the sequence.
+    if ($self->bz_column_info('fielddefs', 'id')
+        && $self->bz_sequence_exists('fielddefs_fieldid_seq')) 
+    {
+        print "Fixing fielddefs_fieldid_seq sequence...\n";
+        $self->do("ALTER TABLE fielddefs_fieldid_seq RENAME TO fielddefs_id_seq");
+        $self->do("ALTER TABLE fielddefs ALTER COLUMN id
+                    SET DEFAULT NEXTVAL('fielddefs_id_seq')");
+    }
 }
 
 # Renames things that differ only in case.
