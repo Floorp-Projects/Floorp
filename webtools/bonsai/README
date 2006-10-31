@@ -528,4 +528,7 @@ Hook			The 'hook' is actually the oldest part of the Bonsai
 	Maintainer
 	==========
 
-The current primary maintainer of Bonsai is Tara Hernandez <tara@tequilarista.org
+The current primary maintainer of Bonsai is Tara Hernandez <tara@tequilarista.org>
+
+Currently Mike Taylor <bear@code-bear.com> is helping by doing bug fixes and, in
+theory, bringing SVN support to Bonsai.
