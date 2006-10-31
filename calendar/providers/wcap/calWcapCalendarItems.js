@@ -222,11 +222,21 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     var orgUID = ((item.organizer && item.organizer.id)
                   ? item.organizer.id : ownerId);
     
+    var bOrgRequest = false;
+    
     // attendees:
     var attendees =  item.getAttendees({});
     if (attendees.length > 0) {
         // ORGANIZER is owner fo this cal?
-        if (!oldItem || orgUID == ownerId) {
+        if (!oldItem || (orgUID == ownerId &&
+                         // xxx todo:
+                         // we assume that the alarm service writes a new
+                         // lastAck here (only); then we update only
+                         // the organizer's copy of the item, no REQUEST:
+                         getIcalUTC(oldItem.alarmLastAck) ==
+                         getIcalUTC(item.alarmLastAck)))
+        {
+            bOrgRequest = true;
             url += "&method=2"; // REQUEST
             url += ("&orgUID=" + encodeURIComponent(orgUID));
             url += "&attendees=";
@@ -238,10 +248,7 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
         }
         else { // in modifyItem(), attendee's calendar:
             var attendee = item.getAttendeeById(ownerId);
-            if (attendee == null) {
-                this.logError( "not in attendee list, but in my cal?" );
-            }
-            else {
+            if (attendee) {
                 this.log( "attendee: " + attendee.icalProperty.icalString );
                 var oldAttendee = oldItem.getAttendeeById(ownerId);
                 if (!oldAttendee ||
@@ -492,21 +499,25 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     //                          operation REPLACE does not work, just adds
     //                          more and more props. WTF.
     
-    // misusing CONTACTS for now to store additional X- data
-    // (not used in cs web-frontend nor in mozilla)
-    // xxx todo, contact asavari
+    // misusing CONTACTS for now:
+    // (not used in cs web-frontend nor in mozilla, but in Outlook...)
+    url += ("&contacts=" + getIcalUTC(getTime()));
     
-    // stamp:[lastack]:[related]
-    var contacts = getIcalUTC(getTime());
-    // xxx todo: currently no support to store this at VALARM component...
-    var lastAck = item.alarmLastAck;
-    contacts += ":";
-    if (lastAck)
-        contacts += getIcalUTC(lastAck);
-    contacts += ":";
-    if (alarmStart)
-        contacts += item.alarmRelated;
-    url += ("&contacts=" + encodeURIComponent(contacts));
+    if (bIsParent && !bOrgRequest) {
+        // - storing X-props at occurrences doesn't work
+        // - don't publish lastAck to attendees
+        // xxx todo: currently no support to store this at VALARM component...
+        var lastAck = item.alarmLastAck;
+        if (lastAck) {
+            url += ("&X-MOZ-VALARM-LASTACK=" +
+                    "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
+                    getIcalUTC(lastAck));
+        }
+        else {
+            url += ("&X-MOZ-VALARM-LASTACK=" +
+                    "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
+        }
+    }
     
     if (bIsParent)
         url += this.encodeRecurrenceParams( item, oldItem );
@@ -517,13 +528,17 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
 
 calWcapCalendar.prototype.tunnelXProps = function( destItem, srcItem )
 {
+    // xxx todo: temp workaround for bug in calItemBase.js
+    if (!isParent(srcItem))
+        return;
     var enum = srcItem.propertyEnumerator;
     while (enum.hasMoreElements()) {
         var prop = enum.getNext().QueryInterface(
             Components.interfaces.nsIProperty);
         var name = prop.name;
-        if (name.indexOf("X-MOZ-") == 0) {
-            this.log( "tunneling " + name );
+        if (name != "X-MOZ-VALARM-LASTACK" && name.indexOf("X-MOZ-") == 0) {
+            if (LOG_LEVEL > 1)
+                this.log( "tunneling " + name );
             destItem.setProperty(name, prop.value);
         }
     }
@@ -828,40 +843,12 @@ calWcapCalendar.prototype.parseItems = function(
             }
             }
             if (item != null) {
-                var contactsProp = subComp.getFirstProperty("CONTACT");
-                if (contactsProp) { // stamp:[lastack]:[related]
-                    var ar = contactsProp.value.split(":");
-                    if (ar.length > 2) {
-                        var alarmRelated = ar[2];
-                        if (alarmRelated.length > 0) {
-                            alarmRelated = Number(alarmRelated);
-                            if (alarmRelated == Components.interfaces
-                                .calIItemBase.ALARM_RELATED_END &&
-                                alarmRelated != item.alarmRelated)
-                            {
-                                var dur = item.duration;
-                                if (dur) {
-                                    dur = dur.clone();
-                                    dur.isNegative = true;
-                                    var alarmOffset = item.alarmOffset;
-                                    if (alarmOffset) {
-                                        alarmOffset = alarmOffset.clone();
-                                        alarmOffset.addDuration(dur);
-                                        item.alarmOffset = alarmOffset;
-                                    }
-                                }
-                                // else only DUE is set i.e. relates to END
-                            }
-                            item.alarmRelated = alarmRelated;
-                        }
-                        var lastAck = ar[1];
-                        if (lastAck.length > 0) {
-                            var dtLastAck = new CalDateTime();
-                            dtLastAck.icalString = lastAck; // TZID is UTC
-                            // shift to alarm comp:
-                            item.alarmLastAck = dtLastAck;
-                        }
-                    }
+                var prop = subComp.getFirstProperty("X-MOZ-VALARM-LASTACK");
+                if (prop) {
+                    var dtLastAck = new CalDateTime();
+                    dtLastAck.icalString = prop.value; // TZID is UTC
+                    // shift to alarm comp:
+                    item.alarmLastAck = dtLastAck;
                 }
                 
                 item.calendar = this_.superCalendar;
@@ -1031,11 +1018,18 @@ calWcapCalendar.prototype.getItems_resp = function(
 {
     try {
         var exc = wcapResponse.exception;
-        // check  whether access is denied,
-        // then show free-busy information instead:
+        // check whether access is denied,
+        // then use free-busy information instead:
         if (testResultCode( exc, Components.interfaces.
                             calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
-            if (listener != null) {
+            if (listener &&
+                // xxx todo: ignore errors on Todo retrieval, callers ought
+                //           to check whether Read-Access is granted before
+                //           calling getItems() in the future.
+                (itemFilter &
+                 Components.interfaces.calICalendar.ITEM_FILTER_TYPE_EVENT) &&
+                rangeStart && rangeEnd)
+            {
                 var this_ = this;
                 var freeBusyListener = { // calIWcapFreeBusyListener:
                     onGetFreeBusyTimes:
