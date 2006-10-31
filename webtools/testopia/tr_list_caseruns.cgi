@@ -150,6 +150,7 @@ if ($action eq 'Commit'){
         $vars->{'run'} = $run;
         $vars->{'table'} = $table;
         $vars->{'action'} = 'Commit';
+        $vars->{'backlink'} = $run;
         $vars->{'form_action'} = "tr_show_run.cgi";
         $template->process("testopia/run/show.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());

@@ -188,8 +188,11 @@
 [%##### Reports #####%]
 <br><br>
 <h3>Reports</h3>
-<a href="tr_query.cgi?current_tab=run&report=1">General Reports</a>
-<br><br>
+<a href="tr_query.cgi?current_tab=run&report=1">General Reports</a><br>
+[% IF run.bugs %]
+<a href="buglist.cgi?bug_id=[% run.bug_list FILTER none %]">Bugs Found in this Run</a><br>
+[% END %]
+<br>
 [%##### Categories and Tags #####%]
 <h3>CC, Coverage, Tags</h3>
 

@@ -1007,6 +1007,33 @@ sub builds {
     
 }
 
+=head2 bugs
+
+Returns a reference to a list of Bugzilla::Bug objects associated
+with this plan
+
+=cut
+
+sub bugs {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    return $self->{'bugs'} if exists $self->{'bugs'};
+    my $ref = $dbh->selectcol_arrayref(
+          "SELECT DISTINCT bug_id
+             FROM test_case_bugs 
+             JOIN test_cases ON test_case_bugs.case_id = test_cases.case_id
+             JOIN test_case_plans ON test_case_plans.case_id = test_cases.case_id 
+            WHERE test_case_plans.plan_id = ?", 
+           undef, $self->id);
+    my @bugs;
+    foreach my $id (@{$ref}){
+        push @bugs, Bugzilla::Bug->new($id, Bugzilla->user->id);
+    }
+    $self->{'bugs'} = \@bugs;
+    $self->{'bug_list'} = join(',', @$ref);
+    return $self->{'bugs'};
+}
+
 =head2 product_name
 
 Returns the name of the product this plan is associated with
