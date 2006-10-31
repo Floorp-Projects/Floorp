@@ -177,7 +177,7 @@ sub init {
         }
         if (grep(/map_case_author/, @$fields)) {
             push @supptables, "INNER JOIN profiles AS map_case_author " .
-                              "ON test_cases.author_id = profiles.userid";
+                              "ON test_cases.author_id = map_case_author.userid";
         }
         if (grep(/map_default_tester/, @$fields)) {
             push @supptables, "INNER JOIN profiles AS map_default_tester " .
@@ -295,10 +295,10 @@ sub init {
         if (grep(/map_caserun_components/, @$fields)) {
             push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
                               "ON test_case_runs.case_id = map_caserun_cases.case_id";
-            push @supptables, "INNER JOIN test_cases AS map_caserun_cases " .
-                              "ON map_caserun_cases.case_id = test_case_components.case_id";
+            push @supptables, "INNER JOIN test_case_components AS case_components " .
+                              "ON map_caserun_cases.case_id = case_components.case_id";
             push @supptables, "INNER JOIN components AS map_caserun_components " .
-                              "ON map_caserun_cases.component_id = map_caserun_components.id";
+                              "ON case_components.component_id = map_caserun_components.id";
         }
         
     }

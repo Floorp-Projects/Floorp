@@ -176,7 +176,7 @@ sub init {
         $columns{'priority'}        = "map_caserun_priority.value";
         $columns{'default_tester'}  = "map_caserun_default_tester.login_name";
         $columns{'category'}        = "map_caserun_category.name";
-        $columns{'componnet'}       = "map_caserun_components.name";
+        $columns{'component'}       = "map_caserun_components.name";
     }
     # One which means "nothing". Any number would do, really. It just gets SELECTed
     # so that we always select 3 items in the query.

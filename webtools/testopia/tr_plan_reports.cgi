@@ -124,7 +124,7 @@ else{
     my $filename = "report-" . $report->{'date'} . ".$format->{extension}";
     print $cgi->header(-type => $format->{'ctype'},
                        -content_disposition => "inline; filename=$filename");
-
+    $vars->{'time'} = time();
     $template->process("$format->{'template'}", $vars)
         || ThrowTemplateError($template->error());
 
