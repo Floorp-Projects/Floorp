@@ -108,7 +108,7 @@ nsMenuBarX::~nsMenuBarX()
     mDocument->RemoveMutationObserver(this);
   }
   
-  [mRootMenu autorelease];
+  [mRootMenu release];
 }
 
 nsEventStatus 
@@ -547,15 +547,9 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
     return nil;
   }
 
-  // get the label into NSString* form
-  NSString* labelString = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(),
-                                                                    label.Length());
-  if (!labelString)
-    labelString = [@"" retain];
-    
   // Get more information about the key equivalent. Start by
   // finding the key node we need.
-  NSString* keyEquiv = [@"" retain];
+  NSString* keyEquiv = nil;
   unsigned int macKeyModifiers = 0;
   if (!key.IsEmpty()) {
     nsCOMPtr<nsIDOMElement> keyElement;
@@ -566,10 +560,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) {
-        keyEquiv = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)keyChar.get(),
-                                                             keyChar.Length());
-        [keyEquiv autorelease];
-        keyEquiv = [[keyEquiv lowercaseString] retain];
+        keyEquiv = [[NSString stringWithCharacters:keyChar.get() length:keyChar.Length()] lowercaseString];
       }
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
@@ -580,12 +571,16 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
       macKeyModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
   }
+  // get the label into NSString-form
+  NSString* labelString = [NSString stringWithCharacters:label.get() length:label.Length()];
+  
+  if (!labelString)
+    labelString = @"";
+  if (!keyEquiv)
+    keyEquiv = @"";
 
   // put together the actual NSMenuItem
   NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:keyEquiv];
-  
-  [labelString release];
-  [keyEquiv release];
   
   [newMenuItem setTag:tag];
   [newMenuItem setTarget:target];
@@ -652,6 +647,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
+      
       // Add separator after About menu
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
     }
@@ -662,6 +659,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
+      
       // Add separator after Preferences menu
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
     }
@@ -671,13 +670,13 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
                                              0, nil);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      itemBeingAdded = nil;
       
       // set this menu item up as the Mac OS X Services menu
       NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@""];
       [itemBeingAdded setSubmenu:servicesMenu];
       [NSApp setServicesMenu:servicesMenu];
-      
-      [itemBeingAdded release];
       
       // Add separator after Services menu
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
@@ -691,6 +690,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
+      
       addHideShowSeparator = TRUE;
     }
     
@@ -700,6 +701,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
+      
       addHideShowSeparator = TRUE;
     }
     
@@ -709,6 +712,8 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
+      
       addHideShowSeparator = TRUE;
     }
     
@@ -722,6 +727,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
+      itemBeingAdded = nil;
     }
     else {
       // the current application does not have a DOM node for "Quit". Add one
@@ -1024,10 +1030,9 @@ NSString* MenuHelpersX::CreateTruncatedCocoaLabel(nsString itemLabel)
   // easy way to compute what this should be given the system font, etc, so we're just going
   // to hard code it to something reasonable and bigger fonts will just have to deal.
   const short kMaxItemPixelWidth = 300;
-  CFMutableStringRef labelRef = ::CFStringCreateMutable(kCFAllocatorDefault, itemLabel.Length());
-  ::CFStringAppendCharacters(labelRef, (UniChar*)itemLabel.get(), itemLabel.Length());
-  ::TruncateThemeText(labelRef, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
-  return (NSString*)labelRef; // caller releases
+  NSMutableString *label = [[NSMutableString stringWithCharacters:itemLabel.get() length:itemLabel.Length()] retain];
+  ::TruncateThemeText((CFMutableStringRef)label, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
+  return label; // caller releases
 }
 
 PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(char* modifiersAttribute)
@@ -1108,6 +1113,7 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
       err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[nsMenuBarX::sEventTargetWindow windowRef]));
       NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
     }
+    ReleaseEvent(newEvent);
   }
 }
 

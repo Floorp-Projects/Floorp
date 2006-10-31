@@ -60,6 +60,7 @@ class nsMenuX;
 @interface MenuDelegate : NSObject
 {
   nsMenuX* mGeckoMenu; // weak ref
+  EventHandlerRef mEventHandler;
   BOOL mHaveInstalledCarbonEvents;
 }
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
@@ -159,8 +160,6 @@ protected:
     PRPackedBool                mNeedsRebuild;
     PRPackedBool                mConstructed;
     PRPackedBool                mVisible;               // are we visible to the user?
-    
-    EventHandlerRef             mHandler;               // our event handler
 };
 
 #endif // nsMenuX_h__
