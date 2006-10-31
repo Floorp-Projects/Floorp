@@ -55,6 +55,7 @@ var gLdapServerURL;
 var gLdapConnection;
 var gCertDB;
 var gLdapOperation;
+var gLogin;
 
 function onLoad()
 {
@@ -81,6 +82,13 @@ function search()
     Components.classes["@mozilla.org/network/ldap-url;1"]
       .createInstance().QueryInterface(Components.interfaces.nsILDAPURL);
 
+  // get the login to authenticate as, if there is one
+  try {
+    gLogin = prefs.getComplexValue(gDirectoryPref + ".auth.dn", Components.interfaces.nsISupportsString).data;
+  } catch (ex) {
+    // if we don't have this pref, no big deal
+  }
+
   try {
     gLdapServerURL.spec = prefs.getCharPref(gDirectoryPref + ".uri");
 
@@ -90,8 +98,8 @@ function search()
     gLdapConnection.init(
       gLdapServerURL.asciiHost,
       gLdapServerURL.port,
-      gLdapServerURL.options,
-      null,
+      gLdapServerURL.options & gLdapServerURL.OPT_SECURE,
+      gLogin,
       getProxyOnUIThread(new boundListener(),
                             Components.interfaces.nsILDAPMessageListener),
       null, Components.interfaces.nsILDAPConnection.VERSION3);
@@ -139,11 +147,36 @@ function getLDAPOperation()
                             Components.interfaces.nsILDAPMessageListener),
                         null);
 }
+
+function getPassword()
+{
+  // we only need a password if we are using credentials
+  if (gLogin)
+  {
+    var windowWatcherSvc = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                            .getService(Components.interfaces.nsIWindowWatcher);
+    var authPrompter = windowWatcherSvc.getNewAuthPrompter(window.QueryInterface(Components.interfaces.nsIDOMWindow));    
+    var strBundle = document.getElementById('bundle_ldap');
+    var password = { value: "" };
+    
+    // nsLDAPAutocompleteSession uses asciiHost instead of host for the prompt text, I think we should be
+    // consistent. 
+    if (authPrompter.promptPassword(strBundle.getString("authPromptTitle"),  
+                                     strBundle.getFormattedString("authPromptText", [gLdapServerURL.asciiHost]),
+                                     gLdapServerURL.spec,
+                                     authPrompter.SAVE_PASSWORD_PERMANENTLY,
+                                     password))
+      return password.value;       
+  }
+  
+  return null;
+}
+
 function kickOffBind()
 {
   try {
     getLDAPOperation();
-    gLdapOperation.simpleBind(null);
+    gLdapOperation.simpleBind(getPassword());
   }
   catch (e) {
     window.close();

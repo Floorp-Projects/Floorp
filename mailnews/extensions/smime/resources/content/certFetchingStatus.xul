@@ -48,6 +48,7 @@
   ondialogcancel="return stopFetching();"
   onload="onLoad();">
 
+  <stringbundle id="bundle_ldap" src="chrome://mozldap/locale/ldap.properties"/>
 <script type="application/x-javascript" src="chrome://messenger-smime/content/certFetchingStatus.js"/>
 
   <description>&info.message;</description>
