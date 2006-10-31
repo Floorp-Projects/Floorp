@@ -260,6 +260,20 @@ char* icalparser_get_next_paramvalue(char* line, char **end)
     }
 }
 
+char* icalparser_get_value(char* line, char **end, icalvalue_kind kind)
+{
+    char *str;
+    size_t length = strlen(line);
+
+    if (length == 0){
+        return 0;
+    } 
+
+    *end = line+length;
+    str = make_segment(line, *end);
+
+    return str;
+}
 
 /**
    A property may have multiple values, if the values are seperated by
@@ -920,7 +934,21 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 
     vcount=0;
     while(1) {
-	str = icalparser_get_next_value(end,&end, value_kind);
+        /* Only some properies can have multiple values. This list was taken
+           from rfc2445. Also added the x-properties, because the spec actually
+           says that commas should be escaped. For x-properties, other apps may
+           depend on that behaviour
+           */
+        switch (prop_kind) {
+            case ICAL_X_PROPERTY:
+            case ICAL_CATEGORIES_PROPERTY:
+            case ICAL_RESOURCES_PROPERTY:
+                 str = icalparser_get_next_value(end,&end, value_kind);
+                 break;
+            default:
+                 str = icalparser_get_value(end, &end, value_kind);
+                 break;
+        }
 
 	if (str != 0){
 		
