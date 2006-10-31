@@ -1380,7 +1380,9 @@ nsXFormsModelElement::OnLoad(nsISchema* aSchema)
 {
   mSchemaCount++;
 
-  if (IsComplete()) {
+  // If there is no model element, then schema loading finished after
+  // main page failed to load.
+  if (IsComplete() && mElement) {
     nsresult rv = FinishConstruction();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2077,6 +2079,11 @@ nsXFormsModelElement::BackupOrRestoreInstanceData(PRBool restore)
 nsresult
 nsXFormsModelElement::FinishConstruction()
 {
+  // Ensure that FinishConstruction isn't called due to some callback
+  // or event handler after the model has started going through its
+  // destruction phase
+  NS_ENSURE_STATE(mElement);
+
   // process inline schemas that aren't referenced via the schema attribute
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
