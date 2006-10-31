@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.26 $ $Date: 2005/01/20 02:25:47 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.27 $ $Date: 2006/10/31 00:05:04 $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -690,6 +690,10 @@ create_object (
     nssCryptokiObjectAndAttributes *rvCachedObject = NULL;
 
     slot = nssToken_GetSlot(object->token);
+    if (!slot) {
+        nss_SetError(NSS_ERROR_INVALUD_POINTER);
+        goto loser;
+    }
     session = nssToken_GetDefaultSession(object->token);
 
     arena = nssArena_Create();
@@ -724,9 +728,8 @@ create_object (
     }
     rvCachedObject->numAttributes = numTypes;
     *status = PR_SUCCESS;
-    if (slot) {
-	nssSlot_Destroy(slot);
-    }
+    nssSlot_Destroy(slot);
+
     return rvCachedObject;
 loser:
     *status = PR_FAILURE;
