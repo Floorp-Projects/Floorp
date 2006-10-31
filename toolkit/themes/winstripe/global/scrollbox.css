@@ -95,8 +95,8 @@ autorepeatbutton
     padding               : 1px;
   }
 
-autorepeatbutton:hover,
-autorepeatbutton:hover:active
+autorepeatbutton:not([disabled="true"]):hover,
+autorepeatbutton:not([disabled="true"]):hover:active
   {
     margin                : 1px;
     border                : 1px inset ThreeDFace;
