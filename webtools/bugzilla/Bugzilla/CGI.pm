@@ -166,7 +166,19 @@ sub multipart_init {
 # Have to add the cookies in.
 sub multipart_start {
     my $self = shift;
-    my $headers = $self->SUPER::multipart_start(@_);
+    
+    my %args = @_;
+
+    # CGI.pm::multipart_start doesn't accept a -charset parameter, so
+    # we do it ourselves here
+    if (defined $args{-charset} && defined $args{-type}) {
+        # Remove any existing charset specifier
+        $args{-type} =~ s/;.*$//;
+        # and add the specified one
+        $args{-type} .= "; charset=$args{-charset}";
+    }
+        
+    my $headers = $self->SUPER::multipart_start(%args);
     # Eliminate the one extra CRLF at the end.
     $headers =~ s/$CGI::CRLF$//;
     # Add the cookies. We have to do it this way instead of
