@@ -91,7 +91,6 @@ EXPORTS = \
 		$(NULL)
 
 MAC_LCPPSRCS = \
-		nsBidiKeyboard.cpp \
 		nsLookAndFeel.cpp \
 		nsToolkitBase.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
@@ -116,6 +115,7 @@ CPPSRCS += nsNativeThemeCocoa.cpp
 endif
 
 CMMSRCS = \
+		nsBidiKeyboard.mm \
 		nsClipboard.mm \
 		nsMenuX.mm \
 		nsMenuBarX.mm \
