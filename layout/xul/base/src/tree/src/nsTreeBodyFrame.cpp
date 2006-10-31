@@ -1520,8 +1520,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
   // Determine the column hit.
   for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol; 
        currCol = currCol->GetNext()) {
-    nsRect cellRect;
-    CalcColumnRect(cellRect, currCol, mInnerBox.y+mRowHeight*(*aRow-mTopRowIndex), mRowHeight);
+    nsRect cellRect(currCol->GetX(), mInnerBox.y + mRowHeight * (*aRow - mTopRowIndex), currCol->GetWidth(), mRowHeight);
     if (!OffsetForHorzScroll(cellRect, PR_TRUE))
         continue;
 
@@ -2612,6 +2611,8 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
 {
   // Update our available height and our page count.
   CalcInnerBox();
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(mInnerBox + aPt, nsClipCombine_kReplace);
   PRInt32 oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
     mPageLength = mInnerBox.height/mRowHeight;
@@ -2634,8 +2635,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
        currCol = currCol->GetNext()) {
     // Don't paint hidden columns.
     if (currCol->GetWidth()) {
-      nsRect colRect;
-      CalcColumnRect(colRect, currCol, mInnerBox.y, mInnerBox.height);
+      nsRect colRect(currCol->GetX(), mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
       if (OffsetForHorzScroll(colRect, PR_FALSE)) {
         nsRect dirtyRect;
         colRect += aPt;
@@ -2651,20 +2651,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, rowRect + aPt) &&
         rowRect.y < (mInnerBox.y+mInnerBox.height)) {
-      PRBool clip = (rowRect.y + rowRect.height > mInnerBox.y + mInnerBox.height);
-      if (clip) {
-        // We need to clip the last row, since it extends outside our inner box. Push
-        // a clip rect down.
-        PRInt32 overflow = (rowRect.y+rowRect.height) - (mInnerBox.y+mInnerBox.height);
-        nsRect clipRect(rowRect.x, rowRect.y, mInnerBox.width, mRowHeight-overflow);
-        aRenderingContext.PushState();
-        aRenderingContext.SetClipRect(clipRect + aPt, nsClipCombine_kReplace);
-      }
-
       PaintRow(i, rowRect + aPt, GetPresContext(), aRenderingContext, aDirtyRect, aPt);
-
-      if (clip)
-        aRenderingContext.PopState();
     }
   }
 
@@ -2681,6 +2668,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
       PaintDropFeedback(feedbackRect, GetPresContext(), aRenderingContext, aDirtyRect);
     }
   }
+  aRenderingContext.PopState();
 }
 
 
@@ -2778,8 +2766,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     nsTreeColumn* primaryCol = mColumns->GetPrimaryColumn();
     if (primaryCol) {
       // Paint the primary cell.
-      nsRect cellRect;
-      CalcColumnRect(cellRect, primaryCol, rowRect.y, rowRect.height);
+      nsRect cellRect(primaryCol->GetX(), rowRect.y, primaryCol->GetWidth(), rowRect.height);
       if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
         cellRect.x += aPt.x;
         nsRect dirtyRect;
@@ -2823,8 +2810,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
          currCol = currCol->GetNext()) {
       // Don't paint cells in hidden columns.
       if (currCol->GetWidth()) {
-        nsRect cellRect;
-        CalcColumnRect(cellRect, currCol, rowRect.y, rowRect.height);
+        nsRect cellRect(currCol->GetX(), rowRect.y, currCol->GetWidth(), rowRect.height);
         if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
           cellRect.x += aPt.x;
           
@@ -4007,17 +3993,6 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   mImageCache.EnumerateRead(CancelImageRequest, nsnull);
   mImageCache.Clear();
   return NS_OK;
-}
-
-void
-nsTreeBodyFrame::CalcColumnRect(nsRect& rect, nsTreeColumn* aCol, nscoord y, nscoord height)
-{
-  rect.x = aCol->GetX();
-  rect.y = y;
-  rect.width = aCol->GetWidth();
-  rect.height = height;
-  // Don't let the cell stick outside the inner box area
-  rect.width = PR_MAX(0, PR_MIN(rect.width, mInnerBox.width - rect.x));
 }
 
 PRBool 
