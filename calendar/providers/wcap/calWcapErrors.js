@@ -190,7 +190,7 @@ const g_wcapErrorCodes = [
     /* 59 */ Components.interfaces.calIWcapErrors.WCAP_COMPONENT_NOT_FOUND, "Returned when a fetch or delete is attempted that does not exist.",
     /* 60 */ Components.interfaces.calIWcapErrors.WCAP_BAD_ARGUMENTS, "Currently used when attendee or organizer specified does not have a valid email address.",
     /* 61 */ Components.interfaces.calIWcapErrors.WCAP_GET_USERPREFS_FAILED, "get_userprefs.wcap failed. The following error conditions returns error code 61: LDAP access denied, no results found, LDAP limit exceeded, LDAP connection failed.",
-    /* 62 */ Components.interfaces.calIWcapErrors.WCAP_WCAP_MODIFY_NO_EVENT, "storeevents.wcap issued with storeytype set to 2 (WCAP_STORE_TYPE_MODIFY) and the event doesn\’t exist.",
+    /* 62 */ Components.interfaces.calIWcapErrors.WCAP_WCAP_MODIFY_NO_EVENT, "storeevents.wcap issued with storetype set to 2 (WCAP_STORE_TYPE_MODIFY) and the event doesn\’t exist.",
     /* 63 */ Components.interfaces.calIWcapErrors.WCAP_WCAP_CREATE_EXISTS, "storeevents.wcap issued with storetype set to 1 (WCAP_STORE_TYPE_CREATE) and the event already exists.",
     /* 64 */ Components.interfaces.calIWcapErrors.WCAP_WCAP_MODIFY_CANT_MAKE_COPY, "storevents.wcap issued and copy of event failed during processing.",
     /* 65 */ Components.interfaces.calIWcapErrors.WCAP_STORE_FAILED_RECUR_SKIP, "One instance of a recurring event skips over another.",
