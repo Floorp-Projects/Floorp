@@ -1473,7 +1473,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
     if (srca == 0)
 	return;
 
-    srcsrc = (unsigned long long)src << 32 | src;
+    srcsrc = (ullong)src << 32 | src;
 
     fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
@@ -1516,7 +1516,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 
 	    if (srca == 0xff && (m0 & m1) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrc;
+		*(ullong *)dst = srcsrc;
 	    }
 	    else if (m0 | m1)
 	    {
@@ -1591,7 +1591,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 	    return;
     }
 
-    srcsrc = (unsigned long long)src << 32 | src;
+    srcsrc = (ullong)src << 32 | src;
 
     fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
@@ -1638,7 +1638,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 
 	    if (srca == 0xff && (m0 & m1) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrc;
+		*(ullong *)dst = srcsrc;
 	    }
 	    else if (m0 | m1)
 	    {
@@ -1769,7 +1769,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
 
 	    if (srca == 0xff && (m0 & m1 & m2 & m3) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrcsrcsrc;
+		*(ullong *)dst = srcsrcsrcsrc;
 	    }
 	    else if (m0 | m1 | m2 | m3)
 	    {
