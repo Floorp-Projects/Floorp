@@ -922,7 +922,7 @@ sub bugs {
     foreach my $id (@{$ref}){
         push @bugs, Bugzilla::Bug->new($id, Bugzilla->user->id);
     }
-    $self->{'bugs'} = \@bugs;
+    $self->{'bugs'} = \@bugs if @bugs;
     $self->{'bug_list'} = join(',', @$ref);
     return $self->{'bugs'};
 }
