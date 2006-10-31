@@ -101,8 +101,7 @@ NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupp
 nsMenuX::nsMenuX()
 : mParent(nsnull), mManager(nsnull), mMacMenuID(0), mMacMenu(nil),
   mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
-  mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE),
-  mHandler(nsnull)
+  mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE)
 {
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
     
@@ -115,13 +114,8 @@ nsMenuX::~nsMenuX()
 {
   RemoveAll();
 
-  if (mMacMenu) {
-    if (mHandler)
-      ::RemoveEventHandler(mHandler);
-    [mMacMenu autorelease];
-  }
-  
-  [mMenuDelegate autorelease];
+  [mMacMenu release];
+  [mMenuDelegate release];
   
   // alert the change notifier we don't care no more
   mManager->Unregister(mMenuContent);
@@ -275,7 +269,7 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   PRBool enabled;
   aMenu->GetEnabled(&enabled);
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(label);
-  NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
+  NSMenuItem* newNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [newNativeMenuItem setEnabled:enabled];
   [mMacMenu addItem:newNativeMenuItem];
   [newCocoaLabelString release];
@@ -1216,6 +1210,11 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   return self;
 }
 
+- (void)dealloc
+{
+  RemoveEventHandler(mEventHandler);
+  [super dealloc];
+}
 
 // You can get a MenuRef from an NSMenu*, but not until it has been made visible
 // or added to the main menu bar. Basically, Cocoa is attempting lazy loading,
@@ -1228,7 +1227,7 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   if (!mHaveInstalledCarbonEvents) {
     MenuRef myMenuRef = _NSGetCarbonMenu(aMenu);
     if (myMenuRef) {
-      InstallMyMenuEventHandler(myMenuRef, mGeckoMenu, nil); // can't be nil because we need to clean up
+      InstallMyMenuEventHandler(myMenuRef, mGeckoMenu, &mEventHandler);
       mHaveInstalledCarbonEvents = TRUE;
     }
   }
