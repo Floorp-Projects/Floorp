@@ -43,8 +43,7 @@
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      onload="HistoryCommonInit();"
-      elementtofocus="historyTree">
+      onload="HistoryCommonInit();">
 
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTreeController.js"/>

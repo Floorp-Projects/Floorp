@@ -36,6 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+function init() {
+  document.getElementById("search-box").focus();
+}
+
 function manageBookmarks() {
   openDialog("chrome://browser/content/bookmarks/bookmarksManager.xul", "", "chrome,dialog=no,resizable=yes");
 }
