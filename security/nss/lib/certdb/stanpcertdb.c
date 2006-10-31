@@ -92,6 +92,11 @@ SEC_DeletePermCertificate(CERTCertificate *cert)
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
 
+    if (c == NULL) {
+        /* error code is set */
+        return SECFailure;
+    }
+
     /* get rid of the token instances */
     nssrv = NSSCertificate_DeleteStoredObject(c, NULL);
 
@@ -157,6 +162,11 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
     nssCertificateStoreTrace lockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
     nssCertificateStoreTrace unlockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+
+    if (c == NULL) {
+        /* error code is set */
+        return SECFailure;
+    }
 
     context = c->object.cryptoContext;
     if (!context) {
