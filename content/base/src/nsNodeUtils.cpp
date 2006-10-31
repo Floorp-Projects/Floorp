@@ -50,6 +50,7 @@
 #include "pldhash.h"
 #include "nsIDOMAttr.h"
 #include "nsCOMArray.h"
+#include "nsXULElement.h"
 
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
@@ -463,6 +464,24 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                          aCx, aOldScope, aNewScope, aNodesWithProperties,
                          clone, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // XXX setting document on some nodes not in a document so XBL will bind
+  // and chrome won't break. Make XBL bind to document-less nodes!
+  // XXXbz Once this is fixed, fix up the asserts in all implementations of
+  // BindToTree to assert what they would like to assert, and fix the
+  // ChangeDocumentFor() call in nsXULElement::BindToTree as well.  Also,
+  // remove the UnbindFromTree call in ~nsXULElement, and add back in the
+  // precondition in nsXULElement::UnbindFromTree and remove the line in
+  // nsXULElement.h that makes nsNodeUtils a friend of nsXULElement.
+  // Note: Make sure to do this witchery _after_ we've done any deep
+  // cloning, so kids of the new node aren't confused about whether they're
+  // in a document.
+  if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
+    nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
+    if (!xulElem->mPrototype || xulElem->IsInDoc()) {
+      clone->mParentPtrBits |= nsINode::PARENT_BIT_INDOCUMENT;
     }
   }
 
