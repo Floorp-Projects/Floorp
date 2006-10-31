@@ -14,6 +14,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+#                 Mads Bondo Dydensborg <mbd@dbc.dk>
 
 =head1 NAME
 
@@ -145,7 +146,17 @@ minimum required version your application needs.
 
 $soapresult = $proxy->call('Bugzilla.version');
 _die_on_fault($soapresult);
-print 'Connecting to a Bugzilla of version ' . $soapresult->result() . ".\n";
+print 'Connecting to a Bugzilla of version ' . $soapresult->result()->{version} . ".\n";
+
+=head2 Checking Bugzilla's timezone
+
+To make sure that you understand the dates and times that Bugzilla returns to you, you may want to call C<Bugzilla.timezone>.
+
+=cut
+
+$soapresult = $proxy->call('Bugzilla.timezone');
+_die_on_fault($soapresult);
+print 'Bugzilla\'s timezone is ' . $soapresult->result()->{timezone} . ".\n";
 
 =head2 Logging In and Out
 
