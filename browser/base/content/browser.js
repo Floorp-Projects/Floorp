@@ -4691,27 +4691,35 @@ nsContextMenu.prototype = {
         // if the document is editable, show context menu like in text inputs
         var win = this.target.ownerDocument.defaultView;
         if (win) {
-          var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIWebNavigation)
-                                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIEditingSession);
-          if (editingSession.windowIsEditable(win)) {
-            this.onTextInput       = true;
-            this.onKeywordField    = false;
-            this.onImage           = false;
-            this.onLoadedImage     = false;
-            this.onMetaDataItem    = false;
-            this.onMathML          = false;
-            this.inFrame           = false;
-            this.hasBGImage        = false;
-            this.isDesignMode      = true;
-            this.possibleSpellChecking = true;
-            InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
-            var canSpell = InlineSpellCheckerUI.canSpellCheck;
-            InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
-            this.showItem("spell-check-enabled", canSpell);
-            this.showItem("spell-separator", canSpell);
-          }
+            var isEditable = false;
+            var editingSession;
+            try {
+                editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
+                isEditable = editingSession.windowIsEditable(win);
+            }
+            catch (ex) {
+                // If someone built with composer disabled, we can't get an editing session.
+            }
+            if (isEditable) {
+                this.onTextInput       = true;
+                this.onKeywordField    = false;
+                this.onImage           = false;
+                this.onLoadedImage     = false;
+                this.onMetaDataItem    = false;
+                this.onMathML          = false;
+                this.inFrame           = false;
+                this.hasBGImage        = false;
+                this.isDesignMode      = true;
+                this.possibleSpellChecking = true;
+                InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
+                var canSpell = InlineSpellCheckerUI.canSpellCheck;
+                InlineSpellCheckerUI.initFromEvent(rangeParent, rangeOffset);
+                this.showItem("spell-check-enabled", canSpell);
+                this.showItem("spell-separator", canSpell);
+            }
         }
     },
     // Returns the computed style attribute for the given element.
