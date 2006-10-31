@@ -184,9 +184,9 @@
             this.calendarView.activeInPlaceEdit = false;
 
           if (saveChanges && (this.eventNameTextbox.value != this.mOriginalTextLabel)) {
-              var clone = this.mOccurrence.clone();
-              clone.title = this.eventNameTextbox.value;
-              clone.calendar.modifyItem(clone, this.mOccurrence, null);
+              this.calendarView.controller.modifyOccurrence(this.mOccurrence, 
+                                                            null, null,
+                                                            this.eventNameTextbox.value);
 
               // Note that as soon as we do the modifyItem, this element ceases to exist,
               // so don't bother trying to modify anything further here! ('this' exists,

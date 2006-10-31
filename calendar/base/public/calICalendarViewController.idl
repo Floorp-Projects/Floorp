@@ -76,12 +76,13 @@ interface calICalendarViewController : nsISupports
 
   /**
    * Modify aOccurrence.  If aNewStartTime and aNewEndTime are given,
-   * update the event to those times.  Otherwise ask the user to modify.
+   * update the event to those times.  If aNewTitle is given, modify the title
+   * of the item.  If no parameters are given, ask the user to modify.
    */
   void modifyOccurrence (in calIItemBase aOccurrence,
-			 in calIDateTime aNewStartTime,
-			 in calIDateTime aNewEndTime);
-
+                         in calIDateTime aNewStartTime,
+                         in calIDateTime aNewEndTime,
+                         in AString aNewTitle);
   /**
    * Delete the given event.  This should prompt whether to delete
    * just this occurrence or all occurrences, and do whatever else

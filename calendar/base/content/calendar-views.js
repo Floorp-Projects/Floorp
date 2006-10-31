@@ -90,11 +90,15 @@ var calendarViewController = {
         }
     },
 
-    modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime) {
+    modifyOccurrence: function (aOccurrence, aNewStartTime, aNewEndTime, aNewTitle) {
         // if modifying this item directly (e.g. just dragged to new time),
         // then do so; otherwise pop up the dialog
-        if (aNewStartTime && aNewEndTime) {
+        if ((aNewStartTime && aNewEndTime) || aNewTitle) {
             var instance = aOccurrence.clone();
+
+            if (aNewTitle) {
+                instance.title = aNewTitle;
+            }
 
             // When we made the executive decision (in bug 352862) that
             // dragging an occurrence of a recurring event would _only_ act
@@ -102,13 +106,15 @@ var calendarViewController = {
             // function. If we ever revert that decision, check CVS history
             // here to get that code back.
 
-            // Yay for variable names that make this next line look silly
-            if (instance instanceof Components.interfaces.calIEvent) {
-                instance.startDate = aNewStartTime;
-                instance.endDate = aNewEndTime;
-            } else {
-                instance.entryDate = aNewStartTime;
-                instance.dueDate = aNewEndTime;
+            if (aNewStartTime) { // we know we have aEndTime too then
+                // Yay for variable names that make this next line look silly
+                if (instance instanceof Components.interfaces.calIEvent) {
+                    instance.startDate = aNewStartTime;
+                    instance.endDate = aNewEndTime;
+                } else {
+                    instance.entryDate = aNewStartTime;
+                    instance.dueDate = aNewEndTime;
+                }
             }
             doTransaction('modify', instance, instance.calendar, aOccurrence, null);
         } else {
