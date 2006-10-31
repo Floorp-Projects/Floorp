@@ -292,3 +292,12 @@ dl dl > dt {
         background-color: #fff;
     }
 }
+
+.field_label {
+    text-align: right;
+    vertical-align: top;
+    font-weight: bold;
+}
+.field_value {
+    vertical-align: top;
+}
