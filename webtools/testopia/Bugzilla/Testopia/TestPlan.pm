@@ -51,6 +51,7 @@ use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::Category;
 use Bugzilla::Testopia::Build;
 use Bugzilla::Testopia::TestTag;
+use Bugzilla::Bug;
 
 #TODO: Add this to checksetup
 use Text::Diff;

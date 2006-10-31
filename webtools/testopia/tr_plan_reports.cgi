@@ -58,17 +58,29 @@ if ($type eq 'build_coverage'){
             $buildseen{$cr->build->id} = $cr->build->name;
             $report->{$case->id}->{$cr->build->id} = $cr;
         }
+        $report->{$case->id}->{'name'} = $case->summary;
     }
-       
+    my $run_reports = {};
+    foreach my $run (@{$plan->test_runs}){
+        foreach my $cr (@{$run->caseruns}){
+            $run_reports->{$run->id}->{$cr->case->id}->{$cr->build->id} = $cr;
+            $run_reports->{$run->id}->{$cr->case->id}->{'name'} = $cr->case->summary; 
+        }
+        
+        $run_reports->{$run->id}->{'name'} = $run->summary;
+    }
+    my @ids = keys %buildseen;
+    $report->{'build_ids'} = \@ids;
     $report->{'builds'} = \%buildseen;
+    $vars->{'run_reports'} = $run_reports;
     $vars->{'report'} = $report;
     $vars->{'plan'} = $plan;
 
     print $cgi->header();
     if ($cgi->param('debug')){
-        use Data::Dumper;
-        print Dumper(\%buildseen);
+        use Data::Dumper;        
         print Dumper($report);
+        print Dumper($run_reports);
     }
     $template->process("testopia/reports/build-coverage.html.tmpl", $vars)
        || ThrowTemplateError($template->error());

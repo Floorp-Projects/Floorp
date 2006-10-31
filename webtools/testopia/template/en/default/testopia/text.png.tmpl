@@ -1,5 +1,5 @@
     [% FILTER null;
-        USE gd  = GD.Image(200,40);
+        USE gd  = GD.Image(100,40);
         USE gdc = GD.Constants;
         white = gd.colorAllocate(255,255, 255);
         black = gd.colorAllocate(0,0,0);
@@ -9,7 +9,7 @@
          text        => txt,
         );
         wrapbox.set_font(gdc.gdMediumBoldFont);
-        wrapbox.set(align => 'left', width => 200);
+        wrapbox.set(align => 'left', width => 100);
         wrapbox.draw(2, 2);
         gdr = gd.copyRotate270();
         gdr.png | stdout(1);

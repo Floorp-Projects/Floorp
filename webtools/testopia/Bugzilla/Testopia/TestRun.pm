@@ -48,6 +48,7 @@ use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config;
 use Bugzilla::Testopia::Environment;
+use Bugzilla::Bug;
 
 use base qw(Exporter);
 @Bugzilla::Testopia::TestRun::EXPORT = qw(CalculatePercentCompleted);

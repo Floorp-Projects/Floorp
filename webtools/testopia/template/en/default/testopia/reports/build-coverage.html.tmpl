@@ -37,25 +37,25 @@
 [% PROCESS global/header.html.tmpl %]
 
 [% PROCESS testopia/style.none.tmpl %]
-
+<h3>Summary of all runs</h3>
 <table border="0">
   <tr>  
     <td>&nbsp;</td>
-[% FOREACH b = report.builds %]
-    <td><img src=tr_draw.cgi?text=[% b.value %]"/></td>
+[% FOREACH b = report.build_ids %]
+    <td><img src="tr_draw.cgi?text=[% report.builds.$b FILTER url_quote %]"></td>
 [% END %]
   </tr>
 [% FOREACH case = report.keys %]
-  [% IF case == 'builds' %]
+  [% IF case == 'builds' OR case == 'build_ids' %]
     [% NEXT %]
   [% END %]
-  <tr>
-    <td><a href="tr_show_case.cgi?case_id=[% case %]">[% case %]</a></td>
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+    <td align="right"><a href="tr_show_case.cgi?case_id=[% case %]">[% report.$case.name %]</a></td>
   [% FOREACH bid = report.builds.keys %]
-    <td align="center">
+    <td align="left">
     [% IF report.$case.$bid.status %]
       <a href="tr_show_caserun.cgi?caserun_id=[% report.$case.$bid.id %]">
-      <img src="testopia/img/[% report.$case.$bid.status %]_small.gif" alt="[% report.$case.$bid.status %]" border="0" />
+      <img src="testopia/img/[% report.$case.$bid.status %]_small.gif" alt="[% report.$case.$bid.status %]" title="[% report.$case.$bid.status %]" border="0" />
     [% ELSE %]
       &nbsp;
     [% END %]
@@ -64,6 +64,39 @@
   </tr>
 [% END %]
 </table>
+
+<br><br>
+<h3>Individual Runs</h3>
+[% FOREACH run = run_reports.keys %]
+  <span style="font-size:10pt; font-weight:bold"><a href="tr_show_run.cgi?run_id=[% run %]">Test Run [% run %]: [% run_reports.$run.name %]</a></span>
+  <table border="0">
+    <tr>  
+      <td>&nbsp;</td>
+  [% FOREACH rb = report.build_ids %]
+      <td><img src="tr_draw.cgi?text=[% report.builds.$rb FILTER url_quote %]"></td>
+  [% END %]
+    </tr>
+  [% FOREACH case = run_reports.$run.keys %]
+    [% IF case == 'name' %]
+      [% NEXT %]
+    [% END %]
+    <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+      <td align="right"><a href="tr_show_case.cgi?case_id=[% case %]">[% run_reports.$run.$case.name %]</a></td>
+    [% FOREACH bid = report.builds.keys %]
+      <td align="left">
+      [% IF run_reports.$run.$case.$bid.status %]
+        <a href="tr_show_caserun.cgi?caserun_id=[% report.$case.$bid.id %]">
+        <img src="testopia/img/[% run_reports.$run.$case.$bid.status %]_small.gif" alt="[% run_reports.$run.$case.$bid.status %]" title="[% run_reports.$run.$case.$bid.status %]" border="0" />
+      [% ELSE %]
+        &nbsp;
+      [% END %]
+      </td>
+    [% END %]
+    </tr>
+  [% END %]
+  </table>
+<br><br>
+[% END %]
 <p>
 Back to <a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">plan</a>
 </p>
