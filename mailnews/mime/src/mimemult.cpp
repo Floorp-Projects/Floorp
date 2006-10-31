@@ -207,7 +207,8 @@ MimeMultipart_parse_line (const char *line, PRInt32 length, MimeObject *obj)
         // check if this is a sub-part of a part we're stripping.
         for (PRInt32 partIndex = 0; partIndex < obj->options->state->partsToStrip.Count(); partIndex++)
         {
-          if (newPart.Find(*obj->options->state->partsToStrip.CStringAt(partIndex)) == 0)
+          nsCString *curPartToStrip = obj->options->state->partsToStrip.CStringAt(partIndex);
+          if (newPart.Find(*curPartToStrip) == 0 && (newPart.Length() == curPartToStrip->Length() || newPart.CharAt(curPartToStrip->Length()) == '.'))
           {
             obj->options->state->strippingPart = PR_TRUE;
             if (partIndex < obj->options->state->detachToFiles.Count())
