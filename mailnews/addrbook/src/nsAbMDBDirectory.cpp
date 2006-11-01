@@ -624,9 +624,12 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
 
     dblist = do_QueryInterface(newlist, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    
+    mDatabase->CreateMailListAndAddToDB(newlist, PR_TRUE);
   }
+  else
+    mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
 
-  mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
   mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
 
   PRUint32 dbRowID;
