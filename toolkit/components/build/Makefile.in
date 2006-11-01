@@ -127,11 +127,8 @@ ifdef MOZ_FEEDS
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)feed_s.$(LIB_SUFFIX)
 endif
 
-ifndef MOZ_SUITE
-# XXX Suite isn't ready to build this just yet
 SHARED_LIBRARY_LIBS += ../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX)
 EXTRA_DSO_LIBS = gkgfx
-endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \

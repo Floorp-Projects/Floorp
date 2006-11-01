@@ -58,13 +58,8 @@ DIRS += \
 	filepicker \
 	console \
 	viewconfig \
-	$(NULL)
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
-DIRS += \
 	typeaheadfind \
 	$(NULL)
-endif # MOZ_SUITE
 
 ifdef MOZ_FEEDS
 DIRS += feeds
@@ -102,12 +97,12 @@ endif # MOZ_XUL
 endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
 
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
 ifdef MOZ_XUL
 DIRS += help
 endif
 
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
 ifdef MOZ_XPINSTALL
 ifdef MOZ_RDF
 DIRS +=	downloads
