@@ -1527,7 +1527,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
             rv = this_ctx->InitClasses(glob);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (navigatorHolder && st_id == nsIProgrammingLanguage::JAVASCRIPT) {
+            if (navigatorHolder &&
+                st_id == nsIProgrammingLanguage::JAVASCRIPT) {
               // Restore window.navigator onto the new inner window.
               JSObject *nav;
               JSAutoRequest ar(cx);
@@ -1535,7 +1536,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
               ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
                                   OBJECT_TO_JSVAL(nav), nsnull, nsnull,
-                                  JSPROP_ENUMERATE);
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                  JSPROP_READONLY);
             }
           }
         }
