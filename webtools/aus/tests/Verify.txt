@@ -37,6 +37,13 @@
 |4000000001|channel-cck-partner|complete004|partial004|true|true|true|true|
 |4000000001|channel|complete004|partial004|true|true|true|true|
 
+ 1 update for partner channel does not fall back because explicit blank complete/partial files exist to stop it
+ 2 update exists as expected for normal chanel
+|aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
+|build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
+|4000000002|channel-cck-partner|complete004|partial004|false|false|false|true|
+|4000000002|channel|complete004|partial004|true|true|true|true|
+
  1 update exists only on partner channel 
  2 update does not exist for normal channel 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
@@ -52,12 +59,14 @@
 |6000000001|channel|complete|partial|false|false|false|true|
 
 !1 Build ID Validation
- 1 don't serve update if build version in uri is newer than build version in *.txt
- 2 don't serve update if build version in uri is newer than build version in *.txt, fallback channel 
+ 1 should serve update if build version in uri is newer than build version in *.txt
+ 2 should serve update if build version in uri is newer than build version in *.txt, fallback channel
+ 3 should not serve update if build version in uri is newer than build version in *.txt if using the nightly datasource 
 |aus.Verify|${host}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
-|7000000001|channel|complete|partial|false|false|false|true|
-|7000000001|channel-cck-partner|complete|partial|false|false|false|true|
+|7000000001|channel|complete|partial|true|true|true|true|
+|7000000001|channel-cck-partner|complete|partial|true|true|true|true|
+|7000000001|nightly|complete|partial|false|false|false|true|
 
 !1 Major and Minor Updates 
  1 minor update using new snippet schema (preed's patch)
