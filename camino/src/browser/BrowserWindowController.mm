@@ -717,7 +717,7 @@ enum BWCOpenDest {
                                     button1:NSLocalizedString(@"CloseWindowWithMultipleTabsButton", @"")
                                     button2:NSLocalizedString(@"CancelButtonText", @"")
                                     button3:nil
-                                   checkMsg:NSLocalizedString(@"CloseWindowWithMultipleTabsCheckboxLabel", @"")
+                                   checkMsg:NSLocalizedString(@"DontShowWarningAgainCheckboxLabel", @"")
                                  checkValue:&dontShowAgain];
       NS_HANDLER
       NS_ENDHANDLER
