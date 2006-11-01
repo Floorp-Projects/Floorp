@@ -3852,8 +3852,14 @@ nsBrowserStatusHandler.prototype =
     if (document.getElementById("highlight").checked)
       document.getElementById("highlight").removeAttribute("checked");
 
-    var self = this;
-    setTimeout(function() { self.asyncUpdateUI(); }, 0);
+    // See bug 358202, when tabs are switched during a drag operation,
+    // timers don't fire on windows (bug 203573)
+    if (aRequest) {
+      var self = this;
+      setTimeout(function() { self.asyncUpdateUI(); }, 0);
+    } 
+    else
+      this.asyncUpdateUI();
   },
   
   asyncUpdateUI : function () {
