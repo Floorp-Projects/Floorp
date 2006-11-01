@@ -2321,12 +2321,18 @@ function OnMsgLoaded(aUrl)
     if (!aUrl)
       return;
 
-    var folder = aUrl.folder;
-    var msgURI = GetLoadedMessage();
-    var msgHdr = null;
-
-    if (!folder || !msgURI)
+    // nsIMsgMailNewsUrl.folder throws an error when opening .eml files.
+    try {
+      var folder = aUrl.folder;
+    } catch (ex) {
       return;
+    }
+
+    var msgURI = GetLoadedMessage();
+    if (!msgURI)
+      return;
+
+    var msgHdr = null;
 
     // If we are in the middle of a delete or move operation, make sure that
     // if the user clicks on another message then that message stays selected
