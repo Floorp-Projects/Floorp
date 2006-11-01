@@ -4059,7 +4059,21 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   nsCOMPtr<nsIContent> commonHoverAncestor, oldHover, newHover;
   if ((aState & NS_EVENT_STATE_HOVER) && (aContent != mHoverContent)) {
     oldHover = mHoverContent;
-    newHover = aContent;
+
+    if (!mPresContext || mPresContext->IsDynamic()) {
+      newHover = aContent;
+    } else {
+      nsIFrame *frame = mPresContext->PresShell()->GetPrimaryFrameFor(aContent);
+      if (nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
+        // The scrollbars of viewport should not ignore the hover state.
+        // Because they are *not* the content of the web page.
+        newHover = aContent;
+      } else {
+        // All contents of the web page should ignore the hover state.
+        newHover = nsnull;
+      }
+    }
+
     commonHoverAncestor = FindCommonAncestor(mHoverContent, aContent);
     mHoverContent = aContent;
   }
