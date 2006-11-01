@@ -34,7 +34,7 @@ class PermissionsManager {
         . ( $umDes?$umDes:"Unknown ($this->mode)" );
       
       if ($this->trusted=="TRUE") {
-        echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
+        echo "Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
       }
     } else if( $level=='admin' 
       || ($editorAdding=($this->func == 'adduser' && $level=='editor')) ) { 
@@ -98,11 +98,11 @@ if ($function=="edituser" or $function=="changepassword") {
     }
 
     if ($allowed == false) {
-      echo"<h1>Error Accessing Record</h1>\n";
-      echo"You do not appear to have permission to edit this record.<br>\n";
-      echo"<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
+      echo "<h1>Error Accessing Record</h1>\n";
+      echo "You do not appear to have permission to edit this record.<br>\n";
+      echo "<a href=\"?function=\">&#171;&#171; Go Back</a>\n";
       include"$page_footer";
-      echo"</body>\n<html>\n";
+      echo "</body>\n<html>\n";
       exit;
     } else {
       $userid = $postuid;
@@ -151,7 +151,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 	    $sql = "UPDATE `userprofiles` SET `UserMode`= 'D' WHERE `UserID`='$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
-	      echo"User Account for User Number $selecteduser Disabled<br>\n";
+	      echo "User Account for User Number $selecteduser Disabled<br>\n";
 	    }
 
 	    //Disabling an author, check their extension list and disable any item they're the solo author of.
@@ -166,7 +166,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 	        $sql3 = "UPDATE `version` SET `approved`='DISABLED' WHERE `ID`='$id' and `approved` !='NO' ";
 	        $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	        if ($sql_result3) {
-	  	  echo"$name disabled from public viewing...<br>\n";
+	  	  echo "$name disabled from public viewing...<br>\n";
 	        }
 	      }
             }
@@ -177,7 +177,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 	    $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$selecteduser' LIMIT 1";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
-	      echo"User Account for User Number $selecteduser Deleted<br>\n";
+	      echo "User Account for User Number $selecteduser Deleted<br>\n";
 	    }
           }
 
@@ -186,7 +186,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 	    $sql = "UPDATE `userprofiles` SET `UserMode`= 'U' WHERE `UserID`='$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
-	      echo"User Account for User Number $selecteduser Enabled, User Mode set to User<br>\n";
+	      echo "User Account for User Number $selecteduser Enabled, User Mode set to User<br>\n";
 	    }
 	    //Disabling an author, check their extension list and disable any item they're the solo author of.
 	    $sql = "SELECT TM.ID, TM.Name from `main` TM INNER JOIN `authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
@@ -200,7 +200,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 	        $sql3 = "UPDATE `version` SET `approved`='?' WHERE `ID`='$id' and `approved` !='NO'";
 	        $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	        if ($sql_result3) {
-	  	  echo"$name restored to public view pending approval...<br>\n";
+	  	  echo "$name restored to public view pending approval...<br>\n";
 	        }
 	      }
 	    }
@@ -212,7 +212,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
     }
   unset($i);
 
-  echo"Your changes to the User List have been succesfully completed<BR>\n";
+  echo "Your changes to the User List have been successfully completed<BR>\n";
 
  }
 ?>
@@ -247,21 +247,21 @@ if ($usermode=="A") {$a="TRUE"; $e="TRUE";
 } else if ($usermode=="U") {$e="FALSE"; $a="FALSE";
 } else if ($usermode=="D") {$d="TRUE";}
     $i++;
-    echo"<TR>";
-    echo"<TD CLASS=\"tablehighlight\" ALIGN=CENTER><B>$i</B></TD>\n";
-    echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"?function=edituser&userid=$userid\">$username</A></B></TD>\n";
-    echo"<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"mailto:$useremail\">$useremail</A></B></TD>\n";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected$userid\" TYPE=\"CHECKBOX\" VALUE=\"$userid\" TITLE=\"Selected User\""; if (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED=\"CHECKED\""; } if (($a=="TRUE" or $d=="TRUE") or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Editor\"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or $_SESSION["level"]=="editor") {echo" DISABLED=\"DISABLED\"";} echo" TITLE=\"Administrator\"></TD>";
-    echo"<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo"CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo" DISABLED=\"DISABLED\"";}echo" TITLE=\"Trusted User\"></TD>";
-    if ($d=="TRUE") {echo"<INPUT NAME=\"disabled$userid\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; }
-    echo"</TR>\n";
+    echo "<TR>";
+    echo "<TD CLASS=\"tablehighlight\" ALIGN=CENTER><B>$i</B></TD>\n";
+    echo "<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"?function=edituser&userid=$userid\">$username</A></B></TD>\n";
+    echo "<TD CLASS=\"tablehighlight\"><B>&nbsp;&nbsp;<A HREF=\"mailto:$useremail\">$useremail</A></B></TD>\n";
+    echo "<TD CLASS=\"tablehighlight\"><INPUT NAME=\"selected$userid\" TYPE=\"CHECKBOX\" VALUE=\"$userid\" TITLE=\"Selected User\""; if (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor") {echo " DISABLED=\"DISABLED\"";} echo "></TD>";
+    echo "<TD CLASS=\"tablehighlight\"><INPUT NAME=\"editor$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo "CHECKED=\"CHECKED\""; } if (($a=="TRUE" or $d=="TRUE") or $_SESSION["level"]=="editor") {echo " DISABLED=\"DISABLED\"";} echo " TITLE=\"Editor\"></TD>";
+    echo "<TD CLASS=\"tablehighlight\"><INPUT NAME=\"admin$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo "CHECKED=\"CHECKED\""; } if ($d=="TRUE" or $_SESSION["level"]=="editor") {echo " DISABLED=\"DISABLED\"";} echo " TITLE=\"Administrator\"></TD>";
+    echo "<TD CLASS=\"tablehighlight\"><INPUT NAME=\"trusted$userid\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($t=="TRUE") {echo "CHECKED=\"CHECKED\""; } if ($d=="TRUE" or (($a=="TRUE" or $e=="TRUE") AND $_SESSION["level"]=="editor" )) {echo " DISABLED=\"DISABLED\"";}echo " TITLE=\"Trusted User\"></TD>";
+    if ($d=="TRUE") {echo "<INPUT NAME=\"disabled$userid\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; }
+    echo "</TR>\n";
 
   unset($a,$e,$t);
 }
 
-echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
+echo "<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 
 ?>
 <TR><TD COLSPAN=3 ALIGN=CENTER>
@@ -305,8 +305,8 @@ if ($_POST["submit"]=="Update") {
     $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$perms->mode', `UserTrusted`='$perms->trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
-      echo"<h1>Updating User Profile...</h1>\n";
-      echo"The User Profile for $username, has been successfully updated...<br>\n";
+      echo "<h1>Updating User Profile...</h1>\n";
+      echo "The User Profile for $username, has been successfully updated...<br>\n";
     }
   }
 } else if ($_POST["submit"] == "Delete User") {
@@ -317,10 +317,10 @@ if ($_POST["submit"]=="Update") {
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
       $username = htmlspecialchars($_POST["username"]);
-      echo"<h1>Deleting User... Please wait...</h1>\n";
-      echo"You've successfully deleted the user profile for $username...<br>\n";
+      echo "<h1>Deleting User... Please wait...</h1>\n";
+      echo "You've successfully deleted the user profile for $username...<br>\n";
       include"$page_footer";
-      echo"</body>\n</html>\n";
+      echo "</body>\n</html>\n";
       exit;
     }
   }
@@ -343,36 +343,36 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
     $userlastlogin = date("l, F, d, Y, g:i:sa", strtotime($row["UserLastLogin"]));
 ?>
 
-<h1>Edit User Profile for <?php echo"$username"; ?></h1>
+<h1>Edit User Profile for <?php echo "$username"; ?></h1>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
-<TR><TD COLSPAN=2>Last login: <?php echo"$userlastlogin"; ?></TD></TR>
+<TR><TD COLSPAN=2>Last login: <?php echo "$userlastlogin"; ?></TD></TR>
 <FORM NAME="edituser" METHOD="POST" ACTION="?function=edituser">
 <?writeFormKey();?>
 <?php
-    echo"<INPUT NAME=\"userid\" TYPE=\"HIDDEN\" VALUE=\"$userid\">\n";
-    echo"<TR><TD STYLE=\"width: 130px\"><B>Name:</B></TD><TD><INPUT NAME=\"username\" TYPE=\"TEXT\" VALUE=\"$username\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
-    echo"<TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME=\"useremail\" TYPE=\"TEXT\" VALUE=\"$useremail\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
-    echo"<TR><TD><B>Website:</B></TD><TD><INPUT NAME=\"userwebsite\" TYPE=\"TEXT\" VALUE=\"$userwebsite\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
-    echo"<TR><TD><B>Password:</B></TD><TD><FONT STYLE=\"font-size:10pt; font-weight: bold\"><A HREF=\"?function=changepassword&userid=$userid\">Change Password</A></FONT></TD></TR>\n";
+    echo "<INPUT NAME=\"userid\" TYPE=\"HIDDEN\" VALUE=\"$userid\">\n";
+    echo "<TR><TD STYLE=\"width: 130px\"><B>Name:</B></TD><TD><INPUT NAME=\"username\" TYPE=\"TEXT\" VALUE=\"$username\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
+    echo "<TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME=\"useremail\" TYPE=\"TEXT\" VALUE=\"$useremail\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
+    echo "<TR><TD><B>Website:</B></TD><TD><INPUT NAME=\"userwebsite\" TYPE=\"TEXT\" VALUE=\"$userwebsite\" SIZE=30 MAXLENGTH=100></TD></TR>\n";
+    echo "<TR><TD><B>Password:</B></TD><TD><FONT STYLE=\"font-size:10pt; font-weight: bold\"><A HREF=\"?function=changepassword&userid=$userid\">Change Password</A></FONT></TD></TR>\n";
 
-    echo"<TR><TD><B>Permissions:</B></TD><TD>";
+    echo "<TR><TD><B>Permissions:</B></TD><TD>";
 
     $perms->printUI();
     
-    echo"</TD></TR>\n";
+    echo "</TD></TR>\n";
 
-    echo"<TR><TD><B>E-Mail Public:<B></TD><TD>";
+    echo "<TR><TD><B>E-Mail Public:<B></TD><TD>";
     if ($useremailhide==="1") {
-      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\" CHECKED> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
+      echo "Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\" CHECKED> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
     } else if ($useremailhide==="0") {
-      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\" CHECKED>";
+      echo "Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\" CHECKED>";
     } else {
-      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
+      echo "Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
     }
-    echo"</TD></TR>\n";
+    echo "</TD></TR>\n";
 ?>
 <TR><TD COLSPAN="2"><strong>Warning:</strong> Setting E-Mail Public to Visible will show your e-mail address in plaintext on your profile. Do not enable this if you wish to keep your e-mail address hidden.</TD></TR>
-<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete User" ONCLICK="return confirm('Are you sure you want to delete the profile for <?php echo"$username"; ?>?');"></TD></TR>
+<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Update">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form">&nbsp;&nbsp;<INPUT NAME="submit" TYPE="SUBMIT" VALUE="Delete User" ONCLICK="return confirm('Are you sure you want to delete the profile for <?php echo "$username"; ?>?');"></TD></TR>
 </FORM>
 <?php if ($_SESSION["level"]=="user") {} else { ?>
 <TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
@@ -383,13 +383,13 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
 } else if ($function=="adduser") {
 
 if ($_POST["submit"]=="Create User") {
-echo"<h1>Adding User...</h1>\n";
+echo "<h1>Adding User...</h1>\n";
  //Verify Users Password and md5 encode it for storage...
  if ($_POST['userpass']==$_POST['userpassconfirm']) {
  $_POST['userpass']=md5($_POST['userpass']);
  } else {
  $errors="true";
- echo"<B>Your two passwords did not match, go back and try again...</B><br>\n";
+ echo "<B>Your two passwords did not match, go back and try again...</B><br>\n";
  }
 
  //Add User to MySQL Table
@@ -413,8 +413,8 @@ $useremailhide = escape_string($_POST['useremailhide']);
     $sql_result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
       include"mail_newaccount.php"; 
-      echo"The user $username has been added successfully...<br>\n";
-      echo"An E-Mail has been sent to the e-mail address specified with the login info they need to log in to their new account.<br>\n";
+      echo "The user $username has been added successfully...<br>\n";
+      echo "An E-Mail has been sent to the e-mail address specified with the login info they need to log in to their new account.<br>\n";
     }
   }
 }
@@ -426,7 +426,7 @@ $useremailhide = escape_string($_POST['useremailhide']);
 <FORM NAME="adduser" METHOD="POST" ACTION="?function=adduser">
 <?writeFormKey();?>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
-  <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
+  <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo "$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
   <TR><TD ALIGN=RIGHT><B>Show E-Mail:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
   <TR><TD STYLE="width: 150px"><B>Name:</B></TD><TD><INPUT NAME="username" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
   <TR><TD><B>Website:</B></TD><TD><INPUT NAME="userwebsite" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
@@ -451,7 +451,7 @@ if (!$userid) {$userid = escape_string($_GET["userid"]); }
 
 //Set Password Change if this is a POST.
 if ($_POST["submit"]=="Change Password") {
-   echo"<h1>Changing Password, please wait...</h1>\n";
+   echo "<h1>Changing Password, please wait...</h1>\n";
  $userid = escape_string($_POST["userid"]);
  $sql = "SELECT `UserPass`, `UserEmail` FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -474,20 +474,20 @@ if ($_POST["submit"]=="Change Password") {
      }
      if ($sql_result) {
        include"mail_newpassword.php";
-       echo"The password has been successfully changed, an e-mail has been sent confirming this action.<br>\n";
+       echo "The password has been successfully changed, an e-mail has been sent confirming this action.<br>\n";
      }
     } else {
-     echo"The two passwords did not match, please go back and try again.<BR>\n";
+     echo "The two passwords did not match, please go back and try again.<BR>\n";
     }
 
 
     } else {
-     echo"Your Old password did not match the password on file, please try again.<br>\n";
+     echo "Your Old password did not match the password on file, please try again.<br>\n";
 
     }
 
 } else if ($_POST["submit"]=="Generate New Password") {
-   echo"<h1>Generating New Password, please wait...</h1>\n";
+   echo "<h1>Generating New Password, please wait...</h1>\n";
    $newpassword = substr(md5(mt_rand()),0,14);
    $password_plain = $newpassword;
    $userpass = md5($newpassword);
@@ -503,7 +503,7 @@ if ($_POST["submit"]=="Change Password") {
        $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
        if ($sql_result) {
        include"mail_newpassword.php";
-       echo"The password has been successfully reset. The user has been sent an e-mail notifying them of their new password.<br>\n";
+       echo "The password has been successfully reset. The user has been sent an e-mail notifying them of their new password.<br>\n";
        }
      }
 }
@@ -515,11 +515,11 @@ if (!$userid) { $userid = escape_string($_POST["userid"]); }
     $row = mysql_fetch_array($sql_result);
     $username = $row["UserName"];
 ?>
-<h1>Change password for <?php echo"$username"; ?></h1>
+<h1>Change password for <?php echo "$username"; ?></h1>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
-<FORM NAME="adduser" METHOD="POST" ACTION="?function=changepassword&userid=<?php echo"$userid"; ?>">
+<FORM NAME="adduser" METHOD="POST" ACTION="?function=changepassword&userid=<?php echo "$userid"; ?>">
 <?writeFormKey();?>
-    <INPUT NAME="userid" TYPE="HIDDEN" VALUE="<?php echo"$userid"; ?>">
+    <INPUT NAME="userid" TYPE="HIDDEN" VALUE="<?php echo "$userid"; ?>">
 <?php if (($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") and $userid != $_SESSION["uid"]) { ?>
     <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Generate New Password"></TD></TR>
 <?php } else { ?>

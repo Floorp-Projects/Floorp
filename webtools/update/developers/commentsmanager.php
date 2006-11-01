@@ -55,13 +55,13 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
             $sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
-                echo"Comment $selected deleted from database.<br>\n";
+                echo "Comment $selected deleted from database.<br>\n";
             }
         } else if ($_POST["submit"]=="Flag Selected") {
             $sql = "UPDATE `feedback` SET `flag`= 'YES' WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
-                echo"Comment $selected flagged for editor review.<br>\n";
+                echo "Comment $selected flagged for editor review.<br>\n";
             }
         }
      }
@@ -69,7 +69,7 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
     }
 
   unset($i);
-  echo"Your changes to the comment list have been succesfully completed<BR>\n";
+  echo "Your changes to the comment list have been successfully completed<BR>\n";
 
  }
 ?>
@@ -91,28 +91,28 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $num_pages = ceil(mysql_num_rows($sql_result)/$items_per_page);
 ?>
 
-<h1>Manage Comments for <?php echo"$name :: Page $pageid of $num_pages"; ?></h1>
+<h1>Manage Comments for <?php echo "$name :: Page $pageid of $num_pages"; ?></h1>
 <?php
 //Flagged Comments Queue Link for Admins/Editors
 if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
-    echo"<a href=\"?function=flaggedcomments\">View Flagged Comments Queue</a> | \n";
+    echo "<a href=\"?function=flaggedcomments\">View Flagged Comments Queue</a> | \n";
 }
 
 // Begin Code for Dynamic Navbars
 if ($pageid <=$num_pages) {
     $previd=$pageid-1;
     if ($previd >"0") {
-        echo"<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
+        echo "<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
     }
 }
 
-echo"Page $pageid of $num_pages";
+echo "Page $pageid of $num_pages";
 $nextid=$pageid+1;
 
 if ($pageid <$num_pages) {
-    echo" &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
+    echo " &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
 }
-echo"<BR>\n";
+echo "<BR>\n";
 ?>
 
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%">
@@ -122,7 +122,7 @@ echo"<BR>\n";
 <TH>Rating</TH>
 <TH>Select</TH>
 </TR>
-<FORM NAME="updateusers" METHOD="POST" ACTION="?id=<?php echo"$id&pageid=$pageid&numpg=$items_per_page"; ?>&action=update">
+<FORM NAME="updateusers" METHOD="POST" ACTION="?id=<?php echo "$id&pageid=$pageid&numpg=$items_per_page"; ?>&action=update">
 <?writeFormKey();?>
 <?php
 
@@ -147,26 +147,26 @@ echo"<BR>\n";
    
    
    $i++;
-    echo"<TR><TD COLSPAN=4><h2>$i.&nbsp;&nbsp;$title</h2></TD></TR>\n";
-    echo"<TR>\n";
-    echo"<TD COLSPAN=4>$notes";
-    if ($helpful_total>0) {echo" ($helpful_yes of $helpful_total found this comment helpful)"; }
-    echo"</TD>\n";
-    echo"</TR>\n";
-    echo"<TR>";
+    echo "<TR><TD COLSPAN=4><h2>$i.&nbsp;&nbsp;$title</h2></TD></TR>\n";
+    echo "<TR>\n";
+    echo "<TD COLSPAN=4>$notes";
+    if ($helpful_total>0) {echo " ($helpful_yes of $helpful_total found this comment helpful)"; }
+    echo "</TD>\n";
+    echo "</TR>\n";
+    echo "<TR>";
     if ($email) {
-        echo"<TD>Posted by <A HREF=\"mailto:$email\">$name</A></TD>\n";
+        echo "<TD>Posted by <A HREF=\"mailto:$email\">$name</A></TD>\n";
     } else {
-        echo"<TD>Posted by $name</TD>\n";
+        echo "<TD>Posted by $name</TD>\n";
     }
-    echo"<TD NOWRAP>$date</TD>\n";
-    echo"<TD NOWRAP>Rated $rating of 5</TD>\n";
-    echo"<TD ALIGN=CENTER><INPUT NAME=\"selected_$i\" TYPE=\"CHECKBOX\" VALUE=\"$commentid\" TITLE=\"Selected User\"></TD>";
-    echo"</TR>\n";
+    echo "<TD NOWRAP>$date</TD>\n";
+    echo "<TD NOWRAP>Rated $rating of 5</TD>\n";
+    echo "<TD ALIGN=CENTER><INPUT NAME=\"selected_$i\" TYPE=\"CHECKBOX\" VALUE=\"$commentid\" TITLE=\"Selected User\"></TD>";
+    echo "</TR>\n";
 
 }
 
-echo"<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
+echo "<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
 
 ?>
 <TR>
@@ -196,21 +196,21 @@ if ($_SESSION["level"] =="admin" or $_SESSION["level"]=="editor") {
 if ($pageid <=$num_pages) {
     $previd=$pageid-1;
     if ($previd >"0") {
-        echo"<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
+        echo "<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
     }
 }
 
-echo"Page $pageid of $num_pages";
+echo "Page $pageid of $num_pages";
 $nextid=$pageid+1;
 
 if ($pageid <$num_pages) {
-    echo" &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
+    echo " &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
 }
-echo"<BR>\n";
+echo "<BR>\n";
 
 //Skip to Page...
 if ($num_pages>1) {
-    echo"Jump to Page: ";
+    echo "Jump to Page: ";
     $pagesperpage=9; //Plus 1 by default..
     $i = 01;
 
@@ -226,27 +226,27 @@ if ($num_pages>1) {
     //Page #s
     while ($i <= $maxpagesonpage && $i <= $num_pages) {
         if ($i==$pageid) { 
-            echo"<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
+            echo "<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
         } else {
-            echo"<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=$i\">$i</A>&nbsp;";
+            echo "<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=$i\">$i</A>&nbsp;";
         }
         $i++;
     }
 }
 
 if ($num_pages>1) {
-    echo"<br>\nComments per page: \n";
+    echo "<br>\nComments per page: \n";
     $perpagearray = array("25","50","100");
     foreach ($perpagearray as $items_per_page) {
-       echo"<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=1\">$items_per_page</A>&nbsp;";
+       echo "<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=1\">$items_per_page</A>&nbsp;";
     }
 }
 ?>
 
 <?php
 if ($_POST["submit"]=="Add Comment") {
-echo"<a name=\"addcomment\"></a>\n";
-echo"<h2>Submitting Comment, please wait...</h2>\n";
+echo "<a name=\"addcomment\"></a>\n";
+echo "<h2>Submitting Comment, please wait...</h2>\n";
 
 
   if (checkFormKey()) {
@@ -267,9 +267,9 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
     $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$id', '$name', NULL, '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if ($sql_result) {
-      echo"Your comment has been added successfully...<br>\n";
+      echo "Your comment has been added successfully...<br>\n";
     } else {
-      echo"There was a problem adding your comment, please try again.<br>\n";
+      echo "There was a problem adding your comment, please try again.<br>\n";
     }
   }
 
@@ -281,11 +281,11 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
 <h2>Add Comment with No Rating</h2>
 Need to make a reply comment or answer a question somebody left who didn't provide an e-mail address? Use the form below. No rating is supplied and it will not affect your item's overall rating.
 
-<form name="addcoment" method="post" action="?id=<?php echo"$id"; ?>&action=addcomment#addcomment">
+<form name="addcoment" method="post" action="?id=<?php echo "$id"; ?>&action=addcomment#addcomment">
 <?writeFormKey();?>
-  <input name="id" type="hidden" value="<?php echo"$id"; ?>">
-  <input name="type" type="hidden" value="<?php echo"$type"; ?>">
-  <input name="name" type="hidden" value="<?php echo"$_SESSION[name]"; ?>">
+  <input name="id" type="hidden" value="<?php echo "$id"; ?>">
+  <input name="type" type="hidden" value="<?php echo "$type"; ?>">
+  <input name="name" type="hidden" value="<?php echo "$_SESSION[name]"; ?>">
   <strong>Title:</strong> <input name="title" type="text" size="30" maxlength="150" value=""><br>
   <strong>Comment:</strong><br>
   <textarea name="notes" rows=5 cols=50></textarea><br>
@@ -300,7 +300,7 @@ Need to make a reply comment or answer a question somebody left who didn't provi
 
 <?php
 if ($_POST["submit"]=="Process Queue") {
-echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n";
+echo "<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n";
     
     for ($i=1; $i<=$_POST[maxid]; $i++) {
         $action = $_POST["action_$i"];
@@ -311,14 +311,14 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
             $sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
-                echo"Comment $commentid deleted from database.<br>\n";
+                echo "Comment $commentid deleted from database.<br>\n";
             }
 
         } else if ($action=="clear") {
             $sql = "UPDATE `feedback` SET `flag`= '' WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
-                echo"Flag cleared for comment $commentid.<br>\n";
+                echo "Flag cleared for comment $commentid.<br>\n";
             }
 
         }
@@ -369,30 +369,30 @@ unset($i);
    
    
    $i++;
-    echo"<TR><TD COLSPAN=4><h2>$i.&nbsp;&nbsp;$itemname :: $title</h2></TD></TR>\n";
-    echo"<TR>\n";
-    echo"<TD COLSPAN=4>$notes";
-    if ($commentip) {echo"<BR>(Posted from IP: $commentip)"; }
-    echo"</TD>\n";
-    echo"</TR>\n";
-    echo"<TR>";
+    echo "<TR><TD COLSPAN=4><h2>$i.&nbsp;&nbsp;$itemname :: $title</h2></TD></TR>\n";
+    echo "<TR>\n";
+    echo "<TD COLSPAN=4>$notes";
+    if ($commentip) {echo "<BR>(Posted from IP: $commentip)"; }
+    echo "</TD>\n";
+    echo "</TR>\n";
+    echo "<TR>";
     if ($email) {
-        echo"<TD>Posted by <A HREF=\"mailto:$email\">$name</A></TD>\n";
+        echo "<TD>Posted by <A HREF=\"mailto:$email\">$name</A></TD>\n";
     } else {
-        echo"<TD>Posted by $name</TD>\n";
+        echo "<TD>Posted by $name</TD>\n";
     }
-    echo"<TD NOWRAP>$date</TD>\n";
-    echo"<TD NOWRAP>Rated $rating of 5</TD>\n";
-    echo"<TD>&nbsp;<INPUT NAME=\"selected_$i\" TYPE=\"hidden\" VALUE=\"$commentid\"></TD>";
-    echo"</TR>\n";
+    echo "<TD NOWRAP>$date</TD>\n";
+    echo "<TD NOWRAP>Rated $rating of 5</TD>\n";
+    echo "<TD>&nbsp;<INPUT NAME=\"selected_$i\" TYPE=\"hidden\" VALUE=\"$commentid\"></TD>";
+    echo "</TR>\n";
 
-    echo"<TR>\n";
-    echo"<TD COLSPAN=4><input name=\"action_$i\" type=\"radio\" value=\"delete\"> Delete Comment  <input name=\"action_$i\" type=\"radio\" value=\"clear\"> Clear Flag <input name=\"action_$i\" type=\"radio\" value=\"skip\" checked> No Action</TD>\n";
-    echo"</TR>\n";
+    echo "<TR>\n";
+    echo "<TD COLSPAN=4><input name=\"action_$i\" type=\"radio\" value=\"delete\"> Delete Comment  <input name=\"action_$i\" type=\"radio\" value=\"clear\"> Clear Flag <input name=\"action_$i\" type=\"radio\" value=\"skip\" checked> No Action</TD>\n";
+    echo "</TR>\n";
 
 }
 if ($num_results>"0") {
-echo"<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
+echo "<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
 
 ?>
 <TR><TD COLSPAN=4 ALIGN=RIGHT>
@@ -403,7 +403,7 @@ echo"<INPUT NAME=\"maxid\" TYPE=\"HIDDEN\" VALUE=\"$i\">\n";
 </TR>
 <?php
 } else {
-echo"<TR><TD COLSPAN=4 align=center>No Comments are Currently Flagged for Editor Review</TD></TR>\n";
+echo "<TR><TD COLSPAN=4 align=center>No Comments are Currently Flagged for Editor Review</TD></TR>\n";
 }
 ?>
 </FORM>

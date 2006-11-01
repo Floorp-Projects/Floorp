@@ -20,7 +20,7 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 
 <form name="createaccount" method="post" action="createaccount.php?function=step2">
 <table border=0 cellpadding=0 cellspacing=0>
-<tr><td colspan=2>Your e-mail address is used as your username to login. You'll also receive confirmation e-mail to this address. In order for your account to be activated succesfully, you must specify a valid e-mail address.</td></tr>
+<tr><td colspan=2>Your e-mail address is used as your username to login. You'll also receive confirmation e-mail to this address. In order for your account to be activated successfully, you must specify a valid e-mail address.</td></tr>
 <tr>
 <td>E-Mail Address:</td>
 <td><input name="email" type="text" size=30></td>
@@ -65,7 +65,7 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 
 <?php
 } else if ($function=="step2") {
-echo"<h1>Processing New Account Request, Please Wait...</h1>\n";
+echo "<h1>Processing New Account Request, Please Wait...</h1>\n";
 //Gather and Filter Data from the Submission Form
 if ($_POST["email"]==$_POST["emailconfirm"]) {$email = escape_string($_POST["email"]);} else { $errors="true"; $emailvalid="no";}
 if ($_POST["password"]==$_POST["passwordconfirm"]) {$password = escape_string($_POST["password"]);} else { $errors="true"; $passwordvalid="no"; }
@@ -80,13 +80,13 @@ $sql = "SELECT `UserEmail` from `userprofiles` WHERE `UserEmail`='$email' LIMIT 
 }
 
 if ($errors == "true") {
-echo"Errors have been found in your submission, please go back to the previous page and fix the errors and try again.<br>\n";
-if ($emailvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your e-mail addresses didn't match, or your e-mail is already in use.<BR>\n"; }
-if ($passwordvalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The passwords you entered did not match.<BR>\n"; }
-if ($namevalid=="no") {echo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name field cannot be left blank.<BR>\n"; }
+echo "Errors have been found in your submission, please go back to the previous page and fix the errors and try again.<br>\n";
+if ($emailvalid=="no") {echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your e-mail addresses didn't match, or your e-mail is already in use.<BR>\n"; }
+if ($passwordvalid=="no") {echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The passwords you entered did not match.<BR>\n"; }
+if ($namevalid=="no") {echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The name field cannot be left blank.<BR>\n"; }
 
 include"$page_footer";
-echo"</BODY>\n</HTML>\n";
+echo "</BODY>\n</HTML>\n";
 exit;
 }
 
@@ -101,8 +101,8 @@ $sql = "INSERT INTO `userprofiles` (`UserName`,`UserEmail`,`UserWebsite`,`UserPa
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   if ($sql_result) {
     include"mail_newaccount.php";
-    echo"Your account has been created successfully. An e-mail has been sent to you with instructions on how to activate your account so you can begin using it.<br>\n";
-    echo"<br><br><a href=\"./index.php\">&#171;&#171; Login to Mozilla Update's Developer Control Panel &#187;&#187;</a>";
+    echo "Your account has been created successfully. An e-mail has been sent to you with instructions on how to activate your account so you can begin using it.<br>\n";
+    echo "<br><br><a href=\"./index.php\">&#171;&#171; Login to Mozilla Update's Developer Control Panel &#187;&#187;</a>";
   }
 
 } else if ($function=="confirmaccount") {
@@ -122,12 +122,12 @@ $sql = "SELECT `UserID` from `userprofiles` WHERE `UserEmail`='$email' and `Conf
       $sql = "UPDATE `userprofiles` SET `UserMode`='U', `ConfirmationCode`=NULL WHERE `UserID`='$userid' LIMIT 1";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         if ($sql_result) {
-        echo"Thanks! Your account has been activated successfully, you may now login and being using Mozilla Update's Developer Control Panel.";
-        echo"<br><br><a href=\"./index.php\">&#171;&#171; Login to Mozilla Update's Developer Control Panel &#187;&#187;</a>";
+        echo "Thanks! Your account has been activated successfully, you may now login and being using Mozilla Update's Developer Control Panel.";
+        echo "<br><br><a href=\"./index.php\">&#171;&#171; Login to Mozilla Update's Developer Control Panel &#187;&#187;</a>";
         }
    } else {
-     echo"Sorry, the e-mail and confirmation code do not match, please make sure you've copied the entire URL, if you copy/pasted it from your e-mail client, and try again.";
-     echo"<br><br><a href=\"./index.php\">&#171;&#171; Back to Mozilla Update Developer Control Panel Home &#187;&#187;</a>";
+     echo "Sorry, the e-mail and confirmation code do not match, please make sure you've copied the entire URL, if you copy/pasted it from your e-mail client, and try again.";
+     echo "<br><br><a href=\"./index.php\">&#171;&#171; Back to Mozilla Update Developer Control Panel Home &#187;&#187;</a>";
 
    }
 
