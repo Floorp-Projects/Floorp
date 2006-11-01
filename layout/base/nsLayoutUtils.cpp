@@ -1062,3 +1062,26 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   }
   return lastCommonFrame;
 }
+
+PRBool
+nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  nsIFrame* rootScrollFrame =
+    aFrame->GetPresContext()->PresShell()->GetRootScrollFrame();
+  if (!rootScrollFrame)
+    return PR_FALSE;
+
+  nsIScrollableFrame* rootScrollableFrame = nsnull;
+  CallQueryInterface(rootScrollFrame, &rootScrollableFrame);
+  NS_ASSERTION(rootScrollableFrame, "The root scorollable frame is null");
+
+  if (!IsProperAncestorFrame(rootScrollFrame, aFrame))
+    return PR_FALSE;
+
+  nsIFrame* rootScrolledFrame = rootScrollableFrame->GetScrolledFrame();
+  return !(rootScrolledFrame == aFrame ||
+           IsProperAncestorFrame(rootScrolledFrame, aFrame));
+}

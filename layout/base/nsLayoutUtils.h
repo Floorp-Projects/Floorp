@@ -452,6 +452,15 @@ public:
   static nsIFrame*
   GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1, nsIFrame* aFrame2,
                                           nsIFrame* aKnownCommonAncestorHint);
+
+  /**
+   * Check whether aFrame is a part of the scrollbar or scrollcorner of
+   * the root content.
+   * @param aFrame the checking frame
+   * @return if TRUE, the frame is a part of the scrollbar or scrollcorner of
+   *         the root content.
+   */
+  static PRBool IsViewportScrollbarFrame(nsIFrame* aFrame);
 };
 
 #endif // nsLayoutUtils_h__
