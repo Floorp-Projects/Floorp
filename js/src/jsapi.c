@@ -1802,7 +1802,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
                   void (*dump)(const char *name, void *rp, void *data),
                   void *data)
 {
-    return js_DumpNamedRoots(rt, dump, data);
+    js_DumpNamedRoots(rt, dump, data);
 }
 
 #endif /* DEBUG */
