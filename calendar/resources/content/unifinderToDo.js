@@ -87,20 +87,60 @@ var unifinderToDoDataSourceObserver =
     },
     onAddItem: function(aItem) {
         if (aItem instanceof Components.interfaces.calITodo &&
-            !this.mInBatch)
-            toDoUnifinderRefresh();
+            !this.mInBatch) {
+            if (document.getElementById("hide-completed-checkbox").checked &&
+                aItem.isCompleted) {
+                return;
+            }
+            this.addItemToTree(aItem);
+        }
     },
     onModifyItem: function(aNewItem, aOldItem) {
         if (aNewItem instanceof Components.interfaces.calITodo &&
-            !this.mInBatch)
-            toDoUnifinderRefresh();
+            !this.mInBatch) {
+            var completedChange = (aNewItem.isCompleted != aOldItem.isCompleted);
+            if (document.getElementById("hide-completed-checkbox").checked &&
+                completedChange) {
+                if (aNewItem.isCompleted) {
+                    this.removeItemFromTree(aOldItem);
+                } else {
+                    this.addItemToTree(aNewItem);
+                }
+                return;
+            }
+
+            // We need to add+remove, because the property that our sort is
+            // based on could be the same as the property that was changed in
+            // the task
+            this.removeItemFromTree(aOldItem);
+            this.addItemToTree(aNewItem);
+        }
     },
     onDeleteItem: function(aDeletedItem) {
         if (aDeletedItem instanceof Components.interfaces.calITodo &&
-            !this.mInBatch)
-            toDoUnifinderRefresh();
+            !this.mInBatch) {
+            if (document.getElementById("hide-completed-checkbox").checked &&
+                aDeletedItem.isCompleted) {
+                return;
+            }
+            this.removeItemFromTree(aDeletedItem);
+        }
     },
     onError: function(aErrNo, aMessage) {},
+
+    addItemToTree: function(aItem) {
+        var tree = document.getElementById("unifinder-todo-tree");
+        gTaskArray.push(aItem);
+        gTaskArray.sort(compareTasks);
+        tree.treeBoxObject.rowCountChanged(tree.taskView.getRowOfCalendarTask(aItem), 1);
+    },
+
+    removeItemFromTree: function(aItem) {
+        var tree = document.getElementById("unifinder-todo-tree");
+        var index = tree.taskView.getRowOfCalendarTask(aItem);
+        gTaskArray.splice(index, 1);
+        tree.treeBoxObject.rowCountChanged(index, -1);
+    },
 
     // calICompositeObserver:
     onCalendarAdded: function(aDeletedItem) {
@@ -515,12 +555,11 @@ calendarTaskView.prototype.getCalendarTaskAtRow = function( i )
 
 calendarTaskView.prototype.getRowOfCalendarTask = function( Task )
 {
-   for( var i = 0; i < this.gTaskArray.length; i++ )
-   {
-      if( this.gTaskArray[i].id == Event.id )
-         return( i );
+   for (var i in gTaskArray) {
+      if (gTaskArray[i].hasSameIds(Task))
+         return i;
    }
-   return( "null" );
+   return null;
 }
 
 /**
