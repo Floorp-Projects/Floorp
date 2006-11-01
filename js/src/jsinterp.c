@@ -5958,10 +5958,12 @@ interrupt:
             pc += JSOP_GENERATOR_LENGTH;
             SAVE_SP_AND_PC(fp);
             obj = js_NewGenerator(cx, fp);
-            if (obj)
-                fp->rval = OBJECT_TO_JSVAL(obj);
-            else
+            if (!obj) {
                 ok = JS_FALSE;
+            } else {
+                JS_ASSERT(!fp->callobj && !fp->argsobj);
+                fp->rval = OBJECT_TO_JSVAL(obj);
+            }
             goto out;
 
           BEGIN_CASE(JSOP_YIELD)

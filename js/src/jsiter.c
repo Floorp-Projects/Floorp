@@ -702,6 +702,14 @@ JSClass js_GeneratorClass = {
     NULL,             NULL,            generator_mark,  NULL
 };
 
+/*
+ * Called from the JSOP_GENERATOR case in the interpreter, with fp referring
+ * to the frame by which the generator function was activated.  Create a new
+ * JSGenerator object, which contains its own JSStackFrame that we populate
+ * from *fp.  We know that upon return, the JSOP_GENERATOR opcode will return
+ * from the activation in fp, so we can steal away fp->callobj and fp->argsobj
+ * if they are non-null.
+ */
 JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 {
@@ -730,17 +738,29 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     gen->obj = obj;
 
-    /* Copy call-invariant object and function references. */
+    /* Steal away objects reflecting fp and point them at gen->frame. */
     gen->frame.callobj = fp->callobj;
+    if (fp->callobj) {
+        JS_SetPrivate(cx, fp->callobj, &gen->frame);
+        fp->callobj = NULL;
+    }
     gen->frame.argsobj = fp->argsobj;
+    if (fp->argsobj) {
+        JS_SetPrivate(cx, fp->argsobj, &gen->frame);
+        fp->argsobj = NULL;
+    }
+
+    /* These two references can be shared with fp until it goes away. */
     gen->frame.varobj = fp->varobj;
+    gen->frame.thisp = fp->thisp;
+
+    /* Copy call-invariant script and function references. */
     gen->frame.script = fp->script;
     gen->frame.fun = fp->fun;
-    gen->frame.thisp = fp->thisp;
-    gen->arena.next = NULL;
 
     /* Use newsp to carve space out of gen->stack. */
     newsp = gen->stack;
+    gen->arena.next = NULL;
     gen->arena.base = (jsuword) newsp;
     gen->arena.limit = gen->arena.avail = (jsuword) (newsp + nslots);
 
