@@ -1052,6 +1052,11 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   mCaretRect += framePos;
   mCaretRect.width = mCaretTwipsWidth;
 
+  // on RTL frames the right edge of mCaretRect must be equal to framePos
+  const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+  if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
+    mCaretRect.x -= mCaretRect.width;
+
   return UpdateHookRect(presContext);
 }
 
