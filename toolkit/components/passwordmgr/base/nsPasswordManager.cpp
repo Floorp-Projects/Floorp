@@ -1775,6 +1775,8 @@ nsresult
 nsPasswordManager::FillDocument(nsIDOMDocument* aDomDoc)
 {
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDomDoc);
+  if (!htmlDoc)
+    return NS_OK;
   nsCOMPtr<nsIDOMHTMLCollection> forms;
   htmlDoc->GetForms(getter_AddRefs(forms));
   
