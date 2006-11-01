@@ -58,7 +58,7 @@
   [% rowstyle = 'odd' %]
 [% END %]
 <tr class="[% rowstyle %]">
-<td align="center">[% IF loop.first OR user_result.num_results == num_results %][% num_results = user_result.num_results %]<img src="images/trophy.gif" alt="Trophy!" align="absmiddle" />&nbsp;[% END %]<a href="mailto:[% user_result.email | email %]">[% IF user_result.irc_nickname %][% user_result.irc_nickname | email | html %][% ELSE %][user_result.email | email %][% END %]</a></td>
+<td align="center">[% IF loop.first OR user_result.num_results == num_results %][% num_results = user_result.num_results %]<img src="images/trophy.gif" alt="Trophy!" align="absmiddle" />&nbsp;[% END %]<a href="mailto:[% user_result.email | email %]">[% IF user_result.irc_nickname %][% user_result.irc_nickname | email | html %][% ELSE %][% user_result.email | email %][% END %]</a></td>
 <td align="center"><a href="advanced_search.cgi?email=[% user_result.email %]&amp;start_date=[% test_event.getStartTimestamp %]&amp;end_date=[% test_event.getFinishTimestamp %]&amp;limit=[% user_result.num_results %]">[% user_result.num_results %]</a></td>
 </tr>
 [% END %]
