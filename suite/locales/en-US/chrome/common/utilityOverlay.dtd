@@ -61,8 +61,8 @@
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpMenu.accesskey				"h"> 
 
-<!-- NOTE (whatNewCmd.label): This is not used in Mozilla but is used in Netscape -->
-<!ENTITY whatNewCmd.label				"What's New">  
+<!ENTITY helpForIEUsers.label     "For Internet Explorer Users">
+<!ENTITY helpForIEUsers.accesskey "I">
 
 <!ENTITY releaseCmd.label				"Release Notes">
 <!ENTITY releaseCmd.accesskey                   "N">

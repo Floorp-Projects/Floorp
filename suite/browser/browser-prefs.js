@@ -199,6 +199,9 @@ pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla
 // 2 = check multi/single line controls
 pref("layout.spellcheckDefault", 1);
 
+// special TypeAheadFind settings
+pref("accessibility.typeaheadfind.flashBar", 0);
+
 // App-specific update preferences
 
 // Whether or not app updates are enabled - false initally for SeaMonkey

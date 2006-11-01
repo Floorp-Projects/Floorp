@@ -4266,7 +4266,11 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+  if test "$MOZ_XUL_APP"; then
+    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+  else
+    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+  fi
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -5546,6 +5550,11 @@ fi
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
     AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
+fi
+
+if test "$MOZ_XUL_APP" && test `echo "$MOZ_EXTENSIONS" | grep -c help` -ne 0; then
+    AC_MSG_WARN([Cannot build old help extension with MOZ_XUL_APP set. Removing help from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|help||'`
 fi
 
 dnl This might be temporary: build tridentprofile only on Windows

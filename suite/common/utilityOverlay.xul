@@ -8,6 +8,8 @@
 %brandDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
+<!ENTITY % platformCommunicatorDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
+%platformCommunicatorDTD;
 <!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
 %utilityDTD;
 
@@ -20,6 +22,10 @@
           src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript"
           src="chrome://communicator/content/utilityOverlay.js"/>
+#ifdef MOZ_XUL_APP
+  <script type="application/x-javascript"
+          src="chrome://help/content/contextHelp.js"/>
+#endif
 
   <!-- online/offline status indicators -->   
   <broadcaster id="Communicator:WorkMode"
@@ -220,6 +226,11 @@
               events="focus"
               oncommandupdate="goUpdateFindTypeMenuItems()"/>
 
+  <commandset id="tasksCommands">
+    <command id="cmd_openHelp"
+             oncommand="openHelp('welcome', 'chrome://communicator/locale/help/suitehelp.rdf');"/>
+  </commandset>
+
   <command id="cmd_copyLink"
            oncommand="goDoCommand('cmd_copyLink')"
            disabled="false"/>
@@ -284,6 +295,30 @@
         label="&helpMenu.label;"
         accesskey="&helpMenu.accesskey;">
     <menupopup id="helpPopup">
+#ifdef MOZ_XUL_APP
+      <menuitem label="&openHelpCmd.label;"
+                accesskey="&openHelpCmd.accesskey;"
+                id="help"
+                key="key_openHelp"
+                command="cmd_openHelp"/>
+#ifdef XP_WIN
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef XP_MACOSX
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef HPUX
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef SOLARIS
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef DISPLAY_IE_USERS_HELP_MENU_ITEM
+      <menuitem label="&helpForIEUsers.label;"
+                accesskey="&helpForIEUsers.accesskey;"
+                oncommand="openHelp('ieusers', 'chrome://communicator/locale/help/suitehelp.rdf');" />
+#endif
+#endif
       <menuitem accesskey="&releaseCmd.accesskey;"
                 label="&releaseCmd.label;"
                 id="releaseUrl"
