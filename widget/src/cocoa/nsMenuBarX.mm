@@ -670,13 +670,14 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
                                              0, nil);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
-      [itemBeingAdded release];
-      itemBeingAdded = nil;
       
       // set this menu item up as the Mac OS X Services menu
       NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@""];
       [itemBeingAdded setSubmenu:servicesMenu];
       [NSApp setServicesMenu:servicesMenu];
+      
+      [itemBeingAdded release];
+      itemBeingAdded = nil;
       
       // Add separator after Services menu
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
