@@ -110,6 +110,13 @@ if ($c->param("testcase_id")) {
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);
   my $js = $json->objToJson($branch);
   print $js;
+} elsif ($c->param("testday_id")) {
+  use Litmus::DB::TestDay;
+  my $testday_id = $c->param("testday_id");
+  my $testday = Litmus::DB::TestDay->retrieve($testday_id);
+  my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+  my $js = $json->objToJson($testday);
+  print $js;
 } elsif ($c->param("products")) {
   my @products = Litmus::DB::Product->retrieve_all();
   my $json = JSON->new(skipinvalid => 1, convblessed => 1);

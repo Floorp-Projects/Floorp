@@ -40,9 +40,8 @@ use Litmus::Error;
 use Litmus::FormWidget;
 
 use CGI;
+use JSON;
 use Time::Piece::MySQL;
-
-
 
 Litmus->init();
 Litmus::Auth::requireAdmin("edit_categories.cgi");
@@ -309,6 +308,100 @@ if ($c->param) {
     }
   }
 
+  # Process testday changes.
+  if ($c->param("delete_testday_button") and 
+      $c->param("testday_id")) {
+    my $testday_id = $c->param("testday_id");
+    my $testday = Litmus::DB::TestDay->retrieve($testday_id);
+    if ($testday) {
+      $rv = $testday->delete;
+      if ($rv) {
+        $status = "success";
+        $message = "Testday ID# $testday_id deleted successfully.";
+        $rebuild_cache=1;
+      } else {
+        $status = "failure";
+        $message = "Failed to delete testday ID# $testday_id.";
+      }
+    } else { 
+      $status = "failure";
+      $message = "Testday ID# $testday_id does not exist. (Already deleted?)";
+    }
+  } elsif ($c->param("edit_testday_form_mode")) {
+    if ($c->param("edit_testday_form_mode") eq "add") {
+      my %hash = ( 
+                  description => $c->param('edit_testday_form_desc'),
+                  start_timestamp => $c->param('edit_testday_form_start_timestamp'),
+                  finish_timestamp => $c->param('edit_testday_form_finish_timestamp'),
+                 );
+      if ($c->param('testday_product_id')) {
+        $hash{product_id} = $c->param('testday_product_id');
+      }
+      if ($c->param('testday_branch_id')) {
+        $hash{branch_id} = $c->param('testday_branch_id');
+      }
+      if ($c->param('testday_testgroup_id')) {
+        $hash{testgroup_id} = $c->param('testday_testgroup_id');
+      }
+      if ($c->param('testday_build_id')) {
+        $hash{build_id} = $c->param('testday_build_id');
+      }
+      if ($c->param('testday_locale') and 
+          $c->param('testday_locale') ne "") {
+        $hash{locale_abbrev} = $c->param('testday_locale');
+      }
+      my $new_testday = 
+        Litmus::DB::TestDay->create(\%hash);
+      if ($new_testday) {
+        $status = "success";
+        $message = "Testday added successfully. New testday ID# is " . $new_testday->testday_id;
+        $defaults->{'testday_id'} = $new_testday->testday_id;
+        $rebuild_cache=1;
+      } else {
+        $status = "failure";
+        $message = "Failed to add testday.";
+      }
+    } elsif ($c->param("edit_testday_form_mode") eq "edit") {
+      my $testday_id = $c->param("edit_testday_form_testday_id");
+      my $testday = Litmus::DB::TestDay->retrieve($testday_id);
+      if ($testday) {
+        $testday->description($c->param('edit_testday_form_desc'));
+        $testday->start_timestamp($c->param('edit_testday_form_start_timestamp'));
+        $testday->finish_timestamp($c->param('edit_testday_form_finish_timestamp'));
+        if ($c->param('testday_product_id')) {
+          $testday->product_id($c->param('testday_product_id'));
+        }
+        if ($c->param('testday_branch_id')) {
+          $testday->branch_id($c->param('testday_branch_id'));
+        }
+        if ($c->param('testday_testgroup_id')) {
+          $testday->testgroup_id($c->param('testday_testgroup_id'));
+        }
+        if ($c->param('testday_build_id')) {
+          $testday->build_id($c->param('testday_build_id'));
+        }
+        if ($c->param('testday_locale') and
+            $c->param('testday_locale') ne "") {        
+          $testday->locale_abbrev($c->param('testday_locale'));
+        }
+
+        $rv = $testday->update();
+        if ($rv) {
+          $status = "success";
+          $message = "Testday ID# $testday_id updated successfully.";
+          $defaults->{'testday_id'} = $testday_id;
+          $rebuild_cache=1;
+        } else {
+          $status = "failure";
+          $message = "Failed to update testday ID# $testday_id.";
+        }
+      } else {
+        $status = "failure";
+        $message = "Testday ID# $testday_id not found.";        
+      }
+    }
+  }
+
 }
 
 if ($rebuild_cache) {
@@ -318,7 +411,15 @@ if ($rebuild_cache) {
 my $products = Litmus::FormWidget->getProducts();
 my $platforms = Litmus::FormWidget->getPlatforms();
 my $branches = Litmus::FormWidget->getBranches();
+my $testgroups = Litmus::FormWidget->getTestgroups();
 my $opsyses = Litmus::FormWidget->getOpsyses();
+my $testdays = Litmus::FormWidget->getTestdays();
+my $locales = Litmus::FormWidget->getLocales;
+
+my $json = JSON->new(skipinvalid => 1, convblessed => 1);
+my $products_js = $json->objToJson($products);
+my $branches_js = $json->objToJson($branches);
+my $testgroups_js = $json->objToJson($testgroups);
 
 my $vars = {
             title => 'Manage Categories',
@@ -326,8 +427,14 @@ my $vars = {
             platforms => $platforms,
             branches => $branches,
             opsyses => $opsyses,
+            testdays => $testdays,
+            locales => $locales,
            };
   
+$vars->{'products_js'} = $products_js;
+$vars->{'branches_js'} = $branches_js;
+$vars->{'testgroups_js'} = $testgroups_js;
+
 if ($status and $message) {
   $vars->{'onload'} = "toggleMessage('$status','$message');";
 }

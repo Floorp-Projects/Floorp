@@ -28,11 +28,11 @@
 [% INCLUDE global/html_header.tmpl js_files=['js/Help.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
-[% staricon="<img class=icon src=\"images/star1.gif\" title=\"This result has comments\" alt=\"*\">" %]
+[% commenticon="<img class=icon src=\"images/comment.png\" title=\"This result has comments\" alt=\"*\">" %]
 
 <script type="text/javascript">
 var navigationHelpTitle = "Navigation";
-var navigationHelpText = '<ul class="instructions"><li>Click on the number in the "result id#" column to see a full listing of the test result, including comments.</li><li>Click on the number at the start of the "testcase id#: summary" column to see a more detailed description of that particular testcase.</li><li>Results marked with the star icon ([% staricon %]) have comments associated with them. Clicking on the star will display the comments in-page.</li></ul>';
+var navigationHelpText = '<ul class="instructions"><li>Click on the number in the "result id#" column to see a full listing of the test result, including comments.</li><li>Click on the number at the start of the "testcase id#: summary" column to see a more detailed description of that particular testcase.</li><li>Results marked with the comment icon ([% commenticon %]) have comments associated with them. Clicking on the icon will display the comments in-page.</li></ul>';
 </script>
 
 <div id="page">

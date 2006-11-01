@@ -25,7 +25,6 @@ use strict;
 use Litmus;
 use Litmus::Error;
 use Litmus::DB::Product;
-use Litmus::DB::TestcaseSubgroup;
 use Litmus::Auth;
 use Litmus::Utils;
 

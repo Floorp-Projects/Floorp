@@ -367,6 +367,19 @@ function verifySelected(theField, fieldName) {
   }
 }
 
+function verifySelectNotEmpty(selectBox, message) {
+  if (selectBox.options.length > 0) {
+    // We just need to find one option with a non-empty value.
+    var ems = selectBox.getElementsByTagName('option');
+    for (var i in ems) {
+      if (!isEmpty(ems[i].value)) {
+        return true;
+      }
+    }
+  }
+  return warnInvalid (selectBox, message + ' Please make a selection now.');
+}
+
 function toggleMessage(msgType,msg) {
   var em = document.getElementById("message");
   if (toggleMessage.arguments.length < 1) {

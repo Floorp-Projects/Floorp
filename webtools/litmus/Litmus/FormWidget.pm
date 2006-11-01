@@ -46,6 +46,7 @@ BEGIN {
 
 use DBI;
 use Litmus::DBI;
+use Litmus::DB::TestDay;
 
 our $_dbh = Litmus::DBI->db_Main();
 
@@ -115,7 +116,7 @@ See Also   :
 #########################################################################
 sub getProducts()
 {
-    my $sql = "SELECT name, product_id FROM products ORDER BY name";
+    my $sql = "SELECT name, product_id FROM products ORDER BY name ASC";
     return _getValues($sql);
 }
 
@@ -136,7 +137,7 @@ sub getPlatforms()
 #########################################################################
 sub getBranches()
 {
-    my $sql = "SELECT name, branch_id FROM branches ORDER BY name ASC";
+    my $sql = "SELECT name, branch_id, product_id FROM branches ORDER BY name ASC";
     return _getValues($sql);
 }
 
@@ -150,7 +151,7 @@ sub getUniqueBranches()
 #########################################################################
 sub getOpsyses()
 {
-    my $sql = "SELECT name, opsys_id FROM opsyses ORDER BY name ASC";
+    my $sql = "SELECT name, opsys_id, platform_id FROM opsyses ORDER BY name ASC";
     return _getValues($sql);
 }
 
@@ -227,6 +228,13 @@ sub getUsers()
 }
 
 #########################################################################
+sub getTestdays()
+{
+  my @testdays = reverse Litmus::DB::TestDay->retrieve_all();
+  return \@testdays;
+}
+
+#########################################################################
 sub getAuthors()
 {
   my $sql = "SELECT user_id, email FROM users WHERE is_admin=1 ORDER BY email";
@@ -235,7 +243,7 @@ sub getAuthors()
 
 #########################################################################
 sub getTestRuns() {
-  my $sql = "SELECT test_run_id, name FROM test_runs ORDER BY finish_timestamp DESC, name ASC";
+  my $sql = "SELECT test_run_id, name FROM test_runs ORDER BY finish_timestamp DESC, name DESC";
   return _getValues($sql);
 }
 

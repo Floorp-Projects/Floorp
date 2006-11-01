@@ -25,9 +25,15 @@
   # ***** END LICENSE BLOCK *****
 #%]
   
-[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/EditCategories.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/SelectSort.js','js/ManageCategories.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/FormValidation.js','js/EditCategories.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/SelectSort.js','js/ManageCategories.js','js/ManageTestdays.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
+<script type="text/javascript">
+var products=[% products_js %];
+var branches=[% branches_js %];
+var testgroups=[% testgroups_js %];
+
+</script>
 
 <div id="page">
 
@@ -39,6 +45,7 @@
     [% INCLUDE admin/form_widgets/update_platforms.tmpl %]
     [% INCLUDE admin/form_widgets/update_opsyses.tmpl %]
     [% INCLUDE admin/form_widgets/update_branches.tmpl %]
+    [% INCLUDE admin/form_widgets/update_testdays.tmpl %]
 
   </div> <!--END content-->
 
@@ -47,6 +54,7 @@
     Element.cleanWhitespace('manage_platforms_div');    
     Element.cleanWhitespace('manage_opsyses_div');    
     Element.cleanWhitespace('manage_branches_div');    
+    Element.cleanWhitespace('manage_testdays_div');    
     ec_init();
   </script>
 

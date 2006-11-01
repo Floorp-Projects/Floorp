@@ -42,6 +42,9 @@ function load_testgroups(selects) {
         if (!product) {
             return;
         }
+
+        var branchbox = document.getElementById("branch"+groupbox.name.substr(9));
+	
         // now get the list of testgroups that goes with that product:
         var testgroups = product['testgroups'];
         for (var group=0; group<testgroups.length; group++) {
@@ -90,6 +93,9 @@ function load_platforms(selects) {
         addNullEntry(platformbox);
         // find the currently selected product that goes with this select
         var productbox = document.getElementById("product"+platformbox.name.substr(8));
+	if (!productbox) {
+	  return;
+        }
         var productid = productbox.options[productbox.selectedIndex].value;
         var product = getProductById(productid);
         if (!product) {
@@ -160,13 +166,32 @@ function changeProduct(testid) {
     var testidflag = "";
     if (testid) { testidflag = "_"+testid; }
     
-    load_testgroups([document.getElementById("testgroup"+testidflag)]);    
-    changeTestgroup(testid);
+    var em = document.getElementById("testgroup"+testidflag);
+    if (em) {
+      load_testgroups([em]);
+      changeTestgroup(testid);
+    }
+     
+    em = document.getElementById("platform"+testidflag);
+    if (em) {
+      load_platforms([em]);
+      changePlatform(testid);
+    }
+
+    em = document.getElementById("branch"+testidflag);
+    if (em) {
+      load_branches([document.getElementById("branch"+testidflag)]);
+    }
+}
+
+function changeBranch(testid) {
+    var testidflag = "";
+    if (testid) { testidflag = "_"+testid; }
     
-    load_platforms([document.getElementById("platform"+testidflag)]);
-    changePlatform(testid);
-    
-    load_branches([document.getElementById("branch"+testidflag)]);
+    var em = document.getElementById("testgroup"+testidflag);
+    if (em) {
+      load_testgroups([em]);
+    }
 }
 
 function changeTestgroup(testid) {
@@ -196,6 +221,10 @@ function addNullEntry(select) {
     	select.add(new Option("-Subgroup-", "", false, false), null);
     } else if (select.className == 'select_branch') {
     	select.add(new Option("-Branch-", "", false, false), null);
+    } else if (select.className == 'select_platform') {
+    	select.add(new Option("-Platform-", "", false, false), null);
+    } else if (select.className == 'select_opsys') {
+    	select.add(new Option("-Operating System-", "", false, false), null);
     } else {
     	select.add(new Option("---", "", false, false), null);
     }

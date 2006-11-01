@@ -323,6 +323,27 @@ $table{testcases} =
 
          fulltext key(summary,steps,expected_results)';
 
+$table{testdays} = 
+        'testday_id smallint(6) not null primary key auto_increment,
+         last_updated timestamp(14),
+         start_timestamp timestamp(14) not null,
+         finish_timestamp timestamp(14) not null,
+         description varchar(255) not null,
+	 product_id tinyint(4),
+	 testgroup_id smallint(6),
+	 build_id int(10) unsigned,         
+         branch_id smallint(6),
+	 locale_abbrev varchar(16),
+         
+         index(start_timestamp),
+         index(finish_timestamp),
+         index(description),
+         index(product_id),
+         index(testgroup_id),
+         index(build_id),
+         index(branch_id),
+         index(locale_abbrev)';
+
 $table{testgroup_branches} = 
 	'testgroup_id smallint(6) not null,
          branch_id smallint(6) not null,

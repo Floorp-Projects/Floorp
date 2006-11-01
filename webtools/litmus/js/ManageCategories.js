@@ -2,6 +2,7 @@ var product;
 var platform;
 var opsys;
 var branch;
+var testday;
 
 function enableBranchModeButtons() {
   document.getElementById("edit_branch_button").disabled=false;
@@ -407,5 +408,111 @@ function resetProduct() {
     switchProductFormToEdit();   
   } else {
     switchProductFormToAdd();   
+  }
+}
+
+function enableTestdayModeButtons() {
+  document.getElementById("edit_testday_button").disabled=false;
+  document.getElementById("delete_testday_button").disabled=false;
+}
+
+function disableTestdayModeButtons() {
+  document.getElementById("edit_testday_button").disabled=true;
+  document.getElementById("delete_testday_button").disabled=true;
+}
+
+function loadTestday() {
+  var testday_select = document.getElementById("testday_id");
+
+  if (! testday_select ||
+      testday_select.options[testday_select.selectedIndex].value=="") {
+    disableTestdayModeButtons();
+    document.getElementById('edit_testday_form_div').style.display = 'none';
+    disableForm('edit_testday_form');
+    blankTestdayForm('edit_testday_form');
+    return false;
+  }
+
+  var testday_id = testday_select.options[testday_select.selectedIndex].value;
+
+  disableForm('edit_testday_form');
+  toggleMessage('loading','Loading Testday ID# ' + testday_id + '...');
+  var url = 'json.cgi?testday_id=' + testday_id;
+  fetchJSON(url,populateTestday);
+}
+
+function populateTestday(data) {
+  testday=data;
+  document.getElementById('edit_testday_form_testday_id').value = testday.testday_id;
+  document.getElementById('edit_testday_form_testday_id_display').innerHTML = testday.testday_id;
+  document.getElementById('edit_testday_form_desc').value = testday.description;
+  document.getElementById('edit_testday_form_start_timestamp').value = testday.start_timestamp.replace(/-| |:/g, "");
+  document.getElementById('edit_testday_form_finish_timestamp').value = testday.finish_timestamp.replace(/-| |:/g, "");
+  productBox = document.getElementById('testday_product_id');
+  branchBox = document.getElementById('testday_branch_id');
+  testgroupBox = document.getElementById('testday_testgroup_id');
+  if (testday.product_id) {
+    changeSelected(productBox,testday.product_id.product_id);
+    changeProduct(productBox,branchBox,testgroupBox);
+    if (testday.branch_id) {
+      changeSelected(branchBox,testday.branch_id.branch_id);
+      changeBranch(branchBox,testgroupBox);
+      if (testday.testgroup_id) {
+        changeSelected(testgroupBox,testday.testgroup_id.testgroup_id);
+      }
+    }
+  } else {
+    changeSelected(productBox,"");
+    changeProduct(productBox,branchBox,testgroupBox);
+  } 
+  document.getElementById('testday_build_id').value = testday.build_id
+  localeBox = document.getElementById('testday_locale');
+  if (testday.locale_abbrev) {
+    changeSelected(localeBox,testday.locale_abbrev.abbrev);
+  } else {
+    changeSelected(localeBox,"");
+  }
+
+  document.getElementById('edit_testday_form_div').style.display = 'block';
+  enableTestdayModeButtons();
+}
+
+function blankTestdayForm(formid) {
+  blankForm(formid);
+  document.getElementById('edit_testday_form_testday_id_display').innerHTML = '';
+}
+
+function switchTestdayFormToAdd() {
+  disableTestdayModeButtons();
+  blankTestdayForm('edit_testday_form');
+  document.getElementById('edit_testday_form_testday_id_display').innerHTML = '<em>Automatically generated for a new testday</em>';
+  document.getElementById('edit_testday_form_submit').value = 'Add Testday';
+  document.getElementById('edit_testday_form_mode').value = 'add';
+  enableForm('edit_testday_form');
+  document.getElementById('edit_testday_form_div').style.display = 'block';
+}
+
+function switchTestdayFormToEdit() {
+  document.getElementById('edit_testday_form_submit').value = 'Submit Edits';
+  document.getElementById('edit_testday_form_mode').value = 'edit';
+  enableForm('edit_testday_form');
+  document.getElementById('edit_testday_form_div').style.display = 'block';
+}
+
+
+function checkTestdayForm(f) {
+  return (
+          checkString(f.edit_testday_form_name,"testday description",false) &&
+          checkString(f.edit_testday_form_start_timestamp,"testday start timestamp",false) &&
+          checkString(f.edit_testday_form_finish_timestamp,"testday finish timestamp",false)
+         );
+}
+
+function resetTestday() {
+  if (document.getElementById('edit_testday_form_testday_id').value != '') {
+    populateTestday(testday);
+    switchTestdayFormToEdit();   
+  } else {
+    switchTestdayFormToAdd();   
   }
 }
