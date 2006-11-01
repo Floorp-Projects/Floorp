@@ -192,7 +192,7 @@ public class MailToURLConnection extends URLConnection {
      *
      * <p> NOTE: HTTP requires all request properties which can
      * legally have multiple instances with the same key
-     * to use a comma-seperated list syntax which enables multiple
+     * to use a comma-separated list syntax which enables multiple
      * properties to be appended into a single property.
      *
      *

@@ -45,7 +45,7 @@ interface nsIMutableArray;
 [scriptable, uuid(f76c0901-437a-11d3-b7a0-e35db351b4bc)]
 interface nsIDialogParamBlock:  nsISupports {
 
-  /** Get or set an interger to pass.
+  /** Get or set an integer to pass.
    * Index must be in the range 0..7
    */
   PRInt32 GetInt( in PRInt32 inIndex );

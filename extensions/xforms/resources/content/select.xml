@@ -791,7 +791,7 @@
                 }
               } else {
                 // not a copyItem, so grab the item's value and append it to our
-                // space seperated list.
+                // space separated list.
                 selectedValues += options[i].control.
                   QueryInterface(Components.interfaces.nsIXFormsSelectChild).value;
               }

@@ -513,7 +513,7 @@ public:
     /**
      * Printing functions
      */
-    // XXX look and see if the arguments here should be a seperate object
+    // XXX look and see if the arguments here should be a separate object
     void BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     void EndPrinting();
     void AbortPrinting();

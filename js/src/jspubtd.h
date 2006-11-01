@@ -545,7 +545,7 @@ typedef enum JSContextOp {
 
 /*
  * The possible values for contextOp when the runtime calls the callback are:
- *   JSCONTEXT_NEW      JS_NewContext succesfully created a new JSContext
+ *   JSCONTEXT_NEW      JS_NewContext successfully created a new JSContext
  *                      instance. The callback can initialize the instance as
  *                      required. If the callback returns false, the instance
  *                      will be destroyed and JS_NewContext returns null. In

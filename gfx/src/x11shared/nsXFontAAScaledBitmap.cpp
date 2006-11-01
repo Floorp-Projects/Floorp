@@ -865,7 +865,7 @@ scale_image(nsAntiAliasedGlyph *aSrc, nsAntiAliasedGlyph *aDst)
   //
 
   // Calculate the ratio between the unscaled horizontal and
-  // the scaled horizontal. Use interger multiplication 
+  // the scaled horizontal. Use integer multiplication 
   // using a 24.8 format fixed decimal format.
   ratio = (dst_width<<8)/src_width;
 
@@ -910,7 +910,7 @@ scale_image(nsAntiAliasedGlyph *aSrc, nsAntiAliasedGlyph *aDst)
   //
 
   // Calculate the ratio between the unscaled vertical and
-  // the scaled vertical. Use interger multiplication 
+  // the scaled vertical. Use integer multiplication 
   // using a 24.8 format fixed decimal format.
   ratio = (dst_height<<8)/src_height;
 

@@ -17,9 +17,9 @@
 #     Time Column, Version Control (VC) checkin lists, 
 #     notice board display,  build display (colored squares)
 
-# $Revision: 1.24 $ 
-# $Date: 2006/07/27 16:31:06 $ 
-# $Author: bear%code-bear.com $ 
+# $Revision: 1.25 $ 
+# $Date: 2006/11/01 23:02:18 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
 
@@ -117,7 +117,7 @@ $VERSION = '#tinder_version#';
 
 $DEBUG = 1;
 
-  # What border should the status legends use?  new browers allow us to
+  # What border should the status legends use?  new browsers allow us to
   # frame the parts of the legend without putting a border arround the
   # individual cells.
 

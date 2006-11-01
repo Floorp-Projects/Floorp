@@ -54,7 +54,7 @@ interface nsIXFormsRangeConditionAccessors : nsIXFormsAccessors
   /**
    * Used to tell the XForms processor whether the control can represent all
    * of data in the bound node.  For example, if there are 3 different
-   * space-seperated values in the instance data bound to a xf:select1 and the
+   * space-separated values in the instance data bound to a xf:select1 and the
    * select1 only has one item, then the data must be out of the range of
    * the control.
    *

@@ -67,7 +67,7 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
 
   /** 
    * This function takes an instance data node, finds the type bound to it, and
-   * returns the seperated out type and namespace URI.  If no type is set for
+   * returns the separated out type and namespace URI.  If no type is set for
    * the node, then it returns the defaults: "http://www.w3.org/2001/XMLSchema"
    * and "string"
    */

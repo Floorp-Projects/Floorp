@@ -103,7 +103,7 @@ public interface PlugletStreamListener {
     void onStopBinding(PlugletStreamInfo streamInfo,int status);
     /**
      * Returns the type of stream.<p>
-     * @param int This is an interger representing the stream type:<p>
+     * @param int This is an integer representing the stream type:<p>
      * 1 for STREAM_TYPE_NORMAL<br> 
      * 2 for STREAM_TYPE_SEEK<br> 
      * 3 for STREAM_TYPE_AS_FILE<br> 

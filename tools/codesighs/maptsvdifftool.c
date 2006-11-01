@@ -870,7 +870,7 @@ int difftool(Options* inOptions)
                         theSymbol = theObject->mSymbols + symbolLoop;
                         
                         /*
-                        **  Propogate the composition all the way to the top.
+                        **  Propagate the composition all the way to the top.
                         **  Sizes of zero change are skipped.
                         */
                         if(0 < theSymbol->mSize)

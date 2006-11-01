@@ -325,7 +325,7 @@ PRInt32 nsInstallPatch::Complete()
             nsCAutoString tempPath;
             mTargetFile->GetNativePath(tempPath);
 
-            // DO NOT propogate version registry errors, it will abort 
+            // DO NOT propagate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
             VR_Install( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(*mRegistryName).get()),

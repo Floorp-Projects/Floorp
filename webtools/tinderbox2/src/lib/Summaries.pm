@@ -8,9 +8,9 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.17 $ 
-# $Date: 2005/10/06 07:23:05 $ 
-# $Author: bear%code-bear.com $ 
+# $Revision: 1.18 $ 
+# $Date: 2006/11/01 23:02:18 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
 
@@ -383,7 +383,7 @@ EOF
 
 
   $body .= "\t<TABLE BORDER=1 CELLPADDING=1 CELLSPACING=1>\n";
-  $body .= "\t\t<TR><TH ALIGH=LEFT COLSPAN=$colspan>";
+  $body .= "\t\t<TR><TH ALIGN=LEFT COLSPAN=$colspan>";
   
   $body .= HTMLPopUp::Link(
                            "linktxt"=> ("$TREE is $TREE_STATE".

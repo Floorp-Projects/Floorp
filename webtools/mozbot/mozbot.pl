@@ -1535,7 +1535,7 @@ package BotModules;
 # Do not override this either, unless you know what
 # you are doing (I don't, and I wrote it...). If you
 # want to add variables to $self, use Initialise.
-# The paramter is the name of the module.
+# The parameter is the name of the module.
 sub create {
     my $class = shift;
     my ($name, $filename) = @_;

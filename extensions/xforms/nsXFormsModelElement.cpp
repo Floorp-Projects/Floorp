@@ -2439,7 +2439,7 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
         NS_ENSURE_TRUE(newString, NS_ERROR_OUT_OF_MEMORY);
         NS_ENSURE_TRUE(table->Put(node, newString), NS_ERROR_OUT_OF_MEMORY);
 
-        // string is succesfully stored in the table, we should not dealloc it
+        // string is successfully stored in the table, we should not dealloc it
         newString.forget();
 
         if (j == eModel_type) {

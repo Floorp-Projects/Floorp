@@ -105,7 +105,7 @@ interface nsIWebDAVService : nsISupports
                                   in nsISupports closure);
     /**
      * @param properties  an array of propertynames, where the namespace
-     *                    and the name of the properties are seperated by
+     *                    and the name of the properties are separated by
      *                    a space
      * @param notificationCallbacks  
      *                  The notification callbacks to be passed to the channel

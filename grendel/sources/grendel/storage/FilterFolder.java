@@ -119,7 +119,7 @@ class FilterFolder extends FolderBase {
   }
   // Returns the set of messages that match the current search term,
   // all messages if there is no term, and null if there is no target folder.
-  // I think this should propogate the MessagingException up, but FolderBase
+  // I think this should propagate the MessagingException up, but FolderBase
   // is not doing this, so I need to talk to Terry.
   public synchronized Message[] getMessages() {
         resync();

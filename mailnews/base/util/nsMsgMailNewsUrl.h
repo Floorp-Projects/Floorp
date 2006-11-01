@@ -101,7 +101,7 @@ protected:
   PRBool m_suppressErrorMsgs;
 
   // the following field is really a bit of a hack to make 
-  // open attachments work. The external applications code sometimes trys to figure out the right
+  // open attachments work. The external applications code sometimes tries to figure out the right
   // handler to use by looking at the file extension of the url we are trying to load. Unfortunately,
   // the attachment file name really isn't part of the url string....so we'll store it here...and if 
   // the url we are running is an attachment url, we'll set it here. Then when the helper apps code

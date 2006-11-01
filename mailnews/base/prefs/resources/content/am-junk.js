@@ -97,7 +97,7 @@ function updateSpamLevel()
     document.getElementById('spamLevel').checked ? 100 : 0;
 }
 
-// propogate changes to the server filter menu list back to 
+// propagate changes to the server filter menu list back to 
 // our hidden wsm element.
 function onServerFilterListChange()
 {
@@ -105,7 +105,7 @@ function onServerFilterListChange()
     document.getElementById("useServerFilterList").value;
 }
 
-// propogate changes to the whitelist menu list back to
+// propagate changes to the whitelist menu list back to
 // our hidden wsm element.
 function onWhiteListAbURIChange()
 {

@@ -55,7 +55,7 @@
 
 struct mime_store {
 	char *mimetype;
-	char *extensions;		// comma seperated list of extension. Dot is optional
+	char *extensions;		// comma separated list of extension. Dot is optional
 	char *description;
 	int isEnabled;			// 0 if disabled; else enabled
 };

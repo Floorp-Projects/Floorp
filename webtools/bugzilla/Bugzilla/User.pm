@@ -1773,7 +1773,7 @@ obtained by C<values(%{$user-E<gt>groups})>.)
 
 =item C<groups_as_string>
 
-Returns a string containing a comma-seperated list of numeric group ids.  If
+Returns a string containing a comma-separated list of numeric group ids.  If
 the user is not a member of any groups, returns "-1". This is most often used
 within an SQL IN() function.
 

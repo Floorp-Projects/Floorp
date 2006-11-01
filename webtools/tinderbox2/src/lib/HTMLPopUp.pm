@@ -12,9 +12,9 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.30 $ 
-# $Date: 2006/07/27 16:31:06 $ 
-# $Author: bear%code-bear.com $ 
+# $Revision: 1.31 $ 
+# $Date: 2006/11/01 23:02:18 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
 
@@ -750,7 +750,7 @@ bug reports, please provide the version of CGI.pm, the version of
 Perl, the name and version of your Web server, and the name and
 version of the operating system you are using.  If the problem is even
 remotely browser dependent, please provide information about the
-affected browers as well.
+affected browsers as well.
 
 =head1 SEE ALSO
 

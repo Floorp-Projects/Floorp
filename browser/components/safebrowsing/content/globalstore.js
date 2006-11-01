@@ -112,7 +112,7 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.reportErrorURL_ = this.getUrlPref_(basePref + "reportErrorURL");
   this.reportPhishURL_ = this.getUrlPref_(basePref + "reportPhishURL");
 
-  // Propogate the changes to the list-manager.
+  // Propagate the changes to the list-manager.
   this.updateListManager_();
 }
 
