@@ -877,6 +877,7 @@ PyObject_FromVariant( Py_nsISupports *parent, nsIVariant *v)
 			// If the variant itself holds a variant, we should
 			// probably unpack that too?
 			ret = parent->MakeInterfaceResult(p, *iid);
+			nsMemory::Free((char*)iid);
 			break;
 		// case nsIDataType::VTYPE_WCHAR_STR
 		// case nsIDataType::VTYPE_UTF8STRING
@@ -2109,6 +2110,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 			}
 			PRUint32 seq_size = GetSizeIs(index, PR_FALSE);
 			ret = UnpackSingleArray(NULL, t, seq_size, array_type&XPT_TDP_TAGMASK, piid);
+			nsMemory::Free(piid);
 		}
 		break;
 		}
@@ -2147,6 +2149,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 	return ret;
 }
 
+// NOTE: Caller must free iid when no longer needed.
 nsresult PyXPCOM_GatewayVariantHelper::GetArrayType(PRUint8 index, PRUint8 *ret, nsIID **iid)
 {
 	nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
@@ -2165,11 +2168,13 @@ nsresult PyXPCOM_GatewayVariantHelper::GetArrayType(PRUint8 index, PRUint8 *ret,
 	if (NS_FAILED(rc))
 		return rc;
 	if (iid) {
-		*iid = (nsIID *)&NS_GET_IID(nsISupports);
 		if (XPT_TDP_TAG(datumType)==nsXPTType::T_INTERFACE ||
 		    XPT_TDP_TAG(datumType)==nsXPTType::T_INTERFACE_IS ||
 		    XPT_TDP_TAG(datumType)==nsXPTType::T_ARRAY)
 			ii->GetIIDForParam(m_method_index, &param_info, iid);
+		else
+			*iid = (nsIID*) nsMemory::Clone(&NS_GET_IID(nsISupports),
+			                                sizeof(nsIID));
 	}
 	*ret = datumType.flags;
 	return NS_OK;
@@ -2428,7 +2433,9 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		// We do allow NULL here, even tho doing so will no-doubt crash some objects.
 		// (but there will certainly be objects out there that will allow NULL :-(
 		nsIID iid_use = iid ? *iid : NS_GET_IID(nsISupports);
-		if (!Py_nsISupports::InterfaceFromPyObject(val, iid_use, &pnew, PR_TRUE))
+		PRBool ok = Py_nsISupports::InterfaceFromPyObject(val, iid_use, &pnew, PR_TRUE);
+		nsMemory::Free(iid);
+		if (!ok)
 			BREAK_FALSE;
 		nsISupports **pp = (nsISupports **)ns_v.val.p;
 		if (*pp && pi->IsIn()) {
@@ -2571,8 +2578,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		// If it is an existing array of the correct size, keep it.
 		PRUint32 sequence_size = 0;
 		PRUint8 array_type;
-		nsIID *piid;
-		nsresult ns = GetArrayType(index, &array_type, &piid);
+		nsresult ns = GetArrayType(index, &array_type, NULL);
 		if (NS_FAILED(ns))
 			return ns;
 		PRUint32 element_size = GetArrayElementSize(array_type);

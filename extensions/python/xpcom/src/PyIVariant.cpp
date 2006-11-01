@@ -135,7 +135,9 @@ static PyObject *GetAsInterface(PyObject *self, PyObject *args) {
 	nsIID *iid;
 	nsresult nr = pI->GetAsInterface(&iid, getter_AddRefs(p));
 	if (NS_FAILED(nr)) return PyXPCOM_BuildPyException(nr);
-	return Py_nsISupports::PyObjectFromInterface(p, *iid);
+	PyObject *ret = Py_nsISupports::PyObjectFromInterface(p, *iid);
+	nsMemory::Free(iid);
+	return ret;
 }
 
 static PyObject *GetAsISupports(PyObject *self, PyObject *args) {
