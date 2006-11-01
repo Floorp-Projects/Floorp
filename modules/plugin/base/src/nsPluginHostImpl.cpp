@@ -2382,7 +2382,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
         !lastModified.IsEmpty())
     {
       PRTime time64;
-      PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
+      PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to integer time
 
       // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
       double fpTime;

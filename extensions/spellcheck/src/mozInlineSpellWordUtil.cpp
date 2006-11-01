@@ -935,7 +935,7 @@ WordSplitState::FindSpecialWord()
   for (i = mDOMWordOffset;
        i < PRInt32(mDOMWordText.Length()); i ++) {
     if (mDOMWordText[i] == '@') {
-      // only accept this if there are unambigous word characters (don't bother
+      // only accept this if there are unambiguous word characters (don't bother
       // recursing to disambiguate apostrophes) on each side. This prevents
       // classifying, e.g. "@home" as an email address
 

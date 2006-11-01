@@ -584,7 +584,7 @@ categorizeAllocation(STOptions * inOptions, STContext * inContext,
                               node->runs[inContext->mIndex], aAllocation,
                               PR_FALSE);
 
-    /* Propogate upwards the statistics */
+    /* Propagate upwards the statistics */
     /* XXX */
 #if defined(DEBUG_dp) && 0
     fprintf(stderr, "DEBUG: [%s] match\n", node->categoryName);

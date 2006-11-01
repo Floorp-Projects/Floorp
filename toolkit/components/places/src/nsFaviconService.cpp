@@ -350,7 +350,7 @@ nsFaviconService::UpdateBookmarkRedirectFavicon(nsIURI* aPage, nsIURI* aFavicon)
 
 // nsFaviconService::SendFaviconNotifications
 //
-//    Call to send out favicon changed notifications. Shuold only be called
+//    Call to send out favicon changed notifications. Should only be called
 //    when you know there is data loaded for the favicon.
 
 void

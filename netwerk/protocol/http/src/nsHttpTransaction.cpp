@@ -479,7 +479,7 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     if (NS_FAILED(rv))
         trans->Close(rv);
 
-    return rv; // failure code only stops WriteSegments; it is not propogated.
+    return rv; // failure code only stops WriteSegments; it is not propagated.
 }
 
 nsresult

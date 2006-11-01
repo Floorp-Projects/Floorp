@@ -138,7 +138,7 @@ NP_Initialize(NPNetscapeFuncs* pFuncs)
 // NP_Shutdown
 //
 //	called immediately before the plugin DLL is unloaded.
-//	This functio shuold check for some ref count on the dll to see if it is
+//	This function should check for some ref count on the dll to see if it is
 //	unloadable or it needs to stay in memory. 
 //
 NPError WINAPI NP_EXPORT 

@@ -43,7 +43,7 @@
 #include "nsISVGValue.h"
 
 // This is a very simple frame whose only purpose is to capture style change
-// events and propogate them to the parent.  Most of the heavy lifting is done
+// events and propagate them to the parent.  Most of the heavy lifting is done
 // within the nsSVGGradientFrame, which is the parent for this frame
 
 typedef nsFrame  nsSVGStopFrameBase;

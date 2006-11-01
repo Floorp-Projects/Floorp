@@ -122,7 +122,7 @@ class WrappedNative(Component):
         # to us until someone calls self._remember_object() on the context -
         # which sets up all kinds of cycles!
         self.__dict__['_context_'] = context
-        # We store expandos in a seperate dict rather than directly in our
+        # We store expandos in a separate dict rather than directly in our
         # __dict__.  No real need for this other than to prevent these
         # attributes clobbering ones we need to work!
         self.__dict__['_expandos_'] = {}

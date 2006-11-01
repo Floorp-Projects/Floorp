@@ -5,6 +5,10 @@
 // % Language	:	C++                                                        
 // %                                                                       
 // % $Log: GUSIOpenTransport.h,v $
+// % Revision 1.2  2006/11/01 23:02:18  timeless%mozdev.org
+// % Bug 106386 Correct misspellings in source code
+// % r=glennrp@gmail.com, bclary@bclary.com rs=brendan
+// %
 // % Revision 1.1  2001/03/11 22:37:24  sgehani%netscape.com
 // % First Checked In.
 // %                                        
@@ -330,7 +334,7 @@ public:
  virtual int getpeername(void * name, socklen_t * namelen);
  // [[accept]] may become quite complex, because connections could nest. The
  // listening socket calls [[OTListen]], queues candidates by their         
- // [[fNextListener]] field, and then trys calling [[OTAccept]] on the first
+ // [[fNextListener]] field, and then tries calling [[OTAccept]] on the first
  // candidate.                                                              
  //                                                                         
  // <Overridden member functions for [[GUSIOTStreamSocket]]>=               

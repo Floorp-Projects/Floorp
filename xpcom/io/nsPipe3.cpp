@@ -764,7 +764,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             if (NS_FAILED(rv) || writeCount == 0) {
                 count = 0;
                 // any errors returned from the writer end here: do not
-                // propogate to the caller of ReadSegments.
+                // propagate to the caller of ReadSegments.
                 rv = NS_OK;
                 break;
             }
@@ -1095,7 +1095,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             if (NS_FAILED(rv) || readCount == 0) {
                 count = 0;
                 // any errors returned from the reader end here: do not
-                // propogate to the caller of WriteSegments.
+                // propagate to the caller of WriteSegments.
                 rv = NS_OK;
                 break;
             }

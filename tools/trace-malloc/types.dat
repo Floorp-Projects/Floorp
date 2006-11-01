@@ -5139,7 +5139,7 @@ nsTemplateMatch::GetAssignmentFor(nsConflictSet &, int, Value *)
 PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::Alloc(unsigned int)
-nsInstantiationNode::Propogate(InstantiationSet const &, void *)
+nsInstantiationNode::Propagate(InstantiationSet const &, void *)
 
 <nsTemplateMatch>
 PR_Malloc

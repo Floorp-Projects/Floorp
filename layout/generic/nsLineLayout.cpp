@@ -2098,7 +2098,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   while (nsnull != pfd) {
     nsIFrame* frame = pfd->mFrame;
 
-    // sanity check (see bug 105168, non-reproducable crashes from null frame)
+    // sanity check (see bug 105168, non-reproducible crashes from null frame)
     NS_ASSERTION(frame, "null frame in PerFrameData - something is very very bad");
     if (!frame) {
       return;

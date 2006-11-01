@@ -678,7 +678,7 @@ byteSize(STOptions * inOptions, STAllocation * aAlloc)
 ** recalculateAllocationCost
 **
 ** Given an allocation, does a recalculation of Cost - weight, heapcount etc.
-** and does the right thing to propogate the cost upwards.
+** and does the right thing to propagate the cost upwards.
 */
 int
 recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
@@ -1060,7 +1060,7 @@ harvestRun(const STRun * aInRun, STRun * aOutRun,
 /*
 ** recalculateRunCost
 **
-** Goes over all allocations of a run and recalculates and propogates
+** Goes over all allocations of a run and recalculates and propagates
 ** the allocation costs - weight, heapcount, size
 */
 int
@@ -5790,7 +5790,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.53 2006/02/23 09:36:40 timeless%mozdev.org Exp $",
+                           "$Id: spacetrace.c,v 1.54 2006/11/01 23:02:17 timeless%mozdev.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {

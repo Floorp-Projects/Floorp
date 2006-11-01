@@ -2861,7 +2861,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             }
           }
           result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
-          // don't propogate mouse move or the OS will change the pointer
+          // don't propagate mouse move or the OS will change the pointer
           if (!mIsScrollBar)
             result = PR_TRUE;
           break;
