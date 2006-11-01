@@ -1477,15 +1477,15 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
           if (!cellData) return origData;
           if (rowX > aRowIndex) {
             cellData->SetRowSpanOffset(rowX - aRowIndex);
-          }
-          if (zeroRowSpan) {
-            cellData->SetZeroRowSpan(PR_TRUE);
+            if (zeroRowSpan) {
+              cellData->SetZeroRowSpan(PR_TRUE);
+            }
           }
           if (colX > startColIndex) {
             cellData->SetColSpanOffset(colX - startColIndex);
-          }
-          if (zeroColSpan) {
-            cellData->SetZeroColSpan(PR_TRUE);
+            if (zeroColSpan) {
+              cellData->SetZeroColSpan(PR_TRUE);
+            }
           }
           SetDataAt(aMap, *cellData, rowX, colX);
         }
