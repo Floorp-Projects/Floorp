@@ -83,7 +83,7 @@ protected:
   virtual PRInt32 GetOrder(const char* str, PRUint32 *charLen) = 0;
   virtual PRInt32 GetOrder(const char* str) = 0;
 
-  //category counters, each interger counts sequence in its category
+  //category counters, each integer counts sequences in its category
   PRUint32 mRelSample[NUM_OF_CATEGORY];
 
   //total sequence received
