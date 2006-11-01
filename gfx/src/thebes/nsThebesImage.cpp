@@ -216,16 +216,13 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
         if (mFormat == gfxImageSurface::ImageFormatARGB32 ||
             mFormat == gfxImageSurface::ImageFormatRGB24)
         {
-            PRUint32 *pxl = (PRUint32 *) mImageSurface->Data();
-            mSinglePixelColor = gfxRGBA(*pxl);
-            if (mFormat == gfxImageSurface::ImageFormatRGB24)
-                mSinglePixelColor.a = 1.0;
-            else if (mSinglePixelColor.a != 0.0) {
-                // unpremultiply alpha
-                mSinglePixelColor.r = mSinglePixelColor.r / mSinglePixelColor.a;
-                mSinglePixelColor.g = mSinglePixelColor.g / mSinglePixelColor.a;
-                mSinglePixelColor.b = mSinglePixelColor.b / mSinglePixelColor.a;
-            }
+            PRUint32 pixel = *((PRUint32 *) mImageSurface->Data());
+
+            mSinglePixelColor = gfxRGBA
+                (pixel,
+                 (mFormat == gfxImageSurface::ImageFormatRGB24 ?
+                  gfxRGBA::PACKED_XRGB :
+                  gfxRGBA::PACKED_ARGB_PREMULTIPLIED));
 
             mSinglePixel = PR_TRUE;
 
