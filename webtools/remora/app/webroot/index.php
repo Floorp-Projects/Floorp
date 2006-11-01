@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: index.php,v 1.2 2006/08/15 03:12:10 sancus%off.net Exp $ */
+/* SVN FILE: $Id: index.php,v 1.3 2006/11/01 23:10:21 timeless%mozdev.org Exp $ */
 /**
  * Short description for file.
  *
@@ -21,9 +21,9 @@
  * @package			cake
  * @subpackage		cake.app.webroot
  * @since			CakePHP v 0.2.9
- * @version			$Revision: 1.2 $
+ * @version			$Revision: 1.3 $
  * @modifiedby		$LastChangedBy: phpnut $
- * @lastmodified	$Date: 2006/08/15 03:12:10 $
+ * @lastmodified	$Date: 2006/11/01 23:10:21 $
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 /**
@@ -40,7 +40,7 @@
  */
 	if (!defined('ROOT')) {
 		 //define('ROOT', 'FULL PATH TO DIRECTORY WHERE APP DIRECTORY IS LOCATED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-		 //You should also use the DS define to seperate your directories
+		 //You should also use the DS define to separate your directories
 		 define('ROOT', dirname(dirname(dirname(__FILE__))));
 	}
 	if (!defined('APP_DIR')) {
@@ -53,7 +53,7 @@
  */
 	if (!defined('CAKE_CORE_INCLUDE_PATH')) {
 		 //define ('CAKE_CORE_INCLUDE_PATH', FULL PATH TO DIRECTORY WHERE CAKE CORE IS INSTALLED DO NOT ADD A TRAILING DIRECTORY SEPARATOR';
-		 //You should also use the DS define to seperate your directories
+		 //You should also use the DS define to separate your directories
 		 define('CAKE_CORE_INCLUDE_PATH', ROOT);
 	}
 ///////////////////////////////

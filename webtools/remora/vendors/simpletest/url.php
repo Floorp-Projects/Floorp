@@ -3,7 +3,7 @@
      *	base include file for SimpleTest
      *	@package	SimpleTest
      *	@subpackage	WebTester
-     *	@version	$Id: url.php,v 1.1 2006/08/27 02:06:39 shaver%mozilla.org Exp $
+     *	@version	$Id: url.php,v 1.2 2006/11/01 23:10:21 timeless%mozdev.org Exp $
      */
 
     /**#@+
@@ -512,7 +512,7 @@
         }
         
         /**
-         *    A pipe seperated list of all TLDs that result in two part
+         *    A pipe separated list of all TLDs that result in two part
          *    domain names.
          *    @return string        Pipe separated list.
          *    @access public
