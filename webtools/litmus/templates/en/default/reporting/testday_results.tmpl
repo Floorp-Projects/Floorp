@@ -94,7 +94,7 @@
 </tr>
 [% FOR user_status_result IN user_status_results %]
 <tr>
-<td align="center"><a href="mailto:[% user_status_result.email | email %]">[% IF user_status_result.irc_nickname %][% user_status_result.irc_nickname | email | html %][% ELSE %][user_status_result.email | email %][% END %]</a></td>
+<td align="center"><a href="mailto:[% user_status_result.email | email %]">[% IF user_status_result.irc_nickname %][% user_status_result.irc_nickname | email | html %][% ELSE %][% user_status_result.email | email %][% END %]</a></td>
 <td class="pass" align="center">[% IF user_status_result.pass %]<a href="advanced_search.cgi?email=[% user_status_result.email %]&amp;start_date=[% test_event.getStartTimestamp %]&amp;end_date=[% test_event.getFinishTimestamp %]&amp;result_status=pass&amp;limit=[% user_status_result.pass %]">[% user_status_result.pass %]</a>[% ELSE %]0[% END %]</td>
 <td class="fail" align="center">[% IF user_status_result.fail %]<a href="advanced_search.cgi?email=[% user_status_result.email %]&amp;start_date=[% test_event.getStartTimestamp %]&amp;end_date=[% test_event.getFinishTimestamp %]&amp;result_status=fail&amp;limit=[% user_status_result.fail %]">[% user_status_result.fail %]</a>[% ELSE %]0[% END %]</td>
 <td class="unclear" align="center">[% IF user_status_result.unclear %]<a href="advanced_search.cgi?email=[% user_status_result.email %]&amp;start_date=[% test_event.getStartTimestamp %]&amp;end_date=[% test_event.getFinishTimestamp %]&amp;result_status=unclear&amp;limit=[% user_status_result.unclear %]">[% user_status_result.unclear %]</a>[% ELSE %]0[% END %]</td>
