@@ -22,6 +22,9 @@ switch( $_app ) {
     case 'thunderbird':
         $clean['app'] = 'Thunderbird';
         break;
+    case 'sunbird':
+        $clean['app'] = 'Sunbird';
+        break;
     case 'firefox':
     default:
         $clean['app'] = 'Firefox';

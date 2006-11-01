@@ -7,6 +7,8 @@
     {assign var="app" value="mozilla"}
 {elseif $smarty.get.app eq "seamonkey"}
     {assign var="app" value="mozilla"}
+{elseif $smarty.get.app eq "sunbird"}
+    {assign var="app" value="sunbird"}
 {else}
     {assign var="app" value="firefox"}
 {/if}
@@ -48,6 +50,8 @@
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
 {elseif $app eq "seamonkey"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
+{elseif $app eq "sunbird"}
+        <h1><a href="{$config.webpath}/?app=sunbird" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-sunbird.gif" width="295" height="54" alt="Sunbird Add-ons Beta"></a></h1>
 {else}
         <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
 {/if}

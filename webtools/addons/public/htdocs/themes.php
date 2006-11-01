@@ -16,11 +16,15 @@ $_app = array_key_exists('app', $_GET) ? $_GET['app'] : null;
 
 // Determine our application.
 switch( $_app ) {
+    case 'seamonkey':
     case 'mozilla':
         $clean['app'] = 'Mozilla';
         break;
     case 'thunderbird':
         $clean['app'] = 'Thunderbird';
+        break;
+    case 'sunbird':
+        $clean['app'] = 'Sunbird';
         break;
     case 'firefox':
     default:

@@ -4,6 +4,8 @@
     {assign var="app" value="mozilla"}
 {elseif $smarty.get.app eq "seamonkey"}
     {assign var="app" value="mozilla"}
+{elseif $smarty.get.app eq "sunbird"}
+    {assign var="app" value="sunbird"}
 {else}
     {assign var="app" value="firefox"}
 {/if}
