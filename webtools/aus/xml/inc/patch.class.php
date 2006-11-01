@@ -65,6 +65,9 @@ class Patch extends AUS_Object {
     // Array the defines which channels are flagged as 'nightly' channels.
     var $nightlyChannels;
 
+    // Valid patch flag.
+    var $isPatch;
+
     // Is this patch a complete or partial patch?
     var $patchType;
 
@@ -284,8 +287,8 @@ class Patch extends AUS_Object {
      * @param string $build
      * @return boolean
      */
-    function isNewBuild($build) {
-        return ($this->build>$build) ? true : false;
+    function isNewerBuild($build) {
+        return ($this->build>$build);
     }
 
     /**
@@ -355,12 +358,12 @@ class Patch extends AUS_Object {
 
             // For nightlies, we only want to deliver the complete patch if the destination build is newer than the client build.
             if ($this->isNightlyChannel($channel) && $this->isComplete()) {
-                return $this->isNewBuild($build);
+                return $this->isNewerBuild($build);
             }
 
             // For nightlies, we only want to deliver the partial patch if the destination build for the partial patch is equal to the build in the complete patch (which will always point to the latest).
             elseif ($this->isNightlyChannel($channel) && $this->isPartial()) {
-                return $this->isNewBuild($build);
+                return $this->isNewerBuild($build);
             } else {
                 return $this->isPatch;
             }
