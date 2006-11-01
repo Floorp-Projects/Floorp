@@ -339,12 +339,6 @@ function openTopWin( url )
        limit the number of help windows that can be spawned? */
     if ((url == null) || (url == "")) return null;
 
-    // xlate the URL if necessary
-    if (url.indexOf("urn:") == 0)
-    {
-        url = xlateURL(url);        // does RDF urn expansion
-    }
-
     // avoid loading "", since this loads a directory listing
     if (url == "") {
         url = "about:blank";
