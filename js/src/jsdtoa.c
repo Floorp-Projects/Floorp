@@ -48,6 +48,7 @@
 #include "jsutil.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsnum.h"
+#include "jsbit.h"
 
 #ifdef JS_THREADSAFE
 #include "prlock.h"
@@ -540,6 +541,9 @@ static Bigint *s2b(CONST char *s, int32 nd0, int32 nd, ULong y9)
 /* Return the number (0 through 32) of most significant zero bits in x. */
 static int32 hi0bits(register ULong x)
 {
+#ifdef JS_HAS_BUILTIN_BITSCAN32
+    return( (!x) ? 32 : js_bitscan_clz32(x) );
+#else
     register int32 k = 0;
 
     if (!(x & 0xffff0000)) {
@@ -564,6 +568,7 @@ static int32 hi0bits(register ULong x)
             return 32;
     }
     return k;
+#endif /* JS_HAS_BUILTIN_BITSCAN32 */
 }
 
 
@@ -572,6 +577,15 @@ static int32 hi0bits(register ULong x)
  * least significant bit will be set unless y was originally zero. */
 static int32 lo0bits(ULong *y)
 {
+#ifdef JS_HAS_BUILTIN_BITSCAN32
+    int32 k;
+    ULong x = *y;
+
+   if (x>1)
+      *y = ( x >> (k = js_bitscan_ctz32(x)) );
+   else
+      k = ((x ^ 1) << 5);
+#else
     register int32 k;
     register ULong x = *y;
 
@@ -609,6 +623,7 @@ static int32 lo0bits(ULong *y)
             return 32;
     }
     *y = x;
+#endif /* JS_HAS_BUILTIN_BITSCAN32 */
     return k;
 }
 

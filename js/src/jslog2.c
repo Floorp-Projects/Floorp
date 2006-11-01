@@ -66,7 +66,7 @@ JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n)
 /*
  * js_FloorLog2wImpl has to be defined only for 64-bit non-GCC case.
  */
-#if !defined(JS_HAS_GCC_BUILTIN_CLZ) && JS_BYTES_PER_WORD == 8
+#if !defined(JS_HAS_BUILTIN_BITSCAN64) && JS_BYTES_PER_WORD == 8
 
 JSUword
 js_FloorLog2wImpl(JSUword n)
