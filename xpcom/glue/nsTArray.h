@@ -78,9 +78,14 @@ class NS_COM_GLUE nsTArray_base {
     }
 
   protected:
+#ifndef NS_BUILD_REFCNT_LOGGING
     nsTArray_base()
       : mHdr(NS_CONST_CAST(Header *, &sEmptyHdr)) {
     }
+#else
+    nsTArray_base();
+    ~nsTArray_base();  
+#endif // NS_BUILD_REFCNT_LOGGING
 
     // Resize the storage if necessary to achieve the requested capacity.
     // @param capacity     The requested number of array elements.
@@ -107,6 +112,14 @@ class NS_COM_GLUE nsTArray_base {
       NS_ASSERTION(mHdr != &sEmptyHdr, "bad data pointer");
       mHdr->mLength += n;
     }
+
+    // This method inserts blank slots into the array.
+    // @param index the place to insert the new elements. This must be no
+    //              greater than the current length of the array.
+    // @param count the number of slots to insert
+    // @param elementSize the size of an array element.
+    PRBool InsertSlotsAt(index_type index, size_type count,
+                         size_type elementSize);
 
   protected:
 
@@ -548,20 +561,53 @@ class nsTArray : public nsTArray_base {
     PRBool SetLength(size_type newLen) {
       size_type oldLen = Length();
       if (newLen > oldLen) {
-        SetCapacity(newLen);
-        // Check for out of memory conditions
-        if (Capacity() < newLen)
-          return PR_FALSE;
-        // Initialize the extra array elements
-        elem_type *iter = Elements() + oldLen, *end = Elements() + newLen;
-        for (; iter != end; ++iter) {
-          elem_traits::Construct(iter);
-        }
-        IncrementLength(newLen - oldLen);
-      } else {
-        RemoveElementsAt(newLen, oldLen - newLen);
+        return InsertElementsAt(oldLen, newLen - oldLen) != nsnull;
       }
+      
+      RemoveElementsAt(newLen, oldLen - newLen);
       return PR_TRUE;
+    }
+
+    // This method inserts elements into the array, constructing
+    // them using elem_type's default constructor.
+    // @param index the place to insert the new elements. This must be no
+    //              greater than the current length of the array.
+    // @param count the number of elements to insert
+    elem_type *InsertElementsAt(index_type index, size_type count) {
+      if (!nsTArray_base::InsertSlotsAt(index, count, sizeof(elem_type))) {
+        return nsnull;
+      }
+
+      // Initialize the extra array elements
+      elem_type *iter = Elements() + index, *end = iter + count;
+      for (; iter != end; ++iter) {
+        elem_traits::Construct(iter);
+      }
+
+      return Elements() + index;
+    }
+
+    // This method inserts elements into the array, constructing them
+    // elem_type's copy constructor (or whatever one-arg constructor
+    // happens to match the Item type).
+    // @param index the place to insert the new elements. This must be no
+    //              greater than the current length of the array.
+    // @param count the number of elements to insert.
+    // @param item the value to use when constructing the new elements.
+    template<class Item>
+    elem_type *InsertElementsAt(index_type index, size_type count,
+                                const Item& item) {
+      if (!nsTArray_base::InsertSlotsAt(index, count, sizeof(elem_type))) {
+        return nsnull;
+      }
+
+      // Initialize the extra array elements
+      elem_type *iter = Elements() + index, *end = iter + count;
+      for (; iter != end; ++iter) {
+        elem_traits::Construct(iter, item);
+      }
+
+      return Elements() + index;
     }
 
     // This method may be called to minimize the memory used by this array.
