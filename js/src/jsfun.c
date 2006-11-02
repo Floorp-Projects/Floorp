@@ -1907,8 +1907,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         mark = JS_ARENA_MARK(&cx->tempPool);
         JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
                                (args_length+1) * sizeof(jschar));
-        if (!cp)
+        if (!cp) {
+            JS_ReportOutOfMemory(cx);
             return JS_FALSE;
+        }
         collected_args = cp;
 
         /*
