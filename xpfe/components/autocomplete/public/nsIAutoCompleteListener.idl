@@ -59,7 +59,7 @@ interface nsIAutoCompleteStatus {
 [scriptable, uuid(4BA0A181-097C-11d4-A449-CD1A8B47ED7C)]
 interface nsIAutoCompleteListener : nsISupports {
 
-    /* onStatus is called by the autocomplete session during the seach */
+    /* onStatus is called by the autocomplete session during the search */
     void onStatus(in wstring statusText);
 
     /* onAutoComplete is called by the autocomplete session when the search is done or over */

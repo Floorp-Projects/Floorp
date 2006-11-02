@@ -52,7 +52,7 @@ $logfile = &trick_taint($logfile);
 die "Error: No tree named $tree" unless -r "$tree/treedata.pl";
 require "$tree/treedata.pl";
 
-# Seach the build log for the scrape data
+# Search the build log for the scrape data
 #
 my $gz = gzopen("$tree/$logfile", "rb")
   or die "gzopen($tree/$logfile): $!\n";

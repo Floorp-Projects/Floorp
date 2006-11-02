@@ -15,7 +15,7 @@
 <SEARCH
     version = "7.1"
 	name="BBC News"
-	description="Seaches BBC News"
+	description="Searches BBC News"
 	method="GET"
 	action="http://newssearch.bbc.co.uk/cgi-bin/search/results.pl"
     searchform="http://news.bbc.co.uk/"

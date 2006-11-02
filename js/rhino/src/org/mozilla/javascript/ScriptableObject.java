@@ -1380,7 +1380,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     /**
      * Puts a named property in an object or in an object in its prototype chain.
      * <p>
-     * Seaches for the named property in the prototype chain. If it is found,
+     * Searches for the named property in the prototype chain. If it is found,
      * the value of the property in <code>obj</code> is changed through a call
      * to {@link Scriptable#put(String, Scriptable, Object)} on the prototype
      * passing <code>obj</code> as the <code>start</code> argument. This allows
@@ -1403,7 +1403,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     /**
      * Puts an indexed property in an object or in an object in its prototype chain.
      * <p>
-     * Seaches for the indexed property in the prototype chain. If it is found,
+     * Searches for the indexed property in the prototype chain. If it is found,
      * the value of the property in <code>obj</code> is changed through a call
      * to {@link Scriptable#put(int, Scriptable, Object)} on the prototype
      * passing <code>obj</code> as the <code>start</code> argument. This allows
