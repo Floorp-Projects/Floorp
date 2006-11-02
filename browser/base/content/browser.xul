@@ -80,7 +80,8 @@
 # wishes to include *must* go into the global-scripts.inc file
 # so that they can be shared by macBrowserOverlay.xul.
 #include global-scripts.inc
-
+<script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
+  
 #ifdef MOZ_SAFE_BROWSING
 <script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
 #endif
@@ -121,7 +122,11 @@
       <menuseparator observes="blockedPopupsSeparator"/>
     </popup>
 
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
 #include browser-context.inc
+    </popup>
 
 #ifdef MOZ_PLACES
 #include ../../components/places/content/context.inc

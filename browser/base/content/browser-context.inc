@@ -35,9 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 label="&spellNoSuggestions.label;"/>
@@ -79,7 +76,7 @@
       <menuitem id="context-copylink"
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"
-                command="cmd_copyLink"/>
+                oncommand="goDoCommand('cmd_copyLink');"/>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
@@ -90,12 +87,12 @@
       <menuitem id="context-copyimage-contents"
                 label="&copyImageContentsCmd.label;"
                 accesskey="&copyImageContentsCmd.accesskey;"
-                command="cmd_copyImageContents"/>
+                oncommand="goDoCommand('cmd_copyImageContents');"/>
 #endif
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
                 accesskey="&copyImageCmd.accesskey;"
-                command="cmd_copyImageLocation"/>
+                oncommand="goDoCommand('cmd_copyImageLocation');"/>
       <menuseparator id="context-sep-copyimage"/>
       <menuitem id="context-saveimage"
                 label="&saveImageCmd.label;"
@@ -136,12 +133,12 @@
 #ifdef MOZ_PLACES
                 command="Browser:AddBookmarkAs"/>
 #else
-                oncommand="addBookmarkAs(document.getElementById('content'));"/>
+                oncommand="gContextMenu.bookmarkThisPage();"/>
 #endif
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
-                oncommand="saveDocument(window.content.document);"/>
+                oncommand="gContextMenu.savePageAs();"/>
       <menuitem id="context-sendpage"  
                 label="&sendPageCmd.label;" 
                 accesskey="&sendPageCmd.accesskey;" 
@@ -269,4 +266,4 @@
                 label="&bidiSwitchPageDirectionItem.label;"
                 accesskey="&bidiSwitchPageDirectionItem.accesskey;"
                 oncommand="SwitchDocumentDirection(window.content);"/>
-    </popup>
+
