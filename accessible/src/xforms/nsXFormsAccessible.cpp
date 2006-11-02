@@ -183,3 +183,29 @@ nsXFormsAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
   return NS_OK;
 }
 
+// nsXFormsContainerAccessible
+
+nsXFormsContainerAccessible::
+nsXFormsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsContainerAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_GROUPING;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
+{
+  NS_ENSURE_ARG_POINTER(aAllowsAnonChildren);
+
+  *aAllowsAnonChildren = PR_TRUE;
+  return NS_OK;
+}
+

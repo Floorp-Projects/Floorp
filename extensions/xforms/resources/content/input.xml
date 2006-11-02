@@ -220,7 +220,13 @@
   -->
   <binding id="xformswidget-input-month-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <implementation implements="nsIXFormsUIWidget">
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsContainer;
+        </getter>
+      </property>
 
       <method name="refresh">
         <body>
@@ -293,7 +299,14 @@
   -->
   <binding id="xformswidget-input-day-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <implementation implements="nsIXFormsUIWidget">
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsContainer;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
         <![CDATA[

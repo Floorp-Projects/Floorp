@@ -483,9 +483,16 @@
       focus(); // set focus
     }
   -->
-  <binding id="xformswidget-upload-base" extends="#xformswidget-base">
+  <binding id="xformswidget-upload-base"
+           extends="#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
+    <implementation implements="nsIXFormsUploadUIElement, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsContainer;
+        </getter>
+      </property>
+
       <method name="refresh">
         <body>
           this.control.readonly = this.accessors.isReadonly();
