@@ -303,43 +303,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
   return nsHyperTextAccessible::Shutdown();
 }
 
-void nsHTMLTextFieldAccessible::CacheChildren()
-{
-  if (!mWeakShell) {
-    // This node has been shut down
-    mAccChildCount = eChildCountUninitialized;
-    return;
-  }
-
-  if (mAccChildCount == eChildCountUninitialized) {
-    nsCOMPtr<nsIEditor> editor = GetEditor();
-    if (!editor) {
-      nsAccessible::CacheChildren();
-      return;
-    }
-    nsCOMPtr<nsIDOMElement> editorRoot;
-    editor->GetRootElement(getter_AddRefs(editorRoot));
-    nsCOMPtr<nsIDOMNode> editorRootDOMNode = do_QueryInterface(editorRoot);
-    if (!editorRootDOMNode) {
-      return;
-    }
-    nsAccessibleTreeWalker walker(mWeakShell, editorRootDOMNode, PR_TRUE);
-    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
-    PRInt32 childCount = 0;
-    walker.GetFirstChild();
-    SetFirstChild(walker.mState.accessible);
-
-    while (walker.mState.accessible) {
-      ++ childCount;
-      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
-      privatePrevAccessible->SetParent(this);
-      walker.GetNextSibling();
-      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
-    }
-    mAccChildCount = childCount;
-  }
-}
-
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = ROLE_ENTRY;

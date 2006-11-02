@@ -77,6 +77,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetExtState(PRUint32 *aState);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+  void CacheChildren();
 
 protected:
   PRBool IsHyperText();
