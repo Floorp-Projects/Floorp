@@ -1507,6 +1507,7 @@ class FileTextArea
         case KeyEvent.VK_BACK_SPACE:
         case KeyEvent.VK_ENTER:
         case KeyEvent.VK_DELETE:
+        case KeyEvent.VK_TAB:
             e.consume();
             break;
         }
