@@ -1562,7 +1562,7 @@ function serv_251(e)
     // 251 is the first message we get after 005, so it's now safe to do
     // things that might depend upon server features.
 
-    if (this.supports.namesx)
+    if (("namesx" in this.supports) && this.supports.namesx)
         this.sendData("PROTOCTL NAMESX\n");
 
     if (this.parent.INITIAL_CHANNEL)
@@ -1765,7 +1765,7 @@ function serv_353 (e)
                     break;
                 }
             }
-        } while (found && this.supports.namesx);
+        } while (found && ("namesx" in this.supports) && this.supports.namesx);
 
         new CIRCChanUser(e.channel, null, nick, modes);
     }
