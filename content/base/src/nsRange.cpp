@@ -1653,14 +1653,11 @@ nsresult nsRange::ToString(nsAString& aReturn)
   if(mIsDetached)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  nsCOMPtr<nsIContent> cStart( do_QueryInterface(mStartParent) );
-  nsCOMPtr<nsIContent> cEnd( do_QueryInterface(mEndParent) );
-  
   // clear the string
   aReturn.Truncate();
   
   // If we're unpositioned, return the empty string
-  if (!cStart || !cEnd) {
+  if (!mIsPositioned) {
     return NS_OK;
   }
 
@@ -1669,7 +1666,7 @@ nsresult nsRange::ToString(nsAString& aReturn)
 #endif /* DEBUG */
     
   // effeciency hack for simple case
-  if (cStart == cEnd)
+  if (mStartParent == mEndParent)
   {
     nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(mStartParent) );
     
@@ -1689,13 +1686,14 @@ nsresult nsRange::ToString(nsAString& aReturn)
     }
   } 
   
-  /* complex case: cStart != cEnd, or cStart not a text node
+  /* complex case: mStartParent != mEndParent, or mStartParent not a text node
      revisit - there are potential optimizations here and also tradeoffs.
   */
 
   nsCOMPtr<nsIContentIterator> iter;
   NS_NewContentIterator(getter_AddRefs(iter));
-  iter->Init(this);
+  nsresult rv = iter->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   nsString tempString;
  
@@ -1712,14 +1710,14 @@ nsresult nsRange::ToString(nsAString& aReturn)
     nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
     if (textNode) // if it's a text node, get the text
     {
-      if (cN == cStart) // only include text past start offset
+      if (cN == mStartParent) // only include text past start offset
       {
         PRUint32 strLength;
         textNode->GetLength(&strLength);
         textNode->SubstringData(mStartOffset,strLength-mStartOffset,tempString);
         aReturn += tempString;
       }
-      else if (cN == cEnd)  // only include text before end offset
+      else if (cN == mEndParent)  // only include text before end offset
       {
         textNode->SubstringData(0,mEndOffset,tempString);
         aReturn += tempString;
