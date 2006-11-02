@@ -265,16 +265,12 @@ nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify)
 {
   nsresult rv;
-  
-  if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE)
+
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE))
     GetXTFElement()->WillSetAttribute(aName, aValue);
 
   if (aNameSpaceID==kNameSpaceID_None && HandledByInner(aName)) {
-    // XXX we don't do namespaced attributes yet
-    if (aNameSpaceID != kNameSpaceID_None) {
-      NS_WARNING("setattr: xtf elements don't do namespaced attribs yet!");
-      return NS_ERROR_FAILURE;
-    }  
     rv = mAttributeHandler->SetAttribute(aName, aValue);
     // XXX mutation events?
   }
@@ -282,7 +278,8 @@ nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     rv = nsXTFElementWrapperBase::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
   }
   
-  if (mNotificationMask & nsIXTFElement::NOTIFY_ATTRIBUTE_SET)
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_ATTRIBUTE_SET))
     GetXTFElement()->AttributeSet(aName, aValue);
   
   return rv;
@@ -407,15 +404,11 @@ nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
 {
   nsresult rv;
 
-  if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_REMOVE_ATTRIBUTE)
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_WILL_REMOVE_ATTRIBUTE))
     GetXTFElement()->WillRemoveAttribute(aAttr);
   
   if (aNameSpaceID==kNameSpaceID_None && HandledByInner(aAttr)) {
-    // XXX we don't do namespaced attributes yet
-    if (aNameSpaceID != kNameSpaceID_None) {
-      NS_WARNING("setattr: xtf elements don't do namespaced attribs yet!");
-      return NS_ERROR_FAILURE;
-    }  
     nsDOMSlots *slots = GetExistingDOMSlots();
     if (slots && slots->mAttributeMap) {
       slots->mAttributeMap->DropAttribute(aNameSpaceID, aAttr);
@@ -433,7 +426,8 @@ nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
     rv = nsXTFElementWrapperBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
   }
 
-  if (mNotificationMask & nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED)
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (mNotificationMask & nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED))
     GetXTFElement()->AttributeRemoved(aAttr);
 
   return rv;
