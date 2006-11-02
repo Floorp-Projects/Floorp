@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Henry Sobotka <sobotka@axess.com>
+ *  William Bonnet <wbonnet@on-x.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -416,56 +417,129 @@ nsresult nsFileSpec::Rename(const char* inNewName)
 } // nsFileSpec::Rename
 
 //----------------------------------------------------------------------------------------
+static int CrudeFileCopy_DoCopy(PRFileDesc * pFileDescIn, PRFileDesc * pFileDescOut, char * pBuf, long bufferSize)
+//----------------------------------------------------------------------------------------
+{
+  PRInt32 rbytes, wbytes;                       // Number of bytes read and written in copy loop
+
+  // Copy loop
+  //
+  // If EOF is reached and no data is available, PR_Read returns 0. A negative
+  // return value means an error occured
+  rbytes = PR_Read(pFileDescIn, pBuf, bufferSize);
+  if (rbytes < 0)                              // Test if read was unsuccessfull
+  {                                            // Error case
+    return -1;                                 // Return an error
+  }
+
+  while (rbytes > 0)                          // While there is data to copy
+  {
+    // Data buffer size is only 1K ! fwrite function is able to write it in 
+    // one call. According to the man page fwrite returns a number of elements 
+    // written if an error occured. Thus there is no need to handle this case
+    // as a normal case. Written data cannot be smaller than rbytes. 
+    wbytes = PR_Write(pFileDescOut, pBuf, rbytes);   // Copy data to output file
+    if (wbytes != rbytes)                    // Test if all data was written
+    {                                        // No this an error
+      return -1;                             // Return an error
+    }
+
+    // Write is done, we try to get more data
+    rbytes = PR_Read(pFileDescIn, pBuf, bufferSize);
+    if (rbytes < 0)                              // Test if read was unsuccessful
+    {                                            // Error case
+      return -1;                                 // Return an error
+    }
+  }
+
+  return 0;                          // Still here ? ok so it worked :)
+} // nsFileSpec::CrudeFileCopy_DoCopy
+
+//----------------------------------------------------------------------------------------
 static int CrudeFileCopy(const char* in, const char* out)
 //----------------------------------------------------------------------------------------
 {
-	struct stat in_stat;
-	int stat_result = -1;
+  char buf[1024];                               // Used as buffer for the copy loop
+  PRInt32 rbytes, wbytes;                       // Number of bytes read and written in copy loop
+  struct stat in_stat;                          // Stores informations from the stat syscall
+  int stat_result = -1, ret;                 
+  PRFileDesc * pFileDescIn, * pFileDescOut;     // Src and dest pointers
 
-	char	buf [1024];
-	FILE	*ifp, *ofp;
-	int	rbytes, wbytes;
+  // Check if the pointers to filenames are valid
+  NS_ASSERTION(in && out, "CrudeFileCopy should be called with pointers to filenames...");
 
-	if (!in || !out)
-		return -1;
+  // Check if the pointers are the same, if so, no need to copy A to A
+  if (in == out)
+    return 0;
 
-	stat_result = stat (in, &in_stat);
+  // Check if content of the pointers are the sames, if so, no need to copy A to A
+  if (strcmp(in,out) == 0)
+    return 0;
 
-	ifp = fopen (in, "r");
-	if (!ifp) 
-	{
-		return -1;
-	}
+  // Retrieve the 'in' file attributes
+  stat_result = stat(in, &in_stat);
+  if(stat_result != 0)
+  {
+    // test if stat failed, it can happen if the file does not exist, is not 
+    // readable or is not available ( can happen with NFS mounts )
+    return -1;                      // Return an error
+  }
 
-	ofp = fopen (out, "w");
-	if (!ofp)
-	{
-		fclose (ifp);
-		return -1;
-	}
+  // Open the input file for binary read
+  pFileDescIn = PR_Open(in, PR_RDONLY, 0444);
+  if (pFileDescIn == 0)
+  {
+    return -1;                                  // Open failed, return an error
+  }  
 
-	while ((rbytes = fread (buf, 1, sizeof(buf), ifp)) > 0)
-	{
-		while (rbytes > 0)
-		{
-			if ( (wbytes = fwrite (buf, 1, rbytes, ofp)) < 0 )
-			{
-				fclose (ofp);
-				fclose (ifp);
-				unlink(out);
-				return -1;
-			}
-			rbytes -= wbytes;
-		}
-	}
-	fclose (ofp);
-	fclose (ifp);
+  // Open the output file for binary write
+  pFileDescOut = PR_Open(out, PR_WRONLY | PR_CREATE_FILE, 0600);
+  if (pFileDescOut == 0)
+  {
+    // Open failed, need to close input file, then return an error
+    PR_Close(pFileDescOut);                    // Close the output file
+    return -1;                                 // Open failed, return an error
+  }  
 
-	if (stat_result == 0)
-		chmod (out, in_stat.st_mode & 0777);
+  // Copy the data
+  if (CrudeFileCopy_DoCopy(pFileDescIn, pFileDescOut, buf, sizeof(buf)) != 0)
+  {                                            // Error case
+    PR_Close(pFileDescOut);                    // Close output file
+    PR_Close(pFileDescIn);                     // Close input file
+    PR_Delete(out);                            // Destroy output file
+    return -1;                                 // Return an error
+  }
 
-	return 0;
-} // nsFileSpec::Rename
+  // There is no need for error handling here. This should have worked, but even
+  // if it fails, the data are now copied to destination, thus there is no need 
+  // for the function to fail on the input file error
+  PR_Close(pFileDescIn);            
+
+  // It is better to call fsync and test return code before exiting to be sure
+  // data are actually written on disk. Data loss can happen with NFS mounts
+  if (PR_Sync(pFileDescOut) != PR_SUCCESS) 
+  {                                  // Test if the fsync function succeeded
+    PR_Close(pFileDescOut);          // Close output file
+    PR_Delete(out);                  // Destroy output file
+    return -1;                       // Return an error
+  }
+
+  // Copy is done, close both file
+  if (PR_Close(pFileDescOut) != PR_SUCCESS) // Close output file
+  {                                  // Output file was not closed :(
+    PR_Delete(out);                  // Destroy output file
+    return -1;                       // Return an error
+  }
+    
+  ret = chmod(out, in_stat.st_mode & 0777); // Set the new file file mode
+  if (ret != 0)                      // Test if the chmod function succeeded
+  {
+    PR_Delete(out);                  // Destroy output file
+    return -1;                       // Return an error
+  }
+
+  return 0;                          // Still here ? ok so it worked :)
+} // nsFileSpec::CrudeFileCopy
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileSpec::CopyToDir(const nsFileSpec& inParentDirectory) const
@@ -505,10 +579,10 @@ nsresult nsFileSpec::MoveToDir(const nsFileSpec& inNewParentDirectory)
         if (result == NS_OK)
         {
             // cast to fix const-ness
-		    ((nsFileSpec*)this)->Delete(PR_FALSE);
+            ((nsFileSpec*)this)->Delete(PR_FALSE);
         
             *this = inNewParentDirectory + GetLeafName(); 
-    	}
+        }
     }
     return result;
 } 
