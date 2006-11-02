@@ -52,6 +52,24 @@ use constant WS_ERROR_CODE => {
     invalid_bug_id_or_alias     => 100,
     invalid_bug_id_non_existent => 101,
     bug_access_denied           => 102,
+    # These all mean "invalid alias"
+    alias_not_defined        => 103,
+    alias_too_long           => 103,
+    alias_in_use             => 103,
+    alias_is_numeric         => 103,
+    alias_has_comma_or_space => 103,
+    # Misc. bug field errors
+    illegal_field => 104,
+    # Component errors
+    require_component       => 105,
+    component_name_too_long => 105,
+    component_not_valid     => 105,
+    # Invalid Product
+    no_products         => 106,
+    entry_access_denied => 106,
+    product_disabled    => 106,
+    # Invalid Summary
+    require_summary => 107,
 
     # Authentication errors are usually 300-400.
     invalid_username_or_password => 300,
@@ -64,6 +82,10 @@ use constant WS_ERROR_CODE => {
     illegal_email_address => 501,
     password_too_short    => 502,
     password_too_long     => 503,
+    invalid_username      => 504,
+    # This is from strict_isolation, but it also basically means 
+    # "invalid user."
+    invalid_user_group    => 504,
 };
 
 # These are the fallback defaults for errors not in ERROR_CODE.

@@ -100,8 +100,8 @@ sub DB_COLUMNS {
 
 use constant REQUIRED_CREATE_FIELDS => qw(
     bug_severity
+    comment
     component
-    creation_ts
     op_sys
     priority
     product
@@ -319,9 +319,18 @@ sub create {
 
     # And insert the comment. We always insert a comment on bug creation,
     # but sometimes it's blank.
-    $dbh->do('INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate)
-                   VALUES (?, ?, ?, ?, ?)', undef, 
-             $bug->bug_id, $bug->{reporter_id}, $timestamp, $comment, $privacy);
+    my @columns = qw(bug_id who bug_when thetext);
+    my @values  = ($bug->bug_id, $bug->{reporter_id}, $timestamp, $comment);
+    # We don't include the "isprivate" column unless it was specified. 
+    # This allows it to fall back to its database default.
+    if (defined $privacy) {
+        push(@columns, 'isprivate');
+        push(@values, $privacy);
+    }
+    my $qmarks = "?," x @columns;
+    chop($qmarks);
+    $dbh->do('INSERT INTO longdescs (' . join(',', @columns)  . ")
+                   VALUES ($qmarks)", undef, @values);
 
     $dbh->bz_unlock_tables();
 
@@ -361,14 +370,24 @@ sub run_create_validators {
     # Callers cannot set Reporter, currently.
     $params->{reporter} = Bugzilla->user->id;
 
+    $params->{creation_ts} ||= Bugzilla->dbh->selectrow_array('SELECT NOW()');
     $params->{delta_ts} = $params->{creation_ts};
-    $params->{remaining_time} = $params->{estimated_time};
+
+    if ($params->{estimated_time}) {
+        $params->{remaining_time} = $params->{estimated_time};
+    }
 
     $class->_check_strict_isolation($product, $params->{cc},
                                     $params->{assigned_to}, $params->{qa_contact});
 
     ($params->{dependson}, $params->{blocked}) = 
         $class->_check_dependencies($params->{dependson}, $params->{blocked});
+
+    # You can't set these fields on bug creation (or sometimes ever).
+    delete $params->{resolution};
+    delete $params->{votes};
+    delete $params->{lastdiffed};
+    delete $params->{bug_id};
 
     return $params;
 }
@@ -562,9 +581,6 @@ sub _check_component {
     $name = trim($name);
     $name || ThrowUserError("require_component");
     my $obj = Bugzilla::Component::check_component($product, $name);
-    # XXX Right now, post_bug needs this to return an object. However,
-    # when we move to Bugzilla::Bug->create, this should just return
-    # what it was passed.
     return $obj;
 }
 
@@ -682,9 +698,6 @@ sub _check_product {
     # can_enter_product already does everything that check_product
     # would do for us, so we don't need to use it.
     my $obj = new Bugzilla::Product({ name => $name });
-    # XXX Right now, post_bug needs this to return an object. However,
-    # when we move to Bugzilla::Bug->create, this should just return
-    # what it was passed.
     return $obj;
 }
 
