@@ -45,7 +45,9 @@
 #define NS_NAMESPACE_XFORMS "http://www.w3.org/2002/xforms"
 
 /**
- * The class is base for accessible objects of all XForms elements.
+ * Every XForms element that is bindable to XForms model or is able to contain
+ * XForms hint and XForms label elements should have accessible object. This
+ * class is base class for accessible objects for these XForms elements.
  */
 class nsXFormsAccessible : public nsAccessibleWrap
 {
@@ -80,6 +82,32 @@ protected:
 
   // Service allows to get some xforms functionality.
   static nsIXFormsUtilityService *sXFormsService;
+};
+
+
+/**
+ * This class is accessible object for XForms elements that provide accessible
+ * object for itself as well for anonymous content. You should use this class
+ * if accessible XForms element is complex, i.e. it is composed from elements
+ * that should be accessible too. Especially for elements that have multiple
+ * areas that a user can interact with or multiple visual areas. For example,
+ * objects for XForms input[type="xsd:gMonth"] that contains combobox element
+ * to choose month. It has an entryfield, a drop-down button and a drop-down
+ * list, all of which need to be accessible. Another example would be
+ * an XForms upload element since it is constructed from textfield and
+ * 'pick up file' and 'clear file' buttons.
+ */
+class nsXFormsContainerAccessible : public nsXFormsAccessible
+{
+public:
+  nsXFormsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // Returns ROLE_GROUP.
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+
+  // Allows accessible nodes in anonymous content of xforms element by
+  // always returning PR_TRUE value.
+  NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 };
 
 #endif

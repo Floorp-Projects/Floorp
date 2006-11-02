@@ -1571,6 +1571,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsSliderRange:
       *aAccessible = new nsXFormsRangeAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsContainer:
+      *aAccessible = new nsXFormsContainerAccessible(aNode, weakShell);
+      break;
 #endif
 
     default:

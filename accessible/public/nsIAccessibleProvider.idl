@@ -122,6 +122,11 @@ interface nsIAccessibleProvider : nsISupports
    const long XFormsSecret = 0x00002006;
    /** Used for range element represented by slider */
    const long XFormsSliderRange = 0x00002007;
+   /** Used for xforms elements that provide accessible object for itself as
+    * well for anonymous content. This property are used for upload,
+    * input[type="xsd:gDay"] and input[type="xsd:gMonth"].
+    */
+   const long XFormsContainer = 0x00002008;
 
   /**
    * Return one of constants declared above.
