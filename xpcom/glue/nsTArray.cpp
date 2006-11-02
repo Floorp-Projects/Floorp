@@ -37,11 +37,23 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
+#include "nsTraceRefcnt.h"
 #include "nsTArray.h"
 #include "nsXPCOM.h"
 #include "nsDebug.h"
 
 const nsTArray_base::Header nsTArray_base::sEmptyHdr = { 0, 0 };
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsTArray_base::nsTArray_base()
+  : mHdr(NS_CONST_CAST(Header *, &sEmptyHdr)) {
+  MOZ_COUNT_CTOR(nsTArray_base);
+}
+
+nsTArray_base::~nsTArray_base() {
+  MOZ_COUNT_DTOR(nsTArray_base);
+}
+#endif // NS_BUILD_REFCNT_LOGGING
 
 PRBool
 nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
@@ -131,4 +143,23 @@ nsTArray_base::ShiftData(index_type start, size_type oldLen, size_type newLen,
     char *base = NS_REINTERPRET_CAST(char*, mHdr + 1) + start;
     memmove(base + newLen, base + oldLen, num);
   }
+}
+
+PRBool
+nsTArray_base::InsertSlotsAt(index_type index, size_type count,
+                             size_type elementSize) {
+  NS_ASSERTION(index <= Length(), "Bogus insertion index");
+  size_type newLen = Length() + count;
+
+  EnsureCapacity(newLen, elementSize);
+
+  // Check for out of memory conditions
+  if (Capacity() < newLen)
+    return PR_FALSE;
+
+  // Move the existing elements as needed.  Note that this will
+  // change our mLength, so no need to call IncrementLength.
+  ShiftData(index, 0, count, elementSize);
+      
+  return PR_TRUE;
 }
