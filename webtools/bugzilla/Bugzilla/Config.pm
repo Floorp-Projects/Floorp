@@ -171,6 +171,19 @@ sub update_params {
         delete $param->{'enablequips'};
     }
 
+    # Old mail_delivery_method choices contained no uppercase characters
+    if (exists $param->{'mail_delivery_method'}
+        && $param->{'mail_delivery_method'} !~ /[A-Z]/) {
+        my $method = $param->{'mail_delivery_method'};
+        my %translation = (
+            'sendmail' => 'Sendmail',
+            'smtp'     => 'SMTP',
+            'qmail'    => 'Qmail',
+            'testfile' => 'Test',
+            'none'     => 'None');
+        $param->{'mail_delivery_method'} = $translation{$method};
+    }
+
     # --- DEFAULTS FOR NEW PARAMS ---
 
     _load_params unless %params;
@@ -216,7 +229,7 @@ sub update_params {
     }
 
     if (ON_WINDOWS && !-e SENDMAIL_EXE
-        && $param->{'mail_delivery_method'} eq 'sendmail')
+        && $param->{'mail_delivery_method'} eq 'Sendmail')
     {
         my $smtp = $answer->{'SMTP_SERVER'};
         if (!$smtp) {
@@ -233,7 +246,7 @@ sub update_params {
             }
         }
 
-        $param->{'mail_delivery_method'} = 'smtp';
+        $param->{'mail_delivery_method'} = 'SMTP';
     }
 
     write_params($param);

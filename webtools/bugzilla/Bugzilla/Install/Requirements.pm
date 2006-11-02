@@ -79,11 +79,6 @@ sub REQUIRED_MODULES {
         version => '2.12'
     },
     {
-        package => 'MailTools',
-        module  => 'Mail::Mailer',
-        version => '1.67'
-    },
-    {
         package => 'MIME-Base64',
         module  => 'MIME::Base64',
         version => '3.01'
@@ -93,6 +88,17 @@ sub REQUIRED_MODULES {
         # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
         module  => ON_WINDOWS ? 'MIME::Tools' : 'MIME::Parser',
         version => '5.406'
+    },
+    {
+        package => 'Email-Send',
+        module  => 'Email::Send',
+        version => ON_WINDOWS ? '2.16' : '2.00'
+    },
+    {
+        # This will pull in Email::MIME for us, also. 
+        package => 'Email-MIME-Modifier',
+        module  => 'Email::MIME::Modifier',
+        version => 0
     },
     );
 
@@ -186,15 +192,6 @@ sub OPTIONAL_MODULES {
     },
 
     # Inbound Email
-    {
-        # Email::MIME::Attachment::Stripper can throw an error with
-        # earlier versions.
-        # This also pulls in Email::MIME and Email::Address for us.
-        package => 'Email-MIME-Modifier',
-        module  => 'Email::MIME::Modifier',
-        version => '1.43',
-        feature => 'Inbound Email'
-    },
     {
         package => 'Email-MIME-Attachment-Stripper',
         module  => 'Email::MIME::Attachment::Stripper',

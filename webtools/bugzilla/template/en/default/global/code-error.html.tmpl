@@ -295,6 +295,11 @@
   [% ELSIF error == "ldap_server_not_defined" %]
     The LDAP server for authentication has not been defined.
 
+  [% ELSIF error == "mail_send_error" %]
+    There was an error sending mail from '[% mail.header('From') FILTER html %]'
+    to '[% mail.header('To') FILTER html %]':
+    [% msg FILTER html %]
+
   [% ELSIF error == "missing_bug_id" %]
     No [% terms.bug %] ID was given.
     

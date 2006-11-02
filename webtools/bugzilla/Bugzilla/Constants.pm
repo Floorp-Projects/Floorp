@@ -103,6 +103,7 @@ use File::Basename;
     ADMIN_GROUP_NAME
 
     SENDMAIL_EXE
+    SENDMAIL_PATH
 
     FIELD_TYPE_UNKNOWN
     FIELD_TYPE_FREETEXT
@@ -290,6 +291,8 @@ use constant ADMIN_GROUP_NAME => 'admin';
 
 # Path to sendmail.exe (Windows only)
 use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
+# Paths to search for the sendmail binary (non-Windows)
+use constant SENDMAIL_PATH => '/usr/lib:/usr/sbin:/usr/ucblib';
 
 # Field types.  Match values in fielddefs.type column.  These are purposely
 # not named after database column types, since Bugzilla fields comprise not

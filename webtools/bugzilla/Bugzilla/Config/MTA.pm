@@ -34,6 +34,7 @@ package Bugzilla::Config::MTA;
 use strict;
 
 use Bugzilla::Config::Common;
+use Email::Send;
 
 $Bugzilla::Config::MTA::sortkey = "10";
 
@@ -43,10 +44,8 @@ sub get_param_list {
   {
    name => 'mail_delivery_method',
    type => 's',
-   choices => $^O =~ /MSWin32/i 
-                  ? ['smtp', 'testfile', 'sendmail', 'none']
-                  : ['sendmail', 'smtp', 'qmail', 'testfile', 'none'],
-   default => 'sendmail',
+   choices => [Email::Send->new()->all_mailers(), 'None'],
+   default => 'Sendmail',
    checker => \&check_mail_delivery_method
   },
 

@@ -28,14 +28,13 @@
   mail_delivery_method => "Defines how email is sent, or if it is sent at all.<br>
                            <ul>
                              <li>
-                               'sendmail', 'smtp' and 'qmail' are all MTAs.
+                               'Sendmail', 'SMTP' and 'Qmail' are all MTAs.
                                You need to install a third-party sendmail replacement if
                                you want to use sendmail on Windows.
                              </li>
                              <li>
-                               'testfile' is useful for debugging: all email is stored
-                               in 'data/mailer.testfile' instead of being sent. For more
-                               information, see the Mail::Mailer manual.
+                               'Test' is useful for debugging: all email is stored
+                               in 'data/mailer.testfile' instead of being sent.
                              </li>
                              <li>
                                'none' will completely disable email. $terms.Bugzilla continues

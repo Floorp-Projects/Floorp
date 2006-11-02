@@ -81,6 +81,9 @@ sub init_page {
 
     # Some environment variables are not taint safe
     delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+    # Some modules throw undefined errors (notably File::Spec::Win32) if
+    # PATH is undefined.
+    $ENV{'PATH'} = '';
 
     # If Bugzilla is shut down, do not allow anything to run, just display a
     # message to the user about the downtime and log out.  Scripts listed in 
