@@ -232,6 +232,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsRange)
 NS_IMPL_RELEASE(nsRange)
 
+PRBool InSameDoc(nsINode* aNode1, nsINode* aNode2);
+
 /********************************************************
  * Utilities for comparing points: API from nsIDOMNSRange
  ********************************************************/
@@ -250,12 +252,19 @@ nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
 NS_IMETHODIMP
 nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(parent, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-  
+  if (mIsDetached)
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+
   // our range is in a good state?
   if (!mIsPositioned) 
     return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(parent, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+
+  if (!InSameDoc(parent, mStartParent)) {
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  }
   
   PRInt32 cmp;
   if ((cmp = nsContentUtils::ComparePoints(parent, aOffset,
