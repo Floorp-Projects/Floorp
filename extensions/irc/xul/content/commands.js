@@ -184,7 +184,6 @@ function initCommands()
          ["text-direction",    cmdTextDirection,                             0],
          ["time",              cmdTime,             CMD_NEED_SRV | CMD_CONSOLE],
          ["timestamps",        cmdTimestamps,                      CMD_CONSOLE],
-         ["timestamp-format",  cmdTimestampFormat,                 CMD_CONSOLE],
          ["toggle-ui",         cmdToggleUI,                        CMD_CONSOLE],
          ["toggle-pref",       cmdTogglePref,                                0],
          ["topic",             cmdTopic,           CMD_NEED_CHAN | CMD_CONSOLE],
@@ -1110,8 +1109,7 @@ function cmdSync(e)
         case "sync-timestamp":
             fun = function ()
                   {
-                      view.changeCSS(view.getTimestampCSS("data"),
-                                     "cz-timestamp-format");
+                      updateTimestamps(view);
                   };
             break;
 
@@ -3598,21 +3596,6 @@ function cmdTimestamps(e)
     {
         display(getMsg(MSG_FMT_PREF, ["timestamps",
                                       view.prefs["timestamps"]]));
-    }
-}
-
-function cmdTimestampFormat(e)
-{
-    var view = e.sourceObject;
-
-    if (e.format != null)
-    {
-        view.prefs["timestampFormat"] = e.format;
-    }
-    else
-    {
-        display(getMsg(MSG_FMT_PREF, ["timestampFormat",
-                                      view.prefs["timestampFormat"]]));
     }
 }
 

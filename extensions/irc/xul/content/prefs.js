@@ -236,8 +236,9 @@ function initPrefs()
          ["sound.channel.stalk", "beep",      "global.soundEvts"],
          ["sound.user.start",    "beep beep", "global.soundEvts"],
          ["sound.user.stalk",    "beep",      "global.soundEvts"],
-         ["timestamps",         false,     "appearance.timestamps"],
-         ["timestampFormat",    "[%h:%n]", "appearance.timestamps"],
+         ["timestamps",         false,        "appearance.timestamps"],
+         ["timestamps.display", "[%H:%M]",    "appearance.timestamps"],
+         ["timestamps.log",     "[%Y-%m-%d %H:%M:%S]", "hidden"],
          ["urls.list",          [],       "hidden"],
          ["urls.store.max",     100,      "global"],
          ["urls.display",       10,       "hidden"],
@@ -275,15 +276,6 @@ function initPrefs()
 
 function makeLogName(obj, type)
 {
-    // We like some control on the number of digits.
-    function formatTimeNumber(num, digits)
-    {
-        var rv = num.toString();
-        while (rv.length < digits)
-            rv = "0" + rv;
-        return rv;
-    };
-
     function replaceNonPrintables(ch) {
         var rv = ch.charCodeAt().toString(16);
         if (rv.length == 1)
@@ -368,10 +360,10 @@ function makeLogName(obj, type)
     // 4 short codes: $y, $m, $d, $h.
     // These are time codes, each replaced with a fixed-length number.
     var d = new Date();
-    var shortCodes = { y: formatTimeNumber(d.getFullYear(), 4),
-                       m: formatTimeNumber(d.getMonth() + 1, 2),
-                       d: formatTimeNumber(d.getDate(), 2),
-                       h: formatTimeNumber(d.getHours(), 2)
+    var shortCodes = { y: padNumber(d.getFullYear(), 4),
+                       m: padNumber(d.getMonth() + 1, 2),
+                       d: padNumber(d.getDate(), 2),
+                       h: padNumber(d.getHours(), 2)
                      };
 
     // Replace all $-variables in one go.
@@ -449,8 +441,9 @@ function getNetworkPrefManager(network)
          ["outputWindowURL",  defer, "appearance.misc"],
          ["proxy.typeOverride", defer, ".connect"],
          ["reconnect",        defer, ".connect"],
-         ["timestamps",       defer, "appearance.timestamps"],
-         ["timestampFormat",  defer, "appearance.timestamps"],
+         ["timestamps",         defer, "appearance.timestamps"],
+         ["timestamps.display", defer, "appearance.timestamps"],
+         ["timestamps.log",     defer, "hidden"],
          ["username",         defer, ".ident"],
          ["usermode",         defer, ".ident"],
          ["autoperform",      [],    "lists.autoperform"]
@@ -533,8 +526,9 @@ function getChannelPrefManager(channel)
          ["log",              client.prefs["channelLog"], ".log"],
          ["logFileName",      makeLogNameChannel,         ".log"],
          ["motif.current",    defer, "appearance.motif"],
-         ["timestamps",       defer, "appearance.timestamps"],
-         ["timestampFormat",  defer, "appearance.timestamps"],
+         ["timestamps",         defer, "appearance.timestamps"],
+         ["timestamps.display", defer, "appearance.timestamps"],
+         ["timestamps.log",     defer, "hidden"],
          ["outputWindowURL",  defer, "appearance.misc"]
         ];
 
@@ -587,8 +581,9 @@ function getUserPrefManager(user)
          ["outputWindowURL",  defer, "appearance.misc"],
          ["log",              client.prefs["userLog"], ".log"],
          ["logFileName",      makeLogNameUser,         ".log"],
-         ["timestamps",       defer, "appearance.timestamps"],
-         ["timestampFormat",  defer, "appearance.timestamps"]
+         ["timestamps",         defer, "appearance.timestamps"],
+         ["timestamps.display", defer, "appearance.timestamps"],
+         ["timestamps.log",     defer, "hidden"]
         ];
 
     var branch = "extensions.irc.networks." + pref_mungeName(network.encodedName) +
@@ -632,8 +627,9 @@ function getDCCUserPrefManager(user)
          ["outputWindowURL",  defer, "appearance.misc"],
          ["log",              client.prefs["dccUserLog"], ".log"],
          ["logFileName",      makeLogNameUser,            ".log"],
-         ["timestamps",       defer, "appearance.timestamps"],
-         ["timestampFormat",  defer, "appearance.timestamps"]
+         ["timestamps",         defer, "appearance.timestamps"],
+         ["timestamps.display", defer, "appearance.timestamps"],
+         ["timestamps.log",     defer, "hidden"]
         ];
 
     var branch = "extensions.irc.dcc.users." +
@@ -772,7 +768,7 @@ function onPrefChanged(prefName, newValue, oldValue)
             break;
 
         case "timestamps":
-        case "timestampFormat":
+        case "timestamps.display":
             client.dispatch("sync-timestamp");
             break;
 
@@ -854,7 +850,7 @@ function onNetworkPrefChanged(network, prefName, newValue, oldValue)
             break;
 
         case "timestamps":
-        case "timestampFormat":
+        case "timestamps.display":
             network.dispatch("sync-timestamp");
             break;
 
@@ -918,7 +914,7 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
             break;
 
         case "timestamps":
-        case "timestampFormat":
+        case "timestamps.display":
             channel.dispatch("sync-timestamp");
             break;
 
@@ -963,7 +959,7 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
             break;
 
         case "timestamps":
-        case "timestampFormat":
+        case "timestamps.display":
             user.dispatch("sync-timestamp");
             break;
 
@@ -1005,7 +1001,7 @@ function onDCCUserPrefChanged(user, prefName, newValue, oldValue)
                 break;
 
             case "timestamps":
-            case "timestampFormat":
+            case "timestamps.display":
                 view.dispatch("sync-timestamp");
                 break;
 

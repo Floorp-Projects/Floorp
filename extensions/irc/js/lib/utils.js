@@ -1274,3 +1274,151 @@ function compareVersions(ver1, ver2)
         return 1;
     return 0;
 }
+
+// Zero-pad Numbers (or pad with something else if you wish)
+function padNumber(num, digits, pad)
+{
+    pad = pad || "0";
+    var rv = num.toString();
+    while (rv.length < digits)
+        rv = pad + rv;
+    return rv;
+}
+
+const timestr = {
+    A: { method: "getDay" },
+    a: { method: "getDay" },
+    B: { method: "getMonth" },
+    b: { method: "getMonth" },
+    c: { replace: null },
+    D: { replace: "%m/%d/%y" },
+    d: { method: "getDate", pad: 2 },
+    e: { method: "getDate", pad: 2, padwith: " " },
+    F: { replace: "%Y-%m-$d" },
+    h: { replace: "%b" },
+    H: { method: "getHours", pad: 2 },
+    k: { method: "getHours", pad: 2, padwith: " " },
+    M: { method: "getMinutes", pad: 2 },
+    p: { AM: null, PM: null },
+    P: { AM: null, PM: null },
+    r: { replace: null },
+    R: { replace: "%H:%M" },
+    S: { method: "getSeconds", pad: 2 },
+    T: { replace: "%H:%M:%S" },
+    w: { method: "getDay" },
+    x: { replace: null },
+    X: { replace: null },
+    Y: { method: "getFullYear" },
+    initialized: false
+}
+
+function strftime(format, time)
+{
+    /* Javascript implementation of standard C strftime */
+
+    if (!timestr.initialized)
+    {
+        timestr.A.values = getMsg("datetime.day.long").split("^");
+        timestr.a.values = getMsg("datetime.day.short").split("^");
+        timestr.B.values = getMsg("datetime.month.long").split("^");
+        timestr.b.values = getMsg("datetime.month.short").split("^");
+        // Just make sure the locale isn't playing silly with us.
+        ASSERT(timestr.A.values.length == 7, "datetime.day.long bad!");
+        ASSERT(timestr.a.values.length == 7, "datetime.day.short bad!");
+        ASSERT(timestr.B.values.length == 12, "datetime.month.long bad!");
+        ASSERT(timestr.b.values.length == 12, "datetime.month.short bad!");
+
+        timestr.p.AM = getMsg("datetime.uam");
+        timestr.p.PM = getMsg("datetime.upm");
+        timestr.P.AM = getMsg("datetime.lam");
+        timestr.P.PM = getMsg("datetime.lpm");
+
+        timestr.c.replace = getMsg("datetime.presets.lc");
+        timestr.r.replace = getMsg("datetime.presets.lr");
+        timestr.x.replace = getMsg("datetime.presets.lx");
+        timestr.X.replace = getMsg("datetime.presets.ux");
+
+        timestr.initialized = true;
+    }
+
+
+    function getDayOfYear(dateobj)
+    {
+       var yearobj = new Date(dateobj.getFullYear(), 0, 1, 0, 0, 0, 0);
+       return Math.floor((dateobj - yearobj) / 86400000) + 1;
+    };
+
+    time = time || new Date();
+    if (!isinstance(time, Date))
+        throw "Expected date object";
+
+    var ary;
+    while ((ary = format.match(/(^|[^%])%(\w)/)))
+    {
+        var start = ary[1] ? (ary.index + 1) : ary.index;
+        var rpl = "";
+        if (ary[2] in timestr)
+        {
+            var tbranch = timestr[ary[2]];
+            if (("method" in tbranch) && ("values" in tbranch))
+               rpl = tbranch.values[time[tbranch.method]()];
+            else if ("method" in tbranch)
+                rpl = time[tbranch.method]().toString();
+            else if ("replace" in tbranch)
+                rpl = tbranch.replace;
+
+            if ("pad" in tbranch)
+            {
+                var padwith = (padwith in tbranch) ? tbranch.padwith : "0";
+                rpl = padNumber(rpl, tbranch.pad, padwith);
+            }
+        }
+        if (!rpl)
+        {
+            switch (ary[2])
+            {
+                case "C":
+                    var century = Math.floor(time.getFullYear() / 100);
+                    rpl = padNumber(century, 2);
+                    break;
+                case "I":
+                case "l":
+                    var hour = (time.getHours() + 11) % 12 + 1;
+                    var padwith = (ary[2] == "I") ? "0" : " ";
+                    rpl = padNumber(hour, 2, padwith);
+                    break;
+                case "j":
+                    rpl = padNumber(getDayOfYear(time), 3);
+                    break;
+                case "m":
+                    rpl = padNumber(time.getMonth() + 1, 2);
+                    break;
+                case "p":
+                case "P":
+                    var bit = (time.getHours() < 12) ? "AM" : "PM";
+                    rpl = timestr[ary[2]][bit];
+                    break;
+                case "s":
+                    rpl = Math.round(time.getTime() / 1000);
+                    break;
+                case "u":
+                    rpl = (time.getDay() + 6) % 7 + 1;
+                    break;
+                case "y":
+                    rpl = time.getFullYear().toString().substr(2);
+                    break;
+                case "z":
+                    var mins = time.getTimezoneOffset();
+                    rpl = (mins > 0) ? "-" : "+";
+                    mins = Math.abs(mins);
+                    var hours = Math.floor(mins / 60);
+                    rpl += padNumber(hours, 2) + padNumber(mins - (hours * 60), 2);
+                    break;
+            }
+        }
+        if (!rpl)
+            rpl = "%%" + ary[2];
+        format = format.substr(0, start) + rpl + format.substr(start + 2);
+    }
+    return format.replace(/%%/, "%");
+}
