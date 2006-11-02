@@ -1056,6 +1056,12 @@ calStorageCalendar.prototype = {
                 this.upgradeDB(version);
             }
         }
+        
+        // (Conditionally) add index
+        this.mDB.executeSimpleSQL(
+            "CREATE INDEX IF NOT EXISTS " + 
+            "idx_cal_properies_item_id ON cal_properties(item_id);"
+            );
 
         this.mSelectEvent = createStatement (
             this.mDB,
