@@ -42,6 +42,7 @@
 #include "prtypes.h"
 #include "nsQuickSort.h"
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 #include NEW_H
 
 //
