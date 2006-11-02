@@ -36,10 +36,7 @@ Works with:
     <div class="key-point install-box">
         <div class="install" id="install-{$addon->ID}">
             {foreach key=key item=item from=$addon->OsVersions}
-<p class="install-button platform-{$item.OSName|escape}"><a href="{$item.URI|escape}" onclick="return {$addon->installFunc}(event,'{$addon->Name|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png', '{$item.hash|escape}');" title="Install {$item.Name} {$item.Version} (Right-Click to Download)"><span>Install now ({$item.Size} KB)</span></a></p>
-{if $multiDownloadLinks}
-    for {$item.OSName|escape}
-{/if}
+<p class="install-button platform-{$item.OSName|escape}"><a href="{$item.URI|escape}" onclick="return {$addon->installFunc}(event,'{$addon->Name|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png', '{$item.hash|escape}');" title="Install {$item.Name} {$item.Version} {if $multiDownloadLinks} for {$item.OSName|escape}{/if} (Right-Click to Download)"><span class="install-green-button"><span class="install-button-text">Install now {if $multiDownloadLinks} for {$item.OSName|escape}{/if} ({$item.Size}&nbsp;KB)</span></span></a></p>
             {/foreach}
         </div>
     </div>

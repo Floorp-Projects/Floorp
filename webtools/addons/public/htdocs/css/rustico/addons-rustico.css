@@ -298,19 +298,23 @@ p.install-button {
 	margin: 0;
 }
 
-.install-button a:link span,
-.install-button a:visited span,
-.install-button a:hover span,
-.install-button a:active span {
+span.install-button-text {
+    padding-right: 30px;
+}
+
+.install-button a:link span.install-green-button,
+.install-button a:visited span.install-green-button,
+.install-button a:hover span.install-green-button,
+.install-button a:active span.install-green-button {
 	background: url(../../images/rustico/install-button.png) no-repeat bottom left;
 	display: block;
 	min-height: 20px;
 	padding: 10px;
 } 
-* html .install-button a:link span,
-* html .install-button a:visited span,
-* html .install-button a:hover span,
-* html .install-button a:active span { height: 20px; }
+* html .install-button a:link span.install-green-button,
+* html .install-button a:visited span.install-green-button,
+* html .install-button a:hover span.install-green-button,
+* html .install-button a:active span.install-green-button { height: 20px; }
 
 .install-button a:link,
 .install-button a:visited,
@@ -322,8 +326,8 @@ p.install-button {
 	text-decoration: none;
 }
 
-.install-button a:hover span,
-.install-button a:active span {
+.install-button a:hover span.install-green-button,
+.install-button a:active span.install-green-button {
 	background: url(../../images/rustico/install-button.png) no-repeat bottom right;
 }
 
