@@ -282,44 +282,42 @@ function loadDialog(item)
   }
 
   // Categories
+  var categoriesString = "Anniversary,Birthday,Business,Calls,Clients,Competition,Customer,Favorites,Follow up,Gifts,Holidays,Ideas,Issues,Miscellaneous,Personal,Projects,Public Holiday,Status,Suppliers,Travel,Vacation";
   try {
-      var categoriesString = getLocalizedPref("calendar.categories.names");
-      var categoriesList = categoriesString.split( "," );
+    var categories = getLocalizedPref("calendar.categories.names");
+    if (categories && categories != "")
+      categoriesString = categories;
+  } catch (ex) {}
+  var categoriesList = categoriesString.split( "," );
 
-      // insert the category already in the menulist so it doesn't get lost
-      var itemCategory = item.getProperty("CATEGORIES");
-      if (itemCategory) {
-          if (categoriesString.indexOf(itemCategory) == -1)
-              categoriesList[categoriesList.length] = itemCategory;
-      }
-      categoriesList.sort();
+  // insert the category already in the menulist so it doesn't get lost
+  var itemCategory = item.getProperty("CATEGORIES");
+  if (itemCategory) {
+      if (categoriesString.indexOf(itemCategory) == -1)
+          categoriesList[categoriesList.length] = itemCategory;
+  }
+  categoriesList.sort();
 
-      var oldMenulist = document.getElementById("item-categories");
-      while (oldMenulist.hasChildNodes()) {
-          oldMenulist.removeChild(oldMenulist.lastChild);
-      }
-
-      var categoryMenuList = document.getElementById("item-categories");
-      var indexToSelect = 0;
-
-      // Add a 'none' option to allow users to cancel the category
-      var noneItem = categoryMenuList.appendItem(calGetString("calendar", "None"), "NONE");
-
-      for (var i in categoriesList) {
-          var catItem = categoryMenuList.appendItem(categoriesList[i], categoriesList[i]);
-          catItem.value = categoriesList[i];
-          if (itemCategory && categoriesList[i] == itemCategory) {
-              indexToSelect = parseInt(i)+1;  // Add 1 because of 'None'
-          }
-      }
-
-      categoryMenuList.selectedIndex = indexToSelect;
-
-  } catch (ex) {
-      // The app using this dialog doesn't support categories
-      //document.getElementById("categories-box").collapsed = true;
+  var oldMenulist = document.getElementById("item-categories");
+  while (oldMenulist.hasChildNodes()) {
+      oldMenulist.removeChild(oldMenulist.lastChild);
   }
 
+  var categoryMenuList = document.getElementById("item-categories");
+  var indexToSelect = 0;
+
+  // Add a 'none' option to allow users to cancel the category
+  var noneItem = categoryMenuList.appendItem(calGetString("calendar", "None"), "NONE");
+
+  for (var i in categoriesList) {
+      var catItem = categoryMenuList.appendItem(categoriesList[i], categoriesList[i]);
+      catItem.value = categoriesList[i];
+      if (itemCategory && categoriesList[i] == itemCategory) {
+          indexToSelect = parseInt(i)+1;  // Add 1 because of 'None'
+      }
+  }
+
+  categoryMenuList.selectedIndex = indexToSelect;
 
   // URL
   gURL = item.getProperty("URL");

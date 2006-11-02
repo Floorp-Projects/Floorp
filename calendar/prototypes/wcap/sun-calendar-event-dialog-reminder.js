@@ -154,7 +154,13 @@ function loadReminders()
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch("calendar.reminder.");
-  var pref = prefBranch.getCharPref("custom");
+
+  var pref = "length=15;unit=minutes;relation=START,length=3;unit=hours;relation=START";
+  try {
+    var newPref = prefBranch.getCharPref("custom");
+    if(newPref && newPref != "")
+      pref = newPref;
+  } catch (ex) {}
 
   var reminderArray = [];
   var reminders = pref.split(',');
@@ -186,7 +192,6 @@ function saveReminders(reminderArray)
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch("calendar.reminder.");
-  var pref = prefBranch.getCharPref("custom");
 
   var result = "";
   for each(var reminder in reminderArray) {
