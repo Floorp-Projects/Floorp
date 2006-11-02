@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsINode.h"
 
 // IID for the nsIRange interface
@@ -90,18 +89,15 @@ public:
     return mIsDetached;
   }
   
-  nsINode* GetCommonAncestor()
-  {
-    return mIsPositioned ?
-      nsContentUtils::GetCommonAncestor(mStartParent, mEndParent) :
-      nsnull;
-  }
-
   PRBool Collapsed()
   {
     return mIsPositioned && mStartParent == mEndParent &&
            mStartOffset == mEndOffset;
   }
+
+  virtual nsINode* GetCommonAncestor() = 0;
+
+  virtual void Reset() = 0;
 
 protected:
   nsCOMPtr<nsINode> mStartParent;
