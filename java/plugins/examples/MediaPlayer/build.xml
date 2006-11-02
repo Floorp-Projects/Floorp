@@ -105,6 +105,7 @@
        </manifest>
       <fileset dir="${basedir}/build">
         <include name="**/*.*" />
+        <exclude name="mediaplayer.jar" />
       </fileset>
     </jar>
 
