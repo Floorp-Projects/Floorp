@@ -297,7 +297,7 @@ public class Dim {
                     // Can be a file name
                     try {
                         if (sourceUrl.startsWith("~/")) {
-                            String home = System.getProperty("user.home");
+                            String home = SecurityUtilities.getSystemProperty("user.home");
                             if (home != null) {
                                 String pathFromHome = sourceUrl.substring(2);
                                 File f = new File(new File(home), pathFromHome);
