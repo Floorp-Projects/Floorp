@@ -62,30 +62,25 @@ Works with:
 <p>{$addon->devcomments|strip_tags|nl2br}</p>
 {/if}
 
-<div class="rating" title="{$addon->Rating} out of 5">Rating: {$addon->Rating}</div>
-
-<h3 id="user-comments">User Comments</h3>
-
+<h2>User Comments</h2>
+<div class="averagerating">Average Rating: {$addon->Rating} out of 5</div>
 <p><strong><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add your own comment &#187;</a></strong></p>
 
-<ul id="opinions">
-{section name=comments loop=$addon->Comments max=10}
-<li>
-<div class="opinions-vote">{$addon->Comments[comments].CommentVote} <span class="opinions-caption">out of 5</span></div>
-<h4 class="opinions-title">{$addon->Comments[comments].CommentTitle|strip_tags}</h4>
-<p class="opinions-info">by 
-{if $addon->Comments[comments].CommentName}
+{section name=comments loop=$addon->Comments}
+<div class="usercomment">
+<h4>{$addon->Comments[comments].CommentTitle|strip_tags}</h4>
+<p class="commenttext">{$addon->Comments[comments].CommentNote|strip_tags|nl2br}</p>
+<p class="commentmeta">My rating: {$addon->Comments[comments].CommentVote}/5<br>
+Posted by {if $addon->Comments[comments].CommentName}
 {$addon->Comments[comments].CommentName|strip_tags}
 {else}
 {$addon->Comments[comments].UserName|strip_tags}
-{/if},
-{$addon->Comments[comments].CommentDate|date_format}</p>
-<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags|nl2br}</p>
-<p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
-Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes&amp;app={$app}">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no&amp;app={$app}">No</a></p>
-</li>
+{/if}
+on {$addon->Comments[comments].CommentDate|date_format}.<br>
+<em>{$addon->Comments[comments].helpful_yes} out of {$addon->Comments[comments].helpful_total} viewers found this comment helpful<br>
+Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes&amp;app={$app}">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no&amp;app={$app}">No</a></em></p>
+</div>
 {/section}
-</ul>
 
 <p><strong><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Read all comments &#187;</a></strong></p>
 

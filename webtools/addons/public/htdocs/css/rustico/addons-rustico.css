@@ -653,14 +653,6 @@ table.dalvay-table th {
 	background-image: url("../../images/switch-suite.gif");
 }
 
-/* previews */
-
-div.rating {
-    float:right;
-    font-size:85%;
-    font-weight:bold;
-}
-
 
 /* ported from cavendish */
 
@@ -701,4 +693,44 @@ div.rating {
 
 .iconbar a {
     text-decoration: none;
+}
+
+/* user comments */
+
+div.averagerating {
+    float:right;
+    font-size:85%;
+    font-weight:bold;
+}
+
+div.usercomment {
+    border-top: 1px solid #eee;
+}
+
+p.commenttext {
+    margin-left: 2em;
+}
+
+p.commentmeta {
+    font-size: smaller;
+}
+
+.pages {
+    color: #999;
+    font-weight: bold;
+    height: 2em;
+}
+
+.next {
+    border-left: 1px solid #000;
+    display: inline;
+    padding-left: 5px;
+}
+
+.prev {
+    display: inline;
+}
+
+#comments-sort {
+    float: right;
 }
