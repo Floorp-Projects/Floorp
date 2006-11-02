@@ -48,6 +48,7 @@ my $Bugzilla_password;
 my $Bugzilla_remember;
 my $bug_id;
 my $product_name;
+my $create_file_name;
 
 GetOptions('help|h|?'       => \$help,
            'uri=s'          => \$Bugzilla_uri,
@@ -56,6 +57,7 @@ GetOptions('help|h|?'       => \$help,
            'rememberlogin!' => \$Bugzilla_remember,
            'bug_id:s'       => \$bug_id,
            'product_name:s' => \$product_name,
+           'create:s'       => \$create_file_name
           ) or pod2usage({'-verbose' => 0, '-exitval' => 1});
 
 =head1 OPTIONS
@@ -98,6 +100,10 @@ Pass a bug ID to have C<bz_webservice_demo.pl> do some bug-related test calls.
 
 Pass a product name to have C<bz_webservice_demo.pl> do some product-related
 test calls.
+
+=item --create
+
+Specify a file that contains settings for the creating of a new bug.
 
 =back
 
@@ -238,6 +244,33 @@ if ($product_name) {
     }
 }
 
+=head2 Creating A Bug
+
+Call C<Bug.create> with the settings read from the file indicated on
+the command line. The file must contain a valid anonymous hash to use 
+as argument for the call to C<Bug.create>.
+The call will return a hash with a bug id for the newly created bug.
+
+=cut
+
+if ($create_file_name) {
+    $soapresult = $proxy->call('Bug.create', do "$create_file_name" );
+    _die_on_fault($soapresult);
+    $result = $soapresult->result;
+
+    if (ref($result) eq 'HASH') {
+        foreach (keys(%$result)) {
+            print "$_: $$result{$_}\n";
+        }
+    }
+    else {
+        print "$result\n";
+    }
+
+}
+
+
+
 =head1 NOTES
 
 =head2 Character Set Encoding
@@ -246,6 +279,23 @@ Make sure that your application either uses the same character set
 encoding as Bugzilla does, or that it converts correspondingly when using the
 web service API.
 By default, Bugzilla uses UTF-8 as its character set encoding.
+
+=head2 Format For Create File
+
+The create format file is a piece of Perl code, that should look something like
+this:
+
+    {
+        product     => "TestProduct", 
+        component   => "TestComponent",
+        summary     => "TestBug - created from bz_webservice_demo.pl",
+        version     => "unspecified",
+        description => "This is a description of the bug... hohoho",
+        op_sys      => "All",
+        platform    => "All",	
+        priority    => "P4",
+        severity    => "normal"
+    };
 
 =head1 SEE ALSO
 
