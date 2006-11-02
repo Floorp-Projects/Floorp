@@ -114,7 +114,7 @@ switch ($clean['updateVersion']) {
         $completePatch = new Patch($branchVersions,$nightlyChannels,'complete');
 
         // If our complete patch exists and is valid, set the patch line.
-        if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) && $completePatch->isPatch($clean['build'],$clean['channel'])) {
+        if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) && $completePatch->isPatch()) {
             
             // Set our patchLine.
             $xml->setPatchLine($completePatch);
@@ -142,19 +142,15 @@ switch ($clean['updateVersion']) {
             }
         }
 
-        // We only check for a partial patch if the complete patch was successfully retrieved.
-        if ($completePatch->isPatch($clean['build'],$clean['channel'])) {
+        // Instantiate our partial patch.
+        $partialPatch = new Patch($branchVersions,$nightlyChannels,'partial');
 
-            // Instantiate our partial patch.
-            $partialPatch = new Patch($branchVersions,$nightlyChannels,'partial');
-
-            // If our partial patch exists and is valid, set the patch line.
-            if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
-                  && $partialPatch->isPatch($clean['build'],$clean['channel']) 
-                  && $partialPatch->isOneStepFromLatest($completePatch->build)) {
-                $xml->setPatchLine($partialPatch);
-            }
-        }
+        // If our partial patch exists and is valid, set the patch line.
+        if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
+              && $partialPatch->isPatch() 
+              && $partialPatch->isOneStepFromLatest($completePatch->build)) {
+            $xml->setPatchLine($partialPatch);
+         }
 
         // If we have valid patchLine(s), set up our output.
         if ($xml->hasPatchLine()) {
@@ -179,7 +175,7 @@ switch ($clean['updateVersion']) {
 
         $patch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],null);
 
-        if ($patch->isPatch($clean['build'])) {
+        if ($patch->isPatch()) {
             $xml->setPatchLine($patch);
         }
 
