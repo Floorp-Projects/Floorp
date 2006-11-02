@@ -230,10 +230,7 @@ function issueSyncRequest( url, receiverFunc, bLogging )
                     "failed: " + errorToString(status) );
     }
     
-    throw new Components.Exception(
-        bLogging ? ("issueSyncRequest( \"" + url + "\" ) failed.")
-                 : "issueSyncRequest() failed.",
-        status );
+    throw status;
 }
 
 function issueSyncXMLRequest( url, receiverFunc, bLogging )

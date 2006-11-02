@@ -499,25 +499,22 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
     //                          operation REPLACE does not work, just adds
     //                          more and more props. WTF.
     
-    // misusing CONTACTS for now:
-    // (not used in cs web-frontend nor in mozilla, but in Outlook...)
-    url += ("&contacts=" + getIcalUTC(getTime()));
+    // storing X-props does not work properly for
+    // recurring items or single occurrences
     
+    // misusing CONTACTS for now to store additional X- data
+    // (not used in cs web-frontend nor in mozilla, but in Outlook...)
+    
+    // stamp[:lastack]
+    var contacts = getIcalUTC(getTime());
     if (bIsParent && !bOrgRequest) {
-        // - storing X-props at occurrences doesn't work
-        // - don't publish lastAck to attendees
-        // xxx todo: currently no support to store this at VALARM component...
         var lastAck = item.alarmLastAck;
         if (lastAck) {
-            url += ("&X-MOZ-VALARM-LASTACK=" +
-                    "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-REPLACE^" +
-                    getIcalUTC(lastAck));
-        }
-        else {
-            url += ("&X-MOZ-VALARM-LASTACK=" +
-                    "X-NSCP-ORIGINAL-OPERATION=X-NSCP-WCAP-PROPERTY-DELETE^");
+            contacts += ":";
+            contacts += getIcalUTC(lastAck);
         }
     }
+    url += ("&contacts=" + encodeURIComponent(contacts));
     
     if (bIsParent)
         url += this.encodeRecurrenceParams( item, oldItem );
@@ -531,12 +528,12 @@ calWcapCalendar.prototype.tunnelXProps = function( destItem, srcItem )
     // xxx todo: temp workaround for bug in calItemBase.js
     if (!isParent(srcItem))
         return;
-    var enum = srcItem.propertyEnumerator;
-    while (enum.hasMoreElements()) {
-        var prop = enum.getNext().QueryInterface(
+    var en = srcItem.propertyEnumerator;
+    while (en.hasMoreElements()) {
+        var prop = en.getNext().QueryInterface(
             Components.interfaces.nsIProperty);
         var name = prop.name;
-        if (name != "X-MOZ-VALARM-LASTACK" && name.indexOf("X-MOZ-") == 0) {
+        if (name.indexOf("X-MOZ-") == 0) {
             if (LOG_LEVEL > 1)
                 this.log( "tunneling " + name );
             destItem.setProperty(name, prop.value);
@@ -843,12 +840,19 @@ calWcapCalendar.prototype.parseItems = function(
             }
             }
             if (item != null) {
-                var prop = subComp.getFirstProperty("X-MOZ-VALARM-LASTACK");
-                if (prop) {
-                    var dtLastAck = new CalDateTime();
-                    dtLastAck.icalString = prop.value; // TZID is UTC
-                    // shift to alarm comp:
-                    item.alarmLastAck = dtLastAck;
+                var contactsProp = subComp.getFirstProperty("CONTACT");
+                if (contactsProp) { // stamp[:lastack]
+                    var ar = contactsProp.value.split(":");
+                    if (ar.length > 1) {
+                        var lastAck = ar[1];
+                        if (lastAck.length > 0) {
+                            var dtLastAck = new CalDateTime();
+                            dtLastAck.icalString = lastAck; // TZID is UTC
+                            dtLastAck.normalize();
+                            // shift to alarm comp:
+                            item.alarmLastAck = dtLastAck;
+                        }
+                    }
                 }
                 
                 item.calendar = this_.superCalendar;

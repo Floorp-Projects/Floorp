@@ -314,7 +314,7 @@ calWcapSession.prototype = {
                                         bundle.formatStringFromName(
                                             "reconnectConfirmation.text",
                                             [this_.uri.hostPort], 1 ) )) {
-                                    this.log( "reconnect cancelled." );
+                                    this_.log( "reconnect cancelled." );
                                     throw new Components.Exception(
                                         "Login failed. Invalid session ID.",
                                         Components.interfaces.
@@ -507,7 +507,8 @@ calWcapSession.prototype = {
                 // server seems unavailable:
                 throw new Components.Exception(
                     getWcapBundle().formatStringFromName(
-                        "accessingServerFailedError.text", [uri.hostPort], 1 ),
+                        "accessingServerFailedError.text",
+                        [sessionUri.hostPort], 1 ),
                     exc );
             }
             throw exc;
