@@ -78,7 +78,7 @@ class NS_COM_GLUE nsTArray_base {
       return mHdr->mCapacity;
     }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(ENABLE_TESTS)
     void* DebugGetHeader() {
       return mHdr;
     }
