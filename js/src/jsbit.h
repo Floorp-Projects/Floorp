@@ -68,39 +68,41 @@ extern JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 i);
 extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 
 /*
- * Check if __builtin_clz is available which apeared first in GCC 3.4.
- * The built-in allows to speedup calculations of ceiling/floor log2,
- * see bug 327129.
+ * Replace bit-scanning code sequences with CPU-specific instructions to
+ * speedup calculations of ceiling/floor log2.
+ *
+ * With GCC 3.4 or later we can use __builtin_clz for that, see bug 327129.
+ *
  * SWS: Added MSVC intrinsic bitscan support.  See bugs 349364 and 356856.
- * Also added GCC-specific JS_HAS_BUILTIN_BITSCAN64 in preparation for
- * general support of 64-bit bit-scanning.
  */
-
-/* replace compare/jump/add/shift sequence with x86 BSF/BSR instruction */
 #if defined(_WIN32) && (_MSC_VER >= 1300) && defined(_M_IX86)
-  unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
-  unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
+
+unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
+unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
 # pragma intrinsic(_BitScanForward,_BitScanReverse)
+
 __forceinline static int
 __BitScanForward32(unsigned int val)
-{ 
-   unsigned long idx; 
+{
+   unsigned long idx;
 
-   _BitScanForward(&idx, (unsigned long)val); 
-   return( (int)idx) ;
+   _BitScanForward(&idx, (unsigned long)val);
+   return (int)idx;
 }
 __forceinline static int
 __BitScanReverse32(unsigned int val)
 {
    unsigned long idx;
 
-   _BitScanReverse(&idx, (unsigned long)val); 
-   return( (int)(31-idx) );
+   _BitScanReverse(&idx, (unsigned long)val);
+   return (int)(31-idx);
 }
 # define js_bitscan_ctz32(val)  __BitScanForward32(val)
 # define js_bitscan_clz32(val)  __BitScanReverse32(val)
 # define JS_HAS_BUILTIN_BITSCAN32
+
 #elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+
 # define js_bitscan_ctz32(val)  __builtin_ctz(val)
 # define js_bitscan_clz32(val)  __builtin_clz(val)
 # define JS_HAS_BUILTIN_BITSCAN32
@@ -109,6 +111,7 @@ __BitScanReverse32(unsigned int val)
 #  define js_bitscan_clz64(val)  __builtin_clzll(val)
 #  define JS_HAS_BUILTIN_BITSCAN64
 # endif
+
 #endif
 
 /*
@@ -213,7 +216,7 @@ JS_STATIC_ASSERT(sizeof(unsigned) == sizeof(JSUword));
 # ifdef JS_HAS_BUILTIN_BITSCAN64
 JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(JSUword));
 #  define js_FloorLog2wImpl(n)                                                \
-   ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64((n)))
+   ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
 # else
 extern JSUword js_FloorLog2wImpl(JSUword n);
 # endif
