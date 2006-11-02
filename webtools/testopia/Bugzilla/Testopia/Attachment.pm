@@ -327,6 +327,9 @@ Returns true if the logged in user has rights to view this attachment
 =cut
 
 sub canview {
+    my $self = shift;
+# TODO: Check for private attachments
+    return 1;
 }
 
 =head2 canedit
@@ -336,6 +339,16 @@ Returns true if the logged in user has rights to edit this attachment
 =cut
 
 sub canedit {
+    my $self = shift;
+    my $obj;
+    if ($self->plan_id){
+        $obj = Bugzilla::Testopia::TestPlan->new($self->plan_id);
+    }
+    else {
+        $obj = Bugzilla::Testopia::TestCase->new($self->case_id);
+    }
+
+    return $obj->canedit && $self->canview; $obj->canedit;
 }
 
 =head2 candelete
@@ -345,6 +358,9 @@ Returns true if the logged in user has rights to delete this attachment
 =cut
 
 sub candelete {
+    my $self = shift;
+    return $self->canedit && Param("allow-test-deletion") 
+      && (Bugzilla->user->id == $self->submitter->id || Bugzilla->user->in_group('admin'));
 }
 
 ###############################
