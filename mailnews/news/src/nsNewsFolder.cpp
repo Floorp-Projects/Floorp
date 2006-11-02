@@ -114,7 +114,7 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), 
+    mInitialized(PR_FALSE),
     m_downloadMessageForOfflineUse(PR_FALSE), m_downloadingMultipleMessages(PR_FALSE), 
     mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
 {

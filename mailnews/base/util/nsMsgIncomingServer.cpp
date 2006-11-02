@@ -86,10 +86,10 @@
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_rootFolder(0),
+    m_numMsgsDownloaded(0),
     m_prefBranch(0),
     m_biffState(nsIMsgFolder::nsMsgBiffState_NoMail),
     m_serverBusy(PR_FALSE),
-    m_numMsgsDownloaded(0),
     m_canHaveFilters(PR_TRUE),
     m_displayStartupPage(PR_TRUE),
     mPerformingBiff(PR_FALSE)
