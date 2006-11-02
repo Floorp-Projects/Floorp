@@ -51,7 +51,7 @@
 
 <dialog
   id="sun-calendar-event-dialog-timezone"
-  title="&reminder.title.label;"
+  title="&timezone.title.label;"
   onload="onLoad()"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"
@@ -821,47 +821,47 @@
   </menulist>
 
   <stack id="timezone-stack">
-    <image src="chrome://calendar/skin/TimeZone_map.png"/>
-    <image src="chrome://calendar/skin/TimeZone_0h.png" offset="0" tzid="+0000" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_1h.png" offset="3600" tzid="+0100" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_2h.png" offset="7200" tzid="+0200" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_3h30.png" offset="12600" tzid="+0330" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_3h.png" offset="10800" tzid="+0300" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_4h30.png" offset="16200" tzid="+0430" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_4h.png" offset="14400" tzid="+0400" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_5h30.png" offset="19800" tzid="+0530" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_5h45.png" offset="20700" tzid="+0545" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_5h.png" offset="18000" tzid="+0500" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_6h30.png" offset="23400" tzid="+0630" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_6h.png" offset="21600" tzid="+0600" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_7h.png" offset="25200" tzid="+0700" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_8h.png" offset="28800" tzid="+0800" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_9h30.png" offset="34200" tzid="+0930" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_9h.png" offset="32400" tzid="+0900" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_10h30.png" offset="37800" tzid="+1030" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_10h.png" offset="36000" tzid="+1000" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_11h30.png" offset="41400" tzid="+1130" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_11h.png" offset="39600" tzid="+1100" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_12h45.png" offset="45900" tzid="+1245" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_12h.png" offset="43200" tzid="+1200" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_13h.png" offset="46800" tzid="+1300" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_14h.png" offset="50400" tzid="+1400" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-1h.png" offset="-3600" tzid="-0100" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-2h.png" offset="-7200" tzid="-0200" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-3h30.png" offset="-12600" tzid="-0330" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-3h.png" offset="-10800" tzid="-0300" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-4h.png" offset="-14400" tzid="-0400" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-5h.png" offset="-18000" tzid="-0500" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-6h.png" offset="-21600" tzid="-0600" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-7h.png" offset="-25200" tzid="-0700" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-8h30.png" offset="-30600" tzid="-0830" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-8h.png" offset="-28800" tzid="-0800" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-9h30.png" offset="-34200" tzid="-0930" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-9h.png" offset="-32400" tzid="-0900" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-10h.png" offset="-36000" tzid="-1000" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-11h.png" offset="-39600" tzid="-1100" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-12h45.png" offset="-45900" tzid="-1245" hidden="true"/>
-    <image src="chrome://calendar/skin/TimeZone_-12h.png" offset="-43200" tzid="-1200" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_map.png"/>
+    <image src="chrome://calendar/skin/timezone_0h.png" offset="0" tzid="+0000" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_1h.png" offset="3600" tzid="+0100" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_2h.png" offset="7200" tzid="+0200" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_3h30.png" offset="12600" tzid="+0330" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_3h.png" offset="10800" tzid="+0300" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_4h30.png" offset="16200" tzid="+0430" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_4h.png" offset="14400" tzid="+0400" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_5h30.png" offset="19800" tzid="+0530" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_5h45.png" offset="20700" tzid="+0545" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_5h.png" offset="18000" tzid="+0500" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_6h30.png" offset="23400" tzid="+0630" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_6h.png" offset="21600" tzid="+0600" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_7h.png" offset="25200" tzid="+0700" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_8h.png" offset="28800" tzid="+0800" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_9h30.png" offset="34200" tzid="+0930" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_9h.png" offset="32400" tzid="+0900" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_10h30.png" offset="37800" tzid="+1030" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_10h.png" offset="36000" tzid="+1000" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_11h30.png" offset="41400" tzid="+1130" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_11h.png" offset="39600" tzid="+1100" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_12h45.png" offset="45900" tzid="+1245" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_12h.png" offset="43200" tzid="+1200" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_13h.png" offset="46800" tzid="+1300" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_14h.png" offset="50400" tzid="+1400" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-1h.png" offset="-3600" tzid="-0100" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-2h.png" offset="-7200" tzid="-0200" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-3h30.png" offset="-12600" tzid="-0330" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-3h.png" offset="-10800" tzid="-0300" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-4h.png" offset="-14400" tzid="-0400" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-5h.png" offset="-18000" tzid="-0500" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-6h.png" offset="-21600" tzid="-0600" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-7h.png" offset="-25200" tzid="-0700" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-8h30.png" offset="-30600" tzid="-0830" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-8h.png" offset="-28800" tzid="-0800" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-9h30.png" offset="-34200" tzid="-0930" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-9h.png" offset="-32400" tzid="-0900" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-10h.png" offset="-36000" tzid="-1000" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-11h.png" offset="-39600" tzid="-1100" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-12h45.png" offset="-45900" tzid="-1245" hidden="true"/>
+    <image src="chrome://calendar/skin/timezone_-12h.png" offset="-43200" tzid="-1200" hidden="true"/>
   </stack>
 
 </dialog>
