@@ -1,4 +1,51 @@
 
+/* icon #1 */
+#button-attendees {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 48px 24px 24px);
+}
+#button-attendees:hover:active {
+  -moz-image-region: rect(24px 48px 48px 24px);
+}
+#button-attendees[disabled="true"] {
+  -moz-image-region: rect(48px 48px 72px 24px);
+}
+
+/* icon #2 */
+#button-spellcheck {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 72px 24px 48px);
+}
+#button-spellcheck:hover:active {
+  -moz-image-region: rect(24px 72px 48px 48px);
+}
+#button-spellcheck[disabled="true"] {
+  -moz-image-region: rect(48px 72px 72px 48px);
+}
+
+/* icon #3 */
+#button-url {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 96px 24px 72px);
+}
+#button-url:hover:active {
+  -moz-image-region: rect(24px 96px 48px 72px);
+}
+#button-url[disabled="true"] {
+  -moz-image-region: rect(48px 96px 72px 72px);
+}
+
+/* icon #4 */
+#button-privacy {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 120px 24px 96px);
+}
+#button-privacy:hover:active {
+  -moz-image-region: rect(24px 120px 48px 96px);
+}
+#button-privacy[disabled="true"] {
+  -moz-image-region: rect(48px 120px 72px 96px);
+}
  
 /* icon #5 */
 #button-save {
@@ -22,4 +69,88 @@
 }
 #button-print[disabled="true"] {
   -moz-image-region: rect(48px 456px 72px 432px);
+}
+
+/* icon #23 */
+#button-question {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png");
+  -moz-image-region: rect(0px 576px 24px 552px);
+}
+#button-question:hover:active {
+  -moz-image-region: rect(24px 576px 48px 552px);
+}
+#button-question[disabled="true"] {
+  -moz-image-region: rect(48px 576px 72px 552px);
+}
+
+/* icon #0 */
+#button-privacy-public {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 28px 16px 0px);
+}
+#button-privacy-public:hover:active {
+  -moz-image-region: rect(0px 28px 16px 0px);
+}
+#button-privacy-public[disabled="true"] {
+  -moz-image-region: rect(0px 28px 16px 0px);
+}
+
+/* icon #1 */
+#button-privacy-private {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 56px 16px 28px);
+}
+#button-privacy-private:hover:active {
+  -moz-image-region: rect(0px 56px 16px 28px);
+}
+#button-privacy-private[disabled="true"] {
+  -moz-image-region: rect(0px 56px 16px 28px);
+}
+
+/* icon #2 */
+#button-privacy-confidential {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 84px 16px 56px);
+}
+#button-privacy-confidential:hover:active {
+  -moz-image-region: rect(0px 84px 16px 56px);
+}
+#button-privacy-confidential[disabled="true"] {
+  -moz-image-region: rect(0px 84px 16px 56px);
+}
+
+/* icon #3 */
+#button-importance-low {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 100px 16px 84px);
+}
+#button-importance-low:hover:active {
+  -moz-image-region: rect(0px 100px 16px 84px);
+}
+#button-importance-low[disabled="true"] {
+  -moz-image-region: rect(0px 100px 16px 84px);
+}
+
+/* icon #4 */
+#button-importance-medium {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 116px 16px 100px);
+}
+#button-importance-medium:hover:active {
+  -moz-image-region: rect(0px 116px 16px 100px);
+}
+#button-importance-medium[disabled="true"] {
+  -moz-image-region: rect(0px 116px 16px 100px);
+}
+
+/* icon #5 */
+#button-importance-high {
+  list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog.png");
+  -moz-image-region: rect(0px 132px 16px 116px);
+}
+#button-importance-high:hover:active {
+  -moz-image-region: rect(0px 132px 16px 116px);
+}
+#button-importance-high[disabled="true"] {
+  -moz-image-region: rect(0px 132px 16px 116px);
 }

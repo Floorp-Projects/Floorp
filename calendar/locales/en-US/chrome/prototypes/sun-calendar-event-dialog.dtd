@@ -33,23 +33,110 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- Menubar -->
+<!ENTITY  event.menu.file.label                           "File">
+<!ENTITY  event.menu.file.new.label                       "New">
+<!ENTITY  event.menu.file.new.event.label                 "Event">
+<!ENTITY  event.menu.file.new.message.label               "Message">
+<!ENTITY  event.menu.file.new.address.label               "Address Book Card">
+<!ENTITY  event.menu.file.close.label                     "Close">
+<!ENTITY  event.menu.file.save.label                      "Save">
+<!ENTITY  event.menu.file.page.setup.label                "Page Setup">
+<!ENTITY  event.menu.file.print.label                     "Print">
+<!ENTITY  event.menu.file.exit.label                      "Exit">
+
+<!ENTITY  event.menu.edit.label                           "Edit">
+<!ENTITY  event.menu.edit.undo.label                      "Undo">
+<!ENTITY  event.menu.edit.redo.label                      "Redo">
+<!ENTITY  event.menu.edit.cut.label                       "Cut">
+<!ENTITY  event.menu.edit.copy.label                      "Copy">
+<!ENTITY  event.menu.edit.paste.label                     "Paste">
+<!ENTITY  event.menu.edit.select.all.label                "Select All">
+
+<!ENTITY  event.menu.view.label                           "View">
+<!ENTITY  event.menu.view.toolbars.label                  "Toolbars">
+<!ENTITY  event.menu.view.toolbars.event.label            "Event Toolbar">
+<!ENTITY  event.menu.view.toolbars.customize.label        "Customize">
+
+<!ENTITY  event.menu.options.label                        "Options">
+<!ENTITY  event.menu.options.spellcheck.label             "Check Spelling...">
+<!ENTITY  event.menu.options.inline.spellcheck.label      "Spell Check As You Type">
+<!ENTITY  event.menu.options.url.label                    "Link to Documents">
+<!ENTITY  event.menu.options.timezone.label               "Timezone">
+<!ENTITY  event.menu.options.priority.label               "Importance">
+<!ENTITY  event.menu.options.priority.none.label          "None">
+<!ENTITY  event.menu.options.priority.low.label           "Low">
+<!ENTITY  event.menu.options.priority.normal.label        "Normal">
+<!ENTITY  event.menu.options.priority.high.label          "High">
+<!ENTITY  event.menu.options.privacy.label                "Privacy">
+<!ENTITY  event.menu.options.privacy.public.label         "Public Event">
+<!ENTITY  event.menu.options.privacy.confidential.label   "Show Time and Date Only">
+<!ENTITY  event.menu.options.privacy.private.label        "Private Event">
+<!ENTITY  event.menu.options.show.time.label              "Show Time as">
+<!ENTITY  event.menu.options.show.time.busy.label         "Busy">
+<!ENTITY  event.menu.options.show.time.free.label         "Free">
+
+<!ENTITY event.help.label                                 "Help">
+<!ENTITY event.help.release.notes.label                   "Release Notes">
+<!ENTITY event.help.help.label                            "&brandShortName; Help">
+<!ENTITY event.help.about.label                           "About &brandShortName;">
+
 <!-- Toolbar -->
-<!ENTITY  event.command.save.label                      "Save">
+<!ENTITY  event.toolbar.save.label                        "Save and Close">
+<!ENTITY  event.toolbar.attendees.label                   "Invite Attendees">
+<!ENTITY  event.toolbar.spellcheck.label                  "Spellcheck">
+<!ENTITY  event.toolbar.privacy.label                     "Privacy">
+<!ENTITY  event.toolbar.document.label                    "Documents">
 
 <!-- Main page -->
-<!ENTITY event.tab.main.label                           "Event">
-<!ENTITY event.tab.recurrence.label                     "Recurrence">
-<!ENTITY event.tab.attendees.label                      "Attendees">
-<!ENTITY event.tab.timezone.label                       "Timezone">
+<!ENTITY event.title.textbox.label                        "Title:" >
+<!ENTITY event.location.label                             "Location:" >
+<!ENTITY event.categories.label                           "Category:">
+<!ENTITY event.calendar.label                             "Calendar:" >
+<!ENTITY event.attendees.label                            "Attendees:" >
+<!ENTITY event.alldayevent.label                          "All day Event" >
+<!ENTITY event.from.label                                 "Start:" >
+<!ENTITY task.from.label                                  "Start:" >
+<!ENTITY event.to.label                                   "End:" >
+<!ENTITY task.to.label                                    "Due Date:" >
+<!ENTITY task.status.label                                "Status:" >
+<!ENTITY event.repeat.label                               "Repeat:" >
+<!ENTITY event.reminder.label                             "Reminder:" >
+<!ENTITY event.description.label                          "Description:" >
+<!ENTITY event.document.label                             "Document:" >
+<!ENTITY event.document.change.label                      "Change..." >
 
-<!ENTITY event.private.label      "Private" >
-<!ENTITY event.public.label       "Public" >
-<!ENTITY event.confidential.label "Time and Date Only" >
+<!ENTITY event.private.label                              "Private" >
+<!ENTITY event.public.label                               "Public" >
+<!ENTITY event.confidential.label                         "Time and Date Only" >
 
-<!-- Recurrence page -->
+<!ENTITY event.reminder.none.label                        "No reminder " >
+<!ENTITY event.reminder.5minutes.before.label             "5 minutes before" >
+<!ENTITY event.reminder.10minutes.before.label            "10 minutes before" >
+<!ENTITY event.reminder.15minutes.before.label            "15 minutes before" >
+<!ENTITY event.reminder.30minutes.before.label            "30 minutes before" >
+<!ENTITY event.reminder.45minutes.before.label            "45 minutes before" >
+<!ENTITY event.reminder.1hour.before.label                "1 hour before" >
+<!ENTITY event.reminder.2hours.before.label               "2 hours before" >
+<!ENTITY event.reminder.5hours.before.label               "5 hours before" >
+<!ENTITY event.reminder.15hours.before.label              "15 hours before" >
+<!ENTITY event.reminder.1day.before.label                 "1 day before" >
+<!ENTITY event.reminder.2days.before.label                "2 days before" >
+<!ENTITY event.reminder.1week.before.label                "1 week before" >
+<!ENTITY event.reminder.custom.label                      "Custom..." >
+
+<!-- Recurrence dialog -->
+<!ENTITY event.repeat.does.not.repeat.label             "Does not repeat">
+<!ENTITY event.repeat.daily.label                       "Daily">
+<!ENTITY event.repeat.weekly.label                      "Weekly">
+<!ENTITY event.repeat.every.weekday.label               "Every Weekday">
+<!ENTITY event.repeat.bi.weekly.label                   "Bi-weekly">
+<!ENTITY event.repeat.monthly.label                     "Monthly">
+<!ENTITY event.repeat.yearly.label                      "Yearly">
+<!ENTITY event.repeat.custom.label                      "Custom...">
+
 <!ENTITY event.recurrence.pattern.label                 "Recurrence pattern">
 <!ENTITY event.recurrence.occurs.label                  "Repeat" >
-<!ENTITY event.recurrence.none.label                    "none" >
 <!ENTITY event.recurrence.day.label                     "daily" >
 <!ENTITY event.recurrence.week.label                    "weekly" >
 <!ENTITY event.recurrence.month.label                   "monthly" >
@@ -86,11 +173,27 @@
 <!ENTITY month.11.name "November" >
 <!ENTITY month.12.name "December" >
 
-<!-- Attendees page -->
-<!ENTITY  event.organizer.label          "Organizer">
+<!-- Reminder dialog -->
+
+<!ENTITY reminder.title.label                           "Custom Reminder">
+<!ENTITY reminder.reminder.label                        "Reminder">
+<!ENTITY reminder.due.label                             "When Reminder becomes Due">
+<!ENTITY reminder.action.alert.label                    "Show an Alert">
+<!ENTITY reminder.action.sound.label                    "Play a Sound">
+<!ENTITY reminder.action.email.label                    "Send an E-mail">
+<!ENTITY reminder.new.label                             "New">
+<!ENTITY reminder.delete.label                          "Delete">
+<!ENTITY reminder.rename.label                          "Rename">
+
+<!-- Attendees dialog -->
+<!ENTITY event.organizer.label          "Organizer">
 <!ENTITY event.freebusy.next.slot        "Next slot" >
 <!ENTITY event.freebusy.previous.slot    "Previous slot" >
 <!ENTITY event.freebusy.plus             "Next hour" >
 <!ENTITY event.freebusy.minus            "Previous hour" >
 
-<!-- Timezone page -->
+<!-- Timezone dialog -->
+
+
+
+
