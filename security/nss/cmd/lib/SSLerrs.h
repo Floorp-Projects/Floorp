@@ -196,7 +196,7 @@ ER3(SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY     , (SSL_ERROR_BASE + 48),
 "SSL received an unexpected Certificate Verify handshake message.")
 
 ER3(SSL_ERROR_RX_UNEXPECTED_CLIENT_KEY_EXCH , (SSL_ERROR_BASE + 49),
-"SSL received an unexpected Cllient Key Exchange handshake message.")
+"SSL received an unexpected Client Key Exchange handshake message.")
 
 ER3(SSL_ERROR_RX_UNEXPECTED_FINISHED        , (SSL_ERROR_BASE + 50),
 "SSL received an unexpected Finished handshake message.")
