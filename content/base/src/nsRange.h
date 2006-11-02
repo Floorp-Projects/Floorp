@@ -91,6 +91,10 @@ public:
   // nsIDOMNSRange interface
   NS_DECL_NSIDOMNSRANGE
   
+  // nsIRange interface
+  virtual nsINode* GetCommonAncestor();
+  virtual void Reset();
+  
   // nsRange interface extensions
   
   static NS_METHOD    OwnerGone(nsIContent* aParentNode);

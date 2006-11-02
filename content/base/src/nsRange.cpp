@@ -427,6 +427,24 @@ ContentOwnsRange(nsIRange* aRange, nsINode* aNode)
 }
 
 /******************************************************
+ * nsIRange implementation
+ ******************************************************/
+
+nsINode*
+nsRange::GetCommonAncestor()
+{
+  return mIsPositioned ?
+    nsContentUtils::GetCommonAncestor(mStartParent, mEndParent) :
+    nsnull;
+}
+
+void
+nsRange::Reset()
+{
+  DoSetRange(nsnull, 0, nsnull, 0);
+}
+
+/******************************************************
  * public functionality
  ******************************************************/
 

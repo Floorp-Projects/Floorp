@@ -71,6 +71,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIRange.h"
 
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
@@ -340,13 +341,15 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     // clear out mDocChangeRange and mUtilRange
     if(mDocChangeRange)
     {
-      // Ignore failure code returned if the range is already detached
-      mDocChangeRange->Detach(); // clear out our accounting of what changed
+      // clear out our accounting of what changed
+      nsCOMPtr<nsIRange> range = do_QueryInterface(mDocChangeRange);
+      range->Reset(); 
     }
     if(mUtilRange)
     {
-      // Ignore failure code returned if the range is already detached
-      mUtilRange->Detach(); // ditto for mUtilRange.
+      // ditto for mUtilRange.
+      nsCOMPtr<nsIRange> range = do_QueryInterface(mUtilRange);
+      range->Reset(); 
     }
 
     // remember current inline styles for deletion and normal insertion operations
@@ -8077,6 +8080,14 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     
     // compare starts of ranges
     res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, aRange, &result);
+    if (res == NS_ERROR_NOT_INITIALIZED) {
+      // This will happen is mDocChangeRange is non-null, but the range is
+      // uninitialized. In this case we'll set the start to aRange start.
+      // The same test won't be needed further down since after we've set
+      // the start the range will be collapsed to that point.
+      result = 1;
+      res = NS_OK;
+    }
     if (NS_FAILED(res)) return res;
     if (result > 0)  // positive result means mDocChangeRange start is after aRange start
     {
