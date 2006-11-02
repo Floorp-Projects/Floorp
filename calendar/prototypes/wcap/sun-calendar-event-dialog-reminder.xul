@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Sun Microsystems code.
+   -
+   - The Initial Developer of the Original Code is Sun Microsystems.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Michael Buettner <michael.buettner@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/sun-calendar-event-dialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
+
+<!DOCTYPE dialog
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd" > %dtd3;
+]>     
+
+<dialog
+  id="sun-calendar-event-dialog-reminder"
+  title="&reminder.title.label;"
+  onload="onLoad()"
+  ondialogaccept="return onAccept();"
+  ondialogcancel="return onCancel();"
+  persist="screenX screenY"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- Javascript includes -->
+  <script type="application/x-javascript" src="chrome://calendar/content/sun-calendar-event-dialog-reminder.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendar-dialog-utils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
+
+  <!-- Listbox with custom reminders -->
+  <grid flex="1">
+    <rows>
+      <row/>
+      <row/>
+      <row flex="1"/>
+      <row/>
+    </rows>
+    <columns>
+      <listbox id="reminder-listbox" seltype="single" onselect="onReminderSelected()">
+        <listitem/>
+      </listbox>
+      <column>
+        <button id="reminder-new" label="&reminder.new.label;" oncommand="onNewReminder()"/>
+        <button id="reminder-delete" label="&reminder.delete.label;" oncommand="onDeleteReminder()"/>
+        <spacer/>
+        <button label="&reminder.rename.label;" disabled="true"/>
+      </column>
+    </columns>
+  </grid>
+
+  <!-- Custom reminder details -->
+  <groupbox>
+    <caption label="&reminder.reminder.label;"/>
+    <radiogroup>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <radio selected="true"/>
+            <hbox>
+              <textbox id="reminder-length" size="1" oninput="updateReminderLength(event)"/>
+              <menulist id="reminder-unit" oncommand="updateReminder()">
+                <menupopup>
+                  <menuitem label="&alarm.units.minutes;" value="minutes" selected="true"/>
+                  <menuitem label="&alarm.units.hours;" value="hours"/>
+                  <menuitem label="&alarm.units.days;" value="days"/>
+                </menupopup>
+              </menulist>
+              <menulist id="reminder-relation" oncommand="updateReminder()">
+                <menupopup>
+                  <menuitem label="&newevent.before.label;" value="START" selected="true"/>
+                  <menuitem label="&newevent.after.label;" value="END"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+          <row>
+            <radio disabled="true"/>
+            <datetimepicker id="reminder-duetime" disabled="true"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
+  </groupbox>
+
+  <!-- Custom reminder action -->
+  <groupbox>
+    <caption label="&reminder.due.label;"/>
+    <checkbox label="&reminder.action.alert.label;" checked="true" disabled="true"/>
+    <checkbox label="&reminder.action.sound.label;" disabled="true"/>
+    <checkbox label="&reminder.action.email.label;" disabled="true"/>
+  </groupbox>
+
+</dialog>

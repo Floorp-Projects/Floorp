@@ -100,7 +100,7 @@
       <field name="mIsOffline">0</field>
       <field name="mLDAPSession">null</field>
       <field name="mSessionAdded">0</field>
-      <field name="mCalID">null</field>
+      <field name="mOwnerID">null</field>
       <field name="mUserID">null</field>
       <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
@@ -149,8 +149,9 @@
         <body>
           <![CDATA[
             var args = window.arguments[0];
-            var item = args.calendarEvent;
-            var calendar = item.calendar;
+            var organizer = args.organizer;
+            var attendees = args.attendees;
+            var calendar = args.calendar;
 
             // set 'mIsReadOnly' if the calendar is read-only
             if (calendar && calendar.readOnly)
@@ -162,19 +163,19 @@
             
             try {
               this.mUserID = "";
-              this.mCalID = "";
+              this.mOwnerID = "";
               this.mOrganizerID = "";
             
-              var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mCalID = provider.calId;
+              var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+              this.mOwnerID = provider.ownerId;
               this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
-                              ? this.mCalID // sensible default
-                              : item.organizer.id);
+              this.mOrganizerID = ((organizer == null || organizer.id == null)
+                              ? this.mOwnerID // sensible default
+                              : organizer.id);
 
               // set 'mIsOrganizer' if the current calid originally scheduled this event.
               this.mIsOrganizer = false;
-              if(this.mCalID == this.mOrganizerID)
+              if(this.mOwnerID == this.mOrganizerID)
                 this.mIsOrganizer = true;
             }
             catch(e) {}
@@ -199,10 +200,6 @@
             if(this.mIsReadOnly || !this.mIsOrganizer)
               listbox.setAttribute("disabled","true");
             
-            // detach the template item from the listbox, but hold the reference.
-            // until this function returns we add at least a single copy of this template back again.
-            listbox.removeChild(template);
-
             // TODO: the organizer should show up in the attendee list, but this information
             // should be based on the organizer contained in the appropriate field of calIItemBase.
             // This is currently not supported, since we're still missing calendar identities.
@@ -212,7 +209,7 @@
               organizer.role = "CHAIR";
               organizer.participationStatus = "ACCEPTED";
               try {
-                var provider = item.calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+                var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
                 var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
                 var props = organizerCalendar.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
                 if(props.length > 0)
@@ -223,7 +220,6 @@
             }
 
             var numRowsAdded = 0;
-            var attendees = item.getAttendees({});
             if(attendees.length > 0) {
                 for each(var attendee in attendees) {
                   this.appendAttendee(attendee,listbox,template,false);
@@ -233,6 +229,10 @@
             if(numRowsAdded == 0) {
               this.appendAttendee(null,listbox,template,false);
             }
+
+            // detach the template item from the listbox, but hold the reference.
+            // until this function returns we add at least a single copy of this template back again.
+            listbox.removeChild(template);
 
             this.fitDummyRows();
             this.addDirectoryServerObserver();
@@ -271,7 +271,6 @@
         <parameter name="aDisableIfOrganizer"/>
         <body>
           <![CDATA[
-          
           // create a new listbox item and append it to our parent control.
           var newNode = aTemplateNode.cloneNode(true);
           aParentNode.appendChild(newNode);
@@ -319,12 +318,22 @@
               aAttendee = this.createAttendee();        
           }
 
+          // construct the display string from common name and/or email address.
           var inputValue = aAttendee.commonName;
-          var email = aAttendee.id;
-          if(email && email.length) {
-              if (email.indexOf("mailto:") == 0)
-                  email = email.split("mailto:")[1]
-              inputValue += ' <'+email+'>';
+          if(inputValue) {
+            var email = aAttendee.id;
+            if(email && email.length) {
+                if (email.indexOf("mailto:") == 0)
+                    email = email.split("mailto:")[1]
+                inputValue += ' <'+email+'>';
+            }
+          } else {
+            var email = aAttendee.id;
+            if(email && email.length) {
+                if (email.indexOf("mailto:") == 0)
+                    email = email.split("mailto:")[1]
+                inputValue = email;
+            }
           }
 
           // remove leading spaces
@@ -1374,6 +1383,281 @@
 
   </binding>
 
+  <!-- the 'selection-bar' binding implements the vertical bar that provides
+       a visual indication for the time range the event is configured for. -->
+  <binding id="selection-bar">
+
+    <content>
+      <xul:scrollbox anonid="scrollbox" width="0" orient="horizontal" flex="1">
+        <xul:box class="selection-bar" anonid="selection-bar">
+          <xul:box width="3"/>
+          <xul:spacer flex="1"/>
+          <xul:box width="3"/>
+        </xul:box>
+      </xul:scrollbox>
+    </content>
+    
+    <implementation>
+
+      <field name="mRange">0</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
+      <field name="mContentWidth">0</field>
+      <field name="mHeaderHeight">0</field>
+      <field name="mRatio">0</field>
+      <field name="mBaseDate">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <field name="mMouseX">0</field>
+      <field name="mMouseY">0</field>
+      <field name="mDragState">0</field>
+      <field name="mMargin">0</field>
+      <field name="mWidth">0</field>
+
+      <property name="ratio">
+        <setter>
+          <![CDATA[
+          this.mRatio = val;
+          this.update();
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+
+          // the basedate is the date/time from which the display
+          // of the timebar starts. the range is the number of days
+          // we should be able to show. the start- and enddate
+          // is the time the event is scheduled for.
+          this.mRange = Number(this.getAttribute("range"));
+        ]]>
+      </constructor>
+
+      <property name="baseDate">
+        <setter>
+          <![CDATA[
+          // we need to convert the date/time in question in
+          // order to calculate with hours that are aligned
+          // with our timebar display.
+          var kDefaultTimezone = calendarDefaultTimezone();
+          this.mBaseDate = val.getInTimezone(kDefaultTimezone);
+          this.mBaseDate.isDate = true;
+          this.mBaseDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="startDate">
+        <setter>
+          <![CDATA[
+          // currently we *always* set the basedate to be
+          // equal to the startdate. we'll most probably
+          // want to change this later.
+          this.baseDate = val;
+          // we need to convert the date/time in question in
+          // order to calculate with hours that are aligned
+          // with our timebar display.
+          var kDefaultTimezone = calendarDefaultTimezone();
+          this.mStartDate = val.getInTimezone(kDefaultTimezone);
+          this.mStartDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="endDate">
+        <setter>
+          <![CDATA[
+          // we need to convert the date/time in question in
+          // order to calculate with hours that are aligned
+          // with our timebar display.
+          var kDefaultTimezone = calendarDefaultTimezone();
+          this.mEndDate = val.getInTimezone(kDefaultTimezone);
+          this.mEndDate.makeImmutable();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <method name="init">
+        <parameter name="width"/>
+        <parameter name="height"/>
+        <body>
+          <![CDATA[
+            this.mContentWidth = width;
+            this.mHeaderHeight = height + 2;
+            var num_hours = this.mEndHour - this.mStartHour;
+            var hour_width = this.mContentWidth / num_hours;
+            this.mWidth = hour_width*1;
+            this.mMargin = 0;
+            this.update();
+          ]]>
+        </body>
+      </method>
+
+      <!-- given some specific date this method calculates the
+           corrposonding offset in fractional hours -->
+      <method name="date2offset">
+        <parameter name="date"/>
+        <body>
+          <![CDATA[
+            var num_hours = this.mEndHour - this.mStartHour;
+            var diff = date.subtractDate(this.mBaseDate);
+            var offset = diff.days * num_hours;
+            var hours = (diff.hours - this.mStartHour) + (diff.minutes / 60.0);
+            if(hours < 0)
+              hours = 0;
+            if(hours > num_hours)
+              hours = num_hours;
+            offset += hours;
+            return offset;
+          ]]>
+        </body>
+      </method>
+
+      <method name="update">
+        <body>
+          <![CDATA[
+            // calculate the relation of startdate/basedate and enddate/startdate.
+            var offset = this.mStartDate.subtractDate(this.mBaseDate);
+            var duration = this.mEndDate.subtractDate(this.mStartDate);
+            
+            // calculate how much pixels a single hour and a single day take up.
+            var num_hours = this.mEndHour - this.mStartHour;
+            var hour_width = this.mContentWidth / num_hours;
+
+            // calculate the offset in fractional hours that corrospond
+            // to our start- and end-time.
+            var start_offset_in_hours = this.date2offset(this.mStartDate);
+            var end_offset_in_hours = this.date2offset(this.mEndDate);
+            var duration_in_hours = end_offset_in_hours - start_offset_in_hours;
+
+            // calculate width & margin for the selection bar based on the
+            // relation of startdate/basedate and enddate/startdate.
+            // this is a simple conversion from hours to pixels.
+            this.mWidth = duration_in_hours*hour_width;
+            this.mMargin = start_offset_in_hours*hour_width;
+            
+            // calculate the difference between content and container in pixels.
+            // the container is the window showing this control, the content is the
+            // total number of pixels the selection bar can theoretically take up.
+            var total_width = this.mContentWidth * this.mRange - this.parentNode.boxObject.width;
+            
+            // calculate the current scroll offset.
+            var offset = Math.floor(total_width * this.mRatio);
+
+            // the final margin is the difference between
+            // the date-based margin and the scroll-based margin.
+            var margin = this.mMargin - offset;
+
+            // set the styles based on the calculations above for the 'selection-bar'.
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+            var style = "width: "+this.mWidth+"px; margin-left: "+margin+"px; margin-top: "+this.mHeaderHeight+"px;";
+            selectionbar.setAttribute("style",style);
+          ]]>
+        </body>
+      </method>
+
+      <method name="setWidth">
+        <parameter name="width"/>
+        <body>
+          <![CDATA[
+            var scrollbox = document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
+            scrollbox.setAttribute("width",width);
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+
+      <handler event="mousedown">
+        <![CDATA[
+          var element = event.target;
+          this.mMouseX = event.clientX - element.boxObject.x;
+          this.mMouseY = event.clientY - element.boxObject.y;
+          if(this.mMouseX >= this.mMargin) {
+            if(this.mMouseX < (this.mMargin+this.mWidth)) {
+              this.mDragState = 1;
+              if(this.mMouseX <= (this.mMargin+3)) {
+                this.mDragState = 2;
+              } else if(this.mMouseX >= (this.mMargin+this.mWidth-3)) {
+                this.mDragState = 3;
+              }
+            }
+          }
+        ]]>
+      </handler>
+
+      <handler event="mousemove">
+        <![CDATA[
+          if(this.mDragState == 1) {
+            var element = event.target;
+            var mouseX = event.clientX - element.boxObject.x;
+            var mouseY = event.clientY - element.boxObject.y;
+            var delta = mouseX - this.mMouseX;
+            this.mMargin += delta;
+            if(this.mMargin < 0)
+              this.mMargin = 0;
+            this.mMouseX = mouseX;
+            this.mMouseY = mouseY;
+            this.update();
+          } else if(this.mDragState == 2) {
+            var element = event.target;
+            var mouseX = event.clientX - element.boxObject.x;
+            var mouseY = event.clientY - element.boxObject.y;
+            var delta = mouseX - this.mMouseX;
+            var newMargin = this.mMargin + delta;
+            if(newMargin < 0)
+              newMargin = 0;
+            var newWidth = this.mWidth - (newMargin - this.mMargin);
+            if(newWidth >= 8) {
+              this.mWidth = newWidth;
+              this.mMargin = newMargin;
+              this.update();
+            }
+            this.mMouseX = mouseX;
+            this.mMouseY = mouseY;
+          } else if(this.mDragState == 3) {
+            var element = event.target;
+            var mouseX = event.clientX - element.boxObject.x;
+            var mouseY = event.clientY - element.boxObject.y;
+            var delta = mouseX - this.mMouseX;
+            var newWidth = this.mWidth + delta;
+            if(newWidth >= 8) {
+              this.mWidth = newWidth;
+              this.update();
+            }
+            this.mMouseX = mouseX;
+            this.mMouseY = mouseY;
+          }
+        ]]>
+      </handler>
+
+      <handler event="mouseup">
+        <![CDATA[
+          this.mDragState = 0;
+        ]]>
+      </handler>
+
+    </handlers>
+
+  </binding>
+
 
   <!-- id's are evil, use anonid -->
   <binding id="attendees-page">
@@ -1387,10 +1671,18 @@
             <xul:attendees-list flex="1" anonid="attendees-list"/>
             <xul:box class="attendee-spacer-bottom"/>
           </xul:box>
-          <xul:splitter/>
-          <xul:box orient="vertical" flex="1">
-            <xul:freebusy-timebar anonid="timebar" xbl:inherits="range"/>
-            <xul:freebusy-grid flex="1" anonid="freebusy-grid" xbl:inherits="range"/>
+          <xul:splitter anonid="splitter"/>
+          <xul:box orient="vertical">
+
+            <xul:stack flex="1">
+              <xul:box orient="vertical" flex="1">
+                <xul:freebusy-timebar anonid="timebar" xbl:inherits="range"/>
+                <xul:freebusy-grid flex="1" anonid="freebusy-grid" xbl:inherits="range"/>
+              </xul:box>
+              <xul:selection-bar anonid="selection-bar" xbl:inherits="range"/>
+            </xul:stack>
+
+
             <xul:scrollbar orient="horizontal" anonid="horizontal-scrollbar" maxpos="100"/>
           </xul:box>
           <xul:box orient="vertical" anonid="vertical-scrollbar-box" collapsed="true">
@@ -1486,22 +1778,20 @@
 
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
-      <field name="mStartHour">0</field>
-      <field name="mEndHour">24</field>
+      <field name="mStartHour">8</field>
+      <field name="mEndHour">19</field>
 
-      <field name="mCalID">null</field>
+      <field name="mOwnerID">null</field>
       <field name="mUserID">null</field>
       <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
       <field name="mIsOrganizer">false</field>
 
+      <field name="mUndoStack">[]</field>
+
       <constructor>
         <![CDATA[
           var args = window.arguments[0];
-          var item = args.calendarEvent;
-
-          if (isToDo(item))
-            return;
 
           var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
 
@@ -1545,7 +1835,7 @@
             var kDefaultTimezone = calendarDefaultTimezone();
             this.mStartDate = aStartDate.getInTimezone(kDefaultTimezone);
             this.mEndDate = aEndDate.getInTimezone(kDefaultTimezone);
-            var endDate = this.mEndDate.clone();
+            var endDate = this.mEndDate.getInTimezone(kDefaultTimezone);
                 
             // Check if an all-day event has been passed in (to adapt endDate).
             if (this.mStartDate.isDate) {
@@ -1573,6 +1863,12 @@
             timebar.endDate = endDate;
             timebar.refresh();
             
+            // tell the selection-bar about the new start/enddate
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+            selectionbar.startDate = this.mStartDate;
+            selectionbar.endDate = endDate;
+            selectionbar.update();
+            
             // tell the freebusy grid about the new start/enddate
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
             grid.startDate = this.mStartDate;
@@ -1593,6 +1889,24 @@
         <getter>
           <![CDATA[
           return this.mEndDate;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="attendees">
+        <getter>
+          <![CDATA[
+            var attendeelist = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
+            return attendeelist.attendees;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="organizer">
+        <getter>
+          <![CDATA[
+            var attendeelist = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
+            return attendeelist.organizer;
           ]]>
         </getter>
       </property>
@@ -1629,8 +1943,9 @@
         <body>
           <![CDATA[
             var args = window.arguments[0];
-            var item = args.calendarEvent;
-            var calendar = item.calendar;
+            var startTime = args.startTime;
+            var endTime = args.endTime;
+            var calendar = args.calendar;
 
             this.onChangeCalendar(calendar);
 
@@ -1651,22 +1966,9 @@
                 }
             }
 
-            this.setTimeRange(item.startDate,item.endDate);
-          ]]>
-        </body>
-      </method>
-
-      <method name="onSave">
-        <parameter name="item"/>
-        <body>
-          <![CDATA[
-            item.removeAllAttendees();
-            var attendeelist = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
-            var attendees = attendeelist.attendees;
-            item.organizer = attendeelist.organizer;
-            for each(var attendee in attendees) {
-               item.addAttendee(attendee);
-            }
+            this.setTimeRange(startTime,endTime);
+            
+            this.updateButtons();
           ]]>
         </body>
       </method>
@@ -1676,7 +1978,7 @@
         <body>
           <![CDATA[
             var args = window.arguments[0];
-            var item = args.calendarEvent;
+            var organizer = args.organizer;
           
             // set 'mIsReadOnly' if the calendar is read-only
             if (calendar && calendar.readOnly)
@@ -1691,19 +1993,19 @@
 
             try {
               this.mUserID = "";
-              this.mCalID = "";
+              this.mOwnerID = "";
               this.mOrganizerID = "";
             
               var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-              this.mCalID = provider.calId;
+              this.mOwnerID = provider.ownerId;
               this.mUserID = provider.session.userId;
-              this.mOrganizerID = ((item.organizer == null || item.organizer.id == null)
-                              ? this.mCalID // sensible default
-                              : item.organizer.id);
+              this.mOrganizerID = ((organizer == null || organizer.id == null)
+                              ? this.mOwnerID // sensible default
+                              : organizer.id);
 
               // set 'mIsOrganizer' if the current calid originally scheduled this event.
               this.mIsOrganizer = false;
-              if(this.mCalID == this.mOrganizerID)
+              if(this.mOwnerID == this.mOrganizerID)
                 this.mIsOrganizer = true;
 
               // display the organizer [try to get the common name from the calid]
@@ -1728,9 +2030,28 @@
         </body>
       </method>
 
+      <method name="updateButtons">
+        <body>
+          <![CDATA[
+            var previousButton = document.getAnonymousElementByAttribute(this, "anonid", "previous-slot");
+            if(this.mUndoStack.length > 0) {
+              previousButton.removeAttribute('disabled');
+            } else {
+              previousButton.setAttribute('disabled', 'true');
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="onNextSlot">
         <body>
           <![CDATA[
+            // store the current setting in the undo-stack.
+            var currentSlot = {};
+            currentSlot.startTime = this.mStartDate;
+            currentSlot.endTime = this.mEndDate;
+            this.mUndoStack.push(currentSlot);
+
             // ask the grid for the next possible timeslot.
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
             var duration = this.mEndDate.subtractDate(this.mStartDate);
@@ -1741,9 +2062,8 @@
               end.day++;
               end.normalize();
             }
-            var kDefaultTimezone = calendarDefaultTimezone();
-            this.mStartDate = start.getInTimezone(kDefaultTimezone);
-            this.mEndDate = end.getInTimezone(kDefaultTimezone);
+            this.mStartDate = start.clone();
+            this.mEndDate = end.clone();
             var endDate = this.mEndDate.clone();
                 
             // Check if an all-day event has been passed in (to adapt endDate).
@@ -1777,8 +2097,16 @@
             timebar.endDate = endDate;
             timebar.refresh();
 
+            // tell the selection-bar about the new start/enddate
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+            selectionbar.startDate = this.mStartDate;
+            selectionbar.endDate = endDate;
+            selectionbar.update();
+
             // scroll the grid/timebar such that the current time is visible
             this.scrollToCurrentTime();
+
+            this.updateButtons();
           ]]>
         </body>
       </method>
@@ -1786,37 +2114,53 @@
       <method name="onPreviousSlot">
         <body>
           <![CDATA[
-            // ask the grid for the previous timeslot.
-            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
-            var duration = this.mEndDate.subtractDate(this.mStartDate);
-            var start = grid.previousSlot();
-            var end = start.clone();
-            end.addDuration(duration);
-            if(start.isDate) {
-              end.day++;
-              end.normalize();
-            }
-            var kDefaultTimezone = calendarDefaultTimezone();
-            this.mStartDate = start.getInTimezone(kDefaultTimezone);
-            this.mEndDate = end.getInTimezone(kDefaultTimezone);
+            var previousSlot = this.mUndoStack.pop();
+            if(!previousSlot)
+              return;
+                          
+            // in case the new starttime happens to be scheduled
+            // on a different day, we also need to update the
+            // complete freebusy informations and appropriate
+            // underlying arrays holding the information.
+            var refresh = previousSlot.startTime.day != this.mStartDate.day;
+                          
+            this.mStartDate = previousSlot.startTime.clone();
+            this.mEndDate = previousSlot.endTime.clone();
             var endDate = this.mEndDate.clone();
-                
-            // Check if an all-day event has been passed in (to adapt endDate).
-            if (this.mStartDate.isDate) {
-                this.mEndDate.day -= 1;
-
-                // The date/timepicker uses jsDate internally. Because jsDate does
-                // not know the concept of dates we end up displaying times unequal
-                // to 00:00 for all-day events depending on local timezone setting. 
-                // Calling normalize() recalculates that times to represent 00:00
-                // in local timezone.
-                this.mEndDate.normalize();
-                this.mStartDate.normalize();
-                endDate.normalize();
-            }
-            this.mStartDate.makeImmutable();
-            this.mEndDate.makeImmutable();
-            endDate.makeImmutable();
+            
+            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+                    
+            /* // the following block was used to really search for the previous
+             * // slot instead of relying on a simple undeo/redo stack.
+             * // ask the grid for the previous timeslot.
+             * var duration = this.mEndDate.subtractDate(this.mStartDate);
+             * var start = grid.previousSlot();
+             * var end = start.clone();
+             * end.addDuration(duration);
+             * if(start.isDate) {
+             *   end.day++;
+             *   end.normalize();
+             * }
+             * this.mStartDate = start.clone();
+             * this.mEndDate = end.clone();
+             * var endDate = this.mEndDate.clone();
+             * // Check if an all-day event has been passed in (to adapt endDate).
+             * if (this.mStartDate.isDate) {
+             *     this.mEndDate.day -= 1;
+             * 
+             *     // The date/timepicker uses jsDate internally. Because jsDate does
+             *     // not know the concept of dates we end up displaying times unequal
+             *     // to 00:00 for all-day events depending on local timezone setting. 
+             *     // Calling normalize() recalculates that times to represent 00:00
+             *     // in local timezone.
+             *     this.mEndDate.normalize();
+             *     this.mStartDate.normalize();
+             *     endDate.normalize();
+             * }
+             * this.mStartDate.makeImmutable();
+             * this.mEndDate.makeImmutable();
+             * endDate.makeImmutable();
+             */
 
             // show the new start/enddate in the appropriate controls
             document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
@@ -1832,8 +2176,20 @@
             timebar.endDate = endDate;
             timebar.refresh();
             
+            // tell the selection-bar about the new start/enddate
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+            selectionbar.startDate = this.mStartDate;
+            selectionbar.endDate = endDate;
+            selectionbar.update();
+            
             // scroll the grid/timebar such that the current time is visible
             this.scrollToCurrentTime();
+            
+            this.updateButtons();
+            
+            if(refresh) {
+              grid.forceRefresh();
+            }
           ]]>
         </body>
       </method>
@@ -1871,6 +2227,7 @@
       <method name="scrollToCurrentTime">
         <body>
           <![CDATA[
+            debugger;
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             var ratio = (this.mStartDate.hour-this.mStartHour) * timebar.step;
             if(ratio <= 0.0)
@@ -1889,6 +2246,12 @@
     <handlers>
       <handler event="DOMAttrModified">
         <![CDATA[
+          if(event.attrName == "width") {
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+            selectionbar.setWidth(selectionbar.boxObject.width);
+            return;
+          }
+        
           if(event.attrName != "curpos")
             return;
           var scrollbar = event.originalTarget.parentNode;
@@ -1904,11 +2267,21 @@
             var ratio = event.newValue/maxpos;
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
             timebar.scroll = ratio;
             grid.scroll = ratio;
+            selectionbar.ratio = ratio;
           }
       ]]>
       </handler>
+
+      <handler event="timebar">
+        <![CDATA[
+          var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+          selectionbar.init(event.details,event.height);
+        ]]>
+      </handler>
+
     </handlers>
 
   </binding>

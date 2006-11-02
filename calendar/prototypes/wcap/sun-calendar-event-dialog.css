@@ -43,10 +43,29 @@ label.label {
   text-align: right;
 }
 
-main-page
+.text-link:focus
 {
-	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-main.xml#main-page");
-	-moz-user-focus: normal;
+  color : blue;
+  border : 1px solid transparent;
+}
+
+.text-link:hover:active
+{
+  color : blue;
+} 
+
+.text-link[visited="true"] 
+{
+  color : blue;
+}
+
+#item-calendar,
+#item-categories,
+#item-repeat,
+#item-alarm,
+.datepicker-text-class
+{
+  min-width: 12em;
 }
 
 /****************************************************************************************/
@@ -99,6 +118,12 @@ attendees-list
 	-moz-user-focus: normal;
 }
 
+selection-bar
+{
+	-moz-binding: url("chrome://calendar/content/sun-calendar-event-dialog-attendees.xml#selection-bar");
+	-moz-user-focus: normal;
+}
+
 /****************************************************************************************/
 
 scroll-container 
@@ -141,6 +166,21 @@ timezone-page
 
 /****************************************************************************************/
 
+listbox {
+  margin: 0px 0px;
+  border-style: none;
+}
+
+.selection-bar
+{
+  /*cursor: -moz-grab;*/
+  /*cursor: e-resize;*/
+  /*cursor: e-resize;*/
+  background-color: #008080;
+  opacity: 0.2;
+  -moz-border-radius-topleft: 10px;
+  -moz-border-radius-topright: 10px;
+}
 
 .freebusy-container 
 {
@@ -165,10 +205,15 @@ timezone-page
 	margin-bottom: 5px;
 }
 
-.freebusy-timebar-hour[scheduled="true"] {
-	margin-bottom: 0px;
-	border-bottom: 5px solid;
-	-moz-border-bottom-colors: #688541 #8EB060 #ADC78B #D6E2C5;
+.freebusy-timebar-hour[scheduled="true"] 
+{
+  /* the 'sechuled'-attribute is used in the timebar to indicate
+     which hours are affected of the currently schedued event.
+     since we added the selection-bar this is no longer necessary
+     but we keep the possibity to decorate those hours if it should
+     become beneficial.
+     text-decoration : underline;
+   */
 }
 
 .freebusy-grid 

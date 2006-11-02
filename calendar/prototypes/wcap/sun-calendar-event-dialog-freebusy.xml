@@ -153,6 +153,15 @@
         </setter>
       </property>
 
+      <property name="dayHeight">
+        <getter>
+          <![CDATA[
+          var day = document.getAnonymousElementByAttribute(this, "anonid", "day");
+          return day.boxObject.height;
+        ]]>
+        </getter>
+      </property>
+
       <property name="date">
         <setter>
           <![CDATA[
@@ -215,9 +224,8 @@
   ########################################################################
   -->
   <binding id="freebusy-timebar" extends="xul:box">
+
     <content>
-
-
       <xul:listbox anonid="listbox" seltype="multiple" rows="1" flex="1" disabled="true">
         <xul:listcols>
           <xul:listcol id="day-column" flex="1"/>
@@ -230,8 +238,8 @@
           </xul:listcell>
         </xul:listitem>
       </xul:listbox>
-
     </content>
+
     <implementation>
 
       <field name="mNumDays">0</field>
@@ -369,11 +377,9 @@
       <constructor>
         <![CDATA[
           var args = window.arguments[0];
-          var item = args.calendarEvent;
+          var startTime = args.startTime;
+          var endTime = args.endTime;
 
-          if (isToDo(item))
-            return;
-         
           var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
 
           // get default start/end times from prefs and set on the
@@ -390,8 +396,8 @@
           // we should be able to show. the start- and enddate
           // is the time the event is scheduled for.
           var kDefaultTimezone = calendarDefaultTimezone();
-          this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
-          this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+          this.startDate = startTime.getInTimezone(kDefaultTimezone);
+          this.endDate = endTime.getInTimezone(kDefaultTimezone);
           this.mRange = Number(this.getAttribute("range"));
 
           var self = this;
@@ -425,15 +431,17 @@
         <body>
           <![CDATA[
             var args = window.arguments[0];
-            var item = args.calendarEvent;
-            var calendar = item.calendar;
+            var startTime = args.startTime;
+            var endTime = args.endTime;
+            var calendar = args.calendar;
 
             var kDefaultTimezone = calendarDefaultTimezone();
-            this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
-            this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+            this.startDate = startTime.getInTimezone(kDefaultTimezone);
+            this.endDate = endTime.getInTimezone(kDefaultTimezone);
             
             // set the number of 'freebusy-day'-elements we need to fill up the content box.
-            this.mNumDays = 2;
+            // TODO: hardcoded value
+            this.mNumDays = 4;
             
             // now create those elements and set their date property.
             var date = this.mStartDate.clone();
@@ -454,6 +462,12 @@
                 parent.appendChild(newNode);
               }
             }
+            
+            var event = document.createEvent('Events'); 
+            event.initEvent('timebar', true, false);
+            event.details = this.contentWidth;
+            event.height = template.dayHeight;
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
@@ -612,7 +626,8 @@
             var time = formatter.formatTime(date);
             template.setAttribute("value",time);
             date.hour++;
-            for(var day=1; day<=2; day++) {
+            // TODO: hardcoded value
+            for(var day=1; day<=4; day++) {
               while(date.hour < this.mEndHour) {
                 var newNode = template.cloneNode(false);
                 var value = formatter.formatTime(date);
@@ -640,13 +655,19 @@
           // result. after the state has been updated we call showState()
           // which will map the entries to attributes on the xul elements.
           if(aEntries) {
+
+            var kDefaultTimezone = calendarDefaultTimezone();
             
             var start = this.mStartDate.clone();
             start.hour = 0;
             start.minute = 0;
             start.second = 0;
+            start.timezone = kDefaultTimezone;
+            start.normalize();
             var end = start.clone();
             end.day += this.mRange;
+            end.timezone = kDefaultTimezone;
+            end.normalize();
 
             // first of all set all state slots to 'free'
             for(var i=0; i<this.mState.length; i++) {
@@ -661,13 +682,38 @@
               // first of all make sure that the given intervall is
               // within the intervall we're currently displaying.
               if(entry.isBusyEntry) {
-                if(entry.dtRangeStart.compare(start) >= 0) {
-                  if(entry.dtRangeEnd.compare(end) < 0) {
+              
+                var rangeStart = entry.dtRangeStart.getInTimezone(kDefaultTimezone);
+                var rangeEnd = entry.dtRangeEnd.getInTimezone(kDefaultTimezone);
+                rangeStart.normalize();
+                rangeEnd.normalize();
+                
+                if(rangeStart.compare(start) >= 0) {
+                  if(rangeEnd.compare(end) < 0) {
+            
+                    var dayingrid = start.clone();
+                    dayingrid.year = rangeStart.year;
+                    dayingrid.month = rangeStart.month;
+                    dayingrid.day = rangeStart.day;
+                    dayingrid.getInTimezone(kDefaultTimezone);
+                    dayingrid.normalize();
             
                     // ok, this is an entry we're interested in. find out
                     // which hours are actually occupied.
-                    var offset = entry.dtRangeStart.subtractDate(start);
-                    var duration = entry.dtRangeEnd.subtractDate(entry.dtRangeStart);
+                    var offset = rangeStart.subtractDate(dayingrid);
+                    
+                    // calculate how many days we're offset from the
+                    // start of the grid. eliminate hours in case
+                    // we encounter the daylight-saving hop.
+                    var dayoffset = dayingrid.subtractDate(start);
+                    dayoffset.hours = 0;
+                    
+                    // add both offsets to find the total offset.
+                    // dayoffset -> offset in days from start of grid
+                    // offset -> offset in hours from start of current day
+                    offset.addDuration(dayoffset);
+                    
+                    var duration = rangeEnd.subtractDate(rangeStart);
                     var startHours = Math.floor(offset.inSeconds / 3600);
                     var endHours = startHours +
                                    Math.ceil((duration.inSeconds / 3600) +
@@ -860,9 +906,14 @@
 
   <!-- id's are evil, use anonid -->
   <binding id="freebusy-grid">
+    
     <content>
-
-      <xul:listbox anonid="listbox" seltype="multiple" rows="-1" flex="1" disabled="true">
+      <xul:listbox anonid="listbox"
+                   seltype="multiple"
+                   rows="-1"
+                   disabled="true"
+                   flex="1"
+                   style="min-width: 50em; min-height: 30em">
         <xul:listcols>
           <xul:listcol id="grid-column" flex="1"/>
         </xul:listcols>
@@ -872,8 +923,8 @@
           </xul:listcell>
         </xul:listitem>
       </xul:listbox>
-
     </content>
+    
     <implementation>
 
       <field name="mContentHeight">0</field>
@@ -920,10 +971,6 @@
       <constructor>
         <![CDATA[
           var args = window.arguments[0];
-          var item = args.calendarEvent;
-
-          if (isToDo(item))
-            return;
 
           var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
 
@@ -989,12 +1036,13 @@
         <body>
           <![CDATA[
             var args = window.arguments[0];
-            var item = args.calendarEvent;
-            var calendar = item.calendar;
+            var startTime = args.startTime;
+            var endTime = args.endTime;
+            var calendar = args.calendar;
 
             var kDefaultTimezone = calendarDefaultTimezone();
-            this.startDate = item.startDate.getInTimezone(kDefaultTimezone);
-            this.endDate = item.endDate.getInTimezone(kDefaultTimezone);
+            this.startDate = startTime.getInTimezone(kDefaultTimezone);
+            this.endDate = endTime.getInTimezone(kDefaultTimezone);
 
             // query for the wcap interface, the appropriate functionality of this interface
             // should be migrated to some other generic one instead of relying on the wcap provider.
@@ -1006,11 +1054,7 @@
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
 
-            // detach the template item from the listbox, but hold the reference.
-            // until this function returns we add at least a single copy of this template back again.
-            listbox.removeChild(template);
-
-            var attendees = item.getAttendees({});
+            var attendees = args.attendees;
             if(attendees.length > 0) {
                 for each(var attendee in attendees) {
                   this.appendNewRow(listbox,template,null);
@@ -1020,6 +1064,10 @@
             else {
               this.appendNewRow(listbox,template,null);
             }
+          
+            // detach the template item from the listbox, but hold the reference.
+            // until this function returns we add at least a single copy of this template back again.
+            listbox.removeChild(template);
           
             this.fitDummyRows();
             this.updateFreeBusy();
@@ -1347,7 +1395,19 @@
           ]]>
         </body>
       </method>
-      
+
+      <method name="forceRefresh">
+        <body>
+          <![CDATA[
+            for (var i=1; i <= this.mMaxFreeBusy; i++) {
+              var row = this.getFreeBusyElement(i);
+              row.setAttribute("dirty","true");
+            }
+            this.updateFreeBusy();
+          ]]>
+        </body>
+      </method>
+
       <!-- This method returns the <xul:listitem> at row numer 'aRow' -->
       <method name="getListItem">
         <parameter name="aRow"/>
