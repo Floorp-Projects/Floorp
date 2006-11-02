@@ -703,19 +703,23 @@ class nsTArray : public nsTArray_base {
 template<class E, PRUint32 N>
 class nsAutoTArray : public nsTArray<E> {
   public:
-    nsAutoTArray() {
-      mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
-      mHdr->mLength = 0;
-      mHdr->mCapacity = N;
-      mHdr->mIsAutoArray = 1;
+    typedef nsTPtrArray<E> base_type;
+    typedef typename base_type::Header Header;
+    typedef typename base_type::elem_type elem_type;
 
-      NS_ASSERTION(GetAutoArrayBuffer() ==
+    nsAutoTArray() {
+      base_type::mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
+      base_type::mHdr->mLength = 0;
+      base_type::mHdr->mCapacity = N;
+      base_type::mHdr->mIsAutoArray = 1;
+
+      NS_ASSERTION(base_type::GetAutoArrayBuffer() ==
                    NS_REINTERPRET_CAST(Header*, &mAutoBuf),
                    "GetAutoArrayBuffer needs to be fixed");
     }
 
   protected:
-    char mAutoBuf[sizeof(Header) + N * sizeof(E)];
+    char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
 };
 
 #endif  // nsTArray_h__
