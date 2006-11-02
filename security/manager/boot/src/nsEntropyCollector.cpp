@@ -44,6 +44,12 @@
 nsEntropyCollector::nsEntropyCollector()
 :mBytesCollected(0), mWritePointer(mEntropyCache)
 {
+  // We could use the uninitialized memory in mEntropyCache as initial
+  // random data, but that means (if any entropy is collected before NSS
+  // initialization and then forwarded) that we'll get warnings from
+  // tools like valgrind for every later operation that depends on the
+  // entropy.
+  memset(mEntropyCache, 0, sizeof(mEntropyCache));
 }
 
 nsEntropyCollector::~nsEntropyCollector()
@@ -84,7 +90,6 @@ nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
         // copy at most to the end of the cyclic buffer
         for (PRInt32 i = 0; i < this_time; ++i) {
 
-          // accept the fact that we use our buffer's random uninitialized content
           unsigned int old = *mWritePointer;
 
           // combine new and old value already stored in buffer
