@@ -155,27 +155,27 @@ if ($debug == true) {
 
     echo '<h1>Parameters</h1>';
     echo '<pre>';
-    print_r($_GET);
+    htmlspecialchars(print_r($_GET));
     echo '</pre>';
 
     if (!empty($query)) {
         echo '<h1>Query</h1>';
         echo '<pre>';
-        echo $query;
+        echo htmlspecialchars($query);
         echo '</pre>';
     }
 
     if (!empty($update)) {
         echo '<h1>Result</h1>';
         echo '<pre>';
-        print_r($update);
+        htmlspecialchars(print_r($update));
         echo '</pre>';
     }
 
     if (!empty($errors) && is_array($errors)) {
         echo '<h1>Errors Found</h1>';
         echo '<pre>';
-        print_r($errors);
+        htmlspecialchars(print_r($errors));
         echo '</pre>';
     } else {
         echo '<h1>No Errors Found</h1>';
