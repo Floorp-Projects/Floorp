@@ -1346,11 +1346,6 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
   }
   PRUint16 currentGroup = aFlags & NS_EVENT_FLAG_SYSTEM_EVENT;
 
-  /* Without this addref, certain events, notably ones bound to
-     keys which cause window deletion, can destroy this object
-     before we're ready. */
-  nsCOMPtr<nsIEventListenerManager> kungFuDeathGrip(this);
-
   if ((aEvent->message == NS_CONTEXTMENU ||
        aEvent->message == NS_CONTEXTMENU_KEY) &&
       NS_FAILED(FixContextMenuEvent(aPresContext, aCurrentTarget, aEvent,
