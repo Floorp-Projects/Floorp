@@ -6005,7 +6005,7 @@ xml_contains(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 break;
         }
         XMLArrayCursorFinish(&cursor);
-        if (!eq)
+        if (kid)
             return JS_FALSE;
     } else {
         if (!xml_equality(cx, obj, value, &eq))
