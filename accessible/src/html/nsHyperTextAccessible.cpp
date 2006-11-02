@@ -1260,16 +1260,25 @@ nsresult nsHyperTextAccessible::FireTextChangeEvent(AtkTextChange *aTextData)
 
 nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  // This will clear all the selections out and set the selection
+  // Set the selection
+  nsresult rv = SetSelectionBounds(0, aStartPos, aEndPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If range 0 was successfully set, clear any additional selection 
+  // ranges remaining from previous selection
   nsCOMPtr<nsISelection> domSel;
   GetSelections(nsnull, getter_AddRefs(domSel));
-  if (!domSel) {
-    return NS_ERROR_FAILURE;
-  }
   if (domSel) {
-    domSel->RemoveAllRanges();
-    AddSelection(aStartPos, aEndPos);
+    PRInt32 numRanges;
+    domSel->GetRangeCount(&numRanges);
+
+    for (PRInt32 count = 0; count < numRanges - 1; count ++) {
+      nsCOMPtr<nsIDOMRange> range;
+      domSel->GetRangeAt(1, getter_AddRefs(range));
+      domSel->RemoveRange(range);
+    }
   }
+
   return NS_OK;
 }
 
@@ -1403,26 +1412,22 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
 
   PRInt32 rangeCount;
   domSel->GetRangeCount(&rangeCount);
-  if (aSelectionNum < 0 || aSelectionNum >= rangeCount)
+  nsCOMPtr<nsIDOMRange> range;
+  if (aSelectionNum == rangeCount) { // Add a range
+    range = do_CreateInstance(kRangeCID);
+    NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
+  }
+  else if (aSelectionNum < 0 || aSelectionNum > rangeCount) {
     return NS_ERROR_INVALID_ARG;
+  }
+  else {
+    domSel->GetRangeAt(aSelectionNum, getter_AddRefs(range));
+    NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+  }
 
   nsIFrame *endFrame;
   nsIFrame *startFrame = GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrame);
-  nsCOMPtr<nsIDOMRange> range;
-  domSel->GetRangeAt(aSelectionNum, getter_AddRefs(range));
-
-  if (!startFrame) {
-    // If blank editor, make sure to position selection anyway
-    nsCOMPtr<nsIEditor> editor = GetEditor();
-    if (editor) {
-      nsCOMPtr<nsIDOMElement> rootElement;
-      editor->GetRootElement(getter_AddRefs(rootElement));
-      nsCOMPtr<nsIDOMNode> rootEditorNode(do_QueryInterface(rootElement));
-      return range->SelectNodeContents(rootEditorNode);
-    }
-    return NS_ERROR_FAILURE;
-  }
-
+  NS_ENSURE_TRUE(startFrame, NS_ERROR_FAILURE);
 
   nsIContent *startParentContent = startFrame->GetContent();
   if (startFrame->GetType() != nsAccessibilityAtoms::textFrame) {
@@ -1432,10 +1437,12 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
   }
   nsCOMPtr<nsIDOMNode> startParentNode(do_QueryInterface(startParentContent));
   NS_ENSURE_TRUE(startParentNode, NS_ERROR_FAILURE);
-  range->SelectNodeContents(mDOMNode);
-  range->SetStart(startParentNode, aStartOffset);
+  rv = range->SetStart(startParentNode, aStartOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (isOnlyCaret) { 
-    range->Collapse(PR_TRUE);
+    rv = range->Collapse(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     nsIContent *endParentContent = endFrame->GetContent();
@@ -1446,9 +1453,13 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
     }
     nsCOMPtr<nsIDOMNode> endParentNode(do_QueryInterface(endParentContent));
     NS_ENSURE_TRUE(endParentNode, NS_ERROR_FAILURE);
-    range->SetEnd(endParentNode, aEndOffset);
+    rv = range->SetEnd(endParentNode, aEndOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (aSelectionNum == rangeCount) { // Add successfully created new range
+    return domSel->AddRange(range);
+  }
   return NS_OK;
 }
 
@@ -1461,17 +1472,10 @@ NS_IMETHODIMP nsHyperTextAccessible::AddSelection(PRInt32 aStartOffset, PRInt32 
   nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID));
-  if (! range)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  range->SelectNodeContents(mDOMNode);  // Must be a valid range or we can't add it
-  rv = domSel->AddRange(range);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRInt32 rangeCount;
   domSel->GetRangeCount(&rangeCount);
-  return SetSelectionBounds(rangeCount - 1, aStartOffset, aEndOffset);
+
+  return SetSelectionBounds(rangeCount, aStartOffset, aEndOffset);
 }
 
 /*
