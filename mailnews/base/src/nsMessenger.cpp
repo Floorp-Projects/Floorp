@@ -2860,7 +2860,7 @@ nsDelAttachListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
   // the imap code gets here, since the delete triggers an OnStopRunningUrl.
   // the local msg code doesn't get here.
   const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
-  if (mOriginalMessage && !strncmp(messageUri, "imap:", 5))
+  if (mOriginalMessage && !strncmp(messageUri, "imap-message:", 13))
     rv = DeleteOriginalMessage();
   // check if we've deleted the original message, and we know the new msg id.
   else if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
@@ -2925,7 +2925,7 @@ nsDelAttachListener::OnStopCopy(nsresult aStatus)
   // in OnStopRunningUrl, we'll issue the delete before we do the
   // update....all nasty stuff.
   const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
-  if (mOriginalMessage && strncmp(messageUri, "imap:", 5))
+  if (mOriginalMessage && strncmp(messageUri, "imap-message:", 13))
     return DeleteOriginalMessage();
   return NS_OK;
 }
