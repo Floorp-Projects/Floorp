@@ -2240,8 +2240,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
         else {
           // this is a good cert to present
           cert = CERT_DupCertificate(node->cert);
+          break;
         }
-        break;
       }
       keyError = PR_GetError();
       if (keyError == SEC_ERROR_BAD_PASSWORD) {
