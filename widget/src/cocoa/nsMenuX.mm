@@ -528,18 +528,11 @@ nsEventStatus nsMenuX::SetRebuild(PRBool aNeedsRebuild)
 
 NS_IMETHODIMP nsMenuX::SetEnabled(PRBool aIsEnabled)
 {
-  mIsEnabled = aIsEnabled;
-  
-  // find the menu item this menu is attached to
-  NSMenu* parentMenu = [mMacMenu supermenu];
-  NSArray* parentMenuItems = [parentMenu itemArray];
-  unsigned int parentMenuItemCount = [parentMenuItems count];
-  for (unsigned int i = 0; i < parentMenuItemCount; i++) {
-    NSMenuItem* currentMenuItem = [parentMenuItems objectAtIndex:i];
-    if ([currentMenuItem submenu] == mMacMenu)
-      [currentMenuItem setEnabled:aIsEnabled];
+  if (aIsEnabled != mIsEnabled) {
+    // we always want to rebuild when this changes
+    SetRebuild(PR_TRUE); 
+    mIsEnabled = aIsEnabled;
   }
-  
   return NS_OK;
 }
 
