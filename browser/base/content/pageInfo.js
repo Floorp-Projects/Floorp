@@ -284,9 +284,8 @@ function onLoadPageInfo()
   if ("arguments" in window && window.arguments.length >= 1 &&
        window.arguments[0] && window.arguments[0].doc)
   {
-    theWindow = null;
     theDocument = window.arguments[0].doc;
-    docTitle = theBundle.getString("frameInfo.title");
+    theWindow = theDocument.defaultView;
   } 
   else 
   {
@@ -295,11 +294,10 @@ function onLoadPageInfo()
     else
       theWindow = window.opener.frames[0];
     theDocument = theWindow.document;
-
-    docTitle = theBundle.getString("pageInfo.title");
   }
-
-  document.title = docTitle;
+  document.title = theBundle.getString(theWindow != theWindow.top ?
+                                       "frameInfo.title" :
+                                       "pageInfo.title");
   
   document.getElementById("main-window").setAttribute("relatedUrl", theDocument.location.toString());
 

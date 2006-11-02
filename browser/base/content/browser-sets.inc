@@ -105,16 +105,8 @@
     <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
     <command id="cmd_toggleTaskbar" oncommand="goToggleToolbar('status-bar','toggle_taskbar');"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
-  
-    <command id="cmd_copyLink"
-             oncommand="goDoCommand('cmd_copyLink')"
-             disabled="false"/>
-    <command id="cmd_copyImageLocation"
-             oncommand="goDoCommand('cmd_copyImageLocation')"
-             disabled="false"/>
-    <command id="cmd_copyImageContents"
-             oncommand="goDoCommand('cmd_copyImageContents')"
-             disabled="false"/>
+
+
     <command id="cmd_undo" 
              oncommand="goDoCommand('cmd_undo')"
              disabled="true"/>

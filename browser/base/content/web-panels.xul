@@ -39,6 +39,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
 
@@ -52,17 +53,24 @@
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
 
   <stringbundleset id="stringbundleset"> 
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
     
   <popupset id="mainPopupSet">
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, document.getElementById('web-panels-browser')); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
 #include browser-context.inc
+    </popup>
   </popupset>
-  
-  
+
+  <commandset id="editMenuCommands"/> 
   <browser id="web-panels-browser" persist="cachedurl" type="content" flex="1"
            context="contentAreaContextMenu"
            onclick="return window.parent.contentAreaClick(event, true);"/>
