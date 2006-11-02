@@ -2777,6 +2777,88 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
+#ifdef MOZ_CAIRO_GFX
+  nsCOMPtr<gfxIImageFrame> frame;
+  aCursor->GetFrameAt(0, getter_AddRefs(frame));
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRInt32 width, height;
+  PRUint32 bpr;
+  gfx_format format;
+  frame->GetWidth(&width);
+  frame->GetHeight(&height);
+  frame->GetImageBytesPerRow(&bpr);
+  frame->GetFormat(&format);
+
+  frame->LockImageData();
+
+  PRUint32 dataLen;
+  PRUint8 *data;
+  nsresult rv = frame->GetImageData(&data, &dataLen);
+  if (NS_FAILED(rv)) {
+    frame->UnlockImageData();
+    return rv;
+  }
+
+  /* flip the image so that it is stored bottom-up */
+  PRUint8 *bottomUpData = (PRUint8*)malloc(dataLen);
+  if (!bottomUpData) {
+    frame->UnlockImageData();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
+    for (PRInt32 i = 0; i < height; ++i) {
+      PRUint32 srcOffset = i * bpr;
+      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
+      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
+      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
+      memcpy(dstRow, srcRow, bpr);
+    }
+  } else {
+    for (PRInt32 i = 0; i < height; ++i) {
+      PRUint32 srcOffset = i * bpr;
+      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
+      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
+      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
+      for (PRInt32 x = 0; x < width; ++x) {
+        dstRow[x] = (srcRow[x] & 0xFFFFFF) | (0xFF << 24);
+      }
+    }
+  }
+  HBITMAP bmp = DataToBitmap(bottomUpData, width, height, 32);
+
+  free(bottomUpData);
+
+  frame->UnlockImageData();
+
+  ICONINFO info = {0};
+  info.fIcon = FALSE;
+  info.xHotspot = aHotspotX;
+  info.yHotspot = aHotspotY;
+  info.hbmMask = bmp;
+  info.hbmColor = bmp;
+  
+  HCURSOR cursor = ::CreateIconIndirect(&info);
+  ::DeleteObject(bmp);
+  if (cursor == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCursor = nsCursor(-1);
+  ::SetCursor(cursor);
+
+  NS_IF_RELEASE(gCursorImgContainer);
+  gCursorImgContainer = aCursor;
+  NS_ADDREF(gCursorImgContainer);
+
+  if (gHCursor != NULL)
+    ::DestroyIcon(gHCursor);
+  gHCursor = cursor;
+
+#else
+
   // Get the image data
   nsCOMPtr<gfxIImageFrame> frame;
   aCursor->GetFrameAt(0, getter_AddRefs(frame));
@@ -2908,6 +2990,8 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (gHCursor != NULL)
     ::DestroyIcon(gHCursor);
   gHCursor = cursor;
+
+#endif
 
   return NS_OK;
 }
