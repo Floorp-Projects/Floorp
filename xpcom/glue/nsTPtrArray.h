@@ -51,10 +51,10 @@ template<class E>
 class nsTPtrArray : public nsTArray<E*> {
   public:
     typedef nsTPtrArray<E> self_type;
-    typedef nsTArray<E*> parent_type;
-    typedef typename parent_type::size_type size_type;
-    typedef typename parent_type::elem_type elem_type;
-    typedef typename parent_type::index_type index_type;
+    typedef nsTArray<E*> base_type;
+    typedef typename base_type::size_type size_type;
+    typedef typename base_type::elem_type elem_type;
+    typedef typename base_type::index_type index_type;
 
     //
     // Initialization methods
@@ -79,10 +79,10 @@ class nsTPtrArray : public nsTArray<E*> {
 
     // Forward SafeElementAt to avoid shadowing (and warnings thereof)
     elem_type& SafeElementAt(index_type i, elem_type& def) {
-      return parent_type::SafeElementAt(i, def);
+      return base_type::SafeElementAt(i, def);
     }
     const elem_type& SafeElementAt(index_type i, const elem_type& def) const {
-      return parent_type::SafeElementAt(i, def);
+      return base_type::SafeElementAt(i, def);
     }
 
     // This method provides direct access to the i'th element of the array in
@@ -97,19 +97,23 @@ class nsTPtrArray : public nsTArray<E*> {
 template<class E, PRUint32 N>
 class nsAutoTPtrArray : public nsTPtrArray<E> {
   public:
-    nsAutoTPtrArray() {
-      mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
-      mHdr->mLength = 0;
-      mHdr->mCapacity = N;
-      mHdr->mIsAutoArray = 1;
+    typedef nsTPtrArray<E> base_type;
+    typedef typename base_type::Header Header;
+    typedef typename base_type::elem_type elem_type;
 
-      NS_ASSERTION(GetAutoArrayBuffer() ==
+    nsAutoTPtrArray() {
+      base_type::mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
+      base_type::mHdr->mLength = 0;
+      base_type::mHdr->mCapacity = N;
+      base_type::mHdr->mIsAutoArray = 1;
+
+      NS_ASSERTION(base_type::GetAutoArrayBuffer() ==
                    NS_REINTERPRET_CAST(Header*, &mAutoBuf),
                    "GetAutoArrayBuffer needs to be fixed");
     }
 
   protected:
-    char mAutoBuf[sizeof(Header) + N * sizeof(E*)];
+    char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
 };
 
 #endif  // nsTPtrArray_h__
