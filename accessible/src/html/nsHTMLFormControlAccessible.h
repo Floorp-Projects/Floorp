@@ -113,7 +113,6 @@ public:
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetExtState(PRUint32 *aExtState); 
-  void CacheChildren();
 
 protected:
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
