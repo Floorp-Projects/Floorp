@@ -1230,6 +1230,8 @@ const SEC_ASN1Template DisplayTextTemplate[] = {
     { SEC_ASN1_CHOICE,
       offsetof(DisplayText, variant), NULL,
       sizeof(DisplayText) },
+    { SEC_ASN1_IA5_STRING, 
+      offsetof(DisplayText, value), NULL, VisibleForm },
     { SEC_ASN1_VISIBLE_STRING, 
       offsetof(DisplayText, value), NULL, VisibleForm },
     { SEC_ASN1_BMP_STRING, 
