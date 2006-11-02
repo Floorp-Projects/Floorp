@@ -121,6 +121,8 @@ NS_NewSVGFEMergeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEMergeNodeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
+NS_NewSVGFEMorphologyElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGFEOffsetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEUnimplementedMOZElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -218,6 +220,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEMergeElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feMergeNode)
     return NS_NewSVGFEMergeNodeElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feMorphology)
+    return NS_NewSVGFEMorphologyElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feOffset)
     return NS_NewSVGFEOffsetElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feBlend            ||
@@ -228,7 +232,6 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
       name == nsSVGAtoms::feDisplacementMap  ||
       name == nsSVGAtoms::feFlood            ||
       name == nsSVGAtoms::feImage            ||
-      name == nsSVGAtoms::feMorphology       ||
       name == nsSVGAtoms::feSpecularLighting ||
       name == nsSVGAtoms::feTile             ||
       name == nsSVGAtoms::feTurbulence)

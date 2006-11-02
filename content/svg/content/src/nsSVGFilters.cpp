@@ -55,6 +55,7 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
 #include "nsSVGUtils.h"
+#include "prdtoa.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -119,6 +120,47 @@ nsSVGFE::DidModifySVGObservable (nsISVGValue* observable,
   return nsSVGFEBase::DidModifySVGObservable(observable, aModType);
 }
 
+PRBool
+nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
+                                nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
+                                NumberInfo* aInfo1, NumberInfo* aInfo2,
+                                nsAttrValue& aResult)
+{
+  float x = 0.0f, y = 0.0f;
+  char *rest;
+  PRBool parseError = PR_FALSE;
+
+  NS_ConvertUTF16toUTF8 value(aValue);
+  value.CompressWhitespace(PR_FALSE, PR_TRUE);
+  const char *str = value.get();
+  x = NS_STATIC_CAST(float, PR_strtod(str, &rest));
+  if (str == rest) {
+    //first value was illformed
+    parseError = PR_TRUE;
+  } else {
+    if (*rest == '\0') {
+      //second value was not supplied
+      y = x;
+    } else {
+      y = NS_STATIC_CAST(float, PR_strtod(rest, &rest));
+      if (*rest != '\0') {
+        //second value was illformed or there was trailing content
+        parseError = PR_TRUE;
+      }
+    }
+  }
+
+  if (parseError) {
+    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+    x = aInfo1->mDefaultValue;
+    y = aInfo2->mDefaultValue;
+    return PR_FALSE;
+  }
+  aNum1->SetBaseValue(x, this, PR_FALSE);
+  aNum2->SetBaseValue(y, this, PR_FALSE);
+  aResult.SetTo(aValue);
+  return PR_TRUE;
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGFilterPrimitiveStandardAttributes methods
@@ -409,9 +451,9 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -511,27 +553,21 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
   return NS_OK;
 }
 
-nsresult
-nsSVGFEGaussianBlurElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                    nsIAtom* aPrefix, const nsAString& aValue,
-                                    PRBool aNotify)
+PRBool
+nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                           const nsAString& aValue,
+                                           nsAttrValue& aResult)
 {
-  nsresult rv = nsSVGFEGaussianBlurElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                        aValue, aNotify);
-
   if (aName == nsSVGAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
-    float stdX = 0.0f, stdY = 0.0f;
-    char *str;
-    str = ToNewCString(aValue);
-    int num = sscanf(str, "%f %f\n", &stdX, &stdY);
-    if (num == 1)
-      stdY = stdX;
-    mNumberAttributes[STD_DEV_X].SetBaseValue(stdX, this, PR_FALSE);
-    mNumberAttributes[STD_DEV_Y].SetBaseValue(stdY, this, PR_FALSE);
-    nsMemory::Free(str);
+    return ScanDualValueAttribute(aValue, nsGkAtoms::stdDeviation,
+                                  &mNumberAttributes[STD_DEV_X],
+                                  &mNumberAttributes[STD_DEV_Y],
+                                  &sNumberInfo[STD_DEV_X],
+                                  &sNumberInfo[STD_DEV_Y],
+                                  aResult);
   }
-
-  return rv;
+  return nsSVGFEGaussianBlurElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                        aValue, aResult);
 }
 
 static void
@@ -1899,6 +1935,301 @@ nsSVGFEOffsetElement::GetNumberInfo()
                               NS_ARRAY_LENGTH(sNumberInfo));
 }
 
+//---------------------Morphology------------------------
+
+typedef nsSVGFE nsSVGFEMorphologyElementBase;
+
+class nsSVGFEMorphologyElement : public nsSVGFEMorphologyElementBase,
+                                 public nsIDOMSVGFEMorphologyElement,
+                                 public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFEMorphologyElement(nsIContent **aResult,
+                                               nsINodeInfo *aNodeInfo);
+  nsSVGFEMorphologyElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEMorphologyElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Morphology
+  NS_DECL_NSIDOMSVGFEMORPHOLOGYELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMorphologyElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFEMorphologyElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEMorphologyElementBase::)
+
+  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual NumberAttributesInfo GetNumberInfo();
+
+  enum { RADIUS_X, RADIUS_Y };
+  nsSVGNumber2 mNumberAttributes[2];
+  static NumberInfo sNumberInfo[2];
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOperator;
+};
+
+nsSVGElement::NumberInfo nsSVGFEMorphologyElement::sNumberInfo[2] =
+{
+  { &nsGkAtoms::radius, 0 },
+  { &nsGkAtoms::radius, 0 }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEMorphologyElement,nsSVGFEMorphologyElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEMorphologyElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEMorphologyElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEMorphologyElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMorphologyElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFEMorphologyElement::nsSVGFEMorphologyElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFEMorphologyElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFEMorphologyElement::Init()
+{
+  nsresult rv = nsSVGFEMorphologyElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  static struct nsSVGEnumMapping gOperatorTypes[] = {
+    {&nsSVGAtoms::erode, nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE},
+    {&nsSVGAtoms::dilate, nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE},
+    {nsnull, 0}
+  };
+
+  // Create mapped properties:
+  // DOM property: operator, #IMPLIED attrib: operator
+  {
+    nsCOMPtr<nsISVGEnum> operators;
+    rv = NS_NewSVGEnum(getter_AddRefs(operators),
+                       nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE,
+                       gOperatorTypes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mOperator), operators);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::_operator, mOperator);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMorphologyElement)
+
+
+//----------------------------------------------------------------------
+// nsSVGFEMorphologyElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFEMorphologyElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration operator; */
+NS_IMETHODIMP nsSVGFEMorphologyElement::GetOperator(nsIDOMSVGAnimatedEnumeration * *aOperator)
+{
+  *aOperator = mOperator;
+  NS_IF_ADDREF(*aOperator);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber radiusX; */
+NS_IMETHODIMP nsSVGFEMorphologyElement::GetRadiusX(nsIDOMSVGAnimatedNumber * *aX)
+{
+  return mNumberAttributes[RADIUS_X].ToDOMAnimatedNumber(aX, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber radiusY; */
+NS_IMETHODIMP nsSVGFEMorphologyElement::GetRadiusY(nsIDOMSVGAnimatedNumber * *aY)
+{
+  return mNumberAttributes[RADIUS_Y].ToDOMAnimatedNumber(aY, this);
+}
+
+NS_IMETHODIMP
+nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
+{
+  mNumberAttributes[RADIUS_X].SetBaseValue(rx, this, PR_TRUE);
+  mNumberAttributes[RADIUS_Y].SetBaseValue(ry, this, PR_TRUE);
+  return NS_OK;
+}
+
+PRBool
+nsSVGFEMorphologyElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                         const nsAString& aValue,
+                                         nsAttrValue& aResult)
+{
+  if (aName == nsSVGAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
+    return ScanDualValueAttribute(aValue, nsGkAtoms::radius,
+                                  &mNumberAttributes[RADIUS_X],
+                                  &mNumberAttributes[RADIUS_Y],
+                                  &sNumberInfo[RADIUS_X],
+                                  &sNumberInfo[RADIUS_Y],
+                                  aResult);
+  }
+  return nsSVGFEMorphologyElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                      aValue, aResult);
+}
+
+NS_IMETHODIMP
+nsSVGFEMorphologyElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEMorphologyElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+NS_IMETHODIMP
+nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
+
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER MORPH rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  float rx, ry;
+  nsSVGLength2 val;
+
+  GetAnimatedNumberValues(&rx, &ry, nsnull);
+  val.Init(nsSVGUtils::X, 0xff, rx, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  rx = instance->GetPrimitiveLength(&val);
+  val.Init(nsSVGUtils::Y, 0xff, ry, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  ry = instance->GetPrimitiveLength(&val);
+
+  PRInt32 stride = fr.GetDataStride();
+  PRUint32 xExt[4], yExt[4];  // X, Y indices of RGBA extrema
+  PRUint8 extrema[4];         // RGBA magnitude of extrema
+  PRUint16 op;
+  mOperator->GetAnimVal(&op);
+
+  if (rx == 0 && ry == 0) {
+    memcpy(targetData, sourceData, rect.height * stride);
+    return NS_OK;
+  }
+  /* Scan the kernel for each pixel to determine max/min RGBA values.  Note that
+   * as we advance in the x direction, each kernel overlaps the previous kernel.
+   * Thus, we can avoid iterating over the entire kernel by comparing the
+   * leading edge of the new kernel against the extrema found in the previous
+   * kernel.   We must still scan the entire kernel if the previous extrema do
+   * not fall within the current kernel or if we are starting a new row.
+   */
+  for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
+    PRUint32 startY = PR_MAX(0, (int)(y - ry));
+    PRUint32 endY = PR_MIN((int)(y + ry), rect.y + rect.height - 1);
+    for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
+      PRUint32 startX = PR_MAX(0, (int)(x - rx));
+      PRUint32 endX = PR_MIN((int)(x + rx), rect.x + rect.width - 1);
+      PRUint32 targIndex = y * stride + 4 * x;
+
+      // We need to scan the entire kernel
+      if (x == rect.x || xExt[0]  <= startX || xExt[1] <= startX ||
+          xExt[2] <= startX || xExt[3] <= startX) {
+        PRUint32 i;
+        for (i = 0; i < 4; i++) {
+          extrema[i] = sourceData[targIndex + i];
+        }
+        for (PRUint32 y1 = startY; y1 <= endY; y1++) {
+          for (PRUint32 x1 = startX; x1 <= endX; x1++) {
+            for (i = 0; i < 4; i++) {
+              PRUint8 pixel = sourceData[y1 * stride + 4 * x1 + i];
+              if ((extrema[i] >= pixel &&
+                   op == nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE) ||
+                  (extrema[i] <= pixel &&
+                   op == nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE)) {
+                extrema[i] = pixel;
+                xExt[i] = x1;
+                yExt[i] = y1;
+              }
+            }
+          }
+        }
+      } else { // We only need to look at the newest column
+        for (PRUint32 y1 = startY; y1 <= endY; y1++) {
+          for (PRUint32 i = 0; i < 4; i++) {
+            PRUint8 pixel = sourceData[y1 * stride + 4 * endX + i];
+            if ((extrema[i] >= pixel &&
+                 op == nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE) ||
+                (extrema[i] <= pixel &&
+                 op == nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE)) {
+                extrema[i] = pixel;
+                xExt[i] = endX;
+                yExt[i] = y1;
+            }
+          }
+        }
+      }
+      targetData[targIndex  ] = extrema[0];
+      targetData[targIndex+1] = extrema[1];
+      targetData[targIndex+2] = extrema[2];
+      targetData[targIndex+3] = extrema[3];
+    }
+  }
+  return NS_OK;
+}
 
 //---------------------UnimplementedMOZ------------------------
 
