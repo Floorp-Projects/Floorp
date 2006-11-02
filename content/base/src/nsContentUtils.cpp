@@ -138,6 +138,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMUserDataHandler.h"
 #include "nsIFragmentContentSink.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsTPtrArray.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -1228,7 +1229,7 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   }
 
   // Build the chain of parents
-  nsAutoVoidArray parents1, parents2;
+  nsAutoTPtrArray<nsINode, 30> parents1, parents2;
   do {
     parents1.AppendElement(aNode1);
     aNode1 = aNode1->GetNodeParent();
@@ -1239,13 +1240,13 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   } while (aNode2);
 
   // Find where the parent chain differs
-  PRUint32 pos1 = parents1.Count();
-  PRUint32 pos2 = parents2.Count();
+  PRUint32 pos1 = parents1.Length();
+  PRUint32 pos2 = parents2.Length();
   nsINode* parent = nsnull;
   PRUint32 len;
   for (len = PR_MIN(pos1, pos2); len > 0; --len) {
-    nsINode* child1 = NS_STATIC_CAST(nsINode*, parents1.FastElementAt(--pos1));
-    nsINode* child2 = NS_STATIC_CAST(nsINode*, parents2.FastElementAt(--pos2));
+    nsINode* child1 = parents1.ElementAt(--pos1);
+    nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       break;
     }
@@ -1265,7 +1266,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
     return 0;
   }
 
-  nsAutoVoidArray parents1, parents2;
+  nsAutoTPtrArray<nsINode, 30> parents1, parents2;
 
   // Check if either node is an attribute
   nsIAttribute* attr1 = nsnull;
@@ -1276,7 +1277,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
     // to the chain and walk up to the element
     if (elem) {
       aNode1 = elem;
-      parents1.AppendElement(attr1);
+      parents1.AppendElement(NS_STATIC_CAST(nsINode*, attr1));
     }
   }
   if (aNode2->IsNodeOfType(nsINode::eATTRIBUTE)) {
@@ -1306,7 +1307,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
 
     if (elem) {
       aNode2 = elem;
-      parents2.AppendElement(attr2);
+      parents2.AppendElement(NS_STATIC_CAST(nsINode*, attr2));
     }
   }
 
@@ -1326,10 +1327,10 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
   } while (aNode2);
 
   // Check if the nodes are disconnected.
-  PRUint32 pos1 = parents1.Count();
-  PRUint32 pos2 = parents2.Count();
-  nsINode* top1 = NS_STATIC_CAST(nsINode*, parents1.FastElementAt(--pos1));
-  nsINode* top2 = NS_STATIC_CAST(nsINode*, parents2.FastElementAt(--pos2));
+  PRUint32 pos1 = parents1.Length();
+  PRUint32 pos2 = parents2.Length();
+  nsINode* top1 = parents1.ElementAt(--pos1);
+  nsINode* top2 = parents2.ElementAt(--pos2);
   if (top1 != top2) {
     return top1 < top2 ?
       (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
@@ -1344,8 +1345,8 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
   nsINode* parent = top1;
   PRUint32 len;
   for (len = PR_MIN(pos1, pos2); len > 0; --len) {
-    nsINode* child1 = NS_STATIC_CAST(nsINode*, parents1.FastElementAt(--pos1));
-    nsINode* child2 = NS_STATIC_CAST(nsINode*, parents2.FastElementAt(--pos2));
+    nsINode* child1 = parents1.ElementAt(--pos1);
+    nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       // child1 or child2 can be an attribute here. This will work fine since
       // IndexOf will return -1 for the attribute making the attribute be
