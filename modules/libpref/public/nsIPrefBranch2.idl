@@ -105,6 +105,11 @@ interface nsIPrefBranch2 : nsIPrefBranch
    * @param aDomain   The preference which is being observed for changes.
    * @param aObserver An observer previously registered with addObserver().
    *
+   * @note
+   * Note that you must call removeObserver() on the same nsIPrefBranch2
+   * instance on which you called addObserver() in order to remove aObserver;
+   * otherwise, the observer will not be removed.
+   *
    * @see nsIObserver
    * @see addObserver
    */
