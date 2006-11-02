@@ -194,6 +194,7 @@
 
 <!-- Timezone dialog -->
 
+<!ENTITY timezone.title.label            "Please Specify the Timezone">
 
 
 
