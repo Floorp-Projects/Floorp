@@ -410,6 +410,72 @@ static PRBool test_ptrarray() {
 
 //----
 
+static PRBool test_autoarray() {
+  PRUint32 data[] = {4,6,8,2,4,1,5,7,3};
+  nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)> array;
+
+  void* hdr = array.DebugGetHeader();
+  if (hdr == (nsTArray<PRUint32>()).DebugGetHeader())
+    return PR_FALSE;
+  if (hdr == (nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)>()).DebugGetHeader())
+    return PR_FALSE;
+
+  array.AppendElement(1);
+  if (hdr != array.DebugGetHeader())
+    return PR_FALSE;
+
+  array.RemoveElement(1);
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
+  if (hdr != array.DebugGetHeader())
+    return PR_FALSE;
+
+  array.AppendElement(2);
+  if (hdr == array.DebugGetHeader())
+    return PR_FALSE;
+
+  array.Clear();
+  array.Compact();
+  if (hdr != array.DebugGetHeader())
+    return PR_FALSE;
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
+  if (hdr != array.DebugGetHeader())
+    return PR_FALSE;
+
+  nsTArray<PRUint32> array2;
+  void* emptyHdr = array2.DebugGetHeader();
+  array.SwapElements(array2);
+  if (emptyHdr == array.DebugGetHeader())
+    return PR_FALSE;
+  if (hdr == array2.DebugGetHeader())
+    return PR_FALSE;
+  PRUint32 i;
+  for (i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
+    if (array2[i] != data[i])
+      return PR_FALSE;
+  }
+  if (!array.IsEmpty())
+    return PR_FALSE;
+
+  array.Compact();
+  array.AppendElements(data, NS_ARRAY_LENGTH(data));
+  PRUint32 data3[] = {5, 7, 11};
+  nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data3)> array3;
+  array3.AppendElements(data3, NS_ARRAY_LENGTH(data3));  
+  array.SwapElements(array3);
+  for (i = 0; i < NS_ARRAY_LENGTH(data); ++i) {
+    if (array3[i] != data[i])
+      return PR_FALSE;
+  }
+  for (i = 0; i < NS_ARRAY_LENGTH(data3); ++i) {
+    if (array[i] != data3[i])
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+//----
+
 typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
@@ -426,6 +492,7 @@ static const struct Test {
   DECL_TEST(test_comptr_array),
   DECL_TEST(test_refptr_array),
   DECL_TEST(test_ptrarray),
+  DECL_TEST(test_autoarray),
   { nsnull, nsnull }
 };
 

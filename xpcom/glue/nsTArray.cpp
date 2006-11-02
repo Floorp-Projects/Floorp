@@ -46,7 +46,7 @@ nsTArray_base::Header nsTArray_base::sEmptyHdr = { 0, 0, 0 };
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsTArray_base::nsTArray_base()
-  : mHdr(NS_CONST_CAST(Header *, &sEmptyHdr)) {
+  : mHdr(&sEmptyHdr) {
   MOZ_COUNT_CTOR(nsTArray_base);
 }
 

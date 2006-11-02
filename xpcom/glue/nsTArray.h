@@ -77,10 +77,16 @@ class NS_COM_GLUE nsTArray_base {
       return mHdr->mCapacity;
     }
 
+#ifdef DEBUG
+    void* DebugGetHeader() {
+      return mHdr;
+    }
+#endif
+
   protected:
 #ifndef NS_BUILD_REFCNT_LOGGING
     nsTArray_base()
-      : mHdr(NS_CONST_CAST(Header *, &sEmptyHdr)) {
+      : mHdr(&sEmptyHdr) {
     }
 #else
     nsTArray_base();
@@ -108,8 +114,11 @@ class NS_COM_GLUE nsTArray_base {
                    size_type elementSize);
 
     // This method increments the length member of the array's header.
+    // Note that mHdr may actually be sEmptyHdr in the case where a
+    // zero-length array is inserted into our array. But then n should
+    // always be 0.
     void IncrementLength(PRUint32 n) {
-      NS_ASSERTION(mHdr != &sEmptyHdr, "bad data pointer");
+      NS_ASSERTION(mHdr != &sEmptyHdr || n == 0, "bad data pointer");
       mHdr->mLength += n;
     }
 
@@ -123,14 +132,44 @@ class NS_COM_GLUE nsTArray_base {
 
   protected:
 
+    // NOTE: This method isn't heavily optimized if either array is an
+    // nsAutoTArray.
+    PRBool SwapArrayElements(nsTArray_base& other, size_type elementSize);
+
+    // Helper function for SwapArrayElements. Ensures that if the array
+    // is an nsAutoTArray that it doesn't use the built-in buffer.
+    PRBool EnsureNotUsingAutoArrayBuffer(size_type elemSize);
+
     // We prefix mData with a structure of this type.  This is done to minimize
     // the size of the nsTArray object when it is empty.
     struct Header {
       PRUint32 mLength;
-      PRUint32 mCapacity;
+      PRUint32 mCapacity : 31;
+      PRUint32 mIsAutoArray : 1;
     };
 
-    static const Header sEmptyHdr;
+    // Returns true if this nsTArray is an nsAutoTArray with a built-in buffer.
+    PRBool IsAutoArray() {
+      return mHdr->mIsAutoArray;
+    }
+
+    // Returns a Header for the built-in buffer of this nsAutoTArray.
+    Header* GetAutoArrayBuffer() {
+      NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
+
+      return NS_REINTERPRET_CAST(Header*, &mHdr + 1);
+    }
+
+    // Returns true if this is an nsAutoTArray and it currently uses the
+    // built-in buffer to store its elements.
+    PRBool UsesAutoArrayBuffer() {
+      return mHdr->mIsAutoArray && mHdr == GetAutoArrayBuffer();
+    }
+
+    // This is not const since we may actually write to it. However we will
+    // always write to it the same data that it already contains. See
+    // IncrementLength
+    static Header sEmptyHdr;
 
     // The array's elements (prefixed with a Header).  This pointer is never
     // null.  If the array is empty, then this will point to sEmptyHdr.
@@ -533,10 +572,10 @@ class nsTArray : public nsTArray_base {
 
     // This method causes the elements contained in this array and the given
     // array to be swapped.
-    void SwapElements(self_type& other) {
-      Header *h = other.mHdr;
-      other.mHdr = mHdr;
-      mHdr = h;
+    // NOTE: This method isn't heavily optimized if either array is an
+    // nsAutoTArray.
+    PRBool SwapElements(self_type& other) {
+      return SwapArrayElements(other, sizeof(elem_type));
     }
 
     //
@@ -659,6 +698,24 @@ class nsTArray : public nsTArray_base {
         elem_traits::Construct(iter, *values);
       }
     }
+};
+
+template<class E, PRUint32 N>
+class nsAutoTArray : public nsTArray<E> {
+  public:
+    nsAutoTArray() {
+      mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
+      mHdr->mLength = 0;
+      mHdr->mCapacity = N;
+      mHdr->mIsAutoArray = 1;
+
+      NS_ASSERTION(GetAutoArrayBuffer() ==
+                   NS_REINTERPRET_CAST(Header*, &mAutoBuf),
+                   "GetAutoArrayBuffer needs to be fixed");
+    }
+
+  protected:
+    char mAutoBuf[sizeof(Header) + N * sizeof(E)];
 };
 
 #endif  // nsTArray_h__

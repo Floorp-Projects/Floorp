@@ -94,4 +94,22 @@ class nsTPtrArray : public nsTArray<E*> {
     }
 };
 
+template<class E, PRUint32 N>
+class nsAutoTPtrArray : public nsTPtrArray<E> {
+  public:
+    nsAutoTPtrArray() {
+      mHdr = NS_REINTERPRET_CAST(Header*, &mAutoBuf);
+      mHdr->mLength = 0;
+      mHdr->mCapacity = N;
+      mHdr->mIsAutoArray = 1;
+
+      NS_ASSERTION(GetAutoArrayBuffer() ==
+                   NS_REINTERPRET_CAST(Header*, &mAutoBuf),
+                   "GetAutoArrayBuffer needs to be fixed");
+    }
+
+  protected:
+    char mAutoBuf[sizeof(Header) + N * sizeof(E*)];
+};
+
 #endif  // nsTPtrArray_h__
