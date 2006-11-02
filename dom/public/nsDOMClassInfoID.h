@@ -252,6 +252,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGFEGaussianBlurElement_id,
   eDOMClassInfo_SVGFEMergeElement_id,
   eDOMClassInfo_SVGFEMergeNodeElement_id,
+  eDOMClassInfo_SVGFEMorphologyElement_id,
   eDOMClassInfo_SVGFEOffsetElement_id,
   eDOMClassInfo_SVGFEUnimplementedMOZElement_id,
   eDOMClassInfo_SVGFilterElement_id,

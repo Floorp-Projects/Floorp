@@ -56,6 +56,10 @@ protected:
                                      nsISVGValue::modificationType aModType);
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
+  PRBool ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
+                                nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
+                                NumberInfo* aInfo1, NumberInfo* aInfo2,
+                                nsAttrValue& aResult);
 
 public:
   // interfaces:

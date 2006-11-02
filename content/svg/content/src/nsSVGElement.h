@@ -191,16 +191,13 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
 
+  static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
+                                              nsIAtom* aAttribute,
+                                              const nsAString& aValue);
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 
   PRPackedBool mSuppressNotification;
-
-private:
-  static nsresult
-  ReportAttributeParseFailure(nsIDocument* aDocument,
-                              nsIAtom* aAttribute,
-                              const nsAString& aValue);
 };
 
 /**

@@ -129,6 +129,21 @@ interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes 
     readonly attribute nsIDOMSVGAnimatedNumber dy;
 };
 
+[scriptable, uuid(16154319-FB5F-4473-B360-5065B6096D33)]
+interface nsIDOMSVGFEMorphologyElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+    // Operator Types
+    const unsigned short SVG_OPERATOR_UNKNOWN  = 0;
+    const unsigned short SVG_OPERATOR_ERODE    = 1;
+    const unsigned short SVG_OPERATOR_DILATE   = 2;
+
+    readonly attribute nsIDOMSVGAnimatedString      in1;
+    readonly attribute nsIDOMSVGAnimatedNumber      radiusX;
+    readonly attribute nsIDOMSVGAnimatedNumber      radiusY;
+    readonly attribute nsIDOMSVGAnimatedEnumeration operator;
+    
+    void setRadius ( in float rx, in float ry );
+};
 
 [scriptable, uuid(8698c635-26c7-468b-905e-494e8825d56b)]
 interface nsIDOMSVGFEUnimplementedMOZElement : nsIDOMSVGFilterPrimitiveStandardAttributes
