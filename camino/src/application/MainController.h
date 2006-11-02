@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Josh Aas - josha@mac.com
+ *   Josh Aas - josh@mozilla.com
  *   Nate Weaver (Wevah) - wevah@derailer.org
  *
  * Alternatively, the contents of this file may be used under the terms of

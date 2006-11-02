@@ -22,7 +22,7 @@
  * Contributor(s):
  *   David Hyatt <hyatt@mozilla.org> (Original Author)
  *   Max Horn <max@quendi.de> (Context menu, tooltip code, and editing)
- *   Josh Aas <josha@mac.com> (contextual menu fixups)
+ *   Josh Aas <josh@mozilla.com> (contextual menu fixups)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

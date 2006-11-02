@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Calum Robinson <calumr@mac.com>
- *   Josh Aas <josha@mac.com>
+ *   Josh Aas <josh@mozilla.com>
  *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of

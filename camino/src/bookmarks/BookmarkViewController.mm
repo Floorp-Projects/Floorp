@@ -24,7 +24,7 @@
  *   Max Horn <max@quendi.de>
  *   David Haas <haasd@cae.wisc.edu>
  *   Simon Woodside <sbwoodside@yahoo.com>
- *   Josh Aas <josha@mac.com>
+ *   Josh Aas <josh@mozilla.com>
  *   Bruce Davidson <Bruce.Davidson@ipl.com>
  *   Håkan Waara <hwaara@gmail.com>
  *

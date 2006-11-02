@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Calum Robinson <calumr@mac.com>
- *   Josh Aas <josha@mac.com>
+ *   Josh Aas <josh@mozilla.com>
  *   Nick Kreeger <nick.kreeger@park.edu>
  *   Bruce Davidson <mozilla@transoceanic.org.uk>
  *

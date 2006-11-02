@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Calum Robinson <calumr@mac.com>
  *   Simon Fraser <sfraser@netscape.com>
- *   Josh Aas <josha@mac.com>
+ *   Josh Aas <josh@mozilla.com>
  *   Nick Kreeger <nick.kreeger@park.edu>
  *   Bruce Davidson <mozilla@transoceanic.org.uk>
  *
