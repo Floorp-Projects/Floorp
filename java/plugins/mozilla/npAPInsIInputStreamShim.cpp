@@ -22,46 +22,46 @@
 #include "npAPInsIInputStreamShim.h"
 
 #include "nsCRT.h"
+#include "npapi.h"
 
 #include "prlog.h"
 #include "prlock.h"
 
 #include "nsStreamUtils.h"
 
-const PRUint32 npAPInsIInputStreamShim::INITIAL_BUFFER_LENGTH = 16532;
-const PRInt32 npAPInsIInputStreamShim::buffer_increment = 5120;
+const uint32 npAPInsIInputStreamShim::INITIAL_BUFFER_LENGTH = 16532;
+const uint32 npAPInsIInputStreamShim::buffer_increment = 5120;
 const PRInt32 npAPInsIInputStreamShim::do_close_code = -524;
 
 npAPInsIInputStreamShim::npAPInsIInputStreamShim(nsIPluginStreamListener *plugletListener, nsIPluginStreamInfo* streamInfo)
     : mPlugletListener(plugletListener),
       mStreamInfo(streamInfo),
       mBuffer(nsnull), mBufferLength(0), mCountFromPluginHost(0), 
-      mCountFromPluglet(0), mAvailable(0), mAvailableForPluglet(0), 
+      mCountFromPluglet(0), mAvailableForPluglet(0), 
       mNumWrittenFromPluginHost(0),
-      mDoClose(PR_FALSE), mDidClose(PR_FALSE), mLock(nsnull), 
+      mDoClose(PR_FALSE), mDidClose(PR_FALSE), mLock(PR_NewLock()), 
+      mHasLock(PR_FALSE),
       mCloseStatus(NS_OK), mCallback(nsnull), mCallbackFlags(0)
 
 { 
     NS_INIT_ISUPPORTS();
-    mLock = PR_NewLock();
 }
 
 npAPInsIInputStreamShim::~npAPInsIInputStreamShim()
 {
-    PR_Lock(mLock);
+    this->doLock();
 
     DoClose();
 
     mPlugletListener = nsnull;
     mStreamInfo = nsnull;
 
-    delete [] mBuffer;
+    NPN_MemFree(mBuffer);
     mBuffer = nsnull;
     mBufferLength = 0;
 
-    PR_Unlock(mLock);
+    this->doUnlock();
 
-    mAvailable = 0;
     mAvailableForPluglet = 0;
     mNumWrittenFromPluginHost = 0;
     mDoClose = PR_TRUE;
@@ -69,6 +69,32 @@ npAPInsIInputStreamShim::~npAPInsIInputStreamShim()
     PR_DestroyLock(mLock);
     mLock = nsnull;
 
+}
+
+PRStatus npAPInsIInputStreamShim::doLock(void)
+{
+    PRStatus result = PR_SUCCESS;
+
+    if (!mHasLock) {
+        PR_ASSERT(mLock);
+        PR_Lock(mLock);
+        mHasLock = PR_TRUE;
+    }
+
+    return result;
+}
+
+PRStatus npAPInsIInputStreamShim::doUnlock(void)
+{
+    PRStatus result = PR_SUCCESS;
+
+    if (mHasLock) {
+        PR_ASSERT(mLock);
+        mHasLock = PR_FALSE;
+        result = PR_Unlock(mLock);
+    }
+
+    return result;
 }
 
 //NS_IMPL_ISUPPORTS(npAPInsIInputStreamShim, NS_GET_IID(nsIInputStream))
@@ -109,15 +135,15 @@ npAPInsIInputStreamShim::AllowStreamToReadFromBuffer(int32 len, void* buf,
         return rv;
     }
 
-    PR_Lock(mLock);
+    this->doLock();
 
     rv = this->CopyFromPluginHostToBuffer(len, buf, outWritten);
 
-    PR_Unlock(mLock);
+    this->doUnlock();
 
     if (NS_SUCCEEDED(rv)) {
-        rv = mPlugletListener->OnDataAvailable(mStreamInfo, this, 
-                                               (PRUint32) outWritten);
+        //        rv = mPlugletListener->OnDataAvailable(mStreamInfo, this, 
+        //                                               (PRUint32) outWritten);
     }
 
     return rv;
@@ -137,64 +163,23 @@ npAPInsIInputStreamShim::CopyFromPluginHostToBuffer(int32 len, void* buf,
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    // if we don't have a buffer, create one
-    if (!mBuffer) {
-        if (0 < INITIAL_BUFFER_LENGTH) {
-            mBuffer = new char[INITIAL_BUFFER_LENGTH];
-            mBufferLength = INITIAL_BUFFER_LENGTH;
-        }
-        else {
-
-            // make sure we allocate enough buffer to store what is
-            // currently available.
-            if (mAvailable < buffer_increment) {
-                mBufferLength = buffer_increment;
-            }
-            else {
-                PRInt32 bufLengthCalc = mAvailable / buffer_increment;
-                mBufferLength = buffer_increment + 
-                    (bufLengthCalc * buffer_increment);
-            }
-            mBuffer = new char[mBufferLength];
-                
-        }
-        if (!mBuffer) {
-            mBufferLength = 0;
-            return NS_ERROR_FAILURE;
-        }
-    }
-    else {
-        
-        // See if we need to grow our buffer.  If what we have plus what
-        // we're about to get is greater than the current buffer size...
-
-        if (mBufferLength < (mCountFromPluginHost + mAvailable)) {
-            // create the new buffer
-            char *tBuffer = new char[mBufferLength + buffer_increment];
-            if (!tBuffer) {
-                return NS_ERROR_FAILURE;
-            }
-            // copy the old buffer into the new buffer
-            memcpy(tBuffer, mBuffer, mBufferLength);
-            // delete the old buffer
-            delete [] mBuffer;
-            // update mBuffer;
-            mBuffer = tBuffer;
-            // update our bufferLength
-            mBufferLength += buffer_increment;
-        }
+    rv = EnsureBuffer(len);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
     
     mNumWrittenFromPluginHost = len;
     *outWritten = mNumWrittenFromPluginHost;
     if (0 < mNumWrittenFromPluginHost) {
         // copy the bytes the from the plugin host into our buffer
-        memcpy(mBuffer + mCountFromPluginHost, buf, mNumWrittenFromPluginHost);
+        memcpy(((char *) mBuffer) + mCountFromPluginHost, buf, 
+               (size_t) mNumWrittenFromPluginHost);
+
         mCountFromPluginHost += mNumWrittenFromPluginHost;
         mAvailableForPluglet = mCountFromPluginHost - mCountFromPluglet;
     }
 
-    // if we have bytes available for the pluglet, and they it have
+    // if we have bytes available for the pluglet, and they have
     // requested a callback when bytes are available.
     if (mCallback && 0 < mAvailableForPluglet
         && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
@@ -206,6 +191,48 @@ npAPInsIInputStreamShim::CopyFromPluginHostToBuffer(int32 len, void* buf,
     rv = NS_OK;
     
     return rv;
+}
+
+NS_IMETHODIMP
+npAPInsIInputStreamShim::EnsureBuffer(int32 requestedAdditionalLen)
+{
+
+    // if we don't have a buffer, create one
+    if (!mBuffer) {
+        if (0 < INITIAL_BUFFER_LENGTH) {
+            mBuffer = NPN_MemAlloc(INITIAL_BUFFER_LENGTH);
+            mBufferLength = INITIAL_BUFFER_LENGTH;
+        }
+        if (!mBuffer) {
+            mBufferLength = 0;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    else {
+        
+        // See if we need to grow our buffer.  If what we have plus what
+        // we're about to get is greater than the current buffer size...
+        int32 additionalLen = requestedAdditionalLen < buffer_increment ?
+            buffer_increment : requestedAdditionalLen;
+
+        if (mBufferLength < (mCountFromPluginHost + additionalLen)) {
+            // create the new buffer
+            void *tBuffer = NPN_MemAlloc(mBufferLength + additionalLen);
+            if (!tBuffer) {
+                return NS_ERROR_FAILURE;
+            }
+            // copy the old buffer into the new buffer
+            memcpy(tBuffer, mBuffer, mBufferLength);
+            // delete the old buffer
+            NPN_MemFree(mBuffer);
+            // update mBuffer;
+            mBuffer = tBuffer;
+            // update our bufferLength
+            mBufferLength += additionalLen;
+        }
+    }
+
+    return NS_OK;
 }
 
 
@@ -227,9 +254,9 @@ npAPInsIInputStreamShim::DoClose(void)
     mCloseStatus = NS_BASE_STREAM_CLOSED;
     mDidClose = PR_TRUE;
 
-    if (mPlugletListener && mStreamInfo) {
-        mPlugletListener->OnStopBinding(mStreamInfo, mCloseStatus);
-    }
+    //    if (mPlugletListener && mStreamInfo) {
+    //        mPlugletListener->OnStopBinding(mStreamInfo, mCloseStatus);
+    //    }
 
     return rv;
 }
@@ -254,12 +281,11 @@ npAPInsIInputStreamShim::Available(PRUint32* aResult)
         }
         return mCloseStatus;
     }
-    PR_ASSERT(mLock);
-    PR_Lock(mLock);
+    this->doLock();
     *aResult = mAvailableForPluglet;
     // *aResult = PR_UINT32_MAX;
     rv = NS_OK;
-    PR_Unlock(mLock);
+    this->doUnlock();
 
     return rv;
 }
@@ -268,12 +294,11 @@ NS_IMETHODIMP
 npAPInsIInputStreamShim::Close() 
 {
     nsresult rv = NS_ERROR_FAILURE;
-    PR_ASSERT(mLock);
-    PR_Lock(mLock);
+    this->doLock();
     mDoClose = PR_TRUE;
     mCloseStatus = NS_BASE_STREAM_CLOSED;
     rv = NS_OK;
-    PR_Unlock(mLock);
+    this->doUnlock();
 
     return rv;
 }
@@ -291,21 +316,21 @@ npAPInsIInputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
     }
 
     *aNumRead = 0;
-    PR_ASSERT(mLock);
+
     PR_ASSERT(mCountFromPluglet <= mCountFromPluginHost);
 
-    PR_Lock(mLock);
+    this->doLock();
 
     if (mAvailableForPluglet) {
         if (aCount <= (mCountFromPluginHost - mCountFromPluglet)) {
             // what she's asking for is less than or equal to what we have
-            memcpy(aBuffer, (mBuffer + mCountFromPluglet), aCount);
+            memcpy(aBuffer, (((char *)mBuffer) + mCountFromPluglet), aCount);
             mCountFromPluglet += aCount;
             *aNumRead = aCount;
         }
         else {
             // what she's asking for is more than what we have
-            memcpy(aBuffer, (mBuffer + mCountFromPluglet), 
+            memcpy(aBuffer, ((char *)mBuffer) + mCountFromPluglet, 
                           (mCountFromPluginHost - mCountFromPluglet));
             *aNumRead = (mCountFromPluginHost - mCountFromPluglet);
             
@@ -318,7 +343,7 @@ npAPInsIInputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
         rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
     
-    PR_Unlock(mLock);
+    this->doUnlock();
 
     return rv;
 }
@@ -335,10 +360,9 @@ npAPInsIInputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * aClosure,
         return mCloseStatus;
     }
     *aNumRead = 0;
-    PR_ASSERT(mLock);
     PR_ASSERT(mCountFromPluglet <= mCountFromPluginHost);
 
-    PR_Lock(mLock);
+    this->doLock();
 
     PRInt32 bytesToWrite = mAvailableForPluglet;
     PRUint32 bytesWritten;
@@ -355,7 +379,7 @@ npAPInsIInputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * aClosure,
     while (bytesToWrite) {
         // what she's asking for is less than or equal to what we have
         rv = writer(this, aClosure, 
-                    (mBuffer + mCountFromPluglet),
+                    (((char *)mBuffer) + mCountFromPluglet),
                     totalBytesWritten, bytesToWrite, &bytesWritten);
         if (NS_FAILED(rv)) {
             break;
@@ -369,7 +393,7 @@ npAPInsIInputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * aClosure,
     *aNumRead = totalBytesWritten;
     mAvailableForPluglet -= totalBytesWritten;
     
-    PR_Unlock(mLock);
+    this->doUnlock();
 }
 
 NS_IMETHODIMP 
@@ -396,7 +420,7 @@ npAPInsIInputStreamShim::AsyncWait(nsIInputStreamCallback *aCallback,
                            PRUint32 aFlags, PRUint32 aRequestedCount, 
                            nsIEventTarget *aEventTarget)
 {
-    PR_Lock(mLock);
+    this->doLock();
     
     mCallback = nsnull;
     mCallbackFlags = nsnull;
@@ -419,7 +443,7 @@ npAPInsIInputStreamShim::AsyncWait(nsIInputStreamCallback *aCallback,
         mCallbackFlags = aFlags;
     }
     
-    PR_Unlock(mLock);
+    this->doUnlock();
     
     return NS_OK;
 }

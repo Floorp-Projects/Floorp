@@ -69,7 +69,7 @@ public class PlugletLoader {
 	    if (policy != Policy.getPolicy()) {
 		Policy.setPolicy(policy);
 	    }
-	    CodeSource codesource = new CodeSource(url,null);
+	    CodeSource codesource = new CodeSource(url,(java.security.cert.Certificate []) null);
 	    Permission perm = new AllPermission();
 	    PermissionCollection collection = perm.newPermissionCollection();
 	    collection.add(perm);

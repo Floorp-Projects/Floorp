@@ -171,6 +171,10 @@ class TestInstance implements Pluglet {
      */ 
     public void print(PrinterJob printerJob) {
     }
+    
+    protected void finalize() {
+        org.mozilla.util.DebugPluglet.print("--TestInstance.finalize()\n");
+    }
 }
 
 class TestStreamListener implements PlugletStreamListener {

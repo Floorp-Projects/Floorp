@@ -56,6 +56,8 @@ private:
     NS_IMETHOD CopyFromPluginHostToBuffer(int32 len, void* buf, 
                                           int32* outWritten);
 
+    NS_IMETHOD EnsureBuffer(int32 len);
+
     nsCOMPtr<nsIPluginStreamListener> mPlugletListener;
     nsCOMPtr<nsIPluginStreamInfo> mStreamInfo;
 
@@ -72,7 +74,7 @@ private:
 
      */
      
-    char *mBuffer;
+    void *mBuffer;
     
     /**
        
@@ -80,7 +82,7 @@ private:
      
      */
     
-    PRUint32 mBufferLength;
+    uint32 mBufferLength;
     
 
     /**
@@ -90,7 +92,7 @@ private:
 
      */ 
 
-    PRUint32 mCountFromPluginHost;
+    uint32 mCountFromPluginHost;
 
     /**
      
@@ -98,7 +100,7 @@ private:
 
      */ 
 
-    PRUint32 mCountFromPluglet;
+    uint32 mCountFromPluglet;
 
     /**
 
@@ -106,7 +108,7 @@ private:
 
      */
 
-    PRInt32 mAvailable;
+    uint32 mAvailable;
 
     /**
 
@@ -115,7 +117,7 @@ private:
 
      */
 
-    PRInt32 mAvailableForPluglet;
+    uint32 mAvailableForPluglet;
 
     /**
 
@@ -124,7 +126,7 @@ private:
 
      */
 
-    PRInt32 mNumWrittenFromPluginHost;
+    uint32 mNumWrittenFromPluginHost;
 
     PRBool mDoClose;
 
@@ -137,6 +139,9 @@ private:
      */
 
     PRLock *mLock;
+    PRStatus doLock(void);
+    PRStatus doUnlock(void);
+    PRBool mHasLock;
 
     nsresult mCloseStatus;
 
@@ -144,8 +149,8 @@ private:
 
     PRUint32 mCallbackFlags;
 
-    static const PRUint32 INITIAL_BUFFER_LENGTH;
-    static const PRInt32 buffer_increment;
+    static const uint32 INITIAL_BUFFER_LENGTH;
+    static const uint32 buffer_increment;
     static const PRInt32 do_close_code;
 
 

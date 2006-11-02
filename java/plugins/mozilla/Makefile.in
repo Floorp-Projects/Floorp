@@ -92,3 +92,5 @@ LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
                  -I$(PLUGIN_SDK)/samples/include \
 		 -I$(PLUGIN_SDK)/../../base/src \
                  $(NULL)
+install::
+	$(INSTALL) $(IFLAGS1) $(SHARED_LIBRARY) $(DIST)/bin/plugins

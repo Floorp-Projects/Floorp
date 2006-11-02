@@ -105,7 +105,6 @@ NPError NS_PluginInitialize()
   // in the future so we don't need to do casting of any sort.
   if(sm) {
     sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
-    printf("debug: edburns: gServiceManager: %p\n\n", gServiceManager);
     NS_RELEASE(sm);
   }
 
@@ -183,15 +182,20 @@ nsPluginInstance::~nsPluginInstance()
     if (mPluglet) {
         mPluglet->Destroy();
         mPluglet = nsnull;
+
     }
     mInitialized = PR_FALSE;
 
-  // mScriptablePeer may be also held by the browser 
-  // so releasing it here does not guarantee that it is over
-  // we should take precaution in case it will be called later
-  // and zero its mPlugin member
-  mScriptablePeer->SetInstance(nsnull);
-  NS_IF_RELEASE(mScriptablePeer);
+
+    if (mScriptablePeer) {
+        // mScriptablePeer may be also held by the browser 
+        // so releasing it here does not guarantee that it is over
+        // we should take precaution in case it will be called later
+        // and zero its mPlugin member
+        mScriptablePeer->SetInstance(nsnull);
+        
+        NS_IF_RELEASE(mScriptablePeer);
+    }
 }
 
 NPBool nsPluginInstance::init(NPWindow* aWindow)
@@ -330,9 +334,6 @@ int32 nsPluginInstance::Write(NPStream *stream, int32 offset,
     nsresult rv = NS_ERROR_NULL_POINTER;
 
     rv = shim->AllowStreamToReadFromBuffer(len, buffer, &result);
-    if (NS_SUCCEEDED(rv)) {
-        printf("debug: edburns: passed %d bytes to pluglet\n", result);
-    }
     
     return result;
 }

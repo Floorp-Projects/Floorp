@@ -164,13 +164,11 @@ PlugletFactory::PlugletFactory(const char *mimeDescription, const char *path) : 
 
     nsresult rv = NS_ERROR_FAILURE;
     plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
-    printf("debug: edburns: PlugletFactory ctor: rv: %d\n", rv);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	       ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
 	return;
     }
-    printf("debug: edburns: PlugletFactory ctor: this: %p\n", this);
 }
  
 PlugletFactory::~PlugletFactory(void) {

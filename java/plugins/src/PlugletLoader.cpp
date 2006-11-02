@@ -55,9 +55,6 @@ NS_EXPORT void PlugletLoader::Initialize(void) {
     nsCOMPtr<iPlugletEngine> plugletEngine =
 	do_GetService(PLUGLETENGINE_ContractID, &rv);
 
-    printf("debug: edburns: plugletEngine: %p", plugletEngine.get());
-    
-
     if (NS_FAILED(rv)) {
 	return;
     }
@@ -144,7 +141,6 @@ char * PlugletLoader::GetMIMEDescription(const char * path) {
     
     const char* str = env->GetStringUTFChars(mimeDescription,nsnull);
 
-    printf("debug: edburns: mime description: %s\n", str);
     char *res = nsnull;
     if(str) {
 	res = new char[strlen(str)+1];

@@ -369,8 +369,6 @@ iPlugletEngine::GetInstance(void ** result)
                                          NS_GET_IID(iPlugletEngine),
                                          (void **) &result);
 
-    printf("debug: edburns: plugletEngine instance rv: %d\n", rv);
-    printf("debug: edburns: plugletEngine instance result: %p\n", *result);
     if (NS_FAILED(rv)) {
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
                ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));

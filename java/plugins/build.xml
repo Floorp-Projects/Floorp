@@ -131,10 +131,24 @@
     <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
                      failonerror="yes"/>
 
+    <exec os="SunOS" dir="${basedir}/mozilla" failonerror="yes" 
+                     executable="gmake">
+      <arg line="install" />
+    </exec>
+    <exec os="Linux" dir="${basedir}/mozilla" failonerror="yes" 
+                     executable="make">
+      <arg line="install" />
+    </exec>
+
+    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+                     failonerror="yes">
+      <arg line="install" />
+    </exec>
+
   </target>
 
   <target name="clean.classes">
-    <delete dir="${build.home}/org/mozilla/pluglets"/>
+    <delete dir="${build.home}/org/mozilla/pluglet"/>
   </target>
 
   <target name="clean" depends="clean.classes">
@@ -202,20 +216,9 @@
   </target>
 
   <target name="compile.examples" depends="compile.classes">
-  
-    <mkdir dir="build" />
 
-    <javac destdir="${basedir}/build"
-             debug="${compile.debug}"
-            source="${compile.source}"
-       deprecation="${compile.deprecation}"
-          optimize="${compile.optimize}">
-      <classpath refid="compile.classpath"/>
-      <src path="${basedir}/examples/MediaPlayer"/>
-
-      <include name="*.java"/>
-    </javac>
-
+   <ant inheritall="false" dir="examples/MediaPlayer" />
+   <ant dir="test" />
 
   </target>
 

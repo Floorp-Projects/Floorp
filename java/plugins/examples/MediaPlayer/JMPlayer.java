@@ -23,7 +23,7 @@ public class JMPlayer implements PlugletFactory {
             player = new Player();
         }
         catch (Throwable e) {
-            System.out.println("debug: edburns: " + e.getMessage());
+            e.printStackTrace();
         }
  	return player;
     }

@@ -109,7 +109,7 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
 
 void nsScriptablePeer::SetInstance(nsPluginInstance* plugin)
 {
-  mPlugin = plugin;
+    mPlugin = plugin;
 }
 
 //

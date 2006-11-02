@@ -74,14 +74,20 @@ Pluglet::~Pluglet() {
     Registry::Remove(jthis);
     JNIEnv *jniEnv = nsnull;
     nsresult rv;
-    rv = plugletEngine->GetJNIEnv(&jniEnv);
-    if (NS_FAILED(rv)) {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("Pluglet::~Pluglet: plugletEngine->GetJNIEnv failed\n"));
-	return;
+    plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
+    if (plugletEngine) {
+	rv = plugletEngine->GetJNIEnv(&jniEnv);
+	if (NS_FAILED(rv)) {
+	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		   ("Pluglet::~Pluglet: plugletEngine->GetJNIEnv failed\n"));
+	    return;
+	}
+	jniEnv->DeleteGlobalRef(jthis);
+	if (jniEnv->ExceptionOccurred()) {
+            jniEnv->ExceptionDescribe();
+        }
     }
 
-    jniEnv->DeleteGlobalRef(jthis);
     peer = nsnull;
 }
 
