@@ -703,7 +703,7 @@ class nsTArray : public nsTArray_base {
 template<class E, PRUint32 N>
 class nsAutoTArray : public nsTArray<E> {
   public:
-    typedef nsTPtrArray<E> base_type;
+    typedef nsTArray<E> base_type;
     typedef typename base_type::Header Header;
     typedef typename base_type::elem_type elem_type;
 
