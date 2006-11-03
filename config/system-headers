@@ -65,7 +65,27 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
+#if MOZ_ENABLE_LIBXUL!=1
+#define WRAP_CAIRO_HEADERS
+#endif
+#if MOZ_TREE_CAIRO!=1
+#define WRAP_CAIRO_HEADERS
+#endif
+#ifdef WRAP_CAIRO_HEADERS
 cairo.h
+cairo-atsui.h
+cairo-beos.h
+cairo-ft.h
+cairo-glitz.h
+cairo-nquartz.h
+cairo-os2.h
+cairo-pdf.h
+cairo-ps.h
+cairo-quartz.h
+cairo-win32.h
+cairo-xlib.h
+cairo-xlib-xrender.h
+#endif
 callconv.h
 Carbon/Carbon.h
 CarbonEvents.h
