@@ -127,6 +127,11 @@ if ($c->param) {
             $limit = quotemeta($c->param($param));
             next if ($limit == $Litmus::DB::Testresult::_num_results_default);
             $limit_criteria .= "Limit to $limit results";
+        } elsif ($param eq "has_comments") {
+          my $value = quotemeta($c->param($param));
+          push @where, {field => $param,
+                        value => $value};
+          $where_criteria .= "Has comments<br/>";          
         } else {
             # Skip unknown field
         }

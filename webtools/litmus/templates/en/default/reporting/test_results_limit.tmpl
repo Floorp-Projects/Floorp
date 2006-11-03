@@ -67,9 +67,9 @@ function checkSearchForm(f)
         <option[% IF order_bys.testcase_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
 
-  [% colspan=6 %]
+  [% colspan=4 %]
   [% IF show_admin==1 %]
-  [% colspan=7 %]
+  [% colspan=5 %]
   <td class="search"><select name="order_by_email">
         <option value="">-Sort-</option>
         <option[% IF order_bys.email == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
@@ -121,6 +121,7 @@ function checkSearchForm(f)
 Limit to</td>
   <td class="search">
   <input type="text" name="limit" value="[% limit | html %]" size="5" /> results</td>
+  <td align="left" colspan="2"><input name="has_comments" id="has_comments" type="checkbox" value="1"> Result that have comments?</td>
   <td class="search-submit" colspan="[% colspan %]">
   <input class="button" type="reset" onclick="FormInit(this.parent, '');" />&nbsp;
   <input class="button" type="submit" value="Show Results" />

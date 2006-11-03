@@ -246,6 +246,8 @@ sub getTestResults($\@\@$) {
 
         } elsif ($criterion->{'field'} eq 'search_field') {
             ($from,$where) = &_processSearchField($criterion,$from,$where);
+        } elsif ($criterion->{'field'} eq 'has_comments') {
+          $from =~ s/^FROM test_results tr,/FROM test_results tr INNER JOIN test_result_comments trc ON tr.testresult_id=trc.test_result_id,/;
         } else {
             # Skip unknown field
         }
@@ -295,7 +297,7 @@ sub getTestResults($\@\@$) {
     }
     
     my $sql = "$select $from $where $group_by $order_by $limit";
-#print $sql,"<br/>\n";
+    # print $sql,"<br/>\n";
     Litmus::DB::Testresult->set_sql(TestResults => qq{
         $sql
         });
