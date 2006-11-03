@@ -13,6 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Noel Cragg <noel@red-bean.com>
 
 package Bugzilla::Install::DB;
 
@@ -184,12 +185,16 @@ sub update_table_definitions {
     # 2000-03-24 Added unique indexes into the cc and keyword tables.  This
     # prevents certain database inconsistencies, and, moreover, is required for
     # new generalized list code to work.
-    if (!$dbh->bz_index_info('cc', 'cc_bug_id_idx')->{TYPE}) {
+    if (!$dbh->bz_index_info('cc', 'cc_bug_id_idx')
+        || !$dbh->bz_index_info('cc', 'cc_bug_id_idx')->{TYPE})
+    {
         $dbh->bz_drop_index('cc', 'cc_bug_id_idx');
         $dbh->bz_add_index('cc', 'cc_bug_id_idx',
                            {TYPE => 'UNIQUE', FIELDS => [qw(bug_id who)]});
     }
-    if (!$dbh->bz_index_info('keywords', 'keywords_bug_id_idx')->{TYPE}) {
+    if (!$dbh->bz_index_info('keywords', 'keywords_bug_id_idx')
+        || !$dbh->bz_index_info('keywords', 'keywords_bug_id_idx')->{TYPE})
+    {
         $dbh->bz_drop_index('keywords', 'keywords_bug_id_idx');
         $dbh->bz_add_index('keywords', 'keywords_bug_id_idx',
             {TYPE => 'UNIQUE', FIELDS => [qw(bug_id keywordid)]});
@@ -752,8 +757,9 @@ sub _add_unique_login_name_index_to_profiles {
     # declared to be unique.  Sure enough, somehow, I got 22 duplicated entries
     # in my database.  This code detects that, cleans up the duplicates, and
     # then tweaks the table to declare the field to be unique.  What a pain.
-    if (!$dbh->bz_index_info('profiles', 'profiles_login_name_idx') ||
-        !$dbh->bz_index_info('profiles', 'profiles_login_name_idx')->{TYPE}) {
+    if (!$dbh->bz_index_info('profiles', 'profiles_login_name_idx')
+        || !$dbh->bz_index_info('profiles', 'profiles_login_name_idx')->{TYPE})
+    {
         print "Searching for duplicate entries in the profiles table...\n";
         while (1) {
             # This code is weird in that it loops around and keeps doing this
