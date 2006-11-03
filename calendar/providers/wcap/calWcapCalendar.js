@@ -231,7 +231,9 @@ calWcapCalendar.prototype = {
         return (this.m_bSuppressAlarms ||
                 // writing lastAck does currently not work on readOnly cals,
                 // so avoid alarms if not writable at all... discuss!
-                this.readOnly ||
+                // use m_bReadOnly here instead of attribute, because this
+                // calendar acts read-only if not logged in
+                this.m_bReadOnly ||
                 // xxx todo: check write permissions in advance
                 // alarms only for own calendars:
                 !this.isOwnedCalendar);
