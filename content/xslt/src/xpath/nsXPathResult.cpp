@@ -210,7 +210,7 @@ nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 void
 nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent *aContent,
-                                    PRBool aAppend)
+                                    CharacterDataChangeInfo* aInfo)
 {
     Invalidate();
 }

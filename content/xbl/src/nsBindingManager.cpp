@@ -1157,10 +1157,10 @@ nsBindingManager::RemoveObserver(nsIMutationObserver* aObserver)
 void
 nsBindingManager::CharacterDataChanged(nsIDocument* aDocument,
                                        nsIContent* aContent,
-                                       PRBool aAppend)
+                                       CharacterDataChangeInfo* aInfo)
 {
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataChanged,
-                                     (aDocument, aContent, aAppend));
+                                     (aDocument, aContent, aInfo));
 }
 
 void

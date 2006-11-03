@@ -321,7 +321,7 @@ nsSVGPatternElement::PushUpdate()
 void
 nsSVGPatternElement::CharacterDataChanged(nsIDocument *aDocument,
                                           nsIContent *aContent,
-                                          PRBool aAppend)
+                                          CharacterDataChangeInfo *aInfo)
 {
   PushUpdate();
 }

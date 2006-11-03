@@ -1199,7 +1199,7 @@ txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 void
 txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
                                              nsIContent *aContent,
-                                             PRBool aAppend)
+                                             CharacterDataChangeInfo* aInfo)
 {
     mStylesheet = nsnull;
 }

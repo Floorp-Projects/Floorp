@@ -351,7 +351,7 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLEventsManager)
 void 
 nsXMLEventsManager::CharacterDataChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
-                                         PRBool aAppend) {}
+                                         CharacterDataChangeInfo* aInfo) {}
 void
 nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      nsIContent* aContent,
