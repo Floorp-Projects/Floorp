@@ -65,7 +65,7 @@ $build_name_index = {};
 $build_names = [];
 $name_count = 0;
 
-# Frome get_build_time_index()
+# From get_build_time_index()
 $build_time_index = {};
 $build_time_times = [];
 $mindate_time_count = 0;  # time_count that corresponds to the mindate
@@ -76,6 +76,9 @@ $who_list = [];
 @note_array = ();
 
 $data_dir='data';
+
+@global_tree_list = ();
+undef @global_tree_list;
 
 # Set this to show real end times for builds instead of just using
 # the start of the next build as the end time.
@@ -111,13 +114,13 @@ sub trick_taint{
 }
 
 sub make_tree_list {
-    my @result;
+    return @global_tree_list if defined(@global_tree_list);
     while(<*>) {
         if( -d $_ && $_ ne "$data_dir" && $_ ne 'CVS' && -f "$_/treedata.pl") {
-            push @result, $_;
+            push @global_tree_list, $_;
         }
     }
-    return @result;
+    return @global_tree_list;
 }
 
 sub require_only_one_tree {
@@ -366,16 +369,10 @@ sub value_encode {
 }
 
 
-BEGIN {
-  my $have_loaded_treedata = 0;
-
-  sub tb_load_treedata {
+sub tb_load_treedata {
     my $tree = shift;
 
-    return if $have_loaded_treedata;
-    $have_loaded_treedata = 1;
-    require "$tree/treedata.pl" if -r "$tree/treedata.pl";
-  }
+    do "$tree/treedata.pl" if -r "$tree/treedata.pl";
 }
 
 sub tb_load_data {
@@ -385,11 +382,14 @@ sub tb_load_data {
   
   tb_load_treedata($tree);
         
+  # Reset globals
   $ignore_builds = {};
   $scrape_builds = {};
 
-  require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
-  require "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
+  undef $ignore_builds;
+  undef $scrape_builds;
+  do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
+  do "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
         
   $td = {};
   $td->{name} = $tree;
@@ -406,7 +406,7 @@ sub tb_load_data {
   get_build_name_index($build_list);
   get_build_time_index($build_list);
   
-  load_who($td, $who_list);
+  load_who($td);
 
   make_build_table($td, $build_list);
 
@@ -421,8 +421,9 @@ sub tb_loadquickparseinfo {
   local $_;
 
   return if (! -d "$tree" || ! -r "$tree/build.dat");
-  $maxdate = time;
-  require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
+  $maxdate = time if !defined($maxdate);
+  undef $ignore_builds;
+  do "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
     
   my $bw = Backwards->new("$tree/build.dat") or die;
     
@@ -667,9 +668,12 @@ sub load_buildlog {
 #   File format: <build_time>|<email_address>
 #
 sub load_who {
-  my ($treedata, $who_list) = @_;
+  my ($treedata) = @_;
   local $_;
   
+  # Reset globals
+  $who_list = [];
+
   open(WHOLOG, "<", "$treedata->{name}/who.dat");
   while (<WHOLOG>) {
     chomp;
@@ -738,6 +742,11 @@ sub load_warnings {
 sub get_build_name_index {
   my ($build_list) = @_;
 
+  # Reset globals
+  $build_name_index = {};     
+  $build_names = [];
+  $name_count = 0;
+
   # Get all the unique build names.
   #
   foreach my $build_record (@{$build_list}) {
@@ -755,6 +764,12 @@ sub get_build_name_index {
 
 sub get_build_time_index {
   my ($build_list) = @_;
+
+  # Reset globals
+  $build_time_index = {};
+  $build_time_times = [];
+  $mindate_time_count = 0;  # time_count that corresponds to the mindate
+  $time_count = 0;
 
   # Get all the unique build names.
   #
@@ -778,6 +793,9 @@ sub get_build_time_index {
 sub make_build_table {
   my ($treedata, $build_list) = @_;
   my ($ti, $bi, $ti1, $br);
+
+  # Reset globals
+  $build_table = [];
 
   # Create the build table
   #
@@ -871,6 +889,9 @@ sub make_build_table {
 
 sub load_notes {
   my $treedata = $_[0];
+
+  # Reset globals
+  @note_array = ();
 
   open(NOTES, "<", "$treedata->{name}/notes.txt") 
     or print "<h2>warning: Couldn't open $treedata->{name}/notes.txt </h2>\n";

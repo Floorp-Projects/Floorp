@@ -147,17 +147,20 @@ sub print_page_head {
 
     # Print rules, sheriff, and status.  Only on the first pageful.
     if ($nowdate eq $maxdate) {
+        undef $rules_message;
         unless ($form{norules}) {
             do "$::tree/rules.pl";
             print "<a NAME=\"rules\"></a>$rules_message";  # from $::tree/rules.pl
         }
     
+        undef $current_sheriff;
         do "$::tree/sheriff.pl";
         $current_sheriff =~ s:^\s*|\s*$::gs;
         if ($current_sheriff and length($current_sheriff) gt 0) {
             print "<a NAME=\"sheriff\"></a>$current_sheriff";  # from $::tree/sheriff.pl
         }
         
+        undef $status_message;
         do "$::tree/status.pl";
         $status_message =~ s:^\s*|\s*$::gs;
         if ($status_message and length($status_message) gt 0) {
@@ -581,7 +584,7 @@ sub who_menu {
   # trick who.cgi into using regexps, escaping & and =
   $treeflag .= '%26branchtype%3Dregexp' if $treeflag =~ /\+|\?|\*/;
 
-  require "$tree/treedata.pl";
+  do "$tree/treedata.pl";
 
   my $qr = '';
   my $ret = '<a><!-- no query system configured -->';

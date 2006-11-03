@@ -63,7 +63,13 @@ for my $file (@datafiles) {
 unlink($lockfile);
 
 require 'showbuilds.pl';
+# Hardcode static pages to only showing 12 hrs of data
+$nowdate = $maxdate = time;
+$mindate = $maxdate - (12*60*60);
+print "Changed trees:\n\t@changed_trees\n" if ($debug && $#changed_trees > 0);
 for my $t (@changed_trees) {
+    # Override globals used in static page creation
+    %form = ();
     $tree = $t;
     print "Tree: $t\n" if ($debug);
     # Static pages - For Sidebar flash and tinderbox panels.
