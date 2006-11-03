@@ -272,56 +272,61 @@ sub nick {
 
 sub queries {
     my $self = shift;
-
     return $self->{queries} if defined $self->{queries};
     return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    my $used_in_whine_ref = $dbh->selectall_hashref('
-                    SELECT DISTINCT query_name
-                      FROM whine_events we
-                INNER JOIN whine_queries wq
-                        ON we.id = wq.eventid
-                     WHERE we.owner_userid = ?',
-                     'query_name', undef, $self->id);
-
-    # If the user is in any group, there may be shared queries to be included.
-    my $or_nqgm_group_id_in_usergroups = '';
-    if ($self->groups_as_string) {
-        $or_nqgm_group_id_in_usergroups =
-            'OR MAX(nqgm.group_id) IN (' . $self->groups_as_string . ') ';
-    }
-
-    my $queries_ref = $dbh->selectall_arrayref('
-                    SELECT nq.id, MAX(userid) AS userid, name, query, query_type,
-                           MAX(nqgm.group_id) AS shared_with_group,
-                           COUNT(nql.namedquery_id) AS link_in_footer
-                      FROM namedqueries AS nq
-                      LEFT JOIN namedquery_group_map nqgm
-                             ON nqgm.namedquery_id = nq.id
-                      LEFT JOIN namedqueries_link_in_footer AS nql
-                             ON nql.namedquery_id = nq.id
-                            AND nql.user_id = ? ' .
-                      $dbh->sql_group_by('nq.id', 'name, query, query_type') .
-                  ' HAVING MAX(nq.userid) = ? ' .
-                           $or_nqgm_group_id_in_usergroups .
-                ' ORDER BY UPPER(name)',
-                {'Slice'=>{}}, $self->id, $self->id);
-
-    foreach my $queries_hash (@$queries_ref) {
-        # For each query, determine whether it's being used in a whine.
-        if (exists($$used_in_whine_ref{$queries_hash->{'name'}})) {
-            $queries_hash->{'usedinwhine'} = 1;
-        }
-
-        # For shared queries, provide the sharer's user object.
-        if ($queries_hash->{'userid'} != $self->id) {
-            $queries_hash->{'user'} = new Bugzilla::User($queries_hash->{'userid'});
-        }
-    }
-    $self->{queries} = $queries_ref;
-
+    my $query_ids = $dbh->selectcol_arrayref(
+        'SELECT id FROM namedqueries WHERE userid = ?', undef, $self->id);
+    require Bugzilla::Search::Saved;
+    $self->{queries} = Bugzilla::Search::Saved->new_from_list($query_ids);
     return $self->{queries};
+}
+
+sub queries_subscribed {
+    my $self = shift;
+    return $self->{queries_subscribed} if defined $self->{queries_subscribed};
+    return [] unless $self->id;
+
+    # Exclude the user's own queries.
+    my @my_query_ids = map($_->id, @{$self->queries});
+    my $query_id_string = join(',', @my_query_ids) || '-1';
+
+    # Only show subscriptions that we can still actually see. If a
+    # user changes the shared group of a query, our subscription
+    # will remain but we won't have access to the query anymore.
+    my $subscribed_query_ids = Bugzilla->dbh->selectcol_arrayref(
+        "SELECT lif.namedquery_id
+           FROM namedqueries_link_in_footer lif
+                INNER JOIN namedquery_group_map ngm
+                ON ngm.namedquery_id = lif.namedquery_id
+          WHERE lif.user_id = ? 
+                AND lif.namedquery_id NOT IN ($query_id_string)
+                AND ngm.group_id IN (" . $self->groups_as_string . ")",
+          undef, $self->id);
+    require Bugzilla::Search::Saved;
+    $self->{queries_subscribed} =
+        Bugzilla::Search::Saved->new_from_list($subscribed_query_ids);
+    return $self->{queries_subscribed};
+}
+
+sub queries_available {
+    my $self = shift;
+    return $self->{queries_available} if defined $self->{queries_available};
+    return [] unless $self->id;
+
+    # Exclude the user's own queries.
+    my @my_query_ids = map($_->id, @{$self->queries});
+    my $query_id_string = join(',', @my_query_ids) || '-1';
+
+    my $avail_query_ids = Bugzilla->dbh->selectcol_arrayref(
+        'SELECT namedquery_id FROM namedquery_group_map
+          WHERE group_id IN (' . $self->groups_as_string . ")
+                AND namedquery_id NOT IN ($query_id_string)");
+    require Bugzilla::Search::Saved;
+    $self->{queries_available} =
+        Bugzilla::Search::Saved->new_from_list($avail_query_ids);
+    return $self->{queries_available};
 }
 
 sub settings {
@@ -345,6 +350,8 @@ sub flush_queries_cache {
     my $self = shift;
 
     delete $self->{queries};
+    delete $self->{queries_subscribed};
+    delete $self->{queries_available};
 }
 
 sub groups {
@@ -1663,6 +1670,42 @@ confirmation screen.
 
 =head1 METHODS
 
+=head2 Saved and Shared Queries
+
+=over
+
+=item C<queries>
+
+Returns an arrayref of the user's own saved queries, sorted by name. The 
+array contains L<Bugzilla::Search::Saved> objects.
+
+=item C<queries_subscribed>
+
+Returns an arrayref of shared queries that the user has subscribed to.
+That is, these are shared queries that the user sees in their footer.
+This array contains L<Bugzilla::Search::Saved> objects.
+
+=item C<queries_available>
+
+Returns an arrayref of all queries to which the user could possibly
+subscribe. This includes the contents of L</queries_subscribed>.
+An array of L<Bugzilla::Search::Saved> objects.
+
+=item C<flush_queries_cache>
+
+Some code modifies the set of stored queries. Because C<Bugzilla::User> does
+not handle these modifications, but does cache the result of calling C<queries>
+internally, such code must call this method to flush the cached result.
+
+=item C<queryshare_groups>
+
+An arrayref of group ids. The user can share their own queries with these
+groups.
+
+=back
+
+=head2 Other Methods
+
 =over
 
 =item C<id>
@@ -1711,35 +1754,6 @@ returned.
 Sets the L<Bugzilla::Auth> object to be returned by C<authorizer()>.
 Should only be called by C<Bugzilla::Auth::login>, for the most part.
 
-=item C<queries>
-
-Returns an array of the user's named queries, sorted in a case-insensitive
-order by name. Each entry is a hash with five keys:
-
-=over
-
-=item *
-
-id - The ID of the query
-
-=item *
-
-userid - The query owner's user ID
-
-=item *
-
-name - The name of the query
-
-=item *
-
-query - The text for the query
-
-=item *
-
-link_in_footer - Whether or not the query should be displayed in the footer.
-
-=back
-
 =item C<disabledtext>
 
 Returns the disable text of the user, if any.
@@ -1757,12 +1771,6 @@ value          - the value of this setting for this user. Will be the same
                  is_default is true.
 is_default     - a boolean to indicate whether the user has chosen to make
                  a preference for themself or use the site default.
-
-=item C<flush_queries_cache>
-
-Some code modifies the set of stored queries. Because C<Bugzilla::User> does
-not handle these modifications, but does cache the result of calling C<queries>
-internally, such code must call this method to flush the cached result.
 
 =item C<groups>
 

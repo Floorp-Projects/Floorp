@@ -378,30 +378,9 @@ sub DoPermissions {
 
 
 sub DoSavedSearches {
-    # 2004-12-13 - colin.ogilvie@gmail.com, bug 274397
-    # Need to work around the possibly missing query_format=advanced
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
 
-    my @queries = @{$user->queries};
-    my @newqueries;
-    foreach my $q (@queries) {
-        if ($q->{'query'} =~ /query_format=([^&]*)/) {
-            my $format = $1;
-            if (!IsValidQueryType($format)) {
-                if ($format eq "") {
-                    $q->{'query'} =~ s/query_format=/query_format=advanced/;
-                }
-                else {
-                    $q->{'query'} .= '&query_format=advanced';
-                }
-            }
-        } else {
-            $q->{'query'} .= '&query_format=advanced';
-        }
-        push @newqueries, $q;
-    }
-    $vars->{'queries'} = \@newqueries;
     if ($user->queryshare_groups_as_string) {
         $vars->{'queryshare_groups'} =
             Bugzilla::Group->new_from_list($user->queryshare_groups);
@@ -416,20 +395,12 @@ sub SaveSavedSearches {
     # We'll need this in a loop, so do the call once.
     my $user_id = $user->id;
 
-    my @queries = @{$user->queries};
-    my $sth_check_nl = $dbh->prepare('SELECT COUNT(*)
-                                        FROM namedqueries_link_in_footer
-                                       WHERE namedquery_id = ?
-                                         AND user_id = ?');
     my $sth_insert_nl = $dbh->prepare('INSERT INTO namedqueries_link_in_footer
                                        (namedquery_id, user_id)
                                        VALUES (?, ?)');
     my $sth_delete_nl = $dbh->prepare('DELETE FROM namedqueries_link_in_footer
                                              WHERE namedquery_id = ?
                                                AND user_id = ?');
-    my $sth_check_ngm = $dbh->prepare('SELECT COUNT(*)
-                                         FROM namedquery_group_map
-                                        WHERE namedquery_id = ?');
     my $sth_insert_ngm = $dbh->prepare('INSERT INTO namedquery_group_map
                                         (namedquery_id, group_id)
                                         VALUES (?, ?)');
@@ -438,83 +409,64 @@ sub SaveSavedSearches {
                                          WHERE namedquery_id = ?');
     my $sth_delete_ngm = $dbh->prepare('DELETE FROM namedquery_group_map
                                               WHERE namedquery_id = ?');
-    my $sth_direct_group_members =
-        $dbh->prepare('SELECT user_id
-                         FROM user_group_map
-                        WHERE group_id = ?
-                          AND isbless = ' . GROUP_MEMBERSHIP . '
-                          AND grant_type = ' . GRANT_DIRECT);
-    foreach my $q (@queries) {
-        # Update namedqueries_link_in_footer.
-        $sth_check_nl->execute($q->{'id'}, $user_id);
-        my ($link_in_footer_entries) = $sth_check_nl->fetchrow_array();
-        if (defined($cgi->param("link_in_footer_$q->{'id'}"))) {
-            if ($link_in_footer_entries == 0) {
-                $sth_insert_nl->execute($q->{'id'}, $user_id);
+
+    # Update namedqueries_link_in_footer for this user.
+    foreach my $q (@{$user->queries}, @{$user->queries_available}) {
+        if (defined $cgi->param("link_in_footer_" . $q->id)) {
+            $sth_insert_nl->execute($q->id, $user_id) if !$q->link_in_footer;
+        }
+        else {
+            $sth_delete_nl->execute($q->id, $user_id) if $q->link_in_footer;
+        }
+    }
+
+    # For user's own queries, update namedquery_group_map.
+    foreach my $q (@{$user->queries}) {
+        my $group_id;
+
+        if ($user->in_group(Bugzilla->params->{'querysharegroup'})) {
+            $group_id = $cgi->param("share_" . $q->id) || '';
+        }
+
+        if ($group_id) {
+            # Don't allow the user to share queries with groups he's not
+            # allowed to.
+            next unless grep($_ eq $group_id, @{$user->queryshare_groups});
+
+            # $group_id is now definitely a valid ID of a group the
+            # user can share queries with, so we can trick_taint.
+            detaint_natural($group_id);
+            if ($q->shared_with_group) {
+                $sth_update_ngm->execute($group_id, $q->id);
+            }
+            else {
+                $sth_insert_ngm->execute($q->id, $group_id);
+            }
+
+            # If we're sharing our query with a group we can bless, we 
+            # subscribe direct group members to our search automatically.
+            # Otherwise, the group members need to opt in. This behaviour 
+            # is deemed most likely to fit users' needs.
+            if ($user->can_bless($group_id)) {
+                my $group = new Bugzilla::Group($group_id);
+                my $members = $group->members_non_inherited;
+                foreach my $member (@$members) {
+                    next if $member->id == $user->id;
+                    $sth_insert_nl->execute($q->id, $member->id)
+                        if !$q->link_in_footer($member);
+                }
             }
         }
         else {
-            if ($link_in_footer_entries > 0) {
-                $sth_delete_nl->execute($q->{'id'}, $user_id);
+            # They have unshared that query.
+            if ($q->shared_with_group) {
+                $sth_delete_ngm->execute($q->id);
             }
-        }
 
-        # For user's own queries, update namedquery_group_map.
-        if ($q->{'userid'} == $user_id) {
-            my ($group_id, $group_map_entries);
-            if ($user->in_group(Bugzilla->params->{'querysharegroup'})) {
-                $sth_check_ngm->execute($q->{'id'});
-                ($group_map_entries) = $sth_check_ngm->fetchrow_array();
-                $group_id = $cgi->param("share_$q->{'id'}") || '';
-            }
-            if ($group_id) {
-                if (grep(/^\Q$group_id\E$/, @{$user->queryshare_groups()})) {
-                    # $group_id is now definitely a valid ID of a group the
-                    # user can see, so we can trick_taint.
-                    trick_taint($group_id);
-                    if ($group_map_entries == 0) {
-                        $sth_insert_ngm->execute($q->{'id'}, $group_id);
-                    }
-                    else {
-                        $sth_update_ngm->execute($group_id, $q->{'id'});
-                    }
-
-                    # If we're sharing our query with a group we can bless,
-                    # we're subscribing direct group members to our search
-                    # automatically. Otherwise, the group members need to
-                    # opt in. This behaviour is deemed most likely to fit
-                    # users' needs.
-                    if ($user->can_bless($group_id)) {
-                        $sth_direct_group_members->execute($group_id);
-                        my $user_id;
-                        while ($user_id =
-                               $sth_direct_group_members->fetchrow_array()) {
-                            next if $user_id == $user->id;
-
-                            $sth_check_nl->execute($q->{'id'}, $user_id);
-                            my ($already_shown_in_footer) =
-                                $sth_check_nl->fetchrow_array();
-                            if (! $already_shown_in_footer) {
-                                $sth_insert_nl->execute($q->{'id'}, $user_id);
-                            }
-                        }
-                    }
-                }
-                else {
-                    # In the unlikely case somebody removed visibility to the
-                    # group in the meantime, don't modify sharing.
-                }
-            }
-            else {
-                if ($group_map_entries > 0) {
-                    $sth_delete_ngm->execute($q->{'id'});
-                }
-
-                # Don't remove namedqueries_link_in_footer entries for users
-                # subscribing to the shared query. The idea is that they will
-                # probably want to be subscribers again should the sharing
-                # user choose to share the query again.
-            }
+            # Don't remove namedqueries_link_in_footer entries for users
+            # subscribing to the shared query. The idea is that they will
+            # probably want to be subscribers again should the sharing
+            # user choose to share the query again.
         }
     }
 

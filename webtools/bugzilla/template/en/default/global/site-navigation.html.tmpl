@@ -97,6 +97,14 @@
           href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">
   [% END %]
 
+  [% FOREACH q = user.queries_subscribed %]
+    <link rel="Saved&nbsp;Search"
+          title="[% q.name FILTER html %] ([% q.user.login FILTER html %])"
+          href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                 [% q.name FILTER url_quote %]&amp;sharer_id=
+                 [% q.user.id FILTER url_quote %]">
+  [% END %]
+
   [%# *** Bugzilla Administration Tools *** %]
   [% IF user.login %] 
     [% '<link rel="Administration" title="Parameters"    

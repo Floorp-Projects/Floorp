@@ -54,7 +54,7 @@
   [%# Get existing lists of bugs for this user %]
   [% lists_of_bugs = [] %]
   [% FOREACH q = user.queries %]
-    [% NEXT UNLESS q.query_type == constants.LIST_OF_BUGS %]
+    [% NEXT UNLESS q.bug_ids_only %]
     [% lists_of_bugs.push(q.name) %]
   [% END %]
 

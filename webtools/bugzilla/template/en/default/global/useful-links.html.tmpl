@@ -86,10 +86,12 @@
     
     [%# Saved searches %]
     
-  [% IF user.showmybugslink OR user.queries.size %]
+  [% IF user.showmybugslink OR user.queries.size 
+        OR user.queries_subscribed.size 
+  %]
     <li id="links-saved">
       <div class="label">
-          Saved Searches:
+        Saved Searches:
       </div>
       <ul class="links">
         [% IF user.showmybugslink %]
@@ -99,7 +101,6 @@
         [% END %]
 
         [% FOREACH q = user.queries %]
-          [% NEXT IF q.userid != user.id %]
           [% IF q.link_in_footer %]
             <li>[% '<span class="separator">| </span>' IF print_pipe %]
             <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html %]</a></li>
@@ -108,22 +109,20 @@
         [% END %]
         [% new_line = print_pipe %]
         [% print_pipe = 0 %]
-        [% FOREACH q = user.queries %]
-          [% NEXT IF q.userid == user.id %]
-          [% IF q.link_in_footer %]
-            [% IF new_line %]
-              <br>
-              [% new_line = 0 %]
-            [% END %]
-            <li>
+        [% FOREACH q = user.queries_subscribed %]
+          [% IF new_line %]
+            <br>
+            [% new_line = 0 %]
+          [% END %]
+          <li>
             [% '<span class="separator">| </span>' IF print_pipe %]
             <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
                      [% q.name FILTER url_quote %]&amp;sharer_id=
-                     [% q.userid FILTER url_quote %]"
+                     [% q.user.id FILTER url_quote %]"
                class="shared"
-               title="Shared by [% q.user.identity FILTER html %]">[% q.name FILTER html FILTER no_break %]</a></li>
-            [% print_pipe = 1 %]
-          [% END %]
+               title="Shared by [% q.user.identity FILTER html %]"
+               >[% q.name FILTER html FILTER no_break %]</a></li>
+          [% print_pipe = 1 %]
         [% END %]
       </ul>
     </li>

@@ -81,6 +81,20 @@ sub _rederive_regexp {
     RederiveRegexp($self->user_regexp, $self->id);
 }
 
+sub members_non_inherited {
+    my ($self) = @_;
+    return $self->{members_non_inherited} 
+           if exists $self->{members_non_inherited};
+
+    my $member_ids = Bugzilla->dbh->selectcol_arrayref(
+        'SELECT DISTINCT user_id FROM user_group_map 
+          WHERE isbless = 0 AND group_id = ?',
+        undef, $self->id) || [];
+    require Bugzilla::User;
+    $self->{members_non_inherited} = Bugzilla::User->new_from_list($member_ids);
+    return $self->{members_non_inherited};
+}
+
 ################################
 #####  Module Subroutines    ###
 ################################
@@ -244,5 +258,18 @@ be a member of this group.
 
  Returns:     It returns the group id if successful
               and undef otherwise.
+
+=back
+
+=head1 METHODS
+
+=over
+
+=item C<members_non_inherited>
+
+Returns an arrayref of L<Bugzilla::User> objects representing people who are
+"directly" in this group, meaning that they're in it because they match
+the group regular expression, or they have been actually added to the
+group manually.
 
 =back

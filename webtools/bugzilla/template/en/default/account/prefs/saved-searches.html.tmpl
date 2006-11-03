@@ -20,8 +20,6 @@
   #%]
 
 [%# INTERFACE:
-  # queries: list of the named queries visible to the user, both own and shared
-  #          by others. Cleaned-up result of Bugzilla::User::queries.
   # queryshare_groups: list of groups the user may share queries with
   #                    (id, name).
   #%]
@@ -81,18 +79,18 @@
         &mdash;
       </td>
     </tr>
-    [% FOREACH q = queries %]
-      [% NEXT UNLESS q.userid == user.id %]
+    [% FOREACH q = user.queries %]
       <tr>
         <td>[% q.name FILTER html %]</td>
         <td>
           <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">Run</a>
         </td>
         <td>
-          <a href="query.cgi?[% q.query FILTER html %]&amp;known_name=[% q.name FILTER url_quote %]">Edit</a>
+          <a href="query.cgi?[% q.edit_link FILTER html %]&amp;known_name=
+                   [% q.name FILTER url_quote %]">Edit</a>
         </td>
         <td>
-          [% IF q.usedinwhine %]
+          [% IF q.used_in_whine %]
             Remove from <a href="editwhines.cgi">whining</a> first
           [% ELSE %]
             <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
@@ -112,7 +110,9 @@
               <option value="">Don't share</option>
               [% FOREACH group = queryshare_groups %]
                 <option value="[% group.id %]"
-                        [% ' selected="selected"' IF q.shared_with_group == group.id %]>[% group.name FILTER html %]</option>
+                        [% ' selected="selected"' 
+                           IF q.shared_with_group.id == group.id %]
+                >[% group.name FILTER html %]</option>
               [% END %]
             </select>
           [% ELSE %]
@@ -144,8 +144,7 @@
       </th>
     </tr>
     [% found_shared_query = 0 %]
-    [% FOREACH q = queries %]
-      [% NEXT IF q.userid == user.id %]
+    [% FOREACH q = user.queries_available %]
       [% found_shared_query = 1 %]
       <tr>
         <td>[% q.name FILTER html %]</td>
@@ -153,7 +152,7 @@
         <td>
           <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
                    [% q.name FILTER url_quote %]&amp;sharer_id=
-                   [% q.userid FILTER url_quote %]">Run</a>
+                   [% q.user.id FILTER url_quote %]">Run</a>
         </td>
         <td align="center">
           <input type="checkbox" 
