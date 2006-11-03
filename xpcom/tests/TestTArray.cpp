@@ -410,6 +410,9 @@ static PRBool test_ptrarray() {
 
 //----
 
+// This test relies too heavily on the existance of DebugGetHeader to be
+// useful in non-debug builds.
+#ifdef DEBUG
 static PRBool test_autoarray() {
   PRUint32 data[] = {4,6,8,2,4,1,5,7,3};
   nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)> array;
@@ -473,6 +476,7 @@ static PRBool test_autoarray() {
 
   return PR_TRUE;
 }
+#endif
 
 //----
 
@@ -492,7 +496,9 @@ static const struct Test {
   DECL_TEST(test_comptr_array),
   DECL_TEST(test_refptr_array),
   DECL_TEST(test_ptrarray),
+#ifdef DEBUG
   DECL_TEST(test_autoarray),
+#endif
   { nsnull, nsnull }
 };
 
