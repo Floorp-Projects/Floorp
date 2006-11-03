@@ -48,6 +48,17 @@ class nsINode;
 { 0x0864a23d, 0x824b, 0x48be, \
  { 0x9d, 0x50, 0xff, 0x30, 0x2f, 0xf2, 0x79, 0xfe } }
 
+/**
+ * Information details about a characterdata change
+ */
+struct CharacterDataChangeInfo
+{
+  PRBool mAppend;
+  PRUint32 mChangeStart;
+  PRUint32 mChangeEnd;
+  PRUint32 mReplaceLength;
+};
+
 // Mutation observer interface
 class nsIMutationObserver : public nsISupports
 {
@@ -68,7 +79,7 @@ public:
    */
   virtual void CharacterDataChanged(nsIDocument *aDocument,
                                     nsIContent* aContent,
-                                    PRBool aAppend) = 0;
+                                    CharacterDataChangeInfo* aInfo) = 0;
 
   /**
    * Notification that an attribute of an element has changed.
@@ -159,7 +170,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 #define NS_DECL_NSIMUTATIONOBSERVER                                          \
     virtual void CharacterDataChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent,                  \
-                                      PRBool aAppend);                       \
+                                      CharacterDataChangeInfo* aInfo);       \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
                                   nsIContent* aContent,                      \
                                   PRInt32 aNameSpaceID,                      \
@@ -189,7 +200,7 @@ _class::NodeWillBeDestroyed(const nsINode* aNode)                               
 void                                                                      \
 _class::CharacterDataChanged(nsIDocument* aDocument,                      \
                              nsIContent* aContent,                        \
-                             PRBool aAppend)                              \
+                             CharacterDataChangeInfo* aInfo)              \
 {                                                                         \
 }                                                                         \
 void                                                                      \

@@ -153,7 +153,6 @@
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
-#include "nsRange.h"
 #include "nsEventDispatcher.h"
 
 /**
@@ -1740,28 +1739,6 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
 
     return nsGenericElement::PreHandleEvent(aVisitor);
-}
-
-nsresult
-nsXULElement::RangeAdd(nsIRange* aRange)
-{
-    // rdf content does not yet support DOM ranges
-    return NS_OK;
-}
-
-
-void
-nsXULElement::RangeRemove(nsIRange* aRange)
-{
-    // rdf content does not yet support DOM ranges
-}
-
-
-const nsVoidArray *
-nsXULElement::GetRangeList() const
-{
-    // XUL content does not yet support DOM ranges
-    return nsnull;
 }
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(

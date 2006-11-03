@@ -286,7 +286,7 @@ nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
 void
 nsSVGUseElement::CharacterDataChanged(nsIDocument *aDocument,
                                       nsIContent *aContent,
-                                      PRBool aAppend)
+                                      CharacterDataChangeInfo* aInfo)
 {
   TriggerReclone();
 }

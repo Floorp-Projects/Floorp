@@ -88,7 +88,6 @@ class nsIScriptGlobalObject;
 template<class E> class nsCOMArray;
 class nsIPref;
 class nsVoidArray;
-class nsIRange;
 struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
@@ -781,43 +780,6 @@ public:
                                        PRBool aCanBubble,
                                        PRBool aCancelable,
                                        PRBool *aDefaultAction = nsnull);
-
-  /**
-   * Add aRange to the list of ranges with a start- or endpoint containing
-   * aNode. aCreated will be set to PR_TRUE if this call created a new list
-   * (meaning the list was empty before the call to AddToRangeList).
-   *
-   * @param aNode The node contained in the start- or endpoint of aRange.
-   * @param aRange The range containing aNode in its start- or endpoint.
-   * @param aCreated [out] Set to PR_TRUE if a new list was created.
-   */
-  static nsresult AddToRangeList(nsINode *aNode, nsIRange *aRange,
-                                 PRBool *aCreated);
-
-  /**
-   * Remove aRange from the list of ranges with a start- or endpoint containing
-   * aNode. This will return PR_TRUE if aRange was the last range in the list.
-   *
-   * @param aNode The node for which to remove aRange.
-   * @param aRange The range to remove.
-   * @return PR_TRUE if aRange was the last range in the list.
-   */
-  static PRBool RemoveFromRangeList(nsINode *aNode, nsIRange *aRange);
-
-  /**
-   * Look up the list of ranges containing aNode.
-   *
-   * @param aNode The node for which to look up the range list.
-   * @return The range list if one exists.
-   */
-  static const nsVoidArray* LookupRangeList(const nsINode *aNode);
-
-  /**
-   * Remove the list of ranges containing aNode as their start- or endpoint.
-   *
-   * @param aNode The node for which to remove the range list.
-   */
-  static void RemoveRangeList(nsINode *aNode);
 
   /**
    * Get the eventlistener manager for aNode. If a new eventlistener manager

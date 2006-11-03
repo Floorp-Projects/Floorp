@@ -832,7 +832,7 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
 void
 inDOMView::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent* aContent,
-                                PRBool aAppend)
+                                CharacterDataChangeInfo* aInfo)
 {
 }
 

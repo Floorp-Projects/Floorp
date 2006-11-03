@@ -51,6 +51,7 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "prmon.h"
+#include "nsStubMutationObserver.h"
 
 class nsVoidArray;
 
@@ -75,10 +76,12 @@ public:
 
 class nsRange : public nsIRange,
                 public nsIDOMRange,
-                public nsIDOMNSRange
+                public nsIDOMNSRange,
+                public nsStubMutationObserver
 {
 public:
   nsRange()
+    : mRoot(nsnull)
   {
   }
   virtual ~nsRange();
@@ -95,19 +98,19 @@ public:
   virtual nsINode* GetCommonAncestor();
   virtual void Reset();
   
-  // nsRange interface extensions
-  
-  static NS_METHOD    OwnerGone(nsIContent* aParentNode);
-  
-  static NS_METHOD    OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset);
-  
-  static NS_METHOD    OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aRemovedNode);
-  
-  static nsresult TextOwnerChanged(nsIContent *aTextNode,
-                                   const nsVoidArray *aRangeList,
-                                   PRInt32 aStartOffset,
-                                   PRInt32 aEndOffset,
-                                   PRInt32 aReplaceLength);
+  // nsIMutationObserver methods
+  virtual void CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent,
+                                    CharacterDataChangeInfo* aChangeInfo);
+  virtual void ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+  virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
 private:
   // no copy's or assigns
@@ -127,8 +130,11 @@ public:
                                      PRBool *outNodeAfter);
 
 protected:
+  nsINode* mRoot;
+ 
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
-                  nsINode* aEndN, PRInt32 aEndOffset);
+                  nsINode* aEndN, PRInt32 aEndOffset,
+                  nsINode* aRoot);
 };
 
 // Make a new nsIDOMRange object

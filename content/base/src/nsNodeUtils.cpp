@@ -79,11 +79,12 @@
 
 
 void
-nsNodeUtils::CharacterDataChanged(nsIContent* aContent, PRBool aAppend)
+nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
+                                  CharacterDataChangeInfo* aInfo)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
-                             (doc, aContent, aAppend));
+                             (doc, aContent, aInfo));
 }
 
 void
@@ -181,19 +182,6 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
       document->PropertyTable()->DeleteAllPropertiesFor(aNode);
     }
     aNode->UnsetFlags(NODE_HAS_PROPERTIES);
-  }
-
-  if (aNode->HasFlag(NODE_HAS_RANGELIST)) {
-#ifdef DEBUG
-    if (!nsContentUtils::LookupRangeList(aNode) &&
-        nsContentUtils::IsInitialized()) {
-      NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
-               "in the hash!?!!");
-    }
-#endif
-
-    nsContentUtils::RemoveRangeList(aNode);
-    aNode->UnsetFlags(NODE_HAS_RANGELIST);
   }
 
   if (aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {

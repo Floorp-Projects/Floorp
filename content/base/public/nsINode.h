@@ -55,38 +55,34 @@ class nsIEventListenerManager;
 class nsIPrincipal;
 class nsVoidArray;
 class nsIMutationObserver;
-class nsIRange;
 
 // This bit will be set if the node doesn't have nsSlots
 #define NODE_DOESNT_HAVE_SLOTS       0x00000001U
 
-// This bit will be set if the node has a range list in the range list hash
-#define NODE_HAS_RANGELIST           0x00000002U
-
 // This bit will be set if the node has a listener manager in the listener
 // manager hash
-#define NODE_HAS_LISTENERMANAGER     0x00000004U
+#define NODE_HAS_LISTENERMANAGER     0x00000002U
 
 // Whether this node has had any properties set on it
-#define NODE_HAS_PROPERTIES          0x00000008U
+#define NODE_HAS_PROPERTIES          0x00000004U
 
 // Whether this node is anonymous
 // NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS            0x00000010U
+#define NODE_IS_ANONYMOUS            0x00000008U
 
 // Whether this node is anonymous for events
 // NOTE: Should only be used on nsIContent nodes
-#define NODE_IS_ANONYMOUS_FOR_EVENTS 0x00000020U
+#define NODE_IS_ANONYMOUS_FOR_EVENTS 0x00000010U
 
 // Whether this node may have a frame
 // NOTE: Should only be used on nsIContent nodes
-#define NODE_MAY_HAVE_FRAME          0x00000040U
+#define NODE_MAY_HAVE_FRAME          0x00000020U
 
 // Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                7
+#define NODE_SCRIPT_TYPE_OFFSET                6
 
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0b
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0a
 
 // Useful macro for getting a node given an nsIContent and an nsIDocument
 // Returns the first argument cast to nsINode if it is non-null, otherwise
@@ -433,35 +429,6 @@ public:
   {
     return HasFlag(NODE_HAS_PROPERTIES);
   }
-
-  /**
-   * Inform node of range ownership changes.  This allows the node to do the
-   * right thing to ranges in the face of changes to the content model.
-   *
-   * RangeRemove -- informs content that it no longer owns a range endpoint
-   * GetRangeList -- returns the list of ranges that have one or both endpoints
-   *                 within this content item
-   */
-  /**
-   * Inform node that it owns one or both range endpoints
-   * @param aRange the range the node owns
-   */
-  virtual nsresult RangeAdd(nsIRange* aRange);
-
-  /**
-   * Inform node that it no longer owns either range endpoint
-   * @param aRange the range the node no longer owns
-   */
-  virtual void RangeRemove(nsIRange* aRange);
-
-  /**
-   * Get the list of ranges that have either endpoint in this node
-   * item.
-   * @return the list of ranges owned partially by this node. The
-   * nsVoidArray is owned by the node object and its lifetime is
-   * controlled completely by the node object.
-   */
-  virtual const nsVoidArray *GetRangeList() const;
 
   /**
    * Return the principal of this node.  This is guaranteed to never be a null

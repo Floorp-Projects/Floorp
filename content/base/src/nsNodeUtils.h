@@ -46,6 +46,7 @@ struct JSObject;
 class nsINode;
 class nsNodeInfoManager;
 template<class E> class nsCOMArray;
+struct CharacterDataChangeInfo;
 
 class nsNodeUtils
 {
@@ -53,10 +54,11 @@ public:
   /**
    * Send CharacterDataChanged notifications to nsIMutationObservers.
    * @param aContent  Node whose data changed
-   * @param aAppend   True if data was only appended
+   * @param aInfo     Struct with information details about the change
    * @see nsIMutationObserver::CharacterDataChanged
    */
-  static void CharacterDataChanged(nsIContent* aContent, PRBool aAppend);
+  static void CharacterDataChanged(nsIContent* aContent,
+                                   CharacterDataChangeInfo* aInfo);
 
   /**
    * Send AttributeChanged notifications to nsIMutationObservers.

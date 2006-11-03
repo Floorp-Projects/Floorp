@@ -967,7 +967,7 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
 
 void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
                                            nsIContent* aContent,
-                                           PRBool aAppend)
+                                           CharacterDataChangeInfo* aInfo)
 {
   InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
 }

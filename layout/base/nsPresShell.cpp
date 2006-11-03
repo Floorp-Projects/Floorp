@@ -1234,7 +1234,7 @@ public:
   virtual void EndLoad(nsIDocument* aDocument);
   virtual void CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent* aContent,
-                                    PRBool aAppend);
+                                    CharacterDataChangeInfo* aInfo);
   virtual void ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
@@ -5229,7 +5229,7 @@ PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
 void
 PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
-                                PRBool aAppend)
+                                CharacterDataChangeInfo* aInfo)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
@@ -5244,7 +5244,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
     // frame to the caret.
     mCaret->InvalidateOutsideCaret();
   }
-  mFrameConstructor->CharacterDataChanged(aContent, aAppend);
+  mFrameConstructor->CharacterDataChanged(aContent, aInfo->mAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }

@@ -50,11 +50,9 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContentIterator.h"
-#include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -197,48 +195,6 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
 
   return doc->PropertyTable()->UnsetProperty(this, aCategory, aPropertyName,
                                              aStatus);
-}
-
-nsresult
-nsINode::RangeAdd(nsIRange* aRange)
-{
-  PRBool created;
-  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    NS_ASSERTION(!HasFlag(NODE_HAS_RANGELIST),
-                 "Huh, nsGenericElement flags don't reflect reality!!!");
-    SetFlags(NODE_HAS_RANGELIST);
-  }
-  return rv;
-}
-
-void
-nsINode::RangeRemove(nsIRange* aRange)
-{
-  if (!HasFlag(NODE_HAS_RANGELIST)) {
-    return;
-  }
-
-  PRBool removed = nsContentUtils::RemoveFromRangeList(this, aRange);
-  if (removed) {
-    UnsetFlags(NODE_HAS_RANGELIST);
-  }
-}
-
-const nsVoidArray *
-nsINode::GetRangeList() const
-{
-  if (!HasFlag(NODE_HAS_RANGELIST)) {
-    return nsnull;
-  }
-
-  const nsVoidArray* rangeList = nsContentUtils::LookupRangeList(this);
-
-  NS_ASSERTION(rangeList || !nsContentUtils::IsInitialized(),
-               "Huh, our bit says we have a range list, but there's nothing "
-               "in the hash!?!!");
-
-  return rangeList;
 }
 
 NS_IMETHODIMP
@@ -2319,11 +2275,6 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     return rv;
   }
 
-  // Adjust ranges, but only if we're not appending to the end of the list
-  if (aParent && !isAppend) {
-    nsRange::OwnerChildInserted(aParent, aIndex);
-  }
-  
   // The kid may have removed its parent from the document, so recheck that
   // that's still in the document before proceeding.  Also, the kid may have
   // just removed itself, in which case we don't really want to fire
@@ -2405,10 +2356,6 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
     if (NS_STATIC_CAST(PRInt32, aIndex) < 0) {
       return NS_OK;
     }
-  }
-
-  if (aParent) {
-    nsRange::OwnerChildRemoved(aParent, aIndex, aKid);
   }
 
   aChildArray.RemoveChildAt(aIndex);
