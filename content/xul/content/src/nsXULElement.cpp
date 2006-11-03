@@ -1743,7 +1743,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsXULElement::RangeAdd(nsIDOMRange* aRange)
+nsXULElement::RangeAdd(nsIRange* aRange)
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;
@@ -1751,7 +1751,7 @@ nsXULElement::RangeAdd(nsIDOMRange* aRange)
 
 
 void
-nsXULElement::RangeRemove(nsIDOMRange* aRange)
+nsXULElement::RangeRemove(nsIRange* aRange)
 {
     // rdf content does not yet support DOM ranges
 }

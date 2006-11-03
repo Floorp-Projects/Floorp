@@ -514,8 +514,8 @@ public:
     }
 #endif
 
-    virtual nsresult RangeAdd(nsIDOMRange* aRange);
-    virtual void RangeRemove(nsIDOMRange* aRange);
+    virtual nsresult RangeAdd(nsIRange* aRange);
+    virtual void RangeRemove(nsIRange* aRange);
     virtual const nsVoidArray *GetRangeList() const;
     virtual void SetFocus(nsPresContext* aPresContext);
     virtual void RemoveFocus(nsPresContext* aPresContext);
