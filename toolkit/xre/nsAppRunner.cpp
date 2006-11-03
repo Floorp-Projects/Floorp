@@ -1555,7 +1555,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
       rv = NS_NewNativeLocalFile(nsDependentCString(delim + 1),
                                    PR_TRUE, getter_AddRefs(lf));
       if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Error: profile path not valid.");
+        PR_fprintf(PR_STDERR, "Error: profile path not valid.\n");
         return rv;
       }
       
@@ -1567,10 +1567,13 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
       rv = profileSvc->CreateProfile(nsnull, nsnull, nsDependentCString(arg),
                                      getter_AddRefs(profile));
     }
-    if (NS_SUCCEEDED(rv)) {
-      rv = NS_ERROR_ABORT;
-      PR_fprintf(PR_STDERR, "Success: created profile '%s'\n", arg);
+    // Some pathological arguments can make it this far
+    if (NS_FAILED(rv)) {
+      PR_fprintf(PR_STDERR, "Error creating profile.\n");
+      return rv; 
     }
+    rv = NS_ERROR_ABORT;  
+    PR_fprintf(PR_STDERR, "Success: created profile '%s'\n", arg);
     profileSvc->Flush();
 
     // XXXben need to ensure prefs.js exists here so the tinderboxes will
