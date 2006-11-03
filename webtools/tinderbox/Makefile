@@ -146,11 +146,12 @@ install:
 	  cp $$I $(TINDERBOX_DIR) && \
 	  chmod 644 $(TINDERBOX_DIR)/$$I; \
 	done
-	mkdir -p $(TINDERBOX_DIR)/data
+	mkdir -p $(TINDERBOX_DIR)/data/bad
 	chown -R $(TINDERBOX_USER) $(TINDERBOX_DIR)
 	chgrp -R $(TINDERBOX_GROUP) $(TINDERBOX_DIR)
 	chmod 755 $(TINDERBOX_DIR)
 	chmod 770 $(TINDERBOX_DIR)/data
+	chmod 770 $(TINDERBOX_DIR)/data/bad
 	chmod 770 $(TINDERBOX_DIR)/examples
 
 define READPASS
