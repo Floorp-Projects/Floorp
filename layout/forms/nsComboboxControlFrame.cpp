@@ -2090,7 +2090,7 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
   if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled) &&
       mFocused == this) {
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-    aRenderingContext.SetColor(0);
+    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
   } else {
     aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
     aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
