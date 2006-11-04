@@ -84,7 +84,7 @@ DIRS += \
         $(NULL)
 
 ifdef MOZ_PHOENIX
-ifndef MOZ_PLACES
+ifndef MOZ_PLACES_BOOKMARKS
 DIRS += search
 endif
 endif

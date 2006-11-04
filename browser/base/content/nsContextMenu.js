@@ -868,7 +868,7 @@ nsContextMenu.prototype = {
   addBookmarkForFrame: function() {
     var doc = this.target.ownerDocument;
     var uri = doc.location.href;
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
     var title = doc.title;
     var description = BookmarksUtils.getDescriptionFromDocument(doc);
     if (!title)

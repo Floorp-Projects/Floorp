@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
 #include "nsToolkitCompsCID.h"
@@ -223,7 +223,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 {
   nsresult rv;
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsIBookmarksService> bms = 
     do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -256,7 +256,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   rv = rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"),
                          getter_AddRefs(root));
   NS_ENSURE_SUCCESS(rv, rv);
-#endif // MOZ_PLACES
+#endif // MOZ_PLACES_BOOKMARKS
 
   // Look for the localized name of the bookmarks toolbar
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -276,7 +276,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
                                sourceNameStrings, 1, 
                                getter_Copies(importedBookmarksTitle));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   // Get the bookmarks service
   nsCOMPtr<nsINavBookmarksService> bms =
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);

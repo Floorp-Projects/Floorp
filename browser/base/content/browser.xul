@@ -51,7 +51,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 <?xml-stylesheet href="chrome://browser/skin/places/browser-places.css" type="text/css"?>
 #endif
 
@@ -128,7 +128,7 @@
 #include browser-context.inc
     </popup>
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 #include ../../components/places/content/context.inc
 #endif
   </popupset>
@@ -136,7 +136,7 @@
 # The hacky hidden tree used by the Go menu to build items.
 #include browser-gotreehack.inc
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   <!-- bookmarks context menu -->
   <popupset>
     <menupopup id="bookmarks-context-menu" 
@@ -315,7 +315,7 @@
         <button id="navigator-throbber" disabled="true"/>
       </toolbaritem>
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
       <toolbarbutton id="bookmarksBarShowPlaces" 
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&placesToolbarButton.label;" 
@@ -394,11 +394,11 @@
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 
-#ifndef MOZ_PLACES
         <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewHistorySidebar" label="&historyButton.label;"
                        tooltiptext="&historyButton.tooltip;"/>
 
+#ifndef MOZ_PLACES_BOOKMARKS
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"
@@ -470,7 +470,7 @@
  
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     <toolbar id="PersonalToolbar" mode="icons"  iconsize="small" 
              class="chromeclass-directories"
              context="toolbar-context-menu" 
@@ -506,7 +506,7 @@
                     autocompletepopup="PopupAutoComplete"
                     ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                     onclick="return contentAreaClick(event, false);"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                     onselect="BrowserController.onEvent(BrowserController.EVENT_TABCHANGE);"
 #endif
                     />

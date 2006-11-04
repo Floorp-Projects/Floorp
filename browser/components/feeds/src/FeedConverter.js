@@ -385,7 +385,7 @@ var FeedResultService = {
           Cc["@mozilla.org/appshell/window-mediator;1"].
           getService(Ci.nsIWindowMediator);
       var topWindow = wm.getMostRecentWindow("navigator:browser");
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
       topWindow.PlacesCommandHook.addLiveBookmark(spec, title, subtitle);
 #else
       topWindow.FeedHandler.addLiveBookmark(spec, title, subtitle);

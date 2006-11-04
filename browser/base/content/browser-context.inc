@@ -55,7 +55,7 @@
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                 command="Browser:AddLinkBookmark"/>
 #else
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL,
@@ -130,7 +130,7 @@
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                 command="Browser:AddBookmarkAs"/>
 #else
                 oncommand="gContextMenu.bookmarkThisPage();"/>

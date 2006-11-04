@@ -26,9 +26,11 @@
     locale/browser/sessionstore.properties         (%chrome/browser/sessionstore.properties)
 #ifdef MOZ_PLACES
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
+    locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+#endif
+#ifdef MOZ_PLACES_BOOKMARKS
     locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
-    locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/default_places.html      (%chrome/browser/places/default_places.html)
     locale/browser/places/placesPopup.dtd          (%chrome/browser/places/placesPopup.dtd)
     locale/browser/places/placesPopup.properties   (%chrome/browser/places/placesPopup.properties)

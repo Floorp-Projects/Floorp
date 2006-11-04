@@ -52,7 +52,7 @@ class nsILocalFile;
 class nsINIParser;
 class nsIPermissionManager;
 class nsIPrefBranch;
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 class nsINavBookmarksService;
 #else
 class nsIBookmarksService;
@@ -108,7 +108,7 @@ protected:
   nsresult CopyHistory(PRBool aReplace);
 
   nsresult CopyBookmarks(PRBool aReplace);
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   void     ClearToolbarFolder(nsINavBookmarksService * aBookmarksService, PRInt64 aToolbarFolder);
   nsresult ParseBookmarksFolder(nsILineInputStream* aStream, 
                                 PRInt64 aFolder,
@@ -130,7 +130,7 @@ protected:
                              nsIStringBundle* aBundle, 
                              nsIRDFResource* aParentFolder);
 #endif // defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
-#endif // MOZ_PLACES
+#endif // MOZ_PLACES_BOOKMARKS
 
   void     GetOperaProfile(const PRUnichar* aProfile, nsILocalFile** aFile);
 

@@ -21,7 +21,7 @@ menuitem.spell-suggestion {
   -moz-user-focus: normal;
 }
 
-%ifdef MOZ_PLACES
+%ifdef MOZ_PLACES_BOOKMARKS
 #PersonalToolbar > #bookmarksBarShowPlaces > .toolbarbutton-text {
   visibility: collapse;
 }
