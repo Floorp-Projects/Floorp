@@ -236,7 +236,7 @@ print "
 <td><table BORDER=0 CELLPADDING=0 CELLPSPACING=0>
 <tr>
 <TD VALIGN=TOP ALIGN=RIGHT NOWRAP>
-Between <input type=text name=mindate value='$mindate' size=25></td>
+Between <input type=text name=mindate value='" . &MyFmtClock($mindate) . "' size=25></td>
 <td valign=top rowspan=2>You can use the form
 <B><TT><NOBR>yyyy-mm-dd hh:mm:ss</NOBR></TT></B> or a Unix <TT>time_t</TT>
 (seconds since the Epoch.)
@@ -244,7 +244,7 @@ Between <input type=text name=mindate value='$mindate' size=25></td>
 </tr>
 <tr>
 <td VALIGN=TOP ALIGN=RIGHT NOWRAP>
- and <input type=text name=maxdate value='$maxdate' size=25></td>
+ and <input type=text name=maxdate value='" . &MyFmtClock($maxdate) . "' size=25></td>
 </tr>
 </table>
 </td>
