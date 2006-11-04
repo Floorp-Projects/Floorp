@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
+#include "nsIBoxObject.h"
 
 
 class nsIDOMEventReceiver;
@@ -85,9 +86,14 @@ protected:
   virtual PRBool EventMatched(nsXBLPrototypeHandler* inHandler,
                               nsIAtom* inEventType,
                               nsIDOMEvent* inEvent) = 0;
-                    
-  nsIDOMElement* mElement;            // weak ref
-  nsIDOMEventReceiver* mReceiver;     // weak ref
+
+  // Returns the element which was passed as a parameter to the constructor,
+  // unless the element has been removed from the document.
+  already_AddRefed<nsIDOMElement> GetElement();
+
+  // Using nsIBoxObject as a weak reference to a DOM Element.
+  nsCOMPtr<nsIBoxObject> mBoxObjectForElement;
+  nsIDOMEventReceiver*   mReceiver;     // weak ref
 
   // these are not owning references; the prototype handlers are owned
   // by the prototype bindings which are owned by the docinfo.
