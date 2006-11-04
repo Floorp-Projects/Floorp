@@ -96,7 +96,7 @@
 
 #include "prlog.h"
 
-PRLogModuleInfo* nsComponentManagerLog = nsnull;
+NS_COM PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN
