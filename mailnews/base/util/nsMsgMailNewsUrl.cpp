@@ -951,9 +951,17 @@ nsresult nsMsgSaveAsListener::SetupMsgWriteStream(nsIFileSpec *aFileSpec, PRBool
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  // if the file already exists, delete it.
-  // do this before we get the outputstream
+  // If the file already exists, delete it, but do this before
+  // getting the outputstream.
+  // Due to bug 328027, the nsSaveMsgListener created in 
+  // nsMessenger::SaveAs now opens the stream on the nsIFileSpec
+  // object, thus creating an empty file. Actual save operations for
+  // IMAP and NNTP use this nsMsgSaveAsListener here, though, so we
+  // have to close the stream before deleting the file lest, else data
+  // would still be written happily into a now non-existing file.
+  // (Windows doesn't care, btw, just unixoids do...)
   nsFileSpec fileSpec;
+  aFileSpec->CloseStream();
   aFileSpec->GetFileSpec(&fileSpec);
   fileSpec.Delete(PR_FALSE);
 
