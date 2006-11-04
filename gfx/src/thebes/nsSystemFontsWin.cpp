@@ -44,7 +44,9 @@
 
 
 nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
-					       nsFont* aFont, PRBool aIsWide) const
+					       nsString *aFontName,
+                                               gfxFontStyle *aFontStyle,
+                                               PRBool aIsWide) const
 {
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;
@@ -54,31 +56,31 @@ nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogF
     MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
       strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
   }
-  aFont->name = name;
+  *aFontName = name;
 
   // Do Style
-  aFont->style = NS_FONT_STYLE_NORMAL;
+  aFontStyle->style = FONT_STYLE_NORMAL;
   if (ptrLogFont->lfItalic)
   {
-    aFont->style = NS_FONT_STYLE_ITALIC;
+    aFontStyle->style = FONT_STYLE_ITALIC;
   }
   // XXX What about oblique?
 
-  aFont->variant = NS_FONT_VARIANT_NORMAL;
+  aFontStyle->variant = FONT_VARIANT_NORMAL;
 
   // Do Weight
-  aFont->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
-            NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
+  aFontStyle->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
+            FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL);
 
   // Do decorations
-  aFont->decorations = NS_FONT_DECORATION_NONE;
+  aFontStyle->decorations = FONT_DECORATION_NONE;
   if (ptrLogFont->lfUnderline)
   {
-    aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
+    aFontStyle->decorations |= FONT_DECORATION_UNDERLINE;
   }
   if (ptrLogFont->lfStrikeOut)
   {
-    aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
+    aFontStyle->decorations |= FONT_DECORATION_STRIKEOUT;
   }
 
 
@@ -108,20 +110,23 @@ nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogF
     pixelHeight = tm.tmAscent;
   }
 
-  float pointSize = pixelHeight * mPixelScale * 72 / ::GetDeviceCaps(*aHDC, LOGPIXELSY);
+  pixelHeight *= mPixelScale;
 
-  // we have problem on Simplified Chinese system because the system report
-  // the default font size is 8. but if we use 8, the text display very
-  // Ugly. force it to be at 9 on that system (cp936), but leave other sizes alone.
-  if ((pointSize < 9) && 
+  // we have problem on Simplified Chinese system because the system
+  // report the default font size is 8 points. but if we use 8, the text
+  // display very ugly. force it to be at 9 points (12 pixels) on that
+  // system (cp936), but leave other sizes alone.
+  if ((pixelHeight < 12) && 
       (936 == ::GetACP())) 
-    pointSize = 9;
+    pixelHeight = 12;
 
-  aFont->size = NSFloatPointsToTwips(pointSize);
+  aFontStyle->size = pixelHeight;
   return NS_OK;
 }
 
-nsresult nsSystemFontsWin::GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const
+nsresult nsSystemFontsWin::GetSysFontInfo(HDC aHDC, nsSystemFontID anID,
+                                          nsString *aFontName,
+                                          gfxFontStyle *aFontStyle) const
 {
   HGDIOBJ hGDI;
 
@@ -220,12 +225,14 @@ nsresult nsSystemFontsWin::GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont*
     return NS_ERROR_FAILURE;
   }
 
-  aFont->systemFont = PR_TRUE;
+  aFontStyle->systemFont = PR_TRUE;
 
-  return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFont);
+  return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFontName, aFontStyle);
 }
 
-nsresult nsSystemFontsWin::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
+nsresult nsSystemFontsWin::GetSystemFont(nsSystemFontID anID,
+                                         nsString *aFontName,
+                                         gfxFontStyle *aFontStyle) const
 {
   nsresult status = NS_OK;
 
@@ -253,7 +260,7 @@ nsresult nsSystemFontsWin::GetSystemFont(nsSystemFontID anID, nsFont *aFont) con
       HWND hwnd = nsnull;
       HDC tdc = GetDC(hwnd);
 
-      status = GetSysFontInfo(tdc, anID, aFont);
+      status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);
 
       ReleaseDC(hwnd, tdc);
 
@@ -264,7 +271,7 @@ nsresult nsSystemFontsWin::GetSystemFont(nsSystemFontID anID, nsFont *aFont) con
   return status;
 }
 
-nsSystemFontsWin::nsSystemFontsWin(float aPixelsToTwips)
+nsSystemFontsWin::nsSystemFontsWin()
 {
 
 }

@@ -39,8 +39,7 @@
 
 #include "nsSystemFontsMac.h"
 
-nsSystemFontsMac::nsSystemFontsMac(float aPixelsToTwips)
-    : mPixelsToTwips(aPixelsToTwips)
+nsSystemFontsMac::nsSystemFontsMac()
 {
 }
 
@@ -106,7 +105,8 @@ GetSystemFontForScript(ThemeFontID aFontID, ScriptCode aScriptCode,
 }
 
 nsresult
-nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
+nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
+                                gfxFontStyle *aFontStyle) const
 {
     nsresult rv;
 
@@ -114,13 +114,13 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     if (aID == eSystemFont_Window ||
         aID == eSystemFont_Document)
     {
-        aFont->style       = NS_FONT_STYLE_NORMAL;
-        aFont->weight      = NS_FONT_WEIGHT_NORMAL;
-        aFont->decorations = NS_FONT_DECORATION_NONE;
+        aFontStyle->style       = FONT_STYLE_NORMAL;
+        aFontStyle->weight      = FONT_WEIGHT_NORMAL;
+        aFontStyle->decorations = FONT_DECORATION_NONE;
 
-        aFont->name.AssignLiteral("sans-serif");
-        aFont->size = NSToCoordRound(aFont->size * 0.875f);
-        aFont->systemFont = PR_TRUE;
+        aFontName->AssignLiteral("sans-serif");
+        aFontStyle->size = 14;
+        aFontStyle->systemFont = PR_TRUE;
 
         return NS_OK;
     }
@@ -176,17 +176,17 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
         }
     }
 
-    aFont->name = fontName; 
-    aFont->size = NSToCoordRound(float(fontSize) * mPixelsToTwips);
+    *aFontName = fontName; 
+    aFontStyle->size = gfxFloat(fontSize);
 
     if (fontStyle & bold)
-        aFont->weight = NS_FONT_WEIGHT_BOLD;
+        aFontStyle->weight = FONT_WEIGHT_BOLD;
     if (fontStyle & italic)
-        aFont->style = NS_FONT_STYLE_ITALIC;
+        aFontStyle->style = FONT_STYLE_ITALIC;
     if (fontStyle & underline)
-        aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+        aFontStyle->decorations = FONT_DECORATION_UNDERLINE;
 
-    aFont->systemFont = PR_TRUE;
+    aFontStyle->systemFont = PR_TRUE;
 
     return NS_OK;
 }

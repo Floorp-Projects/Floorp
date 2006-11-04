@@ -38,17 +38,15 @@
 #ifndef _NS_SYSTEMFONTSMAC_H_
 #define _NS_SYSTEMFONTSMAC_H_
 
-#include <nsFont.h>
+#include <gfxFont.h>
 #include <nsIDeviceContext.h>
 
 class nsSystemFontsMac
 {
 public:
-     nsSystemFontsMac(float aPixelsToTwips);
-
-     nsresult GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
-protected:
-    float mPixelsToTwips;
+    nsSystemFontsMac();
+    nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
+                           gfxFontStyle *aFontStyle) const;
 };
 
 #endif /* _NS_SYSTEMFONTSMAC_H_ */

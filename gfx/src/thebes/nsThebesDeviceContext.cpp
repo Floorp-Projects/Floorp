@@ -135,7 +135,7 @@ nsresult
 nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 {
     PRInt32 OSVal;
-    PRBool do_round = PR_TRUE;
+    PRBool do_round = PR_TRUE; // XXX bogus -- only caller for which it's false is a round number
 
     PRInt32 dpi = 96;
 
@@ -383,19 +383,38 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
     if (!gSystemFonts) {
 #ifdef MOZ_ENABLE_GTK2
-        gSystemFonts = new nsSystemFontsGTK2(mPixelsToTwips);
+        gSystemFonts = new nsSystemFontsGTK2();
 #elif XP_WIN
-        gSystemFonts = new nsSystemFontsWin(mPixelsToTwips);
+        gSystemFonts = new nsSystemFontsWin();
 #elif defined(XP_BEOS)
-        gSystemFonts = new nsSystemFontsBeOS(mPixelsToTwips);
+        gSystemFonts = new nsSystemFontsBeOS();
 #elif XP_MACOSX
-        gSystemFonts = new nsSystemFontsMac(mPixelsToTwips);
+        gSystemFonts = new nsSystemFontsMac();
 #else
 #error Need to know how to create gSystemFonts, fix me!
 #endif
     }
 
-    return gSystemFonts->GetSystemFont(aID, aFont);
+    nsString fontName;
+    gfxFontStyle fontStyle(NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                           FONT_WEIGHT_NORMAL, FONT_DECORATION_NONE,
+                           16.0f, NS_LITERAL_CSTRING(""), 0.0f, PR_TRUE,
+                           PR_FALSE);
+    nsresult rv = gSystemFonts->GetSystemFont(aID, &fontName, &fontStyle);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aFont->name = fontName;
+    aFont->style = fontStyle.style;
+    aFont->systemFont = fontStyle.systemFont;
+    aFont->variant = fontStyle.variant;
+    aFont->familyNameQuirks = fontStyle.familyNameQuirks;
+    aFont->weight = fontStyle.weight;
+    aFont->decorations = fontStyle.decorations;
+    aFont->size = NSToCoordRound(fontStyle.size * mPixelsToTwips);
+    //aFont->langGroup = fontStyle.langGroup;
+    aFont->sizeAdjust = fontStyle.sizeAdjust;
+
+    return rv;
 }
 
 NS_IMETHODIMP
