@@ -472,11 +472,13 @@ nsXTFElementWrapper::BeginAddingChildren()
     GetXTFElement()->BeginAddingChildren();
 }
 
-void
+nsresult
 nsXTFElementWrapper::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (mNotificationMask & nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN)
     GetXTFElement()->DoneAddingChildren();
+
+  return NS_OK;
 }
 
 already_AddRefed<nsINodeInfo>

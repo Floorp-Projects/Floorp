@@ -2229,15 +2229,11 @@ nsDocument::GetInnerWindow()
   return win;
 }
 
-nsIScriptLoader *
+nsScriptLoader*
 nsDocument::GetScriptLoader()
 {
   if (!mScriptLoader) {
-    mScriptLoader = new nsScriptLoader();
-    if (!mScriptLoader) {
-      return nsnull;
-    }
-    mScriptLoader->Init(this);
+    mScriptLoader = new nsScriptLoader(this);
   }
 
   return mScriptLoader;
@@ -2283,6 +2279,9 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
+  if (mScriptLoader) {
+    mScriptLoader->AddExecuteBlocker();
+  }
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 }
 
@@ -2290,6 +2289,9 @@ void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
+  if (mScriptLoader) {
+    mScriptLoader->RemoveExecuteBlocker();
+  }
 }
 
 void

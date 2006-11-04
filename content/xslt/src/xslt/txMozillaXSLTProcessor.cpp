@@ -50,7 +50,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
-#include "nsIScriptLoader.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

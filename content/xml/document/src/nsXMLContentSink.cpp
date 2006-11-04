@@ -78,7 +78,7 @@
 #include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 #include "nsStyleLinkElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsReadableUtils.h"
@@ -301,7 +301,7 @@ nsXMLContentSink::DidBuildModel()
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
-    nsIScriptLoader *loader = mDocument->GetScriptLoader();
+    nsScriptLoader *loader = mDocument->GetScriptLoader();
     if (loader) {
       loader->RemoveObserver(this);
     }
@@ -392,7 +392,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     mDocument = aResultDocument;
   }
 
-  nsIScriptLoader *loader = originalDocument->GetScriptLoader();
+  nsScriptLoader *loader = originalDocument->GetScriptLoader();
   if (loader) {
     loader->RemoveObserver(this);
   }
@@ -469,11 +469,10 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
       || aNodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
 #endif
     ) {
-    // Don't append the content to the tree until we're all
-    // done collecting its contents
+    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
+    sele->SetScriptLineNumber(aLineNumber);
+    sele->WillCallDoneAddingChildren();
     mConstrainSize = PR_FALSE;
-    mScriptLineNo = aLineNumber;
-    *aAppendContent = PR_FALSE;
   }
 
   // XHTML needs some special attention
@@ -531,12 +530,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
 
 nsresult
-nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
-                               PRBool* aAppendContent)
+nsXMLContentSink::CloseElement(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "missing element to close");
-
-  *aAppendContent = PR_FALSE;
 
   nsINodeInfo *nodeInfo = aContent->NodeInfo();
 
@@ -566,8 +562,28 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
       || nodeInfo->Equals(nsSVGAtoms::script, kNameSpaceID_SVG)
 #endif
     ) {
-    rv = ProcessEndSCRIPTTag(aContent, aParent);
-    *aAppendContent = PR_TRUE;
+    mConstrainSize = PR_TRUE; 
+
+    // Now tell the script that it's ready to go. This may execute the script
+    // or return NS_ERROR_HTMLPARSER_BLOCK. Or neither if the script doesn't
+    // need executing.
+    rv = aContent->DoneAddingChildren(PR_TRUE);
+
+    // If the act of insertion evaluated the script, we're fine.
+    // Else, block the parser till the script has loaded.
+    if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
+      mScriptElements.AppendObject(sele);
+    }
+
+    // If the parser got blocked, make sure to return the appropriate rv.
+    // I'm not sure if this is actually needed or not.
+    if (mParser && !mParser->IsParserEnabled()) {
+      // XXX The HTML sink doesn't call BlockParser here, why do we?
+      mParser->BlockParser();
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+
     return rv;
   }
   
@@ -908,7 +924,7 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
       // In this case, disable script execution, stylesheet
       // loading, and auto XLinks since we plan to prettyprint.
       mAllowAutoXLinks = PR_FALSE;
-      nsIScriptLoader* scriptLoader = mDocument->GetScriptLoader();
+      nsScriptLoader* scriptLoader = mDocument->GetScriptLoader();
       if (scriptLoader) {
         scriptLoader->SetEnabled(PR_FALSE);
       }
@@ -1019,7 +1035,6 @@ NS_IMETHODIMP
 nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 {
   nsresult result = NS_OK;
-  PRBool appendContent = PR_FALSE;
 
   // XXX Hopefully the parser will flag this before we get
   // here. If we're in the prolog or epilog, there should be
@@ -1041,25 +1056,12 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
                "Wrong element being closed");
 #endif  
 
-  nsCOMPtr<nsIContent> parent = GetCurrentContent();
-  
-  result = CloseElement(content, parent, &appendContent);
-  NS_ENSURE_SUCCESS(result, result);
+  result = CloseElement(content);
 
   if (mDocElement == content) {
     // XXXbz for roots that don't want to be appended on open, we
     // probably need to deal here.... (and stop appending them on open).
     mState = eXMLContentSinkState_InEpilog;
-  }
-  else if (appendContent) {
-    NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
-
-    parent->AppendChildTo(content, PR_FALSE);
-  }
-
-  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
-    if (mParser) mParser->BlockParser();
-    result = NS_ERROR_HTMLPARSER_BLOCK;
   }
 
 #ifdef MOZ_SVG
@@ -1439,27 +1441,4 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
   }
 
   return NS_OK;
-}
-
-nsresult
-nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent,
-                                      nsIContent* aParent)
-{
-  nsresult result = NS_OK;
-
-  mConstrainSize = PR_TRUE; 
-  nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aContent));
-  NS_ASSERTION(scriptElement, "null script element in XML content sink");
-
-  scriptElement->SetScriptLineNumber(mScriptLineNo);
-
-  if (!aParent || aParent->GetCurrentDoc() == mDocument) {
-    // Assume that we're going to block the parser with a script load.
-    // If it's an inline script, we'll be told otherwise in the call
-    // to our ScriptAvailable method.
-    mScriptElements.AppendObject(scriptElement);
-    mNeedToBlockParser = PR_TRUE;
-  }
-
-  return result;
 }

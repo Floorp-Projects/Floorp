@@ -62,8 +62,8 @@ class nsTextFragment;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x7796e67b, 0xdc73, 0x4b3d, \
-  { 0xb8, 0x34, 0xcc, 0x9f, 0x96, 0xf7, 0x25, 0x56 } }
+{ 0x38cb1dfd, 0xeeac, 0x4f35, \
+  { 0x93, 0x83, 0xc0, 0xb5, 0xe5, 0xf1, 0xcd, 0xa4 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -620,12 +620,22 @@ public:
    * have the parser pass true.  See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
    *
+   * It is ok to ignore an error returned from this function. However the
+   * following errors may be of interest to some callers:
+   *
+   *   NS_ERROR_HTMLPARSER_BLOCK  Returned by script elements to indicate
+   *                              that a script will be loaded asynchronously
+   *
+   * This means that implementations will have to deal with returned error
+   * codes being ignored.
+   *
    * @param aHaveNotified Whether there has been a
    *        ContentInserted/ContentAppended notification for this content node
    *        yet.
    */
-  virtual void DoneAddingChildren(PRBool aHaveNotified)
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified)
   {
+    return NS_OK;
   }
 
   /**

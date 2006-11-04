@@ -451,7 +451,7 @@ public:
   /**
    * Get the script loader for this document
    */
-  virtual nsIScriptLoader* GetScriptLoader();
+  virtual nsScriptLoader* GetScriptLoader();
 
   virtual void AddMutationObserver(nsIMutationObserver* aObserver);
   virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
@@ -729,7 +729,7 @@ protected:
 
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
-  nsCOMPtr<nsIScriptLoader> mScriptLoader;
+  nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
   nsRefPtr<nsChildContentList> mChildNodes;

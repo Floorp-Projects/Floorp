@@ -104,7 +104,7 @@ public:
   virtual PRInt32 IntrinsicState() const;
 
   virtual void BeginAddingChildren();
-  virtual void DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
 
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* GetClasses() const;

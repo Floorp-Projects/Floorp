@@ -558,7 +558,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     // who puts the document on display to worry about enabling.
 
     // scripts
-    nsIScriptLoader *loader = GetScriptLoader();
+    nsScriptLoader *loader = GetScriptLoader();
     if (loader) {
       loader->SetEnabled(PR_FALSE); // Do not load/process scripts when loading as data
     }

@@ -95,7 +95,6 @@ XPIDLSRCS	= \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
 		nsISelectionPrivate.idl  \
-		nsIScriptLoader.idl  \
 		nsIScriptLoaderObserver.idl  \
 		nsISyncLoadDOMService.idl  \
 		nsIDragDropHandler.idl \

@@ -109,8 +109,7 @@ protected:
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent);
-  virtual nsresult CloseElement(nsIContent* aContent, nsIContent* aParent,
-                                PRBool* aAppendContent);
+  virtual nsresult CloseElement(nsIContent* aContent);
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -244,10 +243,7 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
                                 aNodeInfo, aLineNumber,
                                 aResult, aAppendContent);
 
-  // Make sure that scripts are added immediately, not on close.
-  *aAppendContent = PR_TRUE;
-
-  // However, when we aren't grabbing all of the content we, never open a doc
+  // When we aren't grabbing all of the content we, never open a doc
   // element, we run into trouble on the first element, so we don't append,
   // and simply push this onto the content stack.
   if (!mAllContent && mContentStack.Count() == 0) {
@@ -258,13 +254,9 @@ nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsC
 }
 
 nsresult
-nsXMLFragmentContentSink::CloseElement(nsIContent* aContent,
-                                       nsIContent* aParent,
-                                       PRBool* aAppendContent)
+nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
-  *aAppendContent = PR_FALSE;
-
   return NS_OK;
 }
 

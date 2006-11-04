@@ -138,7 +138,7 @@ public:
 
   virtual void SetFocus(nsPresContext* aPresContext);
 
-  virtual void DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -641,7 +641,7 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-void
+nsresult
 nsHTMLTextAreaElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (!mValueChanged) {
@@ -655,6 +655,8 @@ nsHTMLTextAreaElement::DoneAddingChildren(PRBool aHaveNotified)
   }
 
   mDoneAddingChildren = PR_TRUE;
+
+  return NS_OK;
 }
 
 PRBool

@@ -112,7 +112,7 @@ public:
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRUint32 GetDesiredIMEState();
 
-  virtual void DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -181,7 +181,7 @@ nsHTMLSharedObjectElement::IsDoneAddingChildren()
   return mIsDoneAddingChildren;
 }
 
-void
+nsresult
 nsHTMLSharedObjectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (!mIsDoneAddingChildren) {
@@ -193,6 +193,8 @@ nsHTMLSharedObjectElement::DoneAddingChildren(PRBool aHaveNotified)
       StartObjectLoad(aHaveNotified);
     }
   }
+
+  return NS_OK;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 

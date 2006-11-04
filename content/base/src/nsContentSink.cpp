@@ -41,7 +41,7 @@
  */
 
 #include "nsContentSink.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 #include "nsIDocument.h"
 #include "nsICSSLoader.h"
 #include "nsStyleConsts.h"
@@ -112,14 +112,13 @@ nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
                                              PRBool aIsInline,
                                              PRBool aWasPending,
                                              nsIURI *aURI,
-                                             PRInt32 aLineNo,
-                                             const nsAString & aScript)
+                                             PRInt32 aLineNo)
 {
   nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
 
   if (inner) {
     return inner->ScriptAvailable(aResult, aElement, aIsInline, aWasPending,
-                                  aURI, aLineNo, aScript);
+                                  aURI, aLineNo);
   }
 
   return NS_OK;
@@ -147,7 +146,6 @@ NS_IMPL_ISUPPORTS3(nsContentSink,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
-  : mNeedToBlockParser(PR_FALSE)
 {
 }
 
@@ -179,10 +177,9 @@ nsContentSink::Init(nsIDocument* aDoc,
       new nsScriptLoaderObserverProxy(this);
   NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIScriptLoader *loader = mDocument->GetScriptLoader();
+  nsScriptLoader *loader = mDocument->GetScriptLoader();
   NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
-  nsresult rv = loader->AddObserver(proxy);
-  NS_ENSURE_SUCCESS(rv, rv);
+  loader->AddObserver(proxy);
 
   mCSSLoader = aDoc->CSSLoader();
 
@@ -207,14 +204,20 @@ nsContentSink::ScriptAvailable(nsresult aResult,
                                PRBool aIsInline,
                                PRBool aWasPending,
                                nsIURI *aURI,
-                               PRInt32 aLineNo,
-                               const nsAString& aScript)
+                               PRInt32 aLineNo)
 {
   PRUint32 count = mScriptElements.Count();
 
   if (count == 0) {
     return NS_OK;
   }
+
+  // aElement will not be in mScriptElements if a <script> was added
+  // using the DOM during loading, or if the script was inline and thus
+  // never blocked.
+  NS_ASSERTION(mScriptElements.IndexOf(aElement) == count - 1 ||
+               mScriptElements.IndexOf(aElement) == -1,
+               "script found at unexpected position");
 
   // Check if this is the element we were waiting for
   if (aElement != mScriptElements[count - 1]) {
@@ -229,10 +232,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
     mParser->UnblockParser();
   }
 
-  // Mark the current script as loaded
-  mNeedToBlockParser = PR_FALSE;
-
-  if (NS_SUCCEEDED(aResult) && aResult != NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
+  if (NS_SUCCEEDED(aResult)) {
     PreEvaluateScript();
   } else {
     mScriptElements.RemoveObjectAt(count - 1);

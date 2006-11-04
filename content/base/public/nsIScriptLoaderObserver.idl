@@ -62,15 +62,13 @@ interface nsIScriptLoaderObserver : nsISupports {
    *        it is inline).
    * @param aLineNo At what line does the script appear (generally 1
    *        if it is a loaded script).
-   * @param aScript String representation of the string to be evaluated.
    */
   void scriptAvailable(in nsresult aResult, 
                        in nsIScriptElement aElement,
                        in boolean aIsInline,
                        in boolean aWasPending,
                        in nsIURI aURI,
-                       in PRInt32 aLineNo,
-                       in AString aScript);
+                       in PRInt32 aLineNo);
 
   /**
    * The script has been evaluated.

@@ -3615,10 +3615,7 @@ nsHTMLDocument::GenerateParserKey(void)
 
   // The script loader provides us with the currently executing script element,
   // which is guaranteed to be unique per script.
-  nsCOMPtr<nsIScriptElement> key;
-  mScriptLoader->GetCurrentScript(getter_AddRefs(key));
-
-  return key;
+  return mScriptLoader->GetCurrentScript();
 }
 
 /* attribute DOMString designMode; */
