@@ -85,6 +85,7 @@ EXPORTS		= \
 		nsGkAtoms.h \
 		nsNodeInfoManager.h \
 		nsPropertyTable.h \
+		nsScriptLoader.h \
 		nsStubDocumentObserver.h \
 		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
@@ -135,6 +136,7 @@ CPPSRCS		= \
 		nsPlainTextSerializer.cpp \
 		nsPropertyTable.cpp \
 		nsRange.cpp \
+		nsScriptElement.cpp \
 		nsScriptEventManager.cpp \
 		nsScriptLoader.cpp \
 		nsStubDocumentObserver.cpp \

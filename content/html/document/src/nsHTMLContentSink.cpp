@@ -48,7 +48,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIParser.h"
 #include "nsParserUtils.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
@@ -273,8 +273,10 @@ public:
   NS_DECL_NSITIMERCALLBACK
   
   // nsIDocumentObserver
-  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
-  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
+  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
+                           PRUint32 aNestingLevel);
+  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
+                         PRUint32 aNestingLevel);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -425,7 +427,6 @@ protected:
   // Routines for tags that require special handling when we reach their end
   // tag.
   nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content,
-                               PRBool aHaveNotified,
                                PRBool aMalformed);
   nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
@@ -1249,7 +1250,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 
   case eHTMLTag_script:
     result = mSink->ProcessSCRIPTEndTag(content,
-                                        HaveNotifiedForCurrentContent(),
                                         aMalformed);
     break;
 
@@ -1588,6 +1588,10 @@ SinkContext::FlushTags(PRBool aNotify)
   FlushText();
 
   if (aNotify) {
+    ++(mSink->mInNotification);
+    mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
+                                 PR_TRUE);
+
     // Start from the base of the stack (growing downward) and do
     // a notification from the node that is closest to the root of
     // tree for any content that has been added.
@@ -1634,6 +1638,7 @@ SinkContext::FlushTags(PRBool aNotify)
       stackPos++;
     }
     mNotifyLevel = mStackPos - 1;
+    --(mSink->mInNotification);
   }
 
   return NS_OK;
@@ -2153,7 +2158,7 @@ HTMLContentSink::DidBuildModel(void)
     }
   }
 
-  nsIScriptLoader *loader = mDocument->GetScriptLoader();
+  nsScriptLoader *loader = mDocument->GetScriptLoader();
   if (loader) {
     loader->RemoveObserver(this);
   }
@@ -3685,7 +3690,8 @@ HTMLContentSink::UpdateAllContexts()
 }
 
 void
-HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
+                             PRUint32 aNestingLevel)
 {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
@@ -3711,7 +3717,8 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 }
 
 void
-HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
+                           PRUint32 aNestingLevel)
 {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
@@ -3748,71 +3755,59 @@ HTMLContentSink::PostEvaluateScript(nsIScriptElement *aElement)
 
 nsresult
 HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
-                                     PRBool aHaveNotified,
                                      PRBool aMalformed)
 {
+  // Flush all tags up front so that we are in as stable state as possible
+  // when calling DoneAddingChildren. This may not be strictly needed since
+  // any ScriptAvailable calls will cause us to flush anyway. But it gives a
+  // warm fuzzy feeling to be in a stable state before even attempting to
+  // run scripts.
+  // It would however be needed if we properly called BeginUpdate and
+  // EndUpdate while we were inserting stuff into the DOM.
+
+  mCurrentContext->FlushTags(PR_FALSE);
+
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
   NS_ASSERTION(sele, "Not really closing a script tag?");
-
-  nsRefPtr<nsGenericHTMLElement> parent =
-    mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
 
   if (aMalformed) {
     // Make sure to serialize this script correctly, for nice round tripping.
     sele->SetIsMalformed();
   }
-
-  nsCOMPtr<nsIScriptLoader> loader;
   if (mFrameset) {
-    // Fix bug 82498
-    // We don't want to evaluate scripts in a frameset document.
-    if (mDocument) {
-      loader = mDocument->GetScriptLoader();
-      if (loader) {
-        loader->SetEnabled(PR_FALSE);
-      }
-    }
-  } else if (parent->GetCurrentDoc() == mDocument) {
-    // We test the current doc of |parent| because if it doesn't have one we
-    // won't actually try to evaluate the script, so we shouldn't be blocking
-    // or appending to mScriptElements or anything.
-    
-    // Don't include script loading and evaluation in the stopwatch
-    // that is measuring content creation time
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTEndTag()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
-    // Assume that we're going to block the parser with a script load.
-    // If it's an inline script, we'll be told otherwise in the call
-    // to our ScriptAvailable method.
-    mNeedToBlockParser = PR_TRUE;
-
-    mScriptElements.AppendObject(sele);
+    sele->PreventExecution();
   }
 
   // Notify our document that we're loading this script.
   mHTMLDocument->ScriptLoading(sele);
 
-  // Now tell the script that it's ready to go. This will execute the script
-  // and call our ScriptAvailable method.
-  content->DoneAddingChildren(aHaveNotified);
-  
-  // To prevent script evaluation in a frameset document we suspended the
-  // script loader. Now that the script content has been handled, let's resume
-  // the script loader.
-  if (loader) {
-    loader->SetEnabled(PR_TRUE);
-  }
+  // Now tell the script that it's ready to go. This may execute the script
+  // or return NS_ERROR_HTMLPARSER_BLOCK. Or neither if the script doesn't
+  // need executing.
+  nsresult rv = content->DoneAddingChildren(PR_TRUE);
 
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
-  // Note: If the script is malformed, we'll get a ScriptAvailable call to
-  // take care of this test.
-  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
-    return NS_ERROR_HTMLPARSER_BLOCK;
+  if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+    // If this append fails we'll never unblock the parser, but the UI will
+    // still remain responsive. There are other ways to deal with this, but
+    // the end result is always that the page gets botched, so there is no
+    // real point in making it more complicated.
+    mScriptElements.AppendObject(sele);
+  }
+  else {
+    // This may have already happened if the script executed, but in case
+    // it didn't then remove the element so that it doesn't get stuck forever.
+    mHTMLDocument->ScriptExecuted(sele);
   }
 
-  return NS_OK;
+  // If the parser got blocked, make sure to return the appropriate rv.
+  // I'm not sure if this is actually needed or not.
+  if (mParser && !mParser->IsParserEnabled()) {
+    rv = NS_ERROR_HTMLPARSER_BLOCK;
+  }
+
+  return rv;
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag

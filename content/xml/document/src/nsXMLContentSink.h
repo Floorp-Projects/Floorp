@@ -101,7 +101,6 @@ protected:
 
   virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
-  nsresult ProcessEndSCRIPTTag(nsIContent* aContent, nsIContent* aParent);
 
   virtual PRBool OnOpenContainer(const PRUnichar **aAtts, 
                                  PRUint32 aAttsCount, 
@@ -120,8 +119,7 @@ protected:
 
   // aParent is allowed to be null here if this is the root content
   // being closed
-  virtual nsresult CloseElement(nsIContent* aContent, nsIContent* aParent,
-                                PRBool* aAppendContent);
+  virtual nsresult CloseElement(nsIContent* aContent);
 
   virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                              PRBool* aDidFlush=nsnull);
@@ -156,7 +154,6 @@ protected:
   
   PRInt32 mTextLength;
   PRInt32 mTextSize;
-  PRUint32 mScriptLineNo;
   
   PRUint8 mConstrainSize : 1;
   PRUint8 mInTitle : 1;

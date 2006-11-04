@@ -154,8 +154,6 @@ private:
 
     txOutputFormat mOutputFormat;
 
-    PRPackedBool mDontAddCurrent;
-
     PRPackedBool mHaveTitleElement;
     PRPackedBool mHaveBaseElement;
 

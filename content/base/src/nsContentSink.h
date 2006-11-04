@@ -125,7 +125,6 @@ protected:
   nsCOMArray<nsIScriptElement> mScriptElements;
 
   nsCString mRef; // ScrollTo #ref
-  PRBool mNeedToBlockParser;
 };
 
 // these two lists are used by the sanitizing fragment serializers

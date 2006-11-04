@@ -87,7 +87,7 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 #include "nsRuleData.h"
 
 #include "nsPresState.h"
@@ -886,20 +886,15 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
 
   // Strong ref since appendChild can fire events
-  nsCOMPtr<nsIScriptLoader> loader;
+  nsRefPtr<nsScriptLoader> loader;
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
     loader = doc->GetScriptLoader();
     if (loader) {
-      loader->GetEnabled(&scripts_enabled);
+      scripts_enabled = loader->GetEnabled();
+      loader->SetEnabled(PR_FALSE);
     }
-  }
-
-  if (scripts_enabled) {
-    // Don't let scripts execute while setting .innerHTML.
-
-    loader->SetEnabled(PR_FALSE);
   }
 
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,

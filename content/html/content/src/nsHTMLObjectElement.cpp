@@ -93,7 +93,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission *aFormSubmission,
                                nsIContent *aSubmitElement);
 
-  virtual void DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -140,7 +140,7 @@ nsHTMLObjectElement::IsDoneAddingChildren()
   return mIsDoneAddingChildren;
 }
 
-void
+nsresult
 nsHTMLObjectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
@@ -150,6 +150,7 @@ nsHTMLObjectElement::DoneAddingChildren(PRBool aHaveNotified)
   if (IsInDoc()) {
     StartObjectLoad(aHaveNotified);
   }
+  return NS_OK;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 

@@ -76,7 +76,7 @@ class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIObserver;
 class nsISupportsArray;
-class nsIScriptLoader;
+class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
 class nsNodeInfoManager;
@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x3a5ce97e, 0x4f41, 0x42ef, \
- { 0xa7, 0xc9, 0xcc, 0x3d, 0x4e, 0x7a, 0x3d, 0x00 } }
+{ 0x1ae3a9cc, 0x3c05, 0x4215, \
+  { 0xad, 0xed, 0xe7, 0x89, 0xc4, 0x08, 0x00, 0x91 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -522,7 +522,7 @@ public:
   /**
    * Get the script loader for this document
    */ 
-  virtual nsIScriptLoader* GetScriptLoader() = 0;
+  virtual nsScriptLoader* GetScriptLoader() = 0;
 
   //----------------------------------------------------------------------
 

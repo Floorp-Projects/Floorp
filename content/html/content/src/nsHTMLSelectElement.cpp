@@ -271,7 +271,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
   
-  virtual void DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -1714,7 +1714,7 @@ nsHTMLSelectElement::IsDoneAddingChildren()
   return mIsDoneAddingChildren;
 }
 
-void
+nsresult
 nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
@@ -1739,6 +1739,8 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
   // Now that we're done, select something (if it's a single select something
   // must be selected)
   CheckSelectSomething();
+
+  return NS_OK;
 }
 
 PRBool

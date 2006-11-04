@@ -40,7 +40,7 @@
 
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
@@ -86,7 +86,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
-      mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_TRUE),
@@ -111,7 +110,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
-      mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_FALSE),
@@ -324,14 +322,20 @@ txMozillaXMLOutput::endElement()
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Handle svg script elements
-    if (element->NodeInfo()->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
-        // Add this script element to the array of loading script elements.
-        nsCOMPtr<nsIScriptElement> scriptElement =
-            do_QueryInterface(mCurrentNode);
-        NS_ASSERTION(scriptElement, "Need script element");
-        rv = mNotifier->AddScriptElement(scriptElement);
-        NS_ENSURE_SUCCESS(rv, rv);
+    // Handle script elements
+    if (element->Tag() == nsGkAtoms::script &&
+        (element->IsNodeOfType(nsINode::eHTML) ||
+         element->GetNameSpaceID() == kNameSpaceID_SVG)) {
+
+        rv = element->DoneAddingChildren(PR_TRUE);
+
+        // If the act of insertion evaluated the script, we're fine.
+        // Else, add this script element to the array of loading scripts.
+        if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+            nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element);
+            rv = mNotifier->AddScriptElement(sele);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
 
     if (mCreatingNewDocument) {
@@ -541,7 +545,6 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     }
 
     mTableState = NORMAL;
-    mDontAddCurrent = PR_FALSE;
     mOpenedElementIsHTML = PR_FALSE;
 
     // Create the element
@@ -560,7 +563,8 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
 
     }
     else if (aNsID == kNameSpaceID_SVG && aLocalName == txHTMLAtoms::script) {
-        mDontAddCurrent = PR_TRUE;
+        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(mOpenedElement);
+        sele->WillCallDoneAddingChildren();
     }
 
     if (mCreatingNewDocument) {
@@ -593,17 +597,13 @@ txMozillaXMLOutput::closePrevious(PRBool aFlushText)
             NS_ENSURE_SUCCESS(rv, rv);
         }
 
-        if (mDontAddCurrent && !mNonAddedNode) {
-            mNonAddedNode = mOpenedElement;
+        if (currentIsDoc) {
+            mRootContentCreated = PR_TRUE;
         }
-        else {
-            if (currentIsDoc) {
-                mRootContentCreated = PR_TRUE;
-            }
-            
-            rv = mCurrentNode->AppendChildTo(mOpenedElement, PR_TRUE);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+
+        rv = mCurrentNode->AppendChildTo(mOpenedElement, PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         mCurrentNode = mOpenedElement;
         mOpenedElement = nsnull;
     }
@@ -698,8 +698,6 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
     nsresult rv = NS_OK;
     nsIAtom *atom = aElement->Tag();
 
-    mDontAddCurrent = (atom == txHTMLAtoms::script);
-
     if ((atom != txHTMLAtoms::tr || !aIsHTML) &&
         NS_PTR_TO_INT32(mTableStateStack.peek()) == ADDED_TBODY) {
         PRUint32 last = mCurrentNodeStack.Count() - 1;
@@ -756,6 +754,10 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
         rv = aElement->AppendChildTo(meta, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
     }
+    else if (atom == nsGkAtoms::script) {
+        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aElement);
+        sele->WillCallDoneAddingChildren();
+    }
 
     return NS_OK;
 }
@@ -780,15 +782,6 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
         return NS_OK;
     }
 
-    // Load scripts
-    if (mNotifier && atom == txHTMLAtoms::script) {
-        // Add this script element to the array of loading script elements.
-        nsCOMPtr<nsIScriptElement> scriptElement =
-            do_QueryInterface(mCurrentNode);
-        NS_ASSERTION(scriptElement, "Need script element");
-        rv = mNotifier->AddScriptElement(scriptElement);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
     // Set document title
     else if (mCreatingNewDocument &&
              atom == txHTMLAtoms::title && !mHaveTitleElement) {
@@ -924,7 +917,7 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
     }
 
     // Set up script loader of the result document.
-    nsIScriptLoader *loader = mDocument->GetScriptLoader();
+    nsScriptLoader *loader = mDocument->GetScriptLoader();
     if (loader) {
         if (mNotifier) {
             loader->AddObserver(mNotifier);
@@ -1021,8 +1014,7 @@ txTransformNotifier::ScriptAvailable(nsresult aResult,
                                      PRBool aIsInline,
                                      PRBool aWasPending,
                                      nsIURI *aURI, 
-                                     PRInt32 aLineNo,
-                                     const nsAString& aScript)
+                                     PRInt32 aLineNo)
 {
     if (NS_FAILED(aResult) &&
         mScriptElements.RemoveObject(aElement)) {
@@ -1121,7 +1113,7 @@ txTransformNotifier::SignalTransformEnd(nsresult aResult)
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
     if (doc) {
-        nsIScriptLoader *scriptLoader = doc->GetScriptLoader();
+        nsScriptLoader *scriptLoader = doc->GetScriptLoader();
         if (scriptLoader) {
             scriptLoader->RemoveObserver(this);
             // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?

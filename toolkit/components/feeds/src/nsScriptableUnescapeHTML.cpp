@@ -41,7 +41,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
-#include "nsIScriptLoader.h"
+#include "nsScriptLoader.h"
 
 #include "nsIParser.h"
 #include "nsIDTD.h"
@@ -65,6 +65,7 @@
 #include "nsContentCID.h"
 #include "nsIScriptableUnescapeHTML.h"
 #include "nsScriptableUnescapeHTML.h"
+#include "nsAutoPtr.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
 #define HTML_BODY_TAG "BODY"
@@ -134,12 +135,12 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
 
   // stop scripts
-  nsCOMPtr<nsIScriptLoader> loader;
+  nsRefPtr<nsScriptLoader> loader;
   PRBool scripts_enabled = PR_FALSE;
   if (document) {
     loader = document->GetScriptLoader();
     if (loader) {
-      loader->GetEnabled(&scripts_enabled);
+      scripts_enabled = loader->GetEnabled();
     }
   }
   if (scripts_enabled) {

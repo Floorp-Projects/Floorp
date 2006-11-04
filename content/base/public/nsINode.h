@@ -94,8 +94,8 @@ class nsIMutationObserver;
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x3d3a28b7, 0x6666, 0x4f93, \
-  { 0xb7, 0xe7, 0xa9, 0x56, 0xd5, 0xaf, 0xf7, 0x57 } }
+{ 0x98470c4b, 0xe988, 0x4abf, \
+  { 0xa4, 0x00, 0x39, 0xbd, 0x00, 0x38, 0x51, 0x4d } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -570,6 +570,13 @@ public:
      */
     nsTObserverArray<nsIMutationObserver> mMutationObservers;
   };
+
+#ifdef DEBUG
+  nsSlots* DebugGetSlots()
+  {
+    return GetSlots();
+  }
+#endif
 
 protected:
   /**

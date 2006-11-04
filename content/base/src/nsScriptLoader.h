@@ -44,9 +44,7 @@
 #define __nsScriptLoader_h__
 
 #include "nsCOMPtr.h"
-#include "nsIScriptLoader.h"
 #include "nsIScriptElement.h"
-#include "nsIScriptLoaderObserver.h"
 #include "nsIURI.h"
 #include "nsCOMArray.h"
 #include "nsIDocument.h"
@@ -58,16 +56,106 @@ class nsScriptLoadRequest;
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class nsScriptLoader : public nsIScriptLoader,
-                       public nsIStreamLoaderObserver
+class nsScriptLoader : public nsIStreamLoaderObserver
 {
 public:
-  nsScriptLoader();
+  nsScriptLoader(nsIDocument* aDocument);
   virtual ~nsScriptLoader();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTLOADER
   NS_DECL_NSISTREAMLOADEROBSERVER
+
+  /**
+   * The loader maintains a weak reference to the document with
+   * which it is initialized. This call forces the reference to
+   * be dropped.
+   */
+  void DropDocumentReference()
+  {
+    mDocument = nsnull;
+  }
+
+  /**
+   * Add an observer for all scripts loaded through this loader.
+   *
+   * @param aObserver observer for all script processing.
+   */
+  nsresult AddObserver(nsIScriptLoaderObserver* aObserver)
+  {
+    return mObservers.AppendObject(aObserver) ? NS_OK :
+      NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  /**
+   * Remove an observer.
+   *
+   * @param aObserver observer to be removed
+   */
+  void RemoveObserver(nsIScriptLoaderObserver* aObserver)
+  {
+    mObservers.RemoveObject(aObserver);
+  }
+  
+  /**
+   * Process a script element. This will include both loading the 
+   * source of the element if it is not inline and evaluating
+   * the script itself.
+   *
+   * If the script is an inline script that can be executed immediately
+   * (i.e. there are no other scripts pending) then ScriptAvailable
+   * and ScriptEvaluated will be called before the function returns.
+   *
+   * If NS_ERROR_HTMLPARSER_BLOCK is returned the script could not be
+   * executed immediately. In this case ScriptAvailable is guaranteed
+   * to be called at a later point (as well as possibly ScriptEvaluated).
+   *
+   * @param aElement The element representing the script to be loaded and
+   *        evaluated.
+   */
+  nsresult ProcessScriptElement(nsIScriptElement* aElement);
+
+  /**
+   * Gets the currently executing script. This is useful if you want to
+   * generate a unique key based on the currently executing script.
+   */
+  nsIScriptElement* GetCurrentScript()
+  {
+    return mCurrentScript;
+  }
+
+  /**
+   * Whether the loader is enabled or not.
+   * When disabled, processing of new script elements is disabled. 
+   * Any call to ProcessScriptElement() will fail with a return code of
+   * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT disable
+   * currently loading or executing scripts.
+   */
+  PRBool GetEnabled()
+  {
+    return mEnabled;
+  }
+  void SetEnabled(PRBool aEnabled)
+  {
+    mEnabled = aEnabled;
+  }
+
+  /**
+   * Add/remove blocker. Blockers will stop scripts from executing, but not
+   * from loading.
+   * NOTE! Calling RemoveExecuteBlocker could potentially execute pending
+   * scripts synchronously. In other words, it should not be done at 'unsafe'
+   * times
+   */
+  void AddExecuteBlocker()
+  {
+    ++mBlockerCount;
+  }
+  void RemoveExecuteBlocker()
+  {
+    if (!--mBlockerCount) {
+      ProcessPendingRequests();
+    }
+  }
 
   /**
    * Convert the given buffer to a UTF-16 string.
@@ -86,33 +174,32 @@ public:
                                  nsIDocument* aDocument, nsString& aString);
 
 protected:
-  PRBool InNonScriptingContainer(nsIScriptElement* aScriptElement);
-  PRBool IsScriptEventHandler(nsIScriptElement* aScriptElement);
-  void FireErrorNotification(nsresult aResult,
-                             nsIScriptElement* aElement,
-                             nsIScriptLoaderObserver* aObserver);
+  PRBool ReadyToExecuteScripts()
+  {
+    return !mBlockerCount;
+  }
+
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
-                           nsScriptLoadRequest* aRequest,
-                           const nsAFlatString& aScript);
+                           nsScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest,
                           const nsAFlatString& aScript);
-  void ProcessPendingReqests();
+  void ProcessPendingRequests();
 
-  // The guts of ProcessScriptElement.  If aFireErrorNotification is
-  // true, FireErrorNotification should be called with the return
-  // value of this method.
-  nsresult DoProcessScriptElement(nsIScriptElement *aElement,
-                                  nsIScriptLoaderObserver *aObserver,
-                                  PRBool* aFireErrorNotification);
+  nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
+                                nsIStreamLoader* aLoader,
+                                nsresult aStatus,
+                                PRUint32 aStringLen,
+                                const PRUint8* aString);
 
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsCOMArray<nsScriptLoadRequest> mPendingRequests;
   nsCOMPtr<nsIScriptElement> mCurrentScript;
-  PRBool mEnabled;
+  PRUint32 mBlockerCount;
+  PRPackedBool mEnabled;
 };
 
 #endif //__nsScriptLoader_h__
