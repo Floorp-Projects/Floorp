@@ -383,11 +383,11 @@ sub get_attachment_link {
         $title = value_quote($title);
 
         $link_text =~ s/ \[details\]$//;
-        my $linkval = "attachment.cgi?id=$attachid&amp;action=";
+        my $linkval = "attachment.cgi?id=$attachid";
         # Whitespace matters here because these links are in <pre> tags.
         return qq|<span class="$className">|
-               . qq|<a href="${linkval}view" title="$title">$link_text</a>|
-               . qq| <a href="${linkval}edit" title="$title">[details]</a>|
+               . qq|<a href="${linkval}" title="$title">$link_text</a>|
+               . qq| <a href="${linkval}&amp;action=edit" title="$title">[details]</a>|
                . qq|</span>|;
     }
     else {
