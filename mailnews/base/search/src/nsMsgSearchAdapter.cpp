@@ -650,8 +650,9 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
         // do all sorts of crazy escaping
         convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
         EscapeImapSearchProtocol(searchTermValue);
-        useQuotes = !reallyDredd || 
-          (nsDependentString(convertedValue).FindChar(PRUnichar(' ')) != -1);
+        useQuotes = ((!reallyDredd || 
+                    (nsDependentString(convertedValue).FindChar(PRUnichar(' ')) != -1)) &&
+           (attrib != nsMsgSearchAttrib::Keywords));
         // now convert to char* and escape quoted_specials
         nsCAutoString valueStr;
         nsresult rv = ConvertFromUnicode(NS_LossyConvertUTF16toASCII(destCharset).get(),
