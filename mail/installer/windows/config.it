@@ -544,16 +544,6 @@ Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE|MAIN_COMPONENT
 Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 FileCount=$FileCount$
 
-[Component Offline]
-Description Short={Component_Offline}
-Description Long={Component_Offline_Long}
-Archive=offline.xpi
-$InstallSize$:offline
-$InstallSizeArchive$:offline.xpi
-Attributes=SELECTED|FORCE_UPGRADE|INVISIBLE
-Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
-FileCount=$FileCount$
-
 [Component RSS]
 Description Short={Component_RSS}
 Description Long={Component_RSS_Long}

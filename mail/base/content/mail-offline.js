@@ -56,20 +56,8 @@ function MsgSettingsOffline()
 // Init PrefsService
 function GetMailOfflinePrefs()
 {
-  // Store the prefs object
-  try {
-    var prefsService = Components.classes["@mozilla.org/preferences-service;1"];
-    if (prefsService)
-    prefsService = prefsService.getService();
-    if (prefsService)
-    gMailOfflinePrefs = prefsService.QueryInterface(Components.interfaces.nsIPrefBranch);
-
-    if (!gMailOfflinePrefs)
-    dump("failed to get prefs service!\n");
-  }
-  catch(ex) {
-    dump("failed to get prefs service!\n");
-  }
+  gMailOfflinePrefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService).getBranch(null);
 }
 
 // Check for unsent messages

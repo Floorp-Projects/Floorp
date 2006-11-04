@@ -32,6 +32,7 @@ messenger.jar:
 *   content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
 *   content/messenger/searchBar.js                  (content/searchBar.js)
 *   content/messenger/phishingDetector.js           (content/phishingDetector.js)
+*   content/messenger/mail-offline.js               (content/mail-offline.js)
     content/messenger/about-footer.png              (content/about-footer.png)
     content/messenger/aboutDialog.css               (content/aboutDialog.css)
 *   content/messenger/credits.xhtml                 (content/credits.xhtml)

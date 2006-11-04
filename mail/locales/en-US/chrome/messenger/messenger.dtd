@@ -43,6 +43,16 @@
 <!ENTITY emptyTrashCmd.accesskey		"y">
 <!ENTITY importCmd.label "Import...">
 <!ENTITY importCmd.accesskey "I">
+<!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineMenu.accesskey "l">
+<!ENTITY synchronizeOfflineCmd.label "Download/Sync Now...">
+<!ENTITY synchronizeOfflineCmd.accesskey "S">
+<!ENTITY settingsOfflineCmd.label "Offline Settings...">
+<!ENTITY settingsOfflineCmd.accesskey "e">
+<!ENTITY downloadSelectedCmd.label "Get Selected Messages">
+<!ENTITY downloadSelectedCmd.accesskey "M">
+<!ENTITY downloadStarredCmd.label "Get Starred Messages">
+<!ENTITY downloadStarredCmd.accesskey "a">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.key "p">

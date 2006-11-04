@@ -39,10 +39,6 @@ locale,install,url,jar:resource:/chrome/inspector.jar!/locale/en-US/inspector/
 skin,install,url,jar:resource:/chrome/inspector.jar!/skin/classic/inspector/
 skin,install,url,jar:resource:/chrome/inspector.jar!/skin/modern/inspector/
 
-# optional registration for offline support which may or may not be installed
-content,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
-skin,install,url,jar:resource:/chrome/offline.jar!/content/messenger-offline/
-
 # optional registration for RSS support which may or may not be installed
 content,install,url,jar:resource:/chrome/newsblog.jar!/content/messenger-newsblog/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/messenger-newsblog/

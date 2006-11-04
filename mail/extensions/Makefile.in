@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = offline newsblog
+DIRS = newsblog
 
 ifdef MOZ_PSM
 BUILD_SMIME=1

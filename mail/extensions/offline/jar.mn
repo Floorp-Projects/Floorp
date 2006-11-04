@@ -1,5 +1,0 @@
-offline.jar:
-% content messenger-offline %content/messenger-offline/ xpcnativewrappers=yes
-% overlay chrome://messenger/content/mailWindowOverlay.xul chrome://messenger-offline/content/msgOfflineOverlay.xul
-*   content/messenger-offline/msgOfflineOverlay.xul                (content/msgOfflineOverlay.xul)
-*   content/messenger-offline/mail-offline.js                      (content/mail-offline.js)

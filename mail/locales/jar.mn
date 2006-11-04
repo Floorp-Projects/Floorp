@@ -141,9 +141,6 @@
   locale/@AB_CD@/messenger-smime/msgReadSecurityInfo.dtd                (%chrome/messenger-smime/msgReadSecurityInfo.dtd)
   locale/@AB_CD@/messenger-smime/certFetchingStatus.dtd                 (%chrome/messenger-smime/certFetchingStatus.dtd)
   locale/@AB_CD@/messenger-smime/msgSecurityInfo.properties             (%chrome/messenger-smime/msgSecurityInfo.properties)
-% locale messenger-offline @AB_CD@ %locale/@AB_CD@/messenger-offline/
-  locale/@AB_CD@/messenger-offline/offline.properties                   (%chrome/messenger-offline/offline.properties)
-  locale/@AB_CD@/messenger-offline/offline.dtd                          (%chrome/messenger-offline/offline.dtd)
 % locale messenger-region @AB_CD@ %locale/@AB_CD@/messenger-region/
   locale/@AB_CD@/messenger-region/region.properties                     (%chrome/messenger-region/region.properties)
 % locale mozldap @AB_CD@ %locale/@AB_CD@/mozldap/

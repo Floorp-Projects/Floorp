@@ -19,8 +19,5 @@ locale global-platform en-US jar:en-US.jar!/locale/en-US/global-platform/
 locale navigator-platform en-US jar:en-US.jar!/locale/en-US/navigator-platform/
 locale communicator-platform en-US jar:en-US.jar!/locale/en-US/communicator-platform/
 
-# optional registration for offline support which may or may not be installed
-locale messenger-offline en-US jar:en-US.jar!/locale/en-US/messenger-offline/
-
 # optional registration for RSS support which may or may not be installed
 locale messenger-newsblog en-US jar:en-US.jar!/locale/en-US/messenger-newsblog/

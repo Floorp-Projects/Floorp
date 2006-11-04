@@ -147,12 +147,6 @@ function toImport()
   window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
 }
 
-// this method is overridden by mail-offline.js if we build with the offline extensions
-function CheckOnline()
-{
-  return true; 
-}
-
 // aPaneID
 function openOptionsDialog(aPaneID, aTabID)
 {
