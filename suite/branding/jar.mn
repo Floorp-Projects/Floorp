@@ -4,4 +4,5 @@ comm.jar:
 #else
 * content/branding/contents.rdf                           (contents.rdf)
 #endif
+  content/branding/about.png                              (content/about.png)
   content/branding/icon64.png                             (content/icon64.png)
