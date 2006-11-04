@@ -168,6 +168,7 @@ chrome/app-chrome.manifest
 chrome/mail.jar
 chrome/qute.jar
 chrome/offline.jar
+chrome/offline.manifest
 chrome/en-US-mail.jar
 chrome/overlayinfo/
 defaults/pref/all.js
