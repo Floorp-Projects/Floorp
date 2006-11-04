@@ -405,7 +405,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [self writeBookmarks:nil];
   // Temporary logging to try to help nail down bug 337750
   long long bmFileSize = [[NSFileManager defaultManager] sizeOfFileAtPath:mPathToBookmarkFile traverseLink:YES];
-  NSLog(@"Writing %qi byte bookmarks file '%@' on shutdown", bmFileSize, mPathToBookmarkFile);
+  NSLog(@"Bookmarks file '%@' is %qi bytes on shutdown", mPathToBookmarkFile, bmFileSize);
 }
 
 - (BOOL)bookmarksLoaded
@@ -2003,14 +2003,12 @@ static BookmarkManager* gBookmarkManager = nil;
 //
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
-  if (![NSThread inMainThread])
-  {
+  if (![NSThread inMainThread]) {
     NSLog(@"writePropertyListFile: called from background thread");
     return;
   }
 
-  if (!pathToFile)
-  {
+  if (!pathToFile) {
     NSLog(@"writePropertyListFile: nil path argument");
     return;
   }
@@ -2020,21 +2018,40 @@ static BookmarkManager* gBookmarkManager = nil;
     return;   // we never read anything
 
   NSDictionary* dict = [rootBookmarks writeNativeDictionary];
-  if (!dict)
-  {
+  if (!dict) {
     NSLog(@"writePropertyListFile: writeNativeDictionary returned nil dictionary");
     return;
   }
 
   NSString* stdPath = [pathToFile stringByStandardizingPath];
   NSString* backupFile = [NSString stringWithFormat:@"%@.new", stdPath];
-  BOOL success = [dict writeToFile:backupFile atomically:YES];
-  if (success)
-  {
+  // Use the more roundabout NSPropertyListSerialization/NSData method when possible
+  // for now to try to get useful error data for bug 337750
+  BOOL success;
+  if ([NSData instancesRespondToSelector:@selector(writeToFile:options:error:)]) {
+    NSString* errorString = nil;
+    NSData* bookmarkData = [NSPropertyListSerialization dataFromPropertyList:dict
+                                                                     format:NSPropertyListXMLFormat_v1_0
+                                                           errorDescription:&errorString];
+    if (!bookmarkData) {
+      NSLog(@"writePropertyListFile: dataFromPropertyList returned nil data: %@", errorString);
+      [errorString release];
+      return;
+    }
+    NSError* error = nil;
+    // 1 is NSAtomicWrite, but we don't have the 10.4 headers. It's temp code, so we'll just hard-code it.
+    success = [bookmarkData writeToFile:backupFile options:1 error:&error];
+    if (!success)
+      NSLog(@"writePropertyListFile: %@ (%@)", pathToFile,
+            [error localizedDescription], [error localizedFailureReason]);
+  }
+  else {
+    success = [dict writeToFile:backupFile atomically:YES];
+  }
+  if (success) {
     NSFileManager* fm = [NSFileManager defaultManager];
     long long bmFileSize = [fm sizeOfFileAtPath:backupFile traverseLink:YES];
-    if (bmFileSize > 0)
-    {
+    if (bmFileSize > 0) {
       BOOL removedOld = [fm removeFileAtPath:stdPath handler:self];               // out with the old...
       BOOL movedNew   = [fm movePath:backupFile toPath:stdPath handler:self];     //  ... in with the new
       if (!removedOld || !movedNew)
