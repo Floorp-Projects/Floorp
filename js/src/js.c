@@ -92,8 +92,11 @@
 #include <io.h>     /* for isatty() */
 #endif
 
-#define EXITCODE_RUNTIME_ERROR 3
-#define EXITCODE_FILE_NOT_FOUND 4
+typedef enum JSShellExitCode {
+    EXITCODE_RUNTIME_ERROR      = 3,
+    EXITCODE_FILE_NOT_FOUND     = 4,
+    EXITCODE_OUT_OF_MEMORY      = 5
+} JSShellExitCode;
 
 size_t gStackChunkSize = 8192;
 
@@ -2518,8 +2521,13 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
-    if (!JSREPORT_IS_WARNING(report->flags))
-        gExitCode = EXITCODE_RUNTIME_ERROR;
+    if (!JSREPORT_IS_WARNING(report->flags)) {
+        if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
+            gExitCode = EXITCODE_OUT_OF_MEMORY;
+        } else {
+            gExitCode = EXITCODE_RUNTIME_ERROR;
+        }
+    }
     JS_free(cx, prefix);
 }
 
