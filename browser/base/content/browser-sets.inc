@@ -139,7 +139,7 @@
     <command id="cmd_find" oncommand="gFindBar.onFindCmd();" observes="isImage"/>
     <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);" observes="isImage"/>
     <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);" observes="isImage"/>
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:AddLinkBookmark"
              oncommand="PlacesCommandHook.bookmarkLink(gContextMenu.linkURL, gContextMenu.linkText());"/>
     <command id="Browser:AddBookmarkAs" 
@@ -169,16 +169,17 @@
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
 #ifdef MOZ_PLACES
 #include ../../components/places/content/commands.inc
-    <command id="Browser:ShowBookmarks" 
-             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>
     <command id="Browser:ShowHistory" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
     <command id="Browser:SearchHistory" oncommand="HistoryMenu.showPlacesSearch();"/>
-
+#endif
+#ifdef MOZ_PLACES_BOOKMARKS
+    <command id="Browser:ShowBookmarks" 
+             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>
 #endif
   </commandset>
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   <commandset id="multipleTabsCommands" 
               commandupdater="true" events="select"
               oncommandupdate="BrowserController.onEvent(BrowserController.EVENT_TABCHANGE);">
@@ -187,7 +188,7 @@
 #endif
 
   <broadcasterset id="mainBroadcasterSet">
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_NEW_HISTORY_UI
     <broadcaster id="viewHistoryPlaces" autoCheck="false" label="&historyButton.label;"
                  oncommand="PlacesCommandHook.showPlacesPopup(event);"/>
 #else
@@ -195,8 +196,12 @@
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="toggleSidebar('viewBookmarksSidebar');"/>
 
+    <!-- for both places and non-places, the sidebar lives at 
+         chrome://browser/content/history/history-panel.xul so there are no
+         problems when switching between versions -->
     <broadcaster id="viewHistorySidebar" autoCheck="false" sidebartitle="&historyButton.label;"
-                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
+                 type="checkbox" group="sidebar" 
+                 sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
                  
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
@@ -326,7 +331,7 @@
 #ifndef MOZ_WIDGET_GTK2
     <key id="bookmarkAllTabsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:BookmarkAllTabs" modifiers="accel,shift"/>
 #endif
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     <key id="searchBookmarksKb" key="&searchBookmarksCmd.commandkey;" command="Browser:ShowBookmarks" modifiers="accel"/>
 #else
     <key id="viewBookmarksSidebarKb" key="&bookmarksSidebarCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
@@ -345,7 +350,7 @@
     <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
 #endif
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_NEW_HISTORY_UI
     <key id="searchHistoryKb"
          key="&historySidebarCmd.commandKey;"
 #ifdef XP_MACOSX

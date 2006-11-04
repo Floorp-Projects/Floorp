@@ -40,7 +40,7 @@
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDocShellCID.h"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
 #else
@@ -1043,7 +1043,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
@@ -1077,7 +1077,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1, 
                                  getter_Copies(importedOperaHotlistTitle));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     bms->CreateFolder(parentFolder, importedOperaHotlistTitle, -1, &parentFolder);
 #else
     bms->CreateFolderInContainer(importedOperaHotlistTitle.get(), 
@@ -1093,7 +1093,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   printf("*** done copying smart keywords\n");
 #endif
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 toolbar;
   rv = bms->GetToolbarRoot(&toolbar);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1110,7 +1110,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
 nsresult
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS, 
                                           nsIStringBundle* aBundle, 
                                           PRInt64 aParentFolder)
@@ -1145,7 +1145,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                 sourceNameStrings, 1, 
                                 getter_Copies(importedSearchUrlsTitle));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 keywordsFolder;
   rv = aBMS->CreateFolder(aParentFolder, importedSearchUrlsTitle, -1, &keywordsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1214,7 +1214,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
     aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                   descStrings, 2, getter_Copies(keywordDesc));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     rv = aBMS->InsertItem(keywordsFolder, uri, -1);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aBMS->SetItemTitle(uri, nameStr);
@@ -1244,7 +1244,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
 }
 #endif
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
 void
 nsOperaProfileMigrator::ClearToolbarFolder(nsIBookmarksService* aBookmarksService, nsIRDFResource* aToolbarFolder)
 {
@@ -1323,7 +1323,7 @@ typedef enum { EntryType_BOOKMARK, EntryType_FOLDER } EntryType;
 
 nsresult
 nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream, 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                                              PRInt64 aParent,
                                              PRInt64 aToolbar,
                                              nsINavBookmarksService* aBMS)
@@ -1385,12 +1385,12 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // Assuming it's in UTF-8 is rather safe because it covers two cases 
       // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
       // multibyte encoding).
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
       nsCOMPtr<nsIRDFResource> itemRes;
 #endif
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
           nsCOMPtr<nsIURI> uri;
           rv = NS_NewURI(getter_AddRefs(uri), url);
           if (NS_FAILED(rv))
@@ -1424,7 +1424,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       }
       else if (entryType == EntryType_FOLDER) {
         if (!name.IsEmpty()) {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
           PRInt64 newFolder;
           rv = aBMS->CreateFolder(onToolbar ? aToolbar : aParent,
                                   name, -1, &newFolder);

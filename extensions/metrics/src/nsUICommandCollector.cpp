@@ -48,7 +48,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsDataHashtable.h"
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFContainer.h"
@@ -349,8 +349,9 @@ nsresult
 nsUICommandCollector::LogBookmarkInfo(const nsString& id,
                                       nsIMetricsEventItem* parentItem)
 {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   // TODO: write me!
+  // see bug #356606
   return NS_OK;
 
 #else
@@ -437,5 +438,5 @@ nsUICommandCollector::LogBookmarkInfo(const nsString& id,
 
   return nsMetricsUtils::AddChildItem(parentItem,
                                       NS_LITERAL_STRING("bookmark"), bmProps);
-#endif  // MOZ_PLACES
+#endif  // MOZ_PLACES_BOOKMARKS
 }

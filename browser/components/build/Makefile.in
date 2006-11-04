@@ -63,7 +63,7 @@ ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
-ifndef MOZ_PLACES
+ifndef MOZ_PLACES_BOOKMARKS
 SHARED_LIBRARY_LIBS += \
 	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(NULL)

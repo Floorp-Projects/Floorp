@@ -93,7 +93,7 @@ protected:
   nsresult CopyHistory(PRBool aReplace);
   nsresult CopyBookmarks(PRBool aReplace);
   nsresult ParseBookmarksFolder(CFArrayRef aChildren, 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                                 PRInt64 aParentFolder,
                                 nsINavBookmarksService * aBookmarksService,
 #else

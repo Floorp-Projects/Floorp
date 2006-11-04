@@ -155,10 +155,10 @@
                       label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar" accesskey="&bookmarksSidebarCmd.accesskey;"/>
-                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar" label="&historyButton.label;" accesskey="&historySidebarCmd.accesskey;"/>
 #endif
+                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar" label="&historyButton.label;" accesskey="&historySidebarCmd.accesskey;"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>
@@ -355,22 +355,22 @@
                 <menuitem label="&historyHomeCmd.label;"
                           command="Browser:Home"
                           key="historyHome"/>
+#ifdef MOZ_PLACES_NEW_HISTORY_UI
                 <menuseparator/>
                 <menuitem label="&historySearchCmd.label;"
                           command="Browser:SearchHistory"
                           key="searchHistoryKb"/>
                 <menuitem label="&historyShowCmd.label;"
                           command="Browser:ShowHistory"/>
+#endif
                 <menuseparator id="startTabHistorySeparator"/>
                 <menuseparator hidden="true" id="endTabHistorySeparator"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
                   <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>
                 <menuseparator id="endUndoSeparator"/>
-                <menuitem id="sanitizeItem" 
-                          accesskey="&clearPrivateDataCmd.accesskey;"
-                          label="&clearPrivateDataCmd.label;"
-                          key="key_sanitize" command="Tools:Sanitize"/>
+                <menuitem observes="viewHistorySidebar" label="&historyShowSidebarCmd.label;"
+                          key="key_gotoHistory"/>
               </menupopup>
             </menu>
 #else
@@ -415,7 +415,7 @@
             </menu>
 #endif
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
             <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
                   datasources="rdf:bookmarks rdf:files" 
                   ref="NC:BookmarksRoot" flags="dont-test-empty"
@@ -521,13 +521,11 @@
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         key="key_viewInfo" command="View:PageInfo"/>
 #endif
-#ifndef MOZ_PLACES
               <menuseparator id="sanitizeSeparator"/>
               <menuitem id="sanitizeItem"
                         accesskey="&clearPrivateDataCmd.accesskey;"
                         label="&clearPrivateDataCmd.label;"
                         key="key_sanitize" command="Tools:Sanitize"/>
-#endif
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
@@ -544,7 +542,7 @@
           <menu id="helpMenu" />
         </menubar>
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   <template id='bookmarks-template' xmlns:nc="http://home.netscape.com/NC-rdf#">
     <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
       <toolbarseparator uri="rdf:*"

@@ -44,7 +44,8 @@
 <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 #ifdef MOZ_PLACES
 <script type="application/x-javascript" src="chrome://browser/content/places/controller.js"/>
-#else
+#endif
+#ifndef MOZ_PLACES_BOOKMARKS
 <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
 #endif

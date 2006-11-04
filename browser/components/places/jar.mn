@@ -17,3 +17,7 @@ browser.jar:
 *   content/browser/places/demos/time.html               (content/demos/time.html)
 *   content/browser/places/demos/time.css                (content/demos/time.css)
 *   content/browser/places/demos/time.js                 (content/demos/time.js)
+# keep the Places version of the history sidebar at history/history-panel.xul 
+# to prevent having to worry about between versions of the browser
+*   content/browser/history/history-panel.xul            (content/history-panel.xul) 
+*   content/browser/places/history-panel.js              (content/history-panel.js)

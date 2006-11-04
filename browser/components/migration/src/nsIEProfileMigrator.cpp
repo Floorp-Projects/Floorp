@@ -84,7 +84,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
 #include "nsIURL.h"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsBrowserCompsCID.h"
 #else
@@ -1177,7 +1177,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   // a folder called "Imported IE Favorites" and place all the Bookmarks there. 
   nsresult rv;
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
@@ -1196,7 +1196,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
 
   nsAutoString personalToolbarFolderName;
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 folder;
 #else
   nsCOMPtr<nsIRDFResource> folder;
@@ -1217,7 +1217,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     bms->CreateFolder(root, importedIEFavsTitle, -1, &folder);
 #else
     bms->CreateFolderInContainer(importedIEFavsTitle.get(), root, -1, getter_AddRefs(folder));
@@ -1262,7 +1262,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
 }
 
 nsresult
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
 #else
 nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
@@ -1276,7 +1276,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                                 searchUrlKey, nsIWindowsRegKey::ACCESS_READ))) {
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
     nsresult rv;
     nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1307,7 +1307,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
         nsXPIDLString importedIESearchUrlsTitle;
         bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                     sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
         bms->CreateFolder(aParentFolder, importedIESearchUrlsTitle, -1, &keywordsFolder);
 #else
         bms->CreateFolderInContainer(importedIESearchUrlsTitle.get(), aParentFolder, -1, 
@@ -1328,7 +1328,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
             childKey->Close();
             continue;
           }
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
           bms->InsertItem(keywordsFolder, uri, -1);
           bms->SetItemTitle(uri, keyName);
 #else
@@ -1399,7 +1399,7 @@ nsIEProfileMigrator::ResolveShortcut(const nsAFlatString &aFileName, char** aOut
 
 nsresult
 nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory, 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                                           PRInt64 aParentFolder,
                                           nsINavBookmarksService* aBookmarksService,
 #else
@@ -1466,7 +1466,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
                          nsCaseInsensitiveStringComparator()))
         bookmarkName.Truncate(lnkExtStart);
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
       nsCOMPtr<nsIURI> bookmarkURI;
       rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1499,13 +1499,13 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       if (NS_FAILED(rv)) continue;
     }
     else if (isDir) {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
       PRInt64 folder;
 #else
       nsCOMPtr<nsIRDFResource> folder;
 #endif
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
         aBookmarksService->GetToolbarRoot(&folder);
         // If we're here, it means the user's doing a _replace_ import which means
         // clear out the content of this folder, and replace it with the new content
@@ -1535,7 +1535,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 #endif
       }
       else {
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
         rv = aBookmarksService->CreateFolder(aParentFolder,
                                              bookmarkName,
                                              -1,
@@ -1570,7 +1570,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsXPIDLCString resolvedURL;
       ResolveShortcut(path, getter_Copies(resolvedURL));
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
       nsCOMPtr<nsIURI> resolvedURI;
       rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
       NS_ENSURE_SUCCESS(rv, rv);

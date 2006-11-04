@@ -54,7 +54,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsINavHistoryService.h"
 #include "nsILivemarkService.h"
@@ -130,7 +130,7 @@ class nsProfileCollector::BookmarkCounter
 
   // Fills in |count| with the number of children of each BookmarkType.
   // If |deep| is true, then the count will include children of all subfolders.
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   void CountChildren(PRInt64 root, PRBool deep, nsTArray<PRInt32> &count);
 #else
   void CountChildren(nsIRDFResource *root,
@@ -138,7 +138,7 @@ class nsProfileCollector::BookmarkCounter
 #endif
 
  private:
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   void CountRecursive(nsINavHistoryContainerResultNode *root, PRBool deep,
                       nsTArray<PRInt32> &count);
 #else
@@ -146,7 +146,7 @@ class nsProfileCollector::BookmarkCounter
                       nsTArray<PRInt32> &count);
 #endif
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsILivemarkService> mLivemarkService;
 #else
   nsCOMPtr<nsIRDFDataSource> mDataSource;
@@ -442,7 +442,7 @@ nsProfileCollector::LogBookmarks(nsIMetricsEventItem *profile)
                       getter_AddRefs(bookmarksItem));
   NS_ENSURE_STATE(bookmarksItem);
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bmSvc =
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
   NS_ENSURE_STATE(bmSvc);
@@ -515,7 +515,7 @@ void
 nsProfileCollector::LogBookmarkLocation(nsIMetricsEventItem *bookmarksItem,
                                         const nsACString &location,
                                         BookmarkCounter *counter,
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
                                         PRInt64 root,
 #else
                                         nsIRDFResource *root,
@@ -750,7 +750,7 @@ nsProfileCollector::ExtensionEnumerator::CreateExtensionItem(
 }
 
 
-#ifdef MOZ_PLACES
+#ifdef MOZ_PLACES_BOOKMARKS
 nsresult
 nsProfileCollector::BookmarkCounter::Init()
 {

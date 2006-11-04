@@ -76,7 +76,8 @@ endif
 
 ifdef MOZ_PLACES
 REQUIRES	+= places toolkitcomps
-else
+endif
+ifndef MOZ_PLACES_BOOKMARKS
 REQUIRES	+= bookmarks
 endif
 

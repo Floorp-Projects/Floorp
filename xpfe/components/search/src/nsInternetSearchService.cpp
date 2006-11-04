@@ -74,7 +74,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIInputStream.h"
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
 #include "nsIBookmarksService.h"
 #endif
 #include "nsIStringBundle.h"
@@ -1713,7 +1713,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
           &isSearchResult);
   if (NS_SUCCEEDED(rv) && isSearchResult)
   {
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
     nsCOMPtr<nsIRDFDataSource>  datasource;
     if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
     {
@@ -1832,7 +1832,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
     }
   }
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsIRDFDataSource>  datasource;
   if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
   {
@@ -1902,7 +1902,7 @@ InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
     }
   }
 
-#ifndef MOZ_PLACES
+#ifndef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsIRDFDataSource>  datasource;
   if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
   {

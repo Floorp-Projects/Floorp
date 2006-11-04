@@ -228,7 +228,7 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
-%ifdef MOZ_PLACES
+%ifdef MOZ_PLACES_BOOKMARKS
 toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   display: none;
 }
@@ -1209,7 +1209,7 @@ tabpanels.plain {
 	background-color: #fff !important;
 }
 
-%ifdef MOZ_PLACES
+%ifdef MOZ_PLACES_BOOKMARKS
 #places-bookmark {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
