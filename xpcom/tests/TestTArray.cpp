@@ -418,21 +418,21 @@ static PRBool test_autoarray() {
   nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
-  if (hdr == (nsTArray<PRUint32>()).DebugGetHeader())
+  if (hdr == nsTArray<PRUint32>().DebugGetHeader())
     return PR_FALSE;
-  if (hdr == (nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)>()).DebugGetHeader())
+  if (hdr == nsAutoTArray<PRUint32, NS_ARRAY_LENGTH(data)>().DebugGetHeader())
     return PR_FALSE;
 
-  array.AppendElement(1);
+  array.AppendElement(1u);
   if (hdr != array.DebugGetHeader())
     return PR_FALSE;
 
-  array.RemoveElement(1);
+  array.RemoveElement(1u);
   array.AppendElements(data, NS_ARRAY_LENGTH(data));
   if (hdr != array.DebugGetHeader())
     return PR_FALSE;
 
-  array.AppendElement(2);
+  array.AppendElement(2u);
   if (hdr == array.DebugGetHeader())
     return PR_FALSE;
 
