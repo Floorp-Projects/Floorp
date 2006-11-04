@@ -52,12 +52,14 @@ client, supporting advanced junk mail detection and other useful features.">
 "Tight integration with the &brandShortName; application suite">
 <!ENTITY dict.title "Dictionaries">
 <!ENTITY dict_intro.label "Dictionaries are used to check the spelling of your messages.">
+<!--# LOCALIZATION NOTE (dict_info.label): the URL for <a id="dictURL"> is fetched from brand.properties -->
 <!ENTITY dict_info.label
-'Many additional languages can be installed from the 
-<a href="https://addons.mozilla.org/search.php?cat=68&amp;app=seamonkey&amp;type=E/">dictionaries</a> 
-section on <a href="http://addons.mozilla.org/">Mozilla Add-ons</a>.'>
+'Many additional languages can be installed from the
+<a id="dictURL" href="">dictionaries</a> section on
+<a href="https://addons.mozilla.org/seamonkey/">Mozilla Add-ons</a>.'>
 <!ENTITY info.title "More Information">
+<!--# LOCALIZATION NOTE (info_bugs.label): the URL for <a id="releaseNotesURL"> is fetched from brand.properties -->
 <!ENTITY info_bugs.label
 '<a href="http://www.mozilla.org/mailnews/">We</a> welcome bug reports and feature
-requests, but please read the <a href="&releaseURL;">release notes</a> and query
+requests, but please read the <a id="releaseNotesURL" href="">release notes</a> and query
 <a href="https://bugzilla.mozilla.org/query.cgi">Bugzilla</a> first.'>

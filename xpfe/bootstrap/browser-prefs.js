@@ -189,7 +189,7 @@ pref("mail.directory",                  "");
 pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
-pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.org/%LOCALE%/%APP%/%VERSION%/dictionaries/");
+pref("spellchecker.dictionaries.download.url", "chrome://branding/locale/brand.properties");
 
 // this will automatically enable inline spellchecking (if it is available) for
 // editable elements in HTML
@@ -197,6 +197,8 @@ pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla
 // 1 = check multi-line controls [default]
 // 2 = check multi/single line controls
 pref("layout.spellcheckDefault", 1);
+
+pref("app.releaseNotesURL", "chrome://branding/locale/brand.properties");
 
 pref("extensions.getMoreLocalesURL", "chrome://branding/locale/brand.properties");
 

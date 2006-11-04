@@ -76,5 +76,20 @@
 <p>&info_bugs.label;</p>
 </div>
 
+<script type="application/x-javascript">
+  // get dictionaries and release notes URLs from prefs
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  var dictURL = formatter.formatURLPref("spellchecker.dictionaries.download.url");
+  var dictionaries = document.getElementById("dictURL");
+  if (dictionaries)
+    dictionaries.setAttribute("href", dictURL);
+
+  var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
+  var relnotes = document.getElementById("releaseNotesURL");
+  if (relnotes)
+    relnotes.setAttribute("href", releaseNotesURL);
+</script>
+
 </body>
 </html>

@@ -190,7 +190,7 @@ pref("mail.directory",                  "");
 pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
-pref("spellchecker.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.org/%LOCALE%/%APP%/%VERSION%/dictionaries/");
+pref("spellchecker.dictionaries.download.url", "chrome://branding/locale/brand.properties");
 
 // this will automatically enable inline spellchecking (if it is available) for
 // editable elements in HTML
@@ -201,6 +201,8 @@ pref("layout.spellcheckDefault", 1);
 
 // special TypeAheadFind settings
 pref("accessibility.typeaheadfind.flashBar", 0);
+
+pref("app.releaseNotesURL", "chrome://branding/locale/brand.properties");
 
 // App-specific update preferences
 
@@ -292,10 +294,10 @@ pref("extensions.update.interval", 86400);  // Check for updates to Extensions a
                                             // Themes every day
 
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
-pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "chrome://branding/locale/brand.properties");
+pref("extensions.getMoreThemesURL", "chrome://branding/locale/brand.properties");
 pref("extensions.getMoreLocalesURL", "chrome://branding/locale/brand.properties");
-pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
+pref("extensions.dss.enabled", false);          // Dynamic Skin Switching
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.
 
