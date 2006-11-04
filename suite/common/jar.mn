@@ -165,7 +165,7 @@ comm.jar:
    content/communicator/pref/pref-winhooks.js                       (pref/pref-winhooks.js)
    content/communicator/pref/pref-winhooks.xul                      (pref/pref-winhooks.xul)
 #ifdef XP_MACOSX
-#   content/communicator/pref/platformPrefOverlay.xul                (pref/mac/platformPrefOverlay.xul)
+   content/communicator/pref/platformPrefOverlay.xul                (pref/mac/platformPrefOverlay.xul)
 #else
 #ifdef XP_WIN32
    content/communicator/pref/platformPrefOverlay.xul                (pref/win/platformPrefOverlay.xul)
