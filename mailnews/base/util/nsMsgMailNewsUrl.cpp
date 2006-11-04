@@ -957,7 +957,7 @@ nsresult nsMsgSaveAsListener::SetupMsgWriteStream(nsIFileSpec *aFileSpec, PRBool
   // nsMessenger::SaveAs now opens the stream on the nsIFileSpec
   // object, thus creating an empty file. Actual save operations for
   // IMAP and NNTP use this nsMsgSaveAsListener here, though, so we
-  // have to close the stream before deleting the file lest, else data
+  // have to close the stream before deleting the file, else data
   // would still be written happily into a now non-existing file.
   // (Windows doesn't care, btw, just unixoids do...)
   nsFileSpec fileSpec;
