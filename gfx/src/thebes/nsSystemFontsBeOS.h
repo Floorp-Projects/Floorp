@@ -37,20 +37,21 @@
 #ifndef _NS_SYSTEMFONTSBEOS_H_
 #define _NS_SYSTEMFONTSBEOS_H_
 
-#include <nsFont.h>
+#include <gfxFont.h>
 
 class BFont;
 
 class nsSystemFontsBeOS
 {
 public:
-    nsSystemFontsBeOS(float aPixelsToTwips);
+    nsSystemFontsBeOS();
 
-    nsresult GetSystemFont(nsSystemFontID aID, nsFont* aFont) const;
+    nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
+                           gfxFontStyle *aFontStyle) const;
 
 private:
-    nsresult GetSystemFontInfo(const BFont *theFont, nsFont* aFont,
-                               float aPixelsToTwips) const;
+    nsresult GetSystemFontInfo(const BFont *theFont, nsString *aFontName,
+                               gfxFontStyle *aFontStyle) const;
 
     /*
      * The following system font constants exist:
@@ -68,9 +69,8 @@ private:
      * // moz
      * eSystemFont_Tooltips, eSystemFont_Widget
      */
-    nsFont mDefaultFont;
-    nsFont mMenuFont;
-    nsFont mCaptionFont;
+    nsString mDefaultFontName, mMenuFontName, mCaptionFontName;
+    gfxFontStyle mDefaultFontStyle, mMenuFontStyle, mCaptionFontStyle;
 };
 
 #endif /* _NS_SYSTEMFONTSBEOS_H_ */

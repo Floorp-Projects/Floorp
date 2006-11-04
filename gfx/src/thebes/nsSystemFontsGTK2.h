@@ -39,23 +39,20 @@
 #ifndef _NS_SYSTEMFONTSGTK2_H_
 #define _NS_SYSTEMFONTSGTK2_H_
 
-#include <nsFont.h>
+#include <gfxFont.h>
 
 class nsSystemFontsGTK2
 {
 public:
-    nsSystemFontsGTK2(float aPixelsToTwips);
+    nsSystemFontsGTK2();
 
-    nsresult GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
-
-    const nsFont& GetDefaultFont() { return mDefaultFont; }
-    const nsFont& GetMenuFont() { return mMenuFont; }
-    const nsFont& GetFieldFont() { return mFieldFont; }
-    const nsFont& GetButtonFont() { return mButtonFont; }
+    nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
+                           gfxFontStyle *aFontStyle) const;
 
 private:
-    nsresult GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
-                               float aPixelsToTwips) const;
+
+    nsresult GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
+                               gfxFontStyle *aFontStyle) const;
 
     /*
      * The following system font constants exist:
@@ -73,10 +70,8 @@ private:
      * // moz
      * eSystemFont_Tooltips, eSystemFont_Widget
      */
-    nsFont mDefaultFont;
-    nsFont mButtonFont;
-    nsFont mFieldFont;
-    nsFont mMenuFont;
+    nsString mDefaultFontName, mButtonFontName, mFieldFontName, mMenuFontName;
+    gfxFontStyle mDefaultFontStyle, mButtonFontStyle, mFieldFontStyle, mMenuFontStyle;
 };
 
 #endif /* _NS_SYSTEMFONTSGTK2_H_ */
