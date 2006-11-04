@@ -566,7 +566,7 @@ IsValidBoundary(nsINode* aNode)
   nsCOMPtr<nsIContent> cont = do_QueryInterface(root);
   if (cont) {
     nsAutoString name;
-    content->Tag()->ToString(name);
+    cont->Tag()->ToString(name);
     printf("nsRange::IsValidBoundary: node is not a valid boundary point [%s]\n",
            NS_ConvertUTF16toUTF8(name).get());
   }
