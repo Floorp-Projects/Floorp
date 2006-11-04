@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string.h>
-#include "nsTraceRefcnt.h"
 #include "nsTArray.h"
 #include "nsXPCOM.h"
 #include "nsDebug.h"
