@@ -69,8 +69,8 @@ nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEven
 
 nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 {
-  // If mElement is non-null, we created a prototype handler.
-  if (mElement)
+  // If mBoxObjectForElement is non-null, we created a prototype handler.
+  if (mBoxObjectForElement)
     delete mHandler;
 }
 
@@ -110,7 +110,9 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 nsresult
 nsXBLWindowKeyHandler::EnsureHandlers(PRBool *aIsEditor)
 {
-  if (mElement) {
+  nsCOMPtr<nsIDOMElement> el = GetElement();
+  NS_ENSURE_STATE(!mBoxObjectForElement || el);
+  if (el) {
     // We are actually a XUL <keyset>.
     if (aIsEditor)
       *aIsEditor = PR_FALSE;
@@ -118,7 +120,7 @@ nsXBLWindowKeyHandler::EnsureHandlers(PRBool *aIsEditor)
     if (mHandler)
       return NS_OK;
 
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(el));
     BuildHandlerChain(content, &mHandler);
   }
   else // We are an XBL file of handlers.
@@ -182,9 +184,11 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
     return NS_OK;
 
   PRBool isEditor;
-  EnsureHandlers(&isEditor);
+  nsresult rv = EnsureHandlers(&isEditor);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  if (!mElement) {
+  nsCOMPtr<nsIDOMElement> el = GetElement();
+  if (!el) {
     if (mUserHandler) {
       WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
       evt->GetPreventDefault(&prevent);

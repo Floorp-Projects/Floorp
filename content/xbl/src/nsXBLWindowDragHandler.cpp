@@ -78,7 +78,8 @@ nsXBLWindowDragHandler::WalkHandlers(nsIDOMEvent* aDragEvent, nsIAtom* aEventTyp
   if (!dragEvent)
     return NS_OK;
 
-  EnsureHandlers(nsnull);
+  nsresult rv = EnsureHandlers(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   WalkHandlersInternal(aDragEvent, aEventType, mHandler);
   

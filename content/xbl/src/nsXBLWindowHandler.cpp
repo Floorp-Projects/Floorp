@@ -62,6 +62,7 @@
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsISelectionController.h"
 #include "nsXULAtoms.h"
 #include "nsIURI.h"
@@ -177,11 +178,18 @@ PRUint32 nsXBLWindowHandler::sRefCnt = 0;
 //
 nsXBLWindowHandler::nsXBLWindowHandler(nsIDOMElement* aElement,
                                        nsIDOMEventReceiver* aReceiver)
-  : mElement(aElement),
-    mReceiver(aReceiver),
+  : mReceiver(aReceiver),
     mHandler(nsnull),
     mUserHandler(nsnull)
 {
+  if (aElement) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMNSDocument> nsDomDoc = do_QueryInterface(domDoc);
+    if (nsDomDoc) {
+      nsDomDoc->GetBoxObjectFor(aElement, getter_AddRefs(mBoxObjectForElement));
+    }
+  }
   ++sRefCnt;
 }
 
@@ -202,6 +210,19 @@ nsXBLWindowHandler::~nsXBLWindowHandler()
 }
 
 
+already_AddRefed<nsIDOMElement>
+nsXBLWindowHandler::GetElement()
+{
+  if (!mBoxObjectForElement) {
+    return nsnull;
+  }
+  nsCOMPtr<nsIDOMElement> element;
+  mBoxObjectForElement->GetElement(getter_AddRefs(element));
+  nsIDOMElement* el = nsnull;
+  element.swap(el);
+  return el;
+}
+
 //
 // IsEditor
 //
@@ -211,6 +232,7 @@ PRBool
 nsXBLWindowHandler :: IsEditor()
 {
   nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(mReceiver));
+  NS_ENSURE_TRUE(windowRoot, PR_FALSE);
   nsCOMPtr<nsIFocusController> focusController;
   windowRoot->GetFocusController(getter_AddRefs(focusController));
   if (!focusController) {
@@ -274,7 +296,8 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIDOMElement> commandElt;
 
     // See if we're in a XUL doc.
-    if (mElement) {
+    nsCOMPtr<nsIDOMElement> el = GetElement();
+    if (el) {
       // We are.  Obtain our command attribute.
       nsAutoString command;
       elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
@@ -313,7 +336,8 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
     }
 
     nsCOMPtr<nsIDOMEventReceiver> rec;
-    if (mElement) {
+    nsCOMPtr<nsIDOMElement> element = GetElement();
+    if (element) {
       rec = do_QueryInterface(commandElt);
     } else {
       rec = mReceiver;
