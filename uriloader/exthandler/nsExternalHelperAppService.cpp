@@ -2285,13 +2285,13 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
       fileToUse->Remove(PR_FALSE);
 
      // extract the new leaf name from the file location
-     nsCAutoString fileName;
-     fileToUse->GetNativeLeafName(fileName);
+     nsAutoString fileName;
+     fileToUse->GetLeafName(fileName);
      nsCOMPtr<nsIFile> directoryLocation;
      rv = fileToUse->GetParent(getter_AddRefs(directoryLocation));
      if (directoryLocation)
      {
-       rv = mTempFile->MoveToNative(directoryLocation, fileName);
+       rv = mTempFile->MoveTo(directoryLocation, fileName);
      }
      if (NS_FAILED(rv))
      {
@@ -2374,17 +2374,17 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     mFinalFileDestination->Clone(getter_AddRefs(movedFile));
     if (movedFile) {
       // Get the old leaf name and append .part to it
-      nsCAutoString name;
-      mFinalFileDestination->GetNativeLeafName(name);
+      nsAutoString name;
+      mFinalFileDestination->GetLeafName(name);
       name.AppendLiteral(".part");
-      movedFile->SetNativeLeafName(name);
+      movedFile->SetLeafName(name);
 
       nsCOMPtr<nsIFile> dir;
       movedFile->GetParent(getter_AddRefs(dir));
 
       mOutStream->Close();
 
-      rv = mTempFile->MoveToNative(dir, name);
+      rv = mTempFile->MoveTo(dir, name);
       if (NS_SUCCEEDED(rv)) // if it failed, we just continue with $TEMP
         mTempFile = movedFile;
       rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
