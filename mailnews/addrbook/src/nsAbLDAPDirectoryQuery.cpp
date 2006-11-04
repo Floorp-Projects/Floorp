@@ -98,7 +98,7 @@ protected:
     nsAbLDAPDirectoryQuery* mDirectoryQuery;
     PRInt32 mContextID;
     nsCOMPtr<nsILDAPURL> mUrl;
-    nsCOMPtr<nsILDAPConnection> mConnection;
+    nsILDAPConnection *mConnection;
     nsCOMPtr<nsIAbDirectoryQueryArguments> mQueryArguments;
     nsCOMPtr<nsIAbDirectoryQueryResultListener> mQueryListener;
     PRInt32 mResultLimit;
@@ -141,14 +141,12 @@ nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
     mLock(0)
 
 {
-  NS_ADDREF(mDirectoryQuery);
 }
 
 nsAbQueryLDAPMessageListener::~nsAbQueryLDAPMessageListener ()
 {
     if (mLock)
         PR_DestroyLock (mLock);
-    NS_RELEASE(mDirectoryQuery);
 }
 
 nsresult nsAbQueryLDAPMessageListener::Initiate ()
@@ -216,6 +214,9 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     }
     // Leave lock
 
+    if (!mDirectoryQuery)
+      return NS_ERROR_NULL_POINTER;
+
     nsCOMPtr<nsIAbDirectoryQueryResult> queryResult;
     if (!cancelOperation)
     {
@@ -254,7 +255,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
 
     }
 
-    if (queryResult)
+    if (queryResult && mQueryListener)
         rv = mQueryListener->OnQueryItem (queryResult);
 
     return rv;
@@ -267,6 +268,9 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
 
     // Make sure that the Init() worked properly
     NS_ENSURE_SUCCESS(aStatus, aStatus);
+
+    if (!mDirectoryQuery)
+      return NS_ERROR_NULL_POINTER;
 
     // If mLogin is set, we're expected to use it to get a password.
     //
@@ -445,6 +449,9 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
             // doesn't require the service to be running, which is why
             // this might not exist yet.
             //
+            if (!mDirectoryQuery)
+              return NS_ERROR_NULL_POINTER;
+
             rv = NS_CreateServicesFromCategory(
                 "passwordmanager", mDirectoryQuery->mDirectoryUrl,
                 "login-failed");
@@ -526,6 +533,8 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
 {
     nsresult rv;
 
+    if (!mDirectoryQuery)
+      return NS_ERROR_NULL_POINTER;
     // the address book fields that we'll be asking for
     CharPtrArrayGuard properties;
     rv = mQueryArguments->GetReturnProperties (properties.GetSizeAddr(), properties.GetArrayAddr());
@@ -648,7 +657,15 @@ nsAbLDAPDirectoryQuery::nsAbLDAPDirectoryQuery() :
 
 nsAbLDAPDirectoryQuery::~nsAbLDAPDirectoryQuery()
 {
-    if(mLock)
+     nsAbQueryLDAPMessageListener *msgListener = 
+        NS_STATIC_CAST(nsAbQueryLDAPMessageListener *, 
+        NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
+     if (msgListener)
+     {
+       msgListener->mDirectoryQuery = nsnull;
+       msgListener->mQueryListener = nsnull;
+     }
+     if(mLock)
         PR_DestroyLock (mLock);
 }
 nsresult nsAbLDAPDirectoryQuery::Initiate ()

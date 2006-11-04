@@ -465,7 +465,6 @@ nsresult nsAbLDAPDirectory::OnSearchFinished (PRInt32 result)
 
     nsAutoLock lock (mLock);
     mPerformingQuery = PR_FALSE;
-    mListener = nsnull; // break cycle with listener
 
     return NS_OK;
 }
