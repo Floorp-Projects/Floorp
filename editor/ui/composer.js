@@ -66,7 +66,6 @@ pref("editor.table.maintain_structure", true);
 pref("editor.prettyprint", true);
 
 pref("editor.throbber.url","chrome://editor-region/locale/region.properties");
-pref("editor.spellcheckers.url","chrome://editor-region/locale/region.properties");
 
 pref("editor.toolbars.showbutton.new", true);
 pref("editor.toolbars.showbutton.open", true);
