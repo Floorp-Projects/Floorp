@@ -240,6 +240,8 @@ sub print_page_head {
 
 sub print_table_body {
     my $tinderbox_data = $_[0];
+    # Reset globals
+    undef @who_check_list;
     for (my $tt=0; $tt < $time_count; $tt++) {
         last if $build_time_times->[$tt] < $mindate;
         print_table_row($tinderbox_data, $tt);
