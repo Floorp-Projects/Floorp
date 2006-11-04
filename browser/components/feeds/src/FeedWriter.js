@@ -58,6 +58,23 @@ function LOG(str) {
     dump("*** Feeds: " + str + "\n");
 }
 
+/**
+ * Wrapper function for nsIIOService::newURI.
+ * @param aURLSpec
+ *        The URL string from which to create an nsIURI.
+ * @returns an nsIURI object, or null if the creation of the URI failed.
+ */
+function makeURI(aURLSpec, aCharset) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  try {
+    return ios.newURI(aURLSpec, aCharset, null);
+  } catch (ex) { }
+
+  return null;
+}
+
+
 const XML_NS = "http://www.w3.org/XML/1998/namespace"
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -76,6 +93,8 @@ const FW_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
 
 const TITLE_ID = "feedTitleText";
 const SUBTITLE_ID = "feedSubtitleText";
+
+const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
 function FeedWriter() {
 }
@@ -321,10 +340,6 @@ FeedWriter.prototype = {
     var feedService = 
         Cc["@mozilla.org/browser/feeds/result-service;1"].
         getService(Ci.nsIFeedResultService);
-        
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
  
     try {
       var result = 
@@ -479,7 +494,8 @@ FeedWriter.prototype = {
     if (checkbox) {
       var handlersMenuList = this._document.getElementById("handlersMenuList");
       if (handlersMenuList) {
-        var handlerName = this._getSelectedItemFromMenulist(handlersMenuList)                              .getAttribute("label");
+        var handlerName = this._getSelectedItemFromMenulist(handlersMenuList)
+                              .getAttribute("label");
         checkbox.setAttribute("label", this._getFormattedString("alwaysUse", [handlerName]));
       }
     }
@@ -683,19 +699,19 @@ FeedWriter.prototype = {
       getService(Ci.nsIWebContentConverterService);
     var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
     if (handlers.length != 0) {
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
       for (var i = 0; i < handlers.length; ++i) {
         menuItem = this._document.createElementNS(XUL_NS, "menuitem");
         menuItem.className = "menuitem-iconic";
         menuItem.setAttribute("label", handlers[i].name);
         menuItem.setAttribute("handlerType", "web");
         menuItem.setAttribute("webhandlerurl", handlers[i].uri);
-
-        var uri = ios.newURI(handlers[i].uri, null, null);
-        menuItem.setAttribute("image", uri.prePath + "/favicon.ico");
-
         handlersMenuPopup.appendChild(menuItem);
+
+        // For privacy reasons we cannot set the image attribute directly
+        // to the icon url, see Bug 358878
+        var uri = makeURI(handlers[i].uri);
+        if (uri) 
+          new iconDataURIGenerator(uri.prePath + "/favicon.ico", menuItem)
       }
     }
 
@@ -742,9 +758,7 @@ FeedWriter.prototype = {
         QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
 
     const SUBSCRIBE_PAGE_URI = "chrome://browser/content/feeds/subscribe.xhtml";
-    var uri = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService).
-              newURI(SUBSCRIBE_PAGE_URI, "", null)
+    var uri = makeURI(SUBSCRIBE_PAGE_URI);
     var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
                       getService(Ci.nsIChromeRegistry).
                       convertChromeURL(uri);
@@ -957,6 +971,144 @@ FeedWriter.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
+};
+
+// copied over from nsSearchService.js
+function b64(aBytes) {
+  const B64_CHARS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  var out = "", bits, i, j;
+
+  while (aBytes.length >= 3) {
+    bits = 0;
+    for (i = 0; i < 3; i++) {
+      bits <<= 8;
+      bits |= aBytes[i];
+    }
+    for (j = 18; j >= 0; j -= 6)
+      out += B64_CHARS[(bits>>j) & 0x3F];
+
+    aBytes.splice(0, 3);
+  }
+
+  switch (aBytes.length) {
+    case 2:
+      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
+      out += B64_CHARS[((aBytes[0] & 0x03) << 4) | ((aBytes[1] >> 4) & 0x0F)];
+      out += B64_CHARS[((aBytes[1] & 0x0F) << 2)];
+      out += "=";
+      break;
+    case 1:
+      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
+      out += B64_CHARS[(aBytes[0] & 0x03) << 4];
+      out += "==";
+      break;
+  }
+  return out;
+}
+
+function iconDataURIGenerator(aURISpec, aElement) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  var chan = ios.newChannelFromURI(makeURI(aURISpec));
+  chan.notificationCallbacks = this;
+  chan.asyncOpen(this, null);
+
+  this._channel = chan;
+  this._bytes = [];
+  this._element = aElement;
+}
+iconDataURIGenerator.prototype = {
+  _channel: null,
+  _countRead: 0,
+  _stream: null,
+
+  QueryInterface: function FW_IDUG_loadQI(aIID) {
+    if (aIID.equals(Ci.nsISupports)           ||
+        aIID.equals(Ci.nsIRequestObserver)    ||
+        aIID.equals(Ci.nsIStreamListener)     ||
+        aIID.equals(Ci.nsIChannelEventSink)   ||
+        aIID.equals(Ci.nsIInterfaceRequestor) ||
+        aIID.equals(Ci.nsIBadCertListener)    ||
+        // See bug 358878 comment 11
+        aIID.equals(Ci.nsIPrompt)             ||
+        // See FIXME comment below
+        aIID.equals(Ci.nsIHttpEventSink)      ||
+        aIID.equals(Ci.nsIProgressEventSink)  ||
+        false)
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIRequestObserver
+  onStartRequest: function FW_IDUG_loadStartR(aRequest, aContext) {
+    this._stream = Cc["@mozilla.org/binaryinputstream;1"].
+                   createInstance(Ci.nsIBinaryInputStream);
+  },
+
+  onStopRequest: function FW_IDUG_loadStopR(aRequest, aContext, aStatusCode) {
+    var requestFailed = !Components.isSuccessCode(aStatusCode);
+    if (!requestFailed && (aRequest instanceof Ci.nsIHttpChannel))
+      requestFailed = !aRequest.requestSucceeded;
+
+    if (!requestFailed && this._countRead != 0) {
+      try {
+        var dataURI = ICON_DATAURL_PREFIX + b64(this._bytes);
+        this._element.setAttribute("image", dataURI);
+      }
+      catch(ex) { }
+    }
+    this._channel = null;
+    this._element  = null;
+  },
+
+  // nsIStreamListener
+  onDataAvailable: function FW_IDUG_loadDAvailable(aRequest, aContext,
+                                                   aInputStream, aOffset,
+                                                   aCount) {
+    this._stream.setInputStream(aInputStream);
+
+    // Get a byte array of the data
+    this._bytes = this._bytes.concat(this._stream.readByteArray(aCount));
+    this._countRead += aCount;
+  },
+
+  // nsIChannelEventSink
+  onChannelRedirect: function FW_IDUG_loadCRedirect(aOldChannel, aNewChannel,
+                                                    aFlags) {
+    this._channel = aNewChannel;
+  },
+
+  // nsIInterfaceRequestor
+  getInterface: function FW_IDUG_load_GI(aIID) {
+    return this.QueryInterface(aIID);
+  },
+
+  // nsIBadCertListener
+  confirmUnknownIssuer: function FW_IDUG_load_CUI(aSocketInfo, aCert,
+                                                  aCertAddType) {
+    return false;
+  },
+
+  confirmMismatchDomain: function FW_IDUG_load_CMD(aSocketInfo, aTargetURL,
+                                                   aCert) {
+    return false;
+  },
+
+  confirmCertExpired: function FW_IDUG_load_CCE(aSocketInfo, aCert) {
+    return false;
+  },
+
+  notifyCrlNextupdate: function FW_IDUG_load_NCN(aSocketInfo, aTargetURL, aCert) {
+  },
+
+  // FIXME: bug 253127
+  // nsIHttpEventSink
+  onRedirect: function (aChannel, aNewChannel) { },
+  // nsIProgressEventSink
+  onProgress: function (aRequest, aContext, aProgress, aProgressMax) { },
+  onStatus: function (aRequest, aContext, aStatus, aStatusArg) { }
 };
 
 var Module = {
