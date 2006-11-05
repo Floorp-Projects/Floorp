@@ -4443,7 +4443,7 @@ function cli_wantToQuit(reason, deliberate)
     var close = true;
     if (client.prefs["warnOnClose"] && !deliberate)
     {
-        const buttons = ["!yes", "!no"];
+        const buttons = [MSG_QUIT_ANYWAY, MSG_DONT_QUIT];
         var checkState = { value: true };
         var rv = confirmEx(MSG_CONFIRM_QUIT, buttons, 0, MSG_WARN_ON_EXIT,
                            checkState);
