@@ -90,6 +90,7 @@ protected:
   nsresult ComposeShouldLoad(nsIDocShell * aRootDocShell, nsIURI * aContentLocation, PRInt16 * aDecision);
   
   nsresult GetRootDocShellForContext(nsISupports * aRequestingContext, nsIDocShell ** aDocShell);
+  nsresult GetMessagePaneURI(nsIDocShell * aRootDocShell, nsIURI ** aURI);
 };
 
 #ifdef MOZ_THUNDERBIRD

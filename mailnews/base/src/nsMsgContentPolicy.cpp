@@ -73,6 +73,8 @@
 
 // needed for mailnews content load policy manager
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsContentPolicyUtils.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
@@ -319,8 +321,18 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
 
   if (windowType.Equals(NS_LITERAL_STRING("msgcompose")))
     ComposeShouldLoad(rootDocShell, aContentLocation, aDecision);
-  else 
-    MailShouldLoad(aRequestingLocation, aContentLocation, aDecision);
+  else
+  {
+    // the remote image could be nested in any number of iframes. For those cases, we don't really
+    // care about the value of aRequestingLocation. We care about the parent message pane nsIURI so
+    // use that if we can find it. For the non nesting case, mailRequestingLocation and aRequestingLocation
+    // should end up being the same object.
+    nsCOMPtr<nsIURI> mailRequestingLocation;
+    GetMessagePaneURI(rootDocShell, getter_AddRefs(mailRequestingLocation));
+    
+    MailShouldLoad(mailRequestingLocation ? mailRequestingLocation : aRequestingLocation, 
+                   aContentLocation, aDecision);
+  }
 
   return NS_OK;
 }
@@ -480,6 +492,30 @@ nsresult nsMsgContentPolicy::GetRootDocShellForContext(nsISupports * aRequesting
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void**) aDocShell);
+}
+
+/**
+ * helper routine to get the current URI loaded in the message pane for the mail window.
+ *
+ * @param aRootDocShell the root docshell for a mail window with a message pane (i.e. not a compose window)
+ *
+ * @return aURI may be null
+ */
+nsresult nsMsgContentPolicy::GetMessagePaneURI(nsIDocShell * aRootDocShell, nsIURI ** aURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDocShellTreeNode> rootDocShellAsNode(do_QueryInterface(aRootDocShell, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeItem> childAsItem;
+  rv = rootDocShellAsNode->FindChildWithName(NS_LITERAL_STRING("messagepane").get(),
+                                               PR_TRUE, PR_FALSE, nsnull, nsnull, getter_AddRefs(childAsItem));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIWebNavigation> webNavigation (do_QueryInterface(childAsItem, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return webNavigation->GetCurrentURI(aURI);
 }
 
 NS_IMETHODIMP
