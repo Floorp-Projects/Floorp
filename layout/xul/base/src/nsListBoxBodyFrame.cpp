@@ -635,6 +635,7 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   nsCOMPtr<nsIContent> itemContent(do_QueryInterface(aItem));
 
   nsIContent* listbox = mContent->GetBindingParent();
+  NS_ENSURE_STATE(listbox);
 
   PRUint32 childCount = listbox->GetChildCount();
 
@@ -656,12 +657,14 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
+nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aItem)
 {
+  *aItem = nsnull;
   if (aIndex < 0)
     return NS_ERROR_ILLEGAL_VALUE;
   
   nsIContent* listbox = mContent->GetBindingParent();
+  NS_ENSURE_STATE(listbox);
 
   PRUint32 childCount = listbox->GetChildCount();
 
@@ -673,7 +676,7 @@ nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
     if (child->Tag() == nsXULAtoms::listitem) {
       // is this it?
       if (itemCount == aIndex) {
-        return CallQueryInterface(child, _retval);
+        return CallQueryInterface(child, aItem);
       }
       ++itemCount;
     }
@@ -788,6 +791,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     width += (margin.left + margin.right);
 
     nsIContent* listbox = mContent->GetBindingParent();
+    NS_ENSURE_TRUE(listbox, largestWidth);
 
     PRUint32 childCount = listbox->GetChildCount();
 
@@ -830,11 +834,11 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
 void
 nsListBoxBodyFrame::ComputeTotalRowCount()
 {
+  mRowCount = 0;
   nsIContent* listbox = mContent->GetBindingParent();
+  ENSURE_TRUE(listbox);
 
   PRUint32 childCount = listbox->GetChildCount();
-
-  mRowCount = 0;
   for (PRUint32 i = 0; i < childCount; i++) {
     if (listbox->GetChildAt(i)->Tag() == nsXULAtoms::listitem)
       ++mRowCount;
@@ -1335,47 +1339,48 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
   if (mRowCount >= 0)
     --mRowCount;
 
-  if (!aChildFrame) {
-    // The row we are removing is out of view, so we need to try to
-    // determine the index of its next sibling.
-    nsIContent *oldNextSiblingContent =
-      mContent->GetBindingParent()->GetChildAt(aIndex);
-
-    PRInt32 siblingIndex = -1;
-    if (oldNextSiblingContent) {
-      nsCOMPtr<nsIContent> nextSiblingContent;
-      GetListItemNextSibling(oldNextSiblingContent, getter_AddRefs(nextSiblingContent), siblingIndex);
-    }
+  nsIContent* listBoxContent = mContent->GetBindingParent();
+  if (listBoxContent) {
+    if (!aChildFrame) {
+      // The row we are removing is out of view, so we need to try to
+      // determine the index of its next sibling.
+      nsIContent *oldNextSiblingContent = listBoxContent->GetChildAt(aIndex);
   
-    // if the row being removed is off-screen and above the top frame, we need to
-    // adjust our top index and tell the scrollbar to shift up one row.
-    if (siblingIndex >= 0 && siblingIndex-1 < mCurrentIndex) {
-      NS_PRECONDITION(mCurrentIndex > 0, "mCurrentIndex > 0");
-      --mCurrentIndex;
-      mYPosition = mCurrentIndex*mRowHeight;
-      VerticalScroll(mYPosition);
-    }
-  } else if (mCurrentIndex > 0) {
-    // At this point, we know we have a scrollbar, and we need to know 
-    // if we are scrolled to the last row.  In this case, the behavior
-    // of the scrollbar is to stay locked to the bottom.  Since we are
-    // removing visible content, the first visible row will have to move
-    // down by one, and we will have to insert a new frame at the top.
+      PRInt32 siblingIndex = -1;
+      if (oldNextSiblingContent) {
+        nsCOMPtr<nsIContent> nextSiblingContent;
+        GetListItemNextSibling(oldNextSiblingContent, getter_AddRefs(nextSiblingContent), siblingIndex);
+      }
     
-    // if the last content node has a frame, we are scrolled to the bottom
-    nsIContent* listBoxContent = mContent->GetBindingParent();
-    PRUint32 childCount = listBoxContent->GetChildCount();
-    if (childCount > 0) {
-      nsIContent *lastChild = listBoxContent->GetChildAt(childCount - 1);
-      nsIFrame* lastChildFrame = 
-        aPresContext->PresShell()->GetPrimaryFrameFor(lastChild);
-    
-      if (lastChildFrame) {
-        mTopFrame = nsnull;
-        mRowsToPrepend = 1;
+      // if the row being removed is off-screen and above the top frame, we need to
+      // adjust our top index and tell the scrollbar to shift up one row.
+      if (siblingIndex >= 0 && siblingIndex-1 < mCurrentIndex) {
+        NS_PRECONDITION(mCurrentIndex > 0, "mCurrentIndex > 0");
         --mCurrentIndex;
         mYPosition = mCurrentIndex*mRowHeight;
         VerticalScroll(mYPosition);
+      }
+    } else if (mCurrentIndex > 0) {
+      // At this point, we know we have a scrollbar, and we need to know 
+      // if we are scrolled to the last row.  In this case, the behavior
+      // of the scrollbar is to stay locked to the bottom.  Since we are
+      // removing visible content, the first visible row will have to move
+      // down by one, and we will have to insert a new frame at the top.
+      
+      // if the last content node has a frame, we are scrolled to the bottom
+      PRUint32 childCount = listBoxContent->GetChildCount();
+      if (childCount > 0) {
+        nsIContent *lastChild = listBoxContent->GetChildAt(childCount - 1);
+        nsIFrame* lastChildFrame = 
+          aPresContext->PresShell()->GetPrimaryFrameFor(lastChild);
+      
+        if (lastChildFrame) {
+          mTopFrame = nsnull;
+          mRowsToPrepend = 1;
+          --mCurrentIndex;
+          mYPosition = mCurrentIndex*mRowHeight;
+          VerticalScroll(mYPosition);
+        }
       }
     }
   }
@@ -1396,7 +1401,9 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
 void
 nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
 {
+  *aContent = nsnull;
   nsIContent* listboxContent = mContent->GetBindingParent();
+  ENSURE_TRUE(listboxContent);
 
   PRUint32 childCount = listboxContent->GetChildCount();
   PRInt32 itemsFound = 0;
@@ -1418,9 +1425,10 @@ nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
 void
 nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** aContent, PRInt32& aSiblingIndex)
 {
-  nsIContent* listboxContent = mContent->GetBindingParent();
-
+  *aContent = nsnull;
   aSiblingIndex = -1;
+  nsIContent* listboxContent = mContent->GetBindingParent();
+  ENSURE_TRUE(listboxContent);
 
   PRUint32 childCount = listboxContent->GetChildCount();
   nsIContent *prevKid = nsnull;
