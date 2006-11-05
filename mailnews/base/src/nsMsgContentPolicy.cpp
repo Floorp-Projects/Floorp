@@ -330,7 +330,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
     nsCOMPtr<nsIURI> mailRequestingLocation;
     GetMessagePaneURI(rootDocShell, getter_AddRefs(mailRequestingLocation));
     
-    MailShouldLoad(mailRequestingLocation ? mailRequestingLocation : aRequestingLocation, 
+    MailShouldLoad(mailRequestingLocation ? mailRequestingLocation.get() : aRequestingLocation, 
                    aContentLocation, aDecision);
   }
 
