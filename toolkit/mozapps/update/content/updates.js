@@ -667,7 +667,7 @@ var gUpdatesAvailablePage = {
     if (severity == "major") {
       // for major updates, use the brandName and the version for the intro
       intro = gUpdates.strings.getFormattedString(
-        "introType_" + severity + "_app_and_version", 
+        "introType_major_app_and_version", 
         [gUpdates.brandName, gUpdates.update.version]);
 
       this._updateMoreInfoContent = 
@@ -684,7 +684,7 @@ var gUpdatesAvailablePage = {
       // for minor updates, do not include the version
       // just use the brandName for the intro
       intro = gUpdates.strings.getFormattedString(
-        "introType_" + severity + "_app", [gUpdates.brandName]);
+        "introType_minor_app", [gUpdates.brandName]);
 
       var updateMoreInfoURL = document.getElementById("updateMoreInfoURL");
       updateMoreInfoURL.href = gUpdates.update.detailsURL; 
