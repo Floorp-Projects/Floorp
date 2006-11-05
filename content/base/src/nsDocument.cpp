@@ -25,7 +25,7 @@
  *   L. David Baron  <dbaron@dbaron.org>
  *   Pierre Phaneuf  <pp@ludusdesign.com>
  *   Pete Collins    <petejc@collab.net>
- *   James Ross      <silver@warwickcompsocc.o.uk>
+ *   James Ross      <silver@warwickcompsoc.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
