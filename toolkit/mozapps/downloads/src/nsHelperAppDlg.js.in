@@ -858,7 +858,7 @@ nsUnknownContentTypeDialog.prototype = {
       // Remove our web progress listener (a progress dialog will be
       // taking over).
       this.mLauncher.setWebProgressListener(null);
-      
+
       // saveToDisk and launchWithApplication can return errors in 
       // certain circumstances (e.g. The user clicks cancel in the
       // "Save to Disk" dialog. In those cases, we don't want to
@@ -885,7 +885,12 @@ nsUnknownContentTypeDialog.prototype = {
 
           this.mLauncher.saveToDisk(targetFile, false);
 #endif
-          this.mLauncher.saveToDisk(null, false);
+          // Since saveToDisk may open a file picker and therefore block this routine,
+          // we should only call it once the dialog is closed.
+          var _delayedSaveToDisk = function(aSelf) {
+            aSelf.mLauncher.saveToDisk(null, false);
+          }
+          this.mDialog.opener.setTimeout(_delayedSaveToDisk, 0, this);
         }
         else
           this.mLauncher.launchWithApplication(null, false);
