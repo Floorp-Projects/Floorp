@@ -3,10 +3,10 @@
 <!ENTITY caption.label         "Element Properties">
 <!ENTITY image-sec.label       "Image Properties">
 <!ENTITY image-url.label       "Location:">
+<!ENTITY image-type.label      "Type:">
 <!ENTITY image-desc.label      "Description:">
 <!ENTITY image-alt.label       "Alternate text:">
-<!ENTITY image-width.label     "Width:">
-<!ENTITY image-height.label    "Height:">
+<!ENTITY image-size.label      "Image Dimensions:">
 <!ENTITY image-filesize.label  "Size of File:">
 <!ENTITY insdel-sec.label      "Insert/Delete Properties">
 <!ENTITY insdel-cite.label     "Info:">

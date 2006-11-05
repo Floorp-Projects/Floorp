@@ -58,6 +58,9 @@ var onTable  = false;
 var onTitle  = false;
 var onLang   = false;
 
+// Interface for image loading content
+const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+
 const nsICacheService = Components.interfaces.nsICacheService;
 const cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
                      .getService(nsICacheService);
@@ -251,14 +254,25 @@ function checkForImage(elem, htmllocalname)
     } else {
       setInfo("image-filesize", gMetadataBundle.getString("imageSizeUnknown"));
     }
-    if ("width" in img && img.width != "") {
-      setInfo("image-width", gMetadataBundle.getFormattedString("imageWidth", [ img.width ]));
-      setInfo("image-height", gMetadataBundle.getFormattedString("imageHeight", [ img.height ]));
-    }
-    else {
-      setInfo("image-width", "");
-      setInfo("image-height", "");
+
+    var imageRequest = img.QueryInterface(nsIImageLoadingContent)
+                          .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    if (imageRequest)
+      setInfo("image-type", imageRequest.mimeType);
+    else
+      setInfo("image-type", "");
+
+    var imageSize = "";
+    if (img.width) {
+      if (imageRequest && (imageRequest.image.width  != img.width ||
+                           imageRequest.image.height != img.height))
+        imageSize = gMetadataBundle.getFormattedString("imageDimensionsScaled",
+                                                       [imageRequest.image.width, imageRequest.image.height,
+                                                        img.width,                img.height]);
+      else
+        imageSize = gMetadataBundle.getFormattedString("imageDimensions", [img.width, img.height]);
     }        
+    setInfo("image-size", imageSize);
      
     if (imgType == "img") {
       setInfo("image-desc", img.longDesc);
