@@ -374,11 +374,14 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
        $mok = lsearch(\@milestone_names, $cgi->param('target_milestone')) >= 0;
     }
 
-    # If the product-specific fields need to be verified, or we need to verify
-    # whether or not to add the bugs to their new product's group, display
-    # a verification form.
-    if (!$vok || !$cok || !$mok || (AnyDefaultGroups()
-        && !defined $cgi->param('addtonewgroup'))) {
+    # We cannot be sure if the component is the same by only checking $cok; the
+    # current component name could exist in the new product. So always display
+    # the form and use the confirm_product_change param to check if that was
+    # shown. Also show the verification form if the product-specific fields
+    # somehow still need to be verified, or if we need to verify whether or not
+    # to add the bugs to their new product's group.
+    if (!$vok || !$cok || !$mok || !defined $cgi->param('confirm_product_change')
+        || (AnyDefaultGroups() && !defined $cgi->param('addtonewgroup'))) {
 
         if (Bugzilla->usage_mode == USAGE_MODE_EMAIL) {
             if (!$vok) {
@@ -398,7 +401,9 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             }
         }
         
-        if (!$vok || !$cok || !$mok) {
+        if (!$vok || !$cok || !$mok
+            || !defined $cgi->param('confirm_product_change'))
+        {
             $vars->{'verify_fields'} = 1;
             my %defaults;
             # We set the defaults to these fields to the old value,

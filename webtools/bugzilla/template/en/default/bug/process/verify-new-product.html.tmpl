@@ -47,6 +47,7 @@
 [% PROCESS "global/hidden-fields.html.tmpl"
      exclude=(verify_fields ? "^version|component|target_milestone$" : "") %]
 
+<input type="hidden" name="confirm_product_change" value="1">
 [%# Verify the version, component, and target milestone fields. %]
 [% IF verify_fields %]
   <h3>Verify Version, Component[% ", Target Milestone" IF use_target_milestone %]</h3>
@@ -69,16 +70,28 @@
     <tr>
       <td>
         <b>Version:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="version" options=versions default=defaults.version %]
+        [% PROCESS "global/select-menu.html.tmpl" 
+                   name="version"
+                   options=versions
+                   default=defaults.version
+                   size=10 %]
       </td>
       <td>
         <b>Component:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="component" options=components default=defaults.component %]
+        [% PROCESS "global/select-menu.html.tmpl"
+                   name="component"
+                   options=components
+                   default=defaults.component
+                   size=10 %]
       </td>
       [% IF use_target_milestone %]
         <td>
           <b>Target Milestone:</b><br>
-        [% PROCESS "global/select-menu.html.tmpl" name="target_milestone" options=milestones default=defaults.target_milestone %]
+        [% PROCESS "global/select-menu.html.tmpl"
+                   name="target_milestone"
+                   options=milestones
+                   default=defaults.target_milestone
+                   size=10 %]
         </td>
       [% END %]
     </tr>
