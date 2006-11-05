@@ -263,7 +263,7 @@
               return null;
 
             var tabBrowser = this.getTabBrowser();
-            if (tabBrowser && tabBrowser.mCurrentBrowser == this)
+            if (tabBrowser)
               return this._fastFind = tabBrowser.fastFind;
 
             if (!this.docShell)
