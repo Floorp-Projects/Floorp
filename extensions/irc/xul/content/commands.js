@@ -3309,6 +3309,8 @@ function cmdSave(e)
                  */
                 else if (!requestSpec && saveType > 0)
                 {
+                    if (wbp)
+                        wbp.progressListener = null;
                     pm = [e.sourceObject.viewName, e.filename];
                     display(getMsg(MSG_SAVE_SUCCESSFUL, pm), MT_INFO);
                 }
