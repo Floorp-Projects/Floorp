@@ -127,15 +127,15 @@
           <label value="&image-url.label; "/>
           <textbox readonly="true" id="image-url-text"/>
         </row>
-        <row id="image-width">
+        <row id="image-type">
           <separator orient="vertical"/>
-          <label value="&image-width.label; "/>
-          <textbox readonly="true" id="image-width-text"/>
+          <label value="&image-type.label; "/>
+          <textbox readonly="true" id="image-type-text"/>
         </row>
-        <row id="image-height">
+        <row id="image-size">
           <separator orient="vertical"/>
-          <label value="&image-height.label; "/>
-          <textbox readonly="true" id="image-height-text"/>
+          <label value="&image-size.label; "/>
+          <textbox readonly="true" id="image-size-text"/>
         </row>
 	<row id="image-filesize">
           <separator orient="vertical"/>
