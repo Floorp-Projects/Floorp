@@ -1494,7 +1494,10 @@ function my_401 (e)
     }
     else
     {
-        display(toUnicode(e.params[3], this));
+        if (this.whoisList && (target in this.whoisList))
+            this.whoisList[target] = false;
+        else
+            display(toUnicode(e.params[3], this));
     }
 }
 
@@ -1608,7 +1611,11 @@ function my_whoisreply (e)
 {
     var text = "egads!";
     var nick = e.params[2];
+    var lowerNick = this.primServ.toLowerCase(nick);
     var user;
+
+    if (this.whoisList && (e.code != 318) && (lowerNick in this.whoisList))
+        this.whoisList[lowerNick] = true;
 
     if (e.user)
     {
@@ -1645,6 +1652,15 @@ function my_whoisreply (e)
             break;
 
         case 318:
+            // If this user isn't here, don't display anything and do a whowas
+            if (this.whoisList && (lowerNick in this.whoisList) &&
+                !this.whoisList[lowerNick])
+            {
+                delete this.whoisList[lowerNick];
+                this.primServ.whowas(nick, 1);
+                return;
+            }
+            delete this.whoisList[lowerNick];
             text = getMsg(MSG_WHOIS_END, nick);
             if (user)
                 user.updateHeader();
