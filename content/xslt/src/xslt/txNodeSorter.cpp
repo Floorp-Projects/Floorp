@@ -70,7 +70,7 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
                              Expr* aDataTypeExpr, Expr* aOrderExpr,
                              Expr* aCaseOrderExpr, txIEvalContext* aContext)
 {
-    SortKey* key = new SortKey;
+    nsAutoPtr<SortKey> key(new SortKey);
     NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
     nsresult rv = NS_OK;
 
@@ -88,7 +88,6 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
             ascending = MB_FALSE;
         }
         else if (!TX_StringEqualsAtom(attrValue, txXSLTAtoms::ascending)) {
-            delete key;
             // XXX ErrorReport: unknown value for order attribute
             return NS_ERROR_XSLT_BAD_VALUE;
         }
@@ -125,7 +124,6 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
             }
             else if (!TX_StringEqualsAtom(attrValue,
                                           txXSLTAtoms::lowerFirst)) {
-                delete key;
                 // XXX ErrorReport: unknown value for case-order attribute
                 return NS_ERROR_XSLT_BAD_VALUE;
             }
@@ -143,12 +141,14 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     }
     else {
         // XXX ErrorReport: unknown data-type
-        delete key;
-
         return NS_ERROR_XSLT_BAD_VALUE;
     }
 
-    mSortKeys.add(key);
+    // mSortKeys owns key now. 
+    rv = mSortKeys.add(key);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    key.forget();
     mNKeys++;
 
     return NS_OK;
