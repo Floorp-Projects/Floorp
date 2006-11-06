@@ -51,7 +51,7 @@ define('SOURCE_DIR',getcwd().'/data');
 define('OVERRIDE_DIR',getcwd().'/data/3');
 
 // Uncomment this line in order to echo text debug information.
-define('DEBUG',true);
+define('DEBUG',false);
 
 // Define default for Update blocks.
 define('UPDATE_TYPE','minor');
