@@ -146,7 +146,7 @@ var gAdvancedPane = {
      * the Master Password UI is automatically updated.
      */
     _removeMasterPassword: function advRemoveMasterPassword() {
-        if (this._secModDB.isFIPSEnabled) {
+        if (this._secModDb.isFIPSEnabled) {
             var bundle = document.getElementById("bundlePreferences");
             var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                       .getService(Components.interfaces.nsIPromptService);
