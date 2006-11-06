@@ -53,7 +53,7 @@ class nsPIBoxObject : public nsIBoxObject
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIBOXOBJECT_IID)
 
-  virtual void Init(nsIContent* aContent) = 0;
+  virtual nsresult Init(nsIContent* aContent) = 0;
 
   // Drop the weak ref to the content node as needed
   virtual void Clear() = 0;

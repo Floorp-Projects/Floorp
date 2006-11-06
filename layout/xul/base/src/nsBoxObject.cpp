@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBoxObject.h"
+#include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -54,6 +55,9 @@
 #include "nsIDOMXULElement.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsISupportsPrimitives.h"
+#include "prtypes.h"
+#include "nsSupportsPrimitives.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -100,16 +104,17 @@ nsBoxObject::GetElement(nsIDOMElement** aResult)
 
 // nsPIBoxObject //////////////////////////////////////////////////////////////////////////
 
-void
+nsresult
 nsBoxObject::Init(nsIContent* aContent)
 {
   mContent = aContent;
+  return NS_OK;
 }
 
 void
 nsBoxObject::Clear()
 {
-  mPresState = nsnull;
+  mPropertyTable = nsnull;
   mContent = nsnull;
 }
 
@@ -346,13 +351,12 @@ NS_IMETHODIMP
 nsBoxObject::GetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports** aResult)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
-  if (!mPresState) {
+  if (!mPropertyTable) {
     *aResult = nsnull;
     return NS_OK;
   }
-
   nsDependentString propertyName(aPropertyName);
-  return mPresState->GetStatePropertyAsSupports(propertyName, aResult); // Addref here.
+  return mPropertyTable->Get(propertyName, aResult); // Addref here.
 }
 
 NS_IMETHODIMP
@@ -368,33 +372,36 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
                  "exploit you");
   }
 #endif
-
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
   
-  if (!mPresState) {
-    NS_NewPresState(getter_Transfers(mPresState));
-    NS_ENSURE_TRUE(mPresState, NS_ERROR_OUT_OF_MEMORY);
+  if (!mPropertyTable) {  
+    mPropertyTable = new nsInterfaceHashtable<nsStringHashKey,nsISupports>;  
+    if (!mPropertyTable) return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(mPropertyTable->Init(8))) {
+       mPropertyTable = nsnull;
+       return NS_ERROR_FAILURE;
+    }
   }
 
   nsDependentString propertyName(aPropertyName);
-  return mPresState->SetStatePropertyAsSupports(propertyName, aValue);
+  return mPropertyTable->Put(propertyName, aValue);
 }
 
 NS_IMETHODIMP
 nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
 {
-  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
-  
-  if (!mPresState) {
+  nsCOMPtr<nsISupports> data;
+  if (NS_FAILED(GetPropertyAsSupports(aPropertyName,getter_AddRefs(data)))) {
     *aResult = nsnull;
     return NS_OK;
   }
 
-  nsDependentString propertyName(aPropertyName);
-  nsAutoString result;
-  nsresult rv = mPresState->GetStateProperty(propertyName, result);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsISupportsString> supportsStr = do_QueryInterface(data);
+  if (!supportsStr) 
+    return NS_ERROR_FAILURE;
+  nsAutoString result;  
+  supportsStr->GetData(result);
+
   *aResult = result.IsVoid() ? nsnull : ToNewUnicode(result);
   return NS_OK;
 }
@@ -403,10 +410,7 @@ NS_IMETHODIMP
 nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPropertyValue)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
-  if (!mPresState) {
-    NS_NewPresState(getter_Transfers(mPresState));
-    NS_ENSURE_TRUE(mPresState, NS_ERROR_OUT_OF_MEMORY);
-  }
+
   nsDependentString propertyName(aPropertyName);
   nsDependentString propertyValue;
   if (aPropertyValue) {
@@ -414,18 +418,24 @@ nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPrope
   } else {
     propertyValue.SetIsVoid(PR_TRUE);
   }
-  return mPresState->SetStateProperty(propertyName, propertyValue);
+  
+  nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
+  supportsStr->SetData(propertyValue);
+
+  return SetPropertyAsSupports(aPropertyName,supportsStr);
 }
 
 NS_IMETHODIMP
 nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
-  if (!mPresState)
-    return NS_OK;
+
+  if (!mPropertyTable) return NS_OK;
 
   nsDependentString propertyName(aPropertyName);
-  return mPresState->RemoveStateProperty(propertyName);
+  mPropertyTable->Remove(propertyName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
