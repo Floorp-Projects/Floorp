@@ -6,12 +6,9 @@ http://www.intertwingly.net/blog/2006/10/03/Firefox-XHTML-innerHTML-quirk#commen
 https://bugzilla.mozilla.org/show_bug.cgi?id=339350
 -->
 <head>
-  <!-- XHTML needs explicit script elements -->
-  <script type="text/javascript" src="../MochiKit/Base.js"></script>
-  <script type="text/javascript" src="../MochiKit/Iter.js"></script>
-  <script type="text/javascript" src="../MochiKit/DOM.js"></script>
-  <script type="text/javascript" src="../MochiKit/Style.js"></script>
-  <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+  <!-- XHTML needs the packed version -->
+  <script type="text/javascript" src="../MochiKit/packed.js"/>      
+  <script type="text/javascript" src="SimpleTest/SimpleTest.js"/>   
   <link rel="stylesheet" type="text/css" href="SimpleTest/test.css" />
 </head>
 <body>
