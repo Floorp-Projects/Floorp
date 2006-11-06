@@ -1,9 +1,10 @@
 //get prefInt services
 
 var availCharsetDict     = [];
-var prefInt              = null; //Preferences Interface
+var prefBranch           = null; //Preferences Interface
 var pref_string_title    = "";
 var pref_string_content  = "";
+var pref_string_object   = null;
 
 function Init()
 {
@@ -12,10 +13,10 @@ function Init()
   if ("arguments" in window && window.arguments[0])
     applicationArea = window.arguments[0];
 
-  prefInt = Components.classes["@mozilla.org/preferences;1"];
+  prefBranch = Components.classes["@mozilla.org/preferences-service;1"];
 
-  if (prefInt) {
-    prefInt = prefInt.getService(Components.interfaces.nsIPref);
+  if (prefBranch) {
+    prefBranch = prefBranch.getService(Components.interfaces.nsIPrefBranch);
 
     if (applicationArea.indexOf("mail") != -1) {
       pref_string_title = "intl.charsetmenu.mailedit";
@@ -24,7 +25,8 @@ function Init()
       pref_string_title = "intl.charsetmenu.browser.static";
     }
 
-    pref_string_content = prefInt.getLocalizedUnicharPref(pref_string_title);
+    pref_string_object = prefBranch.getComplexValue(pref_string_title, Components.interfaces.nsIPrefLocalizedString)
+    pref_string_content = pref_string_object.data;
 
     AddRemoveLatin1('add');
   }
@@ -244,8 +246,9 @@ function Save()
 
   try
   {
-    if (prefInt) {
-      prefInt.SetCharPref(pref_string_title, pref_string_content);
+    if (prefBranch) {
+      pref_string_object.data = pref_string_content;
+      prefBranch.setComplexValue(pref_string_title, Components.interfaces.nsIPrefLocalizedString, pref_string_object);
       window.close();
     }
   }
