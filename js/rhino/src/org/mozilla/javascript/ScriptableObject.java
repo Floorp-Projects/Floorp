@@ -519,6 +519,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public Object getDefaultValue(Class typeHint)
     {
+        return getDefaultValue(this, typeHint);
+    }
+    
+    public static Object getDefaultValue(Scriptable object, Class typeHint)
+    {
         Context cx = null;
         for (int i=0; i < 2; i++) {
             boolean tryToString;
@@ -568,13 +573,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
                 args[0] = hint;
             }
-            Object v = getProperty(this, methodName);
+            Object v = getProperty(object, methodName);
             if (!(v instanceof Function))
                 continue;
             Function fun = (Function) v;
             if (cx == null)
                 cx = Context.getContext();
-            v = fun.call(cx, fun.getParentScope(), this, args);
+            v = fun.call(cx, fun.getParentScope(), object, args);
             if (v != null) {
                 if (!(v instanceof Scriptable)) {
                     return v;
