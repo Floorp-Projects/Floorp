@@ -106,6 +106,7 @@ public class Global extends ImporterTopLevel
         String[] names = {
             "defineClass",
             "deserialize",
+            "gc",
             "help",
             "load",
             "loadClass",
@@ -147,6 +148,13 @@ public class Global extends ImporterTopLevel
         PrintStream out = getInstance(funObj).getOut();
         out.println(ToolErrorReporter.getMessage("msg.help"));
     }
+
+    public static void gc(Context cx, Scriptable thisObj,
+            Object[] args, Function funObj)
+    {
+        System.gc();
+    }
+
 
     /**
      * Print the string values of its arguments.
