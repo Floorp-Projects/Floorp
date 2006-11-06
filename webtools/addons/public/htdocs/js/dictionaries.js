@@ -23,11 +23,12 @@ function writeCurrentDictionary()
         
     document.write("<div class='corner-box'>Install dictionary");
     if (dict.size)
-        document.write(" (", dict.size, "KB)");
+        document.write(" (", dict.size, " KB)");
     document.write("<div class='install-button'><a href='",
                    dict.link,
-                   "' onclick='return install(event, \"Dictionary: ", prettyName, "\")'><span>", prettyName);
-    document.writeln("</span></a>");
+                   "' onclick='return install(event, \"Dictionary: ", prettyName, "\")'>",
+                   "<span class='install-green-button'><span class='install-button-text'>", prettyName);
+    document.writeln("</span></span></a>");
     document.writeln("</div></div>");       
 }
 
