@@ -1433,6 +1433,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
                                                              action:@selector(setAsDockMenuFolder:)
                                                       keyEquivalent:@""];
       [useAsDockItem setTarget:self];
+      if ([aFolder isDockMenu])
+        [useAsDockItem setState:NSOnState];
       [contextMenu addItem:useAsDockItem];
       [useAsDockItem release];
       

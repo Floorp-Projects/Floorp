@@ -808,6 +808,8 @@ static BookmarkManager* gBookmarkManager = nil;
     menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:[items objectAtIndex:0]];
+    if ([(BookmarkFolder*)[items objectAtIndex:0] isDockMenu])
+      [menuItem setState:NSOnState];
     [contextMenu addItem:menuItem];
   }
   
