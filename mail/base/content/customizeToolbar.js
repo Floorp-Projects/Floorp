@@ -78,8 +78,7 @@ function onUnload(aEvent)
 function onCancel()
 {
   // restore the saved toolbarset for each customizeable toolbar
-
-  // Restore the defaultset for fixed toolbars.
+  unwrapToolbarItems();
   var toolbar = gToolbox.firstChild;
   while (toolbar) {
     if (isCustomizableToolbar(toolbar)) {
