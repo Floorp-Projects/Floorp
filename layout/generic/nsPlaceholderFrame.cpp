@@ -86,7 +86,8 @@ nsPlaceholderFrame::Destroy()
   nsIPresShell* shell = GetPresContext()->GetPresShell();
   if (shell && mOutOfFlowFrame) {
     NS_ASSERTION(!shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame),
-                 "Placeholder relationship should have been torn down");
+                 "Placeholder relationship should have been torn down; see "
+                 "comments in nsPlaceholderFrame.h");
   }
 
   nsSplittableFrame::Destroy();
