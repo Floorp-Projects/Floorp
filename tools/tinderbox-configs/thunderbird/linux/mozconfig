@@ -1,0 +1,24 @@
+#
+## hostname: crazyhorse
+## uname: Linux crazyhorse 2.4.18-14 #1 Wed Sep 4 13:35:50 EDT 2002 i686 i686 i386 GNU/Linux
+#
+
+mk_add_options MOZ_CO_PROJECT=mail
+mk_add_options MOZ_MAKE_FLAGS=-j3
+mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
+
+ac_add_options --enable-application=mail
+ac_add_options --enable-update-channel=nightly
+ac_add_options --disable-debug
+ac_add_options --enable-update-packaging
+ac_add_options --enable-optimize="-O2 -gstabs+"
+ac_add_options --enable-official-branding
+ac_add_options --disable-tests
+# You really don't want this in a depend build.  --dbaron (2005-04-05)
+# ac_add_options --disable-auto-deps
+# ac_add_options --disable-md
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --enable-xft
+ac_add_options --disable-freetype2
+ac_add_options --enable-default-toolkit=gtk2
