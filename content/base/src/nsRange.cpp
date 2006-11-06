@@ -376,6 +376,8 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
  * Private helper routines
  ******************************************************/
 
+static nsINode* IsValidBoundary(nsINode* aNode);
+
 // Get the length of aNode
 static PRInt32 GetNodeLength(nsINode *aNode)
 {
@@ -401,7 +403,9 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   "Set all or none");
   NS_PRECONDITION(!aRoot ||
                   (nsContentUtils::ContentIsDescendantOf(aStartN, aRoot) &&
-                   nsContentUtils::ContentIsDescendantOf(aEndN, aRoot)),
+                   nsContentUtils::ContentIsDescendantOf(aEndN, aRoot) &&
+                   aRoot == IsValidBoundary(aStartN) &&
+                   aRoot == IsValidBoundary(aEndN)),
                   "Wrong root");
   NS_PRECONDITION(!aRoot ||
                   (!aRoot->GetNodeParent() &&
