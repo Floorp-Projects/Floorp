@@ -3916,9 +3916,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         aRenderingContext.GetHints(clusterHint);
         clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
 
-        nscoord foo;
-        aRenderingContext.GetWidth(text, textLength, foo);
-
         if (!iter.IsDone() && iter.First())
         {
           nscoord currentX = dx;
