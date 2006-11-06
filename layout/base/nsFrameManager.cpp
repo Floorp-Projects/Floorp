@@ -129,6 +129,9 @@ PR_STATIC_CALLBACK(const void *)
 PlaceholderMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   PlaceholderMapEntry *entry = NS_STATIC_CAST(PlaceholderMapEntry*, hdr);
+  NS_ASSERTION(entry->placeholderFrame->GetOutOfFlowFrame() !=
+               (void*)0xdddddddd,
+               "Dead placeholder in placeholder map");
   return entry->placeholderFrame->GetOutOfFlowFrame();
 }
 
@@ -138,6 +141,9 @@ PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
 {
   const PlaceholderMapEntry *entry =
     NS_STATIC_CAST(const PlaceholderMapEntry*, hdr);
+  NS_ASSERTION(entry->placeholderFrame->GetOutOfFlowFrame() !=
+               (void*)0xdddddddd,
+               "Dead placeholder in placeholder map");
   return entry->placeholderFrame->GetOutOfFlowFrame() == key;
 }
 

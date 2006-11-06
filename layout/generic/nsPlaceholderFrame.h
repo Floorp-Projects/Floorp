@@ -40,6 +40,37 @@
  * objects such as floats and absolutely positioned elements
  */
 
+/*
+ * Destruction of a placeholder and its out-of-flow must observe the
+ * following constraints:
+ *
+ * - The mapping from the out-of-flow to the placeholder must be
+ *   removed from the frame manager before the placeholder is destroyed.
+ * - The mapping from the out-of-flow to the placeholder must be
+ *   removed from the frame manager before the out-of-flow is destroyed.
+ * - The placeholder must be removed from the frame tree, or have the
+ *   mapping from it to its out-of-flow cleared, before the out-of-flow
+ *   is destroyed (so that the placeholder will not point to a destroyed
+ *   frame while it's in the frame tree).
+ *
+ * Therefore the safe order of teardown is to:
+ *
+ * 1)  Unregister the placeholder from the frame manager.
+ * 2)  Destroy the placeholder
+ * 3)  Destroy the out of flow
+ *
+ * In certain cases it may be possible to replace step (2) with:
+ *
+ * 2') Null out the mOutOfFlowFrame pointer in the placeholder
+ *
+ * and add
+ *
+ * 4) Destroy the placeholder
+ *
+ * but this is somewhat dangerous, since lots of code assumes that
+ * placeholders point to something useful.
+ */
+
 #ifndef nsPlaceholderFrame_h___
 #define nsPlaceholderFrame_h___
 
