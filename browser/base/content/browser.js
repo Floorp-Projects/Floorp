@@ -1854,12 +1854,24 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  if (gBrowser.localName == "tabbrowser" && (gBrowser.tabContainer.childNodes.length > 1 ||
-      !gPrefService.getBoolPref("browser.tabs.autoHide") && window.toolbar.visible)) {
+  // XXXzeniko why do we check for gBrowser's localName (it's rather undefined
+  //           than actually a different element, isn't it)?
+  if (gBrowser.localName == "tabbrowser" &&
+      gBrowser.tabContainer.childNodes.length > 1) {
     // Just close up a tab.
     gBrowser.removeCurrentTab();
     return;
   }
+#ifndef XP_MACOSX
+  if (gBrowser.localName == "tabbrowser" && window.toolbar.visible &&
+      !gPrefService.getBoolPref("browser.tabs.autoHide")) {
+    // Replace the remaining tab with a blank one and focus the address bar
+    gBrowser.removeCurrentTab();
+    if (gURLBar)
+      setTimeout(function() { gURLBar.focus(); }, 0);
+    return;
+  }
+#endif
 
   BrowserCloseWindow();
 }
