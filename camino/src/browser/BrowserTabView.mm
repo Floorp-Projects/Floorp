@@ -327,19 +327,20 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
-  if (overTabViewItem)
-  {
+  if (overTabViewItem) {
     [[overTabViewItem view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
+
+    if (![BrowserWindowController shouldLoadInBackground])
+      [self selectTabViewItem:overTabViewItem];
+
     return YES;
   }
-  else if (overContentArea)
-  {
+  else if (overContentArea) {
     [[[self selectedTabViewItem] view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
     return YES;
   }
-  else
-  {
-    [self addTabForURL:url referrer:nil];
+  else {
+    [self addTabForURL:url referrer:nil inBackground:[BrowserWindowController shouldLoadInBackground]];
     return YES;
   }
   
@@ -457,19 +458,12 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     NSArray* urls;
     NSArray* titles;
     [[sender draggingPasteboard] getURLs:&urls andTitles:&titles];
-    for (unsigned int i = 0; i < [urls count]; ++i) {
-      if (i == 0) {
-        // if we're over the content area, just load the first one
-        if (overContentArea)
-          return [self handleDropOnTab:overTabViewItem overContent:YES withURL:[urls objectAtIndex:i]];
-        // otherwise load the first in the tab, and keep going
-        [self handleDropOnTab:overTabViewItem overContent:NO withURL:[urls objectAtIndex:i]];
-      }
-      else {
-        // for subsequent items, make new tabs
-        [self handleDropOnTab:nil overContent:NO withURL:[urls objectAtIndex:i]];
-      }
-    }
+    // if we're over the content area, just load the first one
+    if (overContentArea)
+      return [self handleDropOnTab:overTabViewItem overContent:YES withURL:[urls objectAtIndex:1]];
+    // otherwise load the first in the tab, and keep going
+    else
+      [[[self window] windowController] openURLArray:urls tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
     return YES;
   }
 
@@ -478,9 +472,9 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 #pragma mark -
 
--(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
+-(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer inBackground:(BOOL)inBackground
 {
-  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES allowPopups:NO setJumpback:NO];
+  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:inBackground allowPopups:NO setJumpback:NO];
 }
 
 #pragma mark -

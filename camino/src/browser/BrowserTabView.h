@@ -65,7 +65,7 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 - (BOOL)barAlwaysVisible;
 - (void)setBarAlwaysVisible:(BOOL)newSetting;
 
-- (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
+- (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer inBackground:(BOOL)inBackground;
 
 - (BOOL)tabsVisible;
 
