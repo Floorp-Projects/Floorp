@@ -1,17 +1,18 @@
 package org.mozilla.javascript;
 
-import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.Policy;
 import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.security.SecureClassLoader;
 import java.util.Map;
-import java.util.Random;
 import java.util.WeakHashMap;
 
+import org.mozilla.classfile.ByteCode;
 import org.mozilla.classfile.ClassFileWriter;
 
 /**
@@ -24,13 +25,17 @@ import org.mozilla.classfile.ClassFileWriter;
  * (or not) that the script source files are signed in whatever 
  * implementation-specific way you're using.
  * @author Attila Szegedi
- * @version $Id: PolicySecurityController.java,v 1.2 2006/09/27 08:51:18 szegedia%freemail.hu Exp $
+ * @version $Id: PolicySecurityController.java,v 1.3 2006/11/06 08:37:07 szegedia%freemail.hu Exp $
  */
 public class PolicySecurityController extends SecurityController
 {
-    // Use weak map, so stuff related to abandoned code sources gets cleaned up
-    // automatically.
-    private static final Map secureCallers = new WeakHashMap();
+    private static final byte[] secureCallerImplBytecode = loadBytecode();
+
+    // We're storing a CodeSource -> (ClassLoader -> SecureRenderer), since we
+    // need to have one renderer per class loader. We're using weak hash maps
+    // and soft references all the way, since we don't want to interfere with
+    // cleanup of either CodeSource or ClassLoader objects.
+    private static final Map callers = new WeakHashMap();
     
     private static class Loader extends SecureClassLoader
     implements GeneratedClassLoader
@@ -54,21 +59,15 @@ public class PolicySecurityController extends SecurityController
         }
     }
     
-    public GeneratedClassLoader createClassLoader(ClassLoader parentLoader, 
-            Object securityDomain)
-    {
-        return createLoader(parentLoader, (CodeSource)securityDomain);
-    }
-
-    private Loader createLoader(
-            final ClassLoader parent, final CodeSource securityDomain)
+    public GeneratedClassLoader createClassLoader(final ClassLoader parent, 
+            final Object securityDomain)
     {
         return (Loader)AccessController.doPrivileged(
             new PrivilegedAction()
             {
                 public Object run()
                 {
-                    return new Loader(parent, securityDomain);
+                    return new Loader(parent, (CodeSource)securityDomain);
                 }
             });
     }
@@ -80,96 +79,101 @@ public class PolicySecurityController extends SecurityController
         return securityDomain;
     }
 
-    public Object callWithDomain(Object securityDomain, Context cx, 
+    public Object callWithDomain(final Object securityDomain, final Context cx, 
             Callable callable, Scriptable scope, Scriptable thisObj, 
             Object[] args)
     {
-        SecureCaller secureCaller;
-        CodeSource codeSource = (CodeSource)securityDomain;
-        ClassLoader appClassLoader = cx.getApplicationClassLoader();
-        DomainKey key = new DomainKey(codeSource, appClassLoader);
-        synchronized(secureCallers)
+        // Run in doPrivileged as we might be checked for "getClassLoader" 
+        // runtime permission
+        final ClassLoader classLoader = (ClassLoader)AccessController.doPrivileged(
+            new PrivilegedAction() {
+                public Object run() {
+                    return cx.getApplicationClassLoader();
+                }
+            });
+        final CodeSource codeSource = (CodeSource)securityDomain;
+        Map classLoaderMap;
+        synchronized(callers)
         {
-            Reference ref = (Reference)secureCallers.get(key);
+            classLoaderMap = (Map)callers.get(codeSource);
+            if(classLoaderMap == null)
+            {
+                classLoaderMap = new WeakHashMap();
+                callers.put(codeSource, classLoaderMap);
+            }
+        }
+        SecureCaller caller;
+        synchronized(classLoaderMap)
+        {
+            SoftReference ref = (SoftReference)classLoaderMap.get(classLoader);
             if(ref != null)
             {
-                secureCaller = (SecureCaller)ref.get();
+                caller = (SecureCaller)ref.get();
             }
             else
             {
-                secureCaller = null;
+                caller = null;
             }
-            if(secureCaller == null)
+            if(caller == null)
             {
-                Loader l = createLoader(appClassLoader, codeSource);
-                String name = SecureCaller.class.getName() + "$Sub" + 
-                // Being a bit paranoid about name clashes - if anyone'd figure
-                // out how to get to the class loader this might become a 
-                // concern
-                Integer.toHexString(key.hashCode()) + "_" + Long.toHexString(
-                        new Random().nextLong());
-                // Just a trivial "class ... extends SecureCaller {}" 
-                // class.
-                ClassFileWriter cfw = new ClassFileWriter(name, 
-                        SecureCaller.class.getName(), "<generated>");
-                Class clazz = l.defineClass(name, cfw.toByteArray());
                 try
                 {
-                    secureCaller = (SecureCaller)clazz.newInstance();
-                    // Using a soft reference, so we don't hold strongly on the
-                    // code source and allow it to get cleaned up eventually.
-                    secureCallers.put(key, new SoftReference(secureCaller));
+                    // Run in doPrivileged as we'll be checked for 
+                    // "createClassLoader" runtime permission
+                    caller = (SecureCaller)AccessController.doPrivileged(
+                            new PrivilegedExceptionAction()
+                    {
+                        public Object run() throws Exception
+                        {
+                            Loader loader = new Loader(classLoader, 
+                                    codeSource);
+                            Class c = loader.defineClass(
+                                    SecureCaller.class.getName() + "Impl", 
+                                    secureCallerImplBytecode);
+                            return c.newInstance();
+                        }
+                    });
                 }
-                catch (InstantiationException e)
+                catch(PrivilegedActionException ex)
                 {
-                    throw new UndeclaredThrowableException(e);
-                }
-                catch (IllegalAccessException e)
-                {
-                    throw new UndeclaredThrowableException(e);
+                    throw new UndeclaredThrowableException(ex.getCause());
                 }
             }
         }
-        return secureCaller.call(callable, cx, scope, thisObj, args);
+        return caller.call(callable, cx, scope, thisObj, args);
     }
     
-    public static class SecureCaller
+    public abstract static class SecureCaller
     {
-        public Object call(Callable callable, Context cx, Scriptable scope, 
-                Scriptable thisObj, Object[] args)
-        {
-            return callable.call(cx, scope, thisObj, args);
-        }
+        public abstract Object call(Callable callable, Context cx, Scriptable scope, 
+                Scriptable thisObj, Object[] args);
     }
     
-    private static final class DomainKey
+    
+    private static byte[] loadBytecode()
     {
-        private final CodeSource codeSource;
-        private final ClassLoader appClassLoader;
+        String secureCallerClassName = SecureCaller.class.getName();
+        ClassFileWriter cfw = new ClassFileWriter(
+                secureCallerClassName + "Impl", secureCallerClassName, 
+                "<generated>");
+        String callableCallSig = 
+            "Lorg/mozilla/javascript/Context;" +
+            "Lorg/mozilla/javascript/Scriptable;" +
+            "Lorg/mozilla/javascript/Scriptable;" +
+            "[Ljava/lang/Object;)Ljava/lang/Object;";
         
-        DomainKey(CodeSource codeSource, ClassLoader appClassLoader)
-        {
-            this.codeSource = codeSource;
-            if(codeSource == null)
-            {
-                throw new IllegalArgumentException("codeSource == null");
-            }
-            this.appClassLoader = appClassLoader;
+        cfw.startMethod("call",
+                "(Lorg/mozilla/javascript/Callable;" + callableCallSig,
+                (short)(ClassFileWriter.ACC_PUBLIC
+                        | ClassFileWriter.ACC_FINAL));
+        for(int i = 1; i < 6; ++i) {
+            cfw.addALoad(i);
         }
-        
-        public boolean equals(Object obj)
-        {
-            if(obj == null || obj.getClass() != DomainKey.class)
-            {
-                return false;
-            }
-            DomainKey other = (DomainKey)obj;
-            return codeSource.equals(other.codeSource) && appClassLoader == other.appClassLoader;
-        }
-        
-        public int hashCode()
-        {
-            return codeSource.hashCode() ^ System.identityHashCode(appClassLoader);
-        }
+        cfw.addInvoke(ByteCode.INVOKEINTERFACE, 
+                "org/mozilla/javascript/Callable", "call", 
+                "(" + callableCallSig);
+        cfw.add(ByteCode.ARETURN);
+        cfw.stopMethod((short)6);
+        return cfw.toByteArray();
     }
 }
