@@ -48,6 +48,7 @@ ALL_LOCALES = \
 	en-US \
 	fr \
 	pl \
+	sv-SE \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

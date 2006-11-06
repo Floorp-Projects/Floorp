@@ -12,6 +12,10 @@
 
 <!ENTITY mnFile.label "Arkiv">
 <!ENTITY mnFile.accesskey "A">
+<!ENTITY mnInspectContentDocument.label "Inspektera Content-dokument">
+<!ENTITY mnInspectContentDocument.accesskey "C">
+<!ENTITY mnInspectChromeDocument.label "Inspektera Chrome-dokument">
+<!ENTITY mnInspectChromeDocument.accesskey "h">
 <!ENTITY cmdShowOpenURLDialog.label "Inspektera en URL...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "u">
 <!ENTITY cmdClose.label "Stäng">

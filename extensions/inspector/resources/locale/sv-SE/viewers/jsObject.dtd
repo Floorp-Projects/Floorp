@@ -20,7 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Hasse Wallanger <jasajudeju@telia.com>
+   -   Hasse Wallanger <hasse@jasajudeju.se>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,6 +43,9 @@
 <!ENTITY jsProperty.label "Egenskap">
 <!ENTITY jsValue.label "Värde">
 
-<!ENTITY jsEval.desc "Skriv in ett JavaScript-uttryck.  Variabeln &quot;target&quot; är för närvarande det valda objektet. Varje värde som du stoppar in visas i objektsvisaren">
-
+<!ENTITY evaluateDialog.title "Utvärdera uttryck">
+<!ENTITY jsEval.desc "Skriv in ett JavaScript-uttryck.  Variabeln ”target” är för närvarande det valda objektet.">
 <!ENTITY jsExecute.label "Kör">
+<!ENTITY inspectReturn.label "Inspektera återgång i">
+<!ENTITY inspectReturnNew.label "Nytt fönster">
+<!ENTITY inspectReturnExisting.label "Befintligt fönster">
