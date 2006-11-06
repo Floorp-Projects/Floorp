@@ -593,7 +593,7 @@ public:
     return FlushText(aDidFlush, PR_TRUE);
   }
 
-  nsresult FlushTags(PRBool aNotify);
+  nsresult FlushTags();
 
   PRBool   IsCurrentContainer(nsHTMLTag mType);
   PRBool   IsAncestorContainer(nsHTMLTag mType);
@@ -977,7 +977,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Notification as a result of the "
                 "interval expiring; backoff count: %d", mSink->mBackoffCount));
-    FlushTags(PR_TRUE);
+    FlushTags();
   }
 }
 
@@ -1582,64 +1582,62 @@ SinkContext::AddText(const nsAString& aText)
  * has been newly added so that the frame tree is complete.
  */
 nsresult
-SinkContext::FlushTags(PRBool aNotify)
+SinkContext::FlushTags()
 {
+  ++(mSink->mInNotification);
+  mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
+                               PR_TRUE);
+
   // Don't release last text node in case we need to add to it again
   FlushText();
 
-  if (aNotify) {
-    ++(mSink->mInNotification);
-    mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
-                                 PR_TRUE);
+  // Start from the base of the stack (growing downward) and do
+  // a notification from the node that is closest to the root of
+  // tree for any content that has been added.
 
-    // Start from the base of the stack (growing downward) and do
-    // a notification from the node that is closest to the root of
-    // tree for any content that has been added.
+  // Note that we can start at stackPos == 0 here, because it's the caller's
+  // responsibility to handle flushing interactions between contexts (see
+  // HTMLContentSink::BeginContext).
+  PRInt32 stackPos = 0;
+  PRBool flushed = PR_FALSE;
+  PRUint32 childCount;
+  nsGenericHTMLElement* content;
 
-    // Note that we can start at stackPos == 0 here, because it's the caller's
-    // responsibility to handle flushing interactions between contexts (see
-    // HTMLContentSink::BeginContext).
-    PRInt32 stackPos = 0;
-    PRBool flushed = PR_FALSE;
-    PRUint32 childCount;
-    nsGenericHTMLElement* content;
+  while (stackPos < mStackPos) {
+    content = mStack[stackPos].mContent;
+    childCount = content->GetChildCount();
 
-    while (stackPos < mStackPos) {
-      content = mStack[stackPos].mContent;
-      childCount = content->GetChildCount();
-
-      if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
+    if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
-        {
-          // Tracing code
-          const char* tagStr;
-          mStack[stackPos].mContent->Tag()->GetUTF8String(&tagStr);
+      {
+        // Tracing code
+        const char* tagStr;
+        mStack[stackPos].mContent->Tag()->GetUTF8String(&tagStr);
 
-          SINK_TRACE(SINK_TRACE_REFLOW,
-                     ("SinkContext::FlushTags: tag=%s from newindex=%d at "
-                      "stackPos=%d", tagStr,
-                      mStack[stackPos].mNumFlushed, stackPos));
-        }
+        SINK_TRACE(SINK_TRACE_REFLOW,
+                   ("SinkContext::FlushTags: tag=%s from newindex=%d at "
+                    "stackPos=%d", tagStr,
+                    mStack[stackPos].mNumFlushed, stackPos));
+      }
 #endif
-        if ((mStack[stackPos].mInsertionPoint != -1) &&
-            (mStackPos > (stackPos + 1))) {
-          nsIContent* child = mStack[stackPos + 1].mContent;
-          mSink->NotifyInsert(content,
-                              child,
-                              mStack[stackPos].mInsertionPoint);
-        } else {
-          mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
-        }
-
-        flushed = PR_TRUE;
+      if ((mStack[stackPos].mInsertionPoint != -1) &&
+          (mStackPos > (stackPos + 1))) {
+        nsIContent* child = mStack[stackPos + 1].mContent;
+        mSink->NotifyInsert(content,
+                            child,
+                            mStack[stackPos].mInsertionPoint);
+      } else {
+        mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
       }
 
-      mStack[stackPos].mNumFlushed = childCount;
-      stackPos++;
+      flushed = PR_TRUE;
     }
-    mNotifyLevel = mStackPos - 1;
-    --(mSink->mInNotification);
+
+    mStack[stackPos].mNumFlushed = childCount;
+    stackPos++;
   }
+  mNotifyLevel = mStackPos - 1;
+  --(mSink->mInNotification);
 
   return NS_OK;
 }
@@ -2127,7 +2125,7 @@ HTMLContentSink::DidBuildModel(void)
   if (mBody || mFrameset) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
-    mCurrentContext->FlushTags(PR_TRUE);
+    mCurrentContext->FlushTags();
   } else if (!mLayoutStarted) {
     // We never saw the body, and layout never got started. Force
     // layout *now*, to get an initial reflow.
@@ -2233,7 +2231,7 @@ HTMLContentSink::Notify(nsITimer *timer)
 #endif
 
   if (mCurrentContext) {
-    mCurrentContext->FlushTags(PR_TRUE);
+    mCurrentContext->FlushTags();
   }
 
   // Now try and scroll to the reference
@@ -2267,7 +2265,7 @@ HTMLContentSink::WillInterrupt()
         SINK_TRACE(SINK_TRACE_REFLOW,
                  ("HTMLContentSink::WillInterrupt: flushing tags since we've "
                   "run out time; backoff count: %d", mBackoffCount));
-        result = mCurrentContext->FlushTags(PR_TRUE);
+        result = mCurrentContext->FlushTags();
         if (mFlags & NS_SINK_FLAG_DROPPED_TIMER) {
           TryToScrollToRef();
           mFlags &= ~NS_SINK_FLAG_DROPPED_TIMER;
@@ -2300,7 +2298,7 @@ HTMLContentSink::WillInterrupt()
                ("HTMLContentSink::WillInterrupt: flushing tags "
                 "unconditionally"));
 
-    result = mCurrentContext->FlushTags(PR_TRUE);
+    result = mCurrentContext->FlushTags();
   }
 #endif
 
@@ -2356,7 +2354,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 
   // Flush everything in the current context so that we don't have
   // to worry about insertions resulting in inconsistent frame creation.
-  mCurrentContext->FlushTags(PR_TRUE);
+  mCurrentContext->FlushTags();
 
   // Sanity check.
   if (mCurrentContext->mStackPos <= aPosition) {
@@ -2573,7 +2571,7 @@ HTMLContentSink::CloseBody()
   SINK_TRACE(SINK_TRACE_REFLOW,
              ("HTMLContentSink::CloseBody: layout final body content"));
 
-  mCurrentContext->FlushTags(PR_TRUE);
+  mCurrentContext->FlushTags();
   mCurrentContext->CloseContainer(eHTMLTag_body, PR_FALSE);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseBody()\n"));
@@ -2733,7 +2731,7 @@ HTMLContentSink::CloseFrameset()
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::CloseFrameset: layout final content"));
 
-    sc->FlushTags(PR_TRUE);
+    sc->FlushTags();
   }
 
   rv = sc->CloseContainer(eHTMLTag_frameset, PR_FALSE);    
@@ -3431,7 +3429,7 @@ HTMLContentSink::OpenHeadContext()
   // PERF: This call causes approximately a 2% slowdown in page load time
   // according to jrgm's page load tests, but seems to be a necessary evil
   if (mCurrentContext && (mCurrentContext != mHeadContext)) {
-    mCurrentContext->FlushTags(PR_TRUE);
+    mCurrentContext->FlushTags();
   }
 
   if (!mHeadContext) {
@@ -3586,7 +3584,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 void
 HTMLContentSink::ForceReflow()
 {
-  mCurrentContext->FlushTags(PR_TRUE);
+  mCurrentContext->FlushTags();
 }
 #endif
 
@@ -3712,7 +3710,7 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
                "Weird update type bitmask");
   if (aUpdateType != UPDATE_CONTENT_STATE && !mInNotification++ &&
       mCurrentContext) {
-    mCurrentContext->FlushTags(PR_TRUE);
+    mCurrentContext->FlushTags();
   }
 }
 
@@ -3744,7 +3742,8 @@ HTMLContentSink::PreEvaluateScript()
              ("HTMLContentSink::PreEvaluateScript: flushing tags before "
               "evaluating script"));
 
-  mCurrentContext->FlushTags(PR_FALSE);
+  // XXX Should this call FlushTags()?
+  mCurrentContext->FlushText();
 }
 
 void
@@ -3765,7 +3764,8 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
   // It would however be needed if we properly called BeginUpdate and
   // EndUpdate while we were inserting stuff into the DOM.
 
-  mCurrentContext->FlushTags(PR_FALSE);
+  // XXX Should this call FlushTags()?
+  mCurrentContext->FlushText();
 
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
   NS_ASSERTION(sele, "Not really closing a script tag?");
@@ -3839,8 +3839,12 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
   if (mCurrentContext && !mInNotification) {
-    PRBool notify = ((aType & Flush_SinkNotifications) != 0);
-    mCurrentContext->FlushTags(notify);
+    if (aType & Flush_SinkNotifications) {
+      mCurrentContext->FlushTags();
+    }
+    else {
+      mCurrentContext->FlushText();
+    }
     if (aType & Flush_OnlyReflow) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
