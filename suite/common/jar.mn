@@ -6,6 +6,7 @@ comm.jar:
 % overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/permissionsNavigatorOverlay.xul
 % overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/cookieTasksOverlay.xul
 % overlay chrome://global/content/console.xul chrome://communicator/content/consoleOverlay.xul
+% overlay chrome://help/content/help.xul chrome://communicator/content/helpOverlay.xul
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://communicator/content/emOverlay.xul
 % overlay chrome://communicator/content/pref/preftree.xul chrome://pippki/content/PrefOverlay.xul
 % overlay chrome://pippki/content/certManager.xul chrome://communicator/content/helpSecurityOverlay.xul
@@ -50,6 +51,8 @@ comm.jar:
    content/communicator/emOverlay.xul
    content/communicator/findUtils.js
    content/communicator/helpSecurityOverlay.xul
+   content/communicator/helpOverlay.js
+   content/communicator/helpOverlay.xul
    content/communicator/nsContextMenu.js
    content/communicator/openLocation.js
    content/communicator/openLocation.xul

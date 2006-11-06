@@ -6,8 +6,6 @@
 
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
 <!ENTITY % platformCommunicatorDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
 %platformCommunicatorDTD;
 <!ENTITY % utilityDTD SYSTEM "chrome://communicator/locale/utilityOverlay.dtd">
@@ -322,7 +320,7 @@
       <menuitem accesskey="&releaseCmd.accesskey;"
                 label="&releaseCmd.label;"
                 id="releaseUrl"
-                oncommand="openTopWin('&releaseURL;');"/>
+                oncommand="goReleaseNotes();"/>
 
       <menuseparator id="menu_HelpAboutSeparator"/>
 

@@ -88,6 +88,6 @@ p:first-child { padding-top: 0; margin-top: 0; }
 	list-style-type: none;
 }
 
-a[href^="http://"]:after, a[href^="https://"]:after {
+a[href^="http://"]:after, a[href^="https://"]:after, a[href^="x-moz-url-link:"]:after {
 	content: url("images/web-links.png");
 }

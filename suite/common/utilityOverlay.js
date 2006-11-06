@@ -371,6 +371,17 @@ function goAboutDialog()
     window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'about:' );
 }
 
+function goReleaseNotes()
+{
+  // get release notes URL from prefs
+  try {
+    var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                              .getService(Components.interfaces.nsIURLFormatter);
+    openTopWin(formatter.formatURLPref("app.releaseNotesURL"));
+  }
+  catch (ex) { dump(ex); }
+}
+
 // update menu items that rely on focus
 function goUpdateGlobalEditMenuItems()
 {
