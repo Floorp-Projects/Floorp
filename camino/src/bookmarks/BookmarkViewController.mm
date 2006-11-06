@@ -291,6 +291,10 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   [self ensureBookmarks];
 
+  // set a formatter on the keyword column
+  BookmarkKeywordFormatter* keywordFormatter = [[[BookmarkKeywordFormatter alloc] init] autorelease];
+  [[[mBookmarksOutlineView tableColumnWithIdentifier:@"keyword"] dataCell] setFormatter:keywordFormatter];
+
   // these should be settable in the nib.  however, whenever
   // I try, they disappear as soon as I've saved.  Very annoying.
   [mContainersTableView setAutosaveName:@"BMContainerView"];

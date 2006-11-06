@@ -69,6 +69,12 @@ enum
   kBookmarkItemEverythingChangedMask    = 0xFFFFFFFE
 };
 
+// A formatter for keyword entry fields that prevents whitespace in keywords, since
+// keywords with whitespace don't work.
+@interface BookmarkKeywordFormatter : NSFormatter
+{
+}
+@end
 
 @interface BookmarkItem : NSObject <NSCopying>
 {

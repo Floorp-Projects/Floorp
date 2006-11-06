@@ -87,6 +87,31 @@ NSString* const CaminoBookmarkKey = @"bookmark";
 NSString* const CaminoFolderKey = @"folder";
 NSString* const CaminoTrueKey = @"true";
 
+@implementation BookmarkKeywordFormatter
+
+- (NSString *)stringForObjectValue:(id)anObject
+{
+  return anObject;
+}
+
+- (BOOL)getObjectValue:(id *)anObject forString:(NSString *)string errorDescription:(NSString **)error
+{
+  *anObject = string;
+  return YES;
+}
+
+- (BOOL)isPartialStringValid:(NSString *)partialString newEditingString:(NSString **)newString errorDescription:(NSString **)error
+{
+  if ([partialString rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]].location != NSNotFound) {
+    *newString = [partialString stringByRemovingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    return NO;
+  }
+  return YES;
+}
+
+@end
+
+#pragma mark -
 
 @implementation BookmarkItem
 

@@ -102,6 +102,8 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
 {
   [self setShouldCascadeWindows:NO];
   [[self window] setFrameAutosaveName:@"BookmarkInfoWindow"];
+  [mBookmarkKeywordField setFormatter:[[[BookmarkKeywordFormatter alloc] init] autorelease]];
+  [mFolderKeywordField setFormatter:[[[BookmarkKeywordFormatter alloc] init] autorelease]];
 }
 
 - (void)windowDidLoad
