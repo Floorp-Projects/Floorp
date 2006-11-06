@@ -3922,7 +3922,8 @@ function __display(message, msgtype, sourceObj, destObj)
 
     // Statusbar text, and the line that gets saved to the log.
     var statusString;
-    var logString = timeStamp + " ";
+    var logStringPfx = timeStamp + " ";
+    var logStrings = new Array();
 
     if (fromUser)
     {
@@ -4035,7 +4036,7 @@ function __display(message, msgtype, sourceObj, destObj)
             }
         }
         // Log the nickname in the same format as we'll let the user copy.
-        logString += decorSt + nick + decorEn + " ";
+        logStringPfx += decorSt + nick + decorEn + " ";
 
         // Mark makes alternate "talkers" show up in different shades.
         //if (!("mark" in this))
@@ -4096,7 +4097,7 @@ function __display(message, msgtype, sourceObj, destObj)
         msgRowType.setAttribute("class", "msg-type");
 
         msgRowType.appendChild(newInlineText(code));
-        logString += code + " ";
+        logStringPfx += code + " ";
     }
 
     if (message)
@@ -4105,16 +4106,19 @@ function __display(message, msgtype, sourceObj, destObj)
                                            "html:td");
         msgRowData.setAttribute("class", "msg-data");
 
+        var tmpMsgs = message;
         if (typeof message == "string")
         {
             msgRowData.appendChild(stringToMsg(message, this));
-            logString += message;
         }
         else
         {
             msgRowData.appendChild(message);
-            logString += message.innerHTML.replace(/<[^<]*>/g, "");
+            tmpMsgs = tmpMsgs.innerHTML.replace(/<[^<]*>/g, "");
         }
+        tmpMsgs = tmpMsgs.split(/\r?\n/);
+        for (var l = 0; l < tmpMsgs.length; l++)
+            logStrings[l] = logStringPfx + tmpMsgs[l];
     }
 
     if ("mark" in this)
@@ -4197,7 +4201,9 @@ function __display(message, msgtype, sourceObj, destObj)
 
         try
         {
-            this.logFile.write(fromUnicode(logString + client.lineEnd, "utf-8"));
+            var LE = client.lineEnd;
+            for (var l = 0; l < logStrings.length; l++)
+                this.logFile.write(fromUnicode(logStrings[l] + LE, "utf-8"));
         }
         catch (ex)
         {
