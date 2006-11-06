@@ -6,7 +6,7 @@ ac_add_options --enable-application=camino
 # overridden easily enough.
 case `/usr/bin/uname -p` in
   powerpc*)
-    ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
+    ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
     ;;
   i*86*)
     ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
