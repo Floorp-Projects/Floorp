@@ -49,10 +49,10 @@
 </broadcasterset>
 
 <commandset id="calendar_commands">
-  <command id="new_command" oncommand="newEvent()"/>
+  <command id="new_command" oncommand="createEventWithDialog()"/>
   <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="modify_command" oncommand="editEvent()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="modify_command" oncommand="modifyEventWithDialog(getSelectedItems()[0])" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="print_command" oncommand="calPrint()"/>
@@ -64,7 +64,7 @@
   <command id="paste_command" oncommand="pasteFromClipboard()"/>
   <command id="select_all_command" oncommand="selectAllEvents()"/>
 
-  <command id="new_todo_command" oncommand="newToDo()"/>
+  <command id="new_todo_command" oncommand="createTodoWithDialog()"/>
   <command id="modify_todo_command" oncommand="editToDo()"/>
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 

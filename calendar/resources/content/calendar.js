@@ -177,7 +177,7 @@ function handleCommandLine(aComLine) {
 
 /* Called at midnight to tell us to update the views and other ui bits */
 function refreshUIBits() {
-    gCalendarWindow.currentView.hiliteTodaysDate();
+    currentView().goToDay(now());
     refreshEventTree();
 
     // and schedule again...
@@ -252,67 +252,6 @@ function deleteCalendar(event)
     }
 }
 
-/** 
-* Defaults null start/end date based on selected date in current view.
-* Defaults calendarFile to the selected calendar file.
-* Calls editNewEvent. 
-*/
-
-function newEvent(startDate, endDate, allDay)
-{
-   // create a new event to be edited and added
-   var calendarEvent = createEvent();
-
-   if (!startDate) {
-       startDate = gCalendarWindow.currentView.getNewEventDate();
-   }
-
-   calendarEvent.startDate.jsDate = startDate;
-
-   if (!endDate) {
-       var pb2 = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch2);
-       var MinutesToAddOn = pb2.getIntPref("calendar.event.defaultlength");
-       
-       endDate = new Date(startDate);
-       endDate.setMinutes(endDate.getMinutes() + MinutesToAddOn);
-   }
-
-   calendarEvent.endDate.jsDate = endDate
-
-   setDefaultAlarmValues(calendarEvent);
-
-   if (allDay)
-       calendarEvent.startDate.isDate = true;
-
-   var calendar = getSelectedCalendarOrNull();
-
-   createEventWithDialog(calendar, null, null, null, calendarEvent);
-}
-
-/*
-* Defaults null start/due date to the no_date date.
-* Defaults calendarFile to the selected calendar file.
-* Calls editNewToDo.
-*/
-function newToDo ( startDate, dueDate ) 
-{
-    var calendarToDo = createToDo();
-   
-    // created todo has no start or due date unless user wants one
-    if (startDate) 
-        calendarToDo.entryDate = jsDateToDateTime(startDate);
-
-    if (dueDate)
-        calendarToDo.dueDate = jsDateToDateTime(startDate);
-
-    setDefaultAlarmValues(calendarToDo);
-
-    var calendar = getSelectedCalendarOrNull();
-    
-    createTodoWithDialog(calendar, null, null, calendarToDo);
-}
-
 /**
  * Get the default calendar selected in the calendars tab.
  * Returns a calICalendar object, or null if none selected.
@@ -325,30 +264,6 @@ function getSelectedCalendarOrNull()
      return selectedCalendarItem.calendar;
    else
      return null;
-}
-
-/**
-*  This is called from the unifinder's edit command
-*/
-
-function editEvent(aEvent)
-{
-    if (aEvent) {
-        modifyEventWithDialog(aEvent);
-        return;
-    }
-
-    if (gXXXEvilHackSavedSelection.length == 1) {
-        modifyEventWithDialog(
-            getOccurrenceOrParent(gXXXEvilHackSavedSelection[0]));
-    }
-}
-
-function editToDo(task) {
-    if (!task)
-        return;
-
-    modifyEventWithDialog(getOccurrenceOrParent(task));
 }
 
 /**

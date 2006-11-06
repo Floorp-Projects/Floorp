@@ -259,9 +259,9 @@ function modifyToDoCommand( event )
    var ThisToDo = getToDoFromEvent( event );
    
    if( ThisToDo )
-      editToDo( ThisToDo );
+      modifyEventWithDialog(ThisToDo);
    else
-     newToDo();
+     createTodoWithDialog();
 }
 
 /**
@@ -660,7 +660,7 @@ function contextChangePriority( event, Priority )
 function modifyTaskFromContext() {
    var task = document.getElementById( ToDoUnifinderTreeName ).taskView.contextTask;
    if(task)
-       editToDo(task);
+       createTodoWithDialog(task);
 }
 
 function changeContextMenuForToDo(event)

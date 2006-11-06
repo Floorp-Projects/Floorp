@@ -55,7 +55,7 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
     event = createEvent();
 
     if (!startDate) {
-        startDate = jsDateToDateTime(new Date());
+        startDate = currentView().selectedDay.clone();
         startDate.second = 0;
         startDate.normalize();
     } else if (startDate.isDate) {
@@ -91,6 +91,9 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
 
     if (calendar) {
         event.calendar = calendar;
+    } else if ("getSelectedCalendarOrNull" in window) {
+        // Sunbird specific code
+        event.calendar = getSelectedCalendarOrNull();
     }
 
     if (summary)
@@ -118,6 +121,9 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
 
     if (calendar) {
         todo.calendar = calendar;
+    } else if ("getSelectedCalendarOrNull" in window) {
+        // Sunbird specific code
+        todo.calendar = getSelectedCalendarOrNull();
     }
 
     if (summary)

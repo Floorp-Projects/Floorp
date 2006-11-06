@@ -312,9 +312,9 @@ function unifinderDoubleClickEvent( event )
    var calendarEvent = getCalendarEventFromEvent( event );
    
    if( calendarEvent != null )
-      editEvent(calendarEvent);
+      modifyEventWithDialog(calendarEvent);
    else
-      newEvent();
+      createEventWithDialog();
 }
 
 
@@ -807,7 +807,7 @@ function unifinderKeyPress(aEvent) {
     switch (aEvent.keyCode) {
         case 13:
             // Enter, edit the event
-            editEvent();
+            modifyEventWithDialog(getSelectedItems()[0]);
             break;
         case kKE.DOM_VK_BACK_SPACE:
         case kKE.DOM_VK_DELETE:
