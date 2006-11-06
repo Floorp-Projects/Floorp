@@ -2364,7 +2364,17 @@ enum BWCOpenDest {
   NSString* selection = [[mBrowserView getBrowserView] getSelection];
   [mSearchBar becomeFirstResponder];
   [mSearchBar setStringValue:selection];
-  [self performSearch:mSearchBar];
+  
+  unsigned int modifiers = [[NSApp currentEvent] modifierFlags];
+
+  // do search in a new window/tab if Command is held down
+  if (modifiers & NSCommandKeyMask) {
+    BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+    BWCOpenDest destination = loadInTab ? kDestinationNewTab : kDestinationNewWindow;
+    [self performSearch:mSearchBar inView:destination inBackground:[BrowserWindowController shouldLoadInBackground]];
+  }
+  else
+    [self performSearch:mSearchBar];
 }
 
 //
