@@ -1381,12 +1381,36 @@ static JSBool
 obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
                   void *closure)
 {
+    JSObject *funobj;
+    JSRuntime *rt;
+    JSStackFrame *caller;
+    JSPrincipals *subject, *watcher;
     JSResolvingKey key;
     JSResolvingEntry *entry;
     uint32 generation;
-    JSObject *funobj;
     jsval argv[3];
     JSBool ok;
+
+    funobj = (JSObject *) closure;
+
+    rt = cx->runtime;
+    if (rt->findObjectPrincipals) {
+        /* Skip over any obj_watch_* frames between us and the real subject. */
+        caller = JS_GetScriptedCaller(cx, cx->fp);
+        if (caller) {
+            /*
+             * Only call the watch handler if the watcher is allowed to watch
+             * the currently executing script.
+             */
+            watcher = rt->findObjectPrincipals(cx, funobj);
+            subject = JS_StackFramePrincipals(cx, caller);
+
+            if (watcher && subject && !watcher->subsume(watcher, subject)) {
+                /* Silently don't call the watch handler. */
+                return JS_TRUE;
+            }
+        }
+    }
 
     /* Avoid recursion on (obj, id) already being watched on cx. */
     key.obj = obj;
@@ -1397,7 +1421,6 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
         return JS_TRUE;
     generation = cx->resolvingTable->generation;
 
-    funobj = (JSObject *) closure;
     argv[0] = id;
     argv[1] = old;
     argv[2] = *nvp;
