@@ -578,15 +578,7 @@ MochiKit.Base.update(MochiKit.Signal, {
         };
     },
 
-    /** @id MochiKit.Signal.connect */
-    connect: function (src, sig, objOrFunc/* optional */, funcOrStr) {
-        src = MochiKit.DOM.getElement(src);
-        var self = MochiKit.Signal;
-
-        if (typeof(sig) != 'string') {
-            throw new Error("'sig' must be a string");
-        }
-
+    _getDestPair: function (objOrFunc, funcOrStr) {
         var obj = null;
         var func = null;
         if (typeof(funcOrStr) != 'undefined') {
@@ -604,6 +596,22 @@ MochiKit.Base.update(MochiKit.Signal, {
         } else {
             func = objOrFunc;
         }
+        return [obj, func];
+
+    },
+
+    /** @id MochiKit.Signal.connect */
+    connect: function (src, sig, objOrFunc/* optional */, funcOrStr) {
+        src = MochiKit.DOM.getElement(src);
+        var self = MochiKit.Signal;
+
+        if (typeof(sig) != 'string') {
+            throw new Error("'sig' must be a string");
+        }
+
+        var destPair = self._getDestPair(objOrFunc, funcOrStr);
+        var obj = destPair[0];
+        var func = destPair[1];
         if (typeof(obj) == 'undefined' || obj === null) {
             obj = src;
         }
@@ -631,15 +639,21 @@ MochiKit.Base.update(MochiKit.Signal, {
         self._observers.push(ident);
 
 
+        if (!isDOM && typeof(src.__connect__) == 'function') {
+            var args = MochiKit.Base.extend([ident], arguments, 1);
+            src.__connect__.apply(src, args);
+        }
+
+
         return ident;
     },
 
     _disconnect: function (ident) {
-        // check isDOM
-        if (!ident[3]) { return; }
         // already disconnected
         if (!ident[6]) { return; }
         ident[6] = false;
+        // check isDOM
+        if (!ident[3]) { return; }
         var src = ident[0];
         var sig = ident[1];
         var listener = ident[2];
@@ -688,6 +702,31 @@ MochiKit.Base.update(MochiKit.Signal, {
             }
         }
         return false;
+    },
+
+    /** @id MochiKit.Signal.disconnectAllTo */
+    disconnectAllTo: function (objOrFunc, /* optional */funcOrStr) {
+        var self = MochiKit.Signal;
+        var observers = self._observers;
+        var disconnect = self._disconnect;
+        var locked = self._lock;
+        var dirty = self._dirty;
+        if (typeof(funcOrStr) === 'undefined') {
+            funcOrStr = null;
+        }
+        for (var i = observers.length - 1; i >= 0; i--) {
+            var ident = observers[i];
+            if (ident[4] === objOrFunc &&
+                    (funcOrStr === null || ident[5] === funcOrStr)) {
+                disconnect(ident);
+                if (locked) {
+                    dirty = true;
+                } else {
+                    observers.splice(i, 1);
+                }
+            }
+        }
+        self._dirty = dirty;
     },
 
     /** @id MochiKit.Signal.disconnectAll */
@@ -778,7 +817,8 @@ MochiKit.Signal.EXPORT = [
     'connect',
     'disconnect',
     'signal',
-    'disconnectAll'
+    'disconnectAll',
+    'disconnectAllTo'
 ];
 
 MochiKit.Signal.__new__ = function (win) {

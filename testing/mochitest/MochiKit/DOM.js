@@ -28,15 +28,6 @@ if (typeof(MochiKit.DOM) == 'undefined') {
     MochiKit.DOM = {};
 }
 
-var kXHTMLNSURI = "http://www.w3.org/1999/xhtml";
-var kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-if (document.documentElement &&
-    document.documentElement.namespaceURI == kXULNSURI) {
-    MochiKit.DOM.useNS = true;
-} else {
-    MochiKit.DOM.useNS = false;
-}
-
 MochiKit.DOM.NAME = "MochiKit.DOM";
 MochiKit.DOM.VERSION = "1.4";
 MochiKit.DOM.__repr__ = function () {
@@ -494,6 +485,7 @@ MochiKit.Base.update(MochiKit.DOM, {
         }
         if (typeof(name) == 'string') {
             // Internet Explorer is dumb
+            var xhtml = self._xhtml;
             if (attrs && !self.attributeArray.compliant) {
                 // http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/name_2.asp
                 var contents = "";
@@ -505,13 +497,15 @@ MochiKit.Base.update(MochiKit.DOM, {
                 }
                 if (contents) {
                     name = "<" + name + contents + ">";
+                    xhtml = false;
                 }
             }
-	    if (self.useNS) {
-		elem = self._document.createElementNS(kXHTMLNSURI, name);
-	    } else {
-	        elem = self._document.createElement(name);
-	    }
+            var d = self._document;
+            if (xhtml && d === document) {
+                elem = d.createElementNS("http://www.w3.org/1999/xhtml", name);
+            } else {
+                elem = d.createElement(name);
+            }
         } else {
             elem = name;
         }
@@ -877,6 +871,10 @@ MochiKit.Base.update(MochiKit.DOM, {
         var m = MochiKit.Base;
         if (typeof(document) != "undefined") {
             this._document = document;
+            var kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            this._xhtml = (document.documentElement &&
+                document.createElementNS &&
+                document.documentElement.namespaceURI === kXULNSURI);
         } else if (MochiKit.MockDOM) {
             this._document = MochiKit.MockDOM.document;
         }
@@ -909,7 +907,9 @@ MochiKit.Base.update(MochiKit.DOM, {
                 "checked": "defaultChecked",
                 "usemap": "useMap",
                 "for": "htmlFor",
-                "readonly": "readOnly"
+                "readonly": "readOnly",
+                "colspan": "colSpan",
+                "bgcolor": "bgColor"
             };
         } else {
             attributeArray = function (node) {
