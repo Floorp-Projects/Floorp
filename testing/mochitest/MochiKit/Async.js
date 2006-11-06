@@ -341,25 +341,73 @@ MochiKit.Base.update(MochiKit.Async, {
 
     },
 
-    /** @id MochiKit.Async.doSimpleXMLHttpRequest */
-    doSimpleXMLHttpRequest: function (url/*, ...*/) {
+    /** @id MochiKit.Async.doXHR */
+    doXHR: function (url, opts) {
+        var m = MochiKit.Base;
+        opts = m.update({
+            method: 'GET',
+            sendContent: ''
+            /*
+            queryString: undefined,
+            username: undefined,
+            password: undefined,
+            headers: undefined,
+            mimeType: undefined
+            */
+        }, opts);
         var self = MochiKit.Async;
         var req = self.getXMLHttpRequest();
-        if (arguments.length > 1) {
-            var m = MochiKit.Base;
-            var qs = m.queryString.apply(null, m.extend(null, arguments, 1));
+        if (opts.queryString) {
+            var qs = m.queryString(opts.queryString);
             if (qs) {
                 url += "?" + qs;
             }
         }
-        req.open("GET", url, true);
-        return self.sendXMLHttpRequest(req);
+        req.open(opts.method, url, true, opts.username, opts.password);
+        if (req.overrideMimeType && opts.mimeType) {
+            req.overrideMimeType(opts.mimeType);
+        }
+        if (opts.headers) {
+            var headers = opts.headers;
+            if (!m.isArrayLike(headers)) {
+                headers = m.items(headers);
+            }
+            for (var i = 0; i < headers.length; i++) {
+                var header = headers[i];
+                var name = header[0];
+                var value = header[1];
+                req.setRequestHeader(name, value);
+            }
+        }
+        return self.sendXMLHttpRequest(req, opts.sendContent);
+    },
+            
+    _buildURL: function (url/*, ...*/) {
+        if (arguments.length > 1) {
+            var m = MochiKit.Base;
+            var qs = m.queryString.apply(null, m.extend(null, arguments, 1));
+            if (qs) {
+                return url + "?" + qs;
+            }
+        }
+        return url;
+    },
+    
+    /** @id MochiKit.Async.doSimpleXMLHttpRequest */
+    doSimpleXMLHttpRequest: function (url/*, ...*/) {
+        var self = MochiKit.Async;
+        url = self._buildURL.apply(self, arguments);
+        return self.doXHR(url);
     },
 
     /** @id MochiKit.Async.loadJSONDoc */
-    loadJSONDoc: function (url) {
+    loadJSONDoc: function (url/*, ...*/) {
         var self = MochiKit.Async;
-        var d = self.doSimpleXMLHttpRequest.apply(self, arguments);
+        url = self._buildURL.apply(self, arguments);
+        var d = self.doXHR(url, {
+            'mimeType': 'text/plain',
+            'headers': [['Accept', 'application/json']]
+        });
         d = d.addCallback(self.evalJSONRequest);
         return d;
     },
@@ -540,7 +588,8 @@ MochiKit.Async.EXPORT = [
     "DeferredLock",
     "DeferredList",
     "gatherResults",
-    "maybeDeferred"
+    "maybeDeferred",
+    "doXHR"
 ];
     
 MochiKit.Async.EXPORT_OK = [

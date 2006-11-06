@@ -75,7 +75,7 @@ MochiKit.LoggingPane.LoggingPane = function (inline/* = false */, logger/* = Moc
     }
     if (!inline) {
         // name the popup with the base URL for uniqueness
-        var url = win.location.href.split("?")[0].replace(/[:\/.><&-]/g, "_");
+        var url = win.location.href.split("?")[0].replace(/[#:\/.><&-]/g, "_");
         var name = uid + "_" + url;
         var nwin = win.open("", name, "dependent,resizable,height=200");
         if (!nwin) {
