@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Neil Rashbrook
+ *  Neil Rashbrook <neil@parkwaycc.co.uk>
  *  Robert Kaiser <kairo@kairo.at>
  *
  * Alternatively, the contents of this file may be used under the terms of
