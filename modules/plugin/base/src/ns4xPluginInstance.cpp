@@ -1378,9 +1378,11 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
     }
   }
 
-  NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
-                                          &fNPP,
-                                          thePrint), fLibrary, this);
+  if(fCallbacks->print) {
+      NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
+                                              &fNPP,
+                                              thePrint), fLibrary, this);
+  }
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP PrintProc called: this=%p, pDC=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d]\n",
