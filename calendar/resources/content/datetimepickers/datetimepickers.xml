@@ -1464,6 +1464,22 @@
         <parameter name="aValue"/>
         <body>
           <![CDATA[
+            // Try/catch this, since some people are apparently
+            // interested in using the datepicker in remote apps, where
+            // calGetString wouldn't exist
+            try {
+              var noon = calGetString("dateFormat", "noon");
+              if (aValue.toLowerCase() == noon.toLowerCase()) {
+                return new Date(0, 0, 0, 12, 0, 0, 0);
+              }
+
+              var midnight = calGetString("dateFormat", "midnight");
+              if (aValue.toLowerCase() == midnight.toLowerCase()) {
+                return new Date(0, 0, 0, 0, 0, 0, 0);
+              }
+            } catch(ex) {
+            }
+
             var time = null;
             var timePartsArray = this.parseTimeRegExp.exec(aValue);
             const PRE_INDEX=1, HR_INDEX=2, MIN_INDEX=4, SEC_INDEX=6, POST_INDEX=8;
