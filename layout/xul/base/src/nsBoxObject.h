@@ -35,12 +35,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsBoxObject_h_
+#define nsBoxObject_h_
+
 #include "nsCOMPtr.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
-#include "nsPresState.h"
 #include "nsPoint.h"
 #include "nsAutoPtr.h"
+#include "nsHashKeys.h"
+#include "nsInterfaceHashtable.h"
 
 class nsIFrame;
 class nsIDocShell;
@@ -56,7 +60,7 @@ public:
   virtual ~nsBoxObject();
 
   // nsPIBoxObject
-  virtual void Init(nsIContent* aContent);
+  virtual nsresult Init(nsIContent* aContent);
   virtual void Clear();
   virtual void ClearCachedValues();
 
@@ -72,7 +76,9 @@ public:
 
 protected:
 
-  nsAutoPtr<nsPresState> mPresState; // [OWNER]
+  nsAutoPtr<nsInterfaceHashtable<nsStringHashKey,nsISupports> > mPropertyTable; //[OWNER]
 
   nsIContent* mContent; // [WEAK]
 };
+
+#endif

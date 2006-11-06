@@ -43,8 +43,12 @@
 #ifndef nsPresState_h_
 #define nsPresState_h_
 
+#include "prtypes.h"
 #include "nsStringFwd.h"
 #include "nsInterfaceHashtable.h"
+#include "nsPoint.h"
+#include "nsAutoPtr.h"
+#include "nsRect.h"
 
 class nsPresState
 {
@@ -65,12 +69,16 @@ public:
 
   NS_HIDDEN_(nsresult) RemoveStateProperty(const nsAString& aProperty);
 
+  NS_HIDDEN_(nsresult) SetScrollState(const nsRect& aState);
+
+  nsRect GetScrollState();
+
 // MEMBER VARIABLES
 protected:
-  // A string table that holds property/value pairs.
   nsInterfaceHashtable<nsStringHashKey,nsISupports> mPropertyTable;
+  nsAutoPtr<nsRect> mScrollState;
 };
 
 NS_HIDDEN_(nsresult) NS_NewPresState(nsPresState **aState);
 
-#endif
+#endif /* nsPresState_h_ */
