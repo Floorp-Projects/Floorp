@@ -535,6 +535,7 @@ nsresult nsMsgFilterList::LoadValue(nsCString &value, nsIOFileStream *aStream)
         curChar = '"';
       else if (nextChar == '\\')	// replace "\\" with "\"
       {
+        valueStr += curChar;
         curChar = ReadChar(aStream);
       }
       else
@@ -825,6 +826,12 @@ NS_IMETHODIMP nsMsgFilterList::ParseCondition(nsIMsgFilter *aFilter, const char 
       
       if (newTerm) 
       {
+        /* Invert nsMsgSearchTerm::EscapeQuotesInStr() */
+        for (char *to = termDup, *from = termDup;;)
+        {
+          if (*from == '\\' && from[1] == '"') from++;
+          if (!(*to++ = *from++)) break;
+        }
         newTerm->m_booleanOp = (ANDTerm) ? nsMsgSearchBooleanOp::BooleanAND
                                          : nsMsgSearchBooleanOp::BooleanOR;
 
