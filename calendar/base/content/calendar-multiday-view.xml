@@ -1581,11 +1581,10 @@
   <binding id="calendar-multiday-view">
     <content>
       <xul:box anonid="mainbox" flex="1">
-        <!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
+        <!-- these boxes are tricky: width or height in CSS depend on orient -->
         <xul:box anonid="labelbox">
           <xul:box anonid="labeltimespacer">
-            <xul:button style="min-width: 10px; padding: 1px; background: red;" 
-                        anonid="rotate-button"
+            <xul:button anonid="rotate-button"
              oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
           </xul:box>
           <xul:box anonid="labeldaybox" class="calendar-label-day-box" flex="1"
@@ -2228,40 +2227,11 @@
                         this, "anonid", "mainbox");
 
           if (orient == "vertical") {
-              headerbox.setAttribute("height", 50);
-              headerbox.removeAttribute("width");
-
-              labelbox.setAttribute("height", 30);
-              labelbox.removeAttribute("width");
-
-              var timebarWidth = 100;
-
-              timebar.setAttribute("width", timebarWidth);
-              timebar.removeAttribute("height");
-              headertimespacer.setAttribute("width", timebarWidth);
-              headertimespacer.removeAttribute("height");
-              labeltimespacer.setAttribute("width", timebarWidth);
-              labeltimespacer.removeAttribute("height");
-
               childbox.setAttribute(
                   "style", "overflow-x: hidden; overflow-y: auto;");
               mainbox.setAttribute(
                   "style", "overflow-x: auto; overflow-y: hidden;");
           } else {
-              headerbox.setAttribute("width", 30);
-              headerbox.removeAttribute("height");
-
-              labelbox.setAttribute("width", 30);
-              labelbox.removeAttribute("height");
-
-              var timebarHeight = 40;
-              timebar.setAttribute("height", timebarHeight);
-              timebar.removeAttribute("width");
-              headertimespacer.setAttribute("height", timebarHeight);
-              headertimespacer.removeAttribute("width");
-              labeltimespacer.setAttribute("height", timebarHeight);
-              labeltimespacer.removeAttribute("width");
-
               childbox.setAttribute(
                   "style", "overflow-x: auto; overflow-y: hidden;");
               mainbox.setAttribute(

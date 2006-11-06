@@ -196,6 +196,32 @@ calendar-event-gripbar[parentorient="horizontal"] {
   cursor: e-resize;
 }
 
+/* headers horizontal, times vertical */
+box[anonid="labelbox"][orient="horizontal"] {
+  height: 30px;
+}
+box[anonid="headerbox"][orient="horizontal"] {
+  height: 50px;
+}
+box[anonid="labelbox"][orient="horizontal"] > box[anonid="labeltimespacer"],
+box[anonid="headertimespacer"][orient="horizontal"],
+calendar-time-bar[anonid="timebar"][orient="vertical"] {
+  width: 100px;
+}
+
+/* headers vertical, times horizonal */
+box[anonid="labelbox"][orient="vertical"] {
+  width: 30px;
+}
+box[anonid="headerbox"][orient="vertical"] {
+  width: 30px;
+}
+box[anonid="labelbox"][orient="vertical"] > box[anonid="labeltimespacer"],
+box[anonid="headertimespacer"][orient="vertical"],
+calendar-time-bar[anonid="timebar"][orient="horizontal"] {
+  height: 40px;
+}
+
 .calendar-time-bar-label { 
   font-weight: bold;
 }
