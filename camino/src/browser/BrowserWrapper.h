@@ -147,9 +147,8 @@ class nsIArray;
   NSMutableArray*           mFeedList;        // list of feeds found on page
 
   CHBrowserView*            mBrowserView;     // retained
-  NSString*                 mDefaultStatusString;
-  NSString*                 mLoadingStatusString;
   ToolTip*                  mToolTip;
+  NSMutableArray*           mStatusStrings;   // current status bar messages, STRONG
 
   IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil, STRONG
   IBOutlet RolloverImageButton* mBlockedPopupCloseButton; 

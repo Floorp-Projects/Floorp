@@ -84,12 +84,22 @@ class nsIDOMPopupBlockedEvent;
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
+// types of status bar messages, in order of priority for showing to the user
+enum {
+  eStatusLinkTarget    = 0, // link mouseover info
+  eStatusProgress      = 1, // loading progress
+  eStatusScript        = 2, // javascript window.status
+  eStatusScriptDefault = 3, // javascript window.defaultStatus
+};
+
 @interface BrowserWrapper(Private)
 
 - (void)ensureContentClickListeners;
 
 - (void)setPendingActive:(BOOL)active;
 - (void)registerNotificationListener;
+
+- (void)clearStatusStrings;
 
 - (void)setSiteIconImage:(NSImage*)inSiteIcon;
 - (void)setSiteIconURI:(NSString*)inSiteIconURI;
@@ -155,9 +165,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
     //[self setSiteIconImage:[NSImage imageNamed:@"globe_ico"]];
     //[self setSiteIconURI: [NSString string]];
-    
-    mDefaultStatusString = [[NSString alloc] init];
-    mLoadingStatusString = [[NSString alloc] init];
+
+    // prefill with a null value for each of the four types of status strings
+    mStatusStrings = [[NSMutableArray alloc] initWithObjects:[NSNull null], [NSNull null],
+                                                             [NSNull null], [NSNull null], nil];
 
     mTitle = [[NSString alloc] init];
     
@@ -176,8 +187,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   [mSiteIconImage release];
   [mSiteIconURI release];
-  [mDefaultStatusString release];
-  [mLoadingStatusString release];
+  [mStatusStrings release];
 
   [mToolTip release];
   [mTitle release];
@@ -315,8 +325,14 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (NSString*)statusString
 {
-  // XXX is this right?
-  return mDefaultStatusString ? mDefaultStatusString : mLoadingStatusString;
+  // Return the highest-priority status string that is set, or the empty string if none are set
+  for (unsigned int i = 0; i < [mStatusStrings count]; ++i)
+  {
+    id status = [mStatusStrings objectAtIndex:i];
+    if (status != [NSNull null])
+      return status;
+  }
+  return @"";
 }
 
 - (float)loadingProgress
@@ -452,8 +468,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLoadingStarted 
 {
-  [mDefaultStatusString autorelease];
-  mDefaultStatusString = nil;
+  [self clearStatusStrings];
 
   mProgress = 0.0;
   mIsBusy = YES;
@@ -461,18 +476,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mDelegate loadingStarted];
   [mDelegate setLoadingActive:YES];
   [mDelegate setLoadingProgress:mProgress];
-  
-  [mLoadingStatusString autorelease];
-  mLoadingStatusString = [NSLocalizedString(@"TabLoading", @"") retain];
-  [mDelegate updateStatus:mLoadingStatusString];
-  
+
+  [mStatusStrings replaceObjectAtIndex:eStatusProgress withObject:NSLocalizedString(@"TabLoading", @"")];
+  [mDelegate updateStatus:[self statusString]];
+
   [(BrowserTabViewItem*)mTabItem startLoadAnimation];
   
   [mDelegate showFeedDetected:NO];
   [mFeedList removeAllObjects];
   
   [mTabTitle autorelease];
-  mTabTitle = [mLoadingStatusString retain];
+  mTabTitle = [NSLocalizedString(@"TabLoading", @"") retain];
   [mTabItem setLabel:mTabTitle];
 }
 
@@ -484,11 +498,9 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   [mDelegate setLoadingActive:NO];
 
-  [mLoadingStatusString autorelease];
-  mLoadingStatusString = [@"" retain];
-  
-  [mDelegate updateStatus:mDefaultStatusString ? mDefaultStatusString : mLoadingStatusString];
-  
+  [mStatusStrings replaceObjectAtIndex:eStatusProgress withObject:[NSNull null]];
+  [mDelegate updateStatus:[self statusString]];
+
   [(BrowserTabViewItem*)mTabItem stopLoadAnimation];
 
   NSString *urlString = nil;
@@ -608,7 +620,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onStatusChange:(NSString*)aStatusString
 {
-  [mDelegate updateStatus:aStatusString];
+  [mStatusStrings replaceObjectAtIndex:eStatusProgress withObject:aStatusString];
+  [mDelegate updateStatus:[self statusString]];
 }
 
 //
@@ -626,24 +639,23 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type 
 {
-  NSString* newStatus = nil;
-  
+  int index;
+
   if (type == NSStatusTypeScriptDefault)
-  {
-    [mDefaultStatusString autorelease];
-    mDefaultStatusString = [statusString retain];
-  }
-  else if (!statusString)
-  {
-    newStatus = (mDefaultStatusString) ? mDefaultStatusString : mLoadingStatusString;
-  }
+    index = eStatusScriptDefault;
+  else if (type == NSStatusTypeScript)
+    index = eStatusScript;
   else
-  {
-    newStatus = statusString;
-  }
-  
-  if (newStatus)
-    [mDelegate updateStatus:newStatus];
+    index = eStatusLinkTarget;
+
+  [mStatusStrings replaceObjectAtIndex:index withObject:(statusString ? statusString : [NSNull null])];
+  [mDelegate updateStatus:[self statusString]];
+}
+
+- (void)clearStatusStrings
+{
+  for (unsigned int i = 0; i < [mStatusStrings count]; ++i)
+    [mStatusStrings replaceObjectAtIndex:i withObject:[NSNull null]];
 }
 
 - (NSString *)title 
