@@ -49,7 +49,8 @@
 
 #include "nsDeviceContextSpecQt.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsPrintfCString.h"
@@ -140,8 +141,8 @@ private:
   void SetIntValue(  const char *tagname, PRInt32 value );
   void SetCharValue(  const char *tagname, const char *value );
 
-  nsXPIDLCString    mPrinterName;
-  nsCOMPtr<nsIPref> mPrefs;
+  nsCString    mPrinterName;
+  nsCOMPtr<nsIPrefBranch> mPrefs;
 };
 
 void nsPrinterFeatures::SetBoolValue( const char *tagname, PRBool value )
@@ -163,7 +164,7 @@ nsPrinterFeatures::nsPrinterFeatures( const char *printername )
 {
   DO_PR_DEBUG_LOG(("nsPrinterFeatures::nsPrinterFeatures('%s')\n", printername));
   mPrinterName.Assign(printername);
-  mPrefs = do_GetService(NS_PREF_CONTRACTID);
+  mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   SetBoolValue("has_special_printerfeatures", PR_TRUE);
 }
@@ -501,50 +502,48 @@ NS_IMETHODIMP nsDeviceContextSpecQt::ClosePrintManager()
  * - Get prefs
  */
 static
-nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *printername, const char *prefname, char **return_buf)
+nsresult CopyPrinterCharPref(nsIPrefBranch *pref, const char *modulename, const char *printername,
+                             const char *prefname, nsXPIDLCString &return_buf)
 {
   DO_PR_DEBUG_LOG(("CopyPrinterCharPref('%s', '%s', '%s')\n", modulename, printername, prefname));
 
-  NS_ENSURE_ARG_POINTER(return_buf);
-
-  nsXPIDLCString name;
   nsresult rv = NS_ERROR_FAILURE;
 
   if (printername && modulename) {
     /* Get prefs per printer name and module name */
-    name = nsPrintfCString(512, "print.%s.printer_%s.%s", modulename, printername, prefname);
+    nsPrintfCString name(512, "print.%s.printer_%s.%s", modulename, printername, prefname);
     DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-    rv = pref->CopyCharPref(name, return_buf);
+    rv = pref->GetCharPref(name.get(), getter_Copies(return_buf));
   }
 
   if (NS_FAILED(rv)) {
     if (printername) {
       /* Get prefs per printer name */
-      name = nsPrintfCString(512, "print.printer_%s.%s", printername, prefname);
+      nsPrintfCString name(512, "print.printer_%s.%s", printername, prefname);
       DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-      rv = pref->CopyCharPref(name, return_buf);
+      rv = pref->GetCharPref(name.get(), getter_Copies(return_buf));
     }
 
     if (NS_FAILED(rv)) {
       if (modulename) {
         /* Get prefs per module name */
-        name = nsPrintfCString(512, "print.%s.%s", modulename, prefname);
+        nsPrintfCString name(512, "print.printer_%s.%s", printername, prefname);
         DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = pref->CopyCharPref(name, return_buf);
+        rv = pref->GetCharPref(name.get(), getter_Copies(return_buf));
       }
 
       if (NS_FAILED(rv)) {
         /* Get prefs */
-        name = nsPrintfCString(512, "print.%s", prefname);
+        nsPrintfCString name(512, "print.%s.%s", modulename, prefname);
         DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
-        rv = pref->CopyCharPref(name, return_buf);
+        rv = pref->GetCharPref(name.get(), getter_Copies(return_buf));
       }
     }
   }
 
 #ifdef PR_LOG
   if (NS_SUCCEEDED(rv)) {
-    DO_PR_DEBUG_LOG(("CopyPrinterCharPref returning '%s'.\n", *return_buf));
+    DO_PR_DEBUG_LOG(("CopyPrinterCharPref returning '%s'.\n", return_buf.get()));
   }
   else
   {
@@ -638,7 +637,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
   NS_ENSURE_TRUE(*aPrinterName, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(aPrintSettings, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -670,7 +669,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
 
   /* Set filename */
   nsXPIDLCString filename;
-  if (NS_FAILED(CopyPrinterCharPref(pPrefs, nsnull, printerName, "filename", getter_Copies(filename)))) {
+  if (NS_FAILED(CopyPrinterCharPref(pPrefs, nsnull, printerName, "filename", filename))) {
     const char *path;
 
     if (!(path = PR_GetEnv("PWD")))
@@ -679,7 +678,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
     if (path)
       filename = nsPrintfCString(PATH_MAX, "%s/mozilla.ps", path);
     else
-      filename.Assign("mozilla.ps");
+      filename.AssignLiteral("mozilla.ps");
   }
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
@@ -765,7 +764,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
 
     mlist = XpuGetMediumSourceSizeList(pdpy, pcontext, &mcount);
     if (mlist) {
-      nsXPIDLCString papername;
+      nsCAutoString papername;
 
       default_medium = &mlist[0]; /* First entry is the default one */
       double total_width  = default_medium->ma1 + default_medium->ma2,
@@ -800,7 +799,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
           papername.Assign(curr->medium_name);
         }
 
-        printerFeatures.SetPaperRecord(i, papername, PRInt32(total_width), PRInt32(total_height), PR_FALSE);
+        printerFeatures.SetPaperRecord(i, papername.get(), PRInt32(total_width), PRInt32(total_height), PR_FALSE);
       }
       printerFeatures.SetNumPaperSizeRecords(mcount);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
@@ -838,12 +837,12 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
     nsXPIDLCString orientation;
-    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", getter_Copies(orientation)))) {
-      if (!PL_strcasecmp(orientation, "portrait")) {
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", orientation))) {
+      if (orientation.LowerCaseEqualsLiteral("portrait")) {
         DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
         aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
       }
-      else if (!PL_strcasecmp(orientation, "landscape")) {
+      else if (orientation.LowerCaseEqualsLiteral("landscape")) {
         DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
         aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
       }
@@ -866,7 +865,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
     printerFeatures.SetCanChangePaperSize(PR_TRUE);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     nsXPIDLCString papername;
-    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "paper_size", getter_Copies(papername)))) {
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "paper_size", papername))) {
       int                   i;
       const PSPaperSizeRec *default_paper = nsnull;
 
@@ -913,7 +912,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
     nsXPIDLCString command;
-    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", command))) {
       DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
       aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUTF16(command).get());
     }
@@ -971,7 +970,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
   if (!printerList) {
     nsresult rv;
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
     }
