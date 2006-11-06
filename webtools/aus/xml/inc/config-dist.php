@@ -51,7 +51,7 @@ define('SOURCE_DIR',getcwd().'/data');
 define('OVERRIDE_DIR',getcwd().'/data/3');
 
 // Uncomment this line in order to echo text debug information.
-define('DEBUG',false);
+define('DEBUG',true);
 
 // Define default for Update blocks.
 define('UPDATE_TYPE','minor');
@@ -68,6 +68,8 @@ $nightlyChannels = array(
 // It determines which patches are associated to which incoming client versions.
 // @todo replace this with a better datasource that can be easily managed via a GUI.
 $branchVersions = array(
+    '0.4a1'      =>  'trunk',
+    '0.5'        =>  'trunk',
     '1.0+'       =>  '1.5',
     '1.4'        =>  '1.5',
     '1.4.1'      =>  '1.5',
