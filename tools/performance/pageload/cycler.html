@@ -115,11 +115,21 @@
       }
     }
 
+    // avg and avg median are cumulative for all the pages
+    var avgs = new Array();
+    var medians = new Array();
+    for (var i = 0; i < timeVals.length; ++i) {
+       avgs[i] = getArrayStats(timeVals[i]).mean;
+       medians[i] = getArrayStats(timeVals[i]).median;
+    }
+    var avg = getArrayStats(avgs).mean;
+    var avgmed = getArrayStats(medians).mean;
+
     var r = getArrayStats(all);
     dump(
       "(tinderbox dropping follows)\n"+
-      "_x_x_mozilla_page_load,"+r.median+","+r.max+","+r.min+"\n"+
-      "_x_x_mozilla_page_load_details,avgmedian|"+r.median+"|average|"+r.mean.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+":"
+      "_x_x_mozilla_page_load,"+avgmed+","+r.max+","+r.min+"\n"+
+      "_x_x_mozilla_page_load_details,avgmedian|"+avgmed+"|average|"+avg.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+":"
     );
 
     for (var i = 0; i < timeVals.length; ++i) {
