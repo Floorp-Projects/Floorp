@@ -13016,27 +13016,34 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   tmp.DestroyFrames();
   aState.mFloatedItems.childList = nsnull;
 
-  // If we don't have a containing block, try to find our closest non-inline
-  // ancestor.  We're guaranteed to have one, since
-  // nsStyleContext::ApplyStyleFixups enforces that the root is display:none,
-  // display:table, or display:block.
+  // If we don't have a containing block, start with aFrame and look for one.
   if (!aContainingBlock) {
     aContainingBlock = aFrame;
-    do {
-      aContainingBlock = aContainingBlock->GetParent();
-      NS_ASSERTION(aContainingBlock, "Must have non-inline frame as root!");
-    } while (IsInlineFrame(aContainingBlock));
   }
   
+  // To find the right block to reframe, just walk up the tree until we find a
+  // frame that is:
+  // 1)  Not part of an IB split (not special)
+  // 2)  Not a pseudo-frame
+  // 3)  Not an inline frame
+  // We're guaranteed to find one, since nsStyleContext::ApplyStyleFixups
+  // enforces that the root is display:none, display:table, or display:block.
+  // Note that walking up "too far" is OK in terms of correctness, even if it
+  // might be a little inefficient.  This is why we walk out of all
+  // pseudo-frames -- telling which ones are or are not OK to walk out of is
+  // too hard (and I suspect that we do in fact need to walk out of all of
+  // them).
+  while (IsFrameSpecial(aContainingBlock) || IsInlineFrame(aContainingBlock) ||
+         aContainingBlock->GetStyleContext()->GetPseudoType()) {
+    aContainingBlock = aContainingBlock->GetParent();
+    NS_ASSERTION(aContainingBlock,
+                 "Must have non-inline, non-special, non-pseudo frame as root "
+                 "(or child of root, for a table root)!");
+  }
+
   // Tell parent of the containing block to reformulate the
   // entire block. This is painful and definitely not optimal
   // but it will *always* get the right answer.
-
-  // First, if the containing block is really a block wrapper for something
-  // that's really an inline, walk up the parent chain until we hit something
-  // that's not.
-  while (IsFrameSpecial(aContainingBlock))
-    aContainingBlock = aContainingBlock->GetParent();
 
   nsIContent *blockContent = aContainingBlock->GetContent();
   nsCOMPtr<nsIContent> parentContainer = blockContent->GetParent();
