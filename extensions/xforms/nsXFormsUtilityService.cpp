@@ -44,6 +44,7 @@
 #include "nsIXFormsRangeConditionAccessors.h"
 #include "nsIXFormsRangeAccessors.h"
 #include "nsIXFormsUIWidget.h"
+#include "nsIXFormsNSEditableElement.h"
 #include "nsXFormsUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
@@ -164,5 +165,17 @@ nsXFormsUtilityService::GetRangeStep(nsIDOMNode *aElement, nsAString& aValue)
   nsCOMPtr<nsIXFormsRangeAccessors> raccessors(do_QueryInterface(accessors));
   NS_ENSURE_TRUE(raccessors, NS_ERROR_FAILURE);
   return raccessors->GetRangeStep(aValue);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG(aElement);
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  nsCOMPtr<nsIXFormsNSEditableElement> editable(do_QueryInterface(aElement));
+  NS_ENSURE_TRUE(editable, NS_ERROR_FAILURE);
+
+  return editable->GetEditor(aEditor);
 }
 

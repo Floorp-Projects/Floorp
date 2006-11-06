@@ -150,6 +150,7 @@ XPIDLSRCS	= \
 		nsIXFormsCopyElement.idl \
 		nsIXFormsEphemeralMessageUI.idl \
 		nsIXFormsRangeConditionAccessors.idl \
+		nsIXFormsNSEditableElement.idl \
 		nsIXFormsXPathFunctions.idl \
 		$(NULL)
 

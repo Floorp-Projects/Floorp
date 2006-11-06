@@ -43,6 +43,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIXFormsUtilityService.h"
+#include "nsIPlaintextEditor.h"
 
 // nsXFormsAccessible
 
@@ -50,7 +51,7 @@ nsIXFormsUtilityService *nsXFormsAccessible::sXFormsService = nsnull;
 
 nsXFormsAccessible::
 nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  nsAccessibleWrap(aNode, aShell)
+  nsHyperTextAccessible(aNode, aShell)
 {
   if (!sXFormsService) {
     nsresult rv = CallGetService("@mozilla.org/xforms-utility-service;1",
@@ -126,7 +127,7 @@ nsXFormsAccessible::GetState(PRUint32 *aState)
   rv = sXFormsService->IsValid(mDOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsAccessible::GetState(aState);
+  rv = nsHyperTextAccessible::GetState(aState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isRelevant)
@@ -207,5 +208,85 @@ nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonCh
 
   *aAllowsAnonChildren = PR_TRUE;
   return NS_OK;
+}
+
+// nsXFormsEditableAccessible
+
+nsXFormsEditableAccessible::
+  nsXFormsEditableAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsEditableAccessible::GetExtState(PRUint32 *aExtState)
+{
+  NS_ENSURE_ARG_POINTER(aExtState);
+
+  *aExtState = 0;
+
+  nsresult rv = nsXFormsAccessible::GetExtState(aExtState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mEditor)
+    return NS_OK;
+
+  PRBool isReadonly = PR_FALSE;
+  rv = sXFormsService->IsReadonly(mDOMNode, &isReadonly);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!isReadonly) {
+    PRBool isRelevant = PR_FALSE;
+    rv = sXFormsService->IsRelevant(mDOMNode, &isRelevant);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isRelevant) {
+      *aExtState |= EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT;
+    }
+  }
+
+  PRUint32 flags;
+  mEditor->GetFlags(&flags);
+  if (flags & nsIPlaintextEditor::eEditorSingleLineMask)
+    *aExtState |= EXT_STATE_SINGLE_LINE;
+  else
+    *aExtState |= EXT_STATE_MULTI_LINE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsEditableAccessible::Init()
+{
+  nsCOMPtr<nsIEditor> editor;
+  sXFormsService->GetEditor(mDOMNode, getter_AddRefs(editor));
+  SetEditor(editor);
+
+  return nsXFormsAccessible::Init();
+}
+
+NS_IMETHODIMP
+nsXFormsEditableAccessible::Shutdown()
+{
+  SetEditor(nsnull);
+  return nsXFormsAccessible::Shutdown();
+}
+
+already_AddRefed<nsIEditor>
+nsXFormsEditableAccessible::GetEditor()
+{
+  nsIEditor *editor = mEditor;
+  NS_IF_ADDREF(editor);
+  return editor;
+}
+
+void
+nsXFormsEditableAccessible::SetEditor(nsIEditor *aEditor)
+{
+  if (mEditor)
+    mEditor->RemoveEditActionListener(this);
+
+  mEditor = aEditor;
+  if (mEditor)
+    mEditor->AddEditActionListener(this);
 }
 

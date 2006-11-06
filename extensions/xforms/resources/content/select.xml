@@ -53,6 +53,9 @@
 
     readonly - set/get readonly state
 
+    editor - return nsIEditor object if native widget contains editor, otherwise
+             return null
+
     appendItem(label, value, group) - appends item, returns item control
       @param label - label control
       @param value - item's value
@@ -91,7 +94,10 @@
   <binding id="xformswidget-selectcontrols-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget">
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSEditableElement">
+
+      <property name="editor" readonly="true"
+                onget="return this.control.editor;"/>
 
       <!-- Make sure we don't refresh while we are refreshing (race condition).
            This happens when we are inside a repeat for example. We use the
@@ -1070,6 +1076,15 @@
   -->
   <binding id="controlwidget-base">
     <implementation>
+
+      <!-- Return nsIEditor object if native widget contains editor.
+        Of the widgets that extend this binding, only the
+        xforms:select1[appearance='minimal'] implementation for XUL has an
+        editor.
+      -->
+      <property name="editor" readonly="true"
+                onget="return null"/>
+
       <!-- Return parent xf:select/xf:select1 control. -->
       <property name="parentControl" readonly="true">
         <getter>

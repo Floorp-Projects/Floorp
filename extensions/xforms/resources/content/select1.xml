@@ -78,7 +78,12 @@
                              this.previousSibling.focus();"
         /></html:span></content>
 
-    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element">
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element, nsIXFormsNSEditableElement">
+
+      <!-- nsIXFormsNSEditableElement -->
+      <property name="editor" readonly="true"
+                onget="return this.selectionOpen ? this.inputField.editor : null;"/>
+
     <!-- nsIXFormsNSSelect1Element -->
       <property name="selectedItem">
         <getter>

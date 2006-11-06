@@ -147,7 +147,7 @@ nsXFormsTriggerAccessible::DoAction(PRUint8 aIndex)
 
 nsXFormsInputAccessible::
   nsXFormsInputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
-  nsXFormsAccessible(aNode, aShell)
+  nsXFormsEditableAccessible(aNode, aShell)
 {
 }
 
@@ -158,36 +158,6 @@ nsXFormsInputAccessible::GetRole(PRUint32 *aRole)
 
   *aRole = ROLE_ENTRY;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputAccessible::GetExtState(PRUint32 *aExtState)
-{
-  NS_ENSURE_ARG_POINTER(aExtState);
-
-  *aExtState = 0;
-
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
-  nsresult rv = nsXFormsAccessible::GetExtState(aExtState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool state = PR_FALSE;
-  rv = sXFormsService->IsReadonly(mDOMNode, &state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!state) {
-    rv = sXFormsService->IsRelevant(mDOMNode, &state);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (state) {
-      *aExtState |= EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT;
-    }
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textarea))
-    *aExtState |= EXT_STATE_MULTI_LINE;
-  else
-    *aExtState |= EXT_STATE_SINGLE_LINE;
 }
 
 NS_IMETHODIMP

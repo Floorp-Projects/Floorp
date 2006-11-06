@@ -58,9 +58,27 @@
           xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
+  <!-- INPUT: base widget for input: <default>, textarea: <default> and
+              secret: <default> controls.
+
+    Binding assumes getControlElement returns object that has properties
+    required by 'xformswidget-input-base' binding plus 'editor' property to
+    get nsIEditor for embedded editor. You shouldn't use this binding if xforms
+    input element isn't supposed to have an editor.
+  -->
+  <binding id="xformswidget-input-base"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+
+    <implementation implements="nsIXFormsNSEditableElement">
+      <property name="editor" readonly="true"
+                onget="return this.control.editor;"/>
+    </implementation>
+  </binding>
+
+
   <!-- INPUT: <DEFAULT> -->
   <binding id="xformswidget-input"
-            extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+           extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
       <html:input class="xf-value" anonid="control" xbl:inherits="accesskey"/>
@@ -187,7 +205,7 @@
 
   <!-- INPUT: DATE -->
   <binding id="xformswidget-input-date"
-           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+           extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
       <html:input anonid="control" xbl:inherits="accesskey" size="10"
@@ -644,7 +662,7 @@
 
   <!-- SECRET: <DEFAULT> -->
   <binding id="xformswidget-secret"
-           extends="chrome://xforms/content/input-xhtml.xml#xformswidget-input">
+           extends="#xformswidget-input">
     <content>
       <children includes="label"/>
       <html:input anonid="control" xbl:inherits="accesskey" type="password"/>
@@ -663,7 +681,7 @@
   
   <!-- TEXTAREA: <DEFAULT> -->
   <binding id="xformswidget-textarea"
-           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+           extends="#xformswidget-input-base">
     <content>
        <children includes="label"/>
        <html:textarea class="xf-value" anonid="control"

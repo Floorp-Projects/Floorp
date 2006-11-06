@@ -52,12 +52,21 @@
 
 
   <!-- INPUT: base widget for input: <default>, textarea: <default> and
-              secret: <default> controls
+              secret: <default> controls.
+
+    Binding assumes getControlElement returns object that has properties
+    required by 'xformswidget-input-base' binding plus 'editor' property to
+    get nsIEditor for embedded editor. You shouldn't use this binding if xforms
+    input element isn't supposed to have an editor.
   -->
   <binding id="xformswidget-input-base"
            extends="chrome://xforms/content/input.xml#xformswidget-input-base">
 
-    <implementation>
+    <implementation implements="nsIXFormsNSEditableElement">
+
+      <property name="editor" readonly="true"
+                onget="return this.control.editor;"/>
+
       <method name="getControlElement">
         <body>
           var control = this.ownerDocument.

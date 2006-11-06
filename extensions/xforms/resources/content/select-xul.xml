@@ -404,6 +404,15 @@
     </content>
 
     <implementation>
+      <property name="editor" readonly="true">
+        <getter>
+          if (!this.control.hasAttribute("editable"))
+            return null;
+
+          return this.control.editor;
+        </getter>
+      </property>
+
       <method name="removeAllItems">
         <body>
           var popup = this.control.menupopup;
