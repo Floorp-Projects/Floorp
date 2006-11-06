@@ -86,18 +86,14 @@ public:
 
 /**
  * Accessible object for xforms:input and xforms:textarea.
- *
- * XXX: nsXFormsInputAccessible should implement nsIAccessibleEditableText
- *   interface.
  */
 
-class nsXFormsInputAccessible : public nsXFormsAccessible
+class nsXFormsInputAccessible : public nsXFormsEditableAccessible
 {
 public:
   nsXFormsInputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetExtState(PRUint32 *aState);
   NS_IMETHOD GetNumActions(PRUint8 *aCount);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);

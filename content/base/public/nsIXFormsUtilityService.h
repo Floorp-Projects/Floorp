@@ -39,8 +39,10 @@
 #ifndef nsIXFormsUtilityService_h
 #define nsIXFormsUtilityService_h
 
-#include "nsIDOMNode.h"
+#include "nsISupports.h"
 
+class nsIDOMNode;
+class nsIEditor;
 
 /* For IDL files that don't want to include root IDL files. */
 #ifndef NS_NO_VTABLE
@@ -48,10 +50,10 @@
 #endif
 
 /* nsIXFormsUtilityService */
-#define NS_IXFORMSUTILITYSERVICE_IID_STR "aad08d14-dff8-4acb-bcd0-b6376295c82f"
+#define NS_IXFORMSUTILITYSERVICE_IID_STR "43ad19a6-5639-4b05-8305-1eb729063912"
 #define NS_IXFORMSUTILITYSERVICE_IID \
-{ 0xaad08d14, 0xdff8, 0x4acb, \
-  { 0xbc, 0xd0, 0xb6, 0x37, 0x62, 0x95, 0xc8, 0x2f } }
+{ 0x43ad19a6, 0x5639, 0x4b05, \
+  { 0x83, 0x5, 0x1e, 0xb7, 0x29, 0x6, 0x39, 0x12 } }
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms
@@ -123,6 +125,12 @@ public:
    * given element is not xforms:range.
    */
   NS_IMETHOD GetRangeStep(nsIDOMNode *aElement, nsAString& aValue) = 0;
+
+  /**
+   * Return nsIEditor for xforms element if element is editable, null if it is
+   * not editable. Failure if given element doesn't support editing.
+   */
+   NS_IMETHOD GetEditor(nsIDOMNode *aElemenet, nsIEditor **aEditor) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
