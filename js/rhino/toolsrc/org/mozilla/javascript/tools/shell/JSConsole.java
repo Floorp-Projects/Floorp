@@ -34,9 +34,25 @@
  * file under either the NPL or the GPL.
  */
 package org.mozilla.javascript.tools.shell;
-import java.io.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import org.mozilla.javascript.SecurityUtilities;
 
 public class JSConsole extends JFrame implements ActionListener
 {
@@ -48,7 +64,7 @@ public class JSConsole extends JFrame implements ActionListener
 
     public String chooseFile() {
         if(CWD == null) {
-            String dir = System.getProperty("user.dir");
+            String dir = SecurityUtilities.getSystemProperty("user.dir");
             if(dir != null) {
                 CWD = new File(dir);
             }
@@ -67,7 +83,7 @@ public class JSConsole extends JFrame implements ActionListener
     }
 
     public static void main(String args[]) {
-        JSConsole console = new JSConsole(args);
+        new JSConsole(args);
     }
 
     public void createFileChooser() {
