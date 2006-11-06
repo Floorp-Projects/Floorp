@@ -386,8 +386,19 @@ const gPopupBlockerObserver = {
     if (!this._reportButton)
       this._reportButton = document.getElementById("page-report-button");
 
-    if (gBrowser.selectedBrowser.pageReport) {
-      this._reportButton.setAttribute("blocked", "true");
+    if (!gBrowser.pageReport) {
+      // Hide the popup blocker statusbar button
+      this._reportButton.removeAttribute("blocked");
+
+      return;
+    }
+
+    this._reportButton.setAttribute("blocked", true);
+
+    // Only show the notification again if we've not already shown it. Since
+    // notifications are per-browser, we don't need to worry about re-adding
+    // it.
+    if (!gBrowser.pageReport.reported) {
       if (!gPrefService)
         gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                                  .getService(Components.interfaces.nsIPrefBranch);
@@ -396,7 +407,7 @@ const gPopupBlockerObserver = {
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
-        var popupCount = gBrowser.selectedBrowser.pageReport.length;
+        var popupCount = gBrowser.pageReport.length;
 #ifdef XP_WIN
         var popupButtonText = bundle_browser.getString("popupWarningButton");
         var popupButtonAccesskey = bundle_browser.getString("popupWarningButton.accesskey");
@@ -428,9 +439,11 @@ const gPopupBlockerObserver = {
                                              priority, buttons);
         }
       }
+
+      // Record the fact that we've reported this blocked popup, so we don't
+      // show it again.
+      gBrowser.pageReport.reported = true;
     }
-    else
-      this._reportButton.removeAttribute("blocked");
   },
 
   toggleAllowPopupsForSite: function (aEvent)
@@ -490,7 +503,7 @@ const gPopupBlockerObserver = {
     }
 
     var foundUsablePopupURI = false;
-    var pageReport = gBrowser.selectedBrowser.pageReport;
+    var pageReport = gBrowser.pageReport;
     if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
         var popupURIspec = pageReport[i].popupWindowURI.spec;

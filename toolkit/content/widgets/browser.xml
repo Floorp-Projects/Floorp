@@ -501,6 +501,7 @@
                         popupWindowName: evt.popupWindowName };
 #endif
             this.pageReport.push(obj);
+            this.pageReport.reported = false;
             this.updatePageReport()
           ]]> 
         </body>
