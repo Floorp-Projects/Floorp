@@ -3480,6 +3480,12 @@ function updateTimestampFor(view, displayRow)
     view._timestampLast = fmt;
 }
 
+client.updateMenus =
+function c_updatemenus(menus)
+{
+    return this.menuManager.updateMenus(document, menus);
+}
+
 client.addNetwork =
 function cli_addnet(name, serverList, temporary)
 {

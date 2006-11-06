@@ -59,7 +59,7 @@ MenuManager.prototype.appendMenuItems =
 function mmgr_append(menuId, items)
 {
     for (var i = 0; i < items.length; ++i)
-        client.menuSpecs[menuId].items.push(items[i]);
+        this.menuSpecs[menuId].items.push(items[i]);
 }
 
 MenuManager.prototype.createContextMenus =
@@ -84,6 +84,11 @@ function mmgr_initcx (document, id)
         var popup = this.appendPopupMenu (dp, null, id, id);
         var items = this.menuSpecs[id].items;
         this.createMenuItems (popup, null, items);
+
+        if (!("uiElements" in this.menuSpecs[id]))
+            this.menuSpecs[id].uiElements = [popup];
+        else if (!arrayContains(this.menuSpecs[id].uiElements, popup))
+            this.menuSpecs[id].uiElements.push(popup);
     }
 }
 
@@ -109,13 +114,82 @@ MenuManager.prototype.createMainToolbar =
 function mmgr_createtb(document, id)
 {
     var toolbar = document.getElementById(id);
-    var spec = client.menuSpecs[id];
+    var spec = this.menuSpecs[id];
     for (var i in spec.items)
     {
         this.appendToolbarItem (toolbar, null, spec.items[i]);
     }
 
     toolbar.className = "toolbar-primary chromeclass-toolbar";
+}
+
+MenuManager.prototype.updateMenus =
+function mmgr_updatemenus(document, menus)
+{
+    // Cope with one string (update just the one menu)...
+    if (isinstance(menus, String))
+    {
+        menus = [menus];
+    }
+    // Or nothing/nonsense (update everything).
+    else if ((typeof menus != "object") || !isinstance(menus, Array))
+    {
+        menus = [];
+        for (var k in this.menuSpecs)
+        {
+            if ((/^(mainmenu|context)/).test(k))
+                menus.push(k);
+        }
+    }
+
+    var menuBar = document.getElementById("mainmenu");
+
+    // Loop through this array and update everything we need to.
+    for (var i = 0; i < menus.length; i++)
+    {
+        var id = menus[i];
+        if (!(id in this.menuSpecs))
+            continue;
+        var menu = this.menuSpecs[id];
+        var domID;
+        if ("domID" in this.menuSpecs[id])
+            domID = this.menuSpecs[id].domID;
+        else
+            domID = id;
+
+        // Context menus need to be deleted in order to be regenerated...
+        if ((/^context/).test(id))
+        {
+            var cxMenuNode;
+            if ((cxMenuNode = document.getElementById(id)))
+                cxMenuNode.parentNode.removeChild(cxMenuNode);
+            this.createContextMenu(document, id);
+        }
+        else if ((/^mainmenu/).test(id) &&
+                 !("uiElements" in this.menuSpecs[id]))
+        {
+            this.createMenu(menuBar, null, id, domID);
+            continue;
+        }
+        else if ((/^(mainmenu|popup)/).test(id) &&
+                 ("uiElements" in this.menuSpecs[id]))
+        {
+            for (var j = 0; j < menu.uiElements.length; j++)
+            {
+                var node = menu.uiElements[j];
+                domID = node.parentNode.id;
+                // Clear the menu node.
+                while (node.lastChild)
+                    node.removeChild(node.lastChild);
+
+                this.createMenu(node.parentNode.parentNode,
+                                node.parentNode.nextSibling,
+                                id, domID);
+            }
+        }
+        
+        
+    }
 }
 
 
@@ -134,8 +208,8 @@ function mmgr_hookpop (node)
 /**
  * Internal use only.
  *
- * |showPopup| is called from the "onpopupshowing" event of menus
- * managed by the CommandManager.  If a command is disabled, represents a command
+ * |showPopup| is called from the "onpopupshowing" event of menus managed
+ * by the CommandManager. If a command is disabled, represents a command
  * that cannot be "satisfied" by the current command context |cx|, or has an
  * "enabledif" attribute that eval()s to false, then the menuitem is disabled.
  * In addition "checkedif" and "visibleif" attributes are eval()d and
@@ -448,7 +522,6 @@ function mmgr_addsmenu (parentNode, beforeNode, menuName, domId, label, attribs)
     {
         menu = document.createElement ("menu");
         menu.setAttribute ("id", domId);
-        parentNode.insertBefore(menu, beforeNode);
     }
 
     var menupopup = menu.firstChild;
@@ -467,6 +540,13 @@ function mmgr_addsmenu (parentNode, beforeNode, menuName, domId, label, attribs)
     label = label.replace("&", "");
     menu.setAttribute ("label", label);
     menu.setAttribute ("isSeparator", true);
+
+    // Only attach the menu if it's not there already. This can't be in the
+    // if (!menu) block because the updateMenus code clears toplevel menus,
+    // orphaning the submenus, to (parts of?) which we keep handles in the
+    // uiElements array. See the updateMenus code.
+    if (!menu.parentNode)
+        parentNode.insertBefore(menu, beforeNode);
 
     if (typeof attribs == "object")
     {
@@ -679,6 +759,12 @@ function mmgr_newmenu (parentNode, beforeNode, menuName, domId, attribs)
 
     var subMenu = this.appendSubMenu (parentNode, beforeNode, menuName, domId,
                                       menuSpec.label, attribs);
+
+    // Keep track where we're adding popup nodes derived from some menuSpec
+    if (!("uiElements" in this.menuSpecs[menuName]))
+        this.menuSpecs[menuName].uiElements = [subMenu];
+    else if (!arrayContains(this.menuSpecs[menuName].uiElements, subMenu))
+        this.menuSpecs[menuName].uiElements.push(subMenu);
 
     this.createMenuItems (subMenu, null, menuSpec.items);
     return subMenu;
