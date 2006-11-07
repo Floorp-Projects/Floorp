@@ -98,10 +98,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
-// 0d8a87aa-3e6f-409f-a518-96fd8a29b423
+// 845BA869-F93B-4026-8F42-CB058F0E4D87
 #define NS_IPRESSHELL_IID     \
-{ 0x79433b66, 0xe8a4, 0x442f, \
-  { 0x9c, 0x6e, 0x2f, 0xb2, 0x8d, 0x5e, 0x84, 0xd7 } }
+{ 0x845BA869, 0xF93B, 0x4026, \
+  { 0x8F, 0x42, 0xCB, 0x05, 0x8F, 0x0E, 0x4D, 0x87 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -483,6 +483,13 @@ public:
    * Get the caret, if it exists. AddRefs it.
    */
   NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
+
+  /**
+   * Invalidate the caret's current position if it's outside of its frame's
+   * boundaries. This function is useful if you're batching selection
+   * notifications and might remove the caret's frame out from under it.
+   */
+  NS_IMETHOD_(void) MaybeInvalidateCaretPosition() = 0;
 
   /**
    * Set the current caret to a new caret. Returns the old caret.
