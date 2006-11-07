@@ -305,7 +305,7 @@ var nsBrowserContentHandler = {
           else if (/new-tab/.test(remoteParams[1]))
             location = nsIBrowserDOMWindow.OPEN_NEWTAB;
 
-          handURIToExistingBrowser(uri, location);
+          handURIToExistingBrowser(uri, location, cmdLine);
           break;
 
         case "xfedocommand":
@@ -353,7 +353,7 @@ var nsBrowserContentHandler = {
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
         var uri = resolveURIInternal(cmdLine, uriparam);
-        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB);
+        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine);
         cmdLine.preventDefault = true;
       }
     }
@@ -547,7 +547,7 @@ const bch_contractID = "@mozilla.org/browser/clh;1";
 const bch_CID = Components.ID("{5d0ce354-df01-421a-83fb-7ead0990c24e}");
 const CONTRACTID_PREFIX = "@mozilla.org/uriloader/content-handler;1?type=";
 
-function handURIToExistingBrowser(uri, location)
+function handURIToExistingBrowser(uri, location, cmdLine)
 {
   if (!shouldLoadURI(uri))
     return;
@@ -622,7 +622,7 @@ var nsDefaultCommandLineHandler = {
         // Try to find an existing window and load our URI into the
         // current tab, new tab, or new window as prefs determine.
         try {
-          handURIToExistingBrowser(urilist[0], nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW);
+          handURIToExistingBrowser(urilist[0], nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW, cmdLine);
           return;
         }
         catch (e) {
