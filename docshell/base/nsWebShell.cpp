@@ -1167,103 +1167,90 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       if (httpChannel)
         httpChannel->GetRequestMethod(method);
       if (method.Equals("POST") && !NS_IsOffline()) {
-        nsCOMPtr<nsIPrompt> prompter;
         PRBool repost;
-        nsCOMPtr<nsIStringBundle> stringBundle;
-        GetPromptAndStringBundle(getter_AddRefs(prompter), 
-                                  getter_AddRefs(stringBundle));
-   
-        if (stringBundle && prompter) {
-          nsXPIDLString messageStr;
-          nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repost").get(), 
-                                                        getter_Copies(messageStr));
-            
-          if (NS_SUCCEEDED(rv) && messageStr) {
-            prompter->Confirm(nsnull, messageStr, &repost);
-            /* If the user pressed cancel in the dialog, return. Don't
-             * try to load the page with out the post data.
-             */
-            if (!repost)
-              return NS_OK;
+        rv = ConfirmRepost(&repost);
+        if (NS_FAILED(rv)) return rv;
+        // If the user pressed cancel in the dialog, return. Don't try to load
+        // the page without the post data.
+        if (!repost)
+          return NS_OK;
 
-            // The user wants to repost the data to the server. 
-            // If the page was loaded due to a back/forward/go
-            // operation, update the session history index.
-            // This is similar to the updating done in 
-            // nsDocShell::OnNewURI() for regular pages          
-            nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
-            if (!mSessionHistory) {
-              nsCOMPtr<nsIDocShellTreeItem> root;
-              //Get the root docshell
-              GetSameTypeRootTreeItem(getter_AddRefs(root));
-              if (root) {
-                // QI root to nsIWebNavigation
-                nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-                if (rootAsWebnav) {
-                 // Get the handle to SH from the root docshell          
-                 rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));             
-                }
-              }
-            }  // mSessionHistory
+        // The user wants to repost the data to the server.
+        // If the page was loaded due to a back/forward/go
+        // operation, update the session history index.
+        // This is similar to the updating done in
+        // nsDocShell::OnNewURI() for regular pages
+        nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
+        if (!mSessionHistory) {
+          nsCOMPtr<nsIDocShellTreeItem> root;
+          //Get the root docshell
+          GetSameTypeRootTreeItem(getter_AddRefs(root));
+          if (root) {
+            // QI root to nsIWebNavigation
+            nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+            if (rootAsWebnav) {
+            // Get the handle to SH from the root docshell
+            rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
+            }
+          }
+        }  // mSessionHistory
 
-            if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
-              nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
-              if (shInternal) {
-                rootSH->GetIndex(&mPreviousTransIndex);
-                shInternal->UpdateIndex();
-                rootSH->GetIndex(&mLoadedTransIndex);
+        if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+          nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
+          if (shInternal) {
+            rootSH->GetIndex(&mPreviousTransIndex);
+            shInternal->UpdateIndex();
+            rootSH->GetIndex(&mLoadedTransIndex);
 #ifdef DEBUG_PAGE_CACHE
-                printf("Previous index: %d, Loaded index: %d\n\n",
-                       mPreviousTransIndex, mLoadedTransIndex);
+            printf("Previous index: %d, Loaded index: %d\n\n",
+                  mPreviousTransIndex, mLoadedTransIndex);
 #endif
-              }
-            }
-
-            // Make it look like we really did honestly finish loading the
-            // history page we were loading, since the "reload" load we're
-            // about to kick off will reload our current history entry.  This
-            // is a bit of a hack, and if the force-load fails I think we'll
-            // end up being confused about what page we're on... but we would
-            // anyway, since we've updated the session history index above.
-            SetHistoryEntry(&mOSHE, loadingSHE);
-            
-            /* The user does want to repost the data to the server.
-             * Initiate a new load again.
-             */
-            /* Get the postdata if any from the channel */
-            nsCOMPtr<nsIInputStream> inputStream;
-            nsCOMPtr<nsIURI> referrer;
-            if (channel) {
-              nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-   
-              if(httpChannel) {
-                httpChannel->GetReferrer(getter_AddRefs(referrer));
-                nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
-                if (uploadChannel) {
-                  uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
-                }
-              }
-            }
-            nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));
-            if (postDataSeekable)
-            {
-               postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-            }
-            InternalLoad(url,                               // URI
-                         referrer,                          // Referring URI
-                         nsnull,                            // Owner
-                         INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner
-                         nsnull,                            // No window target
-                         nsnull,                            // No type hint
-                         inputStream,                       // Post data stream
-                         nsnull,                            // No headers stream
-                         LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
-                         nsnull,                            // No SHEntry
-                         PR_TRUE,                           // first party site
-                         nsnull,                            // No nsIDocShell
-                         nsnull);                           // No nsIRequest
           }
         }
+
+        // Make it look like we really did honestly finish loading the
+        // history page we were loading, since the "reload" load we're
+        // about to kick off will reload our current history entry.  This
+        // is a bit of a hack, and if the force-load fails I think we'll
+        // end up being confused about what page we're on... but we would
+        // anyway, since we've updated the session history index above.
+        SetHistoryEntry(&mOSHE, loadingSHE);
+
+        // The user does want to repost the data to the server.
+        // Initiate a new load again.
+
+        // Get the postdata if any from the channel.
+        nsCOMPtr<nsIInputStream> inputStream;
+        nsCOMPtr<nsIURI> referrer;
+        if (channel) {
+          nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+
+          if(httpChannel) {
+            httpChannel->GetReferrer(getter_AddRefs(referrer));
+            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+            if (uploadChannel) {
+              uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
+            }
+          }
+        }
+        nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));
+        if (postDataSeekable)
+        {
+          postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+        }
+        InternalLoad(url,                               // URI
+                    referrer,                          // Referring URI
+                    nsnull,                            // Owner
+                    INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner
+                    nsnull,                            // No window target
+                    nsnull,                            // No type hint
+                    inputStream,                       // Post data stream
+                    nsnull,                            // No headers stream
+                    LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
+                    nsnull,                            // No SHEntry
+                    PR_TRUE,                           // first party site
+                    nsnull,                            // No nsIDocShell
+                    nsnull);                           // No nsIRequest
       }
       else {
         DisplayLoadError(aStatus, url, nsnull, channel);
