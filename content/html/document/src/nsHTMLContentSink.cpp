@@ -273,10 +273,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
   
   // nsIDocumentObserver
-  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
-                           PRUint32 aNestingLevel);
-  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
-                         PRUint32 aNestingLevel);
+  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
+  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -3688,8 +3686,7 @@ HTMLContentSink::UpdateAllContexts()
 }
 
 void
-HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
-                             PRUint32 aNestingLevel)
+HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
@@ -3715,8 +3712,7 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
 }
 
 void
-HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType,
-                           PRUint32 aNestingLevel)
+HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
