@@ -33,6 +33,8 @@
 #ifndef _JAVA_GLUE_H_
 #define _JAVA_GLUE_H_
 
+#ifdef AVMPLUS_WITH_JNI
+
 #define NO_JNI_STDIO
 #include <jni.h>
 
@@ -279,5 +281,7 @@ namespace avmplus
 	 	static char* replace(char* dst, const char* src, char what='_', char with='/');
 	};
 }
+
+#endif /* AVMPLUS_WITH_JNI */
 
 #endif /* _JAVA_GLUE_H_ */

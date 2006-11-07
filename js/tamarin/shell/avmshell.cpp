@@ -94,7 +94,9 @@ namespace avmshell
 		NATIVE_CLASS(abcclass_avmplus_File,            FileClass,          ScriptObject)
 		NATIVE_CLASS(abcclass_avmplus_Domain,          DomainClass,        DomainObject)
 		NATIVE_CLASS(abcclass_avmplus_StringBuilder,   StringBuilderClass, StringBuilderObject)		
+#ifdef AVMPLUS_WITH_JNI
 		NATIVE_CLASS(abcclass_avmplus_JObject,         JObjectClass,		JObject)
+#endif /* AVMPLUS_WITH_JNI */
 		NATIVE_CLASS(abcclass_flash_utils_ByteArray,    ByteArrayClass,     ByteArrayObject)		
 		NATIVE_CLASS(abcclass_flash_utils_ShortArray,   ShortArrayClass,    ShortArrayObject)		
 		NATIVE_CLASS(abcclass_flash_utils_UShortArray,  UShortArrayClass,   UShortArrayObject)		
@@ -568,6 +570,7 @@ namespace avmshell
 						SetErrorMode(0);  // set to default
 						#endif // WIN32
 					}
+#ifdef AVMPLUS_WITH_JNI
 					else if (!strcmp(arg, "-jargs")) {
 						// all the following args until the semi colon is for java.
 						//@todo fix up this hard limit
@@ -585,7 +588,8 @@ namespace avmshell
 						}
 						AvmAssert(strlen(Java::startup_options) < 256);
 					}
-
+#endif /* AVMPLUS_WITH_JNI */
+                                    
 	                #ifdef DEBUGGER
 					else if (!strcmp(arg, "-d")) {
 						do_debugger = true;
@@ -975,7 +979,9 @@ namespace avmshell
 		#ifdef AVMPLUS_PROFILE
 			dump();
 		#endif
+#ifdef AVMPLUS_WITH_JNI
 		if (Java::startup_options) delete Java::startup_options;
+#endif /* AVMPLUS_WITH_JNI */
 		return 0;
 	}
 

@@ -29,6 +29,7 @@
  * 
  ***** END LICENSE BLOCK ***** */
 
+#ifdef AVMPLUS_WITH_JNI
 
 // @todo 
 //  local ref and global refs not used at all!
@@ -1683,3 +1684,5 @@ namespace avmplus
 		return JNI_OK;
 	}
 }	
+
+#endif /* AVMPLUS_WITH_JNI */
