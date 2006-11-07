@@ -685,7 +685,12 @@ calWcapSession.prototype = {
     get userId() { return this.m_userId; },
     
     m_defaultCalId: null,
-    get defaultCalId() { return this.m_defaultCalId || this.userId; },
+    get defaultCalId() {
+        if (this.m_defaultCalId)
+            return this.m_defaultCalId;
+        var list = this.getUserPreferences("X-NSCP-WCAP-PREF-icsCalendar", {});
+        return ((list && list.length > 0) ? list[0] : this.userId);
+    },
     
     get isLoggedIn() { return this.m_sessionId != null; },
     
