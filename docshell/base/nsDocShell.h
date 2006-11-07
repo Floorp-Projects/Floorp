@@ -360,6 +360,7 @@ protected:
                                 nsIChannel * aChannel);
 
     // Helper Routines
+    nsresult   ConfirmRepost(PRBool * aRepost);
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
         nsIStringBundle ** aStringBundle);
     NS_IMETHOD GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,

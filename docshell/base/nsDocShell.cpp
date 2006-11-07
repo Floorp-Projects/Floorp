@@ -99,6 +99,7 @@
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
 #include "nsDOMJSUtils.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -220,6 +221,9 @@ static PRLogModuleInfo* gDocShellLog;
 #endif
 static PRLogModuleInfo* gDocShellLeakLog;
 #endif
+
+const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
+const char kAppstringsBundleURL[] = "chrome://global/locale/appstrings.properties";
 
 static void
 FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay)
@@ -7709,27 +7713,13 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
      * repost the data to the server.
      */
     if ((aLoadType & LOAD_CMD_RELOAD) && postData) {
-
-      nsCOMPtr<nsIPrompt> prompter;
       PRBool repost;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      GetPromptAndStringBundle(getter_AddRefs(prompter), 
-                                getter_AddRefs(stringBundle));
- 
-      if (stringBundle && prompter) {
-        nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repostConfirm").get(), 
-                                                      getter_Copies(messageStr));
-          
-        if (NS_SUCCEEDED(rv) && messageStr) {
-          prompter->Confirm(nsnull, messageStr, &repost);
-          /* If the user pressed cancel in the dialog, return.  We're
-           * done here.
-           */
-          if (!repost)
-            return NS_BINDING_ABORTED;  
-        }
-      }
+      rv = ConfirmRepost(&repost);
+      if (NS_FAILED(rv)) return rv;
+
+      // If the user pressed cancel in the dialog, return.  We're done here.
+      if (!repost)
+        return NS_BINDING_ABORTED;
     }
 
     rv = InternalLoad(uri,
@@ -8207,7 +8197,56 @@ nsDocShell::GetLoadType(PRUint32 * aLoadType)
     return NS_OK;
 }
 
-#define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
+nsresult
+nsDocShell::ConfirmRepost(PRBool * aRepost)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrompt> prompter;
+  CallGetInterface(this, NS_STATIC_CAST(nsIPrompt**, getter_AddRefs(prompter)));
+
+  nsCOMPtr<nsIStringBundleService> 
+      stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> appBundle;
+  rv = stringBundleService->CreateBundle(kAppstringsBundleURL,
+                                         getter_AddRefs(appBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  rv = stringBundleService->CreateBundle(kBrandBundleURL, getter_AddRefs(brandBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(prompter && brandBundle && appBundle,
+               "Unable to set up repost prompter.");
+
+  nsXPIDLString brandName;
+  rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                      getter_Copies(brandName));
+  if (NS_FAILED(rv)) return rv;
+  const PRUnichar *formatStrings[] = { brandName.get() };
+
+  nsXPIDLString msgString, button0Title;
+  rv = appBundle->FormatStringFromName(NS_LITERAL_STRING("confirmRepost").get(),
+                                        formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                                        getter_Copies(msgString));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = appBundle->GetStringFromName(NS_LITERAL_STRING("resendButton.label").get(),
+                                    getter_Copies(button0Title));
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 buttonPressed;
+  rv = prompter->
+         ConfirmEx(nsnull, msgString.get(),
+                   (nsIPrompt::BUTTON_POS_0 * nsIPrompt::BUTTON_TITLE_IS_STRING) +
+                   (nsIPrompt::BUTTON_POS_1 * nsIPrompt::BUTTON_TITLE_CANCEL),
+                   button0Title.get(), nsnull, nsnull, nsnull, nsnull, &buttonPressed);
+  if (NS_FAILED(rv)) return rv;
+
+  *aRepost = (buttonPressed == 0);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDocShell::GetPromptAndStringBundle(nsIPrompt ** aPrompt,
@@ -8221,7 +8260,7 @@ nsDocShell::GetPromptAndStringBundle(nsIPrompt ** aPrompt,
     NS_ENSURE_TRUE(stringBundleService, NS_ERROR_FAILURE);
 
     NS_ENSURE_SUCCESS(stringBundleService->
-                      CreateBundle(DIALOG_STRING_URI,
+                      CreateBundle(kAppstringsBundleURL,
                                    aStringBundle),
                       NS_ERROR_FAILURE);
 
