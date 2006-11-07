@@ -366,12 +366,14 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                  */
                 JSObject *funobj = (JSObject *) wp->closure;
                 JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, funobj);
+                jsval argv[2] = { OBJECT_TO_JSVAL(funobj), JSVAL_NULL };
                 JSStackFrame frame;
 
                 memset(&frame, 0, sizeof(frame));
                 frame.script = FUN_SCRIPT(fun);
                 frame.fun = fun;
                 frame.down = cx->fp;
+                frame.argv = argv + 2;
                 cx->fp = &frame;
                 ok = !wp->setter ||
                      ((sprop->attrs & JSPROP_SETTER)
