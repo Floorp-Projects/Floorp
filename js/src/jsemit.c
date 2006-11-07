@@ -5711,7 +5711,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 #if JS_HAS_LVALUE_RETURN
           case TOK_LP:
-            JS_ASSERT(pn2->pn_op == JSOP_SETCALL);
+            if (pn2->pn_op != JSOP_SETCALL) {
+                JS_ASSERT(pn2->pn_op == JSOP_CALL || pn2->pn_op == JSOP_EVAL);
+                pn2->pn_op = JSOP_SETCALL;
+            }
             top = CG_OFFSET(cg);
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
