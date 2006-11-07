@@ -283,6 +283,11 @@ typedef struct _cairo_rectangle_int16 {
     uint16_t width, height;
 } cairo_rectangle_int16_t, cairo_glyph_size_t;
 
+typedef struct _cairo_rectangle_int32 {
+    int32_t x, y;
+    uint32_t width, height;
+} cairo_rectangle_int32_t;
+
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
    offset */
