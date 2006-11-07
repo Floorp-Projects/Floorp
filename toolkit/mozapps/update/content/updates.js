@@ -231,7 +231,11 @@ var gUpdates = {
     // major version again, unless they manually do "Check for Updates..."
     // which, will clear the "never" pref for the version presented
     // so that if they do "Later", we will remind them later.
-    var neverPrefName = PREF_UPDATE_NEVER_BRANCH + gUpdates.update.version;
+    //
+    // fix for bug #359093
+    // version might one day come back from AUS as an 
+    // arbitrary (and possibly non ascii) string, so we need to encode it
+    var neverPrefName = PREF_UPDATE_NEVER_BRANCH + encodeURIComponent(gUpdates.update.version);
     gPref.setBoolPref(neverPrefName, true);
     this.wiz.cancel();
   },
@@ -762,7 +766,11 @@ var gUpdatesAvailablePage = {
       // and then at a later point, did "Check for Updates..." 
       // and then hit "Later".  If we don't clear the "never" pref
       // "Later" will never happen.
-      var neverPrefName = PREF_UPDATE_NEVER_BRANCH + gUpdates.update.version;
+      //
+      // fix for bug #359093
+      // version might one day come back from AUS as an 
+      // arbitrary (and possibly non ascii) string, so we need to encode it
+      var neverPrefName = PREF_UPDATE_NEVER_BRANCH + encodeURIComponent(gUpdates.update.version);
       gPref.setBoolPref(neverPrefName, false);
     }
     else {

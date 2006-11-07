@@ -130,7 +130,7 @@ var gLogEnabled = { };
  *          The string to write to the error console..
  */  
 function LOG(module, string) {
-  if (module in gLogEnabled) {
+  if (module in gLogEnabled || "all" in gLogEnabled) {
     dump("*** " + module + ": " + string + "\n");
     gConsole.logStringMessage(string);
   }
@@ -1388,7 +1388,11 @@ UpdateService.prototype = {
     // note, the never decision should only apply to major updates
     // see bug #350636 for a scenario where this could potentially
     // be an issue
-    var neverPrefName = PREF_UPDATE_NEVER_BRANCH + update.version;
+    //
+    // fix for bug #359093
+    // version might one day come back from AUS as an 
+    // arbitrary (and possibly non ascii) string, so we need to encode it
+    var neverPrefName = PREF_UPDATE_NEVER_BRANCH + encodeURIComponent(update.version);
     var never = getPref("getBoolPref", neverPrefName, false);
     if (never && update.type == "major")
       return;
