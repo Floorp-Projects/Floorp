@@ -264,7 +264,23 @@ if (!empty($mimetype) &&
         $XPILocation = 'http://update.videoegg.com/Install/Windows/Initial/VideoEggPublisher.xpi';
         $installerShowsUI = 'true';
         $manualInstallationURL = 'http://www.videoegg.com/';
+    } elseif ($mimetype == 'video/divx' && preg_match('/^Win/', $clientOS)) {
+        $name = 'DivX Web Player';
+        $guid = '{a8b771f0-2e07-11db-a98b-0800200c9a66}';
+        $iconUrl = 'http://images.divx.com/divx/player/webplayer.png';
+        $XPILocation = 'http://download.divx.com/player/DivXWebPlayer.xpi';
+        $installerShowsUI = 'true';
+        $manualInstallationURL = 'http://go.divx.com/plugin/download/';
+    } elseif ($mimetype == 'video/divx' && preg_match('/^(PPC|Intel) Mac OS X/', $clientOS)) {
+        $name = 'DivX Web Player';
+        $guid = '{a8b771f0-2e07-11db-a98b-0800200c9a66}';
+        $iconUrl = 'http://images.divx.com/divx/player/webplayer.png';
+        $XPILocation = getUriForNoXPI();
+        $installerShowsUI = 'true';
+        $manualInstallationURL = 'http://go.divx.com/plugin/download/';
     }
+
+
     // End ridiculously huge and embarrassing if-else block.
 
 }
