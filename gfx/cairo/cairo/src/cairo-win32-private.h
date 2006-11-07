@@ -93,7 +93,10 @@ enum {
     CAIRO_WIN32_SURFACE_CAN_ALPHABLEND = (1<<3),
 
     /* Whether we can use StretchBlt with this surface */
-    CAIRO_WIN32_SURFACE_CAN_STRETCHBLT = (1<<4)
+    CAIRO_WIN32_SURFACE_CAN_STRETCHBLT = (1<<4),
+
+    /* Whether we can use StretchDIBits with this surface */
+    CAIRO_WIN32_SURFACE_CAN_STRETCHDIB = (1<<5)
 };
 
 cairo_status_t

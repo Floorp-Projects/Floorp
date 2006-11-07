@@ -49,7 +49,7 @@
 #define SB_NONE         0x00000000
 #endif
 
-#define PELS_72DPI  (72. / 0.0254)
+#define PELS_72DPI  ((LONG)(72. / 0.0254))
 #define NIL_SURFACE ((cairo_surface_t*)&_cairo_surface_nil)
 
 static const cairo_surface_backend_t cairo_win32_surface_backend;
@@ -108,6 +108,7 @@ _cairo_win32_flags_for_dc (HDC dc)
 	flags |= CAIRO_WIN32_SURFACE_CAN_BITBLT;
 	flags |= CAIRO_WIN32_SURFACE_CAN_ALPHABLEND;
 	flags |= CAIRO_WIN32_SURFACE_CAN_STRETCHBLT;
+	flags |= CAIRO_WIN32_SURFACE_CAN_STRETCHDIB;
     } else {
 	int cap;
 
@@ -120,6 +121,8 @@ _cairo_win32_flags_for_dc (HDC dc)
 	    flags |= CAIRO_WIN32_SURFACE_CAN_BITBLT;
 	if (cap & RC_STRETCHBLT)
 	    flags |= CAIRO_WIN32_SURFACE_CAN_STRETCHBLT;
+	if (cap & RC_STRETCHDIB)
+	    flags |= CAIRO_WIN32_SURFACE_CAN_STRETCHDIB;
     }
 
     return flags;
@@ -223,8 +226,9 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 	    bitmap_info->bmiColors[i].rgbGreen = i * 255;
 	    bitmap_info->bmiColors[i].rgbRed = i * 255;
 	    bitmap_info->bmiColors[i].rgbReserved = 0;
-	    break;
 	}
+
+	break;
     }
 
     surface->dc = CreateCompatibleDC (original_dc);
@@ -695,17 +699,8 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (!(dst->flags & CAIRO_WIN32_SURFACE_CAN_ALPHABLEND))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     if (src->format == CAIRO_FORMAT_RGB24 && dst->format == CAIRO_FORMAT_ARGB32)
-    {
-	/* Both of these are represented as 32bpp internally, and AlphaBlend
-	 * DOES NOT throw away source alpha is AC_SRC_ALPHA is not specified,
-	 * it just multiplies it by the SourceConstantAlpha, along with the
-	 * R G B components.
-	 * XXX there has to be a way to do this!
-	 */
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
 
     blend_function.BlendOp = AC_SRC_OVER;
     blend_function.BlendFlags = 0;
@@ -720,7 +715,7 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 		      src_x, src_y,
 		      src_w, src_h,
 		      blend_function))
-	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
+	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(AlphaBlend)");
     /*SetStretchBltMode(dst->dc, oldstretchmode);*/
 
     return CAIRO_STATUS_SUCCESS;
@@ -744,17 +739,17 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
     cairo_win32_surface_t *src;
     cairo_surface_pattern_t *src_surface_pattern;
     int alpha;
-    int itx, ity;
     double scalex, scaley;
     cairo_fixed_t x0_fixed, y0_fixed;
-    int orig_dst_x = dst_x, orig_dst_y = dst_y;
-    int real_src_width, real_src_height;
 
-    int src_width, src_height;
-    int dst_width, dst_height;
-  
     cairo_bool_t needs_alpha, needs_scale;
     cairo_image_surface_t *src_image = NULL;
+
+    cairo_format_t src_format;
+    cairo_rectangle_int16_t src_extents;
+
+    cairo_rectangle_int32_t src_r = { src_x, src_y, width, height };
+    cairo_rectangle_int32_t dst_r = { dst_x, dst_y, width, height };
 
 #if 0
     fprintf (stderr, "composite: %d %p %p %p [%d %d] [%d %d] [%d %d] %dx%d\n",
@@ -767,17 +762,18 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
      */
     if (dst->flags & (CAIRO_WIN32_SURFACE_CAN_BITBLT |
 		      CAIRO_WIN32_SURFACE_CAN_ALPHABLEND |
-		      CAIRO_WIN32_SURFACE_CAN_STRETCHBLT)
+		      CAIRO_WIN32_SURFACE_CAN_STRETCHBLT |
+		      CAIRO_WIN32_SURFACE_CAN_STRETCHDIB)
 	== 0)
     {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
     }
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
 
     if (pattern->extend != CAIRO_EXTEND_NONE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
 
     if (mask_pattern) {
 	/* FIXME: When we fully support RENDER style 4-channel
@@ -794,24 +790,44 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
     src_surface_pattern = (cairo_surface_pattern_t *)pattern;
     src = (cairo_win32_surface_t *)src_surface_pattern->surface;
 
-    /* Disable this StretchDIBits optimization for now */
-#if 0
-    if (src->base.type == CAIRO_SURFACE_TYPE_IMAGE) {
+    if (src->base.type == CAIRO_SURFACE_TYPE_IMAGE &&
+	dst->flags & (CAIRO_WIN32_SURFACE_CAN_STRETCHDIB))
+    {
+	/* In some very limited cases, we can use StretchDIBits to draw
+	 * an image surface directly:
+	 *  - source is CAIRO_FORMAT_ARGB32
+	 *  - dest is CAIRO_FORMAT_ARGB32
+	 *  - alpha is 255
+	 *  - operator is SOURCE or OVER
+	 *  - image stride is 4*width
+	 */
 	src_image = (cairo_image_surface_t*) src;
 
 	if (src_image->format != CAIRO_FORMAT_RGB24 ||
+	    dst->format != CAIRO_FORMAT_RGB24 ||
 	    alpha != 255 ||
+	    (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) ||
 	    src_image->stride != (src_image->width * 4))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    } else 
-#endif
-    if (src->base.backend != dst->base.backend) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	{
+	    goto UNSUPPORTED;
+	}
+
+	src_format = src_image->format;
+	src_extents.x = 0;
+	src_extents.y = 0;
+	src_extents.width = src_image->width;
+	src_extents.height = src_image->height;
+    } else if (src->base.backend != dst->base.backend) {
+	goto UNSUPPORTED;
+    } else {
+	src_format = src->format;
+	src_extents = src->extents;
     }
+
 
 #if 0
     fprintf (stderr, "Before check: (%d %d) [%d %d] -> [%d %d %d %d] {mat %f %f %f %f}\n",
-	     src->extents.width, src->extents.height,
+	     src_extents.width, src_extents.height,
 	     src_x, src_y,
 	     dst_x, dst_y, width, height,
 	     pattern->matrix.x0, pattern->matrix.y0, pattern->matrix.xx, pattern->matrix.yy);
@@ -828,75 +844,127 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	!_cairo_fixed_is_integer(x0_fixed) ||
 	!_cairo_fixed_is_integer(y0_fixed))
     {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
     }
-
-    itx = _cairo_fixed_integer_part(x0_fixed);
-    ity = _cairo_fixed_integer_part(y0_fixed);
 
     scalex = pattern->matrix.xx;
     scaley = pattern->matrix.yy;
 
-    src_x += itx;
-    src_y += ity;
+    src_r.x += _cairo_fixed_integer_part(x0_fixed);
+    src_r.y += _cairo_fixed_integer_part(y0_fixed);
 
-    if (scalex <= 0.0 || scaley <= 0.0)
+    /* Success, right? */
+    if (scalex == 0.0 || scaley == 0.0)
 	return CAIRO_STATUS_SUCCESS;
 
     if (scalex != 1.0 || scaley != 1.0)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
 
     /* If the src coordinates are outside of the source surface bounds,
      * we have to fix them up, because this is an error for the GDI
      * functions.
-     * XXX Make sure to correctly clear out the unpainted region.
      */
 
-    if (src_x < 0) {
-	width += src_x;
-	dst_x -= src_x;
-	src_x = 0;
+    /* If the src rect and the extents of the source image don't overlap at all,
+     * we can't do anything useful here.
+     */
+    if (src_r.x > src_extents.width || src_r.y > src_extents.height ||
+	(src_r.x + src_r.width) < 0 || (src_r.y + src_r.height) < 0)
+    {
+	if (op == CAIRO_OPERATOR_OVER)
+	    return CAIRO_STATUS_SUCCESS;
+	goto UNSUPPORTED;
     }
 
-    if (src_y < 0) {
-	height += src_y;
-	dst_y -= src_y;
-	src_y = 0;
+    /* Otherwise, if the src recangle doesn't wholly lie within the
+     * src extents, fudge things.  We really need to do fixup on the
+     * unpainted region -- e.g. the SOURCE operator is broken for
+     * areas outside of the extents, because it won't clear that area
+     * to transparent black.
+     */
+
+    if (src_r.x < 0) {
+	src_r.width += src_r.x;
+	src_r.x = 0;
+
+	dst_r.width += src_r.x;
+	dst_r.x -= src_r.x;
     }
 
-    if (src_x + width > src->extents.width)
-	dst_width = src->extents.width - src_x;
-    else
-	dst_width = width;
+    if (src_r.y < 0) {
+	src_r.height += src_r.y;
+	src_r.y = 0;
 
-    if (src_y + height > src->extents.height)
-	dst_height = src->extents.height - src_y;
-    else
-	dst_height = height;
+	dst_r.height += dst_r.y;
+	dst_r.y -= src_r.y;
+    }
 
-    src_width = dst_width;
-    src_height = dst_height;
+    if (src_r.x + src_r.width > src_extents.width) {
+	src_r.width = src_extents.width - src_r.x;
+	dst_r.width = src_r.width;
+    }
+
+    if (src_r.y + src_r.height > src_extents.height) {
+	src_r.height = src_extents.height - src_r.y;
+	dst_r.height = src_r.height;
+    }
+
+    /*
+     * Operations that we can do:
+     *
+     *  RGB OVER  RGB -> BitBlt (same as SOURCE)
+     *  RGB OVER ARGB -> UNSUPPORTED (AlphaBlend treats this as a BitBlt, even with SCA 255 and no AC_SRC_ALPHA)
+     * ARGB OVER ARGB -> AlphaBlend, with AC_SRC_ALPHA
+     * ARGB OVER  RGB -> AlphaBlend, with AC_SRC_ALPHA; we'll have junk in the dst A byte
+     * 
+     *  RGB OVER  RGB + mask -> AlphaBlend, no AC_SRC_ALPHA
+     *  RGB OVER ARGB + mask -> UNSUPPORTED
+     * ARGB OVER ARGB + mask -> AlphaBlend, with AC_SRC_ALPHA
+     * ARGB OVER  RGB + mask -> AlphaBlend, with AC_SRC_ALPHA; junk in the dst A byte
+     * 
+     *  RGB SOURCE  RGB -> BitBlt
+     *  RGB SOURCE ARGB -> UNSUPPORTED (AlphaBlend treats this as a BitBlt, even with SCA 255 and no AC_SRC_ALPHA)
+     * ARGB SOURCE ARGB -> BitBlt
+     * ARGB SOURCE  RGB -> BitBlt
+     * 
+     *  RGB SOURCE  RGB + mask -> unsupported
+     *  RGB SOURCE ARGB + mask -> unsupported
+     * ARGB SOURCE ARGB + mask -> unsupported
+     * ARGB SOURCE  RGB + mask -> unsupported
+     */
 
     /*
      * Figure out what action to take.
-     * XXX handle SOURCE with alpha != 255
      */
-    if (alpha == 255 &&
-	(dst->format == src->format) &&
-	((op == CAIRO_OPERATOR_SOURCE && (dst->format == CAIRO_FORMAT_ARGB32 ||
-					  dst->format == CAIRO_FORMAT_RGB24)) ||
-	 (op == CAIRO_OPERATOR_OVER && dst->format == CAIRO_FORMAT_RGB24)))
-    {
-	needs_alpha = FALSE;
-    } else if ((op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_SOURCE) &&
-	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
-	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32))
-    {
-	needs_alpha = TRUE;
+    if (op == CAIRO_OPERATOR_OVER) {
+	if (alpha == 0)
+	    return CAIRO_STATUS_SUCCESS;
+
+	if (src_format == dst->format) {
+	    if (alpha == 255 && src_format == CAIRO_FORMAT_RGB24) {
+		needs_alpha = FALSE;
+	    } else {
+		needs_alpha = TRUE;
+	    }
+	} else if (src_format == CAIRO_FORMAT_ARGB32 &&
+		   dst->format == CAIRO_FORMAT_RGB24)
+	{
+	    needs_alpha = TRUE;
+	} else {
+	    goto UNSUPPORTED;
+	}
+    } else if (alpha == 255 && op == CAIRO_OPERATOR_SOURCE) {
+	if ((src_format == dst->format) ||
+	    (src_format == CAIRO_FORMAT_ARGB32 && dst->format == CAIRO_FORMAT_RGB24))
+	{
+	    needs_alpha = FALSE;
+	} else {
+	    goto UNSUPPORTED;
+	}
     } else {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	goto UNSUPPORTED;
     }
-  
+
     if (scalex == 1.0 && scaley == 1.0) {
 	needs_scale = FALSE;
     } else {
@@ -906,44 +974,60 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 
 #if 0
     fprintf (stderr, "action: [%d %d %d %d] -> [%d %d %d %d]\n",
-	     src_x, src_y, src_width, src_height,
-	     dst_x, dst_y, dst_width, dst_height);
+	     src_r.x, src_r.y, src_r.width, src_r.height,
+	     dst_r.x, dst_r.y, dst_r.width, dst_r.height);
     fflush (stderr);
 #endif
 
     /* Then do BitBlt, StretchDIBits, StretchBlt, AlphaBlend, or MaskBlt */
     if (src_image) {
-	BITMAPINFO bi;
-	bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bi.bmiHeader.biWidth = src_image->width;
-	bi.bmiHeader.biHeight = src_image->height;
-	bi.bmiHeader.biSizeImage = 0;
-	bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
-	bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
-	bi.bmiHeader.biPlanes = 1;
-	bi.bmiHeader.biBitCount = 32;
-	bi.bmiHeader.biCompression = BI_RGB;
-	bi.bmiHeader.biClrUsed = 0;
-	bi.bmiHeader.biClrImportant = 0;
+	if (needs_alpha || needs_scale)
+	    goto UNSUPPORTED;
 
-	if (!StretchDIBits (dst->dc,
-			    dst_x, dst_y, dst_width, dst_height,
-			    src_x, src_y, src_width, src_height,
-			    src_image->data,
-			    &bi,
-			    DIB_RGB_COLORS,
-			    SRCCOPY))
-	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(StretchDIBits)");
+	if (dst->flags & CAIRO_WIN32_SURFACE_CAN_STRETCHBLT) {
+	    BITMAPINFO bi;
+	    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	    bi.bmiHeader.biWidth = src_image->width;
+	    bi.bmiHeader.biHeight = - src_image->height;
+	    bi.bmiHeader.biSizeImage = 0;
+	    bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
+	    bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
+	    bi.bmiHeader.biPlanes = 1;
+	    bi.bmiHeader.biBitCount = 32;
+	    bi.bmiHeader.biCompression = BI_RGB;
+	    bi.bmiHeader.biClrUsed = 0;
+	    bi.bmiHeader.biClrImportant = 0;
 
-	return CAIRO_STATUS_SUCCESS;
+	    /* StretchDIBits is broken with top-down dibs; you need to do some
+	     * special munging to make the coordinate space work (basically,
+	     * need to address everything based on the bottom left, instead of top left,
+	     * and need to tell it to flip the resulting image.
+	     *
+	     * See http://blog.vlad1.com/archives/2006/10/26/134/ and comments.
+	     */
+	    if (!StretchDIBits (dst->dc,
+				/* dst x,y,w,h */
+				dst_r.x, dst_r.y + dst_r.height - 1,
+				dst_r.width, - dst_r.height,
+				/* src x,y,w,h */
+				src_r.x, src_extents.height - src_r.y + 1,
+				src_r.width, - src_r.height,
+				src_image->data,
+				&bi,
+				DIB_RGB_COLORS,
+				SRCCOPY))
+		return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(StretchDIBits)");
+
+	    return CAIRO_STATUS_SUCCESS;
+	}
     } else if (!needs_alpha) {
 	/* BitBlt or StretchBlt? */
 	if (!needs_scale && (dst->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT)) {
 	    if (!BitBlt (dst->dc,
-			 dst_x, dst_y,
-			 dst_width, dst_height,
+			 dst_r.x, dst_r.y,
+			 dst_r.width, dst_r.height,
 			 src->dc,
-			 src_x, src_y,
+			 src_r.x, src_r.y,
 			 SRCCOPY))
 		return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(BitBlt)");
 
@@ -954,25 +1038,34 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	    BOOL success;
 	    int oldmode = SetStretchBltMode(dst->dc, HALFTONE);
 	    success = StretchBlt(dst->dc,
-				 dst_x, dst_y,
-				 dst_width, dst_height,
+				 dst_r.x, dst_r.y,
+				 dst_r.width, dst_r.height,
 				 src->dc,
-				 src_x, src_y,
-				 src_width, src_height,
+				 src_r.x, src_r.y,
+				 src_r.width, src_r.height,
 				 SRCCOPY);
 	    SetStretchBltMode(dst->dc, oldmode);
 
-	    if (!success) {
-		_cairo_win32_print_gdi_error ("StretchBlt");
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
+	    if (!success)
+		return _cairo_win32_print_gdi_error ("StretchBlt");
   
 	    return CAIRO_STATUS_SUCCESS;
 	}
     } else if (needs_alpha && !needs_scale) {
   	return _composite_alpha_blend (dst, src, alpha,
-				       src_x, src_y, src_width, src_height,
-				       dst_x, dst_y, dst_width, dst_height);
+				       src_r.x, src_r.y, src_r.width, src_r.height,
+				       dst_r.x, dst_r.y, dst_r.width, dst_r.height);
+    }
+
+UNSUPPORTED:
+    /* Fall back to image surface directly, if this is a DIB surface */
+    if (dst->image) {
+	return dst->image->backend->composite (op, pattern, mask_pattern,
+					       dst->image,
+					       src_x, src_y,
+					       mask_x, mask_y,
+					       dst_x, dst_y,
+					       width, height);
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
