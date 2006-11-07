@@ -726,6 +726,8 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   gDBView.suppressMsgDisplay = IsMessagePaneCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
+  var ObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  ObserverService.notifyObservers(msgFolder, "MsgCreateDBView", viewType + ":" + viewFlags);
 }
 
 //------------------------------------------------------------
