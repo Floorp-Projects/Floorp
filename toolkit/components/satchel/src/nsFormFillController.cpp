@@ -564,15 +564,15 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
                                   
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    if (type.Equals(NS_LITERAL_STRING("text")) && !isReadOnly &&
-        !autocomplete.EqualsIgnoreCase("off")) {
+    if (type.LowerCaseEqualsLiteral("text") && !isReadOnly &&
+        !autocomplete.LowerCaseEqualsLiteral("off")) {
 
       nsCOMPtr<nsIDOMHTMLFormElement> form;
       input->GetForm(getter_AddRefs(form));
       if (form)
         form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-      if (!form || !autocomplete.EqualsIgnoreCase("off"))
+      if (!form || !autocomplete.LowerCaseEqualsLiteral("off"))
         StartControllingInput(input);
     }
     
