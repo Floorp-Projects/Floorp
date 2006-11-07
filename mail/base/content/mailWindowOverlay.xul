@@ -1216,10 +1216,11 @@
           <menuseparator id="trashMenuSeparator"/>
           <menu id="offlineMenuItem" label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
             <menupopup>
-              <menuitem id="offlineGoOfflineCmd"/>
+              <menuitem id="goOfflineMenuItem" type="checkbox" label="&offlineGoOfflineCmd.label;" 
+                        accesskey="&offlineGoOfflineCmd.accesskey;" oncommand="MailOfflineMgr.toggleOfflineStatus();"/>
               <menuseparator/>
               <menuitem label="&synchronizeOfflineCmd.label;" accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
-              <menuitem label="&settingsOfflineCmd.label;" accesskey="&settingsOfflineCmd.accesskey;"    oncommand="openOptionsDialog('paneAdvanced', 'offlineTab');"/>
+              <menuitem label="&settingsOfflineCmd.label;" accesskey="&settingsOfflineCmd.accesskey;" observes="cmd_settingsOffline"/>
               <menuseparator/>
               <menuitem label="&downloadStarredCmd.label;" accesskey="&downloadStarredCmd.accesskey;"    observes="cmd_downloadFlagged"/>
               <menuitem label="&downloadSelectedCmd.label;" accesskey="&downloadSelectedCmd.accesskey;"   observes="cmd_downloadSelected"/>
@@ -2201,7 +2202,7 @@
 
   <statusbar class="chromeclass-status" id="status-bar">
   <hbox insertbefore="unreadMessageCount"  id="statusTextBox" flex="1">
-    <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/>
+    <statusbarpanel id="offline-status" class="statusbarpanel-iconic" oncommand="MailOfflineMgr.toggleOfflineStatus();"/>
     <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

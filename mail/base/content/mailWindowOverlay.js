@@ -71,9 +71,6 @@ const kMsgNotificationJunkBar = 2;
 const kMsgNotificationRemoteImages = 3;
 
 var gMessengerBundle;
-var gPromptService;
-var gOfflinePromptsBundle;
-var gOfflineManager;
 var gWindowManagerInterface;
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
 var gPrintSettings = null;
@@ -129,7 +126,7 @@ function menu_new_init()
   ShowMenuItem("menu_newFolder", showNew);
   ShowMenuItem("menu_newVirtualFolder", showNew);
 
-  EnableMenuItem("menu_newFolder", !isIMAPFolder || !ioService.offline);
+  EnableMenuItem("menu_newFolder", !isIMAPFolder || MailOfflineMgr.isOnline());
   EnableMenuItem("menu_newVirtualFolder", true);
   if (showNew)
     SetMenuItemLabel("menu_newFolder", gMessengerBundle.getString((isServer || isInbox) ? "newFolderMenuItem" : "newSubfolderMenuItem"));
@@ -982,11 +979,9 @@ function GetMessagesForInboxOnServer(server)
 function MsgGetMessage()
 {
   // if offline, prompt for getting messages
-  if(CheckOnline())
+  if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail())
     GetFolderMessages();
-  else if (DoGetNewMailWhenOffline())
-      GetFolderMessages();
-    }
+}
 
 function MsgGetMessagesForAllServers(defaultServer)
 {
@@ -1044,11 +1039,9 @@ function MsgGetMessagesForAllServers(defaultServer)
   */
 function MsgGetMessagesForAllAuthenticatedAccounts()
 {
-  if(CheckOnline())
+  if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail())
     GetMessagesForAllAuthenticatedAccounts();
-  else if (DoGetNewMailWhenOffline())
-      GetMessagesForAllAuthenticatedAccounts();
-    }
+}
 
 /**
   * Get messages for the account selected from Menu dropdowns.
@@ -1059,30 +1052,21 @@ function MsgGetMessagesForAccount(aEvent)
   if (!aEvent)
     return;
 
-  if(CheckOnline())
+  if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail())
     GetMessagesForAccount(aEvent);
-  else if (DoGetNewMailWhenOffline()) 
-      GetMessagesForAccount(aEvent);
-    }
+}
 
 // if offline, prompt for getNextNMessages
 function MsgGetNextNMessages()
 {
   var folder;
-  
-  if(CheckOnline()) {
+  if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail()) 
+  {
     folder = GetFirstSelectedMsgFolder();
-    if(folder) 
+    if (folder) 
       GetNextNMessages(folder);
   }
-
-  else if(DoGetNewMailWhenOffline()) {
-      folder = GetFirstSelectedMsgFolder();
-      if(folder) {
-        GetNextNMessages(folder);
-      }
-    }
-  }   
+}   
 
 function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
@@ -1434,12 +1418,13 @@ function MsgOpenSelectedMessages()
     
   var openWindowWarning = gPrefBranch.getIntPref("mailnews.open_window_warning");
   if ((openWindowWarning > 1) && (numMessages >= openWindowWarning)) {
-    InitPrompts();
     if (!gMessengerBundle)
         gMessengerBundle = document.getElementById("bundle_messenger");
     var title = gMessengerBundle.getString("openWindowWarningTitle");
     var text = gMessengerBundle.getFormattedString("openWindowWarningText", [numMessages]);
-    if (!gPromptService.confirm(window, title, text))
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                          .getService(Components.interfaces.nsIPromptService);    
+    if (!promptService.confirm(window, title, text))
       return;
   }
 
@@ -1797,20 +1782,10 @@ function MsgStop()
 function MsgSendUnsentMsgs()
 {
   // if offline, prompt for sendUnsentMessages
-  if(CheckOnline()) {
-    SendUnsentMessages();    
-  }
-  else {
-    var option = PromptSendMessagesOffline();
-    if(option == 0) {
-      if (!gOfflineManager) 
-        GetOfflineMgrService();
-      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                               false /* playbackOfflineImapOperations */, 
-                               msgWindow);
-      SendUnsentMessages();
-    }
-  }
+  if (MailOfflineMgr.isOnline())
+    SendUnsentMessages();
+  else
+    MailOfflineMgr.goOnlineToSendMessages(msgWindow);
 }
 
 function GetPrintSettings()
@@ -1989,9 +1964,8 @@ function getMarkupDocumentViewer()
 
 function MsgSynchronizeOffline()
 {
-    //dump("in MsgSynchronize() \n"); 
-    window.openDialog("chrome://messenger/content/msgSynchronize.xul",
-          "", "centerscreen,chrome,modal,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
+  window.openDialog("chrome://messenger/content/msgSynchronize.xul",
+        "", "centerscreen,chrome,modal,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
 }
 
 
@@ -2054,80 +2028,6 @@ function IsAccountOfflineEnabled()
       return selectedFolders[0].supportsOffline;
      
   return false;
-}
-
-// init nsIPromptService and strings
-function InitPrompts()
-{
-  if(!gPromptService) {
-    gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
-  }
-  if (!gOfflinePromptsBundle) 
-    gOfflinePromptsBundle = document.getElementById("bundle_offlinePrompts");
-}
-
-function DoGetNewMailWhenOffline()
-{
-  var sendUnsent = false;
-  var goOnline = PromptGetMessagesOffline() == 0;
-  if (goOnline)
-  {
-    if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
-    {
-      sendUnsent = gPromptService.confirmEx(window, 
-                          gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
-                          gOfflinePromptsBundle.getString('sendMessagesLabel'),
-                          gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
-                            gPromptService.BUTTON_POS_1),
-                          gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
-                          gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
-                          null, null, {value:0}) == 0;
-    }
-    if (!gOfflineManager) 
-      GetOfflineMgrService();
-    gOfflineManager.goOnline(sendUnsent /* sendUnsentMessages */, 
-                             false /* playbackOfflineImapOperations */, 
-                             msgWindow);
- 
-  }
-  return goOnline;
-}
-
-// prompt for getting messages when offline
-function PromptGetMessagesOffline()
-{
-  var buttonPressed = false;
-  InitPrompts();
-  if (gPromptService) {
-    var checkValue = {value:false};
-    buttonPressed = gPromptService.confirmEx(window, 
-                            gOfflinePromptsBundle.getString('getMessagesOfflineWindowTitle'), 
-                            gOfflinePromptsBundle.getString('getMessagesOfflineLabel'),
-                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
-                            (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
-                            gOfflinePromptsBundle.getString('getMessagesOfflineGoButtonLabel'),
-                            null, null, null, checkValue);
-  }
-  return buttonPressed;
-}
-
-// prompt for sending messages when offline
-function PromptSendMessagesOffline()
-{
-  var buttonPressed = false;
-  InitPrompts();
-  if (gPromptService) {
-    var checkValue= {value:false};
-    buttonPressed = gPromptService.confirmEx(window, 
-                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
-                            gOfflinePromptsBundle.getString('sendMessagesOfflineLabel'),
-                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
-                            (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
-                            gOfflinePromptsBundle.getString('sendMessagesOfflineGoButtonLabel'),
-                            null, null, null, checkValue, buttonPressed);
-  }
-  return buttonPressed;
 }
 
 function GetDefaultAccountRootFolder()

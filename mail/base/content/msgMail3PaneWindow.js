@@ -822,7 +822,7 @@ function delayedOnLoadMessenger()
   pref.addObserver("mail.pane_config.dynamic", MailPrefObserver, false);
   pref.addObserver("mail.showFolderPaneColumns", MailPrefObserver, false);
 
-  AddMailOfflineObserver();
+  MailOfflineMgr.init();
   CreateMailWindowGlobals();
   accountCentralBox = document.getElementById("accountCentralBox");
   GetMessagePane().collapsed = true;
@@ -1001,46 +1001,22 @@ function loadStartFolder(initialUri)
     // and we aren't supposed to initially download mail. (Bug #270743)
     if (gLoadStartFolder)
       MsgGetMessagesForAllServers(defaultServer);
-
-    if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
-    {
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-      if (!ioService.offline) 
-      {
-        InitPrompts();
-        InitServices();
-
-        var sendUnsentWhenGoingOnlinePref = pref.getIntPref("offline.send.unsent_messages");
-        if(gPromptService && sendUnsentWhenGoingOnlinePref == 0) // pref is "ask"
-        {
-          var buttonPressed = gPromptService.confirmEx(window, 
-                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
-                            gOfflinePromptsBundle.getString('sendMessagesLabel'),
-                            gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
-                              gPromptService.BUTTON_POS_1),
-                            gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
-                            gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
-                            null, null, {value:0});
-          if (buttonPressed == 0)
-            SendUnsentMessages();
-        }
-        else if(sendUnsentWhenGoingOnlinePref == 1) // pref is "yes"
-          SendUnsentMessages();
-      }
-    }
+    
+    // if appropriate, send unsent messages. This may end up prompting the user
+    if (MailOfflineMgr.shouldSendUnsentMessages())
+      SendUnsentMessages();
 }
 
 function AddToSession()
 {
-    try {
-        var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
-        
-        var nsIFolderListener = Components.interfaces.nsIFolderListener;
-        var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
-        mailSession.AddFolderListener(folderListener, notifyFlags);
+  try {
+   var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
+   var nsIFolderListener = Components.interfaces.nsIFolderListener;
+   var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
+   mailSession.AddFolderListener(folderListener, notifyFlags);
 	} catch (ex) {
-        dump("Error adding to session\n");
-    }
+    dump("Error adding to session\n");
+  }
 }
 
 function InitPanes()

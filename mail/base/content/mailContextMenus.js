@@ -372,7 +372,7 @@ function SetupNewMenuItem(folderResource, numSelected, isServer, serverType,spec
   var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
   ShowMenuItem("folderPaneContext-new", showNew);
 
-  EnableMenuItem("folderPaneContext-new", !isIMAPFolder || !ioService.offline);
+  EnableMenuItem("folderPaneContext-new", !isIMAPFolder || MailOfflineMgr.isOnline());
 
   if (showNew)
   {

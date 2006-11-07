@@ -1006,36 +1006,6 @@ function Redo()
     messenger.Redo(msgWindow);
 }
 
-var mailOfflineObserver = {
-  observe: function(subject, topic, state) {
-    // sanity checks
-    if (topic == "network:offline-status-changed")
-    MailOfflineStateChanged(state == "offline");
-  }
-}
-
-function AddMailOfflineObserver() 
-{
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
-  observerService.addObserver(mailOfflineObserver, "network:offline-status-changed", false);
-
-  try {
-    // Stop automatic management of the offline status.
-    // XXX need to watch the link status changes and manage
-    // offline mode accordingly.
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-      getService(Components.interfaces.nsIIOService2);
-    ioService.manageOfflineStatus = false;
-  } catch (ex) {
-  }
-}
-
-function RemoveMailOfflineObserver()
-{
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
-  observerService.removeObserver(mailOfflineObserver,"network:offline-status-changed");
-}
-
 function getSearchTermString(searchTerms)
 {
   var searchIndex;

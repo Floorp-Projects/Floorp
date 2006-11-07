@@ -1113,7 +1113,7 @@ function detachAttachment(aAttachment, aSaveFirst)
 function CanDetachAttachments()
 {
   var uri = GetLoadedMessage();
-  var canDetach = !IsNewsMessage(uri) && (!IsImapMessage(uri) || CheckOnline());
+  var canDetach = !IsNewsMessage(uri) && (!IsImapMessage(uri) || MailOfflineMgr.isOnline());
   if (canDetach && ("content-type" in currentHeaderData))
   {
     var contentType = currentHeaderData["content-type"].headerValue;
@@ -1413,7 +1413,7 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       }
       var canDetach = !(/news-message:/.test(attachment.uri)) && 
           !signedOrEncrypted &&
-          (!(/imap-message/.test(attachment.uri)) || CheckOnline());
+          (!(/imap-message/.test(attachment.uri)) || MailOfflineMgr.isOnline());
       menuitementry.setAttribute('label', gOpenLabel); 
       menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);

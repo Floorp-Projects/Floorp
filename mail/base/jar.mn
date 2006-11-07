@@ -122,6 +122,7 @@ messenger.jar:
 comm.jar:
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 *+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
+*+  content/communicator/utilityOverlay.js          (content/utilityOverlay.js)
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/help/contextHelp.js                     (content/contextHelp.js)
 % content help %content/help/ xpcnativewrappers=yes

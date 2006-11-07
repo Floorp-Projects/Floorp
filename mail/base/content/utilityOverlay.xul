@@ -15,16 +15,7 @@
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-
-  <!-- online/offline status indicators -->   
-  <broadcaster id="Communicator:WorkMode"
-               label="&offlineGoOfflineCmd.label;"
-               type="checkbox"
-               oncommand="toggleOfflineStatus();"/>
-
-  <statusbarpanel id="offline-status" observes="Communicator:WorkMode"/>
-  <menuitem id="offlineGoOfflineCmd" label="&offlineGoOfflineCmd.label;" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
-
+  
   <!-- File Menu -->
   <menu id="menu_File" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
   <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;"/>

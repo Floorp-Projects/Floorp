@@ -168,8 +168,6 @@
 
 <broadcasterset id="composeBroadcasters">
   <broadcaster id="Editor:Throbber" busy="false"/>
-  <broadcaster id="Communicator:WorkMode" label="&offlineGoOfflineCmd.label;"
-               type="checkbox" oncommand="toggleOfflineStatus();"/>
   <broadcaster id="args" value="editorType=default"/>
   <broadcaster id="viewAddressPicker" autoCheck="false" type="checkbox" oncommand="toggleAddressPicker();"/>
 </broadcasterset>
@@ -314,7 +312,6 @@
               <menuitem type="checkbox" label="&attachVCardCmd.label;" accesskey="&attachVCardCmd.accesskey;" command="cmd_attachVCard"/>
             </menupopup>
           </menu>
-          <menuitem id="offlineGoOfflineCmd" hidden="true" label="&offlineGoOfflineCmd.label;" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
           <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
           <menuseparator/>
           <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" command="cmd_saveDefault"/>
@@ -571,7 +568,6 @@
                now_tooltiptext="&sendButton.tooltip;"
                later_label="&sendLaterCmd.label;"
                later_tooltiptext="&sendlaterButton.tooltip;">
-      <observes element="Communicator:WorkMode" attribute="offline"/>
     </toolbarbutton>
     
     <toolbarbutton class="toolbarbutton-1"

@@ -252,7 +252,14 @@ pref("general.startup.compose",             false);
 pref("general.startup.addressbook",         false);
 
 pref("offline.startup_state",            2);
+// 0 Ask before sending unsent messages when going online
+// 1 Always send unsent messages when going online
+// 2 Never send unsent messages when going online
 pref("offline.send.unsent_messages",            0);
+
+// 0 Ask before synchronizing the offline mail store when going offline
+// 1 Always synchronize the offline store when going offline
+// 2 Never synchronize the offline store when going offline
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
 

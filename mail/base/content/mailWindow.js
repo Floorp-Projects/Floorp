@@ -42,15 +42,10 @@
 var messengerContractID        = "@mozilla.org/messenger;1";
 var statusFeedbackContractID   = "@mozilla.org/messenger/statusfeedback;1";
 var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
-var secureUIContractID         = "@mozilla.org/secure_browser_ui;1";
-
-
-var prefContractID             = "@mozilla.org/preferences-service;1";
 var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 
 var messenger;
 var pref;
-var prefServices;
 var statusFeedback;
 var msgWindow;
 
@@ -84,11 +79,10 @@ var gFakeAccountPageLoaded = false;
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
 var gIsEditableMsgFolder = false;
-var gOfflineManager;
 
 function OnMailWindowUnload()
 {
-  RemoveMailOfflineObserver();
+  MailOfflineMgr.uninit();
   ClearPendingReadTimer();
 
   var searchSession = GetSearchSession();
@@ -142,8 +136,8 @@ function CreateMailWindowGlobals()
   // get the messenger instance
   CreateMessenger();
 
-  prefServices = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefService);
-  pref = prefServices.getBranch(null);
+  pref = Components.classes["@mozilla.org/preferences-service;1"]
+          .getService(Components.interfaces.nsIPrefBranch2);
 
   //Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
@@ -159,29 +153,6 @@ function CreateMailWindowGlobals()
   statusFeedback = Components.classes[statusFeedbackContractID].createInstance();
   statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
   statusFeedback.setWrappedStatusFeedback(window.MsgStatusFeedback);
-
-  /*
-    not in use unless we want the lock button back
-
-  // try to create and register ourselves with a security icon...
-  var securityIcon = document.getElementById("security-button");
-  if (securityIcon) {
-    // if the client isn't built with psm enabled then we won't have a secure UI to monitor the lock icon
-    // so be sure to wrap this in a try / catch clause...
-    try {
-      var secureUI;
-      // we may not have a secure UI if psm isn't installed!
-      if (secureUIContractID in Components.classes) {
-        secureUI = Components.classes[secureUIContractID].createInstance();
-        if (secureUI) {
-          secureUI = secureUI.QueryInterface(Components.interfaces.nsISecureBrowserUI);
-          secureUI.init(_content, securityIcon);
-        }
-      }
-    }
-    catch (ex) {}
-  }
-  */
 
   //Create message window object
   msgWindow = Components.classes[msgWindowContractID].createInstance();
@@ -605,12 +576,10 @@ function OpenInboxForServer(server)
     var inboxFolder = GetInboxFolder(server);
     SelectFolder(inboxFolder.URI);
 
-    if(CheckOnline())	{
+    if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail())	{
       if (server.type != "imap")
         GetMessagesForInboxOnServer(server);
     }
-    else if (DoGetNewMailWhenOffline())
-      GetMessagesForInboxOnServer(server);
   }
   catch (ex) {
       dump("Error opening inbox for server -> " + ex + "\n");

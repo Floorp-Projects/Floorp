@@ -1,6 +1,4 @@
 <!-- these things need to move into utilityOverlay.xul -->
-<!ENTITY  offlineGoOfflineCmd.label                 "Work Offline">
-<!ENTITY  offlineGoOfflineCmd.accesskey             "w">
 
 <!-- LOCALIZATION NOTE : FILE This file contains the global menu items --> 
 

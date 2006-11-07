@@ -232,7 +232,7 @@ var DefaultController =
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
       case "cmd_synchronizeOffline":
-        return(CheckOnline());
+        return MailOfflineMgr.isOnline();
 
       case "cmd_watchThread":
       case "cmd_killThread":
@@ -421,11 +421,11 @@ var DefaultController =
       case "cmd_close":
         return true;
       case "cmd_downloadFlagged":
-        return(CheckOnline());
+        return(IsFolderSelected() && MailOfflineMgr.isOnline());
       case "cmd_downloadSelected":
-        return (IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
+        return (IsFolderSelected() && MailOfflineMgr.isOnline() && GetNumSelectedMessages() > 0);
       case "cmd_synchronizeOffline":
-        return CheckOnline() && IsAccountOfflineEnabled();       
+        return MailOfflineMgr.isOnline() && IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
         return IsAccountOfflineEnabled();
       case "cmd_moveToFolderAgain":
@@ -675,7 +675,7 @@ var DefaultController =
           MsgSynchronizeOffline();
           break;
       case "cmd_settingsOffline":
-          MsgSettingsOffline();
+          MailOfflineMgr.openOfflineAccountSettings();
           break;
       case "cmd_moveToFolderAgain":
           var folderId = pref.getCharPref("mail.last_msg_movecopy_target_uri");

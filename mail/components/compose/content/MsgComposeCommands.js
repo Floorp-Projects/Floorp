@@ -673,21 +673,21 @@ function updateEditItems()
   goUpdateCommand("cmd_findPrev");
 }
 
-var messageComposeOfflineObserver = {
-  observe: function(subject, topic, state) {
+var messageComposeOfflineObserver = 
+{
+  observe: function(subject, topic, state) 
+  {
     // sanity checks
-    if (topic != "network:offline-status-changed") return;
-    if (state == "offline")
-      gIsOffline = true;
-    else
-      gIsOffline = false;
+    if (topic != "network:offline-status-changed") 
+      return;
+    gIsOffline = state == "offline";
     MessageComposeOfflineStateChanged(gIsOffline);
 
     try {
-        setupLdapAutocompleteSession();
+      setupLdapAutocompleteSession();
     } catch (ex) {
-        // catch the exception and ignore it, so that if LDAP setup 
-        // fails, the entire compose window stuff doesn't get aborted
+      // catch the exception and ignore it, so that if LDAP setup 
+      // fails, the entire compose window stuff doesn't get aborted
     }
   }
 }

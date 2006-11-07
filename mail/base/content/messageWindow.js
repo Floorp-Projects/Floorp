@@ -256,7 +256,7 @@ function delayedOnLoadMessageWindow()
   HideMenus();
   HideToolbarButtons();
   ShowMenus();
-  AddMailOfflineObserver();
+  MailOfflineMgr.init();
   CreateMailWindowGlobals();
   CreateMessageWindowGlobals();
   verifyAccounts(null);
@@ -833,7 +833,7 @@ var MessageWindowController =
       case "cmd_synchronizeOffline":
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
-        return CheckOnline();
+        return MailOfflineMgr.isOnline();
 			default:
 				return false;
 		}
@@ -904,9 +904,9 @@ var MessageWindowController =
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
       case "cmd_synchronizeOffline":
-                return CheckOnline();
+        return MailOfflineMgr.isOnline();
 			case "cmd_settingsOffline":
-                return IsAccountOfflineEnabled();
+        return IsAccountOfflineEnabled();
 			case "cmd_close":
 			case "cmd_nextMsg":
       case "button_next":
@@ -1092,7 +1092,7 @@ var MessageWindowController =
         MsgSynchronizeOffline();
         return;
       case "cmd_settingsOffline":
-        MsgSettingsOffline();
+        MailOfflineMgr.openOfflineAccountSettings();
         return;
       case "cmd_nextUnreadMsg":
       case "button_next":
