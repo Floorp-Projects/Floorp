@@ -1,0 +1,736 @@
+<?xml version='1.0' encoding='utf-8' standalone='no' ?>
+<!-- ***** BEGIN LICENSE BLOCK ***** 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1 
+   - 
+   - The contents of this file are subject to the Mozilla Public License Version 1.1 (the 
+   - "License"); you may not use this file except in compliance with the License. You may obtain 
+   - a copy of the License at http://www.mozilla.org/MPL/ 
+   - 
+   - Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
+   - WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
+   - language governing rights and limitations under the License. 
+   - 
+   -  The Original Code is [Open Source Virtual Machine.] 
+   - 
+   - The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
+   - by the Initial Developer are Copyright (C)[ #YEARS# ] Adobe Systems Incorporated. All Rights 
+   - Reserved. 
+   - 
+   - Contributor(s): Adobe AS3 Team
+   - 
+   - Alternatively, the contents of this file may be used under the terms of either the GNU 
+   - General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
+   - License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the 
+   - LGPL are applicable instead of those above. If you wish to allow use of your version of this 
+   - file only under the terms of either the GPL or the LGPL, and not to allow others to use your 
+   - version of this file under the terms of the MPL, indicate your decision by deleting provisions 
+   - above and replace them with the notice and other provisions required by the GPL or the 
+   - LGPL. If you do not delete the provisions above, a recipient may use your version of this file 
+   - under the terms of any one of the MPL, the GPL or the LGPL. 
+   - 
+   - ***** END LICENSE BLOCK ***** -->
+
+<errors>
+  この表には、主要な AVMplus により生成されたすべてのエラーメッセージが含まれています。この表は、ローカリゼーションを容易にするためにリソース表と置き換えられる可能性があります。%o = ScriptObject* %t = Traits* %m = AbstractFunction* %n = Multiname (name portion only) %N = Multiname (namespace portion only) %a = Atom %d = int %f = double %S = Stringp %s = char*
+  <error id="1000" label="kOutOfMemoryError">
+    システムのメモリ不足です。
+    <description><![CDATA[
+		Flash Player needs more memory to compile your code than your system has available. 
+		Close some of the applications or processes running on your system.
+	]]></description>
+  </error>
+  <error id="1001" label="kNotImplementedError">メソッド %1 は実装されていません。</error>
+  <error id="1002" label="kInvalidPrecisionError">
+    精度の引数には %2 ～ %3 の値を指定してください。%1 は不正な値です。
+    <description><![CDATA[
+		You specified a value less than 0 or greater than 20 for the precision argument 
+		of a method or property. Pass a value between 0 and 20 as a precision argument.
+	]]></description>
+  </error>
+  <error id="1003" label="kInvalidRadixError">
+    基数の引数には 2 ～ 36 の値を指定してください。%1 は不正な値です。
+    <description><![CDATA[
+		You passed a value less than 2 or greater than 36 for the radix argument of a method or property. 
+		Pass a value between 2 and 36 as a radix argument.
+	]]></description>
+  </error>
+  <error id="1004" label="kInvokeOnIncompatibleObjectError">
+    メソッド %1 が対応していないオブジェクトで呼び出されました。
+    <description><![CDATA[
+		You tried to call a method that is not available to the specified object. This error occurs when 
+		you have copied a prototype function from one object to another, and then invoked it, but the 
+		target object is not the same type as the original object. Ensure that the target object and 
+		original object are the same type. See ECMAScript edition 3 chapter 15 for more details.
+	]]></description>
+  </error>
+  <error id="1005" label="kArrayIndexNotIntegerError">
+    配列インデックスが正の整数 (%1) ではありません。
+    <description><![CDATA[
+		You tried to access a member of an array using an index value that is not a positive integer. Pass only positive integers as index values for arrays.
+	]]></description>
+  </error>
+  <error id="1006" label="kCallOfNonFunctionError">
+    %1 は関数ではありません。
+    <description><![CDATA[
+		This error occurs when you attempt to call a function that does not exist. 
+		Make sure you are calling the correct function, and that the API has 
+		not changed from ActionScript 2.0. Also, make sure you are using the correct
+		object. For example, you will see this error when you use the following code 
+		(because the last line mistakenly calls the variable <code>big</code> instead 
+		of <code>blg</code>): 
+		
+		<pre><code>var blg:String = "foo";
+var big:Sprite = new Sprite();
+var error:int = big.length(); </code></pre>
+	]]></description>
+  </error>
+  <error id="1007" label="kConstructOfNonFunctionError">コンストラクタ以外にインスタンス化が試行されました。</error>
+  <error id="1008" label="kAmbiguousBindingError">%1 があいまいです。一致するバインディングが複数見つかりました。</error>
+  <error id="1009" label="kConvertNullToObjectError">
+    null のオブジェクト参照のプロパティまたはメソッドにアクセスすることはできません。
+    <description><![CDATA[
+	An object that evaluates to null can have no properties. This error can occur in some unexpected 
+	(though valid) situations. For example, consider the following code, which creates a Sprite
+	object. Since this Sprite object is never added to the display list (via the 
+	<code>addChild()</code> method of a DisplayObjectContainer object), then its <code>stage</code>
+	property is set to null. Thus, the example generates this error because Sprite object's <code>stage</code> property 
+	cannot have any properties:
+	
+	<pre><code>import flash.display.Sprite;
+var sprite1:Sprite = new Sprite();
+var q:String = sprite1.stage.quality;</code></pre>
+	]]></description>
+  </error>
+  <error id="1010" label="kConvertUndefinedToObjectError">
+    条件は未定義であり、プロパティがありません。
+    <description><![CDATA[
+		This error can occur if you are trying to access a property of an object that does not exist. For example:
+		<pre><code>var obj:Object = new Object();
+obj.a = "foo";
+trace(obj.b.prop);</code></pre>
+		
+		<p>You can also see this error because of a misspelling, for example in the following, where
+		<code>mc</code> represents a MovieClip object on the display list, and the <code>stage</code>
+		property is misspelled with a capital S (it should be <code>stage</code>):</p>
+		
+		<pre><code>trace(mc.Stage.quality);</code></pre>
+		
+	
+	]]></description>
+  </error>
+  <error id="1011" label="kIllegalOpcodeError">
+    メソッド %1 に無効な opcode %2 (オフセット %3 内) が含まれています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1012" label="kLastInstExceedsCodeSizeError">
+    最後の命令がコードサイズを超えました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1013" label="kFindVarWithNoScopeError">
+    scopeDepth が 0 である場合、OP_findproperty を呼び出すことはできません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1014" label="kClassNotFoundError">クラス %1 が見つかりません。</error>
+  <error id="1015" label="kIllegalSetDxns">
+    メソッド %1 はデフォルトの xml 名前空間を設定できません
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1016" label="kDescendentsError">Descendants 演算子 (..) は型 %1 でサポートされていません。</error>
+  <error id="1017" label="kScopeStackOverflowError">
+    スコープのスタックオーバーフローが発生しました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1018" label="kScopeStackUnderflowError">
+    スコープのスタックアンダーフローが発生しました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1019" label="kGetScopeObjectBoundsError">
+    Getscopeobject %1 が境界外です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1020" label="kCannotFallOffMethodError">
+    コードがメソッドの末尾からはみ出すことはできません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1021" label="kInvalidBranchTargetError">
+    最低 1 つのブランチターゲットがメソッドの有効な命令を反映していません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1022" label="kIllegalVoidError">
+    Void 型は、関数の戻り型としてのみ使用できます。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1023" label="kStackOverflowError">
+    スタックオーバーフローが発生しました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1024" label="kStackUnderflowError">
+    スタックアンダーフローが発生しました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1025" label="kInvalidRegisterError">
+    無効なレジスタ %1 がアクセスされました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1026" label="kSlotExceedsCountError">
+    スロット %1 が %3 の slotCount=%2 を超えています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1027" label="kMethodInfoExceedsCountError">
+    Method_info %1 が method_count=%2 を超えています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1028" label="kDispIdExceedsCountError">
+    Disp_id %1 が %3 の max_disp_id=%2 を超えています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1029" label="kDispIdUndefinedError">
+    Disp_id %1 が %2 に対して未定義です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1030" label="kStackDepthUnbalancedError">
+    スタックの深さがアンバランスです。%1 != %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1031" label="kScopeDepthUnbalancedError">
+    スコープの深さがアンバランスです。%1 != %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1032" label="kCpoolIndexRangeError">
+    Cpool のインデックス %1 が %2 の範囲外です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1033" label="kCpoolEntryWrongTypeError">Cpool のエントリ %1 の型が正しくありません。</error>
+  <error id="1034" label="kCheckTypeFailedError">強制型変換に失敗しました。%1 を %2 に変換できません。</error>
+  <error id="1035" label="kIllegalSuperCallError">
+    メソッド %1 で無効な super 式が見つかりました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1037" label="kCannotAssignToMethodError">
+    %2 のメソッド %1 に代入できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1038" label="kRedefinedError">
+    %1 は定義済みです。
+    <description><![CDATA[
+		You cannot declare a variable or function with the same identifier name more than once 
+		within the same scope. 
+		In ActionScript 3.0, different code blocks (such as those used in two <code>for</code> loops
+		in the same <code>function</code> definition) are considered to be in the same scope.
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1039" label="kCannotVerifyUntilReferencedError">
+    メソッドは参照されるまで検証できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1040" label="kCantUseInstanceofOnNonObjectError">
+    instanceof の右側はクラスまたは関数でなければなりません。
+    <description><![CDATA[
+		The expression on the right-hand side of the <code>instanceof</code> operator must be a class or function.
+	]]></description>
+  </error>
+  <error id="1041" label="kIsTypeMustBeClassError">
+    演算子の右側はクラスでなければなりません。
+    <description><![CDATA[
+		The expression on the right-hand side of the <code>instanceof</code> operator must be a class.
+	]]></description>
+  </error>
+  <error id="1042" label="kInvalidMagicError">
+    ABC ファイルではありません。major_version=%1 minor_version=%2 です。
+    <description><![CDATA[
+You are attempting to use an  invalid file with the player: Possibly the tool that generates the SWF is out of date or the SWF itself is corrupt.
+	]]></description>
+  </error>
+  <error id="1043" label="kInvalidCodeLengthError">
+    code_length=%1 が無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1044" label="kInvalidMethodInfoFlagsError">
+    MethodInfo-%1 サポートされていないフラグ =%2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1045" label="kUnsupportedTraitsKindError">
+    サポートされていない種類の機能 =%1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1046" label="kMethodInfoOrderError">
+    MethodInfo-%1 が定義の前に参照されています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1047" label="kMissingEntryPointError">
+    エントリポイントが見つかりませんでした。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1049" label="kPrototypeTypeError">
+    プロトタイプオブジェクトはバニラオブジェクトでなければなりません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1050" label="kConvertToPrimitiveError">
+    %1 をプリミティブに変換できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1051" label="kIllegalEarlyBindingError">
+    %1 へのアーリーバインディングアクセスが無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1052" label="kInvalidURIError">
+    無効な URI が %1 関数に渡されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1053" label="kIllegalOverrideError">
+    %2 の %1 のオーバーライドが無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1054" label="kIllegalExceptionHandlerError">
+    例外ハンドラの範囲またはターゲットオフセットが無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1056" label="kWriteSealedError">
+    %2 のプロパティ %1 を作成できません。
+    <description><![CDATA[
+	You are trying to assign a value to a nonexistent property on an instance of a non-dynamic 
+	class. This is only possible for instances of dynamic classes]]></description>
+  </error>
+  <error id="1057" label="kIllegalSlotError">
+    %1 はメソッドしか含むことができません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1058" label="kIllegalOperandTypeError">
+    無効なオペランド型 :%1 は %2 でなければなりません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1059" label="kClassInfoOrderError">
+    ClassInfo-%1 が定義の前に参照されています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1060" label="kClassInfoExceedsCountError">
+    ClassInfo %1 が class_count=%2 を超えています。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1061" label="kNumberOutOfRangeError">
+    値 %1 を %2 に変換すると精度が失われます。
+    <description><![CDATA[
+	
+		This error appears if you attempt to assign a decimal number to a property of type 
+		<code>int</code>.
+		
+		<p>This error also appears for out-of-range assignments, such as the following:</p>
+		
+		<pre><code>var m0:int = 2147483648; // int.MAX_VALUE == 2147483647</code></pre>		
+		<p>You can also see this error when using the bitwise left shift operator (&lt;&lt;).
+		For example, consider the following code:</p>
+		
+		<pre><code>var m0:uint = 0xFF;
+var m1:uint = m0&lt;&lt;24;</code></pre>
+		
+		<p>The result of left shift operator (&lt;&lt;) is interpreted as a 32-bit two's complement number 
+		with sign. In the example, the result is a negative value, which causes the error when assigned
+		to the uint typed property. A workaround is the following:</p>
+		
+		<pre><code>var m0:uint = 0xFF;
+var m1:uint = uint(m0&lt;&lt;24);</code></pre>
+	
+	]]></description>
+  </error>
+  <error id="1063" label="kWrongArgumentCountError">%1 の引数の数が一致していません。%2 が必要ですが、%3 が指定されました。</error>
+  <error id="1064" label="kCannotCallMethodAsConstructor">
+    メソッド %1 をコンストラクタとして呼び出すことはできません。
+    <description><![CDATA[
+	Extracted methods are permanently bound to the object they are extracted from. 
+	Therefore, they can not later be called as a constructor. For example, the following 
+	creates function <code>f()</code> in Class A:
+ 	<pre><code>class A {
+	   function f() {}
+	}</code></pre>
+	In the following code, extracting the function causes no error. However, creating 
+	a new instance of the function causes an error.
+	<pre><code>var a = new A()
+	var m = a.f // extract f, don't call it
+	m() // same as a.f()
+	new m() // causes this error</code></pre>
+	
+	]]></description>
+  </error>
+  <error id="1065" label="kUndefinedVarError">
+    変数 %1 は定義されていません。
+    <description><![CDATA[
+	You are using an undefined lexical reference. For example, in the following statements, the 
+	statement <code>print(x)</code> generates an error because <code>x</code> is undefined. However, the 
+	statement <code>print(y)</code> doesn't generate an error because <code>y</code> is defined:
+ 	<pre><code>print("hello world")
+	print(x) // x is undefined
+	var y
+	print(y) // No error, y is defined.</code></pre>
+	]]></description>
+  </error>
+  <error id="1066" label="kFunctionConstructorError">
+    function('function body') という書式はサポートされていません。
+    <description><![CDATA[
+	Unlike JavaScript, Flash does not compile code on-the-fly using <code>eval()</code> and 
+	<code>function()</code>.  Thus, calling these as a constructor in ActionScript 3.0 generates this error.
+	]]></description>
+  </error>
+  <error id="1067" label="kIllegalNativeMethodBodyError">
+    ネイティブメソッド %1 のメソッドボディが無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1068" label="kCannotMergeTypesError">
+    %1 と %2 は共有できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1069" label="kReadSealedError">
+    %2 にプロパティ %1 が見つからず、デフォルト値もありません。
+    <description><![CDATA[
+	You are referencing an undefined property on a non-dynamic class instance. For example, the following generates this error when it references property 
+	<code>x</code>, which is not defined and cannot be created dynamically: 	
+	<pre><code>class A {} // sealed class, not dynamic
+	print(new A().x) // no property x defined on A, and A is not dynamic</code></pre>
+	]]></description>
+  </error>
+  <error id="1070" label="kCallNotFoundError">
+    %2 にメソッド %1 が見つかりません。
+    <description><![CDATA[
+	You are using a <code>super</code> statement to call a function, but the function doesn't exist in the super class. 
+	For example, the following code generates the error:	<pre><code>class A() {}
+class B extends A {
+  function f() { print(super.f()); } // error 1070, there is no f on A
+}</code></pre>
+	]]></description>
+  </error>
+  <error id="1071" label="kAlreadyBoundError">関数 %1 は %2 にバインド済みです。</error>
+  <error id="1072" label="kZeroDispIdError">
+    Disp_id 0 が無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1073" label="kDuplicateDispIdError">
+    disp_id %2 が重複しているために、非オーバーライドメソッド %1 が置換されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1074" label="kConstWriteError">%2 の読み取り専用プロパティ %1 へは書き込みできません。</error>
+  <error id="1075" label="kMathNotFunctionError">
+    Math は関数ではありません。
+    <description><![CDATA[
+	You are trying to call <code>math()</code> as a function, but <code>math</code> is a class with static methods.
+	]]></description>
+  </error>
+  <error id="1076" label="kMathNotConstructorError">
+    Math はコンストラクタではありません。
+    <description><![CDATA[
+	You can not instantiate the Math class. 
+ 	]]></description>
+  </error>
+  <error id="1077" label="kWriteOnlyError">%2 の書き込み専用プロパティ %1 の読み込みは無効です。</error>
+  <error id="1078" label="kIllegalOpMultinameError">
+    オプコードとマルチネームの組み合わせが無効です :%1&lt;%2&gt;。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1079" label="kIllegalNativeMethodError">
+    読み込まれたコードではネイティブメソッドを使用できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1080" label="kIllegalNamespaceError">
+    名前空間の値が無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1081" label="kReadSealedErrorNs">%2 にプロパティ %1 が見つからず、デフォルト値もありません。</error>
+  <error id="1082" label="kNoDefaultNamespaceError">
+    デフォルトの名前空間が設定されていません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1083" label="kXMLPrefixNotBound">
+    エレメント "%2" の接頭辞 "%1" がバインドされていません。
+    <description><![CDATA[
+	An attribute name or element name has a prefix but no matching namespace was 
+	found. This statement generates an error because there is no <code>foo</code> 
+	namespace to match <code>foo:x</code>:<pre/>&lt;foo:x xmlns:clowns='http://circuscenter.com'&gt;</pre>
+		]]></description>
+  </error>
+  <error id="1084" label="kXMLBadQName">
+    エレメントまたは属性 ("%1") が QName プロダクションと一致しません : QName::=(NCName':')?NCName。
+    <description><![CDATA[
+	You have <code>foo: </code> or <code>:foo</code> as an element or attribute name, but there is nothing 
+	on the other side of the colon.	
+	]]></description>
+  </error>
+  <error id="1085" label="kXMLUnterminatedElementTag">エレメント型 "%1" は対応する終了タグ "&lt;/%2&gt;" で終了する必要があります。</error>
+  <error id="1086" label="kXMLOnlyWorksWithOneItemLists">
+    %1 メソッドは、単一のアイテムを含むリストに対してのみ使用できます。
+    <description><![CDATA[
+	The XMLList class propagates the XML-specific functions to one child if it only has one 
+	item in its list. If more than one item is in the list, the routines fail with this 
+	error. This happens for the following XMLList functions that mimic XML functions: 	
+	<p><code>addNamespace</code>, <code>appendChild</code>,  <code>childIndex</code>,  	
+	<code>inScopeNamespaces</code>,  <code>insertChildAfter</code>,  <code>insertChildBefore</code>,  	
+	<code>name</code>,  <code>namespace</code>,  <code>localName</code>,  <code>namespaceDeclarations</code>,  	
+	<code>nodeKind</code>,  <code>prependChild</code>,  <code>removeNamespace</code>,  <code>replace</code>,  	
+	<code>setChildren</code>,  <code>setLocalName</code>,  <code>setName</code>,  and <code>setNamespace.
+ 
+	]]></description>
+  </error>
+  <error id="1087" label="kXMLAssignmentToIndexedXMLNotAllowed">インデックス付きの XML への代入は許可されません。</error>
+  <error id="1088" label="kXMLMarkupMustBeWellFormed">
+    ルートエレメントに続くドキュメントのマークアップは整形式でなければなりません。
+    <description><![CDATA[
+	These are some possible causes of this error:
+	<ul>
+	<li>Parsing an XMLList style object such as <code><a/><b/><c/></code> as XML</li>
+	<li>Misbalanced strings such as <code><a><b></b></a></c></code></li>
+	</ul>	
+	]]></description>
+  </error>
+  <error id="1089" label="kXMLAssigmentOneItemLists">複数のアイテムを含むリストへの代入はサポートされていません。</error>
+  <error id="1090" label="kXMLMalformedElement">
+    XML パーサエラー :エレメントの形式が正しくありません。
+    <description><![CDATA[
+	An element name is malformed. This example of an element name is malformed because a 
+	trailing right angle bracket <code>></code> is missing:
+ 
+	<pre>&lt;a/&gt;&lt;b&gt;&lt;/b</pre>	]]></description>
+  </error>
+  <error id="1091" label="kXMLUnterminatedCData">XML パーサエラー :CDATA セクションが終了していません。</error>
+  <error id="1092" label="kXMLUnterminatedXMLDecl">XML パーサエラー :XML 宣言が終了していません。</error>
+  <error id="1093" label="kXMLUnterminatedDocTypeDecl">XML パーサエラー :DOCTYPE 宣言が終了していません。</error>
+  <error id="1094" label="kXMLUnterminatedComment">XML パーサエラー :コメントが終了していません。</error>
+  <error id="1095" label="kXMLUnterminatedAttribute">XML パーサエラー :属性が終了していません。</error>
+  <error id="1096" label="kXMLUnterminatedElement">XML パーサエラー :エレメントが終了していません。</error>
+  <error id="1097" label="kXMLUnterminatedProcessingInstruction">XML パーサエラー :処理命令が終了していません。</error>
+  <error id="1098" label="kXMLNamespaceWithPrefixAndNoURI">
+    no namespace の接頭辞 %1 が無効です。
+    <description><![CDATA[
+	The namespace constructor throws this error if you try to pass in an empty URI with a 
+	non-empty prefix as in this example:
+ 
+<pre>ns = new Namespace ("prefix", "");
+	]]></description>
+  </error>
+  <error id="1100" label="kRegExpFlagsArgumentError">
+    RegExp から別の RegExp を構築する際にフラグを渡すことはできません。
+    <description><![CDATA[
+	Creating a new regular expression from an existing one also copies its flags. To create a regular expression with 
+	different flags, use the <code>new</code> operator and set the flags as desired. For example, this statement 
+	creates a regular expression and specifies flag settings:
+	<pre<code>var re:RegExp = new RegExp("ali", /s)</code></pre>
+	Alternatively, this statement creates a regular expression that has the same flags as re:
+	<pre><code>var re2:RegExp = new RegExp(re, ...)</code></pre> 	]]></description>
+  </error>
+  <error id="1101" label="kNoScopeError">
+    不明なスコープを持つメソッド %1 を検証できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1102" label="kIllegalDefaultValue">
+    型 %1 のデフォルト値が無効です。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1103" label="kCannotExtendFinalClass">
+    クラス %1 は、final 基本クラスを拡張できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1104" label="kXMLDuplicateAttribute">属性 "%1" (エレメント "%2") は既に指定されています。</error>
+  <error id="1107" label="kCorruptABCError">
+    ABC データは破損しているため、境界外の読み取りが試行されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1108" label="kInvalidBaseClassError">
+    OP_newclass オプコードが不正な基本クラスで使用されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1109" label="kDanglingFunctionError">
+    結合されていない関数 %1 をメソッド %2 から直接呼び出そうとしました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1110" label="kCannotExtendError">
+    %1 は %2 を拡張できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1111" label="kCannotImplementError">
+    %1 は %2 を実装できません。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1112" label="kCoerceArgumentCountError">クラスの型変換に指定された引数の数が不正です。1 個必要ですが、%1 個指定されました。</error>
+  <error id="1113" label="kInvalidNewActivationError">
+    OP_newactivation が NEED_ACTIVATION フラグなしでメソッドで使用されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1114" label="kNoGlobalScopeError">
+    グローバルスコープなしで OP_getglobalslot または OP_setglobalslot が使用されました。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1115" label="kNotConstructorError">%1 はコンストラクタではありません。</error>
+  <error id="1116" label="kApplyError">Function.prototype.apply の 2 番目の引数は配列でなければなりません。</error>
+  <error id="1117" label="kXMLInvalidName">無効な XML 名 : %1。</error>
+  <error id="1118" label="kXMLIllegalCyclicalLoop">ノード間に不正な周期的なループがあります。</error>
+  <error id="1119" label="kDeleteTypeError">Delete 演算子はオペランド型 %1 でサポートされていません。</error>
+  <error id="1120" label="kDeleteSealedError">%2 のプロパティ %1 を削除できません。</error>
+  <error id="1121" label="kDuplicateMethodBodyError">メソッド %1 のメソッドボディが重複しています。</error>
+  <error id="1122" label="kIllegalInterfaceMethodBodyError">インターフェイスメソッド %1 のメソッドボディが無効です。</error>
+  <error id="1123" label="kFilterError">Filter 演算子は型 %1 でサポートされていません。</error>
+  <error id="1124" label="kInvalidHasNextError">OP_hasnext2 を明示的に登録するには、オブジェクトとインデックスが必要です。</error>
+  <error id="1500" label="kFileOpenError">ファイル %1 を開く際にエラーが発生しました。</error>
+  <error id="1501" label="kFileWriteError">
+    ファイル %1 に書き込む際にエラーが発生しました。
+    <description><![CDATA[
+		The file you are writing to cannot be opened. Possibly the filename contains an error, the file is read-only, or 
+		you do not have access priveleges.
+	  	]]></description>
+  </error>
+  <error id="1502" label="kScriptTimeoutError">
+    スクリプトがデフォルトのタイムアウト時間の 15 秒を超えて実行されました。
+    <description><![CDATA[
+		A script executed after the timeout period. (The default timeout period is 15 seconds.) After this error occurs, the 
+		script can continue to execute for 15 seconds more, after which the script terminates and throws Error 1503.  
+	]]></description>
+  </error>
+  <error id="1503" label="kScriptTerminatedError">
+    スクリプトが 30 秒後の終了に失敗したため、強制終了しました。
+    <description><![CDATA[
+	  The script was still executing after 30 seconds. (The Flash Player first throws Error 1502 if the script executed more than 15 
+	  seconds, which is the default timeout period.) This error occurs 15 seconds after Error 1502 occurs.  
+	]]></description>
+  </error>
+  <error id="1504" label="kEndOfFileError">
+    ファイルの終端です。
+    <description><![CDATA[
+	  The Flash Player unexpectedly encountered the end of the file. Possibly the file was not saved correctly or Flash Player expected more data 
+	  in the file.
+	]]></description>
+  </error>
+  <error id="1505" label="kStringIndexOutOfBoundsError">文字列インデックス %1 が境界外です。%2 ～ %3 の範囲内である必要があります。</error>
+  <error id="1506" label="kInvalidRangeError">
+    指定した範囲は無効です。
+    <description><![CDATA[
+	The method's <code>start</code> parameter is greater than its <code>end</code> parameter.
+	]]></description>
+  </error>
+  <error id="1507" label="kNullArgumentError">引数 %1 は null にすることができません。</error>
+  <error id="1508" label="kInvalidArgumentError">
+    引数 %1 に指定した値は無効です。
+    <description><![CDATA[
+	You are possibly trying to pass the wrong data type. For example, the code
+	<pre><code>public function doSomething(const:int):void {
+	}
+	this ["doSomething"] ("str")</code></pre> 
+	generates an error at runtime because <code>doSomething</code> is cast as an int data type.	]]></description>
+  </error>
+  <error id="1509" label="kShellCompressedDataError">
+    圧縮データの解凍時にエラーが発生しました。
+    <description><![CDATA[
+	The de-compressor reached the end of the stream, but more data was expected. The compressed data 
+	stream is probably corrupted.
+	]]></description>
+  </error>
+  <error id="1034" label="kCheckTypeFailedError">強制型変換に失敗しました。%1 を %2 に変換できません。</error>
+  <error id="1510" label="kArrayFilterNonNullObjectError">コールバック引数がクラスのメソッドのとき、任意指定の引数 'this' は null でなければなりません。</error>
+</errors>

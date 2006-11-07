@@ -1,0 +1,218 @@
+# ***** BEGIN LICENSE BLOCK ***** 
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1 
+#
+# The contents of this file are subject to the Mozilla Public License Version 1.1 (the 
+# "License"); you may not use this file except in compliance with the License. You may obtain 
+# a copy of the License at http://www.mozilla.org/MPL/ 
+#
+# Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
+# WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
+# language governing rights and limitations under the License. 
+#
+# The Original Code is [Open Source Virtual Machine.] 
+#
+# The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
+# by the Initial Developer are Copyright (C)[ 2005 ] Adobe Systems Incorporated. All Rights 
+# Reserved. 
+#
+# Contributor(s): Adobe AS3 Team
+#
+# Alternatively, the contents of this file may be used under the terms of either the GNU 
+# General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
+# License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the 
+# LGPL are applicable instead of those above. If you wish to allow use of your version of this 
+# file only under the terms of either the GPL or the LGPL, and not to allow others to use your 
+# version of this file under the terms of the MPL, indicate your decision by deleting provisions 
+# above and replace them with the notice and other provisions required by the GPL or the 
+# LGPL. If you do not delete the provisions above, a recipient may use your version of this file 
+# under the terms of any one of the MPL, the GPL or the LGPL. 
+# 
+# ***** END LICENSE BLOCK ***** */
+
+
+AVMPLUS_DEBUG_CFLAGS     := -g
+AVMPLUS_RELEASE_CFLAGS   := -O3
+
+AVMPLUS_DEBUG_CXXFLAGS   := ${AVMPLUS_DEBUG_CFLAGS} -DAVMPLUS_NOVIRTUAL -DAVMPLUS_SHELL -fno-exceptions -fno-rtti -Wno-invalid-offsetof -rdynamic
+AVMPLUS_RELEASE_CXXFLAGS := ${AVMPLUS_RELEASE_CFLAGS} -DAVMPLUS_NOVIRTUAL -DAVMPLUS_SHELL -fno-exceptions -fno-rtti -Wno-invalid-offsetof
+
+ifeq (YES, ${DEBUG})
+   AVMPLUS_CFLAGS       := ${AVMPLUS_DEBUG_CFLAGS} -D_DEBUG -DDEBUG
+   AVMPLUS_CXXFLAGS     := ${AVMPLUS_DEBUG_CXXFLAGS} -D_DEBUG -DDEBUG
+else
+   AVMPLUS_CFLAGS       := ${AVMPLUS_RELEASE_CFLAGS}
+   AVMPLUS_CXXFLAGS     := ${AVMPLUS_RELEASE_CXXFLAGS}
+endif
+
+#****************************************************************************
+# Include paths
+#****************************************************************************
+
+AVMPLUS_INCS := -I${AVMPLUS_ROOT}/core -I${AVMPLUS_ROOT}/pcre -I${AVMPLUS_ROOT}/MMgc -I${AVMPLUS_ROOT}/codegen -I${AVMPLUS_ROOT}/regexp -I${AVMPLUS_ROOT}/extensions -I${AVMPLUS_ROOT}/shell
+
+#****************************************************************************
+# Libraries
+#****************************************************************************
+
+AVMPLUS_LIBS := -L. -L${AVMPLUS_ROOT}/MMgc -lavmplus -lmmgc -lpthread
+
+#****************************************************************************
+# Source files
+#****************************************************************************
+
+ZLIB_SRCS := ${ZLIB_ROOT}/zlib/zutil.cpp \
+    ${ZLIB_ROOT}/zlib/uncompr.cpp \
+    ${ZLIB_ROOT}/zlib/trees.cpp \
+    ${ZLIB_ROOT}/zlib/inftrees.cpp \
+    ${ZLIB_ROOT}/zlib/inflate.cpp \
+    ${ZLIB_ROOT}/zlib/inffas86.cpp \
+    ${ZLIB_ROOT}/zlib/infback.cpp \
+    ${ZLIB_ROOT}/zlib/deflate.cpp \
+    ${ZLIB_ROOT}/zlib/crc32.cpp \
+    ${ZLIB_ROOT}/zlib/compress.cpp \
+    ${ZLIB_ROOT}/zlib/adler32.cpp
+
+AVMPLUS_SRCS := ${AVMPLUS_ROOT}/core/AbcEnv.cpp \
+	${AVMPLUS_ROOT}/core/AbcGen.cpp \
+	${AVMPLUS_ROOT}/core/AbcParser.cpp \
+	${AVMPLUS_ROOT}/core/AbstractFunction.cpp \
+	${AVMPLUS_ROOT}/core/Accessor.cpp \
+	${AVMPLUS_ROOT}/core/ActionBlockConstants.cpp \
+	${AVMPLUS_ROOT}/core/ArrayClass.cpp \
+	${AVMPLUS_ROOT}/core/ArrayObject.cpp \
+	${AVMPLUS_ROOT}/core/AtomArray.cpp \
+	${AVMPLUS_ROOT}/core/AtomConstants.cpp \
+	${AVMPLUS_ROOT}/core/AvmCore.cpp \
+	${AVMPLUS_ROOT}/core/AvmDebugUnix.cpp \
+	${AVMPLUS_ROOT}/core/avmplus.cpp \
+	${AVMPLUS_ROOT}/core/avmplusDebugger.cpp \
+	${AVMPLUS_ROOT}/core/avmplusHashtable.cpp \
+	${AVMPLUS_ROOT}/core/avmplusProfiler.cpp \
+	${AVMPLUS_ROOT}/core/BigInteger.cpp \
+	${AVMPLUS_ROOT}/core/BooleanClass.cpp \
+	${AVMPLUS_ROOT}/core/builtin.cpp \
+	${AVMPLUS_ROOT}/codegen/Ia32Assembler.cpp \
+	${AVMPLUS_ROOT}/codegen/CodegenMIR.cpp \
+	${AVMPLUS_ROOT}/core/BuiltinTraits.cpp \
+	${AVMPLUS_ROOT}/core/ClassClass.cpp \
+	${AVMPLUS_ROOT}/core/ClassClosure.cpp \
+	${AVMPLUS_ROOT}/core/Date.cpp \
+	${AVMPLUS_ROOT}/core/DateClass.cpp \
+	${AVMPLUS_ROOT}/core/DateObject.cpp \
+	${AVMPLUS_ROOT}/core/Domain.cpp \
+	${AVMPLUS_ROOT}/core/DomainEnv.cpp \
+	${AVMPLUS_ROOT}/core/DynamicProfiler.cpp \
+	${AVMPLUS_ROOT}/core/E4XNode.cpp \
+	${AVMPLUS_ROOT}/core/ErrorClass.cpp \
+	${AVMPLUS_ROOT}/core/ErrorConstants.cpp \
+	${AVMPLUS_ROOT}/core/Exception.cpp \
+	${AVMPLUS_ROOT}/core/FrameState.cpp \
+	${AVMPLUS_ROOT}/core/FunctionClass.cpp \
+	${AVMPLUS_ROOT}/core/GrowableBuffer.cpp \
+	${AVMPLUS_ROOT}/core/IntClass.cpp \
+	${AVMPLUS_ROOT}/core/Interpreter.cpp \
+	${AVMPLUS_ROOT}/core/MathClass.cpp \
+	${AVMPLUS_ROOT}/core/MathUtils.cpp \
+	${AVMPLUS_ROOT}/core/MethodClosure.cpp \
+	${AVMPLUS_ROOT}/core/MethodEnv.cpp \
+	${AVMPLUS_ROOT}/core/MethodInfo.cpp \
+	${AVMPLUS_ROOT}/core/Multiname.cpp \
+	${AVMPLUS_ROOT}/core/MultinameHashtable.cpp \
+	${AVMPLUS_ROOT}/core/Namespace.cpp \
+	${AVMPLUS_ROOT}/core/NamespaceClass.cpp \
+	${AVMPLUS_ROOT}/core/NamespaceSet.cpp \
+	${AVMPLUS_ROOT}/core/NativeFunction.cpp \
+	${AVMPLUS_ROOT}/core/NumberClass.cpp \
+	${AVMPLUS_ROOT}/core/ObjectClass.cpp \
+	${AVMPLUS_ROOT}/core/opcodes.cpp \
+	${AVMPLUS_ROOT}/core/PoolObject.cpp \
+	${AVMPLUS_ROOT}/core/PrintWriter.cpp \
+	${AVMPLUS_ROOT}/core/RegExpClass.cpp \
+	${AVMPLUS_ROOT}/core/RegExpObject.cpp \
+	${AVMPLUS_ROOT}/core/ScopeChain.cpp \
+	${AVMPLUS_ROOT}/core/ScriptBuffer.cpp \
+	${AVMPLUS_ROOT}/core/ScriptObject.cpp \
+	${AVMPLUS_ROOT}/core/StackTrace.cpp \
+	${AVMPLUS_ROOT}/core/StaticProfiler.cpp \
+	${AVMPLUS_ROOT}/core/StringBuffer.cpp \
+	${AVMPLUS_ROOT}/core/StringClass.cpp \
+	${AVMPLUS_ROOT}/core/StringObject.cpp \
+	${AVMPLUS_ROOT}/core/Toplevel.cpp \
+	${AVMPLUS_ROOT}/core/Traits.cpp \
+	${AVMPLUS_ROOT}/core/UnicodeUtils.cpp \
+	${AVMPLUS_ROOT}/core/Verifier.cpp \
+	${AVMPLUS_ROOT}/core/VTable.cpp \
+	${AVMPLUS_ROOT}/core/XMLClass.cpp \
+	${AVMPLUS_ROOT}/core/XMLListClass.cpp \
+	${AVMPLUS_ROOT}/core/XMLListObject.cpp \
+	${AVMPLUS_ROOT}/core/XMLObject.cpp \
+	${AVMPLUS_ROOT}/core/XMLParser16.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_chartables.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_compile.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_config.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_dfa_exec.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_exec.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_fullinfo.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_get.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_globals.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_info.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_maketables.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_ord2utf8.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_refcount.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_study.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_tables.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_try_flipped.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_valid_utf8.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_version.cpp \
+	${AVMPLUS_ROOT}/pcre/pcre_xclass.cpp \
+	${AVMPLUS_ROOT}/platform/unix/DateUnix.cpp \
+	${AVMPLUS_ROOT}/platform/unix/MathUtilsUnix.cpp \
+	${AVMPLUS_ROOT}/platform/unix/OSDepUnix.cpp 
+
+#****************************************************************************
+# Preprocessor directives
+#****************************************************************************
+
+ifeq (YES, ${DEBUGGER})
+AVMPLUS_DEFS := -DUNIX -DCYGWIN -DAVMPLUS_IA32 -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
+else
+	AVMPLUS_DEFS := -DUNIX -DCYGWIN -DAVMPLUS_IA32 -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
+endif
+
+AVMPLUS_CFLAGS   := ${AVMPLUS_CFLAGS} ${AVMPLUS_DEFS}
+AVMPLUS_CXXFLAGS := ${AVMPLUS_CXXFLAGS} ${AVMPLUS_DEFS}
+
+#********************************************************************************
+# Rules
+#********************************************************************************
+define avmplus-cmd
+	@echo "=== compiling avmplus: ===" $@ ${OPT} ${AVMPLUS_CXXFLAGS}
+	@${CXX} -c ${OPT} ${AVMPLUS_CXXFLAGS} -Wa,-ahld=$(addsuffix .s, $(basename $<)) ${AVMPLUS_INCS} $< -o $@
+endef
+
+${AVMPLUS_ROOT}/core/%.o : ${AVMPLUS_ROOT}/core/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/extensions/%.o : ${AVMPLUS_ROOT}/extensions/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/shell/%.o : ${AVMPLUS_ROOT}/shell/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/codegen/%.o : ${AVMPLUS_ROOT}/codegen/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/platform/%.o : ${AVMPLUS_ROOT}/platform/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/platform/unix/%.o : ${AVMPLUS_ROOT}/platform/unix/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/pcre/%.o : ${AVMPLUS_ROOT}/pcre/%.cpp
+	$(avmplus-cmd)
+
+${AVMPLUS_ROOT}/utils/%.o : ${AVMPLUS_ROOT}/utils/%.cpp
+	$(avmplus-cmd)
+
+
+

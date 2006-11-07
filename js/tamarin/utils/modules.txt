@@ -1,0 +1,283 @@
+crt <common>
+crt kernel32:KERNEL32.dll
+crt advapi32:ADVAPI32.dll
+crt winmm:WINMM.dll
+crt LIBCMT: *
+crt Dll:: *
+crt _E32Dll *
+crt __cpp *
+
+MMGC mmgc: *
+MMGC avmplus:GC *
+MMGC avmplus:FixedAlloc.obj
+MMGC avmplus:FixedMalloc.obj
+MMGC MMgc:: *
+MMGC operator *
+
+MIR avmplus:CodegenMIR.obj
+MIR avmplus:Ia32Assembler.obj
+MIR avmplus:GrowableBuffer.obj
+MIR win32cpuid.obj
+MIR avmplus::CodegenMIR
+MIR avmplus::ArmAssembler
+MIR avmplus::GrowableBuffer
+MIR avmplus::ImtBuilder
+
+Interp avmplus:Interpreter.obj
+Interp avmplus::Interpreter
+
+Verify avmplus:Verifier.obj
+Verify avmplus:AbcParser.obj
+Verify avmplus::Verifier
+Verify avmplus::AbcParser
+Verify avmplus::SortedIntMap
+Verify avmplus::FrameState
+
+Math avmplus:MathUtils.obj
+Math avmplus:MathClass.obj
+Math avmplus:MathUtilsWin.obj
+Math avmplus:BigInteger.obj
+Math avmplus::MathUtils
+Math avmplus::MathClass
+Math avmplus::BigInteger
+Math avmplus::D2A
+Math avmplus::kPowersOfTen
+Math avmplus::Random_Xor_Masks
+Math avmplus::quickBigPowTen
+Math avmplus::quickPowTen
+Math avmplus::quickPowTwo
+Math avmplus::powInt
+
+Number avmplus:NumberClass.obj
+Number avmplus:IntClass.obj
+Number avmplus::NumberClass
+Number avmplus::IntClass
+Number avmplus::UintClass
+
+Error avmplus:ErrorClass.obj
+Error avmplus:Exception.obj
+Error avmplus::ErrorClass
+Error avmplus::NativeErrorClass
+Error avmplus::ErrorObject
+Error avmplus::ExceptionFrame
+Error avmplus::Exception
+Error avmplus::ExceptionHandlerTable
+
+RegExp avmplus:pcre_ *
+RegExp avmplus:RegExp *
+RegExp avmplus::RegExp *
+RegExp pcre_ *
+RegExp _pcre_ *
+RegExp find_ *
+RegExp is_ *
+RegExp compile_ *
+RegExp match_ *
+RegExp check_ *
+RegExp posix_ *
+RegExp first_ *
+RegExp auto_callout
+RegExp match
+RegExp set_start_bits
+RegExp digitab
+RegExp could_be_empty_branch
+RegExp error_texts
+RegExp escapes
+RegExp byteflip
+RegExp complete_callout
+RegExp avmplus::fmalloc
+RegExp avmplus::ffree
+RegExp rep_min
+RegExp rep_max
+RegExp set_bit
+RegExp adjust_recurse
+RegExp read_repeat_counts
+
+ZLIB deflate.obj
+ZLIB inflate.obj
+ZLIB trees.obj
+ZLIB infback.obj
+ZLIB inftrees.obj
+ZLIB inffas86.obj
+ZLIB adler32.obj
+ZLIB compress.obj
+ZLIB zutil.obj
+ZLIB uncompr.obj
+ZLIB crc32.obj
+
+E4X avmplus:XMLObject.obj
+E4X avmplus:XMLListObject.obj
+E4X avmplus:XMLClass.obj
+E4X avmplus:XMLListClass.obj
+E4X avmplus:E4XNode.obj
+E4X avmplus:XMLParser16.obj
+E4X avmplus::CommentE4XNode
+E4X avmplus::AttributeE4XNode
+E4X avmplus::CDATAE4XNode
+E4X avmplus::TextE4XNode
+E4X avmplus::PIE4XNode
+E4X avmplus::ElementE4XNode
+E4X avmplus::E4XNode *
+E4X avmplus::XML *
+E4X avmplus::QName *
+E4X avmplus::stripPrefix
+
+Builtin.as avmplus:AbcData.obj
+Builtin.as avmplus::builtin_abc_data
+
+Runtime avmplus:AvmCore.obj
+Runtime avmplus:MethodEnv.obj
+Runtime avmplus:Toplevel.obj
+Runtime avmplus:AvmCore.obj
+Runtime	avmplus:MethodEnv.obj
+Runtime avmplus:Toplevel.obj
+Runtime avmplus:PoolObject.obj
+Runtime avmplus:Traits.obj
+Runtime avmplus:AbstractFunction.obj
+Runtime avmplus:PrintWriter.obj
+Runtime avmplus:Multiname.obj
+Runtime avmplus:NamespaceSet.obj
+Runtime avmplus:BuiltinTraits.obj
+Runtime avmplus:Domain.obj
+Runtime avmplus:DomainEnv.obj
+Runtime avmplus:VTable.obj
+Runtime avmplus:NativeFunction.obj
+Runtime avmplus:StringBuffer.obj
+Runtime avmplus:MethodInfo.obj
+Runtime avmplus:AbcGen.obj
+Runtime avmplus:win32setjmp.obj
+Runtime avmplus:OSDepWin.obj
+Runtime avmplus:AbcEnv.obj
+Runtime avmplus:ActionBlockConstants.obj
+Runtime avmplus:MultinameHashtable.obj
+Runtime avmplus::OSDep
+Runtime avmplus::Domain *
+Runtime avmplus::NativeObjectHelpers *
+Runtime avmplus::NativeMethod *
+Runtime avmplus::AvmCore
+Runtime avmplus::MethodEnv
+Runtime avmplus::ScriptEnv
+Runtime avmplus::Toplevel
+Runtime avmplus::PoolObject
+Runtime avmplus::Traits
+Runtime avmplus::List
+Runtime avmplus::Multiname *
+Runtime avmplus::PrintWriter
+Runtime avmplus::BuiltinTraits
+Runtime avmplus::letterTable
+Runtime avmplus::AbstractFunction
+Runtime avmplus::ActionBlockConstants
+Runtime avmplus::VTable
+Runtime avmplus::combiningCharTable
+Runtime avmplus::parseDateNumber
+Runtime avmplus::AbcGen
+Date avmplus::parseDateKeyword
+Runtime avmplus::UIntClass
+
+Object avmplus:ScriptObject.obj
+Object avmplus:ObjectClass.obj
+Object avmplus:avmplusHashtable.obj
+Object avmplus::ObjectClass
+Object avmplus::ScriptObject
+Object avmplus::Hashtable
+Object avmplus::WeakValueHashtable
+Object avmplus::WeakKeyHashtable
+
+Array avmplus:ArrayClass.obj
+Array avmplus:ArrayObject.obj
+Array avmplus:AtomArray.obj
+Array avmplus::ArrayObject
+Array avmplus::ArrayClass
+Array avmplus::AtomArray
+Array avmplus::ArraySort
+
+String avmplus:StringClass.obj
+String avmplus:StringObject.obj
+String avmplus:UnicodeUtils.obj
+String avmplus::String
+String avmplus::StringClass
+String avmplus::UnicodeUtils
+String avmplus::StringOutputStream
+String avmplus::StringBuffer
+String avmplus::wcharEquals
+String avmplus::UsesUTF8String
+String avmplus::upperCaseBase
+String avmplus::lowerCaseBase
+String avmplus::upperCaseConversion
+String avmplus::lowerCaseConversion
+String avmplus::g_tolower_map
+String avmplus::g_toupper_map
+String avmplus::operator *
+String minUCS4@_ZN7avmplus12UnicodeUtils10Utf8ToUcs4EPKhiPm_0
+
+Namespace avmplus:Namespace.obj
+Namespace avmplus:NamespaceClass.obj
+Namespace avmplus::Namespace *
+
+Boolean avmplus:BooleanClass.obj
+Boolean avmplus::Boolean *
+
+Class avmplus:ClassClosure.obj
+Class avmplus:ClassClass.obj
+Class avmplus::ClassClosure
+Class avmplus::ClassClass
+
+Function avmplus:MethodClosure.obj
+Function avmplus:FunctionClass.obj
+Function avmplus::FunctionClass
+Function avmplus::MethodClosure
+Function avmplus::MethodClosureClass
+
+Date avmplus:DateClass.obj
+Date avmplus:DateObject.obj
+Date avmplus:Date.obj
+Date avmplus:DateWin.obj
+Date avmplus::UTC
+Date avmplus::Date *
+Date avmplus::Day *
+
+SHELL avmshell.obj
+SHELL DomainClass.obj
+SHELL DomainObject.obj
+SHELL StringBuilderClass.obj
+SHELL StringBuilderObject.obj
+SHELL TypedArrayClass.obj
+SHELL TypedArrayObject.obj
+SHELL ByteArrayGlue.obj
+SHELL DataIO.obj
+SHELL FileClass.obj
+SHELL DictionaryGlue.obj
+SHELL SystemClass.obj
+SHELL ConsoleOutputStream.obj
+SHELL FileInputStream.obj
+SHELL JavaGlue.obj
+
+
+DarkMatter <Anon *
+
+Date avmplus::MakeTime
+Date avmplus::MakeDay
+Runtime avmplus::MethodInfo
+Date avmplus::YearFromTime
+Date avmplus::WeekDay
+Date avmplus::MakeDate
+Runtime avmplus::HeapMultiname
+Runtime avmplus::addTraits
+Runtime avmplus::AvmPlusScriptableObject
+Runtime avmplus::ScopeTypeChain
+Runtime avmplus::ScopeChain
+Runtime avmplus::digitTable
+Date avmplus::IsLeapYear
+Date avmplus::kMonthOffset
+Date avmplus::MonthFromTime
+Runtime avmplus::extenderTable
+Date avmplus::HourFromTime
+Date avmplus::LocalTime
+Runtime avmplus::OutputStream
+Date kMonths@_ZNK7avmplus4Date8toStringEPtiRi_0
+Date avmplus::SecFromTime
+Date avmplus::MinFromTime
+Date avmplus::GetTimezoneOffset
+Date avmplus::MsecFromTime
+Date kDaysOfWeek@_ZNK7avmplus4Date8toStringEPtiRi_1
+Date avmplus::TimeFromYear
+Date avmplus::TimeInLeapYear

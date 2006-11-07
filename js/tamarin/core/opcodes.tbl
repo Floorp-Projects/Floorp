@@ -1,0 +1,332 @@
+// ***** BEGIN LICENSE BLOCK ***** 
+// Version: MPL 1.1/GPL 2.0/LGPL 2.1 
+//
+// The contents of this file are subject to the Mozilla Public License Version 1.1 (the 
+// "License"); you may not use this file except in compliance with the License. You may obtain 
+// a copy of the License at http://www.mozilla.org/MPL/ 
+//
+// Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
+// WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
+// language governing rights and limitations under the License. 
+//
+// The Original Code is [Open Source Virtual Machine.] 
+//
+// The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
+// by the Initial Developer are Copyright (C)[ 2004-2006 ] Adobe Systems Incorporated. All Rights 
+// Reserved. 
+//
+// Contributor(s): Adobe AS3 Team
+//
+// Alternatively, the contents of this file may be used under the terms of either the GNU 
+// General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
+// License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the 
+// LGPL are applicable instead of those above. If you wish to allow use of your version of this 
+// file only under the terms of either the GPL or the LGPL, and not to allow others to use your 
+// version of this file under the terms of the MPL, indicate your decision by deleting provisions 
+// above and replace them with the notice and other provisions required by the GPL or the 
+// LGPL. If you do not delete the provisions above, a recipient may use your version of this file 
+// under the terms of any one of the MPL, the GPL or the LGPL. 
+// 
+// ***** END LICENSE BLOCK ***** */
+
+//
+// This table contains all the opcodes for the AVM+ runtime system.
+// A pre-processor macro can be used to extract the required 
+// information from the table in whatever form is required.
+// 
+// The script opcodes.as will generate tables in .h and .cpp
+// files from this XML file.
+//  
+// Don't forget if you add a column to the table you need
+// to modify the opcodes.as to generate proper .h and .cpp
+// files that utilize this table.
+//
+// Don't forget if you add a column to the table you need
+// to modify all the macros that utilize this table.
+// 
+// The table fields are the following:
+//    const     - name used to idenfify the bytecode
+//    name      - string representation good for display
+//    code      - integer value 
+//    ins_width - # of bytes instruction requires
+//    frm_use   - number of frame references made by the instruction
+//    frm_set   - number of frame sets performed by the instruction
+//    stk_pop   - number of stack pops made by the instruction  (-1 => variable)
+//    stk_push  - number of stack pushes made by the instruction
+//    throws    - 1 if the instruction might throw an exception, 0 if not
+//   
+//
+// const,			name,				code, ins_width, op_count, frm_use, frm_set, stk_pop, stk_push, throws
+//                                                            
+OP_0x00				"OP_0x00"			0x00	0			-1	        0		0		0		 0        0
+OP_bkpt				"bkpt"				0x01	1			0	        0		0		0		 0        0
+OP_nop				"nop" 				0x02	1			0	        0		0		0		 0        0
+OP_throw			"throw" 			0x03	1			0	        0		0		0		 0        1
+OP_getsuper			"getsuper" 			0x04	1+2			1	        0		0		1		 1        1
+OP_setsuper			"setsuper" 			0x05	1+2			1	        0		0		2		 0        1
+OP_dxns				"dxns"				0x06	1+2			1	        0		0		0		 0        1
+OP_dxnslate			"dxnslate"			0x07	1			0	        0		0		1		 0        1
+OP_kill				"kill"				0x08	1+2			1	        0		1		0		 0        0
+OP_label			"label" 			0x09	1			0	        0		0		0		 0        0
+OP_0x0A				"OP_0x0A"			0x0A	0			-1	        0		0		0		 0        0
+OP_0x0B				"OP_0x0B"			0x0B	0			-1	        0		0		0		 0        0
+OP_ifnlt			"ifnlt" 			0x0C	1+3			1	        0		0		2		 0        0
+OP_ifnle			"ifnle" 			0x0D	1+3			1	        0		0		2		 0        0
+OP_ifngt			"ifngt" 			0x0E	1+3			1	        0		0		2		 0        0
+OP_ifnge			"ifnge" 			0x0F	1+3			1	        0		0		2		 0        0
+OP_jump				"jump" 				0x10	1+3			1	        0		0		0		 0        0
+OP_iftrue			"iftrue" 			0x11	1+3			1	        0		0		1		 0        0
+OP_iffalse			"iffalse" 			0x12	1+3			1	        0		0		1		 0        0
+OP_ifeq				"ifeq" 				0x13	1+3			1	        0		0		2		 0        0
+OP_ifne				"ifne" 				0x14	1+3			1	        0		0		2		 0        0
+OP_iflt				"iflt" 				0x15	1+3			1	        0		0		2		 0        0
+OP_ifle				"ifle" 				0x16	1+3			1	        0		0		2		 0        0
+OP_ifgt				"ifgt" 				0x17	1+3			1	        0		0		2		 0        0
+OP_ifge				"ifge" 				0x18	1+3			1	        0		0		2		 0        0
+OP_ifstricteq		"ifstricteq" 		0x19	1+3			1	        0		0		2		 0        0
+OP_ifstrictne		"ifstrictne" 		0x1A	1+3			1	        0		0		2		 0        0
+OP_lookupswitch		"lookupswitch"		0x1B	1+3+2+0		2 	        0		0		1		 0        0
+OP_pushwith			"pushwith"	 		0x1C	1			0	        0		0		0		 0        0
+OP_popscope			"popscope" 			0x1D	1			0	        0		0		0		 0        0
+OP_nextname			"nextname" 			0x1E	1			0	        0		0		2		 1        1
+OP_hasnext			"hasnext" 			0x1F	1			0	        0		0		2		 1        1
+OP_pushnull			"pushnull" 			0x20	1			0	        0		0		0		 1        0
+OP_pushundefined	"pushundefined"		0x21	1			0	        0		0		0		 1        0
+OP_0x22				"OP_0x22"			0x22	0			-1	        0		0		0		 0        0
+OP_nextvalue		"nextvalue" 		0x23	1			0	        0		0		2		 1        1
+OP_pushbyte			"pushbyte" 			0x24	1+1			1	        0		0		0		 1        0
+OP_pushshort		"pushshort" 		0x25	1+2			1	        0		0		0		 1        0
+OP_pushtrue			"pushtrue" 			0x26	1			0	        0		0		0		 1        0
+OP_pushfalse		"pushfalse" 		0x27	1			0	        0		0		0		 1        0
+OP_pushnan			"pushnan" 			0x28	1			0	        0		0		0		 1        0
+OP_pop				"pop" 				0x29	1			0	        0		0		1		 0        0
+OP_dup				"dup" 				0x2A	1			0	        0		0		1		 2        0
+OP_swap				"swap" 				0x2B	1			0	        0		0		2		 2        0
+OP_pushstring		"pushstring"		0x2C	1+2			1	        0		0		0		 1        0
+OP_pushint  		"pushint"	    	0x2D	1+2			1	        0		0		0		 1        0
+OP_pushuint 		"pushuint"    		0x2E	1+2			1	        0		0		0		 1        0
+OP_pushdouble		"pushdouble"		0x2F	1+2			1	        0		0		0		 1        0
+OP_pushscope		"pushscope"	 		0x30	1			0	        0		0		0		 0        0
+OP_pushnamespace	"pushnamespace" 	0x31	1+2			1	        0		0		0		 1        0
+OP_hasnext2			"hasnext2"			0x32	1			2	        0		0		0		 1        1
+OP_0x33				"OP_0x33" 			0x33	0			-1	        0		0		0		 0        0
+OP_0x34				"OP_0x34" 			0x34	0			-1	        0		0		0		 0        0
+OP_0x35				"OP_0x35" 			0x35	0			-1	        0		0		0		 0        0
+OP_0x36				"OP_0x36"			0x36	0			-1	        0		0		0		 0        0
+OP_0x37				"OP_0x37"			0x37	0			-1	        0		0		0		 0        0
+OP_0x38				"OP_0x38"			0x38	0			-1	        0		0		0		 0        0
+OP_0x39				"OP_0x39"			0x39	0			-1	        0		0		0		 0        0
+OP_0x3A				"OP_0x3A"			0x3A	0			-1	        0		0		0		 0        0
+OP_0x3B				"OP_0x3B"			0x3B	0			-1	        0		0		0		 0        0
+OP_0x3C				"OP_0x3C"			0x3C	0			-1	        0		0		0		 0        0
+OP_0x3D				"OP_0x3D"			0x3D	0			-1	        0		0		0		 0        0
+OP_0x3E				"OP_0x3E"			0x3E	0			-1	        0		0		0		 0        0
+OP_0x3F				"OP_0x3F"			0x3F	0			-1	        0		0		0		 0        0
+OP_newfunction		"newfunction" 		0x40	1+2			1	        0		0		0		 1        1
+OP_call				"call" 				0x41	1+2			1	        0		0		-1		 1        1 // stk in: func obj args...
+OP_construct		"construct" 		0x42	1+2			1	        0		0		-1		 1        1 // stk in: func args...
+OP_callmethod		"callmethod" 		0x43	1+2+2		2 	        0		0		-1		 1        1 // stk in: obj args...
+OP_callstatic		"callstatic" 		0x44	1+2+2		2 	        0		0		-1		 1        1 // stk in: obj args...
+OP_callsuper		"callsuper" 		0x45	1+2+2		2 	        0		0		-1		 1        1 // stk in: obj [ns] [name] args...
+OP_callproperty		"callproperty"		0x46	1+2+2		2 	        0		0		-1		 1        1 // stk in: base [ns] [name] args...
+OP_returnvoid		"returnvoid" 		0x47	1			0	        0		0		0		 0        0
+OP_returnvalue		"returnvalue" 		0x48	1			0	        0		0		1		 0        0
+OP_constructsuper	"constructsuper"	0x49	1+2			1	        0		0		-1		 0        1 // stk in: obj args...
+OP_constructprop	"constructprop"		0x4A	1+2+2		2	        0		0		-1		 1        1 // stk in: obj args ...
+OP_callsuperid		"callsuperid"		0x4B	0			-1	        0		0		0		 0        1 // MIR only
+OP_callproplex		"callproplex"		0x4C	1+2+2		2 	        0		0		-1		 1        1 // stk in: base [ns] [name] args...
+OP_callinterface	"callinterface"		0x4D	0			-1	        0		0		0		 0        1 // MIR only
+OP_callsupervoid	"callsupervoid" 	0x4E	1+2+2		2 	        0		0		-1		 0        1 // stk in: obj [ns] [name] args...
+OP_callpropvoid		"callpropvoid"		0x4F	1+2+2		2 	        0		0		-1		 0        1 // stk in: base [ns] [name] args...
+OP_0x50				"OP_0x50"			0x50	0			-1	        0		0		0		 0        0
+OP_0x51				"OP_0x51"			0x51	0			-1	        0		0		0		 0        0
+OP_0x52				"OP_0x52"			0x52	0			-1	        0		0		0		 0        0
+OP_0x53				"OP_0x53"			0x53	0			-1	        0		0		0		 0        0
+OP_0x54				"OP_0x54"			0x54	0			-1	        0		0		0		 0        0
+OP_newobject		"newobject" 		0x55	1+2			1	        0		0		-1		 1        1
+OP_newarray			"newarray" 			0x56	1+2			1	        0		0		-1		 1        1
+OP_newactivation	"newactivation"		0x57	1			0	        0		0		-1		 1        1
+OP_newclass			"newclass" 			0x58	1+2			1	        0		0		1		 1        1
+OP_getdescendants	"getdescendants"	0x59	1+2			1	        0		0		1		 1        1
+OP_newcatch			"newcatch"			0x5A	1+2			1	        0		0		-1		 1        1
+OP_0x5B				"OP_0x5B"			0x5B	0			-1	        0		0		0		 0        0
+OP_0x5C				"OP_0x5C"			0x5C	0			-1	        0		0		0		 0        0
+OP_findpropstrict	"findpropstrict"	0x5D	1+2			1	        0		0		0		 1        1 // stk in: [ns] [name]
+OP_findproperty		"findproperty"		0x5E	1+2			1	        0		0		0		 1        1 // stk in: [ns] [name]
+OP_finddef			"finddef"			0x5F	1+2			1	        0		0		0		 1        1
+OP_getlex			"getlex"			0x60	1+2			1	        0		0		-1		 1        1 // stk in: obj [ns] [name]
+OP_setproperty		"setproperty" 		0x61	1+2			1	        0		0		-1		 0        1 // stk in: obj [ns] [name] value
+OP_getlocal			"getlocal" 			0x62	1+2			1	        1		0		0		 1        0
+OP_setlocal			"setlocal" 			0x63	1+2			1	        0		1		1		 0        0
+OP_getglobalscope	"getglobalscope"	0x64	1			0	        0		0		0		 1        0
+OP_getscopeobject	"getscopeobject"	0x65	1+1			1	        0		0		0		 1        0
+OP_getproperty		"getproperty" 		0x66	1+2			1	        0		0		-1		 1        1 // stk in: obj [ns] [name]
+OP_0x67				"OP_0x67"			0x67	0			-1	        0		0		0		 0        0
+OP_initproperty		"initproperty" 		0x68	1+2			1	        0		0		-1		 0        1 // stk in: obj [ns] [name] value
+OP_0x69				"OP_0x69"			0x69	0			-1	        0		0		0		 0        0
+OP_deleteproperty	"deleteproperty"	0x6A	1+2			1	        0		0		-1		 1        1 // stk in: obj [ns] [name]
+OP_0x6B				"OP_0x6B"			0x6B	0			-1	        0		0		0		 0        0
+OP_getslot			"getslot" 			0x6C	1+2			1	        0		0		1		 1        0
+OP_setslot			"setslot" 			0x6D	1+2			1	        0		0		2		 0        0
+
+// deprecated
+OP_getglobalslot	"getglobalslot"		0x6E	1+2			1	        0		0		0		 1        0
+
+// deprecated
+OP_setglobalslot	"setglobalslot"		0x6F	1+2			1	        0		0		1		 0        0
+
+OP_convert_s		"convert_s" 		0x70	1			0	        0		0		1		 1        1
+OP_esc_xelem		"esc_xelem"			0x71	1			0	        0		0		1		 1        1
+OP_esc_xattr		"esc_xattr"			0x72	1			0	        0		0		1		 1        1
+OP_convert_i		"convert_i" 		0x73	1			0	        0		0		1		 1        1
+OP_convert_u		"convert_u"			0x74	1			0	        0		0		1		 1        1
+OP_convert_d		"convert_d" 		0x75	1			0	        0		0		1		 1        1
+OP_convert_b		"convert_b" 		0x76	1			0	        0		0		1		 1        1
+OP_convert_o		"convert_o" 		0x77	1			0	        0		0		1		 1        1
+OP_checkfilter		"checkfilter"		0x78	1			0	        0		0		0		 0        1
+OP_0x79				"OP_0x79"			0x79	0			-1	        0		0		0		 0        0
+OP_0x7A				"OP_0x7A"			0x7A	0			-1	        0		0		0		 0        0
+OP_0x7B				"OP_0x7B"			0x7B	0			-1	        0		0		0		 0        0
+OP_0x7C				"OP_0x7C"			0x7C	0			-1	        0		0		0		 0        0
+OP_0x7D				"OP_0x7D"			0x7D	0			-1	        0		0		0		 0        0
+OP_0x7E				"OP_0x7E"			0x7E	0			-1	        0		0		0		 0        0
+OP_0x7F				"OP_0x7F"			0x7F	0			-1	        0		0		0		 0        0
+OP_coerce			"coerce" 			0x80	1+2			1	        0		0		1		 1        1
+
+// deprecated
+OP_coerce_b			"coerce_b" 			0x81	1			0	        0		0		1		 1        1
+
+OP_coerce_a			"coerce_a" 			0x82	1			0	        0		0		1		 1        1
+
+// deprecated
+OP_coerce_i			"coerce_i" 			0x83	1			0	        0		0		1		 1        1
+
+// deprecated
+OP_coerce_d			"coerce_d" 			0x84	1			0	        0		0		1		 1        1
+
+OP_coerce_s			"coerce_s" 			0x85	1			0	        0		0		1		 1        1
+OP_astype			"astype"			0x86	1+2			1	        0		0		1		 1        1
+OP_astypelate		"astypelate"		0x87	1			0	        0		0		2		 1        1
+
+// deprecated
+OP_coerce_u			"coerce_u"			0x88	1			0	        0		0		1		 1        1
+
+OP_coerce_o			"coerce_o"			0x89	1			0	        0		0		1		 1        1
+OP_0x8A				"OP_0x8A"			0x8A	0			-1	        0		0		0		 0        0
+OP_0x8B				"OP_0x8B"			0x8B	0			-1	        0		0		0		 0        0
+OP_0x8C				"OP_0x8C"			0x8C	0			-1	        0		0		0		 0        0
+OP_0x8D				"OP_0x8D"			0x8D	0			-1	        0		0		0		 0        0
+OP_0x8E				"OP_0x8E"			0x8E	0			-1	        0		0		0		 0        0
+OP_0x8F				"OP_0x8F"			0x8F	0			-1	        0		0		0		 0        0
+OP_negate			"negate" 			0x90	1			0	        0		0		1		 1        1
+OP_increment		"increment" 		0x91	1			0	        0		0		1		 1        1
+OP_inclocal			"inclocal" 			0x92	1+2			1	        1		1		0		 0        1
+OP_decrement		"decrement" 		0x93	1			0	        0		0		1		 1        1
+OP_declocal			"declocal" 			0x94	1+2			1	        1		1		0		 0        1
+OP_typeof			"typeof" 			0x95	1			0	        0		0		1		 1        0
+OP_not				"not" 				0x96	1			0	        0		0		1		 1        0
+OP_bitnot			"bitnot" 			0x97	1			0	        0		0		1		 1        1
+OP_0x98				"OP_0x98" 			0x98	0			-1	        0		0		0		 0        0
+OP_0x99				"OP_0x99" 			0x99	0			-1	        0		0		0		 0        0
+OP_concat			"concat" 			0x9A	0			-1	        0		0		0		 0        1 //internal only
+OP_add_d			"add_d" 			0x9B	0			-1	        0		0		0		 0        1 //internal only
+OP_0x9C				"OP_0x9C" 			0x9C	0			-1	        0		0		0		 0        0
+OP_0x9D				"OP_0x9D" 			0x9D	0			-1	        0		0		0		 0        0
+OP_0x9E				"OP_0x9E" 			0x9E	0			-1	        0		0		0		 0        0
+OP_0x9F				"OP_0x9F" 			0x9F	0			-1	        0		0		0		 0        0
+OP_add				"add" 				0xA0	1			0	        0		0		2		 1        1
+OP_subtract			"subtract" 			0xA1	1			0	        0		0		2		 1        1
+OP_multiply			"multiply" 			0xA2	1			0	        0		0		2		 1        1
+OP_divide			"divide" 			0xA3	1			0	        0		0		2		 1        1
+OP_modulo			"modulo" 			0xA4	1			0	        0		0		2		 1        1
+OP_lshift			"lshift" 			0xA5	1			0	        0		0		2		 1        1
+OP_rshift			"rshift" 			0xA6	1			0	        0		0		2		 1        1
+OP_urshift			"urshift" 			0xA7	1			0	        0		0		2		 1        1
+OP_bitand			"bitand" 			0xA8	1			0	        0		0		2		 1        1
+OP_bitor			"bitor" 			0xA9	1			0	        0		0		2		 1        1
+OP_bitxor			"bitxor" 			0xAA	1			0	        0		0		2		 1        1
+OP_equals			"equals" 			0xAB	1			0	        0		0		2		 1        1
+OP_strictequals		"strictequals"		0xAC	1			0	        0		0		2		 1        1
+OP_lessthan			"lessthan" 			0xAD	1			0	        0		0		2		 1        1
+OP_lessequals		"lessequals" 		0xAE	1			0	        0		0		2		 1        1
+OP_greaterthan		"greaterthan" 		0xAF	1			0	        0		0		2		 1        1
+OP_greaterequals	"greaterequals"		0xB0	1			0	        0		0		2		 1        1
+OP_instanceof		"instanceof" 		0xB1	1			0	        0		0		2		 1        1
+OP_istype			"istype" 			0xB2	1+2			1	        0		0		1		 1        1
+OP_istypelate		"istypelate" 		0xB3	1			0	        0		0		2		 1        1
+OP_in				"in" 				0xB4	1			0	        0		0		2		 1        1
+OP_0xB5				"OP_0xB5" 			0xB5	0			-1	        0		0		0		 0        0
+OP_0xB6				"OP_0xB6" 			0xB6	0			-1	        0		0		0		 0        0
+OP_0xB7				"OP_0xB7" 			0xB7	0			-1	        0		0		0		 0        0
+OP_0xB8				"OP_0xB8" 			0xB8	0			-1	        0		0		0		 0        0
+OP_0xB9				"OP_0xB9" 			0xB9	0			-1	        0		0		0		 0        0
+OP_0xBA				"OP_0xBA" 			0xBA	0			-1	        0		0		0		 0        0
+OP_0xBB				"OP_0xBB" 			0xBB	0			-1	        0		0		0		 0        0
+OP_0xBC				"OP_0xBC" 			0xBC	0			-1	        0		0		0		 0        0
+OP_0xBD				"OP_0xBD" 			0xBD	0			-1	        0		0		0		 0        0
+OP_0xBE				"OP_0xBE" 			0xBE	0			-1	        0		0		0		 0        0
+OP_0xBF				"OP_0xBF" 			0xBF	0			-1	        0		0		0		 0        0
+OP_increment_i		"increment_i" 		0xC0	1			0	        0		0		1		 1        1
+OP_decrement_i		"decrement_i" 		0xC1	1			0	        0		0		1		 1        1
+OP_inclocal_i		"inclocal_i" 		0xC2	1+2			1	        1		1		0		 0        1
+OP_declocal_i		"declocal_i" 		0xC3	1+2			1	        1		1		0		 0        1
+OP_negate_i			"negate_i" 			0xC4	1			0	        0		0		1		 1        1
+OP_add_i			"add_i" 			0xC5	1			0	        0		0		2		 1        1
+OP_subtract_i		"subtract_i" 		0xC6	1			0	        0		0		2		 1        1
+OP_multiply_i		"multiply_i" 		0xC7	1			0	        0		0		2		 1        1
+OP_0xC8				"OP_0xC8" 			0xC8	0			-1	        0		0		0		 0        0
+OP_0xC9				"OP_0xC9" 			0xC9	0			-1	        0		0		0		 0        0
+OP_0xCA				"OP_0xCA"			0xCA	0			-1	        0		0		0		 0        0
+OP_0xCB				"OP_0xCB"			0xCB	0			-1	        0		0		0		 0        0
+OP_0xCC				"OP_0xCC"			0xCC	0			-1	        0		0		0		 0        0
+OP_0xCD				"OP_0xCD"			0xCD	0			-1	        0		0		0		 0        0
+OP_0xCE				"OP_0xCE"			0xCE	0			-1	        0		0		0		 0        0
+OP_0xCF				"OP_0xCF"			0xCF	0			-1	        0		0		0		 0        0
+OP_getlocal0		"getlocal0"			0xD0	1			0	        1		0		0		 1        0
+OP_getlocal1		"getlocal1"			0xD1	1			0	        1		0		0		 1        0
+OP_getlocal2		"getlocal2"			0xD2	1			0	        1		0		0		 1        0
+OP_getlocal3		"getlocal3"			0xD3	1			0	        1		0		0		 1        0
+OP_setlocal0		"setlocal0"			0xD4	1			0	        0		1		1		 0        0
+OP_setlocal1		"setlocal1"			0xD5	1			0	        0		1		1		 0        0
+OP_setlocal2		"setlocal2"			0xD6	1			0	        0		1		1		 0        0
+OP_setlocal3		"setlocal3"			0xD7	1			0	        0		1		1		 0        0
+OP_0xD8				"OP_0xD8"			0xD8	0			-1	        0		0		0		 0        0
+OP_0xD9				"OP_0xD9"			0xD9	0			-1	        0		0		0		 0        0
+OP_0xDA				"OP_0xDA"			0xDA	0			-1	        0		0		0		 0        0
+OP_0xDB				"OP_0xDB"			0xDB	0			-1	        0		0		0		 0        0
+OP_0xDC				"OP_0xDC"			0xDC	0			-1	        0		0		0		 0        0
+OP_0xDD				"OP_0xDD"			0xDD	0			-1	        0		0		0		 0        0
+OP_0xDE				"OP_0xDE"			0xDE	0			-1	        0		0		0		 0        0
+OP_0xDF				"OP_0xDF"			0xDF	0			-1	        0		0		0		 0        0
+OP_0xE0				"OP_0xE0"			0xE0	0			-1	        0		0		0		 0        0
+OP_0xE1				"OP_0xE1"			0xE1	0			-1	        0		0		0		 0        0
+OP_0xE2				"OP_0xE2"			0xE2	0			-1	        0		0		0		 0        0
+OP_0xE3				"OP_0xE3"			0xE3	0			-1	        0		0		0		 0        0
+OP_0xE4				"OP_0xE4"			0xE4	0			-1	        0		0		0		 0        0
+OP_0xE5				"OP_0xE5"			0xE5	0			-1	        0		0		0		 0        0
+OP_0xE6				"OP_0xE6"			0xE6	0			-1	        0		0		0		 0        0
+OP_0xE7				"OP_0xE7"			0xE7	0			-1	        0		0		0		 0        0
+OP_0xE8				"OP_0xE8"			0xE8	0			-1	        0		0		0		 0        0
+OP_0xE9				"OP_0xE9"			0xE9	0			-1	        0		0		0		 0        0
+OP_0xEA				"OP_0xEA"			0xEA	0			-1	        0		0		0		 0        0
+OP_0xEB				"OP_0xEB"			0xEB	0			-1	        0		0		0		 0        0
+OP_0xEC				"OP_0xEC"			0xEC	0			-1	        0		0		0		 0        0
+OP_0xED				"OP_0xED"			0xED	0			-1	        0		0		0		 0        0
+OP_abs_jump			"abs_jump"			0xEE	1+2			2	        0		0		0		 0        0 // vm-use only, not allowed in ABC files.
+OP_debug			"debug"				0xEF	1+1+2+4		4 	        0		0		0		 0        1
+OP_debugline		"debugline"			0xF0	1+3			1	        0		0		0		 0        1
+OP_debugfile		"debugfile"			0xF1	1+2			1	        0		0		0		 0        1
+OP_bkptline			"bkptline"			0xF2	1+3			1	        0		0		0		 0        0
+OP_timestamp		"timestamp"			0xF3	1			0	        0		0		0		 0        0
+OP_0xF4				"OP_0xF4"			0xF4	0			-1	        0		0		0		 0        0
+OP_verifypass		"verifypass"		0xF5	0			-1	        0		0		0		 0        0
+OP_alloc			"alloc"				0xF6	0			-1	        0		0		0		 0        0
+OP_mark				"mark"				0xF7	0			-1	        0		0		0		 0        0
+OP_wb				"wb"				0xF8	0			-1	        0		0		0		 0        0
+OP_prologue			"prologue"			0xF9	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_sendenter		"sendenter"			0xFA	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_doubletoatom		"doubletoatom"		0xFB	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_sweep			"sweep"				0xFC	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_codegenop		"codegenop" 		0xFD	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_verifyop			"verifyop" 			0xFE	0			-1	        0		0		0		 0        0 // for dprofile stats only
+OP_decode			"decode" 			0xFF	0			-1	        0		0		0		 0        0 // for dprofile stats only

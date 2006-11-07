@@ -1,0 +1,736 @@
+<?xml version='1.0' encoding='utf-8' standalone='no' ?>
+<!-- ***** BEGIN LICENSE BLOCK ***** 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1 
+   - 
+   - The contents of this file are subject to the Mozilla Public License Version 1.1 (the 
+   - "License"); you may not use this file except in compliance with the License. You may obtain 
+   - a copy of the License at http://www.mozilla.org/MPL/ 
+   - 
+   - Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
+   - WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
+   - language governing rights and limitations under the License. 
+   - 
+   -  The Original Code is [Open Source Virtual Machine.] 
+   - 
+   - The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
+   - by the Initial Developer are Copyright (C)[ #YEARS# ] Adobe Systems Incorporated. All Rights 
+   - Reserved. 
+   - 
+   - Contributor(s): Adobe AS3 Team
+   - 
+   - Alternatively, the contents of this file may be used under the terms of either the GNU 
+   - General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
+   - License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the 
+   - LGPL are applicable instead of those above. If you wish to allow use of your version of this 
+   - file only under the terms of either the GPL or the LGPL, and not to allow others to use your 
+   - version of this file under the terms of the MPL, indicate your decision by deleting provisions 
+   - above and replace them with the notice and other provisions required by the GPL or the 
+   - LGPL. If you do not delete the provisions above, a recipient may use your version of this file 
+   - under the terms of any one of the MPL, the GPL or the LGPL. 
+   - 
+   - ***** END LICENSE BLOCK ***** -->
+
+<errors>
+  這個表格包含所有 core avmplus 產生的錯誤訊息。這很可能會由資源清單代替，以方便中文化。%o = ScriptObject* %t = Traits* %m = AbstractFunction* %n = Multiname (name portion only) %N = Multiname (namespace portion only) %a = Atom %d = int %f = double %S = Stringp %s = char*
+  <error id="1000" label="kOutOfMemoryError">
+    系統記憶體不足。
+    <description><![CDATA[
+		Flash Player needs more memory to compile your code than your system has available. 
+		Close some of the applications or processes running on your system.
+	]]></description>
+  </error>
+  <error id="1001" label="kNotImplementedError">未實作方法 %1。</error>
+  <error id="1002" label="kInvalidPrecisionError">
+    精確度引數必須介於 %2 和 %3 之間；%1 無效。
+    <description><![CDATA[
+		You specified a value less than 0 or greater than 20 for the precision argument 
+		of a method or property. Pass a value between 0 and 20 as a precision argument.
+	]]></description>
+  </error>
+  <error id="1003" label="kInvalidRadixError">
+    基數引數必須介於 2 和 36 之間；目前引數為 %1。
+    <description><![CDATA[
+		You passed a value less than 2 or greater than 36 for the radix argument of a method or property. 
+		Pass a value between 2 and 36 as a radix argument.
+	]]></description>
+  </error>
+  <error id="1004" label="kInvokeOnIncompatibleObjectError">
+    在不相容的物件上呼叫了 %1 方法。
+    <description><![CDATA[
+		You tried to call a method that is not available to the specified object. This error occurs when 
+		you have copied a prototype function from one object to another, and then invoked it, but the 
+		target object is not the same type as the original object. Ensure that the target object and 
+		original object are the same type. See ECMAScript edition 3 chapter 15 for more details.
+	]]></description>
+  </error>
+  <error id="1005" label="kArrayIndexNotIntegerError">
+    陣列索引不是正整數 (%1)。
+    <description><![CDATA[
+		You tried to access a member of an array using an index value that is not a positive integer. Pass only positive integers as index values for arrays.
+	]]></description>
+  </error>
+  <error id="1006" label="kCallOfNonFunctionError">
+    %1 不是函數。
+    <description><![CDATA[
+		This error occurs when you attempt to call a function that does not exist. 
+		Make sure you are calling the correct function, and that the API has 
+		not changed from ActionScript 2.0. Also, make sure you are using the correct
+		object. For example, you will see this error when you use the following code 
+		(because the last line mistakenly calls the variable <code>big</code> instead 
+		of <code>blg</code>): 
+		
+		<pre><code>var blg:String = "foo";
+var big:Sprite = new Sprite();
+var error:int = big.length(); </code></pre>
+	]]></description>
+  </error>
+  <error id="1007" label="kConstructOfNonFunctionError">嘗試個體化非建構函式。</error>
+  <error id="1008" label="kAmbiguousBindingError">%1 出現模稜兩可的情況；找到一個以上的相符繫結。</error>
+  <error id="1009" label="kConvertNullToObjectError">
+    無法存取 Null 物件參考的屬性或方法。
+    <description><![CDATA[
+	An object that evaluates to null can have no properties. This error can occur in some unexpected 
+	(though valid) situations. For example, consider the following code, which creates a Sprite
+	object. Since this Sprite object is never added to the display list (via the 
+	<code>addChild()</code> method of a DisplayObjectContainer object), then its <code>stage</code>
+	property is set to null. Thus, the example generates this error because Sprite object's <code>stage</code> property 
+	cannot have any properties:
+	
+	<pre><code>import flash.display.Sprite;
+var sprite1:Sprite = new Sprite();
+var q:String = sprite1.stage.quality;</code></pre>
+	]]></description>
+  </error>
+  <error id="1010" label="kConvertUndefinedToObjectError">
+    詞彙未定義且沒有屬性。
+    <description><![CDATA[
+		This error can occur if you are trying to access a property of an object that does not exist. For example:
+		<pre><code>var obj:Object = new Object();
+obj.a = "foo";
+trace(obj.b.prop);</code></pre>
+		
+		<p>You can also see this error because of a misspelling, for example in the following, where
+		<code>mc</code> represents a MovieClip object on the display list, and the <code>stage</code>
+		property is misspelled with a capital S (it should be <code>stage</code>):</p>
+		
+		<pre><code>trace(mc.Stage.quality);</code></pre>
+		
+	
+	]]></description>
+  </error>
+  <error id="1011" label="kIllegalOpcodeError">
+    方法 %1 包含不合法的 Opcode %2 (在位移 %3)。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1012" label="kLastInstExceedsCodeSizeError">
+    最後的指令超過程式碼大小。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1013" label="kFindVarWithNoScopeError">
+    當 scopeDepth 是 0 時，無法呼叫 OP_findproperty。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1014" label="kClassNotFoundError">找不到類別 %1。</error>
+  <error id="1015" label="kIllegalSetDxns">
+    方法 %1 無法設定預設的 xml 名稱空間
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1016" label="kDescendentsError">類型 %1 不支援子系運算子 (..)。</error>
+  <error id="1017" label="kScopeStackOverflowError">
+    發生範圍堆疊溢位。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1018" label="kScopeStackUnderflowError">
+    發生範圍堆疊反向溢位。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1019" label="kGetScopeObjectBoundsError">
+    Getscopeobject %1 超出範圍。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1020" label="kCannotFallOffMethodError">
+    程式碼不能在方法的結尾之外。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1021" label="kInvalidBranchTargetError">
+    至少有一個分支目標不在方法中的有效指令上。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1022" label="kIllegalVoidError">
+    類型 void 只能用來做為函數傳回類型。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1023" label="kStackOverflowError">
+    發生堆疊溢位。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1024" label="kStackUnderflowError">
+    發生堆疊反向溢位。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1025" label="kInvalidRegisterError">
+    存取無效的註冊項目 %1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1026" label="kSlotExceedsCountError">
+    位置 %1 超過 %3 的 slotCount= %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1027" label="kMethodInfoExceedsCountError">
+    Method_info %1 超過 method_count=%2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1028" label="kDispIdExceedsCountError">
+    Disp_id %1 超過 %3 的 max_disp_id=%2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1029" label="kDispIdUndefinedError">
+    Disp_id %1 沒有定義於 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1030" label="kStackDepthUnbalancedError">
+    堆疊深度不對稱。%1 != %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1031" label="kScopeDepthUnbalancedError">
+    範圍深度不對稱。%1 != %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1032" label="kCpoolIndexRangeError">
+    Cpool 索引 %1 超出範圍 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1033" label="kCpoolEntryWrongTypeError">Cpool 項目 %1 類型錯誤。</error>
+  <error id="1034" label="kCheckTypeFailedError">強制轉型失敗： 無法將 %1 轉換成 %2。</error>
+  <error id="1035" label="kIllegalSuperCallError">
+    方法 %1 中有不合法的 super 陳述式。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1037" label="kCannotAssignToMethodError">
+    無法指定給 %2 上的方法 %1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1038" label="kRedefinedError">
+    %1 已定義。
+    <description><![CDATA[
+		You cannot declare a variable or function with the same identifier name more than once 
+		within the same scope. 
+		In ActionScript 3.0, different code blocks (such as those used in two <code>for</code> loops
+		in the same <code>function</code> definition) are considered to be in the same scope.
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1039" label="kCannotVerifyUntilReferencedError">
+    方法被參考後才能進行驗證。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1040" label="kCantUseInstanceofOnNonObjectError">
+    instanceof 的右邊必須是類別或函式。
+    <description><![CDATA[
+		The expression on the right-hand side of the <code>instanceof</code> operator must be a class or function.
+	]]></description>
+  </error>
+  <error id="1041" label="kIsTypeMustBeClassError">
+    運算子的右邊必須是類別。
+    <description><![CDATA[
+		The expression on the right-hand side of the <code>instanceof</code> operator must be a class.
+	]]></description>
+  </error>
+  <error id="1042" label="kInvalidMagicError">
+    不是 ABC 檔案。major_version=%1 minor_version=%2。
+    <description><![CDATA[
+You are attempting to use an  invalid file with the player: Possibly the tool that generates the SWF is out of date or the SWF itself is corrupt.
+	]]></description>
+  </error>
+  <error id="1043" label="kInvalidCodeLengthError">
+    無效的 code_length=%1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1044" label="kInvalidMethodInfoFlagsError">
+    MethodInfo-%1 不支援的旗標=%2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1045" label="kUnsupportedTraitsKindError">
+    不支援的 traits 類型=%1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1046" label="kMethodInfoOrderError">
+    MethodInfo-%1 在定義之前被參考。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1047" label="kMissingEntryPointError">
+    找不到進入點。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1049" label="kPrototypeTypeError">
+    原型物件必須是 Vanilla 物件。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1050" label="kConvertToPrimitiveError">
+    無法將 %1 轉換成基本類型。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1051" label="kIllegalEarlyBindingError">
+    不合法的早期繫結存取 %1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1052" label="kInvalidURIError">
+    傳遞給 %1 函數的 URI 無效。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1053" label="kIllegalOverrideError">
+    不合法覆寫 %2 中的 %1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1054" label="kIllegalExceptionHandlerError">
+    例外處理常式中出現不合法的範圍或目標位移。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1056" label="kWriteSealedError">
+    無法在 %2 上建立屬性 %1。
+    <description><![CDATA[
+	You are trying to assign a value to a nonexistent property on an instance of a non-dynamic 
+	class. This is only possible for instances of dynamic classes]]></description>
+  </error>
+  <error id="1057" label="kIllegalSlotError">
+    %1 只能包含方法。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1058" label="kIllegalOperandTypeError">
+    運算元類型不合法：%1 必須是 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1059" label="kClassInfoOrderError">
+    ClassInfo-%1 在定義之前被參考。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1060" label="kClassInfoExceedsCountError">
+    ClassInfo %1 超過 class_count=%2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1061" label="kNumberOutOfRangeError">
+    值 %1 在轉換成 %2 後會有誤差。
+    <description><![CDATA[
+	
+		This error appears if you attempt to assign a decimal number to a property of type 
+		<code>int</code>.
+		
+		<p>This error also appears for out-of-range assignments, such as the following:</p>
+		
+		<pre><code>var m0:int = 2147483648; // int.MAX_VALUE == 2147483647</code></pre>		
+		<p>You can also see this error when using the bitwise left shift operator (&lt;&lt;).
+		For example, consider the following code:</p>
+		
+		<pre><code>var m0:uint = 0xFF;
+var m1:uint = m0&lt;&lt;24;</code></pre>
+		
+		<p>The result of left shift operator (&lt;&lt;) is interpreted as a 32-bit two's complement number 
+		with sign. In the example, the result is a negative value, which causes the error when assigned
+		to the uint typed property. A workaround is the following:</p>
+		
+		<pre><code>var m0:uint = 0xFF;
+var m1:uint = uint(m0&lt;&lt;24);</code></pre>
+	
+	]]></description>
+  </error>
+  <error id="1063" label="kWrongArgumentCountError">%1 上的引數個數不相符。需要 %2 個，目前為 %3 個。</error>
+  <error id="1064" label="kCannotCallMethodAsConstructor">
+    無法將方法 %1 當作建構函式呼叫。
+    <description><![CDATA[
+	Extracted methods are permanently bound to the object they are extracted from. 
+	Therefore, they can not later be called as a constructor. For example, the following 
+	creates function <code>f()</code> in Class A:
+ 	<pre><code>class A {
+	   function f() {}
+	}</code></pre>
+	In the following code, extracting the function causes no error. However, creating 
+	a new instance of the function causes an error.
+	<pre><code>var a = new A()
+	var m = a.f // extract f, don't call it
+	m() // same as a.f()
+	new m() // causes this error</code></pre>
+	
+	]]></description>
+  </error>
+  <error id="1065" label="kUndefinedVarError">
+    變數 %1 未定義。
+    <description><![CDATA[
+	You are using an undefined lexical reference. For example, in the following statements, the 
+	statement <code>print(x)</code> generates an error because <code>x</code> is undefined. However, the 
+	statement <code>print(y)</code> doesn't generate an error because <code>y</code> is defined:
+ 	<pre><code>print("hello world")
+	print(x) // x is undefined
+	var y
+	print(y) // No error, y is defined.</code></pre>
+	]]></description>
+  </error>
+  <error id="1066" label="kFunctionConstructorError">
+    不支援表單 function('function body')。
+    <description><![CDATA[
+	Unlike JavaScript, Flash does not compile code on-the-fly using <code>eval()</code> and 
+	<code>function()</code>.  Thus, calling these as a constructor in ActionScript 3.0 generates this error.
+	]]></description>
+  </error>
+  <error id="1067" label="kIllegalNativeMethodBodyError">
+    原生方法 %1 包含不合法的方法主體。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1068" label="kCannotMergeTypesError">
+    %1 和 %2 無法調解。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1069" label="kReadSealedError">
+    %2 上找不到屬性 %1，而且沒有預設值。
+    <description><![CDATA[
+	You are referencing an undefined property on a non-dynamic class instance. For example, the following generates this error when it references property 
+	<code>x</code>, which is not defined and cannot be created dynamically: 	
+	<pre><code>class A {} // sealed class, not dynamic
+	print(new A().x) // no property x defined on A, and A is not dynamic</code></pre>
+	]]></description>
+  </error>
+  <error id="1070" label="kCallNotFoundError">
+    %2 上找不到方法 %1
+    <description><![CDATA[
+	You are using a <code>super</code> statement to call a function, but the function doesn't exist in the super class. 
+	For example, the following code generates the error:	<pre><code>class A() {}
+class B extends A {
+  function f() { print(super.f()); } // error 1070, there is no f on A
+}</code></pre>
+	]]></description>
+  </error>
+  <error id="1071" label="kAlreadyBoundError">函數 %1 已繫結至 %2。</error>
+  <error id="1072" label="kZeroDispIdError">
+    Disp_id 0 不合法。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1073" label="kDuplicateDispIdError">
+    由於 disp_id %2 重複，非 Override 方法 %1 已被代換。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1074" label="kConstWriteError">不合法的寫入 %2 上的唯讀屬性 %1。</error>
+  <error id="1075" label="kMathNotFunctionError">
+    Math 不是函數。
+    <description><![CDATA[
+	You are trying to call <code>math()</code> as a function, but <code>math</code> is a class with static methods.
+	]]></description>
+  </error>
+  <error id="1076" label="kMathNotConstructorError">
+    Math 不是建構函式。
+    <description><![CDATA[
+	You can not instantiate the Math class. 
+ 	]]></description>
+  </error>
+  <error id="1077" label="kWriteOnlyError">不合法的讀取 %2 上的唯寫屬性 %1。</error>
+  <error id="1078" label="kIllegalOpMultinameError">
+    不合法的 Opcode/Multiname 組合：%1&lt;%2&gt;。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1079" label="kIllegalNativeMethodError">
+    載入的程式碼中不允許使用原生方法。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1080" label="kIllegalNamespaceError">
+    不合法的名稱空間值。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1081" label="kReadSealedErrorNs">%2 上找不到屬性 %1，且沒有預設值。</error>
+  <error id="1082" label="kNoDefaultNamespaceError">
+    未設定預設的名稱空間。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1083" label="kXMLPrefixNotBound">
+    未繫結元素 "%2" 的前置詞 "%1"。
+    <description><![CDATA[
+	An attribute name or element name has a prefix but no matching namespace was 
+	found. This statement generates an error because there is no <code>foo</code> 
+	namespace to match <code>foo:x</code>:<pre/>&lt;foo:x xmlns:clowns='http://circuscenter.com'&gt;</pre>
+		]]></description>
+  </error>
+  <error id="1084" label="kXMLBadQName">
+    元素或屬性 ("%1") 與 QName Production 不相符：QName::=(NCName':')?NCName。
+    <description><![CDATA[
+	You have <code>foo: </code> or <code>:foo</code> as an element or attribute name, but there is nothing 
+	on the other side of the colon.	
+	]]></description>
+  </error>
+  <error id="1085" label="kXMLUnterminatedElementTag">元素類型 '%1' 必須以相符的結束標籤 '&lt;/%2&gt;' 結束。</error>
+  <error id="1086" label="kXMLOnlyWorksWithOneItemLists">
+    %1 方法只有在包含一個項目的清單上才有作用。
+    <description><![CDATA[
+	The XMLList class propagates the XML-specific functions to one child if it only has one 
+	item in its list. If more than one item is in the list, the routines fail with this 
+	error. This happens for the following XMLList functions that mimic XML functions: 	
+	<p><code>addNamespace</code>, <code>appendChild</code>,  <code>childIndex</code>,  	
+	<code>inScopeNamespaces</code>,  <code>insertChildAfter</code>,  <code>insertChildBefore</code>,  	
+	<code>name</code>,  <code>namespace</code>,  <code>localName</code>,  <code>namespaceDeclarations</code>,  	
+	<code>nodeKind</code>,  <code>prependChild</code>,  <code>removeNamespace</code>,  <code>replace</code>,  	
+	<code>setChildren</code>,  <code>setLocalName</code>,  <code>setName</code>,  and <code>setNamespace.
+ 
+	]]></description>
+  </error>
+  <error id="1087" label="kXMLAssignmentToIndexedXMLNotAllowed">不允許索引 XML 的指定。</error>
+  <error id="1088" label="kXMLMarkupMustBeWellFormed">
+    文件中根元素之後的標記必須使用正確格式。
+    <description><![CDATA[
+	These are some possible causes of this error:
+	<ul>
+	<li>Parsing an XMLList style object such as <code><a/><b/><c/></code> as XML</li>
+	<li>Misbalanced strings such as <code><a><b></b></a></c></code></li>
+	</ul>	
+	]]></description>
+  </error>
+  <error id="1089" label="kXMLAssigmentOneItemLists">無法指定給包含多個項目的清單。</error>
+  <error id="1090" label="kXMLMalformedElement">
+    XML 剖析器失敗：元素格式錯誤。
+    <description><![CDATA[
+	An element name is malformed. This example of an element name is malformed because a 
+	trailing right angle bracket <code>></code> is missing:
+ 
+	<pre>&lt;a/&gt;&lt;b&gt;&lt;/b</pre>	]]></description>
+  </error>
+  <error id="1091" label="kXMLUnterminatedCData">XML 剖析器失敗：未結束的 CDATA 區段。</error>
+  <error id="1092" label="kXMLUnterminatedXMLDecl">XML 剖析器失敗：未結束的 XML 宣告。</error>
+  <error id="1093" label="kXMLUnterminatedDocTypeDecl">XML 剖析器失敗：未結束的 DOCTYPE 宣告。</error>
+  <error id="1094" label="kXMLUnterminatedComment">XML 剖析器失敗：未結束的註解。</error>
+  <error id="1095" label="kXMLUnterminatedAttribute">XML 剖析器失敗：未結束的屬性。</error>
+  <error id="1096" label="kXMLUnterminatedElement">XML 剖析器失敗：未結束的元素。</error>
+  <error id="1097" label="kXMLUnterminatedProcessingInstruction">XML 剖析器失敗：未結束的處理指令。</error>
+  <error id="1098" label="kXMLNamespaceWithPrefixAndNoURI">
+    no namespace 的前置詞 %1 不合法。
+    <description><![CDATA[
+	The namespace constructor throws this error if you try to pass in an empty URI with a 
+	non-empty prefix as in this example:
+ 
+<pre>ns = new Namespace ("prefix", "");
+	]]></description>
+  </error>
+  <error id="1100" label="kRegExpFlagsArgumentError">
+    從另一個 RegExp 建構 RegExp 時無法提供旗標。
+    <description><![CDATA[
+	Creating a new regular expression from an existing one also copies its flags. To create a regular expression with 
+	different flags, use the <code>new</code> operator and set the flags as desired. For example, this statement 
+	creates a regular expression and specifies flag settings:
+	<pre<code>var re:RegExp = new RegExp("ali", /s)</code></pre>
+	Alternatively, this statement creates a regular expression that has the same flags as re:
+	<pre><code>var re2:RegExp = new RegExp(re, ...)</code></pre> 	]]></description>
+  </error>
+  <error id="1101" label="kNoScopeError">
+    無法以未知的範圍檢查方法 %1。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1102" label="kIllegalDefaultValue">
+    類型 %1 的預設值不合法。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1103" label="kCannotExtendFinalClass">
+    類別 %1 無法擴充最後的基底類別。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1104" label="kXMLDuplicateAttribute">屬性 "%1" 已經指定給元素 "%2"。</error>
+  <error id="1107" label="kCorruptABCError">
+    ABC 資料已經損毀，嘗試讀取超出範圍。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1108" label="kInvalidBaseClassError">
+    OP_newclass Opcode 使用於不正確的基底類別。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1109" label="kDanglingFunctionError">
+    嘗試直接從方法 %1 呼叫未繫結的函式 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1110" label="kCannotExtendError">
+    %1 無法擴充 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1111" label="kCannotImplementError">
+    %1 無法實作 %2。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1112" label="kCoerceArgumentCountError">強制類別上的引數個數不相符。需要 1 個，目前為 %1 個。</error>
+  <error id="1113" label="kInvalidNewActivationError">
+    方法中使用 OP_newactivation，未搭配 NEED_ACTIVATION 指標。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1114" label="kNoGlobalScopeError">
+    在非全域範圍下使用 OP_getglobalslot 或 OP_setglobalslot。
+    <description><![CDATA[
+		See the <a href="#note">note</a> at the bottom of this table. &#42;
+	]]></description>
+  </error>
+  <error id="1115" label="kNotConstructorError">%1 不是建構函式。</error>
+  <error id="1116" label="kApplyError">Function.prototype.apply 的第二個引數必須是陣列。</error>
+  <error id="1117" label="kXMLInvalidName">無效的 XML 名稱：%1。</error>
+  <error id="1118" label="kXMLIllegalCyclicalLoop">節點之間的循環迴圈不合法。</error>
+  <error id="1119" label="kDeleteTypeError">類型 %1 的運算元不支援刪除運算子。</error>
+  <error id="1120" label="kDeleteSealedError">無法刪除 %2 上的屬性 %1。</error>
+  <error id="1121" label="kDuplicateMethodBodyError">方法 %1 包含重複的方法主體。</error>
+  <error id="1122" label="kIllegalInterfaceMethodBodyError">Interface 方法 %1 包含不合法的方法主體。</error>
+  <error id="1123" label="kFilterError">類型 %1 不支援篩選運算子。</error>
+  <error id="1124" label="kInvalidHasNextError">OP_hasnext2 要求物件及索引為可辨識的登錄。</error>
+  <error id="1500" label="kFileOpenError">開啟檔案 %1 時發生錯誤。</error>
+  <error id="1501" label="kFileWriteError">
+    寫入檔案 %1 時發生錯誤。
+    <description><![CDATA[
+		The file you are writing to cannot be opened. Possibly the filename contains an error, the file is read-only, or 
+		you do not have access priveleges.
+	  	]]></description>
+  </error>
+  <error id="1502" label="kScriptTimeoutError">
+    script 已經執行超過預設的 15 秒逾時時段。
+    <description><![CDATA[
+		A script executed after the timeout period. (The default timeout period is 15 seconds.) After this error occurs, the 
+		script can continue to execute for 15 seconds more, after which the script terminates and throws Error 1503.  
+	]]></description>
+  </error>
+  <error id="1503" label="kScriptTerminatedError">
+    Script 並未在 30 秒後結束，已經被終止。
+    <description><![CDATA[
+	  The script was still executing after 30 seconds. (The Flash Player first throws Error 1502 if the script executed more than 15 
+	  seconds, which is the default timeout period.) This error occurs 15 seconds after Error 1502 occurs.  
+	]]></description>
+  </error>
+  <error id="1504" label="kEndOfFileError">
+    檔案結尾。
+    <description><![CDATA[
+	  The Flash Player unexpectedly encountered the end of the file. Possibly the file was not saved correctly or Flash Player expected more data 
+	  in the file.
+	]]></description>
+  </error>
+  <error id="1505" label="kStringIndexOutOfBoundsError">字串索引 %1 超出範圍；範圍必須介於 %2 到 %3。</error>
+  <error id="1506" label="kInvalidRangeError">
+    指定的範圍無效。
+    <description><![CDATA[
+	The method's <code>start</code> parameter is greater than its <code>end</code> parameter.
+	]]></description>
+  </error>
+  <error id="1507" label="kNullArgumentError">引數 %1 不能是 null。</error>
+  <error id="1508" label="kInvalidArgumentError">
+    指定給引數 %1 的值無效。
+    <description><![CDATA[
+	You are possibly trying to pass the wrong data type. For example, the code
+	<pre><code>public function doSomething(const:int):void {
+	}
+	this ["doSomething"] ("str")</code></pre> 
+	generates an error at runtime because <code>doSomething</code> is cast as an int data type.	]]></description>
+  </error>
+  <error id="1509" label="kShellCompressedDataError">
+    解壓縮資料時發生錯誤。
+    <description><![CDATA[
+	The de-compressor reached the end of the stream, but more data was expected. The compressed data 
+	stream is probably corrupted.
+	]]></description>
+  </error>
+  <error id="1034" label="kCheckTypeFailedError">強制轉型失敗： 無法將 %1 轉換成 %2。</error>
+  <error id="1510" label="kArrayFilterNonNullObjectError">若回呼引數是 Class 的方法，選擇性的引數 'this' 必須是 null。</error>
+</errors>

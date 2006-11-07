@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MMgc", "MMgc_8.vcproj", "{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Debugger|Win32 = Debug Debugger|Win32
+		Debug|Win32 = Debug|Win32
+		Release Debugger|Win32 = Release Debugger|Win32
+		Release|Win32 = Release|Win32
+		VTune|Win32 = VTune|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger|Win32.ActiveCfg = Debug Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger|Win32.Build.0 = Debug Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug|Win32.Build.0 = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger|Win32.ActiveCfg = Release Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger|Win32.Build.0 = Release Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.ActiveCfg = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.Build.0 = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune|Win32.ActiveCfg = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune|Win32.Build.0 = VTune|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

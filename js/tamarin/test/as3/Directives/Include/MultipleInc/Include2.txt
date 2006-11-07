@@ -1,0 +1,3 @@
+function incFunc2() {
+  return("incFunc2");
+}

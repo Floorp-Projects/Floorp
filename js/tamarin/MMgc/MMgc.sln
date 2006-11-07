@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MMgc", "MMgc.vcproj", "{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+		VTune = VTune
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug.ActiveCfg = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug.Build.0 = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release.ActiveCfg = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release.Build.0 = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune.ActiveCfg = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune.Build.0 = VTune|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.Debug.ActiveCfg = Debug|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.Debug.Build.0 = Debug|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.Release.ActiveCfg = Release|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.Release.Build.0 = Release|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.VTune.ActiveCfg = VTune|Win32
+		{FE29422B-B9A1-4C3A-954A-0B37CF0642D5}.VTune.Build.0 = VTune|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

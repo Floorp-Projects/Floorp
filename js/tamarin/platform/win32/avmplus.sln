@@ -1,0 +1,68 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shell", "shell.vcproj", "{437E43D2-ED2D-406B-88DB-B5940F838AE9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B} = {B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8} = {437E43D2-ED2D-406B-88DB-B5940F838AE8}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "avmplus", "avmplus.vcproj", "{437E43D2-ED2D-406B-88DB-B5940F838AE8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B} = {B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MMgc", "..\..\MMgc\MMgc.vcproj", "{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Debug Debugger = Debug Debugger
+		Release = Release
+		Release Debugger = Release Debugger
+		VTune = VTune
+		VTune_Performance = VTune_Performance
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Debug.ActiveCfg = Debug|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Debug.Build.0 = Debug|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Debug Debugger.ActiveCfg = Debug Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Debug Debugger.Build.0 = Debug Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Release.ActiveCfg = Release|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Release.Build.0 = Release|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Release Debugger.ActiveCfg = Release Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.Release Debugger.Build.0 = Release Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.VTune.ActiveCfg = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.VTune.Build.0 = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.VTune_Performance.ActiveCfg = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE8}.VTune_Performance.Build.0 = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Debug.ActiveCfg = Debug|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Debug.Build.0 = Debug|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Debug Debugger.ActiveCfg = Debug Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Debug Debugger.Build.0 = Debug Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Release.ActiveCfg = Release|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Release.Build.0 = Release|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Release Debugger.ActiveCfg = Release Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.Release Debugger.Build.0 = Release Debugger|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.VTune.ActiveCfg = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.VTune.Build.0 = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.VTune_Performance.ActiveCfg = VTune|Win32
+		{437E43D2-ED2D-406B-88DB-B5940F838AE9}.VTune_Performance.Build.0 = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug.ActiveCfg = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug.Build.0 = Debug|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger.ActiveCfg = Debug Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger.Build.0 = Debug Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release.ActiveCfg = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release.Build.0 = Release|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger.ActiveCfg = Release Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger.Build.0 = Release Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune.ActiveCfg = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune.Build.0 = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune_Performance.ActiveCfg = VTune|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune_Performance.Build.0 = VTune|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
