@@ -380,7 +380,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
                 cx->fp = frame.down;
             }
-            return DropWatchPoint(cx, wp);
+            return DropWatchPoint(cx, wp) && ok;
         }
     }
     JS_ASSERT(0);       /* XXX can't happen */
