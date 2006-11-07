@@ -784,6 +784,13 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
+  // Batching the selection and moving nodes out from under the caret causes
+  // caret turds. Ask the shell to invalidate the caret now to avoid the turds.
+  nsCOMPtr<nsIPresShell> shell;
+  res = GetPresShell(getter_AddRefs(shell));
+  if (NS_FAILED(res)) return res;
+  shell->MaybeInvalidateCaretPosition();
+
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertBreak);
   PRBool cancel, handled;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);

@@ -1202,6 +1202,7 @@ public:
 
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
+  NS_IMETHOD_(void) MaybeInvalidateCaretPosition();
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
@@ -3213,6 +3214,13 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
   *outCaret = mCaret;
   NS_IF_ADDREF(*outCaret);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
+{
+  if (mCaret) {
+    mCaret->InvalidateOutsideCaret();
+  }
 }
 
 already_AddRefed<nsICaret> PresShell::SetCaret(nsICaret *aNewCaret)
