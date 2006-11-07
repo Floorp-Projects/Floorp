@@ -50,7 +50,9 @@
 #include "pldhash.h"
 #include "nsIDOMAttr.h"
 #include "nsCOMArray.h"
+#ifdef MOZ_XUL
 #include "nsXULElement.h"
+#endif
 
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
@@ -466,12 +468,14 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // Note: Make sure to do this witchery _after_ we've done any deep
   // cloning, so kids of the new node aren't confused about whether they're
   // in a document.
+#ifdef MOZ_XUL
   if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
     nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
       clone->mParentPtrBits |= nsINode::PARENT_BIT_INDOCUMENT;
     }
   }
+#endif
 
   if (aNode->HasProperties()) {
     PRBool ok = aNodesWithProperties.AppendObject(aNode);
