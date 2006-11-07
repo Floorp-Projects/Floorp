@@ -17,8 +17,8 @@ Steps to get started:
  3.) New test cases can be added to the tests/ directory. We are working on
      easy test navigation and automated test addition.
 
- 4.) gen_template.pl takes a bug number as its only argument and outputs a 
-     test template to stdout.
+ 4.) gen_template.pl will generate test templates for HTML, XUL, and XHTML.
+     Read the comment at the top of the file for usage instructions.
 
  5.) Write a test.
 
