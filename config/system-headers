@@ -973,3 +973,9 @@ plstr.h
 plarenas.h
 plarena.h
 plhash.h
+#if MOZ_NATIVE_PNG==1
+png.h
+#endif
+#if MOZ_NATIVE_ZLIB==1
+zlib.h
+#endif
