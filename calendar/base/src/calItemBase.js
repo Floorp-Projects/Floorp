@@ -336,7 +336,7 @@ calItemBase.prototype = {
                 },
 
                 getNext: function() {
-                    if (!currentItem)
+                    if (!this.currentItem)
                         throw Components.results.NS_ERROR_UNEXPECTED;
 
                     var rval = this.currentItem;
