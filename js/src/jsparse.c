@@ -4161,12 +4161,6 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         while (pn2->pn_type == TOK_RP)
             pn2 = pn2->pn_kid;
         pn->pn_kid = pn2;
-#if JS_HAS_LVALUE_RETURN
-        if (pn2->pn_type == TOK_LP) {
-            JS_ASSERT(pn2->pn_op == JSOP_CALL || pn2->pn_op == JSOP_EVAL);
-            pn2->pn_op = JSOP_SETCALL;
-        }
-#endif
         break;
 
       case TOK_ERROR:
