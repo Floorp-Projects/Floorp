@@ -259,7 +259,7 @@ function makeHTMLWeek(date, sortedList, targetMonth) {
         var day = <td align='left' valign='top' class={myClass} height='100' width='100'/>
         var innerTable = <table valign='top' style='font-size: 10px;'/>
         var dateLabel = <tr valign='top'>
-                            <td valign='top' align='right'>{date.day}</td>
+                            <td valign='top' align='left'>{date.day}</td>
                         </tr>
         innerTable.appendChild(dateLabel);
         for each (var item in sortedList) {
