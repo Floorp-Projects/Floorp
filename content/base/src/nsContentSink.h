@@ -127,7 +127,11 @@ protected:
   nsCString mRef; // ScrollTo #ref
 };
 
+
+//
 // these two lists are used by the sanitizing fragment serializers
+// Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
+//
 static nsIAtom** const kDefaultAllowedTags [] = {
   &nsHTMLAtoms::a,
   &nsHTMLAtoms::abbr,
@@ -135,6 +139,7 @@ static nsIAtom** const kDefaultAllowedTags [] = {
   &nsHTMLAtoms::address,
   &nsHTMLAtoms::area,
   &nsHTMLAtoms::b,
+  &nsHTMLAtoms::bdo,
   &nsHTMLAtoms::big,
   &nsHTMLAtoms::blockquote,
   &nsHTMLAtoms::br,
@@ -171,8 +176,10 @@ static nsIAtom** const kDefaultAllowedTags [] = {
   &nsHTMLAtoms::label,
   &nsHTMLAtoms::legend,
   &nsHTMLAtoms::li,
+  &nsHTMLAtoms::listing,
   &nsHTMLAtoms::map,
   &nsHTMLAtoms::menu,
+  &nsHTMLAtoms::nobr,
   &nsHTMLAtoms::ol,
   &nsHTMLAtoms::optgroup,
   &nsHTMLAtoms::option,
@@ -198,17 +205,22 @@ static nsIAtom** const kDefaultAllowedTags [] = {
   &nsHTMLAtoms::tr,
   &nsHTMLAtoms::tt,
   &nsHTMLAtoms::u,
-  &nsHTMLAtoms::ul
+  &nsHTMLAtoms::ul,
+  &nsHTMLAtoms::var
 };
 
 static nsIAtom** const kDefaultAllowedAttributes [] = {
+  &nsHTMLAtoms::abbr,
   &nsHTMLAtoms::accept,
   &nsHTMLAtoms::acceptcharset,
   &nsHTMLAtoms::accesskey,
   &nsHTMLAtoms::action,
   &nsHTMLAtoms::align,
   &nsHTMLAtoms::alt,
+  &nsHTMLAtoms::autocomplete,
   &nsHTMLAtoms::axis,
+  &nsHTMLAtoms::background,
+  &nsHTMLAtoms::bgcolor,
   &nsHTMLAtoms::border,
   &nsHTMLAtoms::cellpadding,
   &nsHTMLAtoms::cellspacing,
@@ -248,10 +260,12 @@ static nsIAtom** const kDefaultAllowedAttributes [] = {
   &nsHTMLAtoms::nohref,
   &nsHTMLAtoms::noshade,
   &nsHTMLAtoms::nowrap,
+  &nsHTMLAtoms::pointSize,
   &nsHTMLAtoms::prompt,
   &nsHTMLAtoms::readonly,
   &nsHTMLAtoms::rel,
   &nsHTMLAtoms::rev,
+  &nsHTMLAtoms::role,
   &nsHTMLAtoms::rows,
   &nsHTMLAtoms::rowspan,
   &nsHTMLAtoms::rules,
@@ -283,6 +297,7 @@ PRBool IsAttrURI(nsIAtom *aName)
           aName == nsHTMLAtoms::src ||
           aName == nsHTMLAtoms::longdesc ||
           aName == nsHTMLAtoms::usemap ||
-          aName == nsHTMLAtoms::cite);
+          aName == nsHTMLAtoms::cite ||
+          aName == nsHTMLAtoms::background);
 }
 #endif // _nsContentSink_h_
