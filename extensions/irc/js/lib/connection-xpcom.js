@@ -159,7 +159,7 @@ function CBSConnection (binary)
     if (!ASSERT(!this.binaryMode || this.workingBinaryStreams,
                 "Unable to use binary streams in this build."))
     {
-        return null;
+        throw ("Unable to use binary streams in this build.");
     }
 
     // Shut up a misguided strict warning.
