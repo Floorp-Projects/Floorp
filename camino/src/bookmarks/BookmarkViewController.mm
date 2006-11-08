@@ -63,7 +63,6 @@
 #import "BrowserTabView.h"
 #import "PreferenceManager.h"
 #import "ImageAndTextCell.h"
-#import "SearchTextField.h"
 #import "ExtendedTableView.h"
 #import "ExtendedOutlineView.h"
 #import "BookmarkOutlineView.h"
@@ -78,13 +77,14 @@
 #import "UserDefaults.h"
 
 
+enum {
+  eNoOpenAction = 0,
+  eOpenBookmarkAction = 1,
+  eOpenInNewTabAction = 2,
+  eOpenInNewWindowAction = 3
+};
 
-#define kNoOpenAction 0
-#define kOpenBookmarkAction 1
-#define kOpenInNewTabAction 2
-#define kOpenInNewWindowAction 3
-
-#define kGetInfoContextMenuItemTag 9
+const int kSearchAllTag = 1;
 
 static NSString* const kExpandedBookmarksStatesDefaultsKey = @"bookmarks_expand_state";
 static NSString* const kBookmarksSelectedContainerDefaultsKey = @"bookmarks_selected_container";
@@ -116,7 +116,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
 - (BOOL)doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index;
 
-- (void)searchStringChanged:(NSString*)searchString;
+- (void)setSearchFilterTag:(int)tag;
 - (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
 - (void)clearSearchResults;
 
@@ -306,8 +306,6 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mHistoryOutlineView setAutosaveName:@"HistoryOutlineView"];
   [mHistoryOutlineView setAutosaveTableColumns:YES];
   [mHistoryOutlineView setAutosaveTableSort:YES];
-
-  [[mSearchField cell] setControlSize:NSSmallControlSize];
   
   mSeparatorImage = [[NSImage imageNamed:@"bm_horizontal_separator"] retain];
   [mSeparatorImage setScalesWhenResized:YES];
@@ -508,7 +506,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
     {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
-      mOpenActionFlag = kOpenBookmarkAction;
+      mOpenActionFlag = eOpenBookmarkAction;
     }    
     else if ([curItem isKindOfClass:[BookmarkFolder class]] && ![curItem isGroup])
     {
@@ -547,7 +545,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
     {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
-      mOpenActionFlag = kOpenInNewTabAction;
+      mOpenActionFlag = eOpenInNewTabAction;
     }
     else
     {
@@ -580,7 +578,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
     {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
-      mOpenActionFlag = kOpenInNewTabAction;
+      mOpenActionFlag = eOpenInNewTabAction;
     }
     else
     {
@@ -617,7 +615,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
     {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
-      mOpenActionFlag = kOpenInNewWindowAction;
+      mOpenActionFlag = eOpenInNewWindowAction;
     }
     else
     {
@@ -780,17 +778,10 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [[BookmarkManager sharedBookmarkManager] copyBookmarksURLs:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
 }
 
--(IBAction)quicksearchPopupChanged:(id)aSender
-{
-  // do the search again (we'll pick up the new popup item tag)
-  NSString* currentText = [mSearchField stringValue];
-  [self searchStringChanged:currentText];
-}
-
 - (void)resetSearchField
 {
-  [mSearchField selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
-  [mSearchField setStringValue:@""];
+  [self setSearchFilterTag:kSearchAllTag];
+  [[mSearchField cell] setStringValue:@""];
 }
 
 -(void)setBrowserWindowController:(BrowserWindowController*)bwController
@@ -1211,8 +1202,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     [mActionButton setMenu:mActionMenuHistory];
     [mSortButton   setEnabled:YES];
     [mSortButton   setMenu:mSortMenuHistory];
-    [mSearchField  setPopupMenu:mQuickSearchMenuHistory];
-    [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
+    [[mSearchField cell] setSearchMenuTemplate:mQuickSearchMenuHistory];
+    [self setSearchFilterTag:kSearchAllTag];
     
     [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"HistoryWindowTitle", @"")];
   } 
@@ -1238,8 +1229,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
     [mActionButton setMenu:mActionMenuBookmarks];
     [mSortButton   setMenu:mSortMenuBookmarks];
-    [mSearchField  setPopupMenu:mQuickSearchMenuBookmarks];
-    [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
+    [[mSearchField cell] setSearchMenuTemplate:mQuickSearchMenuBookmarks];
+    [self setSearchFilterTag:kSearchAllTag];
 
     [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"BookmarksWindowTitle", @"")];
 
@@ -1762,18 +1753,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 #pragma mark -
 
-// called when the user typed into the quicksearch field, or edits an item inline
-- (void)controlTextDidChange:(NSNotification *)aNotification
+- (IBAction)searchStringChanged:(id)aSender
 {
-  if ([aNotification object] == mSearchField)
-  {
-    NSString* currentText = [mSearchField stringValue];
-    [self searchStringChanged:currentText];
-  }
-}
-
-- (void)searchStringChanged:(NSString*)searchString
-{
+  NSString* searchString = [[mSearchField cell] stringValue];
   if ([searchString length] == 0)
   {
     [self clearSearchResults];
@@ -1781,9 +1763,25 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
   else
   {
-    [self searchFor:searchString inFieldWithTag:[[mSearchField selectedPopupMenuItem] tag]];
+    [self searchFor:searchString inFieldWithTag:mSearchTag];
     [[self activeOutlineView] reloadData];
   }
+}
+
+- (IBAction)quicksearchPopupChanged:(id)aSender
+{
+  [self setSearchFilterTag:[aSender tag]];
+  // do the search again with the new filter
+  [self searchStringChanged:aSender];
+}
+
+- (void)setSearchFilterTag:(int)tag
+{
+  mSearchTag = tag;
+  NSMenu* menuTemplate = [[mSearchField cell] searchMenuTemplate];
+  [menuTemplate checkItemWithTag:mSearchTag uncheckingOtherItems:YES];
+  [[mSearchField cell] setPlaceholderString:[[menuTemplate itemWithTag:mSearchTag] title]];
+  [[mSearchField cell] setSearchMenuTemplate:menuTemplate];
 }
 
 - (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag
@@ -1945,7 +1943,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 - (void)serviceResolved:(NSNotification *)note
 {
-  if (mOpenActionFlag == kNoOpenAction)
+  if (mOpenActionFlag == eNoOpenAction)
     return;
   NSDictionary *dict = [note userInfo];
   id aClient = [dict objectForKey:NetworkServicesClientKey];
@@ -1953,22 +1951,22 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   {
     switch (mOpenActionFlag)
     {
-      case (kOpenBookmarkAction):
+      case (eOpenBookmarkAction):
         [self performSelector:@selector(openBookmark:) withObject:aClient afterDelay:0];
         break;
 
-      case (kOpenInNewTabAction):
+      case (eOpenInNewTabAction):
         [self performSelector:@selector(openBookmarkInNewTab:) withObject:aClient afterDelay:0];
         break;
 
-      case (kOpenInNewWindowAction):
+      case (eOpenInNewWindowAction):
         [self performSelector:@selector(openBookmarkInNewWindow:) withObject:aClient afterDelay:0];
         break;
 
       default:
         break;
     }
-    mOpenActionFlag = kNoOpenAction;
+    mOpenActionFlag = eNoOpenAction;
   }
 }
 
