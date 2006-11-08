@@ -30,6 +30,7 @@ user_pref("capability.principal.codebase.p1.subjectName", "");
 user_pref("dom.disable_open_during_load", false);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
+user_pref("browser.shell.checkDefaultBrowser", false);
 PREFEND
 
 $chrome_content = <<CHROMEEND;
