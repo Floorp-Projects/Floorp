@@ -206,6 +206,89 @@ nsNSSCertificate::MarkForPermDeletion()
 }
 
 nsresult
+GetKeyUsagesString(CERTCertificate *cert, nsINSSComponent *nssComponent, 
+                   nsString &text)
+{
+  text.Truncate();
+
+  SECItem keyUsageItem;
+  keyUsageItem.data = NULL;
+
+  SECStatus srv;
+
+  /* There is no extension, v1 or v2 certificate */
+  if (!cert->extensions)
+    return NS_OK;
+
+
+  srv = CERT_FindKeyUsageExtension(cert, &keyUsageItem);
+  if (srv == SECFailure) {
+    if (PORT_GetError () == SEC_ERROR_EXTENSION_NOT_FOUND)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  unsigned char keyUsage = keyUsageItem.data[0];
+  nsAutoString local;
+  nsresult rv;
+  const PRUnichar *comma = NS_LITERAL_STRING(",").get();
+
+  if (keyUsage & KU_DIGITAL_SIGNATURE) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_NON_REPUDIATION) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUNonRep", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_KEY_ENCIPHERMENT) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUEnc", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_DATA_ENCIPHERMENT) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUDEnc", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_KEY_AGREEMENT) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUKA", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_KEY_CERT_SIGN) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUCertSign", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+  if (keyUsage & KU_CRL_SIGN) {
+    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSign", local);
+    if (NS_SUCCEEDED(rv)) {
+      if (!text.IsEmpty()) text.Append(comma);
+      text.Append(local.get());
+    }
+  }
+
+  PORT_Free (keyUsageItem.data);
+  return NS_OK;
+}
+
+nsresult
 nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details)
 {
   nsresult rv = NS_OK;
@@ -303,6 +386,16 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     if (NS_SUCCEEDED(x509Proxy->GetUsagesString(PR_FALSE, &tempInt, temp1)) && !temp1.IsEmpty()) {
       details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoPurposes", info))) {
+        details.Append(info);
+        details.AppendLiteral(": ");
+      }
+      details.Append(temp1);
+      details.Append(PRUnichar('\n'));
+    }
+
+    if (NS_SUCCEEDED(GetKeyUsagesString(mCert, nssComponent, temp1)) && !temp1.IsEmpty()) {
+      details.AppendLiteral("  ");
+      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpKeyUsage", info))) {
         details.Append(info);
         details.AppendLiteral(": ");
       }
