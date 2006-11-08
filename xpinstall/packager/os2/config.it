@@ -166,18 +166,17 @@ C0=Component XPCOM
 C1=Component Navigator
 C2=Component MailNews
 C3=Component PSM
-C4=Component Spellchecker
-C5=Component Chatzilla
-C6=Component Venkman
-C7=Component US English Profile Defaults
-C8=Component En US lang pack
-C9=Component DOM Inspector
-C10=Component Uninstaller
+C4=Component Chatzilla
+C5=Component Venkman
+C6=Component US English Profile Defaults
+C7=Component En US lang pack
+C8=Component DOM Inspector
+C9=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C11=Component QFA
-C11=Component RPT
-C12=Component SRoaming
+C10=Component RPT
+C11=Component SRoaming
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -194,18 +193,17 @@ C0=Component XPCOM
 C1=Component Navigator
 C2=Component MailNews
 C3=Component PSM
-C4=Component Spellchecker
-C5=Component Chatzilla
-C6=Component Venkman
-C7=Component US English Profile Defaults
-C8=Component En US lang pack
-C9=Component DOM Inspector
-C10=Component Uninstaller
+C4=Component Chatzilla
+C5=Component Venkman
+C6=Component US English Profile Defaults
+C7=Component En US lang pack
+C8=Component DOM Inspector
+C9=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ;C11=Component QFA
-C11=Component RPT
-C12=Component SRoaming
+C10=Component RPT
+C11=Component SRoaming
 
 
 
@@ -471,17 +469,6 @@ $InstallSize$:mail
 $InstallSizeArchive$:mail.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\msgbsutl.dll
-
-
-[Component Spellchecker]
-Description Short=Spellchecker
-;*** LOCALIZE ME BABY ***
-Description Long=for spellchecking
-Archive=spellcheck.xpi
-$InstallSize$:spellcheck
-$InstallSizeArchive$:spellcheck.xpi
-Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\myspell.dll
 
 
 [Component Uninstaller]
