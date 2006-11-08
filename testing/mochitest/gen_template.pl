@@ -10,14 +10,14 @@
 #  perl gen_template.pl -b 345876 -type xul
 #
 #  sends a test case template for bug 345876 to stdout
-use Switch;
+
 use Getopt::Long;
 GetOptions("b=i"=> \$bug_number,
            "type:s"=> \$template_type);
 
-if ($template_type == "xul") {
+if ($template_type eq "xul") {
   $template_type = "static/xul.template.txt";
-} elsif ($template_type == "xhtml") {
+} elsif ($template_type eq "xhtml") {
   $template_type = "static/xhtml.template.txt";
 } else {
   $template_type = "static/test.template.txt";
