@@ -340,6 +340,9 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
              mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
 
+    gfxMatrix savedCTM(ctx->CurrentMatrix());
+    PRBool doSnap = !(savedCTM.HasNonTranslation());
+
     if (mSinglePixel) {
         // if a == 0, it's a noop
         if (mSinglePixelColor.a == 0.0)
@@ -351,6 +354,14 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
         ctx->Rectangle(gfxRect(aDX, aDY, aDWidth, aDHeight), PR_TRUE);
         ctx->Fill();
         return NS_OK;
+    }
+
+    // See comment inside ThebesDrawTile
+    if (doSnap) {
+        gfxMatrix roundedCTM(savedCTM);
+        roundedCTM.x0() = ::floor(roundedCTM.x0() + 0.5);
+        roundedCTM.y0() = ::floor(roundedCTM.y0() + 0.5);
+        ctx->SetMatrix(roundedCTM);
     }
 
     gfxFloat xscale = gfxFloat(aDWidth) / aSWidth;
@@ -377,12 +388,21 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     mat.Translate(gfxPoint(aSX, aSY));
     mat.Scale(1.0/xscale, 1.0/yscale);
 
+    /* Translate the start point of the image (the aSX,aSY point)
+     * to coincide with the destination rectangle origin
+     */
+    mat.Translate(gfxPoint(-aDX, -aDY));
+
     nsRefPtr<gfxPattern> pat = new gfxPattern(ThebesSurface());
     pat->SetMatrix(mat);
 
     ctx->NewPath();
-    ctx->PixelSnappedRectangleAndSetPattern(dr, pat);
+    ctx->SetPattern(pat);
+    ctx->Rectangle(dr, doSnap);
     ctx->Fill();
+
+    if (doSnap)
+        ctx->SetMatrix(savedCTM);
 
     return NS_OK;
 }
@@ -404,8 +424,20 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     // so we can hold on to this for a bit longer; might not be needed
     nsRefPtr<gfxPattern> pat;
 
-    PRBool doSnap = !(thebesContext->CurrentMatrix().HasNonTranslation());
+    gfxMatrix savedCTM(thebesContext->CurrentMatrix());
+    PRBool doSnap = !(savedCTM.HasNonTranslation());
     PRBool hasPadding = ((xPadding != 0) || (yPadding != 0));
+
+    // If we need to snap, we need to round the CTM as well;
+    // otherwise, we may have non-integer pixels in the translation,
+    // which will affect the rendering of images (since the current CTM
+    // is what's used at the time of a SetPattern call).
+    if (doSnap) {
+        gfxMatrix roundedCTM(savedCTM);
+        roundedCTM.x0() = ::floor(roundedCTM.x0() + 0.5);
+        roundedCTM.y0() = ::floor(roundedCTM.y0() + 0.5);
+        thebesContext->SetMatrix(roundedCTM);
+    }
 
     if (mSinglePixel && !hasPadding) {
         thebesContext->SetColor(mSinglePixelColor);
@@ -459,6 +491,9 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     thebesContext->NewPath();
     thebesContext->Rectangle(targetRect, doSnap);
     thebesContext->Fill();
+
+    if (doSnap)
+        thebesContext->SetMatrix(savedCTM);
 
     return NS_OK;
 }
