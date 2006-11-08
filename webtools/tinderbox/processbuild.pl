@@ -41,6 +41,7 @@ my ($only_check_mail);
 my @changed_trees=();
 my %scraped_trees;
 my $debug = 0;
+my $err = 0;
 my $rejected_mail_dir = "$data_dir/bad";
 
 chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
@@ -51,7 +52,12 @@ GetOptions("check-mail" => \$only_check_mail) or die ("Error parsing args.");
 # Acquire a lock first so that we don't step on ourselves
 my $lockfile = "$data_dir/processbuild.sem";
 my $lock = &lock_datafile($lockfile);
-opendir(DIR, $data_dir) or die("Can't opendir($data_dir): $!");
+opendir(DIR, $::data_dir) or $err++;
+if ($err) {
+    &unlock_datafile($lock);
+    unlink($lockfile);
+    die("Can't opendir($::data_dir): $!");
+}
 my @datafiles = 
     sort(grep { /^tbx\.\d+\.\d+$/ && -f "$data_dir/$_" } readdir(DIR));
 closedir(DIR);
