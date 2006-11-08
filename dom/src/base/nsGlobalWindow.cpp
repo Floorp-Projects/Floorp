@@ -1173,11 +1173,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         nsCOMPtr<nsIDOMEventReceiver> rec =
           do_QueryInterface(mChromeEventHandler);
         xblService->AttachGlobalKeyHandler(rec);
-
-        // for now, the only way to get drag/drop is to use the XUL
-        // wrapper. There are just too many things that need to be
-        // added to hookup DnD with XBL (pinkerton)
-        //xblService->AttachGlobalDragHandler(rec);
       }
     }
   }

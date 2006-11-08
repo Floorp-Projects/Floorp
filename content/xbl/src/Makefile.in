@@ -87,7 +87,6 @@ CPPSRCS		= \
     nsXBLEventHandler.cpp \
     nsXBLWindowHandler.cpp \
     nsXBLWindowKeyHandler.cpp \
-    nsXBLWindowDragHandler.cpp \
     nsXBLPrototypeHandler.cpp \
     nsXBLService.cpp \
     nsBindingManager.cpp \
