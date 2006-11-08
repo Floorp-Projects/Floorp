@@ -1522,11 +1522,13 @@ const int kReuseWindowOnAE = 2;
 
   // disable non-BWC items that aren't relevant if there's no main browser window open
   // or the bookmark/history manager is open
-  if (action == @selector(findInPage:) ||
-      action == @selector(savePage:))
-  {
+  if (action == @selector(savePage:))
     return (browserController && ![browserController bookmarkManagerIsVisible]);
-  }
+  
+  // disable the find panel if there's no text content
+  if (action == @selector(findInPage:))
+    return (browserController && ![browserController bookmarkManagerIsVisible] &&
+            [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
 
   // BrowserWindowController decides about actions that are just sent on to
   // the front window's BrowserWindowController. This works because the selectors
@@ -1543,9 +1545,7 @@ const int kReuseWindowOnAE = 2;
       action == @selector(viewPageSource:) ||
       action == @selector(sendURL:) ||
       action == @selector(printDocument:) ||
-      action == @selector(pageSetup:) ||
-      action == @selector(findInPage:) ||
-      action == @selector(savePage:))
+      action == @selector(pageSetup:))
   {
     return (browserController && [browserController validateActionBySelector:action]);
   }
@@ -1571,7 +1571,9 @@ const int kReuseWindowOnAE = 2;
 - (void)adjustTextEncodingMenu
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController) {
+  if (browserController && ![browserController bookmarkManagerIsVisible] &&
+      [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent])
+  {
     // enable all items
     [mTextEncodingsMenu setAllItemsEnabled:YES startingWithItemAtIndex:0 includingSubmenus:YES];
 

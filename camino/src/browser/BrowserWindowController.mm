@@ -3604,6 +3604,7 @@ enum BWCOpenDest {
   BrowserWrapper* wrapper = [self getBrowserWrapper];
   return (![wrapper isEmpty] &&
           ![self bookmarkManagerIsVisible] &&
+          [[wrapper getBrowserView] isTextBasedContent] &&
           [[wrapper getBrowserView] canMakeTextBigger]);
 }
 
@@ -3612,6 +3613,7 @@ enum BWCOpenDest {
   BrowserWrapper* wrapper = [self getBrowserWrapper];
   return (![wrapper isEmpty] &&
           ![self bookmarkManagerIsVisible] &&
+          [[wrapper getBrowserView] isTextBasedContent] &&
           [[wrapper getBrowserView] canMakeTextSmaller]);
 }
 
@@ -3620,6 +3622,7 @@ enum BWCOpenDest {
   BrowserWrapper* wrapper = [self getBrowserWrapper];
   return (![wrapper isEmpty] &&
           ![self bookmarkManagerIsVisible] &&
+          [[wrapper getBrowserView] isTextBasedContent] &&
           ![[wrapper getBrowserView] isTextDefaultSize]);
 }
 
