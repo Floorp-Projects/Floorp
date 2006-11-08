@@ -810,6 +810,12 @@ getRoleCB(AtkObject *aAtkObj)
 {
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), ATK_ROLE_INVALID);
 
+#ifdef DEBUG_A11Y
+        nsAccessibleWrap *testAccWrap =
+            NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
+        NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(testAccWrap), "Does not support nsIAccessibleText when it should");
+#endif
+
     if (aAtkObj->role == ATK_ROLE_INVALID) {
         nsAccessibleWrap *accWrap =
             NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;

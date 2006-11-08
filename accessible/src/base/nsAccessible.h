@@ -142,6 +142,10 @@ public:
                                    nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame);
 #endif
 
+#ifdef DEBUG_A11Y
+  static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
+#endif
+
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state); return state; }
   static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
