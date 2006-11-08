@@ -56,6 +56,7 @@ var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
 
 const XMLNS = "http://www.w3.org/XML/1998/namespace";
 const RSS090NS = "http://my.netscape.com/rdf/simple/0.9/";
+const WAIROLE_NS = "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#";
 
 /***** Some general utils *****/
 function strToURI(link, base) {
@@ -284,6 +285,16 @@ var gNamespaces = {
   "http://www.w3.org/XML/1998/namespace":"xml"
 }
 
+// We allow a very small set of namespaces in XHTML content,
+// for attributes only
+var gAllowedXHTMLNamespaces = {
+  "http://www.w3.org/XML/1998/namespace":"xml",
+  "http://www.w3.org/TR/xhtml2":"xhtml2",
+  "http://www.w3.org/2005/07/aaa":"aaa",
+  // if someone ns qualifies XHTML, we have to prefix it to avoid an
+  // attribute collision.
+  "http://www.w3.org/1999/xhtml":"xhtml"
+}
 
 function FeedResult() {}
 FeedResult.prototype = {
@@ -505,6 +516,7 @@ TextConstruct.prototype = {
       docFragment.appendChild(node);
       return docFragment;
     }
+    LOG("entry text: " + this.text + "\n");
     var isXML;
     if (this.type == "xhtml")
       isXML = true
@@ -774,22 +786,39 @@ function dateParse(dateString) {
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 // The XHTMLHandler handles inline XHTML found in things like atom:summary
-function XHTMLHandler(processor, isAtom) {
+function XHTMLHandler(processor, isAtom, waiPrefixes) {
   this._buf = "";
   this._processor = processor;
   this._depth = 0;
   this._isAtom = isAtom;
+  // a stack of lists tracking in-scope namespaces
+  this._inScopeNS = [];
+  this._waiPrefixes = waiPrefixes;
 }
 
 // The fidelity can be improved here, to allow handling of stuff like
 // SVG and MathML. XXX
 XHTMLHandler.prototype = {
+
+   // look back up at the declared namespaces 
+   // we always use the same prefixes for our safe stuff
+  _isInScope: function XH__isInScope(ns) {
+    for (var i in this._inScopeNS) {
+      for (var uri in this._inScopeNS[i]) {
+        if (this._inScopeNS[i][uri] == ns)
+          return true;
+      }
+    }
+    return false;
+  },
+
   startDocument: function XH_startDocument() {
   },
   endDocument: function XH_endDocument() {
   },
   startElement: function XH_startElement(uri, localName, qName, attributes) {
     ++this._depth;
+    this._inScopeNS.push([]);
 
     // RFC4287 requires XHTML to be wrapped in a div that is *not* part of 
     // the content. This prevents people from screwing up namespaces, but
@@ -800,11 +829,65 @@ XHTMLHandler.prototype = {
     // If it's an XHTML element, record it. Otherwise, it's ignored.
     if (uri == XHTML_NS) {
       this._buf += "<" + localName;
+      var uri;
       for (var i=0; i < attributes.length; ++i) {
+        uri = attributes.getURI(i);
         // XHTML attributes aren't in a namespace
-        if (attributes.getURI(i) == "") { 
+        if (uri == "") { 
           this._buf += (" " + attributes.getLocalName(i) + "='" +
                         xmlEscape(attributes.getValue(i)) + "'");
+        } else {
+          // write a small set of allowed attribute namespaces
+          var prefix = gAllowedXHTMLNamespaces[uri];
+          if (prefix != null) {
+            // The attribute value we'll attempt to write
+            var attributeValue = xmlEscape(attributes.getValue(i));
+
+            // More QName abuse from W3C
+            var rolePrefix = "";
+            if (attributes.getLocalName(i) == "role") {
+              for (var aPrefix in this._waiPrefixes) {
+                if (attributeValue.indexOf(aPrefix + ":") == 0) {     
+                  // Now, due to the terrible layer mismatch 
+                  // that is QNames in content, we have to see
+                  // if the attribute value clashes with our 
+                  // namespace declarations.
+                  var isCollision = false;
+                  for (var uriKey in gAllowedXHTMLNamespaces) {
+                    if (gAllowedXHTMLNamespaces[uriKey] == aPrefix)
+                      isCollision = true;
+                  }
+                  
+                  if (isCollision) {
+                    rolePrefix = aPrefix + i;
+                    attributeValue = 
+                      rolePrefix + ":" + 
+                      attributeValue.substring(aPrefix.length + 1);
+                  } else {
+                    rolePrefix = aPrefix;
+                  }
+
+                  break;
+                }
+              }
+
+              if (rolePrefix)
+                this._buf += (" xmlns:" + rolePrefix + 
+                              "='" + WAIROLE_NS + "'");
+            }
+
+            // it's an allowed attribute NS.            
+            // write the attribute
+            this._buf += (" " + prefix + ":" + 
+                          attributes.getLocalName(i) + 
+                          "='" + attributeValue + "'");
+
+            // write an xmlns declaration if necessary
+            if (prefix != "xml" && !this._isInScope(uri)) {
+              this._inScopeNS[this._inScopeNS.length - 1].push(uri);
+              this._buf += " xmlns:" + prefix + "='" + uri + "'";
+            }
+          }
         }
       }
       this._buf += ">";
@@ -812,7 +895,8 @@ XHTMLHandler.prototype = {
   },
   endElement: function XH_endElement(uri, localName, qName) {
     --this._depth;
-    
+    this._inScopeNS.pop();
+
     // We need to skip outer divs in Atom. See comment in startElement.
     if (this._isAtom && this._depth == 0 && localName == "div")
       return;
@@ -831,9 +915,13 @@ XHTMLHandler.prototype = {
   characters: function XH_characters(data) {
     this._buf += xmlEscape(data);
   },
-  startPrefixMapping: function XH_startPrefixMapping() {
+  startPrefixMapping: function XH_startPrefixMapping(prefix, uri) {
+    if (prefix && uri == WAIROLE_NS) 
+      this._waiPrefixes[prefix] = WAIROLE_NS;
   },
-  endPrefixMapping: function XH_endPrefixMapping() {
+  endPrefixMapping: function FP_endPrefixMapping(prefix) {
+    if (prefix)
+      delete this._waiPrefixes[prefix];
   },
   processingInstruction: function XH_processingInstruction() {
   }, 
@@ -945,6 +1033,9 @@ function FeedProcessor() {
   this._result = null;
   this._extensionHandler = null;
   this._xhtmlHandler = null;
+  
+  // http://www.w3.org/WAI/PF/GUI/ uses QNames in content :(
+  this._waiPrefixes = {};
 
   // The nsIFeedResultListener waiting for the parse results
   this.listener = null;
@@ -1282,7 +1373,8 @@ FeedProcessor.prototype = {
       var type = attributes.getValueFromName("","type");
       if (type != null && type.indexOf("xhtml") >= 0) {
         this._xhtmlHandler = 
-          new XHTMLHandler(this, (this._result.version == "atom"));
+          new XHTMLHandler(this, (this._result.version == "atom"), 
+                           this._waiPrefixes);
         this._reader.contentHandler = this._xhtmlHandler;
         return;
       }
@@ -1354,14 +1446,22 @@ FeedProcessor.prototype = {
   characters: function FP_characters(data) {
     this._buf += data;
   },
-
   // TODO: It would be nice to check new prefixes here, and if they
   // don't conflict with the ones we've defined, throw them in a 
   // dictionary to check.
-  startPrefixMapping: function FP_startPrefixMapping() {
+  startPrefixMapping: function FP_startPrefixMapping(prefix, uri) {
+    // Thanks for QNames in content, W3C
+    // This will even be a perf hit for every single feed
+    // http://www.w3.org/WAI/PF/GUI/
+    if (prefix && uri == WAIROLE_NS) 
+      this._waiPrefixes[prefix] = WAIROLE_NS;
   },
-  endPrefixMapping: function FP_endPrefixMapping() {
+  
+  endPrefixMapping: function FP_endPrefixMapping(prefix) {
+    if (prefix)
+      delete this._waiPrefixes[prefix];
   },
+  
   processingInstruction: function FP_processingInstruction(target, data) {
     if (target == "xml-stylesheet") {
       var hrefAttribute = data.match(/href=[\"\'](.*?)[\"\']/);
