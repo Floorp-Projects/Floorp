@@ -35,16 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-  An XUL-specific extension to nsIDocument. Includes methods for
-  setting the root resource of the document content model, a factory
-  method for constructing the children of a node, etc.
-
-  XXX This should really be called nsIXULDocument.
-
- */
-
 #ifndef nsIXULDocument_h___
 #define nsIXULDocument_h___
 
@@ -63,15 +53,16 @@ class nsIURI;
 class nsIContent;
 class nsIRDFDataSource;
 
-// {7f9c0158-1da3-4279-9ee5-fa7931b94db1}
+// {96736e80-4bd1-4a4e-974e-5d3d8e663f43}
 #define NS_IXULDOCUMENT_IID \
-{ 0x7f9c0158, 0x1da3, 0x4279, \
- { 0x9e, 0xe5, 0xfa, 0x79, 0x31, 0xb9, 0x4d, 0xb1 } }
+{ 0x96736e80, 0x4bd1, 0x4a4e, \
+ { 0x97, 0x4e, 0x5d, 0x3d, 0x8e, 0x66, 0x3f, 0x43 } }
 
-/**
- * XUL extensions to nsIDocument
+/*
+ * An XUL-specific extension to nsIDocument. Includes methods for
+ * setting the root resource of the document content model, a factory
+ * method for constructing the children of a node, etc.
  */
-
 class nsIXULDocument : public nsISupports
 {
 public:
@@ -147,11 +138,16 @@ public:
   NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult) = 0;
 
   /**
-   * Callback notifying this document when its XUL prototype document load
-   * completes.  The prototype load was initiated by another document load
-   * request than the one whose document is being notified here.
+   * This is invoked whenever the prototype for this document is loaded
+   * and should be walked, regardless of whether the XUL cache is
+   * disabled, whether the protototype was loaded, whether the
+   * prototype was loaded from the cache or created by parsing the
+   * actual XUL source, etc.
+   *
+   * @param aResumeWalk whether this should also call ResumeWalk().
+   * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
    */
-  NS_IMETHOD OnPrototypeLoadDone() = 0;
+  NS_IMETHOD OnPrototypeLoadDone(PRBool aResumeWalk) = 0;
 
   /**
    * Callback notifying when a document could not be parsed properly.

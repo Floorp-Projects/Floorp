@@ -2593,6 +2593,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         switch (child->mType) {
         case eType_Element:
         case eType_Text:
+        case eType_PI:
             rv |= child->Serialize(aStream, aGlobal, aNodeInfos);
             break;
         case eType_Script:
@@ -2695,6 +2696,15 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Text:
                 child = new nsXULPrototypeText();
+                if (! child)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                child->mType = childType;
+
+                rv |= child->Deserialize(aStream, aGlobal, aDocumentURI,
+                                         aNodeInfos);
+                break;
+            case eType_PI:
+                child = new nsXULPrototypePI();
                 if (! child)
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
@@ -3154,8 +3164,42 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
 {
     nsresult rv;
 
-    // Write basic prototype data
     rv = aStream->ReadString(mValue);
+
+    return rv;
+}
+
+//----------------------------------------------------------------------
+//
+// nsXULPrototypePI
+//
+
+nsresult
+nsXULPrototypePI::Serialize(nsIObjectOutputStream* aStream,
+                            nsIScriptGlobalObject* aGlobal,
+                            const nsCOMArray<nsINodeInfo> *aNodeInfos)
+{
+    nsresult rv;
+
+    // Write basic prototype data
+    rv = aStream->Write32(mType);
+
+    rv |= aStream->WriteWStringZ(mTarget.get());
+    rv |= aStream->WriteWStringZ(mData.get());
+
+    return rv;
+}
+
+nsresult
+nsXULPrototypePI::Deserialize(nsIObjectInputStream* aStream,
+                              nsIScriptGlobalObject* aGlobal,
+                              nsIURI* aDocumentURI,
+                              const nsCOMArray<nsINodeInfo> *aNodeInfos)
+{
+    nsresult rv;
+
+    rv = aStream->ReadString(mTarget);
+    rv |= aStream->ReadString(mData);
 
     return rv;
 }
