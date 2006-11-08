@@ -40,12 +40,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * An implementation for a Gecko-style content sink that knows how
- * to build a content model (the "prototype" document) from XUL.
- *
- * For more information on XUL,
- * see http://developer.mozilla.org/en/docs/XUL
- */
+
+  An implementation for a Gecko-style content sink that knows how
+  to build a content model from XUL.
+
+  For more information on XUL, see http://www.mozilla.org/xpfe
+
+  TO DO
+  -----
+
+*/
 
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
@@ -110,7 +114,7 @@
 static PRLogModuleInfo* gLog;
 #endif
 
-static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
 
@@ -182,6 +186,14 @@ protected:
                                       nsAttrName &aName);
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
 
+    // Style sheets
+    nsresult ProcessStyleLink(nsIContent* aElement,
+                              const nsString& aHref,
+                              PRBool aAlternate,
+                              const nsString& aTitle,
+                              const nsString& aType,
+                              const nsString& aMedia);
+    
 
     public:
     enum State { eInProlog, eInDocumentElement, eInScript, eInEpilog };
@@ -460,6 +472,54 @@ XULContentSinkImpl::SetParser(nsIParser* aParser)
     mParser = aParser;
     NS_IF_ADDREF(mParser);
     return NS_OK;
+}
+
+nsresult
+XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
+                                     const nsString& aHref,
+                                     PRBool aAlternate,
+                                     const nsString& aTitle,
+                                     const nsString& aType,
+                                     const nsString& aMedia)
+{
+    static const char kCSSType[] = "text/css";
+
+    nsresult rv = NS_OK;
+
+    if (aAlternate) { // if alternate, does it have title?
+        if (aTitle.IsEmpty()) { // alternates must have title
+            return NS_OK; //return without error, for now
+        }
+    }
+
+    nsAutoString mimeType;
+    nsAutoString params;
+    nsParserUtils::SplitMimeType(aType, mimeType, params);
+
+    if ((mimeType.IsEmpty()) || mimeType.EqualsIgnoreCase(kCSSType)) {
+        nsCOMPtr<nsIURI> url;
+        rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentURL);
+        if (NS_OK != rv) {
+            return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
+        }
+
+        // Add the style sheet reference to the prototype
+        mPrototype->AddStyleSheetReference(url);
+
+        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+        if (! doc)
+            return NS_ERROR_FAILURE; // doc went away!
+
+        PRBool isAlternate;
+        rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                       aAlternate, mParser, nsnull,
+                                       &isAlternate);
+        if (NS_SUCCEEDED(rv) && !isAlternate) {
+          rv = NS_ERROR_HTMLPARSER_BLOCK;
+        }
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP 
@@ -870,36 +930,60 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 {
     FlushText();
 
+    // XXX For now, we don't add the PI to the content model.
+    // We just check for a style sheet PI
     const nsDependentString target(aTarget);
     const nsDependentString data(aData);
 
-    // Note: the created nsXULPrototypePI has mRefCnt == 1
-    nsXULPrototypePI* pi = new nsXULPrototypePI();
-    if (!pi)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    pi->mTarget = target;
-    pi->mData = data;
-
-    if (mState == eInProlog) {
-        // Note: passing in already addrefed pi
-        return mPrototype->AddProcessingInstruction(pi);
-    }
-
     nsresult rv;
-    nsVoidArray* children;
-    rv = mContextStack.GetTopChildren(&children);
-    if (NS_FAILED(rv)) {
-        pi->Release();
-        return rv;
+    if (target.EqualsLiteral("xul-overlay")) {
+      // Load a XUL overlay.
+      nsAutoString href;
+      nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::href, href);
+
+      // If there was no href, we can't do
+      // anything with this PI
+      if (href.IsEmpty()) {
+        return NS_OK;
+      }
+
+      // Add the overlay to our list of overlays that need to be processed.
+      nsCOMPtr<nsIURI> url;
+      rv = NS_NewURI(getter_AddRefs(url), href, nsnull, mDocumentURL);
+      if (NS_FAILED(rv)) {
+        // XXX This is wrong, the error message could be out of memory
+        //     or something else equally bad, which we should propagate. 
+        //     Bad URL should probably be "success with info" value.
+        return NS_OK; // The URL is bad, move along. Don't propagate for now.
+      }
+
+      return mPrototype->AddOverlayReference(url);
     }
 
-    if (!children->AppendElement(pi)) {
-        pi->Release();
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (!target.EqualsLiteral("xml-stylesheet")) {
+        return NS_OK;
     }
 
-    return NS_OK;
+    // It's a stylesheet PI...
+    nsAutoString type;
+    nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::type, type);
+
+    nsAutoString href, title, media;
+    PRBool isAlternate = PR_FALSE;
+    nsXMLContentSink::ParsePIData(data, href, title, media, isAlternate);
+
+    // If there was no href, we can't do anything with this PI
+    if (href.IsEmpty()) {
+        return NS_OK;
+    }
+
+    // XXX need a node here
+    rv = ProcessStyleLink(nsnull , href, isAlternate, title, type, media);
+    if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
+    }
+
+    return rv;
 }
 
 

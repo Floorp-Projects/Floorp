@@ -82,13 +82,11 @@
 #include "nsIDocShell.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsXMLContentSink.h"
 #include "nsIXULContentSink.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULOverlayProvider.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsNetUtil.h"
-#include "nsParserUtils.h"
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"
 #include "nsRDFCID.h"
@@ -120,7 +118,6 @@
 #include "nsIParserService.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIScriptError.h"
-#include "nsIStyleSheetLinkingElement.h"
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
 #include "nsIObserverService.h"
@@ -304,7 +301,6 @@ NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
-    NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 
@@ -345,8 +341,6 @@ nsXULDocument::SetContentType(const nsAString& aContentType)
     // application/vnd.mozilla.xul+xml
 }
 
-// This is called when the master document begins loading, whether it's
-// fastloaded or not.
 nsresult
 nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
@@ -356,7 +350,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 {
     // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
     // we'll possibly need to reset our content type afterwards.
-    mStillWalking = PR_TRUE;
+    
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
 
     mDocumentTitle.SetIsVoid(PR_TRUE);
@@ -419,6 +413,14 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
         // Set up the right principal on ourselves.
         SetPrincipal(proto->GetDocumentPrincipal());
 
+        // Add cloned style sheet references only if the prototype has in
+        // fact already loaded.  It may still be loading when we hit the XUL
+        // prototype cache.
+        if (loaded) {
+            rv = AddPrototypeSheets();
+            if (NS_FAILED(rv)) return rv;
+        }
+
         // We need a listener, even if proto is not yet loaded, in which
         // event the listener's OnStopRequest method does nothing, and all
         // the interesting work happens below nsXULDocument::EndLoad, from
@@ -468,8 +470,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     return NS_OK;
 }
 
-// This gets invoked after a prototype for this document or one of
-// its overlays is fully built in the content sink.
 void
 nsXULDocument::EndLoad()
 {
@@ -494,32 +494,32 @@ nsXULDocument::EndLoad()
 
     // If the current prototype is an overlay document (non-master prototype)
     // and we're filling the FastLoad disk cache, tell the cache we're done
-    // loading it, and write the prototype. The master prototype is put into
-    // the cache earlier in nsXULDocument::StartDocumentLoad.
-    if (useXULCache && mIsWritingFastLoad && isChrome &&
-        mMasterPrototype != mCurrentPrototype) {
+    // loading it, and write the prototype.
+    if (useXULCache && mIsWritingFastLoad &&
+        mMasterPrototype != mCurrentPrototype &&
+        isChrome)
         gXULCache->WritePrototype(mCurrentPrototype);
-    }
 
     if (isChrome) {
         nsCOMPtr<nsIXULOverlayProvider> reg =
             do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
-
+        nsICSSLoader* cssLoader = CSSLoader();
+        
         if (reg) {
             nsCOMPtr<nsISimpleEnumerator> overlays;
-            rv = reg->GetStyleOverlays(uri, getter_AddRefs(overlays));
-            if (NS_FAILED(rv)) return;
+            reg->GetStyleOverlays(uri, getter_AddRefs(overlays));
 
             PRBool moreSheets;
             nsCOMPtr<nsISupports> next;
             nsCOMPtr<nsIURI> sheetURI;
+            nsCOMPtr<nsICSSStyleSheet> sheet;
 
             while (NS_SUCCEEDED(rv = overlays->HasMoreElements(&moreSheets)) &&
                    moreSheets) {
                 overlays->GetNext(getter_AddRefs(next));
 
                 sheetURI = do_QueryInterface(next);
-                if (!sheetURI) {
+                if (!uri) {
                     NS_ERROR("Chrome registry handed me a non-nsIURI object!");
                     continue;
                 }
@@ -527,11 +527,19 @@ nsXULDocument::EndLoad()
                 if (useXULCache && IsChromeURI(sheetURI)) {
                     mCurrentPrototype->AddStyleSheetReference(sheetURI);
                 }
+
+                cssLoader->LoadSheetSync(sheetURI, getter_AddRefs(sheet));
+                if (!sheet) {
+                    NS_WARNING("Couldn't load chrome style overlay.");
+                    continue;
+                }
+
+                AddStyleSheet(sheet);
             }
         }
 
         if (useXULCache) {
-            // If it's a chrome prototype document, then notify any
+            // If it's a 'chrome:' prototype document, then notify any
             // documents that raced to load the prototype, and awaited
             // its load completion via proto->AwaitLoadDone().
             rv = mCurrentPrototype->NotifyLoadDone();
@@ -539,26 +547,37 @@ nsXULDocument::EndLoad()
         }
     }
 
-    OnPrototypeLoadDone(PR_TRUE);
+    // Now walk the prototype to build content.
+    rv = PrepareToWalk();
+    if (NS_FAILED(rv)) return;
+
+    ResumeWalk();
 }
 
+// Called back from nsXULPrototypeDocument::NotifyLoadDone for each XUL
+// document that raced to start the same prototype document load, lost
+// the race, but hit the XUL prototype cache because the winner filled
+// the cache with the not-yet-loaded prototype object.
 NS_IMETHODIMP
-nsXULDocument::OnPrototypeLoadDone(PRBool aResumeWalk)
+nsXULDocument::OnPrototypeLoadDone()
 {
     nsresult rv;
 
-    // Add the style overlays from chrome registry, if any.
+    // Need to clone style sheet references now, as we couldn't do that
+    // in StartDocumentLoad, because the prototype may not have finished
+    // loading at that point.
     rv = AddPrototypeSheets();
     if (NS_FAILED(rv)) return rv;
 
+    // Now we must do for each secondary or later XUL document (those that
+    // lost the race to start the prototype document load) what is done by
+    // nsCachedChromeStreamListener::OnStopRequest for the primary document
+    // (the one that won the race to start the prototype load).
     rv = PrepareToWalk();
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to prepare for walk");
     if (NS_FAILED(rv)) return rv;
 
-    if (aResumeWalk) {
-        rv = ResumeWalk();
-    }
-    return rv;
+    return ResumeWalk();
 }
 
 // called when an error occurs parsing a document
@@ -1903,6 +1922,10 @@ nsXULDocument::Init()
     // will persist.
     mLocalStore = do_GetService(kLocalStoreCID);
 
+    // Create a new nsISupportsArray for dealing with overlay references
+    rv = NS_NewISupportsArray(getter_AddRefs(mUnloadedOverlays));
+    if (NS_FAILED(rv)) return rv;
+
     if (gRefCnt++ == 0) {
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
@@ -2378,6 +2401,27 @@ nsXULDocument::PrepareToWalk()
     // elements aren't yanked from beneath us.
     mPrototypes.AppendObject(mCurrentPrototype);
 
+    // Push the overlay references onto our overlay processing
+    // stack. GetOverlayReferences() will return an ordered array of
+    // overlay references...
+    nsCOMPtr<nsISupportsArray> overlays;
+    rv = mCurrentPrototype->GetOverlayReferences(getter_AddRefs(overlays));
+    if (NS_FAILED(rv)) return rv;
+
+    // ...and we preserve this ordering by appending to our
+    // mUnloadedOverlays array in reverse order
+    PRUint32 count;
+    overlays->Count(&count);
+    for (PRInt32 i = count - 1; i >= 0; --i) {
+        nsISupports* isupports = overlays->ElementAt(i);
+        mUnloadedOverlays->AppendElement(isupports);
+        NS_IF_RELEASE(isupports);
+    }
+
+
+    // Now check the chrome registry for any additional overlays.
+    rv = AddChromeOverlays();
+
     // Get the prototype's root element and initialize the context
     // stack for the prototype walk.
     nsXULPrototypeElement* proto;
@@ -2404,33 +2448,11 @@ nsXULDocument::PrepareToWalk()
         return NS_OK;
     }
 
-    PRUint32 piInsertionPoint = 0;
-    if (mState != eState_Master) {
-        piInsertionPoint = IndexOf(GetRootContent());
-        NS_ASSERTION(piInsertionPoint >= 0,
-                     "No root content when preparing to walk overlay!");
-    }
-
-    const nsTArray<nsXULPrototypePI*>& processingInstructions =
-        mCurrentPrototype->GetProcessingInstructions();
-
-    PRUint32 total = processingInstructions.Length();
-    for (PRUint32 i = 0; i < total; ++i) {
-        rv = CreateAndInsertPI(processingInstructions[i],
-                               this, piInsertionPoint + i);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Now check the chrome registry for any additional overlays.
-    rv = AddChromeOverlays();
-    if (NS_FAILED(rv)) return rv;
-
     // Do one-time initialization if we're preparing to walk the
     // master document's prototype.
     nsCOMPtr<nsIContent> root;
 
     if (mState == eState_Master) {
-        // Add the root element
         rv = CreateElementFromPrototype(proto, getter_AddRefs(root));
         if (NS_FAILED(rv)) return rv;
 
@@ -2463,112 +2485,6 @@ nsXULDocument::PrepareToWalk()
     return NS_OK;
 }
 
-nsresult
-nsXULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
-                                 nsINode* aParent, PRUint32 aIndex)
-{
-    NS_PRECONDITION(aProtoPI, "null ptr");
-    NS_PRECONDITION(aParent, "null ptr");
-
-    nsresult rv;
-    nsCOMPtr<nsIContent> node;
-
-    rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                        mNodeInfoManager,
-                                        aProtoPI->mTarget,
-                                        aProtoPI->mData);
-    if (NS_FAILED(rv)) return rv;
-
-    if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
-        rv = InsertXMLStylesheetPI(aProtoPI, aParent, aIndex, node);
-    } else if (aProtoPI->mTarget.EqualsLiteral("xul-overlay")) {
-        rv = InsertXULOverlayPI(aProtoPI, aParent, aIndex, node);
-    } else {
-        // No special processing, just add the PI to the document.
-        rv = aParent->InsertChildAt(node, aIndex, PR_FALSE);
-    }
-
-    return rv;
-}
-
-nsresult
-nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
-                                     nsINode* aParent,
-                                     PRUint32 aIndex,
-                                     nsIContent* aPINode)
-{
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aPINode));
-    NS_ASSERTION(ssle, "passed XML Stylesheet node does not "
-                       "implement nsIStyleSheetLinkingElement!");
-
-    nsresult rv;
-
-    ssle->InitStyleLinkElement(nsnull, PR_FALSE);
-    // We want to be notified when the style sheet finishes loading, so
-    // disable style sheet loading for now.
-    ssle->SetEnableUpdates(PR_FALSE);
-
-    rv = aParent->InsertChildAt(aPINode, aIndex, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    ssle->SetEnableUpdates(PR_TRUE);
-
-    // load the stylesheet if necessary, passing ourselves as
-    // nsICSSObserver
-    rv = ssle->UpdateStyleSheet(nsnull, this);
-    if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-        ++mPendingSheets;
-        return NS_OK;
-    }
-
-    return rv;
-}
-
-nsresult
-nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
-                                  nsINode* aParent,
-                                  PRUint32 aIndex,
-                                  nsIContent* aPINode)
-{
-    nsresult rv;
-
-    rv = aParent->InsertChildAt(aPINode, aIndex, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    // xul-overlay PI is special only in prolog
-    if (!nsContentUtils::InProlog(aPINode)) {
-        return NS_OK;
-    }
-
-    nsAutoString href;
-    nsParserUtils::GetQuotedAttributeValue(aProtoPI->mData,
-                                           nsGkAtoms::href,
-                                           href);
-
-    // If there was no href, we can't do anything with this PI
-    if (href.IsEmpty()) {
-        return NS_OK;
-    }
-
-    // Add the overlay to our list of overlays that need to be processed.
-    nsCOMPtr<nsIURI> uri;
-
-    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull, mDocumentURI);
-    if (NS_SUCCEEDED(rv)) {
-        // We insert overlays into mUnloadedOverlays at the same index in
-        // document order, so they end up in the reverse of the document
-        // order in mUnloadedOverlays.
-        // This is needed because the code in ResumeWalk loads the overlays
-        // by processing the last item of mUnloadedOverlays and removing it
-        // from the array.
-        rv = mUnloadedOverlays.InsertObjectAt(uri, 0);
-    } else if (rv == NS_ERROR_MALFORMED_URI) {
-        // The URL is bad, move along. Don't propagate for now.
-        rv = NS_OK;
-    }
-
-    return rv;
-}
 
 nsresult
 nsXULDocument::AddChromeOverlays()
@@ -2597,9 +2513,8 @@ nsXULDocument::AddChromeOverlays()
 
     while (NS_SUCCEEDED(rv = overlays->HasMoreElements(&moreOverlays)) &&
            moreOverlays) {
-
         rv = overlays->GetNext(getter_AddRefs(next));
-        if (NS_FAILED(rv) || !next) break;
+        if (NS_FAILED(rv) || !next) continue;
 
         uri = do_QueryInterface(next);
         if (!uri) {
@@ -2607,12 +2522,10 @@ nsXULDocument::AddChromeOverlays()
             continue;
         }
 
-        // Same comment as in nsXULDocument::InsertXULOverlayPI
-        rv = mUnloadedOverlays.InsertObjectAt(uri, 0);
-        if (NS_FAILED(rv)) break;
+        mUnloadedOverlays->AppendElement(uri);
     }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2728,12 +2641,20 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
             return NS_OK;
         }
 
+        // Found the overlay's prototype in the cache, fully loaded.
+        rv = AddPrototypeSheets();
+        if (NS_FAILED(rv)) return rv;
+
+        // Now prepare to walk the prototype to create its content
+        rv = PrepareToWalk();
+        if (NS_FAILED(rv)) return rv;
+
         PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was cached"));
 
-        // Found the overlay's prototype in the cache, fully loaded. If
-        // this is a dynamic overlay, this will call ResumeWalk.
-        // Otherwise, we'll return to ResumeWalk, which called us.
-        return OnPrototypeLoadDone(aIsDynamic);
+        // If this is a dynamic overlay and we have the prototype in the chrome 
+        // cache already, we must manually call ResumeWalk.
+        if (aIsDynamic)
+            return ResumeWalk();
     }
     else {
         // Not there. Initiate a load.
@@ -2833,12 +2754,9 @@ nsXULDocument::ResumeWalk()
         while (mContextStack.Depth() > 0) {
             // Look at the top of the stack to determine what we're
             // currently working on.
-            // This will always be a node already constructed and
-            // inserted to the actual document.
             nsXULPrototypeElement* proto;
             nsCOMPtr<nsIContent> element;
-            PRInt32 indx; // all children of proto before indx (not
-                          // inclusive) have already been constructed
+            PRInt32 indx;
             rv = mContextStack.Peek(&proto, getter_AddRefs(element), &indx);
             if (NS_FAILED(rv)) return rv;
 
@@ -2983,19 +2901,6 @@ nsXULDocument::ResumeWalk()
                 }
             }
             break;
-
-            case nsXULPrototypeNode::eType_PI: {
-                nsXULPrototypePI* piProto =
-                    NS_REINTERPRET_CAST(nsXULPrototypePI*, childproto);
-
-                rv = CreateAndInsertPI(piProto, element,
-                                       element->GetChildCount());
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
-            break;
-
-            default:
-                NS_NOTREACHED("Unexpected nsXULPrototypeNode::Type value");
             }
         }
 
@@ -3006,13 +2911,18 @@ nsXULDocument::ResumeWalk()
         // If we're not already, mark us as now processing overlays.
         mState = eState_Overlay;
 
+        PRUint32 count;
+        mUnloadedOverlays->Count(&count);
+
         // If there are no overlay URIs, then we're done.
-        PRUint32 count = mUnloadedOverlays.Count();
         if (! count)
             break;
 
-        nsCOMPtr<nsIURI> uri = mUnloadedOverlays[count-1];
-        mUnloadedOverlays.RemoveObjectAt(count-1);
+        nsCOMPtr<nsIURI> uri =
+            dont_AddRef(NS_REINTERPRET_CAST(nsIURI*, mUnloadedOverlays->ElementAt(count - 1)));
+
+        mUnloadedOverlays->RemoveElementAt(count - 1);
+
 
         PRBool shouldReturn, failureFromContent;
         rv = LoadOverlayInternal(uri, PR_FALSE, &shouldReturn,
@@ -3035,19 +2945,6 @@ nsXULDocument::ResumeWalk()
 
     rv = ApplyPersistentAttributes();
     if (NS_FAILED(rv)) return rv;
-
-    mStillWalking = PR_FALSE;
-    if (mPendingSheets == 0) {
-        rv = DoneWalking();
-    }
-    return rv;
-}
-
-nsresult
-nsXULDocument::DoneWalking()
-{
-    NS_PRECONDITION(mPendingSheets == 0, "there are sheets to be loaded");
-    NS_PRECONDITION(!mStillWalking, "walk not done");
 
     // XXXldb This is where we should really be setting the chromehidden
     // attribute.
@@ -3151,28 +3048,7 @@ nsXULDocument::DoneWalking()
         }
     }
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
-                                PRBool aWasAlternate,
-                                nsresult aStatus)
-{
-    if (NS_SUCCEEDED(aStatus)) {
-        AddStyleSheet(aSheet);
-    }
-
-    NS_ASSERTION(mPendingSheets > 0,
-        "Unexpected StyleSheetLoaded notification");
-
-    --mPendingSheets;
-
-    if (!mStillWalking && mPendingSheets == 0) {
-        return DoneWalking();
-    }
-
-    return NS_OK;
+    return rv;
 }
 
 void
@@ -3718,6 +3594,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
 nsresult
 nsXULDocument::AddPrototypeSheets()
 {
+    // Add mCurrentPrototype's style sheets to the document.
     nsresult rv;
 
     nsCOMPtr<nsISupportsArray> sheets;
@@ -3732,14 +3609,36 @@ nsXULDocument::AddPrototypeSheets()
         NS_IF_RELEASE(isupports);
 
         NS_ASSERTION(uri, "not a URI!!!");
+        if (! uri)
+            return NS_ERROR_UNEXPECTED;
 
-        rv = CSSLoader()->LoadSheet(uri, this);
+        nsCAutoString spec;
+        uri->GetAsciiSpec(spec);
 
+        if (!IsChromeURI(uri)) {
+            // These don't get to be in the prototype cache anyway...
+            // and we can't load non-chrome sheets synchronously
+            continue;
+        }
+
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+
+        // If the sheet is a chrome URL, then we can refetch the sheet
+        // synchronously, since we know the sheet is local.  It's not
+        // too late! :) If we're lucky, the loader will just pull it
+        // from the prototype cache anyway.
+        // Otherwise we just bail.  It shouldn't currently
+        // be possible to get into this situation for any reason
+        // other than a skin switch anyway (since skin switching is the
+        // only system that partially invalidates the XUL cache).
+        // - dwh
+        //XXXbz we hit this code from fastload all the time.  Bug 183505.
+        rv = CSSLoader()->LoadSheetSync(uri, getter_AddRefs(sheet));
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure
-        // from LoadSheet (and thus exit the loop).
+        // from LoadSheetSync (and thus exit the loop).
         if (NS_SUCCEEDED(rv)) {
-            ++mPendingSheets;
+            AddStyleSheet(sheet);
         }
     }
 
@@ -4348,7 +4247,12 @@ nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest *request,
     if (! mProtoLoaded)
         return NS_OK;
 
-    return mDocument->OnPrototypeLoadDone(PR_TRUE);
+    nsresult rv;
+    rv = mDocument->PrepareToWalk();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to prepare for walk");
+    if (NS_FAILED(rv)) return rv;
+
+    return mDocument->ResumeWalk();
 }
 
 

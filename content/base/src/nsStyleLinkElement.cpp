@@ -303,7 +303,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
                     parser, aObserver, &isAlternate);
   }
 
-  if (NS_SUCCEEDED(rv) && !doneLoading && !isAlternate) {
+  if (NS_SUCCEEDED(rv) && parser && !doneLoading && !isAlternate) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;
   }
 
