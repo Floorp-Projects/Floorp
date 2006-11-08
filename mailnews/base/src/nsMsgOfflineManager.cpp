@@ -206,8 +206,6 @@ nsresult nsMsgOfflineManager::SynchronizeOfflineImapChanges()
 nsresult nsMsgOfflineManager::SendUnsentMessages()
 {
 	nsresult rv;
-
-  ShowStatus("sendingUnsent");
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater = do_CreateInstance(kMsgSendLaterCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
@@ -257,7 +255,8 @@ nsresult nsMsgOfflineManager::SendUnsentMessages()
 	{ 
     pMsgSendLater->AddListener(this);
     pMsgSendLater->SetMsgWindow(m_window);
-    rv = pMsgSendLater->SendUnsentMessages(identityToUse); 
+    rv = pMsgSendLater->SendUnsentMessages(identityToUse);
+    ShowStatus("sendingUnsent");
     // if we succeeded, return - we'll run the next operation when the
     // send finishes. Otherwise, advance to the next state.
     if (NS_SUCCEEDED(rv))
