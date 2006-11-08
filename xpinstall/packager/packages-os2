@@ -20,6 +20,7 @@ bin/chrome/en-US.manifest
 bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/searchplugins/*
+bin/dictionaries/*
 
 [deflenus]
 ;
@@ -306,6 +307,11 @@ bin/components/websrvcs.xpt
 bin/components/xulappinfo.js
 bin/components/xulappinfo.xpt
 
+; spellchecker (may not be present)
+bin/components/myspell.dll
+bin/components/spellchk.dll
+bin/components/spellchecker.xpt
+
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll
 bin/components/mozldap.xpt
@@ -518,12 +524,6 @@ bin/chrome/icons/default/winInspectorMain.ico
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
-
-[spellcheck]
-bin/components/myspell.dll
-bin/components/spellchk.dll
-bin/components/spellchecker.xpt
-bin/dictionaries/*
 
 [reporter]
 bin/chrome/reporter.jar

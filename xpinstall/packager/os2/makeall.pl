@@ -219,7 +219,6 @@ if(!(-d "$gDirStageProduct"))
 @gComponentList = ("xpcom",
                    "browser",
                    "mail",
-                   "spellcheck",
                    "psm",
                    "chatzilla",
                    "deflenus",
