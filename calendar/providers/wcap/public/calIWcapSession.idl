@@ -55,7 +55,6 @@ interface calIWcapSession : nsISupports
      * User that has established this session.
      * Reading this attribute prompts for login if the session has not yet
      * been established.
-     * An error is notified to all registered calIObservers, then thrown.
      */
     readonly attribute string userId;
     
@@ -71,7 +70,6 @@ interface calIWcapSession : nsISupports
      * will establish a session automatically.
      * If the user is already logged in, she will be logged out before.
      * UI will prompt for a userId and password.
-     * An error is notified to all registered calIObservers, then thrown.
      */
     void login();
     
@@ -80,7 +78,6 @@ interface calIWcapSession : nsISupports
      * Commonly not needed, because the user will be logged out upon
      * "network:offline-about-to-go-offline" and "quit-application"
      * automatically.
-     * An error is notified to all registered calIObservers, then thrown.
      */
     void logout();
     
@@ -95,13 +92,11 @@ interface calIWcapSession : nsISupports
     
     /**
      * The user's default calendar.
-     * An error is notified to all registered calIObservers, then thrown.
      */
     readonly attribute calIWcapCalendar defaultCalendar;
     
     /**
      * Gets a calendar instance for the passed calId using this session.
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param calId full calId (incl. "<user>:")
      * @return calendar instance
@@ -111,7 +106,6 @@ interface calIWcapSession : nsISupports
     /**
      * Gets calendars where the user is the primary owner
      * (including default calendar).
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @return array of owned calendars
      */
@@ -122,7 +116,6 @@ interface calIWcapSession : nsISupports
     /**
      * Gets subscribed calendars (may include calendars where the user
      * is the primary owner).
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @return array of subscribed calendars
      */
@@ -132,7 +125,6 @@ interface calIWcapSession : nsISupports
     
     /**
      * Creates a new calendar for the session's user.
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param calId calendar's calId (portion);
      *        without user's id, e.g. "test-cal".
@@ -161,7 +153,6 @@ interface calIWcapSession : nsISupports
     
     /**
      * Deletes a calendar.
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param calId full calId (incl. "<user>:")
      * @param bRemoveFromSubscribed whether calendar ought to be removed
@@ -173,7 +164,6 @@ interface calIWcapSession : nsISupports
     
     /**
      * Subscribe to calendar(s).
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param count number of calIds
      * @param calIds array of calIds (calid or "mailto:rfc822addr")
@@ -184,7 +174,6 @@ interface calIWcapSession : nsISupports
     
     /**
      * Unsubscribe from calendar(s).
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param count number of calIds
      * @param calIds array of calIds (calid or "mailto:rfc822addr")
@@ -195,7 +184,6 @@ interface calIWcapSession : nsISupports
     
     /**
      * Gets the user's preferences.
-     * An error is notified to all registered calIObservers, then thrown.
      *
      * @param prefName preference name
      * @return array of preference values

@@ -118,7 +118,8 @@ calWcapCalendar.prototype = {
     function()
     {
         var str = this.session.toString();
-        str += (", calId=" + this.calId);
+        str += (", calId=" +
+                (this.session.isLoggedIn ? this.calId : this.m_calId));
         return str;
     },
     log:
@@ -260,8 +261,7 @@ calWcapCalendar.prototype = {
     //           like a subscribed one...
     m_calId: null,
     get calId() {
-        var userId = this.session.defaultCalId; // assure being logged in
-        return this.m_calId || userId;
+        return this.m_calId || this.session.defaultCalId;
     },
     set calId( id ) {
         this.log( "setting calId to " + id );
@@ -275,7 +275,7 @@ calWcapCalendar.prototype = {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
         if (ar.length < 1 || ar[0].length == 0) {
             var calId = this.calId;
-            this.notifyError(
+            this.logError(
                 "cannot determine primary owner of calendar " + calId );
             // fallback to calId prefix:
             var nColon = calId.indexOf(":");
@@ -348,7 +348,6 @@ calWcapCalendar.prototype = {
                         // call the readOnly attribute, thus we would run into
                         // endless recursion here:
                         this_.m_bReadOnly = true;
-//                         this_.notifyError( exc );
                         // just logging here, because user may have dangling
                         // users referred in his subscription list:
                         this_.logError( exc );
@@ -366,7 +365,7 @@ calWcapCalendar.prototype = {
             // patch to read-only here, because error notification call the
             // readOnly attribute, thus we would run into endless recursion here
             this.m_bReadOnly = true;
-            this.notifyError( exc );
+            this.logError( exc );
             throw exc;
         }
         return this.m_calProps;
@@ -375,15 +374,11 @@ calWcapCalendar.prototype = {
     get defaultTimezone() {
         var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", {});
         if (tzid.length < 1 || tzid[0].length == 0) {
+            this.logError( "cannot get X-NSCP-CALPROPS-TZID!" );
             return "UTC"; // fallback
         }
         return tzid[0];
     },
-//     set defaultTimezone( tzid ) {
-//         if (this.readOnly)
-//         // xxx todo:
-//         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-//     },
     
     getAlignedTimezone:
     function( tzid )
@@ -401,7 +396,7 @@ calWcapCalendar.prototype = {
             //           user's default if not supported directly
             var ret = this.defaultTimezone;
             // use calendar's default:
-            this.log( tzid + " not supported, falling back to default: " + ret);
+            this.log(tzid + " not supported, falling back to default: " + ret);
             return ret;
         }
         else // is ok (supported):

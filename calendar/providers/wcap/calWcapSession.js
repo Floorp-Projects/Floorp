@@ -121,15 +121,12 @@ calWcapSession.prototype = {
         if (this.m_sessionId == null) {
             str += (getIoService().offline ? ", offline" : ", not logged in");
         }
-//         else {
-//             str += (", session-id=" + this.m_sessionId);
-//         }
         return str;
     },
     log:
-    function( msg )
+    function( msg, context )
     {
-        return logMessage( this.toString(), msg );
+        return logMessage( context ? context : this.toString(), msg );
     },
     logError:
     function( err, context )
@@ -818,7 +815,7 @@ calWcapSession.prototype = {
             return this.getCalendarByCalId( this.userId + ":" + calId );
         }
         catch (exc) {
-            this.notifyError( exc );
+            this.logError( exc );
             throw exc;
         }
     },
@@ -835,7 +832,7 @@ calWcapSession.prototype = {
             this.m_calIdToCalendar[encodeURIComponent(calId)] = null;
         }
         catch (exc) {
-            this.notifyError( exc );
+            this.logError( exc );
             throw exc;
         }
     },    
@@ -857,7 +854,7 @@ calWcapSession.prototype = {
             this.m_userPrefs = null; // reread prefs
         }
         catch (exc) {
-            this.notifyError( exc );
+            this.logError( exc );
             throw exc;
         }
     },
@@ -894,7 +891,7 @@ calWcapSession.prototype = {
             return ret;
         }
         catch (exc) {
-            this.notifyError( exc );
+            this.logError( exc );
             throw exc;
         }
     },

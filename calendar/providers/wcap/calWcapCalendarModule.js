@@ -146,7 +146,8 @@ function initWcapProvider()
         }
         
         SUPPRESS_ALARMS = getPref("calendar.wcap.suppress_alarms", false);
-        logMessage( "calendar.wcap.suppress_alarms", SUPPRESS_ALARMS );
+        logMessage("calendar.wcap.suppress_alarms",
+                   SUPPRESS_ALARMS.toString());
         
         // init cache dir directory:
         CACHE = getPref("calendar.wcap.cache", "off");
