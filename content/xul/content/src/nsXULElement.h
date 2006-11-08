@@ -197,7 +197,7 @@ public:
 class nsXULPrototypeNode
 {
 public:
-    enum Type { eType_Element, eType_Script, eType_Text };
+    enum Type { eType_Element, eType_Script, eType_Text, eType_PI };
 
     Type                     mType;
 
@@ -399,6 +399,36 @@ public:
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     nsString                 mValue;
+};
+
+class nsXULPrototypePI : public nsXULPrototypeNode
+{
+public:
+    nsXULPrototypePI()
+        : nsXULPrototypeNode(eType_PI)
+    {
+        NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
+    }
+
+    virtual ~nsXULPrototypePI()
+    {
+    }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    virtual const char* ClassName() { return "nsXULPrototypePI"; }
+    virtual PRUint32 ClassSize() { return sizeof(*this); }
+#endif
+
+    virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                               nsIScriptGlobalObject* aGlobal,
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
+    virtual nsresult Deserialize(nsIObjectInputStream* aStream,
+                                 nsIScriptGlobalObject* aGlobal,
+                                 nsIURI* aDocumentURI,
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
+
+    nsString                 mTarget;
+    nsString                 mData;
 };
 
 ////////////////////////////////////////////////////////////////////////
