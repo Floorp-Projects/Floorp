@@ -2372,9 +2372,6 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       if (NS_FAILED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details)))
         continue;
 
-      if (hasExplicitKeyUsageNonRepudiation(node->cert))
-        nickWithSerial.Append(NS_LITERAL_STRING(" [NR]"));
-
       certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
       if (!certNicknameList[CertsToUse])
         continue;
