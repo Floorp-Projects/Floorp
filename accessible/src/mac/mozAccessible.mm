@@ -366,6 +366,9 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (NSString*)role
 {
+#ifdef DEBUG_A11Y
+  NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(mGeckoAccessible), "Does not support nsIAccessibleText when it should");
+#endif
   PRUint32 roleInt = 0;
   mGeckoAccessible->GetFinalRole (&roleInt);
   return AXRoles[roleInt]; // see nsRoleMap.h

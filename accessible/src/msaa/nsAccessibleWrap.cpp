@@ -434,6 +434,10 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (!xpAccessible)
     return E_FAIL;
 
+#ifdef DEBUG_A11Y
+  NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(xpAccessible), "Does not support nsIAccessibleText when it should");
+#endif
+
   PRUint32 xpRole = 0, msaaRole = 0;
   if (NS_FAILED(xpAccessible->GetFinalRole(&xpRole)))
     return E_FAIL;

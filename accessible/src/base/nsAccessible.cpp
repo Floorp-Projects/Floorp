@@ -107,6 +107,40 @@
 NS_IMPL_ADDREF_INHERITED(nsAccessible, nsAccessNode)
 NS_IMPL_RELEASE_INHERITED(nsAccessible, nsAccessNode)
 
+#ifdef DEBUG_A11Y
+/*
+ * static
+ * help method. to detect whether this accessible object implements
+ * nsIAccessibleText, when it is text or has text child node.
+ */
+PRBool nsAccessible::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
+{
+  PRBool foundText = PR_FALSE;
+
+  if (IsText(aAccessible)) {
+    foundText = PR_TRUE;
+  }
+  nsCOMPtr<nsIAccessible> child, nextSibling;
+  aAccessible->GetFirstChild(getter_AddRefs(child));
+  while (child) {
+    if (IsText(child)) {
+      foundText = PR_TRUE;
+      break;
+    }
+    child->GetNextSibling(getter_AddRefs(nextSibling));
+    child.swap(nextSibling);
+  }
+  if (foundText) {
+    // found text child node
+    nsCOMPtr<nsIAccessibleText> text = do_QueryInterface(aAccessible);
+    if (!text) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE; 
+}
+#endif
+
 nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   // Custom-built QueryInterface() knows when we support nsIAccessibleSelectable
