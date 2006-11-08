@@ -42,7 +42,6 @@
 #include "nsNetUtil.h"
 #include "nsXBLService.h"
 #include "nsXBLWindowKeyHandler.h"
-#include "nsXBLWindowDragHandler.h"
 #include "nsIInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsHashtable.h"
@@ -802,46 +801,6 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
 
   return NS_OK;
 }
-
-
-//
-// AttachGlobalDragDropHandler
-//
-// Creates a new drag handler and prepares to listen to dragNdrop events on the given
-// event receiver.
-//
-NS_IMETHODIMP
-nsXBLService::AttachGlobalDragHandler(nsIDOMEventReceiver* aReceiver)
-{
-  // Create the DnD handler
-  nsXBLWindowDragHandler* handler;
-  NS_NewXBLWindowDragHandler(aReceiver, &handler);
-  if (!handler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  aReceiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(aReceiver);
-
-  // listen to these events
-  target->AddGroupedEventListener(NS_LITERAL_STRING("draggesture"), handler,
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("dragenter"), handler,
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("dragexit"), handler,
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("dragover"), handler,
-                                  PR_FALSE, systemGroup);
-  target->AddGroupedEventListener(NS_LITERAL_STRING("dragdrop"), handler,
-                                  PR_FALSE, systemGroup);
-
-  // Release.  Do this so that only the event receiver holds onto the handler.
-  NS_RELEASE(handler);
-
-  return NS_OK;
-
-} // AttachGlobalDragDropHandler
-
 
 NS_IMETHODIMP
 nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
