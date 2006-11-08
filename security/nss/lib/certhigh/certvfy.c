@@ -1212,30 +1212,21 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
     valid = SECSuccess ; /* start off assuming cert is valid */
    
-#ifdef notdef 
-    /* check if this cert is in the Evil list */
-    rv = CERT_CheckForEvilCert(cert);
-    if ( rv != SECSuccess ) {
-	PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
-	LOG_ERROR(log,cert,0,0);
-	return SECFailure;
-    }
-#endif
-    
     /* make sure that the cert is valid at time t */
     allowOverride = (PRBool)((requiredUsages & certificateUsageSSLServer) ||
                              (requiredUsages & certificateUsageSSLServerWithStepUp));
     validity = CERT_CheckCertValidTimes(cert, t, allowOverride);
     if ( validity != secCertTimeValid ) {
-        LOG_ERROR(log,cert,0,validity);
-	return SECFailure;
+        valid = SECFailure;
+        LOG_ERROR_OR_EXIT(log,cert,0,validity);
     }
 
     /* check key usage and netscape cert type */
     cert_GetCertType(cert);
     certType = cert->nsCertType;
 
-    for (i=1;i<=certificateUsageHighest && !(SECFailure == valid && !returnedUsages) ;) {
+    for (i=1; i<=certificateUsageHighest && 
+              (SECSuccess == valid || returnedUsages || log) ; ) {
         PRBool requiredUsage = (i & requiredUsages) ? PR_TRUE : PR_FALSE;
         if (PR_FALSE == requiredUsage && PR_FALSE == checkAllUsages) {
             NEXT_USAGE();
@@ -1416,6 +1407,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
         NEXT_USAGE();
     }
     
+loser:
     return(valid);
 }
 			
