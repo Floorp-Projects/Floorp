@@ -79,7 +79,7 @@
 }
 
 .msg[msg-type="NICK"] .msg-data {
-    font: 10pt courier;
+    font-family: monospace;
 }
 
 /* :before and :after pseudoclasses form the decorations around nicknames.     */
