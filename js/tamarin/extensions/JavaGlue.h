@@ -282,6 +282,26 @@ namespace avmplus
 	};
 }
 
+#else /* !AVMPLUS_WITH_JNI */
+namespace avmplus
+{
+	class JObject;
+	class JClass;
+
+	class JObjectClass: public ClassClosure
+	{
+	public:
+		JObjectClass(VTable *cvtable) : ClassClosure(cvtable) { }
+		void NYI();
+		DECLARE_NATIVE_MAP(JObjectClass);
+	};
+
+	class JObject : public ScriptObject
+	{
+	public:
+		JObject(VTable *vtable, ScriptObject *proto) : ScriptObject(vtable, proto) { }
+	};
+}
 #endif /* AVMPLUS_WITH_JNI */
 
 #endif /* _JAVA_GLUE_H_ */

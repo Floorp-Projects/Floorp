@@ -94,9 +94,7 @@ namespace avmshell
 		NATIVE_CLASS(abcclass_avmplus_File,            FileClass,          ScriptObject)
 		NATIVE_CLASS(abcclass_avmplus_Domain,          DomainClass,        DomainObject)
 		NATIVE_CLASS(abcclass_avmplus_StringBuilder,   StringBuilderClass, StringBuilderObject)		
-#ifdef AVMPLUS_WITH_JNI
-		NATIVE_CLASS(abcclass_avmplus_JObject,         JObjectClass,		JObject)
-#endif /* AVMPLUS_WITH_JNI */
+		NATIVE_CLASS(abcclass_avmplus_JObject,          JObjectClass,		JObject)
 		NATIVE_CLASS(abcclass_flash_utils_ByteArray,    ByteArrayClass,     ByteArrayObject)		
 		NATIVE_CLASS(abcclass_flash_utils_ShortArray,   ShortArrayClass,    ShortArrayObject)		
 		NATIVE_CLASS(abcclass_flash_utils_UShortArray,  UShortArrayClass,   UShortArrayObject)		

@@ -29,6 +29,10 @@
  * 
  ***** END LICENSE BLOCK ***** */
 
+#include "avmplus.h"
+#include "avmshell.h"
+#include "JavaGlue.h"
+
 #ifdef AVMPLUS_WITH_JNI
 
 // @todo 
@@ -36,9 +40,6 @@
 //  support for arrays 
 //  128 is a very nice number but its not the best way to pick how much room is needed for signatures etc.
 // 
-#include "avmplus.h"
-#include "avmshell.h"
-#include "JavaGlue.h"
 
 #ifdef WIN32
 #include <tchar.h>
@@ -1684,5 +1685,18 @@ namespace avmplus
 		return JNI_OK;
 	}
 }	
+#else /* !AVMPLUS_WITH_JNI */
+namespace avmplus {
+	BEGIN_NATIVE_MAP(JObjectClass)
+		NATIVE_METHOD(avmplus_JObject_toString,				JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_methodSignature,		JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_fieldSignature,		JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_constructorSignature,	JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_create,				JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_createArray,			JObjectClass::NYI)
+		NATIVE_METHOD(avmplus_JObject_toArray,				JObjectClass::NYI)
+	END_NATIVE_MAP()
 
+	void JObjectClass::NYI() { }
+}
 #endif /* AVMPLUS_WITH_JNI */
