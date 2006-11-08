@@ -40,9 +40,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * A "prototype" document that stores shared document information
- * for the XUL cache.
- */
+
+  A "prototype" document that stores shared document information
+  for the XUL cache.
+
+*/
 
 #include "nsCOMPtr.h"
 #include "nsAString.h"
@@ -62,6 +64,7 @@
 #include "nsIXULPrototypeDocument.h"
 #include "jsapi.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 #include "nsXULElement.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -132,11 +135,11 @@ public:
     NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult);
     NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement);
 
-    NS_IMETHOD AddProcessingInstruction(nsXULPrototypePI* aPI);
-    const nsTArray<nsXULPrototypePI*>& GetProcessingInstructions() const;
-
     NS_IMETHOD AddStyleSheetReference(nsIURI* aStyleSheet);
     NS_IMETHOD GetStyleSheetReferences(nsISupportsArray** aResult);
+
+    NS_IMETHOD AddOverlayReference(nsIURI* aURI);
+    NS_IMETHOD GetOverlayReferences(nsISupportsArray** aResult);
 
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
@@ -157,8 +160,8 @@ public:
 protected:
     nsCOMPtr<nsIURI> mURI;
     nsXULPrototypeElement* mRoot;
-    nsTArray<nsXULPrototypePI*> mProcessingInstructions;
     nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
+    nsCOMPtr<nsISupportsArray> mOverlayReferences;
     nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
     nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
@@ -247,6 +250,9 @@ nsXULPrototypeDocument::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheetReferences));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = NS_NewISupportsArray(getter_AddRefs(mOverlayReferences));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     mNodeInfoManager = new nsNodeInfoManager();
     NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
@@ -259,13 +265,7 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
         // cleaup cycles etc.
         mGlobalObject->SetGlobalObjectOwner(nsnull);
     }
-
-    PRUint32 count = mProcessingInstructions.Length();
-    for (PRUint32 i = 0; i < count; i++)
-    {
-        mProcessingInstructions[i]->Release();
-    }
-
+    
     if (mRoot)
         mRoot->ReleaseSubtree();
 
@@ -366,6 +366,14 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         mStyleSheetReferences->AppendElement(referenceURI);
     }
 
+    // nsISupportsArray mOverlayReferences
+    rv |= aStream->Read32(&referenceCount);
+    for (i = 0; i < referenceCount; ++i) {
+        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(referenceURI));
+        
+        mOverlayReferences->AppendElement(referenceURI);
+    }
+
     // nsIPrincipal mDocumentPrincipal
     nsCOMPtr<nsIPrincipal> principal;
     rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(principal));
@@ -404,27 +412,12 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
     // Document contents
     PRUint32 type;
-    while (NS_SUCCEEDED(rv)) {
-        rv |= aStream->Read32(&type);
+    rv |= aStream->Read32(&type);
 
-        if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
-            nsXULPrototypePI* pi = new nsXULPrototypePI();
-            if (! pi) {
-               rv |= NS_ERROR_OUT_OF_MEMORY;
-               break;
-            }
+    if ((nsXULPrototypeNode::Type)type != nsXULPrototypeNode::eType_Element)
+        return NS_ERROR_FAILURE;
 
-            rv |= pi->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
-            rv |= AddProcessingInstruction(pi);
-        } else if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_Element) {
-            rv |= mRoot->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
-            break;
-        } else {
-            NS_NOTREACHED("Unexpected prototype node type");
-            rv |= NS_ERROR_FAILURE;
-            break;
-        }
-    }
+    rv |= mRoot->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
     rv |= NotifyLoadDone();
 
     return rv;
@@ -498,6 +491,16 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
     }
 
+    // nsISupportsArray mOverlayReferences
+    mOverlayReferences->Count(&referenceCount);
+    rv |= aStream->Write32(referenceCount);
+    
+    for (i = 0; i < referenceCount; ++i) {
+        mOverlayReferences->QueryElementAt(i, NS_GET_IID(nsIURI), getter_AddRefs(referenceURI));
+        
+        rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
+    }
+
     // nsIPrincipal mDocumentPrincipal
     rv |= NS_WriteOptionalObject(aStream, mDocumentPrincipal, PR_TRUE);
     
@@ -524,12 +527,6 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     // Now serialize the document contents
     nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
     NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-
-    referenceCount = mProcessingInstructions.Length();
-    for (i = 0; i < referenceCount; ++i) {
-        nsXULPrototypePI* pi = mProcessingInstructions[i];
-        rv |= pi->Serialize(aStream, globalObject, &nodeInfos);
-    }
 
     if (mRoot)
         rv |= mRoot->Serialize(aStream, globalObject, &nodeInfos);
@@ -584,30 +581,16 @@ nsXULPrototypeDocument::SetRootElement(nsXULPrototypeElement* aElement)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
-{
-    NS_PRECONDITION(aPI, "null ptr");
-    if (!mProcessingInstructions.AppendElement(aPI)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return NS_OK;
-}
-
-const nsTArray<nsXULPrototypePI*>&
-nsXULPrototypeDocument::GetProcessingInstructions() const
-{
-    return mProcessingInstructions;
-}
 
 NS_IMETHODIMP
 nsXULPrototypeDocument::AddStyleSheetReference(nsIURI* aURI)
 {
-    NS_PRECONDITION(aURI, "null ptr");
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    return mStyleSheetReferences->AppendElement(aURI);
+    mStyleSheetReferences->AppendElement(aURI);
+    return NS_OK;
 }
 
 
@@ -618,6 +601,29 @@ nsXULPrototypeDocument::GetStyleSheetReferences(nsISupportsArray** aResult)
     NS_ADDREF(*aResult);
     return NS_OK;
 }
+
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::AddOverlayReference(nsIURI* aURI)
+{
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
+        return NS_ERROR_NULL_POINTER;
+
+    mOverlayReferences->AppendElement(aURI);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetOverlayReferences(nsISupportsArray** aResult)
+{
+    *aResult = mOverlayReferences;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetHeaderData(nsIAtom* aField, nsAString& aData) const
@@ -712,11 +718,6 @@ nsXULPrototypeDocument::AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult
 NS_IMETHODIMP
 nsXULPrototypeDocument::NotifyLoadDone()
 {
-    // Call back to each XUL document that raced to start the same
-    // prototype document load, lost the race, but hit the XUL
-    // prototype cache because the winner filled the cache with
-    // the not-yet-loaded prototype object.
-
     nsresult rv = NS_OK;
 
     mLoaded = PR_TRUE;
@@ -730,9 +731,7 @@ nsXULPrototypeDocument::NotifyLoadDone()
                 rv = mPrototypeWaiters->GetElementAt(i, getter_AddRefs(doc));
                 if (NS_FAILED(rv)) break;
 
-                // PR_TRUE means that OnPrototypeLoadDone will also
-                // call ResumeWalk().
-                rv = doc->OnPrototypeLoadDone(PR_TRUE);
+                rv = doc->OnPrototypeLoadDone();
                 if (NS_FAILED(rv)) break;
             }
         }
