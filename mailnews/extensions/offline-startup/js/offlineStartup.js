@@ -44,6 +44,7 @@ const kRememberLastState = 0;
 const kAskForOnlineState = 1;
 const kAlwaysOnline = 2;
 const kAlwaysOffline = 3;
+
 ////////////////////////////////////////////////////////////////////////
 //
 //   nsOfflineStartup : nsIObserver
@@ -75,6 +76,7 @@ var nsOfflineStartup =
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
+    var manageOfflineStatus = prefs.getBoolPref("offline.autoDetect");
     gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
 
     if (gOfflineStartupMode == kAlwaysOffline)
@@ -84,13 +86,14 @@ var nsOfflineStartup =
     }
     else if (gOfflineStartupMode == kAlwaysOnline)
     {
-      ioService.manageOfflineStatus = false;
+      ioService.manageOfflineStatus = manageOfflineStatus;
       ioService.offline = false;
     }
     else if (gOfflineStartupMode == kRememberLastState)
     {
-      ioService.manageOfflineStatus = false;
-      ioService.offline = !prefs.getBoolPref("network.online");
+      var wasOffline = !prefs.getBoolPref("network.online");
+      ioService.manageOfflineStatus = manageOfflineStatus && !wasOffline;
+      ioService.offline = wasOffline;        
     }
     else if (gOfflineStartupMode == kAskForOnlineState)
     {
@@ -113,7 +116,7 @@ var nsOfflineStartup =
         (promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING),
         button0Text, button1Text, null, null, checkVal);
       debug ("result = " + result + "\n");
-      ioService.manageOfflineStatus = false;
+      ioService.manageOfflineStatus = manageOfflineStatus && result != 1;
       ioService.offline = result == 1;
     }
   },
