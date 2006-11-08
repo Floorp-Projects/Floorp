@@ -1340,10 +1340,6 @@ if [ "$MOZ_XTF" ]; then
 	content/xtf/public/Makefile
 	content/xtf/src/Makefile
 "
-    MAKEFILES_layout="$MAKEFILES_layout
-	layout/xtf/Makefile
-	layout/xtf/src/Makefile
-"
 fi
 
 if [ "$MOZ_XMLEXTRAS" ]; then
