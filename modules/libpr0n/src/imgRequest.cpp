@@ -79,7 +79,7 @@ NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
 imgRequest::imgRequest() : 
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
-  mImageStatus(imgIRequest::STATUS_NONE), mState(0),
+  mNetworkStatus(0), mImageStatus(imgIRequest::STATUS_NONE), mState(0),
   mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
 {
   /* member initializers and constructor code */
@@ -738,6 +738,10 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   }
 
   // XXXldb What if this is a non-last part of a multipart request?
+  // xxx before we release our reference to mChannel, lets
+  // save the last status that we saw so that the
+  // imgRequestProxy will have access to it.
+  mRequest->GetStatus(&mNetworkStatus);
   mRequest = nsnull;  // we no longer need the request
 
   // If mImage is still null, we didn't properly load the image.
@@ -927,4 +931,16 @@ void
 imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
   imgLoader::GetMimeTypeFromContent(buf, len, mContentType);
+}
+
+nsresult 
+imgRequest::GetNetworkStatus()
+{
+  nsresult status;
+  if (mRequest)
+    mRequest->GetStatus(&status);
+  else
+    status = mNetworkStatus;
+
+  return status;
 }
