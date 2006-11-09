@@ -74,6 +74,11 @@ protected:
   // Internal methods
 
   /**
+   * Check if this element contains any script, linked or inline
+   */
+  virtual PRBool HasScriptContent() = 0;
+
+  /**
    * Processes the script if it's in the document-tree and links to or
    * contains a script. Once it has been evaluated there is no way to make it
    * reevaluate the script, you'll have to create a new element. This also means

@@ -81,11 +81,15 @@ public:
   virtual void GetScriptText(nsAString& text);
   virtual void GetScriptCharset(nsAString& charset); 
 
+  // nsScriptElement
+  virtual PRBool HasScriptContent();
+
   // nsISVGValueObserver specializations:
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
 
   // nsIContent specializations:
+  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
@@ -223,6 +227,17 @@ nsSVGScriptElement::GetScriptCharset(nsAString& charset)
 }
 
 //----------------------------------------------------------------------
+// nsScriptElement methods
+
+PRBool
+nsSVGScriptElement::HasScriptContent()
+{
+  nsAutoString src;
+  mHref->GetAnimVal(src);
+  return !src.IsEmpty() || nsContentUtils::HasNonEmptyTextContent(this);
+}
+
+//----------------------------------------------------------------------
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
@@ -240,6 +255,13 @@ nsSVGScriptElement::DidModifySVGObservable(nsISVGValue* aObservable,
 
 //----------------------------------------------------------------------
 // nsIContent methods
+
+nsresult
+nsSVGScriptElement::DoneAddingChildren(PRBool aHaveNotified)
+{
+  mDoneAddingChildren = PR_TRUE;
+  return MaybeProcessScript();
+}
 
 nsresult
 nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
