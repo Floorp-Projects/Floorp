@@ -277,6 +277,9 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
   }
   if (aTryFirstChild) {
     mState.frame = mState.frame->GetFirstChild(nsnull);
+// temporary workaround for Bug 359210. We never want to walk frames.
+// Aaron Leventhal will refix :before and :after content later without walking frames.
+#if 0
     if (mState.frame && mState.siblingIndex < 0) {
       // Container frames can contain generated content frames from
       // :before and :after style rules, so we walk their frame trees
@@ -295,6 +298,7 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
       mState.domNode = do_QueryInterface(mState.frame->GetContent());
       mState.siblingIndex = eSiblingsWalkFrames;
     }
+#endif
   }
   else {
     mState.frame = mState.frame->GetNextSibling();
