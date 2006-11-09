@@ -33,7 +33,7 @@ sub main {
 sub ProcessArgs {
     GetOptions(
         \%config,
-        "step|s=s", "only|o=s", "list|l", "help|h",
+        "step|s=s", "only|o=s", "list|l", "help|h", "execute|e", "verify|v",
     );
 
     if ($config{'list'}) {
@@ -45,10 +45,12 @@ sub ProcessArgs {
     }
 
     if ($config{'help'}) {
-        print "Usage: release [-l] [-s Step] [-o Step] [-h]\n";
+        print "Usage: release [-l] [-s Step] [-o Step] [-e | v] [-h]\n";
         print "    -l list all Steps\n";
         print "    -s start at Step\n";
         print "    -o only run one Step\n";
+        print "    -e only run Execute\n";
+        print "    -v only run Verify\n";
         print "    -h this usage message\n";
         exit(0);
     }
@@ -103,8 +105,16 @@ sub PerformStep {
     print "Bootstrap running $stepName\n";
     my $step = "Bootstrap::Step::$stepName"->new();
     eval {
-        $step->Execute();
-        $step->Verify();
+        if (defined($config{'execute'})) {
+            print "Bootstrap only running Execute\n";
+            $step->Execute();
+        } elsif (defined($config{'verify'})) {
+            print "Bootstrap only running Verify\n";
+            $step->Verify();
+        } else {
+            $step->Execute();
+            $step->Verify();
+        }
     };
     if ($@) 
     {

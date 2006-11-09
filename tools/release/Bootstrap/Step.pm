@@ -5,11 +5,14 @@
 package Bootstrap::Step;
 use MozBuild::Util;
 use Config::General;
+use POSIX qw(strftime);
+
+my $DEFAULT_TIMEOUT = 3600;
 
 # shared static config
 my $conf = new Config::General("bootstrap.cfg");
 if (not $conf) {
-    die "Config is null: $!";
+    die "Config is null!";
 }
 
 sub new {
@@ -25,23 +28,32 @@ sub Shell {
     my %args = @_;
     my $cmd = $args{'cmd'};
     my $dir = $args{'dir'};
-    my $timeout = $args{'timeout'};
+    my $timeout = $args{'timeout'} ? $args{'timeout'} : $DEFAULT_TIMEOUT;
+    my $logFile = $args{'logFile'};
     my $rv = '';
 
     if ($dir) {
-        chdir($dir) || die "Cannot chdir to $dir: $!";
+        $this->Log('msg' => 'Changing directory to ' . $dir);
+        chdir($dir) or die "Cannot chdir to $dir: $!";
         $this->Log('msg' => 'Running shell command ' . $cmd . ' in dir ' . $dir);
     } else {
         $this->Log('msg' => 'Running shell command ' . $cmd);
     }
+
+    $this->Log('msg' => 'Starting time is ' . $this->CurrentTime());
+
+    print "Timeout: $timeout\n";
+
     if ($timeout) {
         $rv = MozBuild::Util::RunShellCommand(
            'command' => "$cmd",
            'timeout' => "$timeout",
+           'logfile' => "$logFile",
         );
     } else {
         $rv = MozBuild::Util::RunShellCommand(
            'command' => "$cmd",
+           'logfile' => "$logFile",
         );
     }
 
@@ -49,28 +61,32 @@ sub Shell {
     my $timedOut  = $rv->{'timedOut'};
     my $signalName  = $rv->{'signalName'};
     my $dumpedCore = $rv->{'dumpedCore'};
-    if ($exitValue) {
-        if ($exitValue != 0) {
-            $this->Log('msg' => "output: $rv->{'output'}");
-            die("shell call returned bad exit code: $exitValue");
-        }
-    }
+    my $pid = $rv->{'pid'};
+    print "Pid: $pid\n";
     if ($timedOut) {
-        $this->Log('msg' => "output: $rv->{'output'}");
+        $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
         die("FAIL shell call timed out after $timeout seconds");
     }
     if ($signalName) {
-        $this->Log('msg' => "output: $rv->{'output'}");
         print ("WARNING shell recieved signal $signalName");
     }
     if ($dumpedCore) {
-        $this->Log('msg' => "output: $rv->{'output'}");
+        $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
         die("FAIL shell call dumped core");
     }
+    if ($exitValue) {
+        if ($exitValue != 0) {
+            $this->Log('msg' => "output: $rv->{'output'}") if $rv->{'output'};
+            die("shell call returned bad exit code: $exitValue");
+        }
+    }
 
-    if($rc->{'output'}) {
+    if ($rv->{'output'} && not defined($logFile)) {
         $this->Log('msg' => "output: $rv->{'output'}");
     }
+
+    # current time
+    $this->Log('msg' => 'Ending time is ' . $this->CurrentTime());
 }
 
 sub Log {
@@ -89,8 +105,8 @@ sub Config {
 
     my %config = $conf->getall();
 
-    if ($config{'app'}{'firefox'}{'release'}{'1.5.0.7'}{$var}) {
-        return $config{'app'}{'firefox'}{'release'}{'1.5.0.7'}{$var};
+    if ($config{'app'}{$var}) {
+        return $config{'app'}{$var};
     } else {
         die("No such config variable: $var\n");
     }
@@ -105,30 +121,41 @@ sub CheckLog {
     my $checkFor = $args{'checkFor'};
     my $checkForOnly = $args{'checkForOnly'};
 
-    open (FILE, "< $log") || die "Cannot open file $log: $!";
+    if (not defined($log)) {
+        die "No log file specified";
+    }
+
+    open (FILE, "< $log") or die "Cannot open file $log: $!";
     my @contents = <FILE>;
-    close FILE || die "Cannot close file $log: $!";
+    close FILE or die "Cannot close file $log: $!";
   
     if ($notAllowed) {
         my @errors = grep(/$notAllowed/i, @contents);
         if (@errors) {
-            die "Errors in log ($log): \n\n @errors \n $!";
+            die "Errors in log ($log): \n\n @errors \n";
         }
     }
     if ($checkFor) {
         if (not grep(/$checkFor/i, @contents)) {
-            die "$checkFor is not present in file $log: $!";
+            die "$checkFor is not present in file $log \n";
         }
     }
     if ($checkForOnly) {
         if (not grep(/$checkForOnly/i, @contents)) {
-            die "$checkForOnly is not present in file $log: $!";
+            die "$checkForOnly is not present in file $log \n";
         }
         my @errors = grep(!/$checkForOnly/i, @contents);
         if (@errors) {
-            die "Errors in log ($log): \n\n @errors \n $!";
+            die "Errors in log ($log): \n\n @errors \n";
         }
     }
+}
+
+sub CurrentTime() {
+    my $this = shift;
+    my $args = @_;
+
+    return strftime("%T %D", localtime());
 }
 
 1;
