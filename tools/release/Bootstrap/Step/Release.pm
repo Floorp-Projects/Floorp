@@ -1,3 +1,6 @@
+#
+# Release step. Pushes bits to production.
+#
 package Bootstrap::Step::Release;
 use Bootstrap::Step;
 @ISA = ("Bootstrap::Step");
