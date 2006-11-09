@@ -30,8 +30,8 @@
 <!ENTITY playSound.accesskey              "P">
 <!ENTITY showAnimatedAlert.label          "Show an alert">
 <!ENTITY showAnimatedAlert.accesskey      "S">
-<!ENTITY soundbutton.label                "Advanced...">
-<!ENTITY soundbutton.accesskey            "A">
+<!ENTITY customizeNewMailBehavior.label            "Advanced...">
+<!ENTITY customizeNewMailBehavior.accesskey        "A">
 
 <!ENTITY showConnections.label         "Connection Settings...">
 <!ENTITY showConnections.accesskey     "o">

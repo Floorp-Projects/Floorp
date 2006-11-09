@@ -120,9 +120,7 @@ function onAlertLoad()
   // read out our initial settings from prefs.
   try 
   {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService();
-    prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-    var prefBranch = prefService.getBranch(null);
+    var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
     gSlideTime = prefBranch.getIntPref("alerts.slideIncrementTime");
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
   } catch (ex) {}

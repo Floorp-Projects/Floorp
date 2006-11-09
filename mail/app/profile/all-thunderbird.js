@@ -140,6 +140,10 @@ pref("mail.phishing.detection.enabled", true); // enable / disable phishing dete
 pref("mail.spellcheck.inline", true);
 pref("mail.showPreviewText", true); // enables preview text in mail alerts and folder tooltips
 
+pref("mail.biff.alert.show_preview", true);
+pref("mail.biff.alert.show_subject", true);
+pref("mail.biff.alert.show_sender",  true);
+
 // Folder Pane View
 // 0 == All Folders
 // 1 == Unread Folders

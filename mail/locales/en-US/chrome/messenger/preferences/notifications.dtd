@@ -1,7 +1,15 @@
-<!ENTITY notificationsDialog.title        "New Mail Sound">
+<!ENTITY notificationsDialog1.title       "Customize New Mail Notifications">
 <!ENTITY window.width                     "30em">
 
-<!ENTITY soundNotification.caption        "Configure Sound for New Mail">
+<!ENTITY alertCustomization.caption       "Alerts">
+<!ENTITY alertCustomization.intro         "Choose which fields to show in the alert notification:">
+<!ENTITY previewText.label                "Message Preview Text">
+<!ENTITY previewText.accesskey            "M">
+<!ENTITY subject.label                    "Subject">
+<!ENTITY subject.accesskey                "S">
+<!ENTITY sender.label                     "Sender">
+<!ENTITY sender.accesskey                 "e">
+<!ENTITY soundNotification1.caption       "Sound">
 <!ENTITY preview.label                    "Preview Sound">
 <!ENTITY preview.accesskey                "v">
 <!ENTITY systemsound.label                "System New Mail Sound">
