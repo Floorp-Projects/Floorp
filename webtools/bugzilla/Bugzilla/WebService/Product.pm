@@ -21,6 +21,7 @@ use strict;
 use base qw(Bugzilla::WebService);
 use Bugzilla::Product;
 use Bugzilla::User;
+import SOAP::Data qw(type);
 
 # Get the ids of the products the user can search
 sub get_selectable_products {
@@ -34,23 +35,35 @@ sub get_enterable_products {
 
 # Get the union of the products the user can search and enter bugs against.
 sub get_accessible_products {
-    my %union = ();
-    map $union{ $_->id } = 1, @{Bugzilla->user->get_selectable_products};
-    map $union{ $_->id } = 1, @{Bugzilla->user->get_enterable_products};
-    return { ids => [keys %union] };
+    return {ids => [map {$_->id} @{Bugzilla->user->get_accessible_products}]}; 
 }
 
-sub get_product {
-    my $self = shift;
-    my ($product_name) = @_;
+# Get a list of actual products, based on list of ids
+sub get_products {
+    my ($self, $params) = @_;
+    
+    # Only products that are in the users accessible products, 
+    # can be allowed to be returned
+    my $accessible_products = Bugzilla->user->get_accessible_products;
 
-    Bugzilla->login;
+    # Create a hash with the ids the user wants
+    my %ids = map { $_ => 1 } @{$params->{ids}};
+    
+    # Return the intersection of this, by grepping the ids from 
+    # accessible products.
+    my @requested_accessible = grep { $ids{$_->id} } @$accessible_products;
 
-    # Bugzilla::Product doesn't do permissions checks, so we can't do the call
-    # to Bugzilla::Product::new until a permissions check happens here.
-    $self->fail_unimplemented();
+    # Now create a result entry for each.
+    my @products = 
+        map {{
+               internals   => $_,
+               id          => type('int')->value($_->id),
+               name        => type('string')->value($_->name),
+               description => type('string')->value($_->description), 
+             }
+        } @requested_accessible;
 
-    return new Bugzilla::Product({'name' => $product_name});
+    return { products => \@products };
 }
 
 1;
@@ -77,32 +90,93 @@ and B<EXPERIMENTAL> mean, and for more information about error codes.
 
 =item C<get_selectable_products> B<UNSTABLE>
 
-Description: Returns a list of the ids of the products the user can search on.
+=over
 
-Params:     none
+=item B<Description>
 
-Returns:    A hash containing one item, C<ids>, that contains an array
-            of product ids.
+Returns a list of the ids of the products the user can search on.
+
+=item B<Params> (none)
+
+=item B<Returns>    
+
+A hash containing one item, C<ids>, that contains an array of product
+ids.
+
+=item B<Errors> (none)
+
+=back
 
 =item C<get_enterable_products> B<UNSTABLE>
 
-Description: Returns a list of the ids of the products the user can enter bugs
-             against.
+=over
 
-Params:     none
+=item B<Description>
 
-Returns:    A hash containing one item, C<ids>, that contains an array
-            of product ids.
+Returns a list of the ids of the products the user can enter bugs
+against.
+
+=item B<Params> (none)
+
+=item B<Returns>
+
+A hash containing one item, C<ids>, that contains an array of product
+ids.
+
+=item B<Errors> (none)
+
+=back
 
 =item C<get_accessible_products> B<UNSTABLE>
 
-Description: Returns a list of the ids of the products the user can search or 
-             enter bugs against.
+=over
 
-Params:     none
+=item B<Description>
 
-Returns:    A hash containing one item, C<ids>, that contains an array
-            of product ids.
+Returns a list of the ids of the products the user can search or enter
+bugs against.
+
+=item B<Params> (none)
+
+=item B<Returns>
+
+A hash containing one item, C<ids>, that contains an array of product
+ids.
+
+=item B<Errors> (none)
+
+=back
+
+=item C<get_products> B<UNSTABLE>
+
+=over
+
+=item B<Description>
+
+Returns a list of information about the products passed to it.
+
+=item B<Params>
+
+A hash containing one item, C<ids>, that is an array of product ids. 
+
+=item B<Returns> 
+
+A hash containing one item, C<products>, that is an array of
+hashes. Each hash describes a product, and has the following items:
+C<id>, C<name>, C<description>, and C<internals>. The C<id> item is
+the id of the product. The C<name> item is the name of the
+product. The C<description> is the description of the
+product. Finally, the C<internals> is an internal representation of
+the product.
+
+Note, that if the user tries to access a product that is not in the
+list of accessible products for the user, or a product that does not
+exist, that is silently ignored, and no information about that product
+is returned.
+
+=item B<Errors> (none)
+
+=back
 
 =back
 

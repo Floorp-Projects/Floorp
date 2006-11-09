@@ -29,6 +29,7 @@
 #                 Justin C. De Vries <judevries@novell.com>
 #                 Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Mads Bondo Dydensborg <mbd@dbc.dk>
 
 ################################################################################
 # Module Initialization
@@ -712,6 +713,17 @@ sub get_enterable_products {
     $self->{enterable_products} =
          Bugzilla::Product->new_from_list(\@enterable_ids);
     return $self->{enterable_products};
+}
+
+sub get_accessible_products {
+    my $self = shift;
+    
+    # Map the objects into a hash using the ids as keys
+    my %products = map { $_->id => $_ }
+                       @{$self->get_selectable_products},
+                       @{$self->get_enterable_products};
+    
+    return [ values %products ];
 }
 
 sub can_request_flag {
