@@ -923,11 +923,16 @@ var ViewMenu = {
    *          the type of the menuitem, e.g. "radio" or "checkbox". 
    *          Can be null (no-type). 
    *          Checkboxes are checked if the column is visible.
-   * @param   labelFormat
-   *          A format string to be applied to item labels. If null, no format
-   *          is used. 
+   * @param   propertyPrefix
+   *          If propertyPrefix is non-null:
+   *          propertyPrefix + column ID + ".label" will be used to get the
+   *          localized label string.
+   *          propertyPrefix + column ID + ".accesskey" will be used to get the
+   *          localized accesskey.
+   *          If propertyPrefix is null, the column label is used as label and
+   *          no accesskey is assigned.
    */
-  fillWithColumns: function VM_fillWithColumns(event, startID, endID, type, labelFormat) {
+  fillWithColumns: function VM_fillWithColumns(event, startID, endID, type, propertyPrefix) {
     var popup = event.target;  
     var pivot = this._clean(popup, startID, endID);
     
@@ -942,8 +947,12 @@ var ViewMenu = {
       var menuitem = document.createElementNS(XUL_NS, "menuitem");
       menuitem.id = "menucol_" + column.id;
       var label = column.getAttribute("label");
-      if (labelFormat)
-        label = strings.getFormattedString(labelFormat, [label]);
+      if (propertyPrefix) {
+        var menuitemPrefix = propertyPrefix + column.id;
+        label = strings.getString(menuitemPrefix + ".label");
+        var accesskey = strings.getString(menuitemPrefix + ".accesskey");
+        menuitem.setAttribute("accesskey", accesskey);
+      }
       menuitem.setAttribute("label", label);
       if (type == "radio") {
         menuitem.setAttribute("type", "radio");
@@ -975,7 +984,7 @@ var ViewMenu = {
    * Set up the content of the view menu.
    */
   populate: function VM_populate(event) {
-    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "sortByPrefix");
+    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "view.sortBy.");
     
     var sortColumn = this._getSortColumn();
     var viewSortAscending = document.getElementById("viewSortAscending");

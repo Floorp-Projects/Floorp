@@ -21,7 +21,7 @@
 <!ENTITY view.toolbar.label
   "Toolbar">
 <!ENTITY view.toolbar.accesskey
-  "T">
+  "o">
 <!ENTITY view.columns.label
   "Show Columns">
 <!ENTITY view.columns.accesskey
@@ -160,7 +160,7 @@
 <!ENTITY cmd.reload.label
   "Reload">
 <!ENTITY cmd.reload.accesskey
-  "l">
+  "R">
 <!ENTITY cmd.reload.key
   "r">
 <!ENTITY cmd.groupby_site.label
