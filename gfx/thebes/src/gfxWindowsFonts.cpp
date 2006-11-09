@@ -755,18 +755,18 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
         cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
         double offset = 0;
-#ifdef DEBUG_pavlov
-        if (!mSpacing.IsEmpty() && mSpacing.Length() != numGlyphs) {
-            printf("different number of glyphs/spacings\n");
-        }
-#endif
+
+        const PRBool hasSpacing = !mSpacing.IsEmpty();
+
+        // XXX we'll get rid of this case once the new textframe lands
+        NS_ASSERTION(!(hasSpacing && mSpacing.Length() != numGlyphs), "different number of glyphs/spacing");
 
         for (PRInt32 k = 0; k < numGlyphs; k++) {
             cglyphs[k].index = glyphs[k];
             cglyphs[k].x = pt.x + offset;
             cglyphs[k].y = pt.y;
 
-            if (!mSpacing.IsEmpty()) {
+            if (hasSpacing && mSpacing.Length() >= numGlyphs) {
                 offset += mSpacing[k];
             } else {
                 offset += dxBuf[k] * cairoToPixels;
@@ -1149,10 +1149,9 @@ public:
 
         const int isRTL = mScriptItem->a.s.uBidiLevel == 1;
 
-#ifdef DEBUG_pavlov
-        if (!mSpacing->IsEmpty() && mNumGlyphs != mLength)
-            printf("glyph/spacing mismatch\n");
-#endif
+        // XXX we'll get rid of this case once the new textframe lands
+        NS_ASSERTION(!(!mSpacing->IsEmpty() && mSpacing->Length() != mNumGlyphs), "different number of glyphs/spacing");
+
         PRInt32 m = mScriptItem->iCharPos;
         if (isRTL)
             m += mNumGlyphs - 1;
@@ -1161,7 +1160,7 @@ public:
             cglyphs[k].x = pt.x + offset + (mOffsets[k].du * cairoToPixels);
             cglyphs[k].y = pt.y + (mOffsets[k].dv * cairoToPixels);
 
-            if (!mSpacing->IsEmpty()) {
+            if (!mSpacing->IsEmpty() && mSpacing->Length() >= mNumGlyphs) {
                 // XXX We need to convert char index to cluster index.
                 // But we cannot do it until nsTextFrame is refactored.
                 offset += mSpacing->ElementAt(isRTL ? m-- : m++);
