@@ -121,6 +121,10 @@ class nsChildView;
   
   // when menuForEvent: is called, we store its event here (strong)
   NSEvent* mLastMenuForEventEvent;
+  
+  // rects that were invalidated during a draw, so have pending drawing
+  NSMutableArray* mPendingDirtyRects;
+  BOOL mPendingFullDisplay;
 
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
