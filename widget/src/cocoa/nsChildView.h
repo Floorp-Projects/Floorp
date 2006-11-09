@@ -246,7 +246,7 @@ public:
 #ifndef MOZ_CAIRO_GFX
   virtual void            StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
   virtual void            EndDraw();
-  void                    UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+  void                    UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext, nsIRegion *aRegion);
 #endif
   NS_IMETHOD              Update();
 

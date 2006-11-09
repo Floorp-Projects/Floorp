@@ -58,9 +58,15 @@
 #include "nsIScrollableView.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
+#include "nsGfxCIID.h"
+
+#include "nsMacResources.h"
+
 #include "nsDragService.h"
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"
+
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
@@ -1410,7 +1416,7 @@ NS_IMETHODIMP nsChildView::Update()
 // because the display system will take care of that for us.
 //
 void 
-nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
+nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext, nsIRegion *aRegion)
 {
   if (! mVisible)
     return;
@@ -1427,6 +1433,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, this);
   paintEvent.renderingContext = aContext;       // nsPaintEvent
   paintEvent.rect             = &aRect;
+  paintEvent.region = aRegion;
 
   // offscreen drawing is pointless.
   if (paintEvent.rect->x < 0)
@@ -2517,11 +2524,6 @@ NSEvent* globalDragEvent = nil;
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
-#if 0
-  targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y,
-                                   aRect.size.width, aRect.size.height));
-  targetContext->Clip();
-#else
   const NSRect *rects;
   int count, i;
   [self getRectsBeingDrawn:&rects count:&count];
@@ -2530,7 +2532,6 @@ NSEvent* globalDragEvent = nil;
                                      rects[i].size.width, rects[i].size.height));
   }
   targetContext->Clip();
-#endif
 
   nsCOMPtr<nsIRenderingContext> rc;
   mGeckoChild->GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
@@ -2573,16 +2574,25 @@ NSEvent* globalDragEvent = nil;
 #endif
 
 #else
-  // tell gecko to paint.
-  const NSRect *rects;
-  int count, i;
-  [self getRectsBeingDrawn:&rects count:&count];
-  for (i = 0; i < count; ++i) {
+
+  nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
+  if (rgn) {
+    rgn->Init();
+
     nsRect r;
-    NSRectToGeckoRect(rects[i], r);
-    nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
-    mGeckoChild->UpdateWidget(r, rendContext);
+    const NSRect *rects;
+    int count, i;
+    [self getRectsBeingDrawn:&rects count:&count];
+    for (i = 0; i < count; ++i) {
+      NSRectToGeckoRect(rects[i], r);
+      rgn->Union(r.x, r.y, r.width, r.height);
+    }
   }
+
+  nsRect fullRect;
+  NSRectToGeckoRect(aRect, fullRect);
+  nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
+  mGeckoChild->UpdateWidget(fullRect, rendContext, rgn);
 #endif
 }
 
