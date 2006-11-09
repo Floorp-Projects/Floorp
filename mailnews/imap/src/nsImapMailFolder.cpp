@@ -2481,8 +2481,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     
     if (confirmed && deleteNoTrash)   //delete subfolders only if you are  deleting things from trash
         return nsMsgDBFolder::DeleteSubFolders(folders, msgWindow);
-    else
-        return rv;
+    return rv;
 }
 
 // Called by Biff, or when user presses GetMsg button.
@@ -4437,6 +4436,7 @@ nsImapMailFolder::BeginMessageUpload()
 
 nsresult nsImapMailFolder::HandleCustomFlags(nsMsgKey uidOfMessage, nsIMsgDBHdr *dbHdr, nsXPIDLCString &keywords)
 {
+  ToLowerCase(keywords);
   PRBool messageClassified = PR_TRUE;
   nsXPIDLCString::const_iterator b, e;
   if (FindInReadable(NS_LITERAL_CSTRING("NonJunk"), keywords.BeginReading(b), 
