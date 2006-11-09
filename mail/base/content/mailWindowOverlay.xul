@@ -2207,6 +2207,18 @@
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
+    <statusbarpanel class="statusbarpanel-progress"
+                    id="quotaPanel" hidden="true">
+      <stack>
+        <progressmeter class="progressmeter-statusbar"
+                       id="quotaMeter"
+                       mode="normal"
+                       value="0" />
+        <label id="quotaLabelShadow" />
+        <label id="quotaLabel"
+               onclick="MsgFolderProperties('QuotaTab');" />
+      </stack>
+    </statusbarpanel>
   </hbox>
 </statusbar> 
 

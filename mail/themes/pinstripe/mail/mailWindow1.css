@@ -915,6 +915,32 @@ splitter {
   border-bottom: 1px solid #bEbEbE;
 }
 
+/* ..... status bar adjustments ..... */
+
 #status-bar {
 	border-top: none !important;
+}
+
+#quotaMeter {
+  min-width: 4em;
+  max-width: 4em;
+}
+#quotaPanel[alert="warning"] .progress-bar {
+  background-color: orange;
+  -moz-appearance: none;
+}
+#quotaPanel[alert="critical"] .progress-bar {
+  background-color: red;
+  -moz-appearance: none;
+}
+#quotaLabel {
+  padding-right: 1px;
+  padding-bottom: 1px;
+  text-align: center;
+}
+#quotaLabelShadow {
+  padding-left: 1px;
+  padding-top: 1px;
+  text-align: center;
+  color: white;
 }

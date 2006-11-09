@@ -291,16 +291,12 @@ function folderPropsOnLoad()
   var retentionSettings = gMsgFolder.retentionSettings;
   initCommonRetentionSettings(retentionSettings);
   document.getElementById("retention.useDefault").checked = retentionSettings.useServerDefaults;
-    
+
   // select the initial tab
   if (window.arguments[0].tabID) {
-    // set index for starting panel on the <tabpanel> element
-    var folderPropTabPanel = document.getElementById("folderPropTabPanel");
-    folderPropTabPanel.setAttribute("selectedIndex", window.arguments[0].tabIndex);
-
     try {
-      var tab = document.getElementById(window.arguments[0].tabID);
-      tab.setAttribute("selected", "true");
+      document.getElementById("folderPropTabBox").selectedTab =
+                           document.getElementById(window.arguments[0].tabID);
     }
     catch (ex) {}
   }

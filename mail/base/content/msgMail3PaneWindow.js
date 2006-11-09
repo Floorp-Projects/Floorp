@@ -198,6 +198,7 @@ var folderListener = {
              gCurrentFolderToReroot = null;
              if(msgFolder) {
                msgFolder.endFolderLoading();
+               UpdateStatusQuota(msgFolder);
                // suppress command updating when rerooting the folder
                // when rerooting, we'll be clearing the selection
                // which will cause us to update commands.

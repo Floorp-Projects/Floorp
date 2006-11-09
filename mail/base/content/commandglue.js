@@ -173,7 +173,8 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     msgWindow.openFolder = null;
 
     ClearThreadPane();
-    
+    UpdateStatusQuota(null);
+
     // Load AccountCentral page here.
     ShowAccountCentral();
 
@@ -481,6 +482,70 @@ function UpdateStatusMessageCounts(folder)
 
   }
 
+}
+
+var gQuotaUICache;
+function UpdateStatusQuota(folder)
+{
+  if (!(folder && // no folder selected
+        folder instanceof Components.interfaces.nsIMsgImapMailFolder)) // POP etc.
+  {
+    if (typeof(gQuotaUICache) == "object") // ever shown quota
+      gQuotaUICache.panel.hidden = true;
+    return;
+  }
+  folder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+
+  // get element references and prefs
+  if (typeof(gQuotaUICache) != "object")
+  {
+    gQuotaUICache = new Object();
+    gQuotaUICache.meter = document.getElementById("quotaMeter");
+    gQuotaUICache.panel = document.getElementById("quotaPanel");
+    gQuotaUICache.label = document.getElementById("quotaLabel");
+    gQuotaUICache.labelShadow = document.getElementById("quotaLabelShadow");
+    const kBranch = "mail.quota.mainwindow_threshold.";
+    gQuotaUICache.showTreshold = gPrefBranch.getIntPref(kBranch + "show");
+    gQuotaUICache.warningTreshold = gPrefBranch.getIntPref(kBranch + "warning");
+    gQuotaUICache.criticalTreshold = gPrefBranch.getIntPref(kBranch + "critical");
+  }
+
+  var valid = {value: null};
+  var used = {value: null};
+  var max = {value: null};
+  try {
+    // get data from backend
+    folder.getQuota(valid, used, max);
+  } catch (e) { dump(e + "\n"); }
+  if (valid.value)
+  {
+    var percent = Math.round(used.value / max.value * 100);
+
+    // show in UI
+    if (percent < gQuotaUICache.showTreshold)
+      gQuotaUICache.panel.hidden = true;
+    else
+    {
+      gQuotaUICache.panel.hidden = false;
+      gQuotaUICache.meter.setAttribute("value", percent);
+           // do not use value property, because that is imprecise (3%)
+           // for optimization that we don't need here
+      var label = gMessengerBundle.getFormattedString("percent", [percent]);
+      var tooltip = gMessengerBundle.getFormattedString("quotaTooltip",
+           [used.value, max.value]);
+      gQuotaUICache.label.value = label;
+      gQuotaUICache.labelShadow.value = label;
+      gQuotaUICache.label.tooltipText = tooltip;
+      if (percent < gQuotaUICache.warningTreshold)
+        gQuotaUICache.panel.removeAttribute("alert");
+      else if (percent < gQuotaUICache.criticalTreshold)
+        gQuotaUICache.panel.setAttribute("alert", "warning");
+      else
+        gQuotaUICache.panel.setAttribute("alert", "critical");
+    }
+  }
+  else
+    gQuotaUICache.panel.hidden = true;
 }
 
 function ConvertColumnIDToSortType(columnID)

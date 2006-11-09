@@ -63,7 +63,7 @@
   ]]>
   </script>
 
-<tabbox>
+<tabbox id="folderPropTabBox">
   <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;"/>
     <tab id="Retention" label="&retention.label;"/>
@@ -71,7 +71,7 @@
     <tab hidefor="movemail,pop3,rss,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
     <tab hidefor="movemail,pop3,rss,none,nntp" hidable="true" id="QuotaTab" label="&folderQuotaTab.label;"/>
   </tabs>
-  <tabpanels id="folderPropTabPanel">
+  <tabpanels>
     <vbox>
       <hbox id="nameBox" align="center">
         <label value="&folderProps.name.label;" for="name"

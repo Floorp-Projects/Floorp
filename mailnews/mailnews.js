@@ -562,6 +562,10 @@ pref("mailnews.global_html_domains.version",1);
 
 pref("mail.imap.use_status_for_biff", true);
 
+pref("mail.quota.mainwindow_threshold.show", 75); // in percent. when the quota meter starts showing up at all. decrease this for it to be more than a warning.
+pref("mail.quota.mainwindow_threshold.warning", 80); // when it gets yellow
+pref("mail.quota.mainwindow_threshold.critical", 95); // when it gets red
+
 // Pref controlling confirmation of folder deletion on empty trash
 pref("mail.imap.confirm_emptyTrashFolderDeletion", false);
 // Pref controlling the updates on the pre-configured accounts.
