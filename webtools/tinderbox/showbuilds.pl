@@ -98,6 +98,7 @@ sub do_static {
     my @pages = ( ['index.html', 'do_tinderbox'],
                   ['flash.rdf',  'do_flash'],
                   ['panel.html', 'do_panel'],
+                  ['quickparse.txt', 'do_quickparse'],
                   ['stats.hdml', 'do_hdml'],
                   ['status.vxml', 'do_vxml'] );
 
@@ -1059,7 +1060,7 @@ sub do_flash {
 }
 
 sub do_quickparse {
-    print "Content-type: text/plain\n\n";
+    print "Content-type: text/plain\n\n" unless $form{static};
 
     my @treelist = &make_tree_list();
     my @requestedtreelist = split /,/, $::tree;
