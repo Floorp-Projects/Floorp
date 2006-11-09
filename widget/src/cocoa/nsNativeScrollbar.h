@@ -80,7 +80,7 @@ protected:
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD IsEnabled(PRBool* outState);
   
-  NSScroller* GetControl() { return mView; }
+  NSScroller* GetControl() { return (NSScroller*)mView; }
 
   void UpdateContentPosition(PRUint32 inNewPos);
   
@@ -119,6 +119,10 @@ private:
 
     // YES when we're in a tracking loop
   BOOL      mInTracking;
+
+  // rects that were invalidated during a draw, so have pending drawing
+  NSMutableArray* mPendingDirtyRects;
+  BOOL mPendingFullDisplay;
 }
 
   // default initializer

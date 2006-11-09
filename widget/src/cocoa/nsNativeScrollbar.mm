@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Mark Mentovai <mark@moxienet.com>
+ *  Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -527,6 +528,11 @@ nsNativeScrollbar::UpdateScroller()
 
 #pragma mark -
 
+@interface NativeScrollbarView(Private)
+
+- (void)processPendingRedraws;
+
+@end
 
 @implementation NativeScrollbarView
 
@@ -598,22 +604,54 @@ nsNativeScrollbar::UpdateScroller()
   return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
 }
 
-//
-// -setNeedsDisplayWithValue:
-//
-// call -setNeedsDisplay or setNeedsDisplayInRect:
-//
-- (void)setNeedsDisplayWithValue:(NSValue*)inRectValue
+- (void)setNeedsPendingDisplay
 {
-  if (inRectValue)
-  {
-    NSRect theRect = [inRectValue rectValue];
-    [self setNeedsDisplayInRect:theRect];
-  }
-  else
-  {
+  mPendingFullDisplay = YES;
+  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+}
+
+- (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect
+{
+  if (!mPendingDirtyRects)
+    mPendingDirtyRects = [[NSMutableArray alloc] initWithCapacity:1];
+  [mPendingDirtyRects addObject:[NSValue valueWithRect:invalidRect]];
+  [self performSelector:@selector(processPendingRedraws) withObject:nil afterDelay:0];
+}
+
+//
+// -processPendingRedraws
+//
+// Clears the queue of any pending invalides
+//
+- (void)processPendingRedraws
+{
+  if (mPendingFullDisplay) {
     [self setNeedsDisplay:YES];
   }
+  else {
+    unsigned int count = [mPendingDirtyRects count];
+    for (unsigned int i = 0; i < count; ++i) {
+      [self setNeedsDisplayInRect:[[mPendingDirtyRects objectAtIndex:i] rectValue]];
+    }
+  }
+  mPendingFullDisplay = NO;
+  [mPendingDirtyRects release];
+  mPendingDirtyRects = nil;
+}
+
+- (void)scrollRect:(NSRect)aRect by:(NSSize)offset
+{
+  // Update any pending dirty rects to reflect the new scroll position
+  if (mPendingDirtyRects) {
+    unsigned int count = [mPendingDirtyRects count];
+    for (unsigned int i = 0; i < count; ++i) {
+      NSRect oldRect = [[mPendingDirtyRects objectAtIndex:i] rectValue];
+      NSRect newRect = NSOffsetRect(oldRect, offset.width, offset.height);
+      [mPendingDirtyRects replaceObjectAtIndex:i
+                                    withObject:[NSValue valueWithRect:newRect]];
+    }
+  }
+  [super scrollRect:aRect by:offset];
 }
 
 //

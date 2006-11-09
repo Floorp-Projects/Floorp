@@ -65,10 +65,10 @@ class nsIWidget;
   // return a context menu for this view
 - (NSMenu*)contextMenu;
 
-  // calls setNeedsDisplay, with the rect in inRectValue if supplied.
-  // Allows callers to do a delayed invalidate using
-  // -performSelector:withObject:afterDelay:
-- (void)setNeedsDisplayWithValue:(NSValue*)inRectValue;
+  // Allows callers to do a delayed invalidate (e.g., if an invalidate
+  // happens during drawing)
+- (void)setNeedsPendingDisplay;
+- (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect;
 
   // called when our corresponding Gecko view goes away
 - (void)widgetDestroyed;
