@@ -459,8 +459,8 @@ typedef PRUint32 nsrefcnt;
  */
 
 #if defined(__GNUC__) && (__GNUC__ > 2)
-#define NS_LIKELY(x)    (__builtin_expect(!!(x), 1))
-#define NS_UNLIKELY(x)  (__builtin_expect(!!(x), 0))
+#define NS_LIKELY(x)    (__builtin_expect((x), 1))
+#define NS_UNLIKELY(x)  (__builtin_expect((x), 0))
 #else
 #define NS_LIKELY(x)    (x)
 #define NS_UNLIKELY(x)  (x)
