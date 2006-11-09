@@ -187,13 +187,18 @@ NS_IMETHODIMP imgRequestProxy::GetName(nsACString &aName)
 /* boolean isPending (); */
 NS_IMETHODIMP imgRequestProxy::IsPending(PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* readonly attribute nsresult status; */
 NS_IMETHODIMP imgRequestProxy::GetStatus(nsresult *aStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  *aStatus = mOwner->GetNetworkStatus();
+
+  return NS_OK;
 }
 
 /* void cancel (in nsresult status); */

@@ -102,6 +102,10 @@ public:
   // being made...
   PRBool IsReusable(void *aCacheId) { return !mLoading || (aCacheId == mCacheId); }
 
+  // get the current or last network status from our
+  // internal nsIChannel.
+  nsresult GetNetworkStatus();
+
 private:
   friend class imgRequestProxy;
   friend class imgLoader;
@@ -155,10 +159,9 @@ private:
   PRPackedBool mLoading;
   PRPackedBool mProcessing;
   PRPackedBool mHadLastPart;
-
+  PRUint32 mNetworkStatus;
   PRUint32 mImageStatus;
   PRUint32 mState;
-
   nsCString mContentType;
 
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
