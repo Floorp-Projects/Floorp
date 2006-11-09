@@ -39,7 +39,7 @@
 #define nsICharsetAlias_h___
 
 #include "nscore.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsISupports.h"
 
 /* 0b4028d6-7473-4958-9b3c-4dee46bf68cb */
