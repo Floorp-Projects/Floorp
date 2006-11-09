@@ -1,5 +1,5 @@
 <?php
-/* SVN FILE: $Id: bootstrap.php,v 1.2 2006/06/29 21:37:53 wclouser%mozilla.com Exp $ */
+/* SVN FILE: $Id: bootstrap.php,v 1.3 2006/11/09 21:48:49 wclouser%mozilla.com Exp $ */
 
 /**
  * Short description for file.
@@ -22,9 +22,9 @@
  * @package      cake
  * @subpackage   cake.app.config
  * @since        CakePHP v 0.10.8.2117
- * @version      $Revision: 1.2 $
+ * @version      $Revision: 1.3 $
  * @modifiedby   $LastChangedBy: phpnut $
- * @lastmodified $Date: 2006/06/29 21:37:53 $
+ * @lastmodified $Date: 2006/11/09 21:48:49 $
  * @license      http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
@@ -55,7 +55,7 @@
   */
  define('DEFAULT_APP_NAME','Mozilla Firefox');
 
- define('DEFAULT_APP_VERSION','1.5');
+ define('DEFAULT_APP_VERSION','2.0');
 
  /**
   * We are adding applications dynamically based on the URL.  If a version of firefox
