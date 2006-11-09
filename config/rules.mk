@@ -347,11 +347,11 @@ endif
 
 LOOP_OVER_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
 
 LOOP_OVER_TOOL_DIRS = \
     @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; )
+    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
 
 #
 # Now we can differentiate between objects used to build a library, and
@@ -571,13 +571,13 @@ STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
 
 default all alldep::
 	$(EXIT_ON_ERROR) \
-	$(foreach tier,$(TIERS),$(MAKE) tier_$(tier); )
+	$(foreach tier,$(TIERS),$(MAKE) tier_$(tier); ) true
 
 else
 
 default all::
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); )
+	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); ) true
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -598,24 +598,24 @@ export_tier_%:
 	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) export; )
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) export; ) true
 
 libs_tier_%:
 	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) libs; )
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) libs; ) true
 
 tools_tier_%:
 	@echo "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) tools; )
+	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) tools; ) true
 
 $(foreach tier,$(TIERS),tier_$(tier))::
 	@echo "$@: $($@_staticdirs) $($@_dirs)"
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$($@_staticdirs),$(MAKE) -C $(dir); )
+	$(foreach dir,$($@_staticdirs),$(MAKE) -C $(dir); ) true
 	$(MAKE) export_$@
 	$(MAKE) libs_$@
 
@@ -658,7 +658,7 @@ tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 ifdef TOOL_DIRS
 	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; )
+	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; ) true
 endif
 
 #
