@@ -342,7 +342,7 @@ static PRBool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
     if (!NS_IsAscii(*aStr))
       return PR_FALSE;
 
-    if (NS_ToLower((char) *aStr) != *aSubstring)
+    if (NS_ToLower((char) *aStr) != NS_ToLower(*aSubstring))
       return PR_FALSE;
   }
 
@@ -350,13 +350,16 @@ static PRBool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
 }
 
 PRInt32
-nsAString::Find(const char *aStr, PRBool aIgnoreCase) const
+nsAString::Find(const char *aStr, PRUint32 aOffset, PRBool aIgnoreCase) const
 {
   PRBool (*match)(const PRUnichar*, const char*, PRUint32) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
   const char_type *begin, *end;
   PRUint32 selflen = BeginReading(&begin, &end);
+
+  if (aOffset > selflen)
+    return -1;
 
   PRUint32 otherlen = strlen(aStr);
 
@@ -366,7 +369,7 @@ nsAString::Find(const char *aStr, PRBool aIgnoreCase) const
   // We want to stop searching otherlen characters before the end of the string
   end -= otherlen;
 
-  for (const char_type *cur = begin; cur <= end; ++cur) {
+  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
     if (match(cur, aStr, otherlen)) {
       return cur - begin;
     }
@@ -682,7 +685,7 @@ nsACString::Find(const char_type *aStr, PRUint32 aLen, ComparatorFunc c) const
   end -= aLen;
 
   for (const char_type *cur = begin; cur <= end; ++cur) {
-    if (!c(begin, aStr, aLen))
+    if (!c(cur, aStr, aLen))
       return cur - begin;
   }
   return -1;
