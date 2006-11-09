@@ -286,13 +286,15 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
     return NS_OK;
   }
 
-  // never load unexposed protocols except for http and https. 
+  // never load unexposed protocols except for http, https and file. 
   // Protocols like ftp, gopher are always blocked.
   PRBool isHttp;
   PRBool isHttps;
+  PRBool isFile;
   rv = aContentLocation->SchemeIs("http", &isHttp);
   rv |= aContentLocation->SchemeIs("https", &isHttps);
-  if (NS_FAILED(rv) || (!isHttp && !isHttps))
+  rv |= aContentLocation->SchemeIs("file", &isFile);
+  if (NS_FAILED(rv) || (!isHttp && !isHttps && !isFile))
     return NS_OK;
 
   // If we are allowing all remote content...
