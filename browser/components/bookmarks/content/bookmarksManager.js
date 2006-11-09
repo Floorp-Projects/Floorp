@@ -114,12 +114,15 @@ function fillViewMenu(aEvent)
   var columns = bookmarksView.columns;
 
   if (!gConstructedViewMenuSortItems) {
+    const kViewMenuSortedPrefix = "view.sortBy.";
     for (var i = 0; i < columns.length; ++i) {
-      var accesskey = columns[i].accesskey;
       var menuitem  = document.createElement("menuitem");
-      var name      = BookmarksUtils.getLocaleString("SortMenuItem", columns[i].label);
-      menuitem.setAttribute("label", name);
-      menuitem.setAttribute("accesskey", columns[i].accesskey);
+      var accesskey = BookmarksUtils.getLocaleString(kViewMenuSortedPrefix +
+                                                     columns[i].id + ".accesskey");
+      var label     = BookmarksUtils.getLocaleString(kViewMenuSortedPrefix +
+                                                     columns[i].id + ".label");
+      menuitem.setAttribute("label", label);
+      menuitem.setAttribute("accesskey", accesskey);
       menuitem.setAttribute("resource", columns[i].resource);
       menuitem.setAttribute("id", "sortMenuItem:" + columns[i].resource);
       menuitem.setAttribute("checked", columns[i].sortActive);
