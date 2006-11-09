@@ -589,6 +589,12 @@ function restoreDefaultSet()
     toolbar = toolbar.nextSibling;
   }
 
+  // Restore the default icon size (large) and mode (icons and text).
+  updateIconSize(false);
+  document.getElementById("smallicons").checked = false;
+  updateToolbarMode("full");
+  document.getElementById("modelist").value = "full";
+
   // Remove all of the customized toolbars.
   var child = gToolbox.lastChild;
   while (child) {
@@ -643,14 +649,7 @@ function updateToolbarMode(aModeValue)
   }
 
   var iconSizeCheckbox = document.getElementById("smallicons");
-  if (aModeValue == "text") {
-    iconSizeCheckbox.disabled = true;
-    iconSizeCheckbox.checked = false;
-    updateIconSize(false);
-  }
-  else {
-    iconSizeCheckbox.disabled = false;
-  }
+  iconSizeCheckbox.disabled = aModeValue == "text";
 
   repositionDialog();
 }
