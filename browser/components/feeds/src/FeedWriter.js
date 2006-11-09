@@ -555,7 +555,7 @@ FeedWriter.prototype = {
       case "web": {
         var handlersMenuList = this._document.getElementById("handlersMenuList");
         if (handlersMenuList) {
-          var url = prefs.getCharPref(PREF_SELECTED_WEB);
+          var url = prefs.getComplexValue(PREF_SELECTED_WEB, Ci.nsISupportsString).data;
           var handlers =
             handlersMenuList.getElementsByAttribute("webhandlerurl", url);
           if (handlers.length == 0) {
@@ -867,7 +867,12 @@ FeedWriter.prototype = {
     if (selectedItem.hasAttribute("webhandlerurl")) {
       var webURI = selectedItem.getAttribute("webhandlerurl");
       prefs.setCharPref(PREF_SELECTED_READER, "web");
-      prefs.setCharPref(PREF_SELECTED_WEB, webURI);
+
+      var supportsString = Cc["@mozilla.org/supports-string;1"].
+                           createInstance(Ci.nsISupportsString);
+      supportsString.data = webURI;
+      prefs.setComplexValue(PREF_SELECTED_WEB, Ci.nsISupportsString,
+                            supportsString);
 
       var wccr = 
         Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].

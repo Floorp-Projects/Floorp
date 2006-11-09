@@ -46,7 +46,6 @@
     locale/browser/safebrowsing/report-phishing.dtd                    (%chrome/browser/safebrowsing/report-phishing.dtd)
 #endif
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
-    locale/browser/feeds/addFeedReader.dtd          (%chrome/browser/feeds/addFeedReader.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
     locale/browser/history/history.dtd             (%chrome/browser/history/history.dtd)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)
