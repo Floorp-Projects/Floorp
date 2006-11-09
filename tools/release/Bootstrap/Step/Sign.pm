@@ -1,3 +1,6 @@
+#
+# Sign step. Applies digital signatures to builds.
+# 
 package Bootstrap::Step::Sign;
 use Bootstrap::Step;
 @ISA = ("Bootstrap::Step");
