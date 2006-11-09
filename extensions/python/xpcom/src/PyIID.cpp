@@ -105,7 +105,7 @@ Py_nsIID::IIDFromPyObject(PyObject *ob, nsIID *pRet) {
 	if (PyString_Check(ob)) {
 		ok = iid.Parse(PyString_AsString(ob));
 		if (!ok) {
-			PyXPCOM_BuildPyException(NS_ERROR_ILLEGAL_VALUE);
+			PyErr_SetString(PyExc_ValueError, "The string is formatted as a valid nsID");
 			return PR_FALSE;
 		}
 	} else if (ob->ob_type == &type) {
