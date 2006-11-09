@@ -110,11 +110,12 @@ class Interface:
         method_joiner = "\n"
         methods_repr = method_joiner.join(method_reprs)
         return \
-"""class %s:
+"""from xpcom import ServerException, nsError
+class %s:
     _com_interfaces_ = xpcom.components.interfaces.%s
     # If this object needs to be registered, the following 2 are also needed.
     # _reg_clsid_ = "{a new clsid generated for this object}"
-    # _reg_contractid_ = "The.Object.Name"\n%s""" % (self.GetName(), self.GetIID().name, methods_repr)
+    # _reg_contractid_ = "@providername.org/object-name;1"\n%s""" % (self.GetName(), self.GetIID().name, methods_repr)
 
     def Describe(self):
         # Make the IID look like xtp_dump - "(" instead of "{"
@@ -226,7 +227,7 @@ class Method:
 
         return """    def %s( %s ):
         # %s%s%s
-        pass""" % (name, ", ".join(param_decls), result_comment, in_comment, out_desc)
+        raise ServerException(nsError.NS_ERROR_NOT_IMPLEMENTED)""" % (name, ", ".join(param_decls), result_comment, in_comment, out_desc)
 
     def Describe(self):
         s = ''
@@ -440,8 +441,11 @@ type_info_map = {
     T_INTERFACE         : ("reserved", "Interface"),
     T_INTERFACE_IS      : ("reserved", "InterfaceIs *"),
     T_ARRAY             : ("reserved", "Array"),
-    T_PSTRING_SIZE_IS   : ("reserved", "string_s"),
-    T_PWSTRING_SIZE_IS  : ("reserved", "wstring_s"),
+    T_PSTRING_SIZE_IS   : ("string", "string_s"),
+    T_PWSTRING_SIZE_IS  : ("unicode", "wstring_s"),
+    T_UTF8STRING        : ("utf8string", "utf8string"),
+    T_CSTRING           : ("string", "cstring"),
+    T_ASTRING           : ("unicode", "astring"),
 }
 
 def dump_interface(iid, mode):
