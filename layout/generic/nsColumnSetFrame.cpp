@@ -398,9 +398,13 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       && !aDesiredSize.mComputeMEW;
     // If we need to pull up content from the prev-in-flow then this is not just
     // a height shrink. The prev in flow will have set the dirty bit.
+    // Check the overflow rect YMost instead of just the child's content height. The child
+    // may have overflowing content that cares about the available height boundary.
+    // (It may also have overflowing content that doesn't care about the available height
+    // boundary, but if so, too bad, this optimization is defeated.)
     PRBool skipResizeHeightShrink = shrinkingHeightOnly
-      && child->GetSize().height <= aConfig.mColMaxHeight
-      && !(child->GetStateBits() & NS_FRAME_IS_DIRTY);
+      && !(child->GetStateBits() & NS_FRAME_IS_DIRTY)
+      && child->GetOverflowRect().YMost() <= aConfig.mColMaxHeight;
     if (!reflowNext && (skipIncremental || skipResizeHeightShrink)) {
       // This child does not need to be reflowed, but we may need to move it
       MoveChildTo(this, child, childOrigin);
@@ -760,17 +764,23 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
 
       nscoord maxHeight = 0;
       for (nsIFrame* f = mFrames.FirstChild(); f; f = f->GetNextSibling()) {
-        maxHeight = PR_MAX(maxHeight, f->GetSize().height);
+        // There could be out-of-flow content which is respecting height
+        // constraints ... so an available height which is greater than
+        // the in-flow frame height but less than the overflow height might
+        // not be enough to fit the content.
+        maxHeight = PR_MAX(maxHeight, f->GetOverflowRect().YMost());
       }
 
       // Record what we learned from the last reflow
       if (feasible) {
-        // maxHeight is feasible (and always maxHeight <=
-        // mLastBalanceHeight)
+        // maxHeight is feasible. Also, mLastBalanceHeight is feasible.
         knownFeasibleHeight = PR_MIN(knownFeasibleHeight, maxHeight);
+        knownFeasibleHeight = PR_MIN(knownFeasibleHeight, mLastBalanceHeight);
 
         // Furthermore, no height less than the height of the last
-        // column can ever be feasible.
+        // column can ever be feasible. (We might be able to reduce the
+        // height of a non-last column by moving content to a later column,
+        // but we can't do that with the last column.)
         if (mFrames.GetLength() == config.mBalanceColCount) {
           knownInfeasibleHeight = PR_MAX(knownInfeasibleHeight,
                                          mFrames.LastChild()->GetSize().height - 1);
