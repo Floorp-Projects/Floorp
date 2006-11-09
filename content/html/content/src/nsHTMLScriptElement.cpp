@@ -357,19 +357,8 @@ protected:
   // Pointer to the script handler helper object (OWNING reference)
   nsCOMPtr<nsHTMLScriptEventHandler> mScriptEventHandler;
 
-  /**
-   * Processes the script if it's in the document-tree and links to or
-   * contains a script. Once it has been evaluated there is no way to make it
-   * reevaluate the script, you'll have to create a new element. This also means
-   * that when adding a src attribute to an element that already contains an
-   * inline script, the script referenced by the src attribute will not be
-   * loaded.
-   *
-   * In order to be able to use multiple childNodes, or to use the
-   * fallback-mechanism of using both inline script and linked script you have
-   * to add all attributes and childNodes before adding the element to the
-   * document-tree.
-   */
+  // nsScriptElement
+  virtual PRBool HasScriptContent();
   virtual nsresult MaybeProcessScript();
 };
 
@@ -530,6 +519,13 @@ void
 nsHTMLScriptElement::GetScriptCharset(nsAString& charset)
 {
   GetCharset(charset);
+}
+
+PRBool
+nsHTMLScriptElement::HasScriptContent()
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::src) ||
+         nsContentUtils::HasNonEmptyTextContent(this);
 }
 
 nsresult

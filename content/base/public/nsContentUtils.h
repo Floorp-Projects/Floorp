@@ -938,6 +938,14 @@ public:
   static void AppendNodeTextContent(nsINode* aNode, PRBool aDeep,
                                     nsAString& aResult);
 
+  /**
+   * Utility method that checks if a given node has any non-empty
+   * children.
+   * NOTE! This method does not descend recursivly into elements.
+   * Though it would be easy to make it so if needed
+   */
+  static PRBool HasNonEmptyTextContent(nsINode* aNode);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,

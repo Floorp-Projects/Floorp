@@ -138,9 +138,7 @@ nsScriptElement::AttributeChanged(nsIDocument* aDocument,
                                   nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::src) {
-    MaybeProcessScript();
-  }
+  MaybeProcessScript();
 }
 
 void
@@ -194,8 +192,7 @@ nsScriptElement::MaybeProcessScript()
 
   if (mIsEvaluated || !mDoneAddingChildren || !cont->IsInDoc() ||
       mMalformed || InNonScriptingContainer(cont) ||
-      !(cont->HasAttr(kNameSpaceID_None, nsGkAtoms::src) ||
-        cont->GetChildCount())) {
+      !HasScriptContent()) {
     return NS_OK;
   }
 

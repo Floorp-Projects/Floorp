@@ -3410,3 +3410,18 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, PRBool aDeep,
     }
   }
 }
+
+PRBool
+nsContentUtils::HasNonEmptyTextContent(nsINode* aNode)
+{
+  nsIContent* child;
+  PRUint32 i;
+  for (i = 0; (child = aNode->GetChildAt(i)); ++i) {
+    if (child->IsNodeOfType(nsINode::eTEXT) &&
+        child->TextLength() > 0) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
