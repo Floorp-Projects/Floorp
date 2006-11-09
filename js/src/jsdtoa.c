@@ -2396,7 +2396,9 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                 goto no_digits;
             goto one_digit;
         }
-        for(i = 1;; i++) {
+
+        /* Use true number of digits to limit looping. */
+        for(i = 1; i<=k+1; i++) {
             L = (Long) (d / ds);
             d -= L*ds;
 #ifdef Check_FLT_ROUNDS
@@ -2421,8 +2423,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                 }
                 break;
             }
-            if (!(d *= 10.))
-                break;
+            d *= 10.;
         }
         goto ret1;
     }
