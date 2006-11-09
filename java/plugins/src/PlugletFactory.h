@@ -43,7 +43,6 @@ class PlugletFactory {
     char *mimeDescription;
     char *path;
     PlugletFactory(const char *mimeDescription,const char * path);
-    nsCOMPtr<iPlugletEngine> plugletEngine;
 };    
 
 #endif /* __PlugletFactory_h__ */

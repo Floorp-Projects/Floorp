@@ -42,13 +42,10 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 
 NS_IMPL_ISUPPORTS1(Pluglet,nsIPluginInstance);
 
-Pluglet::Pluglet(jobject object) : plugletEngine(nsnull), peer(nsnull) {
-    nsIServiceManager *servman = nsnull;
-    NS_GetServiceManager(&servman);
+Pluglet::Pluglet(jobject object) : peer(nsnull) {
     nsresult rv;
-    rv = servman->GetServiceByContractID(PLUGLETENGINE_ContractID,
-					 NS_GET_IID(iPlugletEngine),
-					 getter_AddRefs(plugletEngine));
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	       ("Pluglet::Pluglet: Cannot access iPlugletEngine service\n"));
@@ -74,7 +71,8 @@ Pluglet::~Pluglet() {
     Registry::Remove(jthis);
     JNIEnv *jniEnv = nsnull;
     nsresult rv;
-    plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     if (plugletEngine) {
 	rv = plugletEngine->GetJNIEnv(&jniEnv);
 	if (NS_FAILED(rv)) {
@@ -103,6 +101,9 @@ NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
 	    ("Pluglet::Initialize\n"));
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
+
     rv = plugletEngine->GetJNIEnv(&env);
 
     if (NS_FAILED(rv)) {
@@ -175,6 +176,8 @@ NS_METHOD Pluglet::Start(void) {
 	    ("Pluglet::Start\n"));
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -193,6 +196,8 @@ NS_METHOD Pluglet::Stop(void) {
 	    ("Pluglet::Stop\n"));
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -211,6 +216,8 @@ NS_METHOD Pluglet::Destroy(void) {
 	    ("Pluglet::Destroy\n"));
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -234,6 +241,8 @@ NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
     }
     nsresult rv;
     JNIEnv *env;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
     if (NS_FAILED(rv)) {
 	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -265,6 +274,8 @@ NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
     if (view->SetWindow(window) == PR_TRUE) {
 	nsresult rv;
 	JNIEnv *env;
+	nsCOMPtr<iPlugletEngine> plugletEngine = 
+	    do_GetService(PLUGLETENGINE_ContractID, &rv);
 	rv = plugletEngine->GetJNIEnv(&env);
 	if (NS_FAILED(rv)) {
 	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,

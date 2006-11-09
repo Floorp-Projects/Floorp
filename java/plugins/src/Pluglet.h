@@ -54,6 +54,5 @@ class Pluglet : public nsIPluginInstance {
     static  jmethodID getValueMID;
     nsCOMPtr<nsIPluginInstancePeer> peer;
     PlugletView *view;
-    nsCOMPtr<iPlugletEngine> plugletEngine;
 };
 #endif /* __Pluglet_h__ */

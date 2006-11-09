@@ -29,9 +29,9 @@
 
 #include "nsServiceManagerUtils.h"
 
-jmethodID PlugletFactory::createPlugletMID = NULL;
-jmethodID PlugletFactory::initializeMID = NULL;  
-jmethodID PlugletFactory::shutdownMID = NULL;
+jmethodID PlugletFactory::createPlugletMID = nsnull;
+jmethodID PlugletFactory::initializeMID = nsnull;  
+jmethodID PlugletFactory::shutdownMID = nsnull;
 
 
 nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void **aResult) {
@@ -44,6 +44,8 @@ nsresult PlugletFactory::CreatePluginInstance(const char* aPluginMIMEType, void 
     JNIEnv *env = nsnull;
     nsresult rv = NS_ERROR_FAILURE;
 
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
 
     if (NS_FAILED(rv)) {
@@ -71,6 +73,8 @@ nsresult PlugletFactory::Initialize(void) {
 	    ("PlugletFactory::Initialize\n"));
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
 
     if (NS_FAILED(rv)) {
@@ -130,6 +134,8 @@ nsresult PlugletFactory::Shutdown(void) {
     }
     JNIEnv *env = nsnull;
     nsresult rv;
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
     rv = plugletEngine->GetJNIEnv(&env);
 
     if (NS_FAILED(rv)) {
@@ -155,41 +161,36 @@ nsresult PlugletFactory::GetMIMEDescription(const char* *result) {
     return (*result) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-PlugletFactory::PlugletFactory(const char *mimeDescription, const char *path) : plugletEngine(nsnull) {
-    jthis = NULL;
-    this->path = new char[strlen(path)+1];
-    strcpy(this->path,path);
-    this->mimeDescription = new char[strlen(mimeDescription)+1];
-    strcpy(this->mimeDescription,mimeDescription);
-
-    nsresult rv = NS_ERROR_FAILURE;
-    plugletEngine = do_GetService(PLUGLETENGINE_ContractID, &rv);
-    if (NS_FAILED(rv)) {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("Pluglet::PlugletFactory: Cannot access iPlugletEngine service\n"));
-	return;
-    }
+PlugletFactory::PlugletFactory(const char *inMimeDescription, const char *inPath) : jthis(nsnull), path(PL_strdup(inPath)), mimeDescription(PL_strdup(inMimeDescription))
+{
 }
  
 PlugletFactory::~PlugletFactory(void) {
-    if (path != NULL) {
-        delete[] path;
+    
+    if (this->path) {
+        PL_strfree(this->path);
+	this->path = nsnull;
     }
-    if (mimeDescription != NULL) {
-        delete[] mimeDescription;
+    if (this->mimeDescription) {
+        PL_strfree(this->mimeDescription);
+	this->mimeDescription = nsnull;
     }
     JNIEnv *env = nsnull;
     nsresult rv;
-    rv = plugletEngine->GetJNIEnv(&env);
-
-    if (NS_FAILED(rv)) {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("PlugletFactory::~PlugletFactory: plugletEngine->GetJNIEnv failed\n"));
-	return;
-    }
-
-    if (env != NULL) {
-        env->DeleteGlobalRef(jthis);
+    nsCOMPtr<iPlugletEngine> plugletEngine = 
+	do_GetService(PLUGLETENGINE_ContractID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+	rv = plugletEngine->GetJNIEnv(&env);
+	
+	if (NS_FAILED(rv)) {
+	    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+		   ("PlugletFactory::~PlugletFactory: plugletEngine->GetJNIEnv failed\n"));
+	    return;
+	}
+	
+	if (env != nsnull) {
+	    env->DeleteGlobalRef(jthis);
+	}
     }
 }
 
@@ -197,7 +198,7 @@ PlugletFactory * PlugletFactory::Load(const char * path) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletFactory::Load\n"));
     char * mime = PlugletLoader::GetMIMEDescription(path);
-    PlugletFactory * result = NULL;
+    PlugletFactory * result = nsnull;
     if (mime) {
 	result = new PlugletFactory(mime,path);
 	//delete[] mime;  //nb we have a strange exception here 
@@ -217,16 +218,16 @@ int PlugletFactory::Compare(const char *mimeType) {
     if (!mimeType) {
         return 0;
     }
-    char * terminator = strchr(mimeDescription,':'); // terminator have to be not equal to NULL;
+    char * terminator = strchr(mimeDescription,':'); // terminator have to be not equal to nsnull;
     char *p1 = mimeDescription;
     char *p2 = strchr(p1,';');
-    while ( p1 != NULL && p1 < terminator ) {
-        size_t n = sizeof(char) * ( ( (p2 == NULL || p2 > terminator) ? terminator : p2) - p1 );
+    while ( p1 != nsnull && p1 < terminator ) {
+        size_t n = sizeof(char) * ( ( (p2 == nsnull || p2 > terminator) ? terminator : p2) - p1 );
         if (PL_strncasecmp(p1,mimeType,n) == 0) {
             return 1;
         }
         p1 = p2 ;
-        if (p2 != NULL) {
+        if (p2 != nsnull) {
             p2 = strchr(++p2,';');
             p1++;
         }

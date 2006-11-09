@@ -28,13 +28,15 @@
 static PRIntn DeleteEntryEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 {
     PLHashTable *hash = (PLHashTable *) arg;
-    PL_HashTableRemove(hash, he->key);
 
-    void *key = (void *) he->key;
-    nsMemory::Free(key);
+    char *key = (char *) he->key;
+    
+    PL_strfree(key);
 
     PlugletFactory *toDelete = (PlugletFactory *) he->value;
     delete toDelete;
+
+    PL_HashTableRemove(hash, he->key);
     return 0;
 }
 
@@ -102,13 +104,20 @@ nsresult PlugletsDir::LoadPluglets() {
 		mimeType = nsnull;
 		rv = plugletFactory->GetMIMEDescription(&mimeType);
 		if (NS_SUCCEEDED(rv)) {
+		    const char *key = PL_strdup(mimeType);
+		    printf("debug: edburns: key: %s address: %p\n",
+			   key, key);
 		    PLHashEntry *entry = 
 			PL_HashTableAdd(mMimeTypeToPlugletFacoryHash,
-					(const void *) PL_strdup(mimeType), 
+					(const void *) key, 
 					plugletFactory);
 		    rv = (nsnull != entry) ? NS_OK : NS_ERROR_FAILURE;
 		}
 	    }
+	}
+
+	if (path) {
+	    PL_strfree(path);
 	}
     }
     return rv;
