@@ -227,7 +227,8 @@
                 accesskey: child.getAttribute("accesskey"),
                 resource: child.getAttribute("sort"),
                 sortActive: child.getAttribute("sortActive") == "true",
-                hidden: child.getAttribute("hidden")
+                hidden: child.getAttribute("hidden"),
+                id: "col" + child.getAttribute("id")
               }
               cols.push(obj);
             }
