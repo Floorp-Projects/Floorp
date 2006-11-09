@@ -1230,13 +1230,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
     if (!nsTextEditUtils::IsBody(rootElement))
     {
-      nsCOMPtr<nsIDOMRange> range (do_CreateInstance("@mozilla.org/content/range;1", &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = range->SelectNodeContents(rootElement);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = docEncoder->SetRange(range);
+      rv = docEncoder->SetContainerNode(rootElement);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
