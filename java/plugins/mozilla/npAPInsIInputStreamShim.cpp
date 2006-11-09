@@ -142,8 +142,8 @@ npAPInsIInputStreamShim::AllowStreamToReadFromBuffer(int32 len, void* buf,
     this->doUnlock();
 
     if (NS_SUCCEEDED(rv)) {
-        //        rv = mPlugletListener->OnDataAvailable(mStreamInfo, this, 
-        //                                               (PRUint32) outWritten);
+        rv = mPlugletListener->OnDataAvailable(mStreamInfo, this, 
+                                               (PRUint32) outWritten);
     }
 
     return rv;
