@@ -12,7 +12,7 @@ sub Execute {
     }
 
     eval {
-        $this->Shell( 'cmd' => 'true' );
+        $this->Shell( 'cmd' => 'true', logFile => 't/test.log' );
     };
 
     if ($@) {
@@ -20,7 +20,7 @@ sub Execute {
     }
 
     eval {
-        $this->Shell( 'cmd' => 'false' );
+        $this->Shell( 'cmd' => 'false', logFile => 't/test.log' );
     };
 
     if (not $@) {
@@ -63,7 +63,7 @@ sub Execute {
 
 sub Verify {
     my $this = shift;
-    $this->Shell('cmd' => 'echo Verify tag');
+    $this->Shell('cmd' => 'echo Verify tag', logFile => 't/test.log');
     $this->Log('msg' => 'finished');
 }
 
