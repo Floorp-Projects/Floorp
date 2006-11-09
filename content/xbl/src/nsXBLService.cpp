@@ -23,6 +23,7 @@
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
  *   - Brendan Eich (brendan@mozilla.org)
  *   - Mike Pinkerton (pinkerton@netscape.com)
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -121,7 +122,8 @@ IsAncestorBinding(nsIDocument* aDocument,
     nsresult rv =
       binding->PrototypeBinding()->BindingURI()->Equals(aChildBindingURI,
                                                         &equal);
-    if (NS_FAILED(rv) || equal) {
+    NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+    if (equal) {
       nsCAutoString spec;
       aChildBindingURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 bindingURI(spec);
@@ -839,6 +841,17 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                          PRBool aPeekOnly, PRBool* aIsReady, 
                          nsXBLBinding** aResult)
 {
+  // More than 6 binding URIs are rare, see bug 55070 comment 18.
+  nsTArray<nsIURI*> uris(6);
+  return GetBinding(aBoundElement, aURI, aPeekOnly, aIsReady, aResult, uris);
+}
+
+nsresult
+nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI, 
+                         PRBool aPeekOnly, PRBool* aIsReady,
+                         nsXBLBinding** aResult,
+                         nsTArray<nsIURI*>& aDontExtendURIs)
+{
   NS_ASSERTION(aPeekOnly || aResult,
                "Must have non-null out param if not just peeking to see "
                "whether the binding is ready");
@@ -848,6 +861,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   if (!aURI)
     return NS_ERROR_FAILURE;
+
+  NS_ENSURE_TRUE(aDontExtendURIs.AppendElement(aURI), NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
   if (!url) {
@@ -903,9 +918,11 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   PRBool hasBase = protoBinding->HasBasePrototype();
   nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
-    if (NS_FAILED(GetBinding(aBoundElement, baseProto->BindingURI(),
-                             aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
-      return NS_ERROR_FAILURE; // We aren't ready yet.
+    nsresult rv = GetBinding(aBoundElement, baseProto->BindingURI(), aPeekOnly,
+                             aIsReady, getter_AddRefs(baseBinding),
+                             aDontExtendURIs);
+    if (NS_FAILED(rv))
+      return rv; // We aren't ready yet.
   }
   else if (hasBase) {
     // Check for the presence of 'extends' and 'display' attributes
@@ -976,9 +993,31 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                     doc->GetBaseURI());
         NS_ENSURE_SUCCESS(rv, rv);
         
-        if (NS_FAILED(GetBinding(aBoundElement, bindingURI, aPeekOnly,
-                                 aIsReady, getter_AddRefs(baseBinding))))
-          return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
+        PRUint32 count = aDontExtendURIs.Length();
+        for (PRUint32 index = 0; index < count; ++index) {
+          PRBool equal;
+          rv = aDontExtendURIs[index]->Equals(bindingURI, &equal);
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (equal) {
+            nsCAutoString spec;
+            protoBinding->BindingURI()->GetSpec(spec);
+            NS_ConvertUTF8toUTF16 protoSpec(spec);
+            const PRUnichar* params[] = { protoSpec.get(), value.get() };
+            nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                            "CircularExtendsBinding",
+                                            params, NS_ARRAY_LENGTH(params),
+                                            boundDocument->GetDocumentURI(),
+                                            EmptyString(), 0, 0,
+                                            nsIScriptError::warningFlag,
+                                            "XBL");
+            return NS_ERROR_ILLEGAL_VALUE;
+          }
+        }
+
+        rv = GetBinding(aBoundElement, bindingURI, aPeekOnly, aIsReady,
+                        getter_AddRefs(baseBinding), aDontExtendURIs);
+        if (NS_FAILED(rv))
+          return rv; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
           // Make sure to set the base prototype.
           baseProto = baseBinding->PrototypeBinding();
