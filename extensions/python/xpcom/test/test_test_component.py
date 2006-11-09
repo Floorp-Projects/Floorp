@@ -418,8 +418,10 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.AppendVariant, (None, None), None)
 
     test_method(c.SumVariants, ([],), None)
-    # Array's dont expose their interface, so we are unable to auto-wrap
-    # variant arrays, as they aren't aware if the IID of the array
+    test_method(c.SumVariants, ([1,2,3],), 6)
+    test_method(c.SumVariants, (['foo', 'bar'],), 'foobar')
+    # We previously had trouble working out the IID of interface arrays, so
+    # had to pass an explicitly wrapped variant - let's check that still works.
     test_method(c.SumVariants, ([MakeVariant(1),MakeVariant(2),MakeVariant(3)],), 6)
     test_method(c.SumVariants, ([MakeVariant('foo'), MakeVariant('bar')],), 'foobar')
 

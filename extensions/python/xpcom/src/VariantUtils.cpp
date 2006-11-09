@@ -294,7 +294,8 @@ void FreeSingleArray(void *array_ptr, PRUint32 sequence_size, PRUint8 array_type
 
 
 PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence_size,
-                       PRUint32 array_element_size, PRUint8 array_type)
+                       PRUint32 array_element_size, PRUint8 array_type,
+                       const nsIID &iid)
 {
 	PRUint8 *pthis = (PRUint8 *)array_ptr;
 	NS_ABORT_IF_FALSE(pthis, "Don't have a valid array to fill!");
@@ -460,12 +461,12 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 					BREAK_FALSE;
 				break;
 				}
-			  case nsXPTType::T_INTERFACE_IS: // hmm - ignoring the IID can't be good :(
+			  case nsXPTType::T_INTERFACE_IS:
 			  case nsXPTType::T_INTERFACE:  {
 				// We do allow NULL here, even tho doing so will no-doubt crash some objects.
 				// (but there will certainly be objects out there that will allow NULL :-(
 				nsISupports *pnew;
-				if (!Py_nsISupports::InterfaceFromPyObject(val, NS_GET_IID(nsISupports), &pnew, PR_TRUE))
+				if (!Py_nsISupports::InterfaceFromPyObject(val, iid, &pnew, PR_TRUE))
 					BREAK_FALSE;
 				nsISupports **pp = (nsISupports **)pthis;
 				if (*pp) {
@@ -898,19 +899,20 @@ class PythonTypeDescriptor {
 public:
 	PythonTypeDescriptor() {
 		param_flags = type_flags = argnum = argnum2 = 0;
-		extra = NULL;
+		iid = NS_GET_IID(nsISupports); // always a valid IID
+		array_type = 0;
 		is_auto_out = PR_FALSE;
 		is_auto_in = PR_FALSE;
 		have_set_auto = PR_FALSE;
 	}
 	~PythonTypeDescriptor() {
-		Py_XDECREF(extra);
 	}
 	PRUint8 param_flags;
 	PRUint8 type_flags;
 	PRUint8 argnum;                 /* used for iid_is and size_is */
 	PRUint8 argnum2;                /* used for length_is */
-	PyObject *extra; // The IID object, or the type of the array.
+	PRUint8 array_type; // The type of the array.
+	nsID iid; // The IID of the object or each elt of the array.
 	// Extra items to help our processing.
 	// Is this auto-filled by some other "in" param?
 	PRBool is_auto_in;
@@ -1008,7 +1010,7 @@ PyXPCOM_InterfaceVariantHelper::~PyXPCOM_InterfaceVariantHelper()
 			if (ns_v.IsValArray()) {
 				nsXPTCVariant &ns_v = m_var_array[i];
 				if (ns_v.val.p) {
-					PRUint8 array_type = (PRUint8)PyInt_AsLong(m_python_type_desc_array[i].extra);
+					PRUint8 array_type = m_python_type_desc_array[i].array_type;
 					PRUint32 seq_size = GetSizeIs(i, PR_FALSE);
 					FreeSingleArray(ns_v.val.p, seq_size, array_type);
 				}
@@ -1060,13 +1062,20 @@ PRBool PyXPCOM_InterfaceVariantHelper::Init(PyObject *obParams)
 			goto done;
 
 		// Pull apart the typedesc tuple back into a structure we can work with.
+		PyObject *obIID;
 		PythonTypeDescriptor &ptd = m_python_type_desc_array[i];
-		PRBool this_ok = PyArg_ParseTuple(desc_object, "bbbbO:type_desc", 
-					&ptd.param_flags, &ptd.type_flags, &ptd.argnum, &ptd.argnum2, &ptd.extra);
+		ptd.array_type = 0;
+		PRBool this_ok = PyArg_ParseTuple(desc_object, "bbbbO|b:type_desc", 
+					&ptd.param_flags, &ptd.type_flags, &ptd.argnum, &ptd.argnum2,
+					&obIID, &ptd.array_type);
 		Py_DECREF(desc_object);
 		if (!this_ok) goto done;
-		Py_INCREF(ptd.extra);
 
+		// The .py code may send a 0 as the IID!
+		if (obIID != Py_None && !PyInt_Check(obIID)) {
+			if (!Py_nsIID::IIDFromPyObject(obIID, &ptd.iid))
+				goto done;
+		}
 	}
 	total_params_needed = ProcessPythonTypeDescriptors(m_python_type_desc_array, m_num_array);
 	// OK - check we got the number of args we expected.
@@ -1390,12 +1399,9 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			break;
 			}
 		  case nsXPTType::T_INTERFACE:  {
-			nsIID iid;
-			if (!Py_nsIID::IIDFromPyObject(td.extra, &iid))
-				BREAK_FALSE;
 			if (!Py_nsISupports::InterfaceFromPyObject(
 			                       val, 
-			                       iid, 
+			                       td.iid, 
 			                       (nsISupports **)&ns_v.val.p, 
 			                       PR_TRUE))
 				BREAK_FALSE;
@@ -1481,7 +1487,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				ns_v.val.p = nsnull;
 				break;
 			}
-			if (!PyInt_Check(td.extra)) {
+			if (!td.array_type) {
 				PyErr_SetString(PyExc_TypeError, "The array info is not valid");
 				BREAK_FALSE;
 			}
@@ -1489,7 +1495,9 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				PyErr_SetString(PyExc_TypeError, "This parameter must be a sequence");
 				BREAK_FALSE;
 			}
-			int array_type = PyInt_AsLong(td.extra);
+			int array_type = td.array_type;
+			int type_tag = array_type&XPT_TDP_TAGMASK;
+
 			PRUint32 element_size = GetArrayElementSize(array_type);
 			int seq_length = PySequence_Length(val);
 			cb_this_buffer_pointer = seq_length * element_size;
@@ -1498,7 +1506,9 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				cb_this_buffer_pointer = 1; 
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
 			memset(this_buffer_pointer, 0, cb_this_buffer_pointer);
-			rc = FillSingleArray(this_buffer_pointer, val, seq_length, element_size, array_type&XPT_TDP_TAGMASK);
+			rc = FillSingleArray(this_buffer_pointer, val, seq_length,
+			                     element_size, array_type&XPT_TDP_TAGMASK,
+			                     td.iid);
 			if (!rc) break;
 			rc = SetSizeIs(value_index, PR_FALSE, seq_length);
 			if (!rc) break;
@@ -1712,16 +1722,13 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 		break;
 		}
 	  case nsXPTType::T_INTERFACE: {
-		nsIID iid;
-		if (!Py_nsIID::IIDFromPyObject(td.extra, &iid))
-			break;
 		nsISupports *iret = *((nsISupports **)ns_v.ptr);
 		// Our cleanup code manages iret reference ownership, and our
 		// new object takes its own.
-		if (iid.Equals(NS_GET_IID(nsIVariant)))
+		if (td.iid.Equals(NS_GET_IID(nsIVariant)))
 			ret = PyObject_FromVariant(m_parent, (nsIVariant *)iret);
 		else
-			ret = m_parent->MakeInterfaceResult(iret, iid);
+			ret = m_parent->MakeInterfaceResult(iret, td.iid);
 		break;
 		}
 	  case nsXPTType::T_INTERFACE_IS: {
@@ -1754,11 +1761,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 			ret = Py_None;
 			Py_INCREF(Py_None);
 		}
-		if (!PyInt_Check(td.extra)) {
-			PyErr_SetString(PyExc_TypeError, "The array info is not valid");
-			break;
-		}
-		PRUint8 array_type = (PRUint8)PyInt_AsLong(td.extra);
+		PRUint8 array_type = (PRUint8)td.array_type;
 		PRUint32 seq_size = GetSizeIs(index, PR_FALSE);
 		ret = UnpackSingleArray(m_parent, * ((void **)ns_v.ptr), seq_size, array_type&XPT_TDP_TAGMASK, NULL);
 		break;
@@ -2578,9 +2581,12 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		// If it is an existing array of the correct size, keep it.
 		PRUint32 sequence_size = 0;
 		PRUint8 array_type;
-		nsresult ns = GetArrayType(index, &array_type, NULL);
+		nsIID iid, *piid;
+		nsresult ns = GetArrayType(index, &array_type, &piid);
 		if (NS_FAILED(ns))
 			return ns;
+		iid = *piid;
+		nsMemory::Free(piid);
 		PRUint32 element_size = GetArrayElementSize(array_type);
 		if (val != Py_None) {
 			if (!PySequence_Check(val)) {
@@ -2605,7 +2611,9 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			bBackFill = pi->IsIn();
 		}
 		if (bBackFill)
-			rc = FillSingleArray(*(void **)ns_v.val.p, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK);
+			rc = FillSingleArray(*(void **)ns_v.val.p, val,
+			                     sequence_size, element_size,
+			                     array_type&XPT_TDP_TAGMASK, iid);
 		else {
 			// If it is an existing array, free it.
 			void **pp = (void **)ns_v.val.p;
@@ -2620,7 +2628,9 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (nbytes==0) nbytes = 1; // avoid assertion about 0 bytes
 			*pp = (void *)nsMemory::Alloc(nbytes);
 			memset(*pp, 0, nbytes);
-			rc = FillSingleArray(*pp, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK);
+			rc = FillSingleArray(*pp, val, sequence_size,
+			                     element_size,
+			                     array_type&XPT_TDP_TAGMASK, iid);
 			if (!rc) break;
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_FALSE, sequence_size);

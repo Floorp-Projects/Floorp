@@ -362,7 +362,12 @@ def MakeReprForInvoke(param):
     elif tag == T_ARRAY:
         i_info = param.interface_info
         array_desc = i_info.GetTypeForParam(param.method_index, param.param_index, 1)
-        return param.type_desc[:-1] + array_desc[:1]
+        if XPT_TDP_TAG(array_desc[0]) in (T_INTERFACE, T_INTERFACE_IS):
+            iid = str(i_info.GetIIDForParam(param.method_index, param.param_index))
+        else:
+            iid = None
+        return param.type_desc[:-1] + (iid, array_desc[0])
+
     return param.type_desc
 
 
