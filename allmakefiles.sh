@@ -1046,7 +1046,6 @@ mail/components/shell/Makefile
 mail/components/shell/public/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
-mail/extensions/offline/Makefile
 mail/config/Makefile
 mail/installer/Makefile
 mail/installer/windows/Makefile
