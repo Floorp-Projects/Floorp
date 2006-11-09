@@ -1258,8 +1258,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
             weakNodeUsed = mDomSelections[index]->FetchAnchorNode();
           }
           result = mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
-          mDomSelections[index]->ScrollIntoView();
           mHint = HINTRIGHT;
+          mDomSelections[index]->ScrollIntoView();
           return NS_OK;
 
       case nsIDOMKeyEvent::DOM_VK_RIGHT :
@@ -1273,8 +1273,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
             weakNodeUsed = mDomSelections[index]->FetchFocusNode();
           }
           result = mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
-          mDomSelections[index]->ScrollIntoView();
           mHint = HINTLEFT;
+          mDomSelections[index]->ScrollIntoView();
           return NS_OK;
     }
   }
@@ -1404,11 +1404,18 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
 #endif // VISUALSELECTION
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinueSelection, PR_FALSE);
   } else if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT && !aContinueSelection) {
-    // Collapse selection if PeekOffset failed because we bumped into the BRFrame, bug 207623.
+    // Collapse selection if PeekOffset failed, we either
+    //  1. bumped into the BRFrame, bug 207623
+    //  2. had select-all in a text input (DIV range), bug 352759.
     weakNodeUsed = mDomSelections[index]->FetchFocusNode();
     offsetused = mDomSelections[index]->FetchFocusOffset();
     mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
-    tHint = mHint; // make the line below restore the original hint
+    if (frame->GetType() == nsLayoutAtoms::brFrame) {
+      tHint = mHint;    // 1: make the line below restore the original hint
+    }
+    else {
+      tHint = HINTLEFT; // 2: we're now at the end of the frame to the left
+    }
     result = NS_OK;
   }
   if (NS_SUCCEEDED(result))
@@ -6961,198 +6968,117 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
 nsresult
 nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView)
 {
-  nsresult result = NS_OK;
   if (!mFrameSelection)
-    return NS_ERROR_FAILURE;//nothing to do
+    return NS_ERROR_FAILURE;  // nothing to do
 
-  if (!aRect || !aScrollableView)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aRect && aScrollableView, NS_ERROR_NULL_POINTER);
 
-  // Init aRect:
+  aRect->SetRect(0, 0, 0, 0);
+  *aScrollableView = nsnull;
 
-  aRect->x = 0;
-  aRect->y = 0;
-  aRect->width  = 0;
-  aRect->height = 0;
-
-  *aScrollableView = 0;
-
-  nsIDOMNode *node       = 0;
+  nsIDOMNode *node       = nsnull;
   PRInt32     nodeOffset = 0;
-  PRBool      isEndNode  = PR_TRUE;
-  nsIFrame   *frame      = 0;
+  nsIFrame   *frame      = nsnull;
 
-  switch (aRegion)
-  {
-  case nsISelectionController::SELECTION_ANCHOR_REGION:
-    node       = FetchAnchorNode();
-    nodeOffset = FetchAnchorOffset();
-    isEndNode  = GetDirection() == eDirPrevious;
-    break;
-  case nsISelectionController::SELECTION_FOCUS_REGION:
-    node       = FetchFocusNode();
-    nodeOffset = FetchFocusOffset();
-    isEndNode  = GetDirection() == eDirNext;
-    break;
-  default:
-    return NS_ERROR_FAILURE;
+  switch (aRegion) {
+    case nsISelectionController::SELECTION_ANCHOR_REGION:
+      node       = FetchAnchorNode();
+      nodeOffset = FetchAnchorOffset();
+      break;
+    case nsISelectionController::SELECTION_FOCUS_REGION:
+      node       = FetchFocusNode();
+      nodeOffset = FetchFocusOffset();
+      break;
+    default:
+      return NS_ERROR_FAILURE;
   }
 
   if (!node)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  NS_ENSURE_TRUE(content.get(), NS_ERROR_FAILURE);
   PRInt32 frameOffset = 0;
-
-  if (content)
-  {
-    frame = mFrameSelection->GetFrameForNodeOffset(content, nodeOffset,
-      mFrameSelection->GetHint(), &frameOffset);
-    
-    if (frame)
-      result = NS_OK;
-    else
-      result = NS_ERROR_FAILURE;
-  }
-  else
-    result = NS_ERROR_FAILURE;
-
-  if(NS_FAILED(result))
-    return result;
-
+  frame = mFrameSelection->GetFrameForNodeOffset(content, nodeOffset,
+                                                 mFrameSelection->GetHint(),
+                                                 &frameOffset);
   if (!frame)
-    return NS_ERROR_NULL_POINTER;
-
-  //
-  // Get the frame's scrollable view.
-  //
-
-  nsCOMPtr<nsPresContext> presContext;
-
-  result = GetPresContext(getter_AddRefs(presContext));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!presContext)
     return NS_ERROR_FAILURE;
 
-
-  nsIFrame *parentWithView = frame->GetAncestorWithView();
-
+  // Get the frame's nearest scrollable view.
+  nsIFrame* parentWithView = frame->GetAncestorWithView();
   if (!parentWithView)
     return NS_ERROR_FAILURE;
-
   nsIView* view = parentWithView->GetView();
-
   *aScrollableView =
     nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
-
   if (!*aScrollableView)
     return NS_OK;
 
-  //
   // Figure out what node type we have, then get the
   // appropriate rect for it's nodeOffset.
-  //
-
   PRUint16 nodeType = nsIDOMNode::ELEMENT_NODE;
+  nsresult rv = node->GetNodeType(&nodeType);
+  if (NS_FAILED(rv))
+    return rv;
 
-  result = node->GetNodeType(&nodeType);
-
-  if (NS_FAILED(result))
-    return NS_ERROR_NULL_POINTER;
-
-  if (nodeType == nsIDOMNode::TEXT_NODE)
-  {
-    nsIFrame *childFrame = 0;
-    frameOffset  = 0;
-
-    result = frame->GetChildFrameContainingOffset(nodeOffset, mFrameSelection->mHint, &frameOffset, &childFrame);
-
-    if (NS_FAILED(result))
-      return result;
-
+  nsPoint pt(0, 0);
+  if (nodeType == nsIDOMNode::TEXT_NODE) {
+    nsIFrame* childFrame = nsnull;
+    frameOffset = 0;
+    rv = frame->GetChildFrameContainingOffset(nodeOffset,
+                                              mFrameSelection->GetHint(),
+                                              &frameOffset, &childFrame);
+    if (NS_FAILED(rv))
+      return rv;
     if (!childFrame)
       return NS_ERROR_NULL_POINTER;
 
     frame = childFrame;
 
-    //
     // Get the x coordinate of the offset into the text frame.
-    // The x coordinate will be relative to the frame's origin,
-    // so we'll have to translate it into the root view's coordinate
-    // system.
-    //
-    nsPoint pt;
-    result = GetCachedFrameOffset(frame, nodeOffset, pt);
+    rv = GetCachedFrameOffset(frame, nodeOffset, pt);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
-    if (NS_FAILED(result))
-      return result;
-    
-    //
-    // Get the frame's rect.
-    //
-    *aRect = frame->GetRect();
+  // Get the frame's rect in scroll view coordinates.
+  *aRect = frame->GetRect();
+  rv = GetFrameToScrolledViewOffsets(*aScrollableView, frame, &aRect->x,
+                                     &aRect->y);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    //
-    // Translate the frame's rect into root view coordinates.
-    //
-    result = GetFrameToScrolledViewOffsets(*aScrollableView, frame, &aRect->x, &aRect->y);
-
-    if (NS_FAILED(result))
-      return result;
-
-    //
-    // Now add the offset's x coordinate.
-    //
+  if (nodeType == nsIDOMNode::TEXT_NODE) {
     aRect->x += pt.x;
-
-    //
-    // Adjust the width of the rect to account for any necessary
-    // padding!
-    //
-
-    nsRect clipRect = (*aScrollableView)->View()->GetBounds();
-
-    result = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
-
-    if (NS_FAILED(result))
-      return result;
-
-    //
-    // If the point we are interested is outside the clip
-    // region, we will scroll it into view with a padding
-    // equal to a quarter of the clip's width.
-    //
-
-    PRInt32 pad = clipRect.width >> 2;
-
-    if (pad <= 0)
-      pad = 3; // Arbitrary
-
-    if (aRect->x >= clipRect.XMost())
-      aRect->width = pad;
-    else if (aRect->x <= clipRect.x)
-    {
-      aRect->x -= pad;
-      aRect->width = pad;
-    }
-    else
-      aRect->width = 60; // Arbitrary
   }
-  else
-  {
-    //
-    // Must be a non-text frame, just scroll the frame
-    // into view.
-    //
-    *aRect = frame->GetRect();
-
-    result = GetFrameToScrolledViewOffsets(*aScrollableView, frame, &aRect->x, &aRect->y);
+  else if (mFrameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
+    // It's the frame's right edge we're interested in.
+    aRect->x += aRect->width;
   }
 
-  return result;
+  nsRect clipRect = (*aScrollableView)->View()->GetBounds();
+  rv = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If the point we are interested in is outside the clip region, we aim
+  // to over-scroll it by a quarter of the clip's width.
+  PRInt32 pad = clipRect.width >> 2;
+
+  if (pad <= 0)
+    pad = 3; // Arbitrary
+
+  if (aRect->x >= clipRect.XMost()) {
+    aRect->width = pad;
+  }
+  else if (aRect->x <= clipRect.x) {
+    aRect->x -= pad;
+    aRect->width = pad;
+  }
+  else {
+    aRect->width = 60; // Arbitrary
+  }
+
+  return rv;
 }
 
 static void
