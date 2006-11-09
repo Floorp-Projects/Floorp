@@ -59,8 +59,6 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
 gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
-    HBITMAP bmp = nsnull;
-
     cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
                                                                 width, height);
     if (!surf || cairo_surface_status(surf)) {
@@ -75,8 +73,6 @@ gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height, 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
-    HBITMAP bmp = nsnull;
-
     cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)imageFormat,
                                                                 width, height);
     if (!surf || cairo_surface_status(surf)) {
