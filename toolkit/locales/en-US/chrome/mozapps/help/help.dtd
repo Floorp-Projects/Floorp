@@ -22,9 +22,6 @@
 <!ENTITY printButton.tooltip            "Print this page">
 <!ENTITY closeWindow.commandkey         "W">
 
-<!ENTITY throbberItem.title             "Activity Indicator">
-<!ENTITY throbber.tooltip               "Go to the Help on Help section">
-
 <!ENTITY searchtab.label    	  	"Search">
 <!ENTITY searchtab.accesskey            "S">
 <!ENTITY toctab.label       	  	"Contents">
