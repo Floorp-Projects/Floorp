@@ -538,16 +538,16 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
   const PRBool kIsJumpLinesOk = PR_TRUE;          // okay to jump lines
   const PRBool kIsScrollViewAStop = PR_FALSE;     // do not stop at scroll views
   const PRBool kIsKeyboardSelect = PR_TRUE;       // is keyboard selection
-  const PRBool kIsVisualBidi = PR_TRUE;           // use visual order for bidi text
-
-  nsPeekOffsetStruct pos;
+  const PRBool kIsVisualBidi = PR_FALSE;          // use visual order for bidi text
+  const PRInt32 kDesiredX = aPresShell->GetRootFrame()->GetSize().width;
 
   EWordMovementType wordMovementType = aNeedsStart ? eStartWord : eEndWord;
-  if (aAmount == eSelectLine) {
-    aAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
+  if (aAmount == eSelectLine && aDirection == eDirNext) {
+    aAmount = eSelectEndLine; // Select forward to end of line
   }
 
-  pos.SetData(aAmount, aDirection, aFromOffset, 0,
+  nsPeekOffsetStruct pos;
+  pos.SetData(aAmount, aDirection, aFromOffset, kDesiredX,
               kIsJumpLinesOk,
               kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
               wordMovementType);
@@ -679,9 +679,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     startForwardSearchOffset = startOffset;
     if (amount == eSelectLine) {
       ++ startForwardSearchOffset; // Avoid getting the previous line
-      if (aBoundaryType == BOUNDARY_LINE_END && startOffset > 0) {
-        // Start line fixup: include \n at start of string
-        -- startOffset;
+      if (aBoundaryType == BOUNDARY_LINE_START && startOffset > 0) {
+        // Start line fixup: don't include \n at start of string
+        ++ startOffset;
       }
     }
   }
@@ -703,9 +703,10 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
         endFrame->GetType() == nsAccessibilityAtoms::textFrame) {
       PRInt32 startFrameOffsetUnused, endFrameOffset;
       if (NS_SUCCEEDED(endFrame->GetOffsets(startFrameOffsetUnused, endFrameOffset))) {
-        // End line fixup: make sure <br> at end of string is included in endOffset calculation
-        if ((endFrame = endFrame->GetNextSibling()) != nsnull &&
-            endFrame->GetType() == nsAccessibilityAtoms::brFrame) {
+        nsCOMPtr<nsIDOMNode> endNode = do_QueryInterface(endFrame->GetContent());
+        nsCOMPtr<nsIAccessible> endAccessible;
+        if (endNode && NS_SUCCEEDED(GetAccService()->GetAccessibleFor(endNode, getter_AddRefs(endAccessible))) &&
+            NextChild(endAccessible) && Role(endAccessible) == ROLE_WHITESPACE) {
           ++ endOffset; // Make sure endOffset comes after <br>
         }
         // End line fixup: include \n for <br> at end of string,
