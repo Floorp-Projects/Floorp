@@ -516,7 +516,8 @@ NS_IMETHODIMP nsMailboxService::AllowPort(PRInt32 port, const char *scheme, PRBo
 
 NS_IMETHODIMP nsMailboxService::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD;
+    *result = URI_STD | URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+        URI_DANGEROUS_TO_LOAD;
     return NS_OK; 	
 }
 

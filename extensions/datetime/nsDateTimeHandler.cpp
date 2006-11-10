@@ -88,7 +88,7 @@ nsDateTimeHandler::GetDefaultPort(PRInt32 *result) {
 
 NS_IMETHODIMP
 nsDateTimeHandler::GetProtocolFlags(PRUint32 *result) {
-    *result = URI_NORELATIVE | URI_NOAUTH | ALLOWS_PROXY;
+    *result = URI_NORELATIVE | URI_NOAUTH | ALLOWS_PROXY | URI_DANGEROUS_TO_LOAD;
     return NS_OK;
 }
 

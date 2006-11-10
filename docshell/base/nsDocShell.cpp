@@ -4359,9 +4359,10 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
             securityManager(do_GetService
                             (NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) {
-            rv = securityManager->CheckLoadURI(aBaseURI, uri,
-                                               nsIScriptSecurityManager::
-                                               DISALLOW_FROM_MAIL);
+            rv = securityManager->
+                CheckLoadURI(aBaseURI, uri,
+                             nsIScriptSecurityManager::
+                             LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
             if (NS_SUCCEEDED(rv)) {
                 // Since we can't travel back in time yet, just pretend
                 // negative numbers do nothing at all.
@@ -8824,7 +8825,7 @@ nsDocShell::URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult)
     // Note: about:blank URIs do NOT inherit the security context from the
     // current document, which is what this function tests for...
     return NS_URIChainHasFlags(aURI,
-                               nsIProtocolHandler::URI_HAS_NO_SECURITY_CONTEXT,
+                               nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                                aResult);
 }
 

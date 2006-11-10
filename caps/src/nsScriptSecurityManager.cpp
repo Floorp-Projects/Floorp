@@ -1164,26 +1164,6 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     return NS_ERROR_DOM_BAD_URI;
 }
 
-// static
-nsresult
-nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
-                                          nsCString& aScheme)
-{
-    if (!aURI)
-       return NS_ERROR_FAILURE;
-
-    nsresult rv;
-
-    // Get the innermost URI
-    nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
-
-    //-- get the source scheme
-    rv = uri->GetScheme(aScheme);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
@@ -1203,6 +1183,29 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     return CheckLoadURIWithPrincipal(sourcePrincipal, aTargetURI, aFlags);
 }
 
+/**
+ * Helper method to handle cases where a flag passed to
+ * CheckLoadURIWithPrincipal means denying loading if the given URI has certain
+ * nsIProtocolHandler flags set.
+ * @return if success, access is allowed. Otherwise, deny access
+ */
+static nsresult
+DenyAccessIfURIHasFlags(nsIURI* aURI, PRUint32 aURIFlags)
+{
+    NS_PRECONDITION(aURI, "Must have URI!");
+    
+    PRBool uriHasFlags;
+    nsresult rv =
+        NS_URIChainHasFlags(aURI, aURIFlags, &uriHasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (uriHasFlags) {
+        return NS_ERROR_DOM_BAD_URI;
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                                    nsIURI *aTargetURI,
@@ -1212,10 +1215,10 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     // If someone passes a flag that we don't understand, we should
     // fail, because they may need a security check that we don't
     // provide.
-    NS_ENSURE_FALSE(aFlags & ~(nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
+    NS_ENSURE_FALSE(aFlags & ~(nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
                                nsIScriptSecurityManager::ALLOW_CHROME |
                                nsIScriptSecurityManager::DISALLOW_SCRIPT |
-                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA),
+                               nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL),
                     NS_ERROR_UNEXPECTED);
     NS_ENSURE_ARG_POINTER(aPrincipal);
 
@@ -1229,34 +1232,44 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
     NS_ASSERTION(sourceURI, "Non-system principals passed to CheckLoadURIWithPrincipal must have a URI!");
     
-    //-- get the source scheme
-    nsCAutoString sourceScheme;
-    nsresult rv = GetBaseURIScheme(sourceURI, sourceScheme);
-    if (NS_FAILED(rv)) return rv;
-
-    // Some loads are not allowed from mail/news messages
-    if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) &&
-        (sourceScheme.LowerCaseEqualsLiteral("mailbox") ||
-         sourceScheme.LowerCaseEqualsLiteral("imap")    ||
-         sourceScheme.LowerCaseEqualsLiteral("news")))
-    {
-        return NS_ERROR_DOM_BAD_URI;
+    // Automatic loads are not allowed from certain protocols.
+    if (aFlags & nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT) {
+        nsresult rv =
+            DenyAccessIfURIHasFlags(sourceURI,
+                                    nsIProtocolHandler::URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // If DISALLOW_INHERIT_PRINCIPAL is set, we prevent loading of URIs which
+    // would do such inheriting.  That would be URIs that do not have their own
+    // security context.
+    if (aFlags & nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL) {
+        nsresult rv =
+            DenyAccessIfURIHasFlags(aTargetURI,
+                                    nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // If either URI is a nested URI, get the base URI
+    nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(sourceURI);
+    nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
 
     //-- get the target scheme
     nsCAutoString targetScheme;
-    rv = GetBaseURIScheme(aTargetURI, targetScheme);
+    nsresult rv = targetBaseURI->GetScheme(targetScheme);
     if (NS_FAILED(rv)) return rv;
 
-    //-- Some callers do not allow loading javascript: or data: URLs
-    if (((aFlags & (nsIScriptSecurityManager::DISALLOW_SCRIPT |
-                    nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA)) &&
-         targetScheme.Equals("javascript")) ||
-        ((aFlags & nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA) &&
-         targetScheme.Equals("data")))
+    //-- Some callers do not allow loading javascript:
+    if ((aFlags & nsIScriptSecurityManager::DISALLOW_SCRIPT) &&
+         targetScheme.EqualsLiteral("javascript"))
     {
        return NS_ERROR_DOM_BAD_URI;
     }
+
+    //-- get the source scheme
+    nsCAutoString sourceScheme;
+    rv = sourceURI->GetScheme(sourceScheme);
+    if (NS_FAILED(rv)) return rv;
 
     if (targetScheme.Equals(sourceScheme,
                             nsCaseInsensitiveCStringComparator()) &&
@@ -1267,107 +1280,115 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         return NS_OK;
     }
 
-    //-- If the schemes don't match, the policy is specified in this table.
-    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol};
-    static const struct
-    {
-        const char *name;
-        Action action;
-    } protocolList[] =
-    {
-        //-- Keep the most commonly used protocols at the top of the list
-        //   to increase performance
-        { "http",            AllowProtocol  },
-        { "chrome",          ChromeProtocol },
-        { "file",            PrefControlled },
-        { "https",           AllowProtocol  },
-        { "moz-anno",        DenyProtocol   },
-        { "mailbox",         DenyProtocol   },
-        { "pop",             AllowProtocol  },
-        { "imap",            DenyProtocol   },
-        { "pop3",            DenyProtocol   },
-        { "news",            AllowProtocol  },
-        { "javascript",      AllowProtocol  },
-        { "ftp",             AllowProtocol  },
-        { "moz-safe-about",  AllowProtocol  },
-        { "about",           DenyProtocol   },
-        { "mailto",          AllowProtocol  },
-        { "aim",             AllowProtocol  },
-        { "data",            AllowProtocol  },
-        { "keyword",         DenyProtocol   },
-        { "resource",        ChromeProtocol },
-        { "gopher",          AllowProtocol  },
-        { "datetime",        DenyProtocol   },
-        { "finger",          AllowProtocol  },
-        { "res",             DenyProtocol   },
-        { "x-jsd",           ChromeProtocol },
-
-        // Don't allow random people to load null-principal URIs.  Not like it
-        // matters _that_ much, since we won't have a useful handler for them,
-        // but...
-        { NS_NULLPRINCIPAL_SCHEME, DenyProtocol }
-    };
-
     NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
-    for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
-    {
-        if (targetScheme.LowerCaseEqualsASCII(protocolList[i].name))
-        {
-            switch (protocolList[i].action)
-            {
-            case AllowProtocol:
-                // everyone can access these schemes.
-                return NS_OK;
-            case PrefControlled:
-                {
-                    // resource: and chrome: are equivalent, securitywise
-                    // That's bogus!!  Fix this.  But watch out for
-                    // the view-source stylesheet?
-                    if (sourceScheme.EqualsLiteral("chrome") ||
-                        sourceScheme.EqualsLiteral("resource"))
-                        return NS_OK;
+    
+    // If the schemes don't match, the policy is specified by the protocol
+    // flags on the target URI.  Note that the order of policy checks here is
+    // very important!  We start from most restrictive and work our way down.
+    // Note that since we're working with the innermost URI, we can just use
+    // the methods that work on chains of nested URIs and they will only look
+    // at the flags for our one URI.
 
-                    // Now check capability policies
-                    static const char loadURIPrefGroup[] = "checkloaduri";
-                    ClassInfoData nameData(nsnull, loadURIPrefGroup);
-
-                    SecurityLevel secLevel;
-                    rv = LookupPolicy(aPrincipal, nameData, sEnabledID,
-                                      nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
-                                      nsnull, &secLevel);
-                    if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
-                    {
-                        // OK for this site!
-                        return NS_OK;
-                    }
-
-                    ReportError(nsnull, errorTag, sourceURI, aTargetURI);
-                    return NS_ERROR_DOM_BAD_URI;
-                }
-            case ChromeProtocol:
-                if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
-                    return NS_OK;
-                // resource: and chrome: are equivalent, securitywise
-                // That's bogus!!  Fix this.  But watch out for
-                // the view-source stylesheet?
-                if (sourceScheme.EqualsLiteral("chrome") ||
-                    sourceScheme.EqualsLiteral("resource"))
-                    return NS_OK;
-                ReportError(nsnull, errorTag, sourceURI, aTargetURI);
-                return NS_ERROR_DOM_BAD_URI;
-            case DenyProtocol:
-                // Deny access
-                ReportError(nsnull, errorTag, sourceURI, aTargetURI);
-                return NS_ERROR_DOM_BAD_URI;
-            }
-        }
+    // Check for system target URI
+    rv = DenyAccessIfURIHasFlags(targetBaseURI,
+                                 nsIProtocolHandler::URI_DANGEROUS_TO_LOAD);
+    if (NS_FAILED(rv)) {
+        // Deny access, since the origin principal is not system
+        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
+        return rv;
     }
 
-    // If we reach here, we have an unknown protocol. Warn, but allow.
-    // This is risky from a security standpoint, but allows flexibility
-    // in installing new protocol handlers after initial ship.
-    NS_WARNING("unknown protocol in nsScriptSecurityManager::CheckLoadURI");
+    // Check for chrome target URI
+    PRBool hasFlags;
+    rv = NS_URIChainHasFlags(targetBaseURI,
+                             nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasFlags) {
+        if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
+            return NS_OK;
+        }
 
+        // resource: and chrome: are equivalent, securitywise
+        // That's bogus!!  Fix this.  But watch out for
+        // the view-source stylesheet?
+        PRBool sourceIsChrome;
+        rv = NS_URIChainHasFlags(sourceBaseURI,
+                                 nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                                 &sourceIsChrome);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (sourceIsChrome) {
+            return NS_OK;
+        }
+        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
+        return NS_ERROR_DOM_BAD_URI;
+    }
+
+    // Check for target URI pointing to a file
+    rv = NS_URIChainHasFlags(targetBaseURI,
+                             nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasFlags) {
+        // resource: and chrome: are equivalent, securitywise
+        // That's bogus!!  Fix this.  But watch out for
+        // the view-source stylesheet?
+        PRBool sourceIsChrome;
+        rv = NS_URIChainHasFlags(sourceURI,
+                                 nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                                 &sourceIsChrome);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (sourceIsChrome) {
+            return NS_OK;
+        }
+
+        // Now check capability policies
+        static const char loadURIPrefGroup[] = "checkloaduri";
+        ClassInfoData nameData(nsnull, loadURIPrefGroup);
+
+        SecurityLevel secLevel;
+        rv = LookupPolicy(aPrincipal, nameData, sEnabledID,
+                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
+                          nsnull, &secLevel);
+        if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
+        {
+            // OK for this site!
+            return NS_OK;
+        }
+
+        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
+        return NS_ERROR_DOM_BAD_URI;
+    }
+
+    // OK, everyone is allowed to load this, since unflagged handlers are
+    // deprecated but treated as URI_LOADABLE_BY_ANYONE.  But check whether we
+    // need to warn.  At some point we'll want to make this warning into an
+    // error and treat unflagged handlers as URI_DANGEROUS_TO_LOAD.
+    rv = NS_URIChainHasFlags(targetBaseURI,
+                             nsIProtocolHandler::URI_LOADABLE_BY_ANYONE,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!hasFlags) {
+        nsXPIDLString message;
+        NS_ConvertASCIItoUTF16 ucsTargetScheme(targetScheme);
+        const PRUnichar* formatStrings[] = { ucsTargetScheme.get() };
+        rv = sStrBundle->
+            FormatStringFromName(NS_LITERAL_STRING("ProtocolFlagError").get(),
+                                 formatStrings,
+                                 NS_ARRAY_LENGTH(formatStrings),
+                                 getter_Copies(message));
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIConsoleService> console(
+              do_GetService("@mozilla.org/consoleservice;1"));
+            NS_ENSURE_TRUE(console, NS_ERROR_FAILURE);
+
+            console->LogStringMessage(message.get());
+#ifdef DEBUG
+            fprintf(stderr, "%s\n", NS_ConvertUTF16toUTF8(message).get());
+#endif
+        }
+    }
+    
     return NS_OK;
 }
 
@@ -1873,12 +1894,12 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                               nsIPrincipal **result)
 {
-    PRBool noContext;
+    PRBool inheritsPrincipal;
     nsresult rv =
         NS_URIChainHasFlags(aURI,
-                            nsIProtocolHandler::URI_HAS_NO_SECURITY_CONTEXT,
-                            &noContext);
-    if (NS_FAILED(rv) || noContext) {
+                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                            &inheritsPrincipal);
+    if (NS_FAILED(rv) || inheritsPrincipal) {
         return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
     }
     
@@ -2951,8 +2972,9 @@ nsScriptSecurityManager::OnChannelRedirect(nsIChannel* oldChannel,
 
     NS_ENSURE_STATE(oldURI && newURI);
 
-    const PRUint32 flags = nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
-                           nsIScriptSecurityManager::DISALLOW_SCRIPT;
+    const PRUint32 flags =
+        nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+        nsIScriptSecurityManager::DISALLOW_SCRIPT;
     return CheckLoadURI(oldURI, newURI, flags);
 }
 

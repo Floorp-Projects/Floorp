@@ -135,7 +135,7 @@ FeedWriter.prototype = {
     var secman = 
         Cc["@mozilla.org/scriptsecuritymanager;1"].
         getService(Ci.nsIScriptSecurityManager);    
-    const flags = Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA;
+    const flags = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
     try {
       secman.checkLoadURIStr(this._window.location.href, uri, flags);
       // checkLoadURIStr will throw if the link URI should not be loaded per 

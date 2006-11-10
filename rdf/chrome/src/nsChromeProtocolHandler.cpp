@@ -519,7 +519,10 @@ nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_re
 NS_IMETHODIMP
 nsChromeProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD;
+    // XXXbz we should probably have different flags for different package
+    // types and put the things that ARE OK for random crap to load into a
+    // separate package type!
+    *result = URI_STD | URI_IS_UI_RESOURCE;
     return NS_OK;
 }
 

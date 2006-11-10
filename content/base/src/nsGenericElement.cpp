@@ -3009,9 +3009,10 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      PRUint32 flag = aIsUserTriggered ?
-                      (PRUint32) nsIScriptSecurityManager::STANDARD :
-                      (PRUint32) nsIScriptSecurityManager::DISALLOW_FROM_MAIL;
+      PRUint32 flag =
+        aIsUserTriggered ?
+        (PRUint32) nsIScriptSecurityManager::STANDARD :
+        (PRUint32) nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT;
       proceed =
         securityManager->CheckLoadURIWithPrincipal(NodePrincipal(), aLinkURI,
                                                    flag);

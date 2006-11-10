@@ -171,7 +171,7 @@ InstallTriggerCheckLoadURIFromScript(JSContext *cx, const nsAString& uriStr)
 
     // are we allowed to load this one?
     rv = secman->CheckLoadURIWithPrincipal(principal, uri,
-                    nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+                    nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL);
     return rv;
 }
 

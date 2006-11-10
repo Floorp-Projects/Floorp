@@ -2386,7 +2386,8 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
 
 NS_IMETHODIMP nsImapService::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD | ALLOWS_PROXY;
+    *result = URI_STD | URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+        URI_DANGEROUS_TO_LOAD | ALLOWS_PROXY;
     return NS_OK;
 }
 

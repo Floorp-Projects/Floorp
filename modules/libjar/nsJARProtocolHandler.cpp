@@ -140,7 +140,9 @@ nsJARProtocolHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsJARProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+    // URI_LOADABLE_BY_ANYONE, since it's our inner URI that will matter
+    // anyway.
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
     /* Although jar uris have their own concept of relative urls
        it is very different from the standard behaviour, so we
        have to say norelative here! */

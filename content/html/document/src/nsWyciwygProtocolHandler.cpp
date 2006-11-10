@@ -127,6 +127,8 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 NS_IMETHODIMP
 nsWyciwygProtocolHandler::GetProtocolFlags(PRUint32 *result) 
 {
-  *result = URI_NORELATIVE | URI_NOAUTH;
+  // Should this be an an nsINestedURI?  We don't really want random
+  // webpages loading these URIs...
+  *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
   return NS_OK;
 }

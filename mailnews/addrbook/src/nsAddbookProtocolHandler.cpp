@@ -85,7 +85,7 @@ NS_IMETHODIMP nsAddbookProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 
 NS_IMETHODIMP nsAddbookProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 {
-  *aUritype = URI_STD;
+  *aUritype = URI_STD | URI_LOADABLE_BY_ANYONE;
   return NS_OK;
 }
 

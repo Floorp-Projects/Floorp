@@ -127,7 +127,7 @@ ItipProtocolHandler.prototype = {
         return this;
     },
     
-    protocolFlags: CI.nsIProtocolHandler.URI_NORELATIVE,
+    protocolFlags: CI.nsIProtocolHandler.URI_NORELATIVE | CI.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
     allowPort: function () { return false; },
     isSecure: false,
     newURI: function (spec, charSet, baseURI)

@@ -167,7 +167,7 @@ nsSimpleChromeHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsSimpleChromeHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD;
+    *result = URI_STD | URI_IS_UI_RESOURCE;
     return NS_OK;
 }
 

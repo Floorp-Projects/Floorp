@@ -41,7 +41,7 @@
 interface nsIURI;
 
 
-[scriptable, uuid(5a46e611-cf4a-4407-a5b4-002fcf051120)]
+[scriptable, uuid(5ed0b9b8-e7f4-4b55-9805-7ab857b335a1)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -79,18 +79,35 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     // Default permissions
     const unsigned long STANDARD = 0;
 
-    // If the source is mail, disallow the load
-    const unsigned long DISALLOW_FROM_MAIL = 1 << 0;
+    // Indicate that the load is a load of a new document that is not
+    // user-triggered.  Here "user-triggered" could be broadly interpreted --
+    // for example, scripted sets of window.location.href might be treated as
+    // "user-triggered" in some circumstances.  A typical example of a load
+    // that is not user-triggered is a <meta> refresh load.  If this flag is
+    // set, the load will be denied if the originating principal's URI has the
+    // nsIProtocolHandler::URI_FORBIDS_AUTOMATIC_DOCUMENT_REPLACEMENT flag set.
+    const unsigned long LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT = 1 << 0;
 
-    // Allow the loading of chrome URLs by non-chrome URLs
+    // Allow the loading of chrome URLs by non-chrome URLs.  Use with great
+    // care!  This will actually allow the loading of any URI which has the
+    // nsIProtocolHandler::URI_IS_UI_RESOURCE protocol handler flag set.  Ths
+    // probably means at least chrome: and resource:.
     const unsigned long ALLOW_CHROME = 1 << 1;
 
-    // Don't allow javascript: and data: URLs to load
-    const unsigned long DISALLOW_SCRIPT_OR_DATA = 1 << 2;
+    // Don't allow URLs which would inherit the caller's principal (such as
+    // javascript: or data:) to load.  See
+    // nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT.
+    const unsigned long DISALLOW_INHERIT_PRINCIPAL = 1 << 2;
+
+    // Alias for DISALLOW_INHERIT_PRINCIPAL for backwards compat with
+    // JS-implemented extensions.
+    const unsigned long DISALLOW_SCRIPT_OR_DATA = DISALLOW_INHERIT_PRINCIPAL;
 
     // Don't allow javascript: URLs to load
     //   WARNING: Support for this value was added in Mozilla 1.7.8 and
     //   Firefox 1.0.4.  Use in prior versions WILL BE IGNORED.
+    // When using this, make sure that you actually want DISALLOW_SCRIPT, not
+    // DISALLOW_INHERIT_PRINCIPAL
     const unsigned long DISALLOW_SCRIPT = 1 << 3;
 
     /**

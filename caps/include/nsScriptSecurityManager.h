@@ -424,9 +424,6 @@ private:
     nsIPrincipal*
     doGetSubjectPrincipal(nsresult* rv);
     
-    static nsresult
-    GetBaseURIScheme(nsIURI* aURI, nsCString& aScheme);
-
     static nsresult 
     ReportError(JSContext* cx, const nsAString& messageTag,
                 nsIURI* aSource, nsIURI* aTarget);

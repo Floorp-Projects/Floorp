@@ -255,6 +255,10 @@ function IRCProtocolHandler(isSecure)
 IRCProtocolHandler.prototype.protocolFlags =
                    nsIProtocolHandler.URI_NORELATIVE |
                    nsIProtocolHandler.ALLOWS_PROXY;
+if ("URI_DANGEROUS_TO_LOAD" in nsIProtocolHandler) {
+  IRCProtocolHandler.prototype.protocolFlags |=
+      nsIProtocolHandler.URI_LOADABLE_BY_ANYONE;
+}
 
 IRCProtocolHandler.prototype.allowPort =
 function ircph_allowPort(port, scheme)

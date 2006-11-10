@@ -406,7 +406,7 @@ nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_re
 NS_IMETHODIMP
 nsChromeProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD;
+    *result = URI_STD | URI_IS_UI_RESOURCE;
     return NS_OK;
 }
 

@@ -277,8 +277,12 @@ function JSDProtocolHandler()
 
 JSDProtocolHandler.prototype.scheme = "x-jsd";
 JSDProtocolHandler.prototype.defaultPort = JSD_DEFAULT_PORT;
-JSDProtocolHandler.prototype.protocolFlags = nsIProtocolHandler.URI_NORELATIVE ||
+JSDProtocolHandler.prototype.protocolFlags = nsIProtocolHandler.URI_NORELATIVE |
                                              nsIProtocolHandler.URI_NOAUTH;
+if ("URI_DANGEROUS_TO_LOAD" in nsIProtocolHandler) {
+  JSDProtocolHandler.prototype.protocolFlags |=
+      nsIProtocolHandler.URI_DANGEROUS_TO_LOAD;
+}
 
 JSDProtocolHandler.prototype.allowPort =
 function jsdph_allowport (aPort, aScheme)
