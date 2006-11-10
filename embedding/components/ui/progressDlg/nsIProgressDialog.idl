@@ -53,8 +53,8 @@ interface nsIObserver;
  *   2. Set appropriate attributes that control the display and behavior
  *      of the dialog.
  *   3. Open the dialog.
- *   4. Send progress notifications to the dialog, via it's 
- *      nsIWebProgressListener methods.
+ *   4. Send progress notifications to the dialog, via its
+ *      nsIDownloadProgressListener methods.
  *   5. Close the dialog when the operation completes, or when the user
  *      closes it manually.
  *   6. Release the instance.  The instance will be referenced by

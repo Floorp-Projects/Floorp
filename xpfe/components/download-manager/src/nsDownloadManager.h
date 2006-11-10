@@ -49,7 +49,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIRDFContainerUtils.h"
-#include "nsIWebProgressListener.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
 #include "nsRefPtrHashtable.h"
@@ -128,7 +127,7 @@ public:
   nsresult Resume();
   void DisplayDownloadFinishedAlert();
 
-  void SetDialogListener(nsIWebProgressListener2* aInternalListener) {
+  void SetDialogListener(nsIDownloadProgressListener* aInternalListener) {
     mDialogListener = aInternalListener;
   }
   void SetDialog(nsIProgressDialog* aDialog) {
@@ -170,7 +169,7 @@ private:
 
   nsCOMPtr<nsIURI> mTarget;
   nsCOMPtr<nsIURI> mSource;
-  nsCOMPtr<nsIWebProgressListener2> mDialogListener;
+  nsCOMPtr<nsIDownloadProgressListener> mDialogListener;
   nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
