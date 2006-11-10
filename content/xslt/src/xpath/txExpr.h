@@ -994,6 +994,8 @@ private:
 class txUnionNodeTest : public txNodeTest
 {
 public:
+    ~txUnionNodeTest()
+
     nsresult addNodeTest(txNodeTest* aNodeTest);
 
     TX_DECL_NODE_TEST;
