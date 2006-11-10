@@ -3065,7 +3065,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
           iter.Next();
         }
       }
-      else if (!isPaginated || (aPresContext->Type() == nsPresContext::eContext_PageLayout))
+      else if (!isPaginated)
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
@@ -3901,9 +3901,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      // isDynamic: textFrame receives user interaction
-      PRBool isDynamic = aPresContext->IsDynamic();
-
       if (!hideStandardSelection || displaySelection) {
         //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
         DrawSelectionIterator iter(details, (PRUnichar *)text,
@@ -3960,10 +3957,10 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
             nsRect rect(currentX, dy, newWidth, mRect.height);
             aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect);
 
-            if (!isDynamic && !iter.IsBeforeOrAfter()) {
+            if (isPaginated && !iter.IsBeforeOrAfter()) {
               aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
               aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
-            } else if (isDynamic) {
+            } else if (!isPaginated) {
               aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
               aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
             }
@@ -3975,7 +3972,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
             iter.Next();
           }
         }
-        else if (isDynamic) 
+        else if (!isPaginated) 
         {
           aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
           aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
