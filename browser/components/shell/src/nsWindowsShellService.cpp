@@ -42,6 +42,7 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
+#include "nsCRT.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -56,6 +57,7 @@
 #include "nsIProcess.h"
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "shlobj.h"
@@ -455,8 +457,8 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
       // Close the key we opened.
       ::RegCloseKey(theKey);
       if (REG_FAILED(result) ||
-          !dataLongPath.Equals(currValue, CaseInsensitiveCompare) &&
-          !dataShortPath.Equals(currValue, CaseInsensitiveCompare)) {
+          !dataLongPath.EqualsIgnoreCase(currValue) &&
+          !dataShortPath.EqualsIgnoreCase(currValue)) {
         // Key wasn't set, or was set to something else (something else became the default browser)
         *aIsDefaultBrowser = PR_FALSE;
         break;
@@ -532,13 +534,12 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the Start Menu item if it doesn't exist
-  nsString brandFullName;
+  nsXPIDLString brandFullName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
                                  getter_Copies(brandFullName));
   nsCAutoString nativeFullName;
   // For the now, we use 'A' APIs (see bug 240272, 239279)
-  NS_UTF16ToCString(brandFullName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeFullName);
+  NS_CopyUnicodeToNative(brandFullName, nativeFullName);
 
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
@@ -547,39 +548,35 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
             aForAllUsers);
 
   // Set the Options and Safe Mode start menu context menu item labels
-  nsCAutoString optionsKey(SMI);
-  optionsKey.Append(exeName);
-  optionsKey.Append("\\shell\\properties");
+  nsCAutoString optionsKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
+  optionsKey.ReplaceSubstring("%APPEXE%", exeName.get());
 
-  nsCAutoString safeModeKey(SMI);
-  safeModeKey.Append(exeName);
-  safeModeKey.Append("\\shell\\safemode");
+  nsCAutoString safeModeKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\safemode"));
+  safeModeKey.ReplaceSubstring("%APPEXE%", exeName.get());
 
-  nsString brandShortName;
+  nsXPIDLString brandShortName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                  getter_Copies(brandShortName));
 
   const PRUnichar* brandNameStrings[] = { brandShortName.get() };
 
   // Set the Options menu item
-  nsString optionsTitle;
+  nsXPIDLString optionsTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("optionsLabel").get(),
                                brandNameStrings, 1, getter_Copies(optionsTitle));
   // Set the Safe Mode menu item
-  nsString safeModeTitle;
+  nsXPIDLString safeModeTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("safeModeLabel").get(),
                                brandNameStrings, 1, getter_Copies(safeModeTitle));
 
   // Set the registry keys
   nsCAutoString nativeTitle;
   // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_UTF16ToCString(optionsTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeTitle);
+  NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
   SetRegKey(optionsKey.get(), "", nativeTitle.get(), aClaimAllTypes,
             aForAllUsers);
   // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_UTF16ToCString(safeModeTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeTitle);
+  NS_CopyUnicodeToNative(safeModeTitle, nativeTitle);
   SetRegKey(safeModeKey.get(), "", nativeTitle.get(), aClaimAllTypes,
             aForAllUsers);
 
@@ -781,7 +778,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   NS_ENSURE_SUCCESS(rv, rv);
  
   // e.g. "Desktop Background.bmp"
-  nsString fileLeafName;
+  nsXPIDLString fileLeafName;
   rv = shellBundle->GetStringFromName
                       (NS_LITERAL_STRING("desktopBackgroundLeafNameWin").get(),
                        getter_Copies(fileLeafName));
@@ -1057,7 +1054,7 @@ nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const 
   if (NS_FAILED(rv))
     return rv;
   
-  const nsCString spec(aURI);
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
   const char* specStr = spec.get();
   PRUint32 pid;
   return process->Run(PR_FALSE, &specStr, 1, &pid);

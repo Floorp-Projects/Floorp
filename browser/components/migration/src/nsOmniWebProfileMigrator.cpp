@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
- *  Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +42,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
-#include "nsServiceManagerUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsOmniWebProfileMigrator

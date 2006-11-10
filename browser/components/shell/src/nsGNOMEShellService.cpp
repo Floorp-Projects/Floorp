@@ -43,7 +43,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIPrefService.h"
 #include "prenv.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIGConfService.h"
 #include "nsIGnomeVFSService.h"
 #include "nsIStringBundle.h"
@@ -56,10 +56,10 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIImage.h"
-#include "prprf.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "nsIImageToPixbuf.h"
 #endif
+#include "nsColor.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -217,13 +217,12 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
   nsCAutoString schemeList;
-  nsCAutoString appKeyValue(mAppPath);
-  appKeyValue.Append(" \"%s\"");
+  nsCAutoString appKeyValue(mAppPath + NS_LITERAL_CSTRING(" \"%s\""));
   unsigned int i;
 
   for (i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
-    schemeList.Append(nsDependentCString(appProtocols[i].name));
-    schemeList.Append(',');
+    schemeList.Append(nsDependentCString(appProtocols[i].name)
+                      + NS_LITERAL_CSTRING(","));
 
     if (appProtocols[i].essential || aClaimAllTypes) {
       gconf->SetAppForProtocol(nsDependentCString(appProtocols[i].name),
@@ -243,7 +242,7 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
     bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
     NS_ENSURE_TRUE(brandBundle, NS_ERROR_FAILURE);
 
-    nsString brandShortName, brandFullName;
+    nsXPIDLString brandShortName, brandFullName;
     brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                    getter_Copies(brandShortName));
     brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
@@ -280,7 +279,7 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
     if (lastSlash == -1) {
       NS_ERROR("no slash in executable path?");
     } else {
-      iconFilePath.SetLength(lastSlash);
+      iconFilePath.Truncate(lastSlash);
       nsCOMPtr<nsILocalFile> iconFile;
       NS_NewNativeLocalFile(iconFilePath, PR_FALSE, getter_AddRefs(iconFile));
       if (iconFile) {
@@ -401,7 +400,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   nsCAutoString filePath(PR_GetEnv("HOME"));
 
   // get the product brand name from localized strings
-  nsString brandName;
+  nsXPIDLString brandName;
   nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
   if (bundleService) {
@@ -416,10 +415,10 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   }
 
   // build the file name
-  filePath.Append('/');
-  filePath.Append(NS_ConvertUTF16toUTF8(brandName));
-  filePath.Append("_wallpaper.png");
-
+  filePath.Append(NS_LITERAL_CSTRING("/") +
+                  NS_ConvertUTF16toUTF8(brandName) +
+                  NS_LITERAL_CSTRING("_wallpaper.png"));
+                  
   // write the image to a file in the home dir
   rv = WriteImage(filePath, gfxFrame);
 
@@ -448,59 +447,6 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   return rv;
 }
 
-// In: pointer to two characters CC
-// Out: parsed color number
-static PRUint8
-HexToNum(char ch)
-{
-  if ('0' <= ch && '9' >= ch)
-    return ch - '0';
-
-  if ('A' <= ch && 'F' >= ch)
-    return ch - 'A';
-
-  if ('a' <= ch && 'f' >= ch)
-    return ch - 'a';
-
-  return 0;
-}
-  
-
-// In: 3 or 6-character RRGGBB hex string
-// Out: component colors
-static PRBool
-HexToRGB(const nsCString& aColorSpec,
-         PRUint8 &aRed,
-         PRUint8 &aGreen,
-         PRUint8 &aBlue)
-{
-  const char *buf = aColorSpec.get();
-
-  if (aColorSpec.Length() == 6) {
-    aRed =    HexToNum(buf[0]) >> 4 |
-              HexToNum(buf[1]);
-    aGreen =  HexToNum(buf[2]) >> 4 |
-              HexToNum(buf[3]);
-    aBlue =   HexToNum(buf[4]) >> 4 |
-              HexToNum(buf[5]);
-    return PR_TRUE;
-  }
-
-  if (aColorSpec.Length() == 3) {
-    aRed = HexToNum(buf[0]);
-    aGreen = HexToNum(buf[1]);
-    aBlue = HexToNum(buf[2]);
-
-    aRed |= aRed >> 4;
-    aGreen |= aGreen >> 4;
-    aBlue |= aBlue >> 4;
-
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
 {
@@ -517,27 +463,13 @@ nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
   // Chop off the leading '#' character
   background.Cut(0, 1);
 
-  PRUint8 red, green, blue;
-  if (!HexToRGB(background, red, green, blue))
-      return NS_ERROR_FAILURE;
+  nscolor rgb;
+  if (!NS_ASCIIHexToRGB(background, &rgb))
+    return NS_ERROR_FAILURE;
 
   // The result must be in RGB order with the high 8 bits zero.
-  *aColor = (red << 16 | green << 8  | blue);
+  *aColor = (NS_GET_R(rgb) << 16 | NS_GET_G(rgb) << 8  | NS_GET_B(rgb));
   return NS_OK;
-}
-
-static void
-ColorToHex(PRUint32 aColor, nsCString& aResult)
-{
-  char *buf = aResult.BeginWriting(7);
-  if (!buf)
-    return;
-
-  PRUint8 red = (aColor >> 16);
-  PRUint8 green = (aColor >> 8) & 0xff;
-  PRUint8 blue = aColor & 0xff;
-
-  PR_snprintf(buf, 8, "#%02x%02x%02x", red, green, blue);
 }
 
 NS_IMETHODIMP
@@ -545,8 +477,12 @@ nsGNOMEShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 {
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
-  nsCString colorString;
-  ColorToHex(aColor, colorString);
+  unsigned char red = (aColor >> 16);
+  unsigned char green = (aColor >> 8) & 0xff;
+  unsigned char blue = aColor & 0xff;
+
+  nsCAutoString colorString;
+  NS_RGBToASCIIHex(NS_RGB(red, green, blue), colorString);
 
   gconf->SetString(NS_LITERAL_CSTRING(kDesktopColorKey), colorString);
 
@@ -620,7 +556,7 @@ nsGNOMEShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const ns
   if (NS_FAILED(rv))
     return rv;
 
-  const nsCString spec(aURI);
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aURI);
   const char* specStr = spec.get();
   PRUint32 pid;
   return process->Run(PR_FALSE, &specStr, 1, &pid);

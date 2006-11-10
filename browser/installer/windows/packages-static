@@ -220,8 +220,6 @@ bin\components\nsSessionStore.js
 bin\components\sessionstore.xpt
 bin\components\nsURLFormatter.js
 bin\components\urlformatter.xpt
-bin\components\browserdirprovider.dll
-bin\components\brwsrcmp.dll
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js

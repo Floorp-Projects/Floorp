@@ -48,7 +48,7 @@
 #include "nsITimer.h"
 #include "nsIRDFNode.h"
 #include "nsIBookmarksService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -88,7 +88,7 @@ protected:
 
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
-    nsString      mPersonalToolbarName;
+    nsXPIDLString mPersonalToolbarName;
     PRBool        mBookmarksAvailable;
     PRBool        mDirty;
     PRBool        mBrowserIcons;

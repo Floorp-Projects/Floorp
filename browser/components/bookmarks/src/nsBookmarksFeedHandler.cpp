@@ -392,12 +392,8 @@ nsFeedLoadListener::TryParseAsRDF ()
     if (NS_FAILED(rv)) return rv;
     if (!listener) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIStringInputStream> stream =
-        do_CreateInstance("@mozilla.org/io/string-input-stream;1");
-    if (!stream)
-        return NS_ERROR_FAILURE;
-
-    rv = stream->SetData(mBody.get(), mBody.Length());
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewCStringInputStream(getter_AddRefs(stream), mBody);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
@@ -857,9 +853,9 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
                 }
                 
                 // Clean up whitespace
-                CompressWhitespace(titleStr);
+                titleStr.CompressWhitespace();
                 linkStr.Trim("\b\t\r\n ");
-                CompressWhitespace(dateStr);
+                dateStr.CompressWhitespace();
                 
                 if (titleStr.IsEmpty() && !dateStr.IsEmpty())
                     titleStr.Assign(dateStr);
