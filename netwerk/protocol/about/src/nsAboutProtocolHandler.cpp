@@ -77,7 +77,7 @@ nsAboutProtocolHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsAboutProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
     return NS_OK;
 }
 
@@ -204,7 +204,7 @@ nsSafeAboutProtocolHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsSafeAboutProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 

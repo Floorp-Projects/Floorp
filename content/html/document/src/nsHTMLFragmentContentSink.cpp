@@ -1041,9 +1041,10 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       nsCOMPtr<nsIURI> attrURI;
       rv = NS_NewURI(getter_AddRefs(attrURI), v, nsnull, baseURI);
       if (NS_SUCCEEDED(rv)) {
-        rv = secMan->CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(),
-                                               attrURI,
-                                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+        rv = secMan->
+          CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(),
+                attrURI,
+                nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL);
       }
     }
     

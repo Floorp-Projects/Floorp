@@ -79,7 +79,7 @@ const FAV_CONTRACTID = "@mozilla.org/browser/favicon-service;1";
 const LG_CONTRACTID = "@mozilla.org/network/load-group;1";
 const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
-const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA;
+const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
 
 // Check every hour
 const EXPIRATION = 3600000;

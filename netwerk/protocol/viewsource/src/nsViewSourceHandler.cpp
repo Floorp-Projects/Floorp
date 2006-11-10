@@ -69,7 +69,7 @@ nsViewSourceHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsViewSourceHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 

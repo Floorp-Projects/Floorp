@@ -83,13 +83,11 @@ nsAnnoProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 
 
 // nsAnnoProtocolHandler::GetProtocolFlags
-//
-//    No special protocol flags.
 
 NS_IMETHODIMP
 nsAnnoProtocolHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-  *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH);
+  *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
 

@@ -316,7 +316,8 @@
             var safeURI = ioService.newURI("about:blank", null, null);
 
             try {
-              secMan.checkLoadURI(safeURI, uri, nsISSM.DISALLOW_SCRIPT_OR_DATA)
+              secMan.checkLoadURI(safeURI, uri,
+                                  nsISSM.DISALLOW_INHERIT_PRINCIPAL)
             } catch (ex) {
               var msg = "Error: Cannot open a " + uri.scheme + ": link using \
                          the text-link binding.";

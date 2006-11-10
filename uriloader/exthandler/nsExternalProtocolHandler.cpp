@@ -355,7 +355,7 @@ PRBool nsExternalProtocolHandler::HaveProtocolHandler(nsIURI * aURI)
 NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 {
     // Make it norelative since it is a simple uri
-    *aUritype = URI_NORELATIVE | URI_NOAUTH | URI_HAS_NO_SECURITY_CONTEXT;
+    *aUritype = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 

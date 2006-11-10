@@ -860,8 +860,8 @@ nsGnomeVFSProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-  // Is this true of all GnomeVFS URI types?
-  *aProtocolFlags = URI_STD;
+  // Is URI_STD true of all GnomeVFS URI types?
+  *aProtocolFlags = URI_STD | URI_DANGEROUS_TO_LOAD;
   return NS_OK;
 }
 

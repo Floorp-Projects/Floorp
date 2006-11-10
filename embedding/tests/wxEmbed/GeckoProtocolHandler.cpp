@@ -218,6 +218,9 @@ NS_IMETHODIMP GeckoProtocolHandlerImpl::GetDefaultPort(PRInt32 *aDefaultPort)
 /* readonly attribute unsigned long protocolFlags; */
 NS_IMETHODIMP GeckoProtocolHandlerImpl::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
+    // XXXbz Not setting any of the protocol security flags for now, because I
+    // have no idea what this is used for.  Whoever uses it should set the
+    // flags.
     *aProtocolFlags = URI_NORELATIVE | URI_NOAUTH;
     return NS_OK;
 }

@@ -911,8 +911,7 @@ nsFeedLoadListener::IsLinkValid(const PRUnichar *aURI)
         return PR_FALSE;
 
     rv = mSecMan->CheckLoadURI(mURI, linkuri,
-                               nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
-                               nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
+                               nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL);
     if (NS_FAILED(rv))
         return PR_FALSE;
 

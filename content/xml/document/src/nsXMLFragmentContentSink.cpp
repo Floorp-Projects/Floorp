@@ -574,7 +574,7 @@ nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
   // use this to check for safe URIs in the few attributes that allow them
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIURI> baseURI;
-  PRUint32 flags = nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA;
+  PRUint32 flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL;
 
   // scrub URI attributes that point at dangerous content
   // We have to do this here, because this is where we have a base URI,

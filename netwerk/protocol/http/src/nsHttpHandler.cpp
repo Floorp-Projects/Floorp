@@ -1408,7 +1408,8 @@ nsHttpHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsHttpHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP;
+    *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP |
+        URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 

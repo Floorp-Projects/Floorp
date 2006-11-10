@@ -565,7 +565,9 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
 nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
   // Check if the page where the plugin came from can load aUrl before
-  // loading it, and do *not* allow loading javascript: or data: URIs.
+  // loading it, and do *not* allow loading URIs that would inherit our
+  // principal.
+  
   var pluginPage = window.opener.content.location.href;
 
   const nsIScriptSecurityManager =
@@ -575,7 +577,7 @@ nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
     .getService(nsIScriptSecurityManager);
 
   secMan.checkLoadURIStr(pluginPage, aUrl,
-                         nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
+                         nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
 
   window.opener.open(aUrl);
 }

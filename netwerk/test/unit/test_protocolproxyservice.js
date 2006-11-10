@@ -60,7 +60,8 @@ TestProtocolHandler.prototype = {
   defaultPort: -1,
   protocolFlags: Components.interfaces.nsIProtocolHandler.URI_NOAUTH |
                  Components.interfaces.nsIProtocolHandler.URI_NORELATIVE |
-                 Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY,
+                 Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY |
+                 Components.interfaces.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
   newURI: function(spec, originCharset, baseURI) {
     var uri = Components.classes["@mozilla.org/network/simple-uri;1"]
                         .createInstance(Components.interfaces.nsIURI);

@@ -962,7 +962,8 @@ nsJSProtocolHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsJSProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_HAS_NO_SECURITY_CONTEXT;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
+        URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 
