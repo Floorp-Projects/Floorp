@@ -182,17 +182,17 @@ public:
 #define TX_DECL_EXPR_BASE \
     nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult); \
     ResultType getReturnType(); \
-    PRBool isSensitiveTo(ContextSensitivity aContexts)
+    PRBool isSensitiveTo(ContextSensitivity aContexts);
 
 #define TX_DECL_EXPR \
-    TX_DECL_EXPR_BASE; \
+    TX_DECL_EXPR_BASE \
     TX_DECL_TOSTRING \
     Expr* getSubExprAt(PRUint32 aPos); \
-    void setSubExprAt(PRUint32 aPos, Expr* aExpr)
+    void setSubExprAt(PRUint32 aPos, Expr* aExpr);
 
 #define TX_DECL_OPTIMIZABLE_EXPR \
-    TX_DECL_EXPR; \
-    ExprType getType()
+    TX_DECL_EXPR \
+    ExprType getType();
     
 
 #define TX_DECL_FUNCTION \
@@ -395,7 +395,7 @@ public:
     {
     }
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
     static PRBool getTypeFromAtom(nsIAtom* aName, eType& aType);
 
@@ -619,7 +619,7 @@ public:
     {
     }
 
-    TX_DECL_OPTIMIZABLE_EXPR;
+    TX_DECL_OPTIMIZABLE_EXPR
 
     txNodeTest* getNodeTest()
     {
@@ -662,7 +662,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsAutoPtr<Expr> expr;
@@ -675,7 +675,7 @@ public:
     txLiteralExpr(double aDbl);
     txLiteralExpr(const nsAString& aStr);
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsRefPtr<txAExprResult> mValue;
@@ -703,7 +703,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     short op;
@@ -722,7 +722,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsAutoPtr<Expr> expr;
@@ -747,7 +747,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsAutoPtr<Expr> leftExpr, rightExpr;
@@ -777,7 +777,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsAutoPtr<Expr> mLeftExpr, mRightExpr;
@@ -815,7 +815,7 @@ public:
     }
 
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     PRBool compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
@@ -836,7 +836,7 @@ public:
 
     VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID);
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     nsCOMPtr<nsIAtom> mPrefix;
@@ -870,7 +870,7 @@ public:
      */
     void deleteExprAt(PRUint32 aPos);
 
-    TX_DECL_OPTIMIZABLE_EXPR;
+    TX_DECL_OPTIMIZABLE_EXPR
 
     PathOperator getPathOpAt(PRUint32 aPos)
     {
@@ -916,7 +916,7 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 #ifdef TX_TO_STRING
 public:
@@ -962,7 +962,7 @@ public:
      */
     void deleteExprAt(PRUint32 aPos);
 
-    TX_DECL_OPTIMIZABLE_EXPR;
+    TX_DECL_OPTIMIZABLE_EXPR
 
 private:
 
@@ -980,7 +980,7 @@ public:
     txNamedAttributeStep(PRInt32 aNsID, nsIAtom* aPrefix,
                          nsIAtom* aLocalName);
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 private:
     PRInt32 mNamespace;
@@ -1017,7 +1017,7 @@ public:
     }
 #endif
 
-    TX_DECL_EXPR;
+    TX_DECL_EXPR
 
 #ifdef TX_TO_STRING
 private:

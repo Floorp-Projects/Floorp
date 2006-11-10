@@ -132,7 +132,7 @@ public:
 #endif
                                   nsISupports *aState);
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     txArgumentType GetParamType(const nsXPTParamInfo &aParam,
