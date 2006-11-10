@@ -998,7 +998,7 @@ public:
 
     nsresult addNodeTest(txNodeTest* aNodeTest);
 
-    TX_DECL_NODE_TEST;
+    TX_DECL_NODE_TEST
 
 private:
     nsTPtrArray<txNodeTest> mNodeTests;
