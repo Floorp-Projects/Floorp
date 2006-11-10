@@ -56,8 +56,9 @@ public:
 
 private:
     // Helper methods for optimizing specific classes
-    nsresult optimizeAttributeStep(Expr* aInExpr, Expr** aOutExpr);
     nsresult optimizeStep(Expr* aInExpr, Expr** aOutExpr);
+    nsresult optimizePath(Expr* aInExpr, Expr** aOutExpr);
+    nsresult optimizeUnion(Expr* aInExpr, Expr** aOutExpr);
 };
 
 #endif

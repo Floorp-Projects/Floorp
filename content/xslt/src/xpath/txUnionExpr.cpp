@@ -76,6 +76,16 @@ UnionExpr::addExpr(Expr* aExpr)
     return rv;
 } //-- addExpr
 
+void
+UnionExpr::deleteExprAt(PRUint32 aPos)
+{
+    NS_ASSERTION(aPos < (PRUint32)expressions.getLength(),
+                 "killing bad expression index");
+
+    // This isn't very efficient. We should switch to nsTArray.
+    expressions.remove(expressions.get((int)aPos));
+}
+
     //-----------------------------/
   //- Virtual methods from Expr -/
 //-----------------------------/
@@ -124,6 +134,12 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
     return NS_OK;
 } //-- evaluate
+
+Expr::ExprType
+UnionExpr::getType()
+{
+  return UNION_EXPR;
+}
 
 TX_IMPL_EXPR_STUBS_LIST(UnionExpr, NODESET_RESULT, expressions)
 

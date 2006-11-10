@@ -92,6 +92,7 @@ CPPSRCS = \
         txNodeSetContext.cpp \
         txResultRecycler.cpp \
         txUnionExpr.cpp \
+        txUnionNodeTest.cpp \
         txUnaryExpr.cpp \
         txVariableRefExpr.cpp \
         txXPathOptimizer.cpp

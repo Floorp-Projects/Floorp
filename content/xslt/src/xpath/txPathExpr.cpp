@@ -48,44 +48,33 @@
 //------------/
 
 /**
- * Creates a new PathExpr
-**/
-PathExpr::PathExpr()
-{
-    //-- do nothing
-}
-
-/**
- * Destructor, will delete all Expressions
-**/
-PathExpr::~PathExpr()
-{
-    txListIterator iter(&expressions);
-    while (iter.hasNext()) {
-         delete NS_STATIC_CAST(PathExprItem*, iter.next());
-    }
-} //-- ~PathExpr
-
-/**
  * Adds the Expr to this PathExpr
  * @param expr the Expr to add to this PathExpr
 **/
 nsresult
-PathExpr::addExpr(Expr* aExpr, PathOperator pathOp)
+PathExpr::addExpr(Expr* aExpr, PathOperator aPathOp)
 {
-    NS_ASSERTION(expressions.getLength() > 0 || pathOp == RELATIVE_OP,
+    NS_ASSERTION(!mItems.IsEmpty() || aPathOp == RELATIVE_OP,
                  "First step has to be relative in PathExpr");
-    PathExprItem* pxi = new PathExprItem(aExpr, pathOp);
+    PathExprItem* pxi = mItems.AppendElement();
     if (!pxi) {
         delete aExpr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsresult rv = expressions.add(pxi);
-    if (NS_FAILED(rv)) {
-        delete pxi;
-    }
-    return rv;
-} //-- addExpr
+    pxi->expr = aExpr;
+    pxi->pathOp = aPathOp;
+
+    return NS_OK;
+}
+
+void
+PathExpr::deleteExprAt(PRUint32 aPos)
+{
+    NS_ASSERTION(aPos < mItems.Length(),
+                 "killing bad expression index");
+
+    mItems.RemoveElementAt(aPos);
+}
 
     //-----------------------------/
   //- Virtual methods from Expr -/
@@ -106,10 +95,8 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     // We need to evaluate the first step with the current context since it
     // can depend on the context size and position. For example:
     // key('books', concat('book', position()))
-    txListIterator iter(&expressions);
-    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, iter.next());
     nsRefPtr<txAExprResult> res;
-    nsresult rv = pxi->expr->evaluate(aContext, getter_AddRefs(res));
+    nsresult rv = mItems[0].expr->evaluate(aContext, getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(res->getResultType() == txAExprResult::NODESET,
@@ -126,24 +113,26 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     res = nsnull; // To allow recycling
 
     // Evaluate remaining steps
-    while ((pxi = (PathExprItem*)iter.next())) {
+    PRUint32 i, len = mItems.Length();
+    for (i = 1; i < len; ++i) {
+        PathExprItem& pxi = mItems[i];
         nsRefPtr<txNodeSet> tmpNodes;
         txNodeSetContext eContext(nodes, aContext);
         while (eContext.hasNext()) {
             eContext.next();
 
             nsRefPtr<txNodeSet> resNodes;
-            if (pxi->pathOp == DESCENDANT_OP) {
+            if (pxi.pathOp == DESCENDANT_OP) {
                 rv = aContext->recycler()->getNodeSet(getter_AddRefs(resNodes));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                rv = evalDescendants(pxi->expr, eContext.getContextNode(),
+                rv = evalDescendants(pxi.expr, eContext.getContextNode(),
                                      &eContext, resNodes);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
             else {
                 nsRefPtr<txAExprResult> res;
-                rv = pxi->expr->evaluate(&eContext, getter_AddRefs(res));
+                rv = pxi.expr->evaluate(&eContext, getter_AddRefs(res));
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 if (res->getResultType() != txAExprResult::NODESET) {
@@ -233,32 +222,32 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
     return NS_OK;
 } //-- evalDescendants
 
+Expr::ExprType
+PathExpr::getType()
+{
+  return PATH_EXPR;
+}
+
 TX_IMPL_EXPR_STUBS_BASE(PathExpr, NODESET_RESULT)
 
 Expr*
 PathExpr::getSubExprAt(PRUint32 aPos)
 {
-    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, expressions.get(aPos));
-
-    return pxi ? pxi->expr.get() : nsnull;
+    return aPos < mItems.Length() ? mItems[aPos].expr.get() : nsnull;
 }
 void
 PathExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 {
-    NS_ASSERTION(aPos < (PRUint32)expressions.getLength(),
-                 "setting bad subexpression index");
-    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, expressions.get(aPos));
-    pxi->expr.forget();
-    pxi->expr = aExpr;
+    NS_ASSERTION(aPos < mItems.Length(), "setting bad subexpression index");
+    mItems[aPos].expr.forget();
+    mItems[aPos].expr = aExpr;
 }
 
 
 PRBool
 PathExpr::isSensitiveTo(ContextSensitivity aContext)
 {
-    txListIterator iter(&expressions);
-    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, iter.next());
-    if (pxi->expr->isSensitiveTo(aContext)) {
+    if (mItems[0].expr->isSensitiveTo(aContext)) {
         return PR_TRUE;
     }
 
@@ -269,10 +258,11 @@ PathExpr::isSensitiveTo(ContextSensitivity aContext)
         return PR_FALSE;
     }
 
-    while ((pxi = NS_STATIC_CAST(PathExprItem*, iter.next()))) {
-        NS_ASSERTION(!pxi->expr->isSensitiveTo(Expr::NODESET_CONTEXT),
+    PRUint32 i, len = mItems.Length();
+    for (i = 0; i < len; ++i) {
+        NS_ASSERTION(!mItems[i].expr->isSensitiveTo(Expr::NODESET_CONTEXT),
                      "Step cannot depend on nodeset-context");
-        if (pxi->expr->isSensitiveTo(context)) {
+        if (mItems[i].expr->isSensitiveTo(context)) {
             return PR_TRUE;
         }
     }
@@ -284,17 +274,15 @@ PathExpr::isSensitiveTo(ContextSensitivity aContext)
 void
 PathExpr::toString(nsAString& dest)
 {
-    txListIterator iter(&expressions);
-    
-    PathExprItem* pxi = (PathExprItem*)iter.next();
-    if (pxi) {
-        NS_ASSERTION(pxi->pathOp == RELATIVE_OP,
+    if (!mItems.IsEmpty()) {
+        NS_ASSERTION(mItems[0].pathOp == RELATIVE_OP,
                      "First step should be relative");
-        pxi->expr->toString(dest);
+        mItems[0].expr->toString(dest);
     }
     
-    while ((pxi = (PathExprItem*)iter.next())) {
-        switch (pxi->pathOp) {
+    PRUint32 i, len = mItems.Length();
+    for (i = 1; i < len; ++i) {
+        switch (mItems[i].pathOp) {
             case DESCENDANT_OP:
                 dest.AppendLiteral("//");
                 break;
@@ -302,7 +290,7 @@ PathExpr::toString(nsAString& dest)
                 dest.Append(PRUnichar('/'));
                 break;
         }
-        pxi->expr->toString(dest);
+        mItems[i].expr->toString(dest);
     }
 }
 #endif

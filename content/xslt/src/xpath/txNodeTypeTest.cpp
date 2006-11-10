@@ -82,6 +82,12 @@ PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
     return PR_TRUE;
 }
 
+txNodeTest::NodeTestType
+txNodeTypeTest::getType()
+{
+    return NODETYPE_TEST;
+}
+
 /*
  * Returns the default priority of this txNodeTest
  */

@@ -280,9 +280,7 @@ void LocationStep::fromDescendantsRev(const txXPathNode& aNode,
 Expr::ExprType
 LocationStep::getType()
 {
-  return mAxisIdentifier == ATTRIBUTE_AXIS ?
-         LOCATIONSTEP_ATTRIBUTE_EXPR :
-         LOCATIONSTEP_OTHER_EXPR;
+  return LOCATIONSTEP_EXPR;
 }
 
 
