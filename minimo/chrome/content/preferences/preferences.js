@@ -1,11 +1,41 @@
+/*
+ * Utils 
+ */ 
+
+function fixXULAutoScroll(e) {
+
+      var referenceScrollerBoxObject = document.getElementById("scroller").boxObject;
+      var referenceBottomBoxObject = document.getElementById("refBottom").boxObject;
+      var refTopY = referenceScrollerBoxObject.y;
+
+	try {
+		scb = referenceScrollerBoxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+		try {	
+			focusedElementBoxObject = document.getBoxObjectFor(e.target);
+			var vx={}; var vy={};
+			var currentPosY = scb.getPosition(vx,vy);
+			var toPos = parseInt(focusedElementBoxObject.y-refTopY);
+
+			if(focusedElementBoxObject) {
+				if(parseInt(focusedElementBoxObject.y-(vy.value))>referenceBottomBoxObject.y) {
+					scb.scrollToElement(e.target);
+
+					scb.scrollTo(0,parseInt(focusedElementBoxObject.y-referenceBottomBoxObject.y+focusedElementBoxObject.height+2));
+				}
+			}
+
+		} catch (i) {
+		}
+
+	} catch (i) {
+	}
+}
+
+
 /* 
- * Translators function. 
+ * Translators - When Read, When Write
  * =====
- * With XUL and beyond, these mappers shall happen more and more 
- * as we get more hybrid data-types. It's just like Webservice proxies for XUL elemetns. 
- *. So far we have this static hardcoded here. These has to do with the onsyncfrompreference
- * and onsynctopreference attributes in the XUL pref panels. 
- * ===================================================================================
+ * These are usually simple DOM XML translators. We need to make this XBL-based elements.
  */ 
 
 
@@ -65,12 +95,12 @@ function writeCacheLocationPref()
 
 
 /* 
- * This is called after pref -> DOM load. 
- * and also when clicks sync happens - see each pref element item the onchange attribute
+ * UI Visual elements disabled, enabled, dependency.
  */
  
 function UIdependencyCheck() {
-  if(!document.getElementById("useDiskCache").checked) {
+
+  if(!document.getElementById("useDiskCache").value) {
 	//document.getElementById("storeCacheStorageCard").disabled=true;
 	document.getElementById("cacheSizeField").disabled=true;
   } else {
@@ -86,38 +116,165 @@ function UIdependencyCheck() {
 	document.getElementById("networkProxyHTTP_Port").disabled=false;
   }
 
-  if(!document.getElementById("dontAskForLaunch").checked) {
-//	document.getElementById("downloadDirDisplay").disabled=true;
-  } else {
-//	document.getElementById("downloadDirDisplay").disabled=false;
-  }
-
 }
-
 
 /*
  * OnReadPref callbacks 
  */
 
-function downloadSetTextbox() {
-      if(document.getElementById("downloadDir")&&document.getElementById("downloadDir").value) {
-        var dirLocation=document.getElementById("downloadDir").value;
-//        document.getElementById("downloadDirDisplay").value=dirLocation.path;
-      } else {
-//        document.getElementById("downloadDirDisplay").value="";
-      }
+/*
+ * Depends on dontAskForLaunch pref available. Check Preferences.xul order. 
+ */
+ 
+function downloadSetTextbox()
+{
+
+  var dirLocation=document.getElementById("downloadDir").value;
+  
+  try {
+   const nsIDirectoryServiceProvider2 = Components.interfaces.nsIDirectoryServiceProvider2;
+   const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/device/directory-provider;1";
+   var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID].getService(nsIDirectoryServiceProvider2);
+   var files = dirServiceProvider.getFiles("SCDirList");
+
+   if ( files.hasMoreElements() ) {
+	document.getElementById("menuDownloadOptions").setAttribute("hidden","false");
+   }
+   
+   var fileId=0;
+
+   while (files.hasMoreElements())
+   {
+     var file = files.getNext();
+     const nsILocalFile = Components.interfaces.nsILocalFile;
+ 	 var file2 = file.QueryInterface(nsILocalFile);
+	 fileId++;	
+     var newElement=document.createElement("menuitem");
+
+	 newElement.setAttribute("label",file2.path);
+	 
+	 newElement.setAttribute("id","fileDownloadOption"+fileId);
+	 newElement.fileValue=file2;
+	 newElement.setAttribute("oncommand", "downloadSelectedOption('fileDownloadOption"+fileId+"')");
+	 document.getElementById("downloadOptionsList").appendChild(newElement);
+
+     if(dirLocation.path==file2.path) { 
+		if(document.getElementById("dontAskForLaunch").value) {
+		       document.getElementById("menuDownloadOptions").selectedItem=newElement;
+		} else {
+		       document.getElementById("menuDownloadOptions").selectedItem=document.getElementById("downloadPromptOption");
+		}
+     }
+   }
+ } catch (i) { } 
+
 }
 
+function downloadSelectedOption(refId)
+{
 
-/* Live Synchronizers
- * =====
- * In this section put all the functions you think it should be 
- * synchronized as the end-user hits the button 
- * ===================================================================================
+  var refElementSelected = document.getElementById(refId);
+  document.getElementById("downloadDir").value=refElementSelected.fileValue;
+  syncPref(document.getElementById("downloadDir"));
+
+  document.getElementById("dontAskForLaunch").value=true;
+  syncPref(document.getElementById("dontAskForLaunch"));
+
+}
+
+function downloadSelectPrompt() {
+
+  document.getElementById("dontAskForLaunch").value=false;
+  syncPref(document.getElementById("dontAskForLaunch"));
+
+}
+
+/*
+ * Depends on usaDiskCache pref enabled. Check Preferences.xul order. 
+ */
+function cacheSetTextbox() {
+
+  var dirLocation=document.getElementById("storeCacheStorageCard").value;
+  
+  try {
+   const nsIDirectoryServiceProvider2 = Components.interfaces.nsIDirectoryServiceProvider2;
+   const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/device/directory-provider;1";
+   var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID].getService(nsIDirectoryServiceProvider2);
+   var files = dirServiceProvider.getFiles("SCDirList");
+
+   if( files.hasMoreElements() ) {
+	document.getElementById("menuCacheOptions").setAttribute("hidden","false");
+   }
+   
+   var fileId=0;
+
+   while (files.hasMoreElements())
+   {
+     var file = files.getNext();
+     const nsILocalFile = Components.interfaces.nsILocalFile;
+ 	 var file2 = file.QueryInterface(nsILocalFile);
+	 fileId++;	
+       var newElement=document.createElement("menuitem");
+	 newElement.setAttribute("label",file2.path);
+	 newElement.setAttribute("id","fileCacheOption"+fileId);
+	 newElement.fileValue=file2;
+	 newElement.setAttribute("oncommand", "cacheSelectedOption('fileCacheOption"+fileId+"')"     );
+	 document.getElementById("cacheOptionsList").appendChild(newElement);
+
+     if(dirLocation.path==file2.path) { 
+		if(document.getElementById("useDiskCache").value) {
+
+		       document.getElementById("menuCacheOptions").selectedItem=newElement;
+		} else {
+		       document.getElementById("menuCacheOptions").selectedItem=document.getElementById("cacheNoneOption");
+		}
+     }
+   }
+ } catch (i) { } 
+}
+
+function cacheSelectedOption(refId)
+{
+
+  var refElementSelected = document.getElementById(refId);
+  document.getElementById("storeCacheStorageCard").value=refElementSelected.fileValue;
+  syncPref(document.getElementById("storeCacheStorageCard"));
+
+  document.getElementById("useDiskCache").value=true;
+  syncPref(document.getElementById("useDiskCache"));
+
+}
+
+function cacheSelectNone() {
+
+  document.getElementById("useDiskCache").value=false;
+  syncPref(document.getElementById("useDiskCache"));
+
+}
+
+/*
+ * Synchronous pref actions
  */
 
 function sanitizeAll()
 {
+
+    // GPS Permissions
+    try
+    {
+        var permMgr = Components.classes["@mozilla.org/permissionmanager;1"]
+                                .getService(Components.interfaces.nsIPermissionManager);
+
+        var enumerator = permMgr.enumerator;
+        while (enumerator.hasMoreElements()) {
+             var nextPermission = enumerator.getNext();
+             nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission); 
+             if (nextPermission.type == "GPS") {
+                permMgr.remove(nextPermission.host, "GPS");   
+            }
+        }
+
+    } catch (e) { alert(e) }
 
     // Cookies
     try 
@@ -180,10 +337,21 @@ function loadHomePageFromBrowser() {
    var newVal = "";
    var tabbrowser = win.document.getElementById("content");
    var l = tabbrowser.browsers.length;
+
+   var firstAdded = false;
+
    for (var i = 0; i < l; i++) {
-     if (i)
-       newVal += "|";
-       newVal += tabbrowser.getBrowserAtIndex(i).webNavigation.currentURI.spec;
+      var url = tabbrowser.getBrowserAtIndex(i).webNavigation.currentURI.spec;
+      
+      if (url == "chrome://minimo/content/preferences/preferences.xul")
+          continue;
+
+      if (firstAdded)
+         newVal += "|";
+      else
+          firstAdded = true;
+
+      newVal += url;
    }
    homePageField.value = newVal;
    syncPref(homePageField);
@@ -195,27 +363,6 @@ function loadHomePageBlank() {
    var homePageField = document.getElementById("browserStartupHomepage");
    homePageField.value = "about:blank";
    syncPref(homePageField);
-}
-
-
-function downloadChooseFolder() {
-
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-
-  var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsILocalFile );
-
-    try {
-	refLocalFile.initWithPath("\\Storage Card");
-
-    } catch(e) { alert(e) }
-
-    var currentDirPref = document.getElementById("downloadDir");
-    var customDirPref = document.getElementById("downloadDir");
-
-    customDirPref.value = currentDirPref.value = refLocalFile;
-
-    document.getElementById("downloadDirDisplay").value=refLocalFile.path;
-
 }
 
 function setDefaultBrowser() {
@@ -241,13 +388,12 @@ function setDefaultBrowser() {
 }
 
 /*
- * New Mini Pref Implementation 
+ * Rewrite of Prefs for Minimo.
  * ----------------------------
  * Quick access to OKAY / CANCEL button 
  * Panel selector 
  * OKAY = sync attributes with prefs. 
  * CANCEL = close popup 
- * ===================================================================================
  */
 
 var gPrefQueue=new Array();
@@ -258,7 +404,13 @@ var gPrefArray=null;
 var gPref=null;
 
 function prefStartup() {
-    keyInitHandler();
+
+    /* fix the size of the scrollbox contents */
+
+	//marcio 4000
+ 
+    innerWidth = document.getBoxObjectFor(document.getElementById("scroller")).width;
+    document.getElementById("pref-panes").style.width=innerWidth+"px";
 
     /* Pre select the general pane */ 
 
@@ -274,17 +426,9 @@ function prefStartup() {
 
     } catch (ignore) { alert(ignore)}
 
-    // This is now deprecated, since we have XBL-defined elements to handle the list of registered pref ID elements. 
-    // var regPrefElements= new Array ( 'browserStartupHomepage', 'enableImages', 'ssr', 'sitessr','skey', 'dumpJS', 'UseProxy', 'networkProxyHTTP', 'networkProxyHTTP_Port', 'browserDisplayZoomUI', 'browserDisplayZoomContent'  );
-    // Now depends on the preferenceset.preferenceitem XBL implementation. 
-    // in minimo/content/bindings/preferences.css and preferences.xml
-
     syncPrefLoadDOM(document.getElementById("prefsInstance").prefArray);
 
-    syncUIZoom(); // from common.js 
-    
     gToolbarButtonSelected.focus();
-
 }
 
 /*
@@ -297,15 +441,30 @@ function prefShutdown() {
 	}
 }
 
-/* General Access keyboard handler */ 
+/* 
+ * Called from the XUL 
+ * --
+ * When user dispatches oncommand for a given toolbarbutton on top
+ * we dispatch a focus to an item. 
+ */ 
 
-function keyInitHandler() {
+function focusSkipToPanel() {
+	
+	try {
 
-  document.addEventListener("keypress",eventHandlerMenu,true);
-  
+		document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("pref-panes"));
+
+	} catch (e) { alert(e) }
+
 }
 
-/* Called directly from the XUL top toolbar items */ 
+
+/* 
+ * Called from the XUL 
+ * -- 
+ * When user moves focus over a toolbarbutton item on top
+ * we should show the right pane. 
+ */
 
 function show(idPane,toolbarButtonRef) {
 
@@ -317,75 +476,6 @@ function show(idPane,toolbarButtonRef) {
     gToolbarButtonSelected=toolbarButtonRef;
     gToolbarButtonSelected.className="base-button prefselectedbutton";  // local to preferences.css
     gPanelSelected.collapsed=false;
-}
-
-/*
- * Followin two functions inherited (yes copy and paste) from the MInimo.js. Has 
- * Some differences, shall be combined in one or completelly elimiated when XBL 
- * elements ready 
- */ 
-
-function eventHandlerMenu(e) {
-
-/*
-  if(e.charCode==109) {
-  	document.getElementById("general-button").focus();
-    e.preventBubble();
-  } 
-*/
-
-   if(e.keyCode==134 || e.keyCode==70) /*SoftKey1 or HWKey1*/ {
-  	document.getElementById("general-button").focus();
-    e.preventBubble();
-  } 
-
-  var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
-
-  if(!outnavTarget && (e.keyCode==40||e.keyCode==38)) {
-    e.preventDefault();
-	if(e.keyCode==38) { 
-		document.commandDispatcher.rewindFocus();
-	}
-	if(e.keyCode==40) {
-		document.commandDispatcher.advanceFocus();
-	}
-
-  }
-  if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38)) {
-      e.preventBubble();
-      if(e.keyCode==40) {
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
-      }
-      if(e.keyCode==38) {
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
-      }
-	  var tempElement=ruleElement.getAttribute("accessfocus");
-      if(tempElement.indexOf("#")>-1) {
-      
-        if(tempElement=="#tabContainer") { 
-          if(ruleElement.tabContainer) {
-            ruleElement.selectedTab.focus();
-          }
-        } 
-		if(tempElement=="#tabContent") { 
-          document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
-          document.commandDispatcher.rewindFocus();
-        } 
-        
-	  } else { 
-		  document.getElementById(tempElement).focus();
-	  }
-  }
-}
-
-function findRuleById(outnavTarget,ruleattribute) {
-  var ruleElement=document.getElementById(outnavTarget);
-
-  if(ruleElement.collapsed) {
-      return findRuleById(ruleElement.getAttribute(ruleattribute), ruleattribute);
-  } else {
-	return ruleElement;
-  } 
 }
 
 /* 
@@ -402,6 +492,9 @@ function syncPref(refElement) {
 		//document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
 	}
 	setTimeout("UIdependencyCheck()",0);
+
+	document.getElementById("okay-button").setAttribute("disabled",false);
+	
 }
 
 
@@ -410,7 +503,9 @@ function syncPref(refElement) {
  */
 
 function PrefOkay() {
-	window.close();
+
+	document.getElementById("okay-button").setAttribute("disabled",true);
+
 }
 
 /* 
@@ -419,7 +514,6 @@ function PrefOkay() {
 
 function PrefCancel() {
     gCancelSync=true;
-	window.close();
 }
 
 
@@ -433,6 +527,7 @@ function syncPrefSaveDOM() {
 			var prefName=elRef.getAttribute("preference");
 			var transValidator=elRef.getAttribute("onsynctopreference");
 			var prefSETValue=null;
+
 			if(transValidator!="") {
 				prefSETValue=eval(transValidator);
 	
@@ -445,6 +540,7 @@ function syncPrefSaveDOM() {
 			            } 
 				}
 				prefSETValue=elRef.value;
+
 			}
 
 			if (document.getElementById(prefName).getAttribute("preftype")=="string"){
@@ -491,11 +587,7 @@ function syncPrefSaveDOM() {
 }
 function syncPrefLoadDOM(elementList) {
 
-
-
-
 	for(var strCurKey in elementList) {
-
 
 		var elementAndPref=document.getElementById(elementList[strCurKey]);
 		var prefName=elementAndPref.getAttribute("preference");
@@ -576,8 +668,7 @@ function syncPrefLoadDOM(elementList) {
 		 	   prefDOMValue = gPref.getBoolPref(prefName);
                 } catch (ex) { prefDOMValue=null; } 
 
-			
-		    document.getElementById(prefName).value=prefDOMValue;
+			    document.getElementById(prefName).value=prefDOMValue;
 
 			if(transValidator) {
 				preGETValue=eval(transValidator);
