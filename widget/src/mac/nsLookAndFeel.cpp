@@ -552,6 +552,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DragThresholdY:
         aMetric = 4;
         break;
+    case eMetric_ScrollbarWidth:
+        // It would be nice to use the native metric function, but we have always
+        // used 16 before and it returns 15. We should make the change, but with a
+        // complete audit to make sure things match up.
+        // ::GetThemeMetric(kThemeMetricScrollBarWidth, (SInt32*)&aMetric);
+        aMetric = 16;
+        break;
     case eMetric_ScrollArrowStyle:
         ThemeScrollBarArrowStyle arrowStyle;
         ::GetThemeScrollBarArrowStyle ( &arrowStyle );
