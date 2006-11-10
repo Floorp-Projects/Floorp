@@ -216,7 +216,7 @@ function testSplitOnMark(testStr:String, markArray:Array, markArrayName:String) 
 	} // for
 	
 	this.array[this.item++] = new TestCase(SECTION,
-            "Unicode Split on Mark", '', stringReplaceResult);
+            "Unicode Split on Mark", '', testSplitResult);
 	
 }
 
