@@ -57,7 +57,7 @@ namespace avmplus
 		// now unbox everything, including instance and rest args
 		int extra = argc > method->param_count ? argc - method->param_count : 0;
 		AvmAssert(method->restOffset > 0 && extra >= 0);
-		va_list ap = (va_list) alloca(method->restOffset + sizeof(Atom)*extra);
+		uint32 *ap = (uint32 *) alloca(method->restOffset + sizeof(Atom)*extra);
 
 		unboxCoerceArgs(argc, atomv, ap);
 
@@ -97,14 +97,12 @@ namespace avmplus
 	 * args, not counting the instance which is arg[0].  the
 	 * layout is [instance][arg1..argN]
 	 */
-	void MethodEnv::unboxCoerceArgs(int argc, Atom* in, va_list ap)
+	void MethodEnv::unboxCoerceArgs(int argc, Atom* in, uint32 *argv)
 	{
 		AbstractFunction* f = this->method;
 		AvmCore* core = this->core();
 		Toplevel* toplevel = this->toplevel();
 
-		#if defined(AVMPLUS_MAC) || defined (AVMPLUS_LINUX) || defined(AVMPLUS_ARM)
-		uint32 *argv = (uint32*) ap;
 		for (int i=0; i <= argc; i++)
 		{
 			if (i <= f->param_count)
@@ -153,52 +151,10 @@ namespace avmplus
 				*argv++ = (uint32) in[i];
 			}
 		}
-		#else
-		int n = argc < f->param_count ? argc : f->param_count;
-		int i = 0;
-		for (; i <= n; i++)
-		{
-			Traits* t = f->paramTraits(i);
-			AvmAssert(t != VOID_TYPE);
-			if (t == NUMBER_TYPE) 
-			{
-				va_arg(ap, double) = core->number(in[i]);
-			}
-			else if (t == INT_TYPE)
-			{
-				va_arg(ap, int) = core->integer(in[i]);
-			}
-			else if (t == UINT_TYPE)
-			{
-				va_arg(ap, uint32) = core->toUInt32(in[i]);
-			}
-			else if (t == BOOLEAN_TYPE)
-			{
-				va_arg(ap, int) = core->boolean(in[i]);
-			}
-			else if (t == OBJECT_TYPE)
-			{
-				va_arg(ap, Atom) = in[i] == undefinedAtom ? nullObjectAtom : in[i];
-			}
-			else if (!t)
-			{
-				va_arg(ap, Atom) = in[i];
-			}
-			else
-			{
-				// ScriptObject, String, or Namespace, or Null
-				va_arg(ap, int) = (int) toplevel->coerce(in[i],t) & ~7;
-			}
-		}
-		for (; i <= argc; i++)
-		{
-			va_arg(ap, Atom) = in[i];
-		}
-		#endif
 	}
 
 
-	int MethodEnv::delegateInvoke(MethodEnv* env, int argc, va_list ap)
+	Atom MethodEnv::delegateInvoke(MethodEnv* env, int argc, uint32 *ap)
 	{
 		env->impl32 = env->method->impl32;
 		return env->impl32(env, argc, ap);
@@ -207,7 +163,7 @@ namespace avmplus
 	MethodEnv::MethodEnv(void *addr, VTable *vtable)
 		: vtable(vtable), method(NULL)
 	{
-		impl32 = (int (*)(MethodEnv*, int, va_list)) addr;
+		impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) addr;
 	}
 
 	MethodEnv::MethodEnv(AbstractFunction* method, VTable *vtable)
@@ -256,7 +212,7 @@ namespace avmplus
 	}
 	
 #ifdef DEBUGGER
-	void MethodEnv::debugEnter(int argc, va_list ap, 
+	void MethodEnv::debugEnter(int argc, uint32 *ap, 
 							   Traits**frameTraits, int localCount,
 							   CallStackNode* callstack,
 							   Atom* framep, volatile int *eip)
@@ -294,7 +250,7 @@ namespace avmplus
 		}
 	}
 
-	void MethodEnv::sendEnter(int /*argc*/, va_list /*ap*/)
+	void MethodEnv::sendEnter(int /*argc*/, uint32 * /*ap*/)
 	{
 		Profiler *profiler = core()->profiler;
 		if (profiler->profilingDataWanted)
@@ -586,7 +542,7 @@ namespace avmplus
 		}
 	}
 
-	ArrayObject* MethodEnv::createArgumentsHelper(int argc, va_list ap)
+	ArrayObject* MethodEnv::createArgumentsHelper(int argc, uint32 *ap)
 	{
 		// create arguments using argv[1..argc].
 		// Even tho E3 says create an Object, E4 says create an Array so thats what we will do.
@@ -596,7 +552,7 @@ namespace avmplus
 		return createArguments(atomv, argc);
 	}
 
-	ArrayObject* MethodEnv::createRestHelper(int argc, va_list ap)
+	ArrayObject* MethodEnv::createRestHelper(int argc, uint32 *ap)
 	{
 		// create rest Array using argv[param_count..argc]
 		#ifdef AVMPLUS_WIN32

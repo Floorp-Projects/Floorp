@@ -75,7 +75,7 @@ namespace avmplus
 		// we have virtual functions, so we probably need a virtual dtor
 		virtual ~NativeMethod() {}
 
-		static int verifyEnter(MethodEnv* env, int argc, va_list ap);
+		static Atom verifyEnter(MethodEnv* env, int argc, uint32 *ap);
 
 		virtual void verify(Toplevel* toplevel);
 
@@ -138,12 +138,12 @@ namespace avmplus
 				implN = implvN;
 		}
 
-		static int verifyEnter(MethodEnv* env, int argc, va_list ap);
+		static Atom verifyEnter(MethodEnv* env, int argc, uint32 *ap);
 
-		static int implv32(MethodEnv* env, 
-				   int argc, va_list ap);
+		static Atom implv32(MethodEnv* env, 
+				   int argc, uint32 *ap);
 		static double implvN(MethodEnv* env,
-				   int argc, va_list ap);
+				   int argc, uint32 *ap);
 		
 	private:
 		bool m_haveCookie;

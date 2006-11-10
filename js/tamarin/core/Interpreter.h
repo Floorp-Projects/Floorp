@@ -58,11 +58,11 @@ namespace avmplus
 		 * @return The return value of the method that was executed.
 		 * @throws Exception if the method throws an exception.
 		 */
-		static int interp32(MethodEnv* method, int argc, va_list ap);
-		static double interpN(MethodEnv* method, int argc, va_list ap);
+		static Atom interp32(MethodEnv* method, int argc, uint32 *ap);
+		static double interpN(MethodEnv* method, int argc, uint32 *ap);
 
 	private:
-		static Atom interp(MethodEnv* method, int argc, va_list ap);
+		static Atom interp(MethodEnv* method, int argc, uint32 *ap);
 		static Atom* initMultiname(MethodEnv* env, Multiname &name, Atom* sp, bool isDelete=false);
 
 		static int readS24(const byte *pc) { return AvmCore::readS24(pc); }

@@ -49,7 +49,7 @@ namespace avmplus
 		this->impl32 = verifyEnter;
 	}
 
-	int MethodInfo::verifyEnter(MethodEnv* env, int argc, va_list ap)
+	Atom MethodInfo::verifyEnter(MethodEnv* env, int argc, uint32 *ap)
 	{
 		MethodInfo* f = (MethodInfo*) env->method;
 

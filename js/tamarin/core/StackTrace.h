@@ -122,7 +122,7 @@ namespace avmplus
 					  Atom*				framep,
 					  Traits**			frameTraits,
 					  int				argc,
-					  va_list			ap,
+					  uint32 *			ap,
 					  int volatile *	eip)
 		{
 			initialize(env, info, framep, frameTraits, argc, ap, eip);
@@ -134,7 +134,7 @@ namespace avmplus
 						Atom*				framep,
 						Traits**			frameTraits,
 						int					argc,
-						va_list				ap,
+						uint32 *				ap,
 						int volatile *		eip);
 
 		void exit();
@@ -146,7 +146,7 @@ namespace avmplus
 		CallStackNode *next;
 
 		int         depth;
-		va_list	    ap;
+		uint32 *    ap;
 		int			argc;
 		Atom*		framep;		// pointer to top of AS registers
 		Traits**    traits;		// array of traits for AS registers

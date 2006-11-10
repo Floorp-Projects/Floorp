@@ -43,7 +43,7 @@
 #ifdef AVMPLUS_INTERP
 namespace avmplus
 {	
-	int Interpreter::interp32(MethodEnv* env, int argc, va_list ap)
+	Atom Interpreter::interp32(MethodEnv* env, int argc, uint32 *ap)
 	{
 		Atom a = interp(env, argc, ap);
 		Traits* t = env->method->returnTraits();
@@ -59,7 +59,7 @@ namespace avmplus
 		return a & ~7; // possibly null pointer
 	}
 
-	double Interpreter::interpN(MethodEnv* env, int argc, va_list ap)
+	double Interpreter::interpN(MethodEnv* env, int argc, uint32 * ap)
 	{
 		Atom a = interp(env, argc, ap);
 		return AvmCore::number_d(a);
@@ -69,7 +69,7 @@ namespace avmplus
      * Interpret the AVM+ instruction set.
      * @return
      */
-    Atom Interpreter::interp(MethodEnv *env, int argc, va_list ap)
+    Atom Interpreter::interp(MethodEnv *env, int argc, uint32 *ap)
     {
 
 		MethodInfo* info = (MethodInfo*)(AbstractFunction*) env->method;
@@ -116,12 +116,7 @@ namespace avmplus
 			core->codeContextAtom = (CodeContextAtom)env | CONTEXT_ENV;
 		}
 
-		va_list out = ap;
-		#if defined(AVMPLUS_MAC) || defined(AVMPLUS_LINUX) || defined(AVMPLUS_ARM)
-		Atom* atomv = (Atom*)out;
-		#else
-		Atom* atomv = &va_arg(out, Atom);
-		#endif
+		Atom* atomv = (Atom*)ap;
 		info->boxArgs(argc, ap, atomv);
 
 		// 1. copy instance and args to local frame

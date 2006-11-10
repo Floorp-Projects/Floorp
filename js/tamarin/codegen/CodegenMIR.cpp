@@ -7347,9 +7347,9 @@ namespace avmplus
 #endif
 
 #if defined(_MAC) && !TARGET_RT_MAC_MACHO
-		f->impl32 = (int (*)(MethodEnv*, int, va_list)) (mip-2);
+		f->impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) (mip-2);
 #else
-		f->impl32 = (int (*)(MethodEnv*, int, va_list)) mipStart;
+		f->impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) mipStart;
 #endif
 		// lock in the next available location in the buffer (16B aligned)
 		PoolObject* pool = f->pool;

@@ -37,7 +37,7 @@ namespace avmplus
 {
 	class MethodEnv : public MMgc::GCObject
 	{
-		static int delegateInvoke(MethodEnv* env, int argc, va_list ap);
+		static Atom delegateInvoke(MethodEnv* env, int argc, uint32 *ap);
 
 	public:
 		// pointers are write-once so we don't need WB's
@@ -56,8 +56,8 @@ namespace avmplus
 
 		// pointer to invoke trampoline 
 		union {
-			int (*impl32)(MethodEnv*, int, va_list);
-			double (*implN)(MethodEnv*, int, va_list);
+			Atom (*impl32)(MethodEnv*, int, uint32 *);
+			double (*implN)(MethodEnv*, int, uint32 *);
 		};
 
 		MethodEnv(void* addr, VTable *vtable);
@@ -101,7 +101,7 @@ namespace avmplus
 		 *         to the required type
 		 */
 		Atom coerceEnter(int argc, Atom* atomv);
-		void unboxCoerceArgs(int argc, Atom* in, va_list ap);
+		void unboxCoerceArgs(int argc, Atom* in, uint32 *ap);
 
 	// helper functions used from compiled code
 	public:
@@ -125,8 +125,8 @@ namespace avmplus
 
 		void initMultinameLateForDelete(Multiname& name, Atom index);
 		ScriptObject* newcatch(Traits *traits);
-		ArrayObject* createArgumentsHelper(int argc, va_list ap);
-		ArrayObject* createRestHelper(int argc, va_list ap);
+		ArrayObject* createArgumentsHelper(int argc, uint32 *ap);
+		ArrayObject* createRestHelper(int argc, uint32 *ap);
 #endif
 
 		/**
@@ -237,12 +237,12 @@ namespace avmplus
 		Atom astype(Atom atom, Traits* expected);
 		
 #ifdef DEBUGGER
-		void debugEnter(int argc, va_list ap, 
+		void debugEnter(int argc, uint32 *ap, 
 							   Traits**frameTraits, int localCount,
 							   CallStackNode* callstack,
 							   Atom* framep, volatile int *eip);
 		void debugExit(CallStackNode* callstack);
-		void sendEnter(int argc, va_list ap);
+		void sendEnter(int argc, uint32 *ap);
 		void sendExit();
 #endif
 

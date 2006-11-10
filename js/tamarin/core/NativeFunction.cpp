@@ -56,7 +56,7 @@ namespace avmplus
 	}
 
 
-	int NativeMethod::verifyEnter(MethodEnv* env, int argc, va_list ap)
+	Atom NativeMethod::verifyEnter(MethodEnv* env, int argc, uint32 *ap)
 	{
 		NativeMethod* f = (NativeMethod*) env->method;
 
@@ -84,7 +84,7 @@ namespace avmplus
 			toplevel->throwError(kOutOfMemoryError);
 	}
 
-	int NativeMethodV::verifyEnter(MethodEnv* env, int argc, va_list ap)
+	Atom NativeMethodV::verifyEnter(MethodEnv* env, int argc, uint32 *ap)
 	{
 		NativeMethodV* f = (NativeMethodV*) env->method;
 
@@ -100,12 +100,11 @@ namespace avmplus
 		return f->impl32(env, argc, ap);
 	}
 
-	int NativeMethodV::implv32(MethodEnv* env, 
-				int argc, va_list ap)
+	Atom NativeMethodV::implv32(MethodEnv* env, 
+				int argc, uint32 *ap)
 	{
 		// get the instance pointer before we unbox everything
-		va_list ap2=ap;
-		ScriptObject* instance = va_arg(ap2, ScriptObject*);
+		ScriptObject* instance = *(ScriptObject **)(ap);
 
 #ifdef NATIVE_GLOBAL_FUNCTION_HACK
 		// HACK for native toplevel functions
@@ -137,11 +136,10 @@ namespace avmplus
 	}
 
 	double NativeMethodV::implvN(MethodEnv* env,
-				int argc, va_list ap)
+				int argc, uint32 * ap)
 	{
 		// get the instance pointer before we unbox everything
-		va_list ap2=ap;
-		ScriptObject* instance = va_arg(ap2, ScriptObject*);
+		ScriptObject* instance = *(ScriptObject **)(ap);
 
 #ifdef NATIVE_GLOBAL_FUNCTION_HACK
 		// HACK for native toplevel functions

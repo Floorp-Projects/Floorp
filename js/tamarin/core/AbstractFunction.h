@@ -172,7 +172,7 @@ namespace avmplus
 		/** last optional_count params are optional */		
 		int optional_count;
 
-		// offset to first rest arg in native va_list,
+		// offset to first rest arg,
 		// including the instance parameter.  
 		// this is sum(sizeof(paramType(0..N)))
 		int restOffset; 
@@ -201,8 +201,8 @@ namespace avmplus
 		 * is arg 0.  ap will always have at least the instance.
 		 */
 		union {
-			int (*impl32)(MethodEnv*, int, va_list);
-			double (*implN)(MethodEnv*, int, va_list);
+			Atom (*impl32)(MethodEnv*, int, uint32 *);
+			double (*implN)(MethodEnv*, int, uint32 *);
 		};
 
     protected:
@@ -268,7 +268,7 @@ namespace avmplus
 		virtual void verify(Toplevel* toplevel) = 0;
 #endif
 
-		void boxArgs(int argc, va_list ap, Atom* out);
+		void boxArgs(int argc, uint32 *ap, Atom* out);
 
 	protected:
 		DWB(Traits*) m_returnType;

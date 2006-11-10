@@ -188,7 +188,7 @@ namespace avmplus
 	 * args, not counting the instance which is arg[0].  the
 	 * layout is [instance][arg1..argN]
 	 */
-	void AbstractFunction::boxArgs(int argc, va_list ap, Atom* out)
+	void AbstractFunction::boxArgs(int argc, uint32 *ap, Atom* out)
 	{
 		// box the typed args, up to param_count
 		AvmCore* core = this->core();
@@ -201,29 +201,34 @@ namespace avmplus
 
 				if (t == NUMBER_TYPE) 
 				{
-					out[i] = core->doubleToAtom(va_arg(ap, double));
+					out[i] =  core->doubleToAtom(*(double *)ap);
+					ap += 2;
 				}
 				else if (t == INT_TYPE)
 				{
-					out[i] = core->intToAtom(va_arg(ap, int));
+					out[i] = core->intToAtom(*(int*) ap);
+					ap++;
 				}
 				else if (t == UINT_TYPE)
 				{
-					out[i] = core->uintToAtom(va_arg(ap, uint32));
+					out[i] = core->uintToAtom(*(uint32*) ap);
+					ap++;
 				}
 				else if (t == BOOLEAN_TYPE)
 				{
-					out[i] = va_arg(ap, int) ? trueAtom : falseAtom;
+					out[i] = (*(int*) ap) ? trueAtom : falseAtom;
+					ap++;
 				}
 				else if (!t || t == OBJECT_TYPE)
 				{
-					out[i] = va_arg(ap, Atom);
+					out[i] = *(Atom *) ap;
+					ap += sizeof(Atom) / sizeof(uint32);
 				}
 				else
 				{
 					// it's a pointer type, possibly null
 
-					void* p = va_arg(ap, void*); // unknown pointer
+					void* p = *(void **)ap; // unknown pointer
 					if (t == STRING_TYPE)
 					{
 						out[i] = ((Stringp)p)->atom();
@@ -236,11 +241,13 @@ namespace avmplus
 					{
 						out[i] = ((ScriptObject*)p)->atom();
 					}
+					ap += sizeof(void *) / sizeof(uint32);
 				}
 			}
 			else
 			{
-				out[i] = va_arg(ap, Atom);
+				out[i] = *(Atom *) ap;
+				ap += sizeof(Atom) / sizeof(uint32);
 			}
 		}
 	}
@@ -258,24 +265,21 @@ namespace avmplus
 
 			m_returnType = t;
 
-			// use va_arg macro to compute the size of the typed argument list.
-			// va_arg adds padding according to platform calling conventions.
-			va_list apstart = 0;
-			va_list ap = apstart;
+			restOffset = 0;
 
 			// param 0 is contextual
 			t = m_types[0];
 			if (!t)
 			{
 				setParamType(0, OBJECT_TYPE);
-				va_arg(ap, Atom);
+				restOffset += sizeof(Atom);
 			}
 			else
 			{
 				if (t == NUMBER_TYPE)
-					va_arg(ap, double);
+					restOffset += sizeof(double);
 				else
-					va_arg(ap, int);
+					restOffset += sizeof(Atom);
 				if (t->isInterface)
 					flags |= ABSTRACT_METHOD;
 			}
@@ -286,11 +290,10 @@ namespace avmplus
 				t = pool->resolveTypeName(pos, toplevel);
 				setParamType(i, t);
 				if (t == NUMBER_TYPE)
-					va_arg(ap, double);
+					restOffset += sizeof(double);
 				else
-					va_arg(ap, int);
+					restOffset += sizeof(Atom);
 			}
-			restOffset = ((int)ap)-((int)apstart);
 
 			AvmCore::readU30(pos); // name_index;
 			pos++; // skip flags

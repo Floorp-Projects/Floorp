@@ -72,7 +72,7 @@ namespace avmplus
 
 		MethodInfo();
 
-		static int verifyEnter(MethodEnv* env, int argc, va_list ap);
+		static Atom verifyEnter(MethodEnv* env, int argc, uint32 *ap);
 
 		void verify(Toplevel* toplevel);
 

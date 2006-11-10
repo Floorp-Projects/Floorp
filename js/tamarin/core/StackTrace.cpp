@@ -40,7 +40,7 @@ namespace avmplus
 								   Atom*				framep,
 								   Traits**				traits,
 								   int					argc,
-								   va_list				ap,
+								   uint32 *				ap,
 								   int volatile *		eip)
 	{
 		AvmCore *core = info->core();
