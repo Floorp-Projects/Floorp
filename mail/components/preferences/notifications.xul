@@ -51,20 +51,33 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             style="width: &window.width; !important;"
-            title="&notificationsDialog.title;">
+            title="&notificationsDialog1.title;">
 
   <prefpane id="NotificationsDialogPane" onpaneload="gNotificationsDialog.init();">
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/notifications.js"/>
 
     <preferences>
+      <preference id="mail.biff.alert.show_preview" name="mail.biff.alert.show_preview" type="bool"/>
+      <preference id="mail.biff.alert.show_subject" name="mail.biff.alert.show_subject" type="bool"/>
+      <preference id="mail.biff.alert.show_sender" name="mail.biff.alert.show_sender" type="bool"/>      
       <preference id="mail.biff.play_sound.type" name="mail.biff.play_sound.type" type="int"/>
-      <preference id="mail.biff.play_sound.url" name="mail.biff.play_sound.url" type="string"/>  
+      <preference id="mail.biff.play_sound.url" name="mail.biff.play_sound.url" type="string"/>
     </preferences>
 
     <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
 
+#ifndef XP_MACOSX
     <groupbox>
-      <caption label="&soundNotification.caption;"/>
+      <caption label="&alertCustomization.caption;"/>
+      <description>&alertCustomization.intro;</description>
+      <checkbox id="previewText" class="indent" label="&previewText.label;" accesskey="&previewText.accesskey;" preference="mail.biff.alert.show_preview"/>
+      <checkbox id="subject" class="indent" label="&subject.label;" accesskey="&subject.accesskey;" preference="mail.biff.alert.show_subject"/>
+      <checkbox id="sender"  class="indent" label="&sender.label;" accesskey="&sender.accesskey;" preference="mail.biff.alert.show_sender"/>
+    </groupbox>
+#endif
+
+    <groupbox>
+      <caption label="&soundNotification1.caption;"/>
         <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical" oncommand="gNotificationsDialog.systemSoundCheck();">
           <radio value="0" 
 #ifdef XP_MACOSX

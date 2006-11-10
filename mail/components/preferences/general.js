@@ -38,14 +38,12 @@
 
 var gGeneralPane = {
   mPane: null,
-  mSound: null,
 
   init: function ()
   {
     this.mPane = document.getElementById("paneGeneral"); 
     
     this.startPageCheck();
-    this.mailSoundCheck();
   },
   
 #ifdef HAVE_SHELL_SERVICE
@@ -108,12 +106,7 @@ var gGeneralPane = {
                            "", null);
   },
 
-  mailSoundCheck: function()
-  {
-    document.getElementById("soundButton").disabled = !document.getElementById("newMailNotification").checked;
-  },
-
-  showAdvancedSound: function()
+  customizeNewMailBehavior: function()
   {
     document.documentElement
             .openSubDialog("chrome://messenger/content/preferences/notifications.xul",

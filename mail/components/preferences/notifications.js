@@ -66,9 +66,12 @@ var gNotificationsDialog = {
   readSoundLocation: function()
   {
     var soundUrlLocation = document.getElementById("soundUrlLocation");
-    soundUrlLocation.value = document.getElementById("mail.biff.play_sound.url").value;     
-    soundUrlLocation.label = this.convertURLToLocalFile(soundUrlLocation.value).leafName;
-    soundUrlLocation.image = "moz-icon://" + soundUrlLocation.label + "?size=16";
+    soundUrlLocation.value = document.getElementById("mail.biff.play_sound.url").value;
+    if (soundUrlLocation.value)
+    {
+      soundUrlLocation.label = this.convertURLToLocalFile(soundUrlLocation.value).leafName;
+      soundUrlLocation.image = "moz-icon://" + soundUrlLocation.label + "?size=16";
+    }
     return undefined;
   },
 
