@@ -728,6 +728,9 @@ nsWindow::SetFocus(PRBool aRaise)
         // Set focus to the window
         if (gRaiseWindows && aRaise && toplevelWidget &&
             !GTK_WIDGET_HAS_FOCUS(toplevelWidget) &&
+            // If we're really a child of owningWindow
+            gdk_window_get_parent(mDrawingarea->clip_window) ==
+              owningWindow->mDrawingarea->inner_window &&
             owningWindow->mIsShown && GTK_IS_WINDOW(owningWindow->mShell))
           gtk_window_present(GTK_WINDOW(owningWindow->mShell));
         
