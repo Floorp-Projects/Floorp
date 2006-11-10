@@ -254,7 +254,11 @@ start:
 #ifdef MEMORY_INFO
 			// ensure previously used item wasn't written to
 			// -1 because write back pointer space isn't poisoned.
+#ifdef MMGC_IA64			
 			for(int i=3, n=(b->size>>2)-1; i<n; i++)
+#else
+			for(int i=3, n=(b->size>>2)-3; i<n; i++)
+#endif			
 			{
 				int data = ((int*)item)[i];
 				if(data != 0xcacacaca && data != 0xbabababa)
@@ -269,7 +273,7 @@ start:
 #endif
 		} else {
 			item = b->nextItem;
-			if(((int)((char*)item + b->size) & 0xfff) != 0) {
+			if(((intptr)((char*)item + b->size) & 0xfff) != 0) {
 				b->nextItem = (char*)item +  b->size;
 			} else {
 				b->nextItem = NULL;

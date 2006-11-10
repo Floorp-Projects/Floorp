@@ -46,7 +46,9 @@
  */
 #ifdef __i386__
   #define MMGC_IA32
-#else
+#elif defined (__x86_64__)
+  #define MMGC_IA64
+#elif defined (__ppc__)
   #define MMGC_PPC
 #endif
 

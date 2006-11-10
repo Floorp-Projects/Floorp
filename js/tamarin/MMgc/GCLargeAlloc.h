@@ -77,7 +77,7 @@ namespace MMgc
 		{
 			// The pointer should be 4K aligned plus 16 bytes
 		        // Mac inserts 16 bytes for new[] so make it more general
-			return (((uint32)item & 0xFFF) == sizeof(LargeBlock));
+			return (((intptr)item & 0xFFF) == sizeof(LargeBlock));
 		}
 
 		static bool SetMark(const void *item)
@@ -158,7 +158,7 @@ namespace MMgc
 
 		static LargeBlock* GetBlockHeader(const void *addr)
 		{
-			return (LargeBlock*) ((uint32)addr & ~0xFFF);
+			return (LargeBlock*) ((intptr)addr & ~0xFFF);
 		}
 		
 		static bool NeedsFinalize(LargeBlock *block)

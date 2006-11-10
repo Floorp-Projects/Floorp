@@ -53,8 +53,8 @@ namespace MMgc
 	typedef unsigned long long         uint64;
 	#endif
 
-	typedef unsigned long  uint32;
-	typedef signed   long  int32;
+	typedef unsigned int  uint32;
+	typedef signed   int  int32;
 	
 	typedef unsigned short uint16;
 	typedef signed   short int16;

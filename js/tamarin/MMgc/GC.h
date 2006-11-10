@@ -69,6 +69,21 @@
 		_size = (intptr)_gc->GetStackTop() - (intptr)_stack;	} while (0)
 #endif 
 
+#elif defined MMGC_IA64
+// 64bit - r8-r15?
+#define MMGC_GET_STACK_EXENTS(_gc, _stack, _size) \
+		do { \
+		volatile auto int64 save1,save2,save3,save4,save5,save6,save7;\
+		asm("mov %%rax,%0" : "=r" (save1));\
+		asm("mov %%rbx,%0" : "=r" (save2));\
+		asm("mov %%rcx,%0" : "=r" (save3));\
+		asm("mov %%rdx,%0" : "=r" (save4));\
+		asm("mov %%rbp,%0" : "=r" (save5));\
+		asm("mov %%rsi,%0" : "=r" (save6));\
+		asm("mov %%rdi,%0" : "=r" (save7));\
+		asm("mov %%rsp,%0" : "=r" (_stack));\
+		_size = (intptr)_gc->GetStackTop() - (intptr)_stack;	} while (0)	
+
 #elif defined MMGC_PPC
 
 /* On PowerPC, we need to mark the PPC non-volatile registers,
@@ -634,7 +649,7 @@ namespace MMgc
 		void writeBarrier(const void *container, const void *address, const void *value)
 		{
 			GCAssert(IsPointerToGCPage(container));
-			GCAssert(((int32)address & 3) == 0);
+			GCAssert(((intptr)address & 3) == 0);
 			GCAssert(address >= container);
 			GCAssert(address < (char*)container + Size(container));
 
@@ -776,7 +791,7 @@ namespace MMgc
 
 		void ClearWeakRef(const void *obj);
 
-		int	GetStackTop() const;
+		intptr	GetStackTop() const;
 
 	private:
 
@@ -843,9 +858,9 @@ namespace MMgc
 
 		unsigned char *pageMap;
 
-		inline int GetPageMapValue(uint32 addr) const
+		inline intptr GetPageMapValue(uint32 addr) const
 		{
-			uint32 index = (addr-memStart) >> 12;
+			intptr index = (addr-memStart) >> 12;
 
 			GCAssert(index >> 2 < 64 * GCHeap::kBlockSize);
 			// shift amount to determine position in the byte (times 2 b/c 2 bits per page)
@@ -855,8 +870,8 @@ namespace MMgc
 			//return (pageMap[addr >> 2] & (3<<shiftAmount)) >> shiftAmount;
 			return (pageMap[index >> 2] >> shiftAmount) & 3;
 		}
-		void SetPageMapValue(uint32 addr, int val);
-		void ClearPageMapValue(uint32 addr);
+		void SetPageMapValue(intptr addr, int val);
+		void ClearPageMapValue(intptr addr);
 
 		void MarkGCPages(void *item, uint32 numpages, int val);
 		void UnmarkGCPages(void *item, uint32 numpages);
@@ -948,7 +963,7 @@ public:
 private:
 #endif
 
-		static const void *Pointer(const void *p) { return (const void*)(((int)p)&~7); }
+		static const void *Pointer(const void *p) { return (const void*)(((intptr)p)&~7); }
 
 #ifdef MEMORY_INFO
 public:

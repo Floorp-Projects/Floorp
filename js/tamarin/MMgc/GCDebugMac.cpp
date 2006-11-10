@@ -58,14 +58,14 @@ namespace MMgc
 
 	void GCDebugMsg(const char* p, bool debugBreak)
 	{
-		char buf[256];
-		strcpy(buf, p);
+		CFStringRef cfStr = ::CFStringCreateWithCString(NULL, p, kCFStringEncodingUTF8);
 		if(debugBreak) {
-			::CopyCStringToPascal(buf, (StringPtr)buf);
-			DebugStr((StringPtr) buf);
+			Str255 buf;
+			CFStringGetPascalString (cfStr, buf, 255, kCFStringEncodingUTF8);
+			DebugStr(buf);
 		} else {
-			CFStringRef cfStr = ::CFStringCreateWithCString(NULL, buf, kCFStringEncodingUTF8);
 			::CFShow(cfStr);
 		}
+		::CFRelease (cfStr);
 	}
 }

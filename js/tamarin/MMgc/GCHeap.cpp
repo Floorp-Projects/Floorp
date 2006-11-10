@@ -41,6 +41,9 @@
 namespace MMgc
 {
 #ifdef _DEBUG
+	// 64bit - Warning, this debug mechanism will fail on 64-bit systems when we 
+	// allocate pages across more than 4 GB of memory space.  We no longer have 20-bits
+	// to track - we have 52-bits.  
 	uint8 GCHeap::m_megamap[1048576];
 #endif
 
@@ -133,7 +136,7 @@ namespace MMgc
 				HeapBlock *block = &blocks[i];
 				if(block->baseAddr)
 				{
-					int megamapIndex = ((uint32)block->baseAddr) >> 12;
+					int megamapIndex = ((int)(intptr)block->baseAddr) >> 12;
 					GCAssert(m_megamap[megamapIndex] == 0);
 				}
 				if(block->inUse() && block->baseAddr)
@@ -179,7 +182,7 @@ namespace MMgc
 			// Check for debug builds only:
 			// Use the megamap to double-check that we haven't handed
 			// any of these pages out already.
-			int megamapIndex = ((uint32)block->baseAddr)>>12;
+			int megamapIndex = ((int)(intptr)block->baseAddr)>>12;
 			for (int i=0; i<size; i++) {
 				GCAssert(m_megamap[megamapIndex] == 0);
 				
@@ -222,7 +225,7 @@ namespace MMgc
 			// For debug builds only:
 			// Check the megamap to ensure that all the pages
 			// being freed are in fact allocated.
-			int megamapIndex = ((uint32)block->baseAddr) >> 12;
+			int megamapIndex = ((int)(intptr)block->baseAddr) >> 12;
 			for (int i=0; i<block->size; i++) {
 				if(m_megamap[megamapIndex] != 1) {
 					GCAssertMsg(false, "Megamap is screwed up, are you freeing freed memory?");
@@ -722,7 +725,7 @@ namespace MMgc
 
 	void GCHeap::AddToFreeList(HeapBlock *block)
 	{
-		GCAssert(m_megamap[((uint32)block->baseAddr)>>12] == 0);
+		GCAssert(m_megamap[((int)(intptr)block->baseAddr)>>12] == 0);
 
 		int index = GetFreeListIndex(block->size);
 		HeapBlock *freelist = &freelists[index];
@@ -762,7 +765,7 @@ namespace MMgc
 		// Try to coalesce this block with its predecessor
 		HeapBlock *prevBlock = block - block->sizePrevious;
 		if (!prevBlock->inUse() && prevBlock->committed) {
-			GCAssert(m_megamap[((uint32)prevBlock->baseAddr)>>12] == 0);
+			GCAssert(m_megamap[((int)(intptr)prevBlock->baseAddr)>>12] == 0);
 			// Remove predecessor block from free list
 			RemoveFromList(prevBlock);
 

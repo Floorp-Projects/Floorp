@@ -50,7 +50,7 @@
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#if defined(MMGC_IA32) && defined(MEMORY_INFO)
+#if (defined(MMGC_IA32) || defined(MMGC_IA64)) && defined(MEMORY_INFO)
 #include <dlfcn.h>
 #endif
 
@@ -166,7 +166,7 @@ namespace MMgc
 		if (res == MAP_FAILED)
 			address = 0;
 		else
-			address = (void*)( (int)address + size );
+			address = (void*)( (intptr)address + size );
 			
 		return address;		
 	}
@@ -334,7 +334,7 @@ namespace MMgc
 	}
 #endif
 
-#ifdef MMGC_IA32
+#if (defined(MMGC_IA32) || defined(MMGC_IA64))
 
 	void GetInfoFromPC(int pc, char *buff, int buffSize) 
 	{
@@ -346,7 +346,11 @@ namespace MMgc
 	void GetStackTrace(int* trace, int len, int skip) 
 	{
 		void **ebp;
+		#ifdef MMGC_IA32
 		asm("mov %%ebp, %0" : "=r" (ebp));
+		#else
+		asm("mov %%rbp, %0" : "=r" (ebp));
+		#endif
 		while(skip-- && *ebp)
 		{
 			ebp = (void**)(*ebp);

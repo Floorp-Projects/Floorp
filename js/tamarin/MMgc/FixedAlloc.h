@@ -141,7 +141,7 @@ namespace MMgc
 
 		static inline void Free(void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((uint32)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
 
 #ifdef MEMORY_INFO
 			item = DebugFree(item, 0xED, 6);
@@ -186,7 +186,7 @@ namespace MMgc
 
 		static FixedAlloc *GetFixedAlloc(void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((uint32)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
 #ifdef _DEBUG
 			// Attempt to sanity check this ptr: numAllocs * size should be less than kBlockSize
 			GCAssertMsg(((b->numAlloc * b->size) < GCHeap::kBlockSize), "Size called on ptr not part of FixedBlock");
@@ -229,7 +229,7 @@ namespace MMgc
 
 		static inline size_t Size(const void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((uint32)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
 #ifdef _DEBUG
 			// Attempt to sanity check this ptr: numAllocs * size should be less than kBlockSize
 			GCAssertMsg(((b->numAlloc * b->size) < GCHeap::kBlockSize), "Size called on ptr not part of FixedBlock");

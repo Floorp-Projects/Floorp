@@ -8,7 +8,7 @@
  * Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
  * WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
  * language governing rights and limitations under the License. 
- * 
+ * 42
  * The Original Code is [Open Source Virtual Machine.] 
  * 
  * The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
@@ -54,7 +54,7 @@
 #include "alloca.h"
 #endif
 
-#if defined(_MAC) && defined(MMGC_IA32)
+#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_IA64))
 #include <pthread.h>
 #endif
 
@@ -84,6 +84,12 @@ namespace MMgc
 	// size of table in pages
 	const int ZCT::ZCT_START_SIZE = 1;
 #endif
+
+#ifdef MMGC_IA64
+	const intptr MAX_INTPTR = 0xFFFFFFFFFFFFFFFF;
+#else
+	const intptr MAX_INTPTR = 0xFFFFFFFF;
+#endif	
 
 	// get detailed info on each size class allocators
 	const bool dumpSizeClassState = false;
@@ -190,7 +196,7 @@ namespace MMgc
 #endif
 
 		  marking(false),
-		  memStart(0xffffffff),
+		  memStart(MAX_INTPTR),
 		  memEnd(0),
 		  heap(gcheap),
 		  allocsSinceCollect(0),
@@ -830,16 +836,16 @@ bail:
 		UnmarkGCPages(ptr, size);
 	}
 
-	void GC::SetPageMapValue(uint32 addr, int val)
+	void GC::SetPageMapValue(intptr addr, int val)
 	{
-		uint32 index = (addr-memStart) >> 12;
+		intptr index = (addr-memStart) >> 12;
 		GCAssert(index >> 2 < 64 * GCHeap::kBlockSize);
 		pageMap[index >> 2] |= (val<<((index&0x3)*2));
 	}	
 
-	void GC::ClearPageMapValue(uint32 addr)
+	void GC::ClearPageMapValue(intptr addr)
 	{
-		uint32 index = (addr-memStart) >> 12;
+		intptr index = (addr-memStart) >> 12;
 		GCAssert(index >> 2 < 64 * GCHeap::kBlockSize);
 		pageMap[index >> 2] &= ~(3<<((index&0x3)*2));
 	}	
@@ -865,7 +871,7 @@ bail:
 			// in bytes, ie 16k chunks
 			addr &= ~0x3fff;
 			// marking earlier pages
-			if(memStart != 0xffffffff) {
+			if(memStart != MAX_INTPTR) {
 				shiftAmount = (memStart - addr) >> 14;
 			}
 			memStart = addr;
@@ -902,7 +908,7 @@ bail:
 
 	void GC::UnmarkGCPages(void *item, uint32 numpages)
 	{
-		intptr addr = (uint32) item;
+		intptr addr = (intptr) item;
 		while(numpages--)
 		{
 			ClearPageMapValue(addr);
@@ -933,6 +939,10 @@ bail:
 		#endif
 #endif
 
+#if defined MMGC_IA64
+	asm("mov %%rsp,%0" : "=r" (stackP));
+#endif
+
 #if defined MMGC_PPC
 		// save off sp
 		asm("mr %0,r1" : "=r" (stackP));
@@ -947,6 +957,9 @@ bail:
 #endif
 	}
 	
+	#if defined(MMGC_PPC) && defined(__GNUC__)
+	__attribute__((noinline)) 
+	#endif
 	void GC::MarkQueueAndStack(GCStack<GCWorkItem>& work)
 	{
 		GCWorkItem item;
@@ -1111,7 +1124,7 @@ bail:
 				Reap();
 		}
 
-		if(zctNext >= zct + zctSize*1024) {
+		if(zctNext >= zct + zctSize*4096/sizeof(void *)) {
 			// grow 
 			RCObject **newZCT = (RCObject**) gc->heap->Alloc(zctSize*2);
 			memcpy(newZCT, zct, zctSize*GCHeap::kBlockSize);
@@ -1183,6 +1196,9 @@ bail:
 		int *p = (int*)item;
 		// skip vtable, first 4 bytes are cleared in Alloc
 		p++;
+#ifdef MMGC_IA64
+		p++; // vtable is 8-bytes
+#endif		
 		// in incrementalValidation mode manually deleted items
 		// aren't put on the freelist so skip them
 		if(incrementalValidation) {
@@ -1433,8 +1449,8 @@ bail:
 		if(size && size <= itemSize) {
 			// skip traceIndex + data + endMarker
 			p += (2 + (size>>2));
-			GCAssert(sizeof(int) == sizeof(void*));
-			*p = (int) container;
+			GCAssert(sizeof(intptr) == sizeof(void*));
+			*p = (intptr) container;
 		}
 	}
 
@@ -1627,7 +1643,7 @@ bail:
 		intptr *p = (intptr *) mem;
 		intptr *end = p + (size / sizeof(void*));
 
-		int bits = GetPageMapValue((uint32)mem);
+		int bits = GetPageMapValue((intptr)mem);
 
 		while(p < end)
 		{
@@ -1657,8 +1673,8 @@ bail:
 							int size = fixed->size;
 
 							// now compute which element we are 
-							int startAt = (int) &(fixed->items[0]);
-							int item = ((int)where-startAt) / size;
+							intptr startAt = (intptr) &(fixed->items[0]);
+							intptr item = ((intptr)where-startAt) / size;
 
 							ptr = (int*) ( startAt + (item*size) );
 						}
@@ -2240,15 +2256,15 @@ bail:
 	void GC::WriteBarrierWrite(const void *address, const void *value)
 	{
 		GCAssert(!IsRCObject(value));
-		*(int32*)address = (int32) value;
+		*(intptr*)address = (intptr) value;
 	}
 
 	// optimized version with no RC checks or pointer swizzling
 	void GC::writeBarrierRC(const void *container, const void *address, const void *value)
 	{
 		GCAssert(IsPointerToGCPage(container));
-		GCAssert(((int32)container & 3) == 0);
-		GCAssert(((int32)address & 2) == 0);
+		GCAssert(((intptr)container & 3) == 0);
+		GCAssert(((intptr)address & 2) == 0);
 		GCAssert(address >= container);
 		GCAssert(address < (char*)container + Size(container));
 
@@ -2267,7 +2283,7 @@ bail:
 				rc->DecrementRef();
 			}
 		#endif
-		*(int32*)address = (int32) value;
+		*(intptr*)address = (intptr) value;
 		#ifdef MMGC_DRC		
 			rc = (RCObject*)Pointer(value);
 			if(rc != NULL) {
@@ -2357,7 +2373,7 @@ bail:
 		if(!m_bitsNext)
 			m_bitsNext = (uint32*)heap->Alloc(1);
 
-		int leftOver = GCHeap::kBlockSize - ((int)m_bitsNext & 0xfff);
+		int leftOver = GCHeap::kBlockSize - ((intptr)m_bitsNext & 0xfff);
 		if(leftOver >= numBytes) {
 			bits = m_bitsNext;
 			if(leftOver == numBytes) 
@@ -2591,11 +2607,10 @@ bail:
 	}
 #endif  /* DEBUGGER*/
 
-#if defined(_MAC) && defined(MMGC_IA32)
-	// FIXME: 64 bit problem, use intptr
-	int GC::GetStackTop() const
+#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_IA64))
+	intptr GC::GetStackTop() const
 	{
-		return (int)pthread_get_stackaddr_np(pthread_self());
+		return (intptr)pthread_get_stackaddr_np(pthread_self());
 	}
 #endif
 

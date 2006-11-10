@@ -307,7 +307,13 @@ namespace MMgc
  
 	size_t DebugSize()
 	{ 
+	#ifdef MMGC_IA64
+		// Our writeback pointer is 8 bytes so we need to round up to the next 8 byte
+		// size.  (only 5 DWORDS are used)
+		return 6 * sizeof(int); 
+	#else
 		return 4 * sizeof(int); 
+	#endif
 	}
 
 	/* 
@@ -317,7 +323,8 @@ namespace MMgc
 	 * first four bytes == size / 4 
 	 * second four bytes == stack trace index
 	 * size data bytes
-	 * last 4 bytes == 0xdeadbeef
+	 * 4 bytes == 0xdeadbeef
+	 * last 4/8 bytes - writeback pointer
 	 *
 	 * Its important that the stack trace index is not stored in the first 4 bytes,
 	 * it enables the leak detection to work see ~FixedAlloc.  Underwrite detection isn't
@@ -374,6 +381,10 @@ namespace MMgc
 		mem += (size>>2);
 		*mem++ = 0xdeadbeef;
 		*mem = 0;
+	#ifdef MMGC_IA64
+		*(mem+1) = 0;
+		*(mem+2) = 0;
+	#endif	
 
 		// save these off so we can save the vtable (which is assigned after memory is
 		// allocated)
