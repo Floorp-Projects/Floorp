@@ -269,14 +269,16 @@ if (!empty($mimetype) &&
         $guid = '{a8b771f0-2e07-11db-a98b-0800200c9a66}';
         $iconUrl = 'http://images.divx.com/divx/player/webplayer.png';
         $XPILocation = 'http://download.divx.com/player/DivXWebPlayer.xpi';
-        $installerShowsUI = 'true';
+        $installerShowsUI = 'false';
+        $licenseURL = 'http://go.divx.com/plugin/license/';
         $manualInstallationURL = 'http://go.divx.com/plugin/download/';
     } elseif ($mimetype == 'video/divx' && preg_match('/^(PPC|Intel) Mac OS X/', $clientOS)) {
         $name = 'DivX Web Player';
         $guid = '{a8b771f0-2e07-11db-a98b-0800200c9a66}';
         $iconUrl = 'http://images.divx.com/divx/player/webplayer.png';
-        $XPILocation = getUriForNoXPI();
-        $installerShowsUI = 'true';
+        $XPILocation = 'http://download.divx.com/player/DivXWebPlayerMac.xpi';
+        $installerShowsUI = 'false';
+        $licenseURL = 'http://go.divx.com/plugin/license/';
         $manualInstallationURL = 'http://go.divx.com/plugin/download/';
     }
 
