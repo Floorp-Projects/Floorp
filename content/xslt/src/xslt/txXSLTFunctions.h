@@ -60,7 +60,7 @@ public:
     **/
     DocumentFunctionCall(const nsAString& aBaseURI);
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     nsString mBaseURI;
@@ -78,7 +78,7 @@ public:
      */
     txKeyFunctionCall(txNamespaceMap* aMappings);
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     nsRefPtr<txNamespaceMap> mMappings;
@@ -96,7 +96,7 @@ public:
     **/
     txFormatNumberFunctionCall(txStylesheet* aStylesheet, txNamespaceMap* aMappings);
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     static const PRUnichar FORMAT_QUOTE;
@@ -153,7 +153,7 @@ public:
     **/
     CurrentFunctionCall();
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 };
 
 /**
@@ -168,7 +168,7 @@ public:
     **/
     GenerateIdFunctionCall();
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 };
 
 
@@ -186,7 +186,7 @@ public:
     {
     }
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     eType mType;

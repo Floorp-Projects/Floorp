@@ -896,7 +896,7 @@ public:
     {
     }
 
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 
 private:
     nsCOMPtr<nsIAtom> mName;
