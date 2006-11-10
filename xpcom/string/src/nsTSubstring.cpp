@@ -36,6 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+nsTSubstring_CharT::nsTSubstring_CharT( char_type *data, size_type length,
+                                        PRUint32 flags)
+#ifdef MOZ_V1_STRING_ABI
+  : abstract_string_type(data, length, flags)
+#else
+  : mData(data),
+    mLength(length),
+    mFlags(flags)
+#endif
+  {
+    if (flags & F_OWNED) {
+      STRING_STAT_INCREMENT(Adopt);
+#ifdef NS_BUILD_REFCNT_LOGGING
+      NS_LogCtor(mData, "StringAdopt", 1);
+#endif
+    }
+  }
 
   /**
    * helper function for down-casting a nsTSubstring to a nsTFixedString.

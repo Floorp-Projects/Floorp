@@ -498,15 +498,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * NOTE: this constructor is declared public _only_ for convenience
          * inside the string implementation.
          */
-      nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
-#ifdef MOZ_V1_STRING_ABI
-        : abstract_string_type(data, length, flags) {}
-#else
-        : mData(data),
-          mLength(length),
-          mFlags(flags) {}
-#endif
-
+      NS_COM nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags );
 
     protected:
 
