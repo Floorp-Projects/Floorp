@@ -994,7 +994,7 @@ private:
 class txUnionNodeTest : public txNodeTest
 {
 public:
-    ~txUnionNodeTest()
+    ~txUnionNodeTest();
 
     nsresult addNodeTest(txNodeTest* aNodeTest);
 
