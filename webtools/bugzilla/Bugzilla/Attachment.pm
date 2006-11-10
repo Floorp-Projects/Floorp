@@ -609,19 +609,22 @@ sub validate_content_type {
 
 =pod
 
-=item C<validate_can_edit()>
+=item C<validate_can_edit($attachment, $product_id)>
 
 Description: validates if the user is allowed to view and edit the attachment.
              Only the submitter or someone with editbugs privs can edit it.
              Only the submitter and users in the insider group can view
              private attachments.
 
+Params:      $attachment - the attachment object being edited.
+             $product_id - the product ID the attachment belongs to.
+
 Returns:     1 on success. Else an error is thrown.
 
 =cut
 
 sub validate_can_edit {
-    my $attachment = shift;
+    my ($attachment, $product_id) = @_;
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
 
@@ -634,27 +637,27 @@ sub validate_can_edit {
     }
 
     # Users with editbugs privs can edit all attachments.
-    return if $user->in_group('editbugs');
+    return if $user->in_group('editbugs', $product_id);
 
     # If we come here, then this attachment cannot be seen by the user.
     ThrowUserError('illegal_attachment_edit', { attach_id => $attachment->id });
 }
 
-=item C<validate_obsolete($bug_id)>
+=item C<validate_obsolete($bug)>
 
 Description: validates if attachments the user wants to mark as obsolete
              really belong to the given bug and are not already obsolete.
              Moreover, a user cannot mark an attachment as obsolete if
              he cannot view it (due to restrictions on it).
 
-Params:      $bug_id - The bug ID obsolete attachments should belong to.
+Params:      $bug - The bug object obsolete attachments should belong to.
 
 Returns:     1 on success. Else an error is thrown.
 
 =cut
 
 sub validate_obsolete {
-    my ($class, $bug_id) = @_;
+    my ($class, $bug) = @_;
     my $cgi = Bugzilla->cgi;
 
     # Make sure the attachment id is valid and the user has permissions to view
@@ -674,12 +677,12 @@ sub validate_obsolete {
         ThrowUserError('invalid_attach_id', $vars) unless $attachment;
 
         # Check that the user can view and edit this attachment.
-        $attachment->validate_can_edit;
+        $attachment->validate_can_edit($bug->product_id);
 
         $vars->{'description'} = $attachment->description;
 
-        if ($attachment->bug_id != $bug_id) {
-            $vars->{'my_bug_id'} = $bug_id;
+        if ($attachment->bug_id != $bug->bug_id) {
+            $vars->{'my_bug_id'} = $bug->bug_id;
             $vars->{'attach_bug_id'} = $attachment->bug_id;
             ThrowCodeError('mismatched_bug_ids_on_obsolete', $vars);
         }
@@ -758,7 +761,7 @@ sub insert_attachment_for_bug {
     # Check attachments the user tries to mark as obsolete.
     my @obsolete_attachments;
     if ($cgi->param('obsolete')) {
-        @obsolete_attachments = $class->validate_obsolete($bug->bug_id);
+        @obsolete_attachments = $class->validate_obsolete($bug);
     }
 
     # The order of these function calls is important, as Flag::validate

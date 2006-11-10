@@ -38,7 +38,6 @@
       [% IF has_bits.size %]
         You have the following permission [% terms.bits %] set on your account:
         <p>
-        <br>
         <table align="center">
           [% FOREACH bit_description = has_bits %]
             <tr>
@@ -47,6 +46,23 @@
             </tr>
           [% END %]
         </table>
+
+        [% FOREACH privs = ["editcomponents", "canconfirm", "editbugs"] %]
+          [% SET products = ${"local_$privs"} %]
+          [% IF products && products.size %]
+            <br>
+            <p>
+              You also have local '[% privs FILTER html %]' privileges
+              for the following products:
+            </p>
+            <p>
+              [% FOREACH product = products %]
+                [% product.name FILTER html %]<br>
+              [% END %]
+            </p>
+          [% END %]
+        [% END %]
+
       [% ELSE %]
         There are no permission [% terms.bits %] set on your account.
       [% END %]

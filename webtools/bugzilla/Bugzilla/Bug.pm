@@ -121,7 +121,6 @@ sub VALIDATORS {
         commentprivacy => \&_check_commentprivacy,
         deadline       => \&_check_deadline,
         estimated_time => \&_check_estimated_time,
-        keywords       => \&_check_keywords,
         op_sys         => \&_check_op_sys,
         priority       => \&_check_priority,
         product        => \&_check_product,
@@ -354,6 +353,8 @@ sub run_create_validators {
 
     $params->{version} = $class->_check_version($product, $params->{version});
 
+    $params->{keywords} = $class->_check_keywords($product, $params->{keywords});
+
     $params->{groups} = $class->_check_groups($product,
         $params->{groups});
 
@@ -381,7 +382,7 @@ sub run_create_validators {
                                     $params->{assigned_to}, $params->{qa_contact});
 
     ($params->{dependson}, $params->{blocked}) = 
-        $class->_check_dependencies($params->{dependson}, $params->{blocked});
+        $class->_check_dependencies($product, $params->{dependson}, $params->{blocked});
 
     # You can't set these fields on bug creation (or sometimes ever).
     delete $params->{resolution};
@@ -480,7 +481,7 @@ sub _check_assigned_to {
     $name = trim($name);
     # Default assignee is the component owner.
     my $id;
-    if (!$user->in_group("editbugs") || !$name) {
+    if (!$user->in_group('editbugs', $component->product_id) || !$name) {
         $id = $component->default_assignee->id;
     } else {
         $id = login_to_id($name, THROW_ERROR);
@@ -508,7 +509,8 @@ sub _check_bug_status {
 
     my @valid_statuses = VALID_ENTRY_STATUS;
 
-    if ($user->in_group('editbugs') || $user->in_group('canconfirm')) {
+    if ($user->in_group('editbugs', $product->id)
+        || $user->in_group('canconfirm', $product->id)) {
        # Default to NEW if the user with privs hasn't selected another status.
        $status ||= 'NEW';
     }
@@ -599,10 +601,10 @@ sub _check_deadline {
 # Takes two comma/space-separated strings and returns arrayrefs
 # of valid bug IDs.
 sub _check_dependencies {
-    my ($invocant, $depends_on, $blocks) = @_;
+    my ($invocant, $product, $depends_on, $blocks) = @_;
 
     # Only editbugs users can set dependencies on bug entry.
-    return ([], []) unless Bugzilla->user->in_group('editbugs');
+    return ([], []) unless Bugzilla->user->in_group('editbugs', $product->id);
 
     $depends_on ||= '';
     $blocks     ||= '';
@@ -676,9 +678,10 @@ sub _check_groups {
 }
 
 sub _check_keywords {
-    my ($invocant, $keyword_string) = @_;
+    my ($invocant, $product, $keyword_string) = @_;
     $keyword_string = trim($keyword_string);
-    return [] if (!$keyword_string || !Bugzilla->user->in_group('editbugs'));
+    return [] if (!$keyword_string
+                  || !Bugzilla->user->in_group('editbugs', $product->id));
 
     my %keywords;
     foreach my $keyword (split(/[\s,]+/, $keyword_string)) {
@@ -801,7 +804,7 @@ sub _check_qa_contact {
     $name = trim($name);
 
     my $id;
-    if (!$user->in_group("editbugs") || !$name) {
+    if (!$user->in_group('editbugs', $component->product_id) || !$name) {
         # We want to insert NULL into the database if we get a 0.
         $id = $component->default_qa_contact->id || undef;
     } else {
@@ -1207,14 +1210,16 @@ sub user {
     my $user = Bugzilla->user;
     my $canmove = Bugzilla->params->{'move-enabled'} && $user->is_mover;
 
-    my $unknown_privileges = $user->in_group("editbugs");
+    my $prod_id = $self->{'product_id'};
+
+    my $unknown_privileges = $user->in_group('editbugs', $prod_id);
     my $canedit = $unknown_privileges
                   || $user->id == $self->{assigned_to_id}
                   || (Bugzilla->params->{'useqacontact'}
                       && $self->{'qa_contact_id'}
                       && $user->id == $self->{qa_contact_id});
     my $canconfirm = $unknown_privileges
-                     || $user->in_group("canconfirm");
+                     || $user->in_group('canconfirm', $prod_id);
     my $isreporter = $user->id
                      && $user->id == $self->{reporter_id};
 
@@ -1824,19 +1829,19 @@ sub check_can_change_field {
     # $PrivilegesRequired = 2 : the assignee or an empowered user;
     # $PrivilegesRequired = 3 : an empowered user.
 
-    # Allow anyone with "editbugs" privs to change anything.
-    if ($user->in_group('editbugs')) {
+    # Allow anyone with (product-specific) "editbugs" privs to change anything.
+    if ($user->in_group('editbugs', $self->{'product_id'})) {
         return 1;
     }
 
-    # *Only* users with "canconfirm" privs can confirm bugs.
+    # *Only* users with (product-specific) "canconfirm" privs can confirm bugs.
     if ($field eq 'canconfirm'
         || ($field eq 'bug_status'
             && $oldvalue eq 'UNCONFIRMED'
             && is_open_state($newvalue)))
     {
         $$PrivilegesRequired = 3;
-        return $user->in_group('canconfirm');
+        return $user->in_group('canconfirm', $self->{'product_id'});
     }
 
     # Make sure that a valid bug ID has been given.

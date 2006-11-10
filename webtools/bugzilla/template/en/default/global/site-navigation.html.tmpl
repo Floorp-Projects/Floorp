@@ -111,8 +111,8 @@
               href="editparams.cgi">' IF user.groups.tweakparams %]
     [% '<link rel="Administration" title="Users"    
               href="editusers.cgi">' IF user.groups.editusers %]
-    [% '<link rel="Administration" title="Products"      
-              href="editproducts.cgi">' IF user.groups.editcomponents %]
+    [% '<link rel="Administration" title="Products" href="editproducts.cgi">'
+       IF user.groups.editcomponents || user.get_products_by_permission("editcomponents").size %]
     [% '<link rel="Administration" title="Flag Types"   
               href="editflagtypes.cgi">' IF user.groups.editcomponents %]
     [% '<link rel="Administration" title="Groups"        

@@ -112,6 +112,9 @@ versions:</a>
               [% g.othercontrol FILTER html %]
               [% IF g.entry %], ENTRY[% END %]
               [% IF g.canedit %], CANEDIT[% END %]
+              [% IF g.editcomponents %], editcomponents[% END %]
+              [% IF g.canconfirm %], canconfirm[% END %]
+              [% IF g.editbugs %], editbugs[% END %]
             [% ELSE %]
               DISABLED
             [% END %]

@@ -501,6 +501,14 @@ sub update_table_definitions {
     $dbh->bz_alter_column('longdescs', 'thetext', 
         { TYPE => 'MEDIUMTEXT', NOTNULL => 1 }, '');
 
+    # 2006-10-20 LpSolit@gmail.com - Bug 189627
+    $dbh->bz_add_column('group_control_map', 'editcomponents',
+                        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
+    $dbh->bz_add_column('group_control_map', 'editbugs',
+                        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
+    $dbh->bz_add_column('group_control_map', 'canconfirm',
+                        {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

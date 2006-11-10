@@ -101,6 +101,7 @@ use File::Basename;
     FULLTEXT_BUGLIST_LIMIT
 
     ADMIN_GROUP_NAME
+    PER_PRODUCT_PRIVILEGES
 
     SENDMAIL_EXE
     SENDMAIL_PATH
@@ -288,6 +289,9 @@ use constant FULLTEXT_BUGLIST_LIMIT => 200;
 
 # Default administration group name.
 use constant ADMIN_GROUP_NAME => 'admin';
+
+# Privileges which can be per-product.
+use constant PER_PRODUCT_PRIVILEGES => ('editcomponents', 'editbugs', 'canconfirm');
 
 # Path to sendmail.exe (Windows only)
 use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';

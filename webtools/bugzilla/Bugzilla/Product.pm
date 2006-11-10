@@ -85,7 +85,10 @@ sub group_controls {
                        group_control_map.entry,
                        group_control_map.membercontrol,
                        group_control_map.othercontrol,
-                       group_control_map.canedit
+                       group_control_map.canedit,
+                       group_control_map.editcomponents,
+                       group_control_map.editbugs,
+                       group_control_map.canconfirm
                   FROM groups
                   LEFT JOIN group_control_map
                         ON groups.id = group_control_map.group_id

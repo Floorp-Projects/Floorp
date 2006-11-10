@@ -45,7 +45,7 @@
 
 <hr>
 
-[% UNLESS no_add_product_link %]
+[% UNLESS no_add_product_link || !user.in_group("editcomponents") %]
   <a title="Add a product"
      href="editproducts.cgi?action=add">Add</a> a product[% -%]
 [%# Strictly speaking, we should not have to check for a

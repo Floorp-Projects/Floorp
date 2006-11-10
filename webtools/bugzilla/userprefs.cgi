@@ -369,7 +369,13 @@ sub DoPermissions {
             push(@set_bits, {"desc" => $desc, "name" => $nam});
         }
     }
-    
+
+    # If the user has product specific privileges, inform him about that.
+    foreach my $privs (PER_PRODUCT_PRIVILEGES) {
+        next if $user->in_group($privs);
+        $vars->{"local_$privs"} = $user->get_products_by_permission($privs);
+    }
+
     $vars->{'has_bits'} = \@has_bits;
     $vars->{'set_bits'} = \@set_bits;    
 }

@@ -482,14 +482,58 @@ sub bless_groups {
 }
 
 sub in_group {
-    my ($self, $group) = @_;
-    return exists $self->groups->{$group} ? 1 : 0;
+    my ($self, $group, $product_id) = @_;
+    if (exists $self->groups->{$group}) {
+        return 1;
+    }
+    elsif ($product_id && detaint_natural($product_id)) {
+        # Make sure $group exists on a per-product basis.
+        return 0 unless (grep {$_ eq $group} PER_PRODUCT_PRIVILEGES);
+
+        $self->{"product_$product_id"} = {} unless exists $self->{"product_$product_id"};
+        if (!defined $self->{"product_$product_id"}->{$group}) {
+            my $dbh = Bugzilla->dbh;
+            my $in_group = $dbh->selectrow_array(
+                           "SELECT 1
+                              FROM group_control_map
+                             WHERE product_id = ?
+                                   AND $group != 0
+                                   AND group_id IN (" . $self->groups_as_string . ") " .
+                              $dbh->sql_limit(1),
+                             undef, $product_id);
+
+            $self->{"product_$product_id"}->{$group} = $in_group ? 1 : 0;
+        }
+        return $self->{"product_$product_id"}->{$group};
+    }
+    # If we come here, then the user is not in the requested group.
+    return 0;
 }
 
 sub in_group_id {
     my ($self, $id) = @_;
     my %j = reverse(%{$self->groups});
     return exists $j{$id} ? 1 : 0;
+}
+
+sub get_products_by_permission {
+    my ($self, $group) = @_;
+    # Make sure $group exists on a per-product basis.
+    return [] unless (grep {$_ eq $group} PER_PRODUCT_PRIVILEGES);
+
+    my $product_ids = Bugzilla->dbh->selectcol_arrayref(
+                          "SELECT DISTINCT product_id
+                             FROM group_control_map
+                            WHERE $group != 0
+                              AND group_id IN(" . $self->groups_as_string . ")");
+
+    # No need to go further if the user has no "special" privs.
+    return [] unless scalar(@$product_ids);
+
+    # We will restrict the list to products the user can see.
+    my $selectable_products = $self->get_selectable_products;
+    my @products = grep {lsearch($product_ids, $_->id) > -1} @$selectable_products;
+    return \@products;
 }
 
 sub can_see_user {
@@ -667,15 +711,15 @@ sub can_enter_product {
     }
     # It could be closed for bug entry...
     elsif ($product->disallow_new) {
-        ThrowUserError('product_disabled', {product => $product->name});
+        ThrowUserError('product_disabled', {product => $product});
     }
     # It could have no components...
     elsif (!@{$product->components}) {
-        ThrowUserError('missing_component', {product => $product->name});
+        ThrowUserError('missing_component', {product => $product});
     }
     # It could have no versions...
     elsif (!@{$product->versions}) {
-        ThrowUserError ('missing_version', {product => $product->name});
+        ThrowUserError ('missing_version', {product => $product});
     }
 
     die "can_enter_product reached an unreachable location.";
@@ -724,6 +768,20 @@ sub get_accessible_products {
                        @{$self->get_enterable_products};
     
     return [ values %products ];
+}
+
+sub check_can_admin_product {
+    my ($self, $product_name) = @_;
+
+    # First make sure the product name is valid.
+    my $product = Bugzilla::Product::check_product($product_name);
+
+    ($self->in_group('editcomponents', $product->id)
+       && $self->can_see_product($product->name))
+         || ThrowUserError('product_access_denied', {product => $product->name});
+
+    # Return the validated product object.
+    return $product;
 }
 
 sub can_request_flag {
@@ -861,23 +919,23 @@ sub derive_regexp_groups {
 
 sub product_responsibilities {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     return $self->{'product_resp'} if defined $self->{'product_resp'};
     return [] unless $self->id;
 
-    my $h = Bugzilla->dbh->selectall_arrayref(
-        qq{SELECT products.name AS productname,
-                  components.name AS componentname,
-                  initialowner,
-                  initialqacontact
-           FROM products, components
-           WHERE products.id = components.product_id
-             AND ? IN (initialowner, initialqacontact)
-          },
-        {'Slice' => {}}, $self->id);
-    $self->{'product_resp'} = $h;
+    my $comp_ids = $dbh->selectcol_arrayref('SELECT id FROM components
+                                              WHERE initialowner = ?
+                                                 OR initialqacontact = ?',
+                                              undef, ($self->id, $self->id));
 
-    return $h;
+    # We cannot |use| it, because Component.pm already |use|s User.pm.
+    require Bugzilla::Component;
+    my @components;
+    push(@components, new Bugzilla::Component($_)) foreach (@$comp_ids);
+
+    $self->{'product_resp'} = \@components;
+    return $self->{'product_resp'};
 }
 
 sub can_bless {
@@ -1797,9 +1855,11 @@ Returns a string containing a comma-separated list of numeric group ids.  If
 the user is not a member of any groups, returns "-1". This is most often used
 within an SQL IN() function.
 
-=item C<in_group>
+=item C<in_group($group_name, $product_id)>
 
-Determines whether or not a user is in the given group by name. 
+Determines whether or not a user is in the given group by name.
+If $product_id is given, it also checks for local privileges for
+this product.
 
 =item C<in_group_id>
 
@@ -1813,6 +1873,12 @@ table.
 The arrayref consists of the groups the user can bless, taking into account
 that having editusers permissions means that you can bless all groups, and
 that you need to be aware of a group in order to bless a group.
+
+=item C<get_products_by_permission($group)>
+
+Returns a list of product objects for which the user has $group privileges
+and which he can access.
+$group must be one of the groups defined in PER_PRODUCT_PRIVILEGES.
 
 =item C<can_see_user(user)>
 
@@ -1888,6 +1954,14 @@ method should be called in such a case to force reresolution of these groups.
 
  Returns:     an array of product objects.
 
+=item C<check_can_admin_product($product_name)>
+
+ Description: Checks whether the user is allowed to administrate the product.
+
+ Params:      $product_name - a product name.
+
+ Returns:     On success, a product object. On failure, an error is thrown.
+
 =item C<can_request_flag($flag_type)>
 
  Description: Checks whether the user can request flags of the given type.
@@ -1937,29 +2011,8 @@ list).
 
 =item C<product_responsibilities>
 
-Retrieve user's product responsibilities as a list of hashes.
-One hash per Bugzilla component the user has a responsibility for.
-These are the hash keys:
-
-=over
-
-=item productname
-
-Name of the product.
-
-=item componentname
-
-Name of the component.
-
-=item initialowner
-
-User ID of default assignee.
-
-=item initialqacontact
-
-User ID of default QA contact.
-
-=back
+Retrieve user's product responsibilities as a list of component objects.
+Each object is a component the user has a responsibility for.
 
 =item C<can_bless>
 

@@ -416,12 +416,14 @@ sub enter
   ValidateBugID($bugid);
   validateCanChangeBug($bugid);
   my $dbh = Bugzilla->dbh;
-  
+  my $user = Bugzilla->user;
+
+  my $bug = new Bugzilla::Bug($bugid, $user->id);
   # Retrieve the attachments the user can edit from the database and write
   # them into an array of hashes where each hash represents one attachment.
   my $canEdit = "";
-  if (!Bugzilla->user->in_group("editbugs")) {
-      $canEdit = "AND submitter_id = " . Bugzilla->user->id;
+  if (!$user->in_group('editbugs', $bug->product_id)) {
+      $canEdit = "AND submitter_id = " . $user->id;
   }
   my $attachments = $dbh->selectall_arrayref(
           "SELECT attach_id AS id, description, isprivate
@@ -430,24 +432,13 @@ sub enter
            AND isobsolete = 0 $canEdit
            ORDER BY attach_id",{'Slice' =>{}}, $bugid);
 
-  # Retrieve the bug summary (for displaying on screen) and assignee.
-  my ($bugsummary, $assignee_id) = $dbh->selectrow_array(
-          "SELECT short_desc, assigned_to FROM bugs 
-           WHERE bug_id = ?", undef, $bugid);
-
   # Define the variables and functions that will be passed to the UI template.
-  $vars->{'bugid'} = $bugid;
+  $vars->{'bug'} = $bug;
   $vars->{'attachments'} = $attachments;
-  $vars->{'bugassignee_id'} = $assignee_id;
-  $vars->{'bugsummary'} = $bugsummary;
 
-  my ($product_id, $component_id)= $dbh->selectrow_array(
-          "SELECT product_id, component_id FROM bugs
-           WHERE bug_id = ?", undef, $bugid);
-           
   my $flag_types = Bugzilla::FlagType::match({'target_type'  => 'attachment',
-                                              'product_id'   => $product_id,
-                                              'component_id' => $component_id});
+                                              'product_id'   => $bug->product_id,
+                                              'component_id' => $bug->component_id});
   $vars->{'flag_types'} = $flag_types;
   $vars->{'any_flags_requesteeble'} = grep($_->is_requesteeble, @$flag_types);
 
@@ -487,7 +478,7 @@ sub insert
   # Assign the bug to the user, if they are allowed to take it
   my $owner = "";
   
-  if ($cgi->param('takebug') && Bugzilla->user->in_group("editbugs")) {
+  if ($cgi->param('takebug') && $user->in_group('editbugs', $bug->product_id)) {
       
       my @fields = ("assigned_to", "bug_status", "resolution", "everconfirmed",
                     "login_name");
@@ -606,8 +597,9 @@ sub update
     # Retrieve and validate parameters
     ValidateComment(scalar $cgi->param('comment'));
     my ($attach_id, $bugid) = validateID();
+    my $bug = new Bugzilla::Bug($bugid);
     my $attachment = Bugzilla::Attachment->get($attach_id);
-    $attachment->validate_can_edit;
+    $attachment->validate_can_edit($bug->product_id);
     validateCanChangeAttachment($attach_id);
     Bugzilla::Attachment->validate_description(THROW_ERROR);
     Bugzilla::Attachment->validate_is_patch(THROW_ERROR);
@@ -636,7 +628,6 @@ sub update
     });
     Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
 
-    my $bug = new Bugzilla::Bug($bugid);
     # Lock database tables in preparation for updating the attachment.
     $dbh->bz_lock_tables('attachments WRITE', 'flags WRITE' ,
           'flagtypes READ', 'fielddefs READ', 'bugs_activity WRITE',
@@ -784,7 +775,6 @@ sub delete_attachment {
     # Make sure the administrator is allowed to edit this attachment.
     my ($attach_id, $bug_id) = validateID();
     my $attachment = Bugzilla::Attachment->get($attach_id);
-    $attachment->validate_can_edit;
     validateCanChangeAttachment($attach_id);
 
     $attachment->datasize || ThrowUserError('attachment_removed');

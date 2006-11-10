@@ -777,6 +777,12 @@ use constant ABSTRACT_SCHEMA => {
             membercontrol => {TYPE => 'BOOLEAN', NOTNULL => 1},
             othercontrol  => {TYPE => 'BOOLEAN', NOTNULL => 1},
             canedit       => {TYPE => 'BOOLEAN', NOTNULL => 1},
+            editcomponents => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                               DEFAULT => 'FALSE'},
+            editbugs      => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                              DEFAULT => 'FALSE'},
+            canconfirm    => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                              DEFAULT => 'FALSE'},
         ],
         INDEXES => [
             group_control_map_product_id_idx =>

@@ -25,10 +25,10 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [%# Define strings that will serve as the title and header of this page %]
-[% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bugid %][% END %]
+[% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bug.bug_id %][% END %]
 [% header = BLOCK %]Create New Attachment for
-  [%+ "$terms.Bug $bugid" FILTER bug_link(bugid) FILTER none %][% END %]
-[% subheader = BLOCK %][% bugsummary FILTER html %][% END %]
+  [%+ "$terms.Bug $bug.bug_id" FILTER bug_link(bug.bug_id) FILTER none %][% END %]
+[% subheader = BLOCK %][% bug.short_desc FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
   title = title
@@ -40,7 +40,7 @@
 %]
 
 <form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
-  <input type="hidden" name="bugid" value="[% bugid %]">
+  <input type="hidden" name="bugid" value="[% bug.bug_id %]">
   <input type="hidden" name="action" value="insert">
 
   <table class="attachment_entry">
@@ -66,7 +66,7 @@
       </td>
     </tr>
 
-    [% IF (user.id != bugassignee_id) AND user.groups.editbugs %]
+    [% IF (user.id != bug.assigned_to.id) AND user.in_group("editbugs", bug.product_id) %]
       <tr>
         <th>Reassignment:</th>
         <td>

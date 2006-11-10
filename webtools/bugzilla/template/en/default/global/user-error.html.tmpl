@@ -917,11 +917,11 @@
     [% title = "Missing Component" %]
     [% admindocslinks = {'products.html'   => 'Administering products',
                          'components.html' => 'Creating a component'} %]
-    Sorry, the product <em>[% product FILTER html %]</em>
+    Sorry, the product <em>[% product.name FILTER html %]</em>
     has to have at least one component in order for you to
     enter [% terms.abug %] into it.<br>
-    [% IF user.in_group("editcomponents") %]
-      <a href="editcomponents.cgi?action=add&amp;product=[% product FILTER url_quote %]">Create
+    [% IF user.in_group("editcomponents", product.id) %]
+      <a href="editcomponents.cgi?action=add&amp;product=[% product.name FILTER url_quote %]">Create
       a new component</a>.
     [% ELSE %]
       Please contact [% Param("maintainer") %] and ask them
@@ -989,11 +989,11 @@
   [% ELSIF error == "missing_version" %]
     [% title = "Missing Version" %]
     [% admindocslinks = {'versions.html' => 'Defining versions'} %]
-    Sorry, the product <em>[% product FILTER html %]</em>
+    Sorry, the product <em>[% product.name FILTER html %]</em>
     has to have at least one version in order for you to
     enter [% terms.abug %] into it.<p>
-    [% IF user.in_group("editcomponents") %]
-      <a href="editversions.cgi?action=add&amp;product=[% product FILTER url_quote %]">Create
+    [% IF user.in_group("editcomponents", product.id) %]
+      <a href="editversions.cgi?action=add&amp;product=[% product.name FILTER url_quote %]">Create
       a new version</a>.
     [% ELSE %]
       Please contact [% Param("maintainer") %] and ask them
@@ -1213,7 +1213,7 @@
     [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
     [% admindocslinks = {'products.html' => 'Administering products'} %]
     Sorry, entering [% terms.bugs %] into the
-    product <em>[% product FILTER html %]</em> has been disabled.
+    product <em>[% product.name FILTER html %]</em> has been disabled.
 
   [% ELSIF error == "product_edit_denied" %]
     [% title = "Product Edit Access Denied" %]

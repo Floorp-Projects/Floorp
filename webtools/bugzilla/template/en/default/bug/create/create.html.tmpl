@@ -476,7 +476,7 @@ function handleWantsAttachment(wants_attachment) {
     </td>
   </tr>
 
-  [% IF user.in_group('editbugs') %]
+  [% IF user.in_group('editbugs', product.id) %]
     [% IF use_keywords %]
       <tr>
         <td align="right" valign="top">

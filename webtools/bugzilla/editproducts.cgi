@@ -64,6 +64,7 @@ my $vars = {};
 print $cgi->header();
 
 $user->in_group('editcomponents')
+  || scalar(@{$user->get_products_by_permission('editcomponents')})
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "products"});
@@ -100,10 +101,11 @@ if (Bugzilla->params->{'useclassification'}
 #
 
 if (!$action && !$product_name) {
+    my $classification;
     my $products;
 
     if (Bugzilla->params->{'useclassification'}) {
-        my $classification = 
+        $classification =
             Bugzilla::Classification::check_classification($classification_name);
 
         $products = $user->get_selectable_products($classification->id);
@@ -112,6 +114,14 @@ if (!$action && !$product_name) {
         $products = $user->get_selectable_products;
     }
 
+    # If the user has editcomponents privs for some products only,
+    # we have to restrict the list of products to display.
+    unless ($user->in_group('editcomponents')) {
+        $products = $user->get_products_by_permission('editcomponents');
+        if (Bugzilla->params->{'useclassification'}) {
+            @$products = grep {$_->classification_id == $classification->id} @$products;
+        }
+    }
     $vars->{'products'} = $products;
     $vars->{'showbugcounts'} = $showbugcounts;
 
@@ -130,6 +140,13 @@ if (!$action && !$product_name) {
 #
 
 if ($action eq 'add') {
+    # The user must have the global editcomponents privs to add
+    # new products.
+    $user->in_group('editcomponents')
+      || ThrowUserError("auth_failure", {group  => "editcomponents",
+                                         action => "add",
+                                         object => "products"});
+
     if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
@@ -149,6 +166,13 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
+    # The user must have the global editcomponents privs to add
+    # new products.
+    $user->in_group('editcomponents')
+      || ThrowUserError("auth_failure", {group  => "editcomponents",
+                                         action => "add",
+                                         object => "products"});
+
     check_token_data($token, 'add_product');
     # Cleanups and validity checks
 
@@ -325,12 +349,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    # First make sure the product name is valid.
-    my $product = Bugzilla::Product::check_product($product_name);
-
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product->name)
-      || ThrowUserError('product_access_denied', {product => $product->name});
+    my $product = $user->check_can_admin_product($product_name);
 
     if (Bugzilla->params->{'useclassification'}) {
         my $classification = 
@@ -356,14 +375,9 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
+    my $product = $user->check_can_admin_product($product_name);
     check_token_data($token, 'delete_product');
-    # First make sure the product name is valid.
-    my $product = Bugzilla::Product::check_product($product_name);
 
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product->name)
-      || ThrowUserError('product_access_denied', {product => $product->name});
-    
     $vars->{'product'} = $product;
 
     if (Bugzilla->params->{'useclassification'}) {
@@ -435,12 +449,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product_name)) {
-    # First make sure the product name is valid.
-    my $product = Bugzilla::Product::check_product($product_name);
-
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product->name)
-      || ThrowUserError('product_access_denied', {product => $product->name});
+    my $product = $user->check_can_admin_product($product_name);
 
     if (Bugzilla->params->{'useclassification'}) {
         my $classification; 
@@ -490,13 +499,8 @@ if ($action eq 'edit' || (!$action && $product_name)) {
 #
 
 if ($action eq 'updategroupcontrols') {
+    my $product = $user->check_can_admin_product($product_name);
     check_token_data($token, 'edit_group_controls');
-    # First make sure the product name is valid.
-    my $product = Bugzilla::Product::check_product($product_name);
-
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product->name)
-      || ThrowUserError('product_access_denied', {product => $product->name});
 
     my @now_na = ();
     my @now_mandatory = ();
@@ -584,19 +588,23 @@ if ($action eq 'updategroupcontrols') {
 
     my $sth_Insert = $dbh->prepare('INSERT INTO group_control_map
                                     (group_id, product_id, entry, membercontrol,
-                                     othercontrol, canedit)
-                                    VALUES (?, ?, ?, ?, ?, ?)');
+                                     othercontrol, canedit, editcomponents,
+                                     canconfirm, editbugs)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
     my $sth_Update = $dbh->prepare('UPDATE group_control_map
                                        SET entry = ?, membercontrol = ?,
-                                           othercontrol = ?, canedit = ?
+                                           othercontrol = ?, canedit = ?,
+                                           editcomponents = ?, canconfirm = ?,
+                                           editbugs = ?
                                      WHERE group_id = ? AND product_id = ?');
 
     my $sth_Delete = $dbh->prepare('DELETE FROM group_control_map
                                      WHERE group_id = ? AND product_id = ?');
 
     $groups = $dbh->selectall_arrayref('SELECT id, name, entry, membercontrol,
-                                               othercontrol, canedit
+                                               othercontrol, canedit,
+                                               editcomponents, canconfirm, editbugs
                                           FROM groups
                                      LEFT JOIN group_control_map
                                             ON group_control_map.group_id = id
@@ -606,35 +614,60 @@ if ($action eq 'updategroupcontrols') {
                                          undef, $product->id);
 
     foreach my $group (@$groups) {
-        my ($groupid, $groupname, $entry, $membercontrol, 
-            $othercontrol, $canedit) = @$group;
+        my ($groupid, $groupname, $entry, $membercontrol, $othercontrol,
+            $canedit, $editcomponents, $canconfirm, $editbugs) = @$group;
         my $newentry = $cgi->param("entry_$groupid") || 0;
         my $newmembercontrol = $cgi->param("membercontrol_$groupid") || 0;
         my $newothercontrol = $cgi->param("othercontrol_$groupid") || 0;
         my $newcanedit = $cgi->param("canedit_$groupid") || 0;
+        my $new_editcomponents = $cgi->param("editcomponents_$groupid") || 0;
+        my $new_canconfirm = $cgi->param("canconfirm_$groupid") || 0;
+        my $new_editbugs = $cgi->param("editbugs_$groupid") || 0;
+
         my $oldentry = $entry;
-        $entry = $entry || 0;
-        $membercontrol = $membercontrol || 0;
-        $othercontrol = $othercontrol || 0;
-        $canedit = $canedit || 0;
+        # Set undefined values to 0.
+        $entry ||= 0;
+        $membercontrol ||= 0;
+        $othercontrol ||= 0;
+        $canedit ||= 0;
+        $editcomponents ||= 0;
+        $canconfirm ||= 0;
+        $editbugs ||= 0;
+
+        # We use them in placeholders only. So it's safe to detaint them.
         detaint_natural($newentry);
         detaint_natural($newothercontrol);
         detaint_natural($newmembercontrol);
         detaint_natural($newcanedit);
-        if ((!defined($oldentry)) && 
-             (($newentry) || ($newmembercontrol) || ($newcanedit))) {
+        detaint_natural($new_editcomponents);
+        detaint_natural($new_canconfirm);
+        detaint_natural($new_editbugs);
+
+        if (!defined($oldentry)
+            && ($newentry || $newmembercontrol || $newcanedit
+                || $new_editcomponents || $new_canconfirm || $new_editbugs))
+        {
             $sth_Insert->execute($groupid, $product->id, $newentry,
-                                 $newmembercontrol, $newothercontrol, $newcanedit);
-        } elsif (($newentry != $entry) 
-                  || ($newmembercontrol != $membercontrol) 
-                  || ($newothercontrol != $othercontrol) 
-                  || ($newcanedit != $canedit)) {
+                                 $newmembercontrol, $newothercontrol, $newcanedit,
+                                 $new_editcomponents, $new_canconfirm, $new_editbugs);
+        }
+        elsif (($newentry != $entry)
+               || ($newmembercontrol != $membercontrol)
+               || ($newothercontrol != $othercontrol)
+               || ($newcanedit != $canedit)
+               || ($new_editcomponents != $editcomponents)
+               || ($new_canconfirm != $canconfirm)
+               || ($new_editbugs != $editbugs))
+        {
             $sth_Update->execute($newentry, $newmembercontrol, $newothercontrol,
-                                 $newcanedit, $groupid, $product->id);
+                                 $newcanedit, $new_editcomponents, $new_canconfirm,
+                                 $new_editbugs, $groupid, $product->id);
         }
 
-        if (($newentry == 0) && ($newmembercontrol == 0)
-          && ($newothercontrol == 0) && ($newcanedit == 0)) {
+        if (!$newentry && !$newmembercontrol && !$newothercontrol
+            && !$newcanedit && !$new_editcomponents && !$new_canconfirm
+            && !$new_editbugs)
+        {
             $sth_Delete->execute($groupid, $product->id);
         }
     }
@@ -759,12 +792,7 @@ if ($action eq 'update') {
 
     my $checkvotes = 0;
 
-    # First make sure the product name is valid.
-    my $product_old = Bugzilla::Product::check_product($product_old_name);
-
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product_old->name)
-      || ThrowUserError('product_access_denied', {product => $product_old->name});
+    my $product_old = $user->check_can_admin_product($product_old_name);
 
     if (Bugzilla->params->{'useclassification'}) {
         my $classification; 
@@ -1005,16 +1033,12 @@ if ($action eq 'update') {
 #
 
 if ($action eq 'editgroupcontrols') {
-    # First make sure the product name is valid.
-    my $product = Bugzilla::Product::check_product($product_name);
-
-    # Then make sure the user is allowed to edit properties of this product.
-    $user->can_see_product($product->name)
-      || ThrowUserError('product_access_denied', {product => $product->name});
+    my $product = $user->check_can_admin_product($product_name);
 
     # Display a group if it is either enabled or has bugs for this product.
     my $groups = $dbh->selectall_arrayref(
         'SELECT id, name, entry, membercontrol, othercontrol, canedit,
+                editcomponents, editbugs, canconfirm,
                 isactive, COUNT(bugs.bug_id) AS bugcount
            FROM groups
       LEFT JOIN group_control_map
@@ -1028,7 +1052,8 @@ if ($action eq 'editgroupcontrols') {
           WHERE isbuggroup != 0
             AND (isactive != 0 OR entry IS NOT NULL OR bugs.bug_id IS NOT NULL) ' .
            $dbh->sql_group_by('name', 'id, entry, membercontrol,
-                              othercontrol, canedit, isactive'),
+                              othercontrol, canedit, isactive,
+                              editcomponents, canconfirm, editbugs'),
         {'Slice' => {}}, ($product->id, $product->id));
 
     $vars->{'product'} = $product;

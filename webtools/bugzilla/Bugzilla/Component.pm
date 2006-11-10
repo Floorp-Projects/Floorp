@@ -171,6 +171,15 @@ sub initial_cc {
     return $self->{'initial_cc'};
 }
 
+sub product {
+    my $self = shift;
+    if (!defined $self->{'product'}) {
+        require Bugzilla::Product; # We cannot |use| it.
+        $self->{'product'} = new Bugzilla::Product($self->product_id);
+    }
+    return $self->{'product'};
+}
+
 ###############################
 ####      Accessors        ####
 ###############################
@@ -229,7 +238,8 @@ Bugzilla::Component - Bugzilla product component class.
     my $product_id         = $component->product_id;
     my $default_assignee   = $component->default_assignee;
     my $default_qa_contact = $component->default_qa_contact;
-    my $initial_cc         = $component->initial_cc
+    my $initial_cc         = $component->initial_cc;
+    my $product            = $component->product;
     my $bug_flag_types     = $component->flag_types->{'bug'};
     my $attach_flag_types  = $component->flag_types->{'attachment'};
 
@@ -304,6 +314,14 @@ Initial CC List.
   Params:      none.
 
   Returns:     Two references to an array of flagtype objects.
+
+=item C<product()>
+
+  Description: Returns the product the component belongs to.
+
+  Params:      none.
+
+  Returns:     A Bugzilla::Product object.
 
 =back
 

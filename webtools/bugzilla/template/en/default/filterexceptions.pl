@@ -424,7 +424,7 @@
 ],
 
 'attachment/create.html.tmpl' => [
-  'bugid', 
+  'bug.bug_id',
   'attachment.id', 
 ],
 

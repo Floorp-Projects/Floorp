@@ -23,7 +23,6 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
-use Bugzilla::Product;
 use Bugzilla::Milestone;
 use Bugzilla::Bug;
 use Bugzilla::Token;
@@ -43,6 +42,7 @@ my $whoid = $user->id;
 print $cgi->header();
 
 $user->in_group('editcomponents')
+  || scalar(@{$user->get_products_by_permission('editcomponents')})
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "milestones"});
@@ -62,7 +62,13 @@ my $token          = $cgi->param('token');
 #
 
 unless ($product_name) {
-    $vars->{'products'} = $user->get_selectable_products;
+    my $selectable_products = $user->get_selectable_products;
+    # If the user has editcomponents privs for some products only,
+    # we have to restrict the list of products to display.
+    unless ($user->in_group('editcomponents')) {
+        $selectable_products = $user->get_products_by_permission('editcomponents');
+    }
+    $vars->{'products'} = $selectable_products;
     $vars->{'showbugcounts'} = $showbugcounts;
 
     $template->process("admin/milestones/select-product.html.tmpl", $vars)
@@ -70,13 +76,7 @@ unless ($product_name) {
     exit;
 }
 
-# First make sure the product name is valid.
-my $product = Bugzilla::Product::check_product($product_name);
-
-# Then make sure the user is allowed to edit properties of this product.
-$user->can_see_product($product->name)
-  || ThrowUserError('product_access_denied', {product => $product->name});
-
+my $product = $user->check_can_admin_product($product_name);
 
 #
 # action='' -> Show nice list of milestones

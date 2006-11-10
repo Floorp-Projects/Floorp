@@ -19,7 +19,6 @@
   # listselectionvalues:      selection values to recreate the current user
   #                           list.
   # editusers:                is viewing user member of editusers?
-  # editcomponents:           is viewing user member of editcomponents?
   # otheruser:                Bugzilla::User object of the viewed user.
   # reporter:                 number of bugs reported by the user
   # assignee_or_qa:           number of bugs the user is either the assignee
@@ -57,8 +56,8 @@
 %]
 
 [% responsibilityterms = {
-  'initialowner'     => 'Default Assignee',
-  'initialqacontact' => 'Default QA Contact'
+  'default_assignee'   => 'Default Assignee',
+  'default_qa_contact' => 'Default QA Contact'
   }
 %]
 
@@ -93,21 +92,21 @@
           [% FOREACH component = otheruser.product_responsibilities %]
             <li>
               [% andstring = '' %]
-              [% FOREACH responsibility = ['initialowner', 'initialqacontact'] %]
-                [% IF component.$responsibility == otheruser.id %]
+              [% FOREACH responsibility = ['default_assignee', 'default_qa_contact'] %]
+                [% IF component.${responsibility}.id == otheruser.id %]
                   [% andstring %] [% responsibilityterms.$responsibility %]
                   [% andstring = ' and ' %]
                 [% END %]
               [% END %]
               for
-              [% IF editcomponents %]
+              [% IF user.in_group("editcomponents", component.product_id) %]
                 <a href="editcomponents.cgi?action=edit&amp;product=
-                         [% component.productname FILTER url_quote %]&amp;component=
-                         [% component.componentname FILTER url_quote %]">
+                         [% component.product.name FILTER url_quote %]&amp;component=
+                         [% component.name FILTER url_quote %]">
               [% END %]
-                [%+ component.productname FILTER html %]:
-                [% component.componentname FILTER html %]
-              [% IF editcomponents %]
+                [%+ component.product.name FILTER html %]:
+                [% component.name FILTER html %]
+              [% IF user.in_group("editcomponents", component.product_id) %]
                 </a>
               [% END %]
             </li>
@@ -125,7 +124,7 @@
     one product.
   </p>
   <p>
-    [% IF editcomponents %]
+    [% IF user.in_group("editcomponents", component.product_id) %]
       Change this by clicking the product editing links above,
     [% ELSE %]
       For now, you can

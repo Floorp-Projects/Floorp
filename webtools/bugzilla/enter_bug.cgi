@@ -300,6 +300,9 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
+my $has_editbugs = $user->in_group('editbugs', $product->id);
+my $has_canconfirm = $user->in_group('canconfirm', $product->id);
+
 # If a user is trying to clone a bug
 #   Check that the user has authorization to view the parent bug
 #   Create an instance of Bug that holds the info from the parent
@@ -327,11 +330,11 @@ $vars->{'op_sys'}                = get_legal_field_values('op_sys');
 $vars->{'use_keywords'}          = 1 if Bugzilla::Keyword::keyword_count();
 
 $vars->{'assigned_to'}           = formvalue('assigned_to');
-$vars->{'assigned_to_disabled'}  = !Bugzilla->user->in_group('editbugs');
+$vars->{'assigned_to_disabled'}  = !$has_editbugs;
 $vars->{'cc_disabled'}           = 0;
 
 $vars->{'qa_contact'}           = formvalue('qa_contact');
-$vars->{'qa_contact_disabled'}  = !Bugzilla->user->in_group('editbugs');
+$vars->{'qa_contact_disabled'}  = !$has_editbugs;
 
 $vars->{'cloned_bug_id'}         = $cloned_bug_id;
 
@@ -465,7 +468,7 @@ if ( Bugzilla->params->{'usetargetmilestone'} ) {
 #                             to let them mark bugs as ASSIGNED)
 
 my @status;
-if ($user->in_group('editbugs') || $user->in_group('canconfirm')) {
+if ($has_editbugs || $has_canconfirm) {
     @status = ('NEW', 'ASSIGNED');
 }
 elsif (!$product->votes_to_confirm) {

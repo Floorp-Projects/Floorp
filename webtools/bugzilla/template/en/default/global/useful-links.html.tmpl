@@ -58,10 +58,13 @@
           <li><span class="separator">[% sep %]</span><a href="editclassifications.cgi">Classifications</a></li>
           [% sep = "| " %]
         [% END %]
-        [% IF user.groups.editcomponents %]
+        [% IF user.groups.editcomponents || user.get_products_by_permission("editcomponents").size %]
           <li><span class="separator">[% sep %]</span><a href="editproducts.cgi">Products</a></li>
           [% sep = "| " %]
+        [% END %]
+        [% IF user.groups.editcomponents %]
           <li><span class="separator">[% sep %]</span><a href="editflagtypes.cgi">Flags</a></li>
+          [% sep = "| " %]
         [% END %]
         [% IF user.groups.admin %]
           <li><span class="separator">[% sep %]</span><a href="editfields.cgi">Custom Fields</a></li>
