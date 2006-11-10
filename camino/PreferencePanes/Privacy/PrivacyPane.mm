@@ -63,7 +63,6 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 
 // prefs for keychain password autofill
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
-static const char* const gAutoFillEnabledPref = "chimera.keychain_passwords_autofill";
 
 // network.cookie.lifetimePolicy settings
 const int kAcceptCookiesNormally = 0;
@@ -273,19 +272,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   mCookieManager = cm.get();
   NS_IF_ADDREF(mCookieManager);
 
-  // Keychain checkboxes
+  // Keychain checkbox
   PRBool storePasswords = PR_TRUE;
   mPrefService->GetBoolPref(gUseKeychainPref, &storePasswords);
   [mStorePasswords setState:(storePasswords ? NSOnState : NSOffState)];
-
-  PRBool autoFillPasswords = PR_TRUE;
-  mPrefService->GetBoolPref(gAutoFillEnabledPref, &autoFillPasswords);
-  if(storePasswords)
-    [mAutoFillPasswords setState:(autoFillPasswords ? NSOnState : NSOffState)];
-  else {
-    [mAutoFillPasswords setState:NSOffState];
-    [mAutoFillPasswords setEnabled:NO];
-  }
 
   // set up policy popups
   NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
@@ -951,26 +941,6 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     return;
   mPrefService->SetBoolPref("chimera.store_passwords_with_keychain",
                             ([mStorePasswords state] == NSOnState) ? PR_TRUE : PR_FALSE);
-
-  if([mStorePasswords state] == NSOnState)
-    [mAutoFillPasswords setState:([self getBooleanPref:"chimera.keychain_passwords_autofill" withSuccess:NULL] ? NSOnState : NSOffState)];
-  else
-    [mAutoFillPasswords setState:NSOffState];
-
-  [mAutoFillPasswords setEnabled:([mStorePasswords state] == NSOnState)];
-}
-
-//
-// clickAutoFillPasswords
-//
-// Set pref if autofill is enabled
-//
--(IBAction) clickAutoFillPasswords:(id)sender
-{
-  if (!mPrefService)
-    return;
-  mPrefService->SetBoolPref("chimera.keychain_passwords_autofill",
-                            ([mAutoFillPasswords state] == NSOnState) ? PR_TRUE : PR_FALSE);
 }
 
 -(IBAction) launchKeychainAccess:(id)sender

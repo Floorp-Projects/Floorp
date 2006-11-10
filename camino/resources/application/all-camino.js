@@ -46,7 +46,6 @@ pref("browser.tabs.startPage", 0);
 pref("browser.quartz.enable.all_font_sizes", true);
 
 pref("chimera.store_passwords_with_keychain", true);
-pref("chimera.keychain_passwords_autofill", true);
 
 // by default, Camino will take proxy settings (including PAC) from the OS.
 // set this pref to false if you want to specify proxy settings by hand.

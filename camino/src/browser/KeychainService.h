@@ -61,8 +61,7 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
   IBOutlet id confirmStorePasswordPanel;
   IBOutlet id confirmChangePasswordPanel;
 
-  BOOL mIsEnabled;
-  BOOL mIsAutoFillEnabled;
+  BOOL mFormPasswordFillIsEnabled;
 
   nsIObserver* mFormSubmitObserver;
 }
@@ -86,8 +85,7 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 
 - (void) addListenerToView:(CHBrowserView*)view;
 
-- (BOOL) isEnabled;
-- (BOOL) isAutoFillEnabled;
+- (BOOL) formPasswordFillIsEnabled;
 
 // routines to manipulate the keychain deny list for which hosts we shouldn't
 // ask about

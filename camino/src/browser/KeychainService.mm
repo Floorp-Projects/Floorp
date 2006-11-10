@@ -86,7 +86,6 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
 
 static KeychainService *sInstance = nil;
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
-static const char* const gAutoFillEnabledPref = "chimera.keychain_passwords_autofill";
 
 int KeychainPrefChangedCallback(const char* pref, void* data);
 
@@ -100,9 +99,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 {
   BOOL success = NO;
   if ( strcmp(inPref, gUseKeychainPref) == 0 )
-    [KeychainService instance]->mIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
-  else if ( strcmp(inPref, gAutoFillEnabledPref) == 0)
-    [KeychainService instance]->mIsAutoFillEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gAutoFillEnabledPref withSuccess:&success];
+    [KeychainService instance]->mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
   
   return NS_OK;
 }
@@ -133,17 +130,12 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     
     // cache the values of the prefs and register pref-changed callbacks. Yeah, I know
     // nsIPref is obsolete, but i'm not about to create an nsIObserver just for this.
-    mIsEnabled = NO;
-    mIsAutoFillEnabled = NO;
+    mFormPasswordFillIsEnabled = NO;
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if ( pref ) {
       BOOL success = NO;
-      mIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
-      mIsAutoFillEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gAutoFillEnabledPref withSuccess:&success];
-      if ( pref ) {
-        pref->RegisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
-        pref->RegisterCallback(gAutoFillEnabledPref, KeychainPrefChangedCallback, nsnull);
-      }
+      mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
+      pref->RegisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
     }
     
     // load the keychain.nib file with our dialogs in it
@@ -174,23 +166,16 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 {
   // unregister ourselves as listeners of prefs before prefs go away
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-  if ( pref ) {
+  if ( pref )
     pref->UnregisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
-    pref->UnregisterCallback(gAutoFillEnabledPref, KeychainPrefChangedCallback, nsnull);
-  }
   
   [sInstance release];
 }
 
 
-- (BOOL) isEnabled
+- (BOOL) formPasswordFillIsEnabled
 {
-  return mIsEnabled;
-}
-
-- (BOOL) isAutoFillEnabled
-{
-  return mIsAutoFillEnabled;
+  return mFormPasswordFillIsEnabled;
 }
 
 //
@@ -668,8 +653,6 @@ void
 KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pwd)
 {
   KeychainService* keychain = [KeychainService instance];
-  if(![keychain isEnabled] || ![keychain isAutoFillEnabled])
-    return;
 
   NSString* host = nil;
   PRInt32 port = -1;
@@ -755,7 +738,7 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 {
   PreFill(realm, user, pwd);
 
-  PRBool checked = [[KeychainService instance] isEnabled];
+  PRBool checked = (pwd != NULL && *pwd != NULL);
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptUsernameAndPassword(dialogTitle, text, user, pwd, checkTitle, &checked, _retval);
@@ -780,7 +763,7 @@ KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
 {
   PreFill(realm, nsnull, pwd);
 
-  PRBool checked = [[KeychainService instance] isEnabled];
+  PRBool checked = (pwd != NULL && *pwd != NULL);
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptPassword(dialogTitle, text, pwd, checkTitle, &checked, _retval);
@@ -830,7 +813,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
                                     PRBool* cancelSubmit)
 {
 	KeychainService* keychain = [KeychainService instance];
-  if (![keychain isEnabled])
+  if (![keychain formPasswordFillIsEnabled])
     return NS_OK;
 
   nsCOMPtr<nsIDOMHTMLFormElement> formNode(do_QueryInterface(node));
@@ -959,7 +942,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 - (void)fillDOMWindow:(nsIDOMWindow*)inDOMWindow
 {
   KeychainService* keychain = [KeychainService instance];
-  if(![keychain isEnabled] || ![keychain isAutoFillEnabled])
+  if(![keychain formPasswordFillIsEnabled])
     return;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
