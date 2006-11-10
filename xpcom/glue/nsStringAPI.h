@@ -229,10 +229,7 @@ public:
    *
    * @return the offset of aStr, or -1 if not found.
    */
-  NS_HIDDEN_(PRInt32) Find(const char *aStr, PRBool aIgnoreCase = PR_FALSE) const
-  { return Find(aStr, 0, aIgnoreCase); }
-
-  NS_HIDDEN_(PRInt32) Find(const char *aStr, PRUint32 aOffset, PRBool aIgnoreCase = PR_FALSE) const;
+  NS_HIDDEN_(PRInt32) Find(const char *aStr, PRBool aIgnoreCase = PR_FALSE) const;
 
   /**
    * Search for the offset of the first occurrence of a character in a

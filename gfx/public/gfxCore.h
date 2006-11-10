@@ -46,7 +46,7 @@
 #define NS_SIDE_BOTTOM  2
 #define NS_SIDE_LEFT    3
 
-#if defined(MOZ_ENABLE_LIBXUL) || !defined(MOZILLA_INTERNAL_API)
+#ifdef MOZ_ENABLE_LIBXUL
 #  define NS_GFX
 #  define NS_GFX_(type) type
 #  define NS_GFX_STATIC_MEMBER_(type) type
