@@ -78,8 +78,9 @@ ifdef MOZ_X11
 endif
 
 ifdef _MSC_VER
-CSRCS   += fbmmx.c
-DEFINES += -DUSE_MMX
+# MMX disabled until we figure out the cause of bug 359054.
+#CSRCS   += fbmmx.c
+#DEFINES += -DUSE_MMX
 endif
 
 EXPORTS		= pixman.h pixman-remap.h
