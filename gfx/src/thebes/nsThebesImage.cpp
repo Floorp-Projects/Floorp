@@ -238,10 +238,18 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     // a distinction between DIB and DDB and we want to use DDBs as much
     // as we can.
     if (mWinSurface) {
-        nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, mFormat, mWidth, mHeight);
-        if (wsurf) {
-            mOptSurface = wsurf;
-        } else {
+        // Don't do DDBs for large images; see bug 359147
+        // We use 1024 as a reasonable sized maximum; the real fix
+        // will be to make sure we don't ever make a DDB that's bigger
+        // than the primary screen size (rule of thumb).
+        if (mWidth <= 1024 && mHeight <= 1024) {
+            nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, mFormat, mWidth, mHeight);
+            if (wsurf) {
+                mOptSurface = wsurf;
+            }
+        }
+
+        if (!mOptSurface) {
             // just use the DIB
             mOptSurface = mWinSurface;
         }
