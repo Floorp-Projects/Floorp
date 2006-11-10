@@ -181,10 +181,14 @@ nsProgressDialog.prototype = {
       this.operation = aOperation;
     },
 
-    // ---------- nsIWebProgressListener methods ----------
+    // ----- nsIDownloadProgressListener/nsIWebProgressListener methods -----
+    // Take advantage of javascript's function overloading feature to combine
+    // similiar nsIDownloadProgressListener and nsIWebProgressListener methods
+    // in one. For nsIWebProgressListener calls, the aDownload paramater will
+    // always be undefined.
 
     // Look for STATE_STOP and update dialog to indicate completion when it happens.
-    onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
+    onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus, aDownload ) {
         if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
             // if we are downloading, then just wait for the first STATE_STOP
             if ( this.targetFile != null ) {
@@ -213,9 +217,10 @@ nsProgressDialog.prototype = {
                                 aCurSelfProgress,
                                 aMaxSelfProgress,
                                 aCurTotalProgress,
-                                aMaxTotalProgress ) {
-      return onProgressChange64(aWebProgress, aRequest, aCurSelfProgress,
-              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+                                aMaxTotalProgress,
+                                aDownload ) {
+      return this.onProgressChange64(aWebProgress, aRequest, aCurSelfProgress,
+              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload);
     },
 
     onProgressChange64: function( aWebProgress,
@@ -223,16 +228,13 @@ nsProgressDialog.prototype = {
                                   aCurSelfProgress,
                                   aMaxSelfProgress,
                                   aCurTotalProgress,
-                                  aMaxTotalProgress ) {
-        var overallProgress = aCurTotalProgress;
-
+                                  aMaxTotalProgress,
+                                  aDownload ) {
         // Get current time.
         var now = ( new Date() ).getTime();
 
         // If interval hasn't elapsed, ignore it.
-        if ( now - this.lastUpdate < this.interval &&
-             aMaxTotalProgress != "-1" &&
-             parseInt( aCurTotalProgress ) < parseInt( aMaxTotalProgress ) ) {
+        if ( now - this.lastUpdate < this.interval ) {
             return;
         }
 
@@ -244,7 +246,7 @@ nsProgressDialog.prototype = {
 
         // Calculate percentage.
         if ( aMaxTotalProgress > 0) {
-            this.percent = Math.floor( ( overallProgress * 100.0 ) / aMaxTotalProgress );
+            this.percent = Math.floor( ( aCurTotalProgress * 100.0 ) / aMaxTotalProgress );
         } else {
             this.percent = -1;
         }
@@ -258,11 +260,11 @@ nsProgressDialog.prototype = {
         this.setValue( "timeElapsed", this.formatSeconds( this.elapsed / 1000 ) );
 
         // Now that we've set the progress and the time, update # bytes downloaded...
-        // Update status (nnK of mmK bytes at xx.xK aCurTotalProgress/sec)
+        // Update status (nn KB of mm KB at xx.x KB/sec)
         var status = this.getString( "progressMsg" );
 
         // Insert 1 is the number of kilobytes downloaded so far.
-        status = this.replaceInsert( status, 1, parseInt( overallProgress/1024 + .5 ) );
+        status = this.replaceInsert( status, 1, parseInt( aCurTotalProgress/1024 + .5 ) );
 
         // Insert 2 is the total number of kilobytes to be downloaded (if known).
         if ( aMaxTotalProgress != "-1" ) {
@@ -273,8 +275,14 @@ nsProgressDialog.prototype = {
 
         // Insert 3 is the download rate.
         if ( this.elapsed ) {
-            this.rate = ( aCurTotalProgress * 1000 ) / this.elapsed;
-            status = this.replaceInsert( status, 3, this.rateToKRate( this.rate ) );
+            // Use the download speed where available, otherwise calculate
+            // rate using current progress and elapsed time.
+            if ( aDownload ) {
+                this.rate = aDownload.speed;
+            } else {
+                this.rate = ( aCurTotalProgress * 1000 ) / this.elapsed;
+            }
+            status = this.replaceInsert( status, 3, this.kRate.toFixed(1) );
         } else {
             // Rate not established, yet.
             status = this.replaceInsert( status, 3, "??.?" );
@@ -295,7 +303,7 @@ nsProgressDialog.prototype = {
     },
 
     // Look for error notifications and display alert to user.
-    onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
+    onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage, aDownload ) {
         // Check for error condition (only if dialog is still open).
         if ( aStatus != Components.results.NS_OK ) {
             if ( this.loaded ) {
@@ -323,10 +331,10 @@ nsProgressDialog.prototype = {
     },
 
     // Ignore onLocationChange and onSecurityChange notifications.
-    onLocationChange: function( aWebProgress, aRequest, aLocation ) {
+    onLocationChange: function( aWebProgress, aRequest, aLocation, aDownload ) {
     },
 
-    onSecurityChange: function( aWebProgress, aRequest, state ) {
+    onSecurityChange: function( aWebProgress, aRequest, aState, aDownload ) {
     },
 
     // ---------- nsIObserver methods ----------
@@ -372,6 +380,7 @@ nsProgressDialog.prototype = {
             iid.equals(Components.interfaces.nsITransfer) ||
             iid.equals(Components.interfaces.nsIWebProgressListener) ||
             iid.equals(Components.interfaces.nsIWebProgressListener2) ||
+            iid.equals(Components.interfaces.nsIDownloadProgressListener) ||
             iid.equals(Components.interfaces.nsIObserver) ||
             iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
             iid.equals(Components.interfaces.nsISupports))
@@ -466,7 +475,7 @@ nsProgressDialog.prototype = {
 
         var now = ( new Date() ).getTime();
 
-        // Intialize the elapsed time.
+        // Initialize the elapsed time.
         if ( !this.elapsed ) {
             this.elapsed = now - this.startTime;
         }
@@ -671,19 +680,8 @@ nsProgressDialog.prototype = {
     },
 
     // Update download rate and dialog display.
-    // Note that we don't want the displayed value to quiver
-    // between essentially identical values (e.g., 99.9Kb and
-    // 100.0Kb) so we only update if we see a big change.
     setRate: function( rate ) {
-        if ( rate ) {
-            // rate is bytes/sec
-            var change = Math.abs( this.rate - rate );
-            // Don't update too often!
-            if ( change > this.rate / 10 ) {
-                // Displayed rate changes.
-                this.mRate = rate;
-            }
-        }
+        this.mRate = rate;
         return this.mRate;
     },
 
@@ -778,11 +776,6 @@ nsProgressDialog.prototype = {
         return this.mPaused = pausing;
     },
 
-    // Convert raw rate (bytes/sec) to Kbytes/sec (to nearest tenth).
-    rateToKRate: function( rate ) {
-        return ( rate / 1024 ).toFixed(1);
-    },
-
     // Format number of seconds in hh:mm:ss form.
     formatSeconds: function( secs ) {
         // Round the number of seconds to remove fractions.
@@ -835,7 +828,7 @@ nsProgressDialog.prototype = {
         this.dialogElement( id ).value = val;
     },
 
-    // Enable dialgo element.
+    // Enable dialog element.
     enable: function( field ) {
         this.dialogElement( field ).removeAttribute( "disabled" );
     },

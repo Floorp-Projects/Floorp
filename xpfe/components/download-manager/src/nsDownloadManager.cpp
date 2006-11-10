@@ -49,7 +49,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsRDFCID.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIWebBrowserPersist.h"
 #include "nsIObserver.h"
 #include "nsIProgressDialog.h"
 #include "nsIWebBrowserPersist.h"
@@ -774,7 +773,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   dialog->SetObserver(internalDownload);
 
   // now set the listener so we forward notifications to the dialog
-  nsCOMPtr<nsIWebProgressListener2> listener = do_QueryInterface(dialog);
+  nsCOMPtr<nsIDownloadProgressListener> listener = do_QueryInterface(dialog);
   internalDownload->SetDialogListener(listener);
   
   internalDownload->SetDialog(dialog);
@@ -1092,8 +1091,8 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   }
 
   if (mDialogListener) {
-    mDialogListener->OnProgressChange64(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                                        aCurTotalProgress, aMaxTotalProgress);
+    mDialogListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+                                      aCurTotalProgress, aMaxTotalProgress, this);
   }
 
   return NS_OK;
@@ -1128,7 +1127,7 @@ nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
   }
 
   if (mDialogListener)
-    mDialogListener->OnLocationChange(aWebProgress, aRequest, aLocation);
+    mDialogListener->OnLocationChange(aWebProgress, aRequest, aLocation, this);
 
   return NS_OK;
 }
@@ -1154,7 +1153,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
   }
 
   if (mDialogListener)
-    mDialogListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    mDialogListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage, this);
   else {
     // Need to display error alert ourselves, if an error occurred.
     if (NS_FAILED(aStatus)) {
@@ -1314,7 +1313,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   }
 
   if (mDialogListener) {
-    mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+    mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
     if (aStateFlags & STATE_STOP) {
       // Break this cycle, too
       mDialogListener = nsnull;
@@ -1336,7 +1335,7 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
   }
 
   if (mDialogListener)
-    mDialogListener->OnSecurityChange(aWebProgress, aRequest, aState);
+    mDialogListener->OnSecurityChange(aWebProgress, aRequest, aState, this);
 
   return NS_OK;
 }
