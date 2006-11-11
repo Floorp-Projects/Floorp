@@ -126,10 +126,6 @@ class query
                                               'title' => $config['fields'][$selectedChild]);
                 }
             }
-            // Find out if we are working with a specific host
-            if(isset($_GET['host_hostname']) && $_GET['host_hostname'] != null){
-                $this->queryHost = true;
-            }
         } else {
             // Otherwise, we do it for  them
             $this->selected[] = array('field' => 'host_hostname',
@@ -142,8 +138,13 @@ class query
             }
         }
 
-	// We need the report_id regardless of if the user wants to see it, so we add it ourselves,
-	// but also set artificalReportID, so we know to pull it before we display results.
+        // Find out if we are working with a specific host
+        if(isset($_GET['host_hostname']) && $_GET['host_hostname'] != null){
+            $this->queryHost = true;
+        }
+
+         // We need the report_id regardless of if the user wants to see it, so we add it ourselves,
+        // but also set artificalReportID, so we know to pull it before we display results.
         if($this->_searchQueryInput($this->selected, 'report_id') === false) {
             $this->artificialReportID = true;
             $this->selected[] = array('field' => 'report_id',
