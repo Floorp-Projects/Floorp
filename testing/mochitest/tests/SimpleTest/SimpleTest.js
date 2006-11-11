@@ -40,6 +40,11 @@ SimpleTest.is = function (a, b, name) {
     SimpleTest.ok(a == b, name, "got " + repr(a) + ", expected " + repr(b));
 };
 
+SimpleTest.isnot = function (a, b, name) {
+    var repr = MochiKit.Base.repr;
+    SimpleTest.ok(a != b, name, "Didn't expect " + repr(a) + ", but got it.");
+};
+
 //  --------------- Test.Builder/Test.More todo() -----------------
 
 SimpleTest.todo = function(condition, name, diag) {
@@ -387,5 +392,6 @@ SimpleTest.isa = function (object, clas) {
 // Global symbols:
 var ok = SimpleTest.ok;
 var is = SimpleTest.is;
+var isnot = SimpleTest.isnot;
 var todo = SimpleTest.todo;
 var isDeeply = SimpleTest.isDeeply;
