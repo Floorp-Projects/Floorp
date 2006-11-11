@@ -93,7 +93,7 @@ sub get_param_list {
   {
    name => 'loginnetmask',
    type => 't',
-   default => '32',
+   default => '0',
    checker => \&check_netmask
   },
 
