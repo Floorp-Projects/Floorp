@@ -1,0 +1,33 @@
+<html><head>
+<title>Test for Bug 337124</title>
+ <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=337124">Mozilla Bug 337124</a>
+
+<span style="display: table-row-group;">
+    <input type="text">
+  </span>
+  <div style="display: table-column-group;">
+    <script>document.body.offsetHeight;</script>
+  </div><span style="display: table-row-group;">
+          <input id="i1" type="text">
+        </span><fieldset id="f1" style="display: table-column-group;">
+               </fieldset>
+</fieldset>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var passed = false;
+if ( document.getElementById("f1").offsetTop >  document.getElementById("i1").offsetTop) {
+  passed = true;
+}
+
+ok(passed, "right layout order");
+
+</script> 
+</pre>
+</body>
+</html>
