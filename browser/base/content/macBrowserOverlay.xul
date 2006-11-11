@@ -40,6 +40,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#ifdef MOZ_PLACES
+<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+#endif
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
 #include browser-doctype.inc
@@ -47,13 +54,6 @@
 <overlay id="hidden-overlay"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-#ifdef MOZ_PLACES
-<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
-#endif
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-
-<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 
 # All JS files which are not content (only) dependent that browser.xul
 # wishes to include *must* go into the global-scripts.inc file
