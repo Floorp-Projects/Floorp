@@ -234,8 +234,9 @@ nsMappedAttributes::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 void
-nsMappedAttributes::RemoveAttrAt(PRUint32 aPos)
+nsMappedAttributes::RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue)
 {
+  Attrs()[aPos].mValue.SwapValueWith(aValue);
   Attrs()[aPos].~InternalAttr();
   memmove(&Attrs()[aPos], &Attrs()[aPos + 1],
           (mAttrCount - aPos - 1) * sizeof(InternalAttr));

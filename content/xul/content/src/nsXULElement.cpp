@@ -1385,6 +1385,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     nsCOMPtr<nsIDOMAttr> attrNode;
     if (hasMutationListeners) {
+        // XXXbz namespaces, dude!
         nsAutoString attrName;
         aName->ToString(attrName);
         GetAttributeNode(attrName, getter_AddRefs(attrNode));
@@ -1395,7 +1396,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
       slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
     }
 
-    rv = mAttrsAndChildren.RemoveAttrAt(index);
+    nsAttrValue ignored;
+    rv = mAttrsAndChildren.RemoveAttrAt(index, ignored);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // XXX if the RemoveAttrAt() call fails, we might end up having removed
