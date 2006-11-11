@@ -110,7 +110,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void)restoreSplitters;
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
+- (void)reloadDataForItem:(id)item reloadChildren:(BOOL)aReloadChildren;
 
 - (void)setSearchResultArray:(NSArray *)anArray;
 - (void)displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
@@ -146,8 +146,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask;
 
--(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy;
--(void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder*)dropFolder index:(int)index;
+- (void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy;
+- (void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder*)dropFolder index:(int)index;
 
 @end
 
@@ -167,15 +167,14 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (id)initWithBrowserWindowController:(BrowserWindowController*)bwController
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     mBrowserWindowController = bwController;  // not retained
 
     // wait for |-completeSetup| to be called to lazily complete our setup
     mSetupComplete = NO;
-    
+
     // we'll delay loading the nib until we need to show UI
-    // (important because we get created for every new tab)    
+    // (important because we get created for every new tab)
   }
   return self;
 }
@@ -190,25 +189,25 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // balance the extra retains
   [mBookmarksHostView release];
   [mHistoryHostView release];
-  
+
   // release the views
   // Note: we have to be careful only to release top-level items in the nib,
   // not any random subview we might have an outlet to.
   [mBookmarksEditingView release];
   [mBookmarksHostView release];
   [mHistoryHostView release];
-  
+
   [mActionMenuBookmarks release];
   [mActionMenuHistory release];
-  
+
   [mSortMenuBookmarks release];
   [mSortMenuHistory release];
-  
+
   [mQuickSearchMenuBookmarks release];
   [mQuickSearchMenuHistory release];
-  
+
   [mHistoryOutlineViewDelegate release];
-  
+
   // release data
   [mItemToReveal release];
   [mExpandedStates release];
@@ -217,7 +216,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mSearchResultArray release];
 
   [mHistoryDataSource release];
-  
+
   [mSeparatorImage release];
 
   [super dealloc];
@@ -227,8 +226,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)awakeFromNib
 {
   [mBookmarksEditingView setDelegate:self];
-  
-  // retain views that we remove from the hierarchy  
+
+  // retain views that we remove from the hierarchy
   [mBookmarksHostView retain];
   [mHistoryHostView retain];
 
@@ -270,7 +269,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mHistoryOutlineView setTarget:mHistoryOutlineViewDelegate];
   [mHistoryOutlineView setDoubleAction:@selector(openHistoryItem:)];
   [mHistoryOutlineView setDeleteAction:@selector(deleteHistoryItems:)];
-  
+
   // Generic notifications for Bookmark Client
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(bookmarkAdded:)   name:BookmarkFolderAdditionNotification object:nil];
@@ -285,9 +284,13 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // it can be created after we are and if we don't update ourselves, the bar will be blank. This
   // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
   [nc addObserver:self selector:@selector(managerStarted:) name:kBookmarkManagerStartedNotification object:nil];
-  
+
   // register for dragged types
-  [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSURLPboardType, NSStringPboardType, nil]];
+  [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType,
+                                                                          kWebURLsWithTitlesPboardType,
+                                                                          NSURLPboardType,
+                                                                          NSStringPboardType,
+                                                                          nil]];
 
   [self ensureBookmarks];
 
@@ -306,10 +309,10 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mHistoryOutlineView setAutosaveName:@"HistoryOutlineView"];
   [mHistoryOutlineView setAutosaveTableColumns:YES];
   [mHistoryOutlineView setAutosaveTableSort:YES];
-  
+
   mSeparatorImage = [[NSImage imageNamed:@"bm_horizontal_separator"] retain];
   [mSeparatorImage setScalesWhenResized:YES];
-  
+
   mSetupComplete = YES;
 }
 
@@ -318,24 +321,22 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // the standard table item doesn't handle text and icons. Replace it
   // with a custom cell that does.
   ImageAndTextCell* imageAndTextCell = [[[ImageAndTextCell alloc] init] autorelease];
-  [imageAndTextCell setEditable: YES];
-  [imageAndTextCell setWraps: NO];
+  [imageAndTextCell setEditable:YES];
+  [imageAndTextCell setWraps:NO];
 
-  NSTableColumn* itemNameColumn = [tableView tableColumnWithIdentifier: @"title"];
+  NSTableColumn* itemNameColumn = [tableView tableColumnWithIdentifier:@"title"];
   [itemNameColumn setDataCell:imageAndTextCell];
 
   [tableView setUsesAlternatingRowBackgroundColors:YES];
   [tableView setGridStyleMask:TableViewSolidVerticalGridLineMask];
-  
+
   // set up the font on the item & search views to be smaller
   // also don't let the cells draw their backgrounds
   NSArray* columns = [tableView tableColumns];
-  if (columns)
-  {
+  if (columns) {
     int numColumns = [columns count];
     NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for (int i = 0; i < numColumns; i++)
-    {
+    for (int i = 0; i < numColumns; i++) {
       [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
       [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
     }
@@ -349,10 +350,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 // data. This routine may be called more than once safely. Note that if the bookmark manager
 // has not yet been fully initialized by the time we get here, bail until we hear back later.
 //
--(void)ensureBookmarks
+- (void)ensureBookmarks
 {
-  if (!mRootBookmarks)
-  {
+  if (!mRootBookmarks) {
     BookmarkFolder* manager = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
     if (![manager count])     // not initialized yet, try again later (from start notifiation)
       return;
@@ -363,14 +363,14 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     [mContainersTableView setDeleteAction:@selector(deleteCollection:)];
     [mContainersTableView reloadData];
 
-    [mBookmarksOutlineView setTarget: self];
-    [mBookmarksOutlineView setDoubleAction: @selector(openBookmark:)];
-    [mBookmarksOutlineView setDeleteAction: @selector(deleteBookmarks:)];
+    [mBookmarksOutlineView setTarget:self];
+    [mBookmarksOutlineView setDoubleAction:@selector(openBookmark:)];
+    [mBookmarksOutlineView setDeleteAction:@selector(deleteBookmarks:)];
     [mBookmarksOutlineView reloadData];
   }
 }
 
--(void) setSearchResultArray:(NSArray *)anArray
+- (void)setSearchResultArray:(NSArray *)anArray
 {
   [anArray retain];
   [mSearchResultArray release];
@@ -381,22 +381,22 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 // IBActions
 //
 
-- (IBAction) setAsDockMenuFolder:(id)aSender
+- (IBAction)setAsDockMenuFolder:(id)aSender
 {
   BookmarkFolder* aFolder = [self selectedContainerFolder];
   [aFolder setIsDockMenu:YES];
 }
 
--(IBAction)addCollection:(id)aSender
+- (IBAction)addCollection:(id)aSender
 {
   BookmarkFolder *aFolder = [mRootBookmarks addBookmarkFolder];
-  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder",@"New Folder")];
+  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", nil)];
   [self selectContainerFolder:aFolder];
   int newFolderIndex = [[BookmarkManager sharedBookmarkManager] indexOfContainer:aFolder];
   [mContainersTableView editColumn:0 row:newFolderIndex withEvent:nil select:YES];
 }
 
--(IBAction)addBookmarkSeparator:(id)aSender
+- (IBAction)addBookmarkSeparator:(id)aSender
 {
   Bookmark *aBookmark = [[Bookmark alloc] init];
   [aBookmark setIsSeparator:YES];
@@ -404,13 +404,13 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   int index;
   BookmarkFolder *parentFolder = [self selectedItemFolderAndIndex:&index];
 
-  [parentFolder insertChild:aBookmark atIndex:index isMove:NO];  
+  [parentFolder insertChild:aBookmark atIndex:index isMove:NO];
 
   [self revealItem:aBookmark scrollIntoView:YES selecting:YES byExtendingSelection:NO];
   [aBookmark release];
 }
 
--(IBAction)addBookmarkFolder:(id)aSender
+- (IBAction)addBookmarkFolder:(id)aSender
 {
   AddBookmarkDialogController* addBookmarkController = [AddBookmarkDialogController sharedAddBookmarkDialogController];
 
@@ -422,11 +422,11 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [addBookmarkController showDialogWithLocationsAndTitles:nil isFolder:YES onWindow:[mBookmarksEditingView window]];
 }
 
--(IBAction)deleteCollection:(id)aSender
+- (IBAction)deleteCollection:(id)aSender
 {
   BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
   int index = [mContainersTableView selectedRow];
-  
+
   BookmarkFolder* selectedContainer = [self selectedContainerFolder];
   if (![manager isUserCollection:selectedContainer])
     return;
@@ -435,7 +435,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [[manager rootBookmarks] deleteChild:selectedContainer];
 }
 
--(IBAction)deleteBookmarks: (id)aSender
+- (IBAction)deleteBookmarks:(id)aSender
 {
   int index = [mBookmarksOutlineView selectedRow];
   if (index == -1)
@@ -460,29 +460,29 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
 
   [[BookmarkManager sharedBookmarkManager] startSuppressingChangeNotifications];
-  
+
   // all the parents of the children we need to notify, some may overlap, but in general
   // that's pretty uncommon, so this is good enough.
   NSMutableSet *parentsToNotify = [NSMutableSet set];
-  
+
   // delete all bookmarks that are in our array
   NSEnumerator *e = [[mBookmarksOutlineView selectedItems] objectEnumerator];
   BookmarkItem *doomedBookmark = nil;
-  
+
   while ((doomedBookmark = [e nextObject])) {
     BookmarkFolder *currentParent = [doomedBookmark parent];
     [parentsToNotify addObject:currentParent];
     [currentParent deleteChild:doomedBookmark];
   }
-  
+
   [[BookmarkManager sharedBookmarkManager] stopSuppressingChangeNotifications];
-  
+
   // notify observers that the parents have changed
   e = [parentsToNotify objectEnumerator];
   BookmarkFolder *currentParent = nil;
   while ((currentParent = [e nextObject]))
     [currentParent notifyChildrenChanged];
-  
+
   // restore selection to location near last item deleted or last item
   int total = [mBookmarksOutlineView numberOfRows];
   if (index >= total)
@@ -490,7 +490,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mBookmarksOutlineView selectRow:index byExtendingSelection:NO];
 }
 
--(IBAction)openBookmark: (id)aSender
+- (IBAction)openBookmark:(id)aSender
 {
   NSArray* items = nil;
   if ([aSender isKindOfClass:[BookmarkItem class]])
@@ -500,23 +500,19 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   NSEnumerator* itemsEnum = [items objectEnumerator];
   id curItem;
-  while ((curItem = [itemsEnum nextObject]))
-  {
+  while ((curItem = [itemsEnum nextObject])) {
     // see if it's a rendezvous item
-    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
-    {
+    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved]) {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenBookmarkAction;
-    }    
-    else if ([curItem isKindOfClass:[BookmarkFolder class]] && ![curItem isGroup])
-    {
+    }
+    else if ([curItem isKindOfClass:[BookmarkFolder class]] && ![curItem isGroup]) {
       if ([mBookmarksOutlineView isItemExpanded:curItem])
         [mBookmarksOutlineView collapseItem:curItem];
       else
         [mBookmarksOutlineView expandItem:curItem];
     }
-    else
-    {
+    else {
       // otherwise follow the standard bookmark opening behavior
       BOOL shiftKeyDown = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
       EBookmarkOpenBehavior behavior = eBookmarkOpenBehavior_Preferred;
@@ -529,7 +525,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
 }
 
--(IBAction)openBookmarkInNewTab:(id)aSender
+- (IBAction)openBookmarkInNewTab:(id)aSender
 {
   NSArray* items = nil;
   if ([aSender isKindOfClass:[BookmarkItem class]])
@@ -539,49 +535,46 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   NSEnumerator* itemsEnum = [items objectEnumerator];
   id curItem;
-  while ((curItem = [itemsEnum nextObject]))
-  {
+  while ((curItem = [itemsEnum nextObject])) {
     // see if it's a rendezvous item
-    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
-    {
+    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved]) {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenInNewTabAction;
     }
-    else
-    {
+    else {
       // otherwise follow the standard bookmark opening behavior
       BOOL reverseBackgroundPref = NO;
       if ([aSender isAlternate])
         reverseBackgroundPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
 
-      [[NSApp delegate] loadBookmark:curItem withBWC:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewTab reverseBgToggle:reverseBackgroundPref];
+      [[NSApp delegate] loadBookmark:curItem
+                             withBWC:mBrowserWindowController
+                        openBehavior:eBookmarkOpenBehavior_NewTab
+                     reverseBgToggle:reverseBackgroundPref];
     }
   }
 }
 
--(IBAction)openBookmarksInTabsInNewWindow:(id)aSender
+- (IBAction)openBookmarksInTabsInNewWindow:(id)aSender
 {
   NSArray* items = nil;
   if ([aSender isKindOfClass:[BookmarkItem class]])
     items = [NSArray arrayWithObject:aSender];
   else
     items = [mBookmarksOutlineView selectedItems];
-  
+
   // make url array
   NSMutableArray* urlArray = [NSMutableArray arrayWithCapacity:[items count]];
-  
+
   NSEnumerator* itemsEnum = [items objectEnumerator];
   id curItem;
-  while ((curItem = [itemsEnum nextObject]))
-  {
+  while ((curItem = [itemsEnum nextObject])) {
     // see if it's a rendezvous item (this won't open in the new window, because we suck)
-    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
-    {
+    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved]) {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenInNewTabAction;
     }
-    else
-    {
+    else {
       if ([curItem isKindOfClass:[Bookmark class]])
         [urlArray addObject:[curItem url]];
       else if ([curItem isKindOfClass:[BookmarkFolder class]])
@@ -599,7 +592,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [[NSApp delegate] openBrowserWindowWithURLs:urlArray behind:behindWindow allowPopups:NO];
 }
 
--(IBAction)openBookmarkInNewWindow:(id)aSender
+- (IBAction)openBookmarkInNewWindow:(id)aSender
 {
   NSArray* items = nil;
   if ([aSender isKindOfClass:[BookmarkItem class]])
@@ -609,27 +602,27 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   NSEnumerator* itemsEnum = [items objectEnumerator];
   id curItem;
-  while ((curItem = [itemsEnum nextObject]))
-  {
+  while ((curItem = [itemsEnum nextObject])) {
     // see if it's a rendezvous item
-    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved])
-    {
+    if ([curItem isKindOfClass:[RendezvousBookmark class]] && ![curItem resolved]) {
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = eOpenInNewWindowAction;
     }
-    else
-    {
+    else {
       // otherwise follow the standard bookmark opening behavior
       BOOL reverseBackgroundPref = NO;
       if ([aSender isAlternate])
         reverseBackgroundPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
 
-      [[NSApp delegate] loadBookmark:curItem withBWC:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewWindow reverseBgToggle:reverseBackgroundPref];
+      [[NSApp delegate] loadBookmark:curItem
+                             withBWC:mBrowserWindowController
+                        openBehavior:eBookmarkOpenBehavior_NewWindow
+                     reverseBgToggle:reverseBackgroundPref];
     }
   }
 }
 
--(IBAction)showBookmarkInfo:(id)aSender
+- (IBAction)showBookmarkInfo:(id)aSender
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
   BookmarkItem* item = [self selectedBookmarkItem];
@@ -639,7 +632,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 }
 
 // XXX unused
--(IBAction) locateBookmark:(id)aSender
+- (IBAction)locateBookmark:(id)aSender
 {
 #if 0
   BookmarkItem* item = [aSender representedObject]; // XXX ???
@@ -647,11 +640,11 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 #endif
 }
 
--(IBAction) cut:(id)aSender
+- (IBAction)cut:(id)aSender
 {
   // XXX write me. We'll need to write to the pasteboard something other than an array of UUIDs,
   // because we need to rip the bookmark items out of the tree.
-  
+
 }
 
 - (IBAction)copy:(id)aSender
@@ -663,12 +656,12 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 // Paste bookmark(s) from the general pasteboard into the user's bookmarks file
 // We use the view to work out where to paste the bookmark
-// If no items are selected in the view : at the end of the bookmark menu folder
+// If no items are selected in the view: at the end of the bookmark menu folder
 // If a folder is selected: at the end of that folder
 // If a bookmark is selected: immediately after that bookmark, under the same parent
 // XXX: At the moment if multiple items are selected we only examine the first one
 //
--(IBAction) paste:(id)aSender
+- (IBAction)paste:(id)aSender
 {
   NSArray* types = [[NSPasteboard generalPasteboard] types];
 
@@ -684,7 +677,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if ([item isKindOfClass:[BookmarkFolder class]]) {
       pasteDestinationFolder = (BookmarkFolder*) item;
       pasteDestinationIndex = [pasteDestinationFolder count];
-    } else if ([item isKindOfClass:[Bookmark class]]) {
+    }
+    else if ([item isKindOfClass:[Bookmark class]]) {
       pasteDestinationFolder = (BookmarkFolder*) [item parent];
       pasteDestinationIndex = [pasteDestinationFolder indexOfObject:item] + 1;
     }
@@ -701,34 +695,34 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
 
   // Do the actual copy based on the type available on the clipboard
-  if ([types containsObject: kCaminoBookmarkListPBoardType])
+  if ([types containsObject:kCaminoBookmarkListPBoardType])
     [self pasteBookmarks:[NSPasteboard generalPasteboard] intoFolder:pasteDestinationFolder index:pasteDestinationIndex copying:YES];
   else if ([[NSPasteboard generalPasteboard] containsURLData])
     [self pasteBookmarksFromURLsAndTitles:[NSPasteboard generalPasteboard] intoFolder:pasteDestinationFolder index:pasteDestinationIndex];
 }
 
--(IBAction) delete:(id)aSender
+- (IBAction)delete:(id)aSender
 {
   [self deleteBookmarks:aSender];
 }
 
-// 
+//
 // the logic of what to sort here is somewhat subtle.
-// 
+//
 // If a single folder is selected, we sort its children.
 // If > 1 items are selected, we just re-order them.
 // If the option key is down, we sort deep
-// 
--(IBAction) arrange:(id)aSender
+//
+- (IBAction)arrange:(id)aSender
 {
   BookmarkFolder* activeCollection = [self activeCollection];
   if ([activeCollection isRoot] || [activeCollection isSmartFolder])
     return;
- 
+
   int tag = [aSender tag];
-    
-  BOOL  reverseSort   = ((tag & kArrangeBookmarksDescendingMask) != 0);
-  SEL   sortSelector  = [self sortSelectorFromItemTag:tag];
+
+  BOOL reverseSort  = ((tag & kArrangeBookmarksDescendingMask) != 0);
+  SEL  sortSelector = [self sortSelectorFromItemTag:tag];
   if (!sortSelector)
     return;     // all UI items that call this should have the appropriate tags set
 
@@ -736,8 +730,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   BOOL sortDeep = (([[NSApp currentEvent] modifierFlags] & NSAlternateKeyMask) != 0);
 
   NSArray* bmItems = [mBookmarksOutlineView selectedItems];
-  if ([bmItems count] == 0)
-  {
+  if ([bmItems count] == 0) {
     // if nothing is selected, sort the whole container
     bmItems = [NSArray arrayWithObject:[self activeCollection]];
   }
@@ -745,30 +738,26 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // if the items don't have a common parent, bail.
   if (![[BookmarkManager sharedBookmarkManager] itemsShareCommonParent:bmItems])
     return;
-  
+
   // first arrange the items at the top level
-  if ([bmItems count] > 1)
-  {
+  if ([bmItems count] > 1) {
     BookmarkFolder* itemsParent = (BookmarkFolder*) [[bmItems firstObject] parent];
     [itemsParent arrangeChildItems:bmItems usingSelector:sortSelector reverseSort:reverseSort];
   }
-  
+
   // now sort the children if a single folder is selected,
   // or sort deep if we are doing so
-  if ([bmItems count] == 1 || sortDeep)
-  {
+  if ([bmItems count] == 1 || sortDeep) {
     NSEnumerator* itemsEnum = [bmItems objectEnumerator];
     BookmarkItem* curItem;
-    while ((curItem = [itemsEnum nextObject]))
-    {
-      if ([curItem isKindOfClass:[BookmarkFolder class]])
-      {
+    while ((curItem = [itemsEnum nextObject])) {
+      if ([curItem isKindOfClass:[BookmarkFolder class]]) {
         BookmarkFolder* curFolder = (BookmarkFolder*)curItem;
         [curFolder sortChildrenUsingSelector:sortSelector reverseSort:reverseSort sortDeep:sortDeep undoable:YES];
       }
     }
   }
-  
+
   // reselect them
   [self selectItems:bmItems expandingContainers:NO scrollIntoView:YES];
 }
@@ -784,14 +773,14 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [[mSearchField cell] setStringValue:@""];
 }
 
--(void)setBrowserWindowController:(BrowserWindowController*)bwController
+- (void)setBrowserWindowController:(BrowserWindowController*)bwController
 {
   // don't retain
   mBrowserWindowController = bwController;
 }
 
 // XXX unused
--(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem
+- (void)displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem
 {
 #if 0
   if (!aBookmarkItem) return;   // avoid recursion
@@ -806,7 +795,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 #endif
 }
 
--(NSView*)bookmarksEditingView
+- (NSView*)bookmarksEditingView
 {
   return mBookmarksEditingView;
 }
@@ -816,69 +805,64 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // restore splitters to their saved positions. We have to do this here
   // (rather than in |-completeSetup| because only at this point is the
   // manager view resized correctly. If we did it earlier, it would resize again
-  // to stretch proportionally to the size of the browser window, destroying 
+  // to stretch proportionally to the size of the browser window, destroying
   // the width we just set.
-  if (!mSplittersRestored)
-  {
+  if (!mSplittersRestored) {
     const float kDefaultSplitWidth = kMinContainerSplitWidth;
     float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
     if (savedWidth < kDefaultSplitWidth)
       savedWidth = kDefaultSplitWidth;
-     
+
     float maxWidth = NSWidth([mBookmarksEditingView frame]) - 100;
     if (savedWidth > maxWidth)
       savedWidth = maxWidth;
-    
+
     [mContainersSplit setLeftWidth:savedWidth];
     mSplittersRestored = YES;              // needed first time only
   }
 }
 
-- (void) setCanEditSelectedContainerContents:(BOOL)inCanEdit
+- (void)setCanEditSelectedContainerContents:(BOOL)inCanEdit
 {
   [mBookmarksOutlineView setAllowsEditing:inCanEdit];
   [mAddButton setEnabled:inCanEdit];
   [mSortButton setEnabled:inCanEdit];
 }
 
--(void) setActiveCollection:(BookmarkFolder *)aFolder
+- (void)setActiveCollection:(BookmarkFolder *)aFolder
 {
   [aFolder retain];
   [mActiveRootCollection release];
   mActiveRootCollection = aFolder;
 }
 
--(BookmarkFolder *)activeCollection
+- (BookmarkFolder *)activeCollection
 {
   return mActiveRootCollection;
 }
 
--(BookmarkFolder *)selectedItemFolderAndIndex:(int*)outIndex
+- (BookmarkFolder *)selectedItemFolderAndIndex:(int*)outIndex
 {
   BookmarkFolder *parentFolder = nil;
   *outIndex = 0;
 
-  if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
-  {
+  if ([mBookmarksOutlineView numberOfSelectedRows] == 1) {
     BookmarkItem *item = [self selectedBookmarkItem];
     // if it's a folder, use it
-    if ([item isKindOfClass:[BookmarkFolder class]])
-    {
+    if ([item isKindOfClass:[BookmarkFolder class]]) {
       BookmarkFolder* selectedFolder = (BookmarkFolder*) item;
       *outIndex = [selectedFolder count];
       return selectedFolder;
     }
-    
+
     // otherwise use its parent
-    if ([item respondsToSelector:@selector(parent)])    // when would it not?
-    {
+    if ([item respondsToSelector:@selector(parent)]) {  // when would it not?
       parentFolder = [item parent];
       *outIndex = [parentFolder indexOfObject:item] + 1;
     }
   }
 
-  if (!parentFolder)
-  {
+  if (!parentFolder) {
     parentFolder = [self activeCollection];
     *outIndex = [parentFolder count];
   }
@@ -891,35 +875,34 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   mItemToReveal = [inItem retain];
 }
 
--(void)revealItem:(BookmarkItem*)item scrollIntoView:(BOOL)inScroll selecting:(BOOL)inSelectItem byExtendingSelection:(BOOL)inExtendSelection
+- (void)revealItem:(BookmarkItem*)item scrollIntoView:(BOOL)inScroll selecting:(BOOL)inSelectItem byExtendingSelection:(BOOL)inExtendSelection
 {
   BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
-  
+
   BookmarkFolder* menuContainer    = [bmManager bookmarkMenuFolder];
   BookmarkFolder* toolbarContainer = [bmManager toolbarFolder];
   if ([item hasAncestor:menuContainer])
     [self selectContainerFolder:menuContainer];
   else if ([item hasAncestor:toolbarContainer])
     [self selectContainerFolder:toolbarContainer];
-  else
-  {
+  else {
     // walk up to the child of the root, which should be a container
     id curParent = item;
     while (curParent && [curParent respondsToSelector:@selector(parent)] && (BookmarkFolder*)[curParent parent] != [bmManager rootBookmarks])
       curParent = [curParent parent];
-    
+
     if (curParent)
       [self selectContainerFolder:(BookmarkFolder*)curParent];
   }
 
   [self expandAllParentsOfItem:item];
-  
+
   int itemRow = [mBookmarksOutlineView rowForItem:item];
   if (itemRow == -1) return;
 
   if (inSelectItem)
     [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:inExtendSelection];
-    
+
   if (inScroll)
     [mBookmarksOutlineView scrollRowToVisible:itemRow];
 }
@@ -928,10 +911,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   // make an array of parents
   NSMutableArray* parentArray = [[NSMutableArray alloc] initWithCapacity:10];
-  
+
   id curItem = [inItem parent];
-  while (curItem)
-  {
+  while (curItem) {
     if (![curItem respondsToSelector:@selector(parent)])
       break;
 
@@ -965,11 +947,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)restoreFolderExpandedStates
 {
   int curRow = 0;
-  while (curRow < [mBookmarksOutlineView numberOfRows])
-  {
+  while (curRow < [mBookmarksOutlineView numberOfRows]) {
     id item = [mBookmarksOutlineView itemAtRow:curRow];
-    if ([item isKindOfClass:[BookmarkFolder class]])
-    {
+    if ([item isKindOfClass:[BookmarkFolder class]]) {
       if ([self hasExpandedState:item])
         [mBookmarksOutlineView expandItem:item];
       else
@@ -981,8 +961,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (NSMutableDictionary *)expandedStateDictionary
 {
-  if (!mExpandedStates)
-  {
+  if (!mExpandedStates) {
     mExpandedStates = [[[NSUserDefaults standardUserDefaults] dictionaryForKey:kExpandedBookmarksStatesDefaultsKey] mutableCopy];
     if (!mExpandedStates)
       mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
@@ -1001,47 +980,42 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     collectionStateDict = [NSDictionary dictionaryWithObject:[collectionFolder identifier] forKey:kBookmarksSelectedContainerIdentifierKey];
   else    // otherwise use UUID
     collectionStateDict = [NSDictionary dictionaryWithObject:[collectionFolder UUID] forKey:kBookmarksSelectedContainerUUIDKey];
-  
+
   [[NSUserDefaults standardUserDefaults] setObject:collectionStateDict forKey:kBookmarksSelectedContainerDefaultsKey];
 }
 
--(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy
+- (void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy
 {
-  NSArray* mozBookmarkList = [BookmarkManager bookmarkItemsFromSerializableArray:[aPasteboard propertyListForType: kCaminoBookmarkListPBoardType]];
+  NSArray* mozBookmarkList = [BookmarkManager bookmarkItemsFromSerializableArray:[aPasteboard propertyListForType:kCaminoBookmarkListPBoardType]];
 
   NSMutableArray* newBookmarks = [[NSMutableArray alloc] initWithCapacity:[mozBookmarkList count]];
   if (!isCopy)
     [newBookmarks addObjectsFromArray:mozBookmarkList];
-  
+
   // turn off updates to avoid lots of reloadData with multiple items
   mBookmarkUpdatesDisabled = YES;
-  
+
   // make sure we re-enable updates
   NS_DURING
     NSEnumerator *enumerator = [mozBookmarkList objectEnumerator];
 
     id aKid;
-    while ((aKid = [enumerator nextObject]))
-    {
-      if (isCopy)
-      {
+    while ((aKid = [enumerator nextObject])) {
+      if (isCopy) {
         BookmarkItem* newItem = [(BookmarkFolder*)[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
         [newBookmarks addObject:newItem];
         ++index;
       }
-      else
-      {
+      else {
         // need to be careful to adjust index as we insert items to avoid
         // inserting in reverse order
-        if ([aKid parent] == (id)dropFolder)
-        {
+        if ([aKid parent] == (id)dropFolder) {
           int kidIndex = [dropFolder indexOfObject:aKid];
           [(BookmarkFolder*)[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
           if (kidIndex > index)
             ++index;
         }
-        else
-        {
+        else {
           [(BookmarkFolder*)[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
           ++index;
         }
@@ -1049,36 +1023,36 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     }
   NS_HANDLER
   NS_ENDHANDLER
-  
+
   mBookmarkUpdatesDisabled = NO;
   [self reloadDataForItem:nil reloadChildren:YES];
   [self selectItems:newBookmarks expandingContainers:YES scrollIntoView:YES];
   [newBookmarks release];
 }
 
--(void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index
+- (void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index
 {
   NSArray* urls = nil;
   NSArray* titles = nil;
-  
+
   [aPasteboard getURLs:&urls andTitles:&titles];
 
   // turn off updates to avoid lots of reloadData with multiple items
   mBookmarkUpdatesDisabled = YES;
-  
+
   NSMutableArray* newBookmarks = [NSMutableArray arrayWithCapacity:[urls count]];
   // make sure we re-enable updates
   NS_DURING
-    for ( unsigned int i = 0; i < [urls count]; ++i ) {
+    for (unsigned int i = 0; i < [urls count]; ++i) {
       NSString* title = [titles objectAtIndex:i];
       if ([title length] == 0)
         title = [urls objectAtIndex:i];
-        
+
       [newBookmarks addObject:[dropFolder addBookmark:title url:[urls objectAtIndex:i] inPosition:(index + i) isSeparator:NO]];
     }
   NS_HANDLER
   NS_ENDHANDLER
-  
+
   mBookmarkUpdatesDisabled = NO;
   [self reloadDataForItem:nil reloadChildren:YES];
   [self selectItems:newBookmarks expandingContainers:NO scrollIntoView:YES];
@@ -1086,14 +1060,13 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag
 {
-  if (outlineView == mBookmarksOutlineView)
-  {
+  if (outlineView == mBookmarksOutlineView) {
     if (localFlag)
       return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
 
     return (NSDragOperationDelete | NSDragOperationGeneric);
   }
-  
+
   return NSDragOperationGeneric;
 }
 
@@ -1103,27 +1076,25 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 // called when a drop occurs on a table or outline to do the actual work based on the
 // data types present in the drag info.
 //
--(BOOL) doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index
+- (BOOL)doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index
 {
   NSArray* types  = [[info draggingPasteboard] types];
   BOOL isCopy = ([info draggingSourceOperationMask] == NSDragOperationCopy);
 
-  if ([types containsObject: kCaminoBookmarkListPBoardType])
-  {
+  if ([types containsObject:kCaminoBookmarkListPBoardType]) {
     [self pasteBookmarks:[info draggingPasteboard] intoFolder:dropFolder index:index copying:isCopy];
     return YES;
   }
-  
-  if ([[info draggingPasteboard] containsURLData])
-  {
+
+  if ([[info draggingPasteboard] containsURLData]) {
     [self pasteBookmarksFromURLsAndTitles:[info draggingPasteboard] intoFolder:dropFolder index:index];
     return YES;
   }
-  return NO;  
+  return NO;
 }
 
 // Choose a single drag operation to return based on a provided mask and the operations that table view/outline view support.
--(NSDragOperation) preferredDragOperationForSourceMask:(NSDragOperation)srcMask
+- (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask
 {
   if (srcMask & NSDragOperationMove)
     return NSDragOperationMove;
@@ -1139,22 +1110,21 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 // Copy a set of bookmarks (an NSArray containing the BookmarkItem and BookmarkFolder objects)
 // to the specified pasteboard, in all the available formats
 //
-- (void) copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
+- (void)copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
 {
   // Copy these items to the general pasteboard as an internal list so we can
   // paste back to ourselves with no information loss
   NSArray *bookmarkUUIDArray = [BookmarkManager serializableArrayWithBookmarkItems:bookmarkItemsToCopy];
   [aPasteboard declareTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
   [aPasteboard setPropertyList:bookmarkUUIDArray forType:kCaminoBookmarkListPBoardType];
-  
+
   // Now add copies in formats useful to other applications. Our pasteboard
   // category takes care of working out what formats to write.
   NSMutableArray* urlList = [NSMutableArray array];
   NSMutableArray* titleList = [NSMutableArray array];
   NSEnumerator* bookmarkItemsEnum = [bookmarkItemsToCopy objectEnumerator];
   BookmarkItem* curItem;
-  while (curItem = [bookmarkItemsEnum nextObject])
-  {
+  while (curItem = [bookmarkItemsEnum nextObject]) {
     if ([curItem isKindOfClass:[Bookmark class]]) {
       [urlList addObject:[(Bookmark*)curItem url]];
       [titleList addObject:[(Bookmark*)curItem title]];
@@ -1163,7 +1133,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [aPasteboard setURLs:urlList withTitles:titleList];
 }
 
--(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard
+- (BOOL)canPasteFromPasteboard:(NSPasteboard*)aPasteboard
 {
     return [[aPasteboard types] containsObject:kCaminoBookmarkListPBoardType]
         || [aPasteboard containsURLData];
@@ -1191,24 +1161,22 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   // reset the search
   [self resetSearchField];
 
-  if (inFolder == [bmManager historyFolder])
-  {
+  if (inFolder == [bmManager historyFolder]) {
     [self setActiveOutlineView:mHistoryOutlineView];
 
     [mHistoryOutlineViewDelegate clearSearchResults];
     [mHistoryOutlineViewDelegate historyViewMadeVisible:YES];
-    
+
     [mAddButton    setEnabled:NO];
     [mActionButton setMenu:mActionMenuHistory];
     [mSortButton   setEnabled:YES];
     [mSortButton   setMenu:mSortMenuHistory];
     [[mSearchField cell] setSearchMenuTemplate:mQuickSearchMenuHistory];
     [self setSearchFilterTag:kSearchAllTag];
-    
-    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"HistoryWindowTitle", @"")];
-  } 
-  else
-  {
+
+    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"HistoryWindowTitle", nil)];
+  }
+  else {
     [self setActiveOutlineView:mBookmarksOutlineView];
 
     [mHistoryOutlineViewDelegate historyViewMadeVisible:NO];
@@ -1232,9 +1200,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     [[mSearchField cell] setSearchMenuTemplate:mQuickSearchMenuBookmarks];
     [self setSearchFilterTag:kSearchAllTag];
 
-    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"BookmarksWindowTitle", @"")];
+    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"BookmarksWindowTitle", nil)];
 
-    // this reload ensures that we display the newly selected activeCollection 
+    // this reload ensures that we display the newly selected activeCollection
     [mBookmarksOutlineView reloadData];
     // after we've reloaded data, restore twisty states
     [self restoreFolderExpandedStates];
@@ -1259,7 +1227,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (int)numberOfRowsInTableView:(NSTableView *)tableView
 {
-  if ( tableView == mContainersTableView )
+  if (tableView == mContainersTableView)
     return [mRootBookmarks count];
 
   return 0;
@@ -1270,7 +1238,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   id retValue = nil;
   id item = nil;
 
-  if ( tableView == mContainersTableView ) 
+  if (tableView == mContainersTableView)
     item = [mRootBookmarks objectAtIndex:row];
 
   NS_DURING
@@ -1283,7 +1251,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void)tableView:(NSTableView *)inTableView willDisplayCell:(id)inCell forTableColumn:(NSTableColumn *)inTableColumn row:(int)inRowIndex
 {
-  if ( inTableView == mContainersTableView ) {
+  if (inTableView == mContainersTableView) {
     BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:inRowIndex];
     [inCell setImage:[aFolder icon]];
   }
@@ -1317,8 +1285,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   NSEnumerator* enumerator = [rows objectEnumerator];
   id curRow;
-  while ((curRow = [enumerator nextObject]))
-  {
+  while ((curRow = [enumerator nextObject])) {
     int rowVal = [curRow intValue];
     BookmarkFolder* collectionFolder = [mRootBookmarks objectAtIndex:rowVal];
     if ([manager isUserCollection:collectionFolder])
@@ -1336,7 +1303,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 // -tableView:validateDrop:proposedRow:proposedDropOperation:
 //
-// validate if the drop is allowed and what type it is (move, copy, etc). 
+// validate if the drop is allowed and what type it is (move, copy, etc).
 //
 - (NSDragOperation)tableView:(NSTableView*)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(int)row proposedDropOperation:(NSTableViewDropOperation)op
 {
@@ -1347,34 +1314,29 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     // the top-level bookmarks root if we're to create a new container.
     BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
     BookmarkFolder* dropFolder = nil;
-    
-    if (op == NSTableViewDropOn)
-    {
+
+    if (op == NSTableViewDropOn) {
       BookmarkFolder* destFolder = [mRootBookmarks objectAtIndex:row];
       // only use this if it's a modifiable folder
       if (![destFolder isSmartFolder])
         dropFolder = destFolder;
     }
-    else if (op == NSTableViewDropAbove)
-    {
+    else if (op == NSTableViewDropAbove) {
       // disallow drops above the first user collection (this assumes that the last smart
       // folder is the address book folder)
       int firstUserCollectionRow = [manager indexOfContainer:[manager addressBookFolder]] + 1;
       if (row >= firstUserCollectionRow)
         dropFolder = mRootBookmarks;
     }
-    
-    if (dropFolder)
-    {
+
+    if (dropFolder) {
       // special check if we're moving pointers around
-      if ([types containsObject:kCaminoBookmarkListPBoardType])
-      {
-        NSArray* draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
+      if ([types containsObject:kCaminoBookmarkListPBoardType]) {
+        NSArray* draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType:kCaminoBookmarkListPBoardType]];
         BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
         return (isOK) ? dragOp : NSDragOperationNone;
       }
-      else if ([[info draggingPasteboard] containsURLData])
-      {
+      else if ([[info draggingPasteboard] containsURLData]) {
         return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;
       }
     }
@@ -1401,26 +1363,24 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   return result;
 }
 
--(void)tableViewSelectionDidChange:(NSNotification *)note
+- (void)tableViewSelectionDidChange:(NSNotification *)note
 {
   NSTableView *aView = [note object];
   if (aView == mContainersTableView) {
-    
+
     [self selectContainerFolder:[self selectedContainerFolder]];
   }
 }
 
--(NSMenu *)tableView:(NSTableView *)aTableView contextMenuForRow:(int)rowIndex
+- (NSMenu *)tableView:(NSTableView *)aTableView contextMenuForRow:(int)rowIndex
 {
-  if (aTableView == mContainersTableView)
-  {
+  if (aTableView == mContainersTableView) {
     NSMenu* contextMenu = [[[aTableView menu] copy] autorelease];
-    if ([aTableView numberOfSelectedRows] > 0)
-    {
+    if ([aTableView numberOfSelectedRows] > 0) {
       BookmarkFolder* aFolder = [mRootBookmarks objectAtIndex:rowIndex];
-      
+
       [contextMenu addItem:[NSMenuItem separatorItem]];
-      NSMenuItem* useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", @"")
+      NSMenuItem* useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", nil)
                                                              action:@selector(setAsDockMenuFolder:)
                                                       keyEquivalent:@""];
       [useAsDockItem setTarget:self];
@@ -1428,10 +1388,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
         [useAsDockItem setState:NSOnState];
       [contextMenu addItem:useAsDockItem];
       [useAsDockItem release];
-      
-      if ([[BookmarkManager sharedBookmarkManager] isUserCollection:aFolder])
-      {
-        NSMenuItem* deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", @"")
+
+      if ([[BookmarkManager sharedBookmarkManager] isUserCollection:aFolder]) {
+        NSMenuItem* deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", nil)
                                                             action:@selector(deleteCollection:)
                                                      keyEquivalent:@""];
         [deleteItem setTarget:self];
@@ -1448,10 +1407,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void)outlineView:(NSOutlineView *)outlineView didClickTableColumn:(NSTableColumn *)tableColumn
 {
-  if (outlineView == mBookmarksOutlineView)
-  {
+  if (outlineView == mBookmarksOutlineView) {
     // XXX impl bookmarks sorting
-    
   }
 }
 
@@ -1464,7 +1421,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 - (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
-  return NO;	
+  return NO;
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
@@ -1506,7 +1463,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   // set the image on the name column. the url column doesn't have an image.
-  if ([[tableColumn identifier] isEqualToString: @"title"]) {
+  if ([[tableColumn identifier] isEqualToString:@"title"]) {
     if ([item respondsToSelector:@selector(isSeparator)] && [item isSeparator]) {
       [cell setTitle:@""];
       float fullWidth = [tableColumn width] - kOutlineViewLeftMargin -
@@ -1556,8 +1513,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   NSArray* types = [[info draggingPasteboard] types];
   NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
 
-  if ([types containsObject: kCaminoBookmarkListPBoardType]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
+  if ([types containsObject:kCaminoBookmarkListPBoardType]) {
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType:kCaminoBookmarkListPBoardType]];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? dragOp : NSDragOperationNone;
   }
@@ -1580,7 +1537,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   if ([item isKindOfClass:[Bookmark class]]) {
     if ([[item itemDescription] length] > 0)
-      return [NSString stringWithFormat:@"%@\n%@",[item url], [item itemDescription]];
+      return [NSString stringWithFormat:@"%@\n%@", [item url], [item itemDescription]];
     else
       return [item url];
   }
@@ -1607,7 +1564,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   return hasIcon;
 }
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
+- (void)reloadDataForItem:(id)item reloadChildren:(BOOL)aReloadChildren
 {
   if (mBookmarkUpdatesDisabled)
     return;
@@ -1628,11 +1585,10 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   return ([mBookmarksOutlineView selectedRow] != -1);
 }
 
--(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
+- (void)outlineViewSelectionDidChange:(NSNotification*)aNotification
 {
   BookmarkInfoController* bic = [BookmarkInfoController existingSharedBookmarkInfoController];
-  if ([[bic window] isVisible])
-  {
+  if ([[bic window] isVisible]) {
     if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
         [bic setBookmark:[self selectedBookmarkItem]];
     else
@@ -1644,10 +1600,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   SEL action = [menuItem action];
 
-  if ([self activeOutlineView] == mBookmarksOutlineView)
-  {
-    if (action == @selector(addBookmarkSeparator:))
-    {
+  if ([self activeOutlineView] == mBookmarksOutlineView) {
+    if (action == @selector(addBookmarkSeparator:)) {
       BookmarkFolder *activeCollection = [self activeCollection];
       return (![activeCollection isRoot] && ![activeCollection isSmartFolder]);
     }
@@ -1669,8 +1623,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     if (action == @selector(showBookmarkInfo:))
       return (selItem != nil);
 
-    if (action == @selector(arrange:))
-    {
+    if (action == @selector(arrange:)) {
       BookmarkFolder* activeCollection = [self activeCollection];
       if ([activeCollection isRoot] || [activeCollection isSmartFolder])
         return NO;
@@ -1681,8 +1634,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
              (([selectedBMs count] > 1) && [[BookmarkManager sharedBookmarkManager] itemsShareCommonParent:selectedBMs]);
     }
   }
-  else    // history visible
-  {
+  else {  // history visible
     if (action == @selector(addBookmark:))
       return NO;
 
@@ -1691,14 +1643,14 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
     if (action == @selector(addBookmarkSeparator:))
       return NO;
-  
+
   }
   return YES;
 }
 
 
 #if 0
--(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   int  index = [mBookmarksOutlineView selectedRow];
   BOOL haveSelection = (index != -1);
@@ -1710,7 +1662,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   id item = nil;
 
   if (haveSelection)
-    item = [mBookmarksOutlineView itemAtRow: index];
+    item = [mBookmarksOutlineView itemAtRow:index];
   if ([item isKindOfClass:[Bookmark class]])
     isBookmark = YES;
   else if ([item isKindOfClass:[BookmarkFolder class]]) {
@@ -1719,20 +1671,20 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   }
 
   // Bookmarks and Bookmark Groups can be opened in a new window
-  if (([aMenuItem action] == @selector(openBookmarkInNewWindow:)))
+  if ([aMenuItem action] == @selector(openBookmarkInNewWindow:))
     return (isBookmark || isGroup);
 
   // Only Bookmarks can be opened in new tabs
-  if (([aMenuItem action] == @selector(openBookmarkInNewTab:)))
+  if ([aMenuItem action] == @selector(openBookmarkInNewTab:))
     return isBookmark && [mBrowserWindowController newTabsAllowed];
 
-  if (([aMenuItem action] == @selector(showBookmarkInfo:)))
+  if ([aMenuItem action] == @selector(showBookmarkInfo:))
     return haveSelection;
 
-  if (([aMenuItem action] == @selector(deleteBookmarks:)))
+  if ([aMenuItem action] == @selector(deleteBookmarks:))
     return (multiSelection || (haveSelection && !isToolbar));
 
-  if (([aMenuItem action] == @selector(addFolder:)))
+  if ([aMenuItem action] == @selector(addFolder:))
     return YES;
 
   return YES;
@@ -1756,13 +1708,11 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (IBAction)searchStringChanged:(id)aSender
 {
   NSString* searchString = [[mSearchField cell] stringValue];
-  if ([searchString length] == 0)
-  {
+  if ([searchString length] == 0) {
     [self clearSearchResults];
     [[self activeOutlineView] reloadData];
   }
-  else
-  {
+  else {
     [self searchFor:searchString inFieldWithTag:mSearchTag];
     [[self activeOutlineView] reloadData];
   }
@@ -1788,22 +1738,21 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   if ([self activeOutlineView] == mHistoryOutlineView)
     [mHistoryOutlineViewDelegate searchFor:searchString inFieldWithTag:tag];
-  else
-  {
+  else {
     BookmarkFolder* searchRoot = [self activeCollection];
-    NSArray* searchResults = [[BookmarkManager sharedBookmarkManager] searchBookmarksContainer:searchRoot forString:searchString inFieldWithTag:tag];
+    NSArray* searchResults = [[BookmarkManager sharedBookmarkManager] searchBookmarksContainer:searchRoot
+                                                                                     forString:searchString
+                                                                                inFieldWithTag:tag];
     [self setSearchResultArray:searchResults];
   }
 }
 
 - (void)clearSearchResults
 {
-  if ([self activeOutlineView] == mHistoryOutlineView)
-  {
+  if ([self activeOutlineView] == mHistoryOutlineView) {
     [mHistoryOutlineViewDelegate clearSearchResults];
   }
-  else
-  {
+  else {
     [mSearchResultArray release];
     mSearchResultArray = nil;
   }
@@ -1814,8 +1763,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   NSEnumerator* itemsEnum = [items objectEnumerator];
   [mBookmarksOutlineView deselectAll:nil];
   BookmarkItem* item;
-  while ((item = [itemsEnum nextObject]))
-  {
+  while ((item = [itemsEnum nextObject])) {
     [self revealItem:item scrollIntoView:scroll selecting:YES byExtendingSelection:YES];
   }
 }
@@ -1830,8 +1778,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (SEL)sortSelectorFromItemTag:(int)inTag
 {
-  switch (inTag & kArrangeBookmarksFieldMask)
-  {
+  switch (inTag & kArrangeBookmarksFieldMask) {
     default:
       NSLog(@"Unknown sort tag mask");
       // fall through
@@ -1856,7 +1803,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     case kArrangeBookmarksByTypeMask:
       return @selector(compareType:sortDescending:);
   }
-  
+
   return NULL;  // keep compiler quiet
 }
 
@@ -1865,23 +1812,21 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   if (mSearchResultArray)
     return mSearchResultArray;
-  
+
   return [self activeCollection];
 }
 
 - (void)setActiveOutlineView:(NSOutlineView*)outlineView
 {
-  if (outlineView == mBookmarksOutlineView)
-  {
+  if (outlineView == mBookmarksOutlineView) {
     [mOutlinerHostView swapFirstSubview:mBookmarksHostView];
     [mContainersTableView setNextKeyView:mBookmarksOutlineView];
     [mBookmarksOutlineView setNextKeyView:mAddCollectionButton];
   }
-  else
-  {
+  else {
     [mOutlinerHostView swapFirstSubview:mHistoryHostView];
     [mContainersTableView setNextKeyView:mHistoryOutlineView];
-    
+
     // we're setting this explicitly, because doing it from the nib
     // makes the shift-tab case not work; appkit bug?
     [mHistoryOutlineView setNextKeyView:mAddCollectionButton];
@@ -1902,20 +1847,19 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)actionButtonWillDisplay:(NSNotification *)notification
 {
   NSMenu* actionMenu = nil;
-  if ([self activeOutlineView] == mHistoryOutlineView)
-  {
+  if ([self activeOutlineView] == mHistoryOutlineView) {
     NSArray* selectedItems = [mHistoryOutlineView selectedItems];
     if ([selectedItems count] > 0)
       actionMenu = [mHistoryOutlineViewDelegate outlineView:mHistoryOutlineView contextMenuForItems:selectedItems];
     else
       actionMenu = mActionMenuHistory;
   }
-  else
-  {
+  else {
     NSArray* selectedBMs = [mBookmarksOutlineView selectedItems];
-    if ([selectedBMs count] > 0)
-    {
-      actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItems:selectedBMs fromView:mBookmarksOutlineView target:self];
+    if ([selectedBMs count] > 0) {
+      actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItems:selectedBMs
+                                                                       fromView:mBookmarksOutlineView
+                                                                         target:self];
       // remove the arrange stuff, because it's on the sort button too
       int arrangeSeparatorIndex = [actionMenu indexOfItemWithTag:kBookmarksContextMenuArrangeSeparatorTag];
       if (arrangeSeparatorIndex != -1)
@@ -1924,7 +1868,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     else
       actionMenu = mActionMenuBookmarks;
   }
-  
+
   [mActionButton setMenu:actionMenu];
 }
 
@@ -1947,10 +1891,8 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
     return;
   NSDictionary *dict = [note userInfo];
   id aClient = [dict objectForKey:NetworkServicesClientKey];
-  if ([aClient isKindOfClass:[Bookmark class]])
-  {
-    switch (mOpenActionFlag)
-    {
+  if ([aClient isKindOfClass:[Bookmark class]]) {
+    switch (mOpenActionFlag) {
       case (eOpenBookmarkAction):
         [self performSelector:@selector(openBookmark:) withObject:aClient afterDelay:0];
         break;
@@ -1982,14 +1924,13 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)bookmarkAdded:(NSNotification *)note
 {
   BookmarkItem* addedItem = [note object];
-  if ((addedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks]))
-  {
+  if ((addedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks])) {
     [mContainersTableView reloadData];
     BookmarkFolder* updatedFolder = [[note userInfo] objectForKey:BookmarkFolderChildKey];
     [self selectContainerFolder:updatedFolder];
     return;
   }
-  
+
   if (addedItem == mActiveRootCollection)
     addedItem = nil;
 
@@ -2000,18 +1941,16 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   BookmarkItem* removedItem = [note object];
 
-  if (removedItem == mItemToReveal)
-  {
+  if (removedItem == mItemToReveal) {
     [mItemToReveal autorelease];
     mItemToReveal = nil;
   }
-  
-  if ((removedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks]))
-  {
+
+  if ((removedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks])) {
     [mContainersTableView reloadData];
     return;
   }
-  
+
   if (removedItem == mActiveRootCollection)
     removedItem = nil;
 
@@ -2025,11 +1964,13 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
                                                       kBookmarkItemURLChangedMask |
                                                       kBookmarkItemKeywordChangedMask |
                                                       kBookmarkItemDescriptionChangedMask |
-                                                      kBookmarkItemLastVisitChangedMask | 
+                                                      kBookmarkItemLastVisitChangedMask |
                                                       kBookmarkItemStatusChangedMask);
 
-  BOOL reloadItem     = [BookmarkItem bookmarkChangedNotificationUserInfo:[note userInfo] containsFlags:kVisibleAttributeChangedFlags];
-  BOOL reloadChildren = [BookmarkItem bookmarkChangedNotificationUserInfo:[note userInfo] containsFlags:kBookmarkItemChildrenChangedMask];
+  BOOL reloadItem     = [BookmarkItem bookmarkChangedNotificationUserInfo:[note userInfo]
+                                                            containsFlags:kVisibleAttributeChangedFlags];
+  BOOL reloadChildren = [BookmarkItem bookmarkChangedNotificationUserInfo:[note userInfo]
+                                                            containsFlags:kBookmarkItemChildrenChangedMask];
 
   if (reloadItem || reloadChildren)
     [self reloadDataForItem:[note object] reloadChildren:reloadChildren];
@@ -2038,12 +1979,11 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)bookmarksViewDidMoveToWindow:(NSWindow*)inWindow
 {
   // we're leaving the window, so...
-  if (!inWindow)
-  {
+  if (!inWindow) {
     // save the splitter width
     float containerWidth = [mContainersSplit leftWidth];
     [[NSUserDefaults standardUserDefaults] setFloat:containerWidth forKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
-    
+
     // save the expanded state
     [self saveExpandedStateDictionary];
   }
@@ -2065,7 +2005,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset
 {
-  if ( sender == mContainersSplit )
+  if (sender == mContainersSplit)
     return kMinContainerSplitWidth;  // minimum size of collections pane
 
   return proposedCoord;
@@ -2086,21 +2026,18 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   if ([[inURL lowercaseString] isEqualToString:@"about:history"])
     [self selectContainerFolder:[[BookmarkManager sharedBookmarkManager] historyFolder]];
-  else
-  {
+  else {
     BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
     BookmarkFolder* folderToSelect = [bookmarkManager bookmarkMenuFolder];
-    
+
     // fetch the last-viewed container
     NSDictionary* selectedContainerInfo = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kBookmarksSelectedContainerDefaultsKey];
-    if (selectedContainerInfo)
-    {
+    if (selectedContainerInfo) {
       NSString* containerId = nil;
       BookmarkFolder* theFolder = nil;
       if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerIdentifierKey]))
         theFolder = [bookmarkManager rootBookmarkFolderWithIdentifier:containerId];
-      else if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerUUIDKey]))
-      {
+      else if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerUUIDKey])) {
         theFolder = (BookmarkFolder*)[bookmarkManager itemWithUUID:containerId];
         // make sure it's (still) a container
         if ([theFolder parent] != [bookmarkManager rootBookmarks])
@@ -2109,12 +2046,11 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
       if (theFolder)
         folderToSelect = theFolder;
     }
-        
+
     [self selectContainerFolder:folderToSelect];
   }
-  
-  if (mItemToReveal)
-  {
+
+  if (mItemToReveal) {
     [self revealItem:mItemToReveal scrollIntoView:YES selecting:YES byExtendingSelection:NO];
     [mItemToReveal release];
     mItemToReveal = nil;
@@ -2125,10 +2061,9 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void)contentView:(NSView*)inView usedForURL:(NSString*)inURL
 {
-  if (inView == mBookmarksEditingView)
-  {
+  if (inView == mBookmarksEditingView) {
     [self restoreSplitters];
-    
+
     // set the initial focus to the search textfield.
     // for more info about focus, see the header.
     [[mBookmarksEditingView window] makeFirstResponder:mSearchField];

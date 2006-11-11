@@ -60,72 +60,79 @@ enum {
   NSString*       mIdentifier;    // only non-nil for "special" collection folders. not saved (yet)
 }
 
--(id) init;   // designated initializer
--(id) initWithIdentifier:(NSString*)inIdentifier; // will get used for special folders
--(NSMutableArray *) childArray;
--(NSArray *) childURLs;
--(NSArray *) allChildBookmarks;
+- (id)init;   // designated initializer
+- (id)initWithIdentifier:(NSString*)inIdentifier; // will get used for special folders
+- (NSMutableArray *)childArray;
+- (NSArray *)childURLs;
+- (NSArray *)allChildBookmarks;
 
 // enumerator for this folder and all its children (in depth-first order). not safe under
 // tree changes during enumeration
--(NSEnumerator*)objectEnumerator;
+- (NSEnumerator*)objectEnumerator;
 
--(void)setIdentifier:(NSString*)inIdentifier;
--(NSString*)identifier;
+- (void)setIdentifier:(NSString*)inIdentifier;
+- (NSString*)identifier;
 
--(BOOL) isSpecial;
--(BOOL) isToolbar;
--(BOOL) isRoot;
--(BOOL) isGroup;
--(BOOL) isSmartFolder;
--(BOOL) isDockMenu;
+- (BOOL)isSpecial;
+- (BOOL)isToolbar;
+- (BOOL)isRoot;
+- (BOOL)isGroup;
+- (BOOL)isSmartFolder;
+- (BOOL)isDockMenu;
 
--(void) setChildArray:(NSMutableArray *)aChildArray; //should be private?
--(void)	setIsGroup:(BOOL)aGroupFlag;    //AE code: DBAg
--(void) setIsRoot:(BOOL)aFlag;
--(void) setIsToolbar:(BOOL)aFlag;
--(void) setIsSmartFolder:(BOOL)aFlag;
--(void) setIsDockMenu:(BOOL)aFlag;
--(void) makeDockMenu:(id)sender;
+- (void)setChildArray:(NSMutableArray *)aChildArray; //should be private?
+- (void)setIsGroup:(BOOL)aGroupFlag;    //AE code: DBAg
+- (void)setIsRoot:(BOOL)aFlag;
+- (void)setIsToolbar:(BOOL)aFlag;
+- (void)setIsSmartFolder:(BOOL)aFlag;
+- (void)setIsDockMenu:(BOOL)aFlag;
+- (void)makeDockMenu:(id)sender;
 
 // Things added to make it work sort of like an array
--(unsigned) count;
--(id) objectAtIndex:(unsigned)index;
--(unsigned)indexOfObject:(id)object;
--(unsigned)indexOfObjectIdenticalTo:(id)object;
+- (unsigned)count;
+- (id)objectAtIndex:(unsigned)index;
+- (unsigned)indexOfObject:(id)object;
+- (unsigned)indexOfObjectIdenticalTo:(id)object;
 
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedSpecialFlag;
 
 // ways to add a new bookmark
--(Bookmark *) addBookmark; //adds to end
--(Bookmark *) addBookmark:(NSString *)aTitle url:(NSString *)aURL inPosition:(unsigned)aIndex isSeparator:(BOOL)aBool;
--(Bookmark *) addBookmark:(NSString *)aTitle inPosition:(unsigned)aIndex keyword:(NSString *)aKeyword url:(NSString *)aURL description:(NSString *)aDescription lastVisit:(NSDate *)aDate  status:(unsigned)aStatus isSeparator:(BOOL)aBool;
+- (Bookmark *)addBookmark; //adds to end
+- (Bookmark *)addBookmark:(NSString *)aTitle url:(NSString *)aURL inPosition:(unsigned)aIndex isSeparator:(BOOL)aBool;
+- (Bookmark *)addBookmark:(NSString *)aTitle
+               inPosition:(unsigned)aIndex
+                  keyword:(NSString *)aKeyword
+                      url:(NSString *)aURL
+              description:(NSString *)aDescription
+                lastVisit:(NSDate *)aDate
+                   status:(unsigned)aStatus
+              isSeparator:(BOOL)aBool;
 
 // ways to add a new bookmark array
--(BookmarkFolder *) addBookmarkFolder; //adds to end
--(BookmarkFolder *) addBookmarkFolder:(NSString *)aTitle inPosition:(unsigned)aIndex isGroup:(BOOL)aFlag;
+- (BookmarkFolder *)addBookmarkFolder; //adds to end
+- (BookmarkFolder *)addBookmarkFolder:(NSString *)aTitle inPosition:(unsigned)aIndex isGroup:(BOOL)aFlag;
 
 // finding items by uuid
--(BookmarkItem *)itemWithUUID:(NSString*)uuid;
+- (BookmarkItem *)itemWithUUID:(NSString*)uuid;
 
 // Moving & Copying & inserting bookmarks/bookmark arrays
--(void) appendChild:(BookmarkItem *)aChild;
--(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aIndex isMove:(BOOL)aBool;
--(void) moveChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
+- (void)appendChild:(BookmarkItem *)aChild;
+- (void)insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aIndex isMove:(BOOL)aBool;
+- (void)moveChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
 // returns the new child
--(BookmarkItem*) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
+- (BookmarkItem*)copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
 
 // Used for deleting bookmarks/bookmark arrays
--(BOOL) deleteChild:(BookmarkItem *)aChild;
+- (BOOL)deleteChild:(BookmarkItem *)aChild;
 
 // used for batch notifying about changes to this folder's children (and descendants)
--(void) notifyChildrenChanged;
+- (void)notifyChildrenChanged;
 
 // Smart Folder only methods
--(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem;
--(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex;
--(void) deleteFromSmartFolderChildAtIndex:(unsigned)index;
+- (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem;
+- (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex;
+- (void)deleteFromSmartFolderChildAtIndex:(unsigned)index;
 
 // sorting
 // Arrange the given items (which must be children of this folder) next to eachother and in
@@ -135,17 +142,17 @@ enum {
 - (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep undoable:(BOOL)inUndoable;
 
 // generation menus
--(void) buildFlatFolderList:(NSMenu *)menu depth:(unsigned)pad;
+- (void)buildFlatFolderList:(NSMenu *)menu depth:(unsigned)pad;
 
 // searching
--(NSArray*)resolveKeyword:(NSString *)keyword withArgs:(NSString *)args;
--(NSSet *) bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
+- (NSArray*)resolveKeyword:(NSString *)keyword withArgs:(NSString *)args;
+- (NSSet *)bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
 - (BOOL)containsChildItem:(BookmarkItem*)inItem;
 
 // Scripting - should be a protocol we could use for these
 // two, but i'm not sure which one, so we'll declare them here
 // and avoid the compiler warning
--(NSArray *) indicesOfObjectsByEvaluatingRelativeSpecifier:(NSRelativeSpecifier *)relSpec;
--(NSArray *) indicesOfObjectsByEvaluatingRangeSpecifier:(NSRangeSpecifier *)rangeSpec;
+- (NSArray *)indicesOfObjectsByEvaluatingRelativeSpecifier:(NSRelativeSpecifier *)relSpec;
+- (NSArray *)indicesOfObjectsByEvaluatingRangeSpecifier:(NSRangeSpecifier *)rangeSpec;
 
 @end

@@ -47,7 +47,7 @@
 {
   IBOutlet NSView*      mBookmarkView;
   IBOutlet NSView*      mFolderView;
-  
+
   IBOutlet NSTabView*   mTabView;
   IBOutlet NSTextField* mBookmarkNameField;
   IBOutlet NSTextField* mBookmarkLocationField;
@@ -74,8 +74,8 @@
 + (id)existingSharedBookmarkInfoController;
 + (void)closeBookmarkInfoController;
 
--(void)setBookmark:(BookmarkItem*)aBookmark;
--(BookmarkItem*)bookmark;
+- (void)setBookmark:(BookmarkItem*)aBookmark;
+- (BookmarkItem*)bookmark;
 
 - (IBAction)tabGroupCheckboxClicked:(id)sender;
 - (IBAction)dockMenuCheckboxClicked:(id)sender;

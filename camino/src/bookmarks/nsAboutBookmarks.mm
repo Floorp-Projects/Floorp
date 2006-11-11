@@ -60,13 +60,13 @@ nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsresult rv;
     nsIChannel* channel;
 
-    NSString* windowTitle = mIsBookmarks ? NSLocalizedString(@"BookmarksWindowTitle", @"")
-                                         : NSLocalizedString(@"HistoryWindowTitle", @"");
-    
+    NSString* windowTitle = mIsBookmarks ? NSLocalizedString(@"BookmarksWindowTitle", nil)
+                                         : NSLocalizedString(@"HistoryWindowTitle", nil);
+
     NSString* sourceString = [NSString stringWithFormat:kBlankPageHTML, windowTitle];
     nsAutoString pageSource;
     [sourceString assignTo_nsAString:pageSource];
-    
+
     nsCOMPtr<nsIInputStream> in;
     rv = NS_NewCStringInputStream(getter_AddRefs(in),
                                   NS_ConvertUTF16toUTF8(pageSource));

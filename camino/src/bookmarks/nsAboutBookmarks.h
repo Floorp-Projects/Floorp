@@ -40,7 +40,7 @@
 
 #include "nsIAboutModule.h"
 
-class nsAboutBookmarks : public nsIAboutModule 
+class nsAboutBookmarks : public nsIAboutModule
 {
 public:
     NS_DECL_ISUPPORTS

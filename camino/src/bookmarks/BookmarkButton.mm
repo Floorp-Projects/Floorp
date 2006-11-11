@@ -63,28 +63,26 @@
 
 - (id)initWithFrame:(NSRect)frame
 {
-  if ( (self = [super initWithFrame:frame]) )
-  {
+  if ((self = [super initWithFrame:frame])) {
     DraggableImageAndTextCell* newCell = [[[DraggableImageAndTextCell alloc] init] autorelease];
     [newCell setDraggable:YES];
     [self setCell:newCell];
 
-    [self setBezelStyle: NSRegularSquareBezelStyle];
-    [self setButtonType: NSMomentaryChangeButton];
-    [self setBordered: NO];
-    [self setImagePosition: NSImageLeft];
-    [self setRefusesFirstResponder: YES];
-    [self setFont: [NSFont labelFontOfSize: 11.0]];
-    
+    [self setBezelStyle:NSRegularSquareBezelStyle];
+    [self setButtonType:NSMomentaryChangeButton];
+    [self setBordered:NO];
+    [self setImagePosition:NSImageLeft];
+    [self setRefusesFirstResponder:YES];
+    [self setFont:[NSFont labelFontOfSize:11.0]];
+
     mLastEventWasMenu = NO;
   }
   return self;
 }
 
--(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item
+- (id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item
 {
-  if ( (self = [self initWithFrame:frame]) )
-  {
+  if ((self = [self initWithFrame:frame])) {
     [self setBookmarkItem:item];
   }
   return self;
@@ -110,8 +108,8 @@
       return;
     }
     [self setAction:@selector(openBookmark:)];
-    
-    NSString* tooltipString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", @""),
+
+    NSString* tooltipString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", nil),
                                                 [bookmarkItem title],
                                                 [bookmarkItem url]];
     // using "\n\n" as a tooltip string causes Cocoa to hang when displaying the tooltip,
@@ -123,7 +121,7 @@
     [[self cell] setClickHoldTimeout:0.5];
     if ([(BookmarkFolder *)aItem isGroup])
       [self setAction:@selector(openBookmark:)];
-    else 
+    else
       [self setAction:@selector(showFolderPopupAction:)];
   }
   [self setTitle:[aItem title]];
@@ -133,25 +131,22 @@
 
 - (void)bookmarkChanged:(BOOL*)outNeedsReflow
 {
-  if (![[self title] isEqualToString:[mItem title]])
-  {
+  if (![[self title] isEqualToString:[mItem title]]) {
     *outNeedsReflow = YES;    // assume title width changed
     [self setTitle:[mItem title]];
   }
-  
-  if ([self image] != [mItem icon])
-  {
+
+  if ([self image] != [mItem icon]) {
     // all images are the same size, so this won't trigger reflows
     *outNeedsReflow = !NSEqualSizes([[self image] size], [[mItem icon] size]);
     [self setImage:[mItem icon]];
   }
 
   // folder items can be toggled between folders and tab groups
-  if ([mItem isKindOfClass:[BookmarkFolder class]])
-  {
+  if ([mItem isKindOfClass:[BookmarkFolder class]]) {
     if ([(BookmarkFolder *)mItem isGroup])
       [self setAction:@selector(openBookmark:)];
-    else 
+    else
       [self setAction:@selector(showFolderPopupAction:)];
   }
 }
@@ -161,7 +156,7 @@
   return mItem;
 }
 
--(IBAction)openBookmark:(id)aSender
+- (IBAction)openBookmark:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
@@ -173,7 +168,7 @@
   [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:openBehavior reverseBgToggle:reverseBGPref];
 }
 
--(IBAction)openBookmarkInNewTab:(id)aSender
+- (IBAction)openBookmarkInNewTab:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
@@ -182,7 +177,7 @@
   [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:eBookmarkOpenBehavior_NewTab reverseBgToggle:reverseBGPref];
 }
 
--(IBAction)openBookmarkInNewWindow:(id)aSender
+- (IBAction)openBookmarkInNewWindow:(id)aSender
 {
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
@@ -193,17 +188,18 @@
 
 - (IBAction)copyURLs:(id)aSender
 {
-  [[BookmarkManager sharedBookmarkManager] copyBookmarksURLs:[NSArray arrayWithObject:[self bookmarkItem]] toPasteboard:[NSPasteboard generalPasteboard]];
+  [[BookmarkManager sharedBookmarkManager] copyBookmarksURLs:[NSArray arrayWithObject:[self bookmarkItem]]
+                                                toPasteboard:[NSPasteboard generalPasteboard]];
 }
 
--(IBAction)showBookmarkInfo:(id)aSender
+- (IBAction)showBookmarkInfo:(id)aSender
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
   [bic setBookmark:[self bookmarkItem]];
   [bic showWindow:self];
 }
 
--(IBAction)deleteBookmarks: (id)aSender
+- (IBAction)deleteBookmarks:(id)aSender
 {
   BookmarkItem *item = [self bookmarkItem];
   BOOL deleted = [[item parent] deleteChild:item];
@@ -211,20 +207,20 @@
     [self removeFromSuperview];
 }
 
--(IBAction)addFolder:(id)aSender
+- (IBAction)addFolder:(id)aSender
 {
   BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
   BookmarkFolder* toolbarFolder = [bmManager toolbarFolder];
   BookmarkFolder* aFolder = [toolbarFolder addBookmarkFolder];
-  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", @"New Folder")];
+  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", nil)];
 }
 
--(void)drawRect:(NSRect)aRect
+- (void)drawRect:(NSRect)aRect
 {
   [super drawRect:aRect];
 }
 
--(NSMenu*)menuForEvent:(NSEvent*)aEvent
+- (NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   mLastEventWasMenu = YES;
   NSArray* theItemArray = [NSArray arrayWithObject:[self bookmarkItem]];
@@ -234,7 +230,7 @@
 //
 // context menu has only what we need
 //
--(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   if ([[self bookmarkItem] isKindOfClass:[Bookmark class]] && [(Bookmark *)[self bookmarkItem] isSeparator]) {
     SEL action = [aMenuItem action];
@@ -264,16 +260,16 @@
   // dummy first item
   id dummyItem = [bmMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
   [bmMenu setItemBeforeCustomItems:dummyItem];
-  
+
   // use a temporary NSPopUpButtonCell to display the menu.
-  NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
-  [popupCell setMenu: bmMenu];
+  NSPopUpButtonCell *popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
+  [popupCell setMenu:bmMenu];
   [popupCell trackMouse:event inRect:[self bounds] ofView:self untilMouseUp:YES];
   mLastEventWasMenu = YES;
   [popupCell release];
 }
 
--(void)mouseDown:(NSEvent*)aEvent
+- (void)mouseDown:(NSEvent*)aEvent
 {
   mLastEventWasMenu = NO;
   [super mouseDown:aEvent];
@@ -289,7 +285,7 @@
   return (NSDragOperationDelete | NSDragOperationGeneric);
 }
 
-- (void) mouseDragged: (NSEvent*) aEvent
+- (void)mouseDragged:(NSEvent*)aEvent
 {
   // hack to prevent a drag while viewing a popup or context menu from moving the folder unexpectedly
   // (unless the drag happens on the folder itself)
@@ -300,42 +296,41 @@
   BOOL isSingleBookmark = [item isKindOfClass:[Bookmark class]];
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
   NSString     *title = [item title];
-  if (isSingleBookmark)
-  {
+  if (isSingleBookmark) {
     [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
-    NSString     *url 	= [(Bookmark *)item url];
-    NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+    NSString *url = [(Bookmark *)item url];
+    NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     [pboard setDataForURL:url title:cleanedTitle];
   }
-  else
-  {
+  else {
     [pboard declareTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
   }
 
   // kCaminoBookmarkListPBoardType
   NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:[NSArray arrayWithObject:item]];
-  [pboard setPropertyList:pointerArray forType: kCaminoBookmarkListPBoardType];
+  [pboard setPropertyList:pointerArray forType:kCaminoBookmarkListPBoardType];
 
   // If the drag results in the bookmark button being (re)moved, it could get
   // deallocated too soon.  This occurs with SDK >= 10.3, but not earlier.
   // Change in cleanup strategy?  Hold on tight.
   [[self retain] autorelease];
-  [self dragImage: [MainController createImageForDragging:[self image]
-                                                    title:([item isSeparator] ? @"" : title)]
-               at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
-            event: aEvent pasteboard: pboard source: self slideBack: YES];
+  [self dragImage:[MainController createImageForDragging:[self image]
+                                                   title:([item isSeparator] ? @"" : title)]
+               at:NSMakePoint(0, NSHeight([self bounds]))
+           offset:NSMakeSize(0, 0)
+            event:aEvent
+       pasteboard:pboard
+           source:self
+        slideBack:YES];
 }
 
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
-  if (operation == NSDragOperationDelete)
-  {
+  if (operation == NSDragOperationDelete) {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: kCaminoBookmarkListPBoardType]];
-    if (bookmarks)
-    {
-      for (unsigned int i = 0; i < [bookmarks count]; ++i)
-      {
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType:kCaminoBookmarkListPBoardType]];
+    if (bookmarks) {
+      for (unsigned int i = 0; i < [bookmarks count]; ++i) {
         BookmarkItem* item = [bookmarks objectAtIndex:i];
         [[item parent] deleteChild:item];
       }

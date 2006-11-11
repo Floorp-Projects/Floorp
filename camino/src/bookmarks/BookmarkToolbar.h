@@ -55,19 +55,19 @@
 }
 
   // Called to construct & edit the initial set of personal toolbar buttons.
--(void)rebuildButtonList;
--(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex;
--(void)updateButton:(BookmarkItem*)aItem;
--(void)removeButton:(BookmarkItem*)aItem;
+- (void)rebuildButtonList;
+- (void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex;
+- (void)updateButton:(BookmarkItem*)aItem;
+- (void)removeButton:(BookmarkItem*)aItem;
 
   // Called to lay out the buttons on the toolbar.
--(void)reflowButtons;
--(void)reflowButtonsStartingAtIndex: (int)aIndex;
+- (void)reflowButtons;
+- (void)reflowButtonsStartingAtIndex:(int)aIndex;
 
--(BOOL)isShown;
--(void)setDrawBottomBorder:(BOOL)drawBorder;
--(void)showBookmarksToolbar: (BOOL)aShow;
+- (BOOL)isShown;
+- (void)setDrawBottomBorder:(BOOL)drawBorder;
+- (void)showBookmarksToolbar:(BOOL)aShow;
 
--(IBAction)addFolder:(id)aSender;
+- (IBAction)addFolder:(id)aSender;
 
 @end

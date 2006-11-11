@@ -52,21 +52,21 @@
   NSString*     mFaviconURL;  // only used for <link> favicons
 }
 
--(NSString *) url;
--(NSDate *) lastVisit;
--(unsigned) numberOfVisits;
--(unsigned) status;
+- (NSString *)url;
+- (NSDate *)lastVisit;
+- (unsigned)numberOfVisits;
+- (unsigned)status;
 
--(NSString*) faviconURL;
--(void) setFaviconURL:(NSString*)inURL; 
+- (NSString*)faviconURL;
+- (void)setFaviconURL:(NSString*)inURL;
 
--(void) setUrl:(NSString *)aURL; 
--(void) setLastVisit:(NSDate *)aLastVisit;
--(void) setStatus:(unsigned)aStatus;
--(void) setIsSeparator:(BOOL)aSeparatorFlag;
--(void) setNumberOfVisits:(unsigned)aNumber;
+- (void)setUrl:(NSString *)aURL;
+- (void)setLastVisit:(NSDate *)aLastVisit;
+- (void)setStatus:(unsigned)aStatus;
+- (void)setIsSeparator:(BOOL)aSeparatorFlag;
+- (void)setNumberOfVisits:(unsigned)aNumber;
 
--(void) notePageLoadedWithSuccess:(BOOL)inSuccess;
+- (void)notePageLoadedWithSuccess:(BOOL)inSuccess;
 
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedURL;

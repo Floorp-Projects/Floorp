@@ -49,10 +49,14 @@
 
 - (void)awakeFromNib
 {
-  [self registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSStringPboardType, NSURLPboardType, nil]];
+  [self registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType,
+                                                          kWebURLsWithTitlesPboardType,
+                                                          NSStringPboardType,
+                                                          NSURLPboardType,
+                                                          nil]];
 }
 
--(NSMenu*)menu
+- (NSMenu*)menu
 {
   BookmarkManager *bm = [BookmarkManager sharedBookmarkManager];
   BookmarkFolder *activeCollection = [(BookmarkViewController*)[self delegate] activeCollection];
@@ -60,7 +64,7 @@
   if ((activeCollection == [bm bookmarkMenuFolder]) || (activeCollection == [bm toolbarFolder])) {
     // set up default menu
     NSMenu *menu = [[[NSMenu alloc] init] autorelease];
-    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...", @"")
+    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...", nil)
                                                        action:@selector(addBookmarkFolder:)
                                                 keyEquivalent:@""] autorelease];
     [menuItem setTarget:[self delegate]];
@@ -74,7 +78,7 @@
 {
   if (operation == NSDragOperationDelete) {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: kCaminoBookmarkListPBoardType]];
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType:kCaminoBookmarkListPBoardType]];
     if (bookmarks) {
       for (unsigned int i = 0; i < [bookmarks count]; ++i) {
         BookmarkItem* item = [bookmarks objectAtIndex:i];
@@ -93,7 +97,8 @@
       [super _cancelEditItem];
       return;
     }
-  } else if ([itemToEdit isKindOfClass:[Bookmark class]]) {
+  }
+  else if ([itemToEdit isKindOfClass:[Bookmark class]]) {
     if ([(Bookmark *)itemToEdit isSeparator]) {
       [super _cancelEditItem];
       return;

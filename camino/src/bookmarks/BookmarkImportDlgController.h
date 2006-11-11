@@ -42,18 +42,18 @@
 @interface BookmarkImportDlgController : NSWindowController {
   IBOutlet NSPopUpButton* mBrowserListButton;
   IBOutlet NSButton* mCancelButton;
-  IBOutlet NSButton* mImportButton;  
-  IBOutlet NSProgressIndicator* mImportProgressBar;  
-  IBOutlet NSView* mImportView;  
-  IBOutlet NSView* mProgressView;  
+  IBOutlet NSButton* mImportButton;
+  IBOutlet NSProgressIndicator* mImportProgressBar;
+  IBOutlet NSView* mImportView;
+  IBOutlet NSView* mProgressView;
 }
 
--(void) buildAvailableFileList;
--(IBAction) cancel:(id)aSender;
--(IBAction) import:(id)aSender;
--(IBAction) loadOpenPanel:(id)aSender;
--(IBAction) nullAction:(id)aSender;
--(void) alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
--(void) finishThreadedImport:(BOOL)success fromFile:(NSString *)aFile;
+- (void)buildAvailableFileList;
+- (IBAction)cancel:(id)aSender;
+- (IBAction)import:(id)aSender;
+- (IBAction)loadOpenPanel:(id)aSender;
+- (IBAction)nullAction:(id)aSender;
+- (void)alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
+- (void)finishThreadedImport:(BOOL)success fromFile:(NSString *)aFile;
 
 @end

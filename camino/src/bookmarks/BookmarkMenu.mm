@@ -68,8 +68,7 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (id)initWithTitle:(NSString *)inTitle bookmarkFolder:(BookmarkFolder*)inFolder
 {
-  if ((self = [super initWithTitle:inTitle]))
-  {
+  if ((self = [super initWithTitle:inTitle])) {
     mFolder = [inFolder retain];
     mDirty  = YES;
     mAppendTabsItem = YES;
@@ -142,8 +141,7 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  if ([self isTargetOfMenuDisplayNotification:[inNotification object]])
-  {
+  if ([self isTargetOfMenuDisplayNotification:[inNotification object]]) {
     [self menuWillBeDisplayed];
   }
 }
@@ -155,30 +153,25 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (void)rebuildMenuIncludingSubmenus:(BOOL)includeSubmenus withAlternates:(BOOL)includeAlternates
 {
-  if (mDirty)
-  {
+  if (mDirty) {
     // remove everything after the "before" item
     [self removeItemsAfterItem:mItemBeforeCustomItems];
 
     NSEnumerator* childEnum = [[mFolder childArray] objectEnumerator];
     BookmarkItem* curItem;
-    while ((curItem = [childEnum nextObject]))
-    {
+    while ((curItem = [childEnum nextObject])) {
       [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus withAlternates:includeAlternates];
     }
 
     [self addLastItems];
     mDirty = NO;
   }
-  else if (includeSubmenus) // even if we're not dirty, submenus might be
-  {
+  else if (includeSubmenus) {  // even if we're not dirty, submenus might be
     int firstCustomItemIndex = [self indexOfItem:mItemBeforeCustomItems] + 1;
-    
-    for (int i = firstCustomItemIndex; i < [self numberOfItems]; i ++)
-    {
+
+    for (int i = firstCustomItemIndex; i < [self numberOfItems]; i++) {
       NSMenuItem* curItem = [self itemAtIndex:i];
-      if ([curItem hasSubmenu] && [[curItem submenu] isKindOfClass:[BookmarkMenu class]])
-      {
+      if ([curItem hasSubmenu] && [[curItem submenu] isKindOfClass:[BookmarkMenu class]]) {
         [(BookmarkMenu*)[curItem submenu] rebuildMenuIncludingSubmenus:includeSubmenus withAlternates:includeAlternates];
       }
     }
@@ -190,10 +183,8 @@ const long kOpenInTabsTag = 0xBEEF;
   NSString *title = [[inItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
 
   NSMenuItem *menuItem = nil;
-  if ([inItem isKindOfClass:[Bookmark class]])
-  {
-    if (![(Bookmark *)inItem isSeparator])  // normal bookmark
-    {
+  if ([inItem isKindOfClass:[Bookmark class]]) {
+    if (![(Bookmark *)inItem isSeparator]) {  // normal bookmark
       menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
@@ -210,7 +201,7 @@ const long kOpenInTabsTag = 0xBEEF;
         [altMenuItem setRepresentedObject:inItem];
         [altMenuItem setImage:[inItem icon]];
         [self addItem:altMenuItem];
-  
+
         altMenuItem = [NSMenu alternateMenuItemWithTitle:title
                                                   action:@selector(openMenuBookmark:)
                                                   target:[NSApp delegate]
@@ -220,18 +211,15 @@ const long kOpenInTabsTag = 0xBEEF;
         [self addItem:altMenuItem];
       }
     }
-    else    //separator
-    {
+    else {   //separator
       menuItem = [[NSMenuItem separatorItem] retain];
       [self addItem:menuItem];
     }
   }
-  else if ([inItem isKindOfClass:[BookmarkFolder class]])
-  {
+  else if ([inItem isKindOfClass:[BookmarkFolder class]]) {
     BookmarkFolder* curFolder = (BookmarkFolder*)inItem;
-    if (![curFolder isGroup])     // normal folder
-    {
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+    if (![curFolder isGroup]) {  // normal folder
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setImage:[inItem icon]];
 
       BookmarkMenu* subMenu = [[BookmarkMenu alloc] initWithTitle:title bookmarkFolder:curFolder];
@@ -242,12 +230,11 @@ const long kOpenInTabsTag = 0xBEEF;
       [menuItem setSubmenu:subMenu];
       [subMenu release];
     }
-    else // group
-    { 
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+    else {  // group
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
-      [menuItem setImage:[inItem icon]];      
+      [menuItem setImage:[inItem icon]];
     }
 
     [self addItem:menuItem];
@@ -261,8 +248,7 @@ const long kOpenInTabsTag = 0xBEEF;
 - (void)addLastItems
 {
   // add the "Open In Tabs" option to open all items in this subfolder
-  if (mAppendTabsItem && [[mFolder childURLs] count] > 0)
-  {
+  if (mAppendTabsItem && [[mFolder childURLs] count] > 0) {
     [self addItem:[NSMenuItem separatorItem]];
 
     NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil)
@@ -330,15 +316,13 @@ const long kOpenInTabsTag = 0xBEEF;
     changeFlags = [noteChangeFlags unsignedIntValue];
 
   // if it changed to or from a separator (or everything changed), just do a rebuild later
-  if (changeFlags & kBookmarkItemStatusChangedMask)
-  {
+  if (changeFlags & kBookmarkItemStatusChangedMask) {
     mDirty = YES;
     return;
   }
 
   NSMenuItem* theMenuItem = [self itemAtIndex:itemIndex];
-  if (changeFlags & kBookmarkItemTitleChangedMask)
-  {
+  if (changeFlags & kBookmarkItemTitleChangedMask) {
     NSString *title = [[changedItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
     [theMenuItem setTitle:title];
   }

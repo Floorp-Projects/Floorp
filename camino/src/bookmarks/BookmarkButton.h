@@ -47,18 +47,18 @@
   BOOL            mLastEventWasMenu;
 }
 
--(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item;
+- (id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item;
 
 - (void)setBookmarkItem:(BookmarkItem*)anItem;
 - (BookmarkItem*)bookmarkItem;
 
 - (void)bookmarkChanged:(BOOL*)outNeedsReflow;
 
--(IBAction)openBookmark:(id)aSender;
--(IBAction)openBookmarkInNewTab:(id)aSender;
--(IBAction)openBookmarkInNewWindow:(id)aSender;
--(IBAction)showBookmarkInfo:(id)aSender;
--(IBAction)deleteBookmarks: (id)aSender;
--(IBAction)addFolder:(id)aSender;
+- (IBAction)openBookmark:(id)aSender;
+- (IBAction)openBookmarkInNewTab:(id)aSender;
+- (IBAction)openBookmarkInNewWindow:(id)aSender;
+- (IBAction)showBookmarkInfo:(id)aSender;
+- (IBAction)deleteBookmarks:(id)aSender;
+- (IBAction)addFolder:(id)aSender;
 
 @end

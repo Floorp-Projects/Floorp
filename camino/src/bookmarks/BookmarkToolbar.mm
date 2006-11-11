@@ -62,7 +62,7 @@ static const float kButtonRectVPadding = 4.0f;
 
 @interface BookmarkToolbar(Private)
 
--(void)rebuildButtonList;
+- (void)rebuildButtonList;
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
 - (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
@@ -80,24 +80,27 @@ static const int kBMBarScanningStep = 5;
 
 - (id)initWithFrame:(NSRect)frame
 {
-  if ( (self = [super initWithFrame:frame]) )
-  {
+  if ((self = [super initWithFrame:frame])) {
     mButtons = [[NSMutableArray alloc] init];
     mDragInsertionButton = nil;
     mDragInsertionPosition = CHInsertNone;
     mDrawBorder = YES;
 
-    [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSStringPboardType, NSURLPboardType, nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType,
+                                                            kWebURLsWithTitlesPboardType,
+                                                            NSStringPboardType,
+                                                            NSURLPboardType,
+                                                            nil]];
 
     mIsShowing = YES;
     mButtonListDirty = YES;
-    
+
     // Generic notifications for Bookmark Client
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-    
+
     // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
     // it can be created after we are and if we don't update ourselves, the bar will be blank. This
     // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
@@ -167,22 +170,19 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     CGFunctionRelease(function);
   }
 
-  if (mDrawBorder)
-  {
+  if (mDrawBorder) {
     [[NSColor controlShadowColor] set];
     float height = [self bounds].size.height;
     NSRectFill(NSMakeRect(aRect.origin.x, height - 1.0, aRect.size.width, height));
   }
 
   // The buttons will paint themselves. Just call our base class method.
-  [super drawRect: aRect];
+  [super drawRect:aRect];
 
   // draw a separator at drag n drop insertion point if there is one
-  if (mDragInsertionPosition)
-  {
+  if (mDragInsertionPosition) {
     NSRect buttonRect = [self insertionHiliteRectForButton:mDragInsertionButton position:mDragInsertionPosition];
-    if (mDragInsertionPosition == CHInsertInto)
-    {
+    if (mDragInsertionPosition == CHInsertInto) {
       buttonRect = NSInsetRect(buttonRect, kButtonRectHPadding - 1.0f, kButtonRectVPadding - 1.0f);
       NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRoundCorneredRect:buttonRect cornerRadius:3.0f];
 
@@ -193,8 +193,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
       [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.5] set];
       [dropTargetOutline fill];
     }
-    else
-    {
+    else {
       // rect is a 5-pixel rect before or after the button, offset a little so this draws
       // in the right place. We take care to keep our drawing inside the rect returned from
       // -insertionHiliteRectForButton, since that rect is used to do invalidations.
@@ -217,7 +216,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
       [insertionPointPath moveToPoint:NSMakePoint(insertionPos - kTipsXOffset, NSMaxY(buttonRect))];
       [insertionPointPath lineToPoint:NSMakePoint(insertionPos, NSMaxY(buttonRect) - kTipsYOffset)];
       [insertionPointPath lineToPoint:NSMakePoint(insertionPos + kTipsXOffset, NSMaxY(buttonRect))];
-      
+
       [[NSColor colorWithCalibratedRed:0.12 green:0.36 blue:0.81 alpha:1.0f] set];
       [insertionPointPath setLineCapStyle:NSRoundLineCapStyle];
       [insertionPointPath setLineWidth:2.0f];
@@ -232,8 +231,8 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 // this only gets called on startup OR window creation.  on the off chance that
 // we're starting due to an appleevent from another program, we might call it twice.
 // make sure nothing bad happens if we do that.
-// 
--(void)rebuildButtonList
+//
+- (void)rebuildButtonList
 {
   if (!mButtonListDirty)
     return;
@@ -245,8 +244,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   [self removeAllSubviews];
 
   unsigned int numItems = [toolbarFolder count];
-  for (unsigned int i = 0; i < numItems; i++)
-  {
+  for (unsigned int i = 0; i < numItems; i++) {
     BookmarkButton* button = [self makeNewButtonWithItem:[toolbarFolder objectAtIndex:i]];
     if (button) {
       [self addSubview:button];
@@ -260,55 +258,53 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     [self reflowButtons];
 }
 
--(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex
+- (void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex
 {
   BookmarkButton* button = [self makeNewButtonWithItem:aItem];
   if (!button)
     return;
-  [self addSubview: button];
-  [mButtons insertObject: button atIndex: aIndex];
+  [self addSubview:button];
+  [mButtons insertObject:button atIndex:aIndex];
   if ([self isShown])
-    [self reflowButtonsStartingAtIndex: aIndex];
+    [self reflowButtonsStartingAtIndex:aIndex];
 }
 
--(void)updateButton:(BookmarkItem*)aItem
+- (void)updateButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
   // XXX nasty linear search
-  for (int i = 0; i < count; i++)
-  {
-    BookmarkButton* button = [mButtons objectAtIndex: i];
-    if ([button bookmarkItem] == aItem)
-    {
+  for (int i = 0; i < count; i++) {
+    BookmarkButton* button = [mButtons objectAtIndex:i];
+    if ([button bookmarkItem] == aItem) {
       BOOL needsReflow = NO;
       [button bookmarkChanged:&needsReflow];
       if (needsReflow && count > i && [self isShown])
-        [self reflowButtonsStartingAtIndex: i];
+        [self reflowButtonsStartingAtIndex:i];
       break;
     }
   }
   [self setNeedsDisplay:YES];
 }
 
--(void)removeButton:(BookmarkItem*)aItem
+- (void)removeButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
   for (int i = 0; i < count; i++) {
-    BookmarkButton* button = [mButtons objectAtIndex: i];
+    BookmarkButton* button = [mButtons objectAtIndex:i];
     if ([button bookmarkItem] == aItem) {
-      [mButtons removeObjectAtIndex: i];
+      [mButtons removeObjectAtIndex:i];
       [button removeFromSuperview];
       if (count > i && [self isShown])
-        [self reflowButtonsStartingAtIndex: i];
+        [self reflowButtonsStartingAtIndex:i];
       break;
     }
   }
   [self setNeedsDisplay:YES];
 }
 
--(void)reflowButtons
+- (void)reflowButtons
 {
-  [self reflowButtonsStartingAtIndex: 0];
+  [self reflowButtonsStartingAtIndex:0];
 }
 
 #define kBookmarkButtonHeight            16.0
@@ -319,7 +315,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 #define kBookmarkButtonVerticalPadding    1.0
 #define kBookmarkToolbarBottomPadding     2.0
 
--(void)reflowButtonsStartingAtIndex:(int)aIndex
+- (void)reflowButtonsStartingAtIndex:(int)aIndex
 {
   if (![self isShown])
     return;
@@ -366,8 +362,8 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
   // our size has changed, readjust our view's frame and the content area
   if (computedHeight != oldHeight) {
-    [super setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
-                                [self frame].size.width, computedHeight)];
+    [super setFrame:NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
+                               [self frame].size.width, computedHeight)];
 
     // tell the superview to resize its subviews
     [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
@@ -376,12 +372,12 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   [self setNeedsDisplay:YES];
 }
 
--(BOOL)isFlipped
+- (BOOL)isFlipped
 {
   return YES; // Use flipped coords, so we can layout out from top row to bottom row.
 }
 
--(void)setFrame:(NSRect)aRect
+- (void)setFrame:(NSRect)aRect
 {
   NSRect oldFrame = [self frame];
   [super setFrame:aRect];
@@ -393,8 +389,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   int reflowStart = 0;
 
   // find out where we need to start reflowing
-  for (int i = 0; i < count; i ++)
-  {
+  for (int i = 0; i < count; i++) {
     BookmarkButton* button = [mButtons objectAtIndex:i];
     NSRect           buttonFrame = [button frame];
 
@@ -409,15 +404,14 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   [self reflowButtonsStartingAtIndex:reflowStart];
 }
 
--(BOOL)isShown
+- (BOOL)isShown
 {
   return mIsShowing;
 }
 
--(void)setDrawBottomBorder:(BOOL)drawBorder
+- (void)setDrawBottomBorder:(BOOL)drawBorder
 {
-  if (mDrawBorder != drawBorder)
-  {
+  if (mDrawBorder != drawBorder) {
     mDrawBorder = drawBorder;
     NSRect dirtyRect = [self bounds];
     dirtyRect.origin.y = dirtyRect.size.height - 1.0;
@@ -429,10 +423,10 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 // if the toolbar gets the message, we can only make a new folder.
 // kinda dull.  but we'll do this on the fly.
 //
--(NSMenu*)menuForEvent:(NSEvent*)aEvent
+- (NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   NSMenu* myMenu = [[NSMenu alloc] initWithTitle:@"snookums"];
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder", @"")
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder", nil)
                                                     action:@selector(addFolder:)
                                              keyEquivalent:@""];
   [menuItem setTarget:self];
@@ -444,35 +438,33 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 //
 // context menu has only what we need
 //
--(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   return YES;
 }
 
--(IBAction)addFolder:(id)aSender
+- (IBAction)addFolder:(id)aSender
 {
   BookmarkFolder* toolbar = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
   BookmarkFolder* aFolder = [toolbar addBookmarkFolder];
-  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", @"")];
+  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", nil)];
 }
 
--(void)showBookmarksToolbar: (BOOL)aShow
+- (void)showBookmarksToolbar:(BOOL)aShow
 {
   mIsShowing = aShow;
 
-  if (!aShow)
-  {
+  if (!aShow) {
     [[self superview] setNeedsDisplayInRect:[self frame]];
     NSRect newFrame = [self frame];
     newFrame.origin.y += newFrame.size.height;
     newFrame.size.height = 0;
-    [self setFrame: newFrame];
+    [self setFrame:newFrame];
 
     // tell the superview to resize its subviews
     [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
   }
-  else
-  {
+  else {
     [self reflowButtons];
     [self setNeedsDisplay:YES];
   }
@@ -487,20 +479,20 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
   mDragInsertionButton = nil;
   mDragInsertionPosition = CHInsertAfter;
-  
+
   // check for a button at current location to use as an anchor
   if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
   // otherwise see if there's a view around it to use as an anchor point
   if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kBMBarScanningStep * -1)]) return;
   if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kBMBarScanningStep]) return;
-  
+
   // if neither worked, it's probably the dead zone between lines.
   // treat that zone as the line above, and try everything again
   superviewLoc.y += kBMBarScanningStep;
   if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
   if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kBMBarScanningStep * -1)]) return;
   if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kBMBarScanningStep]) return;
-  
+
   // if nothing works, just throw it in at the end
   mDragInsertionButton = ([mButtons count] > 0) ? [mButtons objectAtIndex:[mButtons count] - 1] : 0;
   mDragInsertionPosition = CHInsertAfter;
@@ -511,11 +503,11 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   NSView* foundView = [self hitTest:testPoint];
   if (foundView && [foundView isMemberOfClass:[BookmarkButton class]]) {
     BookmarkButton* targetButton = (BookmarkButton*)foundView;
-    
+
     // if over current position, leave mDragInsertButton unset but return success so nothing happens
     if (targetButton == sourceButton)
       return YES;
-    
+
     mDragInsertionButton = targetButton;
     if ([[targetButton bookmarkItem] isKindOfClass:[BookmarkFolder class]])
       mDragInsertionPosition = CHInsertInto;
@@ -554,8 +546,8 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   if (!toolbar)
     return NO;
 
-  if ([types containsObject: kCaminoBookmarkListPBoardType]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType: kCaminoBookmarkListPBoardType]];
+  if ([types containsObject:kCaminoBookmarkListPBoardType]) {
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType:kCaminoBookmarkListPBoardType]];
     BookmarkFolder* destFolder = nil;
 
     if (mDragInsertionButton == nil) {
@@ -569,7 +561,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
              mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
       destFolder = toolbar;
     }
-    
+
     return [bmManager isDropValid:draggedItems toFolder:destFolder];
   }
 
@@ -595,7 +587,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     return NSDragOperationCopy;
   if (dragOpMask & NSDragOperationGeneric)
     return NSDragOperationGeneric;
-  
+
   return NSDragOperationNone;
 }
 
@@ -631,8 +623,8 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     return NSDragOperationCopy;
   if (dragOpMask & NSDragOperationGeneric)
     return NSDragOperationGeneric;
-  
-  return NSDragOperationNone;  
+
+  return NSDragOperationNone;
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
@@ -672,7 +664,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   NSArray *draggedTypes = [[sender draggingPasteboard] types];
 
   if ([draggedTypes containsObject:kCaminoBookmarkListPBoardType]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType:kCaminoBookmarkListPBoardType]];
     // added sequentially, so use reverse object enumerator to preserve order.
     NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
@@ -688,9 +680,9 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     NSArray* urls = nil;
     NSArray* titles = nil;
     [[sender draggingPasteboard] getURLs:&urls andTitles:&titles];
-    
+
     // Add in reverse order to preserve order
-    for ( int i = [urls count] - 1; i >= 0; --i )
+    for (int i = [urls count] - 1; i >= 0; --i)
       [toolbar addBookmark:[titles objectAtIndex:i] url:[urls objectAtIndex:i] inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
@@ -701,13 +693,13 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   return dropHandled;
 }
 
-- (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int) aPosition
+- (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int)aPosition
 {
   NSRect buttonFrame = [aButton frame];
 
   if (aPosition == CHInsertInto)
     return NSInsetRect(buttonFrame, -kButtonRectHPadding, -kButtonRectVPadding);
-  
+
   // we fudge the rect for before/after so that it's equivalent to the space between buttons,
   // and covers the insertion indicate that we draw (since we use this rect to refresh)
   NSRect gapRect;
@@ -715,14 +707,15 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     gapRect = NSMakeRect(buttonFrame.origin.x + buttonFrame.size.width, buttonFrame.origin.y, kBookmarkButtonHorizPadding, buttonFrame.size.height);
   else
     gapRect = NSMakeRect(buttonFrame.origin.x - kBookmarkButtonHorizPadding, buttonFrame.origin.y, kBookmarkButtonHorizPadding, buttonFrame.size.height);
-   
+
   gapRect.origin.x -= 1.0f;   // tweak to prevent the insertion point drawing over favicons
   return NSInsetRect(gapRect, -2.0f, -2.0f);
 }
 
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem
 {
-  return [[[BookmarkButton alloc] initWithFrame: NSMakeRect(0.0f, 0.0f, kMaxBookmarkButtonWidth, kBookmarkButtonHeight) item:aItem] autorelease];
+  return [[[BookmarkButton alloc] initWithFrame:NSMakeRect(0.0f, 0.0f, kMaxBookmarkButtonWidth, kBookmarkButtonHeight)
+                                           item:aItem] autorelease];
 }
 
 #pragma mark -
@@ -751,31 +744,27 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 {
   BookmarkItem* changedItem = [aNote object];
   BookmarkFolder* toolbarFolder = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
-  
+
   if (!toolbarFolder)
     return;   // haven't finished loading bookmarks yet
-    
-  if (changedItem == toolbarFolder)
-  {
+
+  if (changedItem == toolbarFolder) {
     const unsigned int kSignificantRootChangeFlags = (kBookmarkItemTitleChangedMask |
                                                       kBookmarkItemStatusChangedMask |
                                                       kBookmarkItemChildrenChangedMask);
 
-    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantRootChangeFlags])
-    {
+    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantRootChangeFlags]) {
       mButtonListDirty = YES;
       [self rebuildButtonList];
     }
   }
-  else if ([changedItem parent] == toolbarFolder)
-  {
+  else if ([changedItem parent] == toolbarFolder) {
     const unsigned int kSignificantItemChangeFlags = (kBookmarkItemTitleChangedMask |
                                                       kBookmarkItemIconChangedMask |
                                                       kBookmarkItemStatusChangedMask |
                                                       kBookmarkItemChildrenChangedMask);
 
-    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantItemChangeFlags])
-    {
+    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantItemChangeFlags]) {
       // note that this gets called as we're building the toolbar for the first time, since that's
       // setting the icons on the bookmarks. It's slightly expensive, but harmless.
       [self updateButton:changedItem];

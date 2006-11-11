@@ -127,10 +127,9 @@ NSString* const CaminoTrueKey = @"true";
 
 
 //Initialization
--(id) init
+- (id)init
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     mParent       = nil;
     mTitle        = [[NSString alloc] init]; //retain count +1
     mKeyword      = [mTitle retain]; //retain count +2
@@ -140,8 +139,8 @@ NSString* const CaminoTrueKey = @"true";
   }
   return self;
 }
- 
--(id) copyWithZone:(NSZone *)zone
+
+- (id)copyWithZone:(NSZone *)zone
 {
   //descend from NSObject - so don't call super
   id bmItemCopy = [[[self class] allocWithZone:zone] init];
@@ -154,7 +153,7 @@ NSString* const CaminoTrueKey = @"true";
   return bmItemCopy;
 }
 
--(void)dealloc
+- (void)dealloc
 {
   [mTitle release];
   [mDescription release];
@@ -166,29 +165,29 @@ NSString* const CaminoTrueKey = @"true";
 }
 
 // Basic properties
--(id) parent
+- (id)parent
 {
   return mParent;
 }
 
--(NSString *) title
+- (NSString *)title
 {
   return mTitle;
 }
 
--(NSString *) itemDescription
+- (NSString *)itemDescription
 {
   return mDescription;
 }
 
--(NSString *) keyword
+- (NSString *)keyword
 {
   return mKeyword;
 }
 
 // if we ask for a UUID, it means we need
-// one.  So generate it if it doesn't exist. 
--(NSString *) UUID
+// one.  So generate it if it doesn't exist.
+- (NSString *)UUID
 {
   if (!mUUID)
     mUUID = [[NSString stringWithUUID] retain];
@@ -197,7 +196,7 @@ NSString* const CaminoTrueKey = @"true";
   return mUUID;
 }
 
--(NSImage *)icon
+- (NSImage *)icon
 {
   return mIcon;
 }
@@ -225,25 +224,22 @@ NSString* const CaminoTrueKey = @"true";
 
   id myParent = [self parent];
   if (myParent && [myParent isKindOfClass:[BookmarkItem class]])
-  {
     return [myParent hasAncestor:inItem];
-  }
 
   return NO;
 }
 
--(void) setParent:(id) aParent
+- (void)setParent:(id)aParent
 {
-  mParent = aParent;	// no reference on the parent, so it better not disappear on us.
+  mParent = aParent;  // no reference on the parent, so it better not disappear on us.
 }
 
--(void) setTitle:(NSString *)aTitle
+- (void)setTitle:(NSString *)aTitle
 {
   if (!aTitle)
     return;
 
-  if (![mTitle isEqualToString:aTitle])
-  {
+  if (![mTitle isEqualToString:aTitle]) {
     [aTitle retain];
     [mTitle release];
     mTitle = aTitle;
@@ -251,13 +247,12 @@ NSString* const CaminoTrueKey = @"true";
   }
 }
 
--(void) setItemDescription:(NSString *)aDescription
+- (void)setItemDescription:(NSString *)aDescription
 {
   if (!aDescription)
     return;
 
-  if (![mDescription isEqualToString:aDescription])
-  {
+  if (![mDescription isEqualToString:aDescription]) {
     [aDescription retain];
     [mDescription release];
     mDescription = aDescription;
@@ -265,13 +260,12 @@ NSString* const CaminoTrueKey = @"true";
   }
 }
 
-- (void) setKeyword:(NSString *)aKeyword
+- (void)setKeyword:(NSString *)aKeyword
 {
   if (!aKeyword)
     return;
 
-  if (![mKeyword isEqualToString:aKeyword])
-  {
+  if (![mKeyword isEqualToString:aKeyword]) {
     [aKeyword retain];
     [mKeyword release];
     mKeyword = aKeyword;
@@ -279,7 +273,7 @@ NSString* const CaminoTrueKey = @"true";
   }
 }
 
--(void) setIcon:(NSImage *)aIcon
+- (void)setIcon:(NSImage *)aIcon
 {
   if (!aIcon)
     return;   // XXX should be allowed to just remove the icon
@@ -291,29 +285,28 @@ NSString* const CaminoTrueKey = @"true";
   [self itemUpdatedNote:kBookmarkItemIconChangedMask];
 }
 
--(void) setUUID:(NSString*)aUUID
+- (void)setUUID:(NSString*)aUUID
 {
   // ignore nil or empty strings
   if (!aUUID || [aUUID length] == 0)
     return;
-  
+
   [aUUID retain];
   [mUUID release];
   mUUID = aUUID;
 }
 
--(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
+- (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
 {
-  switch (tag)
-  {
+  switch (tag) {
     case eBookmarksSearchFieldAll:
       return (([[self title]           rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
               ([[self keyword]         rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
               ([[self itemDescription] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound));
-    
+
     case eBookmarksSearchFieldTitle:
       return ([[self title]            rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
-    
+
     // case eBookmarksSearchFieldURL: // Bookmark subclass has to check this
     case eBookmarksSearchFieldKeyword:
       return ([[self keyword]          rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
@@ -328,40 +321,41 @@ NSString* const CaminoTrueKey = @"true";
 // Helps prevent spamming from itemUpdatedNote:
 // calling with YES will prevent itemUpdatedNote from doing anything
 // and calling with NO will restore itemUpdatedNote and then call it.
--(void) setAccumulateUpdateNotifications:(BOOL)accumulateUpdates
+- (void)setAccumulateUpdateNotifications:(BOOL)accumulateUpdates
 {
-  if (accumulateUpdates)
-  {
+  if (accumulateUpdates) {
     mPendingChangeFlags |= kBookmarkItemAccumulateChangesMask;
   }
-  else
-  {
+  else {
     mPendingChangeFlags &= ~kBookmarkItemAccumulateChangesMask;
     [self itemUpdatedNote:mPendingChangeFlags];   //fire an update to cover the updates that weren't sent
   }
 }
 
--(void) itemUpdatedNote:(unsigned int)inChangeMask
+- (void)itemUpdatedNote:(unsigned int)inChangeMask
 {
   if ([[BookmarkManager sharedBookmarkManager] areChangeNotificationsSuppressed])
     return;   // don't even accumulate the flags. caller is expected to update stuff manually
-    
+
   // don't let 'em change the pending flag
   mPendingChangeFlags |= (inChangeMask & kBookmarkItemEverythingChangedMask);
 
   // if we're just accumulating, return
   if (mPendingChangeFlags & kBookmarkItemAccumulateChangesMask)
     return;
-  
-  NSDictionary*   flagsInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:mPendingChangeFlags] forKey:BookmarkItemChangedFlagsKey];
-  NSNotification* note = [NSNotification notificationWithName:BookmarkItemChangedNotification object:self userInfo:flagsInfo];
+
+  NSDictionary* flagsInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:mPendingChangeFlags]
+                                                        forKey:BookmarkItemChangedFlagsKey];
+  NSNotification* note = [NSNotification notificationWithName:BookmarkItemChangedNotification
+                                                       object:self
+                                                     userInfo:flagsInfo];
   [[NSNotificationCenter defaultCenter] postNotification:note];
   mPendingChangeFlags = 0;
 }
 
 // stub functions to avoid warning
 
--(void) refreshIcon
+- (void)refreshIcon
 {
 }
 
@@ -369,42 +363,42 @@ NSString* const CaminoTrueKey = @"true";
 
 //Reading/writing to & from disk - all just stubs.
 
--(BOOL) readNativeDictionary:(NSDictionary *)aDict
+- (BOOL)readNativeDictionary:(NSDictionary *)aDict
 {
   return NO;
 }
 
--(BOOL) readSafariDictionary:(NSDictionary *)aDict
+- (BOOL)readSafariDictionary:(NSDictionary *)aDict
 {
   return NO;
 }
 
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
+- (BOOL)readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
 {
   return NO;
 }
 
--(void)writeBookmarksMetadataToPath:(NSString*)inPath
+- (void)writeBookmarksMetadataToPath:(NSString*)inPath
 {
   // do nothing, subclasses must override
 }
 
--(void)removeBookmarksMetadataFromPath:(NSString*)inPath
+- (void)removeBookmarksMetadataFromPath:(NSString*)inPath
 {
   // do nothing, subclasses must override
 }
 
--(NSDictionary *)writeNativeDictionary
+- (NSDictionary *)writeNativeDictionary
 {
   return [NSDictionary dictionary];
 }
 
--(NSDictionary *)writeSafariDictionary
+- (NSDictionary *)writeSafariDictionary
 {
   return [NSDictionary dictionary];
 }
 
--(NSString *)writeHTML:(unsigned)aPad
+- (NSString *)writeHTML:(unsigned)aPad
 {
   return @"";
 }

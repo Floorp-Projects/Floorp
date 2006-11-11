@@ -44,7 +44,7 @@
 enum
 {
   kBookmarkItemAccumulateChangesMask    = (1 << 0),
-  
+
   kBookmarkItemTitleChangedMask         = (1 << 1),
   kBookmarkItemDescriptionChangedMask   = (1 << 2),
   kBookmarkItemKeywordChangedMask       = (1 << 3),
@@ -56,7 +56,7 @@ enum
 
   // flags for bookmark folder changes
   kBookmarkItemChildrenChangedMask      = (1 << 9),
-  
+
   // mask of flags that require a save of the bookmarks
   kBookmarkItemSignificantChangeFlagsMask = kBookmarkItemTitleChangedMask |
                                             kBookmarkItemDescriptionChangedMask |
@@ -65,7 +65,7 @@ enum
                                             kBookmarkItemLastVisitChangedMask |
                                             kBookmarkItemStatusChangedMask |
                                             kBookmarkItemNumVisitsChangedMask,
-    
+
   kBookmarkItemEverythingChangedMask    = 0xFFFFFFFE
 };
 
@@ -78,10 +78,10 @@ enum
 
 @interface BookmarkItem : NSObject <NSCopying>
 {
-  id              mParent;	//subclasses will use a BookmarkFolder
-  NSString*       mTitle;       
+  id              mParent;  //subclasses will use a BookmarkFolder
+  NSString*       mTitle;
   NSString*       mDescription;
-  NSString*       mKeyword; 
+  NSString*       mKeyword;
   NSString*       mUUID;
   NSImage*        mIcon;
   unsigned int    mPendingChangeFlags;
@@ -91,19 +91,19 @@ enum
 + (BOOL)bookmarkChangedNotificationUserInfo:(NSDictionary*)inUserInfo containsFlags:(unsigned int)inFlags;
 
 // Setters/Getters
--(id) parent;
--(NSString *) title;
--(NSString *) itemDescription;    // don't use "description"
--(NSString *) keyword;
--(NSImage *) icon;
--(NSString *) UUID;
+- (id)parent;
+- (NSString *)title;
+- (NSString *)itemDescription;    // don't use "description"
+- (NSString *)keyword;
+- (NSImage *)icon;
+- (NSString *)UUID;
 
--(void)	setParent:(id)aParent;    // note that the parent of root items is the BookmarksManager, for some reason
--(void) setTitle:(NSString *)aString;
--(void) setItemDescription:(NSString *)aString;
--(void) setKeyword:(NSString *)aKeyword;
--(void) setIcon:(NSImage *)aIcon;
--(void) setUUID:(NSString*)aUUID;
+- (void)setParent:(id)aParent;    // note that the parent of root items is the BookmarksManager, for some reason
+- (void)setTitle:(NSString *)aString;
+- (void)setItemDescription:(NSString *)aString;
+- (void)setKeyword:(NSString *)aKeyword;
+- (void)setIcon:(NSImage *)aIcon;
+- (void)setUUID:(NSString*)aUUID;
 
 // Status checks
 - (BOOL)isChildOfItem:(BookmarkItem *)anItem;
@@ -122,25 +122,25 @@ enum
   eBookmarksSearchFieldDescription
 };
 
--(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
+- (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
 
 // Notification of Change
--(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates; // does not nest
--(void) itemUpdatedNote:(unsigned int)inChangeMask; // not everything triggers an item update, only certain properties changing
+- (void)setAccumulateUpdateNotifications:(BOOL)suppressUpdates; // does not nest
+- (void)itemUpdatedNote:(unsigned int)inChangeMask; // not everything triggers an item update, only certain properties changing
 
 // Methods called on startup for both bookmark & folder
--(void) refreshIcon;
+- (void)refreshIcon;
 
   // for reading/writing to disk - unimplemented in BookmarkItem.
--(BOOL) readNativeDictionary:(NSDictionary *)aDict;
--(BOOL) readSafariDictionary:(NSDictionary *)aDict;
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar;
+- (BOOL)readNativeDictionary:(NSDictionary *)aDict;
+- (BOOL)readSafariDictionary:(NSDictionary *)aDict;
+- (BOOL)readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar;
 
--(void)writeBookmarksMetadataToPath:(NSString*)inPath;
--(void)removeBookmarksMetadataFromPath:(NSString*)inPath;
--(NSDictionary *)writeNativeDictionary;
--(NSDictionary *)writeSafariDictionary;
--(NSString *)writeHTML:(unsigned)aPad;
+- (void)writeBookmarksMetadataToPath:(NSString*)inPath;
+- (void)removeBookmarksMetadataFromPath:(NSString*)inPath;
+- (NSDictionary *)writeNativeDictionary;
+- (NSDictionary *)writeSafariDictionary;
+- (NSString *)writeHTML:(unsigned)aPad;
 
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedTitle;

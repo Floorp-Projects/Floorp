@@ -56,7 +56,7 @@
   AddressBookManager*   mAddressBookManager;
 }
 
--(id)initWithBookmarkManager:(BookmarkManager *)manager;
--(void)postStartupInitialization:(BookmarkManager *)manager;
+- (id)initWithBookmarkManager:(BookmarkManager *)manager;
+- (void)postStartupInitialization:(BookmarkManager *)manager;
 
 @end
