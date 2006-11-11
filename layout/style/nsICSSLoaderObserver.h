@@ -55,7 +55,8 @@ public:
   /**
    * StyleSheetLoaded is called after aSheet is marked complete and before any
    * load events associated with aSheet are fired.
-   * @param aSheet the sheet that was loaded
+   * @param aSheet the sheet that was loaded. Guaranteed to always be
+   *        non-null, even if aStatus indicates failure.
    * @param aWasAlternate whether the sheet was an alternate.  This will always
    *        match the value LoadStyleLink or LoadInlineStyle returned in
    *        aIsAlternate if one of those methods were used to load the sheet,

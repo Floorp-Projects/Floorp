@@ -281,6 +281,9 @@ public:
   NS_IMETHOD LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
                            nsICSSStyleSheet** aSheet);
 
+  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+                       nsICSSStyleSheet** aSheet);
+
   NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver);
 
   // stop loading all sheets
