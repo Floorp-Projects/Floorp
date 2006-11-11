@@ -22,7 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=359657
 function runTest() {
   var span = document.createElement("span");
   $("test").insertBefore(span, $("test").firstChild);
-  ok($("test").firstChild === span);
+  ok(true, "Reachability", "We should get here without crashing");
+  ok($("test").firstChild === span, "First child is correct",
+     "First child should be the node we inserted");
 }
 </script>
 <div>
