@@ -2539,7 +2539,52 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
 
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
-
+  if (aPrevFrame) {
+    const nsStyleDisplay* prevDisplay = aPrevFrame->GetStyleDisplay();
+    if (display->mDisplay != prevDisplay->mDisplay) {
+      // the previous frame is not valid, see comment at ::AppendFrames
+      nsIFrame* pseudoFrame = aFrameList;
+      nsIContent* parentContent = GetContent();
+      nsIContent* content;
+      aPrevFrame = nsnull;
+      while (pseudoFrame  && (parentContent ==
+                              (content = pseudoFrame->GetContent()))) {
+        pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
+      }
+      nsCOMPtr<nsIContent> container = content->GetParent();
+      PRInt32 newIndex = container->IndexOf(content);
+      nsIFrame* kidFrame;
+      PRBool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==
+                           display->mDisplay);
+      if (isColGroup) {
+        kidFrame = mColGroups.FirstChild();
+      }
+      else {
+        kidFrame = mFrames.FirstChild();
+      }
+      PRInt32 lastIndex = 0;
+      while (kidFrame) {
+        if (isColGroup) {
+          nsTableColGroupType groupType =
+            ((nsTableColGroupFrame *)kidFrame)->GetColType();
+          if (eColGroupAnonymousCell == groupType) {
+            continue;
+          }
+        }
+        pseudoFrame = kidFrame;
+        while (pseudoFrame  && (parentContent ==
+                                (content = pseudoFrame->GetContent()))) {
+          pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
+        }
+        PRInt32 index = container->IndexOf(content);
+        if (index > lastIndex && index < newIndex) {
+          lastIndex = index;
+          aPrevFrame = kidFrame;
+        }
+        kidFrame = kidFrame->GetNextSibling();
+      }
+    }
+  }
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
     NS_ASSERTION(!aListName || aListName == nsLayoutAtoms::colGroupList,
                  "unexpected child list");
