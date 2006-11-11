@@ -742,6 +742,7 @@ nsXftEntry::nsXftEntry(FcPattern *aFontPattern)
   mFaceIndex = 0;
 
   char *fcResult;
+  int fcIndex;
 
   if (FcPatternGetString(aFontPattern, FC_FILE, 0, (FcChar8 **) &fcResult)
       == FcResultMatch)     
@@ -754,6 +755,10 @@ nsXftEntry::nsXftEntry(FcPattern *aFontPattern)
   if (FcPatternGetString(aFontPattern, FC_STYLE, 0, (FcChar8 **) &fcResult)
       == FcResultMatch)
     mStyleName = fcResult;
+
+  if (FcPatternGetInteger(aFontPattern, FC_INDEX, 0, &fcIndex)
+      == FcResultMatch)
+    mFaceIndex = fcIndex;
 }
 
 
