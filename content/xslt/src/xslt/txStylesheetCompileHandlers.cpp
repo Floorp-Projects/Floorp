@@ -431,7 +431,7 @@ txFnStartElementIgnore(PRInt32 aNamespaceID,
                        PRInt32 aAttrCount,
                        txStylesheetCompilerState& aState)
 {
-    if (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp()) {
+    if (!aState.fcp()) {
         clearAttributes(aAttributes, aAttrCount);
     }
 
@@ -452,7 +452,7 @@ txFnStartElementSetIgnore(PRInt32 aNamespaceID,
                           PRInt32 aAttrCount,
                           txStylesheetCompilerState& aState)
 {
-    if (aNamespaceID == kNameSpaceID_XSLT && !aState.fcp()) {
+    if (!aState.fcp()) {
         clearAttributes(aAttributes, aAttrCount);
     }
 
