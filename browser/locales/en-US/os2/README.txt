@@ -99,14 +99,15 @@ OS/2 Installation Instructions
 
      1. Click the "Zip" link on the site you're downloading Firefox from
      to download the ZIP package to your machine. This file is typically called 
-     firefox-os2-*.zip where the "*" is replaced by the Firefox version.
+     firefox-x.x.x.en-US.os2.zip where the "x.x.x" is replaced by the Firefox
+     version.
 
      2. Navigate to where you downloaded the file and unpack it using your
      favorite unzip tool.
 
      3. Keep in mind that the unzip process creates a directory "firefox"
-     below the location you point it to, i.e. 
-        unzip firefox-os2-1.0.1.zip -d c:\firefox-1.0.1
+     below the location you point it to, e.g.
+        unzip firefox-1.0.1.en-US.os2.zip -d c:\firefox-1.0.1
      will unpack Firefox into c:\firefox-1.0.1\firefox.
 
      4. Make sure that you are _not_ unpacking over an old installation. This is
