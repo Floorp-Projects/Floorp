@@ -40,7 +40,7 @@ START("Undeclaring namespace prefix should cause parse error");
 var bug = 292863;
 var summary = 'Undeclaring namespace prefix should cause parse error';
 var actual = 'no error';
-var expect = 'no error';
+var expect = 'error';
 
 printBugNumber (bug);
 printStatus (summary);
@@ -54,7 +54,7 @@ try
 }
 catch(e)
 {
-    actual = e + '';
+    actual = 'error';
 }
 
 TEST(1, expect, actual);
