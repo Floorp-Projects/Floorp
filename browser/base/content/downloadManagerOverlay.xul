@@ -35,11 +35,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+
 <overlay id="downloadManagerOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 
 <window id="downloadManager">
 
