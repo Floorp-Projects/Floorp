@@ -423,11 +423,11 @@ nsStyleSet::AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
   if (!aCurrLevelNode || aCurrLevelNode == aLastPrevLevelNode)
     return;
 
-  AssertNoImportantRules(aCurrLevelNode->GetParent(), aLastPrevLevelNode);
+  AssertNoCSSRules(aCurrLevelNode->GetParent(), aLastPrevLevelNode);
 
   nsIStyleRule *rule = aCurrLevelNode->GetRule();
   nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
-  NS_ASSERTION(!cssRule, "Unexpected CSS rule");
+  NS_ASSERTION(!cssRule || !cssRule->Selector(), "Unexpected CSS rule");
 }
 #endif
 
@@ -493,6 +493,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
   AddImportantRules(lastUserRN, lastPresHintRN); //user
 #ifdef DEBUG
+  AssertNoCSSRules(lastPresHintRN, lastAgentRN);
   AssertNoImportantRules(lastPresHintRN, lastAgentRN); // preshints
 #endif
   AddImportantRules(lastAgentRN, nsnull);     //agent
