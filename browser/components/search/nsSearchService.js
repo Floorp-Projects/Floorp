@@ -149,6 +149,7 @@ const OS_PARAM_OUTPUT_ENCODING = /\{outputEncoding\??\}/g;
 // Default values
 const OS_PARAM_LANGUAGE_DEF         = "*";
 const OS_PARAM_OUTPUT_ENCODING_DEF  = "UTF-8";
+const OS_PARAM_INPUT_ENCODING_DEF   = "UTF-8";
 
 // "Unsupported" OpenSearch parameters. For example, we don't support
 // page-based results, so if the engine requires that we send the "page index"
@@ -1511,6 +1512,9 @@ Engine.prototype = {
    */
   _parseAsOpenSearch: function SRCH_ENG_parseAsOS() {
     var doc = this._data;
+
+    // The OpenSearch spec sets a default value for the input encoding.
+    this._queryCharset = OS_PARAM_INPUT_ENCODING_DEF;
 
     for (var i = 0; i < doc.childNodes.length; ++i) {
       var child = doc.childNodes[i];
