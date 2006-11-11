@@ -95,7 +95,9 @@ public:
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
     return &Attrs()[aPos].mValue;
   }
-  void RemoveAttrAt(PRUint32 aPos);
+  // Remove the attr at position aPos.  The value of the attr is placed in
+  // aValue; any value that was already in aValue is destroyed.
+  void RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue);
   const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const;
   

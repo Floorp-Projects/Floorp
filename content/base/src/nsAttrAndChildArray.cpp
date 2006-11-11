@@ -427,14 +427,16 @@ nsAttrAndChildArray::SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue)
 
 
 nsresult
-nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
+nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue)
 {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
   PRUint32 mapped = MappedAttrCount();
   if (aPos < mapped) {
     if (mapped == 1) {
-      // We're removing the last mapped attribute.
+      // We're removing the last mapped attribute.  Can't swap in this
+      // case; have to copy.
+      aValue.SetTo(*mImpl->mMappedAttrs->AttrAt(0));
       NS_RELEASE(mImpl->mMappedAttrs);
 
       return NS_OK;
@@ -445,12 +447,13 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
                                       getter_AddRefs(mapped));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mapped->RemoveAttrAt(aPos);
+    mapped->RemoveAttrAt(aPos, aValue);
 
     return MakeMappedUnique(mapped);
   }
 
   aPos -= mapped;
+  ATTRS(mImpl)[aPos].mValue.SwapValueWith(aValue);
   ATTRS(mImpl)[aPos].~InternalAttr();
 
   PRUint32 slotCount = AttrSlotCount();
