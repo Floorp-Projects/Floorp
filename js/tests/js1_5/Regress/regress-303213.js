@@ -43,7 +43,8 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 printStatus('This bug passes if no crash occurs');
-expectExitCode(3);
+
+expectExitCode(5);
 
 var s=String.fromCharCode(257);
 
