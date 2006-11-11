@@ -144,6 +144,10 @@ nsINode::nsSlots::~nsSlots()
     mChildNodes->DropReference();
     NS_RELEASE(mChildNodes);
   }
+
+  if (mWeakReference) {
+    mWeakReference->NoticeNodeDestruction();
+  }
 }
 
 //----------------------------------------------------------------------
@@ -608,6 +612,54 @@ nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
   *aReturn = aNamespaceURI.Equals(defaultNamespace);
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS1(nsNodeWeakReference,
+                   nsIWeakReference)
+
+nsNodeWeakReference::~nsNodeWeakReference()
+{
+  if (mNode) {
+    NS_ASSERTION(mNode->GetSlots() &&
+                 mNode->GetSlots()->mWeakReference == this,
+                 "Weak reference has wrong value");
+    mNode->GetSlots()->mWeakReference = nsnull;
+  }
+}
+
+NS_IMETHODIMP
+nsNodeWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
+{
+  return mNode ? mNode->QueryInterface(aIID, aInstancePtr) :
+                 NS_ERROR_NULL_POINTER;
+}
+
+
+NS_INTERFACE_MAP_BEGIN(nsNodeSupportsWeakRefTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END_AGGREGATED(mNode)
+
+NS_IMPL_ADDREF(nsNodeSupportsWeakRefTearoff)
+NS_IMPL_RELEASE(nsNodeSupportsWeakRefTearoff)
+
+NS_IMETHODIMP
+nsNodeSupportsWeakRefTearoff::GetWeakReference(nsIWeakReference** aInstancePtr)
+{
+  nsINode::nsSlots* slots = mNode->GetSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mWeakReference) {
+    slots->mWeakReference = new nsNodeWeakReference(mNode);
+    NS_ENSURE_TRUE(slots->mWeakReference, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*aInstancePtr = slots->mWeakReference);
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
 
 nsDOMEventRTTearoff *
 nsDOMEventRTTearoff::mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
@@ -2963,6 +3015,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
+                                 new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 

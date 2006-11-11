@@ -112,6 +112,8 @@ public:
 class nsINode : public nsINode_base {
 public:
   friend class nsNodeUtils;
+  friend class nsNodeWeakReference;
+  friend class nsNodeSupportsWeakRefTearoff;
 
 #ifdef MOZILLA_INTERNAL_API
   nsINode(nsINodeInfo* aNodeInfo)
@@ -551,7 +553,8 @@ public:
   public:
     nsSlots(PtrBits aFlags)
       : mFlags(aFlags),
-        mChildNodes(nsnull)
+        mChildNodes(nsnull),
+        mWeakReference(nsnull)
     {
     }
 
@@ -579,6 +582,11 @@ public:
      * MSVC 7 doesn't like this as an nsRefPtr
      */
     nsChildContentList* mChildNodes;
+
+    /**
+     * Weak reference to this node
+     */
+    nsNodeWeakReference* mWeakReference;
   };
 
 #ifdef DEBUG
