@@ -121,7 +121,8 @@ var actual = 'No Crash';
 printBugNumber(bug);
 printStatus(summary);
 
-expectExitCode(3);
+expectExitCode(5);
+
 var IN_RHINO = inRhino();
 
 if (!IN_RHINO)

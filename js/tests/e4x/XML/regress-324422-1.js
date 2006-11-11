@@ -49,7 +49,7 @@ if (typeof document == 'undefined')
 {
     printStatus ("Expect possible out of memory error");
     expectExitCode(0);
-    expectExitCode(3);
+    expectExitCode(5);
 }
 var str = '<fu>x</fu>';
 
