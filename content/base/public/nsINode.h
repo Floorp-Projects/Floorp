@@ -56,6 +56,8 @@ class nsIPrincipal;
 class nsVoidArray;
 class nsIMutationObserver;
 class nsChildContentList;
+class nsNodeWeakReference;
+class nsNodeSupportsWeakRefTearoff;
 
 // This bit will be set if the node doesn't have nsSlots
 #define NODE_DOESNT_HAVE_SLOTS       0x00000001U

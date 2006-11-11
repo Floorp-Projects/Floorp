@@ -164,6 +164,7 @@ nsGenericDOMDataNode::GetChildNodes(nsIDOMNodeList** aChildNodes)
   if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
     NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(slots->mChildNodes);
   }
 
   NS_ADDREF(*aChildNodes = slots->mChildNodes);
