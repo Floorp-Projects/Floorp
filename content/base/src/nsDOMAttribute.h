@@ -56,23 +56,6 @@
 
 class nsDOMAttribute;
 
-// bogus child list for an attribute
-class nsAttributeChildList : public nsGenericDOMNodeList
-{
-public:
-  nsAttributeChildList(nsDOMAttribute* aAttribute);
-  virtual ~nsAttributeChildList();
-
-  // interface nsIDOMNodeList
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-  void DropReference();
-
-protected:
-  nsDOMAttribute* mAttribute;
-};
-
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
 class nsDOMAttribute : public nsIDOMAttr,
@@ -82,7 +65,6 @@ class nsDOMAttribute : public nsIDOMAttr,
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,
                  const nsAString& aValue);
-  virtual ~nsDOMAttribute();
 
   NS_DECL_ISUPPORTS
 
@@ -136,7 +118,6 @@ private:
   // XXX For now, there's only a single child - a text
   // element representing the value
   nsCOMPtr<nsIContent> mChild;
-  nsAttributeChildList* mChildList;
 
   nsIContent *GetContentInternal() const
   {

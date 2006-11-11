@@ -135,7 +135,16 @@ DebugListContentTree(nsIContent* aElement)
 PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 PRBool nsIContent::sTabFocusModelAppliesToXUL = PR_FALSE;
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+
 //----------------------------------------------------------------------
+
+nsINode::nsSlots::~nsSlots()
+{
+  if (mChildNodes) {
+    mChildNodes->DropReference();
+    NS_RELEASE(mChildNodes);
+  }
+}
 
 //----------------------------------------------------------------------
 
@@ -876,10 +885,6 @@ nsGenericElement::nsDOMSlots::nsDOMSlots(PtrBits aFlags)
 
 nsGenericElement::nsDOMSlots::~nsDOMSlots()
 {
-  if (mChildNodes) {
-    mChildNodes->DropReference();
-  }
-
   if (mStyle) {
     mStyle->DropReference();
   }
@@ -1228,7 +1233,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 nsresult
 nsGenericElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsDOMSlots *slots = GetDOMSlots();
+  nsSlots *slots = GetSlots();
 
   if (!slots) {
     return NS_ERROR_OUT_OF_MEMORY;

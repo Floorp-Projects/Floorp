@@ -882,13 +882,6 @@ public:
     virtual ~nsDOMSlots();
 
     /**
-     * An object implementing nsIDOMNodeList for this content (childNodes)
-     * @see nsIDOMNodeList
-     * @see nsGenericHTMLElement::GetChildNodes
-     */
-    nsRefPtr<nsChildContentList> mChildNodes;
-
-    /**
      * The .style attribute (an interface that forwards to the actual
      * style rules)
      * @see nsGenericHTMLElement::GetStyle */
