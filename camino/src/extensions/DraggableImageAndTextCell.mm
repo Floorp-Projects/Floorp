@@ -39,11 +39,6 @@
 
 #import "DraggableImageAndTextCell.h"
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-@class NSShadow;
-NSString* const NSShadowAttributeName = @"NSShadow";
-#endif
-
 @interface DraggableImageAndTextCell(Private)
 - (NSAttributedString*)savedStandardTitle;
 - (void)setSavedStandardTitle:(NSAttributedString*)title;
