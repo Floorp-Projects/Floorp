@@ -37,10 +37,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<?xml-stylesheet href="chrome://messenger/skin/addressbook/cardDialog.css" type="text/css"?>
-
-<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/addressbook/abNewCardDialog.dtd">
-
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -51,10 +47,6 @@
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   </stringbundleset>
-
-  <!-- move needed functions into a single js file -->
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/>
 
   <vbox id="editcard"/>
 </dialog>

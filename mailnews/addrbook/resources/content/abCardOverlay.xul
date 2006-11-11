@@ -139,6 +139,13 @@
               <textbox id="SecondEmail" flex="1" class="uri-element"/>
             </hbox>
           </hbox>
+          <hbox id="screenNameContainer">
+            <spacer flex="1"/>
+            <label control="ScreenName" value="&ScreenName.label;" accesskey="&ScreenName.accesskey;" class="CardEditLabel"/>
+            <hbox class="CardEditWidth">
+              <textbox id="ScreenName" flex="1"/>
+            </hbox>
+          </hbox>          
           <hbox>
             <vbox valign="middle">
               <label control="PreferMailFormatPopup" value="&PreferMailFormat.label;" accesskey="&PreferMailFormat.accesskey;"/>
@@ -152,13 +159,7 @@
               </menupopup>
             </menulist>
           </hbox>
-          <hbox id="screenNameContainer">
-            <spacer flex="1"/>
-            <label control="ScreenName" value="&ScreenName.label;" accesskey="&ScreenName.accesskey;" class="CardEditLabel"/>
-            <hbox class="CardEditWidth">
-              <textbox id="ScreenName" flex="1"/>
-            </hbox>
-          </hbox>
+          <checkbox id="allowRemoteContent" label="&allowRemoteContent.label;" accesskey="&allowRemoteContent.accesskey;"/>
         </vbox>
       </groupbox>
 

@@ -38,7 +38,7 @@
 
 const kNonVcardFields =
         ["nickNameContainer", "secondaryEmailContainer", "screenNameContainer",
-         "homeAddressGroup", "customFields"];
+         "homeAddressGroup", "customFields", "allowRemoteContent"];
 
 const kPhoneticFields =
         ["PhoneticLastName", "PhoneticLabel1", "PhoneticSpacer1",
@@ -123,7 +123,7 @@ function OnLoadNewCard()
       else if (directory.operations & directory.opWrite)
         gEditCard.selectedAB = window.arguments[0].selectedAB;
     }
-
+    
     // we may have been given properties to pre-initialize the window with....
     // we'll fill these in here...
     if ("primaryEmail" in window.arguments[0])
@@ -138,6 +138,10 @@ function OnLoadNewCard()
     }
     if ("aimScreenName" in window.arguments[0])
       gEditCard.card.aimScreenName = window.arguments[0].aimScreenName;
+    
+    if ("allowRemoteContent" in window.arguments[0])
+      document.getElementById('allowRemoteContent').checked = 
+        window.arguments[0].allowRemoteContent == 'true';
     
     if ("okCallback" in window.arguments[0])
       gOkCallback = window.arguments[0].okCallback;
@@ -165,7 +169,7 @@ function OnLoadNewCard()
   if (gHideABPicker && abPopup) {
     abPopup.hidden = true;
     document.getElementById("abPopupLabel").hidden = true;
-  }
+  } 
 
   SetCardDialogTitle(gEditCard.card.displayName);
     
@@ -301,6 +305,10 @@ function OnLoadEditCard()
         document.documentElement.buttons = "accept";
         document.documentElement.removeAttribute("ondialogaccept");
       }
+      
+      // hide  remote content in HTML field for remote directories
+      if (directory.isRemote)
+        document.getElementById('allowRemoteContent').hidden = true;
     }
   }
 }
@@ -418,6 +426,10 @@ function GetCardValues(cardproperty, doc)
   var popup = document.getElementById("PreferMailFormatPopup");
   if (popup)
     popup.value = cardproperty.preferMailFormat;
+    
+  var allowRemoteContentEl = document.getElementById("allowRemoteContent");
+  if (allowRemoteContentEl)
+    allowRemoteContentEl.checked = cardproperty.allowRemoteContent;
 
   // get phonetic fields if exist
   try {
@@ -455,6 +467,10 @@ function CheckAndSetCardValues(cardproperty, doc, check)
   var popup = document.getElementById("PreferMailFormatPopup");
   if (popup)
     cardproperty.preferMailFormat = popup.value;
+    
+  var allowRemoteContentEl = document.getElementById("allowRemoteContent");
+  if (allowRemoteContentEl)
+    cardproperty.allowRemoteContent = allowRemoteContentEl.checked;    
 
   // set phonetic fields if exist
   try {

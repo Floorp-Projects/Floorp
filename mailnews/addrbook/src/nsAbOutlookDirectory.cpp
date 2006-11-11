@@ -1341,9 +1341,3 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     NS_ADDREF(*aNewCard) ;
     return retCode ;
 }
-
-
-
-
-
-

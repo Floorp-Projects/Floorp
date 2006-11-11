@@ -163,6 +163,7 @@ nsAddrDatabase::nsAddrDatabase()
       m_LastModDateColumnToken(0),
       m_MailFormatColumnToken(0),
       m_PopularityIndexColumnToken(0),
+      m_AllowRemoteContentColumnToken(0),
       m_AddressCharSetColumnToken(0),
       m_LastRecordKey(0),
       m_dbDirectory(nsnull)
@@ -1220,6 +1221,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
       m_mdbStore->StringToToken(m_mdbEnv,  k2ndEmailColumn, &m_2ndEmailColumnToken);
       m_mdbStore->StringToToken(m_mdbEnv,  kPreferMailFormatColumn, &m_MailFormatColumnToken);
       m_mdbStore->StringToToken(m_mdbEnv,  kPopularityIndexColumn, &m_PopularityIndexColumnToken);
+      m_mdbStore->StringToToken(m_mdbEnv,  kAllowRemoteContentColumn, &m_AllowRemoteContentColumnToken);
       m_mdbStore->StringToToken(m_mdbEnv,  kWorkPhoneColumn, &m_WorkPhoneColumnToken);
       m_mdbStore->StringToToken(m_mdbEnv,  kHomePhoneColumn, &m_HomePhoneColumnToken);
       m_mdbStore->StringToToken(m_mdbEnv,  kFaxColumn, &m_FaxColumnToken);
@@ -1351,6 +1353,10 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
     PRUint32 popularityIndex = 0;
     card->GetPopularityIndex(&popularityIndex);
     AddPopularityIndex(cardRow, popularityIndex);
+
+    PRBool allowRemoteContent = PR_FALSE;
+    card->GetAllowRemoteContent(&allowRemoteContent);
+    AddAllowRemoteContent(cardRow, allowRemoteContent);
     
     card->GetWorkPhone(getter_Copies(unicodeStr));
     AddWorkPhone(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
@@ -2674,6 +2680,11 @@ NS_IMETHODIMP nsAddrDatabase::InitCardFromRow(nsIAbCard *newCard, nsIMdbRow* car
     err = GetIntColumn(cardRow, m_PopularityIndexColumnToken, &popularityIndex, 0);
     if (NS_SUCCEEDED(err))
         newCard->SetPopularityIndex(popularityIndex);
+
+    PRBool allowRemoteContent;
+    err = GetBoolColumn(cardRow, m_AllowRemoteContentColumnToken, &allowRemoteContent);
+    if (NS_SUCCEEDED(err))
+        newCard->SetAllowRemoteContent(allowRemoteContent);
 
     err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
     if (NS_SUCCEEDED(err) && !tempString.IsEmpty())

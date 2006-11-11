@@ -552,7 +552,6 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCard(nsIAbCard *cards, PRBool *hasCard)
   {
     if(NS_SUCCEEDED(rv))
       rv = mDatabase->ContainsCard(cards, hasCard);
-
   }
   return rv;
 }
@@ -971,8 +970,20 @@ nsresult nsAbMDBDirectory::GetAbDatabase()
 
 NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists)
 {
+  nsCOMPtr<nsIAbCard> card;
+  nsresult rv = CardForEmailAddress(aEmailAddress, getter_AddRefs(card));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  *aCardExists = card ? PR_TRUE : PR_FALSE;
+}
+
+NS_IMETHODIMP nsAbMDBDirectory::CardForEmailAddress(const char * aEmailAddress, nsIAbCard ** aAbCard)
+{
+  NS_ENSURE_ARG_POINTER(aAbCard);
+  NS_ENSURE_ARG_POINTER(aEmailAddress);
+
   nsresult rv = NS_OK;
-  *aCardExists = PR_FALSE;
+  *aAbCard = NULL;
 
   if (!mDatabase)
     rv = GetAbDatabase();
@@ -983,11 +994,8 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAbCard> card; 
-  mDatabase->GetCardFromAttribute(this, kLowerPriEmailColumn /* see #196777 */, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(card));
-  if (card)
-    *aCardExists = PR_TRUE;
-  else 
+  mDatabase->GetCardFromAttribute(this, kLowerPriEmailColumn /* see #196777 */, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, aAbCard);
+  if (!*aAbCard) 
   {
     // fix for bug #187239
     // didn't find it as the primary email?  try again, with k2ndEmailColumn ("Additional Email")
@@ -995,9 +1003,8 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
     // TODO bug #198731
     // unlike the kPriEmailColumn, we don't have kLower2ndEmailColumn
     // so we will still suffer from bug #196777 for "additional emails"
-    mDatabase->GetCardFromAttribute(this, k2ndEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(card));
-    if (card)
-      *aCardExists = PR_TRUE;
+    mDatabase->GetCardFromAttribute(this, k2ndEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, aAbCard);
   }
+
   return NS_OK;
 }

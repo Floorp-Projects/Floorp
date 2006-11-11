@@ -126,6 +126,7 @@ protected:
 	PRUint32 m_LastModDate;
 	PRUint32 m_PreferMailFormat;
 	PRUint32 m_PopularityIndex;
+  PRBool   m_AllowRemoteContent;
 
 	PRBool   m_IsMailList;
 	nsCString m_MailListURI;

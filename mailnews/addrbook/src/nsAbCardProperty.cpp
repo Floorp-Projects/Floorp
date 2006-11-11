@@ -123,11 +123,12 @@ static const AppendItem CUSTOM_ATTRS_ARRAY[] = {
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
-	m_LastModDate = 0;
+  m_LastModDate = 0;
 
-	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
-	m_PopularityIndex = 0;
-	m_IsMailList = PR_FALSE;
+  m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
+  m_PopularityIndex = 0;
+  m_AllowRemoteContent = PR_FALSE;
+  m_IsMailList = PR_FALSE;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
@@ -161,6 +162,18 @@ NS_IMETHODIMP nsAbCardProperty::GetPopularityIndex(PRUint32 *aPopularityIndex)
 NS_IMETHODIMP nsAbCardProperty::SetPopularityIndex(PRUint32 aPopularityIndex)
 {
   m_PopularityIndex = aPopularityIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetAllowRemoteContent(PRBool *aAllowRemoteContent)
+{
+  *aAllowRemoteContent = m_AllowRemoteContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetAllowRemoteContent(PRBool aAllowRemoteContent)
+{
+  m_AllowRemoteContent = aAllowRemoteContent;
   return NS_OK;
 }
 
@@ -222,8 +235,16 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
       rv = GetAimScreenName(value);
       break;
     case 'A':
-      // AnniversaryYear, AnniversaryMonth, AnniversaryDay
+      // AllowRemoteContent, AnniversaryYear, AnniversaryMonth, AnniversaryDay
       switch (attrname[11]) {
+        case 'C':
+        {
+          PRBool allowRemoteContent = PR_FALSE;
+          GetAllowRemoteContent(&allowRemoteContent);
+          *value = allowRemoteContent ? ToNewUnicode(NS_LITERAL_STRING("true")) :
+                     ToNewUnicode(NS_LITERAL_STRING("false"));
+          break;
+        }
         case 'Y':
           rv = GetAnniversaryYear(value);
           break;
@@ -484,8 +505,11 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
       rv = SetAimScreenName(value);
       break;
     case 'A':
-      // AnniversaryYear, AnniversaryMonth, AnniversaryDay
-      switch (attrname[5]) {
+      // AllowRemoteContent, AnniversaryYear, AnniversaryMonth, AnniversaryDay
+      switch (attrname[11]) {
+        case 'C':
+          SetAllowRemoteContent(value[0] == 't' || value[0] == 'T');
+          break;
         case 'Y':
           rv = SetAnniversaryYear(value);
           break;
@@ -496,8 +520,8 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
           rv = SetAnniversaryDay(value);
           break;
         default:
-      rv = NS_ERROR_UNEXPECTED;
-      break;
+          rv = NS_ERROR_UNEXPECTED;
+          break;
       }
       break;
     case 'B':
@@ -1170,6 +1194,10 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	PRUint32 popularityIndex;
 	srcCard->GetPopularityIndex(&popularityIndex);
 	SetPopularityIndex(popularityIndex);
+
+  PRBool allowRemoteContent = PR_FALSE;
+  srcCard->GetAllowRemoteContent(&allowRemoteContent);
+  SetAllowRemoteContent(allowRemoteContent);
 
 	srcCard->GetWorkPhone(getter_Copies(str));
 	SetWorkPhone(str);

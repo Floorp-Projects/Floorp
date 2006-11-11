@@ -182,3 +182,8 @@ NS_IMETHODIMP nsAbMDBDirProperty::HasCardForEmailAddress(const char * aEmailAddr
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP nsAbMDBDirProperty::CardForEmailAddress(const char * aEmailAddress, nsIAbCard ** aAbCard)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

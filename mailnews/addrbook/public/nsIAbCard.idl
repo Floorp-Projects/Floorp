@@ -44,7 +44,7 @@ interface nsIAbPreferMailFormat {
     const unsigned long html      = 2; 
 }; 
 
-[scriptable, uuid(f1c34c6e-a211-4aa6-bdb6-e200c58db1d0)]
+[scriptable, uuid(6B46BDD5-10DB-44f4-99C9-C7FFE0D3D954)]
 interface nsIAbCard : nsISupports {
 	// Card properties
 	attribute wstring firstName;
@@ -114,6 +114,10 @@ interface nsIAbCard : nsISupports {
 	 * mail list
 	 */
 	attribute string mailListURI;
+  /**
+   * allowRemoteContent to be displayed in HTML mail received from this contact.
+   */
+  attribute boolean allowRemoteContent;
 
 	wstring getCardValue(in string name);
 

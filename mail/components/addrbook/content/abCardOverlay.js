@@ -38,7 +38,7 @@
 
 const kNonVcardFields =
         ["nickNameContainer", "secondaryEmailContainer", "screenNameContainer",
-         "homeAddressGroup", "customFields"];
+         "homeAddressGroup", "customFields", "allowRemoteContent"];
 
 const kPhoneticFields =
         ["PhoneticLastName", "PhoneticLabel1", "PhoneticSpacer1",
@@ -140,6 +140,10 @@ function OnLoadNewCard()
     if ("aimScreenName" in window.arguments[0])
       gEditCard.card.aimScreenName = window.arguments[0].aimScreenName;
     
+    if ("allowRemoteContent" in window.arguments[0])
+        document.getElementById('allowRemoteContent').checked = 
+          window.arguments[0].allowRemoteContent == 'true';
+    
     if ("okCallback" in window.arguments[0])
       gOkCallback = window.arguments[0].okCallback;
 
@@ -234,11 +238,12 @@ function EditCardOKButton()
 
   gEditCard.card.editCardToDatabase(gEditCard.abURI);
   
-  for (i=0; i<foundDirectoriesCount; i++) {
+  for (i=0; i < foundDirectoriesCount; i++) {
       // Update the addressLists item for this card
       foundDirectories[i].directory.addressLists.
               SetElementAt(foundDirectories[i].index, gEditCard.card);
   }
+                                        
   NotifySaveListeners();
 
   // callback to allow caller to update
@@ -297,11 +302,15 @@ function OnLoadEditCard()
         document.getElementById(kPhoneticFields[3]).readonly = true;
 
         // Also disable the mail format popup.
-        document.getElementById("PreferMailFormatPopup").disabled = true;
+        document.getElementById("PreferMailFormatPopup").disabled = true;      
 
         document.documentElement.buttons = "accept";
         document.documentElement.removeAttribute("ondialogaccept");
       }
+      
+      // hide  remote content in HTML field for remote directories
+      if (directory.isRemote)
+        document.getElementById('allowRemoteContent').hidden = true;
     }
   }
 }
@@ -419,6 +428,10 @@ function GetCardValues(cardproperty, doc)
   var popup = document.getElementById("PreferMailFormatPopup");
   if (popup)
     popup.value = cardproperty.preferMailFormat;
+    
+  var allowRemoteContentEl = document.getElementById("allowRemoteContent");
+  if (allowRemoteContentEl)
+    allowRemoteContentEl.checked = cardproperty.allowRemoteContent;
 
   // get phonetic fields if exist
   try {
@@ -456,7 +469,11 @@ function CheckAndSetCardValues(cardproperty, doc, check)
   var popup = document.getElementById("PreferMailFormatPopup");
   if (popup)
     cardproperty.preferMailFormat = popup.value;
-
+    
+  var allowRemoteContentEl = document.getElementById("allowRemoteContent");
+  if (allowRemoteContentEl)
+    cardproperty.allowRemoteContent = allowRemoteContentEl.checked;
+    
   // set phonetic fields if exist
   try {
     cardproperty.phoneticFirstName = doc.getElementById("PhoneticFirstName").value;

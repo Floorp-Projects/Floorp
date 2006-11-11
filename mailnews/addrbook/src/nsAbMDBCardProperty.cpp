@@ -162,6 +162,10 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
   srcCard->GetPopularityIndex(&popularityIndex);
   SetPopularityIndex(popularityIndex);
 
+  PRBool allowRemoteContent = PR_FALSE;
+  srcCard->GetAllowRemoteContent(&allowRemoteContent);
+  SetAllowRemoteContent(allowRemoteContent);
+
 	srcCard->GetWorkPhone(getter_Copies(str));
 	SetWorkPhone(str);
 	srcCard->GetHomePhone(getter_Copies(str));
