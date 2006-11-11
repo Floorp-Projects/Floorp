@@ -1883,6 +1883,15 @@ function my_netdisconnect (e)
                               e.server.getURL()]);
                 break;
 
+            case NS_ERROR_UNKNOWN_PROXY_HOST:
+                msg = getMsg(MSG_UNKNOWN_PROXY_HOST,
+                             [this.getURL(), e.server.getURL()]);
+                break;
+
+            case NS_ERROR_PROXY_CONNECTION_REFUSED:
+                msg = MSG_PROXY_CONNECTION_REFUSED;
+                break;
+
             default:
                 msg = getMsg(MSG_CLOSE_STATUS,
                              [this.getURL(), e.server.getURL(),
