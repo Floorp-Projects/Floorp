@@ -32,13 +32,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
   {
     ok(!d.hasAttribute("hhh"), "Value check 1",
        "There should be no value");
-    ok(d.getAttribute("hhh") != "testvalue", "Value check 2",
-       "Value should not be old value");
+    isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
     document.removeEventListener("DOMAttrModified", removeItAgain, false);
-//    d.removeAttribute("hhh");
+    d.removeAttribute("hhh");
     ok(true, "Reachability", "We shouldn't have crashed");
   }
-
+  
   var s = document.getElementById("s");
   
   s.setAttribute("ggg", "testvalue");
@@ -51,10 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
   {
     ok(s.hasAttribute("ggg"), "Value check 3",
        "There should be a value");
-    ok(s.getAttribute("ggg") != "testvalue", "Value check 4",
-       "Value should not be old value");
-    ok(s.getAttribute("ggg") == "othervalue", "Value check 5",
-       "Value should be newvalue");
+    isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
+    is(s.getAttribute("ggg"), "othervalue", "Value check 5");
   }
 
 </script>
