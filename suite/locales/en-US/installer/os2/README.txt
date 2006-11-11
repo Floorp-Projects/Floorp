@@ -160,15 +160,15 @@ OS/2 Installation Instructions
 
    1. Click the "Zip" link on the site you're downloading SeaMonkey from
       to download the ZIP package to your machine. This file is typically
-      called seamonkey-x.xx.en-US.os2-emx-i386.zip where the "x.xx" is
-      replaced by the SeaMonkey version.
+      called seamonkey-x.x.x.en-US.os2.zip where the "x.x.x" is replaced
+      by the SeaMonkey version.
 
    2. Navigate to where you downloaded the file and unpack it using your
       favorite unzip tool.
 
    3. Keep in mind that the unzip process creates a directory "seamonkey"
-      below the location you point it to, i.e. 
-        unzip mozilla-os2-1.7.5.zip -d c:\seamonkey-1.7.5
+      below the location you point it to, e.g.
+        unzip seamonkey-1.7.5.en-US.os2.zip -d c:\seamonkey-1.7.5
       will unpack SeaMonkey into c:\seamonkey-1.7.5\seamonkey.
 
    4. Make sure that you are _not_ unpacking over an old installation.

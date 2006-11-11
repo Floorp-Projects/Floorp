@@ -99,15 +99,16 @@ OS/2 Installation Instructions
 
      1. Click the "Zip" link on the site you're downloading Thunderbird from
      to download the ZIP package to your machine. This file is typically called
-     thunderbird-*-os2.zip where the "*" is replaced by the Thunderbird version.
+     thunderbird-x.x.x.en-US.os2.zip where the "x.x.x" is replaced by the
+     Thunderbird version.
 
      2. Navigate to where you downloaded the file and unpack it using your
      favorite unzip tool.
 
      3. Keep in mind that the unzip process creates a directory "thunderbird"
-     below the location you point it to, i.e. 
-        unzip thunderbird-1.0-os2.zip -d c:\thunderbird-1.0
-     will unpack Thunderbird into c:\thunderbird-1.0\thunderbird.
+     below the location you point it to, e.g.
+        unzip thunderbird-1.0.1.en-US.os2.zip -d c:\thunderbird-1.0.1
+     will unpack Thunderbird into c:\thunderbird-1.0.1\thunderbird.
 
      4. Make sure that you are _not_ unpacking over an old installation. This is
      known to cause problems.
