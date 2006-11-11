@@ -274,14 +274,11 @@ protected:
   class nsDataSlots : public nsINode::nsSlots
   {
   public:
-    nsDataSlots(PtrBits aFlags);
-    virtual ~nsDataSlots();
-
-    /**
-     * An object implementing nsIDOMNodeList for this content (childNodes)
-     * @see nsIDOMNodeList
-     */
-    nsRefPtr<nsChildContentList> mChildNodes;
+    nsDataSlots(PtrBits aFlags)
+      : nsINode::nsSlots(aFlags),
+        mBindingParent(nsnull)
+    {
+    }
 
     /**
      * The nearest enclosing content node with a binding that created us.

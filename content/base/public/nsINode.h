@@ -55,6 +55,7 @@ class nsIEventListenerManager;
 class nsIPrincipal;
 class nsVoidArray;
 class nsIMutationObserver;
+class nsChildContentList;
 
 // This bit will be set if the node doesn't have nsSlots
 #define NODE_DOESNT_HAVE_SLOTS       0x00000001U
@@ -548,15 +549,15 @@ public:
   class nsSlots
   {
   public:
-    nsSlots(PtrBits aFlags) : mFlags(aFlags)
+    nsSlots(PtrBits aFlags)
+      : mFlags(aFlags),
+        mChildNodes(nsnull)
     {
     }
 
     // If needed we could remove the vtable pointer this dtor causes by
     // putting a DestroySlots function on nsINode
-    virtual ~nsSlots()
-    {
-    }
+    virtual ~nsSlots();
 
     /**
      * Storage for flags for this node. These are the same flags as the
@@ -569,6 +570,15 @@ public:
      * A list of mutation observers
      */
     nsTObserverArray<nsIMutationObserver> mMutationObservers;
+
+    /**
+     * An object implementing nsIDOMNodeList for this content (childNodes)
+     * @see nsIDOMNodeList
+     * @see nsGenericHTMLElement::GetChildNodes
+     *
+     * MSVC 7 doesn't like this as an nsRefPtr
+     */
+    nsChildContentList* mChildNodes;
   };
 
 #ifdef DEBUG

@@ -63,7 +63,7 @@ PRBool nsDOMAttribute::sInitialized;
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
                                nsINodeInfo       *aNodeInfo,
                                const nsAString   &aValue)
-  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue), mChildList(nsnull)
+  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
 
@@ -71,15 +71,6 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
 }
-
-nsDOMAttribute::~nsDOMAttribute()
-{
-  if (mChildList) {
-    mChildList->DropReference();
-    NS_RELEASE(mChildList);
-  }
-}
-
 
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
@@ -267,14 +258,17 @@ nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  if (!mChildList) {
-    mChildList = new nsAttributeChildList(this);
-    NS_ENSURE_TRUE(mChildList, NS_ERROR_OUT_OF_MEMORY);
+  nsSlots *slots = GetSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_ADDREF(mChildList);
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(mChildList, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -784,42 +778,4 @@ void
 nsDOMAttribute::Shutdown()
 {
   sInitialized = PR_FALSE;
-}
-
-//----------------------------------------------------------------------
-
-nsAttributeChildList::nsAttributeChildList(nsDOMAttribute* aAttribute)
-{
-  // Don't increment the reference count. The attribute will tell
-  // us when it's going away
-  mAttribute = aAttribute;
-}
-
-nsAttributeChildList::~nsAttributeChildList()
-{
-}
-
-NS_IMETHODIMP
-nsAttributeChildList::GetLength(PRUint32* aLength)
-{
-  *aLength = mAttribute ? mAttribute->GetChildCount() : 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAttributeChildList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  if (mAttribute && 0 == aIndex) {
-    mAttribute->GetFirstChild(aReturn);
-  }
-
-  return NS_OK;
-}
-
-void
-nsAttributeChildList::DropReference()
-{
-  mAttribute = nsnull;
 }

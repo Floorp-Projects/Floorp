@@ -718,10 +718,6 @@ nsDocument::~nsDocument()
   if (mStyleAttrStyleSheet)
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
 
-  if (mChildNodes) {
-    mChildNodes->DropReference();
-  }
-
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
@@ -3401,14 +3397,17 @@ nsDocument::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  if (!mChildNodes) {
-    mChildNodes = new nsChildContentList(this);
-    if (!mChildNodes) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  nsSlots *slots = GetSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(mChildNodes.get(), aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

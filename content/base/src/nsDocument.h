@@ -732,8 +732,6 @@ protected:
   nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
-  nsRefPtr<nsChildContentList> mChildNodes;
-
   nsHashtable mRadioGroups;
 
   // True if the document has been detached from its content viewer.
