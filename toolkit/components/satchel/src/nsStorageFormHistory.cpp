@@ -361,10 +361,12 @@ nsFormHistory::Notify(nsIContent* aFormNode, nsIDOMWindowInternal* aWindow, nsIU
       // Filter only inputs that are of type "text" without autocomplete="off"
       nsAutoString type;
       inputElt->GetType(type);
+      if (!type.LowerCaseEqualsLiteral("text"))
+        continue;
+
       nsAutoString autocomplete;
       inputElt->GetAttribute(kAutoComplete, autocomplete);
-      if (type.LowerCaseEqualsLiteral("text") &&
-          !autocomplete.LowerCaseEqualsLiteral("off")) {
+      if (!autocomplete.LowerCaseEqualsLiteral("off")) {
         // If this input has a name/id and value, add it to the database
         nsAutoString value;
         inputElt->GetValue(value);
