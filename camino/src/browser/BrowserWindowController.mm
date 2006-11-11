@@ -1033,15 +1033,15 @@ enum BWCOpenDest {
   NSRect frame = NSMakeRect(0.,0.,32.,32.);
   NSButton* button = [[[ToolbarButton alloc] initWithFrame:frame item:inItem] autorelease];
   if (button) {
-    DraggableImageAndTextCell* newCell = [[[DraggableImageAndTextCell alloc] init] autorelease];
+    DraggableImageAndTextCell* newCell = [[[DraggableImageAndTextCell alloc] initTextCell:@""] autorelease];
     [newCell setDraggable:YES];
     [newCell setClickHoldTimeout:0.45];
     [button setCell:newCell];
 
-    [button setBezelStyle: NSRegularSquareBezelStyle];
-    [button setButtonType: NSMomentaryChangeButton];
-    [button setBordered: NO];
-    [button setImagePosition: NSImageOnly];
+    [button setBezelStyle:NSRegularSquareBezelStyle];
+    [button setButtonType:NSMomentaryChangeButton];
+    [button setImagePosition:NSImageOnly];
+    [button setBordered:NO];
   }
   return button;
 }

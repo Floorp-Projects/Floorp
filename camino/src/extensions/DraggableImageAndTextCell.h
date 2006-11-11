@@ -39,12 +39,13 @@
 
 @interface DraggableImageAndTextCell : NSButtonCell
 {
-  NSPoint         mTrackingStart;
-  float						mClickHoldTimeoutSeconds;
-  BOOL            mIsDraggable;
-  BOOL						mLastClickHoldTimedOut;
-  
-  SEL             mClickHoldAction;
+  NSAttributedString* mSavedStandardTitle;
+  NSPoint             mTrackingStart;
+  float               mClickHoldTimeoutSeconds;
+  BOOL                mIsDraggable;
+  BOOL                mLastClickHoldTimedOut;
+
+  SEL                 mClickHoldAction;
 }
 
 - (id)initTextCell:(NSString*)aString;

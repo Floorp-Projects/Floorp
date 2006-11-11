@@ -39,6 +39,14 @@
 
 #import "DraggableImageAndTextCell.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+@class NSShadow;
+#endif
+
+@interface DraggableImageAndTextCell(Private)
+- (NSAttributedString*)savedStandardTitle;
+- (void)setSavedStandardTitle:(NSAttributedString*)title;
+@end
 
 @implementation DraggableImageAndTextCell
 
@@ -55,6 +63,51 @@
     mLastClickHoldTimedOut = NO;
   }
   return self;
+}
+
+- (void)dealloc
+{
+  [mSavedStandardTitle release];
+  [super dealloc];
+}
+
+- (NSAttributedString*)savedStandardTitle
+{
+  return mSavedStandardTitle;
+}
+
+- (void)setSavedStandardTitle:(NSAttributedString*)title
+{
+  [mSavedStandardTitle autorelease];
+  mSavedStandardTitle = [title retain];
+}
+
+// Overridden to give the title text a drop shadow when the button is highlighted
+- (void)highlight:(BOOL)highlighted withFrame:(NSRect)cellFrame inView:(NSView*)controlView
+{
+  if ([[self title] length] > 0) {
+    if (highlighted) {
+      [self setSavedStandardTitle:[self attributedTitle]];
+      
+      NSMutableDictionary* info = [[[self savedStandardTitle] attributesAtIndex:0 effectiveRange:NULL] mutableCopy];
+      NSShadow* shadow = [[NSShadow alloc] init];
+      [shadow setShadowBlurRadius:1];
+      [shadow setShadowOffset:NSMakeSize(0, -1)];
+      [shadow setShadowColor:[NSColor colorWithCalibratedRed:0.0 green:0.0 blue:0.0 alpha:0.6]];
+      [info setObject:shadow forKey:NSShadowAttributeName];
+      [shadow release];
+      NSAttributedString* shadowedTitle = [[NSAttributedString alloc] initWithString:[self title] attributes:info];
+      [info release];
+      [self setAttributedTitle:shadowedTitle];
+      [shadowedTitle release];
+    }
+    else {
+      [self setAttributedTitle:[self savedStandardTitle]];
+      [self setSavedStandardTitle:nil];
+    }
+  }
+  
+  [super highlight:highlighted withFrame:cellFrame inView:controlView];
 }
 
 - (void)setClickHoldTimeout:(float)timeoutSeconds
