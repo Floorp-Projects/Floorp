@@ -58,9 +58,10 @@ class nsMediaList;
 class nsICSSImportRule;
 
 // IID for the nsICSSLoader interface
-// ff43802a-b355-41f2-919d-5c7ab3dbfb91
+// 446711e6-ad01-4702-8a9b-ce3f5e5d30f0
 #define NS_ICSS_LOADER_IID     \
-{0x8e8deacc, 0xdfe5, 0x4c61, {0x90, 0x14, 0x65, 0x2b, 0xa7, 0xe9, 0x7f, 0x2c}}
+{ 0x446711e6, 0xad01, 0x4702, \
+ { 0x8a, 0x9b, 0xce, 0x3f, 0x5e, 0x5d, 0x30, 0xf0 } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
