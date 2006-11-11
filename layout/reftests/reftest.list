@@ -4,6 +4,7 @@
 != data:text/plain,HELLO about:blank
 
 # bugs/
+== bugs/142233-1.html bugs/142233-1-ref.html
 == bugs/339289-1.html bugs/339289-1-ref.html
 == bugs/351641-1a.html bugs/351641-1-ref.html
 == bugs/351641-1b.html bugs/351641-1-ref.html
