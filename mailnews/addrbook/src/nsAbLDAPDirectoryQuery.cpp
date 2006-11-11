@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,129 +47,92 @@
 #include "nsIAbLDAPAttributeMap.h"
 #include "nsAbUtils.h"
 
-#include "nsIAuthPrompt.h"
-#include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 #include "nsIProxyObjectManager.h"
 #include "prprf.h"
 #include "nsCRT.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
-#include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsAbLDAPDirectory.h"
+#include "nsAbLDAPListenerBase.h"
 
-class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
+// nsAbLDAPListenerBase inherits nsILDAPMessageListener
+class nsAbQueryLDAPMessageListener : public nsAbLDAPListenerBase
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSILDAPMESSAGELISTENER
+  NS_DECL_ISUPPORTS
 
-    nsAbQueryLDAPMessageListener (
-        nsAbLDAPDirectoryQuery* directoryQuery,
-        nsILDAPURL* url,
-        nsILDAPConnection* connection,
-        nsIAbDirectoryQueryArguments* queryArguments,
-        nsIAbDirectoryQueryResultListener* queryListener,
-        PRInt32 resultLimit = -1,
-        PRInt32 timeOut = 0);
-    virtual ~nsAbQueryLDAPMessageListener ();
+  nsAbQueryLDAPMessageListener(nsAbLDAPDirectoryQuery* directoryQuery,
+                               nsILDAPURL* url,
+                               nsILDAPConnection* connection,
+                               nsIAbDirectoryQueryArguments* queryArguments,
+                               nsIAbDirectoryQueryResultListener* queryListener,
+                               const nsACString &login,
+                               const PRInt32 resultLimit = -1,
+                               const PRInt32 timeOut = 0);
+  virtual ~nsAbQueryLDAPMessageListener ();
 
-protected:
-    nsresult OnLDAPMessageBind (nsILDAPMessage *aMessage);
-    nsresult OnLDAPMessageSearchEntry (nsILDAPMessage *aMessage,
-            nsIAbDirectoryQueryResult** result);
-    nsresult OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
-            nsIAbDirectoryQueryResult** result);
-
-    nsresult QueryResultStatus (nsISupportsArray* properties,
-            nsIAbDirectoryQueryResult** result, PRUint32 resultStatus);
+  // nsILDAPMessageListener
+  NS_IMETHOD OnLDAPMessage(nsILDAPMessage *aMessage);
 
 protected:
-    friend class nsAbLDAPDirectoryQuery;
-    nsresult Cancel ();
-    nsresult Initiate ();
-    nsresult DoSearch();
+  nsresult OnLDAPMessageSearchEntry (nsILDAPMessage *aMessage,
+                                     nsIAbDirectoryQueryResult** result);
+  nsresult OnLDAPMessageSearchResult(nsILDAPMessage *aMessage,
+                                     nsIAbDirectoryQueryResult** result);
 
+  nsresult QueryResultStatus (nsISupportsArray* properties,
+                              nsIAbDirectoryQueryResult** result,
+                              PRUint32 resultStatus);
 
-protected:
-    nsAbLDAPDirectoryQuery* mDirectoryQuery;
-    PRInt32 mContextID;
-    nsCOMPtr<nsILDAPURL> mUrl;
-    nsILDAPConnection *mConnection;
-    nsCOMPtr<nsIAbDirectoryQueryArguments> mQueryArguments;
-    nsCOMPtr<nsIAbDirectoryQueryResultListener> mQueryListener;
-    PRInt32 mResultLimit;
-    PRInt32 mTimeOut;
+  friend class nsAbLDAPDirectoryQuery;
+  nsresult Cancel();
+  nsresult DoTask();
 
-    PRBool mBound;
-    PRBool mFinished;
-    PRBool mInitialized;
-    PRBool mCanceled;
-    PRBool mWaitingForPrevQueryToFinish;
+  nsAbLDAPDirectoryQuery* mDirectoryQuery;
+  PRInt32 mContextID;
+  nsCOMPtr<nsIAbDirectoryQueryArguments> mQueryArguments;
+  nsCOMPtr<nsIAbDirectoryQueryResultListener> mQueryListener;
+  PRInt32 mResultLimit;
 
-    nsCOMPtr<nsILDAPOperation> mSearchOperation;
+  PRBool mFinished;
+  PRBool mCanceled;
+  PRBool mWaitingForPrevQueryToFinish;
 
-    PRLock* mLock;
+  nsCOMPtr<nsILDAPOperation> mSearchOperation;
 };
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbQueryLDAPMessageListener, nsILDAPMessageListener)
 
-nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
+nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener(
         nsAbLDAPDirectoryQuery* directoryQuery,
         nsILDAPURL* url,
         nsILDAPConnection* connection,
         nsIAbDirectoryQueryArguments* queryArguments,
         nsIAbDirectoryQueryResultListener* queryListener,
-        PRInt32 resultLimit,
-        PRInt32 timeOut) :
-    mDirectoryQuery (directoryQuery),
-    mUrl (url),
-    mConnection (connection),
-    mQueryArguments (queryArguments),
-    mQueryListener (queryListener),
-    mResultLimit (resultLimit),
-    mTimeOut (timeOut),
-    mBound (PR_FALSE),
-    mFinished (PR_FALSE),
-    mInitialized(PR_FALSE),
-    mCanceled (PR_FALSE),
-    mWaitingForPrevQueryToFinish(PR_FALSE),
-    mLock(0)
-
+        const nsACString &login,
+        const PRInt32 resultLimit,
+        const PRInt32 timeOut) :
+    nsAbLDAPListenerBase(url, connection, login, timeOut),
+    mDirectoryQuery(directoryQuery),
+    mQueryArguments(queryArguments),
+    mQueryListener(queryListener),
+    mResultLimit(resultLimit),
+    mFinished(PR_FALSE),
+    mCanceled(PR_FALSE),
+    mWaitingForPrevQueryToFinish(PR_FALSE)
 {
 }
 
 nsAbQueryLDAPMessageListener::~nsAbQueryLDAPMessageListener ()
 {
-    if (mLock)
-        PR_DestroyLock (mLock);
-}
-
-nsresult nsAbQueryLDAPMessageListener::Initiate ()
-{
-    if (mInitialized)
-        return NS_OK;
-                
-    mLock = PR_NewLock ();
-    if(!mLock)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mInitialized = PR_TRUE;
-
-    return NS_OK;
 }
 
 nsresult nsAbQueryLDAPMessageListener::Cancel ()
 {
-    nsresult rv;
-
-    rv = Initiate();
+    nsresult rv = Initiate();
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoLock lock(mLock);
@@ -186,9 +149,7 @@ nsresult nsAbQueryLDAPMessageListener::Cancel ()
 
 NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessage)
 {
-    nsresult rv;
-
-    rv = Initiate();
+    nsresult rv = Initiate();
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 messageType;
@@ -223,19 +184,21 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
         switch (messageType)
         {
         case nsILDAPMessage::RES_BIND:
-            rv = OnLDAPMessageBind (aMessage);
-            NS_ENSURE_SUCCESS(rv, rv);
+            rv = OnLDAPMessageBind(aMessage);
+            if (NS_FAILED(rv))
+              rv = QueryResultStatus(nsnull, getter_AddRefs(queryResult),
+                                     nsIAbDirectoryQueryResult::queryResultError);
             break;
         case nsILDAPMessage::RES_SEARCH_ENTRY:
             if (!mFinished && !mWaitingForPrevQueryToFinish)
             {
-                rv = OnLDAPMessageSearchEntry (aMessage, 
-                                               getter_AddRefs (queryResult));
+                rv = OnLDAPMessageSearchEntry(aMessage, 
+                                              getter_AddRefs(queryResult));
             }
             break;
         case nsILDAPMessage::RES_SEARCH_RESULT:
             mWaitingForPrevQueryToFinish = PR_FALSE;
-            rv = OnLDAPMessageSearchResult (aMessage, getter_AddRefs (queryResult));
+            rv = OnLDAPMessageSearchResult(aMessage, getter_AddRefs(queryResult));
             NS_ENSURE_SUCCESS(rv, rv);
         default:
             break;
@@ -244,9 +207,10 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     else
     {
         if (mSearchOperation)
-            rv = mSearchOperation->AbandonExt ();
+            rv = mSearchOperation->AbandonExt();
 
-        rv = QueryResultStatus (nsnull, getter_AddRefs (queryResult), nsIAbDirectoryQueryResult::queryResultStopped);
+        rv = QueryResultStatus(nsnull, getter_AddRefs(queryResult),
+                               nsIAbDirectoryQueryResult::queryResultStopped);
         // reset because we might re-use this listener...except don't do this
         // until the search is done, so we'll ignore results from a previous
         // search.
@@ -261,218 +225,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     return rv;
 }
 
-NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
-{
-    nsresult rv;
-    nsXPIDLString passwd;
-
-    // Make sure that the Init() worked properly
-    NS_ENSURE_SUCCESS(aStatus, aStatus);
-
-    if (!mDirectoryQuery)
-      return NS_ERROR_NULL_POINTER;
-
-    // If mLogin is set, we're expected to use it to get a password.
-    //
-    if (!mDirectoryQuery->mLogin.IsEmpty()) {
-// XXX hack until nsUTF8AutoString exists
-#define nsUTF8AutoString nsCAutoString
-        nsUTF8AutoString spec;
-        PRBool status;
-
-        // we're going to use the URL spec of the server as the "realm" for 
-        // wallet to remember the password by / for.
-        // 
-        rv = mDirectoryQuery->mDirectoryUrl->GetSpec(spec);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit(): GetSpec"
-                     " failed\n");
-            return NS_ERROR_FAILURE;
-        }
-
-        // get the string bundle service
-        //
-        nsCOMPtr<nsIStringBundleService> 
-            stringBundleSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv)); 
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     " error getting string bundle service");
-            return rv;
-        }
-
-        // get the LDAP string bundle
-        //
-        nsCOMPtr<nsIStringBundle> ldapBundle;
-        rv = stringBundleSvc->CreateBundle(
-            "chrome://mozldap/locale/ldap.properties",
-            getter_AddRefs(ldapBundle));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     " error creating string bundle"
-                     " chrome://mozldap/locale/ldap.properties");
-            return rv;
-        } 
-
-        // get the title for the authentication prompt
-        //
-        nsXPIDLString authPromptTitle;
-        rv = ldapBundle->GetStringFromName(
-            NS_LITERAL_STRING("authPromptTitle").get(), 
-            getter_Copies(authPromptTitle));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     "error getting 'authPromptTitle' string from bundle "
-                     "chrome://mozldap/locale/ldap.properties");
-            return rv;
-        }
-
-        // get the host name for the auth prompt
-        //
-        nsCAutoString host;
-        rv = mUrl->GetAsciiHost(host);
-        if (NS_FAILED(rv)) {
-            return NS_ERROR_FAILURE;
-        }
-
-        // hostTemp is only necessary to work around a code-generation 
-        // bug in egcs 1.1.2 (the version of gcc that comes with Red Hat 6.2),
-        // which is the default compiler for Mozilla on linux at the moment.
-        //
-        NS_ConvertASCIItoUTF16 hostTemp(host);
-        const PRUnichar *hostArray[1] = { hostTemp.get() };
-
-        // format the hostname into the authprompt text string
-        //
-        nsXPIDLString authPromptText;
-        rv = ldapBundle->FormatStringFromName(
-            NS_LITERAL_STRING("authPromptText").get(),
-            hostArray, sizeof(hostArray) / sizeof(const PRUnichar *),
-            getter_Copies(authPromptText));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     "error getting 'authPromptText' string from bundle "
-                     "chrome://mozldap/locale/ldap.properties");
-            return rv;
-        }
-
-
-        // get the window watcher service, so we can get an auth prompter
-        //
-        nsCOMPtr<nsIWindowWatcher> windowWatcherSvc = 
-            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     " couldn't get window watcher service.");
-            return rv;
-        }
-
-        // get the addressbook window, as it will be used to parent the auth
-        // prompter dialog
-        //
-        nsCOMPtr<nsIDOMWindow> abDOMWindow;
-        rv = windowWatcherSvc->GetWindowByName(
-            NS_LITERAL_STRING("addressbookWindow").get(), nsnull,
-            getter_AddRefs(abDOMWindow));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     " error getting addressbook Window");
-            return rv;
-        }
-
-        // get the auth prompter itself
-        //
-        nsCOMPtr<nsIAuthPrompt> authPrompter;
-        rv = windowWatcherSvc->GetNewAuthPrompter(
-            abDOMWindow, getter_AddRefs(authPrompter));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbQueryLDAPMessageListener::OnLDAPInit():"
-                     " error getting auth prompter");
-            return rv;
-        }
-
-        // get authentication password, prompting the user if necessary
-        //
-        rv = authPrompter->PromptPassword(
-            authPromptTitle.get(), authPromptText.get(),
-            NS_ConvertUTF8toUTF16(spec).get(),
-            nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
-            &status);
-        if (NS_FAILED(rv) || !status) {
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    // Initiate the LDAP operation
-    nsCOMPtr<nsILDAPOperation> ldapOperation =
-        do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsILDAPMessageListener> proxyListener;
-    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                     NS_GET_IID(nsILDAPMessageListener),
-                     NS_STATIC_CAST(nsILDAPMessageListener *, this),
-                     NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                     getter_AddRefs(proxyListener));
-
-    rv = ldapOperation->Init(mConnection, proxyListener, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Bind
-    rv = ldapOperation->SimpleBind(NS_ConvertUTF16toUTF8(passwd));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return rv;
-}
-
-nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessage)
-{
-    if (mBound)
-        return NS_OK;
-
-    // see whether the bind actually succeeded
-    //
-    PRInt32 errCode;
-    nsresult rv = aMessage->GetErrorCode(&errCode);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (errCode != nsILDAPErrors::SUCCESS) {
-
-        // if the login failed, tell the wallet to forget this password
-        //
-        if ( errCode == nsILDAPErrors::INAPPROPRIATE_AUTH ||
-             errCode == nsILDAPErrors::INVALID_CREDENTIALS ) {
-
-            // make sure the wallet service has been created, and in doing so,
-            // pass in a login-failed message to tell it to forget this passwd.
-            //
-            // apparently getting passwords stored in the wallet
-            // doesn't require the service to be running, which is why
-            // this might not exist yet.
-            //
-            if (!mDirectoryQuery)
-              return NS_ERROR_NULL_POINTER;
-
-            rv = NS_CreateServicesFromCategory(
-                "passwordmanager", mDirectoryQuery->mDirectoryUrl,
-                "login-failed");
-            if (NS_FAILED(rv)) {
-                NS_ERROR("nsLDAPAutoCompleteSession::ForgetPassword(): error"
-                         " creating password manager service");
-                // not much to do at this point, though conceivably we could 
-                // pop up a dialog telling the user to go manually delete
-                // this password in the password manager.
-            }
-        } 
-
-        // XXX this error should be propagated back to the UI somehow
-        return NS_OK;
-    }
-
-    mBound = PR_TRUE;
-    return DoSearch();
-}
-
- nsresult nsAbQueryLDAPMessageListener::DoSearch()
+nsresult nsAbQueryLDAPMessageListener::DoTask()
  {
    nsresult rv;
    mCanceled = mFinished = PR_FALSE;
@@ -522,10 +275,9 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     rv = mSearchOperation->SetClientControls(dir->mSearchClientControls.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->SearchExt (dn, scope, filter,
-            attributes.GetSize (), attributes.GetArray (),
-            mTimeOut, mResultLimit);
-    return rv;
+    return mSearchOperation->SearchExt(dn, scope, filter, attributes.GetSize(),
+                                       attributes.GetArray(), mTimeOut,
+                                       mResultLimit);
 }
 
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage *aMessage,
@@ -535,9 +287,11 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
 
     if (!mDirectoryQuery)
       return NS_ERROR_NULL_POINTER;
+
     // the address book fields that we'll be asking for
     CharPtrArrayGuard properties;
-    rv = mQueryArguments->GetReturnProperties (properties.GetSizeAddr(), properties.GetArrayAddr());
+    rv = mQueryArguments->GetReturnProperties(properties.GetSizeAddr(),
+                                              properties.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
     // the map for translating between LDAP attrs <-> addrbook fields
@@ -614,9 +368,8 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
         nsIAbDirectoryQueryResult** result)
 {
-    nsresult rv;
     PRInt32 errorCode;
-    rv = aMessage->GetErrorCode(&errorCode);
+    nsresult rv = aMessage->GetErrorCode(&errorCode);
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (errorCode == nsILDAPErrors::SUCCESS || errorCode == nsILDAPErrors::SIZELIMIT_EXCEEDED)
@@ -626,7 +379,8 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage
 
     return rv;
 }
-nsresult nsAbQueryLDAPMessageListener::QueryResultStatus (nsISupportsArray* properties,
+
+nsresult nsAbQueryLDAPMessageListener::QueryResultStatus(nsISupportsArray* properties,
         nsIAbDirectoryQueryResult** result, PRUint32 resultStatus)
 {
     nsAbDirectoryQueryResult* _queryResult = new nsAbDirectoryQueryResult (
@@ -641,8 +395,6 @@ nsresult nsAbQueryLDAPMessageListener::QueryResultStatus (nsISupportsArray* prop
     NS_IF_ADDREF(*result = _queryResult);
     return NS_OK;
 }
-
-
 
 
 
@@ -690,9 +442,8 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
         PRInt32 timeOut,
         PRInt32* _retval)
 {
-    nsresult rv;
     PRBool alreadyInitialized = mInitialized;
-    rv = Initiate ();
+    nsresult rv = Initiate ();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the scope
@@ -828,19 +579,21 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
       if (msgListener)
       {
         msgListener->mUrl = url;
-        return msgListener->DoSearch();
+        return msgListener->DoTask();
       }
     }
-
 
     // Initiate LDAP message listener
     nsAbQueryLDAPMessageListener* _messageListener =
         new nsAbQueryLDAPMessageListener (
                 this,
-                url,
+                // Note we use the directory url as its more generic for
+                // passwords than the search url
+                mDirectoryUrl,
                 ldapConnection,
                 arguments,
                 listener,
+                mLogin,
                 resultLimit,
                 timeOut);
     if (_messageListener == NULL)
@@ -860,9 +613,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 /* void stopQuery (in long contextID); */
 NS_IMETHODIMP nsAbLDAPDirectoryQuery::StopQuery(PRInt32 contextID)
 {
-    nsresult rv;
-
-    rv = Initiate ();
+    nsresult rv = Initiate ();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mListener)
@@ -881,11 +632,9 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
     nsIAbDirectoryQueryArguments* arguments,
     nsCString& returnAttributes)
 {
-    nsresult rv;
-
     CharPtrArrayGuard properties;
-    rv = arguments->GetReturnProperties(properties.GetSizeAddr(),
-                                        properties.GetArrayAddr());
+    nsresult rv = arguments->GetReturnProperties(properties.GetSizeAddr(),
+                                                 properties.GetArrayAddr());
     NS_ENSURE_SUCCESS(rv, rv);
 
     // figure out how we map attribute names to addressbook fields for this
@@ -933,4 +682,3 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
 
     return rv;
 }
-

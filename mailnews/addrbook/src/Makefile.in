@@ -133,17 +133,19 @@ ifdef MOZ_LDAP_XPCOM
 REQUIRES    += mozldap \
                $(NULL)
 
-CPPSRCS		+= nsAbLDAPDirectory.cpp \
+CPPSRCS		+= \
+		nsAbLDAPDirectory.cpp \
 		nsAbLDAPDirFactory.cpp	\
-                nsAbLDAPCard.cpp \
-                nsAbLDAPDirectoryQuery.cpp \
-                nsAbBoolExprToLDAPFilter.cpp \
+		nsAbLDAPCard.cpp \
+		nsAbLDAPListenerBase.cpp \
+		nsAbLDAPDirectoryQuery.cpp \
+		nsAbBoolExprToLDAPFilter.cpp \
 		nsAbLDAPAutoCompFormatter.cpp \
-                nsAbLDAPReplicationService.cpp \
-                nsAbLDAPReplicationQuery.cpp \
-                nsAbLDAPReplicationData.cpp \
-                nsAbLDAPChangeLogQuery.cpp \
-                nsAbLDAPChangeLogData.cpp \
+		nsAbLDAPReplicationService.cpp \
+		nsAbLDAPReplicationQuery.cpp \
+		nsAbLDAPReplicationData.cpp \
+		nsAbLDAPChangeLogQuery.cpp \
+		nsAbLDAPChangeLogData.cpp \
 		nsLDAPAutoCompleteSession.cpp \
 		$(NULL)
 endif

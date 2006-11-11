@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Paul Sandoz <paul.sandoz@sun.com>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,49 +38,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAbLDAPDirectoryQuery_h__
-#define nsAbLDAPDirectoryQuery_h__
+#ifndef nsAbLDAPListenerBase_h__
+#define nsAbLDAPListenerBase_h__
 
-#include "nsAbDirectoryQuery.h"
-#include "nsILDAPConnection.h"
+#include "nsCOMPtr.h"
 #include "nsILDAPMessageListener.h"
 #include "nsILDAPURL.h"
-
+#include "nsILDAPConnection.h"
+#include "nsILDAPOperation.h"
 #include "nsString.h"
-#include "nsHashtable.h"
 
-class nsAbLDAPDirectoryQuery : public nsIAbDirectoryQuery
+class nsAbLDAPListenerBase : public nsILDAPMessageListener
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIABDIRECTORYQUERY
+    nsAbLDAPListenerBase(nsILDAPURL* url,
+			 nsILDAPConnection* connection,
+			 const nsACString &login,
+			 const PRInt32 timeOut = 0);
+    virtual ~nsAbLDAPListenerBase();
 
-    nsAbLDAPDirectoryQuery();
-    virtual ~nsAbLDAPDirectoryQuery();
-
-    void setLdapUrl (const char* aldapUrl);
-
-    virtual nsresult GetLDAPConnection (nsILDAPConnection** connection) = 0;
-    virtual nsresult GetLDAPURL (nsILDAPURL** url) = 0;
-    virtual nsresult CreateCard (nsILDAPURL* url, const char* dn, nsIAbCard** card) = 0;
+    NS_IMETHOD OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus);
 
 protected:
-    nsresult getLdapReturnAttributes (
-        nsIAbDirectoryQueryArguments* arguments,
-        nsCString& returnAttributes);
+    nsresult OnLDAPMessageBind(nsILDAPMessage *aMessage);
 
-protected:
-    friend class nsAbQueryLDAPMessageListener;
-    nsresult Initiate ();
-    nsXPIDLCString mLogin; // authenticate to the LDAP server as...
-    nsCOMPtr<nsILDAPURL> mDirectoryUrl; // the URL for the server
-    PRUint32 mProtocolVersion; // version of LDAP (see nsILDAPConnection.idl)
-    nsCOMPtr <nsILDAPMessageListener> mListener;
+    nsresult Initiate();
+    virtual nsresult DoTask() = 0;
 
-private:
+    nsCOMPtr<nsILDAPURL> mUrl;
+    nsILDAPConnection* mConnection;
+    nsCAutoString mLogin;
+    PRInt32 mTimeOut;
+    PRBool mBound;
     PRBool mInitialized;
+
+    nsCOMPtr<nsILDAPOperation> mOperation;
 
     PRLock* mLock;
 };
 
-#endif // nsAbLDAPDirectoryQuery_h__
+#endif
