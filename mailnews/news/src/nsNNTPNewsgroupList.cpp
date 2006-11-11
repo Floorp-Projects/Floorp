@@ -780,6 +780,18 @@ NS_IMETHODIMP nsNNTPNewsgroupList::ApplyFilterHit(nsIMsgFilter *aFilter, nsIMsgW
           m_newMsgHdr->SetPriority(filterPriority);
         }
         break;
+      case nsMsgFilterAction::AddTag:
+      {
+        nsXPIDLCString keyword;
+        filterAction->GetStrValue(getter_Copies(keyword));
+        nsCOMPtr<nsISupportsArray> messageArray;
+        NS_NewISupportsArray(getter_AddRefs(messageArray));
+        messageArray->AppendElement(m_newMsgHdr);
+        nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
+        if (folder)
+          folder->AddKeywordToMessages(messageArray, keyword.get());
+        break;
+      }
       case nsMsgFilterAction::Label:
         {
           nsMsgLabelValue filterLabel;
