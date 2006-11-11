@@ -55,6 +55,7 @@
 #include "nsIXULPrototypeDocument.h"
 #include "nsScriptLoader.h"
 #include "nsIStreamListener.h"
+#include "nsICSSLoaderObserver.h"
 
 class nsIRDFResource;
 class nsIRDFService;
@@ -83,7 +84,8 @@ struct PRLogModuleInfo;
 class nsXULDocument : public nsXMLDocument,
                       public nsIXULDocument,
                       public nsIDOMXULDocument,
-                      public nsIStreamLoaderObserver
+                      public nsIStreamLoaderObserver,
+                      public nsICSSLoaderObserver
 {
 public:
     nsXULDocument();
@@ -141,7 +143,7 @@ public:
                                      nsIXULTemplateBuilder* aBuilder);
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder** aResult);
-    NS_IMETHOD OnPrototypeLoadDone();
+    NS_IMETHOD OnPrototypeLoadDone(PRBool aResumeWalk);
     PRBool OnDocumentParserError();
 
     // nsIDOMNode interface overrides
@@ -156,6 +158,11 @@ public:
 
     // nsIDOMNSDocument
     NS_IMETHOD GetContentType(nsAString& aContentType);
+
+    // nsICSSLoaderObserver
+    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                PRBool aWasAlternate,
+                                nsresult aStatus);
 
     static PRBool
     MatchAttribute(nsIContent* aContent,
@@ -259,18 +266,34 @@ protected:
     nsElementMap               mElementMap;
     nsCOMPtr<nsIRDFDataSource> mLocalStore;
     PRPackedBool               mIsPopup;
-    PRPackedBool               mIsFastLoad;
     PRPackedBool               mApplyingPersistedAttrs;
     PRPackedBool               mIsWritingFastLoad;
     PRPackedBool               mDocumentLoaded;
+    /**
+     * Since ResumeWalk is interruptible, it's possible that last
+     * stylesheet finishes loading while the PD walk is still in
+     * progress (waiting for an overlay to finish loading).
+     * mStillWalking prevents DoneLoading (and StartLayout) from being
+     * called in this situation.
+     */
+    PRPackedBool               mStillWalking;
+
+    /**
+     * An array of style sheets, that will be added (preserving order) to the
+     * document after all of them are loaded (in DoneWalking).
+     */
+    nsCOMArray<nsICSSStyleSheet> mOverlaySheets;
+
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     // Maintains the template builders that have been attached to
     // content elements
     nsSupportsHashtable* mTemplateBuilderTable;
-    
+
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;
+
+    PRUint32 mPendingSheets;
 
     /*
      * XXX dr
@@ -333,8 +356,13 @@ protected:
      * order of the array is significant: overlays at the _end_ of the
      * array are resolved before overlays earlier in the array (i.e.,
      * it is a stack).
+     *
+     * In the current implementation the order the overlays are loaded
+     * in is as follows: first overlays from xul-overlay PIs, in the
+     * same order as in the document, then the overlays from the chrome
+     * registry.
      */
-    nsCOMPtr<nsISupportsArray> mUnloadedOverlays;
+    nsCOMArray<nsIURI> mUnloadedOverlays;
 
     /**
      * Load the transcluded script at the specified URI. If the
@@ -394,7 +422,8 @@ protected:
     CreateTemplateBuilder(nsIContent* aElement);
 
     /**
-     * Add the current prototype's style sheets to the document.
+     * Add the current prototype's style sheets (currently it's just
+     * style overlays from the chrome registry) to the document.
      */
     nsresult AddPrototypeSheets();
 
@@ -518,6 +547,39 @@ protected:
     nsresult PrepareToWalk();
 
     /**
+     * Creates a processing instruction based on aProtoPI and inserts
+     * it to the DOM (as the aIndex-th child of aParent).
+     */
+    nsresult
+    CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
+                      nsINode* aParent, PRUint32 aIndex);
+
+    /**
+     * Inserts the passed <?xml-stylesheet ?> PI at the specified
+     * index. Loads and applies the associated stylesheet
+     * asynchronously.
+     * The prototype document walk can happen before the stylesheets
+     * are loaded, but the final steps in the load process (see
+     * DoneWalking()) are not run before all the stylesheets are done
+     * loading.
+     */
+    nsresult
+    InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
+                          nsINode* aParent,
+                          PRUint32 aIndex,
+                          nsIContent* aPINode);
+
+    /**
+     * Inserts the passed <?xul-overlay ?> PI at the specified index.
+     * Schedules the referenced overlay URI for further processing.
+     */
+    nsresult
+    InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
+                       nsINode* aParent,
+                       PRUint32 aIndex,
+                       nsIContent* aPINode);
+
+    /**
      * Add overlays from the chrome registry to the set of unprocessed
      * overlays still to do.
      */
@@ -528,6 +590,13 @@ protected:
      * prototype walk.
      */
     nsresult ResumeWalk();
+
+    /**
+     * Called at the end of ResumeWalk() and from StyleSheetLoaded().
+     * Expects that both the prototype document walk is complete and
+     * all referenced stylesheets finished loading.
+     */
+    nsresult DoneWalking();
 
     /**
      * Report that an overlay failed to load

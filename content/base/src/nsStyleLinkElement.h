@@ -71,9 +71,22 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
-  // If aForceUpdate == PR_TRUE will force the update even if the URI has not
-  // changed.  This should be used in cases when something about the content
-  // that affects the resulting sheet changed but the URI may not have changed.
+  /**
+   * @param aForceUpdate when PR_TRUE, will force the update even if
+   * the URI has not changed.  This should be used in cases when
+   * something about the content that affects the resulting sheet
+   * changed but the URI may not have changed.
+   * @returns NS_ERROR_HTMLPARSER_BLOCK if a non-alternate style sheet
+   *          is being loaded asynchronously. In this case aObserver
+   *          will be notified at a later stage when the sheet is
+   *          loaded (if it is not null).
+   * @returns NS_OK in case when the update was successful, but the
+   *          caller doesn't have to wait for a notification to
+   *          aObserver. This can happen if there was no style sheet
+   *          to load, when it's inline, or when it's alternate. Note
+   *          that in the latter case aObserver is still notified about
+   *          the load when it's done.
+   */
   NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull,
                               nsICSSLoaderObserver* aObserver = nsnull,
                               PRBool aForceUpdate = PR_FALSE);

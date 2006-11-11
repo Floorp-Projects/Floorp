@@ -1859,9 +1859,18 @@ CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
 }
 
 NS_IMETHODIMP
+CSSLoaderImpl::LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+                         nsICSSStyleSheet** aSheet)
+{
+  LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver, aSheet) api call"));
+  NS_PRECONDITION(aSheet, "aSheet is null");
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aSheet, aObserver);
+}
+
+NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver)
 {
-  LOG(("CSSLoaderImpl::LoadSheet api call"));
+  LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver) api call"));
   return InternalLoadNonDocumentSheet(aURL, PR_FALSE, nsnull, aObserver);
 }
 
@@ -1872,8 +1881,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
                                             nsICSSLoaderObserver* aObserver)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load");
-  NS_PRECONDITION((!aSheet || !aObserver) && (aSheet || aObserver),
-                  "One or the other please, at most one");
+  NS_PRECONDITION(aSheet || aObserver, "One or the other please");
   NS_ASSERTION(mParsingDatas.Count() == 0, "We're in the middle of a parse?");
 
   LOG_URI("  Non-document sheet uri: '%s'", aURL);
@@ -1901,10 +1909,11 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
   
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
+    if (aObserver) {
+      rv = PostLoadEvent(aURL, sheet, aObserver, nsnull, PR_FALSE);
+    }
     if (aSheet) {
       sheet.swap(*aSheet);
-    } else {
-      rv = PostLoadEvent(aURL, sheet, aObserver, nsnull, PR_FALSE);
     }
     return rv;
   }
@@ -1923,7 +1932,8 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
 
   if (aSheet) {
     sheet.swap(*aSheet);
-  } else {
+  }
+  if (aObserver) {
     data->mMustNotify = PR_TRUE;
   }
 

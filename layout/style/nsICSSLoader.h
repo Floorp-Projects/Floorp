@@ -212,6 +212,15 @@ public:
    * @param aURL the URL of the sheet to load
    * @param aObserver the observer to notify when the load completes.
    *                  Must not be null.
+   * @param [out] aSheet the sheet to load. Note that the sheet may well
+   *              not be loaded by the time this method returns.
+   */
+  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver,
+                       nsICSSStyleSheet** aSheet) = 0;
+
+  /**
+   * Same as above, to be used when the caller doesn't care about the
+   * not-yet-loaded sheet.
    */
   NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver) = 0;
 
