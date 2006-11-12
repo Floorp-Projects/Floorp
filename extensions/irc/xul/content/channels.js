@@ -439,7 +439,10 @@ function doCurrentStatusRun()
         else if (state.timeTaken < 0.75 * STATE_DELAY)
             state.loadChunk += 100;
         state.loadedSoFar += state.loadChunk;
-        state.loadPendingData += state.loadFile.read(state.loadChunk);
+
+        var newChunk = state.loadFile.read(state.loadChunk);
+        if (newChunk)
+            state.loadPendingData += newChunk;
 
         while (state.loadPendingData.indexOf("\n") != -1)
         {

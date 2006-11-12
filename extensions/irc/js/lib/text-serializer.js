@@ -226,11 +226,20 @@ function ts_deserialize()
     {
         if (this._lines.length == 0)
         {
-            this._buffer += this._fileStream.read();
-            // Got more data in the buffer, so split into lines.
-            // The last one doesn't count - the rest get added to the full list.
+            var newData = this._fileStream.read();
+            if (newData)
+                this._buffer += newData;
+            else if (this._buffer.length == 0)
+                break;
+
+            // Got more data in the buffer, so split into lines. Unless we're
+            // done, the last one might not be complete yet, so save that one.
             var lines = this._buffer.split(/[\r\n]+/);
-            this._buffer = lines.pop();
+            if (!newData)
+                this._buffer = "";
+            else
+                this._buffer = lines.pop();
+
             this._lines = this._lines.concat(lines);
             if (this._lines.length == 0)
                 break;
