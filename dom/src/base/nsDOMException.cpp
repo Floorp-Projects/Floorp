@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMError.h"
 #include "nsDOMException.h"
@@ -217,7 +217,7 @@ NS_IMETHODIMP
 nsBaseDOMException::GetMessage(char **aMessage)
 {
   if (mMessage) {
-    *aMessage = nsCRT::strdup(mMessage);
+    *aMessage = NS_strdup(mMessage);
   } else {
     *aMessage = nsnull;
   }
@@ -241,7 +241,7 @@ nsBaseDOMException::GetName(char **aName)
   NS_ENSURE_ARG_POINTER(aName);
 
   if (mName) {
-    *aName = nsCRT::strdup(mName);
+    *aName = NS_strdup(mName);
   } else {
     *aName = nsnull;
   }
