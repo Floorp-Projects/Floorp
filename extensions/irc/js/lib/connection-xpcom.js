@@ -163,9 +163,6 @@ function CBSConnection (binary)
     {
         throw ("Unable to use binary streams in this build.");
     }
-
-    // Shut up a misguided strict warning.
-    return this;
 }
 
 CBSConnection.prototype.workingBinaryStreams = -1;
