@@ -220,10 +220,10 @@ httpReadHeaders(HTTP *http, App *app, Buf *buf, unsigned char *url,
 		}
 		else if (!strcasecmp((char *) name, "location"))
 		{
-			app->httpResponseHeaderValue(app, buf, value);
-			/* XXX supposed to be absolute URL */
+			/* XXX supposed to be absolute URL? */
 			rel = urlRelative(url, value);
 			addURL(app, rel->url);
+			app->httpResponseHeaderValue(app, buf, rel->url);
 			urlFree(rel);
 			locationFound = 1;
 		}
