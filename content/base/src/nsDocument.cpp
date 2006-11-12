@@ -732,6 +732,11 @@ nsDocument::~nsDocument()
     NS_RELEASE(mCSSLoader);
   }
 
+  // We must delete properties before dropping document reference from
+  // NodeInfoManager, because nsNodeUtils::LastRelease can't remove properties
+  // when owner document is null.
+  mPropertyTable.DeleteAllProperties();
+
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
