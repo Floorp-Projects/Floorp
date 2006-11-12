@@ -40,6 +40,7 @@
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentRegistrar.h"
@@ -3281,7 +3282,7 @@ nsDOMClassInfo::GetFlags(PRUint32 *aFlags)
 NS_IMETHODIMP
 nsDOMClassInfo::GetClassName(char **aClassName)
 {
-  *aClassName = nsCRT::strdup(mData->mName);
+  *aClassName = NS_strdup(mData->mName);
 
   return NS_OK;
 }
