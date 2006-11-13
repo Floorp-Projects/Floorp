@@ -27,6 +27,7 @@ use base qw(Bugzilla::Object);
 use Bugzilla::CGI;
 use Bugzilla::Constants;
 use Bugzilla::Group;
+use Bugzilla::Error;
 use Bugzilla::Search qw(IsValidQueryType);
 use Bugzilla::User;
 use Bugzilla::Util;
