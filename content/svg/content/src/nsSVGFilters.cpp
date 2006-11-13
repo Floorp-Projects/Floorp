@@ -254,18 +254,24 @@ public:
    * aFilter:     the filter that is calling AcquireImage
    * aSourceData: out parameter - the image data of the filter primitive
    *              specified by aIn
+   * aSurface:    optional out parameter - the surface of the filter
+   *              primitive image specified by aIn
    */
   nsresult AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
-                              nsSVGFE* aFilter, PRUint8** aSourceData);
+                              nsSVGFE* aFilter, PRUint8** aSourceData,
+                              cairo_surface_t** aSurface = 0);
   /*
    * Acquiring a target image will create and lock
    * a new surface to be used as the target image.
    * aResult:     the name by which the resulting filter primitive image will be
    *              identified
    * aTargetData: out parameter - the resulting filter primitive image data
+   * aSurface:    optional out parameter - the resulting filter primitive image 
+   *              surface
    */
   nsresult AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
-                              PRUint8** aTargetData);
+                              PRUint8** aTargetData,
+                              cairo_surface_t** aSurface = 0);
   const nsRect& GetRect() {
     return mRect;
   }
@@ -324,7 +330,8 @@ nsSVGFilterResource::~nsSVGFilterResource()
 
 nsresult
 nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
-                                        nsSVGFE* aFilter, PRUint8** aSourceData)
+                                        nsSVGFE* aFilter, PRUint8** aSourceData,
+                                        cairo_surface_t** aSurface)
 {
   aIn->GetAnimVal(mInput);
 
@@ -335,6 +342,9 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
     return NS_ERROR_FAILURE;
   }
 
+  if (aSurface) {
+    *aSurface = surface;
+  }
   mInstance->GetFilterSubregion(aFilter, defaultRect, &mRect);
 
   mSourceData = cairo_image_surface_get_data(surface);
@@ -346,7 +356,8 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
 
 nsresult
 nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
-                                        PRUint8** aTargetData)
+                                        PRUint8** aTargetData,
+                                        cairo_surface_t** aSurface)
 {
   aResult->GetAnimVal(mResult);
   mTargetImage = mInstance->GetImage();
@@ -354,6 +365,9 @@ nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
     return NS_ERROR_FAILURE;
   }
 
+  if (aSurface) {
+    *aSurface = mTargetImage;
+  }
   mTargetData = cairo_image_surface_get_data(mTargetImage);
   mStride = cairo_image_surface_get_stride(mTargetImage);
   mWidth = cairo_image_surface_get_width(mTargetImage);
@@ -1524,11 +1538,17 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
 {
   nsresult rv;
   PRUint8 *sourceData, *targetData;
+  cairo_surface_t *sourceSurface, *targetSurface;
 
   nsSVGFilterResource fr(instance);
-
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  cairo_t *cr = cairo_create(targetSurface);
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(cr);
+    return NS_ERROR_FAILURE;
+  }
 
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -1539,33 +1559,13 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
     nsCOMPtr<nsIDOMSVGAnimatedString> str;
     node->GetIn1(getter_AddRefs(str));
 
-    rv = fr.AcquireSourceImage(str, this, &sourceData);
+    rv = fr.AcquireSourceImage(str, this, &sourceData, &sourceSurface);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsRect rect = fr.GetRect();
 
-#ifdef DEBUG_tor
-    fprintf(stderr, "FILTER MERGE rect: %d,%d  %dx%d\n",
-            rect.x, rect.y, rect.width, rect.height);
-#endif
-
-#define BLEND(target, source, alpha) \
-    target = PR_MIN(255, (target * (255 - alpha))/255 + source)
-
-    PRInt32 stride = fr.GetDataStride();
-    for (PRInt32 y = rect.y; y < rect.y + rect.height; y++)
-      for (PRInt32 x = rect.x; x < rect.x + rect.width; x++) {
-        PRUint32 a = sourceData[y * stride + 4 * x + 3];
-        BLEND(targetData[y * stride + 4 * x    ],
-              sourceData[y * stride + 4 * x    ], a);
-        BLEND(targetData[y * stride + 4 * x + 1],
-              sourceData[y * stride + 4 * x + 1], a);
-        BLEND(targetData[y * stride + 4 * x + 2],
-              sourceData[y * stride + 4 * x + 2], a);
-        BLEND(targetData[y * stride + 4 * x + 3],
-              sourceData[y * stride + 4 * x + 3], a);
-      }
-#undef BLEND
+    cairo_set_source_surface(cr, sourceSurface, 0, 0);
+    cairo_paint(cr);
   }
+  cairo_destroy(cr);
   return NS_OK;
 }
 
