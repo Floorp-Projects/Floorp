@@ -41,7 +41,7 @@
 
 interface nsIAddrDatabase;
 
-[scriptable, uuid(5F414A80-1DD2-11B2-AAD0-AA4A15D5A1E8)]
+[scriptable, uuid(3ed862c5-7007-49fc-8834-094e1c71baab)]
 interface nsIAbMDBCard : nsISupports {
 	// used by the absync code
 	attribute unsigned long key;
@@ -51,11 +51,6 @@ interface nsIAbMDBCard : nsISupports {
     attribute unsigned long dbRowID;
 
 	void setAbDatabase(in nsIAddrDatabase database);
-
-	// Copies attributes from the srcCard
-	// Only used when the address database notifies
-	// a directory listener of an inserted event
-	void copyCard(in nsIAbMDBCard srcCardDB);
 
 	wstring getStringAttribute(in string name);
 	void setStringAttribute(in string name, in wstring value);

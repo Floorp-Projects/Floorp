@@ -1187,11 +1187,11 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
 
-	PRUint32 format;
+	PRUint32 format = nsIAbPreferMailFormat::unknown;
 	srcCard->GetPreferMailFormat(&format);
 	SetPreferMailFormat(format);
 
-	PRUint32 popularityIndex;
+	PRUint32 popularityIndex = 0;
 	srcCard->GetPopularityIndex(&popularityIndex);
 	SetPopularityIndex(popularityIndex);
 
