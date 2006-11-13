@@ -225,9 +225,6 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;
-    return NS_OK;
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
