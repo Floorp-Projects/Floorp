@@ -729,7 +729,10 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   // Get the calling geometry's bounding box.  This
   // will be in *device coordinates*
   nsISVGChildFrame *callerSVGFrame;
-  CallQueryInterface(aSource, &callerSVGFrame);
+  if (callerType == nsGkAtoms::svgGlyphFrame)
+    CallQueryInterface(aSource->GetParent(), &callerSVGFrame);
+  else
+    CallQueryInterface(aSource, &callerSVGFrame);
   callerSVGFrame->GetBBox(aBBox);
   // Sanity check
   {

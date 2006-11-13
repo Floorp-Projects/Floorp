@@ -240,11 +240,11 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
 
   nsCOMPtr<nsIDOMSVGMatrix> bboxTransform;
   PRUint16 gradientUnits = GetGradientUnits();
+  nsIAtom *callerType = aSource->GetType();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
     // If this gradient is applied to text, our caller
     // will be the glyph, which is not a container, so we
     // need to get the parent
-    nsIAtom *callerType = aSource->GetType();
     if (callerType ==  nsGkAtoms::svgGlyphFrame)
       mSourceContent = NS_STATIC_CAST(nsSVGElement*,
                                       aSource->GetContent()->GetParent());
@@ -258,8 +258,12 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
     // objectBoundingBox is the default anyway
 
     nsISVGChildFrame *frame = nsnull;
-    if (aSource)
-      CallQueryInterface(aSource, &frame);
+    if (aSource) {
+      if (callerType == nsGkAtoms::svgGlyphFrame)
+        CallQueryInterface(aSource->GetParent(), &frame);
+      else
+        CallQueryInterface(aSource, &frame);
+    }
     nsCOMPtr<nsIDOMSVGRect> rect;
     if (frame) {
       frame->SetMatrixPropagation(PR_FALSE);
