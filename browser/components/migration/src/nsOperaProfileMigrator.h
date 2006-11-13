@@ -43,7 +43,7 @@
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 #include "nsISupportsArray.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsVoidArray.h"
 
 class nsICookieManager2;
