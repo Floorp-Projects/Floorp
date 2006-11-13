@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.29 2006/10/09 22:19:58 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.30 2006/11/13 18:16:58 wtchang%redhat.com Exp $
  */
 
 #include "prerror.h"
@@ -2817,7 +2817,6 @@ ocsp_CertIDsMatch(CERTCertDBHandle *handle,
 		  CERTOCSPCertID *certID1, CERTOCSPCertID *certID2)
 {
     PRBool match = PR_FALSE;
-    SECItem *foundHash = NULL;
     SECOidTag hashAlg;
     SECItem *keyHash = NULL;
     SECItem *nameHash = NULL;
@@ -2862,17 +2861,10 @@ ocsp_CertIDsMatch(CERTCertDBHandle *handle,
 	keyHash = &certID1->issuerMD2KeyHash;
 	nameHash = &certID1->issuerMD2NameHash;
 	break;
-    default:
-	foundHash = NULL;
-	break;
     }
 
-    if (foundHash == NULL) {
-	goto done;
-    }
-    PORT_Assert(keyHash && nameHash);
-
-    if ((SECITEM_CompareItem(nameHash, &certID2->issuerNameHash) == SECEqual)
+    if ((keyHash != NULL)
+      && (SECITEM_CompareItem(nameHash, &certID2->issuerNameHash) == SECEqual)
       && (SECITEM_CompareItem(keyHash, &certID2->issuerKeyHash) == SECEqual)) {
 	match = PR_TRUE;
     }
