@@ -26,7 +26,7 @@ check_updates () {
       WINNT_x86-msvc) 
           platform_dirname="bin"
           ;;
-      Linux_x86-gcc) 
+      Linux_x86-gcc | Linux_x86-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
           ;;
   esac
@@ -51,7 +51,11 @@ check_updates () {
     echo "FAIL: update status was not succeeded: $update_status"
     return 1
   fi
-  
-  diff -r source/$platform_dirname target/$platform_dirname 
+
+  diff -r \
+    -x chrome/installed-chrome.txt \
+    -x Contents/MacOS/chrome/installed-chrome.txt \
+    -x removed-files \
+    source/$platform_dirname target/$platform_dirname 
   return $?
 }
