@@ -82,7 +82,7 @@ protected:
   nsAdoptingCString  mTrustedMailDomains;
 
   PRBool IsTrustedDomain(nsIURI * aContentLocation);
-  nsresult nsMsgContentPolicy::AllowRemoteContentForSender(nsIMsgDBHdr * aMsgHdr, PRBool * aAllowForSender);
+  nsresult AllowRemoteContentForSender(nsIMsgDBHdr * aMsgHdr, PRBool * aAllowForSender);
   nsresult AllowRemoteContentForMsgHdr(nsIMsgDBHdr * aMsgHdr, nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 *aDecision);
   nsresult MailShouldLoad(nsIURI * aRequestingLocation, nsIURI * aContentLocation, PRInt16 * aDecision);
   nsresult ComposeShouldLoad(nsIDocShell * aRootDocShell, nsIURI * aContentLocation, PRInt16 * aDecision);
