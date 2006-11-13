@@ -52,7 +52,7 @@
   <command id="new_command" oncommand="createEventWithDialog()"/>
   <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="modify_command" oncommand="modifyEventWithDialog(getSelectedItems()[0])" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="modify_command" oncommand="modifyEventWithDialog(currentView().getSelectedItems({})[0])" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="print_command" oncommand="calPrint()"/>
