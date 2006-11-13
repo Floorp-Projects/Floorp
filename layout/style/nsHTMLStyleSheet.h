@@ -181,12 +181,25 @@ private:
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
 
-  // this rule handles borders on a <col> when rules is set on its <table>
+  // this rule handles borders on a <col> when rules is set on its <table>.
+  // This should only be used for <col>s which are in a colgroup or anonymous
+  // cols.
   class TableColRule;
   friend class TableColRule;
   class TableColRule: public GenericTableRule {
   public:
     TableColRule() {}
+
+    NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+  };
+
+  // this rule handles borders on a <col> when rules is set on its <table>.
+  // This should only be used for <col>s which are not in a colgroup.
+  class TableUngroupedColRule;
+  friend class TableUngroupedColRule;
+  class TableUngroupedColRule: public GenericTableRule {
+  public:
+    TableUngroupedColRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
@@ -201,6 +214,7 @@ private:
   TableRowRule*        mTableRowRule;
   TableColgroupRule*   mTableColgroupRule;
   TableColRule*        mTableColRule;
+  TableUngroupedColRule* mTableUngroupedColRule;
   TableTHRule*         mTableTHRule;
 
   PLDHashTable         mMappedAttrTable;
