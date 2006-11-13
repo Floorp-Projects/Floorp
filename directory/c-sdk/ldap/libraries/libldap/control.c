@@ -303,7 +303,30 @@ ldap_controls_free( LDAPControl **ctrls )
 	}
 }
 
-
+LDAPControl *
+LDAP_CALL
+ldap_find_control( const char *oid, LDAPControl **ctrls )
+{
+	int i, foundControl;
+	LDAPControl *Ctrlp = NULL;
+	
+	/* find the control in the list of controls if it exists */
+	if ( ctrls == NULL ) {
+		return ( NULL );
+	} 
+	foundControl = 0;
+	for ( i = 0; (( ctrls[i] != NULL ) && ( !foundControl )); i++ ) {
+		foundControl = !strcmp( ctrls[i]->ldctl_oid, oid );
+	}
+	if ( !foundControl ) {
+		return ( NULL );
+	} else {
+		/* let local var point to the control */
+		Ctrlp = ctrls[i-1];			
+	}
+	
+	return( Ctrlp );
+}
 
 #if 0
 LDAPControl **

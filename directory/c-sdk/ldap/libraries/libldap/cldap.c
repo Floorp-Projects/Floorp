@@ -152,7 +152,7 @@ cldap_open( char *host, int port )
     }	
     ld->ld_sbp->sb_sd = s;
     ld->ld_sbp->sb_naddr = 0;
-    ld->ld_version = LDAP_VERSION;
+    ld->ld_version = LDAP_VERSION2;
 
     sock.sin_family = AF_INET;
     sock.sin_port = htons( port );

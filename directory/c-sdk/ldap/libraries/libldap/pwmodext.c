@@ -130,8 +130,8 @@ ldap_passwd (
 		requestdata = NULL;
 	}
 		
-	rc = ldap_extended_operation( ld, LDAP_CONTROL_EXT_PASSWD_MODIFY, 
-				  requestdata, serverctrls, clientctrls, msgidp );
+	rc = ldap_extended_operation( ld, LDAP_EXOP_MODIFY_PASSWD, requestdata, 
+										serverctrls, clientctrls, msgidp );
 	
 	/* the ber encoding is no longer needed */
 	if ( requestdata ) {

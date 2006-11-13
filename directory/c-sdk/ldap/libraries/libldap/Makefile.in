@@ -47,6 +47,7 @@ include $(topsrcdir)/build.mk
 
 SRCS		= abandon.c \
 		  add.c \
+		  authzidctrl.c \
 		  bind.c \
 		  cache.c \
 		  charray.c \
@@ -66,6 +67,7 @@ SRCS		= abandon.c \
 		  getattr.c \
 		  getdn.c \
 		  getdxbyname.c \
+		  geteffectiverightsctrl.c \
 		  getentry.c \
 		  getfilter.c \
 		  getoption.c \
@@ -78,6 +80,7 @@ SRCS		= abandon.c \
 		  proxyauthctrl.c \
 		  psearch.c \
 		  pwmodext.c \
+		  pwpctrl.c \
 		  referral.c \
 		  regex.c \
 		  rename.c \
@@ -96,8 +99,10 @@ SRCS		= abandon.c \
 		  unbind.c \
 		  unescape.c \
 		  url.c \
+		  userstatusctrl.c \
 		  utf8.c \
-		  vlistctrl.c
+		  vlistctrl.c \
+		  whoami.c
 
 ifeq ($(HAVE_SASL), 1)
 SRCS		+= saslio.c

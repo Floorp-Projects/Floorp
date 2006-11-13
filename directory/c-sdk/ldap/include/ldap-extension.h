@@ -46,8 +46,7 @@ extern "C" {
 
 #define LDAP_PORT_MAX           65535           /* API extension */
 #define LDAP_VERSION1           1               /* API extension */
-#define LDAP_VERSION            LDAP_VERSION2   /* API extension */
-
+#define LDAP_VERSION            LDAP_VERSION3   /* API extension */
 
 /*
  * C LDAP features we support that are not (yet) part of the LDAP C API
@@ -105,20 +104,29 @@ extern "C" {
 #define LDAP_CONTROL_PROXIEDAUTH        "2.16.840.1.113730.3.4.18" /* version 2
 */
 
+/* Authorization Identity Request and Response Controls */
+#define LDAP_CONTROL_AUTHZID_REQ        "2.16.840.1.113730.3.4.16"
+#define LDAP_CONTROL_AUTHZID_RES        "2.16.840.1.113730.3.4.15"
+
 /* Authentication request and response controls */
-#define LDAP_CONTROL_AUTH_REQUEST       "2.16.840.1.113730.3.4.16"
-#define LDAP_CONTROL_AUTH_RESPONSE      "2.16.840.1.113730.3.4.15"
+#define LDAP_CONTROL_AUTH_REQUEST       LDAP_CONTROL_AUTHZID_REQ
+#define LDAP_CONTROL_AUTH_RESPONSE      LDAP_CONTROL_AUTHZID_RES
 
 /* Password information sent back to client */
 #define LDAP_CONTROL_PWEXPIRED          "2.16.840.1.113730.3.4.4"
 #define LDAP_CONTROL_PWEXPIRING         "2.16.840.1.113730.3.4.5"
 
-/* Proposed standard password policy controls */
-#define LDAP_X_CONTROL_PWPOLICY_REQUEST		"1.3.6.1.4.1.42.2.27.8.5.1"
-#define LDAP_X_CONTROL_PWPOLICY_RESPONSE	"1.3.6.1.4.1.42.2.27.8.5.1"
+/* Password Policy Control */
+#define LDAP_CONTROL_PASSWD_POLICY      "1.3.6.1.4.1.42.2.27.8.5.1"
+
+/* Password Policy Control compatibility macros */
+#define LDAP_X_CONTROL_PWPOLICY_REQUEST		LDAP_CONTROL_PASSWD_POLICY
+#define LDAP_X_CONTROL_PWPOLICY_RESPONSE	LDAP_CONTROL_PASSWD_POLICY
+#define LDAP_CONTROL_PASSWORDPOLICYREQUEST	LDAP_CONTROL_PASSWD_POLICY
+#define LDAP_CONTROL_PASSWORDPOLICYRESPONSE	LDAP_CONTROL_PASSWD_POLICY
 
 /* Password Modify Extended Operation */
-#define LDAP_CONTROL_EXT_PASSWD_MODIFY  "1.3.6.1.4.1.4203.1.11.1"
+#define LDAP_EXOP_MODIFY_PASSWD			"1.3.6.1.4.1.4203.1.11.1"
 
 /* Suppress virtual/inherited attribute values */
 #define LDAP_CONTROL_REAL_ATTRS_ONLY	"2.16.840.1.113730.3.4.17"
@@ -126,8 +134,19 @@ extern "C" {
 /* Only return virtual/inherited attribute values */
 #define LDAP_CONTROL_VIRTUAL_ATTRS_ONLY	"2.16.840.1.113730.3.4.19"
 
+/* getEffectiveRights request */
+#define LDAP_CONTROL_GETEFFECTIVERIGHTS_REQUEST "1.3.6.1.4.1.42.2.27.9.5.2"
+
+/* Password Policy Control to get account availability */	
+#define LDAP_CONTROL_ACCOUNT_USABLE     "1.3.6.1.4.1.42.2.27.9.5.8"
+
+/* "Who am I?" Extended Operation */	
+#define LDAP_EXOP_WHO_AM_I				"1.3.6.1.4.1.4203.1.11.3"
 
 LDAP_API(void) LDAP_CALL ldap_ber_free( BerElement *ber, int freebuf );
+
+LDAP_API(LDAPControl *) LDAP_CALL ldap_find_control( const char *oid, 
+		LDAPControl **ctrls );
 
 /*
  * Server side sorting of search results (an LDAPv3 extension --
@@ -139,6 +158,39 @@ typedef struct LDAPsortkey {    /* structure for a sort-key */
         int     sk_reverseorder;
 } LDAPsortkey;
 
+/* where LDAP_CONTROL_ACCOUNT_USABLE control parse results */
+typedef struct LDAPuserstatus {     /* user account availability   */
+        unsigned int us_available;  /* availability status         */
+#define LDAP_US_ACCOUNT_USABLE      1
+#define LDAP_US_ACCOUNT_NOT_USABLE  0
+        int          us_expire;     /* will expire in seconds      */
+        int          us_inactive;   /* boolean inactivation status */
+#define LDAP_US_ACCOUNT_ACTIVE      0
+#define LDAP_US_ACCOUNT_INACTIVE    1
+        int          us_reset;      /* boolean password reset      */
+#define LDAP_US_ACCOUNT_NOT_RESET   0
+#define LDAP_US_ACCOUNT_RESET       1
+        int          us_expired;    /* boolean password expired    */
+#define LDAP_US_ACCOUNT_NOT_EXPIRED 0
+#define LDAP_US_ACCOUNT_EXPIRED     1
+        int          us_remaining;  /* remaining logins            */
+        int          us_seconds;    /* will unlock in seconds      */
+} LDAPuserstatus;
+
+/* LDAP_CONTROL_PASSWD_POLICY results */
+typedef enum passpolicyerror_enum {
+       PP_passwordExpired = 0,
+       PP_accountLocked = 1,
+       PP_changeAfterReset = 2,
+       PP_passwordModNotAllowed = 3,
+       PP_mustSupplyOldPassword = 4,
+       PP_insufficientPasswordQuality = 5,
+       PP_passwordTooShort = 6,
+       PP_passwordTooYoung = 7,
+       PP_passwordInHistory = 8,
+       PP_noError = 65535
+} LDAPPasswordPolicyError;
+
 LDAP_API(int) LDAP_CALL ldap_create_sort_control( LDAP *ld,
         LDAPsortkey **sortKeyList, const char ctl_iscritical,
         LDAPControl **ctrlp );
@@ -149,6 +201,39 @@ LDAP_API(void) LDAP_CALL ldap_free_sort_keylist( LDAPsortkey **sortKeyList );
 LDAP_API(int) LDAP_CALL ldap_create_sort_keylist( LDAPsortkey ***sortKeyList,
         const char *string_rep );
 
+LDAP_API(int) LDAP_CALL ldap_create_userstatus_control( 
+		LDAP *ld, const char ctl_iscritical, LDAPControl **ctrlp );
+LDAP_API(int) LDAP_CALL ldap_parse_userstatus_control( LDAP *ld, 
+		LDAPControl **ctrlp, LDAPuserstatus *us );
+
+LDAP_API(int) LDAP_CALL ldap_create_passwordpolicy_control( LDAP *ld, 
+		LDAPControl **ctrlp );
+LDAP_API(int) LDAP_CALL ldap_create_passwordpolicy_control_ext( LDAP *ld, 
+		const char ctl_iscritical, LDAPControl **ctrlp );
+LDAP_API(int) LDAP_CALL ldap_parse_passwordpolicy_control( LDAP *ld, 
+		LDAPControl *ctrlp, ber_int_t *expirep, ber_int_t *gracep,
+		LDAPPasswordPolicyError *errorp );
+LDAP_API(int) LDAP_CALL ldap_parse_passwordpolicy_control_ext ( LDAP *ld, 
+		LDAPControl **ctrlp, ber_int_t *expirep, ber_int_t *gracep,
+		LDAPPasswordPolicyError *errorp );
+LDAP_API(const char *) LDAP_CALL ldap_passwordpolicy_err2txt( 
+		LDAPPasswordPolicyError err );
+
+LDAP_API(int) LDAP_CALL ldap_create_authzid_control( LDAP *ld, 
+		const char ctl_iscritical, LDAPControl **ctrlp );
+LDAP_API(int) LDAP_CALL ldap_parse_authzid_control( LDAP *ld, 
+		LDAPControl **ctrlp, char **authzid );
+
+LDAP_API(int) LDAP_CALL ldap_whoami( LDAP *ld, LDAPControl **serverctrls, 
+		LDAPControl **clientctrls, int *msgidp );
+LDAP_API(int) LDAP_CALL ldap_whoami_s( LDAP *ld, struct berval **authzid,
+		LDAPControl **serverctrls, LDAPControl **clientctrls );
+LDAP_API(int) LDAP_CALL ldap_parse_whoami( LDAP *ld, LDAPMessage *result, 
+		struct berval **authzid );
+
+LDAP_API(int) LDAP_CALL ldap_create_geteffectiveRights_control( LDAP *ld,
+        const char *authzid, const char **attrlist,  const char ctl_iscritical,
+		LDAPControl **ctrlp );
 
 /*
  * Virtual list view (an LDAPv3 extension -- LDAP_API_FEATURE_VIRTUAL_LIST_VIEW)

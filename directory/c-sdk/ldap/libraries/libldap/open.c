@@ -398,7 +398,7 @@ nsldapi_initialize_defaults( void )
 	memset( &nsldapi_memalloc_fns, 0, sizeof( nsldapi_memalloc_fns ));
 	memset( &nsldapi_ld_defaults, 0, sizeof( nsldapi_ld_defaults ));
 	nsldapi_ld_defaults.ld_options = LDAP_BITOPT_REFERRALS;
-	nsldapi_ld_defaults.ld_version = LDAP_VERSION2;
+	nsldapi_ld_defaults.ld_version = LDAP_VERSION3;
 	nsldapi_ld_defaults.ld_lberoptions = LBER_OPT_USE_DER;
 	nsldapi_ld_defaults.ld_refhoplimit = LDAP_DEFAULT_REFHOPLIMIT;
 
