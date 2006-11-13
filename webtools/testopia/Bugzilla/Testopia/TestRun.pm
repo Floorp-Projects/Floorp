@@ -749,8 +749,10 @@ Returns true if the logged in user has rights to delete this test run.
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param('allow-test-deletion') 
-      && (Bugzilla->user->id == $self->manager->id || Bugzilla->user->in_group('admin'));
+    return 0 unless $self->canedit && Param('allow-test-deletion'); 
+    return (Bugzilla->user->id == $self->manager->id
+            || Bugzilla->user->id == $self->plan->author->id 
+            || Bugzilla->user->in_group('admin'));
 }
 
 ###############################

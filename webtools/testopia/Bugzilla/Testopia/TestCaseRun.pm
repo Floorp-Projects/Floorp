@@ -984,9 +984,8 @@ Returns true if the logged in user has rights to delete this case-run.
 sub candelete {
     my $self = shift;
     
-    return ($self->canedit 
-            && Param('allow-test-deletion')); 
-
+    return 0 unless $self->canedit && Param('allow-test-deletion'); 
+    return $self->run->manager->id == Bugzilla->user->id;
 }
 
 =head2 obliterate

@@ -889,8 +889,8 @@ Returns true if the logged in user has rights to delete this plan
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param("allow-test-deletion")
-      && (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));    
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));    
 }
   
     

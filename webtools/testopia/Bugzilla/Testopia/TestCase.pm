@@ -1339,8 +1339,14 @@ Returns true if the logged in user has rights to delete this test case.
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param("allow-test-deletion")
-      && (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));
+    return 0 unless ($self->canedit && Param("allow-test-deletion"));
+    return 1 if Bugzilla->user->in_group('admin');
+
+    # Allow case author to delete as long as this case does not appear in any runs.
+    return 1 if Bugzilla->user->id == $self->author->id && get_caserun_count == 0;
+
+    # Allow plan author to delete if this case is linked to one plan only.
+    return 1 if scalar(@{$self->plans}) == 1 && Bugzilla->user->id == @{$self->plans}[0]->author->id;  
 }
 
 ###############################
