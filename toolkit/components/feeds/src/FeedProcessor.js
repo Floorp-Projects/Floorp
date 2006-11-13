@@ -349,8 +349,8 @@ Feed.prototype = {
     textInput: ["textInput", "rss1:textinput"],
     skipDays: ["skipDays"],
     skipHours: ["skipHours"],
-    updated: ["pubDate", "atom03:modified", "dc:date", "dcterms:modified",
-              "atom:updated"]
+    updated: ["pubDate", "lastBuildDate", "atom03:modified", "dc:date",
+              "dcterms:modified", "atom:updated"]
   },
 
   normalize: function Feed_normalize() {
