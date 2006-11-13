@@ -269,24 +269,29 @@ function PutDescription() {
     </td>
   </tr>
 
-  [% matches = cgi.user_agent('Gecko/(\d+)') %]
-  [% buildid = cgi.user_agent() IF matches %]
+  [% IF product.match("Firefox|Camino|Mozilla Application Suite") %]
+    [% matches = cgi.user_agent('Gecko/(\d+)') %]
+    [% buildid = cgi.user_agent() IF matches %]
+  [% END %]
+  
+  [%# Accept URL parameter build ID for non-browser products %]
+  [% IF cgi.param("buildid") %]
+    [% buildid = cgi.param("buildid") %]
+  [% END %]
 
   <tr bgcolor="[% tablecolour %]">
     <td align="right" valign="top">
-      <b>Build Identifier<br>(User Agent)</b>
+      <b>Build Identifier</b>
     </td>
     <td valign="top">
       <input type="text" size="80" name="buildid" value="[% buildid %]">
       <p>
-        This identifies exactly the version of the product you were using.
-        If reporting [% terms.abug %] in Mozilla or Firefox,
-        this is the line beginning <tt>"Mozilla/5.0"</tt> in
-        <tt>Help | About</tt>.
-        If you are using the problematic software to file the bug, this 
-        field will already be filled in correctly.
-        If the product won't start, just enter the complete URL you 
-        downloaded it from.
+        This should identify the exact version of the product you were using.  
+        If the above field is blank or you know it is incorrect, copy the 
+        version text from the product's Help | 
+        About menu (for browsers this will begin with "Mozilla/5.0...").  
+        If the product won't start, instead paste the complete URL you downloaded 
+        it from.
       </p>
     </td>
   </tr>
@@ -298,11 +303,10 @@ function PutDescription() {
     <td valign="top">
       <input type="text" size="80" name="bug_file_loc" value="http://">
       <p>
-        URL that demonstrates the problem you are seeing (optional.)
-        <!--
-        <b>IMPORTANT</b>: problems with broken web pages go
-        <a href="http://write-this-webtool/">in this form instead</a>.
-        -->
+        URL that demonstrates the problem you are seeing (optional).<br>
+        <b>IMPORTANT</b>: if the problem is with a broken web page, you need
+        to report it
+        <a href="https://bugzilla.mozilla.org/page.cgi?id=broken-website.html">a different way</a>.
       </p>
    </td>
   </tr>
