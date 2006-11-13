@@ -55,7 +55,7 @@ const kClassicMailLayout = 0;
 const kWideMailLayout = 1;
 const kVerticalMailLayout = 2;
 
-// Per message headder flags to keep track of whether the user is allowing remote
+// Per message header flags to keep track of whether the user is allowing remote
 // content for a particular message. 
 // if you change or add more values to these constants, be sure to modify
 // the corresponding definitions in nsMsgContentPolicy.cpp
@@ -2316,9 +2316,12 @@ var gMessageNotificationBar =
 
   setRemoteContentMsg: function(aMsgHdr)
   {  
-    var blockRemote = aMsgHdr &&
-                      aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent;
-    this.updateMsgNotificationBar(kMsgNotificationRemoteImages, blockRemote);
+    // update the allow remote content for sender string
+    var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+    var emailAddress = headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author);
+    document.getElementById('allowRemoteContentForAuthorDesc').value = 
+      gMessengerBundle.getFormattedString('alwaysLoadRemoteContentForSender', [emailAddress ? emailAddress : aMsgHdr.author]);
+    this.updateMsgNotificationBar(kMsgNotificationRemoteImages, true);
   },
 
   // aUrl is the nsIURI for the message currently loaded in the message pane
@@ -2354,13 +2357,84 @@ var gMessageNotificationBar =
   }
 };
 
-function LoadMsgWithRemoteContent()
+/**
+ * LoadMsgWithRemoteContent
+ *   Reload the current message, allowing remote content
+ */
+function loadMsgWithRemoteContent()
 {
   // we want to get the msg hdr for the currently selected message
   // change the "remoteContentBar" property on it
   // then reload the message
 
   setMsgHdrPropertyAndReload("remoteContentPolicy", kAllowRemoteContent);
+}
+
+/**
+ *  msgHdrForCurrentMessage
+ *   Returns the msg hdr associated with the current loaded message.
+ */
+function msgHdrForCurrentMessage()
+{
+  var msgURI = GetLoadedMessage();
+  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
+    return (msgURI && !(/type=application\/x-message-display/.test(msgURI))) ? messenger.msgHdrFromURI(msgURI) : null;
+}
+
+/**
+ *  Reloads the message after adjusting the remote content policy for the sender.
+ *  Iterate through the local address books looking for a card with the same e-mail address as the 
+ *  sender of the current loaded message. If we find a card, update the allow remote content field.
+ *  If we can't find a card, prompt the user with a new AB card dialog, pre-selecting the remote content field.
+ */
+function allowRemoteContentForSender()
+{
+  // get the sender of the msg hdr
+  var msgHdr = msgHdrForCurrentMessage();
+  if (!msgHdr)
+    return;
+  
+  var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"]
+                      .getService(Components.interfaces.nsIMsgHeaderParser);
+  var names = {};
+  var addresses = {};
+  var fullNames = {};
+  var numAddresses;
+  
+  numAddresses = headerParser.parseHeadersWithArray(msgHdr.author, addresses, names, fullNames);
+  var authorEmailAddress = addresses.value[0];
+  if (!authorEmailAddress)
+    return;
+  
+  // search through all of our local address books looking for a match.
+  var parentDir = RDF.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+  var enumerator = parentDir.childNodes;
+  var cardForEmailAddress;
+  var addrbook;
+  while (!cardForEmailAddress && enumerator.hasMoreElements())
+  {
+    addrbook = enumerator.getNext();
+    if (addrbook instanceof Components.interfaces.nsIAbMDBDirectory)
+      cardForEmailAddress = addrbook.cardForEmailAddress(authorEmailAddress);
+  }
+
+  if (cardForEmailAddress)
+  {
+    // set the property for remote content
+    cardForEmailAddress.allowRemoteContent = true;
+    cardForEmailAddress.editCardToDatabase(""); 
+  }
+  else
+  {
+    // create a new card and set the property
+    window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+                      "",
+                      "chrome,resizable=no,titlebar,modal,centerscreen",
+                      {primaryEmail:authorEmailAddress, displayName:names.value[0], allowRemoteContent:'true'});
+  } 
+  
+  // reload the message now that we've updated the remote content policy for the sender  
+  MsgReload();
 }
 
 function MsgIsNotAScam()
@@ -2377,16 +2451,11 @@ function setMsgHdrPropertyAndReload(aProperty, aValue)
   // we want to get the msg hdr for the currently selected message
   // change the appropiate property on it then reload the message
 
-  var msgURI = GetLoadedMessage();
-
-  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
+  var msgHdr = msgHdrForCurrentMessage();
+  if (msgHdr)
   {
-    var msgHdr = messenger.msgHdrFromURI(msgURI);
-    if (msgHdr)
-    {
-      msgHdr.setUint32Property(aProperty, aValue);
-      MsgReload();
-    }
+    msgHdr.setUint32Property(aProperty, aValue);
+    MsgReload();
   }
 }
 
@@ -2394,15 +2463,8 @@ function checkMsgHdrPropertyIsNot(aProperty, aValue)
 {
   // we want to get the msg hdr for the currently selected message,
   // get the appropiate property on it and then test against value.
-
-  var msgURI = GetLoadedMessage();
-    
-  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
-  {
-    var msgHdr = messenger.msgHdrFromURI(msgURI);
-    return (msgHdr && msgHdr.getUint32Property(aProperty) != aValue);
-  }
-  return false;
+  var msgHdr = msgHdrForCurrentMessage();
+  return (msgHdr && msgHdr.getUint32Property(aProperty) != aValue);
 }
 
 function MarkCurrentMessageAsRead()
@@ -2447,7 +2509,6 @@ function OnMsgLoaded(aUrl)
     catch (ex) {}
     
     var msgURI = GetLoadedMessage();
-    var msgHdr = null;
     
     if (!folder || !msgURI)
       return;
@@ -2462,8 +2523,7 @@ function OnMsgLoaded(aUrl)
     if (wintype == "mail:messageWindow" || GetThreadTree().view.selection.currentIndex != gSelectedIndexWhenDeleting)
       gNextMessageViewIndexAfterDelete = -2;
 
-    if (!(/type=application\/x-message-display/.test(msgURI)))
-      msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    var msgHdr = msgHdrForCurrentMessage();
      
     gMessageNotificationBar.setJunkMsg(msgHdr);
 

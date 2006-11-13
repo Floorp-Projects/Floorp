@@ -511,6 +511,10 @@ toolbar[iconsize="small"] #button-next[disabled] {
   color: black;
 }
 
+#allowRemoteContentForAuthorDesc {
+  padding-left: 10px;
+}
+
 #phishingBarImage {
 /* for now, temporarily copy the remote image icon until we can get a new one */
   list-style-image: url("chrome://global/skin/console/console-toolbar.png");

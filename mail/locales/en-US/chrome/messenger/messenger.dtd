@@ -628,7 +628,7 @@
 
 <!-- Remote Content Bar -->
 <!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message.">
-<!ENTITY loadRemoteContentButton.label "Show Images">
+<!ENTITY loadRemoteContentButton1.label "Load Images">
 
 <!-- Phishing Bar -->
 <!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam.">

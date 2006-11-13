@@ -196,9 +196,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 /* ::::: email address twisty ::::: */
 
 .addresstwisty {
-
   -moz-padding-end: 5px;
-
   padding-top: 4px;
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }

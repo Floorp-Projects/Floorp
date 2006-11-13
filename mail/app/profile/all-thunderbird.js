@@ -179,25 +179,6 @@ pref("accessibility.typeaheadfind.flashBar", 1);
 pref("mail.showFolderPaneColumns", false); // setting to true will allow total/unread/size columns
 pref("mail.showCondensedAddresses", true); // show the friendly display name for people I know
 
-/////////////////////////////////////////////////////////////////
-// Privacy Controls for Handling Remote Content
-///////////////////////////////////////////////////////////////// 
-pref("mailnews.message_display.allow.plugins", false); // disable plugins by default
-pref("mailnews.message_display.disable_remote_image", true);
-pref("mailnews.message_display.disable_remote_images.useWhitelist", true);
-pref("mailnews.message_display.disable_remote_images.whiteListAbURI","moz-abmdbdirectory://abook.mab");
-
-/////////////////////////////////////////////////////////////////
-// Trusted Mail Domains
-//
-// Specific domains can be white listed to bypass various privacy controls in Thunderbird
-// such as blocking remote images, the phishing detector, etc. This is particularly
-// useful for business deployments where images or links reference servers inside a 
-// corporate intranet. For multiple domains, separate them with a comma. i.e.
-// pref("mail.trusteddomains", "mozilla.org,mozillafoundation.org");
-///////////////////////////////////////////////////////////////// 
-pref("mail.trusteddomains", "");
-
 // hidden pref for changing how we present attachments in the message pane
 pref("mailnews.attachments.display.largeView", false); 
 pref("mail.pane_config.dynamic",            0);

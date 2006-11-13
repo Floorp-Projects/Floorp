@@ -57,18 +57,6 @@
     <preferences>
       <preference id="mail.preferences.privacy.selectedTabIndex"
                   name="mail.preferences.privacy.selectedTabIndex" type="int"/>
-      <preference id="mailnews.message_display.disable_remote_image"
-                  name="mailnews.message_display.disable_remote_image"
-                  type="bool"/>
-      <preference id="mailnews.message_display.disable_remote_images.useWhitelist"
-                  name="mailnews.message_display.disable_remote_images.useWhitelist"
-                  type="bool"/>
-      <preference id="mailnews.message_display.disable_remote_images.whiteListAbURI"
-                  name="mailnews.message_display.disable_remote_images.whiteListAbURI"
-                  type="string"/>
-      <preference id="javascript.allow.mailnews"
-                  name="javascript.allow.mailnews" inverted="true"
-                  type="bool"/>
       <preference id="mail.spam.manualMark" 
                   name="mail.spam.manualMark" 
                   type="bool"/>
@@ -106,7 +94,6 @@
 
     <tabbox id="privacyPrefs" flex="1" onselect="gPrivacyPane.tabSelectionChanged();">
       <tabs>
-        <tab label="&itemGeneral.label;"/>
         <tab label="&itemJunk.label;"/>
         <tab label="&itemPhishing.label;"/>
         <tab label="&itemAntiVirus.label;"/>
@@ -115,30 +102,6 @@
       </tabs>
       
       <tabpanels flex="1">
-        <!-- General --> 
-        <tabpanel orient="vertical">
-          <checkbox id="networkImageDisableImagesInMailNews" 
-                    label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
-                    preference="mailnews.message_display.disable_remote_image"
-                    oncommand="gPrivacyPane.updateRemoteImagesState();"/>
-          <hbox class="indent">
-            <checkbox id="useWhiteList"
-                      preference="mailnews.message_display.disable_remote_images.useWhitelist"                       
-                      label="&allowRemoteImagesForFriends.label;" accesskey="&allowRemoteImagesForFriends.accesskey;"/> 
-            <menulist id="whiteListAbURI" flex="1" preference="mailnews.message_display.disable_remote_images.whiteListAbURI">
-              <menupopup id="whitelist-menupopup">
-              </menupopup>
-            </menulist>  
-          </hbox>  
-             
-          <separator class="thin"/>
-
-          <checkbox id="javascriptAllowMailNews"
-                    label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
-                    preference="javascript.allow.mailnews"/>
-                                                      
-        </tabpanel>
-
         <tabpanel orient="vertical">
           <description>&junkMail.intro;</description>
           <class separator="thin"/>

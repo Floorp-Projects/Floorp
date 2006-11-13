@@ -1,16 +1,8 @@
-<!ENTITY itemGeneral.label       "General">
 <!ENTITY itemJunk.label          "Junk">
 <!ENTITY itemPhishing.label      "E-mail Scams">
 <!ENTITY itemPasswords.label     "Passwords">
 <!ENTITY itemAntiVirus.label     "Anti-Virus">
 <!ENTITY itemSecurity.label      "Security">
-
-<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages">
-<!ENTITY disableImageInMailNews.accesskey "B">
-<!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
-<!ENTITY allowRemoteImagesForFriends.accesskey "A">
-<!ENTITY enbJsCheckMailNews.label      "Block JavaScript in mail messages">
-<!ENTITY enbJsCheckMailNews.accesskey  "J">
 
 <!-- Junk Mail Controls -->
 <!ENTITY junkMail.intro "Set your default junk mail settings. Account specific junk mail settings can be configured in Account Settings.">

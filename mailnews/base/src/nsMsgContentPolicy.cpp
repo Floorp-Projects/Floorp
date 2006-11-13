@@ -48,7 +48,8 @@
 #include "nsIRDFResource.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIAbMDBDirectory.h"
-
+#include "nsIAbMDBCard.h"
+#include "nsIAbCard.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgWindow.h"
 #include "nsIMimeMiscStatus.h"
@@ -78,8 +79,6 @@
 #include "nsContentPolicyUtils.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
-static const char kRemoteImagesUseWhiteList[] = "mailnews.message_display.disable_remote_images.useWhitelist";
-static const char kRemoteImagesWhiteListURI[] = "mailnews.message_display.disable_remote_images.whiteListAbURI";
 static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
 static const char kTrustedDomains[] =  "mail.trusteddomains";
 
@@ -99,7 +98,6 @@ NS_IMPL_ISUPPORTS3(nsMsgContentPolicy,
 nsMsgContentPolicy::nsMsgContentPolicy()
 {
   mAllowPlugins = PR_FALSE;
-  mUseRemoteImageWhiteList = PR_TRUE;
   mBlockRemoteImages = PR_TRUE;
 }
 
@@ -111,8 +109,6 @@ nsMsgContentPolicy::~nsMsgContentPolicy()
   if (NS_SUCCEEDED(rv))
   {
     prefInternal->RemoveObserver(kBlockRemoteImages, this);
-    prefInternal->RemoveObserver(kRemoteImagesUseWhiteList, this);
-    prefInternal->RemoveObserver(kRemoteImagesWhiteListURI, this);
     prefInternal->RemoveObserver(kAllowPlugins, this);
   }
 }
@@ -126,54 +122,72 @@ nsresult nsMsgContentPolicy::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   prefInternal->AddObserver(kBlockRemoteImages, this, PR_TRUE);
-  prefInternal->AddObserver(kRemoteImagesUseWhiteList, this, PR_TRUE);
-  prefInternal->AddObserver(kRemoteImagesWhiteListURI, this, PR_TRUE);
   prefInternal->AddObserver(kAllowPlugins, this, PR_TRUE);
 
   prefInternal->GetBoolPref(kAllowPlugins, &mAllowPlugins);
-  prefInternal->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
-  prefInternal->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   prefInternal->GetCharPref(kTrustedDomains, getter_Copies(mTrustedMailDomains));
-  return prefInternal->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+  prefInternal->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+
+  return NS_OK;
 }
 
 /** 
- * returns true if the sender referenced by aMsgHdr is in one of our 
- * trusted white lists.
+ * returns true if the sender referenced by aMsgHdr is in one one of our local
+ * address books and the user has explicitly allowed remote content for the sender
  */
-nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed)
+nsresult nsMsgContentPolicy::AllowRemoteContentForSender(nsIMsgDBHdr * aMsgHdr, PRBool * aAllowForSender)
 {
-  *aWhiteListed = PR_FALSE;
   NS_ENSURE_ARG_POINTER(aMsgHdr); 
-  nsresult rv = NS_OK;
+  
+  nsresult rv;
+  *aAllowForSender = PR_FALSE;  
 
-  if (mBlockRemoteImages && mUseRemoteImageWhiteList && !mRemoteImageWhiteListURI.IsEmpty())
-  {
-    nsXPIDLCString author;
-    rv = aMsgHdr->GetAuthor(getter_Copies(author));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // extract the e-mail address from the msg hdr
+  nsXPIDLCString author;
+  rv = aMsgHdr->GetAuthor(getter_Copies(author));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMsgHeaderParser> headerParser = do_GetService("@mozilla.org/messenger/headerparser;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString emailAddress; 
+  rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author, getter_Copies(emailAddress));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the RDF service to walk through the list of local directories
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
     
-    nsCOMPtr <nsIRDFResource> resource;
-    rv = rdfService->GetResource(mRemoteImageWhiteListURI, getter_AddRefs(resource));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource(NS_LITERAL_CSTRING("moz-abdirectory://"), getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr <nsIAbMDBDirectory> addressBook = do_QueryInterface(resource, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIMsgHeaderParser> headerParser = do_GetService("@mozilla.org/messenger/headerparser;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = directory->GetChildNodes(getter_AddRefs(enumerator));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString emailAddress; 
-    rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author, getter_Copies(emailAddress));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIAbMDBDirectory> mdbDirectory;
+  nsCOMPtr<nsIAbCard> cardForAddress;
+  PRBool hasMore;
 
-    rv = addressBook->HasCardForEmailAddress(emailAddress, aWhiteListed);
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore && !cardForAddress)
+  {
+    rv = enumerator->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mdbDirectory = do_QueryInterface(supports);
+    if (mdbDirectory)
+      mdbDirectory->CardForEmailAddress(emailAddress, getter_AddRefs(cardForAddress));
   }
   
-  return rv;
+  // if we found a card from the sender, 
+  if (cardForAddress)
+    cardForAddress->GetAllowRemoteContent(aAllowForSender);
+
+  return NS_OK;
 }
 
 /**
@@ -360,18 +374,18 @@ nsresult nsMsgContentPolicy::AllowRemoteContentForMsgHdr(nsIMsgDBHdr * aMsgHdr, 
   IsRSSArticle(aRequestingLocation, &isRSS);
 
   // Case #3, author is in our white list..
-  PRBool authorInWhiteList = PR_FALSE;
-  IsSenderInWhiteList(aMsgHdr, &authorInWhiteList);
+  PRBool allowForSender = PR_FALSE;
+  AllowRemoteContentForSender(aMsgHdr, &allowForSender);
 
   // Case #4, the domain for the remote image is in our white list
   PRBool trustedDomain = IsTrustedDomain(aContentLocation);
 
-  *aDecision = (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain) 
+  *aDecision = (isRSS || remoteContentPolicy == kAllowRemoteContent || allowForSender || trustedDomain) 
                ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_REQUEST;
-
+  
   if (*aDecision == nsIContentPolicy::REJECT_REQUEST && !remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
     aMsgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent);
-
+  
   return NS_OK; // always return success
 }
 
@@ -438,7 +452,6 @@ nsresult nsMsgContentPolicy::ComposeShouldLoad(nsIDocShell * aRootDocShell, nsIU
 {
   nsresult rv;
 
-  PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
   PRBool authorInWhiteList = PR_FALSE;
   PRBool trustedDomain = PR_FALSE;
 
@@ -546,10 +559,6 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
 
     if (pref.Equals(kBlockRemoteImages))
       prefBranchInt->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
-    else if (pref.Equals(kRemoteImagesUseWhiteList))
-      prefBranchInt->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
-    else if (pref.Equals(kRemoteImagesWhiteListURI))
-      prefBranchInt->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   }
 
   return NS_OK;

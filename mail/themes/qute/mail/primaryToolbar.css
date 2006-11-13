@@ -519,6 +519,10 @@ toolbar[iconsize="small"] #button-goforward[disabled] {
   list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
 }
 
+#allowRemoteContentForAuthorDesc {
+  padding-left: 10px;
+}
+
 #phishingBarImage {
   list-style-image: url("chrome://messenger/skin/icons/phishing.png");
 }
