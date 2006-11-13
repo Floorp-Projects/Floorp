@@ -1460,6 +1460,9 @@ sub wants_mail {
     
     # No mail if there are no events
     return 0 if !scalar(@$events);
+
+    # Skip DB query if relationship is explicit
+    return 1 if $relationship == REL_GLOBAL_WATCHER;
     
     my $dbh = Bugzilla->dbh;
     

@@ -32,6 +32,7 @@ use Bugzilla::Config::Common;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Token;
+use Bugzilla::User;
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $cgi = Bugzilla->cgi;
@@ -115,6 +116,15 @@ if ($action eq 'save' && $current_module) {
                 my $ok = $i->{'checker'}->($value, $i);
                 if ($ok ne "") {
                     ThrowUserError('invalid_parameter', { name => $name, err => $ok });
+                }
+            } elsif ($name eq 'globalwatchers') {
+                # can't check this as others, as Bugzilla::Config::Common
+                # can not use Bugzilla::User
+                foreach my $watcher (split(/[,\s]+/, $value)) {
+                    ThrowUserError(
+                        'invalid_parameter',
+                        { name => $name, err => "no such user $watcher" }
+                    ) unless login_to_id($watcher);
                 }
             }
             push(@changes, $name);

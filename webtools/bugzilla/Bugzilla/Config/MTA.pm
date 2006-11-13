@@ -72,7 +72,13 @@ sub get_param_list {
    type => 't',
    default => 7,
    checker => \&check_numeric
-  } );
+  },
+  
+  {
+   name => 'globalwatchers',
+   type => 't',
+   default => '',
+  }, );
   return @param_list;
 }
 

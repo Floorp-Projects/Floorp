@@ -50,11 +50,12 @@ use constant BIT_WATCHING  => 2;
 # We need these strings for the X-Bugzilla-Reasons header
 # Note: this hash uses "," rather than "=>" to avoid auto-quoting of the LHS.
 use constant REL_NAMES => {
-    REL_ASSIGNEE, "AssignedTo", 
-    REL_REPORTER, "Reporter",
-    REL_QA      , "QAcontact",
-    REL_CC      , "CC",
-    REL_VOTER   , "Voter"
+    REL_ASSIGNEE      , "AssignedTo", 
+    REL_REPORTER      , "Reporter",
+    REL_QA            , "QAcontact",
+    REL_CC            , "CC",
+    REL_VOTER         , "Voter",
+    REL_GLOBAL_WATCHER, "GlobalWatcher"
 };
 
 sub FormatTriple {
@@ -392,7 +393,15 @@ sub Send {
             push (@{$watching{$watch->[0]}}, $watch->[1]);
         }
     }
-        
+
+    # Global watcher
+    my @watchers = split(/[,\s]+/, Bugzilla->params->{'globalwatchers'});
+    foreach (@watchers) {
+        my $watcher_id = login_to_id($_);
+        next unless $watcher_id;
+        $recipients{$watcher_id}->{+REL_GLOBAL_WATCHER} = BIT_DIRECT;
+    }
+
     # We now have a complete set of all the users, and their relationships to
     # the bug in question. However, we are not necessarily going to mail them
     # all - there are preferences, permissions checks and all sorts to do yet.

@@ -57,6 +57,8 @@ You are the QA contact for the [% terms.bug %].
 You are on the CC list for the [% terms.bug %].
     [% CASE constants.REL_VOTER %]
 You are a voter for the [% terms.bug %].
+    [% CASE constants.REL_GLOBAL_WATCHER %]
+You are watching all [% terms.bug %] changes.
   [% END %]
 [% END %]
 [% FOREACH relationship = reasons_watch %]

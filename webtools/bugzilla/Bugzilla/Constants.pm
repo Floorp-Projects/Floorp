@@ -85,7 +85,7 @@ use File::Basename;
     THROW_ERROR
     
     RELATIONSHIPS
-    REL_ASSIGNEE REL_QA REL_REPORTER REL_CC REL_VOTER 
+    REL_ASSIGNEE REL_QA REL_REPORTER REL_CC REL_VOTER REL_GLOBAL_WATCHER
     REL_ANY
     
     POS_EVENTS
@@ -244,9 +244,10 @@ use constant REL_QA                 => 1;
 use constant REL_REPORTER           => 2;
 use constant REL_CC                 => 3;
 use constant REL_VOTER              => 4;
+use constant REL_GLOBAL_WATCHER     => 5;
 
 use constant RELATIONSHIPS => REL_ASSIGNEE, REL_QA, REL_REPORTER, REL_CC, 
-                              REL_VOTER;
+                              REL_VOTER, REL_GLOBAL_WATCHER;
                               
 # Used for global events like EVT_FLAG_REQUESTED
 use constant REL_ANY                => 100;

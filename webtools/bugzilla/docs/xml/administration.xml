@@ -198,6 +198,21 @@
 
       <varlistentry>
         <term>
+          globalwatcher
+        </term>
+        <listitem>
+          <para>
+            This allows to define specific users that will
+            receive notification each time a new bug in entered, or when
+            an existing bug changes, according to the normal groupset
+            permissions. It may be useful for sending notifications to a
+            mailing-list, for instance.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           usestatuswhiteboard
         </term>
         <listitem>
