@@ -72,15 +72,15 @@ extern int gettimeofday(struct timeval *tv);
 
 #endif /* XP_UNIX */
 
-#define IS_LEAP(year) \
-   (year != 0 && ((((year & 0x3) == 0) &&  \
-		   ((year - ((year/100) * 100)) != 0)) || \
-		  (year - ((year/400) * 400)) == 0))
-
+#define PRMJ_YEAR_DAYS 365L
+#define PRMJ_FOUR_YEARS_DAYS (4 * PRMJ_YEAR_DAYS + 1)
+#define PRMJ_CENTURY_DAYS (25 * PRMJ_FOUR_YEARS_DAYS - 1)
+#define PRMJ_FOUR_CENTURIES_DAYS (4 * PRMJ_CENTURY_DAYS + 1)
 #define PRMJ_HOUR_SECONDS  3600L
 #define PRMJ_DAY_SECONDS  (24L * PRMJ_HOUR_SECONDS)
-#define PRMJ_YEAR_SECONDS (PRMJ_DAY_SECONDS * 365L)
+#define PRMJ_YEAR_SECONDS (PRMJ_DAY_SECONDS * PRMJ_YEAR_DAYS)
 #define PRMJ_MAX_UNIX_TIMET 2145859200L /*time_t value equiv. to 12/31/2037 */
+
 /* function prototypes */
 static void PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm);
 /*
@@ -351,9 +351,29 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSInt64	result2;
     JSInt64 base;
 
+    /* Some variables for intermediate result storage to make computing isleap
+       easier/faster */    
+    JSInt32 fourCenturyBlocks;
+    JSInt32 centuriesLeft;
+    JSInt32 fourYearBlocksLeft;
+    JSInt32 yearsLeft;
+
+    /* Since leap years work by 400/100/4 year intervals, precompute the length
+       of those in seconds if they start at the beginning of year 1. */
+    JSInt64 fourYears;
+    JSInt64 century;
+    JSInt64 fourCenturies;
+
+    JSLL_I2L(fourYears, PRMJ_FOUR_YEARS_DAYS);
+    JSLL_MUL(fourYears, fourYears, PRMJ_DAY_SECONDS);
+    
+    JSLL_I2L(century, PRMJ_CENTURY_DAYS);
+    JSLL_MUL(century, century, PRMJ_DAY_SECONDS);
+
+    JSLL_I2L(fourCenturies, PRMJ_FOUR_CENTURIES_DAYS);
+    JSLL_MUL(fourCenturies, fourCenturies, PRMJ_DAY_SECONDS);
+
     JSLL_UI2L(result,0);
-    JSLL_UI2L(result1,0);
-    JSLL_UI2L(result2,0);
 
     /* get the base time via UTC */
     base = PRMJ_ToExtendedTime(0);
@@ -361,24 +381,53 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSLL_DIV(base,base,result);
     JSLL_ADD(tsecs,tsecs,base);
 
-    JSLL_UI2L(result, PRMJ_YEAR_SECONDS);
-    JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
-    JSLL_ADD(result2,result,result1);
+    /* Compute our |year|, |isleap|, and part of |days|.  When this part is
+       done, |year| should hold the year our date falls in (number of whole
+       years elapsed before our date), isleap should hold 1 if the year the
+       date falls in is a leap year and 0 otherwise. */
 
-    /* get the year */
-    while ((isleap == 0) ? !JSLL_CMP(tsecs,<,result) : !JSLL_CMP(tsecs,<,result2)) {
-        /* subtract a year from tsecs */
-        JSLL_SUB(tsecs,tsecs,result);
-        days += 365;
-        /* is it a leap year ? */
-        if(IS_LEAP(year)){
-            JSLL_SUB(tsecs,tsecs,result1);
-            days++;
-        }
-        year++;
-        isleap = IS_LEAP(year);
+    /* First do year 0; it's special and nonleap. */
+    JSLL_UI2L(result, PRMJ_YEAR_SECONDS);
+    if (!JSLL_CMP(tsecs,<,result)) {
+        days = PRMJ_YEAR_DAYS;
+        year = 1;
+        JSLL_SUB(tsecs, tsecs, result);
     }
 
+    /* Now use those constants we computed above */
+    JSLL_UDIVMOD(&result1, &result2, tsecs, fourCenturies);
+    JSLL_L2I(fourCenturyBlocks, result1);
+    year += fourCenturyBlocks * 400;
+    days += fourCenturyBlocks * PRMJ_FOUR_CENTURIES_DAYS;
+    tsecs = result2;
+
+    JSLL_UDIVMOD(&result1, &result2, tsecs, century);
+    JSLL_L2I(centuriesLeft, result1);
+    year += centuriesLeft * 100;
+    days += centuriesLeft * PRMJ_CENTURY_DAYS;
+    tsecs = result2;
+
+    JSLL_UDIVMOD(&result1, &result2, tsecs, fourYears);
+    JSLL_L2I(fourYearBlocksLeft, result1);
+    year += fourYearBlocksLeft * 4;
+    days += fourYearBlocksLeft * PRMJ_FOUR_YEARS_DAYS;
+    tsecs = result2;
+
+    /* Recall that |result| holds PRMJ_YEAR_SECONDS */
+    JSLL_UDIVMOD(&result1, &result2, tsecs, result);
+    JSLL_L2I(yearsLeft, result1);
+    year += yearsLeft;
+    days += yearsLeft * PRMJ_YEAR_DAYS;
+    tsecs = result2;
+
+    /* now compute isleap.  Note that we don't have to use %, since we've
+       already computed those remainders.  Also note that they're all offset by
+       1 because of the 1 for year 0. */
+    isleap =
+        (yearsLeft == 3) && (fourYearBlocksLeft != 24 || centuriesLeft == 3);
+    JS_ASSERT(isleap ==
+              ((year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)));
+    
     JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
 
     JSLL_DIV(result,tsecs,result1);
