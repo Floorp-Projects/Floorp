@@ -1389,7 +1389,7 @@ function cmdNetwork(e)
     var network = client.networks[e.networkName];
 
     if (!("messages" in network))
-        network.displayHere(getMsg(MSG_NETWORK_OPENED, network.name));
+        network.displayHere(getMsg(MSG_NETWORK_OPENED, network.unicodeName));
 
     dispatch("set-current-view", { view: network });
 }
