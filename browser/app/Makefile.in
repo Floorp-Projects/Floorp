@@ -249,7 +249,7 @@ ifeq ($(OS_ARCH),WINNT)
 # Set it to 256k.  See bug 127069.
 #
 ifndef GNU_CC
-LDFLAGS += /HEAP:0x40000 /fixed:no
+LDFLAGS += /HEAP:0x40000
 endif
 endif
 

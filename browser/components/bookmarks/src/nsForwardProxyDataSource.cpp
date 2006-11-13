@@ -45,17 +45,14 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStringAPI.h"
 #include "rdf.h"
 #include "nsRDFCID.h"
-#include "nsCRT.h"
 
 #include "nsEnumeratorUtils.h"
 
 #include "nsForwardProxyDataSource.h"
-
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsresult
 nsForwardProxyDataSource::Init(void)
@@ -63,7 +60,7 @@ nsForwardProxyDataSource::Init(void)
     nsresult rv;
 
     // do we need to initialize our globals?
-    nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID);
+    nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1");
     if (!rdf) {
         NS_WARNING ("unable to get RDF service");
         return NS_ERROR_FAILURE;
@@ -207,7 +204,7 @@ nsForwardProxyDataSource::GetURI(char* *uri)
 
     nsCAutoString theURI(NS_LITERAL_CSTRING("x-rdf-infer:forward-proxy"));
 
-    nsXPIDLCString dsURI;
+    nsCString dsURI;
     rv = mDS->GetURI(getter_Copies(dsURI));
     if (NS_FAILED(rv)) return rv;
 
@@ -216,9 +213,9 @@ nsForwardProxyDataSource::GetURI(char* *uri)
         theURI += dsURI;
     }
 
-    if ((*uri = nsCRT::strdup(theURI.get())) == nsnull) {
+    *uri = ToNewCString(theURI);
+    if (*uri == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     return NS_OK;
 }

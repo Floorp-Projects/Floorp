@@ -37,7 +37,6 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsCRT.h"
 #include "nsICookieManager2.h"
 #include "nsIFile.h"
 #include "nsILineInputStream.h"
@@ -52,8 +51,6 @@
 #include "nsIURL.h"
 #include "nsNetscapeProfileMigratorBase.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
-#include "nsXPIDLString.h"
 #include "prtime.h"
 #include "prprf.h"
 
@@ -175,8 +172,8 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
       aProfileLocations->AppendElement(dir);
 
       // Get the profile name and add it to the names array
-      nsXPIDLString profileName;
-      CopyUTF8toUTF16(profileStr, profileName);
+      nsString profileName;
+      CopyUTF8toUTF16(nsDependentCString(profileStr), profileName);
 
       nsCOMPtr<nsISupportsString> profileNameString(
         do_CreateInstance("@mozilla.org/supports-string;1"));
@@ -227,7 +224,7 @@ nsNetscapeProfileMigratorBase::GetWString(void* aTransform, nsIPrefBranch* aBran
                                          getter_AddRefs(prefValue));
 
   if (NS_SUCCEEDED(rv) && prefValue) {
-    nsXPIDLString data;
+    nsString data;
     prefValue->ToString(getter_Copies(data));
 
     xform->stringValue = ToNewCString(NS_ConvertUTF16toUTF8(data));
@@ -242,7 +239,7 @@ nsNetscapeProfileMigratorBase::SetWStringFromASCII(void* aTransform, nsIPrefBran
   PrefTransform* xform = (PrefTransform*)aTransform;
   if (xform->prefHasValue) {
     nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
-    nsAutoString data; data.AssignWithConversion(xform->stringValue);
+    NS_ConvertUTF8toUTF16 data(xform->stringValue);
     pls->SetData(data.get());
     return aBranch->SetComplexValue(xform->targetPrefName ? xform->targetPrefName : xform->sourcePrefName, NS_GET_IID(nsIPrefLocalizedString), pls);
   }
@@ -341,7 +338,6 @@ nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
   nsCAutoString buffer;
   PRBool isMore = PR_TRUE;
   PRInt32 hostIndex = 0, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
-  nsASingleFragmentCString::char_iterator iter;
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain;
@@ -381,18 +377,19 @@ nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
 
     // check the expirytime first - if it's expired, ignore
     // nullstomp the trailing tab, to avoid copying the string
-    buffer.BeginWriting(iter);
+    char *iter = buffer.BeginWriting();
     *(iter += nameIndex - 1) = char(0);
     numInts = PR_sscanf(buffer.get() + expiresIndex, "%lld", &expires);
     if (numInts != 1 || nsInt64(expires) < currentTime)
       continue;
 
     isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).Equals(kTrue);
-    const nsASingleFragmentCString &host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
+    const nsDependentCSubstring host =
+      Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
     // check for bad legacy cookies (domain not starting with a dot, or containing a port),
     // and discard
     if (isDomain && !host.IsEmpty() && host.First() != '.' ||
-        host.FindChar(':') != kNotFound)
+        host.FindChar(':') != -1)
       continue;
 
     // create a new nsCookie and assign the data.
@@ -458,7 +455,7 @@ nsNetscapeProfileMigratorBase::LocateSignonsFile(char** aResult)
     nsCAutoString extn;
     url->GetFileExtension(extn);
 
-    if (extn.EqualsIgnoreCase("s")) {
+    if (extn.Equals("s", CaseInsensitiveCompare)) {
       url->GetFileName(fileName);
       break;
     }

@@ -39,7 +39,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIContentSniffer.h"
 #include "nsIStreamListener.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 class nsFeedSniffer : public nsIContentSniffer, nsIStreamListener
 {
