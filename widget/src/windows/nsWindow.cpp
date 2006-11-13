@@ -6371,7 +6371,8 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARA
     case NS_MOUSE_LEFT_BUTTON_UP:
     case NS_MOUSE_MIDDLE_BUTTON_UP:
     case NS_MOUSE_RIGHT_BUTTON_UP:
-      CaptureMouse(PR_FALSE);
+      if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)))
+        CaptureMouse(PR_FALSE);
       break;
 
     default:
