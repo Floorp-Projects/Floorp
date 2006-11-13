@@ -93,26 +93,43 @@ nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
 
 nsFileControlFrame::~nsFileControlFrame()
 {
-  // remove ourself as a listener of the button (bug 40533)
-  if (mBrowse) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
-    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
-  }
-  if (mTextContent) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
-    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
-  }
-
   if (mCachedState) {
     delete mCachedState;
     mCachedState = nsnull;
   }
 }
 
+NS_IMETHODIMP
+nsFileControlFrame::Init(nsIContent* aContent,
+                         nsIFrame*   aParent,
+                         nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsAreaFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mMouseListener = new MouseListener(this);
+  NS_ENSURE_TRUE(mMouseListener, NS_ERROR_OUT_OF_MEMORY);
+
+  return rv;
+}
+
 void
 nsFileControlFrame::Destroy()
 {
   mTextFrame = nsnull;
+  // remove mMouseListener as a mouse event listener (bug 40533, bug 355931)
+  if (mBrowse) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
+    receiver->RemoveEventListenerByIID(mMouseListener,
+                                       NS_GET_IID(nsIDOMMouseListener));
+  }
+  if (mTextContent) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
+    receiver->RemoveEventListenerByIID(mMouseListener,
+                                       NS_GET_IID(nsIDOMMouseListener));
+  }
+
+  mMouseListener->ForgetFrame();
   nsAreaFrame::Destroy();
 }
 
@@ -158,7 +175,8 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
     // register as an event listener of the textbox to open file dialog on mouse click
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
-    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    receiver->AddEventListenerByIID(mMouseListener,
+                                    NS_GET_IID(nsIDOMMouseListener));
   }
 
   // Create the browse button
@@ -184,7 +202,8 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
     // register as an event listener of the button to open file dialog on mouse click
     nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
-    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    receiver->AddEventListenerByIID(mMouseListener,
+                                    NS_GET_IID(nsIDOMMouseListener));
   }
 
   SyncAttr(kNameSpaceID_None, nsHTMLAtoms::size,     SYNC_TEXT);
@@ -579,3 +598,20 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   return DisplaySelectionOverlay(aBuilder, aLists);
 }
+
+////////////////////////////////////////////////////////////
+// Mouse listener implementation
+
+NS_IMPL_ISUPPORTS1(nsFileControlFrame::MouseListener, nsIDOMMouseListener)
+
+NS_IMETHODIMP
+nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  if (mFrame) {
+    return mFrame->MouseClick(aMouseEvent);
+  }
+
+  return NS_OK;
+}
+
+
