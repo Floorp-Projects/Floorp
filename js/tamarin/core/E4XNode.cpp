@@ -944,7 +944,7 @@ namespace avmplus
 
 			if (XMLObject::notifyNeeded(newXML))
 			{
-				Atom detail = prior ? prior->getValue()->atom() : NULL;
+				Atom detail = prior ? prior->getValue()->atom() : 0;
 				XMLObject* target = new (core->GetGC()) XMLObject(toplevel->xmlClass(), newXML);
 				target->nonChildChanges(toplevel->xmlClass()->kTextSet, newXML->getValue()->atom(), detail);
 			}
