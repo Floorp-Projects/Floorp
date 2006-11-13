@@ -43,8 +43,8 @@ Bugzilla::Field - a particular piece of information about bugs
   print Dumper(Bugzilla::Field->match({ obsolete => 1, custom => 1 }));
 
   # Create or update a custom field or field definition.
-  my $field = Bugzilla::Field::create_or_update(
-    {name => 'hilarity', desc => 'Hilarity', custom => 1});
+  my $field = Bugzilla::Field->create(
+    {name => 'cf_silly', description => 'Silly', custom => 1});
 
   # Instantiate a Field object for an existing field.
   my $field = new Bugzilla::Field({name => 'qacontact_accessible'});
@@ -97,6 +97,26 @@ use constant DB_COLUMNS => (
     'sortkey',
     'obsolete',
     'enter_bug',
+);
+
+use constant REQUIRED_CREATE_FIELDS => qw(name description);
+
+use constant VALIDATORS => {
+    custom      => \&_check_custom,
+    description => \&_check_description,
+    enter_bug   => \&_check_enter_bug,
+    mailhead    => \&_check_mailhead,
+    obsolete    => \&_check_obsolete,
+    sortkey     => \&_check_sortkey,
+    type        => \&_check_type,
+};
+
+use constant UPDATE_COLUMNS => qw(
+    description
+    mailhead
+    sortkey
+    obsolete
+    enter_bug
 );
 
 # How various field types translate into SQL data definitions.
@@ -167,6 +187,76 @@ use constant DEFAULT_FIELDS => (
     {name => 'attachments.isurl',     desc => 'Attachment is a URL'},
     {name => "owner_idle_time",       desc => "Time Since Assignee Touched"},
 );
+
+##############
+# Validators #
+##############
+
+sub _check_custom { return $_[1] ? 1 : 0; }
+
+sub _check_description {
+    my ($invocant, $desc) = @_;
+    $desc = clean_text($desc);
+    $desc || ThrowUserError('field_missing_description');
+    return $desc;
+}
+
+sub _check_enter_bug { return $_[1] ? 1 : 0; }
+
+sub _check_mailhead { return $_[1] ? 1 : 0; }
+
+sub _check_name {
+    my ($invocant, $name, $is_custom) = @_;
+    $name = clean_text($name);
+    $name || ThrowUserError('field_missing_name');
+
+    # Don't want to allow a name that might mess up SQL.
+    my $name_regex = qr/^[\w\.]+$/;
+    # Custom fields have more restrictive name requirements than
+    # standard fields.
+    $name_regex = qr/^\w+$/ if $is_custom;
+    # Custom fields can't be named just "cf_", and there is no normal
+    # field named just "cf_".
+    ($name =~ $name_regex && $name ne "cf_")
+         || ThrowUserError('field_invalid_name', { name => $name });
+
+    # If it's custom, prepend cf_ to the custom field name to distinguish 
+    # it from standard fields.
+    if ($name !~ /^cf_/ && $is_custom) {
+        $name = 'cf_' . $name;
+    }
+
+    # Assure the name is unique. Names can't be changed, so we don't have
+    # to worry about what to do on updates.
+    my $field = new Bugzilla::Field({ name => $name });
+    ThrowUserError('field_already_exists', {'field' => $field }) if $field;
+
+    return $name;
+}
+
+sub _check_obsolete { return $_[1] ? 1 : 0; }
+
+sub _check_sortkey {
+    my ($invocant, $sortkey) = @_;
+    my $skey = $sortkey;
+    if (!defined $skey || $skey eq '') {
+        ($sortkey) = Bugzilla->dbh->selectrow_array(
+            'SELECT MAX(sortkey) + 100 FROM fielddefs') || 100;
+    }
+    detaint_natural($sortkey)
+        || ThrowUserError('field_invalid_sortkey', { sortkey => $skey });
+    return $sortkey;
+}
+
+sub _check_type {
+    my ($invocant, $type) = @_;
+    my $saved_type = $type;
+    # FIELD_TYPE_SINGLE_SELECT here should be updated every time a new,
+    # higher field type is added.
+    (detaint_natural($type) && $type <= FIELD_TYPE_SINGLE_SELECT)
+      || ThrowCodeError('invalid_customfield_type', { type => $saved_type });
+    return $type;
+}
 
 =pod
 
@@ -290,98 +380,105 @@ sub legal_values {
 
 =pod
 
-=head2 Class Methods
+=head2 Instance Mutators
+
+These set the particular field that they are named after.
+
+They take a single value--the new value for that field.
+
+They will throw an error if you try to set the values to something invalid.
 
 =over
 
-=item C<create_or_update({name => $name, desc => $desc, in_new_bugmail => 0, custom => 0})>
+=item C<set_description>
 
-Description: Creates a new field, or updates one that
-             already exists with the same name.
+=item C<set_enter_bug>
 
-Params:      This function takes named parameters in a hashref: 
-             C<name> - string - The name of the field.
-             C<desc> - string - The field label to display in the UI.
-             C<in_new_bugmail> - boolean - Whether this field appears at the
-                 top of the bugmail for a newly-filed bug.
+=item C<set_obsolete>
 
-             The following parameters are optional:
-             C<custom> - boolean - True if this is a Custom Field. The field
-                 will be added to the C<bugs> table if it does not exist.
-             C<sortkey> - integer - The sortkey of the field.
-             C<editable_on_enter_bug> - boolean - Whether this field is
-                 editable on the bug creation form.
-             C<is_obsolete> - boolean - Whether this field is obsolete.
+=item C<set_sortkey>
 
-Returns:     a C<Bugzilla::Field> object.
+=item C<set_in_new_bugmail>
 
 =back
 
 =cut
 
-sub create_or_update {
-    my ($params) = @_;
+sub set_description    { $_[0]->set('description', $_[1]); }
+sub set_enter_bug      { $_[0]->set('enter_bug',   $_[1]); }
+sub set_obsolete       { $_[0]->set('obsolete',    $_[1]); }
+sub set_sortkey        { $_[0]->set('sortkey',     $_[1]); }
+sub set_in_new_bugmail { $_[0]->set('mailhead',    $_[1]); }
+
+=pod
+
+=head2 Class Methods
+
+=over
+
+=item C<create>
+
+Just like L<Bugzilla::Object/create>. Takes the following parameters:
+
+=over
+
+=item C<name> B<Required> - The name of the field.
+
+=item C<description> B<Required> - The field label to display in the UI.
+
+=item C<mailhead> - boolean - Whether this field appears at the
+top of the bugmail for a newly-filed bug. Defaults to 0.
+
+=item C<custom> - boolean - True if this is a Custom Field. The field
+will be added to the C<bugs> table if it does not exist. Defaults to 0.
+
+=item C<sortkey> - integer - The sortkey of the field. Defaults to 0.
+
+=item C<enter_bug> - boolean - Whether this field is
+editable on the bug creation form. Defaults to 0.
+
+C<obsolete> - boolean - Whether this field is obsolete. Defaults to 0.
+
+=back
+
+=back
+
+=cut
+
+sub create {
+    my $class = shift;
+    my $field = $class->SUPER::create(@_);
+
     my $dbh = Bugzilla->dbh;
-
-    my $name           = $params->{name};
-    my $custom         = $params->{custom} ? 1 : 0;
-    my $in_new_bugmail = $params->{in_new_bugmail} ? 1 : 0;
-    my $type           = $params->{type} || FIELD_TYPE_UNKNOWN;
-
-    my $field = new Bugzilla::Field({name => $name});
-    if ($field) {
-        # Both fields are mandatory.
-        my @columns = ('description', 'mailhead');
-        my @values = ($params->{desc}, $in_new_bugmail);
-
-        if (exists $params->{sortkey}) {
-            push(@columns, 'sortkey');
-            push(@values, $params->{sortkey} || 0);
-        }
-        if (exists $params->{editable_on_enter_bug}) {
-            push(@columns, 'enter_bug');
-            push(@values, $params->{editable_on_enter_bug} ? 1 : 0);
-        }
-        if (exists $params->{is_obsolete}) {
-            push(@columns, 'obsolete');
-            push(@values, $params->{is_obsolete} ? 1 : 0);
-        }
-        my $columns = join(', ', map {"$_ = ?"} @columns);
-        # Update the already-existing definition.
-        $dbh->do("UPDATE fielddefs SET $columns WHERE id = ?",
-                  undef, (@values, $field->id));
-    }
-    else {
-        my $sortkey     = $params->{sortkey} || 0;
-        my $enter_bug   = $params->{editable_on_enter_bug} ? 1 : 0;
-        my $is_obsolete = $params->{is_obsolete} ? 1 : 0;
-
-        $sortkey ||= $dbh->selectrow_array(
-            "SELECT MAX(sortkey) + 100 FROM fielddefs") || 100;
-
-        # Add the field to the list of fields at this Bugzilla installation.
-        $dbh->do("INSERT INTO fielddefs (name, description, sortkey, type,
-                                         custom, mailhead, obsolete, enter_bug)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)", undef,
-                 $name, $params->{desc}, $sortkey, $type, $custom, 
-                 $in_new_bugmail, $is_obsolete, $enter_bug);
-    }
-
-    if (!$dbh->bz_column_info('bugs', $name) && $custom) {
+    if ($field->custom) {
+        my $name = $field->name;
+        my $type = $field->type;
         # Create the database column that stores the data for this field.
         $dbh->bz_add_column('bugs', $name, SQL_DEFINITIONS->{$type});
+
+        if ($type == FIELD_TYPE_SINGLE_SELECT) {
+            # Create the table that holds the legal values for this field.
+            $dbh->bz_add_field_table($name);
+            # And insert a default value of "---" into it.
+            $dbh->do("INSERT INTO $name (value) VALUES ('---')");
+        }
     }
 
-    if ($custom && !$dbh->bz_table_info($name)
-        && $type eq FIELD_TYPE_SINGLE_SELECT)
-    {
-        # Create the table that holds the legal values for this field.
-        $dbh->bz_add_field_table($name);
-        # And insert a default value of "---" into it.
-        $dbh->do("INSERT INTO $name (value) VALUES ('---')");
+    return $field;
+}
+
+sub run_create_validators {
+    my $class = shift;
+    my $dbh = Bugzilla->dbh;
+    my $params = $class->SUPER::run_create_validators(@_);
+
+    $params->{name} = $class->_check_name($params->{name}, $params->{custom});
+    if (!exists $params->{sortkey}) {
+        $params->{sortkey} = $dbh->selectrow_array(
+            "SELECT MAX(sortkey) + 100 FROM fielddefs") || 100;
     }
 
-    return new Bugzilla::Field({name => $name});
+    return $params;
 }
 
 
@@ -508,8 +605,22 @@ sub populate_field_definitions {
     my $dbh = Bugzilla->dbh;
 
     # ADD and UPDATE field definitions
-    foreach my $definition (DEFAULT_FIELDS) {
-        create_or_update($definition);
+    foreach my $def (DEFAULT_FIELDS) {
+        my $field = new Bugzilla::Field({ name => $def->{name} });
+        if ($field) {
+            $field->set_description($def->{desc});
+            $field->set_in_new_bugmail($def->{in_new_bugmail});
+            $field->update();
+        }
+        else {
+            if (exists $def->{in_new_bugmail}) {
+                $def->{mailhead} = $def->{in_new_bugmail};
+                delete $def->{in_new_bugmail};
+            }
+            $def->{description} = $def->{desc};
+            delete $def->{desc};
+            Bugzilla::Field->create($def);
+        }
     }
 
     # DELETE fields which were added only accidentally, or which
@@ -583,8 +694,9 @@ sub populate_field_definitions {
 
     # This field has to be created separately, or the above upgrade code
     # might not run properly.
-    Bugzilla::Field::create_or_update(
-        {name => $new_field_name, desc => $field_description});
+    Bugzilla::Field->create({ name => $new_field_name, 
+                              description => $field_description })
+        unless new Bugzilla::Field({ name => $new_field_name });
 
 }
 

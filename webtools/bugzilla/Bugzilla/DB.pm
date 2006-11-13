@@ -587,6 +587,8 @@ sub _bz_add_table_raw {
 sub bz_add_field_table {
     my ($self, $name) = @_;
     my $table_schema = $self->_bz_schema->FIELD_TABLE_SCHEMA;
+    # We do nothing if the table already exists.
+    return if $self->bz_table_info($name);
     my $indexes      = $table_schema->{INDEXES};
     # $indexes is an arrayref, not a hash. In order to fix the keys,
     # we have to fix every other item.

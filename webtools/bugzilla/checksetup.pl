@@ -199,7 +199,7 @@ check_graphviz(!$silent) if Bugzilla->params->{'webdotbase'};
 # Changes to the fielddefs --TABLE--
 ###########################################################################
 
-# Calling Bugzilla::Field::create_or_update depends on the
+# Using Bugzilla::Field's create() or update() depends on the
 # fielddefs table having a modern definition. So, we have to make
 # these particular schema changes before we make any other schema changes.
 Bugzilla::Install::DB::update_fielddefs_definition();

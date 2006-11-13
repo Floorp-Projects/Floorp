@@ -168,12 +168,12 @@
 
   [% ELSIF message_tag == "custom_field_created" %]
     [% title = "Custom Field Created" %]
-    The new custom field '[% name FILTER html %]' has been
+    The new custom field '[% field.name FILTER html %]' has been
     successfully created.
 
   [% ELSIF message_tag == "custom_field_updated" %]
     [% title = "Custom Field Updated" %]
-    Properties of the '[% name FILTER html %]' field have been
+    Properties of the '[% field.name FILTER html %]' field have been
     successfully updated.
 
   [% ELSIF message_tag == "emailold_change_cancelled" %]

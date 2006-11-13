@@ -311,33 +311,9 @@
     Product [% product FILTER html %] does not have a component
     named [% name FILTER html %].
 
-  [% ELSIF error == "customfield_already_exists" %]
-    [% title = "Field Already Exists" %]
-    The field '[% field.name FILTER html %]' ([% field.description FILTER html %])
-    already exists. Please choose another name.
-
-  [% ELSIF error == "customfield_invalid_name" %]
-    [% title = "Invalid Custom Field Name" %]
-    '[% name FILTER html %]' is not a valid name for a custom field.
-    A name may contain only letters, numbers, and the underscore character. The
-    name should also be different from 'cf_'.
-
   [% ELSIF error == "customfield_nonexistent" %]
     [% title = "Unknown Custom Field" %]
     There is no custom field with the name '[% name FILTER html %]'.
-
-  [% ELSIF error == "customfield_invalid_sortkey" %]
-    [% title = "Invalid Sortkey for Field" %]
-    The sortkey [% sortkey FILTER html %] that you have provided for
-    the '[% name FILTER html %]' field is not a valid positive integer.
-
-  [% ELSIF error == "customfield_missing_description" %]
-    [% title = "Missing Description for Field" %]
-    You must enter a description for the '[% name FILTER html %]' field.
-
-  [% ELSIF error == "customfield_missing_name" %]
-    [% title = "Missing Name for Field" %]
-    You must enter a name for this field.
 
   [% ELSIF error == "dependency_loop_multi" %]
     [% title = "Dependency Loop Detected" %]
@@ -399,6 +375,30 @@
     Sorry, either the product <em>[% product FILTER html %]</em>
     does not exist or you aren't authorized to
     enter [% terms.abug %] into it.
+
+  [% ELSIF error == "field_already_exists" %]
+    [% title = "Field Already Exists" %]
+    The field '[% field.name FILTER html %]'     
+    ([% field.description FILTER html %]) already exists. Please
+    choose another name.
+
+  [% ELSIF error == "field_invalid_name" %]
+    [% title = "Invalid Field Name" %]
+    '[% name FILTER html %]' is not a valid name for a field.
+    A name may contain only letters, numbers, and the underscore character.
+
+  [% ELSIF error == "field_invalid_sortkey" %]
+    [% title = "Invalid Sortkey for Field" %]
+    The sortkey [% sortkey FILTER html %] that you have provided for
+    this field is not a valid positive integer.
+
+  [% ELSIF error == "field_missing_description" %]
+    [% title = "Missing Description for Field" %]
+    You must enter a description for this field.
+
+  [% ELSIF error == "field_missing_name" %]
+    [% title = "Missing Name for Field" %]
+    You must enter a name for this field.
 
   [% ELSIF error == "fieldname_invalid" %]
     [% title = "Specified Field Does Not Exist" %]
