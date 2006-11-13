@@ -104,8 +104,9 @@ namespace avmshell
 
 		String* _toString();
 
-		void compress();
-		void uncompress();
+		// renamed to avoid preprocessor conflict with mozilla's zlib, which #define's compress and uncompress
+		void zlib_compress();
+		void zlib_uncompress();
 
 		void writeBoolean(bool value);
 		void writeByte(int value);

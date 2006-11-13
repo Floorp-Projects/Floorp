@@ -16,14 +16,14 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\zlib;..\..\core;."
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;_DEBUG;_CONSOLE;USE_REAL2INT"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="FALSE"
@@ -32,22 +32,20 @@
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough=""
-				ProgramDataBaseFileName="$(IntDir)/shell.pdb"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="4"
+				WarnAsError="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="4"/>
+				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
 				AdditionalDependencies="winmm.lib DbgHelp.lib"
-				OutputFile="$(OutDir)/avmplus.exe"
-				LinkIncremental="1"
+				OutputFile="$(OutDir)/avmplus_d.exe"
 				GenerateDebugInformation="TRUE"
-				GenerateMapFile="TRUE"
-				MapFileName="$(OutDir)/$(ProjectName).map"/>
+				GenerateMapFile="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -71,8 +69,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -80,17 +78,17 @@
 				Optimization="3"
 				FavorSizeOrSpeed="2"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\zlib;..\..\core;."
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;NDEBUG;_CONSOLE;USE_REAL2INT"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough=""
-				ProgramDataBaseFileName="$(IntDir)/shell.pdb"
-				WarningLevel="3"
+				WarningLevel="4"
+				WarnAsError="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
@@ -101,63 +99,6 @@
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="TRUE"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="0"
-				OptimizeForWindows98="0"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
-			<Tool
-				Name="VCResourceCompilerTool"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
-		</Configuration>
-		<Configuration
-			Name="VTune|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1">
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
-				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\zlib;..\..\core;."
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;VTUNE;NDEBUG;_CONSOLE;USE_REAL2INT"
-				ExceptionHandling="FALSE"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				PrecompiledHeaderThrough=""
-				ProgramDataBaseFileName="$(IntDir)/shell.pdb"
-				BrowseInformation="1"
-				WarningLevel="3"
-				DebugInformationFormat="3"/>
-			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/avmplus.exe"
-				LinkIncremental="1"
-				GenerateDebugInformation="TRUE"
-				GenerateMapFile="TRUE"
-				MapFileName="$(IntDir)/$(ProjectName).map"
-				MapExports="TRUE"
-				MapLines="TRUE"
 				OptimizeReferences="2"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -182,8 +123,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release Debugger|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -191,24 +132,24 @@
 				Optimization="3"
 				FavorSizeOrSpeed="2"
 				OptimizeForProcessor="2"
-				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\zlib;..\..\core;."
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;NDEBUG;_CONSOLE;USE_REAL2INT;DEBUGGER"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough=""
-				ProgramDataBaseFileName="$(IntDir)/shell.pdb"
-				WarningLevel="3"
+				WarningLevel="4"
+				WarnAsError="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/SAFESEH:NO"
 				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/avmplus.exe"
+				OutputFile="$(OutDir)/avmplus_s.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="TRUE"
@@ -236,14 +177,14 @@
 		</Configuration>
 		<Configuration
 			Name="Debug Debugger|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\zlib;..\..\core;."
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;_DEBUG;_CONSOLE;USE_REAL2INT;DEBUGGER"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="FALSE"
@@ -252,22 +193,21 @@
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough=""
-				ProgramDataBaseFileName="$(IntDir)/shell.pdb"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="4"
+				WarnAsError="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="4"/>
+				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
 				AdditionalDependencies="winmm.lib DbgHelp.lib"
-				OutputFile="$(OutDir)/avmplus.exe"
-				AdditionalLibraryDirectories="..\..\..\MMgc\Debug\mmgc_d.pdb"
+				OutputFile="$(OutDir)/avmplus_sd.exe"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="TRUE"
-				GenerateMapFile="TRUE"
-				MapFileName="$(OutDir)/$(ProjectName).map"/>
+				GenerateMapFile="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -388,84 +328,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
-		</Filter>
-		<Filter
-			Name="zlib"
-			Filter="">
-			<File
-				RelativePath="..\..\..\zlib\adler32.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\compress.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\crc32.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\crc32.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\deflate.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\deflate.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\infback.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inffas86.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inffast.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inffixed.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inflate.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inflate.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inftrees.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\inftrees.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\stdafx.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\trees.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\trees.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\uncompr.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\zconf.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\zconf.in.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\zlib.h">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\zutil.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\zlib\zutil.h">
-			</File>
-		</Filter>
-		<Filter
 			Name="AS3 Files"
 			Filter="">
 			<File
@@ -502,9 +364,6 @@
 				RelativePath="..\..\shell\UShortArray.as">
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

@@ -153,11 +153,11 @@ namespace avmshell
 		}
 	}
 	
-	void CALLBACK TimeoutProc(UINT uTimerID,
-							  UINT uMsg,
+	void CALLBACK TimeoutProc(UINT /*uTimerID*/,
+							  UINT /*uMsg*/,
 							  DWORD_PTR dwUser,
-							  DWORD_PTR dw1,
-							  DWORD_PTR dw2)
+							  DWORD_PTR /*dw1*/,
+							  DWORD_PTR /*dw2*/)
 	{
 		AvmCore *core = (AvmCore*)dwUser;
 		core->interrupted = true;
@@ -498,7 +498,9 @@ namespace avmshell
 			int endFilenamePos = -1;
 			char *filename = NULL;
 			bool do_log = false;
+#ifdef DEBUGGER
 			bool do_debugger = false;
+#endif
 			bool do_interactive = false;
 #ifdef AVMPLUS_VERBOSE
 			bool do_verbose = false;

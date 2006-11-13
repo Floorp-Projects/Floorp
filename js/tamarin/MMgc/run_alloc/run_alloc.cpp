@@ -31,6 +31,9 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "avmplus.h"
 #include "MMgc.h"
 
 using namespace MMgc;

@@ -12,8 +12,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
-			IntermediateDirectory="Debug"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
@@ -22,21 +22,20 @@
 				AdditionalIncludeDirectories="..;..\..\core;..\..\codegen"
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;_DEBUG;_CONSOLE;AVMPLUS_IA32"
 				MinimalRebuild="TRUE"
+				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="4"/>
+				WarningLevel="4"
+				WarnAsError="TRUE"
+				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="winmm.lib DbgHelp.lib"
 				OutputFile="$(OutDir)/run_alloc.exe"
-				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/run_alloc.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -62,68 +61,20 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
-			IntermediateDirectory="Release"
+			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
+			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..;..\..\core;..\..\codegen"
 				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;AVMPLUS_IA32"
-				RuntimeLibrary="4"
+				ExceptionHandling="FALSE"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				WarningLevel="4"
+				WarnAsError="TRUE"
 				DebugInformationFormat="0"/>
-			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib"
-				OutputFile="$(OutDir)/run_alloc.exe"
-				LinkIncremental="1"
-				GenerateDebugInformation="TRUE"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
-			<Tool
-				Name="VCResourceCompilerTool"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
-		</Configuration>
-		<Configuration
-			Name="VTune|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="2">
-			<Tool
-				Name="VCCLCompilerTool"
-				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories="..;..\..\core;..\..\codegen"
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;AVMPLUS_IA32"
-				RuntimeLibrary="4"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool

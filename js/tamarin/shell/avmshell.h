@@ -37,10 +37,9 @@
 
 #include "avmplus.h"
 
-#if defined(AVMPLUS_WIN32) && defined(_DEBUG)
-// interactive shell only supported for windwows debug builds right now
-#define AVMPLUS_INTERACTIVE
-#endif
+// interactive shell requires functional external compiler, not yet
+// present in Tamarin. commented out for now.
+// #define AVMPLUS_INTERACTIVE
 
 using namespace avmplus;
 

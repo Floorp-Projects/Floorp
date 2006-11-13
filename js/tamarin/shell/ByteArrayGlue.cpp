@@ -69,8 +69,8 @@ namespace avmshell
 		NATIVE_METHOD(flash_utils_ByteArray_bytesAvailable_get,         ByteArrayObject::available)
 		NATIVE_METHOD(flash_utils_ByteArray_position_get,    ByteArrayObject::getFilePointer)
 		NATIVE_METHOD(flash_utils_ByteArray_position_set,              ByteArrayObject::seek)
-		NATIVE_METHOD(flash_utils_ByteArray_compress,          ByteArrayObject::compress)
-		NATIVE_METHOD(flash_utils_ByteArray_uncompress,        ByteArrayObject::uncompress)
+		NATIVE_METHOD(flash_utils_ByteArray_compress,          ByteArrayObject::zlib_compress)
+		NATIVE_METHOD(flash_utils_ByteArray_uncompress,        ByteArrayObject::zlib_uncompress)
 		NATIVE_METHOD(flash_utils_ByteArray_endian_get,    ByteArrayObject::get_endian)
 		NATIVE_METHOD(flash_utils_ByteArray_endian_set,              ByteArrayObject::set_endian)
 		NATIVE_METHOD(flash_utils_ByteArray_writeFile,	ByteArrayObject::writeFile)
@@ -466,7 +466,7 @@ namespace avmshell
 		m_byteArray.WriteDouble(value);
 	}
 
-	void ByteArrayObject::compress()
+	void ByteArrayObject::zlib_compress()
 	{
 		int len = m_byteArray.GetLength();
 		if (!len) // empty buffer should give us a empty result
@@ -486,7 +486,7 @@ namespace avmshell
 		delete [] gzdata;
 	}
 
-    void ByteArrayObject::uncompress()
+    void ByteArrayObject::zlib_uncompress()
     {
         // Snapshot the compressed data.
         unsigned long gzlen = m_byteArray.GetLength();

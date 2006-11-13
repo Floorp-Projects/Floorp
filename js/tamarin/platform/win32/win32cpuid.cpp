@@ -42,10 +42,10 @@
 #define CPUID_SSE2_FLAG 0x04000000 //; Is IA SSE2 bit (Bit 26 of EDX) in feature flags set
 static BOOL gP4OsSupport = FALSE;
 
-EXCEPTION_DISPOSITION __cdecl MyExceptionHandlerSSE2(struct _EXCEPTION_RECORD *ExceptionRecord,
-											     void * EstablisherFrame,
+EXCEPTION_DISPOSITION __cdecl MyExceptionHandlerSSE2(struct _EXCEPTION_RECORD * /*ExceptionRecord*/,
+											     void * /*EstablisherFrame*/,
 											     struct _CONTEXT *ContextRecord,
-											     void * DispatcherContext)
+											     void * /*DispatcherContext*/)
 {
 	// Turn off the P4 OS support flag.
 	gP4OsSupport = FALSE;

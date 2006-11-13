@@ -44,16 +44,16 @@ namespace avmshell
 	public:
 		Profiler(MMgc::GC* gc) : avmplus::Profiler(gc) {}
 		
-		void sendDebugFileUrl(UTF8String *url) {}
-		void sendLineTimestamp(int linenumber) {}
-		void setEnabled(bool on) {}
-		void sendFunctionEnter(AbstractFunction* method) {}
+		void sendDebugFileUrl(UTF8String * /*url*/) {}
+		void sendLineTimestamp(int /*linenumber*/) {}
+		void setEnabled(bool /*on*/) {}
+		void sendFunctionEnter(AbstractFunction* /*method*/) {}
 		void sendFunctionExit() {}
-		void sendCatch(AbstractFunction* method) {}
-		void addScriptObject(ScriptObject *scriptObject) {}
-		void deleteScriptObject(ScriptObject *scriptObject) {}
-		void sendHeapDump(String *heapDumpName) {}
-		int computeStringSize(String *myString) { return 0; }		
+		void sendCatch(AbstractFunction* /*method*/) {}
+		void addScriptObject(ScriptObject * /*scriptObject*/) {}
+		void deleteScriptObject(ScriptObject * /*scriptObject*/) {}
+		void sendHeapDump(String * /*heapDumpName*/) {}
+		int computeStringSize(String * /*myString*/) { return 0; }		
 	};
 }
 #endif
