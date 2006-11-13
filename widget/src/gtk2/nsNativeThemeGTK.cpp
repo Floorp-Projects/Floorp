@@ -614,8 +614,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
   }
 #else
-  nsIDeviceContext *dctx = nsnull;
-  aContext->GetDeviceContext(dctx);
+  nsCOMPtr<nsIDeviceContext> dctx = nsnull;
+  aContext->GetDeviceContext(*getter_AddRefs(dctx));
   double t2p = dctx->AppUnitsToDevUnits();
   double p2t = dctx->DevUnitsToAppUnits();
 

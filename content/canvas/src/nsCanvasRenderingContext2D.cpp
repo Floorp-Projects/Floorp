@@ -925,8 +925,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     nsTransform2D *tx = nsnull;
     rc->GetCurrentTransform(tx);
 
-    nsIDeviceContext *dctx;
-    rc->GetDeviceContext(dctx);
+    nsCOMPtr<nsIDeviceContext> dctx;
+    rc->GetDeviceContext(*getter_AddRefs(dctx));
 
     // Until we can use the quartz2 surface, mac will be different,
     // since we'll use CG to render.
@@ -2628,8 +2628,8 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         // There is transparency. Use the blender to recover alphas.
         nsCOMPtr<nsIBlender> blender = do_CreateInstance(kBlenderCID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsIDeviceContext* dc = nsnull;
-        aBlackContext->GetDeviceContext(dc);
+        nsCOMPtr<nsIDeviceContext> dc;
+        aBlackContext->GetDeviceContext(*getter_AddRefs(dc));
         rv = blender->Init(dc);
         NS_ENSURE_SUCCESS(rv, rv);
         

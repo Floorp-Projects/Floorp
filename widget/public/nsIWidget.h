@@ -96,10 +96,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_SCREEN      9
 #define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
 
-// d6fec391-e2d8-4841-9d8f-43423b953884
+// ebdf8ccf-ada9-457c-ad6c-88e1cb9d4498
 #define NS_IWIDGET_IID \
-{ 0xd6fec391, 0xe2d8, 0x4841, \
-  { 0x9d, 0x8f, 0x43, 0x42, 0x3b, 0x95, 0x38, 0x84 } }
+{ 0xebdf8ccf, 0xada9, 0x457c, \
+  { 0xad, 0x6c, 0x88, 0xe1, 0xcb, 0x9d, 0x44, 0x98 } }
 
 
 // Hide the native window systems real window type so as to avoid
@@ -853,7 +853,10 @@ class nsIWidget : public nsISupports {
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
     virtual void FreeNativeData(void * data, PRUint32 aDataType) = 0;//~~~
     virtual nsIRenderingContext* GetRenderingContext() = 0;
+
+    // GetDeviceContext returns a weak pointer to this widget's device context
     virtual nsIDeviceContext* GetDeviceContext() = 0;
+
     //@}
 
     /**
