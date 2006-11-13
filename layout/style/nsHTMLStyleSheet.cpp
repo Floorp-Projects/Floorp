@@ -266,12 +266,33 @@ static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRul
                                NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
 }
 
+static void UngroupedColPostResolveCallback(nsStyleStruct* aStyleStruct,
+                                            nsRuleData* aRuleData)
+{
+  // Pass PR_TRUE for aGroup, so that we find the table's style
+  // context correctly.
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
+  ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_RIGHT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
+                               NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
+}
+
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &ColPostResolveCallback;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLStyleSheet::TableUngroupedColRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &UngroupedColPostResolveCallback;
   }
   return NS_OK;
 }
@@ -359,6 +380,11 @@ nsHTMLStyleSheet::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableColRule);
 
+  mTableUngroupedColRule = new TableUngroupedColRule();
+  if (!mTableUngroupedColRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTableUngroupedColRule);
+
   mTableTHRule = new TableTHRule();
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -378,6 +404,7 @@ nsHTMLStyleSheet::~nsHTMLStyleSheet()
   NS_IF_RELEASE(mTableRowRule);
   NS_IF_RELEASE(mTableColgroupRule);
   NS_IF_RELEASE(mTableColRule);
+  NS_IF_RELEASE(mTableUngroupedColRule);
   NS_IF_RELEASE(mTableTHRule);
 
   if (mMappedAttrTable.ops)
@@ -446,7 +473,13 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
         ruleWalker->Forward(mTableTbodyRule);
       }
       else if (tag == nsHTMLAtoms::col) {
-        ruleWalker->Forward(mTableColRule);
+        nsIContent* parent = aData->mParentContent;
+        if (parent && parent->IsNodeOfType(nsIContent::eHTML) &&
+            parent->Tag() == nsHTMLAtoms::colgroup) {
+          ruleWalker->Forward(mTableColRule);
+        } else {
+          ruleWalker->Forward(mTableUngroupedColRule);
+        }
       }
       else if (tag == nsHTMLAtoms::colgroup) {
         ruleWalker->Forward(mTableColgroupRule);
