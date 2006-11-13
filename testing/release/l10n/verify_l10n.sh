@@ -10,7 +10,7 @@ then
   exit 1
 fi
 
-for platform in linux-i686 win32 mac
+for platform in linux win32 mac
 do
   rm -rf source/*
   # unpack_build platform dir_name pkg_file

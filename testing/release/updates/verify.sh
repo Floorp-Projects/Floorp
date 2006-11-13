@@ -7,7 +7,7 @@
 . ../common/check_updates.sh
 
 ftp_server="http://stage.mozilla.org/pub/mozilla.org"
-aus_server="https://aus2.mozilla.org"
+aus_server="https://aus2-staging.mozilla.org"
 
 runmode=0
 UPDATE_ONLY=1
@@ -100,20 +100,20 @@ do
         then
           continue
         fi
-        from=`echo $from | sed "s/%locale%/${locale}/"`
-        to=`echo $to | sed "s/%locale%/${locale}/"`
-        download_builds "${ftp_server}/${from}" "${ftp_server}/${to}"
+        from_path=`echo $from | sed "s/%locale%/${locale}/"`
+        to_path=`echo $to | sed "s/%locale%/${locale}/"`
+        download_builds "${ftp_server}/${from_path}" "${ftp_server}/${to_path}"
         err=$?
         if [ "$err" != "0" ]; then
           echo "FAIL: download_builds returned non-zero exit code: $err" |tee /dev/stderr
           continue
         fi
-        source_file=`basename "$from"`
-        target_file=`basename "$to"`
+        source_file=`basename "$from_path"`
+        target_file=`basename "$to_path"`
         check_updates "$platform" "downloads/$source_file" "downloads/$target_file"
         err=$?
         if [ "$err" != "0" ]; then
-          echo "FAIL: check_update returned non-zero exit code for $source_platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
+          echo "FAIL: check_update returned non-zero exit code for $platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
           continue
         fi
       fi
