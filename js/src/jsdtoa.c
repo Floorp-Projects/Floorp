@@ -2425,6 +2425,15 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
             }
             d *= 10.;
         }
+#ifdef DEBUG
+        if (d != 0.0) {
+            fprintf(stderr,
+"WARNING: A loss of precision for double floating point is detected.\n"
+"         The result of any operation on doubles can be meaningless.\n"
+"         A possible cause is missing code to restore FPU state, see\n"
+"         bug 360282 for details.\n");
+        }
+#endif
         goto ret1;
     }
 
