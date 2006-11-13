@@ -51,12 +51,15 @@ class nsISupportsArray;
 
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
-                           public nsIDOMMouseListener,
                            public nsIAnonymousContentCreator
 {
 public:
   nsFileControlFrame(nsStyleContext* aContext);
   virtual ~nsFileControlFrame();
+
+  NS_IMETHOD Init(nsIContent* aContent,
+                  nsIFrame*   aParent,
+                  nsIFrame*   aPrevInFlow);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -94,55 +97,37 @@ public:
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
-
-  // mouse events when out browse button is pressed
-  /**
-  * Processes a mouse down event
-  * @param aMouseEvent @see nsIDOMEvent.h 
-  * @returns whether the event was consumed or ignored. @see nsresult
-  */
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse up event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent); // we only care when the button is clicked
-
-  /**
-   * Processes a mouse click event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   *
-   */
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse enter event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  /**
-   * Processes a mouse leave event
-   * @param aMouseEvent @see nsIDOMEvent.h 
-   * @returns whether the event was consumed or ignored. @see nsresult
-   */
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-
 protected:
+  class MouseListener;
+  friend class MouseListener;
+  class MouseListener : public nsIDOMMouseListener {
+  public:
+    NS_DECL_ISUPPORTS
+    
+    MouseListener(nsFileControlFrame* aFrame) :
+      mFrame(aFrame)
+    {}
+
+    void ForgetFrame() {
+      mFrame = nsnull;
+    }
+    
+    // We just want to capture the click events on our browse button
+    // and textfield.
+    NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+
+  private:
+    nsFileControlFrame* mFrame;
+  };
+  
+  nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+
   virtual PRIntn GetSkipSides() const;
 
   /**
@@ -165,6 +150,11 @@ protected:
    * file frame is there but the input frame is not.
    */
   nsString*           mCachedState;
+
+  /**
+   * Our mouse listener.  This makes sure we don't get used after destruction.
+   */
+  nsRefPtr<MouseListener> mMouseListener;
 
 private:
   /**
