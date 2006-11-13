@@ -339,7 +339,8 @@ nsFrameManager::GetCanvasFrame()
 
 // Primary frame functions
 nsIFrame*
-nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
+nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
+                                   PRInt32 aIndexHint)
 {
   NS_ENSURE_TRUE(aContent, nsnull);
 
@@ -383,7 +384,7 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     nsIContent* parent = aContent->GetParent();
     if (parent)
     {
-      PRInt32 index = parent->IndexOf(aContent);
+      PRInt32 index = aIndexHint >= 0 ? aIndexHint : parent->IndexOf(aContent);
       if (index > 0)  // no use looking if it's the first child
       {
         nsIContent *prevSibling;
