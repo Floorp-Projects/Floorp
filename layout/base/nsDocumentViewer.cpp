@@ -1939,7 +1939,7 @@ DocumentViewerImpl::Show(void)
     base_win->GetParentWidget(&mParentWidget);
     NS_ENSURE_TRUE(mParentWidget, NS_ERROR_UNEXPECTED);
 
-    mDeviceContext = dont_AddRef(mParentWidget->GetDeviceContext());
+    mDeviceContext = mParentWidget->GetDeviceContext();
 
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
     // Clear PrintPreview Alternate Device

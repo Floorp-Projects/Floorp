@@ -154,7 +154,9 @@ public:
   NS_IMETHOD Reset(void) = 0;
 
   /**
-   * Get the DeviceContext that this RenderingContext was initialized with
+   * Get the DeviceContext that this RenderingContext was initialized
+   * with.  This function addrefs the device context.  Though it might
+   * be better if it just returned it directly, without addrefing.   
    * @result the device context
    */
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext) = 0;

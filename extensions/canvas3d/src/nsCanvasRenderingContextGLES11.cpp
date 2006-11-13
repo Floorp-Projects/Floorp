@@ -974,8 +974,8 @@ nsCanvasRenderingContextGLES11::Render(nsIRenderingContext *rc)
     nsTransform2D *tx = nsnull;
     rc->GetCurrentTransform(tx);
 
-    nsIDeviceContext *dctx;
-    rc->GetDeviceContext(dctx);
+    nsCOMPtr<nsIDeviceContext> dctx;
+    rc->GetDeviceContext(*getter_AddRefs(dctx));
 
     // Until we can use the quartz2 surface, mac will be different,
     // since we'll use CG to render.
