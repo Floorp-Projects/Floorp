@@ -8004,7 +8004,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
 
       // Get the frame that corresponds to the document element
       nsIFrame* docElementFrame =
-        state.mFrameManager->GetPrimaryFrameFor(rootContent);
+        state.mFrameManager->GetPrimaryFrameFor(rootContent, -1);
         
       // Remove any existing fixed items: they are always on the
       // FixedContainingBlock.  Note that this has to be done before we call
@@ -9746,7 +9746,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
   nsresult                  rv = NS_OK;
 
   // Find the child frame that maps the content
-  nsIFrame* childFrame = mPresShell->GetPrimaryFrameFor(aChild);
+  nsIFrame* childFrame =
+    mPresShell->FrameManager()->GetPrimaryFrameFor(aChild, aIndexInContainer);
 
   if (! childFrame) {
     frameManager->ClearUndisplayedContentIn(aChild, aContainer);
@@ -11212,7 +11213,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
   // call us back if there is no mapping in the hash table
   nsCOMPtr<nsIContent> parentContent = aContent->GetParent(); // Get this once
   if (parentContent) {
-    parentFrame = aFrameManager->GetPrimaryFrameFor(parentContent);
+    parentFrame = aFrameManager->GetPrimaryFrameFor(parentContent, -1);
     while (parentFrame) {
       // Search the child frames for a match
       *aFrame = FindFrameWithContent(aFrameManager, parentFrame,

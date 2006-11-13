@@ -5479,7 +5479,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
 nsIFrame*
 PresShell::GetPrimaryFrameFor(nsIContent* aContent) const
 {
-  return FrameManager()->GetPrimaryFrameFor(aContent);
+  return FrameManager()->GetPrimaryFrameFor(aContent, -1);
 }
 
 NS_IMETHODIMP
@@ -6299,7 +6299,7 @@ PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
 static void
 StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
-  nsIFrame *frame = aShell->FrameManager()->GetPrimaryFrameFor(aContent);
+  nsIFrame *frame = aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1);
 
   nsIObjectFrame *objectFrame = nsnull;
   if (frame)

@@ -110,7 +110,10 @@ public:
   NS_HIDDEN_(nsIFrame*) GetCanvasFrame();
 
   // Primary frame functions
-  NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent);
+  // If aIndexHint it not -1, it will be used as when determining a frame hint
+  // instead of calling IndexOf(aContent).
+  NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent,
+                                           PRInt32 aIndexHint);
   NS_HIDDEN_(nsresult)  SetPrimaryFrameFor(nsIContent* aContent,
                                            nsIFrame* aPrimaryFrame);
   NS_HIDDEN_(void)      ClearPrimaryFrameMap();
