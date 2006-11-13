@@ -52,17 +52,12 @@
 
 - (void)dealloc
 {
-  [mLastFindString release];
   [super dealloc];
 }
 
 - (void)loadNewFindStringFromPasteboard
 {
-  BOOL pasteboardChanged;
-  NSString* curPasteboard = [self getSearchText:&pasteboardChanged];
-  if (pasteboardChanged)
-    [mSearchField setStringValue:curPasteboard];
-
+  [mSearchField setStringValue:[self getSearchText]];
   [mSearchField selectText:nil];
 
   if ([[mSearchField stringValue] length] > 0)
@@ -74,12 +69,11 @@
 
 - (void)putFindStringOnPasteboard
 {
-  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-  [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
-  [pasteboard setString:[mSearchField stringValue] forType:NSStringPboardType];
+  NSPasteboard* pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  NSString* searchText = [mSearchField stringValue];
 
-  [mLastFindString release];
-  mLastFindString = [[NSString stringWithString:[mSearchField stringValue]] retain];
+  [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+  [pasteboard setString:searchText forType:NSStringPboardType];
 }
 
 //
@@ -149,23 +143,16 @@
 //
 // Retrieve the most recent search string
 //
-- (NSString*)getSearchText:(BOOL*)outIsNew
+- (NSString*)getSearchText
 {
   NSString* searchText;
-  
-  NSPasteboard *findPboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-  if ([[findPboard types] indexOfObject:NSStringPboardType] != NSNotFound) 
+
+  NSPasteboard* findPboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  if ([[findPboard types] indexOfObject:NSStringPboardType] != NSNotFound)
     searchText = [findPboard stringForType:NSStringPboardType];
   else
     searchText = @"";
-  
-  if (outIsNew)
-    *outIsNew = !mLastFindString || (mLastFindString && ![mLastFindString isEqualToString:searchText]);
-  
-  // remember the last pasteboard string that we saw
-  [mLastFindString release];
-  mLastFindString = [[NSString stringWithString:searchText] retain];
-  
+
   return searchText;
 }
 

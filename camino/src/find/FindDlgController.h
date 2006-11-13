@@ -44,8 +44,6 @@
     IBOutlet NSButton* mWrapAroundBox;
     IBOutlet NSButton* mFindNextButton;
     IBOutlet NSButton* mFindPrevButton;
-    
-    NSString*          mLastFindString;
 }
 
 - (IBAction) findNextButton: (id)aSender;
