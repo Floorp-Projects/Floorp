@@ -21,6 +21,9 @@ use strict;
 use base qw(Bugzilla::WebService);
 import SOAP::Data qw(type);
 
+use Bugzilla::Constants;
+use Bugzilla::Error;
+use Bugzilla::Field;
 use Bugzilla::WebService::Constants;
 use Bugzilla::Util qw(detaint_natural);
 use Bugzilla::Bug;
@@ -41,6 +44,17 @@ use constant FIELD_MAP => {
     summary     => 'short_desc',
     platform    => 'rep_platform',
 };
+
+use constant GLOBAL_SELECT_FIELDS => qw(
+    bug_severity
+    bug_status
+    op_sys
+    priority
+    rep_platform
+    resolution
+);
+
+use constant PRODUCT_SPECIFIC_FIELDS => qw(version target_milestone component);
 
 ###########
 # Methods #
@@ -83,6 +97,50 @@ sub create {
     return { id => type('int')->value($bug->bug_id) };
 }
 
+sub legal_values {
+    my ($self, $params) = @_;
+    my $field = FIELD_MAP->{$params->{field}} || $params->{field};
+
+    my @custom_select =
+        Bugzilla->get_fields({ type => FIELD_TYPE_SINGLE_SELECT });
+
+    my $values;
+    if (grep($_ eq $field, GLOBAL_SELECT_FIELDS, @custom_select)) {
+        $values = get_legal_field_values($field);
+    }
+    elsif (grep($_ eq $field, PRODUCT_SPECIFIC_FIELDS)) {
+        my $id = $params->{product_id};
+        defined $id || ThrowCodeError('param_required',
+            { function => 'Bug.legal_values', param => 'product_id' });
+        grep($_->id eq $id, @{Bugzilla->user->get_accessible_products})
+            || ThrowUserError('product_access_denied', { product => $id });
+
+        my $product = new Bugzilla::Product($id);
+        my @objects;
+        if ($field eq 'version') {
+            @objects = @{$product->versions};
+        }
+        elsif ($field eq 'target_milestone') {
+            @objects = @{$product->milestones};
+        }
+        elsif ($field eq 'component') {
+            @objects = @{$product->components};
+        }
+
+        $values = [map { $_->name } @objects];
+    }
+    else {
+        ThrowCodeError('invalid_field_name', { field => $params->{field} });
+    }
+
+    my @result;
+    foreach my $val (@$values) {
+        push(@result, type('string')->value($val));
+    }
+
+    return { values => \@result };
+}
+
 1;
 
 __END__
@@ -100,6 +158,57 @@ This part of the Bugzilla API allows you to file a new bug in Bugzilla.
 
 See L<Bugzilla::WebService> for a description of B<STABLE>, B<UNSTABLE>,
 and B<EXPERIMENTAL>.
+
+=head2 Utility Functions
+
+=over
+
+=item C<legal_values> B<EXPERIMENTAL>
+
+=over
+
+=item B<Description>
+
+Tells you what values are allowed for a particular field.
+
+=item B<Params>
+
+=over
+
+=item C<field> - The name of the field you want information about.
+This should be the same as the name you would use in L</create>, below.
+
+=item C<product_id> - If you're picking a product-specific field, you have
+to specify the id of the product you want the values for.
+
+=back
+
+=item B<Returns> 
+
+C<values> - An array of strings: the legal values for this field.
+The values will be sorted as they normally would be in Bugzilla.
+
+=item B<Errors>
+
+=over
+
+=item 106 (Invalid Product)
+
+You were required to specify a product, and either you didn't, or you
+specified an invalid product (or a product that you can't access).
+
+=item 108 (Invalid Field Name)
+
+You specified a field that doesn't exist or isn't a drop-down field.
+
+=back
+
+=back
+
+
+=back
+
+=head2 Bug Creation and Modification
 
 =over
 

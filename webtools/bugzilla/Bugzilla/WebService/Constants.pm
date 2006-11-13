@@ -52,6 +52,7 @@ use constant WS_ERROR_CODE => {
     invalid_bug_id_or_alias     => 100,
     invalid_bug_id_non_existent => 101,
     bug_access_denied           => 102,
+    invalid_field_name          => 108,
     # These all mean "invalid alias"
     alias_not_defined        => 103,
     alias_too_long           => 103,
@@ -67,6 +68,7 @@ use constant WS_ERROR_CODE => {
     # Invalid Product
     no_products         => 106,
     entry_access_denied => 106,
+    product_access_denied => 106,
     product_disabled    => 106,
     # Invalid Summary
     require_summary => 107,

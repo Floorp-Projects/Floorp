@@ -1138,6 +1138,10 @@
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
+  [% ELSIF error == "product_access_denied" %]
+    Either the product '[% product FILTER html %]' does not exist or
+    you don't have access to it.
+
   [% ELSIF error == "product_doesnt_exist" %]
     [% title = "Specified Product Does Not Exist" %]
     The product '[% product FILTER html %]' does not exist.
