@@ -32,86 +32,123 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
-<html>
-<head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="Author" content="Norris Boyd">
-   <meta name="GENERATOR" content="Mozilla/4.5 [en]C-NSCP  (WinNT; I) [Netscape]">
-   <title>Performance Hints</title>
-</head>
-<body bgcolor="#FFFFFF">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 
-<center>
-<h1>
-Performance Hints</h1></center>&nbsp;
-<h3>
-<tt>var</tt> Statements</h3>Use <tt>var</tt> statements when possible. Not only is it good 
-programming practice, it can speed up your code by allowing the compiler to 
-generate special code to access the variables. For example, you could rewrite
-<p><tt>function sum(a) {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; result = 0;</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; for (i=0; i &lt; 
-a.length; i++)</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result += a[i];</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; return result;</tt>
-<br><tt>}</tt>
-<p>as
-<p><tt>function sum(a) {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; var result = 0;</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; for (var i=0; i 
-&lt; a.length; i++)</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result += a[i];</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; return result;</tt>
-<br><tt>}</tt>
+<html lang="en">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Language" content="en">
+<meta http-equiv="Content-Style-Type" content="text/css">
+
+   <meta name="Author" content="Norris Boyd">
+
+   <title>Performance Hints</title>
+
+<link rel="up" href="./" title="Rhino project page">
+<link rel="section" href="#varstatements" title="Var statements">
+<link rel="section" href="#arrays" title="Arrays">
+<link rel="section" href="#eval" title="eval">
+<link rel="section" href="#with" title="with">
+
+</head>
+
+<body>
+
+<p class="crumbs"><em>You are here:</em> <a href="./">Rhino project page</a> &gt; <strong>Performance Hints</strong></p>
+
+<h1 style="text-align: center;">Performance Hints</h1>
+
+<h3><a name="varstatements" id="varstatements"><code>var</code> Statements</a></h3>
+
+<p>Use <code>var</code> statements when possible. Not only is it good 
+programming practice, it can speed up your code by allowing the compiler 
+to generate special code to access the variables. For example, you could 
+rewrite</p>
+
+<pre class="code">
+function sum(a) {
+    result = 0;
+    for (i=0; i &lt; a.length; i++)
+        result += a[i];
+    return result;
+}
+</pre>
+
+<p>as</p>
+
+<pre class="code">
+function sum(a) {
+    var result = 0;
+    for (var i=0; i &lt; a.length; i++)
+        result += a[i];
+    return result;
+}
+</pre>
+
 <p>This is not equivalent code because the second version does 
-not modify global variables <tt>result</tt> and <tt>i</tt>. However, if you don't intend for any other function to 
-access these variables, then storing them globally is probably wrong anyway 
-(what if you called another function that had a loop like the one in <tt>sum</tt>!).
-<br>&nbsp;
-<h3>
-Arrays</h3>Use the forms of the Array constructor that 
-specify a size or take a list of initial elements. For example, the code
-<p><tt>var a = new Array();</tt>
-<br><tt>for (var i=0; i &lt; n; i++)</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; a[i] = i;</tt>
-<p>could be sped up by changing the constructor call to <tt>new Array(n)</tt>. A constructor call like that indicates to 
-the runtime that a Java array should be used for the first <i>n</i> entries of the array. Similarly,
-<tt>new 
-Array(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)</tt> or <tt>[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</tt> will cause a 3-element 
-Java array to be allocated to hold the contents of the JavaScript array.
-<br>&nbsp;
-<br>&nbsp;
-<h3>
-<tt>eval</tt> and <tt>new Function</tt></h3>Avoid calling <tt>eval</tt> when 
-possible. Calls to <tt>eval</tt> are slow because the script 
-being executed must be compiled. Constructing a new function object can be slow 
-for the same reason, while function expressions are more efficient because the 
-function can be compiled. For example, the code
-<p><tt>function MyObject(a) {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; this.s = a;</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; this.toString = new 
-Function(&quot;return this.s&quot;);</tt>
-<br><tt>}</tt>
-<p>could be written more efficiently as
-<p><tt>function MyObject(a) {</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; this.s = a;</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; this.toString = 
-function () { return this.s }</tt>
-<br><tt>}</tt>
-<p>Beginning with Rhino 1.4 Release 2, code 
-passed to eval and new Function will be interpreted rather than compiled to 
-class files.
-<br>&nbsp;</p>
-<h3>
-with</h3>Using the <tt>with</tt> 
-statement prevents the compiler from generating code for fast access to local 
-variables. You're probably better off explicitly accessing any properties of the 
-object.
-<br>&nbsp;
-<p>
-<hr WIDTH="100%">
-<br><a href="index.html">back to top</a>
-<br>
+not modify global variables <code>result</code> and <code>i</code>. 
+However, if you don't intend for any other function to access these 
+variables, then storing them globally is probably wrong anyway 
+(what if you called another function that had a loop like the one 
+in <code>sum</code>!).</p>
+
+<h3><a name="arrays" id="arrays">Arrays</a></h3>
+
+<p>Use the forms of the Array constructor that specify a size or 
+take a list of initial elements. For example, the code</p>
+
+<pre class="code">
+var a = new Array();
+for (var i=0; i &lt; n; i++)
+    a[i] = i;
+</pre>
+
+<p>could be sped up by changing the constructor call to 
+<code>new Array(n)</code>. A constructor call like that indicates 
+to the runtime that a Java array should be used for the first 
+<var>n</var> entries of the array. Similarly,<br><br> 
+<code>new Array(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)</code><br>
+or<br>
+<code>[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</code><br><br>
+will cause a 3-element Java array to be allocated to hold the 
+contents of the JavaScript array.</p>
+
+<h3><a name="eval" id="eval"><code>eval</code> and <code>new Function</code></a></h3>
+
+<p>Avoid calling <code>eval</code> when possible. Calls to 
+<code>eval</code> are slow because the script being executed must 
+be compiled. Constructing a new function object can be slow for 
+the same reason, while function expressions are more efficient 
+because the function can be compiled. For example, the code</p>
+
+<pre class="code">
+function MyObject(a) {
+    this.s = a;
+    this.toString = new Function(&quot;return this.s&quot;);
+}
+</pre>
+
+<p>could be written more efficiently as</p>
+
+<pre class="code">
+function MyObject(a) {
+    this.s = a;
+    this.toString = function () { return this.s }
+}
+</pre>
+
+<p>Beginning with Rhino 1.4 Release 2, code passed to eval and 
+new Function will be interpreted rather than compiled to class 
+files.</p>
+
+<h3><a name="with" id="with"><code>with</code></a></h3>
+
+<p>Using the <code>with</code> statement prevents the compiler 
+from generating code for fast access to local variables. You're 
+probably better off explicitly accessing any properties of the 
+object.</p>
+
 </body>
 </html>

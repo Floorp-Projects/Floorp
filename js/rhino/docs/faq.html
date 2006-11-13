@@ -32,55 +32,55 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Language" content="en">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
    <meta name="Author" content="Norris Boyd">
-   <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
    <meta name="KeyWords" content="Rhino, JavaScript, Java">
    <title>Rhino FAQ</title>
+
+<link rel="up" href="./" title="Rhino project page">
+
 </head>
-<body bgcolor="#FFFFFF">
-<script src="owner.js"></script>
+<body>
+<script type="text/javascript" src="owner.js"></script>
 
-<center>
-<h1>
-Frequently Asked Questions about Rhino</h1></center>
-<script>document.write(owner());</script>
+<p class="crumbs"><em>You are here:</em> <a href="./">Rhino project page</a> &gt; 
+<strong>Rhino FAQ</strong></p>
 
-<br><script>
-	var d = new Date(document.lastModified);
-	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
-	document.write('<br>');
-</script>
+<h1 style="text-align: center;">Frequently Asked Questions about Rhino</h1>
+<script type="text/javascript">document.write(owner());</script>
 
-<center>
-<hr WIDTH="100%"></center>
+<dl>
 
-<p><b><font size=+2>Q</font>.</b> <i>How do I create a Java array from
-JavaScript?</i>
-<p><b><font size=+2>A.</font></b> You must use Java reflection. For instance,
-to create an array of java.lang.String of length five, do
-<blockquote><tt>var stringArray = java.lang.reflect.Array.newInstance(java.lang.String,
-5);</tt></blockquote>
-Then if you wish to assign the string "hi" to the first element, simply
-execute <tt>stringArray[0] = "hi"</tt>.
+<dt>How do I create a Java array from JavaScript?</dt>
+<dd>You must use Java reflection. For instance, to create an array 
+of java.lang.String of length five, do
+<pre class="code">
+var stringArray = java.lang.reflect.Array.newInstance(java.lang.String, 5);
+</pre>
+<p>Then if you wish to assign the string "hi" to the first element, simply
+execute <var>stringArray[0] = "hi"</var>.</p>
 <p>Creating arrays of primitive types is slightly different: you must use
 the TYPE field. For example, creating an array of seven ints can be done
-with the code
-<blockquote><tt>var intArray = java.lang.reflect.Array.newInstance(java.lang.Integer.TYPE,
-7);</tt></blockquote>
+with the code</p>
+<pre class="code">
+var intArray = java.lang.reflect.Array.newInstance(java.lang.Integer.TYPE, 7);
+</pre><br><br></dd>
 
-<p><br><b><font size=+2>Q</font>.</b> <i>When I try to execute a script
-I get the exception </i><tt>Required security context missing</tt><i>.
-What's going on?</i>
-<p><b><font size=+2>A.</font></b> You've likely missed placing the <tt>Security.properties</tt>
-file in your class path at <tt>org.mozilla.javascript.resources</tt>.
-<h3>
+<dt>When I try to execute a script I get the exception <code>Required security context missing</code>. What's going on?</dt>
+<dd>You've likely missed placing the 
+<code class="filename">Security.properties</code> file in your class path at 
+<code class="filename">org.mozilla.javascript.resources</code>.</dd>
 
-<hr WIDTH="100%"><br>
-<a href="index.html">back to top</a></h3>
+</dl>
 
 </body>
 </html>

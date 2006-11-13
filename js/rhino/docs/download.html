@@ -32,41 +32,58 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Language" content="en">
+<meta http-equiv="Content-Style-Type" content="text/css">
   <meta name="Author" content="Igor Bukanov">
   <meta name="KeyWords" content="Rhino, JavaScript, Java">
   <title>Rhino Downloads</title>
+
+<link rel="up" href="./" title="Rhino project page">
+<link rel="section" href="#binaries" title="Rhino Binaries">
+<link rel="section" href="#source" title="Getting source code for Rhino">
+
 </head>
 <body>
-<center><b><font size="+3">Rhino Downloads</font></b></center>
+
+<p class="crumbs"><em>You are here:</em> <a href="./">Rhino project page</a> &gt; <strong>Rhino Downloads</strong></p>
+
+<h1>Rhino Downloads</h1>
 <p>Rhino is available for download both in source and compiled form. </p>
-<h3> Binaries</h3>
+
+<h2><a name="binaries" id="binaries">Binaries</a></h2>
 <p>
 You can download binary distributions of Rhino from <a
- href="ftp://ftp.mozilla.org/pub/mozilla.org/js/"> ftp://ftp.mozilla.org/pub/mozilla.org/js/</a>
-. These zip files includes precompiled <tt>js.jar</tt> with all Rhino classes, documentation, examples and sources.
+ href="ftp://ftp.mozilla.org/pub/mozilla.org/js/">ftp://ftp.mozilla.org/pub/mozilla.org/js/</a>
+. These zip files includes precompiled <code class="filename">js.jar</code> 
+with all Rhino classes, documentation, examples and sources.
 </p>
 
 <p>
-Rhino 1.6R4 is the last qualified release. It includes support for <a
-href="http://www.ecma-international.org/publications/standards/Ecma-357.htm">ECMAScript for XML</a> (E4X). To implement E4X runtime Rhino uses <a
-href="http://xmlbeans.apache.org/">XMLBeans</a> library and if you would like to use E4X you need to add <tt>xbean.jar</tt> from XMLBeans distribution to your class path.</p>
+Rhino 1.6R4 is the last qualified release. It includes support for 
+<a class="ex-ref" 
+href="http://www.ecma-international.org/publications/standards/Ecma-357.htm">ECMAScript for XML</a> (E4X). To implement E4X runtime Rhino uses <a class="ex-ref" 
+href="http://xmlbeans.apache.org/">XMLBeans</a> library and if you 
+would like to use E4X you need to add <code class="filename">xbean.jar</code> 
+from XMLBeans distribution to your class path.</p>
 
-
-<table border=1 cellpadding=2 cellspacing=0>
+<table class="data">
 <thead>
 <tr>
-<th>Release</th> 
-<th>Release Date</th>
-<th>Change log</th>
-<th>Download link</th>
+<th scope="col">Release</th> 
+<th scope="col">Release Date</th>
+<th scope="col">Change log</th>
+<th scope="col">Download link</th>
 </tr>
 </thead>
-<tbody>
 
+<tbody>
 <tr>
 <td>Rhino 1.6R4</td> 
 <td>2006-09-10</td>
@@ -144,30 +161,35 @@ href="http://xmlbeans.apache.org/">XMLBeans</a> library and if you would like to
 <td><a href="ftp://ftp.mozilla.org/pub/mozilla.org/js/older-packages/rhino14R3.zip">rhino14R3.zip</a></td>
 </tr>
 
-
 </tbody>
 </table>
 
-<p>If you are looking for <tt>js.jar</tt> for XSLT or for IBM's Bean
-Scripting  Framework (BSF), please read the following <a href="bsf.html#bsf-issue">note</a> and then download one of the zip files above and unzip it. </p>
+<p>If you are looking for <code class="filename">js.jar</code> for XSLT 
+or for IBM's <dfn>Bean Scripting  Framework (BSF)</dfn>, please read the 
+following <a href="bsf.html#bsf-issue">note</a> and then download one of 
+the zip files above and unzip it.</p>
 
-<h3> Source</h3>
-The source code for Rhino is available under a dual <a
-href="http://www.mozilla.org/MPL/MPL-1.1.html">MPL 1.1</a>/GPL 2.0 license. In addition to getting the
-source from the zip files above, the source code for Rhino can be found in the
-CVS tree at mozilla/js/rhino. See <a
-href="http://www.mozilla.org/cvs.html">source code via cvs</a> for details on
-how to set up CVS, define your CVSROOT, and login. Once you've done that, just
-execute the command
-<pre>&nbsp;&nbsp;&nbsp; cvs co mozilla/js/rhino</pre>
-to get the tip source.
+<h2><a name="source" id="source">Source</a></h2>
+<p>The source code for Rhino is available under <a
+href="http://www.mozilla.org/MPL/MPL-1.1.html">MPL 1.1</a>/GPL 2.0 license. In addition to 
+getting the source from the zip files above, the source code for 
+Rhino can be found in the CVS tree at mozilla/js/rhino. See <a
+href="http://developer.mozilla.org/en/docs/Mozilla_Source_Code_Via_CVS">source code via cvs</a> for details on how to set up CVS, define your CVSROOT, and login. Once 
+you've done that, just execute the command</p>
+
+<pre class="code">&nbsp;&nbsp;&nbsp; cvs co mozilla/js/rhino
+</pre>
+
+<p>to get the tip source.</p>
 <p>The current tip can also be viewed using LXR at <a
  href="http://lxr.mozilla.org/mozilla/source/js/rhino/">
-http://lxr.mozilla.org/mozilla/source/js/rhino/</a> . See also <a href="changes.html">change log</a> for the current tip.</p>
+http://lxr.mozilla.org/mozilla/source/js/rhino/</a> . See also 
+<a href="changes.html">change log</a> for the current tip.</p>
 <p>
-Rhino uses <a href="http://ant.apache.org/">Ant</a> as its build system and running <tt>ant</tt> command at the top directory of Rhino distribution should print the list of available build targets. 
- </p>
-<hr width="100%"><a href="index.html">back to top</a> <br>
-&nbsp; <br>
+Rhino uses <a class="ex-ref" href="http://ant.apache.org/">Ant</a> as its 
+build system and running <tt>ant</tt> command at the top 
+directory of Rhino distribution should print the list of 
+available build targets.</p>
+
 </body>
 </html>
