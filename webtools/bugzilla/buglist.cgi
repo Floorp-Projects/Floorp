@@ -40,6 +40,7 @@ use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Search;
 use Bugzilla::Search::Quicksearch;
+use Bugzilla::Search::Saved;
 use Bugzilla::User;
 use Bugzilla::Bug;
 use Bugzilla::Product;
@@ -275,58 +276,26 @@ sub LookupNamedQuery {
 # Returns: A boolean true value if the query existed in the database 
 # before, and we updated it. A boolean false value otherwise.
 sub InsertNamedQuery {
-    my ($userid, $query_name, $query, $link_in_footer, $query_type) = @_;
-    $link_in_footer ||= 0;
-    $query_type ||= QUERY_LIST;
-    $query_name = trim($query_name);
-    Bugzilla->login(LOGIN_REQUIRED);
+    my ($query_name, $query, $link_in_footer, $query_type) = @_;
     my $dbh = Bugzilla->dbh;
-    my $query_existed_before;
 
-    # Validate the query name.
-    $query_name || ThrowUserError("query_name_missing");
-    $query_name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
-    (length($query_name) <= 64) || ThrowUserError("query_name_too_long");
-    trick_taint($query_name);
+    $query_name = trim($query_name);
+    my ($query_obj) = grep {$_->name eq $query_name} @{Bugzilla->user->queries};
 
-    detaint_natural($userid);
-    detaint_natural($link_in_footer);
-
-    $query || ThrowUserError("buglist_parameters_required",
-                             {'queryname' => $query});
-    # $query is safe, because we always urlencode or html_quote
-    # it when we display it to the user.
-    trick_taint($query);
-
-    $dbh->bz_lock_tables('namedqueries WRITE',
-                         'namedqueries_link_in_footer WRITE');
-
-    my $result = $dbh->selectrow_array("SELECT userid FROM namedqueries"
-        . " WHERE userid = ? AND name = ?"
-        , undef, ($userid, $query_name));
-    if ($result) {
-        $query_existed_before = 1;
-        $dbh->do("UPDATE namedqueries"
-            . " SET query = ?, query_type = ?"
-            . " WHERE userid = ? AND name = ?"
-            , undef, ($query, $query_type, $userid, $query_name));
+    if ($query_obj) {
+        $query_obj->set_url($query);
+        $query_obj->set_query_type($query_type);
+        $query_obj->update();
     } else {
-        $query_existed_before = 0;
-        $dbh->do("INSERT INTO namedqueries"
-            . " (userid, name, query, query_type)"
-            . " VALUES (?, ?, ?, ?)"
-            , undef, ($userid, $query_name, $query, $query_type));
-        if ($link_in_footer) {
-            $dbh->do('INSERT INTO namedqueries_link_in_footer
-                                 (namedquery_id, user_id)
-                          VALUES (?, ?)',
-                     undef,
-                     ($dbh->bz_last_key('namedqueries', 'id'), $userid));
-        }
+        Bugzilla::Search::Saved->create({
+            name           => $query_name,
+            query          => $query,
+            query_type     => $query_type,
+            link_in_footer => $link_in_footer
+        });
     }
 
-    $dbh->bz_unlock_tables();
-    return $query_existed_before;
+    return $query_obj ? 1 : 0;
 }
 
 sub LookupSeries {
@@ -497,7 +466,7 @@ if ($cgi->param('cmdtype') eq "dorem") {
 elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
     if ($cgi->param('remtype') eq "asdefault") {
         my $user = Bugzilla->login(LOGIN_REQUIRED);
-        InsertNamedQuery($user->id, DEFAULT_QUERY_NAME, $buffer);
+        InsertNamedQuery(DEFAULT_QUERY_NAME, $buffer);
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($cgi->param('remtype') eq "asnamed") {
@@ -551,7 +520,7 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
             $query_type = LIST_OF_BUGS;
         }
         my $tofooter = 1;
-        my $existed_before = InsertNamedQuery($user->id, $query_name, $new_query,
+        my $existed_before = InsertNamedQuery($query_name, $new_query,
                                               $tofooter, $query_type);
         if ($existed_before) {
             $vars->{'message'} = "buglist_updated_named_query";

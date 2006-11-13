@@ -135,6 +135,31 @@ sub canonicalise_query {
     return join("&", @parameters);
 }
 
+sub clean_search_url {
+    my $self = shift;
+    # Delete any empty URL parameter
+    my @cgi_params = $self->param;
+
+    foreach my $param (@cgi_params) {
+        if (defined $self->param($param) && $self->param($param) eq '') {
+            $self->delete($param);
+            $self->delete("${param}_type");
+        }
+
+        # Boolean Chart stuff is empty if it's "noop"
+        if ($param =~ /\d-\d-\d/ && defined $self->param($param)
+            && $self->param($param) eq 'noop')
+        {
+            $self->delete($param);
+        }
+    }
+
+    # Delete certain parameters if the associated parameter is empty.
+    $self->delete('bugidtype')  if !$self->param('bug_id');
+    $self->delete('emailtype1') if !$self->param('email1');
+    $self->delete('emailtype2') if !$self->param('email2');
+}
+
 # Overwrite to ensure nph doesn't get set, and unset HEADERS_ONCE
 sub multipart_init {
     my $self = shift;

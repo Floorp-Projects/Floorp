@@ -29,6 +29,7 @@ use Bugzilla::Constants;
 use Bugzilla::Group;
 use Bugzilla::Search qw(IsValidQueryType);
 use Bugzilla::User;
+use Bugzilla::Util;
 
 #############
 # Constants #
@@ -43,6 +44,76 @@ use constant DB_COLUMNS => qw(
     query
     query_type
 );
+
+use constant REQUIRED_CREATE_FIELDS => qw(name query);
+
+use constant VALIDATORS => {
+    name       => \&_check_name,
+    query      => \&_check_query,
+    query_type => \&_check_query_type,
+    link_in_footer => \&_check_link_in_footer,
+};
+
+use constant UPDATE_COLUMNS => qw(query query_type);
+
+##############
+# Validators #
+##############
+
+sub _check_link_in_footer { return $_[1] ? 1 : 0; }
+
+sub _check_name {
+    my ($invocant, $name) = @_;
+    $name = trim($name);
+    $name || ThrowUserError("query_name_missing");
+    $name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
+    if (length($name) > MAX_LEN_QUERY_NAME) {
+        ThrowUserError("query_name_too_long");
+    }
+    return $name;
+}
+
+sub _check_query {
+    my ($invocant, $query) = @_;
+    $query || ThrowUserError("buglist_parameters_required");
+    my $cgi = new Bugzilla::CGI($query);
+    $cgi->clean_search_url;
+    return $cgi->query_string;
+}
+
+sub _check_query_type {
+    my ($invocant, $type) = @_;
+    # Right now the only query type is LIST_OF_BUGS.
+    return $type ? LIST_OF_BUGS : QUERY_LIST;
+}
+
+#########################
+# Database Manipulation #
+#########################
+
+sub create {
+    my $class = shift;
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $dbh = Bugzilla->dbh;
+    $class->check_required_create_fields(@_);
+    my $params = $class->run_create_validators(@_);
+
+    # Right now you can only create a Saved Search for the current user.
+    $params->{userid} = Bugzilla->user->id;
+
+    $dbh->bz_lock_tables('namedqueries WRITE',
+                         'namedqueries_link_in_footer WRITE');
+    my $lif = delete $params->{link_in_footer};
+    my $obj = $class->insert_create_data($params);
+    if ($lif) {
+        $dbh->do('INSERT INTO namedqueries_link_in_footer 
+                  (user_id, namedquery_id) VALUES (?,?)',
+                 undef, $params->{userid}, $obj->id);
+    }
+    $dbh->bz_unlock_tables();
+
+    return $obj;
+}
 
 #####################
 # Complex Accessors #
@@ -111,6 +182,13 @@ sub user {
     $self->{user} = new Bugzilla::User($self->{userid});
     return $self->{user};
 }
+
+############
+# Mutators #
+############
+
+sub set_url        { $_[0]->set('query',      $_[1]); }
+sub set_query_type { $_[0]->set('query_type', $_[1]); }
 
 1;
 

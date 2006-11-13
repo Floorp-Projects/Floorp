@@ -128,6 +128,8 @@ use File::Basename;
     MAX_TOKEN_AGE
 
     SAFE_PROTOCOLS
+
+    MAX_LEN_QUERY_NAME
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -349,6 +351,9 @@ use constant ROOT_USER => $^O =~ /MSWin32/i ? 'Administrator' : 'root';
 
 # True if we're on Win32.
 use constant ON_WINDOWS => ($^O =~ /MSWin32/i);
+
+# The longest that a saved search name can be.
+use constant MAX_LEN_QUERY_NAME => 64;
 
 sub bz_locations {
     # We know that Bugzilla/Constants.pm must be in %INC at this point.
