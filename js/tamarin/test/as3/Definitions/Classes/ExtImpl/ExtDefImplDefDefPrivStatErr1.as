@@ -53,6 +53,6 @@ try {
 
 AddTestCase("accessing private static method outside of the class, RTE #1069",
   "ReferenceError: Error #1069",
-  error);
+  error.substr(0,27));
 
 test();

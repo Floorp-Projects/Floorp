@@ -55,7 +55,7 @@ try {
 
 AddTestCase("accessing public static method outside of the class, RTE #1069",
 	"ReferenceError: Error #1069",
-	error);
+	error.substr(0,27));
 	// print( "FAILED, should give run time error : accessing public static method outside of the class" );
 
 test();

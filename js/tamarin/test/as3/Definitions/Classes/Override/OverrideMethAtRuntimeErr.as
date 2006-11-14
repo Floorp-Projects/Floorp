@@ -53,7 +53,7 @@ try {
 
 AddTestCase("Override Method At Runtime",
   "ReferenceError: Error #1037",
-  error);
+  error.substr(0,27));
 
 test();
 
