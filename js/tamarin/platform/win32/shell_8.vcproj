@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="MMgc"
-	ProjectGUID="{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}"
+	Name="shell"
+	ProjectGUID="{437E43D2-ED2D-406B-88DB-B5940F838AE9}"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -18,8 +18,8 @@
 			Name="Debug|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="0"
+			ConfigurationType="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -39,16 +39,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\core;..\codegen"
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;AVMPLUS_IA32;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
+				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;_DEBUG;_CONSOLE;USE_REAL2INT;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
-				ExceptionHandling="1"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				TreatWChar_tAsBuiltInType="false"
+				ForceConformanceInForLoopScope="false"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)/MMgc.pdb"
-				BrowseInformation="0"
+				PrecompiledHeaderThrough=""
+				BrowseInformation="1"
 				WarningLevel="4"
 				WarnAsError="true"
 				Detect64BitPortabilityProblems="false"
@@ -64,11 +65,18 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/MMgc_d.lib"
+				Name="VCLinkerTool"
+				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
+				AdditionalDependencies="winmm.lib DbgHelp.lib"
+				OutputFile="$(OutDir)/avmplus_d.exe"
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -80,6 +88,12 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -87,8 +101,8 @@
 			Name="Release|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="0"
+			ConfigurationType="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -107,18 +121,17 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				AdditionalIncludeDirectories=".;..\core;..\codegen"
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;AVMPLUS_IA32;_CRT_SECURE_NO_DEPRECATE"
+				Optimization="3"
+				FavorSizeOrSpeed="2"
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
+				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;NDEBUG;_CONSOLE;USE_REAL2INT;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
-				BufferSecurityCheck="false"
-				TreatWChar_tAsBuiltInType="false"
+				ForceConformanceInForLoopScope="false"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)/MMgc.pdb"
-				BrowseInformation="0"
+				PrecompiledHeaderThrough=""
 				WarningLevel="4"
 				WarnAsError="true"
 				Detect64BitPortabilityProblems="false"
@@ -134,11 +147,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/MMgc.lib"
+				Name="VCLinkerTool"
+				AdditionalOptions="/SAFESEH:NO"
+				AdditionalDependencies="winmm.lib"
+				OutputFile="$(OutDir)/avmplus.exe"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				OptimizeReferences="2"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -150,6 +172,12 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -157,7 +185,8 @@
 			Name="Release Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -176,19 +205,21 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				AdditionalIncludeDirectories="..\core;..\codegen"
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;DEBUGGER;AVMPLUS_IA32;_CRT_SECURE_NO_DEPRECATE"
+				Optimization="3"
+				FavorSizeOrSpeed="2"
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
+				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;NDEBUG;_CONSOLE;USE_REAL2INT;DEBUGGER;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
-				BufferSecurityCheck="false"
-				TreatWChar_tAsBuiltInType="false"
+				ForceConformanceInForLoopScope="false"
 				RuntimeTypeInfo="false"
-				ProgramDataBaseFileName="$(IntDir)/MMgc.pdb"
-				BrowseInformation="0"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderThrough=""
 				WarningLevel="4"
 				WarnAsError="true"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -200,11 +231,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/MMgc_s.lib"
+				Name="VCLinkerTool"
+				AdditionalOptions="/SAFESEH:NO"
+				AdditionalDependencies="winmm.lib"
+				OutputFile="$(OutDir)/avmplus_s.exe"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				OptimizeReferences="2"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -216,6 +256,12 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -223,8 +269,8 @@
 			Name="Debug Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="0"
+			ConfigurationType="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -244,16 +290,17 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\core;..\codegen"
-				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;WIN32;DEBUGGER;AVMPLUS_IA32;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\shell;..\..\extensions;..\..\MMgc;..\..\codegen;..\..\..\..\modules\zlib\src;..\..\core;."
+				PreprocessorDefinitions="WIN32_LEAN_AND_MEAN;AVMPLUS_SHELL;WIN32;AVMPLUS_IA32;_DEBUG;_CONSOLE;USE_REAL2INT;DEBUGGER;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
-				ExceptionHandling="1"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				TreatWChar_tAsBuiltInType="false"
+				ForceConformanceInForLoopScope="false"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)/MMgc.pdb"
-				BrowseInformation="0"
+				PrecompiledHeaderThrough=""
+				BrowseInformation="1"
 				WarningLevel="4"
 				WarnAsError="true"
 				Detect64BitPortabilityProblems="false"
@@ -269,11 +316,19 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/MMgc_sd.lib"
+				Name="VCLinkerTool"
+				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
+				AdditionalDependencies="winmm.lib DbgHelp.lib"
+				OutputFile="$(OutDir)/avmplus_sd.exe"
+				AdditionalLibraryDirectories=""
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -283,6 +338,12 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -298,55 +359,59 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\FixedAlloc.cpp"
+				RelativePath="..\..\shell\avmshell.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\FixedMalloc.cpp"
+				RelativePath="..\..\shell\ByteArrayGlue.cpp"
 				>
 			</File>
 			<File
-				RelativePath="GC.cpp"
+				RelativePath="..\..\shell\ConsoleOutputStream.cpp"
 				>
 			</File>
 			<File
-				RelativePath="GCAlloc.cpp"
+				RelativePath="..\..\shell\DataIO.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCAllocObjectWin.cpp"
+				RelativePath="..\..\shell\DebugCLI.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCDebugWin.cpp"
+				RelativePath="..\..\extensions\DictionaryGlue.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCHashtable.cpp"
+				RelativePath="..\..\shell\DomainClass.cpp"
 				>
 			</File>
 			<File
-				RelativePath="GCHeap.cpp"
+				RelativePath="..\..\shell\FileClass.cpp"
 				>
 			</File>
 			<File
-				RelativePath="GCHeapWin.cpp"
+				RelativePath="..\..\shell\FileInputStream.cpp"
 				>
 			</File>
 			<File
-				RelativePath="GCLargeAlloc.cpp"
+				RelativePath="..\..\extensions\JavaGlue.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCMemoryProfiler.cpp"
+				RelativePath="..\..\shell\StringBuilderClass.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCObject.cpp"
+				RelativePath="..\..\shell\SystemClass.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GCTests.cpp"
+				RelativePath="..\..\shell\TypedArrayClass.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\platform\win32\win32cpuid.cpp"
 				>
 			</File>
 		</Filter>
@@ -356,91 +421,109 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\FixedAlloc.h"
+				RelativePath="..\..\shell\avmshell.h"
 				>
 			</File>
 			<File
-				RelativePath=".\FixedMalloc.h"
+				RelativePath="..\..\shell\ByteArrayGlue.h"
 				>
 			</File>
 			<File
-				RelativePath="GC.h"
+				RelativePath="..\..\shell\ConsoleOutputStream.h"
 				>
 			</File>
 			<File
-				RelativePath="GCAlloc.h"
+				RelativePath="..\..\shell\DataIO.h"
 				>
 			</File>
 			<File
-				RelativePath="GCAllocBase.h"
+				RelativePath="..\..\shell\DebugCLI.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCAllocObject.h"
+				RelativePath="..\..\extensions\DictionaryGlue.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCDebug.h"
+				RelativePath="..\..\shell\DomainClass.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCHashtable.h"
+				RelativePath="..\..\shell\FileClass.h"
 				>
 			</File>
 			<File
-				RelativePath="GCHeap.h"
+				RelativePath="..\..\shell\FileInputStream.h"
 				>
 			</File>
 			<File
-				RelativePath="GCLargeAlloc.h"
+				RelativePath="..\..\shell\genericzlib.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCMemoryProfiler.h"
+				RelativePath="..\..\extensions\JavaGlue.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCObject.h"
+				RelativePath="..\..\shell\SystemClass.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCSpinLockWin.h"
+				RelativePath="..\..\shell\toplevel.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GCStack.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GCTests.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GCTypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\GCWeakRef.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MMgc.h"
-				>
-			</File>
-			<File
-				RelativePath=".\winbuild.h"
-				>
-			</File>
-			<File
-				RelativePath=".\WriteBarrier.h"
+				RelativePath="..\..\shell\TypedArrayClass.h"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			Name="AS3 Files"
 			>
+			<File
+				RelativePath="..\..\shell\ByteArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\Domain.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\DoubleArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\Endian.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\FloatArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\IntArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\ShortArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\StringBuilder.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\toplevel.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\UIntArray.as"
+				>
+			</File>
+			<File
+				RelativePath="..\..\shell\UShortArray.as"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

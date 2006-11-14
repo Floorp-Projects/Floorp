@@ -8,7 +8,6 @@ Global
 		Debug|Win32 = Debug|Win32
 		Release Debugger|Win32 = Release Debugger|Win32
 		Release|Win32 = Release|Win32
-		VTune|Win32 = VTune|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger|Win32.ActiveCfg = Debug Debugger|Win32
@@ -19,8 +18,6 @@ Global
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger|Win32.Build.0 = Release Debugger|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.ActiveCfg = Release|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.Build.0 = Release|Win32
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune|Win32.ActiveCfg = VTune|Win32
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.VTune|Win32.Build.0 = VTune|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
