@@ -366,9 +366,9 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
                        { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
                        
    PRBool fPrinting = PR_FALSE;
-   nsIDeviceContext*  context;
-   aContext.GetDeviceContext(context);
-   if (((nsDeviceContextOS2 *)context)->mPrintDC) {
+   nsCOMPtr<nsIDeviceContext>  context;
+   aContext.GetDeviceContext(*getter_AddRefs(context));
+   if (((nsDeviceContextOS2 *)context.get())->mPrintDC) {
       fPrinting = PR_TRUE;
    }
 
@@ -738,9 +738,9 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    PRBool padded = (aPadX || aPadY);
 
    // Get the scale - if greater than 1 then do slow tile which
-   nsIDeviceContext *theDeviceContext;
+   nsCOMPtr<nsIDeviceContext> theDeviceContext;
    float scale;
-   aContext.GetDeviceContext(theDeviceContext);
+   aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
    theDeviceContext->GetCanonicalPixelScale(scale);
 
    nsRect ValidRect (0, 0, ImageWidth, ImageHeight);
