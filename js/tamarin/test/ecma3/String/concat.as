@@ -69,7 +69,7 @@ function getTestCases() {
     array[item++] = new TestCase( SECTION, "'abcde'.concat(null)   ", "abcdenull",      'abcde'.concat(null).toString());
     array[item++] = new TestCase( SECTION, "'abcde'.concat([])     ", "abcde",          'abcde'.concat([]).toString());
     array[item++] = new TestCase( SECTION, "'abcde'.concat([1,2,3])", "abcde1,2,3",     'abcde'.concat([1,2,3]).toString());
-    array[item++] = new TestCase( SECTION, "'abcde'.concat([1,2,3])", "abcde1,2,33,4,5string12345Wed Dec 31 16:00:00 GMT-0800 1969nulltrueundefined",     'abcde'.concat([1,2,3],[3,4,5],'string',12345,new Date(0),null,true,undefined).toString());
+    array[item++] = new TestCase( SECTION, "'abcde'.concat([1,2,3])", "abcde1,2,33,4,5string12345nulltrueundefined",     'abcde'.concat([1,2,3],[3,4,5],'string',12345,null,true,undefined).toString());
 
 	//what should this do:
     array[item++] = new TestCase( SECTION, "'abcde'.concat()       ", "abcde",          'abcde'.concat().toString());
@@ -81,7 +81,7 @@ function getTestCases() {
     myobj.concat = String.prototype.concat;
        
        
-    array[item++] = new TestCase( SECTION, "myobj.concat([1,2,3])", "[object Object]1,2,33,4,5string12345Wed Dec 31 16:00:00 GMT-0800 1969nulltrueundefined",     myobj.concat([1,2,3],[3,4,5],'string',12345,new Date(0),null,true,undefined).toString());
+    array[item++] = new TestCase( SECTION, "myobj.concat([1,2,3])", "[object Object]1,2,33,4,5string12345nulltrueundefined",     myobj.concat([1,2,3],[3,4,5],'string',12345,null,true,undefined).toString());
     
     return array;
 }

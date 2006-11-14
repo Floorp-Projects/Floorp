@@ -115,7 +115,8 @@ for (var i:int = 0; i < valueArr.length; i++) {
 	    } catch (e) {
 		result = e;
 	    } finally {
-		AddTestCase("("+valueDescArr[i]+" as "+ typeDescArr[j]+") Expected: "+String(resultArr[i][j]),true,result);
+        if (valueArr[i]!=myDate || (typeArr[j]!=Date && typeArr[j]!=Object))
+		  AddTestCase("("+valueDescArr[i]+" as "+ typeDescArr[j]+") Expected: "+String(resultArr[i][j]),true,result);
 	    }
 		
 	}

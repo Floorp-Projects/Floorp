@@ -114,7 +114,7 @@ function getTestCases() {
 
     array[item++] = new TestCase(   SECTION,
                                     "Number.toFixed(0)",
-                                    "1000000000000000128",
+                                    "1000000000000000100",
                                     MYNUM.toFixed(0)+"" );
 
     var MYNUM2 = 4;

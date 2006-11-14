@@ -144,11 +144,11 @@ function getTestCases() {
                                     11111,
                                     MyFunction3(foo(),goo(),myvar1+myvar2));
 
-  var arr3 = new Array(1,"string",foo(),[1,2,3],true,new Date(0));
+  var arr3 = new Array(1,"string",foo(),[1,2,3],true);
 
   array[item++] = new TestCase( SECTION,
                                     "arr3.length",
-                                    6,
+                                    5,
                                     arr3.length );
 
   array[item++] = new TestCase( SECTION,
@@ -179,26 +179,19 @@ function getTestCases() {
                                     arr3[4]);
 
 
-   array[item++] = new TestCase( SECTION,
-                                    "arr3[5]",
-                                    "Wed Dec 31 16:00:00 GMT-0800 1969",
-                                    arr3[5]+"");
-
    var k:Number;
    var l:String;
    var m:Array;
    var p:Number;
    var n:Boolean;
-   var o:Date;
    var q:String;
    var r:Number;
 
-   function MyFunction4(a,b,c,d,e,f,g,h):String{
+   function MyFunction4(a,b,c,d,e,g,h):String{
    k=a;
    l=b;
    m=c;
    n=e;
-   o=f;
    p=d;
    q=g;
    r=h;
@@ -208,7 +201,7 @@ function getTestCases() {
    array[item++] = new TestCase( SECTION,
                                     "Function with arguments of different data types",
                                     "passed",
-                                    MyFunction4(1,"string",[2,3,4],goo(),false,new Date(0),null,void));
+                                    MyFunction4(1,"string",[2,3,4],goo(),false,null,void));
 
    array[item++] = new TestCase( SECTION,
                                     "Function with arguments of different data types",
@@ -228,11 +221,6 @@ function getTestCases() {
                                     "Function with arguments of different data types",
                                     false,
                                     n);
-
-   array[item++] = new TestCase( SECTION,
-                                    "Function with arguments of different data types",
-                                    "Wed Dec 31 16:00:00 GMT-0800 1969",
-                                    o+"");
 
    array[item++] = new TestCase( SECTION,
                                     "Function with arguments of different data types",

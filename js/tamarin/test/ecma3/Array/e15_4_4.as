@@ -45,19 +45,12 @@ function getTestCases() {
 
     array[item++] = new TestCase( SECTION,	"Array.prototype.length",   0,          Array.prototype.length );
     array[item++] = new TestCase( SECTION,	"Array.length",   1,          Array.length );
-
 //  verify that prototype object is an Array object.
     array[item++] = new TestCase( SECTION,	"typeof Array.prototype",    "object",   typeof Array.prototype );
 
-	if( playerType == "AVMPlus" ){
-		// ***************************************************************************************
-		// ISSUE:
-		// this is causing problems in the ATS... it doesn't like Array.prototype.toString set!!!
-		// ***************************************************************************************
-   		array[item++] = new TestCase( SECTION,
+ 	array[item++] = new TestCase( SECTION,
                                     "Array.prototype.toString = Object.prototype.toString; Array.prototype.toString()",
                                     "[object Array]",
                                     (Array.prototype.toString = Object.prototype.toString, Array.prototype.toString()) );
-	}
     return ( array );
 }

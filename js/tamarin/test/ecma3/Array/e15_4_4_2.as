@@ -69,10 +69,6 @@ function getTestCases() {
 
    array[item++] = new TestCase( SECTION, "MYARR2.toString()",  "0,1,2,3,4,5,6,7,8,9",  MYARR2.toString() );
 
-   var MYDATEARR = [new Date(0)]
-
-   array[item++] = new TestCase( SECTION, "MYDATEARR.toString()",  "Wed Dec 31 16:00:00 GMT-0800 1969",MYDATEARR.toString() );
-
    var MYARRARR = [new Array(1,2,3),new Array(4,5,6)]
 
    array[item++] = new TestCase( SECTION, "MYARRARR.toString()",  "1,2,3,4,5,6",MYARRARR.toString() );
@@ -89,12 +85,6 @@ function getTestCases() {
    var MYNULLARR2 = new Array(null);
 
    array[item++] = new TestCase( SECTION, "MYNULLARR2.toString()",  "",MYNULLARR2.toString() );
-
-   var MyAllArray = new Array(new String('string'),new Array(1,2,3),new Number(100000),new Date(0),Boolean(0),Number.MAX_VALUE)
-
-   array[item++] = new TestCase( SECTION, "MyAllArray.toString()",  "string,1,2,3,100000,Wed Dec 31 16:00:00 GMT-0800 1969,false,1.79769313486231e+308",MyAllArray.toString() );
-
-
 
    return ( array );
 }

@@ -80,19 +80,19 @@ function getTestCases() {
     array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, .00000000001)", Number.POSITIVE_INFINITY,   Math.pow(Number.POSITIVE_INFINITY,.00000000001) );
     array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, 1)",            Number.POSITIVE_INFINITY,   Math.pow(Number.POSITIVE_INFINITY, 1) );
     array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, -.00000000001)",0,                          Math.pow(Number.POSITIVE_INFINITY, -.00000000001) );
-    array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, -1)",           0,                          Math.pow(Number.POSITIVE_INFINITY, -1) );
-    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 1)",           Number.NEGATIVE_INFINITY,   Math.pow(Number.NEGATIVE_INFINITY, 1) );
-    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 333)",         Number.NEGATIVE_INFINITY,   Math.pow(Number.NEGATIVE_INFINITY, 333) );
-    array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, 2)",            Number.POSITIVE_INFINITY,   Math.pow(Number.POSITIVE_INFINITY, 2) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, -1)",           Number.NaN,                 Math.pow(Number.POSITIVE_INFINITY, -1) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 1)",           Number.NEGATIVE_INFINITY,                 Math.pow(Number.NEGATIVE_INFINITY, 1) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 333)",         Number.NEGATIVE_INFINITY,                 Math.pow(Number.NEGATIVE_INFINITY, 333) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(Infinity, 2)",            Number.POSITIVE_INFINITY,                 Math.pow(Number.POSITIVE_INFINITY, 2) );
     array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 666)",         Number.POSITIVE_INFINITY,   Math.pow(Number.NEGATIVE_INFINITY, 666) );
     array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, 0.5)",         Number.POSITIVE_INFINITY,   Math.pow(Number.NEGATIVE_INFINITY, 0.5) );
     array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, Infinity)",    Number.POSITIVE_INFINITY,   Math.pow(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY) );
 
-    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -1)",          -0,                         Math.pow(Number.NEGATIVE_INFINITY, -1) );
-    array[item++] = new TestCase( SECTION,  "Infinity/Math.pow(-Infinity, -1)", -Infinity,                  Infinity/Math.pow(Number.NEGATIVE_INFINITY, -1) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -1)",          Number.NaN,                         Math.pow(Number.NEGATIVE_INFINITY, -1) );
+    array[item++] = new TestCase( SECTION,  "Infinity/Math.pow(-Infinity, -1)", Number.NaN,                  Infinity/Math.pow(Number.NEGATIVE_INFINITY, -1) );
 
-    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -3)",          -0,                         Math.pow(Number.NEGATIVE_INFINITY, -3) );
-    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -2)",          0,                          Math.pow(Number.NEGATIVE_INFINITY, -2) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -3)",          Number.NaN,                         Math.pow(Number.NEGATIVE_INFINITY, -3) );
+    array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -2)",          Number.NaN,                          Math.pow(Number.NEGATIVE_INFINITY, -2) );
     array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -0.5)",        0,                          Math.pow(Number.NEGATIVE_INFINITY,-0.5) );
     array[item++] = new TestCase( SECTION,  "Math.pow(-Infinity, -Infinity)",   0,                          Math.pow(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY) );
     array[item++] = new TestCase( SECTION,  "Math.pow(0, 1)",                   0,                          Math.pow(0,1) );

@@ -69,10 +69,6 @@ function getTestCases() {
 
    array[item++] = new TestCase( SECTION, "MYARR2.join(separator)",  "0separator1separator2separator3separator4separator5separator6separator7separator8separator9",  MYARR2.join("separator") );
 
-   var MYDATEARR = [new Date(0)]
-
-   array[item++] = new TestCase( SECTION, "MYDATEARR.join(separator)",  "Wed Dec 31 16:00:00 GMT-0800 1969",MYDATEARR.join("/") );
-
    var MYARRARR = [new Array(1,2,3),new Array(4,5,6)]
 
    array[item++] = new TestCase( SECTION, "MYARRARR.join(separator)",  "1,2,34,5,6",MYARRARR.join("") );
@@ -90,9 +86,9 @@ function getTestCases() {
 
    array[item++] = new TestCase( SECTION, "MYNULLARR2.join()",  "",MYNULLARR2.join() );
 
-   var MyAllArray = new Array(new String('string'),new Array(1,2,3),new Number(100000),new Date(0),Boolean(0),Number.MAX_VALUE)
+   var MyAllArray = new Array(new String('string'),new Array(1,2,3),new Number(100000),Boolean(0),Number.MAX_VALUE)
 
-   array[item++] = new TestCase( SECTION, "MyAllArray.join(separator)",  "string&1,2,3&100000&Wed Dec 31 16:00:00 GMT-0800 1969&false&1.79769313486231e+308",MyAllArray.join("&") );
+   array[item++] = new TestCase( SECTION, "MyAllArray.join(separator)",  "string&1,2,3&100000&false&1.79769313486231e+308",MyAllArray.join("&") );
 
 
 

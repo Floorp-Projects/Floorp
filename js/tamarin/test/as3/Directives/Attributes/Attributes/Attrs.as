@@ -28,7 +28,7 @@ LGPL. If you do not delete the provisions above, a recipient may use your versio
 under the terms of any one of the MPL, the GPL or the LGPL. 
 
  ***** END LICENSE BLOCK ***** */
-package AttrPackage {
+package Attrs {
 
  public class Attrs
  {

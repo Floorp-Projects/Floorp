@@ -70,7 +70,8 @@ AddTestCase( "uint as Boolean", null, (uint as Boolean));
 AddTestCase( "null as Date", null, (null as Date));
 AddTestCase( "undefined as Date", null, (undefined as Date));
 AddTestCase( "'test' as Date", null, ('test' as Date));
-AddTestCase( "new Date(0) as Date", "Wed Dec 31 16:00:00 GMT-0800 1969", (new Date(0) as Date).toString());
+// fails if not PDT
+//AddTestCase( "new Date(0) as Date", "Wed Dec 31 16:00:00 GMT-0800 1969", (new Date(0) as Date).toString());
 AddTestCase( "'Wed Dec 31 16:00:00 GMT-0800 1969' as Date", null, ("Wed Dec 31 16:00:00 GMT-0800 1969" as Date));
 AddTestCase( "Array as Date", null, (Array as Date));
 AddTestCase( "Boolean as Date", null, (Boolean as Date));
