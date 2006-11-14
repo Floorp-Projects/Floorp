@@ -227,10 +227,21 @@ private:
                              const txXPathNode* aEnd);
     static void transferElements(txXPathNode* aDest, const txXPathNode* aStart,
                                  const txXPathNode* aEnd);
+    static void destroyElements(const txXPathNode* aStart,
+                                const txXPathNode* aEnd)
+    {
+        while (aStart < aEnd) {
+            aStart->~txXPathNode();
+            ++aStart;
+        }
+    }
 
     typedef void (*transferOp) (txXPathNode* aDest, const txXPathNode* aStart,
                                 const txXPathNode* aEnd);
-    nsresult add(const txNodeSet& aNodes, transferOp aTransfer);
+    typedef void (*destroyOp) (const txXPathNode* aStart,
+                               const txXPathNode* aEnd);
+    nsresult add(const txNodeSet& aNodes, transferOp aTransfer,
+                 destroyOp aDestroy);
 
     txXPathNode *mStart, *mEnd, *mStartBuffer, *mEndBuffer;
     PRInt32 mDirection;
