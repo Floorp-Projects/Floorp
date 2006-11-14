@@ -409,7 +409,7 @@ var gDataMigrator = {
         var profiles = [];
 
         // Do they use Firefox?
-        var ffPro, sbProf, tbProf;
+        var ffProf, sbProf, tbProf;
         if ((ffProf = this.getFirefoxProfile())) {
             profiles.push(ffProf);
         }
@@ -663,7 +663,6 @@ var gDataMigrator = {
 
     getThunderbirdProfile: function gdm_getTB() {
         var profileDir = this.dirService.get("ProfD", Ci.nsILocalFile);
-
         var appSpec = this.ioService.newFileURI(profileDir).path;
         var localFile = Cc["@mozilla.org/file/local;1"]
                         .createInstance(Ci.nsILocalFile);
@@ -746,16 +745,16 @@ var gDataMigrator = {
                 // replace it with "Firefox" to get to Firefox
                 case "darwin": // Mac OS X
                 case "winnt":
-                    idx = appSpec.indexOf("Sunbird");
-                    appSpec = appSpec.substr(0, idx);
+                    truncate = appSpec.indexOf("Sunbird");
+                    appSpec = appSpec.substr(0, truncate);
                     localFile.initWithPath(appSpec);
                     localFile.append(aAppName);
                     localFile.append("Profiles");
                     break;
                 default: // Unix
-                    idx = appSpec.indexOf("sunbird");
-                    appSpec = appSpec.substr(0, idx);
-                    localFile.initWithPath(ffSpec);
+                    truncate = appSpec.indexOf("sunbird");
+                    appSpec = appSpec.substr(0, truncate);
+                    localFile.initWithPath(appSpec);
                     localFile.append(aAppName.toLowerCase());
                     break;
             }
