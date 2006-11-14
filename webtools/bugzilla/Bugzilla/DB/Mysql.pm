@@ -65,6 +65,18 @@ sub new {
 
     bless ($self, $class);
     
+    # Bug 321645 - disable MySQL strict mode, if set
+    my $sql_mode = $self->selectrow_array('SELECT @@sql_mode');
+    if ($sql_mode) {
+        my $new_sql_mode =
+            join(",", grep {$_ !~ /^STRICT_(?:TRANS|ALL)_TABLES|TRADITIONAL$/}
+                            split(/,/, $sql_mode));
+
+        if ($sql_mode ne $new_sql_mode) {
+            $self->do("SET SESSION sql_mode = ?", undef, $new_sql_mode);
+        }
+    }
+
     return $self;
 }
 
