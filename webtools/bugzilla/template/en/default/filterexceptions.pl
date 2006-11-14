@@ -382,15 +382,6 @@
   'product.maxvotes', 
 ],
 
-'bug/process/confirm-duplicate.html.tmpl' => [
-  'original_bug_id', 
-  'duplicate_bug_id', 
-],
-
-'bug/process/midair.html.tmpl' => [
-  'bug_id', 
-],
-
 'bug/process/results.html.tmpl' => [
   'title.$type', 
   '"$terms.Bug $id" FILTER bug_link(id)',

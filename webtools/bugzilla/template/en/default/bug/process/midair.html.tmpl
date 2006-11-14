@@ -45,7 +45,9 @@
 <h1>Mid-air collision detected!</h1>
 
 <p>
-  Someone else has made changes to this [% terms.bug %] at the same time you were trying to.
+  Someone else has made changes to
+  [%+ "$terms.bug $bug_id" FILTER bug_link(bug_id) FILTER none %]
+  at the same time you were trying to.
   The changes made were:
 </p>
 
@@ -83,8 +85,8 @@ You have the following choices:
     </form>
   </li>
   <li>
-    <a href="show_bug.cgi?id=[% bug_id %]">Throw away my changes,
-      and revisit [% terms.bug %] [%+ bug_id %]</a>
+    Throw away my changes, and
+    [%+ "revisit $terms.bug $bug_id" FILTER bug_link(bug_id) FILTER none %]
   </li>
 </ul>
 
