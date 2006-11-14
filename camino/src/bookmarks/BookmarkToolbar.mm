@@ -322,7 +322,23 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
   // coordinates for this view are flipped, making it easier to lay out from top left
   // to bottom right.
-  float oldHeight     = [self frame].size.height;
+  float oldHeight      = [self frame].size.height;
+  float computedHeight = [self computeHeight:NSWidth([self bounds]) startingAtIndex:aIndex];
+
+  // our size has changed, readjust our view's frame and the content area
+  if (computedHeight != oldHeight) {
+    [super setFrame:NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
+                               [self frame].size.width, computedHeight)];
+
+    // tell the superview to resize its subviews
+    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
+  }
+
+  [self setNeedsDisplay:YES];
+}
+
+- (float)computeHeight:(float)aWidth startingAtIndex:(int)aIndex
+{
   int   count         = [mButtons count];
   float curRowYOrigin = kBookmarkToolbarTopPadding;
   float curX          = kBookmarkButtonHorizPadding;
@@ -346,7 +362,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
       buttonRect = NSMakeRect(curX, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
       curX += NSWidth(buttonRect) + kBookmarkButtonHorizPadding;
 
-      if (NSMaxX(buttonRect) > NSWidth([self bounds])) {
+      if (NSMaxX(buttonRect) > aWidth) {
         // jump to the next line
         curX = kBookmarkButtonHorizPadding;
         curRowYOrigin += (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding);
@@ -358,18 +374,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     }
   }
 
-  float computedHeight = curRowYOrigin + (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding + kBookmarkToolbarBottomPadding);
-
-  // our size has changed, readjust our view's frame and the content area
-  if (computedHeight != oldHeight) {
-    [super setFrame:NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
-                               [self frame].size.width, computedHeight)];
-
-    // tell the superview to resize its subviews
-    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
-  }
-
-  [self setNeedsDisplay:YES];
+  return curRowYOrigin + (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding + kBookmarkToolbarBottomPadding);
 }
 
 - (BOOL)isFlipped

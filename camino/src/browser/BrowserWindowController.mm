@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <AppKit/NSScroller.h>
+
 #import <AddressBook/AddressBook.h>
 #import "ABAddressBook+Utils.h"
 
@@ -553,6 +555,8 @@ enum BWCOpenDest {
 - (void)insertForceAlternatesIntoMenu:(NSMenu *)inMenu;
 - (BOOL)prepareSpellingSuggestionMenu:(NSMenu*)inMenu tag:(int)inTag;
 
+- (void)setZoomState:(NSRect)newFrame defaultFrame:(NSRect)defaultFrame;
+
 @end
 
 #pragma mark -
@@ -1010,6 +1014,9 @@ enum BWCOpenDest {
       [[self window] setFrameOrigin: testBrowserFrame.origin];
     }
     
+    // cache the original window frame, we may need this for correct zooming
+    mLastFrameSize = [[self window] frame];
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(newTab:)
                                         name:kTabBarBackgroundDoubleClickedNotification object:mTabBrowser];
 
@@ -1020,6 +1027,89 @@ enum BWCOpenDest {
   //if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
   //  return [[self window] frame].size;
   return proposedFrameSize;
+}
+
+// zoom to fit contents
+- (NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame
+{
+  // If the window is empty or the bookmark manager is loaded maximize to screen  
+  if ([[self getBrowserWrapper] isEmpty] || [self bookmarkManagerIsVisible]) {
+    [self setZoomState:defaultFrame defaultFrame:defaultFrame];
+    return defaultFrame;
+  }
+
+  // Get the needed content size
+  nsCOMPtr<nsIDOMWindow> contentWindow = [[mBrowserView getBrowserView] getContentWindow];
+  if (!contentWindow) {
+    [self setZoomState:defaultFrame defaultFrame:defaultFrame];
+    return defaultFrame;
+  }
+
+  PRInt32 contentWidth = 0, contentHeight = 0;
+  GeckoUtils::GetIntrisicSize(contentWindow, &contentWidth, &contentHeight);
+  if (contentWidth <= 1 || contentHeight <= 1) {
+    // Something went wrong, maximize to screen
+    [self setZoomState:defaultFrame defaultFrame:defaultFrame];
+    return defaultFrame;
+  }
+
+  // Get the current content size and calculate the changes.
+  NSSize curFrameSize = [[mBrowserView getBrowserView] frame].size;
+  float widthChange   = contentWidth  - curFrameSize.width;
+  float heightChange  = contentHeight - curFrameSize.height;
+
+  // Change the window size, but don't let it be to narrow
+  NSRect stdFrame     = [[self window] frame];
+  stdFrame.size.width = MAX([[self window] minSize].width, stdFrame.size.width + widthChange);
+
+  if ([mPersonalToolbar isShown])
+    // if the personal toolbar is shown we need to adjust for its height change
+    heightChange += [mPersonalToolbar computeHeight:stdFrame.size.width startingAtIndex:0]
+                    - [mPersonalToolbar frame].size.height;
+
+  stdFrame.size.height += heightChange;
+  stdFrame.origin.y    -= heightChange;
+
+  // add space for scrollers if needed
+  float scrollerSize = [NSScroller scrollerWidth];
+
+  if (stdFrame.size.height > defaultFrame.size.height)
+    stdFrame.size.width += scrollerSize;
+
+  if (stdFrame.size.width > defaultFrame.size.width) {
+    stdFrame.size.height += scrollerSize;
+    stdFrame.origin.y    -= scrollerSize;
+  }
+
+  [self setZoomState:stdFrame defaultFrame:defaultFrame];
+  return stdFrame;
+} 
+
+- (BOOL)windowShouldZoom:(NSWindow *)sender toFrame:(NSRect)newFrame
+{
+  return mShouldZoom;
+}
+
+// Don't zoom a window that has not been zoomed before and we're not changing its size,
+// strange things will happen (see bug 155956 for details)
+- (void)setZoomState:(NSRect)newFrame defaultFrame:(NSRect)defaultFrame
+{
+  const int kMinZoomChange = 10;
+
+  mShouldZoom = (ABS(mLastFrameSize.size.width  - [[self window] frame].size.width)  > kMinZoomChange ||
+                 ABS(mLastFrameSize.size.height - [[self window] frame].size.height) > kMinZoomChange ||
+                 ABS(MIN(newFrame.size.width,  defaultFrame.size.width)  - [[self window] frame].size.width)  > kMinZoomChange ||
+                 ABS(MIN(newFrame.size.height, defaultFrame.size.height) - [[self window] frame].size.height) > kMinZoomChange);
+}
+
+// If the window is resized update the cached windowframe unless we are zooming the window
+- (void)windowDidResize:(NSNotification *)aNotification
+{
+  if (!mShouldZoom)
+    mLastFrameSize = [[self window] frame];
+  else
+    // reset mShouldZoom so further resizes will be catched
+    mShouldZoom = NO;
 }
 
 #pragma mark -

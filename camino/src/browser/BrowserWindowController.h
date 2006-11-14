@@ -162,6 +162,10 @@ typedef enum
   
   unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 
+  // Needed for correct window zooming
+  NSRect mLastFrameSize;
+  BOOL mShouldZoom;
+
   // C++ object that holds owning refs to XPCOM objects (and related data)
   BWCDataOwner*               mDataOwner;
   

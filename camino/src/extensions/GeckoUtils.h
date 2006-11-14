@@ -43,6 +43,7 @@
 #include "jsapi.h"
 #include "nsIJSContextStack.h"
 
+class nsIDOMWindow;
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIDocShell;
@@ -68,6 +69,9 @@ class GeckoUtils
        found somewhere in a document's docshell tree.  NOTE: Addrefs the found docshell! 
     */
     static void FindDocShellForURI(nsIURI *aURI, nsIDocShell *aRoot, nsIDocShell **outMatch);
+    
+    /* Finds the preferred size (ie the minimum size where scrollbars are not needed) of the content window. */
+    static void GetIntrisicSize(nsIDOMWindow* aWindow, PRInt32* outWidth, PRInt32* outHeight);
 };
 
 /* Stack-based utility that will push a null JSContext onto the JS stack during the
