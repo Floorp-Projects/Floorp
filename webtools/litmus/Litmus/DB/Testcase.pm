@@ -85,7 +85,7 @@ WHERE
 
 __PACKAGE__->set_sql(EnabledBySubgroup => qq{
 SELECT t.* 
-FROM testcases t, testcase_subgroups tsg
+FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
 WHERE 
   tsg.testcase_id=t.testcase_id AND
   tsg.subgroup_id=sgtg.subgroup_id AND
@@ -96,7 +96,7 @@ WHERE
 
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
 SELECT t.* 
-FROM testcases t, testcase_subgroups tsg
+FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
 WHERE 
   tsg.testcase_id=t.testcase_id AND
   tsg.subgroup_id=sgtg.subgroup_id AND
