@@ -275,6 +275,13 @@ function initCalendarManager()
                                  
         homeCalendar.name = name;
         composite.addCalendar(homeCalendar);
+        // Wrapping this in a try/catch block, as if any of the migration code
+        // fails, the app may not load.
+        try {
+            gDataMigrator.checkAndMigrate();
+        } catch (e) {
+            Components.utils.reportError("Migrator error: " + e);
+        }
     }
     calMgr.addObserver(calCalendarManagerObserver);
     composite.addObserver(calCompositeCalendarObserver);
