@@ -1791,7 +1791,7 @@ namespace avmplus
 			if (atom->code == MIR_imm)
 				return InsConst(atom->imm & ~7);
 			else
-				return binaryIns(MIR_and, atom, InsConst(~7));
+				return binaryIns(MIR_and, atom, InsConst(intptr(~7)));
 		}
 	}
 
@@ -3109,7 +3109,7 @@ namespace avmplus
 				// *sp = core->intToAtom(~integer(*sp));
 				AvmAssert(state->value(op1).traits == INT_TYPE);
 				OP* value = localGet(op1);
-				OP* out = binaryIns(MIR_xor, value, InsConst(~0));
+				OP* out = binaryIns(MIR_xor, value, InsConst(intptr(~0)));
 				localSet(op1, out);
 				break;
 			}
