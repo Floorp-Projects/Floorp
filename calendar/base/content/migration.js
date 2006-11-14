@@ -695,7 +695,10 @@ var gDataMigrator = {
                     localFile.append(".thunderbird");
             }
         }
-        return localFile;
+        if (localFile.exists()) {
+            return localFile;
+        }
+        return null;
     },
 
     getSunbirdProfile: function gdm_getSB() {
