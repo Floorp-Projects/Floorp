@@ -975,6 +975,7 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
   NS_ENSURE_SUCCESS(rv, rv);
   
   *aCardExists = card ? PR_TRUE : PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbMDBDirectory::CardForEmailAddress(const char * aEmailAddress, nsIAbCard ** aAbCard)
