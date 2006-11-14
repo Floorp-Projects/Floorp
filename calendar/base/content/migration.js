@@ -127,7 +127,6 @@ var gMigrateWizard = {
         var meter = document.getElementById("migrate-progressmeter");
 
         var i = 0;
-        var nextMig = 0;
         // Because some of our migrators involve async code, we need this
         // call-back function so we know when to start the next migrator.
         function getNextMigrator() {
