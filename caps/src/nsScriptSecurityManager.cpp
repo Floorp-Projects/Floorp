@@ -246,13 +246,10 @@ nsScriptSecurityManager::GetSafeJSContext()
     return cx;
 }
 
-NS_IMETHODIMP
+PRBool
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
-                                             nsIURI* aTargetURI,
-                                             PRBool* result)
+                                             nsIURI* aTargetURI)
 {
-    *result = PR_FALSE;
-
     // Note that this is not an Equals() test on purpose -- for URIs that don't
     // support host/port, we want equality to basically be object identity, for
     // security purposes.  Otherwise, for example, two javascript: URIs that
@@ -260,14 +257,12 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     // unfortunate.
     if (aSourceURI == aTargetURI)
     {
-        *result = PR_TRUE;
-        return NS_OK;
+        return PR_TRUE;
     }
 
     if (!aTargetURI || !aSourceURI) 
     {
-        // return false
-        return NS_OK;
+        return PR_FALSE;
     }
 
     // If either URI is a nested URI, get the base URI
@@ -276,7 +271,7 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
 
     if (!sourceBaseURI || !targetBaseURI)
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
 
     // Compare schemes
     nsCAutoString targetScheme;
@@ -284,82 +279,81 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     nsCAutoString sourceScheme;
     if (NS_SUCCEEDED(rv))
         rv = sourceBaseURI->GetScheme(sourceScheme);
-    if (NS_SUCCEEDED(rv) && targetScheme.Equals(sourceScheme))
-    {
-        if (targetScheme.EqualsLiteral("file"))
-        {
-            // All file: urls are considered to have the same origin.
-            *result = PR_TRUE;
-        }
-        else if (targetScheme.EqualsLiteral("imap") ||
-                 targetScheme.EqualsLiteral("mailbox") ||
-                 targetScheme.EqualsLiteral("news"))
-        {
-            // Each message is a distinct trust domain; use the 
-            // whole spec for comparison
-            nsCAutoString targetSpec;
-            if (NS_FAILED(targetBaseURI->GetSpec(targetSpec)))
-                return NS_ERROR_FAILURE;
-            nsCAutoString sourceSpec;
-            if (NS_FAILED(sourceBaseURI->GetSpec(sourceSpec)))
-                return NS_ERROR_FAILURE;
-            *result = targetSpec.Equals(sourceSpec);
-        }
-        else
-        {
-            // Compare hosts
-            nsCAutoString targetHost;
-            rv = targetBaseURI->GetHost(targetHost);
-            nsCAutoString sourceHost;
-            if (NS_SUCCEEDED(rv))
-                rv = sourceBaseURI->GetHost(sourceHost);
-            *result = NS_SUCCEEDED(rv) &&
-                      targetHost.Equals(sourceHost,
-                                        nsCaseInsensitiveCStringComparator());
-            if (*result) 
-            {
-                // Compare ports
-                PRInt32 targetPort;
-                rv = targetBaseURI->GetPort(&targetPort);
-                PRInt32 sourcePort;
-                if (NS_SUCCEEDED(rv))
-                    rv = sourceBaseURI->GetPort(&sourcePort);
-                *result = NS_SUCCEEDED(rv) && targetPort == sourcePort;
-                // If the port comparison failed, see if either URL has a
-                // port of -1. If so, replace -1 with the default port
-                // for that scheme.
-                if (NS_SUCCEEDED(rv) && !*result &&
-                    (sourcePort == -1 || targetPort == -1))
-                {
-                    NS_ENSURE_STATE(sIOService);
-
-                    NS_ASSERTION(targetScheme.Equals(sourceScheme),
-                                 "Schemes should be equal here");
-                    
-                    PRInt32 defaultPort;
-                    nsCOMPtr<nsIProtocolHandler> protocolHandler;
-                    rv = sIOService->GetProtocolHandler(sourceScheme.get(),
-                                                        getter_AddRefs(protocolHandler));
-                    if (NS_FAILED(rv))
-                    {
-                        *result = PR_FALSE;
-                        return NS_OK;
-                    }
-                    
-                    rv = protocolHandler->GetDefaultPort(&defaultPort);
-                    if (NS_FAILED(rv) || defaultPort == -1)
-                        return NS_OK; // No default port for this scheme
-
-                    if (sourcePort == -1)
-                        sourcePort = defaultPort;
-                    else if (targetPort == -1)
-                        targetPort = defaultPort;
-                    *result = targetPort == sourcePort;
-                }
-            }
-        }
+    if (NS_FAILED(rv) || !targetScheme.Equals(sourceScheme)) {
+        return PR_FALSE;
     }
-    return NS_OK;
+    
+    if (targetScheme.EqualsLiteral("file"))
+    {
+        // All file: urls are considered to have the same origin.
+        return  PR_TRUE;
+    }
+
+    if (targetScheme.EqualsLiteral("imap") ||
+        targetScheme.EqualsLiteral("mailbox") ||
+        targetScheme.EqualsLiteral("news"))
+    {
+        // Each message is a distinct trust domain; use the 
+        // whole spec for comparison
+        nsCAutoString targetSpec;
+        if (NS_FAILED(targetBaseURI->GetSpec(targetSpec)))
+            return PR_FALSE;
+        nsCAutoString sourceSpec;
+        if (NS_FAILED(sourceBaseURI->GetSpec(sourceSpec)))
+            return PR_FALSE;
+        return targetSpec.Equals(sourceSpec);
+    }
+
+    // Compare hosts
+    nsCAutoString targetHost;
+    rv = targetBaseURI->GetHost(targetHost);
+    nsCAutoString sourceHost;
+    if (NS_SUCCEEDED(rv))
+        rv = sourceBaseURI->GetHost(sourceHost);
+    if (NS_FAILED(rv) ||
+        !targetHost.Equals(sourceHost, nsCaseInsensitiveCStringComparator())) {
+        return PR_FALSE;
+    }
+    
+    // Compare ports
+    PRInt32 targetPort;
+    rv = targetBaseURI->GetPort(&targetPort);
+    PRInt32 sourcePort;
+    if (NS_SUCCEEDED(rv))
+        rv = sourceBaseURI->GetPort(&sourcePort);
+    PRBool result = NS_SUCCEEDED(rv) && targetPort == sourcePort;
+    // If the port comparison failed, see if either URL has a
+    // port of -1. If so, replace -1 with the default port
+    // for that scheme.
+    if (NS_SUCCEEDED(rv) && !result &&
+        (sourcePort == -1 || targetPort == -1))
+    {
+        NS_ENSURE_STATE(sIOService);
+
+        NS_ASSERTION(targetScheme.Equals(sourceScheme),
+                     "Schemes should be equal here");
+                    
+        PRInt32 defaultPort;
+        nsCOMPtr<nsIProtocolHandler> protocolHandler;
+        rv = sIOService->GetProtocolHandler(sourceScheme.get(),
+                                            getter_AddRefs(protocolHandler));
+        if (NS_FAILED(rv))
+        {
+            return PR_FALSE;
+        }
+                    
+        rv = protocolHandler->GetDefaultPort(&defaultPort);
+        if (NS_FAILED(rv) || defaultPort == -1)
+            return PR_FALSE; // No default port for this scheme
+
+        if (sourcePort == -1)
+            sourcePort = defaultPort;
+        else if (targetPort == -1)
+            targetPort = defaultPort;
+        result = targetPort == sourcePort;
+    }
+
+    return result;
 }
 
 ////////////////////
@@ -568,11 +562,7 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
     }
 
     // Compare origins
-    PRBool sameOrigin = PR_FALSE;
-    rv = SecurityCompareURIs(sourceURI, aTargetURI, &sameOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!sameOrigin)
+    if (!SecurityCompareURIs(sourceURI, aTargetURI))
     {
          ReportError(cx, NS_LITERAL_STRING("CheckSameOriginError"), sourceURI, aTargetURI);
          return NS_ERROR_DOM_BAD_URI;
@@ -584,12 +574,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
                                             nsIURI* aTargetURI)
 {
-    nsresult rv;
-    PRBool sameOrigin = PR_FALSE;
-    rv = SecurityCompareURIs(aSourceURI, aTargetURI, &sameOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!sameOrigin)
+    if (!SecurityCompareURIs(aSourceURI, aTargetURI))
     {
          ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"), 
                      aSourceURI, aTargetURI);
@@ -875,11 +860,7 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
         }
     }
 
-    PRBool isSameOrigin = PR_FALSE;
-    nsresult rv = SecurityCompareURIs(subjectURI, objectURI, &isSameOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (isSameOrigin)
+    if (SecurityCompareURIs(subjectURI, objectURI))
     {   // If either the subject or the object has changed its principal by
         // explicitly setting document.domain then the other must also have
         // done so in order to be considered the same origin. This prevents
