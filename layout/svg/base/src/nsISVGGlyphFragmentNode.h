@@ -50,9 +50,8 @@ class nsIDOMSVGPoint;
 #define TRIM_LEADING_WHITESPACE   0x02
 #define TRIM_TRAILING_WHITESPACE  0x04
 
-// {9C7406A8-86F0-45e2-85DF-74BB63BE6F4A}
 #define NS_ISVGGLYPHFRAGMENTNODE_IID \
-{ 0x9c7406a8, 0x86f0, 0x45e2, { 0x85, 0xdf, 0x74, 0xbb, 0x63, 0xbe, 0x6f, 0x4a } }
+{ 0x1297716a, 0xd68d, 0x4c9d, { 0x8e, 0xf8, 0x9e, 0x01, 0x1d, 0x78, 0x21, 0xd0 } }
 
 class nsISVGGlyphFragmentNode : public nsISupports
 {
@@ -67,8 +66,6 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling)=0;
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended()=0;
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGlyphFragmentNode,

@@ -141,9 +141,7 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
-  
+
 protected:
   struct nsSVGCharacterPosition {
     PRBool draw;
@@ -198,7 +196,6 @@ protected:
 
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
-  void UpdateFragmentTree();
   nsSVGTextFrame *GetTextFrame();
   PRBool ContainsPoint(float x, float y);
   nsresult GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas *aCanvas);
@@ -207,7 +204,6 @@ protected:
 
   float mX, mY;
   PRUint8      mWhitespaceHandling;
-  PRPackedBool mFragmentTreeDirty;
 };
 
 #endif

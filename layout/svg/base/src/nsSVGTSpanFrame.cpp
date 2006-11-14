@@ -85,23 +85,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
-                             nsIFrame*       aOldFrame)
-{
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (outerSVGFrame)
-    outerSVGFrame->SuspendRedraw();
-  mFragmentTreeDirty = PR_TRUE;
-
-  nsresult rv = nsSVGTSpanFrameBase::RemoveFrame(aListName, aOldFrame);
-  
-  if (outerSVGFrame)
-    outerSVGFrame->UnsuspendRedraw();
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
                                   PRInt32         aModType)
@@ -113,7 +96,7 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::dy)) {
     nsSVGTextFrame* text_frame = GetTextFrame();
     if (text_frame)
-      text_frame->NotifyGlyphMetricsChange(this);
+      text_frame->NotifyGlyphMetricsChange();
   }
 
   return NS_OK;
@@ -228,38 +211,4 @@ NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
 {
   nsSVGTSpanFrameBase::SetWhitespaceHandling();
-}
-
-NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::NotifyGlyphFragmentTreeSuspended()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node)
-      node->NotifyGlyphFragmentTreeSuspended();
-    kid = kid->GetNextSibling();
-  }
-}
-
-NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::NotifyGlyphFragmentTreeUnsuspended()
-{
-  if (mFragmentTreeDirty) {
-    nsSVGTextFrame* text_frame = GetTextFrame();
-    NS_ASSERTION(text_frame, "null text frame");
-    if (text_frame)
-      text_frame->NotifyGlyphFragmentTreeChange(this);
-    mFragmentTreeDirty = PR_FALSE;
-  }    
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode *node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node)
-      node->NotifyGlyphFragmentTreeUnsuspended();
-    kid = kid->GetNextSibling();
-  }
 }

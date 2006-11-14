@@ -131,7 +131,20 @@ nsSVGTextContainerFrame::GetDy()
   animLengthList->GetAnimVal(&retval);
   return retval;
 }
-  
+
+//----------------------------------------------------------------------
+// nsIFrame methods
+
+NS_IMETHODIMP
+nsSVGTextContainerFrame::RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame)
+{
+  nsSVGTextFrame *textFrame = GetTextFrame();
+  if (textFrame)
+    textFrame->NotifyGlyphMetricsChange();
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // nsISVGTextContentMetrics methods
 

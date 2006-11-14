@@ -102,15 +102,14 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     if (!frame) {
       continue;
     }
+
     // is the content a child of a text element
     nsISVGTextContentMetrics* metrics;
     CallQueryInterface(frame, &metrics);
     if (metrics) {
       nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextContainerFrame*,
                                                  frame)->GetTextFrame();
-
-      if (!textFrame->IsGlyphFragmentTreeSuspended())
-        textFrame->UpdateFragmentTree();
+      textFrame->NotifyGlyphMetricsChange();
       continue;
     }
     // if not, are there text elements amongst its descendents
@@ -128,9 +127,7 @@ nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
   while (kid) {
     if (kid->GetType() == nsLayoutAtoms::svgTextFrame) {
       nsSVGTextFrame* textFrame = NS_STATIC_CAST(nsSVGTextFrame*, kid);
-      if (!textFrame->IsGlyphFragmentTreeSuspended()) {
-        textFrame->UpdateFragmentTree();
-      }
+      textFrame->NotifyGlyphMetricsChange();
     } else {
       UpdateTextFragmentTrees(kid);
     }
