@@ -653,7 +653,6 @@ nsIToolkit* nsBaseWidget::GetToolkit()
 //-------------------------------------------------------------------------
 nsIDeviceContext* nsBaseWidget::GetDeviceContext() 
 {
-  NS_IF_ADDREF(mContext);
   return mContext; 
 }
 

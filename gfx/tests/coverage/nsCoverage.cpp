@@ -94,11 +94,10 @@ nsFont  *font;
 nsPoint *pointlist;
 
    // Get the size of a pixel.
-  nsIDeviceContext* deviceContext;
-  aSurface->GetDeviceContext(deviceContext);
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+  aSurface->GetDeviceContext(*getter_AddRefs(deviceContext));
   float p2t; // pixel to twips conversion
   p2t = deviceContext->DevUnitsToAppUnits();
-  NS_RELEASE(deviceContext);
 
   font = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,NS_FONT_WEIGHT_BOLD,0,12);
   aSurface->SetFont(*font);
