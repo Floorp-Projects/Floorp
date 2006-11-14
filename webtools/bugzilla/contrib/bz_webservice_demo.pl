@@ -212,7 +212,7 @@ The call will return a C<Bugzilla::Bug> object.
 =cut
 
 if ($bug_id) {
-    $soapresult = $proxy->call('Bug.get_bug', $bug_id);
+    $soapresult = $proxy->call('Bug.get_bug', { ids => [$bug_id] });
     _die_on_fault($soapresult);
     $result = $soapresult->result;
 

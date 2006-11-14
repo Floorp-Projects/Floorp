@@ -60,14 +60,41 @@ use constant PRODUCT_SPECIFIC_FIELDS => qw(version target_milestone component);
 # Methods #
 ###########
 
-sub get_bug {
-    my $self = shift;
-    my ($bug_id) = @_;
+sub get_bugs {
+    my ($self, $params) = @_;
+    my $ids = $params->{ids};
+    defined $ids || ThrowCodeError('param_required', { param => 'ids' });
 
-    Bugzilla->login;
+    my @return;
+    foreach my $bug_id (@$ids) {
+        ValidateBugID($bug_id);
+        my $bug = new Bugzilla::Bug($bug_id);
 
-    ValidateBugID($bug_id);
-    return new Bugzilla::Bug($bug_id);
+        # This is done in this fashion in order to produce a stable API.
+        # The internals of Bugzilla::Bug are not stable enough to just
+        # return them directly.
+        my $creation_ts = $self->datetime_format($bug->creation_ts);
+        my $delta_ts    = $self->datetime_format($bug->delta_ts);
+        my %item;
+        $item{'creation_time'}    = type('dateTime')->value($creation_ts);
+        $item{'last_change_time'} = type('dateTime')->value($delta_ts);
+        $item{'internals'}        = $bug;
+        $item{'id'}               = type('int')->value($bug->bug_id);
+        $item{'summary'}          = type('string')->value($bug->short_desc);
+
+        if (Bugzilla->params->{'usebugaliases'}) {
+            $item{'alias'} = type('string')->value($bug->alias);
+        }
+        else {
+            # For API reasons, we always want the value to appear, we just
+            # don't want it to have a value if aliases are turned off.
+            $item{'alias'} = undef;
+        }
+
+        push(@return, \%item);
+    }
+
+    return { bugs => \@return };
 }
 
 
@@ -152,7 +179,8 @@ details of bugs.
 
 =head1 DESCRIPTION
 
-This part of the Bugzilla API allows you to file a new bug in Bugzilla.
+This part of the Bugzilla API allows you to file a new bug in Bugzilla,
+or get information about bugs that have already been filed.
 
 =head1 METHODS
 
@@ -211,6 +239,92 @@ You specified a field that doesn't exist or isn't a drop-down field.
 =head2 Bug Creation and Modification
 
 =over
+
+=item C<get_bugs> B<EXPERIMENTAL>
+
+=over
+
+=item B<Description>
+
+Gets information about particular bugs in the database.
+
+=item B<Params>
+
+=over
+
+=item C<ids>
+
+An array of numbers and strings.
+
+If an element in the array is entirely numeric, it represents a bug_id
+from the Bugzilla database to fetch. If it contains any non-numeric 
+characters, it is considered to be a bug alias instead, and the bug with 
+that alias will be loaded. 
+
+Note that it's possible for aliases to be disabled in Bugzilla, in which
+case you will be told that you have specified an invalid bug_id if you
+try to specify an alias. (It will be error 100.)
+
+=back
+
+=item B<Returns>
+
+A hash containing a single element, C<bugs>. This is an array of hashes. 
+Each hash contains the following items:
+
+=over
+
+=item id
+
+C<int> The numeric bug_id of this bug.
+
+=item alias
+
+C<string> The alias of this bug. If there is no alias or aliases are 
+disabled in this Bugzilla, this will be an empty string.
+
+=item summary
+
+C<string> The summary of this bug.
+
+=item creation_time
+
+C<dateTime> When the bug was created.
+
+=item last_change_time
+
+C<dateTime> When the bug was last changed.
+
+=item internals B<UNSTABLE>
+
+A hash. The internals of a L<Bugzilla::Bug> object. This is extremely
+unstable, and you should only rely on this if you absolutely have to. The
+structure of the hash may even change between point releases of Bugzilla.
+
+=back
+
+=item B<Errors>
+
+=over
+
+=item 100 (Invalid Bug Alias)
+
+If you specified an alias and either: (a) the Bugzilla you're querying
+doesn't support aliases or (b) there is no bug with that alias.
+
+=item 101 (Invalid Bug ID)
+
+The bug_id you specified doesn't exist in the database.
+
+=item 102 (Access Denied)
+
+You do not have access to the bug_id you specified.
+
+=back
+
+=back
+
+
 
 =item C<create> B<EXPERIMENTAL>
 
