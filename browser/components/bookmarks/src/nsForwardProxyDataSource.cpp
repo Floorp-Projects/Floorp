@@ -488,7 +488,8 @@ nsForwardProxyDataSource::GetProxyResourcesArray (nsISupportsArray* aSources,
     // have aggregate resources -- if they're found, append them
     // to a new array
     for (PRUint32 i = 0; i < sourcesCount; i++) {
-        source = do_QueryElementAt(aSources, i, &rv);
+        rv = aSources->QueryElementAt(i, NS_GET_IID(nsIRDFResource),
+                                      getter_AddRefs(source));
         if (NS_FAILED(rv)) return rv;
 
         if (GetProxyResource(source, getter_AddRefs(proxyResource)) == NS_OK) {

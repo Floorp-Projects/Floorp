@@ -1960,9 +1960,9 @@ nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
     if (NS_FAILED(rv = GetSources(kWEB_ScheduleActive, kTrueLiteral, PR_TRUE, getter_AddRefs(srcList))))
         return rv;
 
-    nsCOMPtr<nsISupportsArray>  bookmarkList;
-    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(bookmarkList))))
-        return rv;
+    nsCOMPtr<nsISupportsArray>  bookmarkList =
+        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // build up a list of potential bookmarks to check
     PRBool  hasMoreSrcs = PR_TRUE;
@@ -2447,8 +2447,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                     if (wwatch)
                     {
                         nsCOMPtr<nsIDOMWindow> newWindow;
-            nsCOMPtr<nsISupportsArray> suppArray;
-            rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
+            nsCOMPtr<nsISupportsArray> suppArray =
+                do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
             nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
             if (!suppString) return rv;
@@ -4101,10 +4101,7 @@ NS_IMETHODIMP
 nsBookmarksService::GetAllCmds(nsIRDFResource* source,
                    nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-    nsCOMPtr<nsISupportsArray>  cmdArray;
-    nsresult            rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
-    if (NS_FAILED(rv))  return rv;
+    nsCOMArray<nsIRDFResource> cmdArray;
 
     // determine type
     nsCOMPtr<nsIRDFNode> nodeType;
@@ -4118,38 +4115,38 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 
     if (isBookmark || isBookmarkFolder || isBookmarkSeparator || isLivemark)
     {
-        cmdArray->AppendElement(kNC_BookmarkCommand_NewBookmark);
-        cmdArray->AppendElement(kNC_BookmarkCommand_NewFolder);
-        cmdArray->AppendElement(kNC_BookmarkCommand_NewSeparator);
-        cmdArray->AppendElement(kNC_BookmarkSeparator);
+        cmdArray.AppendObject(kNC_BookmarkCommand_NewBookmark);
+        cmdArray.AppendObject(kNC_BookmarkCommand_NewFolder);
+        cmdArray.AppendObject(kNC_BookmarkCommand_NewSeparator);
+        cmdArray.AppendObject(kNC_BookmarkSeparator);
     }
     if (isBookmark || isLivemark)
     {
-        cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmark);
+        cmdArray.AppendObject(kNC_BookmarkCommand_DeleteBookmark);
     }
     if (isLivemark)
     {
-        cmdArray->AppendElement(kNC_BookmarkCommand_RefreshLivemark);
+        cmdArray.AppendObject(kNC_BookmarkCommand_RefreshLivemark);
     }
     if (isBookmarkFolder && (source != kNC_BookmarksRoot) && (source != kNC_IEFavoritesRoot))
     {
-        cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmarkFolder);
+        cmdArray.AppendObject(kNC_BookmarkCommand_DeleteBookmarkFolder);
     }
     if (isBookmarkSeparator)
     {
-        cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmarkSeparator);
+        cmdArray.AppendObject(kNC_BookmarkCommand_DeleteBookmarkSeparator);
     }
     if (isBookmarkFolder)
     {
         nsCOMPtr<nsIRDFResource> personalToolbarFolder;
         GetBookmarksToolbarFolder(getter_AddRefs(personalToolbarFolder));
 
-        cmdArray->AppendElement(kNC_BookmarkSeparator);
-        if (source != personalToolbarFolder.get())  cmdArray->AppendElement(kNC_BookmarkCommand_SetPersonalToolbarFolder);
+        cmdArray.AppendObject(kNC_BookmarkSeparator);
+        if (source != personalToolbarFolder.get())  cmdArray.AppendObject(kNC_BookmarkCommand_SetPersonalToolbarFolder);
     }
 
     // always append a separator last (due to aggregation of commands from multiple datasources)
-    cmdArray->AppendElement(kNC_BookmarkSeparator);
+    cmdArray.AppendObject(kNC_BookmarkSeparator);
 
     return NS_NewArrayEnumerator(commands, cmdArray);
 }
@@ -4178,8 +4175,10 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
     // multiple arguments can be the same, by the way, thus the "offset"
     for (loop = 0; loop < numArguments; loop += 2)
     {
-        nsCOMPtr<nsIRDFResource> src = do_QueryElementAt(arguments, loop, &rv);
-        if (!src) return rv;
+        nsCOMPtr<nsIRDFResource> src;
+        rv = arguments->QueryElementAt(loop, NS_GET_IID(nsIRDFResource),
+                                       getter_AddRefs(src));
+        if (NS_FAILED(rv)) return rv;
         
         if (src == res)
         {
@@ -4189,9 +4188,10 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
                 continue;
             }
 
-            nsCOMPtr<nsIRDFNode> val = do_QueryElementAt(arguments, loop + 1,
-                                                         &rv);
-            if (!val) return rv;
+            nsCOMPtr<nsIRDFNode> val;
+            rv = arguments->QueryElementAt(loop + 1, NS_GET_IID(nsIRDFNode),
+                                           getter_AddRefs(val));
+            if (NS_FAILED(rv)) return rv;
 
             *argValue = val;
             NS_ADDREF(*argValue);
@@ -4303,8 +4303,10 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 
     for (loop=((PRInt32)numSources)-1; loop>=0; loop--)
     {
-        nsCOMPtr<nsIRDFResource> src = do_QueryElementAt(aSources, loop, &rv);
-        if (!src) return rv;
+        nsCOMPtr<nsIRDFResource> src;
+        rv = aSources->QueryElementAt(loop, NS_GET_IID(nsIRDFResource),
+                                      getter_AddRefs(src));
+        if (NS_FAILED(rv)) return rv;
 
         if (aCommand == kNC_BookmarkCommand_NewBookmark)
         {
