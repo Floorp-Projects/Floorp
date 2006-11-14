@@ -57,6 +57,7 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMutableArray.h"
+#include "nsTraceRefcntImpl.h"
 
 //-----------------------------------------------------------------------------
 // static helper functions
@@ -1663,10 +1664,18 @@ nsLocalFile::Load(PRLibrary * *_retval)
     if (NS_FAILED(rv))
         return rv;
 
-    if (! isFile)
+    if (!isFile)
         return NS_ERROR_FILE_IS_DIRECTORY;
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+
     *_retval =  PR_LoadLibrary(mWorkingPath.get());
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
 
     if (*_retval)
         return NS_OK;

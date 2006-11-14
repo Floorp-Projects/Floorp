@@ -57,6 +57,7 @@
 #include "MoreFilesX.h"
 #include "FSCopyObject.h"
 #include "nsAutoBuffer.h"
+#include "nsTraceRefcntImpl.h"
 
 // Mac Includes
 #include <Carbon/Carbon.h>
@@ -1347,7 +1348,15 @@ NS_IMETHODIMP nsLocalFile::Load(PRLibrary **_retval)
   if (NS_FAILED(rv))
     return rv;
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+  nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+
   *_retval = PR_LoadLibrary(path.get());
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
 
   NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
   NS_TIMELINE_MARK_TIMER1("PR_LoadLibrary", path.get());

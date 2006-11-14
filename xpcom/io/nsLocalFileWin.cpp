@@ -79,6 +79,8 @@
 #include "nsAutoLock.h"
 #include "SpecialSystemDirectory.h"
 
+#include "nsTraceRefcntImpl.h"
+
 // _mbsstr isn't declared in w32api headers but it's there in the libs
 #ifdef __MINGW32__
 extern "C" {
@@ -1820,10 +1822,20 @@ nsLocalFile::Load(PRLibrary * *_retval)
         return NS_ERROR_FILE_IS_DIRECTORY;
 
     NS_TIMELINE_START_TIMER("PR_LoadLibraryWithFlags");
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+
     PRLibSpec libSpec;
     libSpec.value.pathname_u = mResolvedPath.get();
     libSpec.type = PR_LibSpec_PathnameU;
     *_retval =  PR_LoadLibraryWithFlags(libSpec, 0);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
+
     NS_TIMELINE_STOP_TIMER("PR_LoadLibraryWithFlags");
     NS_TIMELINE_MARK_TIMER1("PR_LoadLibraryWithFlags",
                             NS_ConvertUTF16toUTF8(mResolvedPath).get());

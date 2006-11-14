@@ -83,6 +83,7 @@
 #include "nsITimelineService.h"
 
 #include "nsNativeCharsetUtils.h"
+#include "nsTraceRefcntImpl.h"
 
 // On some platforms file/directory name comparisons need to
 // be case-blind.
@@ -1586,7 +1587,15 @@ nsLocalFile::Load(PRLibrary **_retval)
 
     NS_TIMELINE_START_TIMER("PR_LoadLibrary");
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+
     *_retval = PR_LoadLibrary(mPath.get());
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
 
     NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
     NS_TIMELINE_MARK_TIMER1("PR_LoadLibrary", mPath.get());
