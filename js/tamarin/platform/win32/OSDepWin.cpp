@@ -52,12 +52,12 @@ namespace avmplus
 		*i = 1;
 	}
 
-	intptr OSDep::startIntWriteTimer(uint32 millis, int *addr)
+	uintptr OSDep::startIntWriteTimer(uint32 millis, int *addr)
 	{
-		return (intptr) timeSetEvent(millis, millis, (LPTIMECALLBACK)intWriteTimerProc, (DWORD_PTR)addr, 1);
+		return (uintptr) timeSetEvent(millis, millis, (LPTIMECALLBACK)intWriteTimerProc, (DWORD_PTR)addr, 1);
 	}
 
-	void OSDep::stopTimer(intptr handle)
+	void OSDep::stopTimer(uintptr handle)
 	{
 		timeKillEvent((UINT)handle);
 	}
