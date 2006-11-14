@@ -176,7 +176,9 @@ UrlClassifierTableEnchash.inherits(UrlClassifierTable);
  * Look up a URL in an enchashDB.  We try all sub domains (up to MAX_DOTS).
  */
 UrlClassifierTableEnchash.prototype.exists = function(url, callback) {
-  var host = this.enchashDecrypter_.getCanonicalHost(url);
+  url = this.enchashDecrypter_.getCanonicalUrl(url);
+  var host = this.enchashDecrypter_.getCanonicalHost(url,
+                                               PROT_EnchashDecrypter.MAX_DOTS);
 
   var possible = [];
   for (var i = 0; i < PROT_EnchashDecrypter.MAX_DOTS + 1; i++) {
