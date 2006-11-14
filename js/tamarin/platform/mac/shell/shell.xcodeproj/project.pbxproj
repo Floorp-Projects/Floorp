@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1A91570F0B012A3F00744986 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A91570E0B012A3F00744986 /* libz.dylib */; };
-		47BA8F2C0B053ACC0092107F /* libMMgc64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 470266410B053A6F007B70DD /* libMMgc64.a */; };
-		47BA8F2D0B053AD40092107F /* libavmplus64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 47BA8F270B053AB10092107F /* libavmplus64.a */; };
 		6803D2C90A5064FD00C797BB /* JavaGlue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6803D2C70A5064FD00C797BB /* JavaGlue.cpp */; };
 		6803D2CA0A5064FD00C797BB /* JavaGlue.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6803D2C80A5064FD00C797BB /* JavaGlue.h */; };
 		8E8B529E09AABAA30057BEE4 /* avmshell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E8B527909AABAA20057BEE4 /* avmshell.cpp */; };
@@ -48,6 +46,8 @@
 		8E8B52C009AABAA30057BEE4 /* TypedArrayClass.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8E8B529B09AABAA30057BEE4 /* TypedArrayClass.h */; };
 		8E8B52C109AABAA30057BEE4 /* UIntArray.as in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8E8B529C09AABAA30057BEE4 /* UIntArray.as */; };
 		8E8B52C209AABAA30057BEE4 /* UShortArray.as in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8E8B529D09AABAA30057BEE4 /* UShortArray.as */; };
+		8EDDB9DE09AAD17F00FB9EE5 /* libavmplus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E8B52C809AABABE0057BEE4 /* libavmplus.a */; };
+		8EDDB9DF09AAD18200FB9EE5 /* libMMgc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E8B52D309AABB120057BEE4 /* libMMgc.a */; };
 		8EDDB9E809AAD1D300FB9EE5 /* Dictionary.as in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8EDDB9E509AAD1D300FB9EE5 /* Dictionary.as */; };
 		8EDDB9E909AAD1D300FB9EE5 /* DictionaryGlue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8EDDB9E609AAD1D300FB9EE5 /* DictionaryGlue.cpp */; };
 		8EDDB9EA09AAD1D300FB9EE5 /* DictionaryGlue.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8EDDB9E709AAD1D300FB9EE5 /* DictionaryGlue.h */; };
@@ -55,30 +55,30 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		470266400B053A6F007B70DD /* PBXContainerItemProxy */ = {
+		8E8B52C709AABABE0057BEE4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
+			containerPortal = 8E8B52C309AABABE0057BEE4 /* avmplus.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = avmplus;
+		};
+		8E8B52D209AABB120057BEE4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8E8B52CD09AABB120057BEE4 /* MMgc.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = MMgc;
 		};
-		47BA8F260B053AB10092107F /* PBXContainerItemProxy */ = {
+		8EDDB9D509AAD06600FB9EE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = D2AAC046055464E500DB518D;
-			remoteInfo = avmplus64;
-		};
-		47BA8F280B053AC00092107F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
+			containerPortal = 8E8B52C309AABABE0057BEE4 /* avmplus.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
-			remoteInfo = avmplus64;
+			remoteInfo = avmplus;
 		};
-		47BA8F2A0B053AC40092107F /* PBXContainerItemProxy */ = {
+		8EDDB9D709AAD06A00FB9EE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
+			containerPortal = 8E8B52CD09AABB120057BEE4 /* MMgc.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = MMgc;
@@ -127,11 +127,9 @@
 
 /* Begin PBXFileReference section */
 		1A91570E0B012A3F00744986 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
-		470266390B053A6F007B70DD /* MMgc64.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MMgc64.xcodeproj; path = ../MMgc/MMgc64.xcodeproj; sourceTree = SOURCE_ROOT; };
-		47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = avmplus64.xcodeproj; path = ../avmplus/avmplus64.xcodeproj; sourceTree = SOURCE_ROOT; };
 		6803D2C70A5064FD00C797BB /* JavaGlue.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = JavaGlue.cpp; path = ../../../extensions/JavaGlue.cpp; sourceTree = SOURCE_ROOT; };
 		6803D2C80A5064FD00C797BB /* JavaGlue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = JavaGlue.h; path = ../../../extensions/JavaGlue.h; sourceTree = SOURCE_ROOT; };
-		8DD76FB20486AB0100D96B5E /* shell64 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = shell64; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76FB20486AB0100D96B5E /* shell */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = shell; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8B527909AABAA20057BEE4 /* avmshell.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = avmshell.cpp; path = ../../../shell/avmshell.cpp; sourceTree = SOURCE_ROOT; };
 		8E8B527A09AABAA20057BEE4 /* avmshell.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = avmshell.h; path = ../../../shell/avmshell.h; sourceTree = SOURCE_ROOT; };
 		8E8B527B09AABAA20057BEE4 /* ByteArray.as */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = ByteArray.as; path = ../../../shell/ByteArray.as; sourceTree = SOURCE_ROOT; };
@@ -168,6 +166,8 @@
 		8E8B529B09AABAA30057BEE4 /* TypedArrayClass.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TypedArrayClass.h; path = ../../../shell/TypedArrayClass.h; sourceTree = SOURCE_ROOT; };
 		8E8B529C09AABAA30057BEE4 /* UIntArray.as */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = UIntArray.as; path = ../../../shell/UIntArray.as; sourceTree = SOURCE_ROOT; };
 		8E8B529D09AABAA30057BEE4 /* UShortArray.as */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = UShortArray.as; path = ../../../shell/UShortArray.as; sourceTree = SOURCE_ROOT; };
+		8E8B52C309AABABE0057BEE4 /* avmplus.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = avmplus.xcodeproj; path = ../avmplus/avmplus.xcodeproj; sourceTree = SOURCE_ROOT; };
+		8E8B52CD09AABB120057BEE4 /* MMgc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MMgc.xcodeproj; path = ../MMgc/MMgc.xcodeproj; sourceTree = SOURCE_ROOT; };
 		8EDDB9E509AAD1D300FB9EE5 /* Dictionary.as */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = Dictionary.as; path = ../../../extensions/Dictionary.as; sourceTree = SOURCE_ROOT; };
 		8EDDB9E609AAD1D300FB9EE5 /* DictionaryGlue.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DictionaryGlue.cpp; path = ../../../extensions/DictionaryGlue.cpp; sourceTree = SOURCE_ROOT; };
 		8EDDB9E709AAD1D300FB9EE5 /* DictionaryGlue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DictionaryGlue.h; path = ../../../extensions/DictionaryGlue.h; sourceTree = SOURCE_ROOT; };
@@ -179,8 +179,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				47BA8F2D0B053AD40092107F /* libavmplus64.a in Frameworks */,
-				47BA8F2C0B053ACC0092107F /* libMMgc64.a in Frameworks */,
+				8EDDB9DF09AAD18200FB9EE5 /* libMMgc.a in Frameworks */,
+				8EDDB9DE09AAD17F00FB9EE5 /* libavmplus.a in Frameworks */,
 				8EDDB9F409AAD2B700FB9EE5 /* CoreServices.framework in Frameworks */,
 				1A91570F0B012A3F00744986 /* libz.dylib in Frameworks */,
 			);
@@ -212,23 +212,15 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76FB20486AB0100D96B5E /* shell64 */,
+				8DD76FB20486AB0100D96B5E /* shell */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4702663A0B053A6F007B70DD /* Products */ = {
+		8E8B52C409AABABE0057BEE4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				470266410B053A6F007B70DD /* libMMgc64.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		47BA8F200B053AB10092107F /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				47BA8F270B053AB10092107F /* libavmplus64.a */,
+				8E8B52C809AABABE0057BEE4 /* libavmplus.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -236,12 +228,20 @@
 		8E8B52C909AABAC80057BEE4 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */,
-				470266390B053A6F007B70DD /* MMgc64.xcodeproj */,
 				1A91570E0B012A3F00744986 /* libz.dylib */,
 				8EDDB9F309AAD2B700FB9EE5 /* CoreServices.framework */,
+				8E8B52CD09AABB120057BEE4 /* MMgc.xcodeproj */,
+				8E8B52C309AABABE0057BEE4 /* avmplus.xcodeproj */,
 			);
 			name = Libraries;
+			sourceTree = "<group>";
+		};
+		8E8B52CE09AABB120057BEE4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8E8B52D309AABB120057BEE4 /* libMMgc.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		8EDDB9E209AAD1A100FB9EE5 /* shell */ = {
@@ -309,9 +309,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8DD76FA90486AB0100D96B5E /* shell64 */ = {
+		8DD76FA90486AB0100D96B5E /* shell */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB928508733DD80010E9CD /* Build configuration list for PBXNativeTarget "shell64" */;
+			buildConfigurationList = 1DEB928508733DD80010E9CD /* Build configuration list for PBXNativeTarget "shell" */;
 			buildPhases = (
 				8DD76FAB0486AB0100D96B5E /* Sources */,
 				8DD76FAD0486AB0100D96B5E /* Frameworks */,
@@ -320,13 +320,13 @@
 			buildRules = (
 			);
 			dependencies = (
-				47BA8F290B053AC00092107F /* PBXTargetDependency */,
-				47BA8F2B0B053AC40092107F /* PBXTargetDependency */,
+				8EDDB9D609AAD06600FB9EE5 /* PBXTargetDependency */,
+				8EDDB9D809AAD06A00FB9EE5 /* PBXTargetDependency */,
 			);
-			name = shell64;
+			name = shell;
 			productInstallPath = "$(HOME)/bin";
 			productName = shell;
-			productReference = 8DD76FB20486AB0100D96B5E /* shell64 */;
+			productReference = 8DD76FB20486AB0100D96B5E /* shell */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -334,42 +334,39 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "shell64" */;
-			compatibilityVersion = "Xcode 2.4";
+			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "shell" */;
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* shell */;
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 47BA8F200B053AB10092107F /* Products */;
-					ProjectRef = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
+					ProductGroup = 8E8B52C409AABABE0057BEE4 /* Products */;
+					ProjectRef = 8E8B52C309AABABE0057BEE4 /* avmplus.xcodeproj */;
 				},
 				{
-					ProductGroup = 4702663A0B053A6F007B70DD /* Products */;
-					ProjectRef = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
+					ProductGroup = 8E8B52CE09AABB120057BEE4 /* Products */;
+					ProjectRef = 8E8B52CD09AABB120057BEE4 /* MMgc.xcodeproj */;
 				},
 			);
-			projectRoot = "";
-			shouldCheckCompatibility = 1;
 			targets = (
-				8DD76FA90486AB0100D96B5E /* shell64 */,
+				8DD76FA90486AB0100D96B5E /* shell */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		470266410B053A6F007B70DD /* libMMgc64.a */ = {
+		8E8B52C809AABABE0057BEE4 /* libavmplus.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libMMgc64.a;
-			remoteRef = 470266400B053A6F007B70DD /* PBXContainerItemProxy */;
+			path = libavmplus.a;
+			remoteRef = 8E8B52C709AABABE0057BEE4 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		47BA8F270B053AB10092107F /* libavmplus64.a */ = {
+		8E8B52D309AABB120057BEE4 /* libMMgc.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libavmplus64.a;
-			remoteRef = 47BA8F260B053AB10092107F /* PBXContainerItemProxy */;
+			path = libMMgc.a;
+			remoteRef = 8E8B52D209AABB120057BEE4 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -398,15 +395,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		47BA8F290B053AC00092107F /* PBXTargetDependency */ = {
+		8EDDB9D609AAD06600FB9EE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = avmplus64;
-			targetProxy = 47BA8F280B053AC00092107F /* PBXContainerItemProxy */;
+			name = avmplus;
+			targetProxy = 8EDDB9D509AAD06600FB9EE5 /* PBXContainerItemProxy */;
 		};
-		47BA8F2B0B053AC40092107F /* PBXTargetDependency */ = {
+		8EDDB9D809AAD06A00FB9EE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = MMgc;
-			targetProxy = 47BA8F2A0B053AC40092107F /* PBXContainerItemProxy */;
+			targetProxy = 8EDDB9D709AAD06A00FB9EE5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -420,13 +417,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
-				PRODUCT_NAME = shell64;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				PRODUCT_NAME = shell;
 				ZERO_LINK = YES;
 			};
 			name = Debug;
@@ -438,13 +429,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
-				PRODUCT_NAME = shell64;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				PRODUCT_NAME = shell;
 			};
 			name = Release;
 		};
@@ -501,45 +486,31 @@
 		8E8B52FE09AABD020057BEE4 /* Debug Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_64_BIT)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
-				PRODUCT_NAME = shell64;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
-				ZERO_LINK = NO;
+				PRODUCT_NAME = shell;
+				ZERO_LINK = YES;
 			};
 			name = "Debug Debugger";
 		};
 		8E8B52FF09AABD020057BEE4 /* Release Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = i386;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
-				PRODUCT_NAME = shell64;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				PRODUCT_NAME = shell;
 			};
 			name = "Release Debugger";
 		};
 		8E8B530009AABD020057BEE4 /* Debug Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_64_BIT)";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					AVMPLUS_SHELL,
@@ -561,7 +532,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				USER_HEADER_SEARCH_PATHS = "../../../core ../../../MMgc ../../../pcre ../../../codegen ../../../extensions ..";
 			};
 			name = "Debug Debugger";
@@ -592,7 +563,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB928508733DD80010E9CD /* Build configuration list for PBXNativeTarget "shell64" */ = {
+		1DEB928508733DD80010E9CD /* Build configuration list for PBXNativeTarget "shell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB928608733DD80010E9CD /* Debug */,
@@ -603,7 +574,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "shell64" */ = {
+		1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "shell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB928A08733DD80010E9CD /* Debug */,
