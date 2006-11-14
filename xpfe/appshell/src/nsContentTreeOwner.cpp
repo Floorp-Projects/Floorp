@@ -255,7 +255,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
        if (win) {
          PRInt32 count = win->mTargetableShells.Count();
          PRInt32 i;
-         for (i = 0; i < count; ++i) {
+         for (i = 0; i < count && !*aFoundItem; ++i) {
            nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem =
              do_QueryReferent(win->mTargetableShells[i]);
            if (shellAsTreeItem) {
