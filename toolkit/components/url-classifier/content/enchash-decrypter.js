@@ -192,7 +192,10 @@ PROT_EnchashDecrypter.prototype.getCanonicalUrl = function(url) {
   return urlObj.asciiSpec;
 }
 
-PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str) {
+/**
+ * @param opt_maxDots Number maximum number of dots to include.
+ */
+PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str, opt_maxDots) {
   var ioService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
   try {
@@ -217,19 +220,22 @@ PROT_EnchashDecrypter.prototype.getCanonicalHost = function(str) {
   // ":", "/", ";", and "?"
   var escaped = encodeURI(unescaped);
 
-  var k;
-  var index = escaped.length;
-  for (k = 0; k < PROT_EnchashDecrypter.MAX_DOTS + 1; k++) {
-    temp = escaped.lastIndexOf(".", index - 1);
-    if (temp == -1) {
-      break;
-    } else {
-      index = temp;
+  if (opt_maxDots) {
+    // Limit the number of dots
+    var k;
+    var index = escaped.length;
+    for (k = 0; k < opt_maxDots + 1; k++) {
+      temp = escaped.lastIndexOf(".", index - 1);
+      if (temp == -1) {
+        break;
+      } else {
+        index = temp;
+      }
     }
-  }
-  
-  if (k == PROT_EnchashDecrypter.MAX_DOTS + 1 && index != -1) {
-    escaped = escaped.substring(index + 1);
+    
+    if (k == opt_maxDots + 1 && index != -1) {
+      escaped = escaped.substring(index + 1);
+    }
   }
 
   escaped = escaped.toLowerCase();
@@ -528,8 +534,11 @@ function TEST_PROT_EnchashDecrypter() {
     testing["http://0x18ac89d5/http.www.paypal.com/"] = "24.172.137.213";
     testing["http://413960661/http.www.paypal.com/"] = "24.172.137.213";
     testing["http://03053104725/http.www.paypal.com/"] = "24.172.137.213";
+    testing["http://www.barclays.co.uk.brccontrol.assruspede.org.bz/"
+                    + "detailsconfirm"] = "co.uk.brccontrol.assruspede.org.bz";
     for (var key in testing)
-      G_Assert(z, l.getCanonicalHost(key) == testing[key], 
+      G_Assert(z, l.getCanonicalHost(key, PROT_EnchashDecrypter.MAX_DOTS) ==
+                                                                testing[key],
                "getCanonicalHost broken on: " + key + 
                "(got: " + l.getCanonicalHost(key) + ")");
 
@@ -545,6 +554,8 @@ function TEST_PROT_EnchashDecrypter() {
                                 "http://24.172.137.213/http.www.paypal.com/";
     testing["http://03053104725/%68t%74p.www.paypal.c%6fm/"] =
                                 "http://24.172.137.213/http.www.paypal.com/";
+    testing["http://www.barclays.co.uk.brccontrol.assruspede.org.bz/detailsconfirm"] =
+      "http://www.barclays.co.uk.brccontrol.assruspede.org.bz/detailsconfirm";
     for (var key in testing)
       G_Assert(z, l.getCanonicalUrl(key) == testing[key], 
                "getCanonicalUrl broken on: " + key + 
