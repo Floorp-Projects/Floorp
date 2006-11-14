@@ -37,7 +37,7 @@
        heading => "Sortkey"
      },
      {
-       name => "type_name"
+       name => "type"
        heading => "Type"
      },
      {
@@ -59,12 +59,21 @@
 [% custom_fields = Bugzilla.get_fields({ custom => 1 }) %]
 
 [%# We want to display the type name of fields, not their type ID. %]
-[% FOREACH cf_field = custom_fields %]
-  [% cf_field.type_name = field_types.${cf_field.type} %]
+[% overrides.type = [] %]
+
+[% FOREACH field_type = field_types.keys %]
+  [% overrides.type.push({
+       match_value => field_type
+       match_field => 'type'
+       override_content => 1
+       content => field_types.${field_type}
+    })
+  %]
 [% END %]
 
 [% PROCESS admin/table.html.tmpl
      columns = columns
+     overrides = overrides
      data = custom_fields
 %]
 
