@@ -79,7 +79,7 @@ namespace avmplus
 		{
 			// Take the address of a local variable to get
 			// stack pointer
-			uint32 sp = (uint32)&core;
+			intptr sp = (intptr)&core;
 			if (sp < core->minstack)
 			{
 				env->vtable->traits->core->stackOverflow(env);
@@ -362,7 +362,7 @@ namespace avmplus
                 continue;
             case OP_pushdouble:
 				sp++;
-                sp[0] = kDoubleType|(int)cpool_double[readU30(pc)];
+                sp[0] = kDoubleType|(intptr)cpool_double[readU30(pc)];
                 continue;
             case OP_pushnamespace:
                 sp++;
@@ -1415,11 +1415,17 @@ namespace avmplus
 				break;
 
 			case OP_abs_jump:
+			{
 				if (interruptable && core->interrupted)
 					env->interrupt();
-				code_start = pc = (const byte*) AvmCore::readU30(pc);
+				#ifdef AVMPLUS_64BIT
+				const byte *target = (const byte *) (AvmCore::readU30(pc) | (intptr(AvmCore::readU30(pc)) << 32));
+				#else
+				const byte *target = (const byte *) AvmCore::readU30(pc);
+				#endif
+				code_start = pc = (const byte*) target;
 				break;
-
+			}
 			default:
 				AvmAssert(false);
             }

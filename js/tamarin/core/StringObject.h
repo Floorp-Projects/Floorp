@@ -372,7 +372,7 @@ namespace avmplus
 		// 0x02 a prefix string is stored
 		// 0x03 a 30-bit offset is stored
 		// manual WB when needed
-		int	m_prefixOrOffsetOrNumber;
+		intptr	m_prefixOrOffsetOrNumber;
 		#define		STRINGFLAGS		0x03
 		#define		NUMBERFLAG		0x01
 		#define		PREFIXFLAG		0x02
@@ -406,7 +406,7 @@ namespace avmplus
 		// with NUMBERTYPE.  This is only valid for non-prefix, non-offset interned strings.
 		void generateIntegerEquivalent(AvmCore *core);
 
-		void setPrefixOrOffsetOrNumber(int value);
+		void setPrefixOrOffsetOrNumber(intptr value);
 
 		static const wchar lowerCaseBase[];
 		static const wchar upperCaseBase[];

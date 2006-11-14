@@ -69,7 +69,7 @@
 		_size = (intptr)_gc->GetStackTop() - (intptr)_stack;	} while (0)
 #endif 
 
-#elif defined MMGC_IA64
+#elif defined MMGC_AMD64
 // 64bit - r8-r15?
 #define MMGC_GET_STACK_EXENTS(_gc, _stack, _size) \
 		do { \
@@ -858,7 +858,7 @@ namespace MMgc
 
 		unsigned char *pageMap;
 
-		inline intptr GetPageMapValue(uint32 addr) const
+		inline int GetPageMapValue(intptr addr) const
 		{
 			intptr index = (addr-memStart) >> 12;
 

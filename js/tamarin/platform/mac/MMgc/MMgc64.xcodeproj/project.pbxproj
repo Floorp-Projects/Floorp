@@ -74,7 +74,7 @@
 		1E60773909733377007D0E1E /* macbuild.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macbuild.h; path = ../../../MMgc/macbuild.h; sourceTree = SOURCE_ROOT; };
 		1E60773A09733377007D0E1E /* MMgc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MMgc.h; path = ../../../MMgc/MMgc.h; sourceTree = SOURCE_ROOT; };
 		1E60773B09733377007D0E1E /* WriteBarrier.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = WriteBarrier.h; path = ../../../MMgc/WriteBarrier.h; sourceTree = SOURCE_ROOT; };
-		D2AAC046055464E500DB518D /* libMMgc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMMgc.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2AAC046055464E500DB518D /* libMMgc64.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMMgc64.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,7 +140,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D2AAC046055464E500DB518D /* libMMgc.a */,
+				D2AAC046055464E500DB518D /* libMMgc64.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -184,9 +184,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		D2AAC045055464E500DB518D /* MMgc */ = {
+		D2AAC045055464E500DB518D /* MMgc64 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "MMgc" */;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "MMgc64" */;
 			buildPhases = (
 				D2AAC043055464E500DB518D /* Headers */,
 				D2AAC044055464E500DB518D /* Sources */,
@@ -196,9 +196,9 @@
 			);
 			dependencies = (
 			);
-			name = MMgc;
+			name = MMgc64;
 			productName = MMgc;
-			productReference = D2AAC046055464E500DB518D /* libMMgc.a */;
+			productReference = D2AAC046055464E500DB518D /* libMMgc64.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -214,7 +214,7 @@
 			projectRoot = "";
 			shouldCheckCompatibility = 1;
 			targets = (
-				D2AAC045055464E500DB518D /* MMgc */,
+				D2AAC045055464E500DB518D /* MMgc64 */,
 			);
 		};
 /* End PBXProject section */
@@ -252,7 +252,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -270,7 +270,7 @@
 					SOFT_ASSERTS,
 				);
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = MMgc;
+				PRODUCT_NAME = MMgc64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 				ZERO_LINK = NO;
@@ -303,7 +303,7 @@
 					"-finline-functions",
 					"-finline-limit=256",
 				);
-				PRODUCT_NAME = MMgc;
+				PRODUCT_NAME = MMgc64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 			};
@@ -381,7 +381,7 @@
 					SOFT_ASSERTS,
 				);
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = MMgc;
+				PRODUCT_NAME = MMgc64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 				ZERO_LINK = NO;
@@ -414,7 +414,7 @@
 					"-finline-functions",
 					"-finline-limit=256",
 				);
-				PRODUCT_NAME = MMgc;
+				PRODUCT_NAME = MMgc64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 			};
@@ -468,7 +468,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "MMgc" */ = {
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "MMgc64" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,

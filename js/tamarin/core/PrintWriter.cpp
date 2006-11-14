@@ -144,6 +144,20 @@ namespace avmplus
 		return *this;
 	}
 
+	PrintWriter& PrintWriter::operator<< (intptr value)
+	{
+		#ifdef AVMPLUS_64BIT
+		AvmAssert(0); // convertInteger routine needs to be upgraded to handle 64-bit ints
+		#endif
+	
+		wchar buffer[256];
+		int len;
+		if (MathUtils::convertIntegerToString(value, buffer, len)) {
+			*this << buffer;
+		}
+		return *this;
+	}
+
 	PrintWriter& PrintWriter::operator<< (uint32 value)
 	{
 		wchar buffer[256];
@@ -404,7 +418,7 @@ namespace avmplus
 					break;
                 #endif
 					
-		#ifdef AVMPLUS_IA32
+		#if defined (AVMPLUS_IA32) || defined (AVMPLUS_AMD64)
 				case 'R': {// gp reg 
 					int r = va_arg(ap,int);
 					if (r == CodegenMIR::Unknown)

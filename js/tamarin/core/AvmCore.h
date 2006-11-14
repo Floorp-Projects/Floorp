@@ -203,7 +203,7 @@ const int kBufferPadding = 16;
 		bool cseopt;
 		bool dceopt;
 
-		#ifdef AVMPLUS_IA32
+		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		bool sse2;
 		#endif
 
@@ -641,7 +641,7 @@ const int kBufferPadding = 16;
 
 		static int integer_d(double d);
 
-#ifdef AVMPLUS_IA32
+#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		static int integer_d_sse2(double d);
 		Atom doubleToAtom_sse2(double n);
 #endif
@@ -1202,7 +1202,7 @@ const int kBufferPadding = 16;
 		int findNamespace(const Namespace *ns);
 
 #ifdef DEBUGGER
-#if defined(MMGC_IA32)
+#if defined(MMGC_IA32) || defined(MMGC_IA64)
 		static inline uint32 FindOneBit(uint32 value)
 		{
 #ifndef __GNUC__
@@ -1248,7 +1248,7 @@ const int kBufferPadding = 16;
 				if (value & (1<<i))
 					return i;
 			// asm versions of this function are undefined if no bits are set
-			GCAssert(false);
+			AvmAssert(false);
 			return 0;
 		}
 
@@ -1339,7 +1339,7 @@ const int kBufferPadding = 16;
 		{
 			double *ptr = (double*)GetGC()->Alloc(sizeof(double), 0);
 			*ptr = n;
-			return kDoubleType | (uint32)ptr;
+			return kDoubleType | (intptr)ptr;
 		}
 		
 		void rehashStrings(int newlen);

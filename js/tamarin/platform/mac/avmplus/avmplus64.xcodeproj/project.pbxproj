@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1E6078E8097335B3007D0E1E /* CodegenMIR.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E6078E4097335B3007D0E1E /* CodegenMIR.cpp */; };
 		1E6078E9097335B3007D0E1E /* CodegenMIR.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E6078E5097335B3007D0E1E /* CodegenMIR.h */; };
-		1E6078EA097335B3007D0E1E /* Ia32Assembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E6078E6097335B3007D0E1E /* Ia32Assembler.cpp */; };
 		1E6078EB097335B3007D0E1E /* PpcAssembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E6078E7097335B3007D0E1E /* PpcAssembler.cpp */; };
 		1E60798E097335EF007D0E1E /* AbcEnv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E6078EE097335EF007D0E1E /* AbcEnv.cpp */; };
 		1E60798F097335EF007D0E1E /* AbcEnv.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E6078EF097335EF007D0E1E /* AbcEnv.h */; };
@@ -173,6 +172,7 @@
 		1E607F9709733ED1007D0E1E /* MathUtilsUnix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E607F9409733ED1007D0E1E /* MathUtilsUnix.cpp */; };
 		1E607F9809733ED1007D0E1E /* OSDepUnix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E607F9509733ED1007D0E1E /* OSDepUnix.cpp */; };
 		1EC50991097391B400040CAB /* Date.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1EC50990097391B400040CAB /* Date.cpp */; };
+		47BB6CCA0B08D9F800036360 /* Amd64Assembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 47BB6CC90B08D9F800036360 /* Amd64Assembler.cpp */; };
 		7CD864E60AC47805004C73CB /* AbcData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CD864E50AC47805004C73CB /* AbcData.cpp */; };
 		85125ADF0A5C648300502345 /* AvmPlusScriptableObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85125ADD0A5C648300502345 /* AvmPlusScriptableObject.cpp */; };
 		85125AE00A5C648300502345 /* AvmPlusScriptableObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 85125ADE0A5C648300502345 /* AvmPlusScriptableObject.h */; };
@@ -200,7 +200,6 @@
 /* Begin PBXFileReference section */
 		1E6078E4097335B3007D0E1E /* CodegenMIR.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CodegenMIR.cpp; path = ../../../codegen/CodegenMIR.cpp; sourceTree = SOURCE_ROOT; };
 		1E6078E5097335B3007D0E1E /* CodegenMIR.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CodegenMIR.h; path = ../../../codegen/CodegenMIR.h; sourceTree = SOURCE_ROOT; };
-		1E6078E6097335B3007D0E1E /* Ia32Assembler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Ia32Assembler.cpp; path = ../../../codegen/Ia32Assembler.cpp; sourceTree = SOURCE_ROOT; };
 		1E6078E7097335B3007D0E1E /* PpcAssembler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PpcAssembler.cpp; path = ../../../codegen/PpcAssembler.cpp; sourceTree = SOURCE_ROOT; };
 		1E6078EE097335EF007D0E1E /* AbcEnv.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AbcEnv.cpp; path = ../../../core/AbcEnv.cpp; sourceTree = SOURCE_ROOT; };
 		1E6078EF097335EF007D0E1E /* AbcEnv.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AbcEnv.h; path = ../../../core/AbcEnv.h; sourceTree = SOURCE_ROOT; };
@@ -364,6 +363,7 @@
 		1E607F9409733ED1007D0E1E /* MathUtilsUnix.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MathUtilsUnix.cpp; path = ../../unix/MathUtilsUnix.cpp; sourceTree = SOURCE_ROOT; };
 		1E607F9509733ED1007D0E1E /* OSDepUnix.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OSDepUnix.cpp; path = ../../unix/OSDepUnix.cpp; sourceTree = SOURCE_ROOT; };
 		1EC50990097391B400040CAB /* Date.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Date.cpp; path = ../../../core/Date.cpp; sourceTree = SOURCE_ROOT; };
+		47BB6CC90B08D9F800036360 /* Amd64Assembler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Amd64Assembler.cpp; path = ../../../codegen/Amd64Assembler.cpp; sourceTree = SOURCE_ROOT; };
 		7CD864E50AC47805004C73CB /* AbcData.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AbcData.cpp; path = ../../../core/AbcData.cpp; sourceTree = SOURCE_ROOT; };
 		85125ADD0A5C648300502345 /* AvmPlusScriptableObject.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AvmPlusScriptableObject.cpp; path = ../../../core/AvmPlusScriptableObject.cpp; sourceTree = SOURCE_ROOT; };
 		85125ADE0A5C648300502345 /* AvmPlusScriptableObject.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AvmPlusScriptableObject.h; path = ../../../core/AvmPlusScriptableObject.h; sourceTree = SOURCE_ROOT; };
@@ -386,7 +386,7 @@
 		8EE6F43E09AA541600DE11A0 /* pcre_xclass.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = pcre_xclass.cpp; path = ../../../pcre/pcre_xclass.cpp; sourceTree = SOURCE_ROOT; };
 		8EE6F45909AA545E00DE11A0 /* pcre_internal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre_internal.h; path = ../../../pcre/pcre_internal.h; sourceTree = SOURCE_ROOT; };
 		8EE6F45A09AA545E00DE11A0 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = ../../../pcre/pcre.h; sourceTree = SOURCE_ROOT; };
-		D2AAC046055464E500DB518D /* libavmplus.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libavmplus.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2AAC046055464E500DB518D /* libavmplus64.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libavmplus64.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -416,7 +416,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D2AAC046055464E500DB518D /* libavmplus.a */,
+				D2AAC046055464E500DB518D /* libavmplus64.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -424,9 +424,9 @@
 		1E607A9E0973377F007D0E1E /* CodenGen */ = {
 			isa = PBXGroup;
 			children = (
+				47BB6CC90B08D9F800036360 /* Amd64Assembler.cpp */,
 				1E6078E4097335B3007D0E1E /* CodegenMIR.cpp */,
 				1E6078E5097335B3007D0E1E /* CodegenMIR.h */,
-				1E6078E6097335B3007D0E1E /* Ia32Assembler.cpp */,
 				1E6078E7097335B3007D0E1E /* PpcAssembler.cpp */,
 			);
 			name = CodenGen;
@@ -453,8 +453,8 @@
 				1E6078FB097335EF007D0E1E /* ArrayClass.h */,
 				1E6078FC097335EF007D0E1E /* ArrayObject.cpp */,
 				1E6078FD097335EF007D0E1E /* ArrayObject.h */,
-				1E6078FE097335EF007D0E1E /* AtomArray.cpp */,
 				1E6078FF097335EF007D0E1E /* AtomArray.h */,
+				1E6078FE097335EF007D0E1E /* AtomArray.cpp */,
 				1E607900097335EF007D0E1E /* AtomConstants.cpp */,
 				1E607901097335EF007D0E1E /* AtomConstants.h */,
 				1E607902097335EF007D0E1E /* AtomWriteBarrier.h */,
@@ -765,9 +765,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		D2AAC045055464E500DB518D /* avmplus */ = {
+		D2AAC045055464E500DB518D /* avmplus64 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "avmplus" */;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "avmplus64" */;
 			buildPhases = (
 				D2AAC043055464E500DB518D /* Headers */,
 				D2AAC044055464E500DB518D /* Sources */,
@@ -777,9 +777,9 @@
 			);
 			dependencies = (
 			);
-			name = avmplus;
+			name = avmplus64;
 			productName = avmplus;
-			productReference = D2AAC046055464E500DB518D /* libavmplus.a */;
+			productReference = D2AAC046055464E500DB518D /* libavmplus64.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -795,7 +795,7 @@
 			projectRoot = "";
 			shouldCheckCompatibility = 1;
 			targets = (
-				D2AAC045055464E500DB518D /* avmplus */,
+				D2AAC045055464E500DB518D /* avmplus64 */,
 			);
 		};
 /* End PBXProject section */
@@ -806,7 +806,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E6078E8097335B3007D0E1E /* CodegenMIR.cpp in Sources */,
-				1E6078EA097335B3007D0E1E /* Ia32Assembler.cpp in Sources */,
 				1E6078EB097335B3007D0E1E /* PpcAssembler.cpp in Sources */,
 				1E60798E097335EF007D0E1E /* AbcEnv.cpp in Sources */,
 				1E607990097335EF007D0E1E /* AbcGen.cpp in Sources */,
@@ -901,6 +900,7 @@
 				8EE6F44F09AA541600DE11A0 /* pcre_xclass.cpp in Sources */,
 				85125ADF0A5C648300502345 /* AvmPlusScriptableObject.cpp in Sources */,
 				7CD864E60AC47805004C73CB /* AbcData.cpp in Sources */,
+				47BB6CCA0B08D9F800036360 /* Amd64Assembler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -934,8 +934,10 @@
 					USE_MMAP,
 					_MAC,
 				);
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = avmplus;
+				PRODUCT_NAME = avmplus64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 				ZERO_LINK = NO;
@@ -968,7 +970,7 @@
 					"-finline-functions",
 					"-finline-limit=65536",
 				);
-				PRODUCT_NAME = avmplus;
+				PRODUCT_NAME = avmplus64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 			};
@@ -1024,7 +1026,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1044,7 +1046,7 @@
 					DEBUGGER,
 				);
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = avmplus;
+				PRODUCT_NAME = avmplus64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 				ZERO_LINK = NO;
@@ -1078,7 +1080,7 @@
 					"-finline-functions",
 					"-finline-limit=100000",
 				);
-				PRODUCT_NAME = avmplus;
+				PRODUCT_NAME = avmplus64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 			};
@@ -1128,7 +1130,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "avmplus" */ = {
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "avmplus64" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,

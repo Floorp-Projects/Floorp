@@ -47,7 +47,7 @@ namespace avmplus
 	#define BIT_VALUE_FITS(v,n)    ( BIT_EXTRACT(v,n-1,0) == (v) )
 
 	// rounding v up to the given 2^ quantity
-	#define BIT_ROUND_UP(v,q)      ( (((unsigned)v)+(q)-1) & ~((q)-1) )
+	#define BIT_ROUND_UP(v,q)      ( (((intptr)v)+(q)-1) & ~((q)-1) )
 
 	/**
 	 * The CodegenMIR class is a dynamic code generator which translates
@@ -186,7 +186,7 @@ namespace avmplus
 		void epilogue(FrameState* state);
 		bool prologue(FrameState* state);
 		void emitCall(FrameState* state, AbcOpcode opcode, int method_id, int argc, Traits* result);
-		void emit(FrameState* state, AbcOpcode opcode, int op1=0, int op2=0, Traits* result=NULL);
+		void emit(FrameState* state, AbcOpcode opcode, intptr op1=0, intptr op2=0, Traits* result=NULL);
 		void emitIf(FrameState* state, AbcOpcode opcode, int target, int lhs, int rhs);
 		void emitSwap(FrameState* state, int i, int j);
 		void emitCopy(FrameState* state, int src, int dest);
@@ -194,7 +194,7 @@ namespace avmplus
 		void emitKill(FrameState* state, int i);
 		void emitBlockStart(FrameState* state);
 		void emitBlockEnd(FrameState* state);
-		void emitIntConst(FrameState* state, int index, int c);
+		void emitIntConst(FrameState* state, int index, intptr c);
 		void emitDoubleConst(FrameState* state, int index, double* pd);
 		void emitCoerce(FrameState* state, int index, Traits* type);
 		void emitCheckNull(FrameState* state, int index);
@@ -404,6 +404,84 @@ namespace avmplus
 		Register;
 		#endif
 
+		#if defined (AVMPLUS_AMD64)
+
+		#ifdef AVMPLUS_VERBOSE
+		static const char *gpregNames[];
+		static const char *xmmregNames[];
+		static const char *x87regNames[];
+		#endif
+
+		#ifdef _MAC
+		byte *patch_esp_padding;
+		#endif
+
+		// These are used as register numbers in various parts of the code
+		static const int MAX_REGISTERS = 16;
+
+		typedef enum
+		{
+			// 64bit - at this point, I'm not sure if we'll be using EAX, etc as registers
+			// or whether this numbering scheme is correct.  For some generated ASM, usage
+			// of RAX implies a REX prefix byte to define the 64-bit operand.  But the ModRM
+			// byte stays the same (EAX=RAX in the encoding)
+			
+			// general purpose 32bit regs
+			EAX = 0, // return value, scratch
+			ECX = 1, // this, scratch
+			EDX = 2, // scratch
+			EBX = 3,
+			ESP = 4, // stack pointer
+			EBP = 5, // frame pointer
+			ESI = 6,
+			EDI = 7,
+			
+			RAX = 8, // return value, scratch
+			RCX = 9, // this, scratch
+			RDX = 10, // scratch
+			RBX = 11,
+			RSP = 12, // stack pointer
+			RBP = 13, // frame pointer
+			RSI = 14,
+			RDI = 15,
+			
+			R8 = 16,
+			R9 = 17,
+			R10 = 18,
+			R11 = 19,
+			R12 = 20,
+			R13 = 21,
+			R14 = 22,
+			R15 = 23,
+
+			SP = 12, // alias SP to RSP to match PPC name
+ 
+			// SSE regs
+			XMM0 = 0,
+			XMM1 = 1,
+			XMM2 = 2,
+			XMM3 = 3,
+			XMM4 = 4,
+			XMM5 = 5,
+			XMM6 = 6,
+			XMM7 = 7,
+
+			// !!@ remove all float support?  SSE2 is always available
+			// X87 regs
+			FST0 = 0,
+			FST1 = 1,
+			FST2 = 2,
+			FST3 = 3,
+			FST4 = 4,
+			FST5 = 5,
+			FST6 = 6,
+			FST7 = 7,
+
+			Unknown = -1
+		} 
+		Register;
+		#endif // AVMPLUS_AMD64
+		
 		#define rmask(r) (1 << (r))
 
 		/**
@@ -573,6 +651,13 @@ namespace avmplus
 		#define PREV_MD_INS(m) (m-4)
 		// for intel and our purposes previous instruction is 4 bytes prior to m; used for patching 32bit target addresses
 		#endif
+
+		// 64bit - need to verify
+		#ifdef AVMPLUS_AMD64
+		typedef byte MDInstruction;
+		#define PREV_MD_INS(m) (m-4)
+		// for intel and our purposes previous instruction is 4 bytes prior to m; used for patching 32bit target addresses
+		#endif
 		
 		// machine specific instruction buffer
 		#ifndef AVMPLUS_ARM
@@ -621,10 +706,10 @@ namespace avmplus
 		MirLabel interrupt_label;
 		bool interruptable;
 		
-		#ifdef AVMPLUS_IA32
+		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		// stack probe for win32
 		void emitAllocaProbe(int growthAmt, MdLabel* returnTo);
-		#endif /* AVMPLUS_IA32 */
+		#endif /* AVMPLUS_IA32 or AVMPLUS_AMD64 */
 
 		#ifdef AVMPLUS_ARM
 		uint32 *patch_stmfd;
@@ -739,13 +824,13 @@ namespace avmplus
 
 		OP*	  InsAt(int nbr)  { return ipStart+nbr; }
 		int	  InsNbr(OP* ins)	 { AvmAssert(ins >= ipStart); return (ins-ipStart); }
-		OP*   InsConst(int32 value) { return Ins(MIR_imm, value); }
+		OP*   InsConst(intptr value) { return Ins(MIR_imm, value); }
 		OP*   InsAlloc(size_t s) { return Ins(MIR_alloc, (int32)s); }
 		void  InsDealloc(OP* alloc);
 		OP*   ldargIns(ArgNumber arg) { return &methodArgs[arg]; }
 
-		OP*   Ins(MirOpcode code, int32 v=0);
-		OP*   Ins(MirOpcode code, OP* a1, int32 a2);
+		OP*   Ins(MirOpcode code, intptr v=0);
+		OP*   Ins(MirOpcode code, OP* a1, intptr a2);
 		OP*   Ins(MirOpcode code, OP* a1, OP* a2=0);
 		OP*	  defineArgInsPos(int spOffset);
 		OP*	  defineArgInsReg(Register r);
@@ -768,7 +853,7 @@ namespace avmplus
 		OP*   cmpLe(int lhs, int rhs);
 		OP*	  cmpEq(int funcaddr, int lhs, int rhs);
 
-		void  storeIns(OP* v, int disp, OP* base);
+		void  storeIns(OP* v, intptr disp, OP* base);
 
 		OP*   leaIns(int disp, OP* base);
 		OP*   callIns(int32 addr, uint32 argCount, MirOpcode code);
@@ -1279,7 +1364,9 @@ namespace avmplus
 		//
 		// End PowerPC code generation
 		//
-        #elif defined AVMPLUS_IA32		
+		// 64bit - enabled this for 64-bit to get compiling.  There
+		// are certain differences between 32 and 64-bit bytecode
+        #elif defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)		
 		//   ---------------------------------------------------
 		// 
 		//    IA32 specific stuff follows
@@ -1331,7 +1418,7 @@ namespace avmplus
 		void UCOMISD(Register xmm1, Register xmm2)	{ SSE(0x660f2e, xmm1, xmm2); }
 		void MOVAPD(Register dest, Register src)	{ SSE(0x660f28, dest, src); }
 
-		void XORPD(Register dest, int src);
+		void XORPD(Register dest, intptr src);
 
 		void SSE(int op, Register r, int disp, Register base);
 		void ADDSD(Register r, int disp, Register base)		{ SSE(0xf20f58, r, disp, base); }
@@ -1499,6 +1586,12 @@ namespace avmplus
 			#ifdef AVMPLUS_IA32
 			CALL (addr - (5+(int)mip));
 			#endif
+			
+			// 64bit - not sure about this
+			#ifdef AVMPLUS_AMD64
+			AvmAssert(0);
+			CALL (addr - (5+(intptr)mip));
+			#endif
 		}
 
 		bool isCodeContextChanged() const;
@@ -1522,5 +1615,13 @@ namespace avmplus
 	static const int md_epilogue_size		= 128;
 	static const int md_native_thunk_size	= 256;
 	#endif /* AVMPLUS_PPC */
+	
+	#ifdef AVMPLUS_AMD64
+	//  64bit - may need adjustment
+	static const int md_prologue_size		= 32;
+	static const int md_epilogue_size		= 128;
+	static const int md_native_thunk_size	= 256;
+	#endif /* AVMPLUS_PPC */
+	
 }
 #endif /* __avmplus_CodegenMIR__ */

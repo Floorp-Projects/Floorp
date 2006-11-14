@@ -62,7 +62,7 @@ namespace avmplus
 
 	void Namespace::setUri(Stringp uri, NamespaceType flags)
 	{
-		WBRC(GC::GetGC(this), this, &m_uri, (sint32)flags | (sint32) uri);
+		WBRC(GC::GetGC(this), this, &m_uri, (sint32)flags | (intptr) uri);
 	}
 
 	void Namespace::setPrefix (Atom pre)

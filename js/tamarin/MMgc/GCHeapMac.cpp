@@ -50,7 +50,7 @@
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#if (defined(MMGC_IA32) || defined(MMGC_IA64)) && defined(MEMORY_INFO)
+#if (defined(MMGC_IA32) || defined(MMGC_AMD64)) && defined(MEMORY_INFO)
 #include <dlfcn.h>
 #endif
 
@@ -334,7 +334,7 @@ namespace MMgc
 	}
 #endif
 
-#if (defined(MMGC_IA32) || defined(MMGC_IA64))
+#if (defined(MMGC_IA32) || defined(MMGC_AMD64))
 
 	void GetInfoFromPC(int pc, char *buff, int buffSize) 
 	{

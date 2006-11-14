@@ -54,7 +54,7 @@
 #include "alloca.h"
 #endif
 
-#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_IA64))
+#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_AMD64))
 #include <pthread.h>
 #endif
 
@@ -85,7 +85,7 @@ namespace MMgc
 	const int ZCT::ZCT_START_SIZE = 1;
 #endif
 
-#ifdef MMGC_IA64
+#ifdef MMGC_AMD64
 	const intptr MAX_INTPTR = 0xFFFFFFFFFFFFFFFF;
 #else
 	const intptr MAX_INTPTR = 0xFFFFFFFF;
@@ -939,7 +939,7 @@ bail:
 		#endif
 #endif
 
-#if defined MMGC_IA64
+#if defined MMGC_AMD64
 	asm("mov %%rsp,%0" : "=r" (stackP));
 #endif
 
@@ -1196,8 +1196,9 @@ bail:
 		int *p = (int*)item;
 		// skip vtable, first 4 bytes are cleared in Alloc
 		p++;
-#ifdef MMGC_IA64
+#ifdef MMGC_AMD64
 		p++; // vtable is 8-bytes
+		size--; 
 #endif		
 		// in incrementalValidation mode manually deleted items
 		// aren't put on the freelist so skip them
@@ -2607,7 +2608,7 @@ bail:
 	}
 #endif  /* DEBUGGER*/
 
-#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_IA64))
+#if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_AMD64))
 	intptr GC::GetStackTop() const
 	{
 		return (intptr)pthread_get_stackaddr_np(pthread_self());

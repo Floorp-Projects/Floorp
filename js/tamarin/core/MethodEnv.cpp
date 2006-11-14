@@ -73,7 +73,7 @@ namespace avmplus
 		else
 		{
 			AvmAssert(method->impl32 != NULL);
-			int i = method->impl32(this, argc, ap);
+			Atom i = method->impl32(this, argc, ap);
 			if (returnType == INT_TYPE)
 				return core->intToAtom(i);
 			else if (returnType == UINT_TYPE)
@@ -103,6 +103,8 @@ namespace avmplus
 		AvmCore* core = this->core();
 		Toplevel* toplevel = this->toplevel();
 
+		Atom *args = (Atom *) argv;
+
 		for (int i=0; i <= argc; i++)
 		{
 			if (i <= f->param_count)
@@ -117,38 +119,45 @@ namespace avmplus
 						uint32 l[2];
 					};
 					d = core->number(in[i]);
-					*argv++ = l[0];
-					*argv++ = l[1];
+					#ifdef AVMPLUS_64BIT
+					AvmAssert(sizeof(Atom) == sizeof(double));
+					*(double *) args = d;
+					args++;
+					#else
+					AvmAssert(sizeof(Atom) * 2 == sizeof(double));
+					*args++ = l[0];
+					*args++ = l[1];
+					#endif
 				}
 				else if (t == INT_TYPE)
 				{
-					*argv++ = core->integer(in[i]);
+					*args++ = core->integer(in[i]);
 				}
 				else if (t == UINT_TYPE)
 				{
-					*argv++ = core->toUInt32(in[i]);
+					*args++ = core->toUInt32(in[i]);
 				}
 				else if (t == BOOLEAN_TYPE)
 				{
-					*argv++ = core->boolean(in[i]);
+					*args++ = core->boolean(in[i]);
 				}
 				else if (t == OBJECT_TYPE)
 				{
-					*argv++ = in[i] == undefinedAtom ? nullObjectAtom : in[i];
+					*args++ = in[i] == undefinedAtom ? nullObjectAtom : in[i];
 				}
 				else if (!t)
 				{
-					*argv++ = (uint32) in[i];
+					*args++ = in[i];
 				}
 				else
 				{
 					// ScriptObject, String, or Namespace, or Null
-					*argv++ = (uint32) toplevel->coerce(in[i],t) & ~7;
+					*args++ = toplevel->coerce(in[i],t) & ~7;
 				}
 			}
 			else
 			{
-				*argv++ = (uint32) in[i];
+				*args++ = in[i];
 			}
 		}
 	}
@@ -555,11 +564,7 @@ namespace avmplus
 	ArrayObject* MethodEnv::createRestHelper(int argc, uint32 *ap)
 	{
 		// create rest Array using argv[param_count..argc]
-		#ifdef AVMPLUS_WIN32
-		Atom* extra = (Atom*) (method->restOffset + (char*)&va_arg(ap, int));
-		#else
 		Atom* extra = (Atom*) (method->restOffset + (char*)ap);
-		#endif /* AVMPLUS_IA32 */
 		int extra_count = argc > method->param_count ? argc - method->param_count : 0;
 		return toplevel()->arrayClass->newarray(extra, extra_count);
 	}

@@ -29,7 +29,6 @@
  * 
  ***** END LICENSE BLOCK ***** */
 
-
 #include "avmplus.h"
 
 #ifdef DARWIN
@@ -532,7 +531,7 @@ namespace avmplus
 		exception_behavior_t behavior;
 		thread_state_flavor_t flavor;
     
-		#ifdef AVMPLUS_IA32
+		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		i386_thread_state_t thread_state;
 		#else
 		ppc_thread_state_t thread_state;
@@ -773,7 +772,7 @@ namespace avmplus
 		}
 	#endif
 		
-	#ifdef AVMPLUS_IA32
+	#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		i386_exception_state_t exc_state;
 		mach_msg_type_number_t exc_state_count = i386_EXCEPTION_STATE_COUNT;
 		thread_state_flavor_t flavor = i386_EXCEPTION_STATE;
@@ -788,8 +787,12 @@ namespace avmplus
 						 (natural_t*)&exc_state,
 						 &exc_state_count);
 
-    #ifdef AVMPLUS_IA32
+	#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
+	#if __DARWIN_UNIX03 // Mac 10.5 SDK changed definition
+		byte *AccessViolationAddress = (byte*) exc_state.__faultvaddr;
+	#else
 		byte *AccessViolationAddress = (byte*) exc_state.faultvaddr;
+	#endif
     #else
 		byte *AccessViolationAddress = (byte*) exc_state.dar;
     #endif
@@ -861,7 +864,7 @@ namespace avmplus
 	
 	bool BufferGuard::handleException(kern_return_t& returnCode)
 	{
-	#ifdef AVMPLUS_IA32
+	#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		i386_thread_state_t thread_state;
 		mach_msg_type_number_t thread_state_count = i386_THREAD_STATE_COUNT;
 		thread_state_flavor_t flavor = i386_THREAD_STATE;
@@ -886,13 +889,22 @@ namespace avmplus
 		thread_state.r1   = jmpBuf[0];
 		#endif
 
-		#ifdef AVMPLUS_IA32
+		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
+		#if __DARWIN_UNIX03 // Mac 10.5 SDK changed definition
+		thread_state.__ebx = jmpBuf[0];
+		thread_state.__esi = jmpBuf[1];
+		thread_state.__edi = jmpBuf[2];
+		thread_state.__ebp = jmpBuf[3];
+		thread_state.__esp = jmpBuf[4];
+		thread_state.__eip = jmpBuf[5];			
+		#else
 		thread_state.ebx = jmpBuf[0];
 		thread_state.esi = jmpBuf[1];
 		thread_state.edi = jmpBuf[2];
 		thread_state.ebp = jmpBuf[3];
 		thread_state.esp = jmpBuf[4];
 		thread_state.eip = jmpBuf[5];			
+		#endif 
 		#endif
 		
 		retVal = thread_set_state(thread,

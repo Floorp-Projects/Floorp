@@ -45,18 +45,28 @@
 namespace avmplus
 {
 	#ifdef DARWIN
-	void AvmDebugMsg(bool /*debuggerBreak*/, const char* format, ...)
+	void AvmDebugMsg(bool debuggerBreak, const char* format, ...)
 	{
-		va_list ap;
-		va_start(ap, format);
-		vfprintf(stderr, format, ap);
-		putc('\n', stderr);
-		va_end(ap);
+		char buf[4096];
+		va_list args;
+		va_start(args, format);
+
+		vsprintf(buf, format, args);
+		va_end(args);
+		AvmDebugMsg(buf, debuggerBreak);
 	}
 
-	void AvmDebugMsg(const char* p, bool /*debugBreak*/)
+	void AvmDebugMsg(const char* p, bool debugBreak)
 	{
-		fprintf(stderr, "%s\n", p);
+		CFStringRef cfStr = ::CFStringCreateWithCString(NULL, p, kCFStringEncodingUTF8);
+		if(debugBreak) {
+			Str255 buf;
+			CFStringGetPascalString (cfStr, buf, 255, kCFStringEncodingUTF8);
+			DebugStr(buf);
+		} else {
+			::CFShow(cfStr);
+		}
+		::CFRelease (cfStr);
 	}	
 	#else
 	void AvmDebugMsg(bool debuggerBreak, const char* format, ...)

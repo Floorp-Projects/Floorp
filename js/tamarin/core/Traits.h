@@ -193,7 +193,7 @@ namespace avmplus
 
 		AbstractFunction **getMethods() const { return instanceData ? (AbstractFunction**) (getOffsets() + slotCount) : NULL; }
 		Traits **getSlotTypes() const { return (Traits**) instanceData; }
-		int *getOffsets() const { return instanceData ? (int*) instanceData + slotCount : NULL; }
+		int *getOffsets() const { return instanceData ? (int*) ((Traits **) instanceData + slotCount) : NULL; }
 
 		/** # of methods in the methods array */
 		uint32 methodCount;

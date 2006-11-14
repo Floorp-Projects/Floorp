@@ -209,9 +209,9 @@ namespace MMgc
 		struct GCBlock
 		{
 			GC *gc;
+			GCBlock* next;
 			uint32 size;
 			GCAlloc *alloc;			
-			GCBlock* next;
 			GCBlock* prev;
 			char*  nextItem;
 			void*  firstFree;        // first item on free list

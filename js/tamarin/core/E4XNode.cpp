@@ -78,7 +78,7 @@ namespace avmplus
 		childNode->setParent (this);
 		if (!m_children)
 		{
-			m_children = int(childNode) | SINGLECHILDBIT;
+			m_children = intptr(childNode) | SINGLECHILDBIT;
 			return;
 		}
 
@@ -122,11 +122,11 @@ namespace avmplus
 			E4XNode *firstChild = (E4XNode *) (m_children & ~SINGLECHILDBIT);
 			AtomArray *aa = new (gc()) AtomArray(2);
 			aa->push (AvmCore::gcObjectToAtom(firstChild));
-			m_children = int(aa);
+			m_children = intptr(aa);
 		}
 		else if (!m_children)
 		{
-			m_children = int(new (gc()) AtomArray (1));
+			m_children = intptr(new (gc()) AtomArray (1));
 		}
 	}
 
@@ -134,7 +134,7 @@ namespace avmplus
 	{
 		// m_children->insert (i, a)
 		convertToAtomArray();
-		AtomArray *aa = ((AtomArray *)(int)m_children);
+		AtomArray *aa = ((AtomArray *)(intptr)m_children);
 		aa->insert (i, AvmCore::gcObjectToAtom(x));
 	}
 
@@ -142,7 +142,7 @@ namespace avmplus
 	{
 		// m_children->removeAt (i)
 		convertToAtomArray();
-		AtomArray *aa = ((AtomArray *)(int)m_children);
+		AtomArray *aa = ((AtomArray *)(intptr)m_children);
 		aa->removeAt (i);
 	}
 
@@ -150,12 +150,12 @@ namespace avmplus
 	{
 		if ((i == 0) && (m_children & SINGLECHILDBIT))
 		{
-			m_children = int(x) | SINGLECHILDBIT;
+			m_children = intptr(x) | SINGLECHILDBIT;
 		}
 		else
 		{
 			convertToAtomArray();
-			AtomArray *aa = ((AtomArray *)(int)m_children);
+			AtomArray *aa = ((AtomArray *)(intptr)m_children);
 			aa->setAt (i, AvmCore::gcObjectToAtom(x));
 		}
 	}
@@ -171,7 +171,7 @@ namespace avmplus
 		}
 		else
 		{
-			AtomArray *aa = (AtomArray *)(int)this->m_children;
+			AtomArray *aa = (AtomArray *)(intptr)this->m_children;
 			E4XNode *x = (E4XNode *) AvmCore::atomToGCObject(aa->getAt(i));
 			return x;
 		}
@@ -255,13 +255,13 @@ namespace avmplus
 			(ns->getPrefix() == core->kEmptyString->atom() && ns->getURI() == core->kEmptyString))
 		{
 			//m_nameOrAux = int (name);
-			WBRC(core->GetGC(), this, &m_nameOrAux, int(name));
+			WBRC(core->GetGC(), this, &m_nameOrAux, intptr(name));
 			return;
 		}
 
 		E4XNodeAux *aux = new (core->GetGC()) E4XNodeAux (name, ns);
 		//m_nameOrAux = AUXBIT | int(aux);
-		WB(core->GetGC(), this, &m_nameOrAux, AUXBIT | int(aux));
+		WB(core->GetGC(), this, &m_nameOrAux, AUXBIT | intptr(aux));
 	}
 
 	void E4XNode::setQName (AvmCore *core, Multiname *mn)
@@ -668,7 +668,7 @@ namespace avmplus
 			if (numChildren())
 			{
 				AvmAssert(y->m_children == 0);
-				y->m_children = int(new (core->GetGC()) AtomArray (numChildren()));
+				y->m_children = intptr(new (core->GetGC()) AtomArray (numChildren()));
 				for (uint32 k = 0; k < _length(); k++)
 				{
 					E4XNode *child = _getAt(k);
@@ -834,7 +834,7 @@ namespace avmplus
 
 		if (!m_children)
 		{
-			m_children = int(new (core->GetGC()) AtomArray (n));
+			m_children = intptr(new (core->GetGC()) AtomArray (n));
 		}
 
 		if (xl)
@@ -890,7 +890,7 @@ namespace avmplus
 			i = _length();
 			// add a blank spot for this child
 			if (!m_children)
-				m_children = int(new (core->GetGC()) AtomArray (1));
+				m_children = intptr(new (core->GetGC()) AtomArray (1));
 			convertToAtomArray();
 			AtomArray *aa = ((AtomArray *)(int)m_children);
 			aa->push (Atom(0));
@@ -968,7 +968,7 @@ namespace avmplus
 			Stringp str = (String *)(nameOrAux);
 			E4XNodeAux *aux = new (core->GetGC()) E4XNodeAux (str, core->publicNamespace, f);
 			//m_nameOrAux = AUXBIT | int(aux);
-			WB(core->GetGC(), this, &m_nameOrAux, AUXBIT | int(aux));
+			WB(core->GetGC(), this, &m_nameOrAux, AUXBIT | intptr(aux));
 		}
 	}
 

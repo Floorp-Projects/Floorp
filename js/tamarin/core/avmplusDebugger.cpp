@@ -260,7 +260,7 @@ namespace avmplus
 				if (!fnc->isFlagSet(AbstractFunction::SUGGEST_INTERP))
 				{
 					core->console << " @ 0x";			
-					core->console.writeHexDWord( (int)fnc->impl32);
+					core->console.writeHexDWord( (intptr)fnc->impl32);
 				}
 				core->console << "\n";		
 				astrace = lvl;
@@ -644,7 +644,7 @@ namespace avmplus
 		AbstractFunction* m = trace->info;
 		if (trace->filename)
 		{
-			int index = (int)debugger->pool2abcIndex.get(Atom((PoolObject*)m->pool));
+			intptr index = (intptr)debugger->pool2abcIndex.get(Atom((PoolObject*)m->pool));
 
 			AbcFile* abc = (AbcFile*)debugger->abcAt(index);
 			source = abc->sourceNamed(trace->filename);

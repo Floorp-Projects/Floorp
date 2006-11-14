@@ -111,7 +111,7 @@ namespace avmplus
 			cseopt = true;
 			dceopt = true;
 
-		    #ifdef AVMPLUS_IA32
+		    #if defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
     		sse2 = true;
 			#endif
 
@@ -2628,7 +2628,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		}
 
         // compute the hash function
-		int hashCode = ((int)ns->getURI())>>3;
+		int hashCode = ((intptr)ns->getURI())>>3;
 
 		int bitMask = m - 1;
 
@@ -3063,7 +3063,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		}
 	}
 
-#ifdef AVMPLUS_IA32
+#if defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 	// ignore warning that inline asm disables global optimization in this function
 	#pragma warning(disable: 4740) 
 	Atom AvmCore::doubleToAtom_sse2(double n)
@@ -3101,7 +3101,7 @@ return the result of the comparison ToPrimitive(x) == y.
 			_asm d2a_alloc:
 			return allocDouble(n);
 		}
-		#elif defined(_MAC) && TARGET_CPU_X86
+		#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))
 		int id = _mm_cvttsd_si32(_mm_set_sd(n));
 		// MacTel is luckily always using SSE2, there
 		// are no intrinsics to check for unordered 
@@ -3140,7 +3140,7 @@ return the result of the comparison ToPrimitive(x) == y.
 			fld [n];
 			fistp [id];
 		}
-		#elif defined(_MAC) && TARGET_CPU_X86
+		#elif defined(_MAC) && (defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64))
 		int id = _mm_cvttsd_si32(_mm_set_sd(n));
 		#else
 		int id = MathUtils::real2int(n);
@@ -3595,7 +3595,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		return doubleToInt32(d);
 	}
 
-#ifdef AVMPLUS_IA32
+#if defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 	int AvmCore::integer_d_sse2(double d)
 	{
 		int id;
@@ -3606,7 +3606,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		}
 		if (id != 0x80000000)
 			return id;
-		#elif defined(_MAC) && TARGET_CPU_X86
+		#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))		
 		id = _mm_cvttsd_si32(_mm_set_sd(d));
 		if (id != 0x80000000)
 			return id;
@@ -3614,7 +3614,7 @@ return the result of the comparison ToPrimitive(x) == y.
 
 		return doubleToInt32(d);
 	}
-#endif // AVMPLUS_IA32
+#endif // AVMPLUS_IA32 or AVMPLUS_AMD64
 
 	int AvmCore::doubleToInt32(double d)
 	{

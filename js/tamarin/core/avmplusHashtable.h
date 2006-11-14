@@ -90,7 +90,7 @@ namespace avmplus
 			AvmAssert(getNumAtoms() == numAtoms);
 		}
 
-#if defined(AVMPLUS_IA32)
+#if defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		static inline uint32 FindOneBit(uint32 value)
 		{
 #ifndef __GNUC__
@@ -135,7 +135,7 @@ namespace avmplus
 				if (value & (1<<i))
 					return i;
 			// asm versions of this function are undefined if no bits are set
-			GCAssert(false);
+			AvmAssert(false);
 			return 0;
 		}
 

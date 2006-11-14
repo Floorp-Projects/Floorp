@@ -36,7 +36,7 @@ namespace avmplus
 {
 	using namespace MMgc;
 
-#ifdef AVMPLUS_IA32
+#ifdef AVMPLUS_AMD64
 #ifdef AVMPLUS_VERBOSE
 
 	const char *CodegenMIR::gpregNames[] = {		
@@ -47,7 +47,24 @@ namespace avmplus
 		"esp",
 		"ebp",
 		"esi",
-		"edi"
+		"edi",
+		"rax",
+		"rcx",
+		"rdx",
+		"rbx",
+		"rsp",
+		"rbp",
+		"rsi",
+		"rdi",
+		"r8",
+		"r9",
+		"r10",
+		"r11",
+		"r12",
+		"r13",
+		"r14",
+		"r15"		
+		
 	};
 
 	const char *CodegenMIR::xmmregNames[] = {
@@ -73,9 +90,9 @@ namespace avmplus
 	};
 
 #endif // AVMPLUS_VERBOSE
-#endif // AVMPLUS_IA32
+#endif // AVMPLUS_AMD64
 
-#ifdef AVMPLUS_IA32
+#ifdef AVMPLUS_AMD64
 	void CodegenMIR::MODRM(Register reg, Register operand)
 	{
  		*mip++ = 3<<6 | reg<<3 | operand;
@@ -484,7 +501,7 @@ namespace avmplus
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
-			core->console.format("    %A  call  %A\n", mip, offset+(int)(mip+5));
+			core->console.format("    %A  call  %A\n", mip, offset+(intptr)(mip+5));
 		#endif /* AVMPLUS_VERBOSE */
 
 		*mip++ = 0xE8;
@@ -665,6 +682,8 @@ namespace avmplus
 	 */
 	void CodegenMIR::emitNativeThunk(NativeMethod *info)
 	{
+		AvmAssert(0); // 64bit - needs complete rework
+		
 		code = mip = mipStart = getMDBuffer(pool);
 		if (!code)
 		{
@@ -955,7 +974,7 @@ namespace avmplus
 #endif
 
 		byte* next_ip = mip+4;  // branch rel. to next instr
-		CALL (info->m_handler_addr - (int)next_ip - 1);       // call the method as an instance method
+		CALL (info->m_handler_addr - (intptr)next_ip - 1);       // call the method as an instance method
 
 #ifdef AVMPLUS_CDECL
 		int popAmount = (pushCount+1)*4;
@@ -1130,6 +1149,6 @@ namespace avmplus
 		return mipStart;
 	}
 
-#endif /* AVMPLUS_IA32 */
+#endif /* AVMPLUS_AMD64 */
 
 }

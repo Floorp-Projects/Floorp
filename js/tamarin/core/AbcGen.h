@@ -60,7 +60,17 @@ namespace avmplus
 		}
 		void getlocalN(int N) { bytes.add((byte)(OP_getlocal0+N)); }
 		void setslot(int slot) { bytes.add(OP_setslot); writeInt(slot+1); }
-		void abs_jump(const byte *pc, int code_length) { bytes.add(OP_abs_jump); writeInt((unsigned int)pc); writeInt(code_length); }
+		void abs_jump(const byte *pc, int code_length) 
+		{ 
+			bytes.add(OP_abs_jump); 
+#ifdef AVMPLUS_64BIT
+			writeInt((int)(intptr)pc);
+			writeInt((int)(((intptr)pc) >> 32));
+#else			
+			writeInt((int)pc); 
+#endif			
+			writeInt(code_length); 
+		}
 		void returnvoid() { bytes.add(OP_returnvoid); }
 		void writeBytes(List<byte,LIST_NonGCObjects>& b) { bytes.add(b); }
 		void writeInt(unsigned int n);

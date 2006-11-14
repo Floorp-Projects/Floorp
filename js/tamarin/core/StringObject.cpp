@@ -110,7 +110,7 @@ namespace avmplus
 	{
 		m_length = s1->length() + s2->length();
 		AvmAssert(m_length >= 0);
-		setPrefixOrOffsetOrNumber(int(s1) | PREFIXFLAG);
+		setPrefixOrOffsetOrNumber(intptr(s1) | PREFIXFLAG);
 		if (s2->needsNormalization()) s2->normalize();
 		setBuf(s2->m_buf);
 #ifdef DEBUGGER
@@ -1180,7 +1180,7 @@ namespace avmplus
 		return new (gc) String(this, start, end-start);
     }
 
-	 void String::setPrefixOrOffsetOrNumber(int value)
+	 void String::setPrefixOrOffsetOrNumber(intptr value)
      {
 #ifdef MMGC_DRC
          // first decrement existing prefix

@@ -405,7 +405,7 @@ namespace avmplus
 		int intValue;
 		_asm fld [value];
 		_asm fistp [intValue];
-#elif defined(_MAC) && TARGET_CPU_X86
+#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))
 		int intValue = _mm_cvttsd_si32(_mm_set_sd(value));
 #else
 		int intValue = real2int(value);
@@ -620,7 +620,7 @@ namespace avmplus
 		_asm mov eax,[value];
 		_asm fld qword ptr [eax];
 		_asm fistp [digit];
-		#elif defined(_MAC) && TARGET_CPU_X86
+		#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))
 		digit = _mm_cvttsd_si32(_mm_set_sd(*value));
 		#else
 		digit = (int) *value;
@@ -794,7 +794,7 @@ namespace avmplus
 			int intValue;
 			_asm fld [value];
 			_asm fistp [intValue];
-#elif defined(_MAC) && TARGET_CPU_X86
+#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))
 			int intValue = _mm_cvttsd_si32(_mm_set_sd(value));
 #else
 			int intValue = real2int(value);

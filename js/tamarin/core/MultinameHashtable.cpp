@@ -78,7 +78,7 @@ namespace avmplus
 		// Note: Mask off MSB to avoid negative indices.  Mask off bottom
 		// 3 bits because it doesn't contribute to hash.  Triple it
 		// because names, namespaces, and values are stored adjacently.
-        unsigned i = ((0x7FFFFFF8 & (int)name) >> 3) & bitmask;
+        unsigned i = ((0x7FFFFFF8 & (intptr)name) >> 3) & bitmask;
         Stringp k;
         while (((k=t[i].name) != name || t[i].ns != ns) && k != NULL)
 		{
@@ -150,7 +150,7 @@ namespace avmplus
 		// Note: Mask off MSB to avoid negative indices.  Mask off bottom
 		// 3 bits because it doesn't contribute to hash.  Triple it
 		// because names, namespaces, and values are stored adjacently.
-        unsigned i = ((0x7FFFFFF8 & (int)mnameName)>>3) & bitMask;
+        unsigned i = ((0x7FFFFFF8 & (intptr)mnameName)>>3) & bitMask;
 		int j;
 		Stringp atomName;
 

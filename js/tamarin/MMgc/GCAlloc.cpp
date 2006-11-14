@@ -254,10 +254,10 @@ start:
 #ifdef MEMORY_INFO
 			// ensure previously used item wasn't written to
 			// -1 because write back pointer space isn't poisoned.
-#ifdef MMGC_IA64			
-			for(int i=3, n=(b->size>>2)-1; i<n; i++)
-#else
+#ifdef MMGC_AMD64			
 			for(int i=3, n=(b->size>>2)-3; i<n; i++)
+#else
+			for(int i=3, n=(b->size>>2)-1; i<n; i++)
 #endif			
 			{
 				int data = ((int*)item)[i];

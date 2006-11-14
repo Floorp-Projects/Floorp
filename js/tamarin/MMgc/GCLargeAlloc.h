@@ -149,9 +149,9 @@ namespace MMgc
 		struct LargeBlock
 		{
 			GC *gc;
+			LargeBlock *next;
 			uint32 usableSize;
 			uint32 flags;
-			LargeBlock *next;
 
 			int GetNumBlocks() const { return (usableSize + sizeof(LargeBlock)) / GCHeap::kBlockSize; }
 		};

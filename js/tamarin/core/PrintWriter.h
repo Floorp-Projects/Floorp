@@ -115,6 +115,7 @@ namespace avmplus
 		PrintWriter& operator<< (char value);
 		PrintWriter& operator<< (wchar value);		
 		PrintWriter& operator<< (int value);
+		PrintWriter& operator<< (intptr value);
 		PrintWriter& operator<< (uint32 value);
 		PrintWriter& operator<< (double value);
 		PrintWriter& operator<< (Stringp str);

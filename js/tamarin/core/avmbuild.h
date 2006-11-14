@@ -46,7 +46,7 @@
 #endif
 
 #ifdef AVMPLUS_MAC
-  // Are we PowerPC or i386 (Macintel)?
+  // Are we PowerPC or i386 (Macintel) or x86_64 (64-bit)?
   #if __i386__
     #ifndef AVMPLUS_IA32
       #define AVMPLUS_IA32
@@ -54,10 +54,17 @@
     #ifndef AVMPLUS_CDECL
       #define AVMPLUS_CDECL
     #endif
-  #else
+  #elif (__x86_64__)
+    #ifndef AVMPLUS_AMD64
+      #define AVMPLUS_AMD64
+    #endif
+    #ifndef AVMPLUS_64BIT
+	  #define AVMPLUS_64BIT
+    #endif
+  #elif (__ppc__)
     #ifndef AVMPLUS_PPC
       #define AVMPLUS_PPC
-    #endif
+    #endif	
   #endif
 #endif
 
@@ -87,6 +94,10 @@
 // FEATURE_BUFFER_GUARD not supported on Mac CFM
 #ifdef AVMPLUS_MAC
   #if !TARGET_RT_MAC_MACHO
+    #undef FEATURE_BUFFER_GUARD
+  #endif
+  // not supported yet in 64-bit mode
+  #ifdef AVMPLUS_AMD64
     #undef FEATURE_BUFFER_GUARD
   #endif
 #endif
