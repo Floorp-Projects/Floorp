@@ -763,16 +763,37 @@
             else if (newBrowser.focusedWindow) {
               whatToFocus = newBrowser.focusedWindow;
             }
+ 
+            // Change focus for this window to |aElement|, without focusing the
+            // window itself.
+            function setFocus(aElement) {
+              var cmdDispatcher = document.commandDispatcher;
 
-            function setFocus(element) {
-              document.commandDispatcher.suppressFocusScroll = true;
-              try {
-                element.focus();
+              var ww =
+                Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                          .getService(Components.interfaces.nsIWindowWatcher);
+              if (ww.activeWindow == window) {
+                cmdDispatcher.suppressFocusScroll = true;
+                try {
+                  aElement.focus();
+                }
+                catch(ex) {
+                  dump("XXX focus() failed, see bug #348183: ex = " + ex + "\n");
+                }
+                cmdDispatcher.suppressFocusScroll = false;
               }
-              catch(ex) {
-                dump("XXX focus() failed, see bug #348183: ex = " + ex + "\n");
+              else {
+                // set the element in command dispatcher so focus will restore
+                // properly when the window does become active
+                if (aElement instanceof Window) {
+                  cmdDispatcher.focusedWindow = aElement;
+                  cmdDispatcher.focusedElement = null;
+                }
+                else {
+                  cmdDispatcher.focusedWindow = aElement.ownerDocument.defaultView;
+                  cmdDispatcher.focusedElement = aElement;
+                }
               }
-              document.commandDispatcher.suppressFocusScroll = false;
             }
 
             // Use setTimeout to avoid focus outline ghosting.
