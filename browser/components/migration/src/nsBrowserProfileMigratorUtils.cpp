@@ -229,8 +229,8 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
     do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupportsArray> params;
-  rv = NS_NewISupportsArray(getter_AddRefs(params));
+  nsCOMPtr<nsISupportsArray> params =
+    do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRDFService> rdfs =
@@ -312,8 +312,8 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   params->AppendElement(folderProp);
   params->AppendElement(folder);
 
-  nsCOMPtr<nsISupportsArray> sources;
-  rv = NS_NewISupportsArray(getter_AddRefs(sources));
+  nsCOMPtr<nsISupportsArray> sources =
+    do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   sources->AppendElement(folder);
 
