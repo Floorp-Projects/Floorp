@@ -279,6 +279,12 @@
            times in a short interval, and therefore improves performance.-->
       <field name="mEventMapTimeout">null</field>
 
+      <!-- Set this true so that we know in our onAddItem listener to start
+         - modifying an event when it comes back to us as created
+        -->
+      <field name="mCreatedNewEvent">false</field>
+      <field name="mEventToEdit">null</field>
+
       <!-- properties -->
       <property name="pixelsPerMinute">
         <getter><![CDATA[
@@ -551,6 +557,10 @@
                clearTimeout(this.mEventMapTimeout);
            }
            var column = this;
+
+           if (this.mCreatedNewEvent) {
+               this.mEventToEdit = aOccurrence;
+           }
            // Fun with scoping...
            this.mEventMapTimeout = setTimeout(function() { column.relayout.call(column) }, 5);
         ]]></body>
@@ -632,6 +642,8 @@
 
           this.mEventMap = this.computeEventMap();
 
+          var boxToEdit;
+
           for each (var column in this.mEventMap) {
               var xulColumn = createXULElement("box");
               xulColumn.setAttribute("orient", orient);
@@ -694,6 +706,11 @@
                               chunkBox.selected = true;
                           }
                       }
+
+                      if (this.mEventToEdit && 
+                          chunkBox.occurrence.hasSameIds(this.mEventToEdit)) {
+                          boxToEdit = chunkBox;
+                      }
                   } else {
                       var chunkBox = createXULElement("spacer");
                       chunkBox.setAttribute("context", this.getAttribute("context"));
@@ -710,6 +727,12 @@
 
                   numBlocksInserted++;
                   curTime += duration;
+              }
+
+              if (boxToEdit) {
+                  this.mCreatedNewEvent = false;
+                  this.mEventToEdit = null;
+                  boxToEdit.startEditing();
               }
 
               if (numBlocksInserted == 0) {
@@ -1074,6 +1097,7 @@
           }
 
           if (dragState.dragType == "new") {
+              col.mCreatedNewEvent = true;
               col.calendarView.controller.createNewEvent(col.calendarView.displayCalendar,
                                                          newStart,
                                                          newEnd);
