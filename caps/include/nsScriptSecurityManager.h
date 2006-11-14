@@ -543,6 +543,15 @@ private:
     InitPrincipals(PRUint32 prefCount, const char** prefNames,
                    nsISecurityPref* securityPref);
 
+
+    /**
+     * Utility method for comparing two URIs.  For security purposes, two URIs
+     * are equivalent if their schemes, hosts, and ports (if any) match.  This
+     * method returns true if aSubjectURI and aObjectURI have the same origin,
+     * false otherwise.
+     */
+    PRBool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
+
 #ifdef XPC_IDISPATCH_SUPPORT
     // While this header is included outside of caps, this class isn't 
     // referenced so this should be fine.
