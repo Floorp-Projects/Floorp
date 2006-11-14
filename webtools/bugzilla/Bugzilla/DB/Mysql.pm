@@ -68,6 +68,9 @@ sub new {
     # Bug 321645 - disable MySQL strict mode, if set
     my $sql_mode = $self->selectrow_array('SELECT @@sql_mode');
     if ($sql_mode) {
+        # STRICT_TRANS_TABLE or STICT_ALL_TABLES enable MySQL strict mode,
+        # causing bug 321645. TRADITIONAL sets these modes (among others) as
+        # well, so it has to be stipped as well
         my $new_sql_mode =
             join(",", grep {$_ !~ /^STRICT_(?:TRANS|ALL)_TABLES|TRADITIONAL$/}
                             split(/,/, $sql_mode));
