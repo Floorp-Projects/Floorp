@@ -3753,7 +3753,13 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
         replyToHdr->GetMessageKey(&replyToKey);
         // message claims to be a reply to itself - ignore that since it leads to corrupt threading.
         if (replyToKey == newHdrKey)
-          continue;
+        {
+          // bad references - throw them all away.
+          newHdr->ParseReferences("");
+          thread = nsnull;
+          break;
+          
+        }
       }
       thread->GetThreadKey(&threadId);
       newHdr->SetThreadId(threadId);
