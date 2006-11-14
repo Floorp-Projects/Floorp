@@ -138,11 +138,7 @@ public:
   // the tree viewer can go faster if it can bypass XPCOM
   friend class nsNavHistoryResultTreeViewer;
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
-#endif
 
   nsresult PropertyBagFor(nsISupports* aObject,
                           nsIWritablePropertyBag** aBag);
@@ -196,6 +192,7 @@ public:
   void InvalidateTree();
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
 
 // nsNavHistoryResultNode
 //
@@ -252,11 +249,7 @@ public:
                          const nsACString& aIconURI);
   virtual ~nsNavHistoryResultNode() {}
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULTNODE_IID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULTNODE_IID)
-#endif
 
   NS_DECL_ISUPPORTS
   NS_IMPLEMENT_SIMPLE_RESULTNODE
@@ -379,9 +372,7 @@ public:
   PRInt32 mViewIndex;
 };
 
-#ifndef MOZILLA_1_8_BRANCH
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_IID)
-#endif
 
 // nsNavHistoryVisitResultNode
 
@@ -492,11 +483,7 @@ public:
     const nsACString& aIconURI, PRUint32 aContainerType,
     PRBool aReadOnly, const nsACString& aRemoteContainerType);
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
-#endif
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
@@ -611,6 +598,8 @@ public:
                         PRBool aRecursive, PRBool aOnlyOne);
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
+                              NS_NAVHISTORYCONTAINERRESULTNODE_IID)
 
 // nsNavHistoryQueryResultNode
 //
