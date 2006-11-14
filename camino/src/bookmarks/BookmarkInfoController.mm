@@ -133,6 +133,14 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   [super dealloc];
 }
 
+// Gets called when the escape key is pressed
+- (void)cancel:(id)sender
+{
+  // revert UI so changes don't get committed
+  [self updateUI];
+  [[self window] close];
+}
+
 // We intercept the tab key in order to let the user tab to/from the bookmark
 // description textfield (even though it's a textview)
 - (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)command
