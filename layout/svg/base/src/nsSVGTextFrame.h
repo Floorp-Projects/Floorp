@@ -62,9 +62,6 @@ private:
 
 public:
   // nsIFrame:
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-  
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -115,27 +112,18 @@ public:
   NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
   NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval);
 
-  void NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller);
-  void NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller);
-  PRBool IsMetricsSuspended();
-  PRBool IsGlyphFragmentTreeSuspended();
-  void UpdateFragmentTree();
+  // nsSVGTextFrame
+  void NotifyGlyphMetricsChange();
 
 private:
-  void EnsureFragmentTreeUpToDate();
   void UpdateGlyphPositioning();
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 
-  enum UpdateState{
-    unsuspended,
-    suspended,
-    updating};
-  UpdateState mFragmentTreeState;
+  enum UpdateState { unsuspended, suspended };
   UpdateState mMetricsState;
 
-  PRPackedBool mFragmentTreeDirty;
   PRPackedBool mPropagateTransform;
   PRPackedBool mPositioningDirty;
 };

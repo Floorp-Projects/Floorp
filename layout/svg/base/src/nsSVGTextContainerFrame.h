@@ -67,6 +67,9 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 
 public:
+  // nsIFrame
+  NS_IMETHOD RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame);
+
   // nsISVGTextContentMetrics
   NS_IMETHOD GetNumberOfChars(PRInt32 *_retval);
   NS_IMETHOD GetComputedTextLength(float *_retval);

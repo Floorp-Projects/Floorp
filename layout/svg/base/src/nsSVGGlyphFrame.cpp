@@ -74,8 +74,7 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
 
 nsSVGGlyphFrame::nsSVGGlyphFrame(nsStyleContext* aContext)
     : nsSVGGlyphFrameBase(aContext),
-      mWhitespaceHandling(COMPRESS_WHITESPACE),
-      mFragmentTreeDirty(PR_FALSE)
+      mWhitespaceHandling(COMPRESS_WHITESPACE)
 {
 }
 
@@ -105,19 +104,9 @@ nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_OK;
 
-#ifdef DEBUG
-//  printf("** nsSVGGlyphFrame::Update\n");
-#endif
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("No outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-  
-  outerSVGFrame->SuspendRedraw();
-  UpdateFragmentTree();
-  UpdateGeometry(PR_TRUE, PR_FALSE);
-  outerSVGFrame->UnsuspendRedraw();
+  nsSVGTextFrame *textFrame = GetTextFrame();
+  if (textFrame)
+    textFrame->NotifyGlyphMetricsChange();
 
   return NS_OK;
 }
@@ -127,7 +116,7 @@ nsSVGGlyphFrame::DidSetStyleContext()
 {
   nsSVGGlyphFrameBase::DidSetStyleContext();
 
-  return CharacterDataChanged(nsnull, nsnull, PR_FALSE);
+  return UpdateGraphic();
 }
 
 NS_IMETHODIMP
@@ -464,8 +453,6 @@ nsSVGGlyphFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGGlyphFrame::NotifyRedrawUnsuspended()
 {
-  NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::NotifyRedrawUnsuspended");
-    
   if (GetStateBits() & NS_STATE_SVG_DIRTY)
     UpdateGeometry(PR_TRUE, PR_FALSE);
 
@@ -1245,26 +1232,6 @@ nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
   mWhitespaceHandling = aWhitespaceHandling;
 }
 
-NS_IMETHODIMP_(void)
-nsSVGGlyphFrame::NotifyGlyphFragmentTreeSuspended()
-{
-  // do nothing
-}
-
-NS_IMETHODIMP_(void)
-nsSVGGlyphFrame::NotifyGlyphFragmentTreeUnsuspended()
-{
-  if (mFragmentTreeDirty) {
-    nsSVGTextFrame* text_frame = GetTextFrame();
-    NS_ASSERTION(text_frame, "null text frame");
-    if (text_frame)
-      text_frame->NotifyGlyphFragmentTreeChange(this);
-    mFragmentTreeDirty = PR_FALSE;
-  }
-}
-
-
-
 //----------------------------------------------------------------------
 //
 
@@ -1360,23 +1327,6 @@ void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
       outerSVGFrame->InvalidateRect(mRect);
     }
   }  
-}
-
-void nsSVGGlyphFrame::UpdateFragmentTree()
-{
-  mFragmentTreeDirty = PR_TRUE;
-    
-  nsSVGTextFrame* text_frame = GetTextFrame();
-  if (!text_frame) {
-    NS_ERROR("null text_frame");
-    return;
-  }
-  
-  PRBool suspended = text_frame->IsGlyphFragmentTreeSuspended();
-  if (!suspended) {
-    text_frame->NotifyGlyphFragmentTreeChange(this);
-    mFragmentTreeDirty = PR_FALSE;
-  }
 }
 
 nsSVGTextFrame *

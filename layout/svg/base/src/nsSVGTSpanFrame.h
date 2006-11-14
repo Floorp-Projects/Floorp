@@ -53,7 +53,7 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
 protected:
   nsSVGTSpanFrame(nsStyleContext* aContext) :
     nsSVGTextContainerFrame(aContext),
-    mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE) {}
+    mPropagateTransform(PR_TRUE) {}
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -63,8 +63,6 @@ private:
 
 public:
   // nsIFrame:
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -97,12 +95,9 @@ public:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended();
-  NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
 
 private:
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
-  PRPackedBool mFragmentTreeDirty;
   PRPackedBool mPropagateTransform;
 };
 

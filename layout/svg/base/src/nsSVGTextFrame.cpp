@@ -75,8 +75,8 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
 
 nsSVGTextFrame::nsSVGTextFrame(nsStyleContext* aContext)
     : nsSVGTextFrameBase(aContext),
-      mFragmentTreeState(suspended), mMetricsState(suspended),
-      mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE),
+      mMetricsState(unsuspended),
+      mPropagateTransform(PR_TRUE),
       mPositioningDirty(PR_FALSE)
 {
 }
@@ -119,10 +119,7 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
              aAttribute == nsGkAtoms::y ||
              aAttribute == nsGkAtoms::dx ||
              aAttribute == nsGkAtoms::dy) {
-    mPositioningDirty = PR_TRUE;
-    if (mMetricsState == unsuspended) {
-      UpdateGlyphPositioning();
-    }
+    UpdateGlyphPositioning();
   }
 
  return NS_OK;
@@ -131,9 +128,6 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
 NS_IMETHODIMP
 nsSVGTextFrame::DidSetStyleContext()
 {
-#ifdef DEBUG
-  printf("** nsSVGTextFrame::DidSetStyleContext\n");
-#endif
   nsSVGUtils::StyleEffects(this);
 
   return NS_OK;
@@ -143,23 +137,6 @@ nsIAtom *
 nsSVGTextFrame::GetType() const
 {
   return nsLayoutAtoms::svgTextFrame;
-}
-
-NS_IMETHODIMP
-nsSVGTextFrame::RemoveFrame(nsIAtom*        aListName,
-                            nsIFrame*       aOldFrame)
-{
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (outerSVGFrame)
-    outerSVGFrame->SuspendRedraw();
-  mFragmentTreeDirty = PR_TRUE;
-
-  nsresult rv = nsSVGTextFrameBase::RemoveFrame(aListName, aOldFrame);
-  
-  if (outerSVGFrame)
-    outerSVGFrame->UnsuspendRedraw();
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -189,7 +166,7 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
 NS_IMETHODIMP
 nsSVGTextFrame::GetNumberOfChars(PRInt32 *_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetNumberOfChars(_retval);
 }
@@ -197,7 +174,7 @@ nsSVGTextFrame::GetNumberOfChars(PRInt32 *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetComputedTextLength(float *_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetComputedTextLength(_retval);
 }
@@ -205,7 +182,7 @@ nsSVGTextFrame::GetComputedTextLength(float *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetSubStringLength(charnum, nchars, _retval);
 }
@@ -213,7 +190,7 @@ nsSVGTextFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_re
 NS_IMETHODIMP
 nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetStartPositionOfChar(charnum,  _retval);
 }
@@ -221,7 +198,7 @@ nsSVGTextFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 NS_IMETHODIMP
 nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetEndPositionOfChar(charnum,  _retval);
 }
@@ -229,7 +206,7 @@ nsSVGTextFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetExtentOfChar(charnum,  _retval);
 }
@@ -237,7 +214,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetRotationOfChar(charnum,  _retval);
 }
@@ -245,7 +222,7 @@ nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetCharNumAtPosition(point,  _retval);
 }
@@ -267,50 +244,17 @@ NS_IMETHODIMP
 nsSVGTextFrame::NotifyRedrawSuspended()
 {
   mMetricsState = suspended;
-  mFragmentTreeState = suspended;
 
-  nsSVGTextFrameBase::NotifyRedrawSuspended();
-
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGGlyphFragmentNode* fragmentNode = nsnull;
-    CallQueryInterface(kid, &fragmentNode);
-    if (fragmentNode) {
-      fragmentNode->NotifyGlyphFragmentTreeSuspended();
-    }
-  }
-
-  return NS_OK;
+  return nsSVGTextFrameBase::NotifyRedrawSuspended();
 }
 
 NS_IMETHODIMP
 nsSVGTextFrame::NotifyRedrawUnsuspended()
 {
-  NS_ASSERTION(mMetricsState == suspended, "metrics state not suspended during redraw");
-  NS_ASSERTION(mFragmentTreeState == suspended, "fragment tree not suspended during redraw");
-
-  // 3 passes:
-  nsIFrame *kid;
-  mFragmentTreeState = updating;
-  for (kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    nsISVGGlyphFragmentNode* node = nsnull;
-    CallQueryInterface(kid, &node);
-    if (node) {
-      node->NotifyGlyphFragmentTreeUnsuspended();
-    }
-  }
-
-  mFragmentTreeState = unsuspended;
-  if (mFragmentTreeDirty)
-    UpdateFragmentTree();
-  
   mMetricsState = unsuspended;
-  if (mPositioningDirty)
-    UpdateGlyphPositioning();
-  
-  nsSVGTextFrameBase::NotifyRedrawUnsuspended();
-  
-  return NS_OK;
+  UpdateGlyphPositioning();
+
+  return nsSVGTextFrameBase::NotifyRedrawUnsuspended();
 }
 
 NS_IMETHODIMP
@@ -330,7 +274,7 @@ nsSVGTextFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  EnsureFragmentTreeUpToDate();
+  UpdateGlyphPositioning();
 
   return nsSVGTextFrameBase::GetBBox(_retval);
 }
@@ -380,100 +324,10 @@ nsSVGTextFrame::GetCanvasTM()
 //
 
 void
-nsSVGTextFrame::NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller)
+nsSVGTextFrame::NotifyGlyphMetricsChange()
 {
-  NS_ASSERTION(mMetricsState!=suspended, "notification during suspension");
   mPositioningDirty = PR_TRUE;
-  if (mMetricsState == unsuspended) {
-    UpdateGlyphPositioning();
-  }
-}
-
-void
-nsSVGTextFrame::NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller)
-{
-  NS_ASSERTION(mFragmentTreeState!=suspended, "notification during suspension");
-  mFragmentTreeDirty = PR_TRUE;
-  if (mFragmentTreeState == unsuspended) {
-    UpdateFragmentTree();
-  }
-}
-
-PRBool
-nsSVGTextFrame::IsMetricsSuspended()
-{
-  return (mMetricsState != unsuspended);
-}
-
-PRBool
-nsSVGTextFrame::IsGlyphFragmentTreeSuspended()
-{
-  return (mFragmentTreeState != unsuspended);
-}
-
-// ensure that the tree and positioning of the nodes is up-to-date
-void
-nsSVGTextFrame::EnsureFragmentTreeUpToDate()
-{
-  PRBool resuspend_fragmenttree = PR_FALSE;
-  PRBool resuspend_metrics = PR_FALSE;
-  
-  // give children a chance to flush their change notifications:
-  
-  if (mFragmentTreeState == suspended) {
-    resuspend_fragmenttree = PR_TRUE;
-    mFragmentTreeState = updating;
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGGlyphFragmentNode* node = nsnull;
-      CallQueryInterface(kid, &node);
-      if (node)
-        node->NotifyGlyphFragmentTreeUnsuspended();
-      kid = kid->GetNextSibling();
-    }
-    
-    mFragmentTreeState = unsuspended;
-  }
-
-  if (mFragmentTreeDirty)
-    UpdateFragmentTree();
-
-  if (mMetricsState == suspended) {
-    resuspend_metrics = PR_TRUE;
-    mMetricsState = unsuspended;
-  }
-  
-  if (mPositioningDirty)
-    UpdateGlyphPositioning();
-
-  if (resuspend_fragmenttree || resuspend_metrics) {
-    mMetricsState = suspended;
-    mFragmentTreeState = suspended;
-  
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGGlyphFragmentNode* fragmentNode = nsnull;
-      CallQueryInterface(kid, &fragmentNode);
-      if (fragmentNode) {
-        fragmentNode->NotifyGlyphFragmentTreeSuspended();
-      }
-      kid = kid->GetNextSibling();
-    }
-  } 
-}
-
-void
-nsSVGTextFrame::UpdateFragmentTree()
-{
-  NS_ASSERTION(mFragmentTreeState == unsuspended, "updating during suspension!");
-
-  SetWhitespaceHandling();
-
-  mFragmentTreeDirty = PR_FALSE;
-  
-  mPositioningDirty = PR_TRUE;
-  if (mMetricsState == unsuspended)
-    UpdateGlyphPositioning();
+  UpdateGlyphPositioning();
 }
 
 static void
@@ -538,7 +392,10 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
 void
 nsSVGTextFrame::UpdateGlyphPositioning()
 {
-  NS_ASSERTION(mMetricsState == unsuspended, "updating during suspension");
+  if (mMetricsState == suspended || !mPositioningDirty)
+    return;
+
+  SetWhitespaceHandling();
 
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   if (!node) return;
