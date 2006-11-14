@@ -38,7 +38,14 @@
 [% IF testcases %]
 <h1 class="firstHeading">Print Matching Testcases[% IF search_string_for_display %] - [% search_string_for_display | html %][% END %]</h1>
 
+[% current_subgroup="" %]
 [% FOREACH test=testcases %]
+
+[% IF test.subgroup_name AND test.subgroup_name != current_subgroup %]
+[% current_subgroup=test.subgroup_name %]
+<h1 class="firstHeading">subgroup: [% test.subgroup_name %]</h1>
+[% END %]
+
 <div class="testcase">
   <div class="testcase-head">
     [% test.test_id | html %]: [% test.summary | html %]

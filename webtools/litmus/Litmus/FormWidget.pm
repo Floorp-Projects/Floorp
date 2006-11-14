@@ -65,14 +65,9 @@ Litmus::FormWidget creates value lists to be used in HTML forms.
 
 =head1 USAGE
 
-
 =head1 BUGS
 
-
-
 =head1 SUPPORT
-
-
 
 =head1 AUTHOR
 
@@ -89,34 +84,14 @@ perl(1).
 =cut
 
 #########################################################################
-
-#sub new
-#{
-#    my ($class, %parameters) = @_;
-#    my $self = bless ({}, ref ($class) || $class);
-#    return ($self);
-#}
-
-#########################################################################
-
-=head2 getProducts
-
- Usage     : How to use this function/method
- Purpose   : What it does
- Returns   : What it returns
- Argument  : What it wants to know
- Throws    : Exceptions and other anomolies
- Comments  : This is a sample subroutine header.
-           : It is polite to include more pod and fewer comments.
-
-See Also   : 
-
-=cut
-
-#########################################################################
 sub getProducts()
 {
-    my $sql = "SELECT name, product_id FROM products ORDER BY name ASC";
+    my ($enabled) = @_;
+    my $sql = "SELECT name, product_id FROM products";
+    if ($enabled) {
+      $sql .= " WHERE enabled=1";
+    }
+    $sql .= " ORDER BY name ASC";
     return _getValues($sql);
 }
 
@@ -137,14 +112,24 @@ sub getPlatforms()
 #########################################################################
 sub getBranches()
 {
-    my $sql = "SELECT name, branch_id, product_id FROM branches ORDER BY name ASC";
+    my ($enabled) = @_;
+    my $sql = "SELECT name, branch_id, product_id FROM branches";
+    if ($enabled) {
+      $sql .= " WHERE enabled=1";
+    }
+    $sql .= " ORDER BY name ASC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getUniqueBranches()
 {
-    my $sql = "SELECT DISTINCT(name) FROM branches ORDER BY name ASC";
+    my ($enabled) = @_;
+    my $sql = "SELECT DISTINCT(name) FROM branches";
+    if ($enabled) {
+      $sql .= " WHERE enabled=1";
+    }
+    $sql .= " ORDER BY name ASC";
     return _getValues($sql);
 }
 
@@ -187,28 +172,60 @@ sub getResultStatuses()
 #########################################################################
 sub getTestcaseIDs()
 {
-    my $sql = "SELECT testcase_id FROM testcases ORDER BY testcase_id";
+    my ($enabled) = @_;
+    my $sql = "SELECT testcase_id FROM testcases";
+    if ($enabled) {
+      $sql .= " WHERE enabled=1";
+    }
+    $sql .= " ORDER BY testcase_id";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getTestcases()
 {
-    my $sql = "SELECT testcase_id, summary, product_id FROM testcases ORDER BY testcase_id";
+    my ($enabled) = @_;
+    my $sql = "SELECT testcase_id, summary, product_id FROM testcases";
+    if ($enabled) {
+      $sql .= " WHERE enabled=1";
+    }
+    $sql .= " ORDER BY testcase_id";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getDistinctSubgroups()
+{
+    my ($enabled) = @_;
+    my $sql = "SELECT DISTINCT(sg.subgroup_id), sg.name, sg.product_id, tgb.branch_id, tg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id) WHERE sgtg.testgroup_id=tg.testgroup_id";
+    if ($enabled) {
+      $sql .= " AND sg.enabled=1";
+    }
+    $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id DESC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getSubgroups()
 {
-    my $sql = "SELECT DISTINCT(sg.subgroup_id), sg.name, sg.product_id, tgb.branch_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id) ORDER BY sg.name ASC, sg.subgroup_id DESC";
+    my ($enabled) = @_;
+    my $sql = "SELECT sg.subgroup_id, sg.name, sg.product_id, tgb.branch_id, tg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id), testgroups tg WHERE sgtg.testgroup_id=tg.testgroup_id";
+    if ($enabled) {
+      $sql .= " AND sg.enabled=1";
+    }
+    $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id DESC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getTestgroups()
 {
-    my $sql = "SELECT tg.testgroup_id, tg.name, tg.product_id, tgb.branch_id FROM testgroups tg, testgroup_branches tgb WHERE tg.testgroup_id=tgb.testgroup_id ORDER BY tg.name, tg.testgroup_id";
+    my ($enabled) = @_;
+    my $sql = "SELECT tg.testgroup_id, tg.name, tg.product_id, tgb.branch_id FROM testgroups tg, testgroup_branches tgb WHERE tg.testgroup_id=tgb.testgroup_id";
+    if ($enabled) {
+      $sql .= " AND tg.enabled=1";
+    }
+    $sql .= " ORDER BY tg.name, tg.testgroup_id";
     return _getValues($sql);
 }
 
@@ -243,7 +260,12 @@ sub getAuthors()
 
 #########################################################################
 sub getTestRuns() {
-  my $sql = "SELECT test_run_id, name FROM test_runs ORDER BY finish_timestamp DESC, name DESC";
+  my ($enabled) = @_;
+  my $sql = "SELECT test_run_id, name FROM test_runs";
+  if ($enabled) {
+    $sql .= " WHERE sg.enabled=1";
+  }
+  $sql .= " ORDER BY finish_timestamp DESC, name DESC";
   return _getValues($sql);
 }
 
@@ -345,10 +367,4 @@ sub _getValues($)
     return \@rows;
 }
 
-1; 
-
-
-
-
-
-
+1;

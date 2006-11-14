@@ -380,6 +380,16 @@ function verifySelectNotEmpty(selectBox, message) {
   return warnInvalid (selectBox, message + ' Please make a selection now.');
 }
 
+// Make sure a radio box has a value checked.
+function checkRadio(theField, fieldName) {
+  for (i = 0; i < theField.length; i++) {
+    if (theField[i].checked) {
+      return true;
+    }
+  } 
+  return false;
+}
+
 function toggleMessage(msgType,msg) {
   var em = document.getElementById("message");
   if (toggleMessage.arguments.length < 1) {

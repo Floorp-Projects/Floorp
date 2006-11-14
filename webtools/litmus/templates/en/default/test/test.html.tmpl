@@ -60,6 +60,20 @@
     <td id="testcase_id_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.testcase_id | html %]</td>
   </tr>
   <tr>
+    <td><b>Regression Bug ID #:</b></td>
+    <td id="regression_bug_id_display[% IF ! show_edit %]_[% testcase.regression_bug_id | html %][% END %]">[% IF testcase.regression_bug_id %]<script>document.write('<a href="' + generateBugLink([% testcase.regression_bug_id %]) + '">[% testcase.regression_bug_id | html %]</a>');</script>[% ELSE %]None specified[% END %]</td>
+  </tr>
+[% IF show_admin %]
+  <tr>
+    <td><b>Enabled?</b></td>
+    <td><input id="enabled_display" name="enabled_display" type="checkbox" value="1" [% IF testcase.enabled %] checked[% END %] disabled></td>
+  </tr>
+  <tr>
+    <td><b>Community Enabled?</b></td>
+    <td><input id="community_enabled_display" name="community_enabled_display" type="checkbox" value="1" [% IF testcase.community_enabled %] checked[% END %] disabled></td>
+  </tr>
+[% END %]
+  <tr>
     <td><b>Summary:</b></td>
     <td><div id="summary_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.summary | html %]</div></td>
   </tr>

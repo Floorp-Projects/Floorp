@@ -47,7 +47,7 @@ Litmus::DB::Testcase->table('testcases');
 
 Litmus::DB::Testcase->columns(Primary => qw/testcase_id/);
 Litmus::DB::Testcase->columns(Essential => qw/summary details enabled community_enabled format_id regression_bug_id product_id steps expected_results author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
-Litmus::DB::Testcase->columns(TEMP => qw //);
+Litmus::DB::Testcase->columns(TEMP => qw /relevance subgroup_name/);
 
 Litmus::DB::Testcase->column_alias("testcase_id", "testid");
 Litmus::DB::Testcase->column_alias("testcase_id", "test_id");
@@ -73,21 +73,23 @@ WHERE
 });
 
 __PACKAGE__->set_sql(ByTestgroup => qq{
-SELECT t.* 
-FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg
+SELECT t.*, sg.name as subgroup_name
+FROM testcases t, testcase_subgroups tsg, subgroup_testgroups sgtg, subgroups sg
 WHERE 
   tsg.testcase_id=t.testcase_id AND
   tsg.subgroup_id=sgtg.subgroup_id AND
+  tsg.subgroup_id = sg.subgroup_id AND
   sgtg.testgroup_id = ?
-  ORDER BY tsg.sort_order ASC
+  ORDER BY sgtg.sort_order ASC, tsg.sort_order ASC
 });
 
 __PACKAGE__->set_sql(EnabledBySubgroup => qq{
 SELECT t.* 
 FROM testcases t, testcase_subgroups tsg
 WHERE 
+  tsg.testcase_id=t.testcase_id AND
+  tsg.subgroup_id=sgtg.subgroup_id AND
   tsg.subgroup_id=? AND 
-  tsg.testcase_id=t.testcase_id AND 
   t.enabled=1 
   ORDER BY tsg.sort_order ASC
 });
@@ -96,11 +98,12 @@ __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
 SELECT t.* 
 FROM testcases t, testcase_subgroups tsg
 WHERE 
+  tsg.testcase_id=t.testcase_id AND
+  tsg.subgroup_id=sgtg.subgroup_id AND
   tsg.subgroup_id=? AND 
-  tsg.testcase_id=t.testcase_id AND 
   t.enabled=1 AND 
   t.community_enabled=1
-ORDER BY tsg.sort_order ASC, t.testcase_id ASC
+ORDER BY tsg.sort_order ASC
 });
 
 #########################################################################

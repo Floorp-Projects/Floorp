@@ -170,20 +170,28 @@ function populateTestcase(data) {
   }
 
   var enabled_em = document.getElementById('editform_enabled')
+  var enabled_display_em = document.getElementById('enabled_display')
   if (testcase.enabled == 1) {
     enabled_em.checked = true;
+    enabled_display_em.checked = true;
   } else {
     enabled_em.checked = false;
- } 
- var communityenabled_em = document.getElementById('editform_communityenabled')
- if (testcase.community_enabled == 1) {
+    enabled_display_em.checked = false;
+  } 
+  var communityenabled_em = document.getElementById('editform_communityenabled')
+  var communityenabled_display_em = document.getElementById('community_enabled_display')
+  if (testcase.community_enabled == 1) {
     communityenabled_em.checked = true;
+    communityenabled_display_em.checked = true;
   } else {
     communityenabled_em.checked = false;
+    communityenabled_display_em.checked = false;
   }
   if (testcase.regression_bug_id) {
+    document.getElementById('regression_bug_id_display').innerHTML = '<a href="' + generateBugLink(testcase.regression_bug_id) + '">' + testcase.regression_bug_id + '</a>';
     document.getElementById('editform_regression_bug_id').value = testcase.regression_bug_id;
   } else {
+    document.getElementById('regression_bug_id_display').innerHTML = 'None specified';
     document.getElementById('editform_regression_bug_id').value = "";
   }
   setAuthor(testcase.author_id.user_id);
@@ -256,4 +264,8 @@ function checkFormContents(f) {
           verifySelected(f.product, 'Product') &&
           verifySelected(f.editform_author_id, 'Author')
          );
+}
+
+function generateBugLink(bugID) {
+  return 'https://bugzilla.mozilla.org?show_bug.cgi?id=' + bugID;
 }
