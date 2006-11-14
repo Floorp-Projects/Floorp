@@ -2271,6 +2271,9 @@ function handleURLBarRevert()
 }
 
 function handleURLBarCommand(aTriggeringEvent) {
+  if (!gURLBar.value)
+    return;
+
   var postData = { };
   canonizeUrl(aTriggeringEvent, postData);
 
