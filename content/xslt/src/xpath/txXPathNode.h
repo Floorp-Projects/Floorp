@@ -64,6 +64,7 @@ public:
     {
         return !(*this == aNode);
     }
+    ~txXPathNode();
 
 private:
     friend class txNodeSet;
@@ -71,24 +72,48 @@ private:
     friend class txXPathNodeUtils;
     friend class txXPathTreeWalker;
 
+    txXPathNode(const txXPathNode& aNode);
+
 #ifdef TX_EXE
     txXPathNode(NodeDefinition* aNode) : mInner(aNode)
     {
     }
-    txXPathNode(const txXPathNode& aNode);
 
     NodeDefinition* mInner;
 #else
     txXPathNode(nsIDocument* aDocument) : mNode(aDocument),
+                                          mRefCountRoot(0),
                                           mIndex(eDocument)
     {
+        MOZ_COUNT_CTOR(txXPathNode);
     }
-    txXPathNode(nsIContent* aContent, PRUint32 aIndex = eContent)
-        : mNode(aContent),
+    txXPathNode(nsINode *aNode, PRUint32 aIndex, nsINode *aRoot)
+        : mNode(aNode),
+          mRefCountRoot(aRoot ? 1 : 0),
           mIndex(aIndex)
     {
+        MOZ_COUNT_CTOR(txXPathNode);
+        if (aRoot) {
+            NS_ADDREF(aRoot);
+        }
     }
-    txXPathNode(const txXPathNode& aNode);
+
+    static nsINode *RootOf(nsINode *aNode)
+    {
+        nsINode *ancestor, *root = aNode;
+        while ((ancestor = root->GetNodeParent())) {
+            root = ancestor;
+        }
+        return root;
+    }
+    nsINode *Root() const
+    {
+        return RootOf(mNode);
+    }
+    nsINode *GetRootToAddRef() const
+    {
+        return mRefCountRoot ? Root() : nsnull;
+    }
 
     PRBool isDocument() const
     {
@@ -116,11 +141,13 @@ private:
 
     enum PositionType
     {
-        eDocument = (PRUint32)-2,
-        eContent = (PRUint32)-1
+        eDocument = (1 << 30),
+        eContent = eDocument - 1
     };
+
     nsINode* mNode;
-    PRUint32 mIndex;
+    PRUint32 mRefCountRoot : 1;
+    PRUint32 mIndex : 31;
 #endif
 };
 
@@ -154,6 +181,49 @@ txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
 #else
     return nsContentUtils::NameSpaceManager()->
         GetNameSpaceURI(aID, aResult);
+#endif
+}
+
+#ifdef TX_EXE
+inline
+txXPathNode::txXPathNode(const txXPathNode& aNode)
+    : mInner(aNode.mInner)
+{
+}
+#else
+inline
+txXPathNode::txXPathNode(const txXPathNode& aNode)
+  : mNode(aNode.mNode),
+    mRefCountRoot(aNode.mRefCountRoot),
+    mIndex(aNode.mIndex)
+{
+    MOZ_COUNT_CTOR(txXPathNode);
+    if (mRefCountRoot) {
+        NS_ADDREF(Root());
+    }
+}
+#endif
+
+inline
+txXPathNode::~txXPathNode()
+{
+#ifdef TX_EXE
+#else
+    MOZ_COUNT_DTOR(txXPathNode);
+    if (mRefCountRoot) {
+        nsINode *root = Root();
+        NS_RELEASE(root);
+    }
+#endif
+}
+
+inline PRBool
+txXPathNode::operator==(const txXPathNode& aNode) const
+{
+#ifdef TX_EXE
+    return (mInner == aNode.mInner);
+#else
+    return mIndex == aNode.mIndex && mNode == aNode.mNode;
 #endif
 }
 

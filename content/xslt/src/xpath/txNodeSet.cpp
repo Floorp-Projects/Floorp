@@ -45,6 +45,24 @@
  * Implementation of an XPath nodeset
  */
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+#define LOG_CHUNK_MOVE(_start, _new_start, _count)            \
+{                                                             \
+    txXPathNode *start = NS_CONST_CAST(txXPathNode*, _start); \
+    while (start < _start + _count) {                         \
+        NS_LogDtor(start, "txXPathNode", sizeof(*start));     \
+        ++start;                                              \
+    }                                                         \
+    start = NS_CONST_CAST(txXPathNode*, _new_start);          \
+    while (start < _new_start + _count) {                     \
+        NS_LogCtor(start, "txXPathNode", sizeof(*start));     \
+        ++start;                                              \
+    }                                                         \
+}
+#else
+#define LOG_CHUNK_MOVE(_start, _new_start, _count)
+#endif
+
 static const PRInt32 kTxNodeSetMinSize = 4;
 static const PRInt32 kTxNodeSetGrowFactor = 2;
 
@@ -96,10 +114,7 @@ txNodeSet::~txNodeSet()
     delete [] mMarks;
 
     if (mStartBuffer) {
-        while (mStart < mEnd) {
-            mStart->~txXPathNode();
-            ++mStart;
-        }
+        destroyElements(mStart, mEnd);
 
         nsMemory::Free(mStartBuffer);
     }
@@ -131,6 +146,7 @@ nsresult txNodeSet::add(const txXPathNode& aNode)
     pos = mStart + offset;
 
     if (moveSize > 0) {
+        LOG_CHUNK_MOVE(pos, pos + 1, moveSize);
         memmove(pos + 1, pos, moveSize * sizeof(txXPathNode));
     }
 
@@ -142,13 +158,13 @@ nsresult txNodeSet::add(const txXPathNode& aNode)
 
 nsresult txNodeSet::add(const txNodeSet& aNodes)
 {
-    return add(aNodes, copyElements);
+    return add(aNodes, copyElements, nsnull);
 }
 
 nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
 {
     // failure is out-of-memory, transfer didn't happen
-    nsresult rv = add(*aNodes, transferElements);
+    nsresult rv = add(*aNodes, transferElements, destroyElements);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef TX_DONT_RECYCLE_BUFFER
@@ -203,7 +219,8 @@ nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
  * check for sequences of duplicate nodes, which can be optimized.
  *
  */
-nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer)
+nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer,
+                        destroyOp aDestroy)
 {
     NS_ASSERTION(mDirection == kForward,
                  "only append(aNode) is supported on reversed nodesets");
@@ -244,12 +261,17 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer)
             pos = findPosition(thisPos[-1], aNodes.mStart, otherPos, dupe);
 
             if (dupe) {
+                const txXPathNode *deletePos = thisPos;
                 --thisPos; // this is already added
                 // check dupe sequence
                 while (thisPos > mStart && pos > aNodes.mStart &&
                        thisPos[-1] == pos[-1]) {
                     --thisPos;
                     --pos;
+                }
+
+                if (aDestroy) {
+                    aDestroy(thisPos, deletePos);
                 }
             }
         }
@@ -271,12 +293,17 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer)
             pos = findPosition(otherPos[-1], mStart, thisPos, dupe);
 
             if (dupe) {
+                const txXPathNode *deletePos = otherPos;
                 --otherPos; // this is already added
                 // check dupe sequence
                 while (otherPos > aNodes.mStart && pos > mStart &&
                        otherPos[-1] == pos[-1]) {
                     --otherPos;
                     --pos;
+                }
+
+                if (aDestroy) {
+                    aDestroy(otherPos, deletePos);
                 }
             }
         }
@@ -289,6 +316,7 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer)
         count = thisPos - pos;
         if (count > 0) {
             insertPos -= count;
+            LOG_CHUNK_MOVE(pos, insertPos, count);
             memmove(insertPos, pos, count * sizeof(txXPathNode));
             thisPos -= count;
         }
@@ -396,6 +424,7 @@ txNodeSet::sweep()
         }
         // move chunk
         if (chunk > 0) {
+            LOG_CHUNK_MOVE(mStart + pos - chunk, insertion, chunk);
             memmove(insertion, mStart + pos - chunk,
                     chunk * sizeof(txXPathNode));
             insertion += chunk;
@@ -412,10 +441,7 @@ txNodeSet::sweep()
 void
 txNodeSet::clear()
 {
-    while (mStart < mEnd) {
-        mStart->~txXPathNode();
-        ++mStart;
-    }
+    destroyElements(mStart, mEnd);
 #ifdef TX_DONT_RECYCLE_BUFFER
     if (mStartBuffer) {
         nsMemory::Free(mStartBuffer);
@@ -517,6 +543,7 @@ PRBool txNodeSet::ensureGrowSize(PRInt32 aSize)
         if (mDirection == kReversed) {
             dest = mEndBuffer - oldSize;
         }
+        LOG_CHUNK_MOVE(mStart, dest, oldSize);
         memmove(dest, mStart, oldSize * sizeof(txXPathNode));
         mStart = dest;
         mEnd = dest + oldSize;
@@ -545,6 +572,7 @@ PRBool txNodeSet::ensureGrowSize(PRInt32 aSize)
     }
 
     if (oldSize > 0) {
+        LOG_CHUNK_MOVE(mStart, dest, oldSize);
         memcpy(dest, mStart, oldSize * sizeof(txXPathNode));
     }
 
@@ -623,5 +651,6 @@ void
 txNodeSet::transferElements(txXPathNode* aDest,
                             const txXPathNode* aStart, const txXPathNode* aEnd)
 {
+    LOG_CHUNK_MOVE(aStart, aDest, (aEnd - aStart));
     memcpy(aDest, aStart, (aEnd - aStart) * sizeof(txXPathNode));
 }

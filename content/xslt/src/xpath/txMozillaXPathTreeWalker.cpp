@@ -86,16 +86,13 @@ txXPathTreeWalker::moveToRoot()
         mPosition.mNode = root;
     }
     else {
-        nsINode *parent, *current = mPosition.mNode;
-        while ((parent = current->GetNodeParent())) {
-            current = parent;
-        }
+        nsINode *rootNode = mPosition.Root();
 
-        NS_ASSERTION(current->IsNodeOfType(nsINode::eCONTENT),
+        NS_ASSERTION(rootNode->IsNodeOfType(nsINode::eCONTENT),
                      "root of subtree wasn't an nsIContent");
 
         mPosition.mIndex = txXPathNode::eContent;
-        mPosition.mNode = current;
+        mPosition.mNode = rootNode;
     }
 
     mCurrentIndex = kUnknownIndex;
@@ -123,16 +120,13 @@ txXPathTreeWalker::moveToElementById(const nsAString& aID)
     }
     else {
         // We're in a disconnected subtree, search only that subtree.
-        nsINode *parent, *current = mPosition.mNode;
-        while ((parent = current->GetNodeParent())) {
-            current = parent;
-        }
+        nsINode *rootNode = mPosition.Root();
 
-        NS_ASSERTION(current->IsNodeOfType(nsINode::eCONTENT),
+        NS_ASSERTION(rootNode->IsNodeOfType(nsINode::eCONTENT),
                      "root of subtree wasn't an nsIContent");
 
         content = nsContentUtils::MatchElementId(
-            NS_STATIC_CAST(nsIContent*, current), aID);
+            NS_STATIC_CAST(nsIContent*, rootNode), aID);
     }
 
     if (!content) {
@@ -348,17 +342,6 @@ txXPathTreeWalker::moveToSibling(PRInt32 aDir)
     mCurrentIndex = newIndex;
 
     return PR_TRUE;
-}
-
-txXPathNode::txXPathNode(const txXPathNode& aNode) : mIndex(aNode.mIndex),
-                                                     mNode(aNode.mNode)
-{
-}
-
-PRBool
-txXPathNode::operator==(const txXPathNode& aNode) const
-{
-    return mIndex == aNode.mIndex && mNode == aNode.mNode;
 }
 
 /* static */
@@ -695,7 +678,6 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
     nsINode* node = aNode.mNode;
     nsINode* otherNode = aOtherNode.mNode;
     nsINode* parent, *otherParent;
-    PRInt32 index, otherIndex;
     while (node && otherNode) {
         parent = node->GetNodeParent();
         otherParent = otherNode->GetNodeParent();
@@ -764,7 +746,7 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
 
 /* static */
 txXPathNode*
-txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
+txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, PRBool aKeepRootAlive)
 {
     PRUint16 nodeType;
     aNode->GetNodeType(&nodeType);
@@ -779,11 +761,13 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
             return nsnull;
         }
 
+        nsINode* root = aKeepRootAlive ? txXPathNode::RootOf(parent) : nsnull;
+
         PRUint32 i, total = parent->GetAttrCount();
         for (i = 0; i < total; ++i) {
             const nsAttrName* name = parent->GetAttrNameAt(i);
             if (nodeInfo->Equals(name->LocalName(), name->NamespaceID())) {
-                return new txXPathNode(parent, i);
+                return new txXPathNode(parent, i, root);
             }
         }
 
@@ -792,13 +776,21 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
         return nsnull;
     }
 
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+    PRUint32 index;
+    nsINode* root = aKeepRootAlive ? node : nsnull;
+
     if (nodeType == nsIDOMNode::DOCUMENT_NODE) {
-        nsCOMPtr<nsIDocument> document = do_QueryInterface(aNode);
-        return new txXPathNode(document);
+        index = txXPathNode::eDocument;
+    }
+    else {
+        index = txXPathNode::eContent;
+        if (root) {
+            root = txXPathNode::RootOf(root);
+        }
     }
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    return new txXPathNode(content);
+    return new txXPathNode(node, index, root);
 }
 
 /* static */

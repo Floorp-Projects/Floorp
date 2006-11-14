@@ -160,7 +160,8 @@ public:
 class txXPathNativeNode
 {
 public:
-    static txXPathNode* createXPathNode(nsIDOMNode* aNode);
+    static txXPathNode* createXPathNode(nsIDOMNode* aNode,
+                                        PRBool aKeepRootAlive = PR_FALSE);
     static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);
     static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult);
     static nsIContent* getContent(const txXPathNode& aNode);
@@ -215,8 +216,22 @@ txXPathTreeWalker::moveTo(const txXPathTreeWalker& aWalker)
 #ifdef TX_EXE
     mPosition.mInner = aWalker.mPosition.mInner;
 #else
+    nsINode *root = nsnull;
+    if (mPosition.mRefCountRoot) {
+        root = mPosition.Root();
+    }
     mPosition.mIndex = aWalker.mPosition.mIndex;
+    mPosition.mRefCountRoot = aWalker.mPosition.mRefCountRoot;
     mPosition.mNode = aWalker.mPosition.mNode;
+    nsINode *newRoot = nsnull;
+    if (mPosition.mRefCountRoot) {
+        newRoot = mPosition.Root();
+    }
+    if (root != newRoot) {
+        NS_IF_ADDREF(newRoot);
+        NS_IF_RELEASE(root);
+    }
+
     mCurrentIndex = aWalker.mCurrentIndex;
     mDescendants.Clear();
 #endif
