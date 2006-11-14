@@ -314,7 +314,7 @@ namespace avmplus
  		MODRM(r, disp, base);
 	}
 	
-	void CodegenMIR::XORPD(Register dest, intptr addr) 
+	void CodegenMIR::XORPD(Register dest, uintptr addr) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE

@@ -128,7 +128,7 @@ namespace MMgc
 		{
 			// space made in ctor
 			item = GetRealPointer(item);
-			return ((intptr) item & 0xFFF) == 0;
+			return ((uintptr) item & 0xFFF) == 0;
 		}
 
 		inline void *LargeAlloc(size_t size)

@@ -142,7 +142,7 @@ namespace avmplus
 		// containing a name + namespace as well as a notification function.
 		// E4XNodeAux *
 		// String *
-		intptr m_nameOrAux;
+		uintptr m_nameOrAux;
 		#define AUXBIT 0x1
 
 	public:

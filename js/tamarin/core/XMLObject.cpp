@@ -2972,7 +2972,7 @@ namespace avmplus
 			for (uint32 i = 0; i < nsArray->getLength(); i++)
 			{
 				Namespace *ns = AvmCore::atomToNamespace (nsArray->getAt(i));
-				AvmAssert(intptr(ns));
+				AvmAssert(uintptr(ns));
 #ifdef STRING_DEBUG
 				Stringp s1 = ns->getURI();
 				Stringp s2 = uri;

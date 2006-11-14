@@ -166,7 +166,7 @@ namespace MMgc
 		if (res == MAP_FAILED)
 			address = 0;
 		else
-			address = (void*)( (intptr)address + size );
+			address = (void*)( (uintptr)address + size );
 			
 		return address;		
 	}

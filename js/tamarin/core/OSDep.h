@@ -49,8 +49,8 @@ namespace avmplus
 		static double daylightSavingTA(double time);
 		static uint64 currentTimeMillis();
 
-		static intptr startIntWriteTimer(uint32 millis, int *addr);
-		static void stopTimer(intptr handle);
+		static uintptr startIntWriteTimer(uint32 millis, int *addr);
+		static void stopTimer(uintptr handle);
 	};
 }
 

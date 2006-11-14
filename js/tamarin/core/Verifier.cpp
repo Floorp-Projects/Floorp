@@ -282,7 +282,7 @@ namespace avmplus
 
 			bool unreachable = false;
 			FrameState* blockState;
-			if ( blockStates && (blockState = blockStates->get((intptr)pc)) != 0 )
+			if ( blockStates && (blockState = blockStates->get((uintptr)pc)) != 0 )
 			{
 				// send a bbend prior to the merge
 				if (mir) mir->emitBlockEnd(state);
@@ -312,7 +312,7 @@ namespace avmplus
 
 				if (!blockState->targetOfBackwardsBranch)
 				{
-					blockStates->remove((intptr)pc);
+					blockStates->remove((uintptr)pc);
 					core->GetGC()->Free(blockState);
 				}
 			}
@@ -382,7 +382,7 @@ namespace avmplus
 							// Set these registers to killed in the catch state
 							if (pc == code_pos + handler->from)
 							{
-								FrameState *catchState = blockStates->get((intptr)target);
+								FrameState *catchState = blockStates->get((uintptr)target);
 								AvmAssert(catchState != 0);
 
                                 for (const byte *temp = pc; temp <= code_pos + handler->to; )
@@ -614,7 +614,7 @@ namespace avmplus
 				//checkStack(0,0)
 				#ifdef DEBUGGER
 				Atom filename = checkCpoolOperand(imm30, kStringType);
-				if (mir) mir->emit(state, opcode, (intptr)AvmCore::atomToString(filename));
+				if (mir) mir->emit(state, opcode, (uintptr)AvmCore::atomToString(filename));
 				#endif
 				break;
 			}
@@ -625,7 +625,7 @@ namespace avmplus
 				if (!info->isFlagSet(AbstractFunction::SETS_DXNS))
 					verifyFailed(kIllegalSetDxns, core->toErrorString(info));
 				Atom uri = checkCpoolOperand(imm30, kStringType);
-				if (mir) mir->emit(state, opcode, (intptr)AvmCore::atomToString(uri));
+				if (mir) mir->emit(state, opcode, (uintptr)AvmCore::atomToString(uri));
 				break;
 			}
 
@@ -647,7 +647,7 @@ namespace avmplus
 				if (index > 0 && index < pool->constantStringCount)
 				{
 					Stringp value = pool->cpool_string[index];
-					if (mir)mir->emitIntConst(state, sp+1, (intptr)value);
+					if (mir)mir->emitIntConst(state, sp+1, (uintptr)value);
 					state->push(STRING_TYPE, value != NULL);
 				}
 				else
@@ -722,7 +722,7 @@ namespace avmplus
 				if (index > 0 && index < pool->constantNsCount)
 				{
 					Namespace* value = pool->cpool_ns[index];
-					if (mir)mir->emitIntConst(state, sp+1, (intptr)value);
+					if (mir)mir->emitIntConst(state, sp+1, (uintptr)value);
 					state->push(NAMESPACE_TYPE, value != NULL);
 				}
 				else
@@ -953,7 +953,7 @@ namespace avmplus
 				{
 					mir->emitSetDxns(state);
 					emitCoerce(CLASS_TYPE, state->sp());
-					mir->emit(state, opcode, (intptr)(void*)pool->cinits[imm30], sp, ctraits);
+					mir->emit(state, opcode, (uintptr)(void*)pool->cinits[imm30], sp, ctraits);
 				}
 				state->pop_push(1, ctraits, true);
 				break;
@@ -976,14 +976,14 @@ namespace avmplus
 				if (script != (AbstractFunction*)BIND_NONE && script != (AbstractFunction*)BIND_AMBIGUOUS)
 				{
 					// found a single matching traits
-					if (mir) mir->emit(state, opcode, (intptr)&multiname, sp+1, script->declaringTraits);
+					if (mir) mir->emit(state, opcode, (uintptr)&multiname, sp+1, script->declaringTraits);
 					state->push(script->declaringTraits, true);
 				}
 				else
 				{
 					// no traits, or ambiguous reference.  use Object, anticipating
 					// a runtime exception
-					if (mir) mir->emit(state, opcode, (intptr)&multiname, sp+1, OBJECT_TYPE);
+					if (mir) mir->emit(state, opcode, (uintptr)&multiname, sp+1, OBJECT_TYPE);
 					state->push(OBJECT_TYPE, true);
 				}
 				break;
@@ -1046,7 +1046,7 @@ namespace avmplus
 				if (mir)
 				{
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname);
+					mir->emit(state, opcode, (uintptr)&multiname);
 				}
 				state->pop(n);
 
@@ -1078,7 +1078,7 @@ namespace avmplus
 				if (mir)
 				{
 					emitCheckNull(sp-(n-1));
-					mir->emit(state, opcode, (intptr)&multiname, 0, NULL);
+					mir->emit(state, opcode, (uintptr)&multiname, 0, NULL);
 				}
 				state->pop_push(n, NULL);
 				break;
@@ -1107,7 +1107,7 @@ namespace avmplus
 				if (mir) 
 				{
 					emitCheckNull(sp-(n-1));
-					mir->emit(state, opcode, (intptr)&multiname, 0, BOOLEAN_TYPE);
+					mir->emit(state, opcode, (uintptr)&multiname, 0, BOOLEAN_TYPE);
 				}
 				state->pop_push(n, BOOLEAN_TYPE);
 				break;
@@ -1128,7 +1128,7 @@ namespace avmplus
 					if (t && t->isMachineType)
 						resultType = OBJECT_TYPE;
 					if (mir)
-						mir->emit(state, OP_astype, (intptr)t, index, resultType);
+						mir->emit(state, OP_astype, (uintptr)t, index, resultType);
 					state->pop_push(1, t);
 				}
 
@@ -1216,7 +1216,7 @@ namespace avmplus
 				checkStack(1,1);
 				// resolve operand into a traits, and test if value is that type
 				Traits* itraits = checkTypeName(imm30); // CONSTANT_Multiname
-				if (mir) mir->emit(state, opcode, (intptr)itraits, sp, BOOLEAN_TYPE);
+				if (mir) mir->emit(state, opcode, (uintptr)itraits, sp, BOOLEAN_TYPE);
 				state->pop();
 				state->pop();
 				state->push(OBJECT_TYPE);
@@ -1492,7 +1492,7 @@ namespace avmplus
 				if (mir) 
 				{
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname, argc, NULL);
+					mir->emit(state, opcode, (uintptr)&multiname, argc, NULL);
 				}
 				state->pop_push(n, NULL);
 				if (opcode == OP_callpropvoid)
@@ -1543,7 +1543,7 @@ namespace avmplus
 				if (mir) 
 				{
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname, argc, NULL);
+					mir->emit(state, opcode, (uintptr)&multiname, argc, NULL);
 				}
 				state->pop_push(n, NULL);
 				break;
@@ -1595,7 +1595,7 @@ namespace avmplus
 				if (mir)
 				{
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname, argc, NULL);
+					mir->emit(state, opcode, (uintptr)&multiname, argc, NULL);
 				}
 				state->pop_push(n, NULL);
 				if (opcode == OP_callsupervoid)
@@ -1659,7 +1659,7 @@ namespace avmplus
 				if (mir) 
 				{
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname, 0, propType);
+					mir->emit(state, opcode, (uintptr)&multiname, 0, propType);
 				}
 				state->pop_push(n, propType);
 				break;
@@ -1722,7 +1722,7 @@ namespace avmplus
 					#endif
 
 					mir->emitSetContext(state, NULL);
-					mir->emit(state, opcode, (intptr)&multiname);
+					mir->emit(state, opcode, (uintptr)&multiname);
 				}
 
 				state->pop(n);
@@ -2219,7 +2219,7 @@ namespace avmplus
 
 				const byte* new_pc = (const byte*) imm30;
 				#ifdef AVMPLUS_64BIT
-				new_pc = (const byte *) (intptr(new_pc) | (((intptr) imm30b) << 32));
+				new_pc = (const byte *) (uintptr(new_pc) | (((uintptr) imm30b) << 32));
 				const byte* new_code_end = new_pc + AvmCore::readU30 (nextpc);
 				#else
 				const byte* new_code_end = new_pc + imm30b;
@@ -2411,7 +2411,7 @@ namespace avmplus
 							else
 							{
 								// found a single matching traits
-								mir->emit(state, OP_finddef, (intptr)&multiname, state->sp()+1, script->declaringTraits);
+								mir->emit(state, OP_finddef, (uintptr)&multiname, state->sp()+1, script->declaringTraits);
 							}
 						}
 						state->push(script->declaringTraits, true);
@@ -2426,7 +2426,7 @@ namespace avmplus
 		{
 			uint32 n=1;
 			checkPropertyMultiname(n, multiname);
-			if (mir) mir->emit(state, opcode, (intptr)&multiname, 0, OBJECT_TYPE);
+			if (mir) mir->emit(state, opcode, (uintptr)&multiname, 0, OBJECT_TYPE);
 			state->pop_push(n-1, OBJECT_TYPE, true);
 		}
 	}
@@ -2478,7 +2478,7 @@ namespace avmplus
 		if (mir)
 		{
 			mir->emitSetContext(state, NULL);
-			mir->emit(state, OP_getproperty, (intptr)&multiname, 0, propType);
+			mir->emit(state, OP_getproperty, (uintptr)&multiname, 0, propType);
 		}
 		state->pop_push(n, propType);
 	}
@@ -2562,11 +2562,11 @@ namespace avmplus
 		{
 			blockStates = new (core->GetGC()) SortedIntMap<FrameState*>(core->GetGC(), 128);
 		}
-		if ( (targetState = blockStates->get((intptr)target)) == 0 ) 
+		if ( (targetState = blockStates->get((uintptr)target)) == 0 ) 
 		{
 			targetState = newFrameState();
 			targetState->pc = target - code_pos;
-			blockStates->put((intptr)target, targetState);
+			blockStates->put((uintptr)target, targetState);
 			labelCount++;
 		}
 		return targetState;

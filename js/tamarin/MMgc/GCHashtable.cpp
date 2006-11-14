@@ -104,7 +104,7 @@ namespace MMgc
 		#endif
 		// Note: Mask off MSB to avoid negative indices.  Mask off bottom
 		// 2 bits because of alignment.  Double it because names, values stored adjacently.
-        unsigned i = ((0x7FFFFFF8 & (intptr)key)>>1) & bitmask;  
+        unsigned i = ((0x7FFFFFF8 & (uintptr)key)>>1) & bitmask;  
         const void *k;
         while ((k=table[i]) != key && k != NULL)
 		{

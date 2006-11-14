@@ -553,7 +553,7 @@ namespace avmplus
 			return Multiname::format(core, ns, name);
 		else
 			return core->concatStrings(core->newString("Traits@"),
-									   core->formatAtomPtr((intptr)this));
+									   core->formatAtomPtr((uintptr)this));
 	}
 #endif
 
@@ -572,9 +572,9 @@ namespace avmplus
 		// 3 bits because it doesn't contribute to hash.
 
 		// [ed] math assumes t is 8-aligned!
-		AvmAssert((((intptr)t) & 7) == 0);
+		AvmAssert((((uintptr)t) & 7) == 0);
 
-		unsigned i = (((intptr)t)>>3) & bitMask;
+		unsigned i = (((uintptr)t)>>3) & bitMask;
         Traitsp k;
         while ((k=set[i]) != t && k != NULL)
 		{
@@ -857,7 +857,7 @@ namespace avmplus
 			{
 				// build conflict stub
 				CodegenMIR mir(pool);
-				imt[i] = BIND_ITRAMP | (intptr)mir.emitImtThunk(e);
+				imt[i] = BIND_ITRAMP | (uintptr)mir.emitImtThunk(e);
 				AvmAssert((imt[i]&7)==BIND_ITRAMP); // addr must be 8-aligned
 			}
 		}

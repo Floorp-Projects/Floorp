@@ -144,7 +144,7 @@ namespace avmplus
 		return *this;
 	}
 
-	PrintWriter& PrintWriter::operator<< (intptr value)
+	PrintWriter& PrintWriter::operator<< (uint64 value)
 	{
 		#ifdef AVMPLUS_64BIT
 		AvmAssert(0); // convertInteger routine needs to be upgraded to handle 64-bit ints
@@ -254,18 +254,7 @@ namespace avmplus
 		AvmAssert(0); // this is only supported in AVMPLUS_VERBOSE builds
 		return *this;
 #endif
-	}
-
-	PrintWriter& PrintWriter::operator<< (Atom atom)
-	{
-#ifdef AVMPLUS_VERBOSE
-		return *this << m_core->format(atom);
-#else
-		(void)atom;
-		AvmAssert(0); // this is only supported in AVMPLUS_VERBOSE builds
-		return *this;
-#endif
-	}
+	}	
 
 	void PrintWriter::writeHexNibble(uint8 value)
 	{

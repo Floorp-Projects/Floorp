@@ -153,7 +153,7 @@ namespace MMgc
 	/* static */
 	bool GCLargeAlloc::ConservativeGetMark(const void *item, bool bogusPointerReturnValue)
 	{
-		if(((intptr) item & 0xfff) == sizeof(LargeBlock))
+		if(((uintptr) item & 0xfff) == sizeof(LargeBlock))
 		{
 			return GetMark(item);
 		}

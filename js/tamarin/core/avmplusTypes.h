@@ -51,7 +51,6 @@ namespace avmplus
 	typedef unsigned int     uint32; 
 	typedef signed int       sint32;
 	typedef signed int       int32;
-	typedef unsigned long	 intptr;
 	#ifdef _MSC_VER
 	typedef __int64          int64;
 	typedef __int64          sint64;
@@ -74,9 +73,24 @@ namespace avmplus
     #define NULL 0
     #endif
 
-	typedef signed long          Atom;
-	typedef signed long			 Binding;
-	typedef signed long          CodeContextAtom;
+	// math friendly pointer (64 bits in LP 64 systems)
+	#if defined (_MSC_VER) && (_MSC_VER >= 1300)
+	    #define AVMPLUS_TYPE_IS_POINTER_SIZED __w64
+	#else
+	    #define AVMPLUS_TYPE_IS_POINTER_SIZED
+	#endif	
+	
+	#ifdef AVMPLUS_64BIT
+	typedef AVMPLUS_TYPE_IS_POINTER_SIZED uint64 uintptr;
+	typedef AVMPLUS_TYPE_IS_POINTER_SIZED int64 sintptr;
+	#else
+	typedef AVMPLUS_TYPE_IS_POINTER_SIZED uint32 uintptr;
+	typedef AVMPLUS_TYPE_IS_POINTER_SIZED int32 sintptr;
+	#endif
+	
+	typedef sintptr          Atom;
+	typedef sintptr			 Binding;
+	typedef sintptr          CodeContextAtom;
 
 	inline uint32 urshift(Atom atom, int amount)
 	{

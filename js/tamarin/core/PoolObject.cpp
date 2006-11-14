@@ -199,7 +199,7 @@ namespace avmplus
 		case CONSTANT_Double:
 			if( index >= constantDoubleCount )
 				toplevel->throwVerifyError(kCpoolIndexRangeError, core->toErrorString(index), core->toErrorString(constantDoubleCount));
-			return kDoubleType|(intptr)cpool_double[index];
+			return kDoubleType|(uintptr)cpool_double[index];
 
 		case CONSTANT_Utf8:
 			if( index >= constantStringCount )

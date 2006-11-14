@@ -60,7 +60,7 @@ namespace avmplus
 		void setDelegate(ScriptObject *d) { WBRC(MMgc::GC::GetGC(this), this, &delegate, d); }
 
 		Atom atom() const {
-			return kObjectType|(intptr)this; 
+			return kObjectType|(uintptr)this; 
 		}
 
 		virtual Atom toAtom() const {

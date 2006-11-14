@@ -115,7 +115,7 @@ namespace avmplus
 		PrintWriter& operator<< (char value);
 		PrintWriter& operator<< (wchar value);		
 		PrintWriter& operator<< (int value);
-		PrintWriter& operator<< (intptr value);
+		PrintWriter& operator<< (uint64 value);
 		PrintWriter& operator<< (uint32 value);
 		PrintWriter& operator<< (double value);
 		PrintWriter& operator<< (Stringp str);
@@ -149,7 +149,6 @@ namespace avmplus
 		PrintWriter& operator<< (const Traits* obj);
 		PrintWriter& operator<< (AbstractFunction* obj);
 		PrintWriter& operator<< (Multiname* obj);
-		PrintWriter& operator<< (Atom atom);
 		PrintWriter& operator<< (Namespace* str);
 	};
 }

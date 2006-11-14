@@ -79,7 +79,7 @@ namespace avmplus
 		{
 			// Take the address of a local variable to get
 			// stack pointer
-			intptr sp = (intptr)&core;
+			uintptr sp = (uintptr)&core;
 			if (sp < core->minstack)
 			{
 				env->vtable->traits->core->stackOverflow(env);
@@ -362,7 +362,7 @@ namespace avmplus
                 continue;
             case OP_pushdouble:
 				sp++;
-                sp[0] = kDoubleType|(intptr)cpool_double[readU30(pc)];
+                sp[0] = kDoubleType|(uintptr)cpool_double[readU30(pc)];
                 continue;
             case OP_pushnamespace:
                 sp++;
@@ -1419,7 +1419,7 @@ namespace avmplus
 				if (interruptable && core->interrupted)
 					env->interrupt();
 				#ifdef AVMPLUS_64BIT
-				const byte *target = (const byte *) (AvmCore::readU30(pc) | (intptr(AvmCore::readU30(pc)) << 32));
+				const byte *target = (const byte *) (AvmCore::readU30(pc) | (uintptr(AvmCore::readU30(pc)) << 32));
 				#else
 				const byte *target = (const byte *) AvmCore::readU30(pc);
 				#endif
@@ -1521,21 +1521,21 @@ namespace avmplus
 		// stack
 		core->console << "                        stack:";
 		for (int i=stackBase; i <= sp; i++) {
-			core->console << " " << framep[i];
+			core->console << " " << core->format(framep[i]);
 		}
 		core->console << '\n';
 
         // scope chain
 		core->console << "                        scope: ";
 		for (int i=scopeBase; i <= scopep; i++) {
-            core->console << framep[i] << " ";
+            core->console << core->format(framep[i]) << " ";
         }
 		core->console << '\n';
 
         // locals
 		core->console << "                         locals: ";
 		for (int i=0; i < scopeBase; i++) {
-            core->console << framep[i] << " ";
+            core->console << core->format(framep[i]) << " ";
         }
 		core->console << '\n';
 
@@ -1548,7 +1548,7 @@ namespace avmplus
 		}
 #endif
 		core->console << off << ':';
-		AvmCore::formatOpcode(core->console, pc, opcode, off, pool);
+		core->formatOpcode(core->console, pc, opcode, off, pool);
 		core->console << '\n';
     }
 #endif

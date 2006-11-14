@@ -307,7 +307,7 @@ namespace MMgc
  
 	size_t DebugSize()
 	{ 
-	#ifdef MMGC_AMD64
+	#ifdef MMGC_64BIT
 		// Our writeback pointer is 8 bytes so we need to round up to the next 8 byte
 		// size.  (only 5 DWORDS are used)
 		return 6 * sizeof(int); 
@@ -381,7 +381,7 @@ namespace MMgc
 		mem += (size>>2);
 		*mem++ = 0xdeadbeef;
 		*mem = 0;
-	#ifdef MMGC_AMD64
+	#ifdef MMGC_64BIT
 		*(mem+1) = 0;
 		*(mem+2) = 0;
 	#endif	

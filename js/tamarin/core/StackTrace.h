@@ -59,7 +59,7 @@ namespace avmplus
 		    int linenum;
 		};
 		bool equals(StackTrace::Element *e, int depth);
-		static intptr hashCode(StackTrace::Element *e, int depth);
+		static uintptr hashCode(StackTrace::Element *e, int depth);
 
 		Element elements[1];
 	private:

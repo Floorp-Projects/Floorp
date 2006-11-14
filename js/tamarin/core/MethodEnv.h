@@ -257,7 +257,7 @@ namespace avmplus
 			VTable* const activation;
 			WeakKeyHashtable* const methodTable;
 		};
-		intptr activationOrMCTable;
+		uintptr activationOrMCTable;
 
 		// low 2 bits of activationOrMCTable
 		enum { kActivation=0, kMethodTable, kActivationMethodTablePair };
@@ -266,7 +266,7 @@ namespace avmplus
 		int getType() const { return activationOrMCTable&3; }
 		void setActivationOrMCTable(void *ptr, int type) 
 		{
-			WB(core()->GetGC(), this, &activationOrMCTable, (intptr)ptr|type);
+			WB(core()->GetGC(), this, &activationOrMCTable, (uintptr)ptr|type);
 		}
 	};
 

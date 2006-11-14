@@ -63,7 +63,19 @@ namespace MMgc
 	typedef signed   char  int8;
 
 	// math friendly pointer (64 bits in LP 64 systems)
-	typedef unsigned long intptr;
+	#if defined (_MSC_VER) && (_MSC_VER >= 1300)
+	    #define MMGC_TYPE_IS_POINTER_SIZED __w64
+	#else
+	    #define MMGC_TYPE_IS_POINTER_SIZED
+	#endif	
+	
+	#ifdef MMGC_64BIT
+	typedef MMGC_TYPE_IS_POINTER_SIZED uint64 uintptr;
+	typedef MMGC_TYPE_IS_POINTER_SIZED int64 sintptr;
+	#else
+	typedef MMGC_TYPE_IS_POINTER_SIZED uint32 uintptr;
+	typedef MMGC_TYPE_IS_POINTER_SIZED int32 sintptr;
+	#endif
 
 	/* wchar is our version of wchar_t, since wchar_t is different sizes
 	   on different platforms, but we want to use UTF-16 uniformly. */

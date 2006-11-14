@@ -72,7 +72,7 @@ namespace avmplus
 		return NULL;
 	}
 
-	intptr OSDep::startIntWriteTimer(uint32 millis, int *addr)
+	uintptr OSDep::startIntWriteTimer(uint32 millis, int *addr)
 	{
 		pthread_t p;
 		IntWriteTimerData *data = new IntWriteTimerData();
@@ -80,10 +80,10 @@ namespace avmplus
 		data->addr = addr;
 		pthread_create(&p, NULL, timerThread, data);
 		data->thread = p;		
-		return (intptr)data;
+		return (uintptr)data;
 	}
 
-	void OSDep::stopTimer(intptr handle)
+	void OSDep::stopTimer(uintptr handle)
 	{
 		IntWriteTimerData *data = (IntWriteTimerData*) handle;
 		data->addr = NULL;

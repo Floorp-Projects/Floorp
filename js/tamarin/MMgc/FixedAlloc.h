@@ -80,12 +80,12 @@ namespace MMgc
 				// assert that the freelist hasn't been tampered with (by writing to the first 4 bytes)
 				GCAssert(b->firstFree == NULL || 
 						(b->firstFree >= b->items && 
-						(((intptr)b->firstFree - (intptr)b->items) % b->size) == 0 && 
-						(intptr) b->firstFree < ((intptr)b & ~0xfff) + GCHeap::kBlockSize));
+						(((uintptr)b->firstFree - (uintptr)b->items) % b->size) == 0 && 
+						(uintptr) b->firstFree < ((uintptr)b & ~0xfff) + GCHeap::kBlockSize));
 #ifdef MEMORY_INFO				
 				// ensure previously used item wasn't written to
 				// -1 because write back pointer space isn't poisoned.
-#ifdef MMGC_AMD64				
+#ifdef MMGC_64BIT				
 				for(int i=3, n=(b->size>>2)-3; i<n; i++)
 #else
 				for(int i=3, n=(b->size>>2)-1; i<n; i++)
@@ -108,7 +108,7 @@ namespace MMgc
 				GCAssert(item != 0);
 				if(!IsFull(b)) {
 					// There are more items at the end of the block
-					b->nextItem = (void *) ((intptr)item+m_itemSize);
+					b->nextItem = (void *) ((uintptr)item+m_itemSize);
 #ifdef MEMORY_INFO
 					// space made in ctor
 					item = DebugDecorate(item, size + DebugSize(), 6);
@@ -145,7 +145,7 @@ namespace MMgc
 
 		static inline void Free(void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((uintptr)item & ~0xFFF);
 
 #ifdef MEMORY_INFO
 			item = DebugFree(item, 0xED, 6);
@@ -153,7 +153,7 @@ namespace MMgc
 
 #ifdef _DEBUG
 			// ensure that we are freeing a pointer on a item boundary
-			GCAssert(((intptr)item - (intptr)b->items) % b->alloc->m_itemSize == 0);
+			GCAssert(((uintptr)item - (uintptr)b->items) % b->alloc->m_itemSize == 0);
 #endif
 
 			// Add this item to the free list
@@ -190,7 +190,7 @@ namespace MMgc
 
 		static FixedAlloc *GetFixedAlloc(void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((uintptr)item & ~0xFFF);
 #ifdef _DEBUG
 			// Attempt to sanity check this ptr: numAllocs * size should be less than kBlockSize
 			GCAssertMsg(((b->numAlloc * b->size) < GCHeap::kBlockSize), "Size called on ptr not part of FixedBlock");
@@ -233,7 +233,7 @@ namespace MMgc
 
 		static inline size_t Size(const void *item)
 		{
-			FixedBlock *b = (FixedBlock*) ((intptr)item & ~0xFFF);
+			FixedBlock *b = (FixedBlock*) ((uintptr)item & ~0xFFF);
 #ifdef _DEBUG
 			// Attempt to sanity check this ptr: numAllocs * size should be less than kBlockSize
 			GCAssertMsg(((b->numAlloc * b->size) < GCHeap::kBlockSize), "Size called on ptr not part of FixedBlock");

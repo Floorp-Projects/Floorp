@@ -64,8 +64,8 @@ namespace avmplus
 		{ 
 			bytes.add(OP_abs_jump); 
 #ifdef AVMPLUS_64BIT
-			writeInt((int)(intptr)pc);
-			writeInt((int)(((intptr)pc) >> 32));
+			writeInt((int)(uintptr)pc);
+			writeInt((int)(((uintptr)pc) >> 32));
 #else			
 			writeInt((int)pc); 
 #endif			

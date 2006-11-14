@@ -331,7 +331,7 @@ namespace avmplus
  		MODRM(r, disp, base);
 	}
 	
-	void CodegenMIR::XORPD(Register dest, intptr addr) 
+	void CodegenMIR::XORPD(Register dest, uintptr addr) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -501,7 +501,7 @@ namespace avmplus
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
-			core->console.format("    %A  call  %A\n", mip, offset+(intptr)(mip+5));
+			core->console.format("    %A  call  %A\n", mip, offset+(uintptr)(mip+5));
 		#endif /* AVMPLUS_VERBOSE */
 
 		*mip++ = 0xE8;
@@ -974,7 +974,7 @@ namespace avmplus
 #endif
 
 		byte* next_ip = mip+4;  // branch rel. to next instr
-		CALL (info->m_handler_addr - (intptr)next_ip - 1);       // call the method as an instance method
+		CALL (info->m_handler_addr - (uintptr)next_ip - 1);       // call the method as an instance method
 
 #ifdef AVMPLUS_CDECL
 		int popAmount = (pushCount+1)*4;

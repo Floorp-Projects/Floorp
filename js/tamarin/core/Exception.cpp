@@ -120,7 +120,7 @@ namespace avmplus
 	
 	void ExceptionFrame::throwException(Exception *exception)
 	{
-		longjmp(jmpbuf, (intptr)exception);
+		longjmp(jmpbuf, (uintptr)exception);
 	}
 
 	void ExceptionFrame::beginCatch()

@@ -149,9 +149,9 @@ namespace avmplus
 			return pool->core;
 		}
 
-		intptr iid() const
+		uintptr iid() const
 		{
-			return ((intptr)this)>>3;
+			return ((uintptr)this)>>3;
 		}
 
 		bool usesCallerContext() const

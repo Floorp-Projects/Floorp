@@ -52,7 +52,7 @@
 		__asm { mov _stack,esp } ;\
 		MEMORY_BASIC_INFORMATION __mib;\
 		VirtualQuery(_stack, &__mib, sizeof(MEMORY_BASIC_INFORMATION)); \
-	    _size = __mib.RegionSize - ((intptr) _stack - (intptr)__mib.BaseAddress);
+	    _size = __mib.RegionSize - ((uintptr) _stack - (uintptr)__mib.BaseAddress);
 
 #else 
 #define MMGC_GET_STACK_EXENTS(_gc, _stack, _size) \
@@ -66,7 +66,7 @@
 		asm("movl %%esi,%0" : "=r" (save6));\
 		asm("movl %%edi,%0" : "=r" (save7));\
 		asm("movl %%esp,%0" : "=r" (_stack));\
-		_size = (intptr)_gc->GetStackTop() - (intptr)_stack;	} while (0)
+		_size = (uintptr)_gc->GetStackTop() - (uintptr)_stack;	} while (0)
 #endif 
 
 #elif defined MMGC_AMD64
@@ -82,7 +82,7 @@
 		asm("mov %%rsi,%0" : "=r" (save6));\
 		asm("mov %%rdi,%0" : "=r" (save7));\
 		asm("mov %%rsp,%0" : "=r" (_stack));\
-		_size = (intptr)_gc->GetStackTop() - (intptr)_stack;	} while (0)	
+		_size = (uintptr)_gc->GetStackTop() - (uintptr)_stack;	} while (0)	
 
 #elif defined MMGC_PPC
 
@@ -104,7 +104,7 @@
 		        "rlwinm r3,r3,0,0,30\n"\
 			"cmpi cr0,r3,0\n"\
 		     "bne StackBaseLoop%1%2" : "=b" (__stackBase) : "i" (__FILE__), "i" (__LINE__) : "r3"); \
-		_size = (intptr) __stackBase - (intptr) _stack;
+		_size = (uintptr) __stackBase - (uintptr) _stack;
 
 #else
 
@@ -119,7 +119,7 @@
 		        "rlwinm r3,r3,0,0,30\n"\
 			"cmpi cr0,r3,0\n"\
 		     "bne StackBaseLoop" : "=b" (__stackBase) : : "r3"); \
-		_size = (intptr) __stackBase - (intptr) _stack;
+		_size = (uintptr) __stackBase - (uintptr) _stack;
 
 #endif
 
@@ -131,7 +131,7 @@
 		int regs[7];\
 		asm("stmia %0,{r4-r10}" : : "r" (regs));\
 		asm("mov %0,sp" : "=r" (_stack));\
-		_size = (intptr)StackTop - (intptr)_stack;
+		_size = (uintptr)StackTop - (uintptr)_stack;
 
 #endif
 
@@ -606,7 +606,7 @@ namespace MMgc
 		 */
 		static GC* GetGC(const void *item)
 		{
-			GC **gc = (GC**) ((intptr)item&~0xfff);
+			GC **gc = (GC**) ((uintptr)item&~0xfff);
 			return *gc;
 		}
 
@@ -649,7 +649,7 @@ namespace MMgc
 		void writeBarrier(const void *container, const void *address, const void *value)
 		{
 			GCAssert(IsPointerToGCPage(container));
-			GCAssert(((intptr)address & 3) == 0);
+			GCAssert(((uintptr)address & 3) == 0);
 			GCAssert(address >= container);
 			GCAssert(address < (char*)container + Size(container));
 
@@ -667,7 +667,7 @@ namespace MMgc
 		 */
 		__forceinline void WriteBarrierNoSubstitute(const void *container, const void *value)
 		{
-			WriteBarrierTrap(container, (const void*)((intptr)value&~7));
+			WriteBarrierTrap(container, (const void*)((uintptr)value&~7));
 		}
 			
 		/**
@@ -677,7 +677,7 @@ namespace MMgc
 		__forceinline void WriteBarrierTrap(const void *container, const void *valuePtr)
 		{
 			GCAssert(IsPointerToGCPage(container));
-			GCAssert(((intptr)valuePtr&7) == 0);
+			GCAssert(((uintptr)valuePtr&7) == 0);
 			GCAssert(IsPointerToGCPage(container));
 			if(marking && valuePtr && GetMark(container) && IsWhite(valuePtr))
 			{
@@ -702,9 +702,9 @@ namespace MMgc
 		void *FindBeginning(const void *gcItem)
 		{
 			GCAssert(gcItem != NULL);
-			GCAssert(GetPageMapValue((intptr)gcItem) != 0);
+			GCAssert(GetPageMapValue((uintptr)gcItem) != 0);
 			void *realItem = NULL;
-			int bits = GetPageMapValue((intptr)gcItem);
+			int bits = GetPageMapValue((uintptr)gcItem);
 			switch(bits)
 			{
 			case kGCAllocPage:
@@ -716,8 +716,8 @@ namespace MMgc
 			case kGCLargeAllocPageRest:
 				while(bits == kGCLargeAllocPageRest)
 				{
-					gcItem = (void*) ((intptr)gcItem - GCHeap::kBlockSize);
-					bits = GetPageMapValue((intptr)gcItem);
+					gcItem = (void*) ((uintptr)gcItem - GCHeap::kBlockSize);
+					bits = GetPageMapValue((uintptr)gcItem);
 				}
 				realItem = GCLargeAlloc::FindBeginning(gcItem);
 				break;
@@ -791,7 +791,7 @@ namespace MMgc
 
 		void ClearWeakRef(const void *obj);
 
-		intptr	GetStackTop() const;
+		uintptr	GetStackTop() const;
 
 	private:
 
@@ -851,16 +851,16 @@ namespace MMgc
 		// 0 - not in use
 		// 1 - used by GCAlloc
 		// 3 - used by GCLargeAlloc
-		intptr memStart;
-		intptr memEnd;
+		uintptr memStart;
+		uintptr memEnd;
 
 		size_t totalGCPages;
 
 		unsigned char *pageMap;
 
-		inline int GetPageMapValue(intptr addr) const
+		inline int GetPageMapValue(uintptr addr) const
 		{
-			intptr index = (addr-memStart) >> 12;
+			uintptr index = (addr-memStart) >> 12;
 
 			GCAssert(index >> 2 < 64 * GCHeap::kBlockSize);
 			// shift amount to determine position in the byte (times 2 b/c 2 bits per page)
@@ -870,8 +870,8 @@ namespace MMgc
 			//return (pageMap[addr >> 2] & (3<<shiftAmount)) >> shiftAmount;
 			return (pageMap[index >> 2] >> shiftAmount) & 3;
 		}
-		void SetPageMapValue(intptr addr, int val);
-		void ClearPageMapValue(intptr addr);
+		void SetPageMapValue(uintptr addr, int val);
+		void ClearPageMapValue(uintptr addr);
 
 		void MarkGCPages(void *item, uint32 numpages, int val);
 		void UnmarkGCPages(void *item, uint32 numpages);
@@ -963,7 +963,7 @@ public:
 private:
 #endif
 
-		static const void *Pointer(const void *p) { return (const void*)(((intptr)p)&~7); }
+		static const void *Pointer(const void *p) { return (const void*)(((uintptr)p)&~7); }
 
 #ifdef MEMORY_INFO
 public:
@@ -1019,7 +1019,7 @@ public:
 #ifdef _DEBUG
 		// Dump a list of objects that have pointers to the given location.
 		void WhosPointingAtMe(void* me, int recurseDepth=0, int currentDepth=0);
-    	void ProbeForMatch(const void *mem, size_t size, intptr value, int recurseDepth, int currentDepth);
+    	void ProbeForMatch(const void *mem, size_t size, uintptr value, int recurseDepth, int currentDepth);
 #endif
 	};
 

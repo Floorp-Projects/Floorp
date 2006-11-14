@@ -979,7 +979,7 @@ namespace avmplus
 		// always can get to the current value.
 		AvmCore* core = this->core();
 #ifdef _DEBUG
-		AvmAssert(!core->dxnsAddr || (intptr)(*core->dxnsAddr) != 0xcccccccc);
+		AvmAssert(!core->dxnsAddr || (uintptr)(*core->dxnsAddr) != 0xcccccccc);
 #endif
 		if (!core->dxnsAddr || !(*core->dxnsAddr))
 			throwTypeError(kNoDefaultNamespaceError);

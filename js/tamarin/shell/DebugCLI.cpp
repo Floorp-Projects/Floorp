@@ -281,7 +281,7 @@ namespace avmshell
 			// this 
 			Atom a = nullObjectAtom;
 			frame->dhis(a);
-			core->console << a << ".";
+			core->console << core->format(a) << ".";
 
 			// method
 			MethodInfo* info = functionFor(src, line);
@@ -300,7 +300,7 @@ namespace avmshell
 				if ( info && (info->getArgName(i) != core->kundefined) )
 					core->console << info->getArgName(i) << "=";
 
-				core->console << *ptr++;
+				core->console << core->format(*ptr++);
 				if (i<count-1)
 					core->console << ",";
 			}
@@ -515,7 +515,7 @@ namespace avmshell
 				if (info && (info->getLocalName(i) != core->kundefined) )
 					core->console << info->getLocalName(i) << " = ";
 
-				core->console << *ptr++;
+				core->console << core->format(*ptr++);
 				//if (i<count-1)
 					core->console << "\n";
 			}
@@ -578,7 +578,7 @@ namespace avmshell
 					// match!
 					Atom a = ease2Atom(to, ptr[i]);
 					if (a == undefinedAtom)
-						core->console << " Type mismatch : current value is " << ptr[i];
+						core->console << " Type mismatch : current value is " << core->format(ptr[i]);
 					else
 						frame->setArgument(i, a);
 					return;
@@ -594,7 +594,7 @@ namespace avmshell
 					// match!
 					Atom a = ease2Atom(to, ptr[i]);
 					if (a == undefinedAtom)
-						core->console << " Type mismatch : current value is " << ptr[i];
+						core->console << " Type mismatch : current value is " << core->format(ptr[i]);
 					else
 						frame->setLocal(i, a);
 					return;

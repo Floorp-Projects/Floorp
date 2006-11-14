@@ -370,9 +370,9 @@ namespace avmplus
 						wchar intbuf[256];
 						int len;
 						MathUtils::convertIntegerToString(value, intbuf, len);
-						wchar *intptr = intbuf;
-						while (*intptr) {
-							*buffer++ = *intptr++;
+						wchar *uintptr = intbuf;
+						while (*uintptr) {
+							*buffer++ = *uintptr++;
 						}
 					}
 					break;

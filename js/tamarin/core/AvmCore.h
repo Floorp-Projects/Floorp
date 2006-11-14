@@ -109,7 +109,7 @@ const int kBufferPadding = 16;
 		void stopSampling();
 		void clearSamples();
 
-		intptr timerHandle;
+		uintptr timerHandle;
 		Hashtable *fakeMethodInfos;
 		void initSampling();
 		#endif
@@ -514,7 +514,7 @@ const int kBufferPadding = 16;
 
 #ifdef AVMPLUS_VERBOSE
 		/** Disassembles an opcode and places the text in str. */
-		static void formatOpcode(PrintWriter& out, const byte *pc, AbcOpcode opcode, int off, PoolObject* pool);
+		void formatOpcode(PrintWriter& out, const byte *pc, AbcOpcode opcode, int off, PoolObject* pool);
 		static void formatMultiname(PrintWriter& out, uint32 index, PoolObject* pool);
 #endif
 
@@ -1339,7 +1339,7 @@ const int kBufferPadding = 16;
 		{
 			double *ptr = (double*)GetGC()->Alloc(sizeof(double), 0);
 			*ptr = n;
-			return kDoubleType | (intptr)ptr;
+			return kDoubleType | (uintptr)ptr;
 		}
 		
 		void rehashStrings(int newlen);

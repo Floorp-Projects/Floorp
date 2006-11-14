@@ -144,14 +144,14 @@ namespace avmplus
 	}
 
 	/*static*/
-	intptr StackTrace::hashCode(StackTrace::Element *e, int depth)
+	uintptr StackTrace::hashCode(StackTrace::Element *e, int depth)
 	{
-		intptr hashCode = 0;
+		uintptr hashCode = 0;
 		while(depth--)
 		{
-			hashCode ^= intptr(e->info)>>3;
-			hashCode ^= intptr(e->filename)>>3;
-			hashCode ^= (intptr)e->linenum;
+			hashCode ^= uintptr(e->info)>>3;
+			hashCode ^= uintptr(e->filename)>>3;
+			hashCode ^= (uintptr)e->linenum;
 			e++;
 		}
 		return hashCode;

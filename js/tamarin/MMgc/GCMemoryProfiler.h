@@ -192,12 +192,12 @@ namespace MMgc
 	/**
 	* Given a user pointer back up to real beginning
 	*/
-	inline void *GetRealPointer(const void *item) { return (void*)((intptr) item -  2 * sizeof(int)); }
+	inline void *GetRealPointer(const void *item) { return (void*)((uintptr) item -  2 * sizeof(int)); }
 
 	/**
 	* Given a user pointer back up to real beginning
 	*/
-	inline void *GetUserPointer(const void *item) { return (void*)((intptr) item +  2 * sizeof(int)); }
+	inline void *GetUserPointer(const void *item) { return (void*)((uintptr) item +  2 * sizeof(int)); }
 
 	const char* GetTypeName(int index, void *obj);
 

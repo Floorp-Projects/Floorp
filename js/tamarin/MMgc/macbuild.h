@@ -48,6 +48,7 @@
   #define MMGC_IA32
 #elif defined (__x86_64__)
   #define MMGC_AMD64
+  #define MMGC_64BIT
 #elif defined (__ppc__)
   #define MMGC_PPC
 #endif

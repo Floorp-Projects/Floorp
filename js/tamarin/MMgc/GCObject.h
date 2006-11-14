@@ -325,7 +325,7 @@ namespace MMgc
 	{
 	public:
 		RCPtr() { t = NULL; }
-		RCPtr(T t) : t(t) { if(t && (intptr)t != 1) t->IncrementRef(); }
+		RCPtr(T t) : t(t) { if(t && (uintptr)t != 1) t->IncrementRef(); }
 		~RCPtr() 
 		{
 			if(t && t != (T)1)
@@ -345,10 +345,10 @@ namespace MMgc
 
 		T operator=(T tNew)
 		{
-			if(t && (intptr)t != 1)
+			if(t && (uintptr)t != 1)
 				t->DecrementRef();
 			t = tNew;
-			if(t && (intptr)t != 1)
+			if(t && (uintptr)t != 1)
 				t->IncrementRef();
 			// this cast is safe b/c other wise compilation would fail
 			return (T) t;
