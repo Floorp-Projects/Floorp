@@ -2046,11 +2046,21 @@ CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
         ::GdiFlush();
 
         // output the composed image
-        ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,
-                        aSX, aSrcy, aSWidth, aSHeight,
-                        screenBits, (LPBITMAPINFO)&offbmi,
-                        256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
-                        SRCCOPY);
+        __try {
+           ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,
+                          aSX, aSrcy, aSWidth, aSHeight,
+                          screenBits, (LPBITMAPINFO)&offbmi,
+                          256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
+                          SRCCOPY);
+        }  __except (EXCEPTION_EXECUTE_HANDLER) {
+          /* yeah this is ugly - certain printer drivers crash in the StretchDIBits */
+          /* workaround is to subtract one from aSrcy */  
+          ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,
+                          aSX, aSrcy-1, aSWidth, aSHeight,
+                          screenBits, (LPBITMAPINFO)&offbmi,
+                          256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
+                          SRCCOPY);
+        }
 
         ::SelectObject(memDC, oldBitmap);
       }
