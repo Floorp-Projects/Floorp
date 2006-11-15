@@ -45,7 +45,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
-#include "nsIBoxObject.h"
+#include "nsWeakPtr.h"
 
 
 class nsIDOMEventReceiver;
@@ -91,8 +91,8 @@ protected:
   // unless the element has been removed from the document.
   already_AddRefed<nsIDOMElement> GetElement();
 
-  // Using nsIBoxObject as a weak reference to a DOM Element.
-  nsCOMPtr<nsIBoxObject> mBoxObjectForElement;
+  // Using weak pointer to the DOM Element.
+  nsWeakPtr              mWeakPtrForElement;
   nsIDOMEventReceiver*   mReceiver;     // weak ref
 
   // these are not owning references; the prototype handlers are owned

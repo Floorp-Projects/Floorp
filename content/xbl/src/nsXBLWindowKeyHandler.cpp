@@ -69,8 +69,8 @@ nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEven
 
 nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 {
-  // If mBoxObjectForElement is non-null, we created a prototype handler.
-  if (mBoxObjectForElement)
+  // If mWeakPtrForElement is non-null, we created a prototype handler.
+  if (mWeakPtrForElement)
     delete mHandler;
 }
 
@@ -111,7 +111,7 @@ nsresult
 nsXBLWindowKeyHandler::EnsureHandlers(PRBool *aIsEditor)
 {
   nsCOMPtr<nsIDOMElement> el = GetElement();
-  NS_ENSURE_STATE(!mBoxObjectForElement || el);
+  NS_ENSURE_STATE(!mWeakPtrForElement || el);
   if (el) {
     // We are actually a XUL <keyset>.
     if (aIsEditor)
