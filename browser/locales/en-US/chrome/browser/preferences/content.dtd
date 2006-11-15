@@ -30,21 +30,6 @@
 <!ENTITY  colors.label                "Colors...">
 <!ENTITY  colors.accesskey            "C">
 
-
-<!ENTITY  feeds.label                 "Feeds">
-
-<!ENTITY  feedReader.label            "Feed Reader:">
-<!ENTITY  feedReader.accesskey        "F">
-
-<!ENTITY  feedClick.label             "When I click on a web feed:">
-<!ENTITY  ask.label                   "Ask me what to use">
-<!ENTITY  ask.accesskey               "A">
-<!ENTITY  subLiveBookmark.label       "Always subscribe with a Live Bookmark">
-<!ENTITY  subLiveBookmark.accesskey   "L">
-<!ENTITY  subReader.label             "Always subscribe using the Feed Reader">
-<!ENTITY  subReader.accesskey         "R">
-
-
 <!ENTITY fileTypes.label              "File Types">
 
 <!ENTITY configureFileTypes.label     "Configure how &brandShortName; handles certain types of files">
