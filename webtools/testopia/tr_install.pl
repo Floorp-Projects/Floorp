@@ -124,18 +124,12 @@ sub doPatch {
 
       # This piece of code needs to be modified when a new patch file is added to the distribution:
 
-      if ($Bugzilla::Config::VERSION =~ /^2\.18.*/) {
-        # version 2.18.* detected
-        $fPatch = "patch-2.18";
-      } elsif ($Bugzilla::Config::VERSION =~ /^2\.19\.2$/) {
-        # version 2.19.2 detected
-        $fPatch = "patch-2.19.2";
-      } elsif ($Bugzilla::Config::VERSION =~ /^2\.19\.3$/) {
-        # version 2.19.3 detected
-        $fPatch = "patch-2.19.3";
-      } elsif ($Bugzilla::Config::VERSION =~ /^2\.20.*/) {
+      if ($Bugzilla::Config::VERSION =~ /^2\.20.*/) {
         # version 2.20.* detected
         $fPatch = "patch-2.20";
+      } elsif ($Bugzilla::Config::VERSION =~ /^2\.22\.1$/) {
+        # version 2.20.* detected
+        $fPatch = "patch-2.22.1";
       } elsif ($Bugzilla::Config::VERSION =~ /^2\.22.*/) {
         # version 2.20.* detected
         $fPatch = "patch-2.22";
