@@ -126,3 +126,10 @@ SSL_ShutdownServerSessionIDCache;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.11.4 {      # NSS 3.11.4 release
+;+    global:
+SSL_ForceHandshakeWithTimeout;
+SSL_ReHandshakeWithTimeout;
+;+    local:
+;+*;
+;+};
