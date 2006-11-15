@@ -1414,48 +1414,19 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
-  if (mWindowType == eWindowType_dialog) {
-    struct {
-      DLGTEMPLATE t;
-      short noMenu;
-      short defaultClass;
-      short title;
-    } templ;
-    LONG units = GetDialogBaseUnits();
-
-    templ.t.style = style;
-    templ.t.dwExtendedStyle = extendedStyle;
-    templ.t.cdit = 0;
-    templ.t.x = (aRect.x*4)/LOWORD(units);
-    templ.t.y = (aRect.y*8)/HIWORD(units);
-    templ.t.cx = (aRect.width*4 + LOWORD(units) - 1)/LOWORD(units);
-    templ.t.cy = (GetHeight(aRect.height)*8 + HIWORD(units) - 1)/HIWORD(units);
-    templ.noMenu = 0;
-    templ.defaultClass = 0;
-    templ.title = 0;
-
-    mWnd = ::CreateDialogIndirectParam(nsToolkit::mDllInstance,
-                                       &templ.t,
-                                       parent,
-                                       (DLGPROC)DummyDialogProc,
-                                       NULL);
-
-  } else {
-
-    mWnd = ::CreateWindowExW(extendedStyle,
-                             aInitData && aInitData->mDropShadow ?
-                             WindowPopupClassW() : WindowClassW(),
-                             L"",
-                             style,
-                             aRect.x,
-                             aRect.y,
-                             aRect.width,
-                             GetHeight(aRect.height),
-                             parent,
-                             NULL,
-                             nsToolkit::mDllInstance,
-                             NULL);
-  }
+  mWnd = ::CreateWindowExW(extendedStyle,
+                           aInitData && aInitData->mDropShadow ?
+                           WindowPopupClassW() : WindowClassW(),
+                           L"",
+                           style,
+                           aRect.x,
+                           aRect.y,
+                           aRect.width,
+                           GetHeight(aRect.height),
+                           parent,
+                           NULL,
+                           nsToolkit::mDllInstance,
+                           NULL);
 
   if (!mWnd)
     return NS_ERROR_FAILURE;
@@ -4892,6 +4863,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       if (wcscmp(className, kWClassNameUI) &&
           wcscmp(className, kWClassNameContent) &&
           wcscmp(className, kWClassNameContentFrame) &&
+          wcscmp(className, kWClassNameDialog) &&
           wcscmp(className, kWClassNameGeneral)) {
         isMozWindowTakingFocus = PR_FALSE;
       }
@@ -5005,6 +4977,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           if (wcscmp(className, kWClassNameUI) &&
               wcscmp(className, kWClassNameContent) &&
               wcscmp(className, kWClassNameContentFrame) &&
+              wcscmp(className, kWClassNameDialog) &&
               wcscmp(className, kWClassNameGeneral)) {
             isMozWindowTakingFocus = PR_FALSE;
           }
@@ -5458,10 +5431,18 @@ LPCWSTR nsWindow::WindowClassW()
       nsWindow::sIsRegistered = FALSE;
     }
 
+    wc.lpszClassName = kWClassNameDialog;
+    wc.hIcon = 0;
+    if (!::RegisterClassW(&wc)) {
+      nsWindow::sIsRegistered = FALSE;
+    }
   }
 
   if (mWindowType == eWindowType_invisible) {
     return kWClassNameHidden;
+  }
+  if (mWindowType == eWindowType_dialog) {
+    return kWClassNameDialog;
   }
   if (mContentType == eContentTypeContent) {
     return kWClassNameContent;
@@ -5517,6 +5498,9 @@ LPCSTR nsWindow::WindowClass()
 
   if (classNameW == kWClassNameHidden) {
     return kClassNameHidden;
+  }
+  if (classNameW == kWClassNameDialog) {
+    return kClassNameDialog;
   }
   if (classNameW == kWClassNameUI) {
     return kClassNameUI;
@@ -5652,7 +5636,7 @@ DWORD nsWindow::WindowExStyle()
       return 0;
 
     case eWindowType_dialog:
-      return WS_EX_WINDOWEDGE;
+      return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
     case eWindowType_popup:
       return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
