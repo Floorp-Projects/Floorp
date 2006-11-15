@@ -93,7 +93,7 @@
 #define HOME_ENVIRONMENT_VARIABLE         "HOME"
 #define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
 #define DEFAULT_UNIX_PROFILE_NAME         "default"
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
 #define OLDREG_NAME               "Netscape Registry"
 #define OLDREG_DIR                NS_MAC_PREFS_DIR
 #define PREF_FILE_NAME_IN_4x      "Netscape Preferences"
@@ -1166,7 +1166,7 @@ nsDogbertProfileMigrator::ProcessPrefsCallback(const char* oldProfilePathStr, co
   }
   
   // just copy what we need
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   rv = DoTheCopy(oldProfilePath, newProfilePath, SECURITY_PATH, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 #else
@@ -1176,9 +1176,9 @@ nsDogbertProfileMigrator::ProcessPrefsCallback(const char* oldProfilePathStr, co
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_SECMODULE_DB);
   if (NS_FAILED(rv)) return rv;
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
-#if defined(XP_MAX) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // Copy the Mac filter rule files which sits at the top level dir of a 4.x profile.
   if(serverType == IMAP_4X_MAIL_TYPE) {
     rv = CopyFilesByPattern(oldProfilePath, newProfilePath, MAC_RULES_FILE_ENDING_STRING_IN_4X);
