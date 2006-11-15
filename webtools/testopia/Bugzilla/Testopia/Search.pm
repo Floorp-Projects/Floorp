@@ -480,15 +480,15 @@ sub init {
          },
          "^env_categories," => sub {
                push(@supptables,
-                    "INNER JOIN test_environment_map as env_map_categories
-                     ON test_environments.environment_id = env_map_categories.environment_id");
+                    "INNER JOIN test_environment_map
+                     ON test_environments.environment_id = test_environment_map.environment_id");
                push(@supptables,
-                    "INNER JOIN test_environment_element as env_element
-                     ON env_map_categories.element_id = env_element.element_id");
+                    "INNER JOIN test_environment_element
+                     ON test_environment_map.element_id = test_environment_element.element_id");
                push(@supptables,
-                    "INNER JOIN test_environment_category as env_categories
-                     ON env_element.env_category_id = env_categories.env_category_id");
-               $f = 'env_categories.env_category_id'      
+                    "INNER JOIN test_environment_category
+                     ON test_environment_element.env_category_id = test_environment_category.env_category_id");
+               $f = 'test_environment_category.env_category_id'      
          },
          "^env_elements," => sub {
                push(@supptables,
