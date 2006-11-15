@@ -113,6 +113,7 @@ enum {
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
 
+- (void)addBlockedPopupViewAndDisplay;
 - (void)removeBlockedPopupViewAndDisplay;
 
 @end
@@ -523,22 +524,6 @@ enum {
     NSNotification* note     = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
     [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
   }
-
-  // We've defered display of the blocked popup view until the page has finished loading in 
-  // order to avoid jumping around during the page load. Even if we're hidden, we ensure that
-  // the new view is in the view hierarchy and it will be resized when the
-  // current tab is eventually displayed.
-  if ([self popupsBlocked] && !mBlockedPopupView) {
-    [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
-
-    [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
-    [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
-    [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];
-
-    [self addSubview:mBlockedPopupView];
-    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
-    [self display];
-  }
 }
 
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes 
@@ -760,6 +745,7 @@ enum {
     CallCreateInstance(NS_ARRAY_CONTRACTID, &mBlockedSites);
   if (mBlockedSites) {
     mBlockedSites->AppendElement((nsISupports*)eventData, PR_FALSE);
+    [self addBlockedPopupViewAndDisplay];
     [mDelegate showPopupBlocked:YES];
   }
 }
@@ -1089,6 +1075,8 @@ enum {
   return mFeedList;
 }
 
+#pragma mark -
+
 //
 // -configurePopupBlocking:
 //
@@ -1119,6 +1107,27 @@ enum {
 }
 
 //
+// -addBlockedPopupViewAndDisplay
+//
+// Even if we're hidden, we ensure that the new view is in the view hierarchy
+// and it will be resized when the current tab is eventually displayed.
+//
+- (void)addBlockedPopupViewAndDisplay
+{
+  if ([self popupsBlocked] && !mBlockedPopupView) {
+    [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
+    
+    [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
+    [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
+    [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];
+    
+    [self addSubview:mBlockedPopupView];
+    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
+    [self display];
+  }
+}
+
+//
 // -removeBlockedPopupViewAndDisplay
 //
 // If we're showing the blocked popup view, this removes it and resizes the
@@ -1129,6 +1138,7 @@ enum {
 {
   if (mBlockedPopupView) {
     [mBlockedPopupView removeFromSuperview];
+    [mBlockedPopupView release]; // retain count of 1 from nib
     mBlockedPopupView = nil;
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
     [self display];
