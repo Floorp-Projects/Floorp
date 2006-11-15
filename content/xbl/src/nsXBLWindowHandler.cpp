@@ -182,14 +182,7 @@ nsXBLWindowHandler::nsXBLWindowHandler(nsIDOMElement* aElement,
     mHandler(nsnull),
     mUserHandler(nsnull)
 {
-  if (aElement) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDOMNSDocument> nsDomDoc = do_QueryInterface(domDoc);
-    if (nsDomDoc) {
-      nsDomDoc->GetBoxObjectFor(aElement, getter_AddRefs(mBoxObjectForElement));
-    }
-  }
+  mWeakPtrForElement = do_GetWeakReference(aElement);
   ++sRefCnt;
 }
 
@@ -213,11 +206,7 @@ nsXBLWindowHandler::~nsXBLWindowHandler()
 already_AddRefed<nsIDOMElement>
 nsXBLWindowHandler::GetElement()
 {
-  if (!mBoxObjectForElement) {
-    return nsnull;
-  }
-  nsCOMPtr<nsIDOMElement> element;
-  mBoxObjectForElement->GetElement(getter_AddRefs(element));
+  nsCOMPtr<nsIDOMElement> element = do_QueryReferent(mWeakPtrForElement);
   nsIDOMElement* el = nsnull;
   element.swap(el);
   return el;
