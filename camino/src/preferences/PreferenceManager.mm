@@ -763,13 +763,47 @@ static BOOL gMadePrefManager;
 
       // If we understood all the languages in the list set the accept-language header.
       // Note that necko will determine quality factors itself.
-      // If we don't set this we'll fall back to the "en-us, en" default from all-camino.js
       if (languagesOkaySoFar && [acceptableLanguages count] > 0) {
         NSString* acceptLangHeader = [acceptableLanguages componentsJoinedByString:@","];
         [self setPref:"intl.accept_languages" toString:acceptLangHeader];
       }
+      else {
+        // Fall back to the "en-us, en" default from all-camino.js - clear
+        // any existing user pref
+        [self clearPref:"intl.accept_languages"];
+      }
     }
-    
+
+    // Use the user-selected pref for the user agent locale if it exists
+    NSString* uaLocale = [self getStringPref:"camino.useragent.locale" 
+                                 withSuccess:nil];
+
+    if (![uaLocale length]) {
+      // Find the active localization nib's name and make sure it's in
+      // ab or ab-CD form
+      NSArray* localizations = [[NSBundle mainBundle] preferredLocalizations];
+      if ([localizations count]) {
+        CFStringRef activeLocalization =
+                    ::CFLocaleCreateCanonicalLocaleIdentifierFromString(
+                    NULL, (CFStringRef)[localizations objectAtIndex:0]);
+        if (activeLocalization) {
+          uaLocale = [PreferenceManager
+                     convertLocaleToHTTPLanguage:(NSString*)activeLocalization];
+          ::CFRelease(activeLocalization);
+        }
+      }
+    }
+
+    if (uaLocale && [uaLocale length]) {
+      [self setPref:"general.useragent.locale" toString:uaLocale];
+    }
+    else {
+      NSLog(@"Unable to determine user interface locale\n");
+      // Fall back to the "en-US" default from all.js.  Clear any existing
+      // user pref.
+      [self clearPref:"general.useragent.locale"];
+    }
+
     // load up the default stylesheet (is this the best place to do this?)
     BOOL prefExists = NO;
     BOOL enableAdBlocking = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&prefExists];
@@ -1097,6 +1131,12 @@ typedef enum EProxyConfig {
 {
   if (mPrefs)
     (void)mPrefs->SetBoolPref(prefName, (PRBool)value);
+}
+
+- (void)clearPref:(const char*)prefName
+{
+  if (mPrefs)
+    (void)mPrefs->ClearUserPref(prefName);
 }
 
 - (NSString*)homePageUsingStartPage:(BOOL)checkStartupPagePref
