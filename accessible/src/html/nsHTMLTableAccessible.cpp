@@ -698,7 +698,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
   
   // Check for legitimate data table elements or attributes
-  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary) || HasDescendant("summary") || 
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary) || HasDescendant("caption") || 
       HasDescendant("th") || HasDescendant("thead") || HasDescendant("tfoot") || HasDescendant("colgroup")) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has caption, summary, th, thead, tfoot or colgroup -- legitimate table structures");
   }
@@ -768,7 +768,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   // Check for many rows
   const PRInt32 kMaxLayoutRows = 20;
   if (rows > kMaxLayoutRows) { // A ton of rows, this is probably for data
-    RETURN_LAYOUT_ANSWER(PR_TRUE, ">= kMaxLayoutRows (20) and non-bordered");
+    RETURN_LAYOUT_ANSWER(PR_FALSE, ">= kMaxLayoutRows (20) and non-bordered");
   }
 
   // Check for very wide table
