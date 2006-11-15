@@ -975,7 +975,7 @@ enum BWCOpenDest {
 
     BOOL chromeHidesToolbar = (mChromeMask != 0) && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
     if (chromeHidesToolbar || ![self shouldShowBookmarkToolbar])
-      [mPersonalToolbar showBookmarksToolbar:NO];
+      [mPersonalToolbar setVisible:NO];
     
     if (mustResizeChrome)
       [mContentView resizeSubviewsWithOldSize:[mContentView frame].size];
@@ -1062,7 +1062,7 @@ enum BWCOpenDest {
   NSRect stdFrame     = [[self window] frame];
   stdFrame.size.width = MAX([[self window] minSize].width, stdFrame.size.width + widthChange);
 
-  if ([mPersonalToolbar isShown])
+  if ([mPersonalToolbar isVisible])
     // if the personal toolbar is shown we need to adjust for its height change
     heightChange += [mPersonalToolbar computeHeight:stdFrame.size.width startingAtIndex:0]
                     - [mPersonalToolbar frame].size.height;

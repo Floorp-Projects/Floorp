@@ -67,9 +67,9 @@
   // This is need for correct window zooming
 - (float)computeHeight:(float)aWidth startingAtIndex:(int)aIndex;
 
-- (BOOL)isShown;
+- (BOOL)isVisible;
+- (void)setVisible:(BOOL)aShow;
 - (void)setDrawBottomBorder:(BOOL)drawBorder;
-- (void)showBookmarksToolbar:(BOOL)aShow;
 
 - (IBAction)addFolder:(id)aSender;
 

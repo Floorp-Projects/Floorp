@@ -254,7 +254,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
   mButtonListDirty = NO;
 
-  if ([self isShown])
+  if ([self isVisible])
     [self reflowButtons];
 }
 
@@ -265,7 +265,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     return;
   [self addSubview:button];
   [mButtons insertObject:button atIndex:aIndex];
-  if ([self isShown])
+  if ([self isVisible])
     [self reflowButtonsStartingAtIndex:aIndex];
 }
 
@@ -278,7 +278,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     if ([button bookmarkItem] == aItem) {
       BOOL needsReflow = NO;
       [button bookmarkChanged:&needsReflow];
-      if (needsReflow && count > i && [self isShown])
+      if (needsReflow && count > i && [self isVisible])
         [self reflowButtonsStartingAtIndex:i];
       break;
     }
@@ -294,7 +294,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     if ([button bookmarkItem] == aItem) {
       [mButtons removeObjectAtIndex:i];
       [button removeFromSuperview];
-      if (count > i && [self isShown])
+      if (count > i && [self isVisible])
         [self reflowButtonsStartingAtIndex:i];
       break;
     }
@@ -317,7 +317,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
 - (void)reflowButtonsStartingAtIndex:(int)aIndex
 {
-  if (![self isShown])
+  if (![self isVisible])
     return;
 
   // coordinates for this view are flipped, making it easier to lay out from top left
@@ -409,9 +409,30 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   [self reflowButtonsStartingAtIndex:reflowStart];
 }
 
-- (BOOL)isShown
+- (BOOL)isVisible
 {
   return mIsShowing;
+}
+
+- (void)setVisible:(BOOL)aShow
+{
+  mIsShowing = aShow;
+
+  if (!aShow) {
+    [[self superview] setNeedsDisplayInRect:[self frame]];
+    NSRect newFrame = [self frame];
+    newFrame.origin.y += newFrame.size.height;
+    newFrame.size.height = 0;
+    [self setFrame:newFrame];
+
+    // tell the superview to resize its subviews
+    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
+  }
+  else {
+    [self reflowButtons];
+    [self setNeedsDisplay:YES];
+  }
+
 }
 
 - (void)setDrawBottomBorder:(BOOL)drawBorder
@@ -453,27 +474,6 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   BookmarkFolder* toolbar = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
   BookmarkFolder* aFolder = [toolbar addBookmarkFolder];
   [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", nil)];
-}
-
-- (void)showBookmarksToolbar:(BOOL)aShow
-{
-  mIsShowing = aShow;
-
-  if (!aShow) {
-    [[self superview] setNeedsDisplayInRect:[self frame]];
-    NSRect newFrame = [self frame];
-    newFrame.origin.y += newFrame.size.height;
-    newFrame.size.height = 0;
-    [self setFrame:newFrame];
-
-    // tell the superview to resize its subviews
-    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
-  }
-  else {
-    [self reflowButtons];
-    [self setNeedsDisplay:YES];
-  }
-
 }
 
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender

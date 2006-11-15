@@ -71,6 +71,7 @@
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
 #import "SiteIconProvider.h"
+#import "SessionManager.h"
 
 #include "nsBuildID.h"
 #include "nsCOMPtr.h"
@@ -250,8 +251,8 @@ const int kReuseWindowOnAE = 2;
   mKeychainService = [KeychainService instance];
 
   // bring up the JS console service
-  BOOL success;
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
+  PreferenceManager* prefManager = [PreferenceManager sharedInstance];
+  if ([prefManager getBooleanPref:"chimera.log_js_to_console" withSuccess:NULL])
     [JSConsole sharedJSConsole];
 
   [self setupRendezvous];
@@ -260,10 +261,19 @@ const int kReuseWindowOnAE = 2;
   NSString* charsetPath = [NSBundle pathForResource:@"Charset" ofType:@"dict" inDirectory:[[NSBundle mainBundle] bundlePath]];
   mCharsets = [[NSDictionary dictionaryWithContentsOfFile:charsetPath] retain];
 
-  // open a new browser window if we don't already have one
-  // (for example, from an GetURL Apple Event)
+  // restore previous window state
+  if ([prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL]) {
+    // if we've already opened a window (e.g., command line argument or apple event), we need
+    // to pull it to the front after restoring the window state
+    NSWindow* existingWindow = [self getFrontmostBrowserWindow];
+    [[SessionManager sharedInstance] restoreWindowState];
+    [existingWindow makeKeyAndOrderFront:self];
+  }
+
+  // open a new browser window if we don't already have one or we have a specific
+  // start URL we need to show
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-  if (!browserWindow)
+  if (!browserWindow || mStartURL)
     [self newWindow:self];
 
   // delay the default browser check to give the first page time to load
@@ -335,6 +345,8 @@ const int kReuseWindowOnAE = 2;
 #if DEBUG
   NSLog(@"App will terminate notification");
 #endif
+  if ([[PreferenceManager sharedInstanceDontCreate] getBooleanPref:"camino.remember_window_state" withSuccess:NULL])
+    [[SessionManager sharedInstance] saveWindowState];
 
   [NetworkServices shutdownNetworkServices];
 
@@ -1198,7 +1210,7 @@ const int kReuseWindowOnAE = 2;
   float height = [[browserController bookmarkToolbar] frame].size.height;
   BOOL showToolbar = (BOOL)(!(height > 0));
 
-  [[browserController bookmarkToolbar] showBookmarksToolbar:showToolbar];
+  [[browserController bookmarkToolbar] setVisible:showToolbar];
 
   // save prefs here
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
