@@ -89,7 +89,7 @@ namespace MMgc
 	class RCObjectAddRefInDtor : public RCObject
 	{
 	public:
-		RCObjectAddRefInDtor(RCObject **stackPinners, int length) : rcs(stackPinners), length(length) {}
+		RCObjectAddRefInDtor(RCObject ** _stackPinners, int _length) : rcs(_stackPinners), length(_length) {}
 		~RCObjectAddRefInDtor() 
 		{ 
 			// whack these, used create freelist

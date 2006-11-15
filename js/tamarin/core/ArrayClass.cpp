@@ -33,11 +33,13 @@
 #include "avmplus.h"
 
 #ifdef _MAC
+#ifndef __GNUC__
 // inline_max_total_size() defaults to 10000.
 // This module includes so many inline functions that we
 // exceed this limit and we start getting compile warnings,
 // so bump up the limit for this file. 
 #pragma inline_max_total_size(100000)
+#endif
 #endif
 
 using namespace MMgc;

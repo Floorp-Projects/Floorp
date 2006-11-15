@@ -38,8 +38,8 @@ namespace avmplus
 	class TraitsIterator
 	{
 	public:
-		TraitsIterator(Traits *traits) :
-			traits(traits),
+		TraitsIterator(Traits * _traits) :
+			traits(_traits),
 			index(0)
 		{
 		}

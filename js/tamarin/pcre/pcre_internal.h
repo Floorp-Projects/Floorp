@@ -905,6 +905,10 @@ extern int         _pcre_ucp_findchar(const int, int *, int *);
 extern int         _pcre_valid_utf8(const uschar *, int);
 extern BOOL        _pcre_xclass(int, const uschar *);
 
+#ifdef _MSC_VER
+#pragma warning(disable:4244) // possible loss of data
+#endif
+
 #endif
 
 /* End of pcre_internal.h */

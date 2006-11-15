@@ -129,7 +129,7 @@
 		1A91570E0B012A3F00744986 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
 		6803D2C70A5064FD00C797BB /* JavaGlue.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = JavaGlue.cpp; path = ../../../extensions/JavaGlue.cpp; sourceTree = SOURCE_ROOT; };
 		6803D2C80A5064FD00C797BB /* JavaGlue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = JavaGlue.h; path = ../../../extensions/JavaGlue.h; sourceTree = SOURCE_ROOT; };
-		8DD76FB20486AB0100D96B5E /* shell */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = shell; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76FB20486AB0100D96B5E /* shell */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = shell; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8B527909AABAA20057BEE4 /* avmshell.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = avmshell.cpp; path = ../../../shell/avmshell.cpp; sourceTree = SOURCE_ROOT; };
 		8E8B527A09AABAA20057BEE4 /* avmshell.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = avmshell.h; path = ../../../shell/avmshell.h; sourceTree = SOURCE_ROOT; };
 		8E8B527B09AABAA20057BEE4 /* ByteArray.as */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = ByteArray.as; path = ../../../shell/ByteArray.as; sourceTree = SOURCE_ROOT; };

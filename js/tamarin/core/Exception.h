@@ -59,14 +59,14 @@ namespace avmplus
 			 * An EXIT_EXCEPTION cannot be caught.  It indicates that
 			 * the VM is shutting down.
 			 */
-			EXIT_EXCEPTION = 1,
+			EXIT_EXCEPTION = 1
 
 #ifdef DEBUGGER
 			/**
 			 * Indicates that this exception has already been passed to
 			 * the debugger.
 			 */
-			SEEN_BY_DEBUGGER = 2,
+			, SEEN_BY_DEBUGGER = 2
 #endif
 		};
 

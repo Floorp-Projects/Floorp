@@ -152,8 +152,6 @@
 	#pragma warning(disable:4611) //interaction between _setjmp and destruct
 	#pragma warning(disable:4725) //instruction may be inaccurate on some Pentiums
 
-	#pragma warning(disable:4244) //possible loss of data in conversion (@todo, re-enable this (lots of code fixes needed))
-
 	// enable some that are off even in /W4 mode, but are still handy
 	#pragma warning(error:4265)	// 'class' : class has virtual functions, but destructor is not virtual
 	#pragma warning(error:4905)	// wide string literal cast to 'LPSTR'

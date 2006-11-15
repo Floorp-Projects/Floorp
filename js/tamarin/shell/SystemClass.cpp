@@ -65,7 +65,7 @@ namespace avmshell
 		#ifdef PERFORMANCE_GETTIMER
 		initialTime = MMgc::GC::getPerformanceCounter();
 		#else
-		initialTime = OSDep::currentTimeMillis();		
+		initialTime = (double)OSDep::currentTimeMillis();		
 		#endif // PERFORMANCE_GETTIMER
 
 	}
@@ -189,7 +189,7 @@ namespace avmshell
 		int i=0;
 		for (int c = getchar(); c != '\n' && c != EOF; c = getchar())
 		{
-			wc[i++] = c;
+			wc[i++] = (wchar)c;
 			if (i == 63) {
 				wc[i] = 0;
 				s = core->concatStrings(s, core->newString(wc));

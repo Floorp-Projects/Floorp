@@ -204,7 +204,7 @@ namespace MMgc
 	void GetInfoFromPC(int pc, char *buff, int buffSize);
 	void GetStackTrace(int *trace, int len, int skip);
 	// print stack trace of index into trace table
-	void PrintStackTraceByIndex(unsigned int index);
+	void PrintStackTraceByIndex(int index);
 	void PrintStackTrace(const void *item);
 	// print stack trace of caller
 	void DumpStackTrace();

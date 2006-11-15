@@ -297,7 +297,7 @@ namespace avmplus
 			m_flags |= kFlagIgnoreProcessingInstructions; 
 		else
 			m_flags &= ~kFlagIgnoreProcessingInstructions; 
-	};
+	}
 
 	uint32 XMLClass::getIgnoreProcessingInstructions() 
 	{ 

@@ -274,8 +274,8 @@ namespace avmplus
 	{
 	public:
 		DRCWB(ScriptObject*) global; // initially null, set after initialization
-		ScriptEnv(AbstractFunction* method, VTable *vtable)
-			: MethodEnv(method, vtable)
+		ScriptEnv(AbstractFunction* _method, VTable * _vtable)
+			: MethodEnv(_method, _vtable)
 		{
 		}
 
@@ -286,8 +286,8 @@ namespace avmplus
 	class FunctionEnv : public MethodEnv
 	{
 	  public:
-		FunctionEnv(AbstractFunction* method, VTable *vtable)
-			: MethodEnv(method, vtable) {}
+		FunctionEnv(AbstractFunction* _method, VTable * _vtable)
+			: MethodEnv(_method, _vtable) {}
 		DRCWB(ClassClosure*) closure;
 	};
 }

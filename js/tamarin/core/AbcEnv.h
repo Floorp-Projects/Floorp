@@ -46,12 +46,12 @@ namespace avmplus
 		MultinameHashtable privateScriptEnvs;
 		MethodEnv* methods[1]; // actual size will hold pool->methodCount methods
 
-		AbcEnv(PoolObject* pool,
-			   DomainEnv* domainEnv,
-		       CodeContext *codeContext)
-			: pool(pool),
-			  domainEnv(domainEnv),
-			  codeContext(codeContext)
+		AbcEnv(PoolObject* _pool,
+			   DomainEnv* _domainEnv,
+		       CodeContext * _codeContext)
+			: pool(_pool),
+			  domainEnv(_domainEnv),
+			  codeContext(_codeContext)
 		{
 		}
 

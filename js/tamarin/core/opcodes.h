@@ -198,5 +198,5 @@ OP_doubletoatom = 0xFB,
 OP_sweep = 0xFC,
 OP_codegenop = 0xFD,
 OP_verifyop = 0xFE,
-OP_decode = 0xFF,
+OP_decode = 0xFF
 };

@@ -73,11 +73,11 @@ namespace avmplus
 			return name;
 		}
 
-		void setName(Stringp name)
+		void setName(Stringp _name)
 		{
-			AvmAssert(name && name->isInterned());
+			AvmAssert(_name && _name->isInterned());
 			this->flags &= ~RTNAME;
-			this->name = name;
+			this->name = _name;
 		}
 
 		void setName(Multiname* other)
@@ -100,11 +100,11 @@ namespace avmplus
 			return getNamespace(0);
 		}
 
-		void setNamespace(Namespace* ns)
+		void setNamespace(Namespace* _ns)
 		{
 			flags &= ~(NSSET|RTNS);
-			AvmAssert(ns != NULL);
-			this->ns = ns;
+			AvmAssert(_ns != NULL);
+			this->ns = _ns;
 		}
 
 		void setNamespace(Multiname* other)
@@ -121,12 +121,12 @@ namespace avmplus
 			return nsset;
 		}
 
-		void setNsset(NamespaceSet* nsset)
+		void setNsset(NamespaceSet* _nsset)
 		{
 			flags &= ~RTNS;
 			flags |= NSSET;
-			AvmAssert(nsset != NULL);
-			this->nsset = nsset;
+			AvmAssert(_nsset != NULL);
+			this->nsset = _nsset;
 		}
 
 		Multiname();
@@ -232,7 +232,7 @@ namespace avmplus
 		{
 			MULTI_FORMAT_FULL = 0,		/* default */
 			MULTI_FORMAT_NAME_ONLY,     /* only name */
-			MULTI_FORMAT_NS_ONLY,		/* only namespaces */
+			MULTI_FORMAT_NS_ONLY		/* only namespaces */
 		}
 		MultiFormat;
 

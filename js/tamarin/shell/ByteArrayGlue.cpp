@@ -271,7 +271,7 @@ namespace avmshell
 	
 	void ByteArrayObject::setUintProperty(uint32 i, Atom value)
 	{
-		m_byteArray[i] = core()->integer(value);
+		m_byteArray[i] = (U8)(core()->integer(value));
 	}
 	
 	Atom ByteArrayObject::getProperty(Atom name) const
@@ -295,7 +295,7 @@ namespace avmshell
 		uint32 index;
 		if (core->getIndexFromAtom(name, &index)) {
 			int intValue = core->integer(value);
-			m_byteArray[index] = intValue;
+			m_byteArray[index] = (U8)(intValue);
 		} else {
 			ScriptObject::setProperty(name, value);
 		}

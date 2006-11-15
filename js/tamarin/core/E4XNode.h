@@ -170,7 +170,7 @@ namespace avmplus
 			kCDATA					= 0x0008, // same as text but no string conversion on output
 			kComment				= 0x0010,
 			kProcessingInstruction	= 0x0020,
-			kElement				= 0x0040,
+			kElement				= 0x0040
 		};
 
 		virtual int getClass() const = 0;

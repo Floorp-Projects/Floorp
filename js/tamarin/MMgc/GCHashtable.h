@@ -79,7 +79,7 @@ namespace MMgc
 	class GCHashtableIterator
 	{
 	public:
-		GCHashtableIterator(GCHashtable *ht) : ht(ht), index(-2) {}
+		GCHashtableIterator(GCHashtable * _ht) : ht(_ht), index(-2) {}
 
 		const void *nextKey() 
 		{ 

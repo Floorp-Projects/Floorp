@@ -57,21 +57,21 @@ namespace avmplus
 	public:
 		enum { kInitialCapacity = 128 };		
 
-		List(int capacity = kInitialCapacity)
+		List(int _capacity = kInitialCapacity)
 		{
-			init(0, capacity);
+			init(0, _capacity);
 		}
-		List(MMgc::GC* gc, uint32 capacity = kInitialCapacity)
+		List(MMgc::GC* _gc, uint32 _capacity = kInitialCapacity)
 		{
-			init(gc, capacity);
+			init(_gc, _capacity);
 		}
-		void init(MMgc::GC* gc, uint32 capacity)
+		void init(MMgc::GC* _gc, uint32 _capacity)
 		{
 			len = 0;
 			max = 0;
 			data = NULL;
-			this->gc = gc;
-			ensureCapacity(capacity);
+			this->gc = _gc;
+			ensureCapacity(_capacity);
 		}
 		~List()
 		{

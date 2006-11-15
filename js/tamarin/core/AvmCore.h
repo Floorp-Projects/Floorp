@@ -509,7 +509,7 @@ const int kBufferPadding = 16;
 
 		static bool isNullOrUndefined(Atom atom)
 		{
-			return ((unsigned)atom) <= kSpecialType;
+			return ((uintptr)atom) <= (uintptr)kSpecialType;
 		}
 
 #ifdef AVMPLUS_VERBOSE
@@ -1374,8 +1374,8 @@ const int kBufferPadding = 16;
 		class GCInterface : MMgc::GCCallback
 		{
 		public:
-			GCInterface(MMgc::GC *gc) : MMgc::GCCallback(gc) {}
-			void SetCore(AvmCore*core) { this->core = core; }
+			GCInterface(MMgc::GC * _gc) : MMgc::GCCallback(_gc) {}
+			void SetCore(AvmCore* _core) { this->core = _core; }
 			void presweep() { core->presweep(); }
 			void postsweep() { core->postsweep(); }
 			void log(const char *str) { core->console << str; }

@@ -150,13 +150,13 @@ namespace avmplus
 			
 			MIR_fldop   = 22 | MIR_float | MIR_oper,	// ptr, disp (optimizable load)
 
-			MIR_last	= 23 | MIR_float | MIR_oper, // highest ordinal value possible
+			MIR_last	= 23 | MIR_float | MIR_oper // highest ordinal value possible
 		};
 
 		enum ArgNumber {
 			_env = 0,
 			_argc = 1, 
-			_ap = 2,
+			_ap = 2
 		};
 		// ia32 offset = 4*ArgNumber+4
 
@@ -262,7 +262,7 @@ namespace avmplus
 			CR4 = 4,
 			CR5 = 5,
 			CR6 = 6,
-			CR7 = 7,
+			CR7 = 7
 		} ConditionRegister;
 
 		// These are used as register numbers in various parts of the code
@@ -836,10 +836,10 @@ namespace avmplus
 		OP*	  defineArgInsReg(Register r);
 		OP*   binaryIns(MirOpcode code, OP* a1, OP* a2);
 		
-		OP*   loadIns(MirOpcode code, int disp, OP* base)
+		OP*   loadIns(MirOpcode _code, int _disp, OP* _base)
 		{
-			AvmAssert((code & ~MIR_float & ~MIR_oper) == MIR_ld);
-			return Ins(code, base, (int32)disp);
+			AvmAssert((_code & ~MIR_float & ~MIR_oper) == MIR_ld);
+			return Ins(_code, _base, (int32)_disp);
 		}
 
 		OP*   cmpOptimization (int lhs, int rhs);
@@ -1069,17 +1069,17 @@ namespace avmplus
 			int count;
 			int countFree()
 			{
-				int count = 0;
+				int _count = 0;
 				for(int i=0;i<MAX_REGISTERS; i++)
-					count += ( (free & rmask(i)) == 0) ? 0 : 1;
-				return count;
+					_count += ( (free & rmask(i)) == 0) ? 0 : 1;
+				return _count;
 			}
 			int countActive()
 			{
-				int count = 0;
+				int _count = 0;
 				for(int i=0;i<MAX_REGISTERS; i++)
-					count += (active[i] == 0) ? 0 : 1;
-				return count;
+					_count += (active[i] == 0) ? 0 : 1;
+				return _count;
 			}
 
 			void checkCount()

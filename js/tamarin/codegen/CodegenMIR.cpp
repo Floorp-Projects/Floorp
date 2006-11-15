@@ -1793,6 +1793,10 @@ namespace avmplus
 			else
 				return binaryIns(MIR_and, atom, InsConst(uintptr(~7)));
 		}
+		
+#ifdef __GNUC__
+		return 0;	// satisfy GCC, although we should never get here
+#endif
 	}
 
 	// f(env, argc, instance, argv)
@@ -2219,7 +2223,7 @@ namespace avmplus
 		sizingStats[SZ_MIREXP] = expansionFactor;
 		uintptr actual_prologue_size = ((uintptr)ip-(uintptr)ipStart);
 		sizingStats[SZ_MIRPRO] = (double)(actual_prologue_size-prologue_size) / prologue_size;
-		AvmAssertMsg( prologue_size >= actual_prologue_size , "Increase prologue_size estimation\n");
+		AvmAssertMsg( (uintptr)prologue_size >= actual_prologue_size , "Increase prologue_size estimation\n");
 		#endif
 		
 		InsAlloc(0);
@@ -4803,7 +4807,7 @@ namespace avmplus
 				buffer << mirNames[op->code] << " ";
 #endif
 				const char *name; 
-				if (names != NULL && ((uintptr)(name = (const char *)names->get(op->addr)) != undefinedAtom) && name )
+				if (names != NULL && ((uintptr)(name = (const char *)names->get(op->addr)) != (uintptr)undefinedAtom) && name )
 				{
 					buffer << name;
 				}
@@ -5277,7 +5281,7 @@ namespace avmplus
 		#ifdef _DEBUG
 		// not terminal but good to know if our prologue estimation is off
 		uintptr actual = (uintptr)mip - (uintptr)mipStart;
-		AvmAssertMsg( actual <= md_prologue_size, "Increase md_prologue_size estimate\n");
+		AvmAssertMsg( actual <= (uintptr)md_prologue_size, "Increase md_prologue_size estimate\n");
 		#endif /* _DEBUG */
 	}
 
@@ -5681,7 +5685,7 @@ namespace avmplus
 		#ifdef _DEBUG
 		// not terminal but good to know if our epilogue estimation is off
 		uintptr actual_epilogue_size = ( (uintptr)mipEnd - (uintptr)mipEpilog );
-		AvmAssertMsg( actual_epilogue_size <= md_epilogue_size , "Increase md_epilogue_size estimate\n");
+		AvmAssertMsg( actual_epilogue_size <= (uintptr)md_epilogue_size , "Increase md_epilogue_size estimate\n");
 		if ((byte*)mipEnd >= pool->codeBuffer->end())
 			AvmAssert(false);
 		#endif /* DEBUG */
@@ -5691,8 +5695,8 @@ namespace avmplus
 		{
 			uint64 endTime = GC::GetPerformanceCounter();
 			uint64 freq = GC::GetPerformanceFrequency();
-			double mddiff = endTime-mdStartTime;
-			double alldiff = endTime - verifyStartTime;
+			double mddiff = (double)(endTime-mdStartTime);
+			double alldiff = (double)endTime - verifyStartTime;
 			double mirdiff = alldiff - mddiff;
 			mddiff = 1000*mddiff/freq;
 			alldiff = 1000*alldiff/freq;
@@ -5919,7 +5923,7 @@ namespace avmplus
 
 		// Remember what was the lowest nonvolatile register
 		// for stmw/lmw
-		if ((rmask(i) & regs.calleeSaved) && i < regs.LowerBound)
+		if ((rmask(i) & regs.calleeSaved) && i < (int)regs.LowerBound)
 			regs.LowerBound = i;
 
 		return (Register) i;
@@ -7421,10 +7425,13 @@ namespace avmplus
 		*mip++ = get_rtoc();
 #endif
 
+		// funny gyration needed to work around GCC pedantic warning
+		typedef Atom (*AtomMethodProc)(MethodEnv*, int, uint32 *);
+		
 #if defined(_MAC) && !TARGET_RT_MAC_MACHO
-		f->impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) (mip-2);
+		f->impl32 = *(AtomMethodProc*) &(mip-2);
 #else
-		f->impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) mipStart;
+		f->impl32 = *(AtomMethodProc*) &mipStart;
 #endif
 		// lock in the next available location in the buffer (16B aligned)
 		PoolObject* pool = f->pool;

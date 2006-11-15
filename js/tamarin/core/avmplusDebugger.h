@@ -39,7 +39,7 @@ namespace avmplus
 	enum DIType
 	{
 		DI_BAD = 0,
-		DI_LOCAL,
+		DI_LOCAL
 	};
 
 	/**
@@ -410,7 +410,7 @@ namespace avmplus
 			TRACE_METHODS = 1,						// method entry only 
 			TRACE_METHODS_WITH_ARGS = 2,			// method entry and arguments
 			TRACE_METHODS_AND_LINES = 3,			// method entry and line numbers
-			TRACE_METHODS_AND_LINES_WITH_ARGS = 4,	// method entry, arguments and line numbers
+			TRACE_METHODS_AND_LINES_WITH_ARGS = 4	// method entry, arguments and line numbers
 		} TraceLevel;
 
 		static TraceLevel astrace; 

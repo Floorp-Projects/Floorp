@@ -222,7 +222,7 @@ namespace avmplus
 
 		for (int i = 0; i < 128; i++)
 		{
-			char singleChar = i;
+			char singleChar = (char)i;
 			// call newString() with an explicit length of 1; required
 			// when singleChar==0, because in that case we need a string
 			// which is a single character with value 0
@@ -3085,7 +3085,9 @@ return the result of the comparison ToPrimitive(x) == y.
 
 #if defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 	// ignore warning that inline asm disables global optimization in this function
+	#ifdef _MSC_VER
 	#pragma warning(disable: 4740) 
+	#endif
 	Atom AvmCore::doubleToAtom_sse2(double n)
 	{
 		#ifdef AVMPLUS_PROFILE
@@ -3628,7 +3630,7 @@ return the result of the comparison ToPrimitive(x) == y.
 			return id;
 		#elif defined(_MAC) && (defined(AVMPLUS_IA32) || defined(AVMPLUS_AMD64))		
 		id = _mm_cvttsd_si32(_mm_set_sd(d));
-		if (id != 0x80000000)
+		if (id != (int)0x80000000)
 			return id;
 		#endif
 

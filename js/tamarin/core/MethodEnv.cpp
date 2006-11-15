@@ -172,7 +172,8 @@ namespace avmplus
 	MethodEnv::MethodEnv(void *addr, VTable *vtable)
 		: vtable(vtable), method(NULL)
 	{
-		impl32 = (Atom (*)(MethodEnv*, int, uint32 *)) addr;
+		typedef Atom (*AtomMethodProc)(MethodEnv*, int, uint32 *);
+		impl32 = *(AtomMethodProc*) &addr;
 	}
 
 	MethodEnv::MethodEnv(AbstractFunction* method, VTable *vtable)

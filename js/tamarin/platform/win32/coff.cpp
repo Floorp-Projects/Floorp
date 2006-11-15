@@ -68,7 +68,7 @@ namespace avmplus
 		{
 			header.f_magic = I386MAGIC;
 			header.f_nscns = 0;
-			header.f_timdat = time(0);
+			header.f_timdat = (uint32)(time(0));
 			header.f_symptr = sizeof(CoffHeader_t);
 			header.f_nsyms = 0;
 			header.f_opthdr = 0;

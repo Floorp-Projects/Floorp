@@ -1182,7 +1182,7 @@ namespace avmplus
 				if (v < 0) {
 					return *src++;
 				}
-				value = (value<<4) | v;
+				value = (wchar)((value<<4) | v);
 			}
 			src = ptr;
 			return value;
@@ -1280,7 +1280,7 @@ namespace avmplus
 					return NULL;
 				}
 				k += 2;
-				uint8 B = (v1<<4) | v2;
+				uint8 B = (uint8)((v1<<4) | v2);
 				uint32 V;
 				if (!(B & 0x80)) {
 					V = (wchar)B;
@@ -1315,7 +1315,7 @@ namespace avmplus
 						if (v2 == -1) {
 							return NULL;
 						}
-						B = (v1<<4) | v2;
+						B = (uint8)((v1<<4) | v2);
 						
 						// 23. If the two most significant bits
 						//     in B are not 10, throw a URIError exception.

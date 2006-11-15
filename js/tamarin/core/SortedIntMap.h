@@ -53,24 +53,24 @@ namespace avmplus
 	public:
 		enum { kInitialCapacity= 64 };
 		
-		SortedIntMap(int capacity=kInitialCapacity)
+		SortedIntMap(int _capacity=kInitialCapacity)
 		{
-			init(0, capacity, false, 0);
+			init(0, _capacity, false, 0);
 		}
-		SortedIntMap(MMgc::GC* gc, uint32 capacity=kInitialCapacity, bool livesInGCContainer=true, int flags=MMgc::GC::kContainsPointers)
+		SortedIntMap(MMgc::GC* _gc, uint32 _capacity=kInitialCapacity, bool _livesInGCContainer=true, int _flags=MMgc::GC::kContainsPointers)
 		{
-			init(gc, capacity, livesInGCContainer, flags);
+			init(_gc, _capacity, _livesInGCContainer, _flags);
 		}
-		void init(MMgc::GC* gc, uint32 capacity, bool livesInGCContainer, int flags)
+		void init(MMgc::GC* _gc, uint32 _capacity, bool _livesInGCContainer, int _flags)
 		{
 			len = 0;
 			max = 0;
 			keys = NULL;
 			values = NULL;
-			this->gc = gc;
-			this->gcFlags = flags;
-			this->livesInGCContainer = livesInGCContainer;
-			ensureCapacity(capacity);
+			this->gc = _gc;
+			this->gcFlags = _flags;
+			this->livesInGCContainer = _livesInGCContainer;
+			ensureCapacity(_capacity);
 		}
 		~SortedIntMap()
 		{

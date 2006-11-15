@@ -167,7 +167,7 @@ namespace avmplus
 			kNativeMethod1,
 			kNativeMethodRest,
 			kNativeMethodV,
-			kNativeMethodV1,
+			kNativeMethodV1
 		} type;
 		Handler handler;
 		int cookie;

@@ -92,14 +92,14 @@ namespace avmplus
 		When it changes, it's new valuable is visible in all closures in scope.
 		*/
 		
-		ScopeChain(ScopeTypeChain* scopeTraits, ScopeChain* outer, Namespace *dxns)
-		  : scopeTraits(scopeTraits), defaultXmlNamespace(dxns)
+		ScopeChain(ScopeTypeChain* _scopeTraits, ScopeChain* _outer, Namespace * _dxns)
+		  : scopeTraits(_scopeTraits), defaultXmlNamespace(_dxns)
 		{
-			if (outer)
+			if (_outer)
 			{
-				for (int i=0, n=outer->scopeTraits->size;/*outer->getSize();*/ i < n; i ++)
+				for (int i=0, n=_outer->scopeTraits->size;/*_outer->getSize();*/ i < n; i ++)
 				{
-					setScope(i, outer->scopes[i]);
+					setScope(i, _outer->scopes[i]);
 				}
 			}
 		}

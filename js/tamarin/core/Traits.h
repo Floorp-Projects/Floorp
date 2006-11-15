@@ -133,8 +133,8 @@ namespace avmplus
 			return totalSize;
 		}
 
-		void setTotalSize(size_t size) { 
-			totalSize = size;
+		void setTotalSize(size_t _size) { 
+			totalSize = _size;
 		}
 
 		void setMetadataPos(const byte* pos) {
@@ -242,9 +242,9 @@ namespace avmplus
 		/**
 		 * Defines a slot on this traits object.
 		 */
-		void defineSlot(Stringp name, Namespace* ns, int slot, Binding kind)
+		void defineSlot(Stringp _name, Namespace* _ns, int _slot, Binding _kind)
 		{
-			add(name, ns, slot<<3|kind);
+			add(_name, _ns, _slot<<3|_kind);
 		}
 		
 		Binding findBinding(Stringp name, Namespace* ns) const;

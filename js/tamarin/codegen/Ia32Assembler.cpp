@@ -78,7 +78,7 @@ namespace avmplus
 #ifdef AVMPLUS_IA32
 	void CodegenMIR::MODRM(Register reg, Register operand)
 	{
- 		*mip++ = 3<<6 | reg<<3 | operand;
+ 		*mip++ = (MDInstruction)(3<<6 | reg<<3 | operand);
  	}
 
 	void CodegenMIR::MODRM(Register reg, int disp, Register base, int lshift, Register index)
@@ -86,17 +86,17 @@ namespace avmplus
  		// reg <-> disp[base+index<<lshift]
  		AvmAssert(lshift >= 0 && lshift <= 3);
  		if (disp == 0 && base != EBP) {
- 			mip[0] =      0<<6 |   reg<<3 | 4;		// ModR/M
- 			mip[1] = lshift<<6 | index<<3 | base;	// SIB
+ 			mip[0] = (MDInstruction)(     0<<6 |   reg<<3 | 4);		// ModR/M
+ 			mip[1] = (MDInstruction)(lshift<<6 | index<<3 | base);	// SIB
 			mip += 2;
  		} else if (is8bit(disp)) {
- 			mip[0] =      1<<6 |   reg<<3 | 4;		// ModR/M
- 			mip[1] = lshift<<6 | index<<3 | base;	// SIB
-			mip[2] = disp;
+ 			mip[0] = (MDInstruction)(     1<<6 |   reg<<3 | 4);		// ModR/M
+ 			mip[1] = (MDInstruction)(lshift<<6 | index<<3 | base);	// SIB
+			mip[2] = (MDInstruction)(disp);
  			mip += 3;
  		} else {
- 			*(mip++) =      2<<6 |   reg<<3 | 4;		// ModR/M
- 			*(mip++) = lshift<<6 | index<<3 | base;		// SIB
+ 			*(mip++) = (MDInstruction)(     2<<6 |   reg<<3 | 4);		// ModR/M
+ 			*(mip++) = (MDInstruction)(lshift<<6 | index<<3 | base);		// SIB
  			IMM32(disp);
  		}
  	}
@@ -106,19 +106,19 @@ namespace avmplus
  		// dest <-> disp[base]
 		if (base == Unknown) {
 			// disp = absolute addr
-			*(mip++) = 0<<6 | reg<<3 | 5;
+			*(mip++) = (MDInstruction)(0<<6 | reg<<3 | 5);
 			IMM32(disp);
 		}
  		else if (base == ESP) {
  			MODRM(reg, disp, base, 0, (Register)4); // index==4 means ignore index
  		}
 		else if (disp == 0 && base != EBP) {
- 			*(mip++) = 0<<6 | reg<<3 | base; // mod r/m
+ 			*(mip++) = (MDInstruction)(0<<6 | reg<<3 | base); // mod r/m
  		} else if (is8bit(disp)) {
- 			*(mip++) = 1<<6 | reg<<3 | base; // mod r/m
- 			*(mip++) = disp;
+ 			*(mip++) = (MDInstruction)(1<<6 | reg<<3 | base); // mod r/m
+ 			*(mip++) = (MDInstruction)(disp);
  		} else {
- 			*(mip++) = 2<<6 | reg<<3 | base; // mod r/m
+ 			*(mip++) = (MDInstruction)(2<<6 | reg<<3 | base); // mod r/m
  			IMM32(disp);
  		}
  	}
@@ -133,12 +133,12 @@ namespace avmplus
 
 		if (is8bit(imm)) {
 			// push imm8 (sign extended)
-			mip[0] = 0x6a;
-			mip[1] = imm;
+			mip[0] = (MDInstruction)(0x6a);
+			mip[1] = (MDInstruction)(imm);
 			mip += 2;
  		} else {
 			// push imm32
- 			*mip++ = 0x68;
+ 			*mip++ = (MDInstruction)(0x68);
  			IMM32(imm);
  		}
  	}
@@ -152,7 +152,7 @@ namespace avmplus
 		#endif /* AVMPLUS_VERBOSE */
 
 		// mov reg, imm32
-		*mip++ = 0xb8 | dest;
+		*mip++ = (MDInstruction)(0xb8 | dest);
 		IMM32(imm32);
 	}
 
@@ -191,18 +191,18 @@ namespace avmplus
 
  		if (is8bit(imm)) {
 			// <op> reg, imm8
- 			mip[0] = 0x83;
- 			mip[1] = 3<<6 | op&~7 | reg;
- 			mip[2] = imm;
+ 			mip[0] = (MDInstruction)(0x83);
+ 			mip[1] = (MDInstruction)(3<<6 | op&~7 | reg);
+ 			mip[2] = (MDInstruction)(imm);
 			mip+=3;
  		} else {
  			if (reg == EAX) {
 				// <op> eax, imm32
- 				*mip++ = op;
+ 				*mip++ = (MDInstruction)(op);
  			} else {
 				// <op> reg, imm32
- 				mip[0] = 0x81;
- 				mip[1] = 3<<6 | op&~7 | reg;
+ 				mip[0] = (MDInstruction)(0x81);
+ 				mip[1] = (MDInstruction)(3<<6 | op&~7 | reg);
 				mip+=2;
  			}
  			IMM32(imm);
@@ -231,7 +231,7 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		*mip++ = op; 
+		*mip++ = (MDInstruction)(op); 
 		MODRM(r, rhs);
 	}
 
@@ -258,8 +258,8 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		mip[0] = op>>8;
-		mip[1] = op; 
+		mip[0] = (MDInstruction)(op>>8);
+		mip[1] = (MDInstruction)(op); 
 		mip += 2;
 		MODRM(r, rhs);
 	}
@@ -282,9 +282,9 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
- 		mip[0] = op>>16;
-		mip[1] = op>>8;
-		mip[2] = op;
+ 		mip[0] = (MDInstruction)(op>>16);
+		mip[1] = (MDInstruction)(op>>8);
+		mip[2] = (MDInstruction)(op);
 		mip += 3;
 		MODRM(dest, src);
 	}
@@ -307,9 +307,9 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
- 		mip[0] = op>>16;
-		mip[1] = op>>8;
-		mip[2] = op;
+ 		mip[0] = (MDInstruction)(op>>16);
+		mip[1] = (MDInstruction)(op>>8);
+		mip[2] = (MDInstruction)(op);
 		mip += 3;
  		MODRM(r, disp, base);
 	}
@@ -323,10 +323,10 @@ namespace avmplus
 		#endif /* AVMPLUS_VERBOSE */
 
 		// xorpd dest, m128
- 		mip[0] = 0x66;
-		mip[1] = 0x0f;
-		mip[2] = 0x57;
-		mip[3] = (dest<<3) | 5;
+ 		mip[0] = (MDInstruction)(0x66);
+		mip[1] = (MDInstruction)(0x0f);
+		mip[2] = (MDInstruction)(0x57);
+		mip[3] = (MDInstruction)((dest<<3) | 5);
 		mip += 4;
 		IMM32(addr);
 	}
@@ -341,13 +341,13 @@ namespace avmplus
 
 		if (is8bit(imm))
 		{
-			*mip++ = 0x6b;
+			*mip++ = (MDInstruction)(0x6b);
 			MODRM(dst,dst);
-			*mip++ = imm;
+			*mip++ = (MDInstruction)(imm);
 		}
 		else
 		{
-			*mip++ = 0x69;
+			*mip++ = (MDInstruction)(0x69);
 			MODRM(dst, dst);
 			IMM32(imm);
 		}
@@ -373,7 +373,7 @@ namespace avmplus
 			}
 		}
 		#endif /* AVMPLUS_VERBOSE */
-		*mip++ = op;
+		*mip++ = (MDInstruction)(op);
 	}
 
 	void CodegenMIR::SHIFT(int op, Register r, int imm8)
@@ -392,9 +392,9 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		*mip++ = 0xc1;
+		*mip++ = (MDInstruction)(0xc1);
 		MODRM((Register)op, r);
-		*mip++ = imm8;
+		*mip++ = (MDInstruction)(imm8);
 	}
 
 	void CodegenMIR::ALU(int op, Register r, int disp, Register base)
@@ -419,7 +419,7 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		*mip++ = op;
+		*mip++ = (MDInstruction)(op);
 		MODRM(r, disp, base);
 	}
 
@@ -450,12 +450,12 @@ namespace avmplus
 
 		// j<op> off32
 		if (is8bit(offset)) {
-			mip[0] = 0x70 | op;
-			mip[1] = offset;
+			mip[0] = (MDInstruction)(0x70 | op);
+			mip[1] = (MDInstruction)(offset);
 			mip += 2;
 		} else {
- 			mip[0] = 0x0f;
- 			mip[1] = 0x80 | op;
+ 			mip[0] = (MDInstruction)(0x0f);
+ 			mip[1] = (MDInstruction)(0x80 | op);
 			mip+=2;
  			IMM32(offset);
 		}
@@ -470,11 +470,11 @@ namespace avmplus
 		#endif /* AVMPLUS_VERBOSE */
 
 		if (is8bit(offset)) {
-			mip[0] = 0xeb;
-			mip[1] = offset;
+			mip[0] = (MDInstruction)(0xeb);
+			mip[1] = (MDInstruction)(offset);
 			mip += 2;
 		} else {
- 			*mip++ = 0xe9;
+ 			*mip++ = (MDInstruction)(0xe9);
  			IMM32(offset);
 		}
 	}
@@ -510,8 +510,8 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		*mip++ = op>>8;
-		*mip++ = op&255 | r;
+		*mip++ = (MDInstruction)(op>>8);
+		*mip++ = (MDInstruction)(op&255 | r);
 	}
 
 	void CodegenMIR::FPU(int op, int disp, Register base)
@@ -538,7 +538,7 @@ namespace avmplus
 		#endif /* AVMPLUS_VERBOSE */
 
 		AvmAssert(x87Dirty);
-		*mip++ = op>>8;
+		*mip++ = (MDInstruction)(op>>8);
 		MODRM((Register)(op&0xff), disp, base);
 	}
 
@@ -559,8 +559,8 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
-		mip[0] = op>>8;
-		mip[1] = op&255;
+		mip[0] = (MDInstruction)(op>>8);
+		mip[1] = (MDInstruction)(op&255);
 		mip += 2;
 	}
 
@@ -628,7 +628,7 @@ namespace avmplus
 
 			CMP(EAX,_PAGESIZE_);	//      ; more than one page requested?
 			JNB(1);					//      ; no
-			mip[-1] = label_loop-mip;
+			mip[-1] = (MDInstruction)(label_loop-mip);
 
 			SUB(ECX,EAX);			//      ; move stack down by eax
 			MOV(EAX,ESP);			//      ; save current tos and do a...
@@ -774,7 +774,7 @@ namespace avmplus
 			PUSH (0);
 			JMP (1);
 
-			patch_ip[-1] = mip-patch_ip;
+			patch_ip[-1] = (byte)(mip-patch_ip);
 			patch_ip = mip;
 
 			// rest_count>=0
@@ -789,7 +789,7 @@ namespace avmplus
 				MOV (ECX, info->param_count); // ECX will contain new argc
 			}
 
-			patch_ip[-1] = mip-patch_ip;
+			patch_ip[-1] = (byte)(mip-patch_ip);
 		}
 		else if (info->optional_count)
 		{
@@ -889,7 +889,7 @@ namespace avmplus
 				// Patch the JAE instruction to jump here,
 				// which is where the non-optional code will
 				// go.
-				patch_jae[-1] = mip-patch_jae;
+				patch_jae[-1] = (byte)(mip-patch_jae);
 			}
 
 			// Generate the code for the non-optional case.
@@ -918,7 +918,7 @@ namespace avmplus
 			// Patch the JMP instruction, if applicable,
 			// to jump to here.
 			if (patch_jmp) {
-				patch_jmp[-1] = mip-patch_jmp;
+				patch_jmp[-1] = (byte)(mip-patch_jmp);
 			}
 		}
 
@@ -1103,7 +1103,7 @@ namespace avmplus
 			MOV (EAX, offsetof(VTable,methods)+4*e->disp_id, ECX); // load concrete env
 			MOV (_env, ESP, EAX);  // replace env before call
 			JMP (offsetof(MethodEnv, impl32), EAX); // invoke real method indirectly
-			patchip[-1] = mip-patchip;
+			patchip[-1] = (byte)(mip-patchip);
 
 			pool->core->GetGC()->Free(e);
 			e = next;

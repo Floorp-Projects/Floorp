@@ -118,13 +118,13 @@ namespace avmplus
 			DynamicProfiler* dprof;
 
 		public:
-			StackMark(AbcOpcode op, DynamicProfiler* dprof) : savedOp(OP_nop)	// init to make GCC happy
+			StackMark(AbcOpcode op, DynamicProfiler* _dprof) : savedOp(OP_nop)	// init to make GCC happy
 			{
-				if (dprof->dprofile)
+				if (_dprof->dprofile)
 				{
-					savedOp = dprof->lastOp;
-					dprof->mark(op);
-					this->dprof = dprof;
+					savedOp = _dprof->lastOp;
+					_dprof->mark(op);
+					this->dprof = _dprof;
 				}
 				else
 				{

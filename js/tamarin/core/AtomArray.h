@@ -109,7 +109,7 @@ namespace avmplus
 		uint32	m_length;
 		Atom* m_atoms;
 
-		const static uint32  kMinCapacity = 4;
+		const static int  kMinCapacity = 4;
 
 		void setAtInternal(uint32 index, Atom a)
 		{

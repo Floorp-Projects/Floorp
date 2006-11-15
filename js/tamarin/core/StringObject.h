@@ -48,7 +48,7 @@ namespace avmplus
 		 * Constructs a UTF8String.  This should not be called
 		 * directly; use the toUTF8String method of String.
 		 */
-		UTF8String(int length) { m_length = length; }
+		UTF8String(int _length) { m_length = _length; }
 
 		/**
 		 * Operator overload; returns a pointer to the

@@ -141,15 +141,15 @@ namespace avmplus
 
 		void pop_push(int n, Traits* type, bool notNull=false)
 		{
-			int sp = stackDepth - n;
-			setType(verifier->stackBase+sp, type, notNull);
-			stackDepth = sp+1;
+			int _sp = stackDepth - n;
+			setType(verifier->stackBase+_sp, type, notNull);
+			stackDepth = _sp+1;
 		}
 
-		void push(Value& value)
+		void push(Value& _value)
 		{
 			AvmAssert(verifier->stackBase+stackDepth+1 <= verifier->frameSize);
-			setType(verifier->stackBase+stackDepth++, value.traits, value.notNull);
+			setType(verifier->stackBase+stackDepth++, _value.traits, _value.notNull);
 		}
 
 		void push(Traits* traits, bool notNull=false)

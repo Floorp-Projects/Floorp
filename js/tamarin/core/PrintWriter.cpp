@@ -152,7 +152,7 @@ namespace avmplus
 	
 		wchar buffer[256];
 		int len;
-		if (MathUtils::convertIntegerToString(value, buffer, len)) {
+		if (MathUtils::convertIntegerToString((int)value, buffer, len)) {
 			*this << buffer;
 		}
 		return *this;
@@ -273,8 +273,8 @@ namespace avmplus
 
 	void PrintWriter::writeHexWord(uint16 value)
 	{
-		writeHexByte(value>>8);
-		writeHexByte(value&0xff);
+		writeHexByte((uint8)(value>>8));
+		writeHexByte((uint8)(value&0xff));
 	}
 
 	void PrintWriter::writeHexDWord(uint32 value)
@@ -445,7 +445,7 @@ namespace avmplus
 				case 'c':
 					{
 						// gcc complains if you put va_arg(ap, char)
-						char value = va_arg(ap, int);
+						char value = (char)(va_arg(ap, int));
 						*this << value;
 					}
 					break;

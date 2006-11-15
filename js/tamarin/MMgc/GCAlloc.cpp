@@ -38,14 +38,14 @@
 
 namespace MMgc
 {
-	GCAlloc::GCAlloc(GC* gc, int itemSize, bool containsPointers, bool isRC, int sizeClassIndex) : 
-		m_gc(gc),
-		containsPointers(containsPointers), 
-		containsRCObjects(isRC),
-		m_sizeClassIndex(sizeClassIndex)
+	GCAlloc::GCAlloc(GC* _gc, int _itemSize, bool _containsPointers, bool _isRC, int _sizeClassIndex) : 
+		m_gc(_gc),
+		containsPointers(_containsPointers), 
+		containsRCObjects(_isRC),
+		m_sizeClassIndex(_sizeClassIndex)
 	{
 		// Round itemSize to the nearest boundary of 8
-		itemSize = (itemSize+7)&~7;
+		_itemSize = (_itemSize+7)&~7;
 
 		m_firstBlock    = NULL;
 		m_lastBlock     = NULL;
@@ -53,7 +53,7 @@ namespace MMgc
 		m_needsSweeping = NULL;
 		m_numAlloc      = 0;
 		m_maxAlloc      = 0;
-		m_itemSize      = itemSize;
+		m_itemSize      = _itemSize;
 		m_numBlocks = 0;
 		m_finalized = false;
 
@@ -100,7 +100,7 @@ namespace MMgc
 				for(int i=3, n=(m_firstBlock->size>>2)-1; i<n; i++)
 				{
 					int data = ((int*)item)[i];
-					if(data != 0xbabababa && data != 0xcacacaca)
+					if(data != (int32)0xbabababa && data != (int32)0xcacacaca)
 					{
 						GCDebugMsg(false, "Object 0x%x was written to after it was deleted, allocation trace:");
 						PrintStackTrace((int*)item+2);
@@ -261,7 +261,7 @@ start:
 #endif			
 			{
 				int data = ((int*)item)[i];
-				if(data != 0xcacacaca && data != 0xbabababa)
+				if(data != (int32)0xcacacaca && data != (int32)0xbabababa)
 				{
 					GCDebugMsg(false, "Object 0x%x was written to after it was deleted, allocation trace:", item);
 					PrintStackTrace((int*)item+2);

@@ -1030,7 +1030,7 @@ public:
 		Cleaner() {}
 		// don't let myself move between objects
 		Cleaner& operator=(const Cleaner& /*rhs*/) { return *this; }
-		void set(const void *v, size_t size) { this->v = (int*)v; this->size = size; }
+		void set(const void * _v, size_t _size) { this->v = (int*)_v; this->size = _size; }
 		~Cleaner() { 
 			if(v) 
 				memset(v, 0, size);

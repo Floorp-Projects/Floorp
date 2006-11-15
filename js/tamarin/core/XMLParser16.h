@@ -68,7 +68,7 @@ namespace avmplus
 			kDocTypeDeclaration    = 10,
 
 			// This does not match the W3C XML DOM SPEC
-			kXMLDeclaration        = 13,
+			kXMLDeclaration        = 13
 		};
 
 		Stringp text;
@@ -122,7 +122,7 @@ namespace avmplus
 			kUnterminatedAttributeValue        = -8,
 			kUnterminatedElement               = -9,
 			kElementNeverBegun                 = -10,
-			kUnterminatedProcessingInstruction = -11,
+			kUnterminatedProcessingInstruction = -11
 		};
 
 		AvmCore* core;

@@ -148,7 +148,7 @@ namespace MMgc
 #ifdef _DEBUG
 			// this is a deleted object but 0xca indicates the InZCT flag so we
 			// might erroneously get here for a deleted RCObject
-			if(composite == 0xcacacaca || composite == 0xbabababa)
+			if(composite == (int32)0xcacacaca || composite == (int32)0xbabababa)
 				return;
 #endif
 
@@ -189,7 +189,7 @@ namespace MMgc
 			GCAssert(gc->IsRCObject(this));
 			GCAssert(this == gc->FindBeginning(this));
 			// don't touch swept objects
-			if(composite == 0xcacacaca || composite == 0xbabababa)
+			if(composite == (int32)0xcacacaca || composite == (int32)0xbabababa)
 				return;
 #endif
 
@@ -215,7 +215,7 @@ namespace MMgc
 			GCAssert(gc->IsRCObject(this));
 			GCAssert(this == gc->FindBeginning(this));
 			// don't touch swept objects
-			if(composite == 0xcacacaca || composite == 0xbabababa)
+			if(composite == (int32)0xcacacaca || composite == (int32)0xbabababa)
 				return;
 		
 			if(gc->Destroying())
@@ -307,7 +307,7 @@ namespace MMgc
 	{
 	public:
 		ZeroPtr() { t = NULL; }
-		ZeroPtr(T t) : t(t) { }
+		ZeroPtr(T _t) : t(_t) { }
 		~ZeroPtr() 
 		{
 			t = NULL;
@@ -325,7 +325,7 @@ namespace MMgc
 	{
 	public:
 		RCPtr() { t = NULL; }
-		RCPtr(T t) : t(t) { if(t && (uintptr)t != 1) t->IncrementRef(); }
+		RCPtr(T _t) : t(_t) { if(t && (uintptr)t != 1) t->IncrementRef(); }
 		~RCPtr() 
 		{
 			if(t && t != (T)1)

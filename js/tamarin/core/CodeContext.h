@@ -51,13 +51,13 @@ namespace avmplus
 	class EnterCodeContext
 	{
 	public:
-		EnterCodeContext(AvmCore *core, MethodEnv *env)
+		EnterCodeContext(AvmCore * _core, MethodEnv *env)
 		{
-			initialize(core, (CodeContextAtom)env | CONTEXT_ENV);
+			initialize(_core, (CodeContextAtom)env | CONTEXT_ENV);
 		}
-		EnterCodeContext(AvmCore *core, CodeContext *codeContext)
+		EnterCodeContext(AvmCore * _core, CodeContext *codeContext)
 		{
-			initialize(core, (CodeContextAtom)codeContext | CONTEXT_OBJECT);
+			initialize(_core, (CodeContextAtom)codeContext | CONTEXT_OBJECT);
 		}
 		~EnterCodeContext()
 		{
@@ -68,11 +68,11 @@ namespace avmplus
 			core->codeContextAtom = savedCodeContextAtom;
 		}
 	private:
-		void initialize(AvmCore *core, CodeContextAtom atom)
+		void initialize(AvmCore * _core, CodeContextAtom atom)
 		{
-			this->core = core;
-			savedCodeContextAtom = core->codeContextAtom;
-			core->codeContextAtom = atom;
+			this->core = _core;
+			savedCodeContextAtom = _core->codeContextAtom;
+			_core->codeContextAtom = atom;
 		}
 		CodeContextAtom savedCodeContextAtom;
 		AvmCore *core;

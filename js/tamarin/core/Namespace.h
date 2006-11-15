@@ -53,7 +53,7 @@ namespace avmplus
             NS_PackageInternal = 2,
             NS_Private = 3,
             NS_Explicit = 4,
-			NS_StaticProtected = 5,
+			NS_StaticProtected = 5
         };
 		Namespace(Atom prefix, Stringp uri, NamespaceType type);
 		~Namespace();

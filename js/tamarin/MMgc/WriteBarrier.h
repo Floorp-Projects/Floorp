@@ -75,9 +75,9 @@ namespace MMgc
 	{
 	public:
 		WriteBarrier() {}
-		WriteBarrier(T t)
+		WriteBarrier(T _t)
 		{ 
-			set(t);
+			set(_t);
 		}
 
 		~WriteBarrier() 
@@ -133,9 +133,9 @@ namespace MMgc
 	{
 	public:
 		WriteBarrierRC() {}
-		WriteBarrierRC(T t)
+		WriteBarrierRC(T _t)
 		{ 
-			set(t);
+			set(_t);
 		}
 
 		~WriteBarrierRC() 

@@ -68,8 +68,8 @@ namespace avmplus
 	class BasicScriptBufferImpl : public ScriptBufferImpl
 	{
 	public:
-		BasicScriptBufferImpl(size_t size) {
-			this->size = size;
+		BasicScriptBufferImpl(size_t _size) {
+			this->size = _size;
 			buffer = (byte*)(this+1);
 		}
 		// override to skip memset and prevent marking
@@ -87,9 +87,9 @@ namespace avmplus
 	class ReadOnlyScriptBufferImpl : public ScriptBufferImpl
 	{
 	public:
-		ReadOnlyScriptBufferImpl(const byte *buf, size_t size) {
-			this->size = size;
-			this->buffer = (byte*) buf;;
+		ReadOnlyScriptBufferImpl(const byte * _buf, size_t _size) {
+			this->size = _size;
+			this->buffer = (byte*) _buf;
 		}
 	};
 	/**

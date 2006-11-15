@@ -89,7 +89,7 @@ namespace avmplus
 		const Atom kDoubleType    = 7;
 		/*@}*/
 
-		#define	ISNULL(a) (((unsigned)a) < kSpecialType)
+		#define	ISNULL(a) (((uintptr)a) < (uintptr)kSpecialType)
 
 		/* 
 		other things you can do with math on atoms

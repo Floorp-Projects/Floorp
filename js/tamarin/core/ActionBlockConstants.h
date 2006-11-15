@@ -67,7 +67,7 @@ namespace avmplus
             CONSTANT_ExplicitNamespace  = 0x19,
 			CONSTANT_StaticProtectedNs  = 0x1A,
 			CONSTANT_MultinameL         = 0x1B,
-			CONSTANT_MultinameLA        = 0x1C,
+			CONSTANT_MultinameLA        = 0x1C
 		};
 		/*@}*/
 
@@ -82,7 +82,7 @@ namespace avmplus
 			TRAIT_Class			= 0x04,
 			TRAIT_Function		= 0x05,
 			TRAIT_Const			= 0x06,
-			TRAIT_mask			= 15,
+			TRAIT_mask			= 15
 		};
 		/*@}*/
 

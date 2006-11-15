@@ -203,7 +203,7 @@ namespace avmplus
 					if (--outMax < 0) {
 						return -1;
 					}					
-					*out++ = outch;
+					*out++ = (wchar)(outch);
 				}
 				outLen++;
 				continue;
@@ -229,7 +229,7 @@ namespace avmplus
 					if (--outMax < 0) {
 						return -1;
 					}					
-					*out++ = outch;
+					*out++ = (wchar)(outch);
 				}
 				outLen++;
 				continue;
