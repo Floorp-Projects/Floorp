@@ -44,8 +44,6 @@
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
-#elif defined(XP_MAC)
-#include <Files.h>
 #elif defined(XP_WIN)
 #include <windows.h>
 #elif defined(XP_OS2)
@@ -58,11 +56,7 @@
 #include "prtypes.h"
 #include "prthread.h"
 
-#if defined(XP_MAC)
-#include "pprio.h"
-#else
 #include "private/pprio.h"
-#endif
 
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheEntry.h"
@@ -94,10 +88,6 @@ static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
  *  Helper class for nsDiskCacheDevice.
  *
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCacheEvictor
-#endif
 
 class nsDiskCacheEvictor : public nsDiskCacheRecordVisitor
 {
@@ -167,10 +157,6 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
 /******************************************************************************
  *  nsDiskCacheDeviceInfo
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCacheDeviceInfo
-#endif
 
 class nsDiskCacheDeviceInfo : public nsICacheDeviceInfo {
 public:
@@ -252,10 +238,6 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
 /******************************************************************************
  *  nsDiskCache
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCache
-#endif
 
 /**
  *  nsDiskCache::Hash(const char * key)
@@ -286,12 +268,6 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
         return NS_ERROR_FAILURE;
     }
 
-#elif defined(XP_MAC)
-    if (::SetEOF(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
-        NS_ERROR("SetEOF failed");
-        return NS_ERROR_FAILURE;
-    }
-
 #elif defined(XP_WIN)
     PRInt32 cnt = PR_Seek(fd, newEOF, PR_SEEK_SET);
     if (cnt == -1)  return NS_ERROR_FAILURE;
@@ -315,11 +291,6 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 /******************************************************************************
  *  nsDiskCacheDevice
  *****************************************************************************/
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCacheDevice
-#endif
 
 nsDiskCacheDevice::nsDiskCacheDevice()
     : mCacheCapacity(0)
@@ -825,11 +796,6 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
 /**
  *  private methods
  */
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark PRIVATE METHODS
-#endif
-
 
 nsresult
 nsDiskCacheDevice::OpenDiskCache()
@@ -925,10 +891,6 @@ nsDiskCacheDevice::EvictDiskCacheEntries(PRUint32  targetCapacity)
 /**
  *  methods for prefs
  */
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark PREF METHODS
-#endif
 
 void
 nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
