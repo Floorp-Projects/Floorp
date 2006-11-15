@@ -42,8 +42,9 @@ public class test implements PlugletFactory {
      * Initializes the pluglet and will be called before any new instances are
      * created.
      */
-    public void initialize(PlugletManager manager) {	
-	org.mozilla.util.DebugPluglet.print("--test.initialize\n");
+    public void initialize(String plugletPath, PlugletManager manager) {
+	org.mozilla.util.DebugPluglet.print("--test.initialize(" + 
+					    plugletPath + ")\n");
     }
     /**
      * Called when the browser is done with the pluglet factory, or when

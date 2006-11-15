@@ -27,7 +27,7 @@ public class JMPlayer implements PlugletFactory {
         }
  	return player;
     }
-    public void initialize(PlugletManager manager) {	
+    public void initialize(String plugletPath, PlugletManager manager) { 
     }
     public void shutdown() {
     }

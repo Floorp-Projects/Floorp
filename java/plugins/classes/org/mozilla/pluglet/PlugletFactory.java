@@ -56,7 +56,7 @@ public interface PlugletFactory {
      * @param manager This is an instance of <code>PlugletManager</code> that is passed
      * to this method.
      */
-    public void initialize(PlugletManager manager);
+    public void initialize(String plugletJarFileName, PlugletManager manager);
     /**
      * Called when the browser is done with a <code>PlugletFactory</code> instance. Normally
      * there is only one <code>PlugletFactory</code> instance. 

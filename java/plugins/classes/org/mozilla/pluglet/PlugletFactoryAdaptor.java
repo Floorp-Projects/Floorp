@@ -26,7 +26,7 @@ public  class PlugletFactoryAdaptor implements PlugletFactory {
     public Pluglet createPluglet(String mimeType) {
 	return null;
     }
-    public void initialize(PlugletManager manager) {
+    public void initialize(String plugletPath, PlugletManager manager) {
     }
     public void shutdown() {
     }

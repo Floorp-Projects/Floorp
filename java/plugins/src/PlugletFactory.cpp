@@ -99,7 +99,8 @@ nsresult PlugletFactory::Initialize(void) {
             env->ExceptionDescribe(); 
 	    return NS_ERROR_FAILURE;
 	}   
-	initializeMID = env->GetMethodID(clazz,"initialize","(Lorg/mozilla/pluglet/mozilla/PlugletManager;)V");
+	initializeMID = env->GetMethodID(clazz,"initialize",
+					 "(Ljava/lang/String;Lorg/mozilla/pluglet/mozilla/PlugletManager;)V");
 	if (!initializeMID) {
             env->ExceptionDescribe();
 	    return NS_ERROR_FAILURE;
@@ -116,7 +117,9 @@ nsresult PlugletFactory::Initialize(void) {
 	if (NS_FAILED(rv)) {
 	    return rv;
 	}
-	env->CallVoidMethod(jthis,initializeMID,plugletEngineObj);
+	jstring jpath = env->NewStringUTF(path);
+	env->CallVoidMethod(jthis,initializeMID, jpath, plugletEngineObj);
+	env->ReleaseStringUTFChars(jpath, path);
 	if (env->ExceptionOccurred()) {
 	    env->ExceptionDescribe();
 	    return NS_ERROR_FAILURE;
