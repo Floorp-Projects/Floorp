@@ -344,6 +344,26 @@ txXPathTreeWalker::moveToSibling(PRInt32 aDir)
     return PR_TRUE;
 }
 
+txXPathNode::txXPathNode(const txXPathNode& aNode)
+  : mNode(aNode.mNode),
+    mRefCountRoot(aNode.mRefCountRoot),
+    mIndex(aNode.mIndex)
+{
+    MOZ_COUNT_CTOR(txXPathNode);
+    if (mRefCountRoot) {
+        NS_ADDREF(Root());
+    }
+}
+
+txXPathNode::~txXPathNode()
+{
+    MOZ_COUNT_DTOR(txXPathNode);
+    if (mRefCountRoot) {
+        nsINode *root = Root();
+        NS_RELEASE(root);
+    }
+}
+
 /* static */
 PRBool
 txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,

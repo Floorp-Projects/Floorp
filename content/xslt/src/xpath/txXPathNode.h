@@ -184,39 +184,6 @@ txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
 #endif
 }
 
-#ifdef TX_EXE
-inline
-txXPathNode::txXPathNode(const txXPathNode& aNode)
-    : mInner(aNode.mInner)
-{
-}
-#else
-inline
-txXPathNode::txXPathNode(const txXPathNode& aNode)
-  : mNode(aNode.mNode),
-    mRefCountRoot(aNode.mRefCountRoot),
-    mIndex(aNode.mIndex)
-{
-    MOZ_COUNT_CTOR(txXPathNode);
-    if (mRefCountRoot) {
-        NS_ADDREF(Root());
-    }
-}
-#endif
-
-inline
-txXPathNode::~txXPathNode()
-{
-#ifdef TX_EXE
-#else
-    MOZ_COUNT_DTOR(txXPathNode);
-    if (mRefCountRoot) {
-        nsINode *root = Root();
-        NS_RELEASE(root);
-    }
-#endif
-}
-
 inline PRBool
 txXPathNode::operator==(const txXPathNode& aNode) const
 {
