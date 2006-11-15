@@ -56,6 +56,14 @@
 // root accessible per window.
 - (BOOL)isRoot;
 
+// some mozAccessibles implement accessibility support in place of another object. for example, 
+// ChildView gets its support from us.
+//
+// instead of returning a mozAccessible to the OS when it wants an object, we need to pass the view we represent, so the
+// OS doesn't get confused and think we return some random object.
+- (BOOL)hasRepresentedView;
+- (id)representedView;
+
 #ifdef DEBUG
 // debug utility that will print the native accessibility tree, starting
 // at this node.

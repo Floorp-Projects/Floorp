@@ -46,25 +46,24 @@
 
 @interface mozAccessible : NSObject <mozAccessible>
 {
-  nsAccessible    *mGeckoAccessible;  // weak reference; it owns us.
-  NSMutableArray  *mChildren;         // strong ref to array of children
+  nsAccessibleWrap *mGeckoAccessible;  // weak reference; it owns us.
+  NSMutableArray   *mChildren;         // strong ref to array of children
   
   // we can be marked as 'expired' if Shutdown() is called on our geckoAccessible.
   // since we might still be retained by some third-party, we need to do cleanup
   // in |expire|, and prevent any potential harm that could come from someone using us
   // after this point.
   BOOL mIsExpired;
+  
+  // the nsIAccessible role of our gecko accessible.
+  PRUint32        mRole;
 }
 
 // inits with the gecko owner.
-- (id)initWithAccessible:(nsAccessible*)geckoParent;
+- (id)initWithAccessible:(nsAccessibleWrap*)geckoParent;
 
 // our accessible parent (AXParent)
 - (id <mozAccessible>)parent;
-
-// when referring to ourself in the accessible hierarchy, we'll use
-// this. see mozDocAccessible.h for why.
-- (id <mozAccessible>)ourself;
 
 // a lazy cache of our accessible children (AXChildren). updated
 - (NSArray*)children;
@@ -78,17 +77,26 @@
 // can be overridden to report another role name.
 - (NSString*)role;
 
+// a subrole is a more specialized variant of the role. for example,
+// the role might be "textfield", while the subrole is "password textfield".
+- (NSString*)subrole;
+
 // returns the native window we're inside.
 - (NSWindow*)window;
 
 // the accessible description of this particular instance.
 - (NSString*)customDescription;
 
-// the string value of this element.
-- (NSString*)value;
+// the value of this element.
+- (id)value;
 
 // name that is associated with this accessible (for buttons, etc)
 - (NSString*)title;
+
+// help text associated with this element.
+- (NSString*)help;
+
+- (BOOL)isEnabled;
 
 // information about focus.
 - (BOOL)isFocused;
@@ -97,8 +105,9 @@
 // returns NO if for some reason we were unable to focus the element.
 - (BOOL)focus;
 
-// sends out a notification to listening accessible providers.
+// notifications sent out to listening accessible providers.
 - (void)didReceiveFocus;
+- (void)valueDidChange;
 
 #pragma mark -
 
@@ -108,8 +117,7 @@
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.
 - (void)expire;
-
-#pragma mark -
+- (BOOL)isExpired;
 
 #ifdef DEBUG
 - (void)printHierarchy;

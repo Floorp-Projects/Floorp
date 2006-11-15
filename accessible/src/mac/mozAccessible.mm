@@ -46,11 +46,15 @@
 #include "nsCoord.h"
 
 #include "nsIAccessible.h"
+#include "nsIAccessibleText.h"
+#include "nsIAccessibleEditableText.h"
 
 // These constants are only defined in OS X SDK 10.4, so we define them in order
 // to be able to use for earlier OS versions.
-const NSString *kInstanceDescriptionAttribute = @"AXDescription";     // NSAccessibilityDescriptionAttribute
-const NSString *kTopLevelUIElementAttribute = @"AXTopLevelUIElement"; // NSAccessibilityTopLevelUIElementAttribute
+const NSString *kInstanceDescriptionAttribute = @"AXDescription";       // NSAccessibilityDescriptionAttribute
+const NSString *kTopLevelUIElementAttribute   = @"AXTopLevelUIElement"; // NSAccessibilityTopLevelUIElementAttribute
+const NSString *kTextLinkSubrole              = @"AXTextLink";          // NSAccessibilitySecureTextFieldSubrole
+const NSString *kURLAttribute                 = @"AXURL";
 
 // converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
 // of the screen), into a top-left screen point, that gecko can use.
@@ -71,9 +75,17 @@ ObjectOrUnignoredAncestor(id anObject)
   return anObject;
 }
 
+static inline mozAccessible* 
+NativeFromGeckoAccessible(nsIAccessible *anAccessible)
+{
+  mozAccessible *native = nil;
+  anAccessible->GetNativeInterface ((void**)&native);
+  return [native hasRepresentedView] ? [native representedView] : native;
+}
+
+#pragma mark -
 
 @interface mozAccessible (Private)
-- (mozAccessible*)getNativeFromGeckoAccessible:(nsIAccessible*)accessible;
 #ifdef DEBUG
 - (void)sanityCheckChildren:(NSArray*)theChildren;
 #endif
@@ -83,11 +95,12 @@ ObjectOrUnignoredAncestor(id anObject)
  
 @implementation mozAccessible
  
-- (id)initWithAccessible:(nsAccessible*)accessible
+- (id)initWithAccessible:(nsAccessibleWrap*)geckoAccessible
 {
   if ((self = [super init])) {
-    mGeckoAccessible = accessible;
+    mGeckoAccessible = geckoAccessible;
     mIsExpired = NO;
+    geckoAccessible->GetFinalRole(&mRole);
     
     // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
     // in nsRoleMap.h.
@@ -99,13 +112,6 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)dealloc
 {
-  // post a notification that we've gone away, if we're not ignored.
-  // XXX: is this expensive perf-wise?
-  if (![self accessibilityIsIgnored]) {
-    NSAccessibilityPostNotification([self ourself],
-                                    NSAccessibilityUIElementDestroyedNotification);
-  }
-  
   [mChildren release];
   [super dealloc];
 }
@@ -125,10 +131,11 @@ ObjectOrUnignoredAncestor(id anObject)
   if (mIsExpired)
     return [NSArray array];
   
-  static NSArray *supportedAttributes = nil;
-  if (!supportedAttributes) {
+  static NSArray *generalAttributes = nil;
+  
+  if (!generalAttributes) {
     // standard attributes that are shared and supported by all generic elements.
-    supportedAttributes = [[NSArray alloc] initWithObjects:NSAccessibilityChildrenAttribute, 
+    generalAttributes = [[NSArray alloc] initWithObjects:  NSAccessibilityChildrenAttribute, 
                                                            NSAccessibilityParentAttribute,
                                                            NSAccessibilityRoleAttribute,
                                                            NSAccessibilityTitleAttribute,
@@ -136,15 +143,18 @@ ObjectOrUnignoredAncestor(id anObject)
                                                            NSAccessibilitySubroleAttribute,
                                                            NSAccessibilityRoleDescriptionAttribute,
                                                            NSAccessibilityPositionAttribute,
+                                                           NSAccessibilityEnabledAttribute,
                                                            NSAccessibilitySizeAttribute,
                                                            NSAccessibilityWindowAttribute,
                                                            NSAccessibilityFocusedAttribute,
+                                                           NSAccessibilityHelpAttribute,
+                                                           NSAccessibilityTitleUIElementAttribute,
                                                            kTopLevelUIElementAttribute,
-                                                           // kInstanceDescriptionAttribute, // XXX: not implemented yet
+                                                           kInstanceDescriptionAttribute,
                                                            nil];
   }
 
-  return supportedAttributes;
+  return generalAttributes;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
@@ -155,22 +165,26 @@ ObjectOrUnignoredAncestor(id anObject)
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
     return NSAccessibilityUnignoredChildren ([self children]);
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) 
-    return ObjectOrUnignoredAncestor ([self parent]);
+    return [self parent];
   
 #ifdef DEBUG_hakan
   NSLog (@"(%@ responding to attr %@)", self, attribute);
 #endif
-  
-  if ([attribute isEqualToString:NSAccessibilityPositionAttribute]) 
-    return [self position];
+
   if ([attribute isEqualToString:NSAccessibilityRoleAttribute])
     return [self role];
+  if ([attribute isEqualToString:NSAccessibilityPositionAttribute]) 
+    return [self position];
   if ([attribute isEqualToString:NSAccessibilitySubroleAttribute])
-    return nil; // default to no subrole
+    return [self subrole];
+  if ([attribute isEqualToString:NSAccessibilityEnabledAttribute])
+    return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return NSAccessibilityRoleDescription([self role], nil);
+  if ([attribute isEqualToString:kInstanceDescriptionAttribute])
+    return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
     return [NSNumber numberWithBool:[self isFocused]];
   if ([attribute isEqualToString:NSAccessibilitySizeAttribute])
@@ -178,15 +192,17 @@ ObjectOrUnignoredAncestor(id anObject)
   if ([attribute isEqualToString:NSAccessibilityWindowAttribute])
     return [self window];
   if ([attribute isEqualToString:kTopLevelUIElementAttribute])
-    // most apps seem to return the window as the top level ui element attr.
     return [self window];
-  if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute] || 
+      [attribute isEqualToString:NSAccessibilityTitleUIElementAttribute])
     return [self title];
-
+  if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
+    return [self help];
+    
 #ifdef DEBUG
  NSLog (@"!!! %@ can't respond to attribute %@", self, attribute);
 #endif
- return nil; // be nice and return empty string instead?
+  return nil; // be nice and return empty string instead?
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute
@@ -199,6 +215,10 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute
 {
+#ifdef DEBUG_hakan
+  NSLog (@"[%@] %@='%@'", self, attribute, value);
+#endif
+  
   // we only support focusing elements so far.
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute] && [value boolValue])
     [self focus];
@@ -220,18 +240,18 @@ ObjectOrUnignoredAncestor(id anObject)
   
   if (foundChild) {
     // if we found something, return its native accessible.
-    mozAccessible *nativeChild = [self getNativeFromGeckoAccessible:foundChild];
+    mozAccessible *nativeChild = NativeFromGeckoAccessible(foundChild);
     if (nativeChild)
       return ObjectOrUnignoredAncestor (nativeChild);
   }
   
   // if we didn't find anything, return ourself (or the first unignored ancestor).
-  return ObjectOrUnignoredAncestor ([self ourself]); 
+  return ObjectOrUnignoredAncestor ([self hasRepresentedView] ? [self representedView] : self); 
 }
 
 - (NSArray*)accessibilityActionNames 
 {
-  return [NSArray array];
+  return nil;
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action 
@@ -252,25 +272,34 @@ ObjectOrUnignoredAncestor(id anObject)
   mGeckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
   
   if (focusedGeckoChild) {
-    mozAccessible *focusedChild = [self getNativeFromGeckoAccessible:focusedGeckoChild];
+    mozAccessible *focusedChild = NativeFromGeckoAccessible(focusedGeckoChild);
     if (focusedChild)
       return ObjectOrUnignoredAncestor(focusedChild);
   }
   
   // return ourself if we can't get a native focused child.
-  return ObjectOrUnignoredAncestor([self ourself]);
+  return ObjectOrUnignoredAncestor([self hasRepresentedView] ? [self representedView] : self);
 }
 
 #pragma mark -
 
 - (id <mozAccessible>)parent
 {
-  nsCOMPtr<nsIAccessible> accessibleParent;
-  nsresult rv = mGeckoAccessible->GetParent (getter_AddRefs (accessibleParent));
-  if (accessibleParent && NS_SUCCEEDED (rv)) {
-    mozAccessible *nativeParent = [self getNativeFromGeckoAccessible:accessibleParent];
-    if (nativeParent)
+  nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
+  if (accessibleParent) {
+    id nativeParent = NativeFromGeckoAccessible(accessibleParent);
+    if (nativeParent) {
+      nativeParent = ObjectOrUnignoredAncestor(nativeParent);
+      NSAssert(![nativeParent accessibilityIsIgnored], @"returned parent should not be ignored!");
+      
+      // if the object doesn't have a representedView method, we might have the NSWindow or any kind of
+      // parent object far up in the hierarchy.
+      if ([nativeParent respondsToSelector:@selector(hasRepresentedView)] && 
+          [nativeParent hasRepresentedView])
+        return [nativeParent representedView];
+      
       return nativeParent;
+    }
   }
   
 #ifdef DEBUG
@@ -280,9 +309,14 @@ ObjectOrUnignoredAncestor(id anObject)
   return nil;
 }
 
-- (id <mozAccessible>)ourself
+- (BOOL)hasRepresentedView
 {
-  return self;
+  return NO;
+}
+
+- (id)representedView
+{
+  return nil;
 }
 
 - (BOOL)isRoot
@@ -294,44 +328,26 @@ ObjectOrUnignoredAncestor(id anObject)
 // returns nil when there are no children.
 - (NSArray*)children
 {
-  // do we want to expire all children, when something is inserted
-  // into a children array instead? then we could avoid this (quite expensive)
-  // check.
-  PRInt32 count=0;
-  mGeckoAccessible->GetChildCount (&count);
-  
-  // short-circuit here. if we already have a children
-  // array, and the count hasn't changed, just return our
-  // cached version.
-  if (mChildren && ([mChildren count] == (unsigned)count))
+  if (mChildren)
     return mChildren;
   
   if (!mChildren)
-    mChildren = [[NSMutableArray alloc] initWithCapacity:count];
+    mChildren = [[NSMutableArray alloc] init];
   
   // get the array of children.
-  nsCOMPtr<nsIArray> childrenArray;
-  mGeckoAccessible->GetChildren(getter_AddRefs(childrenArray));
+  nsTArray<nsRefPtr<nsAccessibleWrap> > childrenArray;
+  mGeckoAccessible->GetUnignoredChildren(childrenArray);
   
-  if (childrenArray) {
-    // get an enumerator for this array.
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    childrenArray->Enumerate(getter_AddRefs(enumerator));
-    
-    nsCOMPtr<nsISupports> curChild;
-    nsCOMPtr<nsIAccessible> accessible;
-    mozAccessible *curNative = nil;
-    PRBool hasMore = PR_FALSE;
-    
-    // now iterate through the children array, and get each native accessible.
-    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore && 
-           NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(curChild))) && curChild) {
-      accessible = do_QueryInterface (curChild);
-      if (accessible) {
-        curNative = [self getNativeFromGeckoAccessible:accessible];
-        if (curNative)
-          [mChildren addObject:curNative];
-      }
+  // now iterate through the children array, and get each native accessible.
+  int totalCount = childrenArray.Length();
+  int index = 0;
+   
+  for (; index < totalCount; index++) {
+    nsAccessibleWrap *curAccessible = childrenArray.ElementAt(index);
+    if (curAccessible) {
+      mozAccessible *curNative = NativeFromGeckoAccessible(curAccessible);
+      if (curNative)
+        [mChildren addObject:curNative];
     }
   }
   
@@ -369,36 +385,55 @@ ObjectOrUnignoredAncestor(id anObject)
 #ifdef DEBUG_A11Y
   NS_ASSERTION(nsAccessible::IsTextInterfaceSupportCorrect(mGeckoAccessible), "Does not support nsIAccessibleText when it should");
 #endif
-  PRUint32 roleInt = 0;
-  mGeckoAccessible->GetFinalRole (&roleInt);
-  return AXRoles[roleInt]; // see nsRoleMap.h
+  return AXRoles[mRole];
+}
+
+- (NSString*)subrole
+{
+  return nil;
 }
 
 - (NSString*)title
 {
   nsAutoString title;
   mGeckoAccessible->GetName (title);
-  return [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
+  return title.IsEmpty() ? nil : [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
 }
 
-- (NSString*)value
+- (id)value
 {
   nsAutoString value;
   mGeckoAccessible->GetValue (value);
-  return [NSString stringWithCharacters:value.BeginReading() length:value.Length()];
+  return value.IsEmpty() ? nil : [NSString stringWithCharacters:value.BeginReading() length:value.Length()];
+}
+
+- (void)valueDidChange
+{
+#ifdef DEBUG_hakan
+  NSLog(@"%@'s value changed!", self);
+#endif
+  // sending out a notification is expensive, so we don't do it other than for really important objects,
+  // like mozTextAccessible.
 }
 
 - (NSString*)customDescription
 {
   nsAutoString desc;
   mGeckoAccessible->GetDescription (desc);
-  return [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
+  return desc.IsEmpty() ? nil : [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
+}
+
+- (NSString*)help
+{
+  nsAutoString helpText;
+  mGeckoAccessible->GetHelp (helpText);
+  return helpText.IsEmpty() ? nil : [NSString stringWithCharacters:helpText.BeginReading() length:helpText.Length()];
 }
 
 // objc-style description (from NSObject); not to be confused with the accessible description above.
 - (NSString*)description
 {
-  return [NSString stringWithFormat:@"(%p) %@", self, [self role], nil];
+  return [NSString stringWithFormat:@"(%p) %@", self, [self role]];
 }
 
 - (BOOL)isFocused
@@ -421,14 +456,22 @@ ObjectOrUnignoredAncestor(id anObject)
   return NS_SUCCEEDED(rv);
 }
 
+- (BOOL)isEnabled
+{
+  PRUint32 state = 0;
+  mGeckoAccessible->GetFinalState (&state);
+  return (state & nsIAccessible::STATE_UNAVAILABLE) == 0;
+}
+
 // The root accessible calls this when the focused node was
 // changed to us.
 - (void)didReceiveFocus
 {
-  #ifdef DEBUG_hakan
-    NSLog (@"%@ received focus!", self);
-  #endif
-  NSAccessibilityPostNotification([self ourself],
+#ifdef DEBUG_hakan
+  NSLog (@"%@ received focus!", self);
+#endif
+  NSAssert1(![self accessibilityIsIgnored], @"trying to set focus to ignored element! (%@)", self);
+  NSAccessibilityPostNotification([self hasRepresentedView] ? [self representedView] : self,
                                   NSAccessibilityFocusedUIElementChangedNotification);
 }
 
@@ -438,30 +481,26 @@ ObjectOrUnignoredAncestor(id anObject)
   NSWindow *nativeWindow = nil;
   accWrap->GetNativeWindow ((void**)&nativeWindow);
   
-#ifdef DEBUG
-  if (!nativeWindow)
-    NSLog (@"Could not get native window for %@", self);
-#endif
-  
+  NSAssert1(nativeWindow, @"Could not get native window for %@", self);
   return nativeWindow;
-}
-
-- (mozAccessible*)getNativeFromGeckoAccessible:(nsIAccessible*)accessible
-{
-  mozAccessible *native = nil;
-  accessible->GetNativeInterface ((void**)&native);
-  return native ? (mozAccessible*)[native ourself] : nil;
 }
 
 - (void)invalidateChildren
 {
-  [mChildren removeAllObjects];
+  // make room for new children
+  [mChildren release];
+  mChildren = nil;
 }
 
 - (void)expire
 {
   [self invalidateChildren];
   mIsExpired = YES;
+}
+
+- (BOOL)isExpired
+{
+  return mIsExpired;
 }
 
 #pragma mark -
@@ -472,24 +511,15 @@ ObjectOrUnignoredAncestor(id anObject)
 
 // will check that our children actually reference us as their
 // parent.
-- (void)sanityCheckChildren:(NSArray*)theChildren
+- (void)sanityCheckChildren
 {
-  id parentObject = nil;
-  
-  // if we're the root accessible, our children's AXParent
-  // should reference the native view. see mozDocAccessible.h
-  if ([self isRoot])
-    parentObject = [self ourself];
-  else
-    parentObject = self;
-  
-  NSEnumerator *iter = [theChildren objectEnumerator];
+  NSAssert(![self accessibilityIsIgnored], @"can't sanity check children of an ignored accessible!");
+  NSEnumerator *iter = [[self children] objectEnumerator];
   mozAccessible *curObj = nil;
   
-  while ((curObj = [iter nextObject])) {
-    if ([curObj parent] != parentObject)
-      NSLog (@"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, parentObject);
-  }
+  while ((curObj = [iter nextObject]))
+    NSAssert2([curObj parent] == self, 
+              @"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, self);
 }
 
 - (void)printHierarchy
@@ -499,6 +529,8 @@ ObjectOrUnignoredAncestor(id anObject)
 
 - (void)printHierarchyWithLevel:(unsigned)level
 {
+  NSAssert(![self isExpired], @"!!! trying to print hierarchy of expired object!");
+  
   // print this node
   NSMutableString *indent = [NSMutableString stringWithCapacity:level];
   unsigned i=0;
@@ -507,9 +539,15 @@ ObjectOrUnignoredAncestor(id anObject)
   
   NSLog (@"%@(#%i) %@", indent, level, self);
   
-  // use |children| method to make sure our children are lazily
-  // fetched first.
-  NSEnumerator *iter = [[self children] objectEnumerator];
+  // use |children| method to make sure our children are lazily fetched first.
+  NSArray *children = [self children];
+  if (!children)
+    return;
+    
+  if (![self accessibilityIsIgnored])
+    [self sanityCheckChildren];
+    
+  NSEnumerator *iter = [children objectEnumerator];
   mozAccessible *object = nil;
   
   while (iter && (object = [iter nextObject]))

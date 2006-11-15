@@ -38,9 +38,14 @@
 
 #include "nsAccessibleWrap.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIAccessibleText.h"
+
+#import "nsRoleMap.h"
 
 #import "mozAccessibleWrapper.h"
 #import "mozAccessible.h"
+#import "mozActionElements.h"
+#import "mozTextAccessible.h"
 
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
   nsAccessible(aNode, aShell),
@@ -59,21 +64,26 @@ nsAccessibleWrap::~nsAccessibleWrap()
 NS_IMETHODIMP
 nsAccessibleWrap::Init () 
 {
-  if (!mNativeWrapper)
-    // create our native object using the class type specified in GetNativeType()
-    mNativeWrapper = new AccessibleWrapper (this, GetNativeType());
-  
   // need to pass the call up, so we're cached (which nsAccessNode::Init() takes care of).
-  return nsAccessible::Init();
+  nsresult rv = nsAccessible::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!mNativeWrapper && !AncestorIsFlat()) {
+    // Create our native object using the class type specified in GetNativeType().
+    mNativeWrapper = new AccessibleWrapper (this, GetNativeType());
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessibleWrap::GetNativeInterface (void **aOutInterface) 
 {
-  NS_ASSERTION (mNativeWrapper, "No native wrapper for this accessible!");
-  if (mNativeWrapper)
+  if (mNativeWrapper) {
     *aOutInterface = (void**)mNativeWrapper->getNativeObject();
-  return NS_OK;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // get the native NSWindow we reside in.
@@ -90,7 +100,31 @@ nsAccessibleWrap::GetNativeWindow (void **aOutNativeWindow)
 objc_class*
 nsAccessibleWrap::GetNativeType () 
 {
-  return [mozAccessible class];
+  PRUint32 role = Role(this);
+  switch (role) {
+    case ROLE_PUSHBUTTON:
+    case ROLE_SPLITBUTTON:
+    case ROLE_TOGGLE_BUTTON:
+      return [mozButtonAccessible class];
+    
+    case ROLE_CHECKBUTTON:
+      return [mozCheckboxAccessible class];
+      
+    case ROLE_ENTRY:
+    case ROLE_STATICTEXT:
+    case ROLE_HEADING:
+    case ROLE_LABEL:
+    case ROLE_CAPTION:
+    case ROLE_ACCEL_LABEL:
+    case ROLE_TEXT_LEAF:
+    case ROLE_AUTOCOMPLETE:
+      return [mozTextAccessible class];
+      
+    default:
+      return [mozAccessible class];
+  }
+  
+  return nil;
 }
 
 // this method is very important. it is fired when an accessible object "dies". after this point
@@ -114,6 +148,87 @@ nsAccessibleWrap::InvalidateChildren ()
     mozAccessible *object = mNativeWrapper->getNativeObject();
     [object invalidateChildren];
   }
-  
   return nsAccessible::InvalidateChildren();
+}
+
+PRInt32
+nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
+{
+  // if we're flat, we have no children.
+  if (IsFlat())
+    return 0;
+  
+  PRInt32 childCount = 0;
+  GetChildCount(&childCount);
+  
+  nsCOMPtr<nsIAccessible> curAcc;
+  
+  while (NextChild(curAcc)) {
+    nsAccessibleWrap *childWrap = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curAcc.get());
+    
+    // if the current child is not ignored, count it.
+    if (!childWrap->IsIgnored())
+      ++childCount;
+      
+    // if it's flat, we don't care to inspect its children.
+    if (childWrap->IsFlat())
+      continue;
+    
+    if (aDeepCount) {
+      // recursively count the unignored children of our children since it's a deep count.
+      childCount += childWrap->GetUnignoredChildCount(PR_TRUE);
+    } else {
+      // no deep counting, but if the child is ignored, we want to substitute it for its
+      // children.
+      if (childWrap->IsIgnored()) 
+        childCount += childWrap->GetUnignoredChildCount(PR_FALSE);
+    }
+  } 
+  
+  return childCount;
+}
+
+void
+nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aChildrenArray)
+{
+  nsCOMPtr<nsIAccessible> curAcc;
+  
+  // we're flat; there are no children.
+  if (IsFlat())
+    return;
+  
+  while (NextChild(curAcc)) {
+    nsAccessibleWrap *childWrap = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curAcc.get());
+    if (childWrap->IsIgnored()) {
+      // element is ignored, so try adding its children as substitutes, if it has any.
+      if (!childWrap->IsFlat()) {
+        nsTArray<nsRefPtr<nsAccessibleWrap> > children;
+        childWrap->GetUnignoredChildren(children);
+        if (!children.IsEmpty()) {
+          // add the found unignored descendants to the array.
+          aChildrenArray.AppendElements(children);
+        }
+      }
+    } else
+      // simply add the element, since it's not ignored.
+      aChildrenArray.AppendElement(childWrap);
+  }
+}
+
+already_AddRefed<nsIAccessible>
+nsAccessibleWrap::GetUnignoredParent()
+{
+  nsCOMPtr<nsIAccessible> parent(GetParent());
+  nsAccessibleWrap *parentWrap = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)parent.get());
+  if (!parentWrap)
+    return nsnull;
+    
+  // recursively return the parent, until we find one that is not ignored.
+  if (parentWrap->IsIgnored())
+    return parentWrap->GetUnignoredParent();
+  
+  nsIAccessible *outValue = nsnull;
+  NS_IF_ADDREF(outValue = parent.get());
+  
+  return outValue;
 }

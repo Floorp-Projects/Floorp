@@ -2094,9 +2094,11 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
   
     // cache the accessible in our weak ptr
     mAccessible = do_GetWeakReference(event.accessible);
+    
+    // now try again
+    accessible = do_QueryReferent(mAccessible);
   }
   
-  accessible = do_QueryReferent(mAccessible);
   NS_IF_ADDREF(*aAccessible = accessible.get());
 
   return;
@@ -4145,11 +4147,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
     accessible->GetNativeInterface((void**)&nativeAccessible);
 
 #ifdef DEBUG_hakan
-  static PRBool testInit = PR_FALSE;
-  if (!testInit && [nativeAccessible isRoot]) {
-    [nativeAccessible printHierarchy];
-    testInit = PR_TRUE;
-  }
+  NSAssert(![nativeAccessible isExpired], @"native acc is expired!!!");
 #endif
   
   return nativeAccessible;
@@ -4157,6 +4155,16 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
 
 /* Implementation of formal mozAccessible formal protocol (enabling mozViews
    to talk to mozAccessible objects in the accessibility module). */
+
+- (BOOL)hasRepresentedView
+{
+  return YES;
+}
+
+- (id)representedView
+{
+  return self;
+}
 
 - (BOOL)isRoot
 {
