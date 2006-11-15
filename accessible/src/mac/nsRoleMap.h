@@ -37,9 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
-const NSString* AXRoles [] = {
+#include "nsIAccessible.h"
+
+static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_NOTHING
   NSAccessibilityUnknownRole,                   // ROLE_TITLEBAR. (irrelevant on OS X; windows are always native.)
   NSAccessibilityMenuBarRole,                   // ROLE_MENUBAR. (irrelevant on OS X; the menubar will always be native and on the top of the screen.)
@@ -54,7 +56,7 @@ const NSString* AXRoles [] = {
   NSAccessibilityPopUpButtonRole,               // ROLE_MENUPOPUP
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
-  NSAccessibilityApplicationRole,               // ROLE_APPLICATION. unused on OS X. the system will take care of this.
+  NSAccessibilityGroupRole,                     // ROLE_APPLICATION. unused on OS X. the system will take care of this.
   NSAccessibilityGroupRole,                     // ROLE_DOCUMENT
   NSAccessibilityGroupRole,                     // ROLE_PANE
   NSAccessibilityUnknownRole,                   // ROLE_CHART
@@ -64,9 +66,9 @@ const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_SEPARATOR
   NSAccessibilityToolbarRole,                   // ROLE_TOOLBAR
   NSAccessibilityUnknownRole,                   // ROLE_STATUSBAR. doesn't exist on OS X (a status bar is its parts; a progressbar, a label, etc.)
-  NSAccessibilityTableRole,                     // ROLE_TABLE
-  NSAccessibilityUnknownRole,                   // ROLE_COLUMNHEADER
-  NSAccessibilityUnknownRole,                   // ROLE_ROWHEADER
+  NSAccessibilityGroupRole,                     // ROLE_TABLE
+  NSAccessibilityGroupRole,                     // ROLE_COLUMNHEADER
+  NSAccessibilityGroupRole,                     // ROLE_ROWHEADER
   NSAccessibilityColumnRole,                    // ROLE_COLUMN
   NSAccessibilityRowRole,                       // ROLE_ROW
   NSAccessibilityGroupRole,                     // ROLE_CELL
@@ -136,8 +138,8 @@ const NSString* AXRoles [] = {
   NSAccessibilityButtonRole,                    // ROLE_TOGGLE_BUTTON
   NSAccessibilityTableRole,                     // ROLE_TREE_TABLE
   NSAccessibilityUnknownRole,                   // ROLE_VIEWPORT
-  NSAccessibilityStaticTextRole,                // ROLE_HEADER
-  NSAccessibilityStaticTextRole,                // ROLE_FOOTER
+  NSAccessibilityGroupRole,                     // ROLE_HEADER
+  NSAccessibilityGroupRole,                     // ROLE_FOOTER
   NSAccessibilityGroupRole,                     // ROLE_PARAGRAPH
   @"AXRuler",                                   // ROLE_RULER. 10.4+ only, so we re-define the constant.
   NSAccessibilityTextFieldRole,                 // ROLE_AUTOCOMPLETE
@@ -155,5 +157,3 @@ const NSString* AXRoles [] = {
   NSAccessibilityMenuItemRole,                  // ROLE_PARENT_MENUITEM
   @"ROLE_LAST_ENTRY"                            // ROLE_LAST_ENTRY. bogus role that will never be shown (just marks the end of this array)!
 };
-
-

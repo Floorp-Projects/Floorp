@@ -46,6 +46,9 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
+
 #include "nsAccessible.h"
 
 struct AccessibleWrapper;
@@ -60,12 +63,12 @@ class nsAccessibleWrap : public nsAccessible
     // creates the native accessible connected to this one.
     NS_IMETHOD Init ();
     
-    // get the native obj-c object
+    // get the native obj-c object (mozAccessible)
     NS_IMETHOD GetNativeInterface (void **aOutAccessible);
     
     // the objective-c |Class| type that this accessible's native object
     // should be instantied with.   used on runtime to determine the
-    // right type for this native accessible's native object.
+    // right type for this accessible's associated native object.
     virtual objc_class* GetNativeType ();
     
     // returns a pointer to the native window for this accessible tree.
@@ -74,7 +77,50 @@ class nsAccessibleWrap : public nsAccessible
     virtual nsresult Shutdown ();
     virtual nsresult InvalidateChildren ();
     
+    // we'll flatten buttons and checkboxes. usually they have a text node
+    // child, that is their title. Works in conjunction with IsPruned() below.
+    PRBool IsFlat() {
+      PRUint32 role = Role(this);
+      return (role == ROLE_CHECKBUTTON    ||
+              role == ROLE_PUSHBUTTON     ||
+              role == ROLE_TOGGLE_BUTTON  ||
+              role == ROLE_SPLITBUTTON    ||
+              role == ROLE_ENTRY          ||
+              role == ROLE_AUTOCOMPLETE);
+    }
+    
+    // if we for some reason have no native accessible, we should be skipped over (and traversed)
+    // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
+    PRBool IsIgnored() {
+      return (mNativeWrapper == nsnull);
+    }
+    
+    PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
+    
+    // return this accessible's all children, adhering to "flat" accessibles by not returning their children.
+    void GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aChildrenArray);
+    virtual already_AddRefed<nsIAccessible> GetUnignoredParent();
+    
   protected:
+    
+    PRBool AncestorIsFlat() {
+      // we don't create a native object if we're child of a "flat" accessible; for example, on OS X buttons 
+      // shouldn't have any children, because that makes the OS confused. 
+      //
+      // to maintain a scripting environment where the XPCOM accessible hierarchy look the same 
+      // on all platforms, we still let the C++ objects be created though.
+      
+      nsCOMPtr<nsIAccessible> curParent = GetParent();
+      while (curParent) {
+        nsAccessibleWrap *ancestorWrap = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curParent.get());
+        if (ancestorWrap->IsFlat())
+          return PR_TRUE;
+        curParent = NS_STATIC_CAST(nsAccessibleWrap*, (nsIAccessible*)curParent.get())->GetParent();
+      }
+      // no parent was flat
+      return PR_FALSE;
+    }
+
     // Wrapper around our native object.
     AccessibleWrapper *mNativeWrapper;
 };

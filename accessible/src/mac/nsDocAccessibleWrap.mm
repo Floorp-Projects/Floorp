@@ -55,12 +55,13 @@ nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessibl
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   
-  // ignore everything but focus-changed events for now.
-  if (aEvent != nsIAccessibleEvent::EVENT_FOCUS)
-    return NS_OK;
-  
   // this will notify xpcom observers, before we notify the OS
   nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aData);
+  
+  // ignore everything but focus-changed and value-changed events for now.
+  if (aEvent != nsIAccessibleEvent::EVENT_FOCUS &&
+      aEvent != nsIAccessibleEvent::EVENT_VALUE_CHANGE)
+    return NS_OK;
   
   mozAccessible *nativeAcc = nil;
   aAccessible->GetNativeInterface((void**)&nativeAcc);
@@ -70,6 +71,9 @@ nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessibl
   switch (aEvent) {
     case nsIAccessibleEvent::EVENT_FOCUS:
       [nativeAcc didReceiveFocus];
+      break;
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [nativeAcc valueDidChange];
       break;
   }
   
