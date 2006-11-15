@@ -798,7 +798,7 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, PRBool aKeepRootAlive)
 
     nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
     PRUint32 index;
-    nsINode* root = aKeepRootAlive ? node : nsnull;
+    nsINode* root = aKeepRootAlive ? node.get() : nsnull;
 
     if (nodeType == nsIDOMNode::DOCUMENT_NODE) {
         index = txXPathNode::eDocument;
