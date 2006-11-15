@@ -53,7 +53,7 @@ static NSString * const kABURLsProperty = @"URLs";
 
 @implementation AddressBookManager
 
--(id)initWithFolder:(id)folder
+- (id)initWithFolder:(id)folder
 {
   if ((self = [super init])) {
     [ABAddressBook sharedAddressBook];    // ensure notification constants are valid, docs say they're not until this is called
@@ -66,18 +66,18 @@ static NSString * const kABURLsProperty = @"URLs";
   return self;
 }
 
--(void)dealloc
+- (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mAddressBookFolder release];
   [super dealloc];
 }
 
--(void)fillAddressBook:(NSNotification *)note
+- (void)fillAddressBook:(NSNotification *)note
 {
   // to fill, you must empty.
   unsigned i, count = [mAddressBookFolder count];
-  for (i=0; i < count; i++)
+  for (i = 0; i < count; i++)
     [mAddressBookFolder deleteChild:[mAddressBookFolder objectAtIndex:0]];
   // fill address book with people.  could probably do this smarter,
   // but it's a start for now.
@@ -106,7 +106,7 @@ static NSString * const kABURLsProperty = @"URLs";
       else {
         name = [person valueForProperty:kABOrganizationProperty];
         if (!name)
-          name = NSLocalizedString(@"<No Name>",nil);
+          name = NSLocalizedString(@"<No Name>", nil);
       }
       id bookmark = [mAddressBookFolder addBookmark];
       [bookmark setTitle:name];
