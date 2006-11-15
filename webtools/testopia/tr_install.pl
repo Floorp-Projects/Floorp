@@ -19,6 +19,7 @@
 #
 # Contributor(s): Maciej Maczynski <macmac@xdsnet.pl>
 #                 Ed Fuentetaja <efuentetaja@acm.org>
+#                 Vance Baarda <vrb@novell.com>
 
 use File::Copy;
 use Bugzilla;

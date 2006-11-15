@@ -77,8 +77,6 @@ sub _list
     
     my $cgi = Bugzilla->cgi;
 
-    $cgi->param("viewall", 1);
-
     $cgi->param("current_tab", "case_run");
     
     foreach (keys(%$query))
@@ -174,7 +172,12 @@ sub update
     _convert_to_ids($new_values);
     
     $$new_values{build_id} = $build_id;  # Needed by TestCaseRun's update member function
-	
+
+    if (not defined $$new_values{environment_id})
+    {
+      $$new_values{environment_id} = $test_case_run->environment;  # Needed by TestCaseRun's update member function
+    }
+    
 	$test_case_run->update($new_values);
 	
 	Bugzilla->logout;

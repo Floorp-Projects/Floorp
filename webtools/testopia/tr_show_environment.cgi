@@ -61,8 +61,7 @@ unless ($env_id || $action){
 
 if ($action eq 'delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless Param("allow-test-deletion");
-    ThrowUserError("testopia-read-only", {'object' => 'Environment'}) unless $env->canedit;
+    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
     $vars->{'environment'} = $env;
     $template->process("testopia/environment/delete.html.tmpl", $vars)
         || print $template->error();
@@ -71,8 +70,7 @@ if ($action eq 'delete'){
 
 elsif ($action eq 'do_delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless Param("allow-test-deletion");
-    ThrowUserError("testopia-read-only", {'object' => 'Environment'}) unless $env->canedit;
+    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
     ThrowUserError("testopia-non-zero-run-count", {'object' => 'Environment'}) if $env->get_run_count;
     $env->obliterate;
     $vars->{'tr_message'} = "Environment Deleted";

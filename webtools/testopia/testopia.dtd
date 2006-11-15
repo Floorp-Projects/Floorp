@@ -7,7 +7,7 @@
 <!ELEMENT archived (#PCDATA)>
 <!ELEMENT arguments (#PCDATA)>
 <!ELEMENT assignedto (#PCDATA)>
-<!ELEMENT attachment (description, filename, submitter, mimetype, created, data)>
+<!ELEMENT attachment (description, filename, submitter, mimetype, data)>
 <!ELEMENT author (#PCDATA)>
 <!ELEMENT automated (#PCDATA)>
 <!ELEMENT blocks (#PCDATA)>
@@ -29,7 +29,9 @@
 <!ELEMENT cclist (#PCDATA)>
 <!ELEMENT closedate (#PCDATA)>
 <!ELEMENT component (#PCDATA)>
-<!ELEMENT created (#PCDATA)>
+<!ATTLIST component
+	product CDATA #REQUIRED
+>
 <!ELEMENT data (#PCDATA)>
 <!ELEMENT defaulttester (#PCDATA)>
 <!ELEMENT dependson (#PCDATA)>
@@ -38,7 +40,6 @@
 >
 <!ELEMENT description (#PCDATA)>
 <!ELEMENT document (#PCDATA)>
-<!ELEMENT editor (#PCDATA)>
 <!ELEMENT environment (#PCDATA)>
 <!ELEMENT expectedresults (#PCDATA)>
 <!ELEMENT filename (#PCDATA)>
@@ -61,10 +62,9 @@
 <!ELEMENT submitter (#PCDATA)>
 <!ELEMENT summary (#PCDATA)>
 <!ELEMENT tag (#PCDATA)>
-<!ELEMENT testcase (summary, testplan_reference+, alias*, requirement, defaulttester, categoryname?, script?, arguments*, component*, tag*, attachment*, dependson*, blocks*, setup?, breakdown?, action, expectedresults?)>
+<!ELEMENT testcase (summary, testplan_reference+, alias?, requirement?, defaulttester, categoryname?, script?, arguments*, component*, tag*, attachment*, dependson*, blocks*, setup?, breakdown?, action, expectedresults?)>
 <!ATTLIST testcase 
 	author CDATA #REQUIRED 
-	created CDATA #IMPLIED 
 	priority (P0|P1|P2|P3|P4|p5) "P5" 
 	automated (Manual|Automatic) "Manual" 
 	status (PROPOSED|CONFIRMED|DISABLED) "CONFIRMED"
@@ -75,7 +75,7 @@
 	type (Database_id|Database_description|Xml_description) #REQUIRED
 >
 <!ELEMENT testenvironment (name, os, platform)>
-<!ELEMENT testplan (name, product, productversion, build*, category*, created?, editor, tag*, attachment*, document?)>
+<!ELEMENT testplan (name, product, productversion, build*, category*, tag*, attachment*, document?)>
 <!ATTLIST testplan
 	author CDATA #REQUIRED
 	type (Acceptance|Function|Installation|Integration|Interoperability|Performance|Product|System|Unit) #REQUIRED

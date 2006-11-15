@@ -310,8 +310,8 @@ safe way to do this.
 
 sub obliterate {
     my $self = shift;
-    my $dbh = Bugzilla->dbh;
     return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
     
     $dbh->do("DELETE FROM test_attachment_data 
               WHERE attachment_id = ?", undef, $self->{'attachment_id'});
@@ -359,8 +359,10 @@ Returns true if the logged in user has rights to delete this attachment
 
 sub candelete {
     my $self = shift;
-    return $self->canedit && Param("allow-test-deletion") 
-      && (Bugzilla->user->id == $self->submitter->id || Bugzilla->user->in_group('admin'));
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("admin");
+    return 1 if Bugzilla->user->id == $self->submitter->id;
+    return 0;
 }
 
 ###############################

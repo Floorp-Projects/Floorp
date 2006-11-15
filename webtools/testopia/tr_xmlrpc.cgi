@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl 
 ####!/usr/bin/perl -d:ptkdb -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
@@ -36,6 +36,8 @@ use Bugzilla::WebService;
 # To be used in version 2.23/3.0 of Bugzilla
 # Bugzilla->usage_mode(Bugzilla::Constants::USAGE_MODE_WEBSERVICE);
 
+Bugzilla->batch(1);
+
 die 'Content-Type must be "text/xml" when using API' unless
     $ENV{'CONTENT_TYPE'} eq 'text/xml';
 
@@ -44,5 +46,8 @@ my $response = Bugzilla::WebService::XMLRPC::Transport::HTTP::CGI
                      'TestCase'    => 'Bugzilla::WebService::Testopia::TestCase',
                      'TestRun'     => 'Bugzilla::WebService::Testopia::TestRun',
                      'TestCaseRun' => 'Bugzilla::WebService::Testopia::TestCaseRun',
+                     'User'        => 'Bugzilla::WebService::User',
+                     'Product'     => 'Bugzilla::WebService::Testopia::Product',
+                     'Build'       => 'Bugzilla::WebService::Testopia::Build',
                     })
     ->handle;

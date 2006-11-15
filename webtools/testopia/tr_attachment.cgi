@@ -82,7 +82,7 @@ elsif ($action eq 'do_edit') {
 elsif ($action eq 'delete') {
     Bugzilla->login(LOGIN_REQUIRED);
     my $attachment = validate();
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless Param("allow-test-deletion");
+    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
     $vars->{'attachment'} = validate();
     print $cgi->header();
     $template->process("testopia/attachment/delete.html.tmpl", $vars)
@@ -93,7 +93,7 @@ elsif ($action eq 'do_delete') {
     Bugzilla->login(LOGIN_REQUIRED);
     my $attachment = validate();
     $vars->{'tr_message'} = "Attachment ". $attachment->description ." deleted";
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless Param("allow-test-deletion");
+    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
     $attachment->obliterate;
     go_on($attachment);
 }

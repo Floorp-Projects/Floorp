@@ -69,6 +69,7 @@ our $DATABASE_ID = "Database_id";
 use constant IGNORECASE => 1;
 use constant DEPENDSON => "dependson";
 use constant PCDATA => "#PCDATA";
+use constant REQUIRE => "REQUIRE";
 our $TESTOPIA_GT = "&testopia_gt;";
 our $TESTOPIA_LT = "&testopia_lt;";
 use constant TESTPLAN_REFERENCE => "testplan_reference";
@@ -255,29 +256,66 @@ sub error()
 
 sub parse()
 {
-	my ($self, $xml) = @_;
+	my ($self, $xml, $filename) = @_;
 
 	my $twig = XML::Twig->new( load_DTD => 1, keep_encoding => 1 );	
 
-	$twig->parse($xml);
+	if ( defined($xml) )
+	{
+		$twig->parse($xml);
+	}
+	elsif ( defined($filename) )
+	{
+		$twig->parsefile($filename);
+	}
+	else
+	{
+		$self->error("Bugzilla::Testopia::Xml::parse has no XML input source")
+	}
+	
 	my $root = $twig->root;
+	
+	# Check for unimplemented tags.
+	my @twig_builds = $root->children('build');
+	$self->error("Support for <build> tags has not been implemented.") if ( $#twig_builds != -1 );
+	my @twig_testenvironments = $root->children('testenvironment');
+	$self->error("Support for <testenvironment> tags has not been implemented.") if ( $#twig_testenvironments != -1 );
+	my @twig_testruns = $root->children('testrun');
+	$self->error("Support for <testrun> tags has not been implemented.") if ( $#twig_testruns != -1 );
+	my @twig_testrunlogs = $root->children('testrunlog');
+	$self->error("Support for <testrunlog> tags has not been implemented.") if ( $#twig_testrunlogs != -1 );
 	
 	foreach my $twig_category ($root->children('category'))
 	{
-		my $product = new Bugzilla::Product({name => $twig_category->field('product')});
+		my $category_name = $twig_category->field('name');
+		my $product_name = $twig_category->att('product');
+		my $description = $twig_category->field('description');
+		
+		$description = "FIX ME.  Created during category import with no description supplied." if ( $description eq "" );
+		
+		if ( $product_name eq REQUIRE )
+		{
+			$self->error("Must supply a product for category '" . $category_name . "'." );
+			next;
+		}
+		
+		my $product = new Bugzilla::Product({name => $product_name});
 		if ( ! $product )
 		{
-			$self->error("Cannot find product '" . $twig_category->field('product') . "' for category '" . $twig_category->field('name') . "'.");
+			$self->error("Cannot find product '" . $product_name . "' for category '" . $category_name . "'.");
 			$self->{"parser_error"} = 1;
 			next;
 		}
+		
 		my $category = new Bugzilla::Testopia::Category
 		({
-			name => $twig_category->field('name'),
+			name => $category_name,
 			product_id => $product->id(),
-			description => $twig_category->field('description'),
+			description => $description,
 		});
-		push @{$self->categories}, $category;
+		
+		# Only create the category if it does not exist.
+		push @{$self->categories}, $category if ( ! $category->check_name($category_name) );
 	}
 	
 	my $testplan = Bugzilla::Testopia::TestPlan->new({ 'name' => 'dummy' });
@@ -334,16 +372,29 @@ sub parse()
 		my @attachments = $twig_testplan->children('attachment');
 		foreach my $twig_attachments (@attachments)
 		{
+			my $submitter = $twig_attachments->field('submitter');
+			# Bugzilla::User::match returns a array with a user hash.  Fields of the hash needed
+			# are 'id' and 'login'.
+			my $submitter_ref = Bugzilla::User::match($submitter, 1, 0);
+			my $submitter_id = -1;
+			if ( ! $submitter_ref->[0] )
+			{
+				$self->error("Cannot find submitter '" . $submitter . "' in test plan '" . $twig_testplan->field('name') . "' attachment '" . $twig_attachments->field('description') . "'.");
+			}
+			else
+			{
+				my $submitter_user = $submitter_ref->[0];
+				bless($submitter_user,"Bugzilla::User");
+				$submitter_id = $submitter_user->id();
+			}
 			my $attachment = Bugzilla::Testopia::Attachment->new({
             	'description'  => entity_replace_xml($twig_attachments->field('description')),
             	'filename'     => entity_replace_xml($twig_attachments->field('filename')),
-            	'submitter_id' => entity_replace_xml($twig_attachments->field('submitter')),
+            	'submitter_id' => $submitter_id,
             	'mime_type'    => entity_replace_xml($twig_attachments->field('mimetype')),
-            	'creation_ts'  => entity_replace_xml($twig_attachments->field('created')),
-            	'data'         => entity_replace_xml($twig_attachments->field('data'))
+            	'contents'      => entity_replace_xml($twig_attachments->field('data'))
     		});
 			push @{$self->attachments}, $attachment;
-			#$testplan->add_tag($tag->id());
 		}
 	}
 	
@@ -413,7 +464,6 @@ sub parse()
             'breakdown'         => entity_replace_testopia($twig_testcase->field('breakdown')),
             'case_status_id' 	=> $status_id,
             'category_id'    	=> undef,
-            'creation_date'		=> $twig_testcase->att('created'),
             'default_tester_id' => $tester_id,
             'dependson'  		=> undef,
             'effect'			=> entity_replace_testopia($twig_testcase->field('expectedresults')),
@@ -449,6 +499,34 @@ sub parse()
     	# will created when each Test Case is stored.
      	$xml_testcase->category(entity_replace_xml($twig_testcase->field('categoryname')));
  
+ 		my @attachments = $twig_testcase->children('attachment');
+		foreach my $twig_attachments (@attachments)
+		{
+			my $submitter = $twig_attachments->field('submitter');
+			# Bugzilla::User::match returns a array with a user hash.  Fields of the hash needed
+			# are 'id' and 'login'.
+			my $submitter_ref = Bugzilla::User::match($submitter, 1, 0);
+			my $submitter_id = -1;
+			if ( ! $submitter_ref->[0] )
+			{
+				$self->error("Cannot find submitter '" . $submitter . "' in test case '" . $twig_testcase->field('summary') . "' attachment '" . $twig_attachments->field('description') . "'.");
+			}
+			else
+			{
+				my $submitter_user = $submitter_ref->[0];
+				bless($submitter_user,"Bugzilla::User");
+				$submitter_id = $submitter_user->id();
+			}
+			my $attachment = Bugzilla::Testopia::Attachment->new({
+            	'description'  => entity_replace_xml($twig_attachments->field('description')),
+            	'filename'     => entity_replace_xml($twig_attachments->field('filename')),
+            	'submitter_id' => $submitter_id,
+            	'mime_type'    => entity_replace_xml($twig_attachments->field('mimetype')),
+            	'contents'      => entity_replace_xml($twig_attachments->field('data'))
+    		});
+			$xml_testcase->add_attachment($attachment);
+		}
+		
     	my @tags = $twig_testcase->children('tag');
 		foreach my $twig_tag ( @tags )
 		{
@@ -458,7 +536,8 @@ sub parse()
     	my @components = $twig_testcase->children('component');
     	foreach my $twig_component ( @components )
 		{
-			$xml_testcase->add_component(entity_replace_xml($twig_component->text()));
+			my $results = $xml_testcase->add_component(entity_replace_xml($twig_component->children_text(PCDATA)),$twig_component->att('product'));
+			$self->error($results) if ( $results ne "" );
     	}
     	
     	foreach my $twig_blocks ( $twig_testcase->children(BLOCKS) )
@@ -541,11 +620,18 @@ sub parse()
 		
 	if ( ! defined $self->parse_error )
 	{
+		# Store new categories.
+		foreach my $category ( @{$self->categories} )
+		{
+				$category->store();
+				print "Created category '" . $category->name() . "': " . $category->description() . "\n";
+		}
+		
+		# Store new testplans.
 		foreach my $testplan ( @{$self->testplans} )
 		{
 			my $plan_id = $testplan->store();
 			$testplan->{'plan_id'} = $plan_id;
-			print "Created Test Plan $plan_id: " . $testplan->name() . "\n";
 			foreach my $asciitag ( @{$self->tags} )
 			{
 				my $classtag = Bugzilla::Testopia::TestTag->new({'tag_name' => $asciitag});
@@ -553,9 +639,15 @@ sub parse()
 				$testplan->{'tag_id'} = $tagid;
 				$testplan->add_tag($tagid);
 			}
+			foreach my $attachment ( @{$self->attachments} )
+			{
+				$attachment->{'plan_id'} = $plan_id;
+				$attachment->store();
+			}
+			print "Created Test Plan $plan_id: " . $testplan->name() . "\n";
 		}
 		
-		# Store the testcases.
+		# Store new testcases.
 		foreach my $testcase ( @{$self->testcases} )
 		{
 			bless($testcase,"Bugzilla::Testopia::XmlTestCase");
@@ -569,6 +661,7 @@ sub parse()
 				print "Created Test Case " . $testcase->testcase->id() . ": " . $testcase->testcase->summary() . "\n";
 			}
 		}
+		
 		# Now that each testcase has been stored we loop though them again and create
 		# relationships like blocks or dependson.
 		foreach my $testcase ( @{$self->testcases} )

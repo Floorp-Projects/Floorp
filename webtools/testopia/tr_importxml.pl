@@ -29,30 +29,6 @@
 
 use strict;
 
-#####################################################################
-#
-# This script is used import bugs from another installation of bugzilla.
-# It can be used in two ways.
-# First using the move function of bugzilla
-# on another system will send mail to an alias provided by
-# the administrator of the target installation (you). Set up an alias
-# similar to the one given below so this mail will be automatically 
-# run by this script and imported into your database.  Run 'newaliases'
-# after adding this alias to your aliases file. Make sure your sendmail
-# installation is configured to allow mail aliases to execute code. 
-#
-# bugzilla-import: "|/usr/bin/perl /opt/bugzilla/importxml.pl"
-#
-# Second it can be run from the command line with any xml file from 
-# STDIN that conforms to the bugzilla DTD. In this case you can pass 
-# an argument to set whether you want to send the
-# mail that will be sent to the exporter and maintainer normally.
-#
-# importxml.pl [--sendmail] < bugsfile.xml
-#
-#####################################################################
-
-
 # figure out which path this script lives in. Set the current path to
 # this and add it to @INC so this will work when run as part of mail
 # alias by the mailer daemon
@@ -96,17 +72,6 @@ pod2usage(0) if $help;
 use constant DEBUG_LEVEL => 2;
 use constant ERR_LEVEL => 1;
 
-
-GetVersionTable();
-our $log;
-our @attachments;
-our $bugtotal;
-our @recipients;
-my $xml;
-
-# This can go away as soon as data/versioncache is removed. Since we still
-# have to use GetVersionTable() though, it stays for now.
-
 sub Debug {
     return unless ($debug);
     my ($message, $level) = (@_);
@@ -114,26 +79,29 @@ sub Debug {
     print STDERR "$message\n" if (($debug == $level) && ($level == DEBUG_LEVEL));
 }
 
-sub Error {
-    my ($reason,$errtype) = @_;
-    my $subject = "Bug import error: $reason";
-    my $message = "Cannot import these bugs because $reason "; 
-    $message .=   "\n\nPlease re-open the original bug.\n" if ($errtype);
-    $message .=   "For more info, contact ". Param("maintainer") . ".\n";
-    my @to = (Param("maintainer"));
-    Debug($message, ERR_LEVEL);
-    exit(1);
-}
-
 Debug("Reading xml", DEBUG_LEVEL);
-# Read STDIN in slurp mode. VERY dangerous, but we live on the wild side ;-)
-local($/);
-$xml = <>;
+
+my $xml;
+my $filename;
+if ( $#ARGV == -1 )
+{
+	# Read STDIN in slurp mode. VERY dangerous, but we live on the wild side ;-)
+	local($/);
+	$xml = <>;
+}
+elsif ( $#ARGV == 0 )
+{
+	$filename = $ARGV[0];
+}
+else
+{
+	pod2usage(0);
+}
 
 Debug("Parsing tree", DEBUG_LEVEL);
 
 my $testopiaXml = Bugzilla::Testopia::Xml->new();
-$testopiaXml->parse($xml);
+$testopiaXml->parse($xml,$filename);
 
 exit 0;
 
@@ -141,16 +109,18 @@ __END__
 
 =head1 NAME
 
-importxml - Import bugzilla bug data from xml.
+tr_importxml - Import Testopia data from xml.
 
 =head1 SYNOPSIS
 
-    importxml.pl [options] [file ...]
+    tr_importxml.pl [options] [file]
 
  Options:
        -? --help        Brief help message.
        -v --verbose     Print error and debug information. 
                         Multiple -v options increase verbosity.
+                        
+ With no file read standard input.
 
 =head1 OPTIONS
 
@@ -164,31 +134,11 @@ importxml - Import bugzilla bug data from xml.
 
     Print error and debug information. Mulltiple -v increases verbosity
 
-=item B<-m>
-
-    Send mail to exporter with a log of bugs imported and any errors.
-
 =back
 
 =head1 DESCRIPTION
 
-     This script is used import bugs from another installation of bugzilla.
-     It can be used in two ways.
-     First using the move function of bugzilla
-     on another system will send mail to an alias provided by
-     the administrator of the target installation (you). Set up an alias
-     similar to the one given below so this mail will be automatically 
-     run by this script and imported into your database.  Run 'newaliases'
-     after adding this alias to your aliases file. Make sure your sendmail
-     installation is configured to allow mail aliases to execute code. 
-
-     bugzilla-import: "|/usr/bin/perl /opt/bugzilla/importxml.pl --mail"
-
-     Second it can be run from the command line with any xml file from 
-     STDIN that conforms to the bugzilla DTD. In this case you can pass 
-     an argument to set whether you want to send the
-     mail that will be sent to the exporter and maintainer normally.
-
-     importxml.pl [options] < bugsfile.xml
+     This script is used import Test Plans and Test Cases into Testopia.
+     
 
 =cut

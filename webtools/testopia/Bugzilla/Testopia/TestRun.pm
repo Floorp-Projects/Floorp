@@ -433,14 +433,13 @@ sub obliterate {
     return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
 
-    $dbh->do("DELETE FROM test_run_cc WHERE run_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_run_tags WHERE run_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_run_activity WHERE run_id = ?", undef, $self->id);
-    
     foreach my $obj (@{$self->caseruns}){
         $obj->obliterate;
     }
-    
+
+    $dbh->do("DELETE FROM test_run_cc WHERE run_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_run_tags WHERE run_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_run_activity WHERE run_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_runs WHERE run_id = ?", undef, $self->id);
     return 1;
 }
@@ -749,10 +748,11 @@ Returns true if the logged in user has rights to delete this test run.
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param('allow-test-deletion'); 
-    return (Bugzilla->user->id == $self->manager->id
-            || Bugzilla->user->id == $self->plan->author->id 
-            || Bugzilla->user->in_group('admin'));
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("admin");
+    return 1 if Bugzilla->user->id == $self->manager->id;
+    return 1 if Bugzilla->user->id == $self->plan->author->id;
+    return 0;
 }
 
 ###############################

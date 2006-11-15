@@ -573,17 +573,19 @@ sub compare_doc_versions {
     detaint_natural($oldversion);
     my $dbh = Bugzilla->dbh;
     my %diff;
-    my ($newaction, $neweffect) = $dbh->selectrow_array(
-            "SELECT action, effect FROM test_case_texts
+    my ($newaction, $neweffect, $newsetup, $newbreakdown) = $dbh->selectrow_array(
+            "SELECT action, effect, setup, breakdown FROM test_case_texts
              WHERE case_id = ? AND case_text_version = ?",
              undef, $self->{'case_id'}, $newversion);
     
-    my ($oldaction, $oldeffect) = $dbh->selectrow_array(
-            "SELECT action, effect FROM test_case_texts
+    my ($oldaction, $oldeffect, $oldsetup, $oldbreakdown) = $dbh->selectrow_array(
+            "SELECT action, effect, setup, breakdown FROM test_case_texts
              WHERE case_id = ? AND case_text_version = ?",
              undef, $self->{'case_id'}, $oldversion);
     $diff{'action'} = diff(\$newaction, \$oldaction);
     $diff{'effect'} = diff(\$neweffect, \$oldeffect);
+    $diff{'setup'} = diff(\$newsetup, \$oldsetup);
+    $diff{'breakdown'} = diff(\$newbreakdown, \$oldbreakdown);
     return \%diff;
 }
 
@@ -1281,22 +1283,21 @@ sub obliterate {
     return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
 
-    $dbh->do("DELETE FROM test_case_texts WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_plans WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_components WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_tags WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_bugs WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_activity WHERE case_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_dependencies 
-               WHERE dependson = ? OR blocked = ?", undef, ($self->id, $self->id));
-
     foreach my $obj (@{$self->attachments}){
         $obj->obliterate;
     }
     foreach my $obj (@{$self->caseruns}){
         $obj->obliterate;
     }
-    
+
+    $dbh->do("DELETE FROM test_case_texts WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_plans WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_components WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_tags WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_bugs WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_activity WHERE case_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_dependencies
+               WHERE dependson = ? OR blocked = ?", undef, ($self->id, $self->id));
     $dbh->do("DELETE FROM test_cases WHERE case_id = ?", undef, $self->id);
     return 1;
 }
@@ -1339,14 +1340,18 @@ Returns true if the logged in user has rights to delete this test case.
 
 sub candelete {
     my $self = shift;
-    return 0 unless ($self->canedit && Param("allow-test-deletion"));
-    return 1 if Bugzilla->user->in_group('admin');
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("admin");
 
-    # Allow case author to delete as long as this case does not appear in any runs.
-    return 1 if Bugzilla->user->id == $self->author->id && get_caserun_count == 0;
+    # Allow case author to delete if this case is not in any runs.
+    return 1 if Bugzilla->user->id == $self->author->id &&
+        $self->get_caserun_count == 0;
 
     # Allow plan author to delete if this case is linked to one plan only.
-    return 1 if scalar(@{$self->plans}) == 1 && Bugzilla->user->id == @{$self->plans}[0]->author->id;  
+    return 1 if Bugzilla->user->id == @{$self->plans}[0]->author->id &&
+        scalar(@{$self->plans}) == 1;
+
+    return 0;
 }
 
 ###############################

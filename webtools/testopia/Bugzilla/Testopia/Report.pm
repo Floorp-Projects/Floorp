@@ -202,7 +202,7 @@ sub init {
     my $dbh = Bugzilla->switch_to_shadow_db;
     my $search = Bugzilla::Testopia::Search->new($cgi, \@selectnames);
     my $results = $dbh->selectall_arrayref($search->query);
-    Bugzilla->switch_to_main_db;
+    $dbh = Bugzilla->switch_to_main_db;
     
     # We have a hash of hashes for the data itself, and a hash to hold the 
     # row/col/table names.

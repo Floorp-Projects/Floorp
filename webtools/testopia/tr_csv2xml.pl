@@ -59,12 +59,11 @@ xmlfilename in Testopia XML format.
 
 =cut
 
-
-my $TCDB_CORRECTION_EXTENSION = ".TCDBcorrections";
 my $TEST_PLAN_AUTHOR = "Change TEST_PLAN_AUTHOR in import.pl user\@novell.com";
 use constant TEST_PLAN_DOCUMENT => "Change TEST_PLAN_DOCUMENT in import.pl";
-my $TEST_PLAN_EDITOR = "Change TEST_PLAN_EDITOR in import.pl user\@novell.com";
 use constant TEST_PLAN_NAME => "Change TEST_PLAN_NAME";
+use constant TEST_PLAN_PRODUCT => "TestProduct";
+use constant TEST_PLAN_PRODUCT_VERSION => "other";
 # Test Plan types are: Database_id, Database_description or Xml_description.
 use constant TEST_PLAN_NAME_TYPE => "Xml_description";
 
@@ -101,68 +100,32 @@ sub map_TCDB_users
 }
 
 #
-# The TCDB export does not quote doube quotes in the fields.  This method finds those
-# double quotes and quotes them.
+# Print the fields.  
 #
-sub quote_the_doublequote {
-	my ($line) = @_;
+# In each field need to change '\"' to '"' and change all '"' to '""'.  The last field
+# will also have a '"' at the end of the line that needs to be removed.
+#
+sub print_tcdb_fields
+{
+	my ($file_descriptor,$fields_ref,$testcasenamefield) = @_;
 
-	# Seeing \" in some files as the quote for a double guote.
-	$line =~ s/\\"/""/g;
-	
-	my @chars = split(//,$line);
 	my $index = 0;
-	my $in_quote_field = 0;
-	my @return_line;
-
-	while ( $index <= $#chars )
+	while ( $index < @$fields_ref )
 	{
-		my $char = $chars[$index];
-
-		if ( $char eq "\"" )
+		$fields_ref->[$index] =~ s/"$//g if ( $index == ( @$fields_ref -1 ) );
+		$fields_ref->[$index] =~ s/\\"/"/g;
+		$fields_ref->[$index] =~ s/"/""/g;
+		if ( $index == $testcasenamefield )
 		{
-			if ( $in_quote_field == 0 )
-			{
-
-				$in_quote_field = 1;
-				push (@return_line,$char);
-			}
-			else
-			{
-				push (@return_line,$char);
-				my $index2 = $index+1;
-				while ( $index2<=$#chars )
-				{
-					last if ( $chars[$index2] =~ m/\S/ );
-					$index2++;
-				}
-				if ( # Special condition for end of line.
-				     # If the next character is last character of string and is a " we need to
-				     # quote our current ".
-				     ( $index2==$#chars && $chars[$index2] eq "\"" ) ||
-				     # Special condition for eand of field.
-				     # If the next two characters are ", we need to quote our current ".
-				     ( ($index2+1)<=$#chars && $chars[$index2] eq "\"" && $chars[$index2+1] eq ",") ||
-				     # If the next non white space character is not a , or " we need to quote the
-				     # current ".
-				     ( $index2<$#chars && $chars[$index2] ne ","  && $chars[$index2] ne "\"" ) )
-				{
-
-					push (@return_line,"\"") ;
-				}
-				else
-				{
-					$in_quote_field = 0;
-				}
-			}
+			$fields_ref->[$index] =~ s/__\d\d\d\d\d\d\d//g;
+			$fields_ref->[$index] =~ s/__\d\d\d\d\d\d//g;
+			$fields_ref->[$index] =~ s/__\d\d\d\d\d//g;
 		}
-		else
-		{
-			push (@return_line,$char);
-		}
-		$index++;
+		print $file_descriptor "\"$fields_ref->[$index]\"";
+		print $file_descriptor "," if ( $index != ( @$fields_ref -1 ) );
+		$index += 1;
 	}
-	return join("",@return_line);
+	print $file_descriptor "\n";
 }
 
 #
@@ -173,7 +136,7 @@ sub quote_the_doublequote {
 # The Test Case Data Base (TCDB) CSV files also need to be processed to clean up format errors.  
 #
 # The TCDB CSV errors are:
-#	1) Does not escape " used in a field with "".
+#	1) Does not escape " used in a field with "".  May use \" instead of "" but not always.
 #	2) Runs the CSV across multiple lines.
 #	3) In some cases a line may be missing the last field.
 #
@@ -181,126 +144,220 @@ sub remove_field_list
 {
 	my ($input_filename,$work_filename,$tcdb_format) = @_;
 	my $field_list = "";
+	my @field_buffer;
+	my @fields;
+	my $fields_index = 0;
+	my $in_quote_field = 0;
 	my $line = "";
 	my $line_count = 0;
-	my $matching_expression = "";
-	my $matching_expression_tcdb_error = "";
-	my $matching_expression_too_long = "";
+	my $number_of_fields = 0;
+	my $parse_line = "";
+	my $testcasenamefield = "";
+
 	open(CSVINPUT, $input_filename) or error("Cannot open file $input_filename");
-	open(CSVWORK, ">" . $work_filename) or error("Cannot open file $work_filename");
+	open(CSVWORK, ">", $work_filename) or error("Cannot open file $work_filename");
 
 	while (<CSVINPUT>)
 	{
 		chop;
-		my $current_line = $_;
 
-		$current_line =~ s/\r//g;
-		$current_line =~ s/\342\200\231/&#8217;/g;
-		$current_line =~ s/\342\200\230/&#8216;/g;
-		$current_line =~ s/\342\200\246/&#133;/g;
-		$current_line =~ s/\342\200\223/-/g;
-		$current_line =~ s/\342\200\224/&#8212;/g;
-		$current_line =~ s/\342\200\234/&#8221;/g;
-		$current_line =~ s/\342\200\235/&#8222;/g;
-  
+		s/\r//g;
+		s/\342\200\231/&#8217;/g;
+		s/\342\200\230/&#8216;/g;
+		s/\342\200\246/&#133;/g;
+		s/\342\200\223/-/g;
+		s/\342\200\224/&#8212;/g;
+		s/\342\200\234/&#8221;/g;
+		s/\342\200\235/&#8222;/g;
+		s/\302\251/&copy;/g;
+		s/\031/'/g;
+		s/\221/&apos;/g;
+		s/\222/&apos;/g;
+		s/\224/&apos;/g;
+		s/\226/-/g;
+		s/\341/&#224;/g;					# small letter a with grave
+		s/\344/&#228;/g;					# small letter a with diaeresis
+		s/\351/&#232;/g;					# small letter e with grave
+		s/\364/&#244;/g;					# small letter o with circumflex
+		
+  		
 		$line_count += 1;
 		if ( $line_count == 1 )
 		{
-			$matching_expression .= "^";
-			$field_list = $current_line;
-			my @fields = split(/,/);
-			for ( my $i=1; $i<=$#fields; $i++ )
+			$field_list = $_;
+			$number_of_fields = $field_list;
+			$number_of_fields =~ s/[^,]//g;
+			# Counting the number of commas so number of fields is one more.
+			$number_of_fields = (length $number_of_fields) + 1;
+			# Returned $field_list needs to be lower case, all spaces, " and \ removed.
+			$field_list = lc $field_list;
+			$field_list =~ s/[\s"\/]//g;
+			my $index = 0;
+			# Find the field that contains the Test Case name.
+			foreach my $field ( split(/,/,$field_list) )
 			{
-				$matching_expression .= "(\".*\",|,)";
+				if ( $field eq "testcasename" )
+				{
+					$testcasenamefield = $index ;
+					last;
+				}
+				$index++;
 			}
-			$matching_expression_too_long = $matching_expression . "(\".*\",|,).+\$";
-			$matching_expression .= "(\".*\")?\$";	
-			$matching_expression_tcdb_error = $matching_expression;
-			$matching_expression_tcdb_error =~ s/^\^\("\.\*",\|,\)/^/;
 			next;
 		}
 		
 		if ( ! $tcdb_format )
 		{
-			print CSVWORK $current_line . "\n";
+			print CSVWORK $_ . "\n";
 			next;
 		}
 		
-		error("Found substitution key <TRANSLATE_DOUBLEQUOTE> in $input_filename at line $line_count") if ( /<TRANSLATE_DOUBLEQUOTE>/ );
-		error("Found substitution key <TRANSLATE_NEWLINE> in $input_filename at line $line_count") if ( /<TRANSLATE_NEWLINE>/ );
-		if ( $line ne "" )
-		{	
-			# If we have all the csv fields the line is ready to print.
-			if ( $line =~ m/$matching_expression/ )
+		# Two TCDB CSV options that are not handled correctly:
+		#	1) A unescaped double quote in a field that appears at the end of the line is assumed
+		#	   to be the end of the field although it is suppose to be part of the field.  This 
+		#	   could probably be detected by reading the next line and seeing if it begins with a
+		#      double quote.  If it does then the double quote was the end of the field.
+		#   2) If a field contains some thing like:
+		#	   '2. Click "Roles and Tasks " , "Storage" , click "Volumes" and' the "," will be 
+		# 	   seen as field seperator and not as part of the field.
+
+		# Add the current line onto the line to parse.
+		$parse_line .= $_;
+
+		# The end of the TCDB CSV line will be a double quote at the end of the line.  Keep combining
+		# lines until we have a double quote at the end of the line and try to parse the line.
+		if ( ! ($parse_line =~ /.+"$/) )
+		{
+			$parse_line .= "\\n";
+			next;
+		}
+
+		# At this point $parse_line will hopefully contain the full CSV line.  It may not though since
+		# we could have found a double quote at the end of the line used in field that spans multiple
+		# lines.  Parse it  below and if we have not found all the fields we will loop back and read
+		# more lines until the next double quote at the end of the line is found.
+
+		$in_quote_field = 0;
+		my $index = 0;
+		@fields = ();
+		@field_buffer = ();
+		my @chars = split(//,$parse_line);
+		while ( $index <= $#chars )
+		{
+			my $char = $chars[$index];
+			if ( $char eq "\"" )
 			{
-				# The TCDB does not double quote double quotes which causes a problem when the last 
-				# field contains a double quote at the end of the line that is should be part of the
-				# field.  The match above is true but we have not really reached the end of the field.
-				# So we need to break the line up at each field, if the last field contains a even
-				# number of double quotes we have not reached the end of the line and need to just
-				# append the current line onto our line buffer.
-				my @fields = split /","/, $line;
-				$fields[$#fields] =~ s/[^"]//g;
-				if ( ((length $fields[$#fields]) % 2) == 0 )
+				# Following check is for character sequence \".  Look at last character in the current
+				# field_buffer and if it is a \ this " is not the end of the field.
+				if ( $#field_buffer>=0 && $field_buffer[$#field_buffer] eq "\\" )
 				{
-					$line .= $current_line;
-					next;
+					push (@field_buffer,$char);
 				}
-				print CSVWORK quote_the_doublequote($line) . "\n";
-				$line = $current_line;
-			}
-			# If current line begins with a ", see if it's the start of a new line. Check to see if this line might have
-			# TCDB error of a missing field.  If line has exceeded the matching criteria display a error.
-			elsif ( $current_line =~ /^"/ )
-			{
-				if ( $line =~ m/$matching_expression_tcdb_error/ )
+				elsif ( ! $in_quote_field )
 				{
-					$line .= ",\"\"";
-					print CSVWORK quote_the_doublequote($line) . "\n";
-					$line = $current_line;
-				}
-				elsif ( $line =~ m/$matching_expression_too_long/ )
-				{
-					error("Confused in $input_filename at line $line_count.  Cannot figure out how to proceed");
+					$in_quote_field = 1;
 				}
 				else
 				{
-					$line .= "<TRANSLATE_NEWLINE>" . $current_line;
+					# If this double quote is followed by a comma double quote ',"' it would be the end of the field
+					# otherwise it should included in the field.  Need to ignore white space when searching for the 
+					# next two characters.
+					# The TCDB never breaks a line at field separators (have not seen it yet anyway) so the code does
+					# not need to worry about finding a comma at the end of the line and checking for a double quote at
+					# the beginning of the next line.
+					my $comma_index = $index+1;
+					while ( $comma_index<=$#chars )
+					{
+						last if ( $chars[$comma_index] =~ m/\S/ );
+						$comma_index++;
+					}
+					my $double_quote_index = $comma_index+1;
+					while ( $double_quote_index<=$#chars )
+					{
+						last if ( $chars[$double_quote_index] =~ m/\S/ );
+						$double_quote_index++;
+					}
+					# Is the next non-white space character a comma followed by a double quote?  If yes then we
+					# have reached the end of the field.
+					if ( ( $comma_index <= $#chars &&  $chars[$comma_index] eq "," ) &&
+					     ( $double_quote_index <= $#chars &&  $chars[$double_quote_index] eq "\"" ) )
+					{	
+						push (@fields,join("",@field_buffer));
+						@field_buffer = ();
+						# Skip past the comma.
+						$index++;
+						$in_quote_field = 0;
+					}
+					# This quote is at end of the line.  Assume it's the last double quote on the CSV line.
+					elsif ( $index == $#chars )
+					{
+						push (@fields,join("",@field_buffer));
+						@field_buffer = ();
+						$in_quote_field = 0;
+					}
+					else
+					{
+						push (@field_buffer,$char);
+					}
+
 				}
 			}
 			else
 			{
-				$line .= "<TRANSLATE_NEWLINE>" . $current_line;
+				if ( $in_quote_field )
+				{
+					push (@field_buffer,$char);
+				}
+				else
+				{
+					# Only allow white space between fields.
+					error("Found unexpected character $char after phrase '" . 
+					      join("",@field_buffer) . 
+					      "' on line $line_count in file $input_filename") if ( $char =~ '\S');
+				}
+			}
+			$index++;
+		}
+		
+		# Do we have all the fields we need?
+		if ( ($#fields == ($number_of_fields-1)) && (! $in_quote_field) )
+		{
+			print_tcdb_fields(\*CSVWORK,\@fields,$testcasenamefield);
+			$parse_line = "";
+			@fields = ();
+		}
+		# Is this the TCDB export error?  We have one less field than needed and the next line begins with a
+		# double quote.
+		elsif ( ($#fields == ($number_of_fields-2)) && (! $in_quote_field ) )
+		{
+			if ( $_ =~ m/^"/ )
+			{
+				# Pull double quote of the end of the last field.
+				$fields[$#fields] =~ s/"$//;
+				# Create the missing field.  Need to insert a double quote since print_fields expects a double
+				# quote at end of last field.
+				push (@fields,"\"");
+				print_tcdb_fields(\*CSVWORK,\@fields,$testcasenamefield);
+				$parse_line = "";
+				@fields = ();
 			}
 		}
-		else 
+		elsif ( $#fields >= $number_of_fields )
 		{
-			$line = $current_line;
-		}
-		print STDERR "        line=$line\ncurrent_line=$current_line\n" if ( $debug );
-	}
-	# Probably will still have a line in the $line buffer.
-	if ( $line ne "" )
-	{
-		if ( $line =~ m/$matching_expression/ )
-		{
-			print CSVWORK quote_the_doublequote($line) . "\n";
+			error("Read too many lines.  Parse line '$parse_line' at line $line_count in file $input_filename");
 		}
 		else
+		# Not enough fields yet.  Need to append a \n to the $parse_line buffer and starting reading 
+		# until we find another double quote at the end of the line.
 		{
-			$line .= ",\"\"" if ( $line =~ m/$matching_expression_tcdb_error/ );
-			if ( $line =~ m/$matching_expression/ )
-			{
-				print CSVWORK quote_the_doublequote($line) . "\n";
-			}
-			else
-			{
-				error("Incomplete line in $input_filename at line $line_count.  Line follows" . $line);
-			}
+			$parse_line .= "\\n";
 		}
 	}
+	# When End of File is read the parse_line is suppose to be empty.
+	error("Reached end of file while parsing '$parse_line'") if ( $parse_line ne "" );
 	close(CSVINPUT);
 	close(CSVWORK);
+	error("Did not find the last double quote in file") if ( $in_quote_field );
 
 	#
 	# Sort the corrected CSV to remove duplicate records.
@@ -330,15 +387,10 @@ sub remove_white_space {
 # Characters that are entities in XML and HTML need to be
 # converted to their entity representation.
 #
-# TRANSLATE_NEWLINE is a character inserted by this script
-# where a new line needs to be but not orginally contained
-# in the field.
-#
 # Some new lines have been showing up as \\n in exports.
 #
 sub fix_entities {
 	my ($line) = @_;
-	$line =~ s/<TRANSLATE_NEWLINE>/\n/g;
 	$line =~ s/\\n/\n/g;
 	$line =~ s/\&/&amp;/g;
 	$line =~ s/\</&lt;/g;
@@ -358,10 +410,9 @@ error("Need to supply XML output file") if ( $#ARGV == 0 );
 error("Too many arguments") if ( $#ARGV >= 2 );
 
 my $csv_input_filename = $ARGV[0];
-
 my $xml_output_filename = $ARGV[1];
 my $csv_work_filename = $csv_input_filename . ".work";
-open(XMLOUTPUT, "> $xml_output_filename") or error("Cannot open file $xml_output_filename");
+open(XMLOUTPUT, ">", $xml_output_filename) or error("Cannot open file $xml_output_filename");
 my %tcdb_user;
 my $field_list = remove_field_list($csv_input_filename,$csv_work_filename,$tcdb);
 map_TCDB_users(\%tcdb_user);
@@ -399,14 +450,13 @@ map_TCDB_users(\%tcdb_user);
 # The order of the fields is not important.  The fields supplied to Class::CSV will be in
 # order found on the first line of the CSV file.
 #
-# Steps needed are:
+# The field_list returned from remove_field_list() will have:
 #    Change to lower case.
 #    Remove spaces.
 #    Remove all "'s
 #    Remove all /'s.'
 #
-$field_list = lc $field_list;
-$field_list =~ s/[\s"\/]//g;
+
 # More sources for the CSV's other than TCDB, transform some of the column names.
 $field_list =~ s/author/owner/g;
 $field_list =~ s/result/passfaildefinition/g;
@@ -433,15 +483,14 @@ while (<DTDINPUT>)
 }
 close(DTDINPUT);
 print XMLOUTPUT "]>\n";
-print XMLOUTPUT "<testopia version=\"2.21\">\n";
+print XMLOUTPUT "<testopia version=\"1.1\">\n";
 
 if ( $TEST_PLAN_AUTHOR ne "Change TEST_PLAN_AUTHOR in import.pl user\@novell.com" )
 {
 	print XMLOUTPUT "	<testplan author=\"" . $TEST_PLAN_AUTHOR . "\" type=\"System\" archived=\"False\">\n";
 	print XMLOUTPUT "		<name>" . TEST_PLAN_NAME . "</name>\n";
-	print XMLOUTPUT "		<product>TestProduct</product>\n";
-	print XMLOUTPUT "		<productversion>other</productversion>\n";
-	print XMLOUTPUT "		<editor>" . $TEST_PLAN_EDITOR . "</editor>\n";
+	print XMLOUTPUT "		<product>" . TEST_PLAN_PRODUCT . "</product>\n";
+	print XMLOUTPUT "		<productversion>" . TEST_PLAN_PRODUCT_VERSION . "</productversion>\n";
 	print XMLOUTPUT "		<document>" . TEST_PLAN_DOCUMENT . "</document>\n";
 	print XMLOUTPUT "	</testplan>\n";
 }
@@ -468,7 +517,7 @@ foreach my $line (@{$csv->lines()}) {
 	}
 	print XMLOUTPUT "automated=\"Manual\" ";
 	print XMLOUTPUT "status=\"CONFIRMED\">\n";
-	print XMLOUTPUT "         <testplan_reference type=\"" . TEST_PLAN_NAME_TYPE . "\">" . TEST_PLAN_NAME . "</testplan_reference>\n";
+	print XMLOUTPUT "		<testplan_reference type=\"" . TEST_PLAN_NAME_TYPE . "\">" . TEST_PLAN_NAME . "</testplan_reference>\n";
 	my $summary;
 	if ( defined($fields{'testcasename'}) )
 	{
@@ -517,7 +566,7 @@ foreach my $line (@{$csv->lines()}) {
 	}
 	if ( defined($fields{'component'}) && ( $line->component() ne "")  )
 	{
-		print XMLOUTPUT "		<component>" . fix_entities(remove_white_space($line->component())) . "</component>\n";
+		print XMLOUTPUT "		<component product=\"" . TEST_PLAN_PRODUCT . "\">" . fix_entities(remove_white_space($line->component())) . "</component>\n";
 	}
 	if ( defined($fields{'category'}) && ( $line->category() ne "") )
 	{
@@ -564,13 +613,13 @@ foreach my $line (@{$csv->lines()}) {
 		print XMLOUTPUT fix_entities($line->steps());
 	}
 	print XMLOUTPUT "</action>\n";
-	print XMLOUTPUT "		<expectedresults>";
 	if ( defined($fields{'passfaildefinition'}) && ( $line->passfaildefinition() ne "") )
 	{
+		print XMLOUTPUT "		<expectedresults>";
 		print XMLOUTPUT "[TCDB Pass Fail Definition]\n" if ( $tcdb );
 		print XMLOUTPUT fix_entities($line->passfaildefinition());
+		print XMLOUTPUT "</expectedresults>\n";
 	}
-	print XMLOUTPUT "</expectedresults>\n";
 	print XMLOUTPUT "	</testcase>\n";
   }
 print XMLOUTPUT "</testopia>\n";

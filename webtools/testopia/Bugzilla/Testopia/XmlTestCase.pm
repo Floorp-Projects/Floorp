@@ -63,17 +63,23 @@ struct
 (
 	'Bugzilla::Testopia::XmlTestCase',
 	{
-#		action						=> '$',
+		attachments					=> '@',
 		blocks						=> 'Bugzilla::Testopia::XmlReferences',
 		category					=> '$',
-		components					=> '@',
+		component_ids				=> '@',
 		dependson					=> 'Bugzilla::Testopia::XmlReferences',
-#		expectedresults				=> '$',
 		tags						=> '@',
 		testcase					=> 'Bugzilla::Testopia::TestCase',
 		testplan					=> 'Bugzilla::Testopia::XmlReferences',
 	}
 );
+
+sub add_attachment()
+{
+	my ($self,$tag) = @_;
+		
+	push @{$self->attachments}, $tag;
+}
 
 sub add_tag()
 {
@@ -84,9 +90,40 @@ sub add_tag()
 
 sub add_component()
 {
-	my ($self,$component) = @_;
-		
-	push @{$self->components}, $component;
+	my ($self,$component,$component_product) = @_;
+	my $component_id = "";
+	my $product_id = "";
+	
+	return "Component $component needs to provide a product" if ( $component_product eq "" );
+	
+	# Find the product identifier.
+	my $products_ref = Bugzilla::Testopia::TestPlan->get_available_products();
+	foreach my $product (@$products_ref)
+	{
+		if ( $component_product eq $product->{name} )
+		{
+			$product_id = $product->{id};
+			last;
+		}
+	}
+	return "Cannot find product $component_product for component $component" if ( $product_id eq "" );
+	
+	# Find the component identifier for the product's componet
+	my $components_ref = Bugzilla::Testopia::TestPlan->get_product_components($product_id);
+	foreach my $product_component ( @$components_ref )
+	{
+		if ( $component eq $product_component->{name} )
+		{
+			$component_id = $product_component->{id};
+			last;
+		}
+	}
+	return "Product $component_product does not have a component named $component" if ( $component_id eq "" );	
+	
+	# Save the component identifier for this Test Case.		
+	push @{$self->component_ids}, $component_id;
+	
+	return "";
 }
 
 sub debug_display()
@@ -117,11 +154,6 @@ sub debug_display()
 	print STDERR "   Author                  " . $author_login . " (id=" . $author_id . ", hash=" . $self->testcase->author() . ")\n";
 	print STDERR "   Blocks                  " . $self->blocks->display() . "\n";
 	print STDERR "   Category                " . $self->category . "\n";
-	$display_variable = $self->testcase->creation_date();
-	if ( defined $display_variable )
-	{
-		print STDERR "   Creation Date           " . $display_variable . "\n";
-	}
 	print STDERR "   Depends On              " . $self->dependson->display() . "\n";
 	print STDERR "   Expected Results\n";
 	if ( defined $text{'effect'} )
@@ -160,7 +192,6 @@ sub debug_display()
 		my %submitter = %{$self->testcase->submitter()};
 		$author_login = $author{"login"};
 		print STDERR "   Attachment                     " . $attachment->description() . "\n";
-		print STDERR "      Creation Date               " . $attachment->creation_ts(). "\n";
 		print STDERR "      Filename                    " . $attachment->filename() . "\n";
 		print STDERR "      Mime Type                   " . $attachment->mime_type(). "\n";
 		print STDERR "      Submitter                   " . $author_login . "\n";
@@ -283,6 +314,11 @@ sub store()
     }
 	my $case_id = $self->testcase->store();
 	$self->testcase->{'case_id'} = $case_id;
+	foreach my $attachment ( @{$self->attachments} )
+	{
+		$attachment->{'case_id'} = $case_id;
+		$attachment->store();
+	}
 	foreach my $asciitag ( @{$self->tags} )
 	{
 		my $classtag = Bugzilla::Testopia::TestTag->new({'tag_name' => $asciitag});
@@ -297,12 +333,9 @@ sub store()
 	}
 	
 	# Code below requires the testplans to be linked into testcases before being run.
-	foreach my $component ( @{$self->components} )
+	foreach my $component_id ( @{$self->component_ids} )
 	{
-		foreach my $available_component ( @{$self->testcase->get_selectable_components()} )
-		{
-			$self->testcase->add_component($available_component->{'id'}) if ( $component eq $available_component->{'name'} );
-		}
+		$self->testcase->add_component($component_id);
 	}
 	
 	return $error_message;

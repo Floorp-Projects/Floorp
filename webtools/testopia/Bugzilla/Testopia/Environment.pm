@@ -574,15 +574,14 @@ sub obliterate {
     return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
 
-    $dbh->do("DELETE FROM test_environment_map WHERE environment_id = ?", undef, $self->id);
-    
     foreach my $obj (@{$self->runs}){
         $obj->obliterate;
     }
     foreach my $obj (@{$self->caseruns}){
         $obj->obliterate;
     }
-    
+
+    $dbh->do("DELETE FROM test_environment_map WHERE environment_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_environments WHERE environment_id = ?", undef, $self->id);
     return 1;
 }
@@ -678,9 +677,9 @@ Returns true if the logged in user has rights to delete this environment.
 
 sub candelete {
     my $self = shift;
-    return (UserInGroup('managetestplans') 
-        || UserInGroup('edittestcases')) 
-            && Param('allow-test-deletion');
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("admin");
+    return 0;
 }
 
 ###############################

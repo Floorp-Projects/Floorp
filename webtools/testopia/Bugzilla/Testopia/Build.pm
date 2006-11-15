@@ -174,6 +174,23 @@ sub check_name {
     return $is;
 }
 
+=head2 check_build_by_name
+
+Returns id of a build of the specified name
+
+=cut
+
+sub check_build_by_name {
+    my $self = shift;
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $id = $dbh->selectrow_array(
+        "SELECT build_id FROM test_builds 
+         WHERE name = ?", undef, $name);
+ 
+    return $id;
+}
+
 =head2 update
 
 Updates an existing build object in the database.

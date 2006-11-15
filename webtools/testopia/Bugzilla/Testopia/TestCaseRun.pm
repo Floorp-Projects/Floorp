@@ -983,9 +983,10 @@ Returns true if the logged in user has rights to delete this case-run.
 
 sub candelete {
     my $self = shift;
-    
-    return 0 unless $self->canedit && Param('allow-test-deletion'); 
-    return $self->run->manager->id == Bugzilla->user->id;
+    return 0 unless $self->canedit && Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("admin");
+    return 1 if Bugzilla->user->id == $self->run->manager->id;
+    return 0;
 }
 
 =head2 obliterate
@@ -996,8 +997,8 @@ Removes this caserun and all things that reference it.
 
 sub obliterate {
     my $self = shift;
-    my $dbh = Bugzilla->dbh;
     return 0 unless $self->candelete;
+    my $dbh = Bugzilla->dbh;
     
     $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_case_runs WHERE case_run_id = ?", undef, $self->id);

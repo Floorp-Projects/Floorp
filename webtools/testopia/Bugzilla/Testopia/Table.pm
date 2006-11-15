@@ -99,7 +99,6 @@ Private constructor for this class
 sub init {
     my $self = shift;
     my ($type, $url, $cgi, $list, $query)  = @_;
-    my $dbh = Bugzilla->dbh;
     $self->{'user'} = Bugzilla->user;
     $self->{'type'} = $type ||   ThrowCodeError('bad_arg',
                                    {argument => 'type',
@@ -115,12 +114,14 @@ sub init {
         my $countquery = $query;
         $countquery =~ s/ LIMIT.*$//;
         print "<br> $countquery" if $debug;
+        my $dbh = Bugzilla->switch_to_shadow_db();
         my $count_res = $dbh->selectcol_arrayref($countquery);
         my $count = scalar @$count_res;
         print "<br> total rows: $count" if $debug;
         $self->{'list_count'} = $count;
         my @ids;
         my $list = $dbh->selectcol_arrayref($query);
+        $dbh = Bugzilla->switch_to_main_db();
         foreach my $id (@$list){
             my $o;
             if ($type eq 'case'){

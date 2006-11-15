@@ -782,9 +782,9 @@ sub lookup_type_by_name {
     
     my ($value) = $dbh->selectrow_array(
             "SELECT type_id
-			 FROM test_plan_types
-			 WHERE name = ?",
-			 undef, $name);
+             FROM test_plan_types
+             WHERE name = ?",
+             undef, $name);
     return $value;
 }
 
@@ -819,9 +819,9 @@ sub lookup_product_by_name {
     # TODO 2.22 use Product.pm
     my ($value) = $dbh->selectrow_array(
             "SELECT id
-			 FROM products
-			 WHERE name = ?",
-			 undef, $name);
+             FROM products
+             WHERE name = ?",
+             undef, $name);
     return $value;
 }
 
@@ -838,12 +838,6 @@ sub obliterate {
     return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
 
-    $dbh->do("DELETE FROM test_plan_texts WHERE plan_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_plan_tags WHERE plan_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_plan_group_map WHERE plan_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_plan_activity WHERE plan_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_plans WHERE plan_id = ?", undef, $self->id);
-    
     foreach my $obj (@{$self->attachments}){
         $obj->obliterate;
     }
@@ -853,7 +847,12 @@ sub obliterate {
     foreach my $obj (@{$self->test_cases}){
         $obj->obliterate if (scalar @{$obj->plans} == 1);
     }
-    
+
+    $dbh->do("DELETE FROM test_plan_texts WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_tags WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_group_map WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_plan_activity WHERE plan_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_plans WHERE plan_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_plans WHERE plan_id = ?", undef, $self->id);
     return 1;
 }
@@ -890,7 +889,9 @@ Returns true if the logged in user has rights to delete this plan
 sub candelete {
     my $self = shift;
     return 0 unless $self->canedit && Param("allow-test-deletion");
-    return (Bugzilla->user->id == $self->author->id || Bugzilla->user->in_group('admin'));    
+    return 1 if Bugzilla->user->in_group("admin");
+    return 1 if Bugzilla->user->id == $self->author->id;
+    return 0;
 }
   
     
