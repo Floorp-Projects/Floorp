@@ -50,6 +50,33 @@
 #endif
 
 #define kMaxTreeColumns 100
+
+inline already_AddRefed<nsITreeColumn> GetFirstColumn(nsITreeBoxObject *aTree)
+{
+  nsCOMPtr<nsITreeColumns> cols;
+  nsCOMPtr<nsITreeColumn> column;
+  aTree->GetColumns(getter_AddRefs(cols));
+  if (cols) {
+    cols->GetFirstColumn(getter_AddRefs(column));
+  }
+  nsITreeColumn *retCol = nsnull;
+  column.swap(retCol);
+  return retCol;
+}
+
+inline already_AddRefed<nsITreeColumn> GetLastColumn(nsITreeBoxObject *aTree)
+{
+  nsCOMPtr<nsITreeColumns> cols;
+  nsCOMPtr<nsITreeColumn> column;
+  aTree->GetColumns(getter_AddRefs(cols));
+  if (cols) {
+    cols->GetLastColumn(getter_AddRefs(column));
+  }
+  nsITreeColumn *retCol = nsnull;
+  column.swap(retCol);
+  return retCol;
+}
+
 // ---------- nsXULTreeAccessible ----------
 
 nsXULTreeAccessible::nsXULTreeAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
@@ -184,7 +211,8 @@ NS_IMETHODIMP nsXULTreeAccessible::GetFirstChild(nsIAccessible **aFirstChild)
     PRInt32 rowCount;
     mTreeView->GetRowCount(&rowCount);
     if (rowCount > 0) {
-      return GetCachedTreeitemAccessible(0, nsnull, aFirstChild);
+      nsCOMPtr<nsITreeColumn> column = GetFirstColumn(mTree);
+      return GetCachedTreeitemAccessible(0, column, aFirstChild);
     }
   }
 
@@ -198,7 +226,8 @@ NS_IMETHODIMP nsXULTreeAccessible::GetLastChild(nsIAccessible **aLastChild)
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
   if (rowCount > 0) {
-    return GetCachedTreeitemAccessible(rowCount - 1, nsnull, aLastChild);
+    nsCOMPtr<nsITreeColumn> column = GetLastColumn(mTree);
+    return GetCachedTreeitemAccessible(rowCount - 1, column, aLastChild);
   }
   else // if there is not any rows, use treecols as tree's last child
     nsAccessible::GetLastChild(aLastChild);
@@ -624,10 +653,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   if (!column) {
     if (mRow < rowCount -1) {
       row++;
-      nsCOMPtr<nsITreeColumns> cols;
-      mTree->GetColumns(getter_AddRefs(cols));
-      if (cols)
-        cols->GetFirstColumn(getter_AddRefs(column));
+      column = GetFirstColumn(mTree);
     } else {
       // the next sibling of the last treeitem is null
       return NS_OK;
@@ -669,10 +695,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
   
   if (!column && mRow > 0) {
     row--;
-    nsCOMPtr<nsITreeColumns> cols;
-    mTree->GetColumns(getter_AddRefs(cols));
-    if (cols)
-      cols->GetLastColumn(getter_AddRefs(column));
+    column = GetLastColumn(mTree);
   }
 #else
   if (--row < 0) {
@@ -870,9 +893,10 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSi
         PRInt32 rowCount;
         treeView->GetRowCount(&rowCount);
         if (rowCount > 0) {
+          nsCOMPtr<nsITreeColumn> column = GetFirstColumn(tree);
           nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
           NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
-          ret = treeCache->GetCachedTreeitemAccessible(0, nsnull, aNextSibling);
+          ret = treeCache->GetCachedTreeitemAccessible(0, column, aNextSibling);
         }
       }
     }
