@@ -61,11 +61,9 @@
 
 #include "nsNetCID.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-// Mac OS
+#if defined(XP_MACOSX)
 #define BUILD_APPLEFILE_DECODER 1
 #else
-// other platforms
 #define BUILD_BINHEX_DECODER 1
 #endif
 

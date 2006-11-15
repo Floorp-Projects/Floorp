@@ -38,8 +38,6 @@
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
-#elif defined(XP_MAC)
-#include <Files.h>
 #elif defined(XP_WIN)
 #include <windows.h>
 #elif defined(XP_OS2)
@@ -49,11 +47,7 @@
 // XXX add necessary include file for ftruncate (or equivalent)
 #endif
 
-#if defined(XP_MAC)
-#include "pprio.h"
-#else
 #include "private/pprio.h"
-#endif
 
 #include "prlong.h"
 
@@ -159,12 +153,6 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 #if defined(XP_UNIX) || defined(XP_BEOS)
   if (ftruncate(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
     NS_ERROR("ftruncate failed");
-    return NS_ERROR_FAILURE;
-  }
-
-#elif defined(XP_MAC)
-  if (::SetEOF(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
-    NS_ERROR("SetEOF failed");
     return NS_ERROR_FAILURE;
   }
 
