@@ -51,6 +51,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsID.cpp                       \
   nsIInterfaceRequestorUtils.cpp \
   nsINIParser.cpp                \
+  nsISupportsImpl.cpp            \
   nsMemory.cpp                   \
   nsWeakReference.cpp            \
   nsGREGlue.cpp                  \
