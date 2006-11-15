@@ -175,11 +175,19 @@ function streamToString( inStream, charset )
     var convStream =
         Components.classes["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Components.interfaces.nsIConverterInputStream);
-    convStream.init( inStream, charset, 0, 0x0000 );
-    var str = "";
-    var str_ = {};
-    while (convStream.readString( -1, str_ )) {
-        str += str_.value;
+    try {
+        convStream.init( inStream, charset, 0, 0x0000 );
+        var str = "";
+        var str_ = {};
+        while (convStream.readString( -1, str_ )) {
+            str += str_.value;
+        }
+    }
+    catch (exc) {
+        throw new Components.Exception(
+            "error converting stream: " + errorToString(exc) +
+            "\ncharset: " + charset +
+            "\npartially read string: " + str, exc );
     }
     return str;
 }
@@ -192,24 +200,12 @@ function issueSyncRequest( url, receiverFunc, bLogging )
         logMessage( "issueSyncRequest( \"" + url + "\" )",
                     "opening channel." );
     }
+    
     var channel = getIoService().newChannel(
         url, "" /* charset */, null /* baseURI */ );
     channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
     
-    var timer = Components.classes["@mozilla.org/timer;1"]
-                .createInstance(Components.interfaces.nsITimer);
-    timer.initWithCallback(
-        { // nsITimerCallback:
-            notify: function( timer_ ) {
-                        if (channel.isPending())
-                            channel.cancel(NS_BINDING_FAILED);
-                    }
-        },
-        SYNC_REQUESTS_TIMEOUT * 1000,
-        Components.interfaces.nsITimer.TYPE_ONE_SHOT );
-    var stream = channel.open();
-    timer.cancel();
-    
+    var stream = channel.open();    
     var status = channel.status;
     if (status == Components.results.NS_OK) {
         var charset = channel.contentCharset;

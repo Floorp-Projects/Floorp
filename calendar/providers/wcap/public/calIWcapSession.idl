@@ -196,18 +196,15 @@ interface calIWcapSession : nsISupports
     /* xxx todo freebusy: separate into own interface? */
     /**
      * Gets free-busy entries for calid.
-     * Results are notifies to passed listener instance.
+     * Results are notified to passed listener instance.
      * An error is notified to all registered calIObservers and
      * to calIWcapFreeBusyListener::onGetFreeBusyTimes with rc != NS_OK.
-     * Additionally, when an error occurs within getFreeBusyTimes,
-     * the error is also thrown.
      *
      * @param calId a calid or "mailto:rfc822addr"
      * @param dtRangeStart start time of free-busy search
      * @param dtRangeEnd end time of free-busy search
      * @param bBusyOnly whether to return busy entries only
      * @param listener listener receiving results
-     * @param bAsync whether the listener receives results asynchronously
      * @param requestId request id to distinguish asynchronous requests
      */
     void getFreeBusyTimes(

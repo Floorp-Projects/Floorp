@@ -45,6 +45,13 @@ function calWcapSession() {
     this.wrappedJSObject = this;
     this.m_observers = [];
     this.m_calIdToCalendar = {};
+    this.m_asyncQueue = new AsyncQueue();
+    this.m_calPropsTimer = new Timer();
+    
+    // init queued calls:
+    this.getFreeBusyTimes = makeQueuedCall(this.asyncQueue,
+                                           this, this.getFreeBusyTimes_queued);
+    
     // listen for shutdown, being logged out:
     // network:offline-about-to-go-offline will be fired for
     // XPCOM shutdown, too.
@@ -57,7 +64,11 @@ function calWcapSession() {
     observerService.addObserver( this, "network:offline-about-to-go-offline",
                                  false /* don't hold weakly: xxx todo */ );
 }
+
 calWcapSession.prototype = {
+    m_asyncQueue: null,
+    get asyncQueue() { return this.m_asyncQueue; },
+    
     m_ifaces: [ Components.interfaces.calIWcapSession,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
@@ -270,6 +281,7 @@ calWcapSession.prototype = {
     
     m_sessionId: null,
     m_bNoLoginsAnymore: false,
+    m_calPropsTimer: null,
     
     getSessionId:
     function( timedOutSessionId )
@@ -290,74 +302,83 @@ calWcapSession.prototype = {
         
         if (!this.m_sessionId || this.m_sessionId == timedOutSessionId) {
             
-            var this_ = this;
-            lockedExec(
-                function() {
-                    if (!this_.m_bNoLoginsAnymore &&
-                        (!this_.m_sessionId ||
-                         this_.m_sessionId == timedOutSessionId)) {
-                        
-                        try {
-                            this_.m_sessionId = null;
-                            if (timedOutSessionId != null) {
-                                this_.log( "session timeout; " +
-                                           "prompting to reconnect." );
-                                var prompt =
-                                    getWindowWatcher().getNewPrompter(null);
-                                var bundle = getWcapBundle();
-                                if (!prompt.confirm(
-                                        bundle.GetStringFromName(
-                                            "reconnectConfirmation.label"),
-                                        bundle.formatStringFromName(
-                                            "reconnectConfirmation.text",
-                                            [this_.uri.hostPort], 1 ) )) {
-                                    this_.log( "reconnect cancelled." );
-                                    throw new Components.Exception(
-                                        "Login failed. Invalid session ID.",
-                                        Components.interfaces.
-                                        calIWcapErrors.WCAP_LOGIN_FAILED );
-                                }
-                            }
-                            
-                            var sessionUri = this_.uri.clone();
-                            sessionUri.userPass = "";
-                            if (sessionUri.scheme.toLowerCase() != "https" &&
-                                sessionUri.port == -1 /* no port specified */)
-                            {
-                                // silently probe for https support:
-                                try { // enforce https:
-                                    sessionUri.scheme = "https";
-                                    this_.getSessionId_(sessionUri);
-                                }
-                                catch (exc) {
-                                    // restore scheme:
-                                    sessionUri.scheme = this_.uri.scheme;
-                                    if (testResultCode(
-                                            exc, Components.interfaces.
-                                            calIWcapErrors.WCAP_LOGIN_FAILED))
-                                        throw exc; // forward login failures
-                                    // but ignore connection errors
-                                }
-                            }
-                            if (!this_.m_sessionId)
-                                this_.getSessionId_(sessionUri);
-                        }
-                        catch (exc) {
-                            this_.m_bNoLoginsAnymore = true;
-                            this_.logError( exc );
-                            this_.log( "no logins anymore." );
-                            throw exc;
-                        }
-                        
-                        this_.getServerTimeDiff(true /* refresh */);
-                        this_.getSupportedTimezones(true /* refresh */);
-                        // preread calprops for subscribed calendars:
-                        var cals = this_.getSubscribedCalendars({});
-                        for each ( cal in cals ) {
-                            cal.getCalProps_(true /* async */);
-                        }
+            try {
+                this.m_sessionId = null;
+                if (timedOutSessionId) {
+                    this.log( "session timeout; prompting to reconnect." );
+                    var prompt = getWindowWatcher().getNewPrompter(null);
+                    var bundle = getWcapBundle();
+                    if (!prompt.confirm(
+                            bundle.GetStringFromName(
+                                "reconnectConfirmation.label"),
+                            bundle.formatStringFromName(
+                                "reconnectConfirmation.text",
+                                [this.uri.hostPort], 1 ) )) {
+                        this.log( "reconnect cancelled." );
+                        throw new Components.Exception(
+                            "Login failed. Invalid session ID.",
+                            Components.interfaces.
+                            calIWcapErrors.WCAP_LOGIN_FAILED );
                     }
-                } );
+                }
+                
+                var sessionUri = this.uri.clone();
+                sessionUri.userPass = "";
+                if (sessionUri.scheme.toLowerCase() != "https" &&
+                    sessionUri.port == -1 /* no port specified */)
+                {
+                    // silently probe for https support:
+                    try { // enforce https:
+                        sessionUri.scheme = "https";
+                        this.getSessionId_(sessionUri);
+                    }
+                    catch (exc) {
+                        // restore scheme:
+                        sessionUri.scheme = this.uri.scheme;
+                        if (testResultCode( exc, Components.interfaces.
+                                            calIWcapErrors.WCAP_LOGIN_FAILED))
+                            throw exc; // forward login failures
+                        // but ignore connection errors
+                    }
+                }
+                if (!this.m_sessionId)
+                    this.getSessionId_(sessionUri);
+            }
+            catch (exc) {
+                this.m_bNoLoginsAnymore = true;
+                this.logError( exc );
+                this.log( "no logins anymore." );
+                throw exc;
+            }
+            
+            this.getServerTimeDiff(true /* refresh */);
+            
+            if (!timedOutSessionId) // timezones don't change that frequently
+                this.getSupportedTimezones(true /* refresh */);
+            
+            // invalidate calprops of all calendars:
+            var cals = this.getSubscribedCalendars({});
+            for each ( cal in cals ) {
+                cal.m_calProps = null;
+            }
+            
+            this.m_calPropsTimer.initWithCallback(
+                { // nsITimerCallback:
+                    m_pos: 0,
+                    m_session: this,
+                    notify: function(timer_) {
+                        var cals = this.m_session.getSubscribedCalendars({});
+                        var c = (cals.length - this.m_pos);
+                        if (c > 5)
+                            c = 5;
+                        while (c--)
+                            cals[this.m_pos++].getCalProps_(true /*async*/);
+                        if (this.m_pos >= cals.length)
+                            timer_.cancel();
+                    }
+                },
+                15 * 1000,
+                Components.interfaces.nsITimer.TYPE_REPEATING_SLACK );
         }
         
         if (!this.m_sessionId) {
@@ -518,7 +539,7 @@ calWcapSession.prototype = {
         this.m_sessionId = prop.value;        
         this.m_userId = user;
         this.m_sessionUri = sessionUri;
-        this.log( "WCAP login succeeded, setting sessionUri to " +
+        this.log( "login succeeded, setting sessionUri to " +
                   this.sessionUri.spec );
         return true;
     },
@@ -538,7 +559,7 @@ calWcapSession.prototype = {
             icalRootComp = getIcsService().parseICS( str );
         }
         catch (exc) {
-            this.log( exc ); // soft error; request denied etc.
+            this.log( errorToString(exc) ); // soft error; request denied etc.
             throw new Components.Exception(
                 getWcapBundle().formatStringFromName(
                     "accessingServerFailedError.text", [uri.hostPort], 1 ),
@@ -689,6 +710,16 @@ calWcapSession.prototype = {
         return ((list && list.length > 0) ? list[0] : this.userId);
     },
     
+    assureLoggedIn:
+    function()
+    {
+        if (!this.isLoggedIn) {
+            throw new Components.Exception(
+                "Not logged in yet.",
+                Components.results.NS_ERROR_NOT_AVAILABLE);
+        }
+    },
+    
     get isLoggedIn() { return this.m_sessionId != null; },
     
     login:
@@ -712,10 +743,10 @@ calWcapSession.prototype = {
             try {
                 checkWcapXmlErrno( issueSyncXMLRequest(url),
                                    -1 /* logout successfull */ );
-                this.log( "WCAP logout succeeded." );
+                this.log( "logout succeeded." );
             }
             catch (exc) {
-                this.log( "WCAP logout failed: " + exc );
+                this.log( "logout failed: " + exc );
                 Components.utils.reportError( exc );
             }
             this.m_sessionId = null;
@@ -802,6 +833,7 @@ calWcapSession.prototype = {
     function( calId, name, bAllowDoubleBooking, bSetCalProps, bAddToSubscribed )
     {
         try {
+            this.assureLoggedIn();
             var url = this.getCommandUrl( "createcalendar" );
             url += ("&allowdoublebook=" + (bAllowDoubleBooking ? "1" : "0"));
             url += ("&set_calprops=" + (bSetCalProps ? "1" : "0"));
@@ -824,6 +856,7 @@ calWcapSession.prototype = {
     function( calId, bRemoveFromSubscribed )
     {
         try {
+            this.assureLoggedIn();
             var url = this.getCommandUrl( "deletecalendar" );
             url += ("&unsubscribe=" + (bRemoveFromSubscribed ? "1" : "0"));
             url += ("&calid=" + encodeURIComponent(calId));
@@ -841,6 +874,7 @@ calWcapSession.prototype = {
     function( calIds, bSubscribe )
     {
         try {
+            this.assureLoggedIn();
             var url = this.getCommandUrl(
                 bSubscribe ? "subscribe_calendars" : "unsubscribe_calendars" );
             var calId = "";
@@ -849,7 +883,7 @@ calWcapSession.prototype = {
                     calId += ";";
                 calId += encodeURIComponent(calIds[i]);
             }
-            url += ("&calid=" + calId);
+            url += ("&calid=" + encodeURIComponent(calId));
             this.issueSyncRequest( url + "&fmt-out=text%2Fxml", stringToXml );
             this.m_userPrefs = null; // reread prefs
         }
@@ -877,6 +911,7 @@ calWcapSession.prototype = {
     {
         try {
             if (this.m_userPrefs == null) {
+                this.assureLoggedIn();
                 var url = this.getCommandUrl( "get_userprefs" );
                 url += ("&userid=" + encodeURIComponent(this.userId));
                 this.m_userPrefs = this.issueSyncRequest(
@@ -908,10 +943,8 @@ calWcapSession.prototype = {
                     var item = nodeList.item(i);
                     var str = item.textContent;
                     var slash = str.indexOf( '/' );
-                    var start = new CalDateTime();
-                    start.icalString = str.substr( 0, slash );
-                    var end = new CalDateTime();
-                    end.icalString = str.substr( slash + 1 );
+                    var start = getDatetimeFromIcalString(str.substr(0, slash));
+                    var end = getDatetimeFromIcalString(str.substr(slash + 1));
                     var entry = {
                         isBusyEntry:
                         (item.attributes.getNamedItem("FBTYPE").nodeValue
@@ -926,8 +959,9 @@ calWcapSession.prototype = {
                     requestId, calId, ret.length, ret );
             }
             if (LOG_LEVEL > 0) {
-                this.log( "getFreeBusyTimes_resp() calId=" + calId + ", " +
-                          getWcapRequestStatusString(xml) );
+                this.log( "calId=" + calId + ", " +
+                          getWcapRequestStatusString(xml),
+                          "getFreeBusyTimes_resp()" );
             }
         }
         catch (exc) {
@@ -948,9 +982,8 @@ calWcapSession.prototype = {
         }
     },
     
-    getFreeBusyTimes:
-    function( calId, rangeStart, rangeEnd, bBusyOnly, listener,
-              bAsync, requestId )
+    getFreeBusyTimes_queued:
+    function( calId, rangeStart, rangeEnd, bBusyOnly, listener, b, requestId )
     {
         try {
             // assure DATETIMEs:
@@ -964,9 +997,11 @@ calWcapSession.prototype = {
             }
             var zRangeStart = getIcalUTC(rangeStart);
             var zRangeEnd = getIcalUTC(rangeEnd);
-            this.log( "getFreeBusyTimes():\n\trangeStart=" + zRangeStart +
-                      ",\n\trangeEnd=" + zRangeEnd );
+            this.log( "\n\trangeStart=" + zRangeStart +
+                      ",\n\trangeEnd=" + zRangeEnd,
+                      "getFreeBusyTimes()" );
             
+            this.assureLoggedIn();
             var url = this.getCommandUrl( "get_freebusy" );
             url += ("&calid=" + encodeURIComponent(calId));
             url += ("&busyonly=" + (bBusyOnly ? "1" : "0"));
@@ -979,18 +1014,14 @@ calWcapSession.prototype = {
                 this_.getFreeBusyTimes_resp(
                     wcapResponse, calId, listener, requestId );
             }
-            if (bAsync)
-                this.issueAsyncRequest( url, stringToXml, resp );
-            else
-                this.issueSyncRequest( url, stringToXml, resp );
+            this.issueAsyncRequest( url, stringToXml, resp );
         }
         catch (exc) {
             this.notifyError( exc );
             if (listener != null)
                 listener.onGetFreeBusyTimes( exc, requestId, calId, 0, [] );
-            throw exc;
         }
-    }
+    },
 };
 
 var g_confirmedHttpLogins = null;

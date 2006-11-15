@@ -57,6 +57,7 @@ var CalTodo;
 var CalDateTime;
 var CalDuration;
 var XmlHttpRequest;
+var Timer;
 
 // some string resources:
 var g_privateItemTitle;
@@ -69,9 +70,6 @@ var g_busyPhantomItemUuidPrefix;
 var CACHE = "off";
 // denotes where to host local storage calendar(s)
 var CACHE_DIR = null;
-
-// timeout for sync network requests (in secs):
-var SYNC_REQUESTS_TIMEOUT = 10;
 
 // logging:
 #expand var LOG_LEVEL = __LOG_LEVEL__;
@@ -95,6 +93,8 @@ function initWcapProvider()
             "@mozilla.org/calendar/duration;1", "calIDuration" );
         XmlHttpRequest = new Components.Constructor(
             "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest" );
+        Timer = new Components.Constructor(
+            "@mozilla.org/timer;1", "nsITimer" );
         
         // some string resources:
         g_privateItemTitle = getWcapBundle().GetStringFromName(
@@ -104,9 +104,6 @@ function initWcapProvider()
         g_busyItemTitle = getWcapBundle().GetStringFromName(
             "busyItem.title.text");
         g_busyPhantomItemUuidPrefix = ("PHANTOM_uuid" + getTime().icalString);
-        
-        SYNC_REQUESTS_TIMEOUT = getPref(
-            "calendar.wcap.sync_request_timeout", 10);
         
         LOG_TIMEZONE = getPref("calendar.timezone.local", null);
         
@@ -192,7 +189,7 @@ var calWcapCalendarModule = { // nsIModule:
     
     WcapSessionInfo: {
         classDescription: "Sun Java System Calendar Server WCAP Session",
-        contractID: "@mozilla.org/calendar/session;1?type=wcap",
+        contractID: "@mozilla.org/calendar/wcap/session;1",
         classID: Components.ID("{CBF803FD-4469-4999-AE39-367AF1C7B077}")
     },
     

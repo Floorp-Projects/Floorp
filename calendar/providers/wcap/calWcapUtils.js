@@ -121,54 +121,6 @@ function getCalendarManager()
     return g_calendarManager;
 };
 
-var g_bInitedLockedExec = false;
-var g_eventQueueService = null;
-var g_threadManager = null;
-
-/** Locks event dispatching for the current event queue while the passed
-    function is executed.
-    
-    xxx todo: this hinders timeeout events for sync requests
-              to be dispatched!
-*/
-function lockedExec( func )
-{
-    if (!g_bInitedLockedExec) {
-        try {
-            var cl = Components.classes["@mozilla.org/event-queue-service;1"];
-            if (cl) {
-                g_eventQueueService =
-                    cl.getService(Components.interfaces.nsIEventQueueService);
-            }
-        }
-        catch (exc) { // eventQueue has vanished on trunk
-        }
-        if (!g_eventQueueService) {
-            g_threadManager =
-                Components.classes["@mozilla.org/thread-manager;1"]
-                .getService(Components.interfaces.nsIThreadManager);
-        }
-        g_bInitedLockedExec = true;
-    }
-    
-    var queue;
-    var ret;
-    if (g_eventQueueService)
-        queue = g_eventQueueService.pushThreadEventQueue();
-    else // we are on trunk using nsIThreadInternal
-        g_threadManager.currentThread.pushEventQueue(null);
-    try {
-        ret = func();
-    }
-    finally {
-        if (g_eventQueueService)
-            g_eventQueueService.popThreadEventQueue(queue);
-        else // we are on trunk using nsIThreadInternal
-            g_threadManager.currentThread.popEventQueue();
-    }
-    return ret;
-}
-
 var g_wcapBundle = null;
 function getWcapBundle()
 {
@@ -203,10 +155,6 @@ function isParent( item )
     if (item.id != item.parentItem.id) {
         throw new Components.Exception(
             "proxy has different id than its parent!");
-    }
-    if (item.parentItem.recurrenceId) {
-        throw new Components.Exception("parent has recurrenceId: " +
-                                       item.parentItem.recurrenceId);
     }
     return (!item.recurrenceId);
 }
@@ -259,18 +207,23 @@ function getIcalUTC( dt )
     }
 }
 
-function getDatetimeFromIcalProp( prop )
+function getDatetimeFromIcalString( val )
 {
-    if (!prop)
-        return null;
-    var val = prop.valueAsIcalString;
-    if (val.length == 0 || val == "0")
+    if (!val || val.length == 0 || val == "0")
         return null;
     // assuming timezone is known:
     var dt = new CalDateTime();
     dt.icalString = val;
-//     dt.makeImmutable();
+//     if (dt.icalString != val)
+//         logMessage("date-time error", dt.icalString + " vs. " + val);
     return dt;
+}
+
+function getDatetimeFromIcalProp( prop )
+{
+    if (!prop)
+        return null;
+    return getDatetimeFromIcalString(prop.valueAsIcalString);
 }
 
 function getPref(prefName, defaultValue)
@@ -316,3 +269,124 @@ function setPref(prefName, value)
     }
 }
 
+function AsyncQueue()
+{
+    this.wrappedJSObject = this;
+    this.m_queue = [];
+}
+AsyncQueue.prototype = {
+    m_queue: null,
+    
+    m_proxy: null,
+    get proxy() {
+        if (!this.m_proxy) {
+            var eventTarget = null;
+            try {
+                var eventQueueService =
+                    Components.classes["@mozilla.org/event-queue-service;1"]
+                    .getService(Components.interfaces.nsIEventQueueService);
+                eventTarget = eventQueueService.createThreadEventQueue(
+                    Components.classes["@mozilla.org/thread;1"]
+                    .createInstance(Components.interfaces.nsIThread), true);
+            }
+            catch (exc) { // eventQueue has vanished on trunk:
+                var threadManager =
+                    Components.classes["@mozilla.org/thread-manager;1"]
+                    .getService(Components.interfaces.nsIThreadManager);
+                eventTarget = threadManager.newThread(0);
+            }
+            var proxyMgr = Components.classes["@mozilla.org/xpcomproxy;1"]
+                .getService(Components.interfaces.nsIProxyObjectManager);
+            this.m_proxy = proxyMgr.getProxyForObject(
+                eventTarget, Components.interfaces.nsIRunnable, this,
+                Components.interfaces.nsIProxyObjectManager.INVOKE_ASYNC );
+        }
+        return this.m_proxy;
+    },
+    
+    queuedExec:
+    function(func)
+    {
+        this.m_queue.push(func);
+        if (LOG_LEVEL > 1)
+            logMessage("enqueued: q=" + this.m_queue.length);
+        if (this.m_queue.length == 1) {
+            this.proxy.run(); // empty queue
+        }
+    },
+    
+    m_ifaces: [ Components.interfaces.nsIRunnable,
+                Components.interfaces.nsISecurityCheckedComponent,
+                Components.interfaces.nsIClassInfo,
+                Components.interfaces.nsISupports ],
+    
+    // nsISupports:
+    QueryInterface:
+    function( iid )
+    {
+        for each ( var iface in this.m_ifaces ) {
+            if (iid.equals( iface ))
+                return this;
+        }
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    
+    // nsIClassInfo:
+    getInterfaces: function( count ) {
+        count.value = this.m_ifaces.length;
+        return this.m_ifaces;
+    },
+    
+    get classDescription() {
+        return "Async Queue";
+    },
+    get contractID() {
+        return "@mozilla.org/calendar/calendar/wcap/async-queue;1";
+    },
+    get classID() {
+        return Components.ID("{C50F7442-C43E-43f6-AA3F-1ADB87E7A962}");
+    },
+    getHelperForLanguage: function( language ) { return null; },
+    implementationLanguage:
+    Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0,
+    
+    // nsISecurityCheckedComponent;
+    canCreateWrapper: function(iid) { return "AllAccess"; },
+    canCallMethod: function(iid, methodName) { return "AllAccess"; },
+    canGetProperty: function(iid, propertyName) { return "AllAccess"; },
+    canSetProperty: function(iid, propertyName) { return "AllAccess"; },
+    
+    // nsIRunnable:
+    run:
+    function() {
+        while (this.m_queue.length > 0) {
+            if (LOG_LEVEL > 1)
+                logMessage("queue exec: " + this.m_queue.length);
+            try {
+                this.m_queue[0]();
+            }
+            catch (exc) { // swallow all exceptions,
+                          // they does not belong to this call
+                debugger;
+                var msg = errorToString(exc);
+                Components.utils.reportError(
+                    logMessage("error: " + msg, "swallowed exception") );
+            }
+            // don't remove element unless func has been executed:
+            this.m_queue.shift();
+            if (LOG_LEVEL > 1)
+                logMessage("dequeued: " + this.m_queue.length);
+        }
+    }
+};
+
+function makeQueuedCall(asyncQueue, obj, func)
+{
+    return function() {
+        var args = [];
+        for ( var i = 0; i < arguments.length; ++i )
+            args.push(arguments[i]);
+        asyncQueue.queuedExec( function() { func.apply(obj, args); } );
+    }
+}

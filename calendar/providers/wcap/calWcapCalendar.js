@@ -57,6 +57,20 @@ function calWcapCalendar( calId, session ) {
     this.m_calId = calId;
     this.m_session = session;
     this.m_bSuppressAlarms = SUPPRESS_ALARMS;
+    
+    // init queued calls:
+    this.adoptItem = makeQueuedCall(this.session.asyncQueue,
+                                    this, this.adoptItem_queued);
+    this.modifyItem = makeQueuedCall(this.session.asyncQueue,
+                                     this, this.modifyItem_queued);
+    this.deleteItem = makeQueuedCall(this.session.asyncQueue,
+                                     this, this.deleteItem_queued);
+    this.getItem = makeQueuedCall(this.session.asyncQueue,
+                                  this, this.getItem_queued);
+    this.getItems = makeQueuedCall(this.session.asyncQueue,
+                                   this, this.getItems_queued);
+    this.syncChangesTo = makeQueuedCall(this.session.asyncQueue,
+                                        this, this.syncChangesTo_queued);
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
@@ -237,7 +251,8 @@ calWcapCalendar.prototype = {
                 this.m_bReadOnly ||
                 // xxx todo: check write permissions in advance
                 // alarms only for own calendars:
-                !this.isOwnedCalendar);
+                // xxx todo: assume alarms if not logged in already
+                (this.session.isLoggedIn && !this.isOwnedCalendar));
     },
     set suppressAlarms( bSuppressAlarms ) {
         this.m_bSuppressAlarms = bSuppressAlarms;
@@ -247,6 +262,14 @@ calWcapCalendar.prototype = {
     refresh: function() {
         // no-op
         this.log("refresh()");
+    },
+    
+    getCommandUrl:
+    function( wcapCommand )
+    {
+        var url = this.session.getCommandUrl(wcapCommand);
+        url += ("&calid=" + encodeURIComponent(this.calId));
+        return url;
     },
     
     // calIWcapCalendar:
@@ -261,14 +284,16 @@ calWcapCalendar.prototype = {
     //           like a subscribed one...
     m_calId: null,
     get calId() {
-        return this.m_calId || this.session.defaultCalId;
+        if (this.m_calId)
+            return this.m_calId;
+        this.session.assureLoggedIn();
+        return this.session.defaultCalId;
     },
     set calId( id ) {
         this.log( "setting calId to " + id );
         this.m_calId = id;
         // refresh calprops:
-        this.m_calProps = null;
-        this.getCalProps_( true /* async */ );
+        this.getCalProps_( true /*async*/, true /*refresh*/ );
     },
     
     get ownerId() {
@@ -328,12 +353,12 @@ calWcapCalendar.prototype = {
     },
     m_calProps: null,
     getCalProps_:
-    function( bAsync )
+    function( bAsync, bRefresh )
     {
+        this.session.assureLoggedIn();
         try {
-            if (this.m_calProps == null) {
-                var url = this.session.getCommandUrl( "get_calprops" );
-                url += ("&calid=" + encodeURIComponent(this.calId));
+            if (bRefresh || !this.m_calProps) {
+                var url = this.getCommandUrl( "get_calprops" );
                 url += "&fmt-out=text%2Fxml";
                 var this_ = this;
                 function resp( wcapResponse ) {
@@ -366,7 +391,8 @@ calWcapCalendar.prototype = {
             // readOnly attribute, thus we would run into endless recursion here
             this.m_bReadOnly = true;
             this.logError( exc );
-            throw exc;
+            if (!bAsync)
+                throw exc;
         }
         return this.m_calProps;
     },

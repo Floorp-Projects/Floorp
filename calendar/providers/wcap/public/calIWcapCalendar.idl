@@ -53,6 +53,7 @@ interface calIWcapCalendar : calICalendar
     
     /**
      * Current calId the calendar instance acts on; defaults to userId.
+     * @exception may throw an NS_ERROR_NOT_AVAILABLE of not logged in
      */
     readonly attribute string calId;
     
