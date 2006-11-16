@@ -230,7 +230,8 @@ $dbtool->DropField("subgroups", "sort_order");
 $dbtool->DropField("testcases", "sort_order");
 
 $dbtool->AddField("users", "authtoken", "varchar(255)");
-$dbtool->AddFullText("users", "key", "(email, realname, irc_nickname)");
+$dbtool->DropIndex("users", "key contact_info_fulltext (email, realname, irc_nickname)");
+$dbtool->AddFullText("users", "key", "contact_info_fulltext (email, realname, irc_nickname)");
 
 # zll 2006-06-15: users.irc_nickname cannot have a unique index, since 
 # many users have a null nickname:
@@ -238,8 +239,8 @@ $dbtool->DropIndex("users", "irc_nickname");
 $dbtool->AddKey("users", "irc_nickname", "(irc_nickname)");
 
 # this should be a normal index, not a fulltext index
-$dbtool->DropIndex("users", "key(email, realname, irc_nickname)");
-$dbtool->AddKey("users", '(email, realname, irc_nickname)', '');
+$dbtool->DropIndex("users", "key contact_info (email, realname, irc_nickname)");
+$dbtool->AddKey("users", 'contact_info (email, realname, irc_nickname)', '');
 
 # make logs have a many-to-many relationship with test_results
 $dbtool->DropIndex("test_result_logs", "test_result_id");

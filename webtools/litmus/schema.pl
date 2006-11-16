@@ -380,4 +380,5 @@ $table{users} =
          index(realname),
          index(enabled),
 	 index(is_admin),
-	 index(email, realname, irc_nickname)';
+	 index contact_info (email, realname, irc_nickname),
+	 fulltext index contact_info_fulltext (email, realname, irc_nickname)';
