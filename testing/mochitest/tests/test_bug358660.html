@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=358660
+-->
+<head>
+  <title>Test for Bug 358660</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=358660">Mozilla Bug 358660</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe"
+          src="data:text/html,<html><body>Some text</body></html>"></iframe>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 358660 **/
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  var doc = $("testframe").contentDocument;
+  var range = doc.createRange();
+  range.selectNode(doc.documentElement);
+  is(range.toString(), "Some text", "Check text");
+
+  SimpleTest.finish()
+}
+
+</script>
+</pre>
+</body>
+</html>
+
