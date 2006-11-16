@@ -240,7 +240,7 @@
 [% PROCESS testopia/run/table.html.tmpl
    table = run_table %]
   <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status_id=2">Create a New Test Run</a>
-  <a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]&case_status_id=2">List Runs</a>
+  <a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
 </div>
 [%##### Attachments #####%]
 <br><br>
