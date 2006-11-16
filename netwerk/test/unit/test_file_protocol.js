@@ -33,13 +33,18 @@ function read_stream(stream, count) {
       Cc["@mozilla.org/binaryinputstream;1"].
       createInstance(Ci.nsIBinaryInputStream);
   wrapper.setInputStream(stream);
-  var bytes = wrapper.readByteArray(count);
-  /* assume that the stream is going to give us all of the data.
-     not all streams conform to this. */
-  if (bytes.length != count)
-    do_throw("Partial read from input stream!");
-  /* convert array of bytes to a String object (by no means efficient) */  
-  return eval("String.fromCharCode(" + bytes.toString() + ")");
+  /* JS methods can be called with a maximum of 65535 arguments, and input
+     streams don't have to return all the data they make .available() when
+     asked to .read() that number of bytes. */
+  var data = [];
+  while (count > 0) {
+    var bytes = wrapper.readByteArray(Math.min(65535, count));
+    data.push(String.fromCharCode.apply(null, bytes));
+    count -= bytes.length;
+    if (bytes.length == 0)
+      do_throw("Nothing read from input stream!");
+  }
+  return data.join('');
 }
 
 function new_file_input_stream(file, buffered) {
