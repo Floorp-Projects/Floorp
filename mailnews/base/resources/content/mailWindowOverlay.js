@@ -1049,7 +1049,7 @@ function MsgReplyToAllRecipients(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  ComposeMessage(msgComposeType.ReplyToAll,
+  ComposeMessage(msgComposeType.ReplyAll,
     (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
     loadedFolder, messageArray);
 }
