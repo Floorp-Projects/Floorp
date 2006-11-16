@@ -47,11 +47,7 @@
   // use a set for automatic duplicate elimination
   NSMutableSet* browsersSet = [NSMutableSet setWithCapacity:10];
   
-  // using LSCopyApplicationURLsForURL would be nice (its not hidden),
-  // but it only exists on Mac OS X >= 10.3
-  NSArray* apps;
-  _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"http:"], kLSRolesViewer, &apps);
-  [apps autorelease];
+  NSArray* apps = [(NSArray*)LSCopyApplicationURLsForURL((CFURLRef)[NSURL URLWithString:@"http:"], kLSRolesViewer) autorelease];
   
   // Put all the browsers into a new array, but only if they also support https and have a bundle ID we can access
   NSEnumerator *appEnumerator = [apps objectEnumerator];
@@ -76,14 +72,12 @@
 
 - (NSSet*)installedFeedViewerIdentifiers
 {
-  NSArray* apps = nil;
   NSMutableSet* feedApps = [[[NSMutableSet alloc] init] autorelease]; 
   NSString* defaultFeedViewerID = [self defaultFeedViewerIdentifier];
   if (defaultFeedViewerID)
     [feedApps addObject:defaultFeedViewerID];
   
-  _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"feed:"], kLSRolesViewer, &apps);
-  [apps autorelease];
+  NSArray* apps = [(NSArray*)LSCopyApplicationURLsForURL((CFURLRef)[NSURL URLWithString:@"feed:"], kLSRolesViewer) autorelease];
   
   NSEnumerator* appEnumerator = [apps objectEnumerator];
   NSURL* anApp;
