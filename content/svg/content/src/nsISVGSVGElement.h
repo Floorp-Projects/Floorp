@@ -56,7 +56,7 @@ class nsISVGEnum;
 class nsISVGSVGElement : public nsIDOMSVGSVGElement
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGSVGELEMENT_IID; return iid; }
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGSVGELEMENT_IID)
 
   NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)=0;
   NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)=0;
@@ -95,5 +95,7 @@ public:
    */
   NS_IMETHOD_(void) InvalidateViewBoxToViewport()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGSVGElement, NS_ISVGSVGELEMENT_IID)
 
 #endif // __NS_ISVGSVGELEMENT__
