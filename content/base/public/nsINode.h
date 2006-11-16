@@ -528,7 +528,9 @@ public:
    * Adds a mutation observer to be notified when this node, or any of its
    * descendants, are modified. The node will hold a weak reference to the
    * observer, which means that it is the responsibility of the observer to
-   * remove itself in case it dies before the node.
+   * remove itself in case it dies before the node.  If an observer is added
+   * while observers are being notified, it may also be notified.  In general,
+   * adding observers while inside a notification is not a good idea.
    */
   virtual void AddMutationObserver(nsIMutationObserver* aMutationObserver);
 
