@@ -55,7 +55,7 @@
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 #include <Errors.h>
 
@@ -729,4 +729,4 @@ static int output64chunk(
 						p-tmpstr);
 }
 
-#endif			/* if define XP_MAC */
+#endif /* XP_MACOSX */

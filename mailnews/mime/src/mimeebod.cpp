@@ -53,7 +53,7 @@
 MimeDefClass(MimeExternalBody, MimeExternalBodyClass,
 			 mimeExternalBodyClass, &MIME_SUPERCLASS);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 extern MimeObjectClass mimeMultipartAppleDoubleClass;
 #endif
 
@@ -278,13 +278,6 @@ MimeExternalBody_make_url(const char *ct,
 	return 0;
 }
 
-#ifdef XP_MAC
-#ifdef DEBUG
-#pragma global_optimizer on
-#pragma optimization_level 1
-#endif /* DEBUG */
-#endif /* XP_MAC */
-
 static int
 MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 {
@@ -297,11 +290,11 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (obj->parent && mime_typep(obj->parent, 
 	  (MimeObjectClass*) &mimeMultipartAppleDoubleClass))
 	  goto done;
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
   if (!abort_p &&
 	  obj->output_p &&
@@ -467,18 +460,12 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  PR_FREEIF(subj);
 	}
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 done:
-#endif /* XP_MAC */
+#endif
 
   return status;
 }
-
-#ifdef XP_MAC
-#ifdef DEBUG
-#pragma global_optimizer reset
-#endif /* DEBUG */
-#endif /* XP_MAC */
 
 #if 0
 #if defined(DEBUG) && defined(XP_UNIX)

@@ -70,22 +70,16 @@
 ///////////////////////////////////////////////////////////////////////////
 // Mac Specific Attachment Handling for AppleDouble Encoded Files
 ///////////////////////////////////////////////////////////////////////////
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 #define AD_WORKING_BUFF_SIZE                  8192
-
 
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
 
 #include "nsIInternetConfigService.h"
-
-#if defined(XP_MAC)
-#include "MoreFilesExtras.h"
-#else
 #include "MoreFilesX.h"
-#endif /* XP_MAC */
 
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
 //
 // Class implementation...
@@ -139,7 +133,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
   m_x_mac_type = nsnull;
   m_x_mac_creator = nsnull;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   mAppleFileSpec = nsnull;
 #endif
 
@@ -152,7 +146,7 @@ nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
 #if defined(DEBUG_ducarroz)
   printf("DISPOSE nsMsgAttachmentHandler: %x\n", this);
 #endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (mAppleFileSpec)
     delete mAppleFileSpec;
 #endif
@@ -503,7 +497,7 @@ FetcherURLDoneCallback(nsresult aStatus,
     ma->m_size = totalSize;
     if (aContentType)
     {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       //Do not change the type if we are dealing with an apple double file
       if (!ma->mAppleFileSpec)
 #else
@@ -653,7 +647,7 @@ done:
   return rv;
 }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 PRBool nsMsgAttachmentHandler::HasResourceFork(FSSpec *fsSpec)
 {
   FSRef fsRef;
@@ -716,7 +710,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
   mURL->GetSpec(url_string);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if ( !m_bogus_attachment && nsMsgIsLocalFile(url_string))
   {
     // convert the apple file to AppleDouble first, and then patch the
@@ -732,12 +726,8 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     //We need to retrieve the file type and creator...
     nsFileSpec scr_fileSpec(escapedFilename.get());
     FSSpec fsSpec;
-#if defined(XP_MAC)
-    fsSpec = scr_fileSpec.GetFSSpec();
-#elif defined(XP_MACOSX)
     Boolean isDir;
     FSPathMakeFSSpec((UInt8 *)escapedFilename.get(), &fsSpec, &isDir);
-#endif
     FInfo info;
     if (FSpGetFInfo (&fsSpec, &info) == noErr)
     {
@@ -767,9 +757,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         {
           // before deciding to send the resource fork along the data fork, check if we have one,
           // else don't need to use apple double.
-#if defined(XP_MAC) || defined(XP_MACOSX)
           sendResourceFork = HasResourceFork(&fsSpec);
-#endif
         }
         
         icGaveNeededInfo = PR_TRUE;
@@ -974,7 +962,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
     PR_FREEIF(src_filename);
   }
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
   //
   // Ok, here we are, we need to fire the URL off and get the data

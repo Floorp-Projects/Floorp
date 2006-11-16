@@ -47,7 +47,7 @@
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   extern MimeObjectClass mimeMultipartAppleDoubleClass;
 #endif
 
@@ -541,7 +541,7 @@ MimeMultipart_create_child(MimeObject *obj)
 	{  
 	  status = body->clazz->parse_begin(body);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     /* if we are saving an apple double attachment, we need to set correctly the conten type of the channel */
     if (mime_typep(obj, (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
     {

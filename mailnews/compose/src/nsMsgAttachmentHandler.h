@@ -47,7 +47,7 @@
 #include "nsIFileStreams.h"
 #include "nsIStreamConverter.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 #include "nsMsgAppleDouble.h"
 
@@ -59,7 +59,7 @@ typedef struct _AppledoubleEncodeObject
   nsIOFileStream              *fileStream;    // file to hold the encoding
 } AppleDoubleEncodeObject;
 
-#endif  // XP_MAC
+#endif  // XP_MACOSX
 
 //
 // This is a class that deals with processing remote attachments. It implements
@@ -90,7 +90,7 @@ private:
   PRBool                UseUUEncode_p(void);
   void                  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
   nsresult              LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, PRBool charsetConversion); //A similar function already exist in nsMsgCompose!
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   PRBool HasResourceFork(FSSpec *fsSpec);
 #endif
 
@@ -106,7 +106,7 @@ public:
   nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
   PRBool                m_bogus_attachment; // This is to catch problem children...
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   nsFileSpec            *mAppleFileSpec;    // The temp file holds the appledouble
                                             // encoding of the file we want to send.
 #endif

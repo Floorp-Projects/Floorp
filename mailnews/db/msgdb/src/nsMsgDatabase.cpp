@@ -39,11 +39,7 @@
 
 // this file implements the nsMsgDatabase interface using the MDB Interface.
 
-#ifdef XP_MAC
-#include <stat.h>
-#else
 #include <sys/stat.h>
-#endif
 
 #include "nscore.h"
 #include "msgCore.h"
@@ -76,9 +72,6 @@
 #include "MailNewsTypes2.h"
 #include "nsMsgUtils.h"
 
-#if defined(XP_MAC) && defined(CompareString)
-	#undef CompareString
-#endif
 #include "nsICollation.h"
 
 #include "nsCollationCID.h"
@@ -1040,42 +1033,6 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 }
 #endif /* XP_WIN || XP_OS2 */
 
-#ifdef XP_MAC
-// this code is stolen from nsFileSpecMac. Since MDB requires a native path, for 
-// the time being, we'll just take the Unix/Canonical form and munge it
-void nsMsgDatabase::UnixToNative(char*& ioPath)
-// This just does string manipulation.  It doesn't check reality, or canonify, or
-// anything
-//----------------------------------------------------------------------------------------
-{
-  // Relying on the fact that the unix path is always longer than the mac path:
-  size_t len = strlen(ioPath);
-  char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
-  if (result)
-  {
-    char* dst = result;
-    const char* src = ioPath;
-    if (*src == '/')		 	// * full path
-      src++;
-    else if (strchr(src, '/'))	// * partial path, and not just a leaf name
-      *dst++ = ':';
-    strcpy(dst, src);
-    
-    while ( *dst != 0)
-    {
-      if (*dst == '/')
-        *dst++ = ':';
-      else
-        *dst++;
-    }
-    nsCRT::free(ioPath);
-    ioPath = result;
-  }
-}
-
-#endif /* XP_MAC */
-
-
 // caller passes in leaveInvalidDB==PR_TRUE if they want back a db even if the db is out of date.
 // If so, they'll extract out the interesting info from the db, close it, delete it, and
 // then try to open the db again, prior to reparsing.
@@ -1199,7 +1156,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
       if (m_mdbEnv)
         m_mdbEnv->SetAutoClear(PR_TRUE);
       m_dbName = dbName;
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2)
       UnixToNative(nativeFileName);
 #endif
       if (stat(nativeFileName, &st)) 

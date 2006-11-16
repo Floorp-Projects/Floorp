@@ -60,14 +60,8 @@
 #include "nsMimeTypes.h"
 #include "prmem.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-
-#ifdef XP_MAC
-#pragma warn_unusedarg off
-#pragma cplusplus on
-#else
+#if defined(XP_MACOSX)
 #include "MoreFilesX.h"
-#endif
 
 void	
 MacGetFileType(nsFileSpec   *fs, 
@@ -86,13 +80,9 @@ MacGetFileType(nsFileSpec   *fs,
 	*encoding = NULL;
 
 	FInfo		fndrInfo;
-#if defined(XP_MAC)
-  OSErr err = FSpGetFInfo( fs->GetFSSpecPtr(), &fndrInfo );
-#else
   FSSpec fsSpec;
   FSPathMakeFSSpec((UInt8 *)fs->GetNativePathCString(), &fsSpec, NULL);
   OSErr err = FSpGetFInfo (&fsSpec, &fndrInfo);
-#endif
 
   if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
     *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
@@ -143,11 +133,7 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 	if (!mySpec.Exists())
 		return -1;
 
-#if defined(XP_MAC)
-	fspec = mySpec.GetFSSpec();
-#else
 	FSPathMakeFSSpec((const UInt8 *)fname, &fspec, NULL);
-#endif
 	memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
 	
 	/*
@@ -312,5 +298,4 @@ int ap_encode_end(
 	return noErr;
 }
 
-#endif	/* the ifdef of XP_MAC */
-
+#endif	/* XP_MACOSX */

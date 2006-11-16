@@ -88,7 +88,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  NS_ASSERTION(obj->options->state->first_data_written_p, "first data not written");
 	}
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (obj->options && obj->options->state) 
   {
 //	obj->options->state->separator_suppressed_p = PR_TRUE;
@@ -190,7 +190,7 @@ GOTTA STILL DO THIS FOR QUOTING!
 	  if (status < 0) return status;
 	}
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 done:
 #endif
 
@@ -210,7 +210,7 @@ MimeMultipartAppleDouble_output_child_p(MimeObject *obj, MimeObject *child)
   if (cont->nchildren >= 1 && cont->children[0] == child && child->content_type &&
       !nsCRT::strcasecmp(child->content_type, APPLICATION_APPLEFILE))
   {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     if (obj->output_p && obj->options && obj->options->write_html_p) //output HTML
       return PR_FALSE;
 #else

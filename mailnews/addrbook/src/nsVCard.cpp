@@ -869,11 +869,6 @@ static int match_begin_name(int end) {
     return 0;
     }
 
-#if defined(XP_MAC) && defined(__MWERKS__)
-#pragma warn_possunwant off
-#pragma require_prototypes off
-#endif
-
 void initLex(const char *inputstring, unsigned long inputlen)
     {
     /* initialize lex mode stack */

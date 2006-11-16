@@ -1195,7 +1195,6 @@ NS_IMETHODIMP nsMsgCompose::SetDeleteDraft(PRBool aDeleteDraft)
   return NS_OK;
 }
 
-#if !defined(XP_MAC)
 PRBool nsMsgCompose::IsLastWindow()
 {
   nsresult rv;
@@ -1218,7 +1217,6 @@ PRBool nsMsgCompose::IsLastWindow()
   }
   return PR_TRUE;
 }
-#endif /* XP_MAC */
 
 NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
 {
@@ -1231,9 +1229,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   rv = composeService->UnregisterComposeWindow(m_window);
   NS_ENSURE_SUCCESS(rv, rv);
   
-#if !defined(XP_MAC)
   recycleIt = recycleIt && !IsLastWindow();
-#endif /* XP_MAC */
   if (recycleIt)
   {
     rv = composeService->CacheWindow(m_window, m_composeHTML, mRecyclingListener);

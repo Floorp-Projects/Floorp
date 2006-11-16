@@ -361,7 +361,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	return( rv);
 }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #define kMsgHeaderSize		220
 #define	kMsgFirstOffset		278
 #else

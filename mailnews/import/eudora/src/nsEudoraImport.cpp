@@ -78,7 +78,7 @@
 #if defined(XP_WIN) || defined(XP_OS2)
 #include "nsEudoraWin32.h"
 #endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include "nsEudoraMac.h"
 #endif
 
@@ -128,7 +128,7 @@ private:
 #if defined(XP_WIN) || defined(XP_OS2)
 	nsEudoraWin32	m_eudora;
 #endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 	nsEudoraMac		m_eudora;
 #endif
 	PRUint32		m_bytes;
@@ -191,7 +191,7 @@ private:
 #if defined(XP_WIN) || defined(XP_OS2)
 	nsEudoraWin32	m_eudora;
 #endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 	nsEudoraMac		m_eudora;
 #endif
 	PRUint32		m_bytes;

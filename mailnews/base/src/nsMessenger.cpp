@@ -55,12 +55,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsISupportsObsolete.h"
 #include "nsQuickSort.h"
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include "nsIAppleFileDecoder.h"
-#if defined(XP_MACOSX)
 #include "nsILocalFileMac.h"
 #include "MoreFilesX.h"
-#endif
 #endif
 #include "nsNativeCharsetUtils.h"
 
@@ -216,16 +214,6 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
   NS_ConvertUTF8toUTF16 ucs2Str(unescapedName);
 
   nsresult rv = NS_OK;
-#if defined(XP_MAC)  /* reviewed for 1.4, XP_MACOSX not needed */
-  /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
-     correctly support long file name. Using a nsILocalFile will do the trick...
-  */
-  nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(aLocalFile->SetLeafName(ucs2Str)))
-  {
-    aLocalFile->GetLeafName(ucs2Str);
-  }
-#endif
 
   // replace platform specific path separator and illegale characters to avoid any confusion
   ucs2Str.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
@@ -776,7 +764,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       saveListener->QueryInterface(NS_GET_IID(nsIStreamListener),
                                  getter_AddRefs(convertedListener));
 
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
       // if the content type is bin hex we are going to do a hokey hack and make sure we decode the bin hex 
       // when saving an attachment to disk..
       if (contentType && !nsCRT::strcasecmp(APPLICATION_BINHEX, contentType))
@@ -1959,7 +1947,7 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
         }
       }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       /* if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
       if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
           (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))

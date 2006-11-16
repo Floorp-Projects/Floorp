@@ -754,7 +754,7 @@ PRBool nsIMAPBodypartLeaf::ShouldFetchInline(nsIMAPBodyShell *aShell)
           return PR_FALSE;	// we can leave it on the server
       }
     }
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     // If it is either applesingle, or a resource fork for appledouble
     if (!PL_strcasecmp(m_contentType, "application/applefile"))
     {
@@ -772,7 +772,7 @@ PRBool nsIMAPBodypartLeaf::ShouldFetchInline(nsIMAPBodyShell *aShell)
         return PR_FALSE;	// we can leave it on the server
       }
     }
-#endif	// XP_MAC
+#endif // XP_MACOSX
     
     // Leave out parts with type application/*
     if (!PL_strcasecmp(m_bodyType, "APPLICATION") &&	// If it is of type "application"

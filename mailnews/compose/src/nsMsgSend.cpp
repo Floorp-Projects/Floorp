@@ -124,33 +124,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
 
-#ifdef XP_MAC
-
-static char* NET_GetLocalFileFromURL(char *url)
-{
-  char * finalPath;
-  NS_ASSERTION(PL_strncasecmp(url, "file://", 7) == 0, "invalid url");
-  finalPath = (char*)PR_Malloc(strlen(url));
-  if (finalPath == nsnull)
-    return nsnull;
-  strcpy(finalPath, url+6+1);
-  return finalPath;
-}
-
-static char* NET_GetURLFromLocalFile(char *filename)
-{
-    /*  file:///<path>0 */
-  char * finalPath = (char*)PR_Malloc(strlen(filename) + 8 + 1);
-  if (finalPath == nsnull)
-    return nsnull;
-  finalPath[0] = 0;
-  strcat(finalPath, "file://");
-  strcat(finalPath, filename);
-  return finalPath;
-}
-
-#endif /* XP_MAC */
-
 static PRBool mime_use_quoted_printable_p = PR_FALSE;
 
 //
@@ -490,7 +463,7 @@ nsMsgComposeAndSend::Clear()
         m_attachments[i].mFileSpec = nsnull;
       }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       //
       // remove the appledoubled intermediate file after we done all.
       //
@@ -500,7 +473,7 @@ nsMsgComposeAndSend::Clear()
         delete m_attachments[i].mAppleFileSpec;
         m_attachments[i].mAppleFileSpec = nsnull;
       }
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
     }
 
     delete[] m_attachments;
@@ -1330,13 +1303,6 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
   return 1;
 }
 
-
-#if defined(XP_MAC) && defined(DEBUG)
-// Compiler runs out of registers for the debug build.
-#pragma global_optimizer on
-#pragma optimization_level 4
-#endif // XP_MAC && DEBUG
-
 # define FROB(X) \
     if (X && *X) \
     { \
@@ -1395,10 +1361,6 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
 
   return rv;
 }
-
-#if defined(XP_MAC) && defined(DEBUG)
-#pragma global_optimizer reset
-#endif // XP_MAC && DEBUG
 
 nsresult
 mime_write_message_body(nsIMsgSend *state, const char *buf, PRInt32 size)
@@ -2364,7 +2326,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                 if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
                   nsCAutoString type;
                   mimeFinder->GetTypeFromExtension(fileExt, type);
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
                   if (!type.Equals("multipart/appledouble"))  // can't do apple double on non-macs
 #endif
                   m_attachments[newLoc].m_type = ToNewCString(type);
@@ -2381,7 +2343,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                   if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty()) {
                     nsCAutoString type;
                     mimeFinder->GetTypeFromExtension(fileExt, type);
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
                   if (!type.Equals("multipart/appledouble"))  // can't do apple double on non-macs
 #endif
                     m_attachments[newLoc].m_type = ToNewCString(type);
@@ -2394,7 +2356,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         else
           element->GetContentTypeParam(&m_attachments[newLoc].m_type_param);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
         //We always need to snarf the file to figure out how to send it, maybe we need to use apple double...
         m_attachments[newLoc].m_done = PR_FALSE;
         m_attachments[newLoc].SetMimeDeliveryState(this);

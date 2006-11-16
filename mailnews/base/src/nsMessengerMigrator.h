@@ -79,11 +79,11 @@
  * on the Mac, the fat file stores relative paths to the newsrc files
  */
 #define NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS 1
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
 #define NEWS_FAT_FILE_NAME "NewsFAT"
 #else
 #error dont_know_what_your_news_fat_file_is
-#endif /* XP_WIN, XP_OS2, XP_MAC */
+#endif /* XP_WIN, XP_OS2, XP_MACOSX */
 
 #endif /* XP_UNIX || XP_BEOS */
 
