@@ -349,8 +349,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
         printf("//////// %d instances of nsXPCWrappedJS created\n", count);
 #endif
 
-    InitStub(GetClass()->GetIID());
-
     // intensionally do double addref - see Release().
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
@@ -471,7 +469,7 @@ nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** info)
 
 NS_IMETHODIMP
 nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
-                           const XPTMethodDescriptor* info,
+                           const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant* params)
 {
     if(!IsValid())

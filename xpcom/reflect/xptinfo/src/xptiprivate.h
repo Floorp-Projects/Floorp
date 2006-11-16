@@ -627,8 +627,6 @@ public:
 
     //////////////////////
 
-    nsID                    mIID;
-
 private:
     xptiInterfaceEntry();   // not implemented
 
@@ -668,6 +666,7 @@ private:
                             const XPTTypeDescriptor** type);
 
 private:
+    nsID                    mIID;
     union {
         xptiTypelib         mTypelib;     // Valid only until resolved.
         xptiInterfaceGuts*  mInterface;   // Valid only after resolved.
@@ -906,8 +905,6 @@ public:
          return self->mInfoMonitor;}
 
     static void WriteToLog(const char *fmt, ...);
-
-    xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
 
 private:
     ~xptiInterfaceInfoManager();

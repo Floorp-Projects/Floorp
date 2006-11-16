@@ -295,7 +295,7 @@ nsresult GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject,
                                  const nsIID& aIID, nsISupports** aResult);
 
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
-                              const XPTMethodDescriptor *methodInfo,
+                              const nsXPTMethodInfo *methodInfo,
                               const nsXPTParamInfo &paramInfo,
                               PRUint8 paramType, PRUint16 methodIndex,
                               nsXPTCMiniVariant *dispatchParams,

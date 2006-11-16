@@ -31,12 +31,12 @@
 .text
 	.align 2
 #
-#   NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-#                    PRUint32 paramCount, nsXPTCVariant* params)
+#   XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+#                   PRUint32 paramCount, nsXPTCVariant* params)
 #
 
-.globl __NS_InvokeByIndex	
-__NS_InvokeByIndex:
+.globl __XPTC_InvokeByIndex	
+__XPTC_InvokeByIndex:
 	mflr	r0
 	stw	r31,-4(r1)
 #

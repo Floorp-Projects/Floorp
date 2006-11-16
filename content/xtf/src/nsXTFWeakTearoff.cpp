@@ -37,11 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsXPTCUtils.h"
+#include "xptcall.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsAutoPtr.h"
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -49,21 +48,27 @@
 ////////////////////////////////////////////////////////////////////////
 // nsXTFWeakTearoff class
 
-class nsXTFWeakTearoff : protected nsAutoXPTCStub
+class nsXTFWeakTearoff : public nsXPTCStubBase
 {
 protected:
+  friend nsresult
+  NS_NewXTFWeakTearoff(const nsIID& iid,
+                       nsISupports* obj,
+                       nsISupports** result);
+
+  nsXTFWeakTearoff(const nsIID& iid,
+                   nsISupports* obj);
   ~nsXTFWeakTearoff();
   
 public:
-  nsXTFWeakTearoff(const nsIID& iid,
-                   nsISupports* obj,
-                   nsresult *rv);
-
   // nsISupports interface
   NS_DECL_ISUPPORTS
   
+  // nsXPTCStubBase
+  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
+
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                        const XPTMethodDescriptor* info,
+                        const nsXPTMethodInfo* info,
                         nsXPTCMiniVariant* params);
 
 private:
@@ -75,18 +80,19 @@ private:
 // implementation:
 
 nsXTFWeakTearoff::nsXTFWeakTearoff(const nsIID& iid,
-                                   nsISupports* obj,
-                                   nsresult *rv)
-  : mObj(obj), mIID(iid)
+                                   nsISupports* obj)
+    : mObj(obj), mIID(iid)
 {
-  MOZ_COUNT_CTOR(nsXTFWeakTearoff);
-
-  *rv = InitStub(iid);
+#ifdef DEBUG
+//  printf("nsXTFWeakTearoff CTOR\n");
+#endif
 }
 
 nsXTFWeakTearoff::~nsXTFWeakTearoff()
 {
-  MOZ_COUNT_DTOR(nsXTFWeakTearoff);
+#ifdef DEBUG
+//  printf("nsXTFWeakTearoff DTOR\n");
+#endif
 }
 
 nsresult
@@ -97,17 +103,13 @@ NS_NewXTFWeakTearoff(const nsIID& iid,
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult rv;
-
-  nsRefPtr<nsXTFWeakTearoff> result =
-    new nsXTFWeakTearoff(iid, obj, &rv);
-  if (!result)
+  nsXTFWeakTearoff* result = new nsXTFWeakTearoff(iid,obj);
+  if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_FAILED(rv))
-    return rv;
-
-  return result->QueryInterface(iid, (void**) aResult);
+  NS_ADDREF(result);
+  *aResult = result;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -120,44 +122,53 @@ NS_IMETHODIMP
 nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if(aIID.Equals(mIID) || aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = mXPTCStub;
+    *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   // we can't map QI onto the obj, because the xpcom wrapper otherwise
   // QI-accumulates all interfaces defined on mObj
-  //  else return mObj->QueryInterface(aIID, aInstancePtr); 
-  return NS_ERROR_NO_INTERFACE;
+//  else return mObj->QueryInterface(aIID, aInstancePtr); 
+  else return NS_ERROR_NO_INTERFACE;
+}
+
+//----------------------------------------------------------------------
+// nsXPTCStubBase implementation
+
+NS_IMETHODIMP
+nsXTFWeakTearoff::GetInterfaceInfo(nsIInterfaceInfo** info)
+{
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
+  NS_ASSERTION(iim, "could not get interface info manager");
+  return iim->GetInfoForIID( &mIID, info);
 }
 
 NS_IMETHODIMP
 nsXTFWeakTearoff::CallMethod(PRUint16 methodIndex,
-                             const XPTMethodDescriptor* info,
+                             const nsXPTMethodInfo* info,
                              nsXPTCMiniVariant* params)
 {
-  NS_ASSERTION(methodIndex >= 3,
-               "huh? indirect nsISupports method call unexpected");
+  if (methodIndex < 3) {
+    NS_ERROR("huh? indirect nsISupports method call unexpected on nsXTFWeakTearoff.");
+    return NS_ERROR_FAILURE;
+  }
 
   // prepare args:
-  int paramCount = info->num_args;
-  nsXPTCVariant* fullPars;
-  if (!paramCount) {
-    fullPars = nsnull;
-  }
-  else {
-    fullPars = new nsXPTCVariant[paramCount];
-    if (!fullPars)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+  int paramCount = info->GetParamCount();
+  nsXPTCVariant* fullPars = paramCount ? new nsXPTCVariant[paramCount] : nsnull;
 
   for (int i=0; i<paramCount; ++i) {
-    const nsXPTParamInfo& paramInfo = info->params[i];
+    const nsXPTParamInfo& paramInfo = info->GetParam(i);
     uint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
     fullPars[i].Init(params[i], paramInfo.GetType(), flags);
   }
   
   // make the call:
-  nsresult rv = NS_InvokeByIndex(mObj, methodIndex, paramCount, fullPars);
+  nsresult rv = XPTC_InvokeByIndex(mObj,
+                                   methodIndex,
+                                   paramCount,
+                                   fullPars);
   if (fullPars)
     delete []fullPars;
   return rv;

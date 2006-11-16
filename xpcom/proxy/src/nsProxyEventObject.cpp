@@ -55,14 +55,12 @@
 
 nsProxyEventObject::nsProxyEventObject(nsProxyObject *aParent,
                             nsProxyEventClass* aClass,
-                            already_AddRefed<nsISomeInterface> aRealInterface,
-                            nsresult *rv)
+                            already_AddRefed<nsISomeInterface> aRealInterface)
     : mRealInterface(aRealInterface),
       mClass(aClass),
       mProxyObject(aParent),
       mNext(nsnull)
 {
-    *rv = InitStub(aClass->GetProxiedIID());
 }
 
 nsProxyEventObject::~nsProxyEventObject()
@@ -108,7 +106,7 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if( aIID.Equals(GetClass()->GetProxiedIID()) )
     {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*, mXPTCStub);
+        *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -120,13 +118,23 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsXPTCStubBase implementation...
 //
 
+NS_IMETHODIMP
+nsProxyEventObject::GetInterfaceInfo(nsIInterfaceInfo** info)
+{
+    *info = mClass->GetInterfaceInfo();
+    NS_ASSERTION(*info, "proxy class without interface");
+
+    NS_ADDREF(*info);
+    return NS_OK;
+}
+
 nsresult
-nsProxyEventObject::convertMiniVariantToVariant(const XPTMethodDescriptor *methodInfo, 
+nsProxyEventObject::convertMiniVariantToVariant(const nsXPTMethodInfo *methodInfo, 
                                                 nsXPTCMiniVariant * params, 
                                                 nsXPTCVariant **fullParam, 
                                                 uint8 *outParamCount)
 {
-    uint8 paramCount = methodInfo->num_args;
+    uint8 paramCount = methodInfo->GetParamCount();
     *outParamCount = paramCount;
     *fullParam = nsnull;
 
@@ -139,7 +147,7 @@ nsProxyEventObject::convertMiniVariantToVariant(const XPTMethodDescriptor *metho
     
     for (int i = 0; i < paramCount; i++)
     {
-        const nsXPTParamInfo& paramInfo = methodInfo->params[i];
+        const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i);
         if ((GetProxyType() & NS_PROXY_ASYNC) && paramInfo.IsDipper())
         {
             NS_WARNING("Async proxying of out parameters is not supported"); 
@@ -181,14 +189,14 @@ nsProxyThreadFilter::AcceptEvent(nsIRunnable *event)
 
 NS_IMETHODIMP
 nsProxyEventObject::CallMethod(PRUint16 methodIndex,
-                               const XPTMethodDescriptor* methodInfo,
+                               const nsXPTMethodInfo* methodInfo,
                                nsXPTCMiniVariant * params)
 {
     NS_ASSERTION(methodIndex > 2,
                  "Calling QI/AddRef/Release through CallMethod");
     nsresult rv;
 
-    if (XPT_MD_IS_NOTXPCOM(methodInfo->flags))
+    if (methodInfo->IsNotXPCOM())
         return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
 
     nsXPTCVariant *fullParam;
@@ -204,8 +212,8 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
         callDirectly) {
 
         // invoke directly using xptc
-        rv = NS_InvokeByIndex(mRealInterface, methodIndex,
-                              paramCount, fullParam);
+        rv = XPTC_InvokeByIndex(mRealInterface, methodIndex,
+                                paramCount, fullParam);
 
         if (fullParam)
             free(fullParam);

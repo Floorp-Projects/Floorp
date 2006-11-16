@@ -2158,8 +2158,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         AutoJSSuspendRequest req(ccx);  // scoped suspend of request
 
         // do the invoke
-        invokeResult = NS_InvokeByIndex(callee, vtblIndex,
-                                        paramCount, dispatchParams);
+        invokeResult = XPTC_InvokeByIndex(callee, vtblIndex,
+                                          paramCount, dispatchParams);
         // resume non-blocking JS operations now
     }
 

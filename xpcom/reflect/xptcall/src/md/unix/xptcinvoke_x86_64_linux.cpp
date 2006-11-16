@@ -131,9 +131,10 @@ invoke_copy_to_stack(PRUint64 * d, PRUint32 paramCount, nsXPTCVariant * s,
     }
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports * that, PRUint32 methodIndex,
-                 PRUint32 paramCount, nsXPTCVariant * params)
+extern "C"
+XPTC_PUBLIC_API(nsresult)
+XPTC_InvokeByIndex(nsISupports * that, PRUint32 methodIndex,
+                   PRUint32 paramCount, nsXPTCVariant * params)
 {
     PRUint32 nr_gpr, nr_fpr, nr_stack;
     invoke_count_words(paramCount, params, nr_gpr, nr_fpr, nr_stack);

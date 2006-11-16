@@ -1724,21 +1724,18 @@ EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
     return NS_OK;    
 }
 
-xptiInterfaceEntry*
-xptiInterfaceInfoManager::GetInterfaceEntryForIID(const nsIID *iid)
-{
-    xptiHashEntry *hashEntry = (xptiHashEntry*)
-        PL_DHashTableOperate(mWorkingSet.mIIDTable, iid, PL_DHASH_LOOKUP);
-    return PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
-}
-
 /* nsIInterfaceInfo getInfoForIID (in nsIIDPtr iid); */
 NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInterfaceInfo **_retval)
 {
     NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceEntry* entry = GetInterfaceEntryForIID(iid);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(mWorkingSet.mIIDTable, iid, PL_DHASH_LOOKUP);
+
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
+
     return EntryToInfo(entry, _retval);
 }
 

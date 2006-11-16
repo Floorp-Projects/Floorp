@@ -168,7 +168,9 @@ void XXXNeverCalled()
 #if defined (DEBUG) && !defined (WINCE) && !defined(XP_OS2)
     PurePrintf(0);
 #endif
-    NS_InvokeByIndex(nsnull, 0, 0, nsnull);
+    XPTC_InvokeByIndex(nsnull, 0, 0, nsnull);
+    xptc_dummy();
+    xptc_dummy2();
     NS_NewGenericFactory(nsnull, nsnull);
     NS_NewGenericModule2(nsnull, nsnull);
     NS_GetWeakReference(nsnull);
