@@ -124,14 +124,14 @@ static intN sXPCOMUCStringFinalizerIndex = -1;
 
 // static
 JSBool
-XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
+XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 {
-    if(XPT_MD_IS_NOTXPCOM(info.flags) || XPT_MD_IS_HIDDEN(info.flags))
+    if(info.IsNotXPCOM() || info.IsHidden())
         return JS_FALSE;
 
-    for(int i = info.num_args-1; i >= 0; i--)
+    for(int i = info.GetParamCount()-1; i >= 0; i--)
     {
-        const nsXPTParamInfo& param = info.params[i];
+        const nsXPTParamInfo& param = info.GetParam(i);
         const nsXPTType& type = param.GetType();
 
         uint8 base_type = type.TagPart();

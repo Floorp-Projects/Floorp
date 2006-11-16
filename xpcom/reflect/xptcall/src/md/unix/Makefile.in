@@ -46,8 +46,6 @@ MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES = string
-
 #
 # The default is this buildable, but non-functioning code.
 #
@@ -380,10 +378,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
 
-LOCAL_INCLUDES += \
-	-I$(srcdir)/../.. \
-	-I$(srcdir)/../../../../xptinfo/src \
-	$(NULL)
+INCLUDES	+= -I$(srcdir)/../..
 
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring mips, $(OS_TEST)))

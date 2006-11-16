@@ -39,7 +39,6 @@
 
 #include "xptcprivate.h"
 #include "xptc_platforms_unixish_x86.h"
-#include "xptiprivate.h"
 
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
@@ -48,6 +47,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
+    nsIInterfaceInfo* iface_info = NULL;
     const nsXPTMethodInfo* info;
     PRUint8 paramCount;
     PRUint8 i;
@@ -55,7 +55,10 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 
     NS_ASSERTION(self,"no self");
 
-    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    self->GetInterfaceInfo(&iface_info);
+    NS_ASSERTION(iface_info,"no interface info");
+
+    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
@@ -89,8 +92,9 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
         }
     }
 
-    result = self->mOuter->
-        CallMethod((PRUint16)methodIndex, info, dispatchParams);
+    result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
+
+    NS_RELEASE(iface_info);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

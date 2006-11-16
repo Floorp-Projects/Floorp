@@ -46,21 +46,12 @@
 #include "nsServiceManagerUtils.h"
 
 
-nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo,
-                               nsresult *rv)
+nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo)
   : mJavaStrongRef(nsnull)
   , mIInfo(aIInfo)
   , mMaster(nsnull)
   , mWeakRefCnt(0)
 {
-  const nsIID *iid = nsnull;
-  aIInfo->GetIIDShared(&iid);
-  NS_ASSERTION(iid, "GetIIDShared must not fail!");
-
-  *rv = InitStub(*iid);
-  if (NS_FAILED(*rv))
-    return;
-
   JNIEnv* env = GetJNIEnv();
   jobject weakref = env->NewObject(weakReferenceClass,
                                    weakReferenceConstructorMID, aJavaObject);
@@ -69,10 +60,13 @@ nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo,
                                               aJavaObject);
 
 #ifdef DEBUG_JAVAXPCOM
+  nsIID* iid;
+  mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("+ nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
       (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
   PR_Free(iid_str);
+  nsMemory::Free(iid);
 #endif
 }
 
@@ -242,7 +236,8 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   // always return the master stub for nsISupports
   if (aIID.Equals(NS_GET_IID(nsISupports)))
   {
-    *aInstancePtr = master->mXPTCStub;
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
+                                   NS_STATIC_CAST(nsXPTCStubBase*, master));
     NS_ADDREF(master);
     return NS_OK;
   }
@@ -259,7 +254,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   nsJavaXPTCStub *stub = master->FindStubSupportingIID(aIID);
   if (stub)
   {
-    *aInstancePtr = stub->mXPTCStub;
+    *aInstancePtr = stub;
     NS_ADDREF(stub);
     return NS_OK;
   }
@@ -314,14 +309,9 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   if (NS_FAILED(rv))
     return rv;
 
-  stub = new nsJavaXPTCStub(obj, iinfo, &rv);
+  stub = new nsJavaXPTCStub(obj, iinfo);
   if (!stub)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  if (NS_FAILED(rv)) {
-    delete stub;
-    return rv;
-  }
 
   // add stub to the master's list of children, so we can preserve
   // symmetry in future QI calls.  the master will delete each child
@@ -347,7 +337,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   stub->mMaster = master;
   master->mChildren.AppendElement(stub);
 
-  *aInstancePtr = stub->mXPTCStub;
+  *aInstancePtr = stub;
   NS_ADDREF(stub);
   return NS_OK;
 }
@@ -389,14 +379,21 @@ nsJavaXPTCStub::FindStubSupportingIID(const nsID &iid)
 }
 
 NS_IMETHODIMP
+nsJavaXPTCStub::GetInterfaceInfo(nsIInterfaceInfo **aInfo)
+{
+  NS_ADDREF(*aInfo = mIInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
-                           const XPTMethodDescriptor *aMethodInfo,
+                           const nsXPTMethodInfo *aMethodInfo,
                            nsXPTCMiniVariant *aParams)
 {
 #ifdef DEBUG_JAVAXPCOM
   const char* ifaceName;
   mIInfo->GetNameShared(&ifaceName);
-  LOG(("---> (Java) %s::%s()\n", ifaceName, aMethodInfo->name));
+  LOG(("---> (Java) %s::%s()\n", ifaceName, aMethodInfo->GetName()));
 #endif
 
   nsresult rv = NS_OK;
@@ -406,7 +403,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   nsCAutoString methodSig("(");
 
   // Create jvalue array to hold Java params
-  PRUint8 paramCount = aMethodInfo->num_args;
+  PRUint8 paramCount = aMethodInfo->GetParamCount();
   jvalue* java_params = nsnull;
   const nsXPTParamInfo* retvalInfo = nsnull;
   if (paramCount) {
@@ -416,7 +413,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
     {
-      const nsXPTParamInfo &paramInfo = aMethodInfo->params[i];
+      const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
       if (!paramInfo.IsRetval()) {
         rv = SetupJavaParams(paramInfo, aMethodInfo, aMethodIndex, aParams,
                              aParams[i], java_params[i], methodSig);
@@ -445,16 +442,15 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   jmethodID mid = nsnull;
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString methodName;
-    if (XPT_MD_IS_GETTER(aMethodInfo->flags) ||
-        XPT_MD_IS_SETTER(aMethodInfo->flags)) {
-      if (XPT_MD_IS_GETTER(aMethodInfo->flags))
+    if (aMethodInfo->IsGetter() || aMethodInfo->IsSetter()) {
+      if (aMethodInfo->IsGetter())
         methodName.AppendLiteral("get");
       else
         methodName.AppendLiteral("set");
-      methodName.AppendASCII(aMethodInfo->name);
+      methodName.AppendASCII(aMethodInfo->GetName());
       methodName.SetCharAt(toupper(methodName[3]), 3);
     } else {
-      methodName.AppendASCII(aMethodInfo->name);
+      methodName.AppendASCII(aMethodInfo->GetName());
       methodName.SetCharAt(tolower(methodName[0]), 0);
     }
     // If it's a Java keyword, then prepend an underscore
@@ -562,7 +558,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
   if (NS_SUCCEEDED(rv)) {
     for (PRUint8 i = 0; i < paramCount; i++)
     {
-      const nsXPTParamInfo &paramInfo = aMethodInfo->params[i];
+      const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
       if (paramInfo.IsIn() && !paramInfo.IsOut() && !paramInfo.IsDipper()) // 'in'
         continue;
 
@@ -590,7 +586,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 #endif
   env->ExceptionClear();
 
-  LOG(("<--- (Java) %s::%s()\n", ifaceName, aMethodInfo->name));
+  LOG(("<--- (Java) %s::%s()\n", ifaceName, aMethodInfo->GetName()));
   return rv;
 }
 
@@ -599,7 +595,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
  */
 nsresult
 nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
-                const XPTMethodDescriptor* aMethodInfo,
+                const nsXPTMethodInfo* aMethodInfo,
                 PRUint16 aMethodIndex,
                 nsXPTCMiniVariant* aDispatchParams,
                 nsXPTCMiniVariant &aVariant, jvalue &aJValue,
@@ -1063,7 +1059,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
 nsresult
 nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
-                             const XPTMethodDescriptor* aMethodInfo,
+                             const nsXPTMethodInfo* aMethodInfo,
                              PRUint16 aMethodIndex,
                              nsXPTCMiniVariant* aDispatchParams,
                              nsACString &aRetvalSig)
@@ -1173,7 +1169,7 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
  */
 nsresult
 nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
-                                 const XPTMethodDescriptor *aMethodInfo,
+                                 const nsXPTMethodInfo* aMethodInfo,
                                  PRUint16 aMethodIndex,
                                  nsXPTCMiniVariant* aDispatchParams,
                                  nsXPTCMiniVariant &aVariant, jvalue &aJValue)

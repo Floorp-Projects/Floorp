@@ -38,7 +38,7 @@
 #ifndef _nsJavaXPTCStub_h_
 #define _nsJavaXPTCStub_h_
 
-#include "nsXPTCUtils.h"
+#include "xptcall.h"
 #include "jni.h"
 #include "nsVoidArray.h"
 #include "nsIInterfaceInfo.h"
@@ -50,7 +50,7 @@
 #define NS_JAVAXPTCSTUB_IID \
 {0x88dd8130, 0xebe6, 0x4431, {0x9d, 0xa7, 0xe6, 0xb7, 0x54, 0x74, 0xfb, 0x21}}
 
-class nsJavaXPTCStub : protected nsAutoXPTCStub,
+class nsJavaXPTCStub : public nsXPTCStubBase,
                        public nsSupportsWeakReference
 {
   friend class nsJavaXPTCStubWeakRef;
@@ -60,17 +60,18 @@ public:
   NS_DECL_NSISUPPORTSWEAKREFERENCE
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_JAVAXPTCSTUB_IID)
 
-  nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo,
-                 nsresult *rv);
+  nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo);
 
   virtual ~nsJavaXPTCStub();
 
+  // return a refcounted pointer to the InterfaceInfo for this object
+  // NOTE: on some platforms this MUST not fail or we crash!
+  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo **aInfo);
+
   // call this method and return result
   NS_IMETHOD CallMethod(PRUint16 aMethodIndex,
-                        const XPTMethodDescriptor *aInfo,
+                        const nsXPTMethodInfo *aInfo,
                         nsXPTCMiniVariant *aParams);
-
-  nsISomeInterface* GetStub() { return mXPTCStub; }
 
   // getter for mJavaObject
   jobject GetJavaObject();
@@ -100,18 +101,18 @@ private:
   PRBool SupportsIID(const nsID &aIID);
 
   nsresult SetupJavaParams(const nsXPTParamInfo &aParamInfo,
-                           const XPTMethodDescriptor* aMethodInfo,
+                           const nsXPTMethodInfo* aMethodInfo,
                            PRUint16 aMethodIndex,
                            nsXPTCMiniVariant* aDispatchParams,
                            nsXPTCMiniVariant &aVariant,
                            jvalue &aJValue, nsACString &aMethodSig);
   nsresult GetRetvalSig(const nsXPTParamInfo* aParamInfo,
-                        const XPTMethodDescriptor* aMethodInfo,
+                        const nsXPTMethodInfo* aMethodInfo,
                         PRUint16 aMethodIndex,
                         nsXPTCMiniVariant* aDispatchParams,
                         nsACString &aRetvalSig);
   nsresult FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
-                              const XPTMethodDescriptor* aMethodInfo,
+                              const nsXPTMethodInfo* aMethodInfo,
                               PRUint16 aMethodIndex,
                               nsXPTCMiniVariant* aDispatchParams,
                               nsXPTCMiniVariant &aVariant,
