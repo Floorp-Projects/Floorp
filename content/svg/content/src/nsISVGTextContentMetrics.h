@@ -53,7 +53,7 @@ class nsIDOMSVGPoint;
 class nsISVGTextContentMetrics : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGTEXTCONTENTMETRICS_IID; return iid; }
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGTEXTCONTENTMETRICS_IID)
   
   NS_IMETHOD GetNumberOfChars(PRInt32 *_retval)=0;
   NS_IMETHOD GetComputedTextLength(float *_retval)=0;
@@ -64,5 +64,8 @@ public:
   NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval)=0;
   NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGTextContentMetrics,
+                              NS_ISVGTEXTCONTENTMETRICS_IID)
 
 #endif // __NS_ISVGTEXTCONTENTMETRICS_H__

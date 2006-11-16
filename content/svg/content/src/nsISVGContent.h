@@ -52,10 +52,11 @@
 class nsISVGContent : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGCONTENT_IID; return iid; }
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCONTENT_IID)
 
   virtual void ParentChainChanged()=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGContent, NS_ISVGCONTENT_IID)
 
 #endif // __NS_ISVGCONTENT_H__
