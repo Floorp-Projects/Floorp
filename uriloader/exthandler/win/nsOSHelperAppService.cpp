@@ -67,26 +67,8 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
 static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
                                                     nsString& aFileExtension);
 
-// static member
-PRBool nsOSHelperAppService::sIsNT = PR_FALSE;
-
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{
-  OSVERSIONINFO osversion;
-  ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
-  osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-  // We'd better make sure that sIsNT is init'd only once, but we can
-  // get away without doing that explicitly because nsOSHelperAppService
-  // is a singleton.
-  if (!GetVersionEx(&osversion)) {
-    // If the call failed, better be safe and assume *W functions don't work
-    sIsNT = PR_FALSE;
-  }
-  else {
-    sIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
-  }
-}
+{}
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
@@ -421,38 +403,19 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
   // AFTER |RemoveParameters| since it may introduce spaces into the path
   // string)
 
-  if (sIsNT) {
-    DWORD required = ::ExpandEnvironmentStringsW(handlerFilePath.get(),
-                                                 L"", 0);
-    if (!required) 
-      return NS_ERROR_FAILURE;
+  DWORD required = ::ExpandEnvironmentStringsW(handlerFilePath.get(),
+                                               L"", 0);
+  if (!required) 
+    return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<WCHAR> destination(new WCHAR[required]); 
-    if (!destination)
-      return NS_ERROR_OUT_OF_MEMORY;
-    if (!::ExpandEnvironmentStringsW(handlerFilePath.get(), destination,
-                                     required))
-      return NS_ERROR_FAILURE;
+  nsAutoArrayPtr<WCHAR> destination(new WCHAR[required]); 
+  if (!destination)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!::ExpandEnvironmentStringsW(handlerFilePath.get(), destination,
+                                   required))
+    return NS_ERROR_FAILURE;
 
-    handlerFilePath = destination;
-  }
-  else {
-    nsCAutoString nativeHandlerFilePath; 
-    NS_CopyUnicodeToNative(handlerFilePath, nativeHandlerFilePath);
-    DWORD required = ::ExpandEnvironmentStringsA(nativeHandlerFilePath.get(),
-                                                 "", 0);
-    if (!required) 
-      return NS_ERROR_FAILURE;
-
-    nsAutoArrayPtr<char> destination(new char[required]); 
-    if (!destination)
-      return NS_ERROR_OUT_OF_MEMORY;
-    if (!::ExpandEnvironmentStringsA(nativeHandlerFilePath.get(), 
-                                     destination, required))
-      return NS_ERROR_FAILURE;
-
-    NS_CopyNativeToUnicode(nsDependentCString(destination), handlerFilePath);
-  }
+  handlerFilePath = destination;
 
   nsCOMPtr<nsILocalFile> lf;
   NS_NewLocalFile(handlerFilePath, PR_TRUE, getter_AddRefs(lf));
