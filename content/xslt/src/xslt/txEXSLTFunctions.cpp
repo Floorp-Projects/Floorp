@@ -136,7 +136,7 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
 class txEXSLTNodeSetFunctionCall : public FunctionCall
 {
 public:
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 };
 
 nsresult
@@ -221,7 +221,7 @@ txEXSLTNodeSetFunctionCall::getNameAtom(nsIAtom **aAtom)
 class txEXSLTObjectTypeFunctionCall : public FunctionCall
 {
 public:
-    TX_DECL_FUNCTION;
+    TX_DECL_FUNCTION
 };
 
 // Need to update this array if types are added to the ResultType enum in
