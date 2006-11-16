@@ -38,6 +38,7 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
+#include "xptiprivate.h"
 
 #ifndef WIN32
 #error "This code is for Win32 only"
@@ -53,7 +54,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
-    nsIInterfaceInfo* iface_info = NULL;
     const nsXPTMethodInfo* info = NULL;
     PRUint8 paramCount;
     PRUint8 i;
@@ -64,11 +64,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
 
     NS_ASSERTION(self,"no self");
 
-    self->GetInterfaceInfo(&iface_info);
-    NS_ASSERTION(iface_info,"no interface info");
-
-    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
-    NS_ASSERTION(info,"no interface info");
+    self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+    NS_ASSERTION(info,"no method info");
 
     paramCount = info->GetParamCount();
 
@@ -114,9 +111,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     }
     *stackBytesToPop = ((PRUint32)ap) - ((PRUint32)args);
 
-    result = self->CallMethod((PRUint16)methodIndex, info, dispatchParams);
-
-    NS_RELEASE(iface_info);
+    result = self->mOuter->CallMethod((PRUint16)methodIndex, info, dispatchParams);
 
     if(dispatchParams != paramBuffer)
         delete [] dispatchParams;

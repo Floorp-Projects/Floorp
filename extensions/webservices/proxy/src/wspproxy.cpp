@@ -80,6 +80,10 @@ WSPProxy::Init(nsIWSDLPort* aPort, nsIInterfaceInfo* aPrimaryInterface,
 
   nsresult rv;
 
+  rv = InitStub(*mIID);
+  if (NS_FAILED(rv))
+    return rv;
+
   mInterfaces = do_CreateInstance(NS_SCRIPTABLE_INTERFACES_CONTRACTID, &rv);
   if (!mInterfaces) {
     return rv;
@@ -135,8 +139,13 @@ NS_IMPL_RELEASE(WSPProxy)
 NS_IMETHODIMP
 WSPProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if((mIID && aIID.Equals(*mIID)) || aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIXPTCProxy*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if(mXPTCStub && mIID && aIID.Equals(*mIID)) {
+    *aInstancePtr = mXPTCStub;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -177,7 +186,7 @@ WSPProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  */
 NS_IMETHODIMP
 WSPProxy::CallMethod(PRUint16 methodIndex,
-                     const nsXPTMethodInfo* info,
+                     const XPTMethodDescriptor* info,
                      nsXPTCMiniVariant* params)
 {
   nsresult rv;
@@ -293,7 +302,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   PRUint32 i, partCount;
   input->GetPartCount(&partCount);
 
-  PRUint32 maxParamIndex = info->GetParamCount()-1;
+  PRUint32 maxParamIndex = info->num_args - 1;
 
   // Iterate through the parts to figure out how many are
   // body vs. header blocks
@@ -450,7 +459,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     PRUint32 arrayLength;
 
     if (paramIndex < maxParamIndex &&
-        info->GetParam((PRUint8)(paramIndex + 1)).GetType().IsArray()) {
+        nsXPTType(info->params[paramIndex + 1].type.prefix).IsArray()) {
       arrayLength = params[paramIndex++].val.u32;
     }
     else {
@@ -460,7 +469,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     NS_ASSERTION(paramIndex <= maxParamIndex,
                  "WSDL/IInfo param count mismatch");
 
-    const nsXPTParamInfo& paramInfo = info->GetParam(paramIndex);
+    const nsXPTParamInfo& paramInfo = info->params[paramIndex];
 
     nsCOMPtr<nsIVariant> value;
     rv = ParameterToVariant(mPrimaryInterface, methodIndex,
@@ -492,7 +501,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
   if (mIsAsync) {
     PRUint8 pcount;
-    pcount = info->GetParamCount();
+    pcount = info->num_args;
     // There has to be at least one parameter - the retval.
     if (pcount == 0) {
       rv = NS_ERROR_FAILURE;
@@ -501,7 +510,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
 #ifdef DEBUG
     // The last one should be the retval.
-    const nsXPTParamInfo& retParamInfo = info->GetParam(pcount - 1);
+    const nsXPTParamInfo& retParamInfo = info->params[pcount - 1];
     if (!retParamInfo.IsRetval()) {
       rv = NS_ERROR_FAILURE;
       goto call_method_end;
@@ -1131,17 +1140,6 @@ WSPProxy::VariantToArrayValue(uint8 aTypeTag,
       NS_ERROR("Conversion of illegal array type");
       return NS_ERROR_FAILURE;
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WSPProxy::GetInterfaceInfo(nsIInterfaceInfo** info)
-{
-  NS_ENSURE_ARG_POINTER(info);
-
-  *info = mPrimaryInterface;
-  NS_ADDREF(*info);
 
   return NS_OK;
 }

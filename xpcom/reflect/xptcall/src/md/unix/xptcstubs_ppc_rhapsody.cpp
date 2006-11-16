@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "xptcprivate.h"
+#include "xptiprivate.h"
 
 /* Under the Mac OS X PowerPC ABI, the first 8 integer and 13 floating point
  * parameters are delivered in registers and are not on the stack, although
@@ -80,7 +81,6 @@ PrepareAndDispatch(
 
   nsXPTCMiniVariant      paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCMiniVariant     *dispatchParams = NULL;
-  nsIInterfaceInfo      *interfaceInfo  = NULL;
   const nsXPTMethodInfo *methodInfo;
   PRUint8                paramCount;
   PRUint8                i;
@@ -95,10 +95,7 @@ PrepareAndDispatch(
 
   NS_ASSERTION(self, "no self");
 
-  self->GetInterfaceInfo(&interfaceInfo);
-  NS_ASSERTION(interfaceInfo, "no interface info");
-
-  interfaceInfo->GetMethodInfo(PRUint16(methodIndex), &methodInfo);
+  self->mEntry->GetMethodInfo(PRUint16(methodIndex), &methodInfo);
   NS_ASSERTION(methodInfo, "no method info");
 
   paramCount = methodInfo->GetParamCount();
@@ -181,9 +178,8 @@ PrepareAndDispatch(
     }
   }
 
-  result = self->CallMethod((PRUint16)methodIndex, methodInfo, dispatchParams);
-
-  NS_RELEASE(interfaceInfo);
+  result = self->mOuter->
+    CallMethod((PRUint16)methodIndex, methodInfo, dispatchParams);
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;

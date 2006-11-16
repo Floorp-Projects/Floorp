@@ -50,7 +50,11 @@ CPPSRCS		= \
 		../unix/xptcinvoke_gcc_x86_unix.cpp \
 		xptcstubs_gcc_x86_os2.cpp \
 		$(NULL)
-LOCAL_INCLUDES	= -I$(srcdir)/../unix
+REQUIRES = string
+LOCAL_INCLUDES = \
+		-I$(srcdir)/../unix \
+		-I$(srcdir)/../../../../xptinfo/src \
+		$(NULL)
 DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
 
 # Force use of PIC

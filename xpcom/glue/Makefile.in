@@ -112,6 +112,7 @@ SDK_HEADERS = \
 EXPORTS = \
 		nsThreadUtils.h \
 		nsProxyRelease.h \
+		nsXPTCUtils.h \
 		$(NULL)
 
 SDK_LIBRARY     =                        \

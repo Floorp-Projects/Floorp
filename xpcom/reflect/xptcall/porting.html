@@ -47,11 +47,11 @@ There are really two pieces of functionality: <i>invoke</i> and <i>stubs</i>...
 <p>
 
 The <b><i>invoke</i></b> functionality requires the implementation of the
-following on each platform (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/public/xptcall.h#131">xptcall/public/xptcall.h</a>):
+following on each platform (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/public/xptcall.h">xptcall/public/xptcall.h</a>):
 
 <pre>
 XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
 </pre>
 
@@ -80,7 +80,7 @@ can decide how best to do this for their platforms.
 The <b><i>stubs</i></b> functionality is more complex. The goal here is a class
 whose vtbl can look like the vtbl of any arbitrary xpcom interface. Objects of
 this class can then be built to impersonate any xpcom object. The base interface
-for this is (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/public/xptcall.h#109">xptcall/public/xptcall.h</a>):
+for this is (from <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/public/xptcall.h">xptcall/public/xptcall.h</a>):
 
 <pre>
 class nsXPTCStubBase : public nsISupports
@@ -177,7 +177,7 @@ href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/test">x
 Not all of the functionality is exercised, but it is a place to get started. 
 <a
 href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/tests">xptcall/tests
-</a> has an api level test for <code>XPTC_InvokeByIndex</code>, but no tests for
+</a> has an api level test for <code>NS_InvokeByIndex</code>, but no tests for
 the <i>stubs</i> functionality. Such a test ought to be written, but this has not
 yet been done.
 

@@ -77,9 +77,9 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 #pragma warning(disable : 4035) // OK to have no return value
-__declspec(naked) XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+extern "C" NS_EXPORT __declspec(naked) nsresult NS_FROZENCALL
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
 {
     __asm {
         push    ebp

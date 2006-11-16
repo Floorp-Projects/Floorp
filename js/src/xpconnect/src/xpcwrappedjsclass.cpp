@@ -579,7 +579,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if(nsnull != (sibling = self->Find(aIID)))
     {
         NS_ADDREF(sibling);
-        *aInstancePtr = (void*) sibling;
+        *aInstancePtr = sibling->GetXPTCStub();
         return NS_OK;
     }
 
@@ -587,7 +587,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     if(nsnull != (sibling = self->FindInherited(aIID)))
     {
         NS_ADDREF(sibling);
-        *aInstancePtr = (void*) sibling;
+        *aInstancePtr = sibling->GetXPTCStub();
         return NS_OK;
     }
 
@@ -708,7 +708,7 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
 
 JSBool
 nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
-                                           const nsXPTMethodInfo* method,
+                                           const XPTMethodDescriptor* method,
                                            const nsXPTParamInfo& param,
                                            uint16 methodIndex,
                                            uint8 paramIndex,
@@ -726,7 +726,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     if(NS_FAILED(rv))
         return JS_FALSE;
 
-    const nsXPTParamInfo& arg_param = method->GetParam(argnum);
+    const nsXPTParamInfo& arg_param = method->params[argnum];
     const nsXPTType& arg_type = arg_param.GetType();
 
     // The xpidl compiler ensures this. We reaffirm it for safety.
@@ -743,7 +743,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
 
 JSBool
 nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
-                                               const nsXPTMethodInfo* method,
+                                               const XPTMethodDescriptor* method,
                                                const nsXPTParamInfo& param,
                                                uint16 methodIndex,
                                                const nsXPTType& type,
@@ -769,7 +769,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         if(NS_FAILED(rv))
             return JS_FALSE;
 
-        const nsXPTParamInfo& arg_param = method->GetParam(argnum);
+        const nsXPTParamInfo& arg_param = method->params[argnum];
         const nsXPTType& arg_type = arg_param.GetType();
         if(arg_type.IsPointer() &&
            arg_type.TagPart() == nsXPTType::T_IID)
@@ -981,7 +981,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
 NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
-                                const nsXPTMethodInfo* info,
+                                const XPTMethodDescriptor* info,
                                 nsXPTCMiniVariant* nativeParams)
 {
     jsval* stackbase;
@@ -998,7 +998,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     nsID  param_iid;
     uint8 outConversionFailedIndex;
     JSObject* obj;
-    const char* name = info->GetName();
+    const char* name = info->name;
     jsval fval;
     void* mark;
     JSBool foundDependentParam;
@@ -1038,9 +1038,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     obj = thisObj = wrapper->GetJSObject();
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
-    paramCount = info->GetParamCount();
+    paramCount = info->num_args;
     argc = paramCount -
-            (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
+        (paramCount && XPT_PD_IS_RETVAL(info->params[paramCount-1].flags) ? 1 : 0);
 
     if(!cx || !xpcc || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
@@ -1059,7 +1059,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // setup stack
 
     // if this isn't a function call then we don't need to push extra stuff
-    if(info->IsGetter() || info->IsSetter())
+    if(XPT_MD_IS_GETTER(info->flags) || XPT_MD_IS_SETTER(info->flags))
     {
         stack_size = argc;
     }
@@ -1099,7 +1099,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
             if(paramCount)
             {
-                const nsXPTParamInfo& firstParam = info->GetParam(0);
+                const nsXPTParamInfo& firstParam = info->params[0];
                 if(firstParam.IsIn())
                 {
                     const nsXPTType& firstType = firstParam.GetType();
@@ -1178,7 +1178,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         goto pre_call_clean_up;
     }
 
-    NS_ASSERTION(info->IsGetter() || sp, "Only a getter needs no stack.");
+    NS_ASSERTION(XPT_MD_IS_GETTER(info->flags) || sp,
+                 "Only a getter needs no stack.");
 
     // this is a function call, so push function and 'this'
     if(stack_size != argc)
@@ -1196,7 +1197,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // build the args
     for(i = 0; i < argc; i++)
     {
-        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTParamInfo& param = info->params[i];
         const nsXPTType& type = param.GetType();
         nsXPTType datum_type;
         JSUint32 array_count;
@@ -1249,7 +1250,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             }
 
             // Figure out what our callee is
-            if(info->IsGetter() || info->IsSetter())
+            if(XPT_MD_IS_GETTER(info->flags) || XPT_MD_IS_SETTER(info->flags))
             {
                 // Pull the getter or setter off of |obj|
                 uintN attrs;
@@ -1262,13 +1263,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                                        &getter, &setter);
                 if(ok)
                 {
-                    if(info->IsGetter() && (attrs & JSPROP_GETTER))
+                    if(XPT_MD_IS_GETTER(info->flags) && (attrs & JSPROP_GETTER))
                     {
                         // JSPROP_GETTER means the getter is actually a
                         // function object.
                         ccx.SetCallee((JSObject*)getter);
                     }
-                    else if(info->IsSetter() && (attrs & JSPROP_SETTER))
+                    else if(XPT_MD_IS_SETTER(info->flags) && (attrs & JSPROP_SETTER))
                     {
                         // JSPROP_SETTER means the setter is actually a
                         // function object.
@@ -1338,7 +1339,7 @@ pre_call_clean_up:
     // clean up any 'out' params handed in
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTParamInfo& param = info->params[i];
         if(!param.IsOut())
             continue;
 
@@ -1393,9 +1394,9 @@ pre_call_clean_up:
 
     JS_ClearPendingException(cx);
 
-    if(info->IsGetter())
+    if(XPT_MD_IS_GETTER(info->flags))
         success = JS_GetProperty(cx, obj, name, &result);
-    else if(info->IsSetter())
+    else if(XPT_MD_IS_SETTER(info->flags))
         success = JS_SetProperty(cx, obj, name, sp-1);
     else
     {
@@ -1469,7 +1470,7 @@ pre_call_clean_up:
     foundDependentParam = JS_FALSE;
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTParamInfo& param = info->params[i];
         if(!param.IsOut() && !param.IsDipper())
             continue;
 
@@ -1520,7 +1521,7 @@ pre_call_clean_up:
     {
         for(i = 0; i < paramCount; i++)
         {
-            const nsXPTParamInfo& param = info->GetParam(i);
+            const nsXPTParamInfo& param = info->params[i];
             if(!param.IsOut())
                 continue;
 
@@ -1613,7 +1614,7 @@ pre_call_clean_up:
 
         for(uint8 k = 0; k < i; k++)
         {
-            const nsXPTParamInfo& param = info->GetParam(k);
+            const nsXPTParamInfo& param = info->params[k];
             if(!param.IsOut())
                 continue;
             const nsXPTType& type = param.GetType();
