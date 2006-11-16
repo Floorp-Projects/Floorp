@@ -16,13 +16,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+<![CDATA[
 
 /** Test for Bug {BUGNUMBER} **/
 
 
 
 
-
+]]>
 </script>
 </pre>
 </body>
