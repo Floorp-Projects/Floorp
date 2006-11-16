@@ -100,11 +100,7 @@
 #include "xpcomobsolete.h"
 #include "nsStringFwd.h"
 
-#ifdef XP_MAC
-#include "pprio.h" // To get PR_ImportFile
-#else
 #include "prio.h"
-#endif
 
 #include "nsCOMPtr.h"
 #include "nsIFileStream.h"
@@ -136,7 +132,7 @@ class nsIFileSpec;
 
 #endif // NS_USING_NAMESPACE
 
-#if !defined(XP_MAC) && !defined(__KCC)
+#ifndef __KCC
 // PR_STDOUT and PR_STDIN are fatal on Macintosh.  So for console i/o, we must use the std
 // stream stuff instead.  However, we have to require that cout and cin are passed in
 // to the constructor because in the current build, there is a copy in the base.shlb,

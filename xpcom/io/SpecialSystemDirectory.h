@@ -44,7 +44,7 @@
 #include "nscore.h"
 #include "nsILocalFile.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <Types.h>
 #include "nsILocalFileMac.h"
 #include "prenv.h"
@@ -130,7 +130,7 @@ enum SystemDirectories {
 nsresult
 GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                           nsILocalFile** aFile);
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 nsresult
 GetOSXFolderType(short aDomain, OSType aFolderType, nsILocalFile **localFile);
 #endif

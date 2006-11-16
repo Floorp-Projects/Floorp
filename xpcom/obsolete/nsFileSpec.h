@@ -176,10 +176,7 @@
 #include "nsILocalFile.h"
 #include "nsCOMPtr.h"
 
-#if defined(XP_MAC)
-#include <Files.h>
-#include "nsILocalFileMac.h"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <dirent.h>
 #elif defined(XP_WIN)
 
@@ -361,46 +358,11 @@ class NS_COM_OBSOLETE nsFileSpec
 
        PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
-#if defined(XP_MAC)
-        // For Macintosh people, this is meant to be useful in its own right as a C++ version
-        // of the FSSpec struct.        
-                                nsFileSpec(
-                                    short vRefNum,
-                                    long parID,
-                                    ConstStr255Param name,
-                                    PRBool resolveAlias = PR_TRUE);
-
-                                nsFileSpec(const FSSpec& inSpec, PRBool resolveAlias = PR_TRUE);
-        void                    operator = (const FSSpec& inSpec);
-
-                                operator FSSpec* () { return &mSpec; }
-                                operator const FSSpec* const () { return &mSpec; }
-                                operator  FSSpec& () { return mSpec; }
-                                operator const FSSpec& () const { return mSpec; }
-                                
-        const FSSpec&           GetFSSpec() const { return mSpec; }
-        FSSpec&                 GetFSSpec() { return mSpec; }
-        ConstFSSpecPtr          GetFSSpecPtr() const { return &mSpec; }
-        FSSpecPtr               GetFSSpecPtr() { return &mSpec; }
-        void                    MakeAliasSafe();
-        void                    MakeUnique(ConstStr255Param inSuggestedLeafName);
-        StringPtr               GetLeafPName() { return mSpec.name; }
-        ConstStr255Param        GetLeafPName() const { return mSpec.name; }
-
-        OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
-
-        OSErr                   SetFileTypeAndCreator(OSType type, OSType creator);
-        OSErr                   GetFileTypeAndCreator(OSType* type, OSType* creator);
-
-#endif // end of Macintosh utility methods.
-
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
         nsresult                Error() const
                                 {
-#if !defined(XP_MAC)
                                     if (mPath.IsEmpty() && NS_SUCCEEDED(mError)) 
                                         ((nsFileSpec*)this)->mError = NS_ERROR_NOT_INITIALIZED; 
-#endif 
                                     return mError;
                                 }
         PRBool                  Failed() const { return (PRBool)NS_FAILED(Error()); }
@@ -508,9 +470,7 @@ class NS_COM_OBSOLETE nsFileSpec
                                 friend class nsFilePath;
                                 friend class nsFileURL;
                                 friend class nsDirectoryIterator;
-#if defined(XP_MAC)
-        FSSpec                  mSpec;
-#endif
+
         nsSimpleCharString      mPath;
         nsresult                mError;
 
@@ -559,11 +519,6 @@ class NS_COM_OBSOLETE nsFileURL
         const char*             GetAsString() const { return (const char*)mURL; }
         							// Not allocated, so don't free it.
 
-#if defined(XP_MAC)
-                                // Accessor to allow quick assignment to a mFileSpec
-        const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
-#endif
-
     //--------------------------------------------------
     // Data
     //--------------------------------------------------
@@ -571,12 +526,6 @@ class NS_COM_OBSOLETE nsFileURL
     protected:
                                 friend class nsFilePath; // to allow construction of nsFilePath
         nsSimpleCharString      mURL;
-
-#if defined(XP_MAC)
-        // Since the path on the macintosh does not uniquely specify a file (volumes
-        // can have the same name), stash the secret nsFileSpec, too.
-        nsFileSpec              mFileSpec;
-#endif
 }; // class nsFileURL
 
 //========================================================================================
@@ -612,12 +561,6 @@ class NS_COM_OBSOLETE nsFilePath
         void                    operator +=(const char* inRelativeUnixPath);
         nsFilePath              operator +(const char* inRelativeUnixPath) const;
 
-#if defined(XP_MAC)
-    public:
-                                // Accessor to allow quick assignment to a mFileSpec
-        const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
-#endif
-
     //--------------------------------------------------
     // Data
     //--------------------------------------------------
@@ -625,11 +568,6 @@ class NS_COM_OBSOLETE nsFilePath
     private:
 
         nsSimpleCharString       mPath;
-#if defined(XP_MAC)
-        // Since the path on the macintosh does not uniquely specify a file (volumes
-        // can have the same name), stash the secret nsFileSpec, too.
-        nsFileSpec               mFileSpec;
-#endif
 }; // class nsFilePath
 
 //========================================================================================
@@ -699,10 +637,7 @@ class NS_COM_OBSOLETE nsDirectoryIterator
 	public:
 	                            nsDirectoryIterator( const nsFileSpec& parent,
 	                            	                 PRBool resoveSymLinks);
-#if !defined(XP_MAC)
-	// Macintosh currently doesn't allocate, so needn't clean up.
 	    virtual                 ~nsDirectoryIterator();
-#endif
 	    PRBool                  Exists() const { return mExists; }
 	    nsDirectoryIterator&    operator ++(); // moves to the next item, if any.
 	    nsDirectoryIterator&    operator ++(int) { return ++(*this); } // post-increment.
@@ -711,12 +646,6 @@ class NS_COM_OBSOLETE nsDirectoryIterator
 	                            operator nsFileSpec&() { return mCurrent; }
 	    
 	    nsFileSpec&             Spec() { return mCurrent; }
-	     
-	private:
-
-#if defined(XP_MAC)
-        OSErr                   SetToIndex();
-#endif
 
     //--------------------------------------------------
     // Data
@@ -731,13 +660,8 @@ class NS_COM_OBSOLETE nsDirectoryIterator
 #if (defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_WIN) || defined(XP_OS2))
 	    nsFileSpec		        mStarting;
 #endif
-        
-#if defined(XP_MAC)
-           short                                       mVRefNum;
-           long                                        mParID;
-           short         mIndex;
-           short         mMaxIndex;
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+
+#if defined(XP_UNIX) || defined(XP_BEOS)
 	    DIR*                    mDir;
 #elif defined(XP_WIN) || defined(XP_OS2)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?

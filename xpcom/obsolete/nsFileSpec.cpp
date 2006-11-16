@@ -71,11 +71,8 @@ static inline char *GetLastSeparator(const char *str, char sep)
 #endif
 }
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <sys/stat.h>
-#endif
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Aliases.h>
 #include <TextUtils.h>
 #endif
@@ -316,10 +313,8 @@ NS_NAMESPACE nsFileSpecHelpers
     ,    kMaxAltDigitLength    = 5
     ,    kMaxCoreLeafNameLength    = (kMaxFilenameLength - (kMaxAltDigitLength + 1))
     };
-#if !defined(XP_MAC)
     NS_NAMESPACE_PROTOTYPE void Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs);
     NS_NAMESPACE_PROTOTYPE void MakeAllDirectories(const char* inPath, int mode);
-#endif
 #if defined(XP_WIN) || defined(XP_OS2)
     NS_NAMESPACE_PROTOTYPE void NativeToUnix(nsSimpleCharString& ioPath);
     NS_NAMESPACE_PROTOTYPE void UnixToNative(nsSimpleCharString& ioPath);
@@ -416,11 +411,6 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
     return result;
 } // nsSimpleCharString::GetLeaf
 
-
-#if 0
-#pragma mark -
-#endif
-
 #if (defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS))
 
 //----------------------------------------------------------------------------------------
@@ -507,18 +497,11 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 
 #endif // XP_UNIX || XP_WIN || XP_OS2 || XP_BEOS
 
-#if 0
-#pragma mark -
-#endif
-
 #if defined(XP_WIN)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
-#elif defined(XP_MAC)
-//#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
-// we include the .cpp file in the project now.
 #elif defined(XP_BEOS)
 #include "nsFileSpecBeOS.cpp" // BeOS-specific implementations
-#elif defined(XP_UNIX) || defined(XP_MACOSX)
+#elif defined(XP_UNIX)
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #elif defined(XP_OS2)
 #include "nsFileSpecOS2.cpp" // OS/2-specific implementations
@@ -528,7 +511,6 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 //                                nsFileURL implementation
 //========================================================================================
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -544,9 +526,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
     nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
-#endif
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -564,35 +544,27 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
-#endif
 
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:    mURL(inOther.mURL)
-#if defined(XP_MAC)
-,    mFileSpec(inOther.GetFileSpec())
-#endif
+: mURL(inOther.mURL)
 {
 } // nsFileURL::nsFileURL
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
     *this = inOther;
 } // nsFileURL::nsFileURL
-#endif
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
     *this = inOther;
 } // nsFileURL::nsFileURL
-#endif
 
 //----------------------------------------------------------------------------------------
 nsFileURL::~nsFileURL()
@@ -600,7 +572,6 @@ nsFileURL::~nsFileURL()
 {
 }
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
@@ -611,7 +582,6 @@ void nsFileURL::operator = (const char* inString)
     mURL = inString;
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
 } // nsFileURL::operator =
-#endif
 
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator +=(const char* inRelativeUnixPath)
@@ -620,9 +590,6 @@ void nsFileURL::operator +=(const char* inRelativeUnixPath)
     char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
     mURL += escapedPath;
     nsCRT::free(escapedPath);
-#if defined(XP_MAC)
-    mFileSpec += inRelativeUnixPath;
-#endif
 } // nsFileURL::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -639,12 +606,8 @@ void nsFileURL::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
     mURL = inOther.mURL;
-#if defined(XP_MAC)
-    mFileSpec = inOther.GetFileSpec();
-#endif
 } // nsFileURL::operator =
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
@@ -666,9 +629,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
         mURL += escapedPath;
     nsCRT::free(escapedPath);
 } // nsFileURL::operator =
-#endif
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
@@ -677,11 +638,7 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
     if (mURL[mURL.Length() - 1] != '/' && inOther.IsDirectory())
         mURL += "/";
 } // nsFileURL::operator =
-#endif
 
-#if 0
-#pragma mark -
-#endif
 
 //========================================================================================
 //                                nsFilePath implementation
@@ -691,13 +648,9 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 nsFilePath::nsFilePath(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
     : mPath(inPath.mPath)
-#if defined(XP_MAC)
-    , mFileSpec(inPath.mFileSpec)
-#endif
 {
 }
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -722,9 +675,7 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
-#endif
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -745,9 +696,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
-#endif
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
@@ -755,7 +704,6 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
     mPath = (const char*)inOther.mURL + kFileURLPrefixLength;
     mPath.Unescape();
 }
-#endif
 
 #if (defined XP_UNIX || defined XP_BEOS)
 //----------------------------------------------------------------------------------------
@@ -764,7 +712,7 @@ nsFilePath::nsFilePath(const nsFileSpec& inOther)
 :    mPath(inOther.mPath)
 {
 }
-#endif // XP_UNIX
+#endif // XP_UNIX || XP_BEOS
 
 //----------------------------------------------------------------------------------------
 nsFilePath::~nsFilePath()
@@ -783,7 +731,6 @@ void nsFilePath::operator = (const nsFileSpec& inOther)
 }
 #endif // XP_UNIX
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
@@ -802,25 +749,19 @@ void nsFilePath::operator = (const char* inString)
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
-#endif // XP_MAC
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
     mPath = (const char*)nsFilePath(inOther);
 }
-#endif
 
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
     mPath = inOther.mPath;
-#if defined(XP_MAC)
-    mFileSpec = inOther.GetFileSpec();
-#endif
 }
 
 //----------------------------------------------------------------------------------------
@@ -832,9 +773,6 @@ void nsFilePath::operator +=(const char* inRelativeUnixPath)
     char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
     mPath += escapedPath;
     nsCRT::free(escapedPath);
-#if defined(XP_MAC)
-    mFileSpec += inRelativeUnixPath;
-#endif
 } // nsFilePath::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -849,15 +787,10 @@ nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 }  // nsFilePath::operator +
 
 
-#if 0
-#pragma mark -
-#endif
-
 //========================================================================================
 //                                nsFileSpec implementation
 //========================================================================================
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
@@ -873,8 +806,6 @@ void nsFileSpec::Clear()
     mPath.SetToEmpty();
     mError = NS_ERROR_NOT_INITIALIZED;
 }
-
-#endif
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::~nsFileSpec()
@@ -949,7 +880,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
     nsCAutoString data;
     inDescriptor.GetData(data);
 
-#if defined (XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     // Decode descriptor into a Handle (which is actually an AliasHandle)
     char* decodedData = PL_Base64Decode(data.get(), data.Length(), nsnull);
     Handle aliasH = nsnull;
@@ -957,14 +888,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
     PR_Free(decodedData);
     if (NS_FAILED(mError))
         return; // not enough memory?
-#endif
 
-#if defined(XP_MAC)
-    Boolean changed;
-    mError = NS_FILE_RESULT(::ResolveAlias(nsnull, (AliasHandle)aliasH, &mSpec, &changed));
-    DisposeHandle((Handle) aliasH);
-    mPath.SetToEmpty();
-#elif defined(XP_MACOSX)
     Boolean changed;
     FSRef fileRef;
     mError = NS_FILE_RESULT(::FSResolveAlias(nsnull, (AliasHandle)aliasH, &fileRef, &changed));
@@ -1002,7 +926,7 @@ void nsFileSpec::operator = (const nsFilePath& inPath)
     mPath = (const char*)inPath;
     mError = NS_OK;
 }
-#endif //XP_UNIX
+#endif // XP_UNIX || XP_BEOS
 
 #if (defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS))
 //----------------------------------------------------------------------------------------
@@ -1053,7 +977,7 @@ void nsFileSpec::operator = (const char* inString)
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
     mError = NS_OK;
 }
-#endif //XP_UNIX,XP_WIN,XP_OS2,XP_BEOS
+#endif // XP_UNIX,XP_WIN,XP_OS2,XP_BEOS
 
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
@@ -1070,13 +994,6 @@ nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
 PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
 //----------------------------------------------------------------------------------------
 {
-
-#if defined(XP_MAC)
-    if ( inOther.mSpec.vRefNum == mSpec.vRefNum &&
-        inOther.mSpec.parID   == mSpec.parID &&
-        EqualString(inOther.mSpec.name, mSpec.name, false, true))
-        return PR_TRUE;
-#else
     PRBool amEmpty = mPath.IsEmpty();
     PRBool heEmpty = inOther.mPath.IsEmpty();
     if (amEmpty) // we're the same if he's empty...
@@ -1104,19 +1021,17 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
 #else
 #define DIR_STRCMP     strcmp
 #endif
-#endif
-    
+#endif    
     if(str[strLast] == DIR_SEPARATOR)
         str[strLast] = '\0';
 
     if(inStr[inLast] == DIR_SEPARATOR)
         inStr[inLast] = '\0';
 
-    if (DIR_STRCMP(str, inStr ) == 0)
+    if (DIR_STRCMP(str, inStr) == 0)
            return PR_TRUE;
 #undef DIR_SEPARATOR
 #undef DIR_STRCMP
-#endif
    return PR_FALSE;
 }
 
@@ -1127,7 +1042,6 @@ PRBool nsFileSpec::operator != (const nsFileSpec& inOther) const
     return (! (*this == inOther) );
 }
 
-#if !defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 // This is the only automatic conversion to const char*
 // that is provided, and it allows the
@@ -1140,7 +1054,6 @@ const char* nsFileSpec::GetCString() const
 {
     return mPath;
 }
-#endif
 
 //----------------------------------------------------------------------------------------
 // Is our spec a child of the provided parent?
@@ -1178,9 +1091,6 @@ PRBool nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
     return PR_FALSE;
 }
 
-#if 0 
-#pragma mark -
-#endif
 
 //========================================================================================
 //    class nsPersistentFileDescriptor
@@ -1211,22 +1121,7 @@ nsPersistentFileDescriptor::nsPersistentFileDescriptor(const nsFileSpec& inSpec)
 void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-#if defined(XP_MAC)
-    if (inSpec.Error())
-        return;
-    AliasHandle    aliasH;
-    OSErr err = NewAlias(nil, inSpec.GetFSSpecPtr(), &aliasH);
-    if (err != noErr)
-        return;
-
-    PRUint32 bytes = GetHandleSize((Handle) aliasH);
-    HLock((Handle) aliasH);
-    char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
-    DisposeHandle((Handle) aliasH);
-
-    mDescriptorString = buf;
-    PR_Free(buf);
-#elif  defined(XP_MACOSX)
+#ifdef XP_MACOSX
     if (inSpec.Error())
         return;
     
@@ -1250,7 +1145,7 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
     PR_Free(buf);
 #else
     mDescriptorString = inSpec.GetCString();
-#endif // XP_MAC
+#endif // XP_MACOSX
 } // nsPersistentFileDescriptor::operator =
 
 //----------------------------------------------------------------------------------------
@@ -1337,19 +1232,8 @@ NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result)
 
     if (!file) return NS_ERROR_FAILURE;
 
-#if defined(XP_MAC)
-    {
-        FSSpec spec  = fileSpec->GetFSSpec();
-        nsCOMPtr<nsILocalFileMac> psmAppMacFile = do_QueryInterface(file, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = psmAppMacFile->InitWithFSSpec(&spec);
-        if (NS_FAILED(rv)) return rv;
-        file = do_QueryInterface(psmAppMacFile, &rv);
-    }
-#else
-    // XP_MACOSX: do this for OS X to preserve long filenames
     rv = file->InitWithNativePath(nsDependentCString(fileSpec->GetNativePathCString()));
-#endif
+
     if (NS_FAILED(rv)) return rv;
 
     *result = file;

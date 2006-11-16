@@ -95,11 +95,6 @@ xpidl_usage(int argc, char *argv[])
     }
 }
 
-#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
-#define main xpidl_main
-int xpidl_main(int argc, char *argv[]);
-#endif
-
 int main(int argc, char *argv[])
 {
     int i;
@@ -112,11 +107,7 @@ int main(int argc, char *argv[])
 /*    IDL_check_cast_enable(TRUE); */
 
     inc_head = xpidl_malloc(sizeof *inc);
-#ifndef XP_MAC
     inc_head->directory = ".";
-#else
-    inc_head->directory = "";
-#endif
     inc_head->next = NULL;
     inc_tail = &inc_head->next;
 

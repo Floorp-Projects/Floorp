@@ -37,10 +37,6 @@
 
 /* entry point wrappers. */
 
-#if defined(XP_MAC)
-#pragma export on
-#endif
-
 #include "xptcprivate.h"
 
 // This method is never called and is only here so the compiler
@@ -52,9 +48,6 @@ NS_IMETHODIMP nsXPTCStubBase::QueryInterface(REFNSIID aIID,
    NS_ASSERTION(0,"wowa! nsXPTCStubBase::QueryInterface called");
    return NS_ERROR_FAILURE;
 }
-#if defined(XP_MAC)
-#pragma export off
-#endif
 
 void
 xptc_dummy2()
