@@ -23,13 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}
 </body>
 
 <script class="testbody" type="application/javascript">
+<![CDATA[
 
 /** Test for Bug {BUGNUMBER} **/
 
 
 
 
-
+]]>
 </script>
 
 </window>
