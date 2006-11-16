@@ -392,11 +392,12 @@ is not specified, use the plan product.
 sub get_product_builds {
 #TODO: 2.22 use product.pm
     my $self = shift;
-    my ($product_id) = @_;
+    my ($product_id, $byid) = @_;
     $product_id ||= $self->{'product_id'};
+    my $idfield = $byid ? 'id' : 'name';
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT name AS id, name 
+            "SELECT DISTINCT $idfield AS id, name 
                FROM test_builds
               WHERE product_id IN($product_id)
            ORDER BY name",
@@ -415,11 +416,12 @@ is not specified, use the plan product.
 sub get_product_categories {
 #TODO: 2.22 use product.pm
     my $self = shift;
-    my ($product_id) = @_;
+    my ($product_id, $byid) = @_;
     $product_id ||= $self->{'product_id'};
+    my $idfield = $byid ? 'id' : 'name';
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT name AS id, name 
+            "SELECT DISTINCT $idfield AS id, name 
                FROM test_case_categories
               WHERE product_id IN($product_id)
            ORDER BY name",
@@ -438,11 +440,12 @@ is not specified, use the plan product.
 sub get_product_components {
 #TODO: 2.22 use product.pm
     my $self = shift;
-    my ($product_id) = @_;
+    my ($product_id, $byid) = @_;
     $product_id ||= $self->{'product_id'};
+    my $idfield = $byid ? 'id' : 'name'; 
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT name AS id, name 
+            "SELECT DISTINCT $idfield AS id, name 
                FROM components
               WHERE product_id IN($product_id)
            ORDER BY name",
@@ -461,11 +464,12 @@ is not specified, use the plan product.
 sub get_product_environments {
 #TODO: 2.22 use product.pm
     my $self = shift;
-    my ($product_id) = @_;
+    my ($product_id, $byid) = @_;
     $product_id ||= $self->{'product_id'};
+    my $idfield = $byid ? 'id' : 'name';
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT name AS id, name 
+            "SELECT DISTINCT $idfield AS id, name 
                FROM test_environments
               WHERE product_id IN($product_id)
            ORDER BY name",
