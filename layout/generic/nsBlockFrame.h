@@ -572,6 +572,12 @@ protected:
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
 
+  /**
+   * Function that should be called whenever the parent of this frame
+   * changes, after mParent is set.
+   */
+  void ParentChanged();
+
   //----------------------------------------
 
 public:

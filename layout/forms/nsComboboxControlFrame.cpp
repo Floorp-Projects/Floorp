@@ -1869,7 +1869,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   }
 
   // Start by by creating our anonymous block frame
-  mDisplayFrame = NS_NewBlockFrame(shell, styleContext, NS_BLOCK_SPACE_MGR);
+  mDisplayFrame = NS_NewBlockFrame(shell, styleContext);
   if (NS_UNLIKELY(!mDisplayFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
