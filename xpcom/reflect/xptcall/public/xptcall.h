@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,27 +46,6 @@
 #include "nsISupports.h"
 #include "xpt_struct.h"
 #include "xptinfo.h"
-#include "nsIInterfaceInfo.h"
-
-/***************************************************************************/
-/*
- * The linkage of XPTC API functions differs depending on whether the file is
- * used within the XPTC library or not.  Any source file within the XPTC
- * library should define EXPORT_XPTC_API whereas any client of the library
- * should not.
- */
-#ifdef EXPORT_XPTC_API
-# define XPTC_PUBLIC_API(t)   PR_IMPLEMENT(t)
-# define XPTC_PUBLIC_DATA(t)  PR_IMPLEMENT_DATA(t)
-# define XPTC_EXPORT          NS_EXPORT
-#else
-# define XPTC_PUBLIC_API(t)   NS_IMPORT t
-# define XPTC_PUBLIC_DATA(t)  NS_IMPORT t
-# define XPTC_EXPORT          NS_IMPORT
-#endif
-#define XPTC_FRIEND_API(t)    XPTC_PUBLIC_API(t)
-#define XPTC_FRIEND_DATA(t)   XPTC_PUBLIC_DATA(t)
-/***************************************************************************/
 
 struct nsXPTCMiniVariant
 {
@@ -174,49 +154,48 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     }
 };
 
-/***************************************************************************/
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
-
-class XPTC_EXPORT nsXPTCStubBase : public nsISupports
+class nsIXPTCProxy : public nsISupports
 {
 public:
-    // We are going to implement this to force the compiler to generate a 
-    // vtbl for this class. Since this is overridden in the inheriting class
-    // we expect it to never be called. 
-    // *This is needed by the Irix implementation.*
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-    // Include generated vtbl stub declarations.
-    // These are virtual and *also* implemented by this class..
-#include "xptcstubsdecl.inc"
-
-    // The following methods must be provided by inheritor of this class.
-
-    // return a refcounted pointer to the InterfaceInfo for this object
-    // NOTE: on some platforms this MUST not fail or we crash!
-    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
-
-    // call this method and return result
-    NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                          const nsXPTMethodInfo* info,
-                          nsXPTCMiniVariant* params) = 0;
+    NS_IMETHOD CallMethod(PRUint16 aMethodIndex,
+                          const XPTMethodDescriptor *aInfo,
+                          nsXPTCMiniVariant *aParams) = 0;
 };
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
+/**
+ * This is a typedef to avoid confusion between the canonical
+ * nsISupports* that provides object identity and an interface pointer
+ * for inheriting interfaces that aren't known at compile-time.
+ */
+typedef nsISupports nsISomeInterface;
 
-PR_BEGIN_EXTERN_C
+/**
+ * Get a proxy object to implement the specified interface.
+ *
+ * @param aIID    The IID of the interface to implement.
+ * @param aOuter  An object to receive method calls from the proxy object.
+ *                The stub forwards QueryInterface/AddRef/Release to the
+ *                outer object. The proxy object does not hold a reference to
+ *                the outer object; it is the caller's responsibility to
+ *                ensure that this pointer remains valid until the stub has
+ *                been destroyed.
+ * @param aStub   Out parameter for the new proxy object. The object is
+ *                not addrefed. The object never destroys itself. It must be
+ *                explicitly destroyed by calling
+ *                NS_DestroyXPTCallStub when it is no longer needed.
+ */
+XPCOM_API(nsresult)
+NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
+                  nsISomeInterface* *aStub);
 
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params);
+/**
+ * Destroys an XPTCall stub previously created with NS_GetXPTCallStub.
+ */
+XPCOM_API(void)
+NS_DestroyXPTCallStub(nsISomeInterface* aStub);
 
-// Used to force linking of these obj for the static library into the dll
-extern void xptc_dummy();
-extern void xptc_dummy2();
-
-PR_END_EXTERN_C
+XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params);
 
 #endif /* xptcall_h___ */

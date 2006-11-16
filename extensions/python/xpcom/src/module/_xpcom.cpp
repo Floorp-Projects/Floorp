@@ -144,7 +144,7 @@ PyXPCOMMethod_XPTI_GetInterfaceInfoManager(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-PyXPCOMMethod_XPTC_InvokeByIndex(PyObject *self, PyObject *args)
+PyXPCOMMethod_NS_InvokeByIndex(PyObject *self, PyObject *args)
 {
 	PyObject *obIS, *obParams;
 	nsCOMPtr<nsISupports> pis;
@@ -182,7 +182,7 @@ PyXPCOMMethod_XPTC_InvokeByIndex(PyObject *self, PyObject *args)
 
 	nsresult r;
 	Py_BEGIN_ALLOW_THREADS;
-	r = XPTC_InvokeByIndex(pis, index, arg_helper.m_num_array, arg_helper.m_var_array);
+	r = NS_InvokeByIndex(pis, index, arg_helper.m_num_array, arg_helper.m_var_array);
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(r) )
 		return PyXPCOM_BuildPyException(r);
@@ -435,7 +435,7 @@ static struct PyMethodDef xpcom_methods[]=
 	{"GetComponentManager", PyXPCOMMethod_GetComponentManager, 1},
 	{"GetComponentRegistrar", PyXPCOMMethod_GetComponentRegistrar, 1},
 	{"XPTI_GetInterfaceInfoManager", PyXPCOMMethod_XPTI_GetInterfaceInfoManager, 1},
-	{"XPTC_InvokeByIndex", PyXPCOMMethod_XPTC_InvokeByIndex, 1},
+	{"NS_InvokeByIndex", PyXPCOMMethod_XPTC_InvokeByIndex, 1},
 	{"GetServiceManager", PyXPCOMMethod_GetServiceManager, 1},
 	{"IID", PyXPCOMMethod_IID, 1}, // IID is wrong - deprecated - not just IID, but CID, etc. 
 	{"ID", PyXPCOMMethod_IID, 1}, // This is the official name.
