@@ -100,6 +100,23 @@ sub map_TCDB_users
 }
 
 #
+# Peek ahead one character in the file.
+#
+sub peek(*)
+{
+	my $fh = shift;
+	
+	# Get current position in file.
+	my $position = tell $fh;
+	# Read next character.
+	read(CSVINPUT, my $next_char, 1);
+	# Restore position in file.
+	seek(CSVINPUT,$position,0);
+	
+	return $next_char;
+}
+
+#
 # Print the fields.  
 #
 # In each field need to change '\"' to '"' and change all '"' to '""'.  The last field
@@ -180,7 +197,6 @@ sub remove_field_list
 		s/\351/&#232;/g;					# small letter e with grave
 		s/\364/&#244;/g;					# small letter o with circumflex
 		
-  		
 		$line_count += 1;
 		if ( $line_count == 1 )
 		{
@@ -212,14 +228,10 @@ sub remove_field_list
 			next;
 		}
 		
-		# Two TCDB CSV options that are not handled correctly:
-		#	1) A unescaped double quote in a field that appears at the end of the line is assumed
-		#	   to be the end of the field although it is suppose to be part of the field.  This 
-		#	   could probably be detected by reading the next line and seeing if it begins with a
-		#      double quote.  If it does then the double quote was the end of the field.
-		#   2) If a field contains some thing like:
-		#	   '2. Click "Roles and Tasks " , "Storage" , click "Volumes" and' the "," will be 
-		# 	   seen as field seperator and not as part of the field.
+		# TCDB CSV options that are not handled correctly:
+		#   If a field contains some thing like:
+		#	   '2. Click "Roles and Tasks " , "Storage" , click "Volumes" and''
+		#   the "," will be seen as field seperator and not as part of the field.
 
 		# Add the current line onto the line to parse.
 		$parse_line .= $_;
@@ -319,8 +331,11 @@ sub remove_field_list
 			$index++;
 		}
 		
+		my $next_char = peek(*CSVINPUT);
+		my $looks_like_end_of_csv_line = $next_char eq "\"" || $next_char eq "";
+		
 		# Do we have all the fields we need?
-		if ( ($#fields == ($number_of_fields-1)) && (! $in_quote_field) )
+		if ( ($#fields == ($number_of_fields-1)) && (! $in_quote_field) && $looks_like_end_of_csv_line )
 		{
 			print_tcdb_fields(\*CSVWORK,\@fields,$testcasenamefield);
 			$parse_line = "";
@@ -328,7 +343,7 @@ sub remove_field_list
 		}
 		# Is this the TCDB export error?  We have one less field than needed and the next line begins with a
 		# double quote.
-		elsif ( ($#fields == ($number_of_fields-2)) && (! $in_quote_field ) )
+		elsif ( ($#fields == ($number_of_fields-2)) && (! $in_quote_field ) && $looks_like_end_of_csv_line )
 		{
 			if ( $_ =~ m/^"/ )
 			{

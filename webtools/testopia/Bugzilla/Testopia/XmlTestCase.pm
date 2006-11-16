@@ -88,13 +88,26 @@ sub add_tag()
 	push @{$self->tags}, $tag;
 }
 
+# Temporary copy of Bugzilla::Testopia::TestPlan->get_available_products().  Remove when bug 220134 is fixed.
+sub TEMP_get_product_components {
+    my ($product_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+            "SELECT DISTINCT id, name 
+               FROM components
+              WHERE product_id IN($product_id)
+           ORDER BY name",
+           {'Slice'=>{}});
+           
+    return $ref;
+}
 sub add_component()
 {
 	my ($self,$component,$component_product) = @_;
 	my $component_id = "";
 	my $product_id = "";
 	
-	return "Component $component needs to provide a product" if ( $component_product eq "" );
+	return "Component $component needs to provide a product." if ( $component_product eq "" );
 	
 	# Find the product identifier.
 	my $products_ref = Bugzilla::Testopia::TestPlan->get_available_products();
@@ -106,10 +119,10 @@ sub add_component()
 			last;
 		}
 	}
-	return "Cannot find product $component_product for component $component" if ( $product_id eq "" );
+	return "Cannot find product $component_product for component $component." if ( $product_id eq "" );
 	
 	# Find the component identifier for the product's componet
-	my $components_ref = Bugzilla::Testopia::TestPlan->get_product_components($product_id);
+	my $components_ref = TEMP_get_product_components($product_id);
 	foreach my $product_component ( @$components_ref )
 	{
 		if ( $component eq $product_component->{name} )
@@ -118,7 +131,7 @@ sub add_component()
 			last;
 		}
 	}
-	return "Product $component_product does not have a component named $component" if ( $component_id eq "" );	
+	return "Product $component_product does not have a component named $component." if ( $component_id eq "" );	
 	
 	# Save the component identifier for this Test Case.		
 	push @{$self->component_ids}, $component_id;
