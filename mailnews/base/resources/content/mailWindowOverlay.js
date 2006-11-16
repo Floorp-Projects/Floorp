@@ -102,8 +102,7 @@ var disallow_classes_no_html = 1; /* the user preference,
      change during runtime other than through the MsgBody*() functions below.*/
 
 // Disable the File | New | Account... menu item if the account preference is locked.
-// Two other affected areas are the account central and the account manager
-// dialogs.
+// Two other affected areas are the account central and the account manager dialogs.
 function menu_new_init()
 {
   if (!gMessengerBundle)
@@ -413,7 +412,7 @@ function InitMessageMenu()
   }
 
   // Disable the Move and Copy menus if there are no messages selected.
-  // Disable the Move menu if we can't delete msgs from the folder.
+  // Disable the Move menu if we can't delete messages from the folder.
   var moveMenu = document.getElementById("moveMenu");
   var msgFolder = GetLoadedMsgFolder();
   if(moveMenu)
