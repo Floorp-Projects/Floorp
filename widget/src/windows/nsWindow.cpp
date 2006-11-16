@@ -4636,10 +4636,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       DispatchPendingEvents();
       break;
 
-    case WM_CANCELMODE:
-      CaptureMouse(PR_FALSE);
-      break;
-
 #ifndef WINCE
     case WM_MOUSELEAVE:
     {
