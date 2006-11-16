@@ -65,9 +65,6 @@ extern BOOL                gSomeMenuBarPainted;
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
-// call getHiddenWindowNativeMenu, don't use this directly
-static nsIMenuBar* gHiddenWindowMenuBar;
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 
@@ -157,9 +154,6 @@ nsCocoaWindow::~nsCocoaWindow()
 
 static nsIMenuBar* GetHiddenWindowMenuBar()
 {
-  if (gHiddenWindowMenuBar)
-    return gHiddenWindowMenuBar;
-  
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (!appShell) {
     NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
@@ -169,7 +163,7 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
   nsCOMPtr<nsIXULWindow> hiddenWindow;
   appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
   if (!hiddenWindow) {
-    NS_WARNING("Couldn't get hidden window from appshell");
+    // Don't warn, this happens during shutdown, bug 358607.
     return nsnull;
   }
   
@@ -187,13 +181,7 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
   }
   
   nsIWidget* hiddenWindowWidgetNoCOMPtr = hiddenWindowWidget;
-  nsIMenuBar* geckoMenuBar = NS_STATIC_CAST(nsCocoaWindow*, hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
-  
-  if (geckoMenuBar) {
-    gHiddenWindowMenuBar = geckoMenuBar;
-  }
-  
-  return gHiddenWindowMenuBar;
+  return NS_STATIC_CAST(nsCocoaWindow*, hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
 }
 
 
