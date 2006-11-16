@@ -1155,9 +1155,10 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
     
     nsPresContext* presContext = GetPresContext();
     nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
+    nsIFrame* topFrame = nsnull;
     fc->CreateListBoxContent(presContext, this, nsnull, startContent,
-                             &mTopFrame, isAppend, PR_FALSE, nsnull);
-    
+                             &topFrame, isAppend, PR_FALSE, nsnull);
+    mTopFrame = topFrame;
     if (mTopFrame) {
       if (aCreated)
         *aCreated = PR_TRUE;
