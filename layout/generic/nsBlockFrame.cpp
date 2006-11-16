@@ -6934,9 +6934,8 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  if (IsBoxWrapped())
-    mState |= NS_BLOCK_SPACE_MGR;
-
+  ParentChanged();
+  
   return rv;
 }
 
@@ -7324,11 +7323,8 @@ NS_IMETHODIMP
 nsBlockFrame::SetParent(const nsIFrame* aParent)
 {
   nsresult rv = nsBlockFrameSuper::SetParent(aParent);
-  if (IsBoxWrapped())
-    mState |= NS_BLOCK_SPACE_MGR;
 
-  // XXX should we clear NS_BLOCK_SPACE_MGR if we were the child of a box
-  // but no longer are?
+  ParentChanged();
 
   return rv;
 }
@@ -7420,3 +7416,25 @@ nsBlockFrame::GetDepth() const
   return depth;
 }
 #endif
+
+void
+nsBlockFrame::ParentChanged()
+{
+  if (mParent && !mParent->IsFloatContainingBlock()) {
+    AddStateBits(NS_BLOCK_SPACE_MGR);
+
+    // columnated blocks are block formatting context roots, but not margin
+    // roots.  All other blocks that are not kids of blocks are margin roots.
+    if (mParent->GetType() != nsLayoutAtoms::columnSetFrame) {
+      AddStateBits(NS_BLOCK_MARGIN_ROOT);
+    }
+  }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(!IsBoxWrapped(), "A box is a float containing block?");
+  }
+#endif
+
+  // XXX should we clear NS_BLOCK_SPACE_MGR bit if we had a non-block parent
+  // but now have a block?
+}
