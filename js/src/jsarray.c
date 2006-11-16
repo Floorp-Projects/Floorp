@@ -1158,7 +1158,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      */
     mergesort_tmp = vec + newlen;
     memset(mergesort_tmp, 0, newlen * sizeof(jsval));
-    tvr.count += newlen;
+    tvr.count = newlen * 2;
 
     /* Here len == 2 * (newlen + undefs + number_of_holes). */
     ca.context = cx;
