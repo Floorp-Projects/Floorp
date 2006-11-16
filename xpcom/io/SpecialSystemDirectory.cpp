@@ -111,6 +111,7 @@
 #endif
 #endif
 
+#ifdef XP_WIN
 typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
                                                DWORD dwFlags,
                                                HANDLE hToken,
@@ -119,6 +120,7 @@ typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
 static nsGetKnownFolderPath gGetKnownFolderPath = NULL;
 
 static HINSTANCE gShell32DLLInst = NULL;
+#endif
 
 NS_COM void StartupSpecialSystemDirectory()
 {
