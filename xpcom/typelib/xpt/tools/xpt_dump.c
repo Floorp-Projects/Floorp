@@ -41,16 +41,10 @@
 
 #include "xpt_xdr.h"
 #include <stdio.h>
-#ifdef XP_MAC
-#include <stat.h>
-#include <StandardFile.h>
-#include "FullPath.h"
-#else
 #ifdef XP_OS2_EMX
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 #include "prprf.h"
@@ -141,16 +135,6 @@ xpt_dump_usage(char *argv[]) {
             "       -v verbose mode\n", argv[0]);
 }
 
-#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
-
-#define main xptdump_main
-int xptdump_main(int argc, char *argv[]);
-
-#define get_file_length mac_get_file_length
-extern size_t mac_get_file_length(const char* filename);
-
-#else /* !(XP_MAC && XPIDL_PLUGIN) */
-
 static size_t get_file_length(const char* filename)
 {
     struct stat file_stat;
@@ -160,8 +144,6 @@ static size_t get_file_length(const char* filename)
     }
     return file_stat.st_size;
 }
-
-#endif /* !(XP_MAC && XPIDL_PLUGIN) */
 
 int 
 main(int argc, char **argv)

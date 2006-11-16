@@ -61,7 +61,7 @@ void NS_ShutdownLocalFile()
     nsLocalFile::GlobalShutdown();
 }
 
-#if !defined(XP_MAC) && !defined(XP_MACOSX) && !defined(XP_WIN)
+#if !defined(XP_MACOSX) && !defined(XP_WIN)
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsILocalFile *aFile)
 {
@@ -75,13 +75,8 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
 }
 #endif
 
-#if defined(XP_MAC)
-#define kMaxFilenameLength 31
-#define kMaxExtensionLength 10
-#else
 #define kMaxFilenameLength 255
 #define kMaxExtensionLength 100
-#endif  
 // requirement: kMaxExtensionLength < kMaxFilenameLength - 4
 
 NS_IMETHODIMP
@@ -125,19 +120,12 @@ nsLocalFile::CreateUnique(PRUint32 type, PRUint32 attributes)
     return NS_ERROR_FILE_TOO_BIG;
 }
 
-#if defined(XP_MAC)
-static const PRUnichar kPathSeparatorChar       = ':';
-#elif defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
 static const PRUnichar kPathSeparatorChar       = '\\';
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 static const PRUnichar kPathSeparatorChar       = '/';
 #else
 #error Need to define file path separator for your platform
-#endif
-
-#if defined(XP_MAC)
-static const char kSlashStr[] = "/";
-static const char kESCSlashStr[] = "%2F";
 #endif
 
 static PRInt32 SplitPath(PRUnichar *path, PRUnichar **nodeArray, PRInt32 arrayLen)
@@ -212,9 +200,6 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
       _retval.AppendLiteral("../");
     for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {
       NS_ConvertUTF16toUTF8 nodeStr(thisNodes[nodeIndex]);
-#ifdef XP_MAC
-      nodeStr.ReplaceSubstring(kSlashStr, kESCSlashStr);
-#endif
       _retval.Append(nodeStr);
       if (nodeIndex + 1 < thisNodeCnt)
         _retval.Append('/');
@@ -261,13 +246,7 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
     nodeBegin = nodeEnd = pos;
     while (nodeEnd != strEnd) {
       FindCharInReadable('/', nodeEnd, strEnd);
-#ifdef XP_MAC
-      nsCAutoString nodeString(Substring(nodeBegin, nodeEnd));      
-      nodeString.ReplaceSubstring(kESCSlashStr, kSlashStr);
-      targetFile->Append(NS_ConvertUTF8toUTF16(nodeString));
-#else
       targetFile->Append(NS_ConvertUTF8toUTF16(Substring(nodeBegin, nodeEnd)));
-#endif
       if (nodeEnd != strEnd) // If there's more left in the string, inc over the '/' nodeEnd is on.
         ++nodeEnd;
       nodeBegin = nodeEnd;

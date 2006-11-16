@@ -234,7 +234,7 @@ interface nsIFile : nsISupports
      *  strings are not guaranteed to be a usable path to pass to
      *  NSPR or the C stdlib.  There are problems that affect
      *  platforms on which a path does not fully specify a file
-     *  because two volumes can have the same name (e.g., XP_MAC).
+     *  because two volumes can have the same name (e.g., mac).
      *  This is solved by holding "private", native data in the
      *  nsIFile implementation.  This native data is lost when
      *  you convert to a string.
