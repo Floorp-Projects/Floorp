@@ -143,7 +143,7 @@ protected:
   nscoord mStringWidth;
 
   // frame markers
-  nsIFrame* mTopFrame;
+  nsWeakFrame mTopFrame;
   nsIFrame* mBottomFrame;
   nsIFrame* mLinkupFrame;
   PRInt32 mRowsToPrepend;
