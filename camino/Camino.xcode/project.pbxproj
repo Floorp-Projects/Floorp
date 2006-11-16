@@ -3201,6 +3201,7 @@
 //294
 		29B97313FDCFA39411CA2CEA = {
 			buildSettings = {
+				GCC_C_LANGUAGE_STANDARD = c99;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
 			};
