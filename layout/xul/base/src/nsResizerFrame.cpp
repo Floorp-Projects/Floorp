@@ -97,28 +97,34 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
   switch (aEvent->message) {
 
-   case NS_MOUSE_LEFT_BUTTON_DOWN: {
+   case NS_MOUSE_BUTTON_DOWN: {
+       if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+             nsMouseEvent::eLeftButton)
+       {
+         // we're tracking.
+         mTrackingMouseMove = PR_TRUE;
 
-       // we're tracking.
-       mTrackingMouseMove = PR_TRUE;
+         // start capture.
+         aEvent->widget->CaptureMouse(PR_TRUE);
+         CaptureMouseEvents(aPresContext,PR_TRUE);
 
-       // start capture.
-       aEvent->widget->CaptureMouse(PR_TRUE);
-       CaptureMouseEvents(aPresContext,PR_TRUE);
+         // remember current mouse coordinates.
+         mLastPoint = aEvent->refPoint;
+         aEvent->widget->GetScreenBounds(mWidgetRect);
 
-       // remember current mouse coordinates.
-       mLastPoint = aEvent->refPoint;
-       aEvent->widget->GetScreenBounds(mWidgetRect);
-
-       *aEventStatus = nsEventStatus_eConsumeNoDefault;
-       doDefault = PR_FALSE;
+         *aEventStatus = nsEventStatus_eConsumeNoDefault;
+         doDefault = PR_FALSE;
+       }
      }
      break;
 
 
-   case NS_MOUSE_LEFT_BUTTON_UP: {
+   case NS_MOUSE_BUTTON_UP: {
 
-       if(mTrackingMouseMove)
+       if(mTrackingMouseMove && aEvent->eventStructType == NS_MOUSE_EVENT &&
+          NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+            nsMouseEvent::eLeftButton)
        {
          // we're done tracking.
          mTrackingMouseMove = PR_FALSE;
@@ -227,8 +233,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
 
 
-    case NS_MOUSE_LEFT_CLICK:
-      MouseClicked(aPresContext, aEvent);
+    case NS_MOUSE_CLICK:
+      if (NS_IS_MOUSE_LEFT_CLICK(aEvent))
+      {
+        MouseClicked(aPresContext, aEvent);
+      }
       break;
   }
 

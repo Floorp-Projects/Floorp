@@ -264,23 +264,28 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   nsresult rv = NS_OK;
   if (mIsLink && nsEventStatus_eIgnore == aVisitor.mEventStatus) {
-    nsIDocument *document = GetCurrentDoc();
     switch (aVisitor.mEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_BUTTON_DOWN:
       {
-        if (aVisitor.mPresContext) {
-          aVisitor.mPresContext->EventStateManager()->
-            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        if (aVisitor.mPresContext &&
+            aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
+          if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                nsMouseEvent::eLeftButton) {
+            aVisitor.mPresContext->EventStateManager()->
+              SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+          } else if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                       nsMouseEvent::eRightButton) {
+            // XXX Bring up a contextual menu provided by the application
+          }
         }
       }
       break;
 
-    case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_CLICK:
       {
         if (nsEventStatus_eConsumeNoDefault != aVisitor.mEventStatus &&
-            aVisitor.mPresContext) {
+            aVisitor.mPresContext && NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           nsInputEvent* inputEvent =
             NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
           if (inputEvent->isControl || inputEvent->isMeta ||
@@ -311,10 +316,6 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
         }
       }
-      break;
-
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      // XXX Bring up a contextual menu provided by the application
       break;
 
     case NS_KEY_PRESS:

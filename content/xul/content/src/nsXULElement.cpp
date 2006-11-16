@@ -2178,11 +2178,11 @@ nsXULElement::Click()
 
             PRBool isCallerChrome = nsContentUtils::IsCallerChrome();
 
-            nsMouseEvent eventDown(isCallerChrome, NS_MOUSE_LEFT_BUTTON_DOWN,
+            nsMouseEvent eventDown(isCallerChrome, NS_MOUSE_BUTTON_DOWN,
                                    nsnull, nsMouseEvent::eReal);
-            nsMouseEvent eventUp(isCallerChrome, NS_MOUSE_LEFT_BUTTON_UP,
+            nsMouseEvent eventUp(isCallerChrome, NS_MOUSE_BUTTON_UP,
                                  nsnull, nsMouseEvent::eReal);
-            nsMouseEvent eventClick(isCallerChrome, NS_MOUSE_LEFT_CLICK, nsnull,
+            nsMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nsnull,
                                     nsMouseEvent::eReal);
 
             // send mouse down

@@ -2467,7 +2467,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_LEFT_CLICK,
+  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_CLICK,
                      aSourceEvent->widget, nsMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;

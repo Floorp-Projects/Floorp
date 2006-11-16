@@ -1481,40 +1481,44 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
     // specified.
     if (hrefURI) {
       switch (aVisitor.mEvent->message) {
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         {
-          // don't make the link grab the focus if there is no link handler
-          nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
-          nsIDocument *document = GetCurrentDoc();
-          if (handler && document && ShouldFocus(this)) {
-            // If the window is not active, do not allow the focus to bring the
-            // window to the front.  We update the focus controller, but do
-            // nothing else.
-            nsPIDOMWindow *win = document->GetWindow();
-            if (win) {
-              nsIFocusController *focusController =
-                win->GetRootFocusController();
-              if (focusController) {
-                PRBool isActive = PR_FALSE;
-                focusController->GetActive(&isActive);
-                if (!isActive) {
-                  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-                  if(domElement)
-                    focusController->SetFocusedElement(domElement);
-                  break;
+          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+              NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                nsMouseEvent::eLeftButton) {
+            // don't make the link grab the focus if there is no link handler
+            nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
+            nsIDocument *document = GetCurrentDoc();
+            if (handler && document && ShouldFocus(this)) {
+              // If the window is not active, do not allow the focus to bring the
+              // window to the front.  We update the focus controller, but do
+              // nothing else.
+              nsPIDOMWindow *win = document->GetWindow();
+              if (win) {
+                nsIFocusController *focusController =
+                  win->GetRootFocusController();
+                if (focusController) {
+                  PRBool isActive = PR_FALSE;
+                  focusController->GetActive(&isActive);
+                  if (!isActive) {
+                    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+                    if(domElement)
+                      focusController->SetFocusedElement(domElement);
+                    break;
+                  }
                 }
               }
+  
+              aVisitor.mPresContext->EventStateManager()->
+                SetContentState(this,
+                                NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
             }
-
-            aVisitor.mPresContext->EventStateManager()->
-              SetContentState(this,
-                              NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           }
         }
         break;
 
-      case NS_MOUSE_LEFT_CLICK:
-        if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
+      case NS_MOUSE_CLICK:
+        if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           nsInputEvent* inputEvent =
             NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
           if (inputEvent->isControl || inputEvent->isMeta ||

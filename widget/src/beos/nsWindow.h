@@ -189,7 +189,8 @@ public:
 	virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, 
 	                                           nsPoint aPoint, 
 	                                           PRUint32 clicks, 
-	                                           PRUint32 mod);
+	                                           PRUint32 mod,
+	                                           PRUint16 aButton = nsMouseEvent::eLeftButton);
 
 
 	void                   InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);

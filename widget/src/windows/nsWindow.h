@@ -230,8 +230,8 @@ public:
   NS_IMETHOD GetIMEEnabled(PRBool* aState);
   NS_IMETHOD CancelIMEComposition();
 
-  PRBool IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam);
-  PRBool IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos);
+  PRBool IMEMouseHandling(PRInt32 aAction, LPARAM lParam);
+  PRBool IMECompositionHitTest(POINT * ptPos);
   PRBool HandleMouseActionOfIME(PRInt32 aAction, POINT* ptPos);
   void GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITIONFORM *cpForm);
 
@@ -241,7 +241,10 @@ public:
   HWND                    GetWindowHandle() { return mWnd; }
   WNDPROC                 GetPrevWindowProc() { return mPrevWndProc; }
 
-  virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam);
+  virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
+                                             LPARAM lParam,
+                                             PRBool aIsContextMenuKey = PR_FALSE,
+                                             PRInt16 aButton = nsMouseEvent::eLeftButton);
 #ifdef ACCESSIBILITY
   virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
   already_AddRefed<nsIAccessible> GetRootAccessible();
@@ -550,7 +553,9 @@ class ChildWindow : public nsWindow {
 
 public:
   ChildWindow() {}
-  PRBool DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam);
+  PRBool DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam,
+                            PRBool aIsContextMenuKey = PR_FALSE,
+                            PRInt16 aButton = nsMouseEvent::eLeftButton);
 
 protected:
   virtual DWORD WindowStyle();

@@ -241,7 +241,9 @@ keyEventToContextMenuEvent(const nsKeyEvent* aKeyEvent,
                            nsMouseEvent* aCMEvent)
 {
     memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
-    aCMEvent->message = NS_CONTEXTMENU_KEY;
+    aCMEvent->message = NS_CONTEXTMENU;
+    aCMEvent->button = nsMouseEvent::eRightButton;
+    aCMEvent->context = nsMouseEvent::eContextMenuKey;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
     aCMEvent->clickCount = 0;
@@ -870,21 +872,22 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
 {
     //qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
 //     backTrace();
-    PRUint32      eventType;
+    PRInt16 button;
 
     switch (e->button()) {
     case Qt::MidButton:
-        eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+        button = nsMouseEvent::eMiddleButton;
         break;
     case Qt::RightButton:
-        eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+        button = nsMouseEvent::eRightButton;
         break;
     default:
-        eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+        button = nsMouseEvent::eLeftButton;
         break;
     }
 
-    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
+    event.button = button;
 
     InitMouseEvent(&event, e, 1);
 
@@ -892,10 +895,11 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
     DispatchEvent(&event, status);
 
     // right menu click on linux should also pop up a context menu
-    if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+    if (button == nsMouseEvent::eRightButton) {
         nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
         InitMouseEvent(&contextMenuEvent, e, 1);
+        contextMenuEvent.button = button;
         DispatchEvent(&contextMenuEvent, status);
     }
 
@@ -906,21 +910,22 @@ bool
 nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     //qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
-    PRUint32      eventType;
+    PRInt16 button;
 
     switch (e->button()) {
     case Qt::MidButton:
-        eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+        button = nsMouseEvent::eMiddleButton;
         break;
     case Qt::RightButton:
-        eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+        button = nsMouseEvent::eRightButton;
         break;
     default:
-        eventType = NS_MOUSE_LEFT_BUTTON_UP;
+        button = nsMouseEvent::eLeftButton;
         break;
     }
 
-    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
+    event.button = button;
 
     InitMouseEvent(&event, e, 1);
 
@@ -933,23 +938,24 @@ nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
 bool
 nsCommonWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
-    PRUint32      eventType;
+    PRInt16 button;
 
     switch (e->button()) {
     case Qt::MidButton:
-        eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+        button = nsMouseEvent::eMiddleButton;
         break;
     case Qt::RightButton:
-        eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+        button = nsMouseEvent::eRightButton;
         break;
     default:
-        eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+        button = nsMouseEvent::eLeftButton;
         break;
     }
 
-    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
 
     InitMouseEvent(&event, e, 2);
+    event.button = button;
     //pressed
     nsEventStatus status;
     DispatchEvent(&event, status);

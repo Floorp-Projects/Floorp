@@ -1805,15 +1805,11 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
 
       } break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         result = ConvertStatus(mMouseListener->MousePressed(aEvent));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
         result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;

@@ -1828,16 +1828,14 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsSwitchToUIThread::BTNCLICK :
 		{
-			NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+			NS_ASSERTION(info->nArgs == 6, "Wrong number of arguments to CallMethod");
 			if (!mEnabled)
 				return false;
 			// close popup when clicked outside of the popup window
 			uint32 eventID = ((int32 *)info->args)[0];
 			PRBool rollup = PR_FALSE;
 
-			if ((eventID == NS_MOUSE_LEFT_BUTTON_DOWN ||
-			        eventID == NS_MOUSE_RIGHT_BUTTON_DOWN ||
-			        eventID == NS_MOUSE_MIDDLE_BUTTON_DOWN) &&
+			if (eventID == NS_MOUSE_BUTTON_DOWN &&
 			        mView && mView->LockLooper())
 			{
 				BPoint p(((int32 *)info->args)[1], ((int32 *)info->args)[2]);
@@ -1851,14 +1849,17 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			DispatchMouseEvent(((int32 *)info->args)[0],
 			                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
 			                   ((int32 *)info->args)[3],
-			                   ((int32 *)info->args)[4]);
+			                   ((int32 *)info->args)[4],
+			                   ((int32 *)info->args)[5]);
 
-			if (((int32 *)info->args)[0] == NS_MOUSE_RIGHT_BUTTON_DOWN)
+			if (((int32 *)info->args)[0] == NS_MOUSE_BUTTON_DOWN &&
+			    ((int32 *)info->args)[5] == nsMouseEvent::eRightButton)
 			{
 				DispatchMouseEvent (NS_CONTEXTMENU,
 				                    nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
 				                    ((int32 *)info->args)[3],
-				                    ((int32 *)info->args)[4]);
+				                    ((int32 *)info->args)[4],
+				                    ((int32 *)info->args)[5]);
 			}
 		}
 		break;
@@ -2658,7 +2659,8 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint32 clicks, PRUint32 mod)
+PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint32 clicks, PRUint32 mod,
+                                    PRUint16 aButton)
 {
 	PRBool result = PR_FALSE;
 	if (nsnull != mEventCallback || nsnull != mMouseListener)
@@ -2670,6 +2672,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 		event.isAlt     = mod & B_COMMAND_KEY;
 		event.isMeta     = mod & B_OPTION_KEY;
 		event.clickCount = clicks;
+		event.button = aButton;
 
 		// call the event callback
 		if (nsnull != mEventCallback)
@@ -2686,15 +2689,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 				result = ConvertStatus(mMouseListener->MouseMoved(event));
 				break;
 
-			case NS_MOUSE_LEFT_BUTTON_DOWN :
-			case NS_MOUSE_MIDDLE_BUTTON_DOWN :
-			case NS_MOUSE_RIGHT_BUTTON_DOWN :
+			case NS_MOUSE_BUTTON_DOWN :
 				result = ConvertStatus(mMouseListener->MousePressed(event));
 				break;
 
-			case NS_MOUSE_LEFT_BUTTON_UP :
-			case NS_MOUSE_MIDDLE_BUTTON_UP :
-			case NS_MOUSE_RIGHT_BUTTON_UP :
+			case NS_MOUSE_BUTTON_UP :
 				result = ConvertStatus(mMouseListener->MouseReleased(event)) && ConvertStatus(mMouseListener->MouseClicked(event));
 				break;
 			}
@@ -3046,17 +3045,19 @@ void nsViewBeOS::MouseDown(BPoint point)
 	if (t == NULL)
 		return;
 
-	int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_DOWN :
-	           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_DOWN :
-	            NS_MOUSE_MIDDLE_BUTTON_DOWN);
-	uint32	args[5];
-	args[0] = ev;
+	PRUint16 eventButton =
+	  (buttons & B_PRIMARY_MOUSE_BUTTON) ? nsMouseEvent::eLeftButton :
+	    ((buttons & B_SECONDARY_MOUSE_BUTTON) ? nsMouseEvent::eRightButton :
+	      nsMouseEvent::eMiddleButton);
+	uint32	args[6];
+	args[0] = NS_MOUSE_BUTTON_DOWN;
 	args[1] = (uint32) point.x;
 	args[2] = (uint32) point.y;
 	args[3] = clicks;
 	args[4] = modifiers();
+	args[5] = eventButton;
 	MethodInfo *info = nsnull;
-	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 5, args)))
+	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 6, args)))
 		t->CallMethodAsync(info);
 	NS_RELEASE(t);
 }
@@ -3129,11 +3130,10 @@ void nsViewBeOS::MouseUp(BPoint point)
 	//To avoid generating extra mouseevents when there is no change in pos.
 	mousePos = point;
 
-	int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_UP :
-	           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_UP :
-	            NS_MOUSE_MIDDLE_BUTTON_UP);
-	            
-	buttons = 0;
+	PRUint16 eventButton =
+	  (buttons & B_PRIMARY_MOUSE_BUTTON) ? nsMouseEvent::eLeftButton :
+	    ((buttons & B_SECONDARY_MOUSE_BUTTON) ? nsMouseEvent::eRightButton :
+	      nsMouseEvent::eMiddleButton);
 	
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	if (w == NULL)
@@ -3143,14 +3143,15 @@ void nsViewBeOS::MouseUp(BPoint point)
 		return;
 
 
-	uint32	args[5];
-	args[0] = ev;
+	uint32	args[6];
+	args[0] = NS_MOUSE_BUTTON_UP;
 	args[1] = (uint32) point.x;
 	args[2] = (int32) point.y;
 	args[3] = 0;
 	args[4] = modifiers();
+	args[5] = eventButton;
 	MethodInfo *info = nsnull;
-	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 5, args)))
+	if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::BTNCLICK, 6, args)))
 		t->CallMethodAsync(info);
 	NS_RELEASE(t);
 }

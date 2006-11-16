@@ -1858,7 +1858,6 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 void
 nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
-    PRUint32      eventType;
     nsEventStatus status;
 
     // If you double click in GDK, it will actually generate a single
@@ -1891,27 +1890,29 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
                          PR_FALSE))
         return;
 
+    PRUint16 domButton;
     switch (aEvent->button) {
     case 2:
-        eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+        domButton = nsMouseEvent::eMiddleButton;
         break;
     case 3:
-        eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+        domButton = nsMouseEvent::eRightButton;
         break;
     default:
-        eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+        domButton = nsMouseEvent::eLeftButton;
         break;
     }
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
-    nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
+    event.button = domButton;
     InitButtonEvent(event, aEvent);
 
     DispatchEvent(&event, status);
 
     // right menu click on linux should also pop up a context menu
-    if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+    if (domButton == nsMouseEvent::eRightButton) {
         nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
         InitButtonEvent(contextMenuEvent, aEvent);
@@ -1922,16 +1923,15 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 void
 nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
-    PRUint32      eventType;
-
+    PRUint16 domButton;
     mLastButtonReleaseTime = aEvent->time;
 
     switch (aEvent->button) {
     case 2:
-        eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+        domButton = nsMouseEvent::eMiddleButton;
         break;
     case 3:
-        eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+        domButton = nsMouseEvent::eRightButton;
         break;
         // don't send events for these types
     case 4:
@@ -1940,11 +1940,12 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         break;
         // default including button 1 is left button up
     default:
-        eventType = NS_MOUSE_LEFT_BUTTON_UP;
+        domButton = nsMouseEvent::eLeftButton;
         break;
     }
 
-    nsMouseEvent  event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
+    event.button = domButton;
     InitButtonEvent(event, aEvent);
 
     nsEventStatus status;
@@ -4707,7 +4708,9 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
 {
     memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
     aCMEvent->eventStructType = NS_MOUSE_EVENT;
-    aCMEvent->message = NS_CONTEXTMENU_KEY;
+    aCMEvent->message = NS_CONTEXTMENU;
+    aCMEvent->context = nsMouseEvent::eContextMenuKey;
+    aCMEvent->button = nsMouseEvent::eRightButton;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
     aCMEvent->clickCount = 0;

@@ -4615,24 +4615,28 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         shrg.dwFlags = SHRG_RETURNCMD;
         if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
         {
-          result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam, lParam);
-          result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam, lParam);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam,
+                                       PR_FALSE, nsMouseEvent::eRightButton);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam,
+                                      PR_FALSE, nsMouseEvent::eRightButton);
           break;
         }
       }
 #endif
       // check whether IME window do mouse operation
-      if (IMEMouseHandling(NS_MOUSE_LEFT_BUTTON_DOWN, IMEMOUSE_LDOWN, lParam))
+      if (IMEMouseHandling(IMEMOUSE_LDOWN, lParam))
         break;
 
-      result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam,
+                                  PR_FALSE, nsMouseEvent::eLeftButton);
       DispatchPendingEvents();
     }
     break;
 
     case WM_LBUTTONUP:
       //RelayMouseEvent(msg,wParam, lParam);
-      result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam,
+                                  PR_FALSE, nsMouseEvent::eLeftButton);
       DispatchPendingEvents();
       break;
 
@@ -4654,60 +4658,68 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       // will be maxlong. Send a different event msg instead.
       PRUint32 msg;
       LPARAM pos;
+      PRBool contextMenukey = PR_FALSE;
+      msg = NS_CONTEXTMENU;
       if (lParam == 0xFFFFFFFF)
       {
-        msg = NS_CONTEXTMENU_KEY;
+        contextMenukey = PR_TRUE;
         pos = lParamToClient(GetMessagePos());
       }
       else
       {
-        msg = NS_CONTEXTMENU;
         pos = lParamToClient(lParam);
       }
-      result = DispatchMouseEvent(msg, wParam, pos);
+      result = DispatchMouseEvent(msg, wParam, pos, contextMenukey);
     }
     break;
 
     case WM_LBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eLeftButton);
       break;
 
     case WM_MBUTTONDOWN:
     {
       // check whether IME window do mouse operation
-      if (IMEMouseHandling(NS_MOUSE_MIDDLE_BUTTON_DOWN, IMEMOUSE_MDOWN, lParam))
+      if (IMEMouseHandling(IMEMOUSE_MDOWN, lParam))
         break;
-      result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eMiddleButton);
       DispatchPendingEvents();
     }
     break;
 
     case WM_MBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eMiddleButton);
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eMiddleButton);
       break;
 
     case WM_RBUTTONDOWN:
     {
       // check whether IME window do mouse operation
-      if (IMEMouseHandling(NS_MOUSE_RIGHT_BUTTON_DOWN, IMEMOUSE_RDOWN, lParam))
+      if (IMEMouseHandling(IMEMOUSE_RDOWN, lParam))
         break;
-      result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eRightButton);
       DispatchPendingEvents();
     }
     break;
 
     case WM_RBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eRightButton);
       DispatchPendingEvents();
       break;
 
     case WM_RBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK, wParam, lParam);
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
+                                  nsMouseEvent::eRightButton);
       break;
 
     case WM_APPCOMMAND:
@@ -5983,7 +5995,9 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam)
+PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
+                                    LPARAM lParam, PRBool aIsContextMenuKey,
+                                    PRInt16 aButton)
 {
   PRBool result = PR_FALSE;
 
@@ -5995,8 +6009,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
   eventPoint.x = GET_X_LPARAM(lParam);
   eventPoint.y = GET_Y_LPARAM(lParam);
 
-  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal);
-  if (aEventType == NS_CONTEXTMENU_KEY) {
+  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal,
+                     aIsContextMenuKey
+                     ? nsMouseEvent::eContextMenuKey
+                     : nsMouseEvent::eNormal);
+  if (aEventType == NS_CONTEXTMENU && aIsContextMenuKey) {
     nsPoint zero(0, 0);
     InitEvent(event, &zero);
   } else {
@@ -6007,6 +6024,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
   event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
   event.isMeta    = PR_FALSE;
   event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+  event.button    = aButton;
 
   nsRect mpWidget;
   nsRect mpScreen;
@@ -6030,20 +6048,14 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
                                    (abs(gLastMousePoint.y - eventPoint.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
-  switch (aEventType) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_LEFT_DOUBLECLICK:
+  switch (aButton) {
+    case nsMouseEvent::eLeftButton:
       eventButton = VK_LBUTTON;
       break;
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+    case nsMouseEvent::eMiddleButton:
       eventButton = VK_MBUTTON;
       break;
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
+    case nsMouseEvent::eRightButton:
       eventButton = VK_RBUTTON;
       break;
     default:
@@ -6055,27 +6067,18 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
   // We're going to time double-clicks from mouse *up* to next mouse *down*
   LONG curMsgTime = ::GetMessageTime();
 
-  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) {
-    event.message = NS_MOUSE_LEFT_BUTTON_DOWN;
+  if (aEventType == NS_MOUSE_DOUBLECLICK) {
+    event.message = NS_MOUSE_BUTTON_DOWN;
+    event.button = aButton;
     gLastClickCount = 2;
   }
-  else if (aEventType == NS_MOUSE_MIDDLE_DOUBLECLICK) {
-    event.message = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-    gLastClickCount = 2;
-  }
-  else if (aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
-    event.message = NS_MOUSE_RIGHT_BUTTON_DOWN;
-    gLastClickCount = 2;
-  }
-  else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP || aEventType == NS_MOUSE_MIDDLE_BUTTON_UP ||
-           aEventType == NS_MOUSE_RIGHT_BUTTON_UP) {
+  else if (aEventType == NS_MOUSE_BUTTON_UP) {
     // remember when this happened for the next mouse down
     gLastMousePoint.x = eventPoint.x;
     gLastMousePoint.y = eventPoint.y;
     gLastMouseButton = eventButton;
   }
-  else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN || aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN ||
-           aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+  else if (aEventType == NS_MOUSE_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
 
 #ifdef NS_DEBUG_XX
@@ -6105,32 +6108,50 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
 
   switch (aEventType)
   {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      pluginEvent.event = WM_LBUTTONDOWN;
+    case NS_MOUSE_BUTTON_DOWN:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_LBUTTONDOWN;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_MBUTTONDOWN;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_RBUTTONDOWN;
+          break;
+        default:
+          break;
+      }
       break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      pluginEvent.event = WM_LBUTTONUP;
+    case NS_MOUSE_BUTTON_UP:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_LBUTTONUP;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_MBUTTONUP;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_RBUTTONUP;
+          break;
+        default:
+          break;
+      }
       break;
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-      pluginEvent.event = WM_LBUTTONDBLCLK;
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      pluginEvent.event = WM_RBUTTONDOWN;
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-      pluginEvent.event = WM_RBUTTONUP;
-      break;
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-      pluginEvent.event = WM_RBUTTONDBLCLK;
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      pluginEvent.event = WM_MBUTTONDOWN;
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-      pluginEvent.event = WM_MBUTTONUP;
-      break;
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      pluginEvent.event = WM_MBUTTONDBLCLK;
+    case NS_MOUSE_DOUBLECLICK:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_LBUTTONDBLCLK;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_MBUTTONDBLCLK;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_RBUTTONDBLCLK;
+          break;
+        default:
+          break;
+      }
       break;
     case NS_MOUSE_MOVE:
       pluginEvent.event = WM_MOUSEMOVE;
@@ -6204,15 +6225,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
       }
       break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         result = ConvertStatus(mMouseListener->MousePressed(event));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(event));
         result = ConvertStatus(mMouseListener->MouseClicked(event));
         break;
@@ -6333,7 +6350,8 @@ HBRUSH nsWindow::OnControlColor()
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam)
+PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam,
+                                       PRBool aIsContextMenuKey, PRInt16 aButton)
 {
   PRBool result = PR_FALSE;
 
@@ -6342,15 +6360,11 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARA
   }
 
   switch (aEventType) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    case NS_MOUSE_BUTTON_DOWN:
       CaptureMouse(PR_TRUE);
       break;
 
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
+    case NS_MOUSE_BUTTON_UP:
       if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)))
         CaptureMouse(PR_FALSE);
       break;
@@ -6360,7 +6374,8 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARA
 
   } // switch
 
-  return nsWindow::DispatchMouseEvent(aEventType, wParam, lParam);
+  return nsWindow::DispatchMouseEvent(aEventType, wParam, lParam,
+                                      aIsContextMenuKey, aButton);
 }
 
 //-------------------------------------------------------------------------
@@ -7407,7 +7422,7 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
 
 // Mouse operation of IME
 PRBool
-nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
+nsWindow::IMEMouseHandling(PRInt32 aAction, LPARAM lParam)
 {
 #ifndef WINCE
   POINT ptPos;
@@ -7415,7 +7430,7 @@ nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
   ptPos.y = (short)HIWORD(lParam);
 
   if (sIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-    if (IMECompositionHitTest(aEventType, &ptPos))
+    if (IMECompositionHitTest(&ptPos))
       if (HandleMouseActionOfIME(aAction, &ptPos))
         return PR_TRUE;
   } else {
@@ -7423,7 +7438,7 @@ nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
     if (parentWnd) {
       nsWindow* parentWidget = GetNSWindowPtr(parentWnd);
       if (parentWidget && parentWidget->sIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
-        if (parentWidget->IMECompositionHitTest(aEventType, &ptPos))
+        if (parentWidget->IMECompositionHitTest(&ptPos))
           if (parentWidget->HandleMouseActionOfIME(aAction, &ptPos))
             return PR_TRUE;
       }
@@ -7479,7 +7494,7 @@ nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 }
 
 //The coordinate is relative to the upper-left corner of the client area.
-PRBool nsWindow::IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos)
+PRBool nsWindow::IMECompositionHitTest(POINT * ptPos)
 {
   PRBool IsHit = PR_FALSE;
 

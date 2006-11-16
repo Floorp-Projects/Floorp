@@ -418,7 +418,10 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       OpenMenu(!IsOpen());
 #endif
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled() && IsMenu() ) {
+  else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+           aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton &&
+           !IsDisabled() && IsMenu()) {
     PRBool isMenuBar = PR_FALSE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
@@ -450,7 +453,10 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
-            aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP &&
+           (aEvent->eventStructType == NS_MOUSE_EVENT &&
+            aEvent->message == NS_MOUSE_BUTTON_UP &&
+            NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+              nsMouseEvent::eRightButton) &&
 #else
             aEvent->message == NS_CONTEXTMENU &&
 #endif
@@ -472,7 +478,10 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       Execute(aEvent);
     }
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent && !IsDisabled()) {
+  else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+           aEvent->message == NS_MOUSE_BUTTON_UP &&
+           NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton &&
+           !IsMenu() && mMenuParent && !IsDisabled()) {
     // Execute the execute event handler.
     Execute(aEvent);
   }

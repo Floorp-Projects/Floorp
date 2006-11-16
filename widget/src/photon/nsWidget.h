@@ -313,7 +313,8 @@ protected:
   void InitMouseEvent( PhPointerEvent_t * aPhButtonEvent,
                        nsWidget         * aWidget,
                        nsMouseEvent     & anEvent,
-                       PRUint32         aEventType );
+                       PRUint32         aEventType,
+                       PRInt16          aButton);
 
 
   /* Convert Photon key codes to Mozilla key codes */

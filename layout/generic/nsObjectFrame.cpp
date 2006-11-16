@@ -2989,7 +2989,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
       }
 
-      if (eventHandled && !(anEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN &&
+      if (eventHandled && !(anEvent.eventStructType == NS_MOUSE_EVENT &&
+                            anEvent.message == NS_MOUSE_BUTTON_DOWN &&
+                            NS_STATIC_CAST(nsMouseEvent, anEvent).button ==
+                              nsMouseEvent::eLeftButton &&
                             !mContentFocused))
         rv = nsEventStatus_eConsumeNoDefault;
 

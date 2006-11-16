@@ -5841,7 +5841,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
   PRBool dispatchUsingCoordinates =
       !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
-         aEvent->message != NS_CONTEXTMENU_KEY && !NS_IS_FOCUS_EVENT(aEvent);
+      !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent);
 
   // if this event has no frame, we need to retarget it at a parent
   // view that has a frame.
@@ -5900,7 +5900,7 @@ PresShell::HandleEvent(nsIView         *aView,
     nsIEventStateManager *esm = mPresContext->EventStateManager();
 
     if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-        aEvent->message == NS_CONTEXTMENU_KEY) {
+        NS_IS_CONTEXT_MENU_KEY(aEvent)) {
       esm->GetFocusedFrame(&mCurrentEventFrame);
       if (mCurrentEventFrame) {
         esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));
@@ -6139,12 +6139,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         if (!nsContentUtils::IsCallerChrome()) {
           break;
         }
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_UP:
       case NS_KEY_PRESS:
       case NS_KEY_DOWN:
       case NS_KEY_UP:
