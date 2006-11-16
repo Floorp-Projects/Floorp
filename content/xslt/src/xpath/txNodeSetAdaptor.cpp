@@ -117,7 +117,8 @@ txNodeSetAdaptor::Add(nsIDOMNode *aNode)
 {
     NS_ENSURE_TRUE(mWritable, NS_ERROR_FAILURE);
 
-    nsAutoPtr<txXPathNode> node(txXPathNativeNode::createXPathNode(aNode));
+    nsAutoPtr<txXPathNode> node(txXPathNativeNode::createXPathNode(aNode,
+                                                                   PR_TRUE));
 
     return node ? mNodeSet->add(*node) : NS_ERROR_OUT_OF_MEMORY;
 }

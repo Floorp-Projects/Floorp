@@ -95,7 +95,6 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet,
       mTemplateRuleCount(0),
       mEvalContext(nsnull),
       mInitialEvalContext(nsnull),
-//      mRTFDocument(nsnull),
       mGlobalParams(nsnull),
       mKeyHash(aStylesheet->getKeyMap()),
       mDisableLoads(aDisableLoads)
@@ -107,7 +106,6 @@ txExecutionState::~txExecutionState()
     delete mResultHandler;
     delete mLocalVariables;
     delete mEvalContext;
-//    delete mRTFDocument;
 
     PRInt32 i;
     for (i = 0; i < mTemplateRuleCount; ++i) {

@@ -260,7 +260,7 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
 nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
                             nsIAtom* aName, nsISupports *aState,
-                            FunctionCall *&aFunction)
+                            FunctionCall **aFunction)
 {
     nsIID iid;
     PRUint16 methodIndex;
@@ -271,13 +271,17 @@ TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
     rv = CallGetService(aContractID.get(), iid, getter_AddRefs(helper));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aFunction = new txXPCOMExtensionFunctionCall(helper, iid, methodIndex,
-#ifdef TX_TO_STRING
-                                                 aNamespaceID, aName,
-#endif
-                                                 aState);
+    if (!aFunction) {
+        return NS_OK;
+    }
 
-    return aFunction ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *aFunction = new txXPCOMExtensionFunctionCall(helper, iid, methodIndex,
+#ifdef TX_TO_STRING
+                                                  aNamespaceID, aName,
+#endif
+                                                  aState);
+
+    return *aFunction ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 txArgumentType

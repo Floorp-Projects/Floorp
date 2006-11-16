@@ -42,6 +42,7 @@
 
 #include "txBufferingHandler.h"
 #include "txExprResult.h"
+#include "txXPathNode.h"
 
 class txResultTreeFragment : public txAExprResult
 {
@@ -53,8 +54,20 @@ public:
 
     nsresult flushToHandler(txAXMLEventHandler* aHandler);
 
+    void setNode(const txXPathNode* aNode)
+    {
+        NS_ASSERTION(!mNode, "Already converted!");
+
+        mNode = aNode;
+    }
+    const txXPathNode *getNode() const
+    {
+        return mNode;
+    }
+
 private:
     nsAutoPtr<txResultBuffer> mBuffer;
+    nsAutoPtr<const txXPathNode> mNode;
 };
 
 class txRtfHandler : public txBufferingHandler

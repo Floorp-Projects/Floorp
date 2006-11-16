@@ -205,14 +205,14 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                 format.mMethod = eHTMLOutput;
             }
 
-            *aHandler = new txMozillaXMLOutput(&format, mFragment);
+            *aHandler = new txMozillaXMLOutput(&format, mFragment, PR_FALSE);
             break;
         }
 
         case eXMLOutput:
         case eHTMLOutput:
         {
-            *aHandler = new txMozillaXMLOutput(aFormat, mFragment);
+            *aHandler = new txMozillaXMLOutput(aFormat, mFragment, PR_FALSE);
             break;
         }
 
@@ -390,7 +390,7 @@ class txXSLTParamContext : public txIParseContext,
                            public txIEvalContext
 {
 public:
-    txXSLTParamContext(txNamespaceMap *aResolver, txXPathNode& aContext,
+    txXSLTParamContext(txNamespaceMap *aResolver, const txXPathNode& aContext,
                        txResultRecycler* aRecycler)
         : mResolver(aResolver),
           mContext(aContext),
@@ -406,7 +406,7 @@ public:
                                              NS_OK;
     }
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
-                                 FunctionCall*& aFunction)
+                                 FunctionCall** aFunction)
     {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }
@@ -455,9 +455,8 @@ public:
 
 private:
     txNamespaceMap *mResolver;
-    txXPathNode& mContext;
+    const txXPathNode& mContext;
     txResultRecycler* mRecycler;
-    
 };
 
 

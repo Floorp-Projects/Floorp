@@ -59,7 +59,8 @@ class txAExprResult : public TxObject
 public:
     friend class txResultRecycler;
 
-    // Update txLiteralExpr::getReturnType if this enum is changed.
+    // Update txLiteralExpr::getReturnType and sTypes in txEXSLTFunctions.cpp if
+    // this enum is changed.
     enum ResultType {
         NODESET = 0,
         BOOLEAN,

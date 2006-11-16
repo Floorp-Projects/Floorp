@@ -134,6 +134,13 @@ public:
                          const nsAString& aKeyValue, PRBool aIndexIfNotFound,
                          txNodeSet** aResult);
     TemplateRule* getCurrentTemplateRule();
+    const txXPathNode& getSourceDocument()
+    {
+        NS_ASSERTION(mLoadedDocuments.mSourceDocument,
+                     "Need a source document!");
+
+        return *mLoadedDocuments.mSourceDocument;
+    }
 
     // state-modification functions
     txInstruction* getNextInstruction();
