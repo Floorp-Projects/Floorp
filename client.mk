@@ -44,7 +44,8 @@
 #    1. cvs co mozilla/client.mk
 #    2. cd mozilla
 #    3. create your .mozconfig file with
-#       mk_add_options MOZ_CO_PROJECT=suite,browser,mail,minimo,xulrunner
+#       mk_add_options MOZ_CO_PROJECT=
+#         suite,browser
 #    4. gmake -f client.mk 
 #
 # This script will pick up the CVSROOT from the CVS/Root file. If you wish
@@ -54,7 +55,7 @@
 #   export CVSROOT=:pserver:username%somedomain.org@cvs.mozilla.org:/cvsroot
 # 
 # You must specify which products/modules you wish to checkout, with
-#   MOZ_CO_PROJECT, MOZ_CO_MODULE, and BUILD_MODULES variables.
+#   MOZ_CO_PROJECT and MOZ_CO_MODULE variables.
 #
 #   MOZ_CO_PROJECT possibilities include the following:
 #     suite (Seamonkey suite)
@@ -65,6 +66,7 @@
 #     calendar (aka Sunbird, use this to build the calendar extensions also)
 #     xulrunner
 #     camino
+#     tamarin
 #
 # Other common MOZ_CO_MODULE options include the following:
 #   mozilla/other-licenses/libart_lgpl
@@ -113,6 +115,7 @@ AVAILABLE_PROJECTS = \
   xulrunner \
   camino \
   necko \
+  tamarin \
   $(NULL)
 
 # Trailing / on top-level mozilla dir required to stop fast-update thinking
@@ -383,6 +386,11 @@ BOOTSTRAP_camino :=                             \
   mozilla/camino/config/mozconfig               \
   $(NULL)
 
+MODULES_tamarin :=                              \
+  mozilla/js/tamarin                            \
+  mozilla/modules/zlib                          \
+  $(NULL)
+
 MODULES_all :=                                  \
   mozilla/other-licenses/bsdiff                 \
   mozilla/other-licenses/libart_lgpl            \
@@ -402,8 +410,6 @@ NSPR_CO_TAG          = NSPRPUB_PRE_4_2_CLIENT_BRANCH
 NSS_CO_TAG           = NSS_3_11_20060929_TAG
 LDAPCSDK_CO_TAG      = ldapcsdk_5_17_client_branch
 LOCALES_CO_TAG       =
-
-BUILD_MODULES = all
 
 #######################################################################
 # Defines
@@ -613,31 +619,6 @@ LDAPCSDK_CO_FLAGS := $(LDAPCSDK_CO_FLAGS) $(if $(LDAPCSDK_CO_TAG),-r $(LDAPCSDK_
 CVSCO_LDAPCSDK = $(CVS) $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
 
 ####################################
-# CVS defines for standalone modules
-#
-ifeq ($(BUILD_MODULES),all)
-  CHECKOUT_STANDALONE := true
-  CHECKOUT_STANDALONE_NOSUBDIRS := true
-else
-  STANDALONE_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_CVS))
-  STANDALONE_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
-  STANDALONE_CO_MODULE += Makefile.in
-
-  MOZ_MODULE_LIST += $(addprefix mozilla/,$(STANDALONE_CO_MODULE))
-  MOZ_MODULE_LIST_NS += $(addprefix mozilla/,$(BUILD_MODULE_CVS_NS))
-
-ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS))$(MOZ_CO_PROJECT))
-  CVSCO_NSPR :=
-endif
-ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS))$(MOZ_CO_PROJECT))
-  CVSCO_NSS :=
-endif
-ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS))$(MOZ_CO_PROJECT))
-  CVSCO_LDAPCSDK :=
-endif
-endif
-
-####################################
 # Error on obsolete variables.
 #
 
@@ -666,6 +647,20 @@ endif
 # sort is used to remove duplicates.
 MOZ_MODULE_LIST := $(sort $(MOZ_MODULE_LIST))
 MOZ_MODULE_LIST_NS := $(sort $(MOZ_MODULE_LIST_NS))
+
+####################################
+# Suppress standalone modules if they're not needed.
+#
+ifeq (,$(filter mozilla/xpcom,$(MOZ_MODULE_LIST)))
+  CVSCO_NSPR :=
+endif
+
+ifeq (,$(filter mozilla/security/manager,$(MOZ_MODULE_LIST)))
+  CVSCO_NSS :=
+endif
+ifeq (,$(filter mozilla/directory/xpcom,$(MOZ_MODULE_LIST)))
+  CVSCO_LDAPCSDK :=
+endif
 
 MODULES_CO_FLAGS := -P
 ifdef MOZ_CO_FLAGS
