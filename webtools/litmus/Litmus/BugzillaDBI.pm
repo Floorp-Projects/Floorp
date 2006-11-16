@@ -36,7 +36,6 @@ use strict;
 use warnings;
 use Litmus::Config;
 use Litmus::Error;
-use Memoize;
 
 use base 'Litmus::DBI';
 
