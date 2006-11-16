@@ -84,6 +84,7 @@ CPPSRCS = \
         txXPathResultComparator.cpp \
         txBufferingHandler.cpp \
         txExecutionState.cpp \
+        txEXSLTFunctions.cpp \
         txInstructions.cpp \
         txOutputFormat.cpp \
         txRtfHandler.cpp \

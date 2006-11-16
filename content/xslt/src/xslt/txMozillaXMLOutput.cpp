@@ -90,7 +90,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_TRUE),
       mOpenedElementIsHTML(PR_FALSE),
-      mRootContentCreated(PR_FALSE)
+      mRootContentCreated(PR_FALSE),
+      mNoFixup(PR_FALSE)
 {
     if (aObserver) {
         mNotifier = new txTransformNotifier();
@@ -106,7 +107,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
 }
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
-                                       nsIDOMDocumentFragment* aFragment)
+                                       nsIDOMDocumentFragment* aFragment,
+                                       PRBool aNoFixup)
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
@@ -114,7 +116,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_FALSE),
       mOpenedElementIsHTML(PR_FALSE),
-      mRootContentCreated(PR_FALSE)
+      mRootContentCreated(PR_FALSE),
+      mNoFixup(aNoFixup)
 {
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
@@ -317,24 +320,26 @@ txMozillaXMLOutput::endElement()
                                                         mCurrentNode));
 
     // Handle html-elements
-    if (element->IsNodeOfType(nsINode::eHTML)) {
-        rv = endHTMLElement(element);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Handle script elements
-    if (element->Tag() == nsGkAtoms::script &&
-        (element->IsNodeOfType(nsINode::eHTML) ||
-         element->GetNameSpaceID() == kNameSpaceID_SVG)) {
-
-        rv = element->DoneAddingChildren(PR_TRUE);
-
-        // If the act of insertion evaluated the script, we're fine.
-        // Else, add this script element to the array of loading scripts.
-        if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-            nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element);
-            rv = mNotifier->AddScriptElement(sele);
+    if (!mNoFixup) {
+        if (element->IsNodeOfType(nsINode::eHTML)) {
+            rv = endHTMLElement(element);
             NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        // Handle script elements
+        if (element->Tag() == nsGkAtoms::script &&
+            (element->IsNodeOfType(nsINode::eHTML) ||
+            element->GetNameSpaceID() == kNameSpaceID_SVG)) {
+
+            rv = element->DoneAddingChildren(PR_TRUE);
+
+            // If the act of insertion evaluated the script, we're fine.
+            // Else, add this script element to the array of loading scripts.
+            if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+                nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element);
+                rv = mNotifier->AddScriptElement(sele);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
         }
     }
 
@@ -556,15 +561,18 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     NS_NewElement(getter_AddRefs(mOpenedElement), aElemType, ni);
 
     // Set up the element and adjust state
-    if (aElemType == kNameSpaceID_XHTML) {
-        mOpenedElementIsHTML = aNsID != kNameSpaceID_XHTML;
-        rv = startHTMLElement(mOpenedElement, mOpenedElementIsHTML);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (!mNoFixup) {
+        if (aElemType == kNameSpaceID_XHTML) {
+            mOpenedElementIsHTML = aNsID != kNameSpaceID_XHTML;
+            rv = startHTMLElement(mOpenedElement, mOpenedElementIsHTML);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-    }
-    else if (aNsID == kNameSpaceID_SVG && aLocalName == txHTMLAtoms::script) {
-        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(mOpenedElement);
-        sele->WillCallDoneAddingChildren();
+        }
+        else if (aNsID == kNameSpaceID_SVG &&
+                 aLocalName == txHTMLAtoms::script) {
+            nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(mOpenedElement);
+            sele->WillCallDoneAddingChildren();
+        }
     }
 
     if (mCreatingNewDocument) {

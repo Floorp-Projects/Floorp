@@ -61,7 +61,7 @@ public:
         return NS_ERROR_FAILURE;
     }
     nsresult
-    resolveFunctionCall(nsIAtom* aName, PRInt32 aID, FunctionCall*& aFunction)
+    resolveFunctionCall(nsIAtom* aName, PRInt32 aID, FunctionCall** aFunction)
     {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }

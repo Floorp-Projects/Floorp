@@ -85,7 +85,7 @@ public:
 
     nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
-                                 FunctionCall*& aFunction);
+                                 FunctionCall** aFunction);
     PRBool caseInsensitiveNameTests();
     void SetErrorOffset(PRUint32 aOffset);
 
@@ -288,12 +288,12 @@ nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
 extern nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
                             nsIAtom *aName, nsISupports *aState,
-                            FunctionCall *&aFunction);
+                            FunctionCall **aFunction);
 
 nsresult
 nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
                                                   PRInt32 aID,
-                                                  FunctionCall*& aFn)
+                                                  FunctionCall** aFn)
 {
     nsresult rv = NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 

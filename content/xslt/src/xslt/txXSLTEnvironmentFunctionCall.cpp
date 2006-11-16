@@ -129,18 +129,15 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         }
         case FUNCTION_AVAILABLE:
         {
+            extern PRBool TX_XSLTFunctionAvailable(nsIAtom* aName,
+                                                   PRInt32 aNameSpaceID);
+
             txCoreFunctionCall::eType type;
-            PRBool val = qname.mNamespaceID == kNameSpaceID_None &&
-                         (txCoreFunctionCall::getTypeFromAtom(qname.mLocalName, type) ||
-                          qname.mLocalName == txXSLTAtoms::current ||
-                          qname.mLocalName == txXSLTAtoms::document ||
-                          qname.mLocalName == txXSLTAtoms::elementAvailable ||
-                          qname.mLocalName == txXSLTAtoms::formatNumber ||
-                          qname.mLocalName == txXSLTAtoms::functionAvailable ||
-                          qname.mLocalName == txXSLTAtoms::generateId ||
-                          qname.mLocalName == txXSLTAtoms::key ||
-                          //qname.mLocalName == txXSLTAtoms::unparsedEntityUri ||
-                          qname.mLocalName == txXSLTAtoms::systemProperty);
+            PRBool val = (qname.mNamespaceID == kNameSpaceID_None &&
+                          txCoreFunctionCall::getTypeFromAtom(qname.mLocalName,
+                                                              type)) ||
+                         TX_XSLTFunctionAvailable(qname.mLocalName,
+                                                  qname.mNamespaceID);
 
             aContext->recycler()->getBoolResult(val, aResult);
             break;

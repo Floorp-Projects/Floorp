@@ -101,7 +101,8 @@ public:
                        nsIDOMDocument* aResultDocument,
                        nsITransformObserver* aObserver);
     txMozillaXMLOutput(txOutputFormat* aFormat,
-                       nsIDOMDocumentFragment* aFragment);
+                       nsIDOMDocumentFragment* aFragment,
+                       PRBool aNoFixup);
     virtual ~txMozillaXMLOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER
@@ -163,6 +164,8 @@ private:
 
     // Set to true when we know there's a root content in our document.
     PRPackedBool mRootContentCreated;
+
+    PRPackedBool mNoFixup;
 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
 };

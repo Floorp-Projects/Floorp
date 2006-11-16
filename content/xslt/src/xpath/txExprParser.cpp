@@ -465,7 +465,7 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
     // check extension functions and xslt
     if (!fnCall) {
         rv = aContext->resolveFunctionCall(lName, namespaceID,
-                                           *getter_Transfers(fnCall));
+                                           getter_Transfers(fnCall));
 
         if (rv == NS_ERROR_NOT_IMPLEMENTED) {
             // this should just happen for unparsed-entity-uri()

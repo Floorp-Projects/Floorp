@@ -140,7 +140,7 @@ public:
     // txIParseContext
     nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
-                                 FunctionCall*& aFunction);
+                                 FunctionCall** aFunction);
     PRBool caseInsensitiveNameTests();
 
     /**
