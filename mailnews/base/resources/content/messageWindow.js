@@ -719,8 +719,8 @@ var MessageWindowController =
 			case "cmd_replyGroup":
 			case "cmd_replyall":
 			case "button_replyall":
-			case "cmd_replySenderAndGroup":
-			case "cmd_replyAllRecipients":
+      case "cmd_replySenderAndGroup":
+      case "cmd_replyAllRecipients":
 			case "cmd_forward":
 			case "button_forward":
 			case "cmd_forwardInline":
@@ -828,12 +828,12 @@ var MessageWindowController =
 			case "cmd_replyall":
 				MsgReplyToAllMessage(null);
 				break;
-			case "cmd_replySenderAndGroup":
-				MsgReplyToSenderAndGroup(null);
-				break;
-			case "cmd_replyAllRecipients":
-				MsgReplyToAllRecipients(null);
-				break;
+      case "cmd_replySenderAndGroup":
+        MsgReplyToSenderAndGroup(null);
+        break;
+      case "cmd_replyAllRecipients":
+        MsgReplyToAllRecipients(null);
+        break;
 			case "cmd_forward":
 				MsgForwardMessage(null);
 				break;
