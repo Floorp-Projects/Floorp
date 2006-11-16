@@ -1834,7 +1834,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
     // nsMouseEvent
     aMouseEvent.acceptActivation = PR_TRUE;
-    if (aMessage == NS_CONTEXTMENU)
+    if (aMouseEvent.message == NS_CONTEXTMENU)
       aMouseEvent.button = nsMouseEvent::eRightButton;
 }
 
