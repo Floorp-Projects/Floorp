@@ -792,8 +792,12 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
       case NS_MOUSE_MOVE:
         MouseDrag(aPresContext, aEvent);
 	      break;
-      case NS_MOUSE_LEFT_BUTTON_UP:
-        EndMouseDrag(aPresContext);
+      case NS_MOUSE_BUTTON_UP:
+        if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+            NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+              nsMouseEvent::eLeftButton) {
+          EndMouseDrag(aPresContext);
+        }
 	      break;
     }
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -1780,14 +1784,14 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      nsHTMLFramesetFrame* parentFrame;
-      nsIFrame* fptr = GetParent();
-      parentFrame = (nsHTMLFramesetFrame*) fptr;
-      parentFrame->StartMouseDrag(aPresContext, this, aEvent);
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
-	    break;
+  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+      aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
+    nsHTMLFramesetFrame* parentFrame;
+    nsIFrame* fptr = GetParent();
+    parentFrame = (nsHTMLFramesetFrame*) fptr;
+    parentFrame->StartMouseDrag(aPresContext, this, aEvent);
+    *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
   return NS_OK;
 }

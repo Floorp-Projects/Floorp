@@ -322,7 +322,9 @@ protected:
    PRBool  DispatchStandardEvent( PRUint32 aMsg);
    PRBool  DispatchAppCommandEvent(PRUint32 aEventCommand);
    PRBool  DispatchDragDropEvent( PRUint32 aMsg);
-   virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
+   virtual PRBool DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2, 
+                                     PRBool aIsContextMenuKey = PR_FALSE,
+                                     PRInt16 aButton = nsMouseEvent::eLeftButton);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void GetNonClientBounds(nsRect &aRect);
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);

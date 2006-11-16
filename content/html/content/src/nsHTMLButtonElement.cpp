@@ -213,7 +213,7 @@ nsHTMLButtonElement::Click()
         // called from chrome JS. Mark this event trusted if Click()
         // is called from chrome code.
         nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                           NS_MOUSE_LEFT_CLICK, nsnull,
+                           NS_MOUSE_CLICK, nsnull,
                            nsMouseEvent::eReal);
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), context,
@@ -313,10 +313,10 @@ nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  //FIXME Should this use NS_UI_ACTIVATE, not NS_MOUSE_LEFT_CLICK?
+  //FIXME Should this use NS_UI_ACTIVATE, not NS_MOUSE_CLICK?
   //      https://bugzilla.mozilla.org/show_bug.cgi?id=309348#c16
   PRBool bInSubmitClick = mType == NS_FORM_BUTTON_SUBMIT &&
-                          aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK &&
+                          NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
                           mForm;
 
   if (bInSubmitClick) {
@@ -361,7 +361,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             nsEventStatus status = nsEventStatus_eIgnore;
 
             nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                               NS_MOUSE_LEFT_CLICK, nsnull,
+                               NS_MOUSE_CLICK, nsnull,
                                nsMouseEvent::eReal);
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
                                         aVisitor.mPresContext, &event, nsnull,
@@ -370,17 +370,19 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         }
         break;// NS_KEY_PRESS
 
-      case NS_MOUSE_LEFT_CLICK:
+      case NS_MOUSE_CLICK:
         {
-          nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
-          if (presShell) {
-            // single-click
-            nsUIEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                            NS_UI_ACTIVATE, 1);
-            nsEventStatus status = nsEventStatus_eIgnore;
-
-            presShell->HandleDOMEventWithTarget(this, &event, &status);
-            aVisitor.mEventStatus = status;
+          if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+            nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
+            if (presShell) {
+              // single-click
+              nsUIEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                              NS_UI_ACTIVATE, 1);
+              nsEventStatus status = nsEventStatus_eIgnore;
+  
+              presShell->HandleDOMEventWithTarget(this, &event, &status);
+              aVisitor.mEventStatus = status;
+            }
           }
         }
         break;
@@ -408,32 +410,42 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             }
           }
         }
-        break;// NS_MOUSE_LEFT_CLICK
+        break;// NS_MOUSE_CLICK
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         {
-          aVisitor.mPresContext->EventStateManager()->
-            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
+            if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                  nsMouseEvent::eLeftButton) {
+              aVisitor.mPresContext->EventStateManager()->
+                SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+            } else if (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                         nsMouseEvent::eMiddleButton ||
+                       NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                         nsMouseEvent::eRightButton) {
+              // cancel all of these events for buttons
+              //XXXsmaug What to do with these events? Why these should be cancelled?
+              aVisitor.mDOMEvent->StopPropagation();
+            }
+          }
         }
         break;
 
       // cancel all of these events for buttons
       //XXXsmaug What to do with these events? Why these should be cancelled?
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
+      case NS_MOUSE_DOUBLECLICK:
         {
-          if (aVisitor.mDOMEvent) {
+          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+              aVisitor.mDOMEvent &&
+              (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                 nsMouseEvent::eMiddleButton ||
+               NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                 nsMouseEvent::eRightButton)) {
             aVisitor.mDOMEvent->StopPropagation();
-          } else {
-            rv = NS_ERROR_FAILURE;
           }
         }
-
         break;
 
       case NS_MOUSE_ENTER_SYNTH:
@@ -462,7 +474,17 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // form.submit() in a left click handler or an activate
       // handler gets flushed, even if the event handler prevented
       // the default action.
-      case NS_MOUSE_LEFT_CLICK:
+      case NS_MOUSE_CLICK:
+        if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+          if (mForm && mType == NS_FORM_BUTTON_SUBMIT) {
+            // Tell the form to flush a possible pending submission.
+            // the reason is that the script returned false (the event was
+            // not ignored) so if there is a stored submission, it needs to
+            // be submitted immediatelly.
+            mForm->FlushPendingSubmission();
+          }
+        }
+        break;
       case NS_UI_ACTIVATE:
         if (mForm && mType == NS_FORM_BUTTON_SUBMIT) {
           // Tell the form to flush a possible pending submission.

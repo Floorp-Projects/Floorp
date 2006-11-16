@@ -319,20 +319,11 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
     case NS_KEY_PRESS:
     case NS_KEY_UP:
     case NS_KEY_DOWN:
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-    case NS_MOUSE_LEFT_CLICK:
-    case NS_MOUSE_MIDDLE_CLICK:
-    case NS_MOUSE_RIGHT_CLICK:
+    case NS_MOUSE_BUTTON_UP:
+    case NS_MOUSE_BUTTON_DOWN:
+    case NS_MOUSE_DOUBLECLICK:
+    case NS_MOUSE_CLICK:
     case NS_CONTEXTMENU:
-    case NS_CONTEXTMENU_KEY:
     case NS_DRAGDROP_DROP:
       EndTransaction();
       return;
@@ -614,39 +605,47 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   nsMouseWheelTransaction::OnEvent(aEvent);
 
   switch (aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_BUTTON_DOWN:
+    switch (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button) {
+    case nsMouseEvent::eLeftButton:
 #ifndef XP_OS2
-    BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
+      BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
 #endif
-    mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
-    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-    mNormalLMouseEventInProcess = PR_TRUE;
-    break;
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    mMClickCount = ((nsMouseEvent*)aEvent)->clickCount;
-    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-    break;
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+      SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+      mNormalLMouseEventInProcess = PR_TRUE;
+      break;
+    case nsMouseEvent::eMiddleButton:
+      mMClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+      SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+      break;
+    case nsMouseEvent::eRightButton:
 #ifdef XP_OS2
-    BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
+      BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
 #endif
-    mRClickCount = ((nsMouseEvent*)aEvent)->clickCount;
-    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+      mRClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+      SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+      break;
+    }
     break;
-  case NS_MOUSE_LEFT_BUTTON_UP:
+  case NS_MOUSE_BUTTON_UP:
+    switch (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button) {
+      case nsMouseEvent::eLeftButton:
 #ifdef CLICK_HOLD_CONTEXT_MENUS
-    KillClickHoldTimer();
+      KillClickHoldTimer();
 #endif
 #ifndef XP_OS2
-    StopTrackingDragGesture();
+      StopTrackingDragGesture();
 #endif
-    mNormalLMouseEventInProcess = PR_FALSE;
-  case NS_MOUSE_RIGHT_BUTTON_UP:
+      mNormalLMouseEventInProcess = PR_FALSE;
+    case nsMouseEvent::eRightButton:
 #ifdef XP_OS2
-    StopTrackingDragGesture();
+      StopTrackingDragGesture();
 #endif
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    case nsMouseEvent::eMiddleButton:
+      SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+      break;
+    }
     break;
   case NS_MOUSE_EXIT:
     // If the event coordinate is within the bounds of the view,
@@ -1255,7 +1254,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
 
           // Propagate trusted state to the new event.
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_LEFT_CLICK,
+          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_CLICK,
                              nsnull, nsMouseEvent::eReal);
 
           nsAutoPopupStatePusher popupStatePusher(NS_IS_TRUSTED_EVENT(aEvent) ?
@@ -2094,11 +2093,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
 
   switch (aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_BUTTON_DOWN:
     {
-      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !mNormalLMouseEventInProcess) {
+      if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton &&
+          !mNormalLMouseEventInProcess) {
         //Our state is out of whack.  We got a mouseup while still processing
         //the mousedown.  Kill View-level mouse capture or it'll stay stuck
         if (aView) {
@@ -2156,7 +2154,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         // The rest is left button-specific.
-        if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN)
+        if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button !=
+            nsMouseEvent::eLeftButton)
           break;
 
         if (activeContent) {
@@ -2181,9 +2180,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
     }
     break;
-  case NS_MOUSE_LEFT_BUTTON_UP:
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-  case NS_MOUSE_RIGHT_BUTTON_UP:
+  case NS_MOUSE_BUTTON_UP:
     {
       SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
       if (!mCurrentTarget) {
@@ -3130,57 +3127,54 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
                                    nsMouseEvent *aEvent,
                                    nsEventStatus* aStatus)
 {
-  nsresult ret = NS_OK;
   nsCOMPtr<nsIContent> mouseContent;
-
   mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
 
-  switch (aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-    mLastLeftMouseDownContent = mouseContent;
-    break;
-
-  case NS_MOUSE_LEFT_BUTTON_UP:
-    if (mLastLeftMouseDownContent == mouseContent) {
-      aEvent->clickCount = mLClickCount;
-      mLClickCount = 0;
-    }
-    else {
-      aEvent->clickCount = 0;
-    }
-    mLastLeftMouseDownContent = nsnull;
-    break;
-
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    mLastMiddleMouseDownContent = mouseContent;
-    break;
-
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-    if (mLastMiddleMouseDownContent == mouseContent) {
-      aEvent->clickCount = mMClickCount;
-      mMClickCount = 0;
-    }
-    else {
-      aEvent->clickCount = 0;
+  switch (aEvent->button) {
+  case nsMouseEvent::eLeftButton:
+    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+      mLastLeftMouseDownContent = mouseContent;
+    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+      if (mLastLeftMouseDownContent == mouseContent) {
+        aEvent->clickCount = mLClickCount;
+        mLClickCount = 0;
+      } else {
+        aEvent->clickCount = 0;
+      }
+      mLastLeftMouseDownContent = nsnull;
     }
     break;
 
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    mLastRightMouseDownContent = mouseContent;
+  case nsMouseEvent::eMiddleButton:
+    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+      mLastMiddleMouseDownContent = mouseContent;
+    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+      if (mLastMiddleMouseDownContent == mouseContent) {
+        aEvent->clickCount = mMClickCount;
+        mMClickCount = 0;
+      } else {
+        aEvent->clickCount = 0;
+      }
+      // XXX Why we don't clear mLastMiddleMouseDownContent here?
+    }
     break;
 
-  case NS_MOUSE_RIGHT_BUTTON_UP:
-    if (mLastRightMouseDownContent == mouseContent) {
-      aEvent->clickCount = mRClickCount;
-      mRClickCount = 0;
-    }
-    else {
-      aEvent->clickCount = 0;
+  case nsMouseEvent::eRightButton:
+    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+      mLastRightMouseDownContent = mouseContent;
+    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+      if (mLastRightMouseDownContent == mouseContent) {
+        aEvent->clickCount = mRClickCount;
+        mRClickCount = 0;
+      } else {
+        aEvent->clickCount = 0;
+      }
+      // XXX Why we don't clear mLastRightMouseDownContent here?
     }
     break;
   }
 
-  return ret;
+  return NS_OK;
 }
 
 nsresult
@@ -3189,28 +3183,19 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
                                               nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
-  PRUint32 eventMsg = 0;
   PRInt32 flags = NS_EVENT_FLAG_NONE;
 
   //If mouse is still over same element, clickcount will be > 1.
   //If it has moved it will be zero, so no click.
   if (0 != aEvent->clickCount) {
     //fire click
-    switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      eventMsg = NS_MOUSE_LEFT_CLICK;
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-      eventMsg = NS_MOUSE_MIDDLE_CLICK;
-      flags |= sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-      eventMsg = NS_MOUSE_RIGHT_CLICK;
-      flags |= sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
-      break;
+    if (aEvent->button == nsMouseEvent::eMiddleButton ||
+        aEvent->button == nsMouseEvent::eRightButton) {
+      flags |=
+        sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
     }
 
-    nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), eventMsg, aEvent->widget,
+    nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_CLICK, aEvent->widget,
                        nsMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
@@ -3220,6 +3205,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.isMeta = aEvent->isMeta;
     event.time = aEvent->time;
     event.flags |= flags;
+    event.button = aEvent->button;
 
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
@@ -3229,21 +3215,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget,
                                              mouseContent, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
-        eventMsg = 0;
         //fire double click
-        switch (aEvent->message) {
-        case NS_MOUSE_LEFT_BUTTON_UP:
-          eventMsg = NS_MOUSE_LEFT_DOUBLECLICK;
-          break;
-        case NS_MOUSE_MIDDLE_BUTTON_UP:
-          eventMsg = NS_MOUSE_MIDDLE_DOUBLECLICK;
-          break;
-        case NS_MOUSE_RIGHT_BUTTON_UP:
-          eventMsg = NS_MOUSE_RIGHT_DOUBLECLICK;
-          break;
-        }
-
-        nsMouseEvent event2(NS_IS_TRUSTED_EVENT(aEvent), eventMsg,
+        nsMouseEvent event2(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_DOUBLECLICK,
                             aEvent->widget, nsMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
@@ -3252,6 +3225,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         event2.isAlt = aEvent->isAlt;
         event2.isMeta = aEvent->isMeta;
         event2.flags |= flags;
+        event2.button = aEvent->button;
 
         ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget,
                                                mouseContent, aStatus);
@@ -4690,7 +4664,8 @@ NS_IMETHODIMP
 nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
 {
   *aOK = PR_TRUE;
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+  if (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
     if (!mNormalLMouseEventInProcess) {
       *aOK = PR_FALSE;
     }

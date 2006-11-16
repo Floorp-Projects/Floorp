@@ -378,13 +378,13 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 
   if (mEvent->eventStructType == NS_MOUSE_EVENT) {
     if (atom == nsLayoutAtoms::onmousedown)
-      mEvent->message = NS_MOUSE_LEFT_BUTTON_DOWN;
+      mEvent->message = NS_MOUSE_BUTTON_DOWN;
     else if (atom == nsLayoutAtoms::onmouseup)
-      mEvent->message = NS_MOUSE_LEFT_BUTTON_UP;
+      mEvent->message = NS_MOUSE_BUTTON_UP;
     else if (atom == nsLayoutAtoms::onclick)
-      mEvent->message = NS_MOUSE_LEFT_CLICK;
+      mEvent->message = NS_MOUSE_CLICK;
     else if (atom == nsLayoutAtoms::ondblclick)
-      mEvent->message = NS_MOUSE_LEFT_DOUBLECLICK;
+      mEvent->message = NS_MOUSE_DOUBLECLICK;
     else if (atom == nsLayoutAtoms::onmouseover)
       mEvent->message = NS_MOUSE_ENTER_SYNTH;
     else if (atom == nsLayoutAtoms::onmouseout)
@@ -622,6 +622,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseEvent->clickCount = oldMouseEvent->clickCount;
       mouseEvent->acceptActivation = oldMouseEvent->acceptActivation;
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
+      mouseEvent->button = oldMouseEvent->button;
       newEvent = mouseEvent;
       break;
     }
@@ -670,6 +671,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseScrollEvent->scrollFlags = oldMouseScrollEvent->scrollFlags;
       mouseScrollEvent->delta = oldMouseScrollEvent->delta;
       mouseScrollEvent->relatedTarget = oldMouseScrollEvent->relatedTarget;
+      mouseScrollEvent->button = oldMouseScrollEvent->button;
       newEvent = mouseScrollEvent;
       break;
     }
@@ -984,14 +986,14 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       PRUint32 key = NS_STATIC_CAST(nsKeyEvent *, aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
-        // return key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+        // return key on focused button. see note at NS_MOUSE_CLICK.
         if (key == nsIDOMKeyEvent::DOM_VK_RETURN)
           abuse = openAllowed;
         else if (::PopupAllowedForEvent("keypress"))
           abuse = openControlled;
         break;
       case NS_KEY_UP :
-        // space key on focused button. see note at NS_MOUSE_LEFT_CLICK.
+        // space key on focused button. see note at NS_MOUSE_CLICK.
         if (key == nsIDOMKeyEvent::DOM_VK_SPACE)
           abuse = openAllowed;
         else if (::PopupAllowedForEvent("keyup"))
@@ -1005,17 +1007,18 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     }
     break;
   case NS_MOUSE_EVENT :
-    if (NS_IS_TRUSTED_EVENT(aEvent)) {
+    if (NS_IS_TRUSTED_EVENT(aEvent) &&
+        NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
       switch(aEvent->message) {
-      case NS_MOUSE_LEFT_BUTTON_UP :
+      case NS_MOUSE_BUTTON_UP :
         if (::PopupAllowedForEvent("mouseup"))
           abuse = openControlled;
         break;
-      case NS_MOUSE_LEFT_BUTTON_DOWN :
+      case NS_MOUSE_BUTTON_DOWN :
         if (::PopupAllowedForEvent("mousedown"))
           abuse = openControlled;
         break;
-      case NS_MOUSE_LEFT_CLICK :
+      case NS_MOUSE_CLICK :
         /* Click events get special treatment because of their
            historical status as a more legitimate event handler. If
            click popups are enabled in the prefs, clear the popup
@@ -1023,7 +1026,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
         if (::PopupAllowedForEvent("click"))
           abuse = openAllowed;
         break;
-      case NS_MOUSE_LEFT_DOUBLECLICK :
+      case NS_MOUSE_DOUBLECLICK :
         if (::PopupAllowedForEvent("dblclick"))
           abuse = openControlled;
         break;
@@ -1092,21 +1095,13 @@ nsDOMEvent::Shutdown()
 const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 {
   switch(aEventType) {
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_BUTTON_DOWN:
     return sEventNames[eDOMEvents_mousedown];
-  case NS_MOUSE_LEFT_BUTTON_UP:
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-  case NS_MOUSE_RIGHT_BUTTON_UP:
+  case NS_MOUSE_BUTTON_UP:
     return sEventNames[eDOMEvents_mouseup];
-  case NS_MOUSE_LEFT_CLICK:
-  case NS_MOUSE_MIDDLE_CLICK:
-  case NS_MOUSE_RIGHT_CLICK:
+  case NS_MOUSE_CLICK:
     return sEventNames[eDOMEvents_click];
-  case NS_MOUSE_LEFT_DOUBLECLICK:
-  case NS_MOUSE_MIDDLE_DOUBLECLICK:
-  case NS_MOUSE_RIGHT_DOUBLECLICK:
+  case NS_MOUSE_DOUBLECLICK:
     return sEventNames[eDOMEvents_dblclick];
   case NS_MOUSE_ENTER_SYNTH:
     return sEventNames[eDOMEvents_mouseover];
@@ -1203,7 +1198,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MUTATION_CHARACTERDATAMODIFIED:
     return sEventNames[eDOMEvents_characterdatamodified];
   case NS_CONTEXTMENU:
-  case NS_CONTEXTMENU_KEY:
     return sEventNames[eDOMEvents_contextmenu];
   case NS_UI_ACTIVATE:
     return sEventNames[eDOMEvents_DOMActivate];

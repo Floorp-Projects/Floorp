@@ -1659,15 +1659,11 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         result = ConvertStatus(mMouseListener->MousePressed(aEvent));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
         result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
@@ -2688,8 +2684,9 @@ NSEvent* globalDragEvent = nil;
 #endif
 
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
+  geckoEvent.button = nsMouseEvent::eLeftButton;
 
   EventRecord macEvent;
   macEvent.what = mouseDown;
@@ -2715,7 +2712,7 @@ NSEvent* globalDragEvent = nil;
     return;
   }
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_UP toGeckoEvent:&geckoEvent];
 
   EventRecord macEvent;
   macEvent.what = mouseUp;
@@ -2905,7 +2902,8 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   
   // The right mouse went down, fire off a right mouse down event to gecko
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eRightButton;
 
   // plugins need a native event here
   EventRecord macEvent;
@@ -2925,7 +2923,8 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_UP toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_UP toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eRightButton;
 
   // plugins need a native event here
   EventRecord macEvent;
@@ -2945,8 +2944,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
+  geckoEvent.button = nsMouseEvent::eMiddleButton;
   
   // send event into Gecko by going directly to the
   // the widget.
@@ -2958,8 +2958,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-  [self convertEvent:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
-  
+  [self convertEvent:theEvent message:NS_MOUSE_BUTTON_UP toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eMiddleButton;
+
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
@@ -3076,6 +3077,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
+  geckoEvent.button = nsMouseEvent::eRightButton;
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
   // Go up our view chain to fetch the correct menu to return.

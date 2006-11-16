@@ -622,6 +622,7 @@ void
 nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 {
   PRUint32 eventType = 0;
+  PRInt16 button = nsMouseEvent::eLeftButton;
   PRBool currentlyDragging = mDragging;
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, aWidget);
 
@@ -631,18 +632,20 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
                                        (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease")));
   switch(event->type) {
   case ButtonPress:
+    eventType = NS_MOUSE_BUTTON_DOWN;
     switch(event->xbutton.button) {
     case 1:
-      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      button = nsMouseEvent::eLeftButton;
       mDragging = PR_TRUE;
       break;
     case 2:
-      eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+      button = nsMouseEvent::eMiddleButton;
       break;
     case 3:
       /* look back into this in case anything actually needs a
        * NS_MOUSE_RIGHT_BUTTON_DOWN */
       eventType = NS_CONTEXTMENU;
+      button = nsMouseEvent::eRightButton;
       break;
     case 4:
     case 5:
@@ -664,16 +667,17 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     }
     break;
   case ButtonRelease:
+    eventType = NS_MOUSE_BUTTON_UP;
     switch(event->xbutton.button) {
     case 1:
-      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      button = nsMouseEvent::eLeftButton;
       mDragging = PR_FALSE;
       break;
     case 2:
-      eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+      button = nsMouseEvent::eMiddleButton;
       break;
     case 3:
-      eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+      button = nsMouseEvent::eRightButton;
       break;
     case 4:
     case 5:
@@ -683,6 +687,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
   }
 
   nsMouseEvent mevent(PR_TRUE, eventType, aWidget, nsMouseEvent::eReal);
+  mevent.button = button;
   mevent.isShift = mShiftDown;
   mevent.isControl = mCtrlDown;
   mevent.isAlt = mAltDown;

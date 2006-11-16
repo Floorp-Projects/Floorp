@@ -1029,8 +1029,7 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     NS_ASSERTION(submitContent, "Form control not implementing nsIContent?!");
     // Fire the button's onclick handler and let the button handle
     // submitting the form.
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
-                       nsMouseEvent::eReal);
+    nsMouseEvent event(PR_TRUE, NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (mForm->HasSingleTextControl()) {
@@ -1300,8 +1299,7 @@ nsHTMLInputElement::Click()
         // called from chrome JS. Mark this event trusted if Click()
         // is called from chrome code.
         nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                           NS_MOUSE_LEFT_CLICK, nsnull,
-                           nsMouseEvent::eReal);
+                           NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
         nsEventStatus status = nsEventStatus_eIgnore;
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
@@ -1365,7 +1363,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
   PRBool outerActivateEvent =
-    (aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK ||
+    (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) ||
      (aVisitor.mEvent->message == NS_UI_ACTIVATE &&
       !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
 
@@ -1434,7 +1432,10 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if ((mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
-      aVisitor.mEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+      aVisitor.mEvent->message == NS_MOUSE_CLICK &&
+      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+        nsMouseEvent::eMiddleButton) {
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
@@ -1464,7 +1465,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
       mType != NS_FORM_INPUT_TEXT &&
-      aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK) {
+      NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
     nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_UI_ACTIVATE, 1);
 
     nsIPresShell *shell = aVisitor.mPresContext->GetPresShell();
@@ -1585,8 +1586,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
                 nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                                   NS_MOUSE_LEFT_CLICK, nsnull,
-                                   nsMouseEvent::eReal);
+                                   NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
                 nsEventStatus status = nsEventStatus_eIgnore;
 
                 nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
@@ -1620,7 +1620,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                     if (NS_SUCCEEDED(rv)) {
                       nsEventStatus status = nsEventStatus_eIgnore;
                       nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                                         NS_MOUSE_LEFT_CLICK, nsnull,
+                                         NS_MOUSE_CLICK, nsnull,
                                          nsMouseEvent::eReal);
                       rv = nsEventDispatcher::Dispatch(radioContent,
                                                        aVisitor.mPresContext,
@@ -1688,25 +1688,28 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
         } break; // NS_KEY_PRESS || NS_KEY_UP
 
-        // cancel all of these events for buttons
-        //XXXsmaug Why?
-        case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-        case NS_MOUSE_MIDDLE_BUTTON_UP:
-        case NS_MOUSE_MIDDLE_DOUBLECLICK:
-        case NS_MOUSE_RIGHT_DOUBLECLICK:
-        case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        case NS_MOUSE_RIGHT_BUTTON_UP:
+        case NS_MOUSE_BUTTON_DOWN:
+        case NS_MOUSE_BUTTON_UP:
+        case NS_MOUSE_DOUBLECLICK:
         {
-          if (mType == NS_FORM_INPUT_BUTTON ||
-              mType == NS_FORM_INPUT_RESET ||
-              mType == NS_FORM_INPUT_SUBMIT) {
-            if (aVisitor.mDOMEvent) {
-              aVisitor.mDOMEvent->StopPropagation();
-            } else {
-              rv = NS_ERROR_FAILURE;
+          // cancel all of these events for buttons
+          //XXXsmaug Why?
+          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+              (NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                 nsMouseEvent::eMiddleButton ||
+               NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+                 nsMouseEvent::eRightButton)) {
+            if (mType == NS_FORM_INPUT_BUTTON ||
+                mType == NS_FORM_INPUT_RESET ||
+                mType == NS_FORM_INPUT_SUBMIT) {
+              if (aVisitor.mDOMEvent) {
+                aVisitor.mDOMEvent->StopPropagation();
+              } else {
+                rv = NS_ERROR_FAILURE;
+              }
             }
-          }
 
+          }
           break;
         }
         default:

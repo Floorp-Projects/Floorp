@@ -199,27 +199,18 @@ class nsHashKey;
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
-#define NS_MOUSE_LEFT_BUTTON_UP         (NS_MOUSE_MESSAGE_START + 1)
-#define NS_MOUSE_LEFT_BUTTON_DOWN       (NS_MOUSE_MESSAGE_START + 2)
-#define NS_MOUSE_MIDDLE_BUTTON_UP       (NS_MOUSE_MESSAGE_START + 10)
-#define NS_MOUSE_MIDDLE_BUTTON_DOWN     (NS_MOUSE_MESSAGE_START + 11)
-#define NS_MOUSE_RIGHT_BUTTON_UP        (NS_MOUSE_MESSAGE_START + 20)
-#define NS_MOUSE_RIGHT_BUTTON_DOWN      (NS_MOUSE_MESSAGE_START + 21)
+#define NS_MOUSE_BUTTON_UP              (NS_MOUSE_MESSAGE_START + 1)
+#define NS_MOUSE_BUTTON_DOWN            (NS_MOUSE_MESSAGE_START + 2)
 #define NS_MOUSE_ENTER                  (NS_MOUSE_MESSAGE_START + 22)
 #define NS_MOUSE_EXIT                   (NS_MOUSE_MESSAGE_START + 23)
-#define NS_MOUSE_LEFT_DOUBLECLICK       (NS_MOUSE_MESSAGE_START + 24)
-#define NS_MOUSE_MIDDLE_DOUBLECLICK     (NS_MOUSE_MESSAGE_START + 25)
-#define NS_MOUSE_RIGHT_DOUBLECLICK      (NS_MOUSE_MESSAGE_START + 26)
-#define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 27)
-#define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
-#define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
+#define NS_MOUSE_DOUBLECLICK            (NS_MOUSE_MESSAGE_START + 24)
+#define NS_MOUSE_CLICK                  (NS_MOUSE_MESSAGE_START + 27)
 #define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
 #define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
 #define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
-#define NS_CONTEXTMENU_KEY              (NS_CONTEXTMENU_MESSAGE_START + 1)
 
 #define NS_SCROLLBAR_MESSAGE_START      1000
 #define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
@@ -619,29 +610,52 @@ public:
  * Mouse event
  */
 
-class nsMouseEvent : public nsInputEvent
+class nsMouseEvent_base : public nsInputEvent
 {
 public:
-  enum reasonType { eReal, eSynthesized };
+  nsMouseEvent_base(PRBool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 type)
+  : nsInputEvent(isTrusted, msg, w, type), button(0) {}
+
+  /// The possible related target
+  nsCOMPtr<nsISupports> relatedTarget;
+
+  PRInt16               button;
+};
+
+class nsMouseEvent : public nsMouseEvent_base
+{
+public:
+  enum buttonType  { eLeftButton = 0, eMiddleButton = 1, eRightButton = 2 };
+  enum reasonType  { eReal, eSynthesized };
+  enum contextType { eNormal, eContextMenuKey };
 
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
-               reasonType aReason)
-    : nsInputEvent(isTrusted, msg, w, NS_MOUSE_EVENT),
-      clickCount(0), acceptActivation(PR_FALSE), reason(aReason)
+               reasonType aReason, contextType aContext = eNormal)
+    : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_EVENT),
+      acceptActivation(PR_FALSE), reason(aReason), context(aContext),
+      clickCount(0)
   {
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    } else if (msg == NS_CONTEXTMENU) {
+      button = eRightButton;
     }
   }
+#ifdef NS_DEBUG
+  ~nsMouseEvent() {
+    NS_WARN_IF_FALSE(message != NS_CONTEXTMENU || button == eRightButton,
+                     "Wrong button set to NS_CONTEXTMENU event?");
+  }
+#endif
 
-  /// The number of mouse clicks
-  PRUint32              clickCount;
   /// Special return code for MOUSE_ACTIVATE to signal
   /// if the target accepts activation (1), or denies it (0)
-  PRPackedBool          acceptActivation;
-  reasonType            reason : 8;
-  /// The possible related target
-  nsCOMPtr<nsISupports> relatedTarget;
+  PRPackedBool acceptActivation;
+  reasonType   reason : 4;
+  contextType  context : 4;
+
+  /// The number of mouse clicks
+  PRUint32     clickCount;
 };
 
 /**
@@ -738,7 +752,7 @@ public:
   nsTextEventReply theReply;
 };
 
-class nsMouseScrollEvent : public nsInputEvent
+class nsMouseScrollEvent : public nsMouseEvent_base
 {
 public:
   enum nsMouseScrollFlags {
@@ -749,15 +763,13 @@ public:
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
+    : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_SCROLL_EVENT),
       scrollFlags(0), delta(0)
   {
   }
 
   PRInt32               scrollFlags;
   PRInt32               delta;
-  /// The possible related target
-  nsCOMPtr<nsISupports> relatedTarget;
 };
 
 struct nsReconversionEventReply {
@@ -950,24 +962,26 @@ enum nsDragDropEventStatus {
 
 
 #define NS_IS_MOUSE_EVENT(evnt) \
-       (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
-        ((evnt)->message == NS_MOUSE_LEFT_BUTTON_UP) || \
-        ((evnt)->message == NS_MOUSE_LEFT_CLICK) || \
-        ((evnt)->message == NS_MOUSE_LEFT_DOUBLECLICK) || \
-        ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_DOWN) || \
-        ((evnt)->message == NS_MOUSE_MIDDLE_BUTTON_UP) || \
-        ((evnt)->message == NS_MOUSE_MIDDLE_CLICK) || \
-        ((evnt)->message == NS_MOUSE_MIDDLE_DOUBLECLICK) || \
-        ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_DOWN) || \
-        ((evnt)->message == NS_MOUSE_RIGHT_BUTTON_UP) || \
-        ((evnt)->message == NS_MOUSE_RIGHT_CLICK) || \
-        ((evnt)->message == NS_MOUSE_RIGHT_DOUBLECLICK) || \
+       (((evnt)->message == NS_MOUSE_BUTTON_DOWN) || \
+        ((evnt)->message == NS_MOUSE_BUTTON_UP) || \
+        ((evnt)->message == NS_MOUSE_CLICK) || \
+        ((evnt)->message == NS_MOUSE_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_ENTER) || \
         ((evnt)->message == NS_MOUSE_EXIT) || \
         ((evnt)->message == NS_MOUSE_ACTIVATE) || \
         ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
+
+#define NS_IS_MOUSE_LEFT_CLICK(evnt) \
+       ((evnt)->eventStructType == NS_MOUSE_EVENT && \
+        (evnt)->message == NS_MOUSE_CLICK && \
+        NS_STATIC_CAST(nsMouseEvent*, (evnt))->button == nsMouseEvent::eLeftButton)
+
+#define NS_IS_CONTEXT_MENU_KEY(evnt) \
+       ((evnt)->eventStructType == NS_MOUSE_EVENT && \
+        (evnt)->message == NS_CONTEXTMENU && \
+        NS_STATIC_CAST(nsMouseEvent*, (evnt))->context == nsMouseEvent::eContextMenuKey)
 
 #define NS_IS_DRAG_EVENT(evnt) \
        (((evnt)->message == NS_DRAGDROP_ENTER) || \

@@ -1665,60 +1665,56 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
   nsImageMap* map;
 
-  switch (aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-  case NS_MOUSE_MOVE:
-    {
-      map = GetImageMap(aPresContext);
-      PRBool isServerMap = IsServerImageMap();
-      if ((nsnull != map) || isServerMap) {
-        nsPoint p;
-        TranslateEventCoords(
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
-        PRBool inside = PR_FALSE;
-        // Even though client-side image map triggering happens
-        // through content, we need to make sure we're not inside
-        // (in case we deal with a case of both client-side and
-        // sever-side on the same image - it happens!)
-        if (nsnull != map) {
-          nsCOMPtr<nsIContent> area;
-          inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
-        }
+  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+      (aEvent->message == NS_MOUSE_BUTTON_UP && 
+      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) ||
+      aEvent->message == NS_MOUSE_MOVE) {
+    map = GetImageMap(aPresContext);
+    PRBool isServerMap = IsServerImageMap();
+    if ((nsnull != map) || isServerMap) {
+      nsPoint p;
+      TranslateEventCoords(
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
+      PRBool inside = PR_FALSE;
+      // Even though client-side image map triggering happens
+      // through content, we need to make sure we're not inside
+      // (in case we deal with a case of both client-side and
+      // sever-side on the same image - it happens!)
+      if (nsnull != map) {
+        nsCOMPtr<nsIContent> area;
+        inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
+      }
 
-        if (!inside && isServerMap) {
+      if (!inside && isServerMap) {
 
-          // Server side image maps use the href in a containing anchor
-          // element to provide the basis for the destination url.
-          nsCOMPtr<nsIURI> uri;
-          nsAutoString target;
-          nsCOMPtr<nsINode> anchorNode;
-          if (GetAnchorHREFTargetAndNode(getter_AddRefs(uri), target,
-                                         getter_AddRefs(anchorNode))) {
-            // XXX if the mouse is over/clicked in the border/padding area
-            // we should probably just pretend nothing happened. Nav4
-            // keeps the x,y coordinates positive as we do; IE doesn't
-            // bother. Both of them send the click through even when the
-            // mouse is over the border.
-            if (p.x < 0) p.x = 0;
-            if (p.y < 0) p.y = 0;
-            nsCAutoString spec;
-            uri->GetSpec(spec);
-            spec += nsPrintfCString("?%d,%d", p.x, p.y);
-            uri->SetSpec(spec);                
-            
-            PRBool clicked = PR_FALSE;
-            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
-              clicked = PR_TRUE;
-            }
-            TriggerLink(aPresContext, uri, target, anchorNode, clicked);
+        // Server side image maps use the href in a containing anchor
+        // element to provide the basis for the destination url.
+        nsCOMPtr<nsIURI> uri;
+        nsAutoString target;
+        nsCOMPtr<nsINode> anchorNode;
+        if (GetAnchorHREFTargetAndNode(getter_AddRefs(uri), target,
+                                       getter_AddRefs(anchorNode))) {
+          // XXX if the mouse is over/clicked in the border/padding area
+          // we should probably just pretend nothing happened. Nav4
+          // keeps the x,y coordinates positive as we do; IE doesn't
+          // bother. Both of them send the click through even when the
+          // mouse is over the border.
+          if (p.x < 0) p.x = 0;
+          if (p.y < 0) p.y = 0;
+          nsCAutoString spec;
+          uri->GetSpec(spec);
+          spec += nsPrintfCString("?%d,%d", p.x, p.y);
+          uri->SetSpec(spec);                
+          
+          PRBool clicked = PR_FALSE;
+          if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+            *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+            clicked = PR_TRUE;
           }
+          TriggerLink(aPresContext, uri, target, anchorNode, clicked);
         }
       }
-      break;
     }
-    default:
-      break;
   }
 
   return nsSplittableFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

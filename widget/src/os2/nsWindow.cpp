@@ -2761,7 +2761,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_BUTTON1DOWN:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
-          result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
+          result = DispatchMouseEvent( NS_MOUSE_BUTTON_DOWN, mp1, mp2);
             // there's no need to clear this on button-up
           gLastButton1Down.x = XFROMMP(mp1);
           gLastButton1Down.y = YFROMMP(mp1);
@@ -2771,24 +2771,27 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_BUTTON1UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
-          result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
+          result = DispatchMouseEvent( NS_MOUSE_BUTTON_UP, mp1, mp2);
           break;
         case WM_BUTTON1DBLCLK:
-          result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
+          result = DispatchMouseEvent( NS_MOUSE_DOUBLECLICK, mp1, mp2);
           break;
     
         case WM_BUTTON2DOWN:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
-          result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, PR_FALSE,
+                                      nsMouseEvent::eRightButton);
           break;
         case WM_BUTTON2UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
-          result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, PR_FALSE,
+                                      nsMouseEvent::eRightButton);
           break;
         case WM_BUTTON2DBLCLK:
-          result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, mp1, mp2,
+                                      PR_FALSE, nsMouseEvent::eRightButton);
           break;
         case WM_CONTEXTMENU:
           if (SHORT2FROMMP(mp2) == TRUE) {
@@ -2796,10 +2799,12 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             if (hwndCurrFocus != mWnd) {
               WinSendMsg(hwndCurrFocus, msg, mp1, mp2);
             } else {
-              result = DispatchMouseEvent( NS_CONTEXTMENU_KEY, mp1, mp2);
+              result = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, PR_TRUE,
+                                          nsMouseEvent::eRightButton);
             }
           } else {
-            result = DispatchMouseEvent( NS_CONTEXTMENU, mp1, mp2);
+            result = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, PR_FALSE,
+                                        nsMouseEvent::eRightButton);
           }
           break;
 
@@ -2838,13 +2843,16 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_BUTTON3DOWN:
-          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, PR_FALSE,
+                                      nsMouseEvent::eMiddleButton);
           break;
         case WM_BUTTON3UP:
-          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_UP, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, PR_FALSE,
+                                      nsMouseEvent::eMiddleButton);
           break;
         case WM_BUTTON3DBLCLK:
-          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_DOUBLECLICK, mp1, mp2);
+          result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, mp1, mp2, PR_FALSE,
+                                      nsMouseEvent::eMiddleButton);
           break;
     
         case WM_MOUSEMOVE:
@@ -3295,7 +3303,8 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2)
+PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
+                                    PRBool aIsContextMenuKey, PRInt16 aButton)
 {
   PRBool result = PR_FALSE;
 
@@ -3303,13 +3312,17 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     return result;
   }
 
-  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal);
+  nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal,
+                     aIsContextMenuKey
+                     ? nsMouseEvent::eContextMenuKey
+                     : nsMouseEvent::eNormal);
+  event.button = aButton;
 
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
   {
     POINTL ptl;
-    if (aEventType == NS_CONTEXTMENU_KEY) {
+    if (aEventType == NS_CONTEXTMENU && aIsContextMenuKey) {
       WinQueryPointerPos(HWND_DESKTOP, &ptl);
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1 );
     } else {
@@ -3336,10 +3349,12 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   event.isMeta    = PR_FALSE;
 
   //Dblclicks are used to set the click count, then changed to mousedowns
-  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
-      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
-    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
-                    NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+  if (aEventType == NS_MOUSE_DOUBLECLICK &&
+      (aButton == nsMouseEvent::eLeftButton ||
+       aButton == nsMouseEvent::eRightButton)) {
+    event.message = NS_MOUSE_BUTTON_DOWN;
+    event.button = (aButton == nsMouseEvent::eLeftButton) ?
+                   nsMouseEvent::eLeftButton : nsMouseEvent::eRightButton;
     event.clickCount = 2;
   }
   else {
@@ -3350,32 +3365,50 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
 
   switch (aEventType)//~~~
   {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      pluginEvent.event = WM_BUTTON1DOWN;
+    case NS_MOUSE_BUTTON_DOWN:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_BUTTON1DOWN;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_BUTTON3DOWN;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_BUTTON2DOWN;
+          break;
+        default:
+          break;
+      }
       break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      pluginEvent.event = WM_BUTTON1UP;
+    case NS_MOUSE_BUTTON_UP:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_BUTTON1UP;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_BUTTON3UP;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_BUTTON2UP;
+          break;
+        default:
+          break;
+      }
       break;
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-      pluginEvent.event = WM_BUTTON1DBLCLK;
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      pluginEvent.event = WM_BUTTON2DOWN;
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-      pluginEvent.event = WM_BUTTON2UP;
-      break;
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-      pluginEvent.event = WM_BUTTON2DBLCLK;
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      pluginEvent.event = WM_BUTTON3DOWN;
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-      pluginEvent.event = WM_BUTTON3UP;
-      break;
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      pluginEvent.event = WM_BUTTON3DBLCLK;
+    case NS_MOUSE_DOUBLECLICK:
+      switch (aButton) {
+        case nsMouseEvent::eLeftButton:
+          pluginEvent.event = WM_BUTTON1DBLCLK;
+          break;
+        case nsMouseEvent::eMiddleButton:
+          pluginEvent.event = WM_BUTTON3DBLCLK;
+          break;
+        case nsMouseEvent::eRightButton:
+          pluginEvent.event = WM_BUTTON2DBLCLK;
+          break;
+        default:
+          break;
+      }
       break;
     case NS_MOUSE_MOVE:
       pluginEvent.event = WM_MOUSEMOVE;
@@ -3497,22 +3530,16 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
 
       } break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         result = ConvertStatus(mMouseListener->MousePressed(event));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(event));
 //        result = ConvertStatus(mMouseListener->MouseClicked(event));
         break;
 
-      case NS_MOUSE_LEFT_CLICK:
-      case NS_MOUSE_MIDDLE_CLICK:
-      case NS_MOUSE_RIGHT_CLICK:
+      case NS_MOUSE_CLICK:
         result = ConvertStatus(mMouseListener->MouseClicked(event));
         break;
     } // switch

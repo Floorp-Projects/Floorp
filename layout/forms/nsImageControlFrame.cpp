@@ -230,15 +230,13 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   *aEventStatus = nsEventStatus_eIgnore;
 
-  switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    {
-      // Store click point for GetNamesValues
-      // Do this on MouseUp because the specs don't say and that's what IE does
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-      TranslateEventCoords(pt, mLastClickPoint);
-      break;
-    }
+  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+      aEvent->message == NS_MOUSE_BUTTON_UP &&
+      NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
+    // Store click point for GetNamesValues
+    // Do this on MouseUp because the specs don't say and that's what IE does
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+    TranslateEventCoords(pt, mLastClickPoint);
   }
   return nsImageControlFrameSuper::HandleEvent(aPresContext, aEvent,
                                                aEventStatus);

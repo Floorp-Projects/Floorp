@@ -75,7 +75,7 @@ nsWidget *nsWidget::sFocusWindow = 0;
 guint32 nsWidget::sLastEventTime = 0;
 
 // we should convert the context key to context menu event in the OnKey member
-// function, and dispatch the NS_CONTEXTMENU_KEY instead of a normal key event.
+// function, and dispatch the NS_CONTEXTMENU instead of a normal key event.
 PRBool nsWidget::OnKey(nsKeyEvent &aEvent)
 {
 
@@ -122,7 +122,9 @@ ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
 {
   *(nsInputEvent *)outCMEvent = *(nsInputEvent *)inKeyEvent;
   outCMEvent->eventStructType = NS_MOUSE_EVENT;
-  outCMEvent->message = NS_CONTEXTMENU_KEY;
+  outCMEvent->message = NS_CONTEXTMENU;
+  outCMEvent->button = nsMouseEvent::eRightButton;
+  outCMEvent->context = nsMouseEvent::eContextMenuKey;
   outCMEvent->isShift = outCMEvent->isControl = PR_FALSE;
   outCMEvent->isAlt = outCMEvent->isMeta = PR_FALSE;
   outCMEvent->clickCount = 0;
@@ -1583,15 +1585,11 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 
       } break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_DOWN:
         result = ConvertStatus(mMouseListener->MousePressed(aEvent));
         break;
 
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
         result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
@@ -1858,6 +1856,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
   PRUint32 eventType = 0;
+  PRInt16 button = nsMouseEvent::eLeftButton;
 
   // If you double click in GDK, it will actually generate a single
   // click event before sending the double click event, and this is
@@ -1884,18 +1883,19 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
     // Triple click.
   case GDK_3BUTTON_PRESS:
 
+    eventType = NS_MOUSE_BUTTON_DOWN;
     switch (aGdkButtonEvent->button)  // Which button?
     {
     case 1:
-      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      button = nsMouseEvent::eLeftButton;
       break;
 
     case 2:
-      eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+      button = nsMouseEvent::eMiddleButton;
       break;
 
     case 3:
-      eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+      button = nsMouseEvent::eRightButton;
       break;
 
     case 4:
@@ -1928,7 +1928,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
       // Single-click default.
     default:
-      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      button = nsMouseEvent::eLeftButton;
       break;
     }
     break;
@@ -1939,6 +1939,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
   nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
   InitMouseEvent(aGdkButtonEvent, event);
+  event.button = button;
 
   // Set the button motion target and remeber the widget and root coords
   sButtonMotionTarget = this;
@@ -1962,7 +1963,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
   // if we're a right-button-down on linux, we're trying to
   // popup a context menu. send that event to gecko also.
-  if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+  if (button == nsMouseEvent::eRightButton) {
     nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, this,
                                   nsMouseEvent::eReal);
     InitMouseEvent(aGdkButtonEvent, contextMenuEvent);
@@ -1976,20 +1977,19 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 /* virtual */ void
 nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 {
-  PRUint32 eventType = 0;
-
+  PRUint16 button;
   switch (aGdkButtonEvent->button)
   {
   case 1:
-    eventType = NS_MOUSE_LEFT_BUTTON_UP;
+    button = nsMouseEvent::eLeftButton;
     break;
 	  
   case 2:
-    eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+    button = nsMouseEvent::eMiddleButton;
     break;
 	  
   case 3:
-    eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+    button = nsMouseEvent::eRightButton;
     break;
 
   case 4:
@@ -2001,11 +2001,12 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     return;
 
   default:
-    eventType = NS_MOUSE_LEFT_BUTTON_UP;
+    button = nsMouseEvent::eLeftButton;
     break;
 	}
 
-  nsMouseEvent event(PR_TRUE, eventType, this, nsMouseEvent::eReal);
+  nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
+  event.button = button;
   InitMouseEvent(aGdkButtonEvent, event);
 
   if (sButtonMotionTarget) {

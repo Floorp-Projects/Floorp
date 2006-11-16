@@ -620,7 +620,10 @@ nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // middle clicks to go to text fields anyway.
   if (aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
-  if (aVisitor.mEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+  if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
+      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+        nsMouseEvent::eMiddleButton) {
     aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 

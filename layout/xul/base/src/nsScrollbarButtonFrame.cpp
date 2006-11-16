@@ -86,10 +86,8 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {  
   // XXX hack until handle release is actually called in nsframe.
-  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || 
-      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || 
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
-      aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP)
+  if (aEvent->message == NS_MOUSE_EXIT_SYNTH ||
+      aEvent->message == NS_MOUSE_BUTTON_UP)
      HandleRelease(aPresContext, aEvent, aEventStatus);
   
   // if we didn't handle the press ourselves, pass it on to the superclass
@@ -106,14 +104,21 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 {
   // Get the desired action for the scrollbar button.
   nsILookAndFeel::nsMetricID tmpAction;
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) 
-    tmpAction = nsILookAndFeel::eMetric_ScrollButtonLeftMouseButtonAction;
-  else if (aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)
-    tmpAction = nsILookAndFeel::eMetric_ScrollButtonMiddleMouseButtonAction;
-  else if (aEvent->message == NS_MOUSE_RIGHT_BUTTON_DOWN)
-    tmpAction = nsILookAndFeel::eMetric_ScrollButtonRightMouseButtonAction;
-  else
+  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+      aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+    PRUint16 button = NS_STATIC_CAST(nsMouseEvent*, aEvent)->button;
+    if (button == nsMouseEvent::eLeftButton) {
+      tmpAction = nsILookAndFeel::eMetric_ScrollButtonLeftMouseButtonAction;
+    } else if (button == nsMouseEvent::eMiddleButton) {
+      tmpAction = nsILookAndFeel::eMetric_ScrollButtonMiddleMouseButtonAction;
+    } else if (button == nsMouseEvent::eRightButton) {
+      tmpAction = nsILookAndFeel::eMetric_ScrollButtonRightMouseButtonAction;
+    } else {
+      return PR_FALSE;
+    }
+  } else {
     return PR_FALSE;
+  }
 
   // Get the button action metric from the pres. shell.
   PRInt32 pressedButtonAction;

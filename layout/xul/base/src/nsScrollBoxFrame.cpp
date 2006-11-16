@@ -138,9 +138,11 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       mTrustedEvent = PR_FALSE;
       break;
 
-    case NS_MOUSE_LEFT_CLICK:
-      // skip button frame handling to prevent click handling
-      return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    case NS_MOUSE_CLICK:
+      if (NS_IS_MOUSE_LEFT_CLICK(aEvent)) {
+        // skip button frame handling to prevent click handling
+         return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+      }
       break;
   }
      

@@ -528,21 +528,24 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     }
     break;
 
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    if(!gMiddlePref)
+    case NS_MOUSE_BUTTON_UP:
+      if (aEvent->eventStructType != NS_MOUSE_EVENT ||
+          (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eMiddleButton &&
+           !gMiddlePref)) {
         break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-       // stop capturing
-      //printf("stop capturing\n");
-      AddListener();
-      DragThumb(PR_FALSE);
-      if (mChange) {
-        nsRepeatService::GetInstance()->Stop();
-        mChange = 0;
       }
-      mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
-      return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+
+      if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
+         // stop capturing
+        AddListener();
+        DragThumb(PR_FALSE);
+        if (mChange) {
+          nsRepeatService::GetInstance()->Stop();
+          mChange = 0;
+        }
+        mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
+        return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+      }
     }
 
     // we want to draw immediately if the user doing it directly with the
@@ -551,9 +554,13 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
-  }
-  else if ((aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && ((nsMouseEvent *)aEvent)->isShift)
-      || (gMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
+  } else if ((aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+              NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+                nsMouseEvent::eLeftButton &&
+              NS_STATIC_CAST(nsMouseEvent*, aEvent)->isShift) ||
+             (gMiddlePref && aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+              NS_STATIC_CAST(nsMouseEvent*, aEvent)->button ==
+                nsMouseEvent::eMiddleButton)) {
     // convert coord from twips to pixels
     nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                                       this);

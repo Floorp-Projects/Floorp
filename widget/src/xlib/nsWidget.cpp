@@ -1077,15 +1077,9 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
   }
 
   /* If there was a mouse down event, check if any popups need to be notified */
-  switch (aEvent.message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      if (HandlePopup(aEvent.refPoint.x, aEvent.refPoint.y)){
-        // Should we return here as GTK does?
-        return PR_TRUE;
-      }
-      break;
+  if (aEvent.message == NS_MOUSE_BUTTON_DOWN &&
+      HandlePopup(aEvent.refPoint.x, aEvent.refPoint.y)) {
+    return PR_TRUE;
   }
 
   if (nsnull != mEventCallback) {
@@ -1097,14 +1091,10 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
     case NS_MOUSE_MOVE:
       // XXX this isn't handled in gtk for some reason.
       break;
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    case NS_MOUSE_BUTTON_DOWN:
       result = ConvertStatus(mMouseListener->MousePressed(aEvent));
       break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
+    case NS_MOUSE_BUTTON_UP:
       result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
       result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
       break;

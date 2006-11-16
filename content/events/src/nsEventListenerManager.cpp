@@ -173,18 +173,10 @@ struct EventTypeData
 #define HANDLER(x) NS_REINTERPRET_CAST(GenericHandler, x)
 
 static const EventDispatchData sMouseEvents[] = {
-  { NS_MOUSE_LEFT_BUTTON_DOWN,   HANDLER(&nsIDOMMouseListener::MouseDown)     },
-  { NS_MOUSE_MIDDLE_BUTTON_DOWN, HANDLER(&nsIDOMMouseListener::MouseDown)     },
-  { NS_MOUSE_RIGHT_BUTTON_DOWN,  HANDLER(&nsIDOMMouseListener::MouseDown)     },
-  { NS_MOUSE_LEFT_BUTTON_UP,     HANDLER(&nsIDOMMouseListener::MouseUp)       },
-  { NS_MOUSE_MIDDLE_BUTTON_UP,   HANDLER(&nsIDOMMouseListener::MouseUp)       },
-  { NS_MOUSE_RIGHT_BUTTON_UP,    HANDLER(&nsIDOMMouseListener::MouseUp)       },
-  { NS_MOUSE_LEFT_CLICK,         HANDLER(&nsIDOMMouseListener::MouseClick)    },
-  { NS_MOUSE_MIDDLE_CLICK,       HANDLER(&nsIDOMMouseListener::MouseClick)    },
-  { NS_MOUSE_RIGHT_CLICK,        HANDLER(&nsIDOMMouseListener::MouseClick)    },
-  { NS_MOUSE_LEFT_DOUBLECLICK,   HANDLER(&nsIDOMMouseListener::MouseDblClick) },
-  { NS_MOUSE_MIDDLE_DOUBLECLICK, HANDLER(&nsIDOMMouseListener::MouseDblClick) },
-  { NS_MOUSE_RIGHT_DOUBLECLICK,  HANDLER(&nsIDOMMouseListener::MouseDblClick) },
+  { NS_MOUSE_BUTTON_DOWN,        HANDLER(&nsIDOMMouseListener::MouseDown)     },
+  { NS_MOUSE_BUTTON_UP,          HANDLER(&nsIDOMMouseListener::MouseUp)       },
+  { NS_MOUSE_CLICK,              HANDLER(&nsIDOMMouseListener::MouseClick)    },
+  { NS_MOUSE_DOUBLECLICK,        HANDLER(&nsIDOMMouseListener::MouseDblClick) },
   { NS_MOUSE_ENTER_SYNTH,        HANDLER(&nsIDOMMouseListener::MouseOver)     },
   { NS_MOUSE_EXIT_SYNTH,         HANDLER(&nsIDOMMouseListener::MouseOut)      }
 };
@@ -194,8 +186,7 @@ static const EventDispatchData sMouseMotionEvents[] = {
 };
 
 static const EventDispatchData sContextMenuEvents[] = {
-  { NS_CONTEXTMENU,     HANDLER(&nsIDOMContextMenuListener::ContextMenu) },
-  { NS_CONTEXTMENU_KEY, HANDLER(&nsIDOMContextMenuListener::ContextMenu) }
+  { NS_CONTEXTMENU, HANDLER(&nsIDOMContextMenuListener::ContextMenu) }
 };
 
 static const EventDispatchData sCompositionEvents[] = {
@@ -656,10 +647,10 @@ InitializeEventIdTable() {
   NS_ASSERTION(!gEventIdTable, "EventIdTable already initialized!");
 
   static const EventId eventIdArray[] = {
-    { &nsGkAtoms::onmousedown,                   NS_MOUSE_LEFT_BUTTON_DOWN },
-    { &nsGkAtoms::onmouseup,                     NS_MOUSE_LEFT_BUTTON_UP },
-    { &nsGkAtoms::onclick,                       NS_MOUSE_LEFT_CLICK },
-    { &nsGkAtoms::ondblclick,                    NS_MOUSE_LEFT_DOUBLECLICK },
+    { &nsGkAtoms::onmousedown,                   NS_MOUSE_BUTTON_DOWN },
+    { &nsGkAtoms::onmouseup,                     NS_MOUSE_BUTTON_UP },
+    { &nsGkAtoms::onclick,                       NS_MOUSE_CLICK },
+    { &nsGkAtoms::ondblclick,                    NS_MOUSE_DOUBLECLICK },
     { &nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH },
     { &nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH },
     { &nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE },
@@ -763,40 +754,7 @@ nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
     // We don't want to check aLs->mEventType here, bug 276846.
     return (aEvent->userType && aLs->mTypeAtom == aEvent->userType);
   }
-
-  // Because some event handlers can handle several kinds of events,
-  // event type must be converted to the one which is used when
-  // listener is registered. @see also nsDOMEvent::GetEventName.
-  PRUint32 event = aEvent->message;
-  switch(event) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      event = NS_MOUSE_LEFT_BUTTON_DOWN;
-      break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-      event = NS_MOUSE_LEFT_BUTTON_UP;
-      break;
-    case NS_MOUSE_LEFT_CLICK:
-    case NS_MOUSE_MIDDLE_CLICK:
-    case NS_MOUSE_RIGHT_CLICK:
-      event = NS_MOUSE_LEFT_CLICK;
-      break;
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-      event = NS_MOUSE_LEFT_DOUBLECLICK;
-      break;
-    case NS_CONTEXTMENU:
-    case NS_CONTEXTMENU_KEY:
-      event = NS_CONTEXTMENU;
-      break;
-    default:
-      break;
-  }
-  return (aLs->mEventType == event);
+  return (aLs->mEventType == aEvent->message);
 }
 
 NS_IMETHODIMP
@@ -1346,8 +1304,7 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
   }
   PRUint16 currentGroup = aFlags & NS_EVENT_FLAG_SYSTEM_EVENT;
 
-  if ((aEvent->message == NS_CONTEXTMENU ||
-       aEvent->message == NS_CONTEXTMENU_KEY) &&
+  if (aEvent->message == NS_CONTEXTMENU &&
       NS_FAILED(FixContextMenuEvent(aPresContext, aCurrentTarget, aEvent,
                                     aDOMEvent))) {
     NS_WARNING("failed to fix context menu event target");
@@ -1657,13 +1614,15 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
 
   nsresult ret = NS_OK;
 
+  PRBool contextMenuKey =
+    NS_STATIC_CAST(nsMouseEvent*, aEvent)->context == nsMouseEvent::eContextMenuKey;
   if (nsnull == *aDOMEvent) {
     // If we're here because of the key-equiv for showing context menus, we
     // have to twiddle with the NS event to make sure the context menu comes
     // up in the upper left of the relevant content area before we create
     // the DOM event. Since we never call InitMouseEvent() on the event, 
     // the client X/Y will be 0,0. We can make use of that if the widget is null.
-    if (aEvent->message == NS_CONTEXTMENU_KEY) {
+    if (contextMenuKey) {
       NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);
       aPresContext->GetViewManager()->GetWidget(&((nsGUIEvent*)aEvent)->widget);
       aEvent->refPoint.x = 0;
@@ -1674,7 +1633,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   }
 
   // see if we should use the caret position for the popup
-  if (aEvent->message == NS_CONTEXTMENU_KEY) {
+  if (contextMenuKey) {
     nsPoint caretPoint;
     if (PrepareToUseCaretPosition(((nsGUIEvent*)aEvent)->widget,
                                   shell, caretPoint)) {
@@ -1691,7 +1650,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   nsCOMPtr<nsIDOMEventTarget> currentTarget = do_QueryInterface(aCurrentTarget);
   nsCOMPtr<nsIDOMElement> currentFocus;
 
-  if (aEvent->message == NS_CONTEXTMENU_KEY) {
+  if (contextMenuKey) {
     nsIDocument *doc = shell->GetDocument();
     if (doc) {
       nsPIDOMWindow* privWindow = doc->GetWindow();

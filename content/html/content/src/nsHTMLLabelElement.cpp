@@ -208,7 +208,7 @@ nsresult
 nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   if (mHandlingEvent ||
-      (aVisitor.mEvent->message != NS_MOUSE_LEFT_CLICK &&
+      (!NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
        aVisitor.mEvent->message != NS_FOCUS_CONTENT) ||
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext) {
@@ -219,8 +219,8 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (content && !EventTargetIn(aVisitor.mEvent, content, this)) {
     mHandlingEvent = PR_TRUE;
     switch (aVisitor.mEvent->message) {
-      case NS_MOUSE_LEFT_CLICK:
-        if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
+      case NS_MOUSE_CLICK:
+        if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           if (ShouldFocus(this)) {
             // Focus the for content.
             content->SetFocus(aVisitor.mPresContext);

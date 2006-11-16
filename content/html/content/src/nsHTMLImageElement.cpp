@@ -499,7 +499,10 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // the Generic Element as this could cause a click event to fire
   // twice, once by the image frame for the map and once by the Anchor
   // element. (bug 39723)
-  if (NS_MOUSE_LEFT_CLICK == aVisitor.mEvent->message) {
+  if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
+      aVisitor.mEvent->message == NS_MOUSE_CLICK &&
+      NS_STATIC_CAST(nsMouseEvent*, aVisitor.mEvent)->button ==
+        nsMouseEvent::eLeftButton) {
     PRBool isMap = PR_FALSE;
     GetIsMap(&isMap);
     if (isMap) {
