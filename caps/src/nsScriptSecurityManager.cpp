@@ -52,6 +52,7 @@
 #include "nsNullPrincipal.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
 #include "nsDOMCID.h"
@@ -364,7 +365,7 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
 PR_STATIC_CALLBACK(PRBool)
 DeleteCapability(nsHashKey *aKey, void *aData, void* closure)
 {
-    nsMemory::Free(aData);
+    NS_Free(aData);
     return PR_TRUE;
 }
 
@@ -3383,7 +3384,7 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
                 NS_REINTERPRET_CAST(char*, mCapabilities->Get(&secLevelKey));
             if (!secLevel.capability)
             {
-                secLevel.capability = nsCRT::strdup(prefValue);
+                secLevel.capability = NS_strdup(prefValue);
                 if (!secLevel.capability)
                     break;
                 mCapabilities->Put(&secLevelKey, 
