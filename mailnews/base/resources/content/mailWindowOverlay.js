@@ -101,9 +101,9 @@ var disallow_classes_no_html = 1; /* the user preference,
      value > 1 in his prefs.js or user.js, but that the value will not
      change during runtime other than through the MsgBody*() functions below.*/
 
-// Disable the new account menu item if the account preference is locked.
+// Disable the File | New | Account... menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
-// dialog.
+// dialogs.
 function menu_new_init()
 {
   if (!gMessengerBundle)
@@ -113,7 +113,7 @@ function menu_new_init()
   if (gPrefBranch.prefIsLocked("mail.disable_new_account_addition"))
     newAccountItem.setAttribute("disabled","true");
 
-  // Change "New Folder..." menu according to the context
+  // Change New Folder... menu according to the context
   var folderArray = GetSelectedMsgFolders();
   if (folderArray.length == 0)
     return;
@@ -176,11 +176,9 @@ function view_init()
       message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
   }
 
-  var folderPane_menuitem = document.getElementById('menu_showFolderPane');
   if (folderPane_menuitem && !folderPane_menuitem.hidden)
     folderPane_menuitem.setAttribute('checked', !IsFolderPaneCollapsed());
 
-  // Disable some menus if account manager is showing
   var sort_menuitem = document.getElementById('viewSortMenu');
   if (sort_menuitem) {
     sort_menuitem.setAttribute("disabled", gAccountCentralLoaded);
@@ -194,7 +192,7 @@ function view_init()
     threads_menuitem.setAttribute("disabled", gAccountCentralLoaded);
   }
 
-  // Initialize the View Attachment Inline menu
+  // Initialize the Display Attachments Inline menu.
   var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
   document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
 
@@ -312,11 +310,11 @@ function InitViewMessageViewMenu()
 
 function viewRefreshCustomMailViews(aCurrentViewValue)
 {
-  // for each mail view in the msg view list, add a menu item
+  // For each mail view in the msg view list, add a menu item.
   var mailViewList = Components.classes["@mozilla.org/messenger/mailviewlist;1"].getService(Components.interfaces.nsIMsgMailViewList);
 
   // XXX TODO, fix code in msgViewPickerOverlay.js, to be like this.
-  // remove any existing entries...
+  // Remove any existing entries...
   var menupopupNode = document.getElementById('viewMessageViewPopup');
   var userDefinedItems = menupopupNode.getElementsByAttribute("userdefined","true");
   for (var i=0; userDefinedItems.item(i); )
@@ -325,7 +323,7 @@ function viewRefreshCustomMailViews(aCurrentViewValue)
       ++i;
   }
   
-  // now rebuild the list
+  // Now rebuild the list.
   var numItems = mailViewList.mailViewCount; 
   var viewCreateCustomViewSeparator = document.getElementById('viewCreateCustomViewSeparator');
   
@@ -349,8 +347,8 @@ function viewRefreshCustomMailViews(aCurrentViewValue)
     viewCreateCustomViewSeparator.removeAttribute('collapsed');
 }
 
-// called by the View | Messages | Views ... menu items
-// see mailWindowOverlay.xul
+// Called by the various View | Messages menu items.
+// See mailWindowOverlay.xul.
 function ViewMessagesBy(id)
 {
   var viewPicker = document.getElementById('viewPicker');
@@ -366,7 +364,7 @@ function InitMessageMenu()
       isNews = IsNewsMessage(aMessage);
   }
 
-  //We show reply to Newsgroups only for news messages.
+  // We show Reply to Newsgroups only for news messages.
   var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
   if(replyNewsgroupMenuItem)
   {
@@ -386,7 +384,21 @@ function InitMessageMenu()
       replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
   }
 
-  // we only kill and watch threads for news
+  //We show Reply to Sender and Newsgroup only for news messages.
+  var replySenderAndNewsgroupMenuItem = document.getElementById("replySenderAndNewsgroupMainMenu");
+  if (replySenderAndNewsgroupMenuItem)
+    replySenderAndNewsgroupMenuItem.hidden = !isNews;
+
+  // For mail messages we say reply all. For news we say ReplyToAllRecipients.
+  var replyAllMenuItem = document.getElementById("replyallMainMenu");
+  if (replyAllMenuItem)
+    replyAllMenuItem.hidden = isNews;
+
+  var replyAllRecipientsMenuItem = document.getElementById("replyAllRecipientsMainMenu");
+  if (replyAllRecipientsMenuItem)
+    replyAllRecipientsMenuItem.hidden = !isNews;
+
+  // We only show Ignore Thread and Watch Thread menu itmes for news.
   var threadMenuSeparator = document.getElementById("threadItemsSeparator");
   if (threadMenuSeparator) {
       threadMenuSeparator.setAttribute("hidden", isNews ? "" : "true");
@@ -400,8 +412,8 @@ function InitMessageMenu()
       watchThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
   }
 
-  // disable the move and copy menus if there are no messages selected.
-  // disable the move menu if we can't delete msgs from the folder
+  // Disable the Move and Copy menus if there are no messages selected.
+  // Disable the Move menu if we can't delete msgs from the folder.
   var moveMenu = document.getElementById("moveMenu");
   var msgFolder = GetLoadedMsgFolder();
   if(moveMenu)
@@ -414,7 +426,7 @@ function InitMessageMenu()
   if(copyMenu)
       copyMenu.setAttribute("disabled", !aMessage);
 
-  // Disable Forward as/tag menu items if no message is selected
+  // Disable the Forward as/Tag menu items if no message is selected.
   var forwardAsMenu = document.getElementById("forwardAsMenu");
   if(forwardAsMenu)
       forwardAsMenu.setAttribute("disabled", !aMessage);
@@ -423,7 +435,7 @@ function InitMessageMenu()
   if(tagMenu)
       tagMenu.setAttribute("disabled", !aMessage);
 
-  // Disable mark menu when we're not in a folder
+  // Disable the Mark menu when we're not in a folder.
   var markMenu = document.getElementById("markMenu");
   if(markMenu)
       markMenu.setAttribute("disabled", !msgFolder);
@@ -981,10 +993,9 @@ function MsgNewMessage(event)
   var loadedFolder = GetFirstSelectedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.New, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.New, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.New,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
 }
 
 function MsgReplyMessage(event)
@@ -1018,21 +1029,40 @@ function MsgReplyGroup(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ReplyToGroup, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ReplyToGroup, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ReplyToGroup,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
 }
 
 function MsgReplyToAllMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
+  var server = loadedFolder.server;
+
+  if (server && server.type == "nntp")
+    MsgReplyToSenderAndGroup(event);
+  else
+    MsgReplyToAllRecipients(event);
+}
+
+function MsgReplyToAllRecipients(event)
+{
+  var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ReplyToAll,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
+}
+
+function MsgReplyToSenderAndGroup(event)
+{
+  var loadedFolder = GetLoadedMsgFolder();
+  var messageArray = GetSelectedMessages();
+
+  ComposeMessage(msgComposeType.ReplyToSenderAndGroup,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
 }
 
 function MsgForwardMessage(event)
@@ -1060,11 +1090,9 @@ function MsgForwardAsAttachment(event)
   var messageArray = GetSelectedMessages();
 
   //dump("\nMsgForwardAsAttachment from XUL\n");
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ForwardAsAttachment,
-                   msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ForwardAsAttachment,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);  
 }
 
 function MsgForwardAsInline(event)
@@ -1073,11 +1101,9 @@ function MsgForwardAsInline(event)
   var messageArray = GetSelectedMessages();
 
   //dump("\nMsgForwardAsInline from XUL\n");
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ForwardInline,
-                   msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ForwardInline, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ForwardInline,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);  
 }
 
 
@@ -1762,6 +1788,8 @@ function IsCompactFolderEnabled()
       isCommandEnabled("cmd_compactFolder"));   // checks e.g. if IMAP is offline
 }
 
+var gReplyAllButton = null;
+var gReplyButton = null;
 var gDeleteButton = null;
 var gMarkButton = null;
 
@@ -1775,15 +1803,23 @@ function SetUpToolbarButtons(uri)
 
     if(!gMarkButton) gMarkButton = document.getElementById("button-mark");
     if(!gDeleteButton) gDeleteButton = document.getElementById("button-delete");
+    if (!gReplyButton) gReplyButton = document.getElementById("button-reply");
+    if (!gReplyAllButton) gReplyAllButton = document.getElementById("button-replyall");
 
     var buttonToHide = null;
     var buttonToShow = null;
 
     if (forNews) {
+        gReplyButton.setAttribute("type", "menu-button");
+        gReplyAllButton.setAttribute("type", "menu-button");
+        gReplyAllButton.setAttribute("tooltiptext", gReplyAllButton.getAttribute("tooltiptextnews"));
         buttonToHide = gDeleteButton;
         buttonToShow = gMarkButton;
     }
     else {
+        gReplyButton.removeAttribute("type");
+        gReplyAllButton.removeAttribute("type");
+        gReplyAllButton.setAttribute("tooltiptext", gReplyAllButton.getAttribute("tooltiptextmail"));
         buttonToHide = gMarkButton;
         buttonToShow = gDeleteButton;
     }

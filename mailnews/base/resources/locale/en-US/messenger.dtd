@@ -358,6 +358,10 @@
 <!ENTITY replyToAllMsgCmd.label "Reply to All">
 <!ENTITY replyToAllMsgCmd.accesskey	"p">
 <!ENTITY replyToAllMsgCmd.key	"r">
+<!ENTITY replyToSenderAndNewsgroupCmd.label "Reply to Sender and Newsgroup">
+<!ENTITY replyToSenderAndNewsgroupCmd.accesskey "p">
+<!ENTITY replyToAllRecipientsCmd.label "Reply to All Recipients">
+<!ENTITY replyToAllRecipientsCmd.accesskey "a">
 <!ENTITY forwardMsgCmd.label "Forward">
 <!ENTITY forwardMsgCmd.accesskey "F">
 <!ENTITY forwardMsgCmd.key	"l">
@@ -474,6 +478,7 @@
 <!ENTITY newMsgButton.tooltip "Create a new message">
 <!ENTITY replyButton.tooltip "Reply to the message">
 <!ENTITY replyAllButton.tooltip "Reply to sender and all recipients">
+<!ENTITY replyAllButtonNews.tooltip "Reply to sender and newsgroup">
 <!ENTITY forwardButton.tooltip "Forward selected message">
 <!ENTITY fileButton.tooltip "File selected message">
 <!ENTITY nextButton.tooltip "Move to the next unread message">
@@ -501,6 +506,8 @@
 <!ENTITY contextReplyNewsgroup.accesskey "y">
 <!ENTITY contextReplyAll.label "Reply to All">
 <!ENTITY contextReplyAll.accesskey "R">
+<!ENTITY contextReplySenderAndNewsgroup.label "Reply to Sender and Newsgroup">
+<!ENTITY contextReplySenderAndNewsgroup.accesskey "p">
 <!ENTITY contextForward.label "Forward">
 <!ENTITY contextForward.accesskey "F">
 <!ENTITY contextForwardAsAttachment.label "Forward as Attachments">

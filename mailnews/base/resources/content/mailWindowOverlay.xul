@@ -232,6 +232,8 @@
   <command id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
   <command id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
   <command id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
+  <command id="cmd_replySenderAndGroup" oncommand="goDoCommand('cmd_replySenderAndGroup')"/>
+  <command id="cmd_replyAllRecipients" oncommand="goDoCommand('cmd_replyAllRecipients')"/>
   <command id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
   <command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
@@ -411,10 +413,14 @@
         label="&contextReplyNewsgroup.label;"
         accesskey="&contextReplyNewsgroup.accesskey;"
         oncommand="MsgReplyGroup(event);"/>
+    <menuitem id="threadPaneContext-replySenderAndNewsgroup"
+        label="&contextReplySenderAndNewsgroup.label;"
+        accesskey="&contextReplySenderAndNewsgroup.accesskey;"
+        oncommand="MsgReplyToSenderAndGroup(event);"/>
     <menuitem id="threadPaneContext-replyAll"
         label="&contextReplyAll.label;"
         accesskey="&contextReplyAll.accesskey;"
-        oncommand="MsgReplyToAllMessage(event);"/>
+        oncommand="MsgReplyToAllRecipients(event);"/>
     <menuitem id="threadPaneContext-forward"
         label="&contextForward.label;"
         accesskey="&contextForward.accesskey;"
@@ -738,7 +744,7 @@
     <menuitem id="messagePaneContext-replyAll"
         label="&contextReplyAll.label;"
         accesskey="&contextReplyAll.accesskey;"
-        oncommand="MsgReplyToAllMessage(event);"/>
+        oncommand="MsgReplyAll(event);"/>
     <menuitem id="messagePaneContext-forward"
         label="&contextForward.label;"
         accesskey="&contextForward.accesskey;"
@@ -1408,10 +1414,17 @@
       accesskey="&replyNewsgroupCmd.accesskey;"
       key="key_reply"
       command="cmd_replyGroup"/>
-    <menuitem label="&replyToAllMsgCmd.label;"
+    <menuitem id="replyallMainMenu" label="&replyToAllMsgCmd.label;"
       accesskey="&replyToAllMsgCmd.accesskey;"
       key="key_replyall"
       command="cmd_replyall"/>
+    <menuitem id="replySenderAndNewsgroupMainMenu" label="&replyToSenderAndNewsgroupCmd.label;" 
+      accesskey="&replyToSenderAndNewsgroupCmd.accesskey;"
+      key="key_replyall"
+      command="cmd_replySenderAndGroup"/>
+    <menuitem id="replyAllRecipientsMainMenu" label="&replyToAllRecipientsCmd.label;" 
+      accesskey="&replyToAllRecipientsCmd.accesskey;"
+      command="cmd_replyAllRecipients"/>
     <menuitem label="&forwardMsgCmd.label;"
       accesskey="&forwardMsgCmd.accesskey;"
       key="key_forward"
@@ -1707,9 +1720,50 @@
       </toolbarbutton>
       <toolbarbutton id="button-newmsg" class="toolbarbutton-1" label="&newMsgButton.label;" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
       <toolbarseparator class="toolbarseparator-primary"/>
-      <toolbarbutton id="button-reply" class="toolbarbutton-1" label="&replyButton.label;" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
-      <toolbarbutton class="toolbarbutton-1" id="button-replyall" label="&replyAllButton.label;" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
-      <toolbarbutton class="toolbarbutton-1" id="button-forward" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-reply"
+                     label="&replyButton.label;"
+                     tooltiptext="&replyButton.tooltip;"
+                     observes="button_reply"
+                     oncommand="MsgReplyMessage(event)">
+        <menupopup>
+          <menuitem label="&replySenderCmd.label;"
+                    accesskey="&replySenderCmd.accesskey;"
+                    command="cmd_replySender"/>
+          <menuitem label="&replyNewsgroupCmd.label;"
+                    accesskey="&replyNewsgroupCmd.accesskey;"
+                    command="cmd_replyGroup" default="true"/>
+        </menupopup>
+      </toolbarbutton>
+      <toolbarbutton class="toolbarbutton-1" id="button-replyall"
+                     label="&replyAllButton.label;"
+                     tooltiptext="&replyAllButton.tooltip;"
+                     tooltiptextmail="&replyAllButton.tooltip;"
+                     tooltiptextnews="&replyAllButtonNews.tooltip;"
+                     observes="button_replyall"
+                     oncommand="MsgReplyToAllMessage(event)">
+        <menupopup>
+          <menuitem label="&replyToSenderAndNewsgroupCmd.label;"
+                    accesskey="&replyToSenderAndNewsgroupCmd.accesskey;"
+                    command="cmd_replySenderAndGroup" default="true"/>
+          <menuitem label="&replyToAllRecipientsCmd.label;"
+                    accesskey="&replyToAllRecipientsCmd.accesskey;"
+                    command="cmd_replyAllRecipients"/>
+        </menupopup>
+      </toolbarbutton>
+      <toolbarbutton class="toolbarbutton-1" id="button-forward"
+                     type="menu-button" label="&forwardButton.label;"
+                     tooltiptext="&forwardButton.tooltip;"
+                     observes="button_forward"
+                     oncommand="MsgForwardMessage(event)">
+        <menupopup onpopupshowing="InitMessageForward(this);">
+          <menuitem label="&forwardAsInline.label;"
+                    accesskey="&forwardAsInline.accesskey;"
+                    command="cmd_forwardInline"/>
+          <menuitem label="&forwardAsAttachmentCmd.label;"
+                    accesskey="&forwardAsAttachmentCmd.accesskey;"
+                    command="cmd_forwardAttachment"/>
+        </menupopup>
+      </toolbarbutton>
       <toolbarseparator class="toolbarseparator-primary"/>
       <toolbarbutton type="menu" id="button-file" class="toolbarbutton-1" 
                   label="&fileButton.label;" observes="button_file"
@@ -1778,8 +1832,28 @@
         </template>
         <menupopup/>
       </toolbarbutton>
-      <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
-      
+      <toolbarbutton class="toolbarbutton-1" id="button-next"
+                     type="menu-button" label="&nextButton.label;"
+                     tooltiptext="&nextButton.tooltip;"
+                     observes="button_next"
+                     oncommand="goDoCommand('button_next')">
+        <menupopup onpopupshowing="InitGoMessagesMenu();">
+          <menuitem label="&nextMsgCmd.label;"
+                    accesskey="&nextMsgCmd.accesskey;"
+                    command="cmd_nextMsg"/>
+          <menuitem label="&nextUnreadMsgCmd.label;"
+                    accesskey="&nextUnreadMsgCmd.accesskey;"
+                    command="cmd_nextUnreadMsg" default="true"/>
+          <menuitem label="&nextFlaggedMsgCmd.label;"
+                    accesskey="&nextFlaggedMsgCmd.accesskey;"
+                    command="cmd_nextFlaggedMsg"/>
+          <menuseparator/>
+          <menuitem label="&nextUnreadThread.label;"
+                    accesskey="&nextUnreadThreadCmd.accesskey;"
+                    command="cmd_nextUnreadThread"/>
+        </menupopup>
+      </toolbarbutton>
+
       <deck id="button-junk" observes="button_junk"
             oncommand="goDoCommand('button_junk')">
         <toolbarbutton class="toolbarbutton-1"

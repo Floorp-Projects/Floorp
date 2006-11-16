@@ -120,6 +120,7 @@ function fillThreadPaneContextMenu()
 
   SetupReplyToSenderMenuItem("threadPaneContext-replySender", numSelected, false);
   SetupReplyToNewsgroupMenuItem("threadPaneContext-replyNewsgroup", numSelected, isNewsgroup, false);
+  SetupReplyToSenderAndNewsgroupMenuItem("threadPaneContext-replySenderAndNewsgroup", numSelected, isNewsgroup, false);
   SetupReplyAllMenuItem("threadPaneContext-replyAll", numSelected, false);
   SetupForwardMenuItem("threadPaneContext-forward", numSelected, false);
   SetupForwardAsAttachmentMenuItem("threadPaneContext-forwardAsAttachment", numSelected, false);
@@ -162,6 +163,12 @@ function SetupReplyToSenderMenuItem(menuID, numSelected, forceHide)
 }
 
 function SetupReplyToNewsgroupMenuItem(menuID, numSelected, isNewsgroup, forceHide)
+{
+  ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
+  EnableMenuItem(menuID,  (numSelected == 1));
+}
+
+function SetupReplyToSenderAndNewsgroupMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
   EnableMenuItem(menuID,  (numSelected == 1));
