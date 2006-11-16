@@ -50,6 +50,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGeometryFrameBase)
 
 //----------------------------------------------------------------------
 
+static const nscolor sInvalidPaintColour = NS_RGB(0, 0, 0);
+
 nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
   : nsSVGGeometryFrameBase(aContext)
 {
@@ -277,8 +279,7 @@ nsSVGGeometryFrame::HasStroke()
     return PR_FALSE;
 
   if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Color ||
-      (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server &&
-       (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)))
+      GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -296,8 +297,7 @@ nsSVGGeometryFrame::HasFill()
   }
 
   if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Color ||
-      (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server &&
-       (GetStateBits() & NS_STATE_SVG_FILL_PSERVER)))
+      GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -349,6 +349,11 @@ nsSVGGeometryFrame::SetupCairoFill(nsISVGRendererCanvas *aCanvas,
     return ps->SetupPaintServer(aCanvas, aCtx, this,
                                 GetStyleSVG()->mFillOpacity,
                                 aClosure);
+  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
+    // should have a paint server but something has gone wrong configuring it.
+    SetupCairoColor(aCtx,
+                    sInvalidPaintColour,
+                    1.0f);
   } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mFill.mPaint.mColor,
@@ -426,6 +431,11 @@ nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
     return ps->SetupPaintServer(aCanvas, aCtx, this,
                                 GetStyleSVG()->mStrokeOpacity,
                                 aClosure);
+  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
+    // should have a paint server but something has gone wrong configuring it.
+    SetupCairoColor(aCtx,
+                    sInvalidPaintColour,
+                    1.0f);
   } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mStroke.mPaint.mColor,
