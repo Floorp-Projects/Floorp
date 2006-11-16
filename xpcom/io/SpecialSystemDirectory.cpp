@@ -46,8 +46,6 @@
 
 #if defined(XP_WIN)
 
-#include "nsNativeCharsetUtils.h"
-#include "nsWinAPIs.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <stdlib.h>
@@ -113,59 +111,23 @@
 #endif
 #endif
 
-#if defined (XP_WIN)
-typedef BOOL (WINAPI * GetSpecialPathProc) (HWND hwndOwner, LPSTR lpszPath,
-                                            int nFolder, BOOL fCreate);
-typedef BOOL (WINAPI * nsGetSpecialFolderPathW) (HWND hwndOwner, 
-                                                 LPWSTR lpszPath,
-                                                 int nFolder, BOOL fCreate);
-typedef BOOL (WINAPI * nsGetSpecialFolderPathA) (HWND hwndOwner,
-                                                 LPSTR lpszPath, int nFolder,
-                                                 BOOL fCreate);
-
-
 typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
                                                DWORD dwFlags,
                                                HANDLE hToken,
                                                PWSTR *ppszPath);
 
-static GetSpecialPathProc gGetSpecialPathProc = NULL;
-static nsGetSpecialFolderPathA gGetSpecialFolderPathA = NULL;
-static nsGetSpecialFolderPathW gGetSpecialFolderPath  = NULL;
 static nsGetKnownFolderPath gGetKnownFolderPath = NULL;
 
 static HINSTANCE gShell32DLLInst = NULL;
 
-static BOOL WINAPI NS_GetSpecialFolderPath(HWND hwndOwner, LPWSTR aPath,
-                                           int aFolder, BOOL fCreate);
-#endif
 NS_COM void StartupSpecialSystemDirectory()
 {
 #if defined (XP_WIN) && !defined (WINCE)
-    /* On windows, the old method to get file locations is incredibly slow.
-       As of this writing, 3 calls to GetWindowsFolder accounts for 3% of mozilla
-       startup. Replacing these older calls with a single call to SHGetSpecialFolderPath
-       effectively removes these calls from the performace radar.  We need to 
-       support the older way of file location lookup on systems that do not have
-       IE4. 
-    */ 
+    // SHGetKnownFolderPath is only available on Windows Vista
+    // so that we need to use GetProcAddress to get the pointer.
     gShell32DLLInst = LoadLibrary("Shell32.dll");
     if(gShell32DLLInst)
     {
-        if (NS_UseUnicode())
-        {
-            gGetSpecialFolderPath = (nsGetSpecialFolderPathW) 
-                GetProcAddress(gShell32DLLInst, "SHGetSpecialFolderPathW");
-        }
-        else 
-        {
-            gGetSpecialFolderPathA = (nsGetSpecialFolderPathA)
-                GetProcAddress(gShell32DLLInst, "SHGetSpecialFolderPathA");
-            // need to check because it's not available on Win95 without IE.
-            if (gGetSpecialFolderPathA)
-                gGetSpecialFolderPath = NS_GetSpecialFolderPath;
-        }
-        
         gGetKnownFolderPath = (nsGetKnownFolderPath) 
             GetProcAddress(gShell32DLLInst, "SHGetKnownFolderPath");
     }
@@ -179,7 +141,6 @@ NS_COM void ShutdownSpecialSystemDirectory()
     {
         FreeLibrary(gShell32DLLInst);
         gShell32DLLInst = NULL;
-        gGetSpecialFolderPath = NULL;
         gGetKnownFolderPath = NULL;
     }
 #endif
@@ -210,87 +171,22 @@ static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
-    if (gGetSpecialFolderPath) { // With MS IE 4.0 or higher
-        WCHAR path[MAX_PATH + 2];
-        HRESULT result = gGetSpecialFolderPath(NULL, path, folder, true);
-        
-        if (!SUCCEEDED(result)) 
-            return NS_ERROR_FAILURE;
-
-        // Append the trailing slash
-        int len = wcslen(path);
-        if (len > 1 && path[len - 1] != L'\\') 
-        {
-            path[len]   = L'\\';
-            path[++len] = L'\0';
-        }
-
-        return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
-    }
-
-    nsresult rv = NS_ERROR_FAILURE;
-    LPMALLOC pMalloc = NULL;
-    LPWSTR pBuffer = NULL;
-    LPITEMIDLIST pItemIDList = NULL;
-    int len;
- 
-    // Get the shell's allocator. 
-    if (!SUCCEEDED(SHGetMalloc(&pMalloc))) 
+    WCHAR path[MAX_PATH + 2];
+    HRESULT result = ::SHGetSpecialFolderPathW(NULL, path, folder, true);
+    
+    if (!SUCCEEDED(result)) 
         return NS_ERROR_FAILURE;
 
-    // Allocate a buffer
-    if ((pBuffer = (LPWSTR) pMalloc->Alloc(MAX_PATH + 2)) == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
- 
-    // Get the PIDL for the folder. 
-    if (!SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)))
-        goto Clean;
- 
-    if (!SUCCEEDED(nsWinAPIs::mSHGetPathFromIDList(pItemIDList, pBuffer)))
-        goto Clean;
-
     // Append the trailing slash
-    len = wcslen(pBuffer);
-    pBuffer[len] = L'\\';
-    pBuffer[++len] = L'\0';
-
-    // Assign the directory
-    rv = NS_NewLocalFile(nsDependentString(pBuffer, len), 
-                         PR_TRUE, 
-                         aFile);
-
-Clean:
-    // Clean up. 
-    if (pItemIDList)
-        pMalloc->Free(pItemIDList); 
-    if (pBuffer)
-        pMalloc->Free(pBuffer); 
-
-	pMalloc->Release();
-    
-    return rv;
-} 
-
-// Assume that this function is always invoked with aPath with the capacity
-// no smaller than MAX_PATH. It's possible because it's only referred to in 
-// this file and we have made sure that they're indeed.
-
-static BOOL WINAPI NS_GetSpecialFolderPath(HWND hwndOwner,
-                                           LPWSTR aPath, 
-                                           int aFolder, BOOL fCreate)
-{
-    char path[MAX_PATH];
-    if (gGetSpecialFolderPathA(hwndOwner, path, aFolder, fCreate))
+    int len = wcslen(path);
+    if (len > 1 && path[len - 1] != L'\\') 
     {
-        if (NS_ConvertAtoW(path, 0, aPath) > MAX_PATH)
-        {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
-        }
-        return NS_ConvertAtoW(path, MAX_PATH, aPath) ? TRUE : FALSE;
+        path[len]   = L'\\';
+        path[++len] = L'\0';
     }
-    return FALSE;
-}
+
+    return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
+} 
 
 #endif // XP_WIN
 
@@ -356,7 +252,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
     {
         case OS_CurrentWorkingDirectory:
 #if defined(XP_WIN)
-            if (!nsWinAPIs::mGetCwd(path, MAX_PATH))
+            if (!_wgetcwd(path, MAX_PATH))
                 return NS_ERROR_FAILURE;
             return NS_NewLocalFile(nsDependentString(path), 
                                    PR_TRUE, 
@@ -378,7 +274,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case OS_DriveDirectory:
 #if defined (XP_WIN)
         {
-            PRInt32 len = nsWinAPIs::mGetWindowsDirectory(path, MAX_PATH);
+            PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
             if (len == 0)
                 break;
             if (path[1] == PRUnichar(':') && path[2] == PRUnichar('\\'))
@@ -410,7 +306,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case OS_TemporaryDirectory:
 #if defined (XP_WIN) && !defined (WINCE)
         {
-            DWORD len = nsWinAPIs::mGetTempPath(MAX_PATH, path);
+            DWORD len = ::GetTempPathW(MAX_PATH, path);
             if (len == 0)
                 break;
             return NS_NewLocalFile(nsDependentString(path, len), 
@@ -468,7 +364,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {    
-            PRInt32 len = nsWinAPIs::mGetSystemDirectory(path, MAX_PATH);
+            PRInt32 len = ::GetSystemDirectoryW(path, MAX_PATH);
         
             // Need enough space to add the trailing backslash
             if (!len || len > MAX_PATH - 2)
@@ -483,7 +379,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Win_WindowsDirectory:
         {    
-            PRInt32 len = nsWinAPIs::mGetWindowsDirectory(path, MAX_PATH);
+            PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
             
             // Need enough space to add the trailing backslash
             if (!len || len > MAX_PATH - 2)
@@ -505,9 +401,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case Win_HomeDirectory:
         {    
             PRInt32 len;
-            if ((len = 
-                 nsWinAPIs::mGetEnvironmentVariable(L"HOME", path, 
-                                                    MAX_PATH)) > 0)
+            if ((len = ::GetEnvironmentVariableW(L"HOME", path, MAX_PATH)) > 0)
             {
                 // Need enough space to add the trailing backslash
                 if (len > MAX_PATH - 2)
@@ -521,14 +415,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                        aFile);
             }
 
-            len = nsWinAPIs::mGetEnvironmentVariable(L"HOMEDRIVE", 
-                                                     path, MAX_PATH);
+            len = ::GetEnvironmentVariableW(L"HOMEDRIVE", path, MAX_PATH);
             if (0 < len && len < MAX_PATH)
             {
                 WCHAR temp[MAX_PATH];
-                DWORD len2 = nsWinAPIs::mGetEnvironmentVariable(L"HOMEPATH", 
-                                                                temp,
-                                                                MAX_PATH);
+                DWORD len2 = ::GetEnvironmentVariableW(L"HOMEPATH", temp, MAX_PATH);
                 if (0 < len2 && len + len2 < MAX_PATH)
                     wcsncat(path, temp, len2);
         
