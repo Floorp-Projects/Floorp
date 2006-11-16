@@ -1828,10 +1828,6 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
     InitializeMouseEvent(aMouseEvent, widgetHitPoint, aOSEvent.modifiers,
                          mClickCount);
-
-    // nsEvent
-    aMouseEvent.message     = aMessage;
-
     // nsGUIEvent
     aMouseEvent.widget      = widgetHit;
     aMouseEvent.nativeMsg   = (void*)&aOSEvent;
