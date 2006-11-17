@@ -367,9 +367,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     [mWindow setContentMinSize:NSMakeSize(60, 60)];
 
     [mWindow setReleasedWhenClosed:NO];
-
-    // register for mouse-moved events. The default is to ignore them for perf reasons.
-    [mWindow setAcceptsMouseMovedEvents:YES];
     
     // setup our notification delegate. Note that setDelegate: does NOT retain.
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
@@ -491,6 +488,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           parentIsSheet) {
         piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
         [NSApp endSheet:nativeParentWindow];
+        [nativeParentWindow setAcceptsMouseMovedEvents:NO];
       }
 
       nsCocoaWindow* sheetShown = nsnull;
@@ -504,6 +502,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           mSheetNeedsShow = PR_FALSE;
           mSheetWindowParent = topNonSheetWindow;
           [[mSheetWindowParent delegate] sendLostFocusAndDeactivate];
+          [mWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:mWindow
              modalForWindow:mSheetWindowParent
               modalDelegate:mDelegate
@@ -522,11 +521,13 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
     else if (mWindowType == eWindowType_popup) {
       mVisible = PR_TRUE;
+      [mWindow setAcceptsMouseMovedEvents:YES];
       [mWindow orderFront:nil];
       SendSetZLevelEvent();
     }
     else {
       mVisible = PR_TRUE;
+      [mWindow setAcceptsMouseMovedEvents:YES];
       [mWindow makeKeyAndOrderFront:nil];
       SendSetZLevelEvent();
     }
@@ -549,6 +550,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         // hide the sheet
         [NSApp endSheet:mWindow];
         
+        [mWindow setAcceptsMouseMovedEvents:NO];
+        
         [[mWindow delegate] sendLostFocusAndDeactivate];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
@@ -566,6 +569,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // If there are no sibling sheets, but the parent is a sheet, restore
           // it.  It wasn't sent any deactivate events when it was hidden, so
           // don't call through Show, just let the OS put it back up.
+          [nativeParentWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:nativeParentWindow
              modalForWindow:sheetParent
               modalDelegate:[nativeParentWindow delegate]
@@ -576,6 +580,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           // Sheet, that was hard.  No more siblings or parents, going back
           // to a real window.
           [sheetParent makeKeyAndOrderFront:nil];
+          [sheetParent setAcceptsMouseMovedEvents:YES];
         }
         SendSetZLevelEvent();
       }
@@ -588,6 +593,10 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
     else {
       [mWindow orderOut:nil];
+      
+      // it's very important to turn off mouse moved events when hiding a window, otherwise
+      // the windows' tracking rects will interfere with each other. (bug 356528)
+      [mWindow setAcceptsMouseMovedEvents:NO];
       mVisible = PR_FALSE;
     }
   }
