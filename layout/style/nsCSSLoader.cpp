@@ -1881,7 +1881,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
                                             nsICSSLoaderObserver* aObserver)
 {
   NS_PRECONDITION(aURL, "Must have a URI to load");
-  NS_PRECONDITION(aSheet || aObserver, "One or the other please");
+  NS_PRECONDITION(aSheet || aObserver, "Sheet and observer can't both be null");
   NS_ASSERTION(mParsingDatas.Count() == 0, "We're in the middle of a parse?");
 
   LOG_URI("  Non-document sheet uri: '%s'", aURL);

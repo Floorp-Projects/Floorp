@@ -3003,11 +3003,14 @@ nsXULDocument::ResumeWalk()
 
                     const PRUnichar* params[] = { piProto->mTarget.get() };
 
+                    nsCOMPtr<nsIURI> overlayURI;
+                    mCurrentPrototype->GetURI(getter_AddRefs(overlayURI));
+
                     nsContentUtils::ReportToConsole(
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
                                         params, NS_ARRAY_LENGTH(params),
-                                        mDocumentURI,
+                                        overlayURI,
                                         EmptyString(), /* source line */
                                         0, /* line number */
                                         0, /* column number */
