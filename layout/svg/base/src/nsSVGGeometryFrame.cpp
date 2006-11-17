@@ -50,8 +50,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGeometryFrameBase)
 
 //----------------------------------------------------------------------
 
-static const nscolor sInvalidPaintColour = NS_RGB(0, 0, 0);
-
 nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
   : nsSVGGeometryFrameBase(aContext)
 {
@@ -279,7 +277,8 @@ nsSVGGeometryFrame::HasStroke()
     return PR_FALSE;
 
   if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Color ||
-      GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server)
+      (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server &&
+       (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -338,6 +337,8 @@ nsSVGGeometryFrame::SetupCairoFill(nsISVGRendererCanvas *aCanvas,
                                    cairo_t *aCtx,
                                    void **aClosure)
 {
+  static const nscolor sInvalidPaintColour = NS_RGB(0, 0, 0);
+
   if (GetStyleSVG()->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
     cairo_set_fill_rule(aCtx, CAIRO_FILL_RULE_EVEN_ODD);
   else
@@ -353,7 +354,7 @@ nsSVGGeometryFrame::SetupCairoFill(nsISVGRendererCanvas *aCanvas,
     // should have a paint server but something has gone wrong configuring it.
     SetupCairoColor(aCtx,
                     sInvalidPaintColour,
-                    1.0f);
+                    GetStyleSVG()->mFillOpacity);
   } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mFill.mPaint.mColor,
@@ -431,11 +432,6 @@ nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
     return ps->SetupPaintServer(aCanvas, aCtx, this,
                                 GetStyleSVG()->mStrokeOpacity,
                                 aClosure);
-  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
-    // should have a paint server but something has gone wrong configuring it.
-    SetupCairoColor(aCtx,
-                    sInvalidPaintColour,
-                    1.0f);
   } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mStroke.mPaint.mColor,
