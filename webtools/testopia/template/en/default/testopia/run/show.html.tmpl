@@ -166,6 +166,8 @@
 [% PROCESS testopia/caserun/table.html.tmpl 
    caseruns = run.current_caseruns %]
 
+[% table.list_count FILTER none %] test cases found.
+<br/>
 <form action="tr_list_cases.cgi" method="POST">
   <input type="hidden" name="exclude" value="[% run.case_id_list FILTER none %]" />
   <input type="hidden" name="current_tab" value="case" />
