@@ -180,7 +180,7 @@
   <div style="z-index:-1; visibility:hidden; position:absolute; left:-10">
     <input type="submit" name="action" value="Commit" style="width:1px;" >
   </div>
-  <input type="hidden" name="case_list" value="[% case_list FILTER none %]" />
+  <input type="hidden" name="case_list" value="[% table.id_list FILTER none %]" />
   <input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
   <input type="submit" name="action" value="Clone Run With These Cases" />
 <a href="tr_list_caseruns.cgi?[% table.get_query_part FILTER none %]">Update Multiple</a>

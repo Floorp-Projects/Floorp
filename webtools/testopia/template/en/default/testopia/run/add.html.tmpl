@@ -48,8 +48,12 @@
  
 <form id="table" method="post" action="tr_new_run.cgi">
 <h3>Select Test Cases</h3>
+[% IF table.list_count > 0 %]
 [% PROCESS testopia/case/table.html.tmpl 
    cases = plan.test_cases %]
+[% ELSE %]
+<b>No CONFIRMED test cases found in this test plan.</b>
+[% END %]
 <br><br>
 <h3>Run Attributes</h3>
 [% PROCESS testopia/run/form.html.tmpl %]

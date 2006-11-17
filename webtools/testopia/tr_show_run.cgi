@@ -300,16 +300,11 @@ sub display {
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
     ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
     
-    my @case_list;
-    foreach my $caserun (@{$table->list}){
-        push @case_list, $caserun->case_id;
-    }
     my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
     $vars->{'expand_report'} = $cgi->param('expand_report') || 0;
     $vars->{'expand_filter'} = $cgi->param('expand_filter') || 0;
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
-    $vars->{'case_list'} = join(",", @case_list);
     $vars->{'action'} = 'Commit';
     $template->process("testopia/run/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
