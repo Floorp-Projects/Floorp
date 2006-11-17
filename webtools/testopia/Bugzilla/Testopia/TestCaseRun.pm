@@ -991,7 +991,7 @@ sub candelete {
 
 =head2 obliterate
 
-Removes this caserun and all things that reference it.
+Removes this caserun, it's history, and all things that reference it.
 
 =cut
 
@@ -1000,8 +1000,10 @@ sub obliterate {
     return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
     
-    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id = ?", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_runs WHERE case_run_id = ?", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 
+              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_runs WHERE case_id = ? AND run_id = ?", 
+              undef, ($self->case_id, $self->run_id));
     return 1;
 }
 
