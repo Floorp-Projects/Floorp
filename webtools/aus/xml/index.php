@@ -88,6 +88,12 @@ switch ($clean['updateVersion']) {
         // Parse out the %OS_VERSION% if it exists.
         $clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
 
+        // Check for OS_VERSION values and scrub the URI to make sure we aren't getting a malformed request
+        // from a client suffering from bug 360127.
+        if (empty($clean['platformVersion']) || $clean['platformVersion']=='%OS_VERSION%' || preg_match('/^1\.5.*$/',$clean['version'])) {
+            break;
+        }
+
         // Check to see if the %OS_VERSION% value passed in the URI is in our no-longer-supported
         // array which is set in our config.
         if (!empty($clean['platformVersion']) && !empty($unsupportedPlatforms) && is_array($unsupportedPlatforms) && in_array($clean['platformVersion'], $unsupportedPlatforms)) {
