@@ -328,7 +328,7 @@
       if (event.shiftKey != (pref && pref.getBoolPref("browser.tabs.loadInBackground")))
         browser.selectedTab = tab;
     }
-    else if (tab.ownerDocument == document) {
+    else if (event.target == browser) {
       tab = browser.addTab(url);
       if (event.shiftKey != (pref && pref.getBoolPref("browser.tabs.loadInBackground")))
         browser.selectedTab = tab;
