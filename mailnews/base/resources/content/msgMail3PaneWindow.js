@@ -344,8 +344,29 @@ var folderObserver = {
         DropOnFolderTree(row, orientation);
     },
 
-    onToggleOpenState: function()
+    onToggleOpenState: function(index)
     {
+      var folderTree = GetFolderTree();
+
+      // Nothing to do when collapsing an item.
+      if (folderTree.view.isContainerOpen(index))
+        return;
+
+      var folderResource = GetFolderResource(folderTree, index);
+
+      if (folderTree.view.getLevel(index) == 0)
+      {
+        // (Imap/Nntp/Pop) Account item.
+
+        folderResource.QueryInterface(Components.interfaces.nsIMsgFolder)
+                      .server.performExpand(msgWindow);
+      }
+      else if (folderResource instanceof Components.interfaces.nsIMsgImapMailFolder)
+      {
+        // Imap message folder item.
+
+        folderResource.performExpand(msgWindow);
+      }
     },
 
     onCycleHeader: function(colID, elt)
@@ -863,7 +884,7 @@ function AddToSession()
         var nsIFolderListener = Components.interfaces.nsIFolderListener;
         var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
         mailSession.AddFolderListener(folderListener, notifyFlags);
-	} catch (ex) {
+    } catch (ex) {
         dump("Error adding to session\n");
     }
 }
@@ -1244,60 +1265,22 @@ function FolderPaneOnClick(event)
       if (event.originalTarget.localName == "treecol")
         // clicking on the name column in the folder pane should not sort
         event.stopPropagation();
-      return;
-    }
-
-    if (elt.value == "twisty")
-    {
-        if (!(folderTree.treeBoxObject.view.isContainerOpen(row.value)))
-        {
-            var folderResource = GetFolderResource(folderTree, row.value);
-
-            var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
-            if (isServer == "true")
-            {
-                var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-                var server = msgFolder.server;
-                server.performExpand(msgWindow);
-            }
-            else
-            {
-                var serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
-                if (serverType == "imap")
-                {
-                    var imapFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
-                    imapFolder.performExpand(msgWindow);
-                }
-            }
-        }
     }
     else if ((event.originalTarget.localName == "slider") ||
              (event.originalTarget.localName == "scrollbarbutton")) {
       event.stopPropagation();
     }
-    else if (event.detail == 2) {
+    else if ((event.detail == 2) && (elt.value != "twisty") &&
+             (folderTree.view.getLevel(row.value) != 0)) {
       FolderPaneDoubleClick(row.value, event);
     }
-
 }
 
 function FolderPaneDoubleClick(folderIndex, event)
 {
-    var folderTree = GetFolderTree();
-    var folderResource = GetFolderResource(folderTree, folderIndex);
-
-    var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
-    if (isServer == "true")
+    if (!pref.getBoolPref("mailnews.reuse_thread_window2"))
     {
-      if (!(folderTree.treeBoxObject.view.isContainerOpen(folderIndex)))
-      {
-        var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        var server = msgFolder.server;
-        server.performExpand(msgWindow);
-      }
-    }
-    else if (!pref.getBoolPref("mailnews.reuse_thread_window2"))
-    {
+      var folderResource = GetFolderResource(GetFolderTree(), folderIndex);
       // Open a new msg window only if we are double clicking on 
       // folders or newsgroups.
       MsgOpenNewWindowForFolder(folderResource.Value, -1 /* key */);
