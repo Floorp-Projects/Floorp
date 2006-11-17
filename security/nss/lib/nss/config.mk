@@ -122,6 +122,14 @@ MKSHLIB += -R '$$ORIGIN'
 endif
 endif
 
+ifeq ($(OS_ARCH), HP-UX) 
+ifneq ($(OS_TEST), ia64)
+# pa-risc
+ifeq ($(USE_64), 1)
+MKSHLIB += +b '$$ORIGIN'
+endif
+endif
+endif
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifndef NS_USE_GCC
