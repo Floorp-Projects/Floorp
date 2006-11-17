@@ -83,7 +83,7 @@
           onkeypress="document.getElementById('no[% index %]').value=1;document.getElementById('bs[% index %]').disabled = false" 
         [% END %]
         style="height:100px; width:400px;" rows=""></textarea>
-        <input id="bs[% index %]" type="button" disabled="true" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value);" value="Append">
+        <input id="bs[% index %]" type="button" disabled="true" onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value);" value="Append Note">
       </td>
     </tr>  
   </table>
@@ -123,7 +123,7 @@
         onkeyup="edt_attch([% index %]);"
         [% END %]
         /></div>
-        <div class="cc_i"><input type="button" value="Attach" id="sk[% index %]" disabled="true" onclick="attch([% index %], [% caserun.id FILTER none %], document.getElementById('mbg[% index %]').value);"/></div>
+        <div class="cc_i"><input type="button" value="Attach Bug" id="sk[% index %]" disabled="true" onclick="attch([% index %], [% caserun.id FILTER none %], document.getElementById('mbg[% index %]').value);"/></div>
   [%##### Assignee #####%]
         <div class="cc_i"><input value="[% user.login FILTER html %]" id="assignee_[% index %]" /><input type="button" value="Assign" onclick="chOwn([% index %], [% caserun.id FILTER none %], document.getElementById('assignee_[% index %]').value)">
         <a href="javascript:userLookup('document.Create.assigned_to', document.Create.assigned_to.value);">
@@ -131,10 +131,10 @@
         <a id="aw_[% index %]" href="javascript:aws([% index %], [% caserun.id FILTER none %])">
       </div>
       <div style="float:right; margin-right:20px;">
-      [% IF caserun.candelete %]
-        <a href="tr_show_caserun.cgi?action=delete&caserun_id=[% caserun.id FILTER none %]">Delete</a>
-      [% END %]
         <a href="tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]">Classic interface...</a>
+      [% IF caserun.candelete %]
+        &nbsp;&nbsp;&nbsp;<a href="tr_show_caserun.cgi?action=delete&caserun_id=[% caserun.id FILTER none %]">Delete</a>
+      [% END %]
       </div>
     </div>
     <div class="cc_xx" style="margin-bottom:10px;"><div id="pp[% index %]" class="floatMsg"></div></div>
