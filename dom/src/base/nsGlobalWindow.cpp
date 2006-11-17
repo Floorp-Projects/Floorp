@@ -387,6 +387,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsPopupSpam(PR_FALSE),
     mBlockScriptedClosingFlag(PR_FALSE),
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
+    mCreatingInnerWindow(PR_FALSE),
     mGlobalObjectOwner(nsnull),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -1326,6 +1327,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         mInnerWindow = nsnull;
 
         Freeze();
+        mCreatingInnerWindow = PR_TRUE;
         // Every script context we are initialized with must create a
         // new global.
         rv = NS_OK;
@@ -1345,6 +1347,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
             }
           }
         }
+        mCreatingInnerWindow = PR_FALSE;
         Thaw();
 
         NS_ENSURE_SUCCESS(rv, rv);

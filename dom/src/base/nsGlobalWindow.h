@@ -390,6 +390,11 @@ public:
     return mIsFrozen;
   }
 
+  PRBool IsCreatingInnerWindow() const
+  {
+    return  mCreatingInnerWindow;
+  }
+
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const PRUnichar* aData);
 
@@ -626,6 +631,10 @@ protected:
 
   // Track what sorts of events we need to fire when thawed
   PRPackedBool                  mFireOfflineStatusChangeEventOnThaw : 1;
+
+  // Indicates whether we're in the middle of creating an initializing
+  // a new inner window object.
+  PRPackedBool                  mCreatingInnerWindow : 1;
   
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
