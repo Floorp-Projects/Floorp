@@ -279,7 +279,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput,
     if (aURI) {
       aURI->GetSpec(mFileName);
     } else {
-      mFileName.Adopt(nsCRT::strdup("from DOM"));
+      mFileName.Adopt(NS_strdup("from DOM"));
     }
   }
 #endif // CSS_REPORT_PARSE_ERRORS

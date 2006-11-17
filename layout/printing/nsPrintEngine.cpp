@@ -1824,13 +1824,13 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*      aPO,
 
   if (!docURLStrPS) {
     if (aPO->mDocURL) {
-      *aURLStr = nsCRT::strdup(aPO->mDocURL);
+      *aURLStr = NS_strdup(aPO->mDocURL);
     }
   }
 
   if (!docTitleStrPS) {
     if (aPO->mDocTitle) {
-      *aTitle = nsCRT::strdup(aPO->mDocTitle);
+      *aTitle = NS_strdup(aPO->mDocTitle);
     } else {
       switch (aDefType) {
         case eDocTitleDefBlank: *aTitle = ToNewUnicode(EmptyString());
@@ -1838,9 +1838,9 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*      aPO,
 
         case eDocTitleDefURLDoc:
           if (*aURLStr) {
-            *aTitle = nsCRT::strdup(*aURLStr);
+            *aTitle = NS_strdup(*aURLStr);
           } else {
-            if (aBrandName) *aTitle = nsCRT::strdup(aBrandName);
+            if (aBrandName) *aTitle = NS_strdup(aBrandName);
           }
           break;
 
