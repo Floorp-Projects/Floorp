@@ -95,11 +95,6 @@ const long kMinContainerSplitWidth = 150;
 const int kMinSeparatorWidth = 16;
 const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn't seem to be in the API
 
-// The actual constant defined in 10.3.x and greater headers is NSTableViewSolidVerticalGridLineMask.
-// In order to compile with 10.2.x, the value has just been extracted and put here.
-// It is extremely unlikely that Apple will change it.
-static const unsigned int TableViewSolidVerticalGridLineMask = 1;
-
 #pragma mark -
 
 @interface BookmarkViewController (Private) <BookmarksClient, NetworkServicesClient>
@@ -328,7 +323,7 @@ static const unsigned int TableViewSolidVerticalGridLineMask = 1;
   [itemNameColumn setDataCell:imageAndTextCell];
 
   [tableView setUsesAlternatingRowBackgroundColors:YES];
-  [tableView setGridStyleMask:TableViewSolidVerticalGridLineMask];
+  [tableView setGridStyleMask:NSTableViewSolidVerticalGridLineMask];
 
   // set up the font on the item & search views to be smaller
   // also don't let the cells draw their backgrounds

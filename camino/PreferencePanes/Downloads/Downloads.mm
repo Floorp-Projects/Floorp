@@ -87,11 +87,6 @@ private:
 
 @end
 
-// necessary because we're building against the 10.2 SDK
-@interface NSOpenPanel(NewFolderExtensionsFor102SDK)
--(void)setCanCreateDirectories:(BOOL)inInclude;      // exists in 10.3 SDK
-@end
-
 @implementation OrgMozillaChimeraPreferenceDownloads
 
 - (id)initWithBundle:(NSBundle *)bundle

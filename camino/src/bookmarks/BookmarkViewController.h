@@ -57,10 +57,6 @@
 @class BookmarkFolder;
 @class BookmarkItem;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-@class NSSearchField;
-#endif
-
 // Tags for arrange menu items
 enum
 {

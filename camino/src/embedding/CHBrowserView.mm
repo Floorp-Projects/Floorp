@@ -127,19 +127,6 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
 
-// fix warnings
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-@interface NSView(PantherViewAdditions)
-- (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
-- (BOOL)needsToDrawRect:(NSRect)aRect;
-- (BOOL)wantsDefaultClipping;
-@end
-
-const long NSFindPanelActionNext = 2;
-const long NSFindPanelActionPrevious = 3;
-const long NSFindPanelActionSetFindString = 7;
-#endif
-
 
 @interface CHBrowserView(Private)
 

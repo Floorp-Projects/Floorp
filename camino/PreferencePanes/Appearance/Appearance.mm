@@ -934,18 +934,6 @@ const int kMissingFontPopupItemTag = 9999;
   return YES;
 }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-
-enum {
-    NSFontPanelFaceModeMask = 1 << 0,
-    NSFontPanelSizeModeMask = 1 << 1,
-    NSFontPanelCollectionModeMask = 1 << 2,
-    NSFontPanelStandardModesMask = 0xFFFF,
-    NSFontPanelAllModesMask = 0xFFFFFFFF
-};
-
-#endif
-
 // this allows us to hide the font face panel
 - (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
 {

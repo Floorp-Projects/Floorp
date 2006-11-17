@@ -39,20 +39,6 @@
 #import <AppKit/AppKit.h>
 
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// this category is here just to quiet some warnings when using the 10.2 SDK
-@interface NSTableView(CaminoNSTableViewPantherAdditions)
-
-- (void)setGridStyleMask:(unsigned int)gridType;
-- (unsigned int)gridStyleMask;
-
-- (void)setUsesAlternatingRowBackgroundColors:(BOOL)useAlternatingRowColors;
-- (BOOL)usesAlternatingRowBackgroundColors;
-
-@end
-
-#endif
-
 @interface ExtendedTableView : NSTableView
 {
   SEL mDeleteAction;
