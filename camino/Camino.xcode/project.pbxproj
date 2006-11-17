@@ -11533,6 +11533,7 @@
 		};
 		3FBDC7D608252CD600D7F8E0 = {
 			children = (
+				F5F94B910332532801026D5D,
 				3FBDC7D908252CF300D7F8E0,
 				3FBDC7DA08252CF300D7F8E0,
 			);
@@ -15363,7 +15364,6 @@
 		F512F52D02D1287F01072C9F = {
 			children = (
 				F59E9F3F0237E43401A967DF,
-				F5F94B910332532801026D5D,
 				F53C1CD7032FF3B301A96654,
 				F6BA6D4E01B2F8A601A962F7,
 				F632AF8402B9AEBB01000103,
@@ -18012,7 +18012,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
 			name = KeychainService.h;
-			path = src/browser/KeychainService.h;
+			path = src/formfill/KeychainService.h;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -18021,7 +18021,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.cpp.objcpp;
 			name = KeychainService.mm;
-			path = src/browser/KeychainService.mm;
+			path = src/formfill/KeychainService.mm;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
