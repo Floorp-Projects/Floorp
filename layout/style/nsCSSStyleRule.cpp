@@ -164,7 +164,7 @@ nsAtomStringList::nsAtomStringList(nsIAtom* aAtom, const PRUnichar* aString)
 {
   MOZ_COUNT_CTOR(nsAtomStringList);
   if (aString)
-    mString = nsCRT::strdup(aString);
+    mString = NS_strdup(aString);
 }
 
 nsAtomStringList::nsAtomStringList(const nsString& aAtomValue,
@@ -176,7 +176,7 @@ nsAtomStringList::nsAtomStringList(const nsString& aAtomValue,
   MOZ_COUNT_CTOR(nsAtomStringList);
   mAtom = do_GetAtom(aAtomValue);
   if (aString)
-    mString = nsCRT::strdup(aString);
+    mString = NS_strdup(aString);
 }
 
 nsAtomStringList*
@@ -194,7 +194,7 @@ nsAtomStringList::~nsAtomStringList(void)
 {
   MOZ_COUNT_DTOR(nsAtomStringList);
   if (mString)
-    nsCRT::free(mString);
+    NS_Free(mString);
   NS_IF_DEEP_DELETE(nsAtomStringList, mNext);
 }
 

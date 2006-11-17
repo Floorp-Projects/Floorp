@@ -3749,7 +3749,7 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
           else if (type <= eStyleContentType_Attr) {
             value.GetStringValue(buffer);
             Unquote(buffer);
-            data.mContent.mString = nsCRT::strdup(buffer.get());
+            data.mContent.mString = NS_strdup(buffer.get());
           }
           else if (type <= eStyleContentType_Counters) {
             data.mContent.mCounters = value.GetArrayValue();

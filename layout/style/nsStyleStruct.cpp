@@ -1317,7 +1317,7 @@ nsStyleContentData::~nsStyleContentData()
              mType == eStyleContentType_Counters) {
     mContent.mCounters->Release();
   } else if (mContent.mString) {
-    nsCRT::free(mContent.mString);
+    NS_Free(mContent.mString);
   }
 }
 
@@ -1335,7 +1335,7 @@ nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOth
     mContent.mCounters = aOther.mContent.mCounters;
     mContent.mCounters->AddRef();
   } else if (aOther.mContent.mString) {
-    mContent.mString = nsCRT::strdup(aOther.mContent.mString);
+    mContent.mString = NS_strdup(aOther.mContent.mString);
   } else {
     mContent.mString = nsnull;
   }
