@@ -66,9 +66,11 @@ sub new {
     bless ($self, $class);
     
     # Bug 321645 - disable MySQL strict mode, if set
-    my $sql_mode = $self->selectrow_array('SELECT @@sql_mode');
+    my ($var, $sql_mode) = $self->selectrow_array(
+        "SHOW VARIABLES LIKE 'sql\\_mode'");
+
     if ($sql_mode) {
-        # STRICT_TRANS_TABLE or STICT_ALL_TABLES enable MySQL strict mode,
+        # STRICT_TRANS_TABLE or STRICT_ALL_TABLES enable MySQL strict mode,
         # causing bug 321645. TRADITIONAL sets these modes (among others) as
         # well, so it has to be stipped as well
         my $new_sql_mode =
