@@ -298,7 +298,7 @@ sub display {
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
     
     my $case = Bugzilla::Testopia::TestCase->new({'case_id' => 0});
     $vars->{'expand_report'} = $cgi->param('expand_report') || 0;

@@ -402,7 +402,7 @@ sub display {
     $cgi->param('current_tab', 'case_run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_case.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
     $vars->{'case'} = $case;
     $vars->{'table'} = $table;
     $vars->{'user'} = Bugzilla->user;

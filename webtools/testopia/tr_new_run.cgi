@@ -163,7 +163,7 @@ if ($action eq 'Add'){
     $cgi->param('run_id', $run_id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
     
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;

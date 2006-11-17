@@ -160,7 +160,7 @@ elsif ($action eq 'do_delete'){
     $cgi->param('run_id', $caserun->run->id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->list_count > $query_limit;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
     
     my @case_list;
     foreach my $cr (@{$table->list}){
