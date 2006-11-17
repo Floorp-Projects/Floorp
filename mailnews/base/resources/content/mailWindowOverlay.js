@@ -175,6 +175,7 @@ function view_init()
       message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
   }
 
+  var folderPane_menuitem = document.getElementById('menu_showFolderPane');
   if (folderPane_menuitem && !folderPane_menuitem.hidden)
     folderPane_menuitem.setAttribute('checked', !IsFolderPaneCollapsed());
 
@@ -553,6 +554,28 @@ function RemoveAllMessageTags()
           .setStringProperty(msgHdr.messageKey, "keywords", "");
   }
   OnTagsChange();
+}
+
+function InitMessageForward(aPopup)
+{
+  var forwardType = 0;
+  try {
+    forwardType = gPrefs.getIntPref("mail.forward_message_mode");
+  }
+  catch (ex) {
+    dump("failed to retrieve pref mail.forward_message_mode");
+  }
+
+  if (forwardType) {
+    // forward inline is the first menuitem
+    aPopup.firstChild.setAttribute("default", "true");
+    aPopup.lastChild.removeAttribute("default");
+  }
+  else {
+    // attachment is the last menuitem
+    aPopup.lastChild.setAttribute("default", "true");
+    aPopup.firstChild.removeAttribute("default");
+  }
 }
 
 function ToggleMessageTagKey(index)
