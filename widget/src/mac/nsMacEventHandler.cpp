@@ -1523,9 +1523,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			{        
 				// set the activation and focus on the widget hit, if it accepts it
 				{
-					nsMouseEvent mouseActivateEvent(PR_TRUE, 0, nsnull,
+					nsMouseEvent mouseActivateEvent(PR_TRUE, NS_MOUSE_ACTIVATE, nsnull,
                                           nsMouseEvent::eReal);
-          ConvertOSEventToMouseEvent(aOSEvent, mouseActivateEvent, NS_MOUSE_ACTIVATE);
+          ConvertOSEventToMouseEvent(aOSEvent, mouseActivateEvent);
 					widgetHit->DispatchMouseEvent(mouseActivateEvent);
 				}
 
@@ -1535,9 +1535,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 				// if we're a control-click, send in an additional NS_CONTEXTMENU event
 				// after the mouse down.
 				if (mouseEvent.button == nsMouseEvent::eRightButton) {
-    			nsMouseEvent contextMenuEvent(PR_TRUE, 0, nsnull,
+    			nsMouseEvent contextMenuEvent(PR_TRUE, NS_CONTEXTMENU, nsnull,
                                         nsMouseEvent::eReal);
-    			ConvertOSEventToMouseEvent(aOSEvent, contextMenuEvent, NS_CONTEXTMENU);
+    			ConvertOSEventToMouseEvent(aOSEvent, contextMenuEvent);
     			contextMenuEvent.isControl = PR_FALSE;    			
 					widgetHit->DispatchMouseEvent(contextMenuEvent);
         } 
@@ -1595,7 +1595,7 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	if ( aOSEvent.message == kEventMouseButtonTertiary )
 		mouseEvent.button = nsMouseEvent::eMiddleButton;
 
-	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
+	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent);
 
 	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
 	nsWindow* widgetHit = mEventDispatchHandler->GetWidgetHit();
@@ -1639,8 +1639,8 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 	if (!::IsWindowActive(wind) && windowType != eWindowType_popup)
 		return retVal;
 
-	nsMouseEvent mouseEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_MOVE);
+	nsMouseEvent mouseEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
+	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent);
 	if (lastWidgetHit)
 	{
 		Point macPoint = aOSEvent.where;
