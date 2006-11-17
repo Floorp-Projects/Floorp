@@ -110,7 +110,8 @@ exit;
 # Simple email obfuscation
 sub emailFilter {
     my ($var) = @_;
-    $var =~ s/\@/_at_/;
+    $var =~ s/\@/at/;
+    $var =~ s/\./dot/;
     return $var;
 }
 
