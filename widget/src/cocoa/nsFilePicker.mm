@@ -98,7 +98,6 @@ nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
   mMode = aMode;
 }
 
-
 NSView* nsFilePicker::GetAccessoryView()
 {
   NSView* accessoryView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
@@ -221,10 +220,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 //-------------------------------------------------------------------------
 //
-// GetLocalFile
+// GetLocalFiles
 //
-// Use OpenPanel to do a GetFile. Returns PR_TRUE if the user presses OK in the dialog. If
-// they do so, the selected file is in the FSSpec.
+// Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
 //
 //-------------------------------------------------------------------------
 PRInt16
@@ -251,6 +249,14 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
+  
+  // if this is the "Choose application..." dialog, and no other start
+  // dir has been set, then use the Applications folder.
+  if (!theDir && filters && [filters count] == 1 && 
+      [(NSString *)[filters objectAtIndex:0] isEqualToString:@"app"]) {
+    theDir = @"/Applications/";
+  }
+  
   int result = [thePanel runModalForDirectory:theDir file:nil types:filters];  
   
   if (result == NSFileHandlingPanelCancelButton)
@@ -272,18 +278,15 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
     retVal = returnOK;
 
   return retVal;
-} // GetFile
+} // GetFiles
 
 
 //-------------------------------------------------------------------------
 //
 // GetLocalFolder
 //
-// Use OpenPanel to do a GetFolder. Returns PR_TRUE if the user presses OK in the dialog. If
-// they do so, the folder location is in the FSSpec.
+// Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
 //
-// Note: Apparently, not used in Chimera.  So it hasn't been tested.  At all.
-//       Consider yourself warned.
 //-------------------------------------------------------------------------
 PRInt16
 nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
@@ -301,7 +304,9 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   [thePanel setCanChooseDirectories:YES];
   [thePanel setCanChooseFiles:NO];
   [thePanel setResolvesAliases:YES];          //this is default - probably doesn't need to be set
-  [thePanel setTreatsFilePackagesAsDirectories:YES]; //sure, we can pick packages.  
+  
+  // packages != folders
+  [thePanel setTreatsFilePackagesAsDirectories:NO];
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
@@ -310,7 +315,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
 
-  // get FSRef for folder (we allow just 1, so that's all we get)
+  // get the path for the folder (we allow just 1, so that's all we get)
   NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
   if (theURL) {
     nsCOMPtr<nsILocalFile> localFile;
@@ -328,7 +333,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 
 //-------------------------------------------------------------------------
 //
-// PutLocalFile
+// PutLocalFile. Returns |returnOK| if the user presses OK in the dialog.
 //
 //-------------------------------------------------------------------------
 PRInt16
@@ -406,10 +411,19 @@ nsFilePicker::GenerateFilterList()
     for (PRInt32 loop = 0; loop < mFilters.Count(); loop++)
     {
       nsString *filterWide = mFilters[loop];
+      
+      // handle special case filters
       if (filterWide->Equals(NS_LITERAL_STRING("*"))) {
         // if we'll allow all files, we won't bother parsing all other
         // file types. just return early.
         return nil;
+      }
+      else if (filterWide->Equals(NS_LITERAL_STRING("..apps"))) {
+        // this magic filter means that we should enable app bundles.
+        // translate it into a usable filter, and continue looping through 
+        // other filters.
+        [giantFilterString appendString:@"*.app"];
+        continue;
       }
       
       if (filterWide && filterWide->Length() > 0)

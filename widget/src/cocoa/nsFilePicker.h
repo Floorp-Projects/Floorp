@@ -85,6 +85,8 @@ protected:
 
     // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
     // aFile is an existing but unspecified file. These functions must specify it.
+    //
+    // will return |returnCancel| or |returnOK| as result.
   PRInt16 GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
   PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile);
   PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
