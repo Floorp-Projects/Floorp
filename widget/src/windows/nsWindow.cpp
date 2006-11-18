@@ -6364,8 +6364,12 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARA
       CaptureMouse(PR_TRUE);
       break;
 
+    // NS_MOUSE_MOVE and NS_MOUSE_EXIT are here because we need to make sure capture flag
+    // isn't left on after a drag where we wouldn't see a button up message (see bug 324131).
     case NS_MOUSE_BUTTON_UP:
-      if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)))
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_EXIT:
+      if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) && mIsInMouseCapture)
         CaptureMouse(PR_FALSE);
       break;
 
