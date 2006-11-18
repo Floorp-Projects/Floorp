@@ -456,14 +456,17 @@ typedef PRUint32 nsrefcnt;
  *    ... non-expected code path ...
  *  }
  *
+ * These macros are guaranteed to always return 0 or 1.
+ * The NS_FAILED/NS_SUCCEEDED macros depends on this.
+ * @return 0 or 1
  */
 
 #if defined(__GNUC__) && (__GNUC__ > 2)
-#define NS_LIKELY(x)    (__builtin_expect((x), 1))
-#define NS_UNLIKELY(x)  (__builtin_expect((x), 0))
+#define NS_LIKELY(x)    (__builtin_expect(!!(x), 1))
+#define NS_UNLIKELY(x)  (__builtin_expect(!!(x), 0))
 #else
-#define NS_LIKELY(x)    (x)
-#define NS_UNLIKELY(x)  (x)
+#define NS_LIKELY(x)    (!!(x))
+#define NS_UNLIKELY(x)  (!!(x))
 #endif
 
 #endif /* nscore_h___ */

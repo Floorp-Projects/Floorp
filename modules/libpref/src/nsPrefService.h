@@ -79,9 +79,6 @@ protected:
 private:
   nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>       mCurrentFile;
-  PRPackedBool            mErrorOpeningUserPrefs;
-
-  PRPackedBool            mErrorOpeningSharedUserPrefs;
   nsCOMPtr<nsIFile>       mCurrentSharedFile;
 };
 

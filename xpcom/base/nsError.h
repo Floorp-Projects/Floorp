@@ -108,6 +108,7 @@
 
 /**
  * @name Standard Error Handling Macros
+ * @return 0 or 1
  */
 
 #define NS_FAILED(_nsresult) (NS_UNLIKELY((_nsresult) & 0x80000000))
