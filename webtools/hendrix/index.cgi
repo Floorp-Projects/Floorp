@@ -33,6 +33,7 @@ use strict;
 use Template;
 use CGI;
 use Email::Send qw(NNTP);
+use Net::RBLClient;
 
 # use CGI::Carp qw(fatalsToBrowser);
 
@@ -40,6 +41,16 @@ use Email::Send qw(NNTP);
 my $newsgroup = $::ENV{'HENDRIX_NEWSGROUP'} || "mozilla.feedback";
 my $server    = $::ENV{'HENDRIX_NNTP_SERVER'} || "news.mozilla.org";
 my $skin      = $::ENV{'HENDRIX_SKIN'} || "skin/planet.css";
+
+my $rbl = Net::RBLClient->new(
+    lists => [
+        'opm.blitzed.org',
+        'http.dnsbl.sorbs.net',
+        'socks.dnsbl.sorbs.net',
+        'misc.dnsbl.sorbs.net',
+    ],
+    query_txt => 1
+);
 
 my $cgi = new CGI;
 my $form = $cgi->Vars;
@@ -70,6 +81,14 @@ elsif ($action eq "submit") {
     if (($form->{'subject'} eq 'LINKS') && 
         ($form->{'product'} eq 'Firefox 2 Beta 1')) {
       throwError("like_spam");
+    }
+
+    # Check the poster's IP against some blacklists
+    $rbl->lookup($::ENV{REMOTE_ADDR});
+    my %rbl_results = $rbl->txt_hash();
+    if (scalar(keys %rbl_results) > 0) {
+      $vars->{'rbl_results'} = \%rbl_results;
+      throwError("rbl_hit");
     }
 
     # Format the parameters and send to the newsgroup.

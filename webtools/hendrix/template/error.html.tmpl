@@ -56,6 +56,17 @@
       press Back, change the Summary to something else and try again.
     </p>
 
+  [% CASE "rbl_hit" %]
+    <p class="error">
+      Your internet address is in a list of known open proxies. We consult this
+      list in an effort to stop spammers from using this form. If you are not a
+      spammer, please send this information to your Internet Service Provider
+      (ISP).<br>
+      [% FOREACH hit IN rbl_results.keys %]
+      <b>[% hit %]</b> - [% rbl_results.$hit %]<br>
+      [% END %]
+    </p>
+
   [% CASE DEFAULT %]
     The error is unknown. Please try again later.
 [% END %]
