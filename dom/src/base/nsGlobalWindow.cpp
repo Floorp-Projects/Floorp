@@ -3576,7 +3576,7 @@ nsGlobalWindow::Focus()
     PRBool isEnabled = PR_TRUE;
     if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
       NS_WARNING( "Should not try to set the focus on a disabled window" );
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
 
     treeOwnerAsWin->SetVisibility(PR_TRUE);
