@@ -85,10 +85,6 @@ static nsresult pref_InitInitialObjects(void);
  */
 
 nsPrefService::nsPrefService()
-: mErrorOpeningUserPrefs(PR_FALSE)
-#if MOZ_PROFILESHARING
-  , mErrorOpeningSharedUserPrefs(PR_FALSE)
-#endif
 {
 }
 
@@ -368,11 +364,7 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
   gSharedPrefHandler->ReadingUserPrefs(PR_TRUE);
 #endif
 
-  // We need to track errors in reading the shared and the
-  // non-shared files independently. 
-  // Set the appropriate member variable from it after reading.
   nsresult rv = openPrefFile(mCurrentFile);
-  mErrorOpeningUserPrefs = NS_FAILED(rv);
 
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
@@ -395,11 +387,7 @@ nsresult nsPrefService::ReadAndOwnSharedUserPrefFile(nsIFile *aFile)
   gSharedPrefHandler->ReadingUserPrefs(PR_TRUE);
 #endif
 
-  // We need to track errors in reading the shared and the
-  // non-shared files independently. 
-  // Set the appropriate member variable from it after reading.
   nsresult rv = openPrefFile(mCurrentSharedFile);
-  mErrorOpeningSharedUserPrefs = NS_FAILED(rv);
 
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
@@ -467,14 +455,6 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
 
   if (!gHashTable.ops)
     return NS_ERROR_NOT_INITIALIZED;
-
-  /* ?! Don't save (blank) user prefs if there was an error reading them */
-  if (aFile == mCurrentFile && mErrorOpeningUserPrefs)
-    return NS_OK;
-#if MOZ_PROFILESHARING
-  if (aFile == mCurrentSharedFile && mErrorOpeningSharedUserPrefs)
-    return NS_OK;
-#endif
 
   // execute a "safe" save by saving through a tempfile
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
@@ -782,4 +762,3 @@ static nsresult pref_InitInitialObjects()
 
   return NS_OK;
 }
-
