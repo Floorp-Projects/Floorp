@@ -1814,20 +1814,7 @@ public:
     Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
   }
 private:
-  void Init(nsIFrame* aFrame)
-  {
-    Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
-    mFrame = aFrame;
-    if (mFrame) {
-      nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
-      NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
-      if (shell) {
-        shell->AddWeakFrame(this);
-      } else {
-        mFrame = nsnull;
-      }
-    }
-  }
+  void Init(nsIFrame* aFrame);
 
   nsWeakFrame*  mPrev;
   nsIFrame*     mFrame;
