@@ -130,6 +130,10 @@ sub bz_check_requirements {
             . bz_locations()->{'localconfig'};
     }
 
+    die("It is not safe to run Bugzilla inside the 'mysql' database.\n"
+        . "Please pick a different value for \$db_name in localconfig.")
+        if $lc->{db_name} eq 'mysql';
+
     # Check the existence and version of the DBD that we need.
     my $dbd        = $db->{dbd};
     my $dbd_ver    = $db->{dbd_version};
@@ -196,8 +200,14 @@ sub bz_create_database {
         print "Creating database $db_name...\n";
 
         # Try to create the DB, and if we fail print a friendly error.
-        if (!eval { $dbh->do("CREATE DATABASE $db_name") }) {
-            my $error = $dbh->errstr;
+        my $success  = eval {
+            my @sql = $dbh->_bz_schema->get_create_database_sql($db_name);
+            # This ends with 1 because this particular do doesn't always
+            # return something.
+            $dbh->do($_) foreach @sql; 1;
+        };
+        if (!$success) {
+            my $error = $dbh->errstr || $@;
             chomp($error);
             print STDERR  "The '$db_name' database could not be created.",
                           " The error returned was:\n\n    $error\n\n",
@@ -221,7 +231,7 @@ sub _get_no_db_connection {
     if (!$conn_success) {
         my $sql_server = DB_MODULE->{lc($lc->{db_driver})}->{name};
         # Can't use $dbh->errstr because $dbh is undef.
-        my $error = $DBI::errstr;
+        my $error = $DBI::errstr || $@;
         chomp($error);
         print STDERR "There was an error connecting to $sql_server:\n\n",
                      "    $error\n\n", _bz_connect_error_reasons();

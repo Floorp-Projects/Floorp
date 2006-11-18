@@ -59,6 +59,10 @@ sub new {
     
     my $self = $class->db_new($dsn, $user, $pass);
 
+    # This makes sure that if the tables are encoded as UTF-8, we
+    # return their data correctly.
+    $self->do("SET NAMES utf8") if Bugzilla->params->{'utf8'};
+
     # all class local variables stored in DBI derived class needs to have
     # a prefix 'private_'. See DBI documentation.
     $self->{private_bz_tables_locked} = "";
@@ -545,6 +549,88 @@ sub bz_setup_database {
                    MAX_ROWS=100000");
     }
 
+    # Convert the database to UTF-8 if the utf8 parameter is on.
+    if (Bugzilla->params->{'utf8'} && !$self->bz_db_is_utf8) {
+        print <<EOT;
+
+WARNING: We are about to convert your table storage format to UTF8. This
+         allows Bugzilla to correctly store and sort international characters.
+         However, if you have any non-UTF-8 data in your database,
+         it ***WILL BE DELETED*** by this process. So, before
+         you continue with checksetup.pl, if you have any non-UTF-8
+         data (or even if you're not sure) you should press Ctrl-C now
+         to interrupt checksetup.pl, and run contrib/recode.pl to make all 
+         the data in your database into UTF-8. You should also back up your
+         database before continuing.
+
+         If you ever used a version of Bugzilla before 2.22, we STRONGLY
+         recommend that you stop checksetup.pl NOW and run contrib/recode.pl.
+
+         Continuing in 60 seconds...
+EOT
+        sleep 60;
+
+        print "Converting table storage format to UTF-8. This may take a",
+              " while.\n";
+        foreach my $table ($self->bz_table_list_real) {
+            my $info_sth = $self->prepare("SHOW FULL COLUMNS FROM $table");
+            $info_sth->execute();
+            while (my $column = $info_sth->fetchrow_hashref) {
+                # If this particular column isn't stored in utf-8
+                if ($column->{Collation} ne 'NULL' 
+                    && $column->{Collation} !~ /utf8/) 
+                {
+                    my $name = $column->{Field};
+
+                    # The code below doesn't work on a field with a FULLTEXT
+                    # index. So we drop it. The upgrade code will re-create
+                    # it later.
+                    if ($table eq 'longdescs' && $name eq 'thetext') {
+                        $self->bz_drop_index('longdescs', 
+                                             'longdescs_thetext_idx');
+                    }
+                    if ($table eq 'bugs' && $name eq 'short_desc') {
+                        $self->bz_drop_index('bugs', 'bugs_short_desc_idx');
+                    }
+
+                    print "Converting $table.$name to be stored as UTF-8...\n";
+                    my $col_info = 
+                        $self->bz_column_info_real($table, $name);
+
+                    # CHANGE COLUMN doesn't take PRIMARY KEY
+                    delete $col_info->{PRIMARYKEY};
+
+                    my $sql_def = $self->_bz_schema->get_type_ddl($col_info);
+                    # We don't want MySQL to actually try to *convert*
+                    # from our current charset to UTF-8, we just want to
+                    # transfer the bytes directly. This is how we do that.
+
+                    # The CHARACTER SET part of the definition has to come
+                    # right after the type, which will always come first.
+                    my ($binary, $utf8) = ($sql_def, $sql_def);
+                    my $type = $self->_bz_schema->convert_type($col_info->{TYPE});
+                    $binary =~ s/(\Q$type\E)/$1 CHARACTER SET binary/;
+                    $utf8   =~ s/(\Q$type\E)/$1 CHARACTER SET utf8/;
+                    $self->do("ALTER TABLE $table CHANGE COLUMN $name $name 
+                              $binary");
+                    $self->do("ALTER TABLE $table CHANGE COLUMN $name $name 
+                              $utf8");
+                }
+                $self->do("ALTER TABLE $table DEFAULT CHARACTER SET utf8");
+            }
+        } # foreach my $table (@tables)
+
+        my $db_name = Bugzilla->localconfig->{db_name};
+        $self->do("ALTER DATABASE $db_name CHARACTER SET utf8");
+    }
+}
+
+sub bz_db_is_utf8 {
+    my $self = shift;
+    my $db_collation = $self->selectrow_arrayref(
+        "SHOW VARIABLES LIKE 'character_set_database'");
+    # First column holds the variable name, second column holds the value.
+    return $db_collation->[1] =~ /utf8/ ? 1 : 0;
 }
 
 

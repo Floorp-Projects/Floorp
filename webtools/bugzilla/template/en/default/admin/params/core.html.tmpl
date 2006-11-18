@@ -64,9 +64,13 @@
 
   utf8 => "Use UTF-8 (Unicode) encoding for all text in ${terms.Bugzilla}. New " _
           "installations should set this to true to avoid character encoding " _
-          "problems. Existing databases should set this to true only after " _
-          "the data has been converted from existing legacy character " _
-          "encodings to UTF-8.",
+          "problems. <strong>Existing databases should set this to true " _
+          " only after the data has been converted from existing legacy " _
+          " character encodings to UTF-8, using the " _
+          " <kbd>contrib/recode.pl</kbd> script</strong>. <br><br> Note " _
+          " that if you  turn this parameter from &quot;off&quot; to " _
+          " &quot;on&quot;, you must re-run checksetup.pl immediately " _
+          " afterward.",
 
   shutdownhtml => "If this field is non-empty, then $terms.Bugzilla will be completely " _
                   "disabled and this text will be displayed instead of all the " _

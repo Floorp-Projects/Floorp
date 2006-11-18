@@ -338,7 +338,7 @@ use constant ERROR_MODE_DIE_SOAP_FAULT => 2;
 
 # Data about what we require for different databases.
 use constant DB_MODULE => {
-    'mysql' => {db => 'Bugzilla::DB::Mysql', db_version => '4.0.14',
+    'mysql' => {db => 'Bugzilla::DB::Mysql', db_version => '4.1.2',
                 dbd => 'DBD::mysql', dbd_version => '2.9003',
                 name => 'MySQL'},
     'pg'    => {db => 'Bugzilla::DB::Pg', db_version => '8.00.0000',

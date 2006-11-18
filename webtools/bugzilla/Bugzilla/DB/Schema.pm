@@ -1302,7 +1302,7 @@ sub get_type_ddl {
     }
 
     my $fkref = $self->{enable_references} ? $finfo->{REFERENCES} : undef;
-    my $type_ddl = $self->{db_specific}{$type} || $type;
+    my $type_ddl = $self->convert_type($type);
     # DEFAULT attribute must appear before any column constraints
     # (e.g., NOT NULL), for Oracle
     $type_ddl .= " DEFAULT $default" if (defined($default));
@@ -1313,7 +1313,19 @@ sub get_type_ddl {
     return($type_ddl);
 
 } #eosub--get_type_ddl
-#--------------------------------------------------------------------------
+
+sub convert_type {
+
+=item C<convert_type>
+
+Converts a TYPE from the L</ABSTRACT_SCHEMA> format into the real SQL type.
+
+=cut
+
+    my ($self, $type) = @_;
+    return $self->{db_specific}->{$type} || $type;
+}
+
 sub get_column {
 =item C<get_column($table, $column)>
 
@@ -1383,7 +1395,12 @@ sub get_table_columns {
     return @columns;
 
 } #eosub--get_table_columns
-#--------------------------------------------------------------------------
+
+sub get_create_database_sql {
+    my ($self, $name) = @_;
+    return ("CREATE DATABASE $name");
+}
+
 sub get_table_ddl {
 
 =item C<get_table_ddl>

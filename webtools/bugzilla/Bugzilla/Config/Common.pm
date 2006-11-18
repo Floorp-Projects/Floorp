@@ -48,7 +48,7 @@ use base qw(Exporter);
        check_opsys check_shadowdb check_urlbase check_webdotbase
        check_netmask check_user_verify_class check_image_converter
        check_languages check_mail_delivery_method check_notification
-       check_timezone
+       check_timezone check_utf8
 );
 
 # Checking functions for the various values
@@ -110,6 +110,18 @@ sub check_sslbase {
             return "Failed to connect to " . html_quote($host) . 
                    ":443, unable to enable SSL.";
         }
+    }
+    return "";
+}
+
+sub check_utf8 {
+    my $utf8 = shift;
+    # You cannot turn off the UTF-8 parameter if you've already converted
+    # your tables to utf-8.
+    my $dbh = Bugzilla->dbh;
+    if ($dbh->isa('Bugzilla::DB::Mysql') && $dbh->bz_db_is_utf8 && !$utf8) {
+        return "You cannot disable UTF-8 support, because your MySQL database"
+               . " is encoded in UTF-8";
     }
     return "";
 }
