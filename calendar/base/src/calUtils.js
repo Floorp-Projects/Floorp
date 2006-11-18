@@ -156,7 +156,7 @@ function compareItems(aItem, aOtherItem) {
 
     var sip2 = Cc["@mozilla.org/supports-interface-pointer;1"].
                createInstance(Ci.nsISupportsInterfacePointer);
-    sip2.data = aItem;
+    sip2.data = aOtherItem;
     sip2.dataIID = Ci.calIItemBase;
     return sip1.data == sip2.data;
 }
