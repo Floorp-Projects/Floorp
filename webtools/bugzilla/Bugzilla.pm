@@ -53,6 +53,7 @@ our $_request_cache = {};
 use constant SHUTDOWNHTML_EXEMPT => [
     'editparams.cgi',
     'checksetup.pl',
+    'recode.pl',
 ];
 
 # Non-cgi scripts that should silently exit.

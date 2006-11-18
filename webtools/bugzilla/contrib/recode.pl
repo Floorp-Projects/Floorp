@@ -174,9 +174,17 @@ if (exists $switch{'overrides'}) {
 
 my $dbh = Bugzilla->dbh;
 
-# Make the database give us raw bytes.
-$dbh->do('SET character_set_results = NULL')
-    if $dbh->isa('Bugzilla::DB::Mysql');
+if ($dbh->isa('Bugzilla::DB::Mysql')) {
+    # Get the actual current encoding of the DB.
+    my $collation_data = $dbh->selectrow_arrayref(
+        "SHOW VARIABLES LIKE 'character_set_database'");
+    my $db_charset = $collation_data->[1];
+    # Set our connection encoding to *that* encoding, so that MySQL
+    # correctly accepts our changes.
+    $dbh->do("SET NAMES $db_charset");
+    # Make the database give us raw bytes.
+    $dbh->do('SET character_set_results = NULL')
+}
 
 $dbh->begin_work;
 
