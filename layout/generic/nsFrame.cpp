@@ -443,6 +443,22 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   aRC->SetFont(font->mFont, visibility->mLangGroup);
 }
 
+void
+nsWeakFrame::Init(nsIFrame* aFrame)
+{
+  Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
+  mFrame = aFrame;
+  if (mFrame) {
+    nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
+    NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
+    if (shell) {
+      shell->AddWeakFrame(this);
+    } else {
+      mFrame = nsnull;
+    }
+  }
+}
+
 nsIFrame*
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
