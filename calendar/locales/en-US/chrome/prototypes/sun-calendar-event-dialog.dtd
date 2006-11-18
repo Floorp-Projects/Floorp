@@ -192,6 +192,10 @@
 <!ENTITY event.freebusy.plus             "Next hour" >
 <!ENTITY event.freebusy.minus            "Previous hour" >
 
+<!ENTITY repeat.units.weeks.both         "Week(s)" >
+<!ENTITY repeat.units.months.both        "Month(s)" >
+<!ENTITY repeat.units.years.both         "Year(s)" >
+
 <!-- Timezone dialog -->
 
 <!ENTITY timezone.title.label            "Please Specify the Timezone">
