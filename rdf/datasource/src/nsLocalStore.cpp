@@ -62,6 +62,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsCRTGlue.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 
@@ -470,7 +471,7 @@ LocalStoreImpl::GetURI(char* *aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    *aURI = nsCRT::strdup("rdf:local-store");
+    *aURI = NS_strdup("rdf:local-store");
     if (! *aURI)
         return NS_ERROR_OUT_OF_MEMORY;
 

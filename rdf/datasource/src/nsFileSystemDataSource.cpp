@@ -67,7 +67,7 @@
 #include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsEscape.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 
 #ifdef  XP_WIN
@@ -260,7 +260,7 @@ FileSystemDataSource::GetURI(char **uri)
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    if ((*uri = nsCRT::strdup("rdf:files")) == nsnull)
+    if ((*uri = NS_strdup("rdf:files")) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;

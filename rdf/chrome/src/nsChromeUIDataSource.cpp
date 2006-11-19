@@ -41,7 +41,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "rdf.h"
 #include "nsIServiceManager.h"
 #include "nsIRDFService.h"
@@ -113,7 +113,7 @@ nsChromeUIDataSource::Release()
 NS_IMETHODIMP
 nsChromeUIDataSource::GetURI(char** aURI)
 {
-  *aURI = nsCRT::strdup("rdf:chrome");
+  *aURI = NS_strdup("rdf:chrome");
 	if (! *aURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 
