@@ -524,6 +524,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
           break;
         }
         
+        kidNextInFlow->AddStateBits(NS_BLOCK_SPACE_MGR);
+
         // Do an initial reflow if we're going to reflow this thing.
         aKidReason = eReflowReason_Initial;
       }

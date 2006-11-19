@@ -307,7 +307,10 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
-  nsMathMLmtdInnerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
+  nsMathMLmtdInnerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
+    // Set the right bits -- see what NS_NewTableCellInnerFrame does
+    AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+  }
   virtual ~nsMathMLmtdInnerFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
