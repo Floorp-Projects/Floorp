@@ -361,7 +361,7 @@ sub parse_mail ($) {
     # Figure out where the diff table ends, and where comments start.
     my $comments_start_at = 0;
     foreach my $check_line (@body_lines) {
-        last if $check_line =~ /^-* Additional Comments From /;
+        last if $check_line =~ /^-+.*Comment.*From /i;
         $comments_start_at++;
     }
     
