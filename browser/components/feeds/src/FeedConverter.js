@@ -239,6 +239,7 @@ FeedConverter.prototype = {
       else
         chromeChannel = ios.newChannelFromURI(result.uri, null);
 
+      chromeChannel.loadGroup = this._request.loadGroup;
       chromeChannel.asyncOpen(this._listener, null);
     }
     finally {
