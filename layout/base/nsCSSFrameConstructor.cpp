@@ -12617,6 +12617,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     *aNewFrame = columnSetFrame;
 
     columnSetFrame->SetInitialChildList(nsnull, blockFrame);
+
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR);
   }
 
   blockFrame->SetStyleContextWithoutNotification(blockStyle);
@@ -12632,6 +12634,13 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(blockFrame, contentParent, PR_FALSE);
+
+  // If we're the first block to be created (e.g., because we're
+  // contained inside a XUL document), then make sure that we've got a
+  // space manager so we can handle floats...
+  if (! aState.mFloatedItems.containingBlock) {
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+  }
 
   // We should make the outer frame be the absolute containing block,
   // if one is required. We have to do this because absolute
@@ -12777,6 +12786,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
       ResolvePseudoStyleFor(aContent, blockStyle, aStyleContext);
 
     blockFrame = NS_NewBlockFrame(mPresShell, blockSC);
+  }
+
+  if (! aState.mFloatedItems.containingBlock) {
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
   }
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, blockFrame, PR_FALSE);  
