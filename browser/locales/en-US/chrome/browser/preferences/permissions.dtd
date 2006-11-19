@@ -3,7 +3,6 @@
 
 <!ENTITY treehead.sitename.label      "Site">
 <!ENTITY treehead.status.label        "Status">
-<!ENTITY addpermission.label          "New Site">
 <!ENTITY removepermission.label       "Remove Site">
 <!ENTITY removepermission.accesskey   "R">
 <!ENTITY removeallpermissions.label   "Remove All Sites">

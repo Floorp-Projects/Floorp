@@ -19,13 +19,6 @@
 <!ENTITY  sans-serif.accesskey                    "n">
 <!ENTITY  monospace.label                         "Monospace:">
 <!ENTITY  monospace.accesskey                     "M">
-<!-- LOCALIZATION NOTE (fantasy.label): 'Fantasy' means 'Ornate' -->
-<!ENTITY  fantasy.label                           "Fantasy:">
-<!ENTITY  fantasy.accesskey                       "F">
-<!ENTITY  cursive.label                           "Cursive:">
-<!ENTITY  cursive.accesskey                       "C">
-
-<!ENTITY  fontsize.units                          "pixels">
 
 <!ENTITY  font.langGroup.latin1                   "Western">
 <!ENTITY  font.langGroup.latin2                   "Central European">
