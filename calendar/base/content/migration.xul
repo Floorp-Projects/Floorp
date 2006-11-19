@@ -61,8 +61,7 @@
     <wizardpage id="wizardPage1"
                 pageid="initialPage"
                 next="progressPage"
-                label="&migration.welcome;"
-                description="&migration.list.description;">
+                label="&migration.welcome;">
         <description id="wizard-desc">&migration.list.description;</description>
         <listbox id="datasource-list" flex="1">
             <listcols>
@@ -75,8 +74,7 @@
     <wizardpage id="wizardPage2"
                 pageid="progressPage"
                 label="&migration.importing;"
-                onpageshow="gMigrateWizard.migrateChecked()"
-                description="&migration.progress.description;">
+                onpageshow="gMigrateWizard.migrateChecked()">
         <description>&migration.progress.description;</description>
         <vbox flex="1">
             <progressmeter id="migrate-progressmeter" mode="determined"
