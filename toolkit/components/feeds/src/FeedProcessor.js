@@ -516,7 +516,6 @@ TextConstruct.prototype = {
       docFragment.appendChild(node);
       return docFragment;
     }
-    LOG("entry text: " + this.text + "\n");
     var isXML;
     if (this.type == "xhtml")
       isXML = true
