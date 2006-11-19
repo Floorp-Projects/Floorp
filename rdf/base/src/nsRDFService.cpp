@@ -87,6 +87,7 @@
 #include "prmem.h"
 #include "rdf.h"
 #include "nsCRT.h"
+#include "nsCRTglue.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -596,7 +597,7 @@ LiteralImpl::GetValue(PRUnichar* *value)
         return NS_ERROR_NULL_POINTER;
 
     const PRUnichar *temp = GetValue();
-    *value = temp? nsCRT::strdup(temp) : 0;
+    *value = temp? NS_strdup(temp) : 0;
     return NS_OK;
 }
 
