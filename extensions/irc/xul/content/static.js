@@ -78,7 +78,6 @@ client.MAX_HISTORY = 50;
 client.MAX_NICK_DISPLAY = 14;
 /* longest word to show in display before abbreviating */
 client.MAX_WORD_DISPLAY = 20;
-client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
 
 client.MAX_MSG_PER_ROW = 3; /* default number of messages to collapse into a
                              * single row, max. */
@@ -2816,8 +2815,7 @@ function setCurrentObject (obj)
     updateProgress();
     updateSecurityIcon();
 
-    if (client.PRINT_DIRECTION == 1)
-        scrollDown(obj.frame, false);
+    scrollDown(obj.frame, false);
 
     // Input area should have the same direction as the output area
     if (("frame" in client.currentObject) &&
@@ -4317,36 +4315,23 @@ function addHistory (source, obj, mergeData)
 
         if (source.messageCount > source.MAX_MESSAGES)
         {
-            if (client.PRINT_DIRECTION == 1)
+            // Get the top of row 2, and subtract the top of row 1.
+            var height = tbody.firstChild.nextSibling.firstChild.offsetTop -
+                         tbody.firstChild.firstChild.offsetTop;
+            var window = getContentWindow(source.frame);
+            var x = window.pageXOffset;
+            var y = window.pageYOffset;
+            tbody.removeChild (tbody.firstChild);
+            --source.messageCount;
+            while (tbody.firstChild && tbody.firstChild.childNodes[1] &&
+                   tbody.firstChild.childNodes[1].getAttribute("class") ==
+                   "msg-data")
             {
-                var height = tbody.firstChild.scrollHeight;
-                var window = getContentWindow(source.frame);
-                var x = window.pageXOffset;
-                var y = window.pageYOffset;
+                --source.messageCount;
                 tbody.removeChild (tbody.firstChild);
-                --source.messageCount;
-                while (tbody.firstChild && tbody.firstChild.childNodes[1] &&
-                       tbody.firstChild.childNodes[1].getAttribute("class") ==
-                       "msg-data")
-                {
-                    --source.messageCount;
-                    tbody.removeChild (tbody.firstChild);
-                }
-                if (!checkScroll(source.frame) && (y > height))
-                    window.scrollTo(x, y - height);
             }
-            else
-            {
-                tbody.removeChild (tbody.lastChild);
-                --source.messageCount;
-                while (tbody.lastChild && tbody.lastChild.childNodes[1] &&
-                       tbody.lastChild.childNodes[1].getAttribute("class") ==
-                       "msg-data")
-                {
-                    --source.messageCount;
-                    tbody.removeChild (tbody.lastChild);
-                }
-            }
+            if (!checkScroll(source.frame) && (y > height))
+                window.scrollTo(x, y - height);
         }
     }
 
