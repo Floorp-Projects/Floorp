@@ -39,9 +39,9 @@
 #define PROCESSOR_STACKWALKER_PPC_H__
 
 
-#include "google/airbag_types.h"
-#include "processor/stackwalker.h"
-#include "processor/minidump_format.h"
+#include "google_airbag/common/airbag_types.h"
+#include "google_airbag/common/minidump_format.h"
+#include "google_airbag/processor/stackwalker.h"
 
 namespace google_airbag {
 

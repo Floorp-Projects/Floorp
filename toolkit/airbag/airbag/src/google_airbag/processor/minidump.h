@@ -76,18 +76,16 @@
 //
 // Author: Mark Mentovai
 
-#ifndef PROCESSOR_MINIDUMP_H__
-#define PROCESSOR_MINIDUMP_H__
+#ifndef GOOGLE_AIRBAG_PROCESSOR_MINIDUMP_H__
+#define GOOGLE_AIRBAG_PROCESSOR_MINIDUMP_H__
 
 
-// TODO(mmentovai): is it ok to include non-<string> header in .h?
 #include <map>
 #include <string>
 #include <vector>
 
-#include "processor/minidump_format.h"
-#include "processor/memory_region.h"
-#include "processor/range_map.h"
+#include "google_airbag/common/minidump_format.h"
+#include "google_airbag/processor/memory_region.h"
 
 
 namespace google_airbag {
@@ -99,6 +97,7 @@ using std::vector;
 
 
 class Minidump;
+template<typename AddressType, typename EntryType> class RangeMap;
 
 
 // MinidumpObject is the base of all Minidump* objects except for Minidump
@@ -281,8 +280,9 @@ class MinidumpThread : public MinidumpObject {
 
   // The thread ID is used to determine if a thread is the exception thread,
   // so a special getter is provided to retrieve this data from the
-  // MDRawThread structure.
-  u_int32_t GetThreadID();
+  // MDRawThread structure.  Returns false if the thread ID cannot be
+  // determined.
+  bool GetThreadID(u_int32_t *thread_id) const;
 
   // Print a human-readable representation of the object to stdout.
   void Print();
@@ -327,7 +327,7 @@ class MinidumpThreadList : public MinidumpStream {
   typedef map<u_int32_t, MinidumpThread*> IDToThreadMap;
   typedef vector<MinidumpThread> MinidumpThreads;
 
-  static const u_int32_t kStreamType = THREAD_LIST_STREAM;
+  static const u_int32_t kStreamType = MD_THREAD_LIST_STREAM;
 
   explicit MinidumpThreadList(Minidump* aMinidump);
 
@@ -350,9 +350,10 @@ class MinidumpModule : public MinidumpObject {
  public:
   ~MinidumpModule();
 
-  const MDRawModule* module() const { return valid_ ? &module_ : 0; }
+  const MDRawModule* module() const { return valid_ ? &module_ : NULL; }
   u_int64_t base_address() const {
-      return valid_ ? module_.base_of_image : static_cast<u_int64_t>(-1); }
+    return valid_ ? module_.base_of_image : static_cast<u_int64_t>(-1);
+  }
   u_int32_t size() const { return valid_ ? module_.size_of_image : 0; }
 
   // The name of the file containing this module's code (exe, dll, so,
@@ -437,17 +438,17 @@ class MinidumpModuleList : public MinidumpStream {
 
   typedef vector<MinidumpModule> MinidumpModules;
 
-  static const u_int32_t kStreamType = MODULE_LIST_STREAM;
+  static const u_int32_t kStreamType = MD_MODULE_LIST_STREAM;
 
   explicit MinidumpModuleList(Minidump* minidump);
 
   bool Read(u_int32_t expected_size);
 
   // Access to modules using addresses as the key.
-  RangeMap<u_int64_t, unsigned int> range_map_;
+  RangeMap<u_int64_t, unsigned int> *range_map_;
 
-  MinidumpModules*                  modules_;
-  u_int32_t                         module_count_;
+  MinidumpModules *modules_;
+  u_int32_t module_count_;
 };
 
 
@@ -482,24 +483,24 @@ class MinidumpMemoryList : public MinidumpStream {
   typedef vector<MDMemoryDescriptor>   MemoryDescriptors;
   typedef vector<MinidumpMemoryRegion> MemoryRegions;
 
-  static const u_int32_t kStreamType = MEMORY_LIST_STREAM;
+  static const u_int32_t kStreamType = MD_MEMORY_LIST_STREAM;
 
   explicit MinidumpMemoryList(Minidump* minidump);
 
   bool Read(u_int32_t expected_size);
 
   // Access to memory regions using addresses as the key.
-  RangeMap<u_int64_t, unsigned int> range_map_;
+  RangeMap<u_int64_t, unsigned int> *range_map_;
 
   // The list of descriptors.  This is maintained separately from the list
   // of regions, because MemoryRegion doesn't own its MemoryDescriptor, it
   // maintains a pointer to it.  descriptors_ provides the storage for this
   // purpose.
-  MemoryDescriptors*                descriptors_;
+  MemoryDescriptors *descriptors_;
 
   // The list of regions.
-  MemoryRegions*                    regions_;
-  u_int32_t                         region_count_;
+  MemoryRegions *regions_;
+  u_int32_t region_count_;
 };
 
 
@@ -514,12 +515,14 @@ class MinidumpException : public MinidumpStream {
   ~MinidumpException();
 
   const MDRawExceptionStream* exception() const {
-      return valid_ ? &exception_ : 0; }
+    return valid_ ? &exception_ : NULL;
+  }
 
   // The thread ID is used to determine if a thread is the exception thread,
   // so a special getter is provided to retrieve this data from the
-  // MDRawExceptionStream structure.
-  u_int32_t GetThreadID();
+  // MDRawExceptionStream structure.  Returns false if the thread ID cannot
+  // be determined.
+  bool GetThreadID(u_int32_t *thread_id) const;
 
   MinidumpContext* GetContext();
 
@@ -529,7 +532,7 @@ class MinidumpException : public MinidumpStream {
  private:
   friend class Minidump;
 
-  static const u_int32_t kStreamType = EXCEPTION_STREAM;
+  static const u_int32_t kStreamType = MD_EXCEPTION_STREAM;
 
   explicit MinidumpException(Minidump* minidump);
 
@@ -547,7 +550,8 @@ class MinidumpSystemInfo : public MinidumpStream {
   ~MinidumpSystemInfo();
 
   const MDRawSystemInfo* system_info() const {
-      return valid_ ? &system_info_ : 0; }
+    return valid_ ? &system_info_ : NULL;
+  }
 
   // I don't know what CSD stands for, but this field is documented as
   // returning a textual representation of the OS service pack.  On other
@@ -566,7 +570,7 @@ class MinidumpSystemInfo : public MinidumpStream {
  private:
   friend class Minidump;
 
-  static const u_int32_t kStreamType = SYSTEM_INFO_STREAM;
+  static const u_int32_t kStreamType = MD_SYSTEM_INFO_STREAM;
 
   explicit MinidumpSystemInfo(Minidump* minidump);
 
@@ -588,7 +592,9 @@ class MinidumpSystemInfo : public MinidumpStream {
 // information.  See also MinidumpSystemInfo.
 class MinidumpMiscInfo : public MinidumpStream {
  public:
-  const MDRawMiscInfo* misc_info() const { return valid_ ? &misc_info_ : 0; }
+  const MDRawMiscInfo* misc_info() const {
+    return valid_ ? &misc_info_ : NULL;
+  }
 
   // Print a human-readable representation of the object to stdout.
   void Print();
@@ -596,13 +602,45 @@ class MinidumpMiscInfo : public MinidumpStream {
  private:
   friend class Minidump;
 
-  static const u_int32_t kStreamType = MISC_INFO_STREAM;
+  static const u_int32_t kStreamType = MD_MISC_INFO_STREAM;
 
   explicit MinidumpMiscInfo(Minidump* minidump_);
 
   bool Read(u_int32_t expected_size_);
 
   MDRawMiscInfo misc_info_;
+};
+
+
+// MinidumpAirbagInfo wraps MDRawAirbagInfo, which is an optional stream in
+// a minidump that provides additional information about the process state
+// at the time the minidump was generated.
+class MinidumpAirbagInfo : public MinidumpStream {
+ public:
+  const MDRawAirbagInfo* airbag_info() const {
+    return valid_ ? &airbag_info_ : NULL;
+  }
+
+  // These thread IDs are used to determine if threads deserve special
+  // treatment, so special getters are provided to retrieve this data from
+  // the MDRawAirbagInfo structure.  The getters return false if the thread
+  // IDs cannot be determined.
+  bool GetDumpThreadID(u_int32_t *thread_id) const;
+  bool GetRequestingThreadID(u_int32_t *thread_id) const;
+
+  // Print a human-readable representation of the object to stdout.
+  void Print();
+
+ private:
+  friend class Minidump;
+
+  static const u_int32_t kStreamType = MD_AIRBAG_INFO_STREAM;
+
+  explicit MinidumpAirbagInfo(Minidump* minidump_);
+
+  bool Read(u_int32_t expected_size_);
+
+  MDRawAirbagInfo airbag_info_;
 };
 
 
@@ -615,7 +653,7 @@ class Minidump {
 
   ~Minidump();
 
-  const MDRawHeader* header() const { return valid_ ? &header_ : 0; }
+  const MDRawHeader* header() const { return valid_ ? &header_ : NULL; }
 
   // Reads the minidump file's header and top-level stream directory.
   // The minidump is expected to be positioned at the beginning of the
@@ -623,7 +661,7 @@ class Minidump {
   // Minidump object.
   bool Read();
 
-  // The next 6 methods are stubs that call GetStream.  They exist to
+  // The next set of methods are stubs that call GetStream.  They exist to
   // force code generation of the templatized API within the module, and
   // to avoid exposing an ugly API (GetStream needs to accept a garbage
   // parameter).
@@ -633,6 +671,7 @@ class Minidump {
   MinidumpException* GetException();
   MinidumpSystemInfo* GetSystemInfo();
   MinidumpMiscInfo* GetMiscInfo();
+  MinidumpAirbagInfo* GetAirbagInfo();
 
   // The next set of methods are provided for users who wish to access
   // data in minidump files directly, while leveraging the rest of
@@ -640,7 +679,8 @@ class Minidump {
   // structure and known stream types.
 
   unsigned int GetDirectoryEntryCount() const {
-      return valid_ ? header_.stream_count : 0; }
+    return valid_ ? header_.stream_count : 0;
+  }
   const MDRawDirectory* GetDirectoryEntryAtIndex(unsigned int index) const;
 
   // The next 2 methods are lower-level I/O routines.  They use fd_.
@@ -733,4 +773,4 @@ class Minidump {
 }  // namespace google_airbag
 
 
-#endif  // PROCESSOR_MINIDUMP_H__
+#endif  // GOOGLE_AIRBAG_PROCESSOR_MINIDUMP_H__

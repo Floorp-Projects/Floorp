@@ -39,7 +39,7 @@
 #include "processor/range_map-inl.h"
 
 #include "processor/source_line_resolver.h"
-#include "google/stack_frame.h"
+#include "google_airbag/processor/stack_frame.h"
 #include "processor/linked_ptr.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stack_frame_info.h"
@@ -249,6 +249,13 @@ bool SourceLineResolver::Module::LoadMap(const string &map_file) {
       if (!ParsePublicSymbol(buffer)) {
         return false;
       }
+    } else if (strncmp(buffer, "MODULE ", 7) == 0) {
+      // Ignore these.  They're not of any use to SourceLineResolver, which
+      // is fed modules by a SymbolSupplier.  These lines are present to
+      // aid other tools in properly placing symbol files so that they can
+      // be accessed by a SymbolSupplier.
+      //
+      // MODULE <guid> <age> <filename>
     } else {
       if (!cur_func) {
         return false;

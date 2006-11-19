@@ -37,10 +37,10 @@
 #include "processor/postfix_evaluator-inl.h"
 
 #include "processor/stackwalker_x86.h"
-#include "google/call_stack.h"
-#include "google/stack_frame_cpu.h"
+#include "google_airbag/processor/call_stack.h"
+#include "google_airbag/processor/minidump.h"
+#include "google_airbag/processor/stack_frame_cpu.h"
 #include "processor/linked_ptr.h"
-#include "processor/minidump.h"
 #include "processor/stack_frame_info.h"
 
 namespace google_airbag {
@@ -283,15 +283,15 @@ StackFrame* StackwalkerX86::GetCallerFrame(
 
   // These are nonvolatile (callee-save) registers, and the program string
   // may have filled them in.
-  if (dictionary_validity.find("$ebx") == dictionary_validity.end()) {
+  if (dictionary_validity.find("$ebx") != dictionary_validity.end()) {
     frame->context.ebx = dictionary["$ebx"];
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EBX;
   }
-  if (dictionary_validity.find("$esi") == dictionary_validity.end()) {
+  if (dictionary_validity.find("$esi") != dictionary_validity.end()) {
     frame->context.esi = dictionary["$esi"];
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_ESI;
   }
-  if (dictionary_validity.find("$edi") == dictionary_validity.end()) {
+  if (dictionary_validity.find("$edi") != dictionary_validity.end()) {
     frame->context.edi = dictionary["$edi"];
     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EDI;
   }

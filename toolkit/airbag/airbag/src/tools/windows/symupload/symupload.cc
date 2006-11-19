@@ -46,6 +46,8 @@
 #include <string>
 #include <vector>
 
+#include "common/windows/string_utils-inl.h"
+
 #include "common/windows/http_upload.h"
 #include "common/windows/pdb_source_line_writer.h"
 
@@ -55,6 +57,7 @@ using std::vector;
 using std::map;
 using google_airbag::HTTPUpload;
 using google_airbag::PDBSourceLineWriter;
+using google_airbag::WindowsStringUtils;
 
 // Extracts the file version information for the given filename,
 // as a string, for example, "1.2.3.4".  Returns true on success.
@@ -82,12 +85,13 @@ static bool GetFileVersionString(const wchar_t *filename, wstring *version) {
   wchar_t ver_string[24];
   VS_FIXEDFILEINFO *file_info =
     reinterpret_cast<VS_FIXEDFILEINFO*>(file_info_buffer);
-  _snwprintf_s(ver_string, sizeof(ver_string) / sizeof(wchar_t), _TRUNCATE,
-               L"%d.%d.%d.%d",
-               file_info->dwFileVersionMS >> 16,
-               file_info->dwFileVersionMS & 0xffff,
-               file_info->dwFileVersionLS >> 16,
-               file_info->dwFileVersionLS & 0xffff);
+  WindowsStringUtils::safe_swprintf(
+      ver_string, sizeof(ver_string) / sizeof(ver_string[0]),
+      L"%d.%d.%d.%d",
+      file_info->dwFileVersionMS >> 16,
+      file_info->dwFileVersionMS & 0xffff,
+      file_info->dwFileVersionLS >> 16,
+      file_info->dwFileVersionLS & 0xffff);
   *version = ver_string;
   return true;
 }
@@ -95,11 +99,13 @@ static bool GetFileVersionString(const wchar_t *filename, wstring *version) {
 // Creates a new temporary file and writes the symbol data from the given
 // exe/dll file to it.  Returns the path to the temp file in temp_file_path,
 // and the unique identifier (GUID) for the pdb in module_guid.
-static bool DumpSymbolsToTempFile(const wchar_t *exe_file,
+static bool DumpSymbolsToTempFile(const wchar_t *file,
                                   wstring *temp_file_path,
-                                  wstring *module_guid) {
+                                  wstring *module_guid,
+                                  int *module_age,
+                                  wstring *module_filename) {
   google_airbag::PDBSourceLineWriter writer;
-  if (!writer.Open(exe_file, PDBSourceLineWriter::EXE_FILE)) {
+  if (!writer.Open(file, PDBSourceLineWriter::ANY_FILE)) {
     return false;
   }
 
@@ -114,7 +120,13 @@ static bool DumpSymbolsToTempFile(const wchar_t *exe_file,
   }
 
   FILE *temp_file = NULL;
+#if _MSC_VER >= 1400  // MSVC 2005/8
   if (_wfopen_s(&temp_file, temp_filename, L"w") != 0) {
+#else  // _MSC_VER >= 1400
+  // _wfopen_s was introduced in MSVC8.  Use _wfopen for earlier environments.
+  // Don't use it with MSVC8 and later, because it's deprecated.
+  if (!(temp_file = _wfopen(temp_filename, L"w"))) {
+#endif  // _MSC_VER >= 1400
     return false;
   }
 
@@ -126,37 +138,35 @@ static bool DumpSymbolsToTempFile(const wchar_t *exe_file,
   }
 
   *temp_file_path = temp_filename;
-  *module_guid = writer.GetModuleGUID();
-  return true;
-}
 
-// Returns the base name of a file, e.g. strips off the path.
-static wstring GetBaseName(const wstring &filename) {
-  wstring base_name(filename);
-  size_t slash_pos = base_name.find_last_of(L"/\\");
-  if (slash_pos != string::npos) {
-    base_name.erase(0, slash_pos + 1);
-  }
-  return base_name;
+  return writer.GetModuleInfo(module_guid, module_age, module_filename);
 }
 
 int wmain(int argc, wchar_t *argv[]) {
   if (argc < 3) {
-    wprintf(L"Usage: %s file.[exe|dll] <symbol upload URL>\n", argv[0]);
+    wprintf(L"Usage: %s file.[pdb|exe|dll] <symbol upload URL>\n", argv[0]);
     return 0;
   }
   const wchar_t *module = argv[1], *url = argv[2];
-  wstring module_basename = GetBaseName(module);
 
-  wstring symbol_file, module_guid;
-  if (!DumpSymbolsToTempFile(module, &symbol_file, &module_guid)) {
+  wstring symbol_file, module_guid, module_basename;
+  int module_age;
+  if (!DumpSymbolsToTempFile(module, &symbol_file,
+                             &module_guid, &module_age, &module_basename)) {
     fwprintf(stderr, L"Could not get symbol data from %s\n", module);
     return 1;
   }
 
+  wchar_t module_age_string[11];
+  WindowsStringUtils::safe_swprintf(
+      module_age_string,
+      sizeof(module_age_string) / sizeof(module_age_string[0]),
+      L"0x%x", module_age);
+
   map<wstring, wstring> parameters;
   parameters[L"module"] = module_basename;
   parameters[L"guid"] = module_guid;
+  parameters[L"age"] = module_age_string;
 
   // Don't make a missing version a hard error.  Issue a warning, and let the
   // server decide whether to reject files without versions.

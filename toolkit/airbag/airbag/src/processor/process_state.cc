@@ -33,8 +33,8 @@
 //
 // Author: Mark Mentovai
 
-#include "google/process_state.h"
-#include "google/call_stack.h"
+#include "google_airbag/processor/process_state.h"
+#include "google_airbag/processor/call_stack.h"
 
 namespace google_airbag {
 

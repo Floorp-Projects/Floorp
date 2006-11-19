@@ -183,6 +183,10 @@
 				RelativePath="..\..\..\common\windows\pdb_source_line_writer.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\common\windows\string_utils-inl.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

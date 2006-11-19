@@ -38,8 +38,8 @@
 // Author: Mark Mentovai
 
 
-#ifndef PROCESSOR_STACKWALKER_H__
-#define PROCESSOR_STACKWALKER_H__
+#ifndef GOOGLE_AIRBAG_PROCESSOR_STACKWALKER_H__
+#define GOOGLE_AIRBAG_PROCESSOR_STACKWALKER_H__
 
 #include <vector>
 
@@ -120,4 +120,4 @@ class Stackwalker {
 }  // namespace google_airbag
 
 
-#endif  // PROCESSOR_STACKWALKER_H__
+#endif  // GOOGLE_AIRBAG_PROCESSOR_STACKWALKER_H__

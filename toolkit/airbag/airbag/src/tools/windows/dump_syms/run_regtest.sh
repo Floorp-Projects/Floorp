@@ -29,10 +29,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Release/dump_syms.exe testdata/dump_syms_regtest.pdb > testdata/dump_syms_regtest.new
-if diff -u testdata/dump_syms_regtest.new testdata/dump_syms_regtest.out >& testdata/dump_syms_regtest.diff; then
+Release/dump_syms.exe testdata/dump_syms_regtest.pdb | \
+ tr -d '\015' > \
+ testdata/dump_syms_regtest.new
+status=$?
+
+if [ $status -ne 0 ] ; then
+  echo "FAIL, dump_syms.exe failed"
+  exit $status
+fi
+
+diff -u testdata/dump_syms_regtest.new testdata/dump_syms_regtest.out > \
+ testdata/dump_syms_regtest.diff
+status=$?
+
+if [ $status -eq 0 ] ; then
   rm testdata/dump_syms_regtest.diff testdata/dump_syms_regtest.new
   echo "PASS"
 else
   echo "FAIL, see testdata/dump_syms_regtest.[new|diff]"
 fi
+
+exit $status

@@ -27,50 +27,30 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// call_stack.h: A call stack comprised of stack frames.
+// pathname_stripper.cc: Manipulates pathnames into their component parts.
 //
-// This class manages a vector of stack frames.  It is used instead of
-// exposing the vector directly to allow the CallStack to own StackFrame
-// pointers without having to publicly export the linked_ptr class.  A
-// CallStack must be composed of pointers instead of objects to allow for
-// CPU-specific StackFrame subclasses.
-//
-// By convention, the stack frame at index 0 is the innermost callee frame,
-// and the frame at the highest index in a call stack is the outermost
-// caller.  CallStack only allows stacks to be built by pushing frames,
-// beginning with the innermost callee frame.
+// See pathname_stripper.h for documentation.
 //
 // Author: Mark Mentovai
 
-#ifndef GOOGLE_CALL_STACK_H__
-#define GOOGLE_CALL_STACK_H__
-
-#include <vector>
+#include "processor/pathname_stripper.h"
 
 namespace google_airbag {
 
-using std::vector;
+// static
+string PathnameStripper::File(const string &path) {
+  string::size_type slash = path.rfind('/');
+  string::size_type backslash = path.rfind('\\');
 
-struct StackFrame;
-template<typename T> class linked_ptr;
+  string::size_type file_start = 0;
+  if (slash != string::npos &&
+      (backslash == string::npos || slash > backslash)) {
+    file_start = slash + 1;
+  } else if (backslash != string::npos) {
+    file_start = backslash + 1;
+  }
 
-class CallStack {
- public:
-  ~CallStack();
-
-  const vector<StackFrame*>* frames() const { return &frames_; }
-
- private:
-  // Stackwalker is responsible for building the frames_ vector.
-  friend class Stackwalker;
-
-  // Disallow instantiation other than by friends.
-  CallStack() : frames_() {}
-
-  // Storage for pushed frames.
-  vector<StackFrame*> frames_;
-};
+  return path.substr(file_start);
+}
 
 }  // namespace google_airbag
-
-#endif  // GOOGLE_CALL_STACK_H__
