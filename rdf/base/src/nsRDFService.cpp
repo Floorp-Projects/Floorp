@@ -87,7 +87,7 @@
 #include "prmem.h"
 #include "rdf.h"
 #include "nsCRT.h"
-#include "nsCRTglue.h"
+#include "nsCRTGlue.h"
 
 ////////////////////////////////////////////////////////////////////////
 
