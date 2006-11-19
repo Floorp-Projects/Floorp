@@ -2153,6 +2153,7 @@ NSEvent* globalDragEvent = nil;
 
 - (void)dealloc
 {
+  [mPendingDirtyRects release];
   [mLastMenuForEventEvent release];
   
   if (sLastViewEntered == self)
