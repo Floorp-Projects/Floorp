@@ -4647,7 +4647,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       // EventStateManager doesn't convert this EXIT message to
       // a MOVE message (besides, WM_MOUSELEAVE doesn't have the position
       // in lParam). 
-      DispatchMouseEvent(NS_MOUSE_EXIT, wParam, MINLONG | MINSHORT);
+      // We also need to check mouse button states and put them in for
+      // wParam.
+      WPARAM mouseState = (GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0)
+        | (GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0)
+        | (GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0);
+      DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, MINLONG | MINSHORT);
     }
     break;
 #endif
