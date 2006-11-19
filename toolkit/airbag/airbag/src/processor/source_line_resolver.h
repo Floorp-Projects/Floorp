@@ -36,7 +36,7 @@
 
 #include <string>
 #include <ext/hash_map>
-#include "google/airbag_types.h"
+#include "google_airbag/common/airbag_types.h"
 
 namespace google_airbag {
 

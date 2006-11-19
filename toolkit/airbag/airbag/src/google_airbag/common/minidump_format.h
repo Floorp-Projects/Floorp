@@ -64,11 +64,19 @@
  * Author: Mark Mentovai */
  
 
-#ifndef PROCESSOR_MINIDUMP_FORMAT_H__
-#define PROCESSOR_MINIDUMP_FORMAT_H__
+#ifndef GOOGLE_AIRBAG_COMMON_MINIDUMP_FORMAT_H__
+#define GOOGLE_AIRBAG_COMMON_MINIDUMP_FORMAT_H__
 
 
-#include "google/airbag_types.h"
+#include "google_airbag/common/airbag_types.h"
+
+
+#if defined(_MSC_VER)
+/* Disable "zero-sized array in struct/union" warnings when compiling in
+ * MSVC.  DbgHelp.h does this too. */
+#pragma warning(push)
+#pragma warning(disable:4200)
+#endif  /* _MSC_VER */
 
 
 /*
@@ -434,7 +442,7 @@ typedef struct {
 
 /* For (MDRawHeader).flags: */
 typedef enum {
-  /* MINIDUMP_NORMAL is the standard type of minidump.  It includes full
+  /* MD_NORMAL is the standard type of minidump.  It includes full
    * streams for the thread list, module list, exception, system info,
    * and miscellaneous info.  A memory list stream is also present,
    * pointing to the same stack memory contained in the thread list,
@@ -442,21 +450,21 @@ typedef enum {
    * was executing when the exception occurred.  Stack memory is from
    * 4 bytes below a thread's stack pointer up to the top of the
    * memory region encompassing the stack. */
-  MINIDUMP_NORMAL                            = 0x00000000,
-  MINIDUMP_WITH_DATA_SEGS                    = 0x00000001,
-  MINIDUMP_WITH_FULL_MEMORY                  = 0x00000002,
-  MINIDUMP_WITH_HANDLE_DATA                  = 0x00000004,
-  MINIDUMP_FILTER_MEMORY                     = 0x00000008,
-  MINIDUMP_SCAN_MEMORY                       = 0x00000010,
-  MINIDUMP_WITH_UNLOADED_MODULES             = 0x00000020,
-  MINIDUMP_WITH_INDIRECTLY_REFERENCED_MEMORY = 0x00000040,
-  MINIDUMP_FILTER_MODULE_PATHS               = 0x00000080,
-  MINIDUMP_WITH_PROCESS_THREAD_DATA          = 0x00000100,
-  MINIDUMP_WITH_PRIVATE_READ_WRITE_MEMORY    = 0x00000200,
-  MINIDUMP_WITHOUT_OPTIONAL_DATA             = 0x00000400,
-  MINIDUMP_WITH_FULL_MEMORY_INFO             = 0x00000800,
-  MINIDUMP_WITH_THREAD_INFO                  = 0x00001000,
-  MINIDUMP_WITH_CODE_SEGS                    = 0x00002000
+  MD_NORMAL                            = 0x00000000,
+  MD_WITH_DATA_SEGS                    = 0x00000001,
+  MD_WITH_FULL_MEMORY                  = 0x00000002,
+  MD_WITH_HANDLE_DATA                  = 0x00000004,
+  MD_FILTER_MEMORY                     = 0x00000008,
+  MD_SCAN_MEMORY                       = 0x00000010,
+  MD_WITH_UNLOADED_MODULES             = 0x00000020,
+  MD_WITH_INDIRECTLY_REFERENCED_MEMORY = 0x00000040,
+  MD_FILTER_MODULE_PATHS               = 0x00000080,
+  MD_WITH_PROCESS_THREAD_DATA          = 0x00000100,
+  MD_WITH_PRIVATE_READ_WRITE_MEMORY    = 0x00000200,
+  MD_WITHOUT_OPTIONAL_DATA             = 0x00000400,
+  MD_WITH_FULL_MEMORY_INFO             = 0x00000800,
+  MD_WITH_THREAD_INFO                  = 0x00001000,
+  MD_WITH_CODE_SEGS                    = 0x00002000
 } MDType;  /* MINIDUMP_TYPE */
 
 
@@ -467,23 +475,26 @@ typedef struct {
 
 /* For (MDRawDirectory).stream_type */
 typedef enum {
-  UNUSED_STREAM               =  0,
-  RESERVED_STREAM_0           =  1,
-  RESERVED_STREAM_1           =  2,
-  THREAD_LIST_STREAM          =  3,  /* MDRawThreadList */
-  MODULE_LIST_STREAM          =  4,  /* MDRawModuleList */
-  MEMORY_LIST_STREAM          =  5,  /* MDRawMemoryList */
-  EXCEPTION_STREAM            =  6,  /* MDRawExceptionStream */
-  SYSTEM_INFO_STREAM          =  7,  /* MDRawSystemInfo */
-  THREAD_EX_LIST_STREAM       =  8,
-  MEMORY_64_LIST_STREAM       =  9,
-  COMMENT_STREAM_A            = 10,
-  COMMENT_STREAM_W            = 11,
-  HANDLE_DATA_STREAM          = 12,
-  FUNCTION_TABLE_STREAM       = 13,
-  UNLOADED_MODULE_LIST_STREAM = 14,
-  MISC_INFO_STREAM            = 15,  /* MDRawMiscInfo */
-  LAST_RESERVED_STREAM        = 0x0000ffff
+  MD_UNUSED_STREAM               =  0,
+  MD_RESERVED_STREAM_0           =  1,
+  MD_RESERVED_STREAM_1           =  2,
+  MD_THREAD_LIST_STREAM          =  3,  /* MDRawThreadList */
+  MD_MODULE_LIST_STREAM          =  4,  /* MDRawModuleList */
+  MD_MEMORY_LIST_STREAM          =  5,  /* MDRawMemoryList */
+  MD_EXCEPTION_STREAM            =  6,  /* MDRawExceptionStream */
+  MD_SYSTEM_INFO_STREAM          =  7,  /* MDRawSystemInfo */
+  MD_THREAD_EX_LIST_STREAM       =  8,
+  MD_MEMORY_64_LIST_STREAM       =  9,
+  MD_COMMENT_STREAM_A            = 10,
+  MD_COMMENT_STREAM_W            = 11,
+  MD_HANDLE_DATA_STREAM          = 12,
+  MD_FUNCTION_TABLE_STREAM       = 13,
+  MD_UNLOADED_MODULE_LIST_STREAM = 14,
+  MD_MISC_INFO_STREAM            = 15,  /* MDRawMiscInfo */
+  MD_LAST_RESERVED_STREAM        = 0x0000ffff,
+
+  /* Airbag extension types.  0x4767 = "Gg" */
+  MD_AIRBAG_INFO_STREAM          = 0x47670001  /* MDRawAirbagInfo */
 } MDStreamType;  /* MINIDUMP_STREAM_TYPE */
 
 
@@ -963,4 +974,51 @@ typedef enum {
 } MDMiscInfoFlags1;
 
 
-#endif  /* PROCESSOR_MINIDUMP_FORMAT_H__ */
+/*
+ * Airbag extension types
+ */
+
+
+typedef struct {
+  /* validity is a bitmask with values from MDAirbagInfoValidity, indicating
+   * which of the other fields in the structure are valid. */
+  u_int32_t validity;
+
+  /* Thread ID of the handler thread.  dump_thread_id should correspond to
+   * the thread_id of an MDRawThread in the minidump's MDRawThreadList if
+   * a dedicated thread in that list was used to produce the minidump.  If
+   * the MDRawThreadList does not contain a dedicated thread used to produce
+   * the minidump, this field should be set to 0 and the validity field
+   * must not contain MD_AIRBAG_INFO_VALID_DUMP_THREAD_ID. */
+  u_int32_t dump_thread_id;
+
+  /* Thread ID of the thread that requested the minidump be produced.  As
+   * with dump_thread_id, requesting_thread_id should correspond to the
+   * thread_id of an MDRawThread in the minidump's MDRawThreadList.  For
+   * minidumps produced as a result of an exception, requesting_thread_id
+   * will be the same as the MDRawExceptionStream's thread_id field.  For
+   * minidumps produced "manually" at the program's request,
+   * requesting_thread_id will indicate which thread caused the dump to be
+   * written.  If the minidump was produced at the request of something
+   * other than a thread in the MDRawThreadList, this field should be set
+   * to 0 and the validity field must not contain
+   * MD_AIRBAG_INFO_VALID_REQUESTING_THREAD_ID. */
+  u_int32_t requesting_thread_id;
+} MDRawAirbagInfo;
+
+/* For (MDRawAirbagInfo).validity: */
+typedef enum {
+  /* When set, the dump_thread_id field is valid. */
+  MD_AIRBAG_INFO_VALID_DUMP_THREAD_ID       = 1 << 0,
+
+  /* When set, the requesting_thread_id field is valid. */
+  MD_AIRBAG_INFO_VALID_REQUESTING_THREAD_ID = 1 << 1
+} MDAirbagInfoValidity;
+
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif  /* _MSC_VER */
+
+
+#endif  /* GOOGLE_AIRBAG_COMMON_MINIDUMP_FORMAT_H__ */

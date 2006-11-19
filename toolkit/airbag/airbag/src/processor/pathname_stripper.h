@@ -27,27 +27,27 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// The caller may implement the SymbolSupplier abstract base class
-// to provide symbols for a given module.
+// pathname_stripper.h: Manipulates pathnames into their component parts.
+//
+// Author: Mark Mentovai
 
-#ifndef GOOGLE_SYMBOL_SUPPLIER_H__
-#define GOOGLE_SYMBOL_SUPPLIER_H__
+#ifndef PROCESSOR_PATHNAME_STRIPPER_H__
+#define PROCESSOR_PATHNAME_STRIPPER_H__
 
 #include <string>
 
 namespace google_airbag {
 
 using std::string;
-class MinidumpModule;
 
-class SymbolSupplier {
+class PathnameStripper {
  public:
-  virtual ~SymbolSupplier() {}
-
-  // Returns the path to the symbol file for the given module.
-  virtual string GetSymbolFile(MinidumpModule *module) = 0;
+  // Given path, a pathname with components separated by slashes (/) or
+  // backslashes (\), returns the trailing component, without any separator.
+  // If path ends in a separator character, returns an empty string.
+  static string File(const string &path);
 };
 
 }  // namespace google_airbag
 
-#endif  // GOOGLE_SYMBOL_SUPPLIER_H__
+#endif  // PROCESSOR_PATHNAME_STRIPPER_H__

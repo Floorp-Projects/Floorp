@@ -53,7 +53,7 @@ typedef SSIZE_T ssize_t;
 
 #include "processor/range_map-inl.h"
 
-#include "processor/minidump.h"
+#include "google_airbag/processor/minidump.h"
 #include "processor/scoped_ptr.h"
 
 
@@ -462,13 +462,13 @@ void MinidumpContext::FreeContext() {
 
 
 bool MinidumpContext::CheckAgainstSystemInfo(u_int32_t context_cpu_type) {
-  // It's OK if the minidump doesn't contain a SYSTEM_INFO_STREAM,
+  // It's OK if the minidump doesn't contain an MD_SYSTEM_INFO_STREAM,
   // as this function just implements a sanity check.
   MinidumpSystemInfo* system_info = minidump_->GetSystemInfo();
   if (!system_info)
     return true;
 
-  // If there is a SYSTEM_INFO_STREAM, it should contain valid system info.
+  // If there is an MD_SYSTEM_INFO_STREAM, it should contain valid system info.
   const MDRawSystemInfo* raw_system_info = system_info->system_info();
   if (!raw_system_info)
     return false;
@@ -661,7 +661,8 @@ const u_int8_t* MinidumpMemoryRegion::GetMemory() {
 
 
 u_int64_t MinidumpMemoryRegion::GetBase() {
-  return valid_ ? descriptor_->start_of_memory_range : (u_int64_t)-1;
+  return valid_ ?
+      descriptor_->start_of_memory_range : static_cast<u_int64_t>(-1);
 }
 
 
@@ -829,8 +830,12 @@ MinidumpContext* MinidumpThread::GetContext() {
 }
 
 
-u_int32_t MinidumpThread::GetThreadID() {
-  return valid_ ? thread_.thread_id : (u_int32_t)-1;
+bool MinidumpThread::GetThreadID(u_int32_t *thread_id) const {
+  if (!thread_id || !valid_)
+    return false;
+
+  *thread_id = thread_.thread_id;
+  return true;
 }
 
 
@@ -928,7 +933,10 @@ bool MinidumpThreadList::Read(u_int32_t expected_size) {
     if (!thread->Read())
       return false;
 
-    u_int32_t thread_id = thread->GetThreadID();
+    u_int32_t thread_id;
+    if (!thread->GetThreadID(&thread_id))
+      return false;
+
     if (GetThreadByID(thread_id)) {
       // Another thread with this ID is already in the list.  Data error.
       return false;
@@ -1408,20 +1416,21 @@ void MinidumpModule::Print() {
 
 MinidumpModuleList::MinidumpModuleList(Minidump* minidump)
     : MinidumpStream(minidump),
-      range_map_(),
+      range_map_(new RangeMap<u_int64_t, unsigned int>()),
       modules_(NULL),
       module_count_(0) {
 }
 
 
 MinidumpModuleList::~MinidumpModuleList() {
+  delete range_map_;
   delete modules_;
 }
 
 
 bool MinidumpModuleList::Read(u_int32_t expected_size) {
   // Invalidate cached data.
-  range_map_.Clear();
+  range_map_->Clear();
   delete modules_;
   modules_ = NULL;
   module_count_ = 0;
@@ -1460,7 +1469,7 @@ bool MinidumpModuleList::Read(u_int32_t expected_size) {
     if (base_address == (u_int64_t)-1)
       return false;
 
-    if (!range_map_.StoreRange(base_address, module_size, module_index))
+    if (!range_map_->StoreRange(base_address, module_size, module_index))
       return false;
   }
 
@@ -1486,7 +1495,7 @@ MinidumpModule* MinidumpModuleList::GetModuleForAddress(u_int64_t address) {
     return NULL;
 
   unsigned int module_index;
-  if (!range_map_.RetrieveRange(address, &module_index, NULL, NULL))
+  if (!range_map_->RetrieveRange(address, &module_index, NULL, NULL))
     return NULL;
 
   return GetModuleAtIndex(module_index);
@@ -1518,7 +1527,7 @@ void MinidumpModuleList::Print() {
 
 MinidumpMemoryList::MinidumpMemoryList(Minidump* minidump)
     : MinidumpStream(minidump),
-      range_map_(),
+      range_map_(new RangeMap<u_int64_t, unsigned int>()),
       descriptors_(NULL),
       regions_(NULL),
       region_count_(0) {
@@ -1526,6 +1535,7 @@ MinidumpMemoryList::MinidumpMemoryList(Minidump* minidump)
 
 
 MinidumpMemoryList::~MinidumpMemoryList() {
+  delete range_map_;
   delete descriptors_;
   delete regions_;
 }
@@ -1537,7 +1547,7 @@ bool MinidumpMemoryList::Read(u_int32_t expected_size) {
   descriptors_ = NULL;
   delete regions_;
   regions_ = NULL;
-  range_map_.Clear();
+  range_map_->Clear();
   region_count_ = 0;
 
   valid_ = false;
@@ -1587,7 +1597,7 @@ bool MinidumpMemoryList::Read(u_int32_t expected_size) {
     if (region_size == 0 || high_address < base_address)
       return false;
 
-    if (!range_map_.StoreRange(base_address, region_size, region_index))
+    if (!range_map_->StoreRange(base_address, region_size, region_index))
       return false;
 
     (*regions)[region_index].SetDescriptor(descriptor);
@@ -1617,7 +1627,7 @@ MinidumpMemoryRegion* MinidumpMemoryList::GetMemoryRegionForAddress(
     return NULL;
 
   unsigned int region_index;
-  if (!range_map_.RetrieveRange(address, &region_index, NULL, NULL))
+  if (!range_map_->RetrieveRange(address, &region_index, NULL, NULL))
     return NULL;
 
   return GetMemoryRegionAtIndex(region_index);
@@ -1708,8 +1718,12 @@ bool MinidumpException::Read(u_int32_t expected_size) {
 }
 
 
-u_int32_t MinidumpException::GetThreadID() {
-  return valid_ ? exception_.thread_id : 0;
+bool MinidumpException::GetThreadID(u_int32_t *thread_id) const {
+  if (!thread_id || !valid_)
+    return false;
+
+  *thread_id = exception_.thread_id;
+  return true;
 }
 
 
@@ -2006,6 +2020,85 @@ void MinidumpMiscInfo::Print() {
     printf("  processor_current_idle_state = 0x%x\n",
            misc_info_.processor_current_idle_state);
   }
+  printf("\n");
+}
+
+
+//
+// MinidumpAirbagInfo
+//
+
+
+MinidumpAirbagInfo::MinidumpAirbagInfo(Minidump* minidump)
+    : MinidumpStream(minidump),
+      airbag_info_() {
+}
+
+
+bool MinidumpAirbagInfo::Read(u_int32_t expected_size) {
+  valid_ = false;
+
+  if (expected_size != sizeof(airbag_info_))
+    return false;
+
+  if (!minidump_->ReadBytes(&airbag_info_, sizeof(airbag_info_)))
+    return false;
+
+  if (minidump_->swap()) {
+    Swap(&airbag_info_.validity);
+    Swap(&airbag_info_.dump_thread_id);
+    Swap(&airbag_info_.requesting_thread_id);
+  }
+
+  valid_ = true;
+  return true;
+}
+
+
+bool MinidumpAirbagInfo::GetDumpThreadID(u_int32_t *thread_id) const {
+  if (!thread_id || !valid_ ||
+      !(airbag_info_.validity & MD_AIRBAG_INFO_VALID_DUMP_THREAD_ID)) {
+    return false;
+  }
+
+  *thread_id = airbag_info_.dump_thread_id;
+  return true;
+}
+
+
+bool MinidumpAirbagInfo::GetRequestingThreadID(u_int32_t *thread_id)
+    const {
+  if (!thread_id || !valid_ ||
+      !(airbag_info_.validity & MD_AIRBAG_INFO_VALID_REQUESTING_THREAD_ID)) {
+    return false;
+  }
+
+  *thread_id = airbag_info_.requesting_thread_id;
+  return true;
+}
+
+
+void MinidumpAirbagInfo::Print() {
+  if (!valid_)
+    return;
+
+  printf("MDRawAirbagInfo\n");
+  printf("  validity             = 0x%x\n", airbag_info_.validity);
+
+  if (airbag_info_.validity & MD_AIRBAG_INFO_VALID_DUMP_THREAD_ID) {
+    printf("  dump_thread_id       = 0x%x\n", airbag_info_.dump_thread_id);
+  } else {
+    printf("  dump_thread_id       = (invalid)\n");
+  }
+
+  if (airbag_info_.validity & MD_AIRBAG_INFO_VALID_DUMP_THREAD_ID) {
+    printf("  requesting_thread_id = 0x%x\n",
+           airbag_info_.requesting_thread_id);
+  } else {
+    printf("  requesting_thread_id = (invalid)\n");
+  }
+
+  printf("\n");
 }
 
 
@@ -2128,12 +2221,13 @@ bool Minidump::Read() {
     // type.
     unsigned int stream_type = directory_entry->stream_type;
     switch (stream_type) {
-      case THREAD_LIST_STREAM:
-      case MODULE_LIST_STREAM:
-      case MEMORY_LIST_STREAM:
-      case EXCEPTION_STREAM:
-      case SYSTEM_INFO_STREAM:
-      case MISC_INFO_STREAM: {
+      case MD_THREAD_LIST_STREAM:
+      case MD_MODULE_LIST_STREAM:
+      case MD_MEMORY_LIST_STREAM:
+      case MD_EXCEPTION_STREAM:
+      case MD_SYSTEM_INFO_STREAM:
+      case MD_MISC_INFO_STREAM:
+      case MD_AIRBAG_INFO_STREAM: {
         if (stream_map->find(stream_type) != stream_map->end()) {
           // Another stream with this type was already found.  A minidump
           // file should contain at most one of each of these stream types.
@@ -2194,6 +2288,12 @@ MinidumpMiscInfo* Minidump::GetMiscInfo() {
 }
 
 
+MinidumpAirbagInfo* Minidump::GetAirbagInfo() {
+  MinidumpAirbagInfo* airbag_info;
+  return GetStream(&airbag_info);
+}
+
+
 void Minidump::Print() {
   if (!valid_)
     return;
@@ -2233,7 +2333,7 @@ void Minidump::Print() {
        ++iterator) {
     u_int32_t stream_type = iterator->first;
     MinidumpStreamInfo info = iterator->second;
-    printf("  stream type %2d at index %d\n", stream_type, info.stream_index);
+    printf("  stream type 0x%x at index %d\n", stream_type, info.stream_index);
   }
   printf("\n");
 }

@@ -34,12 +34,12 @@
 // Author: Mark Mentovai
 
 
-#include "processor/stackwalker.h"
-#include "google/call_stack.h"
-#include "google/stack_frame.h"
-#include "google/symbol_supplier.h"
+#include "google_airbag/processor/stackwalker.h"
+#include "google_airbag/processor/call_stack.h"
+#include "google_airbag/processor/minidump.h"
+#include "google_airbag/processor/stack_frame.h"
+#include "google_airbag/processor/symbol_supplier.h"
 #include "processor/linked_ptr.h"
-#include "processor/minidump.h"
 #include "processor/scoped_ptr.h"
 #include "processor/source_line_resolver.h"
 #include "processor/stack_frame_info.h"

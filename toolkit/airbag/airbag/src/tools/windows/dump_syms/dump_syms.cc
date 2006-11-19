@@ -39,20 +39,14 @@
 using std::wstring;
 using google_airbag::PDBSourceLineWriter;
 
-int main(int argc, char **argv) {
+int wmain(int argc, wchar_t **argv) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <pdb file>\n", argv[0]);
-    return 1;
-  }
-
-  wchar_t filename[_MAX_PATH];
-  if (mbstowcs_s(NULL, filename, argv[1], _MAX_PATH) == -1) {
-    fprintf(stderr, "invalid multibyte character in %s\n", argv[1]);
+    fprintf(stderr, "Usage: %ws <pdb file>\n", argv[0]);
     return 1;
   }
 
   PDBSourceLineWriter writer;
-  if (!writer.Open(wstring(filename), PDBSourceLineWriter::PDB_FILE)) {
+  if (!writer.Open(wstring(argv[1]), PDBSourceLineWriter::ANY_FILE)) {
     fprintf(stderr, "Open failed\n");
     return 1;
   }

@@ -27,20 +27,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include "processor/source_line_resolver.h"
-#include "google/stack_frame.h"
+#include "google_airbag/processor/stack_frame.h"
 #include "processor/linked_ptr.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stack_frame_info.h"
-
-using std::string;
-using google_airbag::linked_ptr;
-using google_airbag::scoped_ptr;
-using google_airbag::SourceLineResolver;
-using google_airbag::StackFrame;
-using google_airbag::StackFrameInfo;
 
 #define ASSERT_TRUE(cond) \
   if (!(cond)) {                                                        \
@@ -51,6 +44,15 @@ using google_airbag::StackFrameInfo;
 #define ASSERT_FALSE(cond) ASSERT_TRUE(!(cond))
 
 #define ASSERT_EQ(e1, e2) ASSERT_TRUE((e1) == (e2))
+
+namespace {
+
+using std::string;
+using google_airbag::linked_ptr;
+using google_airbag::scoped_ptr;
+using google_airbag::SourceLineResolver;
+using google_airbag::StackFrame;
+using google_airbag::StackFrameInfo;
 
 static bool VerifyEmpty(const StackFrame &frame) {
   ASSERT_TRUE(frame.function_name.empty());
@@ -145,6 +147,8 @@ static bool RunTests() {
   ASSERT_FALSE(resolver.HasModule("invalid-module"));
   return true;
 }
+
+}  // namespace
 
 int main(int argc, char **argv) {
   if (!RunTests()) {

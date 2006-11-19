@@ -31,8 +31,8 @@
 //
 // Author: Mark Mentovai
 
-#ifndef GOOGLE_PROCESS_STATE_H__
-#define GOOGLE_PROCESS_STATE_H__
+#ifndef GOOGLE_AIRBAG_PROCESSOR_PROCESS_STATE_H__
+#define GOOGLE_AIRBAG_PROCESSOR_PROCESS_STATE_H__
 
 #include <string>
 #include <vector>
@@ -52,7 +52,7 @@ class ProcessState {
   bool crashed() const { return crashed_; }
   string crash_reason() const { return crash_reason_; }
   u_int64_t crash_address() const { return crash_address_; }
-  unsigned int crash_thread() const { return crash_thread_; }
+  int requesting_thread() const { return requesting_thread_; }
   const vector<CallStack*>* threads() const { return &threads_; }
   string os() const { return os_; }
   string os_version() const { return os_version_; }
@@ -65,7 +65,7 @@ class ProcessState {
 
   // Disallow instantiation other than by friends.
   ProcessState() : crashed_(false), crash_reason_(), crash_address_(0),
-                   crash_thread_(0), threads_(), os_(), os_version_(),
+                   requesting_thread_(-1), threads_(), os_(), os_version_(),
                    cpu_(), cpu_info_() {}
 
   // True if the process crashed, false if the dump was produced outside
@@ -84,9 +84,15 @@ class ProcessState {
   // this will be the address of the instruction that caused the fault.
   u_int64_t crash_address_;
 
-  // If the process crashed, the index of the crashed thread's stack
-  // in the threads vector.
-  unsigned int crash_thread_;
+  // The index of the thread that requested a dump be written in the
+  // threads vector.  If a dump was produced as a result of a crash, this
+  // will point to the thread that crashed.  If the dump was produced as
+  // by user code without crashing, and the dump contains extended Airbag
+  // information, this will point to the thread that requested the dump.
+  // If the dump was not produced as a result of an exception and no
+  // extended Airbag information is present, this field will be set to -1,
+  // indicating that the dump thread is not available.
+  int requesting_thread_;
 
   // Stacks for each thread (except possibly the exception handler
   // thread) at the time of the crash.
@@ -118,4 +124,4 @@ class ProcessState {
 
 }  // namespace google_airbag
 
-#endif  // GOOGLE_CALL_STACK_H__
+#endif  // GOOGLE_AIRBAG_PROCESSOR_CALL_STACK_H__

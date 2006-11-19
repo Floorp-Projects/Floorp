@@ -36,11 +36,11 @@
 //
 // Author: Mark Mentovai
 
-#ifndef GOOGLE_STACK_FRAME_CPU_H__
-#define GOOGLE_STACK_FRAME_CPU_H__
+#ifndef GOOGLE_AIRBAG_PROCESSOR_STACK_FRAME_CPU_H__
+#define GOOGLE_AIRBAG_PROCESSOR_STACK_FRAME_CPU_H__
 
-#include "google/stack_frame.h"
-#include "processor/minidump_format.h"
+#include "google_airbag/common/minidump_format.h"
+#include "google_airbag/processor/stack_frame.h"
 
 namespace google_airbag {
 
@@ -100,4 +100,4 @@ struct StackFramePPC : public StackFrame {
 
 }  // namespace google_airbag
 
-#endif  // GOOGLE_STACK_FRAME_CPU_H__
+#endif  // GOOGLE_AIRBAG_PROCESSOR_STACK_FRAME_CPU_H__

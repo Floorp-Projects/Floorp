@@ -1,0 +1,19 @@
+Operating system: Windows NT
+                  5.1.2600 Service Pack 2
+CPU: x86
+     GenuineIntel family 6 model 13 stepping 8
+
+Crash reason:  EXCEPTION_ACCESS_VIOLATION
+Crash address: 0x45
+
+Thread 0 (crashed)
+ 0  test_app.exe!CrashFunction() [test_app.cc : 51 + 0x3]
+    eip = 0x0040208e   esp = 0x0012feec   ebp = 0x0012fef0   ebx = 0x7c80abc1
+    esi = 0x00000002   edi = 0x00000a28   eax = 0x00000045   ecx = 0x0012fefc
+    edx = 0x7c90eb94   efl = 0x00010246
+ 1  test_app.exe!main [test_app.cc : 56 + 0x4]
+    eip = 0x004020df   esp = 0x0012fef8   ebp = 0x0012ff70
+ 2  test_app.exe!__tmainCRTStartup [crt0.c : 318 + 0x11]
+    eip = 0x0040395c   esp = 0x0012ff78   ebp = 0x0012ffc0
+ 3  kernel32.dll!BaseProcessStart + 0x22
+    eip = 0x7c816fd7   esp = 0x0012ffc8   ebp = 0x0012fff0

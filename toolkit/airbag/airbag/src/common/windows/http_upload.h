@@ -35,7 +35,7 @@
 #define COMMON_WINDOWS_HTTP_UPLOAD_H__
 
 #pragma warning( push )
-// disable exception handler warnings
+// Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
 
 #include <map>
@@ -104,4 +104,5 @@ class HTTPUpload {
 }  // namespace google_airbag
 
 #pragma warning( pop )
+
 #endif  // COMMON_WINDOWS_HTTP_UPLOAD_H__

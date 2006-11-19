@@ -39,7 +39,7 @@
 // wininet.lib.
 
 #pragma warning( push )
-// disable exception handler warnings
+// Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
 
 #include <map>
@@ -74,4 +74,5 @@ class CrashReportSender {
 }  // namespace google_airbag
 
 #pragma warning( pop )
+
 #endif  // CLIENT_WINDOWS_SENDER_CRASH_REPORT_SENDER_H__
