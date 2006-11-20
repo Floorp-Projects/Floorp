@@ -155,8 +155,10 @@ var gMainPane = {
       else
         useCurrent.label = useCurrent.getAttribute("label1");
     }
-    else
+    else {
+      useCurrent.label = useCurrent.getAttribute("label1");
       useCurrent.disabled = true;
+    }
   },
 
   /**
