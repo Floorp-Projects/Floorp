@@ -564,7 +564,7 @@ pref("mailnews.global_html_domains.version",1);
 // Privacy Controls for Handling Remote Content
 ///////////////////////////////////////////////////////////////// 
 pref("mailnews.message_display.allow.plugins", false); // disable plugins by default
-pref("mailnews.message_display.disable_remote_image", false);
+pref("mailnews.message_display.disable_remote_image", true);
 
 /////////////////////////////////////////////////////////////////
 // Trusted Mail Domains
