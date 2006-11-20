@@ -1468,6 +1468,7 @@ const char *kOfflineMsgOffsetColumnName = "msgOffset";
 const char *kOfflineMsgSizeColumnName = "offlineMsgSize";
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
+const char *kFixedBadRefThreadingProp = "fixedBadRefThreading";
 
 // set up empty tables, dbFolderInfo, etc.
 nsresult nsMsgDatabase::InitNewDB()
@@ -1483,6 +1484,7 @@ nsresult nsMsgDatabase::InitNewDB()
       NS_ADDREF(dbFolderInfo); 
       err = dbFolderInfo->AddToNewMDB();
       dbFolderInfo->SetVersion(GetCurVersion());
+      dbFolderInfo->SetBooleanProperty(kFixedBadRefThreadingProp, PR_TRUE);
       nsIMdbStore *store = GetStore();
       // create the unique table for the dbFolderInfo.
       mdb_err mdberr;
@@ -1585,6 +1587,42 @@ nsresult nsMsgDatabase::InitExistingDB()
       if (mdberr != NS_OK || !m_mdbAllThreadsTable)
         err = NS_ERROR_FAILURE;
     }
+  }
+  if (NS_SUCCEEDED(err) && m_dbFolderInfo)
+  {
+    PRBool fixedBadRefThreading;
+    m_dbFolderInfo->GetBooleanProperty(kFixedBadRefThreadingProp, PR_FALSE, &fixedBadRefThreading);
+    if (!fixedBadRefThreading)
+    {
+      nsCOMPtr <nsISimpleEnumerator> enumerator;
+      err = EnumerateMessages(getter_AddRefs(enumerator));
+      if (NS_SUCCEEDED(err) && enumerator)
+      {
+        PRBool hasMore;
+        
+        while (NS_SUCCEEDED(err = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+        {
+          nsCOMPtr <nsIMsgDBHdr> msgHdr;
+          err = enumerator->GetNext(getter_AddRefs(msgHdr));
+          NS_ASSERTION(NS_SUCCEEDED(err), "nsMsgDBEnumerator broken");
+          if (msgHdr && NS_SUCCEEDED(err))
+          {
+            nsXPIDLCString messageId;
+            nsCAutoString firstReference;
+            msgHdr->GetMessageId(getter_Copies(messageId));
+            msgHdr->GetStringReference(0, firstReference);
+            if (messageId.Equals(firstReference))
+            {
+              err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+              break;
+            }
+          }
+        }
+      }
+            
+      m_dbFolderInfo->SetBooleanProperty(kFixedBadRefThreadingProp, PR_TRUE);
+    }
+    
   }
   return err;
 }
@@ -3712,10 +3750,9 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
         if (replyToKey == newHdrKey)
         {
           // bad references - throw them all away.
-          newHdr->ParseReferences("");
+          newHdr->SetMessageId("");
           thread = nsnull;
           break;
-          
         }
       }
       thread->GetThreadKey(&threadId);
