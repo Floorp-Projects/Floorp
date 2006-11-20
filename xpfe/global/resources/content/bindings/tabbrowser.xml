@@ -1131,7 +1131,7 @@
               t.setAttribute("afterselected", true);
 
             // navigate back to the proper page from the light page
-            b.webNavigation.gotoIndex(0);
+            b.webNavigation.goBack();
 
             // reattach the old history
             b.webNavigation.sessionHistory = hist;
@@ -1143,13 +1143,17 @@
             // Hook up the title change listener again
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
-            // add back the filters
+            // add back the filters, security first (bug 313335)
+            const nsIWebProgress = Components.interfaces.nsIWebProgress;
+            var secFlags = nsIWebProgress.NOTIFY_STATE_ALL | nsIWebProgress.NOTIFY_LOCATION | nsIWebProgress.NOTIFY_SECURITY;
+            b.webProgress.addProgressListener(b.securityUI, secFlags);
+
             var position = this.mTabs.length - 1;
             var tabListener = this.mTabProgressListener(t, b, false);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
-                                     .createInstance(Components.interfaces.nsIWebProgress);
-            filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+                                     .createInstance(nsIWebProgress);
+            filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
+            b.webProgress.addProgressListener(filter, nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
 
@@ -1192,6 +1196,9 @@
             }
 
             var index = this.getTabIndex(aTab);
+
+            // Remove SSL listener
+            oldBrowser.webProgress.removeProgressListener(oldBrowser.securityUI);
 
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[index];
@@ -1277,10 +1284,8 @@
             var entry = oldSH.getEntryAtIndex(oldSH.index, false)
             newSH.addEntry(entry, true);
 
-            // LOAD_FLAGS_FROM_EXTERNAL forces the eviction of the current page
-            oldBrowser.loadURIWithFlags("about:blank", Components.interfaces.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL);
-            // But we don't actually want the blank page to load (bug 354927)
-            oldBrowser.stop();
+            // about:blank is light
+            oldBrowser.loadURI("about:blank");
 
             // remove overflow from the undo stack
             if (this.savedBrowsers.length > maxUndoDepth) {
