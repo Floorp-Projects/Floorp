@@ -576,6 +576,10 @@ EOT
             my $info_sth = $self->prepare("SHOW FULL COLUMNS FROM $table");
             $info_sth->execute();
             while (my $column = $info_sth->fetchrow_hashref) {
+                # Our conversion code doesn't work on enum fields, but they
+                # all go away later in checksetup anyway.
+                next if $column->{Type} =~ /enum/i;
+
                 # If this particular column isn't stored in utf-8
                 if ($column->{Collation}
                     && $column->{Collation} ne 'NULL' 
@@ -617,8 +621,9 @@ EOT
                     $self->do("ALTER TABLE $table CHANGE COLUMN $name $name 
                               $utf8");
                 }
-                $self->do("ALTER TABLE $table DEFAULT CHARACTER SET utf8");
             }
+
+            $self->do("ALTER TABLE $table DEFAULT CHARACTER SET utf8");
         } # foreach my $table (@tables)
 
         my $db_name = Bugzilla->localconfig->{db_name};
