@@ -232,12 +232,19 @@ sub check_for_children{
     my $dbh = Bugzilla->dbh;
     my $self = shift;
     
-    my ($used) = $dbh->selectrow_array(qq{
-    	SELECT 1 
-          FROM test_environment_element 
-         WHERE parent_id = ? },undef,$self->{'element_id'});
+    my ($has_element) = $dbh->selectrow_array(
+    	"SELECT 1 
+           FROM test_environment_element 
+          WHERE parent_id = ?",
+         undef, $self->{'element_id'});
 
-    return $used;             
+    my ($has_property) = $dbh->selectrow_array(
+    	"SELECT 1 
+           FROM test_environment_property 
+          WHERE element_id = ?",
+         undef, $self->{'element_id'});
+
+    return $has_element || $has_property;             
 }
 
 sub children_to_json{
