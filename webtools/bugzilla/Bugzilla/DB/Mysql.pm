@@ -577,7 +577,8 @@ EOT
             $info_sth->execute();
             while (my $column = $info_sth->fetchrow_hashref) {
                 # If this particular column isn't stored in utf-8
-                if ($column->{Collation} ne 'NULL' 
+                if ($column->{Collation}
+                    && $column->{Collation} ne 'NULL' 
                     && $column->{Collation} !~ /utf8/) 
                 {
                     my $name = $column->{Field};
