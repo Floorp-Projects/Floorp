@@ -465,6 +465,7 @@ function handleWantsAttachment(wants_attachment) {
           <table class="attachment_entry">
             [% PROCESS attachment/createformcontents.html.tmpl
                        flag_types = product.flag_types.attachment
+                       any_flags_requesteeble = 1
                        flag_table_id ="attachment_flags" %]
           </table>
         </fieldset>
