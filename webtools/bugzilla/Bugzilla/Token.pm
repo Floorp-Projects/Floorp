@@ -475,7 +475,7 @@ Bugzilla::Token - Provides different routines to manage tokens.
               for an action which is not the one expected. An email is sent
               to the user who originally requested this token to inform him
               that this token has been invalidated (e.g. because an hacker
-              tries to use this token for some malicious action).
+              tried to use this token for some malicious action).
 
  Params:      $token:        The token to invalidate.
               $cancelaction: The reason why this token is invalidated.
@@ -486,7 +486,7 @@ Bugzilla::Token - Provides different routines to manage tokens.
 =item C<DeletePasswordTokens($user_id, $reason)>
 
  Description: Cancels all password tokens for the given user. Emails are sent
-              to this user to inform him about this action.
+              to the user to inform him about this action.
 
  Params:      $user_id: The user ID of the user account whose password tokens
                         are cancelled.
@@ -517,7 +517,7 @@ Bugzilla::Token - Provides different routines to manage tokens.
 =head2 Security related routines
 
 The following routines have been written to be used together as described below,
-despite they can be used separately.
+although they can be used separately.
 
 =over
 
