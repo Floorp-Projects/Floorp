@@ -61,16 +61,17 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
                 
-#define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
-#define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
-#define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
-#define NC_RDF_ISREMOTE				"http://home.netscape.com/NC-rdf#IsRemote"
-#define NC_RDF_ISWRITEABLE			"http://home.netscape.com/NC-rdf#IsWriteable"
-#define NC_RDF_DIRTREENAMESORT  "http://home.netscape.com/NC-rdf#DirTreeNameSort"
+#define NC_RDF_DIRNAME              "http://home.netscape.com/NC-rdf#DirName"
+#define NC_RDF_DIRURI               "http://home.netscape.com/NC-rdf#DirUri"
+#define NC_RDF_ISMAILLIST           "http://home.netscape.com/NC-rdf#IsMailList"
+#define NC_RDF_ISREMOTE             "http://home.netscape.com/NC-rdf#IsRemote"
+#define NC_RDF_ISWRITEABLE          "http://home.netscape.com/NC-rdf#IsWriteable"
+#define NC_RDF_DIRTREENAMESORT      "http://home.netscape.com/NC-rdf#DirTreeNameSort"
+#define NC_RDF_SUPPORTSMAILINGLISTS "http://home.netscape.com/NC-rdf#SupportsMailingLists"
 
 //Directory Commands
-#define NC_RDF_MODIFY				"http://home.netscape.com/NC-rdf#Modify"
-#define NC_RDF_DELETECARDS			"http://home.netscape.com/NC-rdf#DeleteCards"
+#define NC_RDF_MODIFY               "http://home.netscape.com/NC-rdf#Modify"
+#define NC_RDF_DELETECARDS          "http://home.netscape.com/NC-rdf#DeleteCards"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -170,6 +171,9 @@ nsAbDirectoryDataSource::Init()
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DELETECARDS),
                         getter_AddRefs(kNC_DeleteCards));
   NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SUPPORTSMAILINGLISTS),
+                        getter_AddRefs(kNC_SupportsMailingLists));
+  NS_ENSURE_SUCCESS(rv,rv);
   rv = createNode(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
   NS_ENSURE_SUCCESS(rv,rv);
   rv = createNode(NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral));
@@ -240,7 +244,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
       (kNC_IsRemote == property) ||
       (kNC_IsSecure == property) ||
       (kNC_IsWriteable == property) ||
-      (kNC_DirTreeNameSort == property)) 
+      (kNC_DirTreeNameSort == property) ||
+      (kNC_SupportsMailingLists == property))
     {
       return NS_NewSingletonEnumerator(targets, property);
     }
@@ -290,7 +295,8 @@ nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
                aArc == kNC_IsRemote ||
                aArc == kNC_IsSecure ||
                aArc == kNC_IsWriteable ||
-               aArc == kNC_DirTreeNameSort);
+               aArc == kNC_DirTreeNameSort ||
+               aArc == kNC_SupportsMailingLists);
   }
   else {
     *result = PR_FALSE;
@@ -333,6 +339,7 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
   (*arcs)->AppendElement(kNC_IsSecure);
   (*arcs)->AppendElement(kNC_IsWriteable);
   (*arcs)->AppendElement(kNC_DirTreeNameSort);
+  (*arcs)->AppendElement(kNC_SupportsMailingLists);
   return NS_OK;
 }
 
@@ -508,6 +515,8 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 	  rv = createDirectoryIsWriteableNode(directory, target);
   else if ((kNC_DirTreeNameSort == property))
     rv = createDirectoryTreeNameSortNode(directory, target);
+  else if ((kNC_SupportsMailingLists == property))
+    rv = createDirectorySupportsMailingListsNode(directory, target);
   return rv;
 }
 
@@ -515,12 +524,10 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
-	nsresult rv = NS_OK;
-
-        nsXPIDLString name;
-	rv = directory->GetDirName(getter_Copies(name));
-	NS_ENSURE_SUCCESS(rv, rv);
-	rv = createNode(name.get(), target);
+  nsXPIDLString name;
+  nsresult rv = directory->GetDirName(getter_Copies(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = createNode(name.get(), target);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -607,15 +614,26 @@ nsresult
 nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory,
                                                        nsIRDFNode **target)
 {
-  nsresult rv;
   PRBool isMailList;
-  rv = directory->GetIsMailList(&isMailList);
+  nsresult rv = directory->GetIsMailList(&isMailList);
   NS_ENSURE_SUCCESS(rv, rv);
   
   NS_IF_ADDREF(*target = (isMailList ? kTrueLiteral : kFalseLiteral));
   return NS_OK;
 }
- 
+
+nsresult
+nsAbDirectoryDataSource::createDirectorySupportsMailingListsNode(nsIAbDirectory* directory,
+                                                                 nsIRDFNode **target)
+{
+  PRBool supportsMailingLists;
+  nsresult rv = directory->GetSupportsMailingLists(&supportsMailingLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*target = (supportsMailingLists ? kTrueLiteral : kFalseLiteral));
+  return NS_OK;
+}
+
 nsresult
 nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directory, nsIRDFNode **target)
 {
@@ -807,7 +825,8 @@ nsresult nsAbDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 			rv = directory->HasDirectory(newDirectory, hasAssertion);
 	}
 	else if ((kNC_IsMailList == property) || (kNC_IsRemote == property) ||
-			(kNC_IsSecure == property) || (kNC_IsWriteable == property))
+            (kNC_IsSecure == property) || (kNC_IsWriteable == property) ||
+            (kNC_SupportsMailingLists == property))
 	{
 		nsCOMPtr<nsIRDFResource> dirResource(do_QueryInterface(directory, &rv));
 		NS_ENSURE_SUCCESS(rv, rv);

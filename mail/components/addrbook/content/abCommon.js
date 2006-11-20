@@ -74,6 +74,7 @@ var ResultsPaneController =
       case "button_edit":
       case "cmd_printcard":
       case "cmd_printcardpreview":
+      case "cmd_newlist":
         return true;
       default:
         return false;
@@ -110,6 +111,15 @@ var ResultsPaneController =
       case "cmd_printcardpreview":
       case "button_edit":
         return (GetSelectedCardIndex() != -1);
+      case "cmd_newlist":
+        var selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          var abDir = GetDirectoryFromURI(selectedDir);
+          if (abDir) {
+            return abDir.supportsMailingLists;
+          }
+        }
+        return false;
       default:
         return false;
     }
@@ -135,6 +145,9 @@ var ResultsPaneController =
       case "cmd_printcardpreview":
         AbPrintPreviewCard();
         break;
+      case "cmd_newlist":
+        AbNewList();
+        break;
     }
   },
 
@@ -159,6 +172,7 @@ var DirPaneController =
       case "button_edit":
       case "cmd_printcard":
       case "cmd_printcardpreview":
+      case "cmd_newlist":
         return true;
       default:
         return false;
@@ -214,6 +228,15 @@ var DirPaneController =
         return (GetSelectedCardIndex() != -1);
       case "button_edit":
         return (GetSelectedDirectory() != null);
+      case "cmd_newlist":
+        selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          var abDir = GetDirectoryFromURI(selectedDir);
+          if (abDir) {
+            return abDir.supportsMailingLists;
+          }
+        }
+        return false;
       default:
         return false;
     }
@@ -234,7 +257,10 @@ var DirPaneController =
         break;
       case "button_edit":
         AbEditSelectedDirectory();
-        break;       
+        break;
+      case "cmd_newlist":
+        AbNewList();
+        break;
     }
   },
 
@@ -655,6 +681,7 @@ function DirPaneSelectionChange()
     gPreviousDirTreeIndex = dirTree.currentIndex;
     ChangeDirectoryByURI(GetSelectedDirectory());
   }
+  goUpdateCommand('cmd_newlist');
 }
 
 function GetAbResultsBoxObject()

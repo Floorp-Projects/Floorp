@@ -303,6 +303,7 @@ function CommandUpdate_AddressBook()
 {
   goUpdateCommand('cmd_delete');
   goUpdateCommand('button_delete');
+  goUpdateCommand('cmd_newlist');
 }
 
 function ResultsPaneSelectionChanged()

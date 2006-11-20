@@ -101,6 +101,7 @@
               commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <command id="cmd_newlist" oncommand="goDoCommand('cmd_newlist');"/>
     <command id="cmd_printcardpreview" oncommand="goDoCommand('cmd_printcardpreview');"/>
     <command id="cmd_printcard" oncommand="goDoCommand('cmd_printcard');"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
@@ -193,7 +194,7 @@
   <menuitem id="dirTreeContext-newlist"
             label="&newlistButton.label;"
             accesskey="&newlistButton.accesskey;"
-            oncommand="AbNewList();"/>
+            command="cmd_newlist"/>
   <menuseparator/>
   <menuitem id="dirTreeContext-delete"
             label="&deleteButton.label;"
@@ -247,7 +248,7 @@
                 <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
                     <menupopup id="menu_NewPopup">
                       <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" key="key_newCard" oncommand="AbNewCard();"/>
-                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList();"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" command="cmd_newlist"/>
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>
@@ -506,7 +507,7 @@
   
   <toolbarpalette id="AddressBookToolbarPalette">
       <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
-      <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" command="cmd_newlist"/>
       <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>

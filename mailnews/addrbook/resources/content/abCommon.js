@@ -74,6 +74,7 @@ var ResultsPaneController =
       case "cmd_delete":
       case "button_delete":
       case "button_edit":
+      case "cmd_newlist":
         return true;
       default:
         return false;
@@ -121,6 +122,15 @@ var ResultsPaneController =
         return (enabled && (numSelected > 0));
       case "button_edit":
         return (GetSelectedCardIndex() != -1);
+      case "cmd_newlist":
+        var selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          var abDir = GetDirectoryFromURI(selectedDir);
+          if (abDir) {
+            return abDir.supportsMailingLists;
+          }
+        }
+        return false;
       default:
         return false;
     }
@@ -139,6 +149,9 @@ var ResultsPaneController =
         break;
       case "button_edit":
         AbEditSelectedCard();
+        break;
+      case "cmd_newlist":
+        AbNewList();
         break;
     }
   },
@@ -162,6 +175,7 @@ var DirPaneController =
       case "cmd_delete":
       case "button_delete":
       case "button_edit":
+      case "cmd_newlist":
         return true;
       default:
         return false;
@@ -170,6 +184,8 @@ var DirPaneController =
 
   isCommandEnabled: function(command)
   {
+    var selectedDir;
+
     switch (command) {
       case "cmd_selectAll":
         // the dirTree pane
@@ -180,7 +196,7 @@ var DirPaneController =
         return (gAbView != null);
       case "cmd_delete":
       case "button_delete":
-        var selectedDir = GetSelectedDirectory();
+        selectedDir = GetSelectedDirectory();
         if (command == "cmd_delete" && selectedDir) {
           goSetMenuValue(command, GetDirectoryFromURI(selectedDir).isMailList ? "valueList" : "valueAddressBook");
         }
@@ -210,6 +226,15 @@ var DirPaneController =
           return false;
       case "button_edit":
         return (GetSelectedDirectory() != null);
+      case "cmd_newlist":
+        selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          var abDir = GetDirectoryFromURI(selectedDir);
+          if (abDir) {
+            return abDir.supportsMailingLists;
+          }
+        }
+        return false;
       default:
         return false;
     }
@@ -228,6 +253,9 @@ var DirPaneController =
         break;
       case "button_edit":
         AbEditSelectedDirectory();
+        break;
+      case "cmd_newlist":
+        AbNewList();
         break;
     }
   },

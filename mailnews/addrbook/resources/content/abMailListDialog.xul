@@ -63,8 +63,8 @@
                  sortDirection="ascending"
                  sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
         <template> 
-        <rule nc:IsWriteable="false"/> 
-        <rule nc:IsMailList="false">
+        <rule nc:IsWriteable="false"/>
+        <rule nc:SupportsMailingLists="true">
           <menuitem uri="..."
                     label="rdf:http://home.netscape.com/NC-rdf#DirName"
                     value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>

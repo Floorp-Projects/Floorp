@@ -63,13 +63,18 @@
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   </stringbundleset>
 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook-panel.js"/>
-    
-  <popup id="composeMail">
+
+  <commandset id="addressbook-panel-commandset">
+    <command id="cmd_newlist" oncommand="AbNewList();"/>
+  </commandset>
+
+  <popup id="composeMail" onpopupshowing="CommandUpdate_AddressBook();">
     <menuitem label="&toButton.label;" accesskey="&toButton.accesskey;" oncommand="AbPanelAdd('addr_to');" default="true"/>
     <menuitem label="&ccButton.label;" accesskey="&ccButton.accesskey;" oncommand="AbPanelAdd('addr_cc');"/>
     <menuitem label="&bccButton.label;" accesskey="&bccButton.accesskey;" oncommand="AbPanelAdd('addr_bcc');"/>
@@ -79,7 +84,7 @@
     <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
     <menuseparator/>
     <menuitem label="&newAddrBookCard.label;" accesskey="&newAddrBookCard.accesskey;" oncommand="AbPanelNewCard();"/>
-    <menuitem label="&newAddrBookMailingList.label;" accesskey="&newAddrBookMailingList.accesskey;" oncommand="AbPanelNewList();"/>
+    <menuitem label="&newAddrBookMailingList.label;" accesskey="&newAddrBookMailingList.accesskey;" command="cmd_newlist"/>
     <menuseparator/>
     <menuitem label="&addrBookCardProperties.label;" accesskey="&addrBookCardProperties.accesskey;" oncommand="AbEditSelectedCard();"/>
   </popup>

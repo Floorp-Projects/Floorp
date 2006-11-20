@@ -207,7 +207,7 @@
                 <menu id="menu_New">
                     <menupopup id="menu_NewPopup">
                       <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard();"/>
-                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList();"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" command="cmd_newlist"/>
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>
