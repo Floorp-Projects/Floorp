@@ -268,8 +268,8 @@
       <acronym>MTA</acronym>
 
       <glossdef>
-        <para>A Message Transport Agent is used to control the flow of email
-        on a system. The <ulink url="http://search.cpan.org/dist/MailTools/Mail/Mailer.pm">Mail::Mailer</ulink>
+        <para>A Message Transport Agent is used to control the flow of email on a system.
+        The <ulink url="http://search.cpan.org/dist/Email-Send/lib/Email/Send.pm">Email::Send</ulink>
         Perl module, which Bugzilla uses to send email, can be configured to
         use many different underlying implementations for actually sending the
         mail using the <option>mail_delivery_method</option> parameter.
