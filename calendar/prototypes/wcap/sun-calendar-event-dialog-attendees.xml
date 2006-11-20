@@ -75,7 +75,7 @@
                      searchSessions="addrbook" timeout="300" maxrows="4" 
                      autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                      minResultsForPopup="1" ignoreBlurWhileSearching="true"
-                     ontextcommand=""
+                     ontextcommand="this.focus();"
                      onerrorcommand=""
                      oninput="this.setAttribute('dirty','true');">
               <xul:image class="person-icon" onclick="this.parentNode.select();"/>
@@ -105,6 +105,7 @@
       <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
       <field name="mIsOrganizer">false</field>
+      <field name="mPopupOpen">false</field>
 
       <constructor>
         <![CDATA[
@@ -182,6 +183,7 @@
 
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+            template.focus();
 
             // we need to enfore several layout constraints which can't be modelled
             // with plain xul and css, at least as far as i know.
@@ -246,6 +248,8 @@
               self.onModify();
             }
             callback();
+            
+            this.setFocus(this.mMaxAttendees);
             ]]>
         </body>
       </method>
@@ -799,21 +803,23 @@
         <parameter name="aRow"/>
         <body>
           <![CDATA[
-            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-            var node = this.getListItem(aRow);
+            var self = this;
+            var set_focus = function func() {
+              // do we need to scroll in order to see the selected row?
+              var node = self.getListItem(aRow);
+              var listbox = document.getAnonymousElementByAttribute(self, "anonid", "listbox");
+              var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
+              var numOfVisibleRows = listbox.getNumberOfVisibleRows();
+              if (aRow <= firstVisibleRow)
+                listbox.scrollToIndex(aRow-1);
+              else
+                if (aRow-1 >= (firstVisibleRow+numOfVisibleRows))
+                  listbox.scrollToIndex(aRow-numOfVisibleRows);
 
-            // do we need to scroll in order to see the selected row?
-            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-            var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
-            var numOfVisibleRows = listbox.getNumberOfVisibleRows();
-            if (aRow <= firstVisibleRow)
-              listbox.scrollToIndex(aRow-1);
-            else
-              if (aRow-1 >= (firstVisibleRow+numOfVisibleRows))
-                listbox.scrollToIndex(aRow-numOfVisibleRows);
-
-            var input = document.getAnonymousElementByAttribute(node, "anonid", "input");
-            input.focus();
+              var input = document.getAnonymousElementByAttribute(node, "anonid", "input");
+              input.focus();
+            }
+            setTimeout(set_focus,0);
           ]]>
         </body>
       </method>
@@ -867,13 +873,16 @@
               if(row > this.mMaxAttendees) {
                 this.appendNewRow(true);
               } else {
+                var input = this.getInputElement(row);
+                if(input.hasAttribute("disabled"))
+                  return;
                 this.setFocus(row);
               }
+              var event = document.createEvent('Events'); 
+              event.initEvent('rowchange', true, false);
+              event.details = row;
+              this.dispatchEvent(event);
             }
-            var event = document.createEvent('Events'); 
-            event.initEvent('rowchange', true, false);
-            event.details = row;
-            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
@@ -1329,6 +1338,18 @@
         ]]>
       </handler>
 
+      <handler event="popupshown">
+        <![CDATA[
+          this.mPopupOpen = true;
+        ]]>
+      </handler>
+
+      <handler event="popuphidden">
+        <![CDATA[
+          this.mPopupOpen = false;
+        ]]>
+      </handler>
+
       <handler event="keydown">
         <![CDATA[
         if(this.mIsReadOnly || !this.mIsOrganizer)
@@ -1342,6 +1363,7 @@
                 event.stopPropagation();
                 break;
               case 13:
+                this.arrowHit(event.originalTarget, 1);
                 event.stopPropagation();
                 event.preventDefault();
                 break;
@@ -1350,8 +1372,15 @@
         ]]>
       </handler>
 
-      <handler event="keypress">
+      <handler event="keypress" phase="capturing">
         <![CDATA[
+        // in case we're currently showing the autocompletion popup
+        // don't care about keypress-events and let them go. otherwise
+        // this event indicates the user wants to travel between
+        // the different attendees. in this case we set the focus
+        // appropriately and stop the event propagation.
+        if(this.mPopupOpen)
+          return;
         if(this.mIsReadOnly || !this.mIsOrganizer)
           return;
         if(event.originalTarget.localName == "input") {
@@ -1363,6 +1392,11 @@
             case KeyEvent.DOM_VK_DOWN:
               this.arrowHit(event.originalTarget, 1);
               event.stopPropagation();
+              break;
+            case KeyEvent.DOM_VK_TAB:
+              this.arrowHit(event.originalTarget, event.shiftKey ? -1 : +1);
+              event.stopPropagation();
+              event.preventDefault();
               break;
             case KeyEvent.DOM_VK_RETURN:
               event.stopPropagation();
