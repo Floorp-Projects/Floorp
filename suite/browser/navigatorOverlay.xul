@@ -503,89 +503,84 @@
     <menupopup id="menu_Debug_Popup">
       <menu label="Verification">
         <menupopup>
-          <menuitem label="Tables" oncommand="loadURI('resource:/res/samples/test6.html');"/>
-          <menuitem label="DOM" oncommand="loadURI('http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html');"/>
-          <menuitem label="GIF Images" oncommand="loadURI('http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html');"/>
-          <menuitem label="JPEG Images" oncommand="loadURI('resource:/res/samples/test2.html');"/>
-          <menuitem label="PNG Images" oncommand="loadURI('http://www.libpng.org/pub/png/png-MagnoliaAlpha.html');"/>
-          <menuitem label="Transparency" oncommand="loadURI('resource:/res/samples/test13.html');"/>
-          <menuitem label="Animation" oncommand="loadURI('resource:/res/samples/test2.html');"/>
-          <menuitem label="Larger page" oncommand="loadURI('http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html');"/>
-          <menuitem label="Smaller page" oncommand="loadURI('http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html');"/>
+          <menuitem label="GIF Images" oncommand="openTopWin('http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html');"/>
+          <menuitem label="PNG Images" oncommand="openTopWin('http://www.libpng.org/pub/png/png-MagnoliaAlpha.html');"/>
+          <menuitem label="Larger page" oncommand="openTopWin('http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html');"/>
+          <menuitem label="Smaller page" oncommand="openTopWin('http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html');"/>
           <menuseparator />
-          <menuitem label="Mozilla" oncommand="loadURI('http://www.mozilla.org');"/>
-          <menuitem label="Yahoo" oncommand="loadURI('http://www.yahoo.com');"/>
-          <menuitem label="Netscape" oncommand="loadURI('http://www.netscape.com');"/>
-          <menuitem label="Excite" oncommand="loadURI('http://www.excite.com');"/>
-          <menuitem label="Microsoft" oncommand="loadURI('http://www.microsoft.com');"/>
-          <menuitem label="city.net" oncommand="loadURI('http://www.city.net');"/>
-          <menuitem label="Mirabilis" oncommand="loadURI('http://www.mirabilis.com');"/>
-          <menuitem label="Time" oncommand="loadURI('http://www.time.com');"/>
-          <menuitem label="Warner Bros." oncommand="loadURI('http://www.warnerbros.com');"/>
-          <menuitem label="CNN" oncommand="loadURI('http://www.cnn.com');"/>
-          <menuitem label="USA Today" oncommand="loadURI('http://www.usatoday.com');"/>
-          <menuitem label="Disney" oncommand="loadURI('http://www.disney.go.com');"/>
-          <menuitem label="Hotwired" oncommand="loadURI('http://www.hotwired.com');"/>
-          <menuitem label="Hotbot" oncommand="loadURI('http://www.hotbot.com');"/>
+          <menuitem label="Mozilla" oncommand="openTopWin('http://www.mozilla.org');"/>
+          <menuitem label="Yahoo" oncommand="openTopWin('http://www.yahoo.com');"/>
+          <menuitem label="Netscape" oncommand="openTopWin('http://www.netscape.com');"/>
+          <menuitem label="Excite" oncommand="openTopWin('http://www.excite.com');"/>
+          <menuitem label="Microsoft" oncommand="openTopWin('http://www.microsoft.com');"/>
+          <menuitem label="city.net" oncommand="openTopWin('http://www.city.net');"/>
+          <menuitem label="Mirabilis" oncommand="openTopWin('http://www.mirabilis.com');"/>
+          <menuitem label="Time" oncommand="openTopWin('http://www.time.com');"/>
+          <menuitem label="Warner Bros." oncommand="openTopWin('http://www.warnerbros.com');"/>
+          <menuitem label="CNN" oncommand="openTopWin('http://www.cnn.com');"/>
+          <menuitem label="USA Today" oncommand="openTopWin('http://www.usatoday.com');"/>
+          <menuitem label="Disney" oncommand="openTopWin('http://www.disney.go.com');"/>
+          <menuitem label="Hotwired" oncommand="openTopWin('http://www.hotwired.com');"/>
+          <menuitem label="Hotbot" oncommand="openTopWin('http://www.hotbot.com');"/>
         </menupopup>
       </menu>
 
       <menu label="Viewer Demos">
        <menupopup>
-        <menuitem label="#0 Basic Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test0.html');"/>
-        <menuitem label="#1 CSS Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test1.html');"/>
-        <menuitem label="#2 Images" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test2.html');"/>
-        <menuitem label="#3 Basic Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test3.html');"/>
-        <menuitem label="#4 Simple Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test4.html');"/>
-        <menuitem label="#5 More Styles" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test5.html');"/>
-        <menuitem label="#6 Deeply Nested Tables" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test6.html');"/>
-        <menuitem label="#7 Scaled Anim Image" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test7.html');"/>
-        <menuitem label="#8 Form" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test8.html');"/>
-        <menuitem label="#9 Frames" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test9.html');"/>
-        <menuitem label="#10 Anim Images" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test10.html');"/>
-        <menuitem label="#11 Fixed Positioning" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test11.html');"/>
-        <menuitem label="#12 More Fixed Pos" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test12.html');"/>
-        <menuitem label="#13 DHTML" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test13.html');"/>
-        <menuitem label="#14 XML Sorting" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test14.html');"/>
-        <menuitem label="#15 XML IRS" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test15.html');"/>
-        <menuitem label="#16 Gfx Widgets" oncommand="loadURI('http://www.mozilla.org/newlayout/samples/test16.html');"/>
+        <menuitem label="#0 Basic Styles" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test0.html');"/>
+        <menuitem label="#1 CSS Styles" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test1.html');"/>
+        <menuitem label="#2 Images" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test2.html');"/>
+        <menuitem label="#3 Basic Tables" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test3.html');"/>
+        <menuitem label="#4 Simple Tables" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test4.html');"/>
+        <menuitem label="#5 More Styles" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test5.html');"/>
+        <menuitem label="#6 Deeply Nested Tables" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test6.html');"/>
+        <menuitem label="#7 Scaled Anim Image" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test7.html');"/>
+        <menuitem label="#8 Form" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test8.html');"/>
+        <menuitem label="#9 Frames" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test9.html');"/>
+        <menuitem label="#10 Anim Images" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test10.html');"/>
+        <menuitem label="#11 Fixed Positioning" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test11.html');"/>
+        <menuitem label="#12 More Fixed Pos" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test12.html');"/>
+        <menuitem label="#13 DHTML" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test13.html');"/>
+        <menuitem label="#14 XML Sorting" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test14.html');"/>
+        <menuitem label="#15 XML IRS" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test15.html');"/>
+        <menuitem label="#16 Gfx Widgets" oncommand="openTopWin('http://www.mozilla.org/newlayout/samples/test16.html');"/>
        </menupopup>
       </menu>
 
       <menu label="XBL Test Suite">
        <menupopup>
-        <menuitem label="#0 Remote XBL"  oncommand="loadURI('http://www.mozilla.org/projects/xbl/test0/test.xul');"/>
-        <menuitem label="#1 Technicolor DIV" oncommand="loadURI('http://www.mozilla.org/projects/xbl/test1/test.html');"/>
-        <menuitem label="#2 Rollover Madness" oncommand="loadURI('http://www.mozilla.org/projects/xbl/test2/test.html');"/>
-        <menuitem label="#3 Popups in HTML" oncommand="loadURI('http://www.mozilla.org/projects/xbl/test3/test.html');"/>
-        <menuitem label="#4 Partition Magic" oncommand="loadURI('http://www.mozilla.org/projects/xbl/test4/test.html');"/>        
-        <menuitem label="#5 Sticky Notes" oncommand="loadURI('http://www.mozilla.org/projects/xbl/test5/test.html');"/>
+        <menuitem label="#0 Remote XBL"  oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test0/test.xul');"/>
+        <menuitem label="#1 Technicolor DIV" oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test1/test.html');"/>
+        <menuitem label="#2 Rollover Madness" oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test2/test.html');"/>
+        <menuitem label="#3 Popups in HTML" oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test3/test.html');"/>
+        <menuitem label="#4 Partition Magic" oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test4/test.html');"/>        
+        <menuitem label="#5 Sticky Notes" oncommand="openTopWin('http://www.mozilla.org/projects/xbl/test5/test.html');"/>
        </menupopup>
       </menu>
 
       <menu label="XUL Test Suite">
        <menupopup>
-         <menuitem label="#1 Stacks" oncommand="loadURI('http://www.mozilla.org/projects/xul/tests/stacks.xul');"/>
-         <menuitem label="#2 Popups" oncommand="loadURI('http://www.mozilla.org/projects/xul/tests/popups.xul');"/>
-         <menuitem label="#3 Descriptions and Labels" oncommand="loadURI('http://www.mozilla.org/projects/xul/tests/label.xul');"/>
-         <menuitem label="#4 Dialog Buttons" oncommand="loadURI('http://www.mozilla.org/projects/xul/tests/buttons.xul');"/>
-         <menuitem label="#5 Tabindex" oncommand="loadURI('http://www.mozilla.org/projects/xul/tests/tabindex.xul');"/>
+         <menuitem label="#1 Stacks" oncommand="openTopWin('http://www.mozilla.org/projects/xul/tests/stacks.xul');"/>
+         <menuitem label="#2 Popups" oncommand="openTopWin('http://www.mozilla.org/projects/xul/tests/popups.xul');"/>
+         <menuitem label="#3 Descriptions and Labels" oncommand="openTopWin('http://www.mozilla.org/projects/xul/tests/label.xul');"/>
+         <menuitem label="#4 Dialog Buttons" oncommand="openTopWin('http://www.mozilla.org/projects/xul/tests/buttons.xul');"/>
+         <menuitem label="#5 Tabindex" oncommand="openTopWin('http://www.mozilla.org/projects/xul/tests/tabindex.xul');"/>
         </menupopup>
       </menu>
 
-      <menuitem label="Form Manager Samples" oncommand="loadURI('http://www.mozilla.org/wallet/samples/wallet.html');"/>
+      <menuitem label="Form Manager Samples" oncommand="openTopWin('http://www.mozilla.org/wallet/samples/wallet.html');"/>
 
-      <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://webtools.mozilla.org/buster/');"/>
+      <menuitem label="chofmann's Browser Buster" oncommand="openTopWin('http://webtools.mozilla.org/buster/');"/>
       <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
       <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
-      <menuitem label="Show Build Configuration" oncommand="loadURI('about:buildconfig');"/>
+      <menuitem label="Show Build Configuration" oncommand="openTopWin('about:buildconfig');"/>
 
       <menuseparator />
 
-      <menuitem label="StringBundle Test" oncommand="loadURI('resource:/res/strres-test.xul');"/>
-      <menuitem label="Bloat: Dump New Stats" oncommand="loadURI('about:bloat?new');"/>
-      <menuitem label="Bloat: Dump All Stats" oncommand="loadURI('about:bloat');"/>
-      <menuitem label="Bloat: Clear Stats" oncommand="loadURI('about:bloat?clear');"/>
+      <menuitem label="StringBundle Test" oncommand="openTopWin('resource:/res/strres-test.xul');"/>
+      <menuitem label="Bloat: Dump New Stats" oncommand="openTopWin('about:bloat?new');"/>
+      <menuitem label="Bloat: Dump All Stats" oncommand="openTopWin('about:bloat');"/>
+      <menuitem label="Bloat: Clear Stats" oncommand="openTopWin('about:bloat?clear');"/>
 
       <menuseparator />
 
@@ -602,29 +597,29 @@
 
   <menu id="qaMenu" accesskey="Q" label="QA">
     <menupopup id="qaMenuPopup">
-      <menuitem label="Getting Involved" oncommand="loadURI('http://www.mozilla.org/projects/seamonkey/start/');"/>
-      <menuitem label="Mozilla QA Overview" oncommand="loadURI('http://www.mozilla.org/quality/');"/>
+      <menuitem label="Getting Involved" oncommand="openTopWin('http://www.mozilla.org/projects/seamonkey/start/');"/>
+      <menuitem label="Mozilla QA Overview" oncommand="openTopWin('http://www.mozilla.org/quality/');"/>
 
       <menuseparator />
 
-      <menuitem label="Frequently Reported Bugs" oncommand="loadURI('https://bugzilla.mozilla.org/duplicates.cgi');"/>
-      <menuitem label="Bug Writing Guidelines" oncommand="loadURI('http://www.mozilla.org/quality/bug-writing-guidelines.html');"/>
-      <menuitem label="File a Bug" oncommand="loadURI('https://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
+      <menuitem label="Frequently Reported Bugs" oncommand="openTopWin('https://bugzilla.mozilla.org/duplicates.cgi');"/>
+      <menuitem label="Bug Writing Guidelines" oncommand="openTopWin('http://www.mozilla.org/quality/bug-writing-guidelines.html');"/>
+      <menuitem label="File a Bug" oncommand="openTopWin('https://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
 
       <menuseparator />
 
-      <menuitem label="Bugs Filed Today" oncommand="loadURI('https://bugzilla.mozilla.org/buglist.cgi?product=Core&amp;product=Mozilla+Application+Suite&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;chfield=%5BBug+creation%5D');"/>
-      <menuitem label="CVS Checkins Today" oncommand="loadURI('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
-      <menuitem label="Tree Status" oncommand="loadURI('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
+      <menuitem label="Bugs Filed Today" oncommand="openTopWin('https://bugzilla.mozilla.org/buglist.cgi?product=Core&amp;product=Mozilla+Application+Suite&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;chfield=%5BBug+creation%5D');"/>
+      <menuitem label="CVS Checkins Today" oncommand="openTopWin('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
+      <menuitem label="Tree Status" oncommand="openTopWin('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
 
       <menuseparator />
 
-      <menuitem label="Smoke Tests" oncommand="loadURI('http://www.mozilla.org/quality/smoketests/');"/>
-      <menuitem label="Pre-Checkin Tests" oncommand="loadURI('http://www.mozilla.org/quality/precheckin-tests.html');"/>
+      <menuitem label="Smoke Tests" oncommand="openTopWin('http://www.mozilla.org/quality/smoketests/');"/>
+      <menuitem label="Pre-Checkin Tests" oncommand="openTopWin('http://www.mozilla.org/quality/precheckin-tests.html');"/>
 
       <menuseparator />
 
-      <menuitem label="Latest Builds" oncommand="loadURI('http://ftp.mozilla.org/pub/mozilla.org/seamonkey/nightly/latest-trunk/');"/>
+      <menuitem label="Latest Builds" oncommand="openTopWin('http://ftp.mozilla.org/pub/mozilla.org/seamonkey/nightly/latest-trunk/');"/>
     </menupopup>
   </menu>
 </menubar>
