@@ -966,7 +966,7 @@ function BrowserHome(aEvent)
 {
   var tab;
   var homePage = getHomePage();
-  var target = aEvent ? BookmarksUtils.getBrowserTargetFromEvent(aEvent) : "current";
+  var target = !gBrowser ? "window": !aEvent ? "current" : BookmarksUtils.getBrowserTargetFromEvent(aEvent);
 
   if (homePage.length == 1) {
     switch (target) {
@@ -1013,7 +1013,7 @@ function addGroupmarkAs()
 
 function updateGroupmarkCommand()
 {
-  const disabled = gBrowser.browsers.length == 1;
+  const disabled = (!gBrowser || gBrowser.browsers.length == 1);
   document.getElementById("Browser:AddGroupmarkAs")
           .setAttribute("disabled", disabled);
 }
@@ -1228,7 +1228,7 @@ function BrowserSearchInternet()
     if (searchEngineURI) {          
       var searchRoot = getSearchUrl("searchForm");
       if (searchRoot) {
-        loadURI(searchRoot);
+        openTopWin(searchRoot);
         return;
       } else {
         // Get a search URL and guess that the front page of the site has a search form.
@@ -1238,7 +1238,7 @@ function BrowserSearchInternet()
         if (searchURL) {
           searchRoot = searchURL.match(/[a-z]+:\/\/[a-z.-]+/);
           if (searchRoot) {
-            loadURI(searchRoot + "/");
+            openTopWin(searchRoot + "/");
             return;
           }
         }
@@ -1736,13 +1736,19 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage',
-                       'Browser:SavePage', 'cmd_printSetup', /*'Browser:PrintPreview',*/
+  var disabledItems = ['cmd_newNavigatorTab', 'cmd_close', 'Browser:SendPage',
+                       'Browser:EditPage', 'Browser:SavePage', 'cmd_printSetup',
                        'Browser:Print', 'canGoBack', 'canGoForward',
-                       'Browser:Home', 'Browser:AddBookmark',
-                       'Browser:AddBookmarkAs', 'Browser:AddGroupmarkAs',
+                       'Browser:AddBookmark', 'Browser:AddBookmarkAs',
                        'cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_copy',
                        'cmd_paste', 'cmd_delete', 'cmd_selectAll',
+                       'cmd_findTypeText', 'cmd_findTypeLinks', 'Browser:Find',
+                       'Browser:FindAgain', 'Browser:FindPrev', 'menu_Toolbars',
+                       'menuitem_reload', 'menu_UseStyleSheet', 'charsetMenu',
+                       'View:PageSource', 'View:PageInfo', 'menu_translate',
+                       'BlockCookies', 'UseCookiesDefault',
+                       'AllowSessionCookies', 'AllowCookies', 'BlockImages',
+                       'UseImagesDefault', 'AllowImages', 'AllowPopups',
                        'menu_textZoom', 'cmd_minimizeWindow', 'cmd_zoomWindow'];
   var broadcaster;
 
@@ -1762,8 +1768,11 @@ function hiddenWindowStartup()
                               .getService(Components.interfaces.nsIPrefService);
   pref = prefService.getBranch(null);
 
-  // init global strings bundle
+  // init string bundles
   gNavigatorBundle = document.getElementById("bundle_navigator");
+  gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
+  gBrandRegionBundle = document.getElementById("bundle_brand_region");
+  gBrandBundle = document.getElementById("bundle_brand");
 
   // now load bookmarks after a delay
   setTimeout(hiddenWindowLoadBookmarksCallback, 0);
@@ -2088,7 +2097,7 @@ function applyTheme(themeName)
 
 function getNewThemes()
 {
-  loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
+  openTopWin(gBrandRegionBundle.getString("getNewThemesURL"));
 }
 
 function URLBarFocusHandler(aEvent)
@@ -2430,16 +2439,21 @@ function createShowPopupsMenu(parent) {
   while (parent.lastChild && parent.lastChild.hasAttribute("uri"))
     parent.removeChild(parent.lastChild);
 
-  var browser = getBrowser().selectedBrowser;      
+  var browser = getBrowser();
 
-  if  (browser.popupUrls.length == 0)
+  if (!browser)
     return false;
 
-  for (var i = 0; i < browser.popupUrls.length; i++) {
+  var popupUrls = browser.selectedBrowser.popupUrls;
+
+  if  (popupUrls.length == 0)
+    return false;
+
+  for (var i = 0; i < popupUrls.length; i++) {
     var menuitem = document.createElement("menuitem");
-    menuitem.setAttribute("label", gNavigatorBundle.getFormattedString('popupMenuShow', [browser.popupUrls[i].spec]));
-    menuitem.setAttribute("uri", browser.popupUrls[i].spec);
-    menuitem.setAttribute("features", browser.popupFeatures[i]);
+    menuitem.setAttribute("label", gNavigatorBundle.getFormattedString('popupMenuShow', [popupUrls[i].spec]));
+    menuitem.setAttribute("uri", popupUrls[i].spec);
+    menuitem.setAttribute("features", browser.selectedBrowser.popupFeatures[i]);
     parent.appendChild(menuitem);
   }
 
