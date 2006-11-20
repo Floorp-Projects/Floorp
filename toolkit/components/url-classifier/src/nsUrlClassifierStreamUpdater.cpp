@@ -36,13 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsCRT.h"
+#include "nsIObserverService.h"
 #include "nsIURI.h"
 #include "nsIUrlClassifierDBService.h"
-#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "prlog.h"
+
+static const char* gQuitApplicationMessage = "quit-application";
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
 #if defined(PR_LOGGING)
@@ -61,7 +64,8 @@ class TableUpdateListener : public nsIStreamListener
 {
 public:
   TableUpdateListener(nsIUrlClassifierCallback *aTableCallback,
-                      nsIUrlClassifierCallback *aErrorCallback);
+                      nsIUrlClassifierCallback *aErrorCallback,
+                      nsUrlClassifierStreamUpdater* aStreamUpdater);
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
 
   NS_DECL_ISUPPORTS
@@ -74,14 +78,19 @@ private:
   // Callback when table updates complete.
   nsCOMPtr<nsIUrlClassifierCallback> mTableCallback;
   nsCOMPtr<nsIUrlClassifierCallback> mErrorCallback;
+
+  // Reference to the stream updater that created this.
+  nsUrlClassifierStreamUpdater *mStreamUpdater;
 };
 
 TableUpdateListener::TableUpdateListener(
                                 nsIUrlClassifierCallback *aTableCallback,
-                                nsIUrlClassifierCallback *aErrorCallback)
+                                nsIUrlClassifierCallback *aErrorCallback,
+                                nsUrlClassifierStreamUpdater* aStreamUpdater)
 {
   mTableCallback = aTableCallback;
   mErrorCallback = aErrorCallback;
+  mStreamUpdater = aStreamUpdater;
 }
 
 NS_IMPL_ISUPPORTS2(TableUpdateListener, nsIStreamListener, nsIRequestObserver)
@@ -175,10 +184,7 @@ TableUpdateListener::OnStopRequest(nsIRequest *request, nsISupports* context,
   else
     mDBService->CancelStream();
 
-  nsUrlClassifierStreamUpdater* updater =
-        NS_STATIC_CAST(nsUrlClassifierStreamUpdater*, context);
-  NS_ASSERTION(updater != nsnull, "failed to cast context");
-  updater->mIsUpdating = PR_FALSE;
+  mStreamUpdater->DownloadDone();
 
   return NS_OK;
 }
@@ -188,15 +194,32 @@ TableUpdateListener::OnStopRequest(nsIRequest *request, nsISupports* context,
 // Handles creating/running the stream listener
 
 nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
-  : mIsUpdating(PR_FALSE), mUpdateUrl(nsnull)
+  : mIsUpdating(PR_FALSE), mInitialized(PR_FALSE), mUpdateUrl(nsnull),
+   mListener(nsnull), mChannel(nsnull)
 {
 #if defined(PR_LOGGING)
   if (!gUrlClassifierStreamUpdaterLog)
     gUrlClassifierStreamUpdaterLog = PR_NewLogModule("UrlClassifierStreamUpdater");
 #endif
+
 }
 
-NS_IMPL_ISUPPORTS1(nsUrlClassifierStreamUpdater, nsIUrlClassifierStreamUpdater)
+NS_IMPL_ISUPPORTS2(nsUrlClassifierStreamUpdater,
+                   nsIUrlClassifierStreamUpdater,
+                   nsIObserver)
+
+/**
+ * Drop our reference to mChannel if we have one.
+ */
+void
+nsUrlClassifierStreamUpdater::DownloadDone()
+{
+  mIsUpdating = PR_FALSE;
+  mChannel = nsnull;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIUrlClassifierStreamUpdater implementation
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::GetUpdateUrl(nsACString & aUpdateUrl)
@@ -235,21 +258,53 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  if (!mInitialized) {
+    // Add an observer for shutdown so we can cancel any pending list
+    // downloads.  quit-application is the same event that the download
+    // manager listens for and uses to cancel pending downloads.
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1");
+    if (!observerService)
+      return NS_ERROR_FAILURE;
+
+    observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+    mInitialized = PR_TRUE;
+  }
+
   // Ok, try to create the download channel.
   nsresult rv;
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), mUpdateUrl);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), mUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind to a different callback each time we invoke this method.
-  mListener = new TableUpdateListener(aTableCallback, aErrorCallback);
+  mListener = new TableUpdateListener(aTableCallback, aErrorCallback, this);
 
   // Make the request
-  rv = channel->AsyncOpen(mListener.get(), this);
+  rv = mChannel->AsyncOpen(mListener.get(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIsUpdating = PR_TRUE;
   *_retval = PR_TRUE;
 
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIObserver implementation
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
+                                      const PRUnichar *aData)
+{
+  if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+    if (mIsUpdating && mChannel) {
+      LOG(("Cancel download"));
+      nsresult rv;
+      rv = mChannel->Cancel(NS_ERROR_ABORT);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mIsUpdating = PR_FALSE;
+      mChannel = nsnull;
+    }
+  }
   return NS_OK;
 }

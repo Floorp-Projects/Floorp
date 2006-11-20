@@ -105,7 +105,7 @@ Rot13Line(nsCString &line)
   line.BeginWriting(start);
   line.EndWriting(end);
   while (start != end) {
-    *start = kRot13Table[*start];
+    *start = kRot13Table[NS_STATIC_CAST(PRInt32, *start)];
     ++start;
   }
 }
@@ -973,6 +973,7 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
                                   const PRUnichar *aData)
 {
   if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    LOG(("shutting down db service\n"));
     Shutdown();
   }
   return NS_OK;
