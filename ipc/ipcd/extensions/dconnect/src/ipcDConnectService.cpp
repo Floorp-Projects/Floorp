@@ -1770,10 +1770,10 @@ ipcDConnectService::OnInvoke(PRUint32 peer, const DConnectInvoke *invoke, PRUint
     }
   }
 
-  rv = XPTC_InvokeByIndex(wrapper->RealInstance(),
-                          invoke->method_index, 
-                          paramCount,
-                          params);
+  rv = NS_InvokeByIndex(wrapper->RealInstance(),
+                        invoke->method_index, 
+                        paramCount,
+                        params);
 
 end:
   LOG(("sending INVOKE_REPLY: rv=%x\n", rv));

@@ -37,10 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "xptcall.h"
+#include "nsXPTCUtils.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsAutoPtr.h"
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -48,7 +49,7 @@
 ////////////////////////////////////////////////////////////////////////
 // nsXTFInterfaceAggregator class
 
-class nsXTFInterfaceAggregator : public nsXPTCStubBase
+class nsXTFInterfaceAggregator : protected nsAutoXPTCStub
 {
 protected:
   friend nsresult
@@ -59,18 +60,16 @@ protected:
 
   nsXTFInterfaceAggregator(const nsIID& iid,
                            nsISupports* inner,
-                           nsISupports* outer);
+                           nsISupports* outer,
+                           nsresult *rv);
   ~nsXTFInterfaceAggregator();
   
 public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
   
-  // nsXPTCStubBase
-  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
-
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                        const nsXPTMethodInfo* info,
+                        const XPTMethodDescriptor* info,
                         nsXPTCMiniVariant* params);
 
 private:
@@ -84,14 +83,17 @@ private:
 
 nsXTFInterfaceAggregator::nsXTFInterfaceAggregator(const nsIID& iid,
                                                    nsISupports* inner,
-                                                   nsISupports* outer)
-    : mInner(inner), mOuter(outer), mIID(iid)
+                                                   nsISupports* outer,
+                                                   nsresult *rv)
+  : mInner(inner), mOuter(outer), mIID(iid)
 {
 #ifdef DEBUG
 //  printf("nsXTFInterfaceAggregator CTOR\n");
 #endif
   mInner->AddRef();
   mOuter->AddRef();
+
+  *rv = InitStub(iid);
 }
 
 nsXTFInterfaceAggregator::~nsXTFInterfaceAggregator()
@@ -112,13 +114,17 @@ NS_NewXTFInterfaceAggregator(const nsIID& iid,
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  nsXTFInterfaceAggregator* result = new nsXTFInterfaceAggregator(iid,inner,outer);
+  nsresult rv;
+
+  nsRefPtr<nsXTFInterfaceAggregator> result =
+    new nsXTFInterfaceAggregator(iid, inner, outer, &rv);
   if (!result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(result);
-  *aResult = result;
-  return NS_OK;
+  if (NS_FAILED(rv))
+    return rv;
+
+  return result->QueryInterface(iid, aResult);
 }
 
 //----------------------------------------------------------------------
@@ -131,7 +137,7 @@ NS_IMETHODIMP
 nsXTFInterfaceAggregator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if(aIID.Equals(mIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
+    *aInstancePtr = mXPTCStub;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -142,39 +148,36 @@ nsXTFInterfaceAggregator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsXPTCStubBase implementation
 
 NS_IMETHODIMP
-nsXTFInterfaceAggregator::GetInterfaceInfo(nsIInterfaceInfo** info)
-{
-  nsCOMPtr<nsIInterfaceInfoManager>
-    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-  NS_ASSERTION(iim, "could not get interface info manager");
-  return iim->GetInfoForIID( &mIID, info);
-}
-
-NS_IMETHODIMP
 nsXTFInterfaceAggregator::CallMethod(PRUint16 methodIndex,
-                                     const nsXPTMethodInfo* info,
+                                     const XPTMethodDescriptor *info,
                                      nsXPTCMiniVariant* params)
 {
-  if (methodIndex < 3) {
-    NS_ERROR("huh? indirect nsISupports method call unexpected on nsXTFInterfaceAggregator.");
-    return NS_ERROR_FAILURE;
-  }
+  NS_ASSERTION(methodIndex >= 3,
+               "huh? indirect nsISupports method call unexpected");
 
   // prepare args:
-  int paramCount = info->GetParamCount();
-  nsXPTCVariant* fullPars = paramCount ? new nsXPTCVariant[paramCount] : nsnull;
+  int paramCount = info->num_args;
+  nsXPTCVariant* fullPars;
+  if (!paramCount) {
+    fullPars = nsnull;
+  }
+  else {
+    fullPars = new nsXPTCVariant[paramCount];
+    if (!fullPars)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   for (int i=0; i<paramCount; ++i) {
-    const nsXPTParamInfo& paramInfo = info->GetParam(i);
+    const nsXPTParamInfo& paramInfo = info->params[i];
     PRUint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
     fullPars[i].Init(params[i], paramInfo.GetType(), flags);
   }
   
   // make the call:
-  nsresult rv = XPTC_InvokeByIndex(mInner,
-                                   methodIndex,
-                                   paramCount,
-                                   fullPars);
+  nsresult rv = NS_InvokeByIndex(mInner,
+                                 methodIndex,
+                                 paramCount,
+                                 fullPars);
   if (fullPars)
     delete []fullPars;
   return rv;

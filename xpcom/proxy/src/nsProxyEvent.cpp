@@ -127,7 +127,7 @@ nsProxyObject::nsProxyObjectDestructorEvent::Run()
 //-----------------------------------------------------------------------------
 
 nsProxyObjectCallInfo::nsProxyObjectCallInfo(nsProxyEventObject* owner,
-                                             const nsXPTMethodInfo *methodInfo,
+                                             const XPTMethodDescriptor *methodInfo,
                                              PRUint32 methodIndex, 
                                              nsXPTCVariant* parameterList, 
                                              PRUint32 parameterCount) :
@@ -175,10 +175,10 @@ nsProxyObjectCallInfo::Run()
 {
     PROXY_LOG(("PROXY(%p): Run\n", this));
 
-    mResult = XPTC_InvokeByIndex(mOwner->GetProxiedInterface(),
-                                 mMethodIndex,
-                                 mParameterCount,
-                                 mParameterList);
+    mResult = NS_InvokeByIndex(mOwner->GetProxiedInterface(),
+                               mMethodIndex,
+                               mParameterCount,
+                               mParameterList);
 
     if (IsSync()) {
         PostCompleted();
@@ -192,7 +192,7 @@ nsProxyObjectCallInfo::RefCountInInterfacePointers(PRBool addRef)
 {
     for (PRUint32 i = 0; i < mParameterCount; i++)
     {
-        nsXPTParamInfo paramInfo = mMethodInfo->GetParam(i);
+        nsXPTParamInfo paramInfo = mMethodInfo->params[i];
 
         if (paramInfo.GetType().IsInterfacePointer() )
         {
@@ -220,7 +220,7 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
 {
     for (PRUint32 i = 0; i < mParameterCount; i++)
     {
-        const nsXPTParamInfo paramInfo = mMethodInfo->GetParam(i);
+        const nsXPTParamInfo paramInfo = mMethodInfo->params[i];
 
         if (paramInfo.IsIn())
         {
@@ -413,7 +413,7 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
 
     for (peo = mFirst; peo; peo = peo->mNext) {
         if (peo->GetClass()->GetProxiedIID().Equals(aIID)) {
-            *aResult = NS_STATIC_CAST(nsISupports*, peo);
+            *aResult = NS_STATIC_CAST(nsISupports*, peo->mXPTCStub);
             peo->AddRef();
             return NS_OK;
         }
@@ -430,16 +430,20 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
         return rv;
 
     peo = new nsProxyEventObject(this, pec, 
-                        already_AddRefed<nsISomeInterface>(newInterface));
+                already_AddRefed<nsISomeInterface>(newInterface), &rv);
     if (!peo)
         return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(rv)) {
+        delete peo;
+        return rv;
+    }
 
     peo->mNext = mFirst;
     mFirst = peo;
 
     NS_ADDREF(peo);
 
-    *aResult = (nsISupports*) peo;
+    *aResult = NS_STATIC_CAST(nsISupports*, peo->mXPTCStub);
     return NS_OK;
 }
 

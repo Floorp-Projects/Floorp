@@ -413,7 +413,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i32;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 3, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 3, 3, var)))
         printf("\t1 + 1 = %d\n", var[2].val.i32);
     else
         printf("\tFAILED");
@@ -431,7 +431,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i64;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 5, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 5, 3, var)))
         printf("\t1L + 1L = %d\n", (int)var[2].val.i64);
     else
         printf("\tFAILED");
@@ -449,7 +449,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i32;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 4, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 4, 3, var)))
         printf("\t2 * 2 = %d\n", var[2].val.i32);
     else
         printf("\tFAILED");
@@ -467,7 +467,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i64;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 6, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 6, 3, var)))
         printf("\t2L * 2L = %d\n", (int)var[2].val.i64);
     else
         printf("\tFAILED");
@@ -517,7 +517,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.i32;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 7, 11, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 7, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n",
                 var[10].val.i32);
 
@@ -534,7 +534,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.f;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 8, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 8, 3, var)))
         printf("\t1 + 2 = %ff\n",
                 (double) var[2].val.f);
 
@@ -584,7 +584,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.d;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 9, 11, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 9, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %f\n",
                 var[10].val.d);
     else
@@ -635,7 +635,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.f;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 10, 11, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 10, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n",
                 (double) var[10].val.f);
     else
@@ -726,7 +726,7 @@ int main()
     var[20].flags = nsXPTCVariant::PTR_IS_DATA;
     var[20].ptr = &var[20].val.f;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 11, 21, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 11, 21, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 + 18 + 19 + 20 = %ff\n",
                 (double) var[20].val.f);
 
@@ -775,7 +775,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.i64;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 12, 11, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 12, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n",
 	       (int)var[10].val.i64);
     else
@@ -826,7 +826,7 @@ int main()
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.i64;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 13, 11, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 13, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n",
 	       (int)var[10].val.i64);
     else
@@ -881,7 +881,7 @@ int main()
     var[11].flags = nsXPTCVariant::PTR_IS_DATA;
     var[11].ptr = &var[11].val.d;
 
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 14, 12, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 14, 12, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 = %f\n",
                 var[11].val.d);
     else
@@ -900,7 +900,7 @@ int main()
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.p;
     
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 15, 3, var)))
+    if(NS_SUCCEEDED(NS_InvokeByIndex(test, 15, 3, var)))
         printf(" = %s\n", var[2].val.p);
     else
         printf("\tFAILED");
@@ -1119,12 +1119,12 @@ static void DoMultipleInheritenceTest()
         var[0].val.i32 = 1;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(foo, 3, 1, var);
+        NS_InvokeByIndex(foo, 3, 1, var);
 
         var[0].val.i32 = 2;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(foo, 4, 1, var);
+        NS_InvokeByIndex(foo, 4, 1, var);
 
         printf("\n");
 
@@ -1137,12 +1137,12 @@ static void DoMultipleInheritenceTest()
         var[0].val.i32 = 1;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(bar, 3, 1, var);
+        NS_InvokeByIndex(bar, 3, 1, var);
 
         var[0].val.i32 = 2;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(bar, 4, 1, var);
+        NS_InvokeByIndex(bar, 4, 1, var);
 
         printf("\n");
 
@@ -1289,12 +1289,12 @@ static void DoMultipleInheritenceTest2()
         var[0].val.i32 = 1;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(foo, 3, 1, var);
+        NS_InvokeByIndex(foo, 3, 1, var);
 
         var[0].val.i32 = 2;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(foo, 4, 1, var);
+        NS_InvokeByIndex(foo, 4, 1, var);
 
         printf("\n");
 
@@ -1307,12 +1307,12 @@ static void DoMultipleInheritenceTest2()
         var[0].val.i32 = 1;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(bar, 3, 1, var);
+        NS_InvokeByIndex(bar, 3, 1, var);
 
         var[0].val.i32 = 2;
         var[0].type = nsXPTType::T_I32;
         var[0].flags = 0;
-        XPTC_InvokeByIndex(bar, 4, 1, var);
+        NS_InvokeByIndex(bar, 4, 1, var);
 
         printf("\n");
 
@@ -1362,7 +1362,7 @@ static void DoSpeedTest()
     printf("Doing %d invoked call iterations...\n", count); 
     start = PR_IntervalNow();
     for(i = count; i; i--)
-        (void)XPTC_InvokeByIndex(test, 3, 3, var);
+        (void)NS_InvokeByIndex(test, 3, 3, var);
     interval_invoke = PR_IntervalNow() - start;
 
     printf(" direct took %0.2f seconds\n", 
