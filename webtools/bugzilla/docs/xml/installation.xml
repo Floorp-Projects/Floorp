@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.131 2006/10/17 05:58:41 mkanat%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.132 2006/11/20 17:57:16 lpsolit%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -258,7 +258,7 @@
         <para>Many people complain that Perl modules will not install for
         them. Most times, the error messages complain that they are missing a
         file in 
-        <quote>@INC</quote>. 
+        <quote>@INC</quote>.
         Virtually every time, this error is due to permissions being set too
         restrictively for you to compile Perl modules or not having the
         necessary Perl development libraries installed on your system.
@@ -331,12 +331,6 @@
 
         <listitem>
           <para>
-            Mail::Mailer (&min-mail-mailer-ver;)
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
             MIME::Base64 (&min-mime-base64-ver;)
           </para>
         </listitem>
@@ -346,14 +340,33 @@
             MIME::Parser (&min-mime-parser-ver;)
           </para>
         </listitem>
+
+        <listitem>
+          <para>
+            Email::Send (&min-email-send-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            Email::MIME::Modifier (&min-email-mime-modifier-ver;)
+          </para>
+        </listitem>
       </orderedlist>
 
       Optional Perl modules:
-      <orderedlist>  
+      <orderedlist>
         <listitem>
           <para>
             <link linkend="install-modules-gd">GD</link>
             (&min-gd-ver;) for bug charting
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            Template::Plugin::GD::Image
+            (&min-gd-ver;) for Graphical Reports
           </para>
         </listitem>
 
@@ -387,8 +400,8 @@
 
         <listitem>
           <para>
-            <link linkend="install-modules-soap-lite">SOAP::Lite</link>
-            (&min-soap-lite-ver;) for the web service interface
+            LWP::UserAgent
+            (&min-lwp-useragent-ver;) for Automatic Update Notifications
           </para>
         </listitem>
 
@@ -404,7 +417,70 @@
             Image::Magick (&min-image-magick-ver;) for converting BMP image attachments to PNG
           </para>
         </listitem>
-      </orderedlist>          
+
+        <listitem>
+          <para>
+            Net::LDAP
+            (&min-net-ldap-ver;) for LDAP Authentication
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-soap-lite">SOAP::Lite</link>
+            (&min-soap-lite-ver;) for the web service interface
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            HTML::Parser
+            (&min-html-parser-ver;) for More HTML in Product/Group Descriptions
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            HTML::Scrubber
+            (&min-html-scrubber-ver;) for More HTML in Product/Group Descriptions
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            Email::MIME::Attachment::Stripper
+            (&min-email-mime-attachment-stripper-ver;) for Inbound Email
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            Email::Reply
+            (&min-email-reply-ver;) for Inbound Email
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            mod_perl2
+            (&min-mod_perl2-ver;) for mod_perl
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            CGI
+            (&min-cgi-ver;) for mod_perl
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            Apache::DBI
+            (&min-apache-dbi-ver;) for mod_perl2
+          </para>
+        </listitem>
+      </orderedlist>
       </para>
 
       <section id="install-modules-dbd-mysql">

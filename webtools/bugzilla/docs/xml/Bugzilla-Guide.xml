@@ -42,7 +42,7 @@
 
 <!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
 <!ENTITY bz "http://www.bugzilla.org/">
-<!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
+<!ENTITY bzg-bugs "<ulink url='https://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
 
 <!ENTITY min-perl-ver "5.8.0">
@@ -98,7 +98,7 @@
 
       <para>
         The most current version of this document can always be found on the
-        <ulink url="http://www.bugzilla.org/documentation.html">Bugzilla 
+        <ulink url="http://www.bugzilla.org/docs/">Bugzilla 
         Documentation Page</ulink>.
       </para>
 
