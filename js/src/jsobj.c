@@ -2783,15 +2783,17 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
             const jschar *cp_ = str_->chars;                                  \
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
-            if (JS7_ISDEC(*cp_) &&                                            \
-                str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING)-1) { \
-                id = CheckForStringIndex(id, cp_, negative_);                 \
+            if (JS7_ISDEC(*cp_)) {                                            \
+                size_t n_ = str_->length - negative_;                         \
+                if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
+                    id = CheckForStringIndex(id, cp_, cp_ + n_, negative_);   \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
 
 static jsid
-CheckForStringIndex(jsid id, const jschar *cp, JSBool negative)
+CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
+                    JSBool negative)
 {
     jsuint index = JS7_UNDEC(*cp++);
     jsuint oldIndex = 0;
@@ -2805,7 +2807,7 @@ CheckForStringIndex(jsid id, const jschar *cp, JSBool negative)
             cp++;
         }
     }
-    if (*cp == 0 &&
+    if (cp == end &&
         (oldIndex < (JSVAL_INT_MAX / 10) ||
          (oldIndex == (JSVAL_INT_MAX / 10) &&
           c <= (JSVAL_INT_MAX % 10)))) {
