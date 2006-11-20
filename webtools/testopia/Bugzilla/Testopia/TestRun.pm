@@ -430,10 +430,27 @@ Removes this run and all things that reference it.
 
 sub obliterate {
     my $self = shift;
-    return 0 unless $self->candelete;
+    my ($cgi, $template) = @_;
     my $dbh = Bugzilla->dbh;
-
+    my $vars;
+    
+    my $progress_interval = 500;
+    my $i = 0;
+    my $total = scalar @{$self->caseruns};
+    
     foreach my $obj (@{$self->caseruns}){
+        $i++;
+        if ($cgi && $i % $progress_interval == 0){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $vars->{'process'} = "Deleting Run " . $self->id;
+        
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+    
         $obj->obliterate;
     }
 

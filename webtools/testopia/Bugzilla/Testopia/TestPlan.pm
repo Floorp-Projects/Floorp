@@ -839,16 +839,33 @@ Removes this plan and all things that reference it.
 
 sub obliterate {
     my $self = shift;
-    return 0 unless $self->candelete;
+    my ($cgi, $template) = @_;
+    my $vars;
     my $dbh = Bugzilla->dbh;
+
+    my $progress_interval = 250;
+    my $i = 0;
+    my $total = scalar @{$self->test_cases} + scalar @{$self->test_runs};
 
     foreach my $obj (@{$self->attachments}){
         $obj->obliterate;
     }
     foreach my $obj (@{$self->test_runs}){
-        $obj->obliterate;
+        $obj->obliterate($cgi, $template);
     }
     foreach my $obj (@{$self->test_cases}){
+        $i++;
+        if ($cgi && $i % $progress_interval == 0){
+            print $cgi->multipart_end;
+            print $cgi->multipart_start;
+            $vars->{'complete'} = $i;
+            $vars->{'total'} = $total;
+            $vars->{'process'} = "Deleting test cases";
+            
+            $template->process("testopia/progress.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+        
         $obj->obliterate if (scalar @{$obj->plans} == 1);
     }
 

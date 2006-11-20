@@ -997,7 +997,6 @@ Removes this caserun, it's history, and all things that reference it.
 
 sub obliterate {
     my $self = shift;
-    return 0 unless $self->candelete;
     my $dbh = Bugzilla->dbh;
     
     $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 

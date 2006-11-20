@@ -41,7 +41,6 @@ my $query_limit = 15000;
 require "globals.pl";
 
 Bugzilla->login();
-print Bugzilla->cgi->header();
    
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
@@ -49,12 +48,15 @@ my $cgi = Bugzilla->cgi;
 my $run_id = trim($cgi->param('run_id') || '');
 
 unless ($run_id){
+  print $cgi->header;
   $template->process("testopia/run/choose.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
   exit;
 }
 validate_test_id($run_id, 'run');
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
+
+my $serverpush = support_server_push($cgi);
 
 my $action = $cgi->param('action') || '';
 
@@ -68,12 +70,14 @@ if ($action eq 'Commit'){
     do_update($run);
     $vars->{'tr_message'} = "Test run updated";
     $vars->{'backlink'} = $run;
+    print $cgi->header;
     display($run);    
 }
 
 elsif ($action eq 'History'){
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     $vars->{'run'} = $run; 
+    print $cgi->header;
     $template->process("testopia/run/history.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
        
@@ -91,6 +95,7 @@ elsif ($action =~ /^Clone/){
     $vars->{'run'} = $run;
     $vars->{'case_list'} = $case_list if ($action =~/These Cases/);
     $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({'case_run_id' => 0});
+    print $cgi->header;
     $template->process("testopia/run/clone.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
     
@@ -155,6 +160,7 @@ elsif ($action eq 'do_clone'){
     $cgi->param('run_id', $newrun->id);
     $vars->{'tr_message'} = "Test run cloned";
     $vars->{'backlink'} = $run;
+    print $cgi->header;
     display($newrun);
 }
 ####################
@@ -194,6 +200,7 @@ elsif ($action eq 'Delete'){
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
     $vars->{'run'} = $run;
+    print $cgi->header;
     
     $template->process("testopia/run/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
@@ -203,16 +210,37 @@ elsif ($action eq 'do_delete'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
-    $run->obliterate;
+    if ($serverpush) {
+        print $cgi->multipart_init();
+        print $cgi->multipart_start();
+        $vars->{'complete'} = 1;
+        $vars->{'total'} = 250;
+        $template->process("testopia/progress.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+
+        $run->obliterate($cgi,$template);
+    }
+    else{
+        $run->obliterate;
+    }
+    if ($serverpush) {
+        print $cgi->multipart_end;
+        print $cgi->multipart_start;
+    } else {
+        print $cgi->header;
+    }
+    
     $vars->{'deleted'} = 1;
     $template->process("testopia/run/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
+    print $cgi->multipart_final if $serverpush;
 }
 
 ####################
 ### Just show it ###
 ####################
 else {
+    print $cgi->header;
     display(Bugzilla::Testopia::TestRun->new($run_id));
 }
 ###################
