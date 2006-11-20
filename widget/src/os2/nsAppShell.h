@@ -41,6 +41,7 @@
 #include "nsBaseAppShell.h"
 #define INCL_DEV
 #define INCL_WIN
+#define INCL_DOS
 #include <os2.h>
 
 /**

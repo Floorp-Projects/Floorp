@@ -69,6 +69,19 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
+  // a message queue is required to create a window but
+  // it is not necessarily created yet
+  if (WinQueryQueueInfo(HMQ_CURRENT, NULL, 0) == FALSE) {
+    // Set our app to be a PM app before attempting Win calls
+    PPIB ppib;
+    PTIB ptib;
+    DosGetInfoBlocks(&ptib, &ppib);
+    ppib->pib_ultype = 3;
+
+    HAB hab = WinInitialize(0);
+    WinCreateMsgQueue(hab, 0);
+  }
+
   if (!sMsgId) {
     sMsgId = WinAddAtom( WinQuerySystemAtomTable(), "nsAppShell:EventID");
     WinRegisterClass((HAB)0, "nsAppShell:EventWindowClass", EventWindowProc, NULL, 0);
