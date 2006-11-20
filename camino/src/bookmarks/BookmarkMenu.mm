@@ -301,6 +301,19 @@ const long kOpenInTabsTag = 0xBEEF;
 - (void)bookmarkChanged:(NSNotification *)inNotification
 {
   BookmarkItem* changedItem = [inNotification object];
+
+  NSNumber* noteChangeFlags = [[inNotification userInfo] objectForKey:BookmarkItemChangedFlagsKey];
+  unsigned int changeFlags = kBookmarkItemEverythingChangedMask;
+  if (noteChangeFlags)
+    changeFlags = [noteChangeFlags unsignedIntValue];
+
+  // first, see if it's a notification that this folder's children have changed
+  if ((changedItem == mFolder) && (changeFlags & kBookmarkItemChildrenChangedMask)) {
+    mDirty = YES;
+    return;
+  }
+
+  // any other change is only interesting if it's to one of this folder's children
   if ([changedItem parent] != mFolder)
     return;
 
@@ -308,12 +321,6 @@ const long kOpenInTabsTag = 0xBEEF;
   int itemIndex = [self indexOfItemWithRepresentedObject:changedItem];
   if (itemIndex == -1)
     return;
-
-  unsigned int changeFlags = kBookmarkItemEverythingChangedMask;
-  NSNumber* noteChangeFlags = [[inNotification userInfo] objectForKey:BookmarkItemChangedFlagsKey];
-
-  if (noteChangeFlags)
-    changeFlags = [noteChangeFlags unsignedIntValue];
 
   // if it changed to or from a separator (or everything changed), just do a rebuild later
   if (changeFlags & kBookmarkItemStatusChangedMask) {
