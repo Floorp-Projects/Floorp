@@ -383,3 +383,184 @@ sub _create_token {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Bugzilla::Token - Provides different routines to manage tokens.
+
+=head1 SYNOPSIS
+
+    use Bugzilla::Token;
+
+    Bugzilla::Token::issue_new_user_account_token($login_name);
+    Bugzilla::Token::IssueEmailChangeToken($user_id, $old_email, $new_email);
+    Bugzilla::Token::IssuePasswordToken($login_name);
+    Bugzilla::Token::DeletePasswordTokens($user_id, $reason);
+    Bugzilla::Token::Cancel($token, $cancelaction, $vars);
+
+    Bugzilla::Token::CleanTokenTable();
+
+    my $token = issue_session_token($event);
+    check_token_data($token, $event)
+    delete_token($token);
+
+    my $token = Bugzilla::Token::GenerateUniqueToken($table, $column);
+    my $token = Bugzilla::Token::HasEmailChangeToken($user_id);
+    my ($token, $date, $data) = Bugzilla::Token::GetTokenData($token);
+
+=head1 SUBROUTINES
+
+=over
+
+=item C<issue_new_user_account_token($login_name)>
+
+ Description: Creates and sends a token per email to the email address
+              requesting a new user account. It doesn't check whether
+              the user account already exists. The user will have to
+              use this token to confirm the creation of his user account.
+
+ Params:      $login_name - The new login name requested by the user.
+
+ Returns:     Nothing. It throws an error if the same user made the same
+              request in the last few minutes.
+
+=item C<sub IssueEmailChangeToken($user_id, $old_email, $new_email)>
+
+ Description: Sends two distinct tokens per email to the old and new email
+              addresses to confirm the email address change for the given
+              user ID. These tokens remain valid for the next MAX_TOKEN_AGE days.
+
+ Params:      $user_id - The user ID of the user account requesting a new
+                         email address.
+              $old_email - The current (old) email address of the user.
+              $new_email - The new email address of the user.
+
+ Returns:     Nothing.
+
+=item C<IssuePasswordToken($login_name)>
+
+ Description: Sends a token per email to the given login name. This token
+              can be used to change the password (e.g. in case the user
+              cannot remember his password and wishes to enter a new one).
+
+ Params:      $login_name - The login name of the user requesting a new password.
+
+ Returns:     Nothing. It throws an error if the same user made the same
+              request in the last few minutes.
+
+=item C<CleanTokenTable()>
+
+ Description: Removes all tokens older than MAX_TOKEN_AGE days from the DB.
+              This means that these tokens will now be considered as invalid.
+
+ Params:      None.
+
+ Returns:     Nothing.
+
+=item C<GenerateUniqueToken($table, $column)>
+
+ Description: Generates and returns a unique token. This token is unique
+              in the $column of the $table. This token is NOT stored in the DB.
+
+ Params:      $table (optional): The table to look at (default: tokens).
+              $column (optional): The column to look at for uniqueness (default: token).
+
+ Returns:     A token which is unique in $column.
+
+=item C<Cancel($token, $cancelaction, $vars)>
+
+ Description: Invalidates an existing token, generally when the token is used
+              for an action which is not the one expected. An email is sent
+              to the user who originally requested this token to inform him
+              that this token has been invalidated (e.g. because an hacker
+              tries to use this token for some malicious action).
+
+ Params:      $token:        The token to invalidate.
+              $cancelaction: The reason why this token is invalidated.
+              $vars:         Some additional information about this action.
+
+ Returns:     Nothing.
+
+=item C<DeletePasswordTokens($user_id, $reason)>
+
+ Description: Cancels all password tokens for the given user. Emails are sent
+              to this user to inform him about this action.
+
+ Params:      $user_id: The user ID of the user account whose password tokens
+                        are cancelled.
+              $reason:  The reason why these tokens are cancelled.
+
+ Returns:     Nothing.
+
+=item C<HasEmailChangeToken($user_id)>
+
+ Description: Returns any existing token currently used for an email change
+              for the given user.
+
+ Params:      $user_id - A user ID.
+
+ Returns:     A token if it exists, else undef.
+
+=item C<GetTokenData($token)>
+
+ Description: Returns all stored data for the given token.
+
+ Params:      $token - A valid token.
+
+ Returns:     The user ID, the date and time when the token was created and
+              the (event)data stored with that token.
+
+=back
+
+=head2 Security related routines
+
+The following routines have been written to be used together as described below,
+despite they can be used separately.
+
+=over
+
+=item C<issue_session_token($event)>
+
+ Description: Creates and returns a token used internally.
+
+ Params:      $event - The event which needs to be stored in the DB for future
+                       reference/checks.
+
+ Returns:     A unique token.
+
+=item C<check_token_data($token, $event)>
+
+ Description: Makes sure the $token has been created by the currently logged in
+              user and to be used for the given $event. If this token is used for
+              an unexpected action (i.e. $event doesn't match the information stored
+              with the token), a warning is displayed asking whether the user really
+              wants to continue. On success, it returns 1.
+              This is the routine to use for security checks, combined with
+              issue_session_token() and delete_token() as follows:
+
+              1. First, create a token for some coming action.
+              my $token = issue_session_token($action);
+              2. Some time later, it's time to make sure that the expected action
+                 is going to be executed, and by the expected user.
+              check_token_data($token, $action);
+              3. The check has been done and we no longer need this token.
+              delete_token($token);
+
+ Params:      $token - The token used for security checks.
+              $event - The expected event to be run.
+
+ Returns:     1 on success, else a warning is thrown.
+
+=item C<delete_token($token)>
+
+ Description: Deletes the specified token. No notification is sent.
+
+ Params:      $token - The token to delete.
+
+ Returns:     Nothing.
+
+=back
+
+=cut
