@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.15 2006/05/16 18:57:55 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: security.xml,v 1.16 2006/11/20 19:48:43 lpsolit%gmail.com Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -171,20 +171,19 @@ skip-networking
   
   
   <section id="security-webserver">
-  <title>Webserver</title>
+  <title>Web server</title>
 
     <section id="security-webserver-access">
     <title>Disabling Remote Access to Bugzilla Configuration Files</title>
     
-      <para>There are many files that are placed in the Bugzilla directory
-      area that should not be accessable from the web. Because of the way
-      Bugzilla is currently layed out, the list of what should and should not
-      be accessible is rather complicated. A new installation method is
-      currently in the works which should solve this by allowing files that
-      shouldn't be accessible from the web to be placed in a directory outside
-      the webroot. See 
-      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">bug 44659</ulink>
-      for more information.
+      <para>
+        There are many files that are placed in the Bugzilla directory
+        area that should not be accessible from the web. Because of the way
+        Bugzilla is currently layed out, the list of what should and should not
+        be accessible is rather complicated. A quick way is to run
+	<filename>testserver.pl</filename> to check if your web server serves
+        Bugzilla files as expected. If not, you may want to follow the few
+	steps below.
       </para>
       
       <tip>
@@ -296,20 +295,16 @@ skip-networking
       properly blocked. Of particular interest is the localconfig file which
       contains your database password. Also, be aware that many editors
       create temporary and backup files in the working directory and that
-      those should also not be accessable. For more information, see 
+      those should also not be accessible. For more information, see
       <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">bug 186383</ulink>
       or
       <ulink url="http://online.securityfocus.com/bid/6501">Bugtraq ID 6501</ulink>.
-      To test, simply point your web browser at the file; for example, to
-      test mozilla.org's installation, we'd try to access
-      <ulink url="http://bugzilla.mozilla.org/localconfig"/>. You should get
-      a <quote><errorcode>403</errorcode> <errorname>Forbidden</errorname></quote>
-      error.
+      To test, simply run <filename>testserver.pl</filename>, as said above.
       </para>
       
       <tip>
         <para>Be sure to check <xref linkend="http"/> for instructions
-        specific to the webserver you use.
+        specific to the web server you use.
         </para>
       </tip>
     
