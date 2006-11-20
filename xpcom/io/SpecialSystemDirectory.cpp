@@ -332,9 +332,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                     return NS_ERROR_UNEXPECTED;
                 }
             }
-            return NS_NewNativeLocalFile(nsDependentCString(tPath),
-                                         PR_TRUE,
-                                         aFile);
+            nsCString tString = nsDependentCString(tPath);
+            if (tString.Find("/", PR_FALSE, 0, -1)) {
+                tString.ReplaceChar('/','\\');
+            }
+            return NS_NewNativeLocalFile(tString, PR_TRUE, aFile);
         }
 #elif defined(XP_MACOSX)
         {
