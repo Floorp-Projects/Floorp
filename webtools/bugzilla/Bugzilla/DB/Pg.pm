@@ -62,7 +62,11 @@ sub new {
     # construct the DSN from the parameters we got
     my $dsn = "DBI:Pg:host=$host;dbname=$dbname";
     $dsn .= ";port=$port" if $port;
-   
+
+    # This stops Pg from printing out lots of "NOTICE" messages when
+    # creating tables.
+    $dsn .= ";options='-c client_min_messages=warning'";
+
     my $self = $class->db_new($dsn, $user, $pass);
 
     # all class local variables stored in DBI derived class needs to have
