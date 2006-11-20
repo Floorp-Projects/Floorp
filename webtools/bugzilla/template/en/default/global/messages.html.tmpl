@@ -121,11 +121,21 @@
     Please add your attachment by clicking the "Create a New Attachment" link
     below.
 
+  [% ELSIF message_tag == "bug_confirmed_by_votes" %]
+    *** This [% terms.bug %] has been confirmed by popular vote. ***
+
   [% ELSIF message_tag == "bug_duplicate_of" %]
     *** This [% terms.bug %] has been marked as a duplicate of [% terms.bug %] [%+ dupe_of FILTER html %] ***
 
   [% ELSIF message_tag == "bug_has_duplicate" %]
     *** [% terms.Bug %] [%+ dupe FILTER html %] has been marked as a duplicate of this [% terms.bug %]. ***
+
+  [% ELSIF message_tag == "bug_moved_to" %]
+    <p>[% terms.Bug %] moved to [% Param("move-to-url") FILTER html %].</p>
+    <p>If the move succeeded, [% login FILTER html %] will receive a mail
+    containing the number of the new [% terms.bug %] in the other database.
+    If all went well, please mark this [% terms.bug %] verified, and paste
+    in a link to the new [% terms.bug %]. Otherwise, reopen this [% terms.bug %].
 
   [% ELSIF message_tag == "buglist_adding_field" %]
     [% title = "Adding field to search page..." %]

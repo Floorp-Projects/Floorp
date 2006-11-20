@@ -81,6 +81,12 @@ use File::Basename;
 
     COMMENT_COLS
 
+    CMT_NORMAL
+    CMT_DUPE_OF
+    CMT_HAS_DUPE
+    CMT_POPULAR_VOTES
+    CMT_MOVED_TO
+
     UNLOCK_ABORT
     THROW_ERROR
     
@@ -230,6 +236,13 @@ use constant LIST_OF_BUGS => 1;
 
 # The column length for displayed (and wrapped) bug comments.
 use constant COMMENT_COLS => 80;
+
+# The type of bug comments.
+use constant CMT_NORMAL => 0;
+use constant CMT_DUPE_OF => 1;
+use constant CMT_HAS_DUPE => 2;
+use constant CMT_POPULAR_VOTES => 3;
+use constant CMT_MOVED_TO => 4;
 
 # used by Bugzilla::DB to indicate that tables are being unlocked
 # because of error

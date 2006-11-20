@@ -1315,12 +1315,16 @@ sub bug_alias_to_id {
 #####################################################################
 
 sub AppendComment {
-    my ($bugid, $whoid, $comment, $isprivate, $timestamp, $work_time) = @_;
+    my ($bugid, $whoid, $comment, $isprivate, $timestamp, $work_time,
+        $type, $extra_data) = @_;
     $work_time ||= 0;
+    $type ||= CMT_NORMAL;
     my $dbh = Bugzilla->dbh;
 
     ValidateTime($work_time, "work_time") if $work_time;
     trick_taint($work_time);
+    detaint_natural($type)
+      || ThrowCodeError('bad_arg', {argument => 'type', function => 'AppendComment'});
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
@@ -1329,7 +1333,7 @@ sub AppendComment {
     $comment =~ s/\r\n/\n/g;     # Handle Windows-style line endings.
     $comment =~ s/\r/\n/g;       # Handle Mac-style line endings.
 
-    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace
+    if ($comment =~ /^\s*$/ && !$type) {  # Nothin' but whitespace
         return;
     }
 
@@ -1338,9 +1342,11 @@ sub AppendComment {
     trick_taint($comment); 
     my $privacyval = $isprivate ? 1 : 0 ;
     $dbh->do(q{INSERT INTO longdescs
-                      (bug_id, who, bug_when, thetext, isprivate, work_time)
-               VALUES (?,?,?,?,?,?)}, undef,
-             ($bugid, $whoid, $timestamp, $comment, $privacyval, $work_time));
+                      (bug_id, who, bug_when, thetext, isprivate, work_time,
+                       type, extra_data)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)}, undef,
+             ($bugid, $whoid, $timestamp, $comment, $privacyval, $work_time,
+              $type, $extra_data));
     $dbh->do("UPDATE bugs SET delta_ts = ? WHERE bug_id = ?",
              undef, $timestamp, $bugid);
 }
@@ -1402,29 +1408,54 @@ sub ValidateTime {
 }
 
 sub GetComments {
-    my ($id, $comment_sort_order) = (@_);
+    my ($id, $comment_sort_order, $start, $end) = @_;
+    my $dbh = Bugzilla->dbh;
+
     $comment_sort_order = $comment_sort_order ||
         Bugzilla->user->settings->{'comment_sort_order'}->{'value'};
 
     my $sort_order = ($comment_sort_order eq "oldest_to_newest") ? 'asc' : 'desc';
-    my $dbh = Bugzilla->dbh;
+
     my @comments;
-    my $sth = $dbh->prepare(
-            "SELECT  profiles.realname AS name, profiles.login_name AS email,
-            " . $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i:%s') . "
-               AS time, longdescs.thetext AS body, longdescs.work_time,
-                     isprivate, already_wrapped
-             FROM    longdescs, profiles
-            WHERE    profiles.userid = longdescs.who
-              AND    longdescs.bug_id = ?
-            ORDER BY longdescs.bug_when $sort_order");
-    $sth->execute($id);
+    my @args = ($id);
+
+    my $query = 'SELECT profiles.realname AS name, profiles.login_name AS email, ' .
+                        $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i:%s') .
+                      ' AS time, longdescs.thetext AS body, longdescs.work_time,
+                        isprivate, already_wrapped, type, extra_data
+                   FROM longdescs
+             INNER JOIN profiles
+                     ON profiles.userid = longdescs.who
+                  WHERE longdescs.bug_id = ?';
+    if ($start) {
+        $query .= ' AND longdescs.bug_when > ?
+                    AND longdescs.bug_when <= ?';
+        push(@args, ($start, $end));
+    }
+    $query .= " ORDER BY longdescs.bug_when $sort_order";
+    my $sth = $dbh->prepare($query);
+    $sth->execute(@args);
 
     while (my $comment_ref = $sth->fetchrow_hashref()) {
         my %comment = %$comment_ref;
 
         $comment{'email'} .= Bugzilla->params->{'emailsuffix'};
         $comment{'name'} = $comment{'name'} || $comment{'email'};
+        if ($comment{'type'} == CMT_DUPE_OF) {
+            $comment{'body'} .= "\n\n" . get_text('bug_duplicate_of',
+                                                  { dupe_of => $comment{'extra_data'} });
+        }
+        elsif ($comment{'type'} == CMT_HAS_DUPE) {
+            $comment{'body'} = get_text('bug_has_duplicate',
+                                        { dupe => $comment{'extra_data'} });
+        }
+        elsif ($comment{'type'} == CMT_POPULAR_VOTES) {
+            $comment{'body'} = get_text('bug_confirmed_by_votes');
+        }
+        elsif ($comment{'type'} == CMT_MOVED_TO) {
+            $comment{'body'} .= "\n\n" . get_text('bug_moved_to',
+                                                  { login => $comment{'extra_data'} });
+        }
 
         push (@comments, \%comment);
     }
@@ -1760,9 +1791,7 @@ sub CheckIfVotedConfirmed {
                  "VALUES (?, ?, ?, ?, ?, ?)",
                  undef, ($id, $who, $timestamp, $fieldid, '0', '1'));
 
-        AppendComment($id, $who,
-                      "*** This bug has been confirmed by popular vote. ***",
-                      0, $timestamp);
+        AppendComment($id, $who, "", 0, $timestamp, 0, CMT_POPULAR_VOTES);
 
         $ret = 1;
     }

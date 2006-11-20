@@ -509,6 +509,11 @@ sub update_table_definitions {
     $dbh->bz_add_column('group_control_map', 'canconfirm',
                         {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE'});
 
+    # 2006-11-07 LpSolit@gmail.com - Bug 353656
+    $dbh->bz_add_column('longdescs', 'type',
+                        {TYPE => 'INT2', NOTNULL => 1, DEFAULT => '0'});
+    $dbh->bz_add_column('longdescs', 'extra_data', {TYPE => 'varchar(255)'});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################

@@ -549,13 +549,8 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
 
     my $comment = "";
     if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {
-        $comment = $cgi->param('comment') . "\n\n";
+        $comment = $cgi->param('comment');
     }
-    $comment .= "Bug moved to " . Bugzilla->params->{'move-to-url'} . ".\n\n";
-    $comment .= "If the move succeeded, " . $user->login . " will receive a mail\n";
-    $comment .= "containing the number of the new bug in the other database.\n";
-    $comment .= "If all went well,  please mark this bug verified, and paste\n";
-    $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
 
     $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE', 'duplicates WRITE',
                          'longdescs WRITE', 'profiles READ', 'groups READ',
@@ -574,7 +569,7 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
         $sth->execute($timestamp, $id);
         $sth2->execute($id);
 
-        AppendComment($id, $whoid, $comment, 0, $timestamp);
+        AppendComment($id, $whoid, $comment, 0, $timestamp, 0, CMT_MOVED_TO, $user->login);
 
         if ($bug->bug_status ne 'RESOLVED') {
             LogActivityEntry($id, 'bug_status', $bug->bug_status,
@@ -942,7 +937,7 @@ if ( defined $cgi->param('id') &&
     }
 }
 
-my $duplicate = 0;
+my $duplicate;
 
 # We need to check the addresses involved in a CC change before we touch any bugs.
 # What we'll do here is formulate the CC data into two hashes of ID's involved
@@ -1190,10 +1185,6 @@ SWITCH: for ($cgi->param('knob')) {
 
         ChangeStatus('RESOLVED');
         ChangeResolution($bug, 'DUPLICATE');
-        my $comment = $cgi->param('comment');
-        $comment .= "\n\n" 
-                    . get_text('bug_duplicate_of', { dupe_of => $duplicate });
-        $cgi->param('comment', $comment);
         last SWITCH;
     };
 
@@ -1605,9 +1596,12 @@ foreach my $id (@idlist) {
         }
     }
 
-    if ($cgi->param('comment') || $work_time) {
+    if ($cgi->param('comment') || $work_time || $duplicate) {
+        my $type = $duplicate ? CMT_DUPE_OF : CMT_NORMAL;
+
         AppendComment($id, $whoid, scalar($cgi->param('comment')),
-                      scalar($cgi->param('commentprivacy')), $timestamp, $work_time);
+                      scalar($cgi->param('commentprivacy')), $timestamp,
+                      $work_time, $type, $duplicate);
         $bug_changed = 1;
     }
 
@@ -2082,10 +2076,9 @@ foreach my $id (@idlist) {
             $dbh->do(q{INSERT INTO cc (who, bug_id) VALUES (?, ?)},
                      undef, $reporter, $duplicate);
         }
-        my $dupe_comment = get_text('bug_has_duplicate',
-                                    { dupe => $cgi->param('id') });
         # Bug 171639 - Duplicate notifications do not need to be private.
-        AppendComment($duplicate, $whoid, $dupe_comment, 0, $timestamp);
+        AppendComment($duplicate, $whoid, "", 0, $timestamp, 0,
+                      CMT_HAS_DUPE, scalar $cgi->param('id'));
 
         $dbh->do(q{INSERT INTO duplicates VALUES (?, ?)}, undef,
                  $duplicate, $cgi->param('id'));

@@ -652,17 +652,6 @@ sub get_comments_by_bug {
     my $count = 0;
     my $anyprivate = 0;
 
-    my $query = 'SELECT profiles.login_name, profiles.realname, ' .
-                        $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . ',
-                        longdescs.thetext, longdescs.isprivate,
-                        longdescs.already_wrapped
-                   FROM longdescs
-             INNER JOIN profiles
-                     ON profiles.userid = longdescs.who
-                  WHERE longdescs.bug_id = ? ';
-
-    my @args = ($id);
-
     # $start will be undef for new bugs, and defined for pre-existing bugs.
     if ($start) {
         # If $start is not NULL, obtain the count-index
@@ -670,26 +659,21 @@ sub get_comments_by_bug {
         $count = $dbh->selectrow_array('SELECT COUNT(*) FROM longdescs
                                         WHERE bug_id = ? AND bug_when <= ?',
                                         undef, ($id, $start));
-
-        $query .= ' AND longdescs.bug_when > ?
-                    AND longdescs.bug_when <= ? ';
-        push @args, ($start, $end);
     }
 
-    $query .= ' ORDER BY longdescs.bug_when';
-    my $comments = $dbh->selectall_arrayref($query, undef, @args);
+    my $comments = Bugzilla::Bug::GetComments($id, "oldest_to_newest", $start, $end);
 
-    foreach (@$comments) {
-        my ($who, $whoname, $when, $text, $isprivate, $already_wrapped) = @$_;
+    foreach my $comment (@$comments) {
         if ($count) {
-            $result .= "\n\n--- Comment #$count from $whoname <$who" .
-                       Bugzilla->params->{'emailsuffix'}. ">  " 
-                       . format_time($when) . " ---\n";
+            $result .= "\n\n--- Comment #$count from " . $comment->{'name'} . " <" .
+                       $comment->{'email'} . Bugzilla->params->{'emailsuffix'} . ">  " .
+                       format_time($comment->{'time'}) . " ---\n";
         }
-        if ($isprivate > 0 && Bugzilla->params->{'insidergroup'}) {
+        if ($comment->{'isprivate'} > 0 && Bugzilla->params->{'insidergroup'}) {
             $anyprivate = 1;
         }
-        $result .= ($already_wrapped ? $text : wrap_comment($text));
+        $result .= ($comment->{'already_wrapped'} ? $comment->{'body'}
+                                                  : wrap_comment($comment->{'body'}));
         $count++;
     }
     return ($result, $anyprivate);
