@@ -59,7 +59,7 @@
 #include "nsSOAPUtils.h"
 
 // interface info includes
-#include "xptcall.h"
+#include "nsXPTCUtils.h"
 #include "nsIInterfaceInfo.h"
 
 // WSDL includes
@@ -92,7 +92,7 @@ public:
                     nsACString& aCIdentifier);
 };
 
-class WSPProxy : public nsXPTCStubBase,
+class WSPProxy : protected nsAutoXPTCStub,
                  public nsIWebServiceProxy,
                  public nsIClassInfo
 {
@@ -104,11 +104,9 @@ public:
   NS_DECL_NSIWEBSERVICEPROXY
   NS_DECL_NSICLASSINFO
 
-  // Would be nice to have a NS_DECL_NSXPTCSTUBBASE
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                        const nsXPTMethodInfo* info,
+                        const XPTMethodDescriptor* info,
                         nsXPTCMiniVariant* params);
-  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
   void GetListenerInterfaceInfo(nsIInterfaceInfo** aInfo);
   void CallCompleted(WSPCallContext* aContext);
@@ -252,7 +250,7 @@ protected:
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
 };
 
-class WSPPropertyBagWrapper : public nsXPTCStubBase,
+class WSPPropertyBagWrapper : protected nsAutoXPTCStub,
                               public nsIWebServicePropertyBagWrapper,
                               public nsIClassInfo
 {
@@ -264,11 +262,9 @@ public:
   NS_DECL_NSIWEBSERVICEPROPERTYBAGWRAPPER
   NS_DECL_NSICLASSINFO
 
-  // Would be nice to have a NS_DECL_NSXPTCSTUBBASE
   NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                        const nsXPTMethodInfo* info,
+                        const XPTMethodDescriptor* info,
                         nsXPTCMiniVariant* params);
-  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
   static NS_METHOD
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);

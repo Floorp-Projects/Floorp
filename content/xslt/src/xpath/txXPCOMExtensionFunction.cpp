@@ -519,7 +519,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         returnParam.ptr = &returnParam.val;
     }
 
-    rv = XPTC_InvokeByIndex(mHelper, mMethodIndex, paramCount, invokeParams);
+    rv = NS_InvokeByIndex(mHelper, mMethodIndex, paramCount, invokeParams);
 
     // In case someone is holding on to the txFunctionEvaluationContext which
     // could thus stay alive longer than this function.

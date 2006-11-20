@@ -881,8 +881,7 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   NS_ENSURE_SUCCESS(rv, rv);
   if (stub) {
     // stub is already AddRef'd and QI'd
-    *aResult = NS_STATIC_CAST(nsISupports*,
-                              NS_STATIC_CAST(nsXPTCStubBase*, stub));
+    *aResult = stub->GetStub();
     return NS_OK;
   }
 
@@ -901,10 +900,14 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create XPCOM stub
-  stub = new nsJavaXPTCStub(aJavaObject, iinfo);
-  if (!stub) {
+  stub = new nsJavaXPTCStub(aJavaObject, iinfo, &rv);
+  if (!stub)
     return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv)) {
+    delete stub;
+    return rv;
   }
+
   rv = gJavaToXPTCStubMap->Add(hash, stub);
   if (NS_FAILED(rv)) {
     delete stub;
@@ -912,14 +915,14 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   }
 
   NS_ADDREF(stub);
-  *aResult = NS_STATIC_CAST(nsISupports*,
-                            NS_STATIC_CAST(nsXPTCStubBase*, stub));
+  *aResult = stub->GetStub();
 
   return NS_OK;
 }
 
 nsresult
-GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
+GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
+                     const XPTMethodDescriptor *methodInfo,
                      const nsXPTParamInfo &paramInfo, PRUint8 paramType,
                      PRUint16 methodIndex, nsXPTCMiniVariant *dispatchParams,
                      PRBool isFullVariantArray, nsID &result)
@@ -940,7 +943,7 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
       if (NS_FAILED(rv))
         break;
 
-      const nsXPTParamInfo& arg_param = methodInfo->GetParam(argnum);
+      const nsXPTParamInfo& arg_param = methodInfo->params[argnum];
       const nsXPTType& arg_type = arg_param.GetType();
 
       // The xpidl compiler ensures this. We reaffirm it for safety.

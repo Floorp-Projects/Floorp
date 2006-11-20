@@ -350,8 +350,8 @@ WSPComplexTypeWrapper::GetPropertyValue(PRUint32 aMethodIndex,
     }
   }
 
-  rv = XPTC_InvokeByIndex(mComplexTypeInstance, aMethodIndex,
-                          numParams, var);
+  rv = NS_InvokeByIndex(mComplexTypeInstance, aMethodIndex,
+                        numParams, var);
 
   if (NS_FAILED(rv)) {
     return rv;

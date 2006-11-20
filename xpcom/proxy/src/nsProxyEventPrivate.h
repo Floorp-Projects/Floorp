@@ -45,7 +45,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIProxyObjectManager.h"
 
-#include "xptcall.h"    // defines nsXPTCVariant
+#include "nsXPTCUtils.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -150,30 +150,31 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyObject, NS_PROXYOBJECT_CLASS_IID)
  * This object is maintained in a singly-linked list from the associated
  * "parent" nsProxyObject.
  */
-class nsProxyEventObject : public nsXPTCStubBase
+class nsProxyEventObject : protected nsAutoXPTCStub
 {
 public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
-
     // call this method and return result
-    NS_IMETHOD CallMethod(PRUint16 methodIndex, const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
+    NS_IMETHOD CallMethod(PRUint16 methodIndex,
+                          const XPTMethodDescriptor* info,
+                          nsXPTCMiniVariant* params);
 
     nsProxyEventClass*    GetClass()            const { return mClass; }
     nsISomeInterface*     GetProxiedInterface() const { return mRealInterface; }
     nsIEventTarget*       GetTarget()           const { return mProxyObject->GetTarget(); }
     PRInt32               GetProxyType()        const { return mProxyObject->GetProxyType(); } 
 
-    nsresult convertMiniVariantToVariant(const nsXPTMethodInfo *methodInfo,
+    nsresult convertMiniVariantToVariant(const XPTMethodDescriptor *methodInfo,
                                          nsXPTCMiniVariant *params,
                                          nsXPTCVariant **fullParam,
                                          uint8 *outParamCount);
 
     nsProxyEventObject(nsProxyObject *aParent,
                        nsProxyEventClass *aClass,
-                       already_AddRefed<nsISomeInterface> aRealInterface);
+                       already_AddRefed<nsISomeInterface> aRealInterface,
+                       nsresult *rv);
 
     friend class nsProxyObject;
 
@@ -210,7 +211,7 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_IID)
     
     nsProxyObjectCallInfo(nsProxyEventObject* owner,
-                          const nsXPTMethodInfo *methodInfo,
+                          const XPTMethodDescriptor *methodInfo,
                           PRUint32 methodIndex, 
                           nsXPTCVariant* parameterList, 
                           PRUint32 parameterCount);
@@ -238,7 +239,7 @@ public:
 private:
     
     nsresult         mResult;                    /* this is the return result of the called function */
-    const nsXPTMethodInfo *mMethodInfo;
+    const XPTMethodDescriptor *mMethodInfo;
     PRUint32         mMethodIndex;               /* which method to be called? */
     nsXPTCVariant   *mParameterList;             /* marshalled in parameter buffer */
     PRUint32         mParameterCount;            /* number of params */

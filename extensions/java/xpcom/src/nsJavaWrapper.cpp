@@ -1477,8 +1477,8 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     ThrowException(env, rv, "Failed to get real XPCOM object");
     return nsnull;
   }
-  nsresult invokeResult = XPTC_InvokeByIndex(realObject, methodIndex,
-                                             paramCount, params);
+  nsresult invokeResult = NS_InvokeByIndex(realObject, methodIndex,
+                                           paramCount, params);
   NS_RELEASE(realObject);
 
   // Clean up params

@@ -48,6 +48,8 @@ MOZILLA_INTERNAL_API = 1
 
 DIRS		= md
 
+REQUIRES = string
+
 CPPSRCS		= xptcall.cpp
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -59,3 +61,5 @@ FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
+
+LOCAL_INCLUDES += -I$(srcdir)/../../xptinfo/src
