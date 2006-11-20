@@ -721,6 +721,10 @@ html|*.textbox-textarea {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box");
 }
 
+.textbox-input-box[spellcheck="true"] {
+  -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box-spell");
+}
+
 textbox[type="timed"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#timed-textbox");
 }
