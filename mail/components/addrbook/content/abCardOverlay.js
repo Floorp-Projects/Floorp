@@ -295,11 +295,11 @@ function OnLoadEditCard()
       {
         // Set all the editable vcard fields to read only
         for (var i = kVcardFields.length; i-- > 0; )
-          document.getElementById(kVcardFields[i][0]).readonly = true;
+          document.getElementById(kVcardFields[i][0]).readOnly = true;
 
         // And the phonetic fields
-        document.getElementById(kPhoneticFields[0]).readonly = true;
-        document.getElementById(kPhoneticFields[3]).readonly = true;
+        document.getElementById(kPhoneticFields[0]).readOnly = true;
+        document.getElementById(kPhoneticFields[3]).readOnly = true;
 
         // Also disable the mail format popup.
         document.getElementById("PreferMailFormatPopup").disabled = true;      
