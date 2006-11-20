@@ -3452,9 +3452,22 @@ function updateTimestamps(view)
 
     view._timestampLast = "";
     var node = view.messages.firstChild.firstChild;
+    var nested;
     while (node)
     {
-        updateTimestampFor(view, node);
+        if(node.className == "msg-nested-tr")
+        {
+            nested = node.firstChild.firstChild.firstChild.firstChild;
+            while (nested)
+            {
+                updateTimestampFor(view, nested);
+                nested = nested.nextSibling;
+            }
+        }
+        else
+        {
+            updateTimestampFor(view, node);
+        }
         node = node.nextSibling;
     }
 }
