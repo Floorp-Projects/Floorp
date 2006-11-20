@@ -5320,8 +5320,10 @@ interrupt:
 
             for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
                 JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
+                if (OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj) <= i) {
+                    JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) < i || OBJ_BLOCK_COUNT(cx, obj) == 0);
                     break;
+                }
             }
             fp->blockChain = obj;
 
@@ -5869,9 +5871,7 @@ interrupt:
             }
 
             sp -= GET_UINT16(pc);
-            JS_ASSERT(op == JSOP_LEAVEBLOCKEXPR
-                      ? fp->spbase < sp && sp <= fp->spbase + depth
-                      : fp->spbase <= sp && sp < fp->spbase + depth);
+            JS_ASSERT(fp->spbase <= sp && sp <= fp->spbase + depth);
 
             /* Store the result into the topmost stack slot. */
             if (op == JSOP_LEAVEBLOCKEXPR)
