@@ -1488,10 +1488,10 @@ sub _get_create_index_ddl {
 
 =cut
 
-    my($self, $table_name, $index_name, $index_fields, $index_type) = @_;
+    my ($self, $table_name, $index_name, $index_fields, $index_type) = @_;
 
     my $sql = "CREATE ";
-    $sql .= "$index_type " if ($index_type eq 'UNIQUE');
+    $sql .= "$index_type " if ($index_type && $index_type eq 'UNIQUE');
     $sql .= "INDEX $index_name ON $table_name \(" .
       join(", ", @$index_fields) . "\)";
 
