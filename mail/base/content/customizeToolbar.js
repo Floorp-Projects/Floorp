@@ -67,18 +67,16 @@ function onLoad()
 function onUnload(aEvent)
 {
   removeToolboxListeners();
-  unwrapToolbarItems();
+  unwrapToolbarItems(true);
   persistCurrentSets();
   
   notifyParentComplete();
-
-  window.close();
 }
 
 function onCancel()
 {
   // restore the saved toolbarset for each customizeable toolbar
-  unwrapToolbarItems();
+  unwrapToolbarItems(false);
   var toolbar = gToolbox.firstChild;
   while (toolbar) {
     if (isCustomizableToolbar(toolbar)) {
@@ -92,12 +90,6 @@ function onCancel()
     }
     toolbar = toolbar.nextSibling;
   }
-
-  // Now rebuild the palette.
-  buildPalette();
-
-  // Now re-wrap the items on the toolbar.
-  wrapToolbarItems();
 
   repositionDialog();
   gToolboxChanged = true;
@@ -247,17 +239,19 @@ function wrapToolbarItems()
 /**
  * Unwraps all items in all customizable toolbars in a toolbox.
  */
- function unwrapToolbarItems()
+ function unwrapToolbarItems(aRemovePreviousSet)
 {
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
-      toolbar.removeAttribute('previousset'); // remove previous set attribute
+      if (aRemovePreviousSet)
+        toolbar.removeAttribute('previousset');
+
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var paletteItem = toolbar.childNodes[k];
         var toolbarItem = paletteItem.firstChild;
 
-        if (isToolbarItem(toolbarItem)) {
+        if (toolbarItem && isToolbarItem(toolbarItem)) {
           var nextSibling = paletteItem.nextSibling;
 
           if (paletteItem.hasAttribute("itemcommand"))
@@ -575,6 +569,7 @@ function setDragActive(aItem, aValue)
 function restoreDefaultSet()
 {
   // Restore the defaultset for fixed toolbars.
+  unwrapToolbarItems(false);
   var toolbar = gToolbox.firstChild;
   while (toolbar) {
     if (isCustomizableToolbar(toolbar)) {
