@@ -44,19 +44,12 @@ function getTestCases() {
     
     var origFunctionToString = Function.prototype.toString;
 
-	// Bug 175820: returns [object Function-35] in Debugger player and [object null] in release player
-	var expectedResult = "[object Function-35]";
-	try
-	{
-	if( Capabilities.isDebugger == false )
-		expectedResult = "[object null]";
-	}catch(ee){
-		// not in ATS... do nothing
-	}
     array[item++] = new TestCase(   SECTION,
          "var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()",
-         expectedResult,
-         (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString() ));
+         true,
+         (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString())=="[object Function-35]" ||
+         (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString())=="[object null]"
+         );
 
     array[item++] = new TestCase( SECTION,  "Function.prototype.valueOf",       Object.prototype.valueOf,   Function.prototype.valueOf );
     

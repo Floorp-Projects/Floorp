@@ -52,14 +52,12 @@ function getTestCases() {
     var myfunc:Function = Function();
     myfunc.myToString=Object.prototype.toString;
 
-	// work around for bug 175820
-	var expRes = "[object Function-35]";
-	if(!Capabilities.isDebugger)
-		expRes = "[object null]";
     array[item++] = new TestCase(   SECTION,
                                     "myfunc = Function(); myfunc.myToString = Object.prototype.toString; myfunc.myToString()",
-                                    expRes,
-                                    myfunc.myToString() );
+                                    true,
+                                    myfunc.myToString()=="[object Function-35]" ||
+                                    myfunc.myToString()=="[object null]"
+                                     );
     thisError="no error";
     try{
         myfunc.toString = Object.prototype.toString;

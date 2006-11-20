@@ -45,19 +45,12 @@ function getTestCases() {
     
     var origFunctionToString = Function.prototype.toString;
 
-	// work around for bug 175820
-	var expRes = "[object Function-35]";    
-	try
-	{
-		if( Capabilities.isDebugger == false )
-			expRes = "[object null]";
-	} catch(ee) {
-		// do nothing... not in ATS
-	}
     array[item++] = new TestCase(   SECTION,
                                     "var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()",
-                                    expRes,
-                                    (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString() ));
+                                    true,
+                                    (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString())=="[object Function-35]" ||
+                                    (myfunc = Function.prototype, myfunc.toString = Object.prototype.toString, myfunc.toString())=="[object null]"
+                                    );
 
     array[item++] = new TestCase( SECTION,  "Function.prototype.valueOf",       Object.prototype.valueOf,   Function.prototype.valueOf );
 

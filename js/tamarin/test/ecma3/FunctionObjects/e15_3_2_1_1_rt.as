@@ -70,19 +70,11 @@ function getTestCases() {
     }
     myfunc.myToString = Object.prototype.toString;
 
-	// work around for bug 175820
-	var expRes = "[object Function-35]";
-	try
-	{
-		if( Capabilities.isDebugger == false )
-			expRes = "[object null]";
-	} catch(ee) {
-		// do nothing, Capabilities is not defined
-	}
-
     array[item++] = new TestCase( SECTION,  "myfunc = new Function(); myfunc.myToString = Object.prototype.toString; myfunc.myToString()",
-                                            expRes,
-                                            myfunc.toString() );
+                                            true,
+                                            myfunc.toString()=="[object Function-35]" ||
+                                            myfunc.toString()=="[object null]"
+                                             );
     array[item++] = new TestCase( SECTION,  "myfunc.length",                            0,                      myfunc.length );
     array[item++] = new TestCase( SECTION,  "myfunc.prototype.toString()",              "[object Object]",      myfunc.prototype.toString() );
 
@@ -106,15 +98,7 @@ function getTestCases() {
 
     MyObject.myToString = Object.prototype.toString;
 
-	// work around to bug 175820
-	expRes = "[object Function-2]";
-	try{
-		if(Capabilities.isDebugger == false)
-			expRes = "[object null]";
-	} catch( ee2 ) {
-		// do nothing
-	}
-    array[item++] = new TestCase( SECTION,  "MyObject.toString = Object.prototype.toString; MyObject.toString()",    expRes,   MyObject.myToString());
+    array[item++] = new TestCase( SECTION,  "MyObject.toString = Object.prototype.toString; MyObject.toString()",    true,   MyObject.myToString()=="[object Function-2]" || MyObject.myToString()=="[object null]");
 
     array[item++] = new TestCase( SECTION,  "MyObject.length",                              1,      MyObject.length );
 

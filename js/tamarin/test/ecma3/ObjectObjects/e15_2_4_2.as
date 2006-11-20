@@ -93,18 +93,11 @@ function getTestCases() {
 
 // The new Funtion() has been replaced by function() {}
 	myvar = function() {};
+    
 	myvar.toString = Object.prototype.toString;
-	// work around for bug 175820
-	var expRes = "[object Function-3]";
-	try{
-		if( Capabilities.isDebugger == false)
-			expRes = "[object null]";
-	} catch (es) {
-		// do nothing
-	}
 	array[item++] = new TestCase( SECTION,  "myvar = function() {}; myvar.toString = Object.prototype.toString; myvar.toString()",
-                                            expRes,
-                                            myvar.toString());
+                                            true,
+                                            myvar.toString()=="[object Function-3]" || myvar.toString()=="[object null]");
 
 /*
 	myvar = new Array();

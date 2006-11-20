@@ -131,15 +131,12 @@ function getTestCases() {
 
     // this is a function object
 
-	// work around for bug 175820
-	var expRes = "Function-2]";
-	if( !Capabilities.isDebugger )
-		expRes = "null]";
-
     array[item++] = new TestCase(   SECTION,
                                     "var obj = function() {}; obj.substring = String.prototype.substring; obj.toString = Object.prototype.toString; obj.substring(8)",
-                                    expRes,
-                                    (obj = function() {}, obj.substring = String.prototype.substring, obj.toString = Object.prototype.toString, obj.substring(8) ) );
+                                    true,
+                                    (obj = function() {}, obj.substring = String.prototype.substring, obj.toString = Object.prototype.toString, obj.substring(8))=="Function-2]" ||
+                                    (obj = function() {}, obj.substring = String.prototype.substring, obj.toString = Object.prototype.toString, obj.substring(8))=="null]"
+                                     );
     // this is a number object
 
     thisError="no error";

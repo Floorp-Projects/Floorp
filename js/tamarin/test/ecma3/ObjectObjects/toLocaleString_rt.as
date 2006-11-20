@@ -49,16 +49,11 @@ function getTestCases() {
                                             (myvar = this,  myvar.toLocaleString = Object.prototype.toLocaleString, myvar.toLocaleString()) );
 
 	// work around for bug 175820
-	var expRes = "[object Function-4]";
-	try{
-		if(Capabilities.isDebugger == false)
-			expRes = "[object null]";
-	} catch( sd ) {
-		// do nothing
-	}
     array[item++] = new TestCase( SECTION,  "myvar = MyObject; myvar.toLocaleString = Object.prototype.toLocaleString; myvar.toLocaleString()",
-                                            expRes,
-                                            (myvar = MyObject, myvar.toLocaleString = Object.prototype.toLocaleString, myvar.toLocaleString()) );
+                                            true,
+                                            (myvar = MyObject, myvar.toLocaleString = Object.prototype.toLocaleString, myvar.toLocaleString())=="[object Function-4]" ||
+                                            (myvar = MyObject, myvar.toLocaleString = Object.prototype.toLocaleString, myvar.toLocaleString())=="[object null]" 
+                                             );
 
     array[item++] = new TestCase( SECTION,  "myvar = new MyObject( true ); myvar.toLocaleString = Object.prototype.toLocaleString; myvar.toLocaleString()",
                                             '[object Object]',

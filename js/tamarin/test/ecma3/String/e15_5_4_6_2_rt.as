@@ -156,22 +156,15 @@ function getTestCases() {
                                   0,
                                   (f = new Object( String.prototype.indexOf ), f(String(GLOBAL))) );
 
-	// work around for bug 175820
-	var expRes1 = "[object Function-97]";
-	if( !Capabilities.isDebugger )
-		expRes1 = "[object null]";
-
-    array[item++]= new TestCase(SECTION,"Assigning Object.prototype.toString to f.toString",expRes1, (f.toString=Object.prototype.toString, f.toString()));
+    array[item++]= new TestCase(SECTION,"Assigning Object.prototype.toString to f.toString",true, (f.toString=Object.prototype.toString, f.toString())=="[object null]" ||
+                                                                                                  (f.toString=Object.prototype.toString, f.toString())=="[object Function-97]");
         
-	// work around for bug 175820
-	var expRes2 = 0;
-	if( !Capabilities.isDebugger )
-		expRes2 = -1;
-
     array[item++] = new TestCase( SECTION,
                                   "var f = function() {}; f.toString = Object.prototype.toString; f.indexOf = String.prototype.indexOf; f.indexOf('[object Function-0]')",
-                                   expRes2,
-                                   (f = function() {}, f.toString = Object.prototype.toString, f.indexOf = String.prototype.indexOf, f.indexOf('[object Function-0]') ) );
+                                   true,
+                                   (f = function() {}, f.toString = Object.prototype.toString, f.indexOf = String.prototype.indexOf, f.indexOf('[object Function-0]'))==0 ||
+                                   (f = function() {}, f.toString = Object.prototype.toString, f.indexOf = String.prototype.indexOf, f.indexOf('[object null]'))==0
+                                   );
 
     try{
         var b = new Boolean(); 
