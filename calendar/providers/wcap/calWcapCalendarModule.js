@@ -254,10 +254,14 @@ var calWcapCalendarModule = { // nsIModule:
         return { // nsIFactory:
             lockFactory: function( lock ) {},
             createInstance: function( outer, iid ) {
-                if (outer)
+                if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
                 var session = new calWcapSession();
-                return session.defaultCalendar.QueryInterface(iid);
+                var cal = createWcapCalendar(
+                    null /* calId: null indicates default calendar */,
+                    session );
+                session.defaultCalendar = cal;
+                return cal.QueryInterface( iid );
             }
         };
     },

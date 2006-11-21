@@ -78,7 +78,7 @@ interface calIWcapCalendar : calICalendar
     readonly attribute string displayName;
     
     /**
-     * Gets this calendar's (calId) default timezone.
+     * Gets or sets this calendar's (calId) default timezone.
      */
     readonly attribute string defaultTimezone;
     
