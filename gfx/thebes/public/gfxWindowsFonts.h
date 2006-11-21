@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -456,7 +457,6 @@ public:
 protected:
     static PRBool MakeFont(const nsAString& fontName,
                            const nsACString& genericName,
-                           const nsACString& aLangGroup,
                            void *closure);
 
 private:

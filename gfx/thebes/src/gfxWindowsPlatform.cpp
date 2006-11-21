@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,6 +53,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 {
     mFonts.Init(200);
     mFontWeights.Init(200);
+    mFontAliases.Init(20);
     UpdateFontList();
 }
 
@@ -170,6 +172,8 @@ nsresult
 gfxWindowsPlatform::UpdateFontList()
 {
     mFonts.Clear();
+    mFontAliases.Clear();
+    mNonExistingFonts.Clear();
 
     LOGFONTW logFont;
     logFont.lfCharSet = DEFAULT_CHARSET;
@@ -182,6 +186,86 @@ gfxWindowsPlatform::UpdateFontList()
     ::ReleaseDC(nsnull, dc);
 
     return NS_OK;
+}
+
+struct ResolveData {
+    ResolveData(gfxPlatform::FontResolverCallback aCallback,
+                gfxWindowsPlatform *aCaller, const nsAString *aFontName,
+                void *aClosure) :
+        mFoundCount(0), mCallback(aCallback), mCaller(aCaller),
+        mFontName(aFontName), mClosure(aClosure) {}
+    PRUint32 mFoundCount;
+    gfxPlatform::FontResolverCallback mCallback;
+    gfxWindowsPlatform *mCaller;
+    const nsAString *mFontName;
+    void *mClosure;
+};
+
+nsresult
+gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
+                                    FontResolverCallback aCallback,
+                                    void *aClosure,
+                                    PRBool& aAborted)
+{
+    if (aFontName.IsEmpty())
+        return NS_ERROR_FAILURE;
+
+    nsRefPtr<FontEntry> fe;
+    if (mFonts.Get(aFontName, &fe) || mFontAliases.Get(aFontName, &fe)) {
+        aAborted = !(*aCallback)(fe->mName, aClosure);
+        // XXX If the font has font link, we should add the linked font.
+        return NS_OK;
+    }
+
+    if (mNonExistingFonts.IndexOf(aFontName) >= 0) {
+        aAborted = PR_FALSE;
+        return NS_OK;
+    }
+
+    LOGFONTW logFont;
+    PRInt32 len = aFontName.Length();
+    if (len >= LF_FACESIZE)
+        len = LF_FACESIZE - 1;
+    memcpy(logFont.lfFaceName,
+           nsPromiseFlatString(aFontName).get(), len * sizeof(PRUnichar));
+    logFont.lfFaceName[len] = 0;
+
+    HDC dc = ::GetDC(nsnull);
+    ResolveData data(aCallback, this, &aFontName, aClosure);
+    aAborted =
+        !EnumFontFamiliesExW(dc, &logFont,
+                             (FONTENUMPROCW)gfxWindowsPlatform::FontResolveProc,
+                             (LPARAM)&data, 0);
+    if (data.mFoundCount == 0)
+        mNonExistingFonts.AppendString(aFontName);
+    ::ReleaseDC(nsnull, dc);
+
+    return NS_OK;
+}
+
+int CALLBACK 
+gfxWindowsPlatform::FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
+                                    const NEWTEXTMETRICEXW *nmetrics,
+                                    DWORD fontType, LPARAM data)
+{
+    const LOGFONTW& logFont = lpelfe->elfLogFont;
+    // Ignore vertical fonts
+    if (logFont.lfFaceName[0] == L'@' || logFont.lfFaceName[0] == 0)
+        return 1;
+
+    ResolveData *rData = reinterpret_cast<ResolveData*>(data);
+    rData->mFoundCount++;
+
+    nsAutoString name(logFont.lfFaceName);
+
+    // Save the alias name to cache
+    nsRefPtr<FontEntry> fe;
+    if (rData->mCaller->mFonts.Get(name, &fe))
+        rData->mCaller->mFontAliases.Put(*(rData->mFontName), fe);
+
+    return (rData->mCallback)(name, rData->mClosure);
+
+    // XXX If the font has font link, we should add the linked font.
 }
 
 struct FontMatch {

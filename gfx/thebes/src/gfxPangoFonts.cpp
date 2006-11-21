@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * based on nsFontMetricsPango.cpp by
  *   Christopher Blizzard <blizzard@mozilla.org>
@@ -117,12 +118,11 @@ FFRECountHyphens (const nsAString &aFFREName)
 PRBool
 gfxPangoFontGroup::FontCallback (const nsAString& fontName,
                                  const nsACString& genericName,
-                                 const nsACString& aLangGroup,
                                  void *closure)
 {
     nsStringArray *sa = NS_STATIC_CAST(nsStringArray*, closure);
 
-    if (FFRECountHyphens(fontName) < 3) {
+    if (FFRECountHyphens(fontName) < 3 && sa->IndexOf(fontName) < 0) {
         sa->AppendString(fontName);
     }
 
@@ -142,6 +142,14 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
     ForEachFont (FontCallback, &familyArray);
 
     FindGenericFontFromStyle (FontCallback, &familyArray);
+
+    // XXX If there are no actual fonts, we should use dummy family.
+    // Pango will resolve from this.
+    if (familyArray.Count() == 0) {
+        // printf("%s(%s)\n", NS_ConvertUTF16toUTF8(families).get(),
+        //                    aStyle->langGroup.get());
+        familyArray.AppendString(NS_LITERAL_STRING("sans-serif"));
+    }
 
     for (int i = 0; i < familyArray.Count(); i++)
         mFonts.AppendElement(new gfxPangoFont(*familyArray[i], &mStyle));
@@ -252,8 +260,7 @@ MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc, double 
 #endif
 
 gfxPangoFont::gfxPangoFont(const nsAString &aName,
-                           const gfxFontStyle *aFontStyle,
-                           PangoLanguage* aPangoLang)
+                           const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle)
 {
     InitPangoLib();
@@ -262,7 +269,6 @@ gfxPangoFont::gfxPangoFont(const nsAString &aName,
     mPangoCtx = nsnull;
     mHasMetrics = PR_FALSE;
     mXftFont = nsnull;
-    mPangoLang = aPangoLang;
 }
 
 gfxPangoFont::~gfxPangoFont()
@@ -364,9 +370,7 @@ gfxPangoFont::RealizeFont(PRBool force)
     mPangoCtx = pango_cairo_font_map_create_context(PANGO_CAIRO_FONT_MAP(pango_cairo_font_map_get_default()));
 #endif
 
-    if (mPangoLang)
-        pango_context_set_language(mPangoCtx, mPangoLang);
-    else if (!mStyle->langGroup.IsEmpty())
+    if (!mStyle->langGroup.IsEmpty())
         pango_context_set_language(mPangoCtx, GetPangoLanguage(mStyle->langGroup));
 
     pango_context_set_font_description(mPangoCtx, mPangoFontDesc);
@@ -594,32 +598,7 @@ gfxPangoFont::GetMetrics()
 void
 gfxPangoFont::GetMozLang(nsACString &aMozLang)
 {
-    if (!mMozLang.IsEmpty()) {
-        aMozLang.Assign(mMozLang);
-        return;
-    }
-    if (mPangoLang) {
-        GetMozLanguage(mPangoLang, mMozLang);
-        aMozLang.Assign(mMozLang);
-        return;
-    }
     aMozLang.Assign(mStyle->langGroup);
-}
-
-void
-gfxPangoFont::GetActualFontFamily(nsACString &aFamily)
-{
-    if (!mActualFontFamily.IsEmpty()) {
-        aFamily.Assign(mActualFontFamily);
-        return;
-    }
-
-    PangoFont* font = GetPangoFont();
-    FcChar8 *family;
-    FcPatternGetString(PANGO_FC_FONT(font)->font_pattern,
-                       FC_FAMILY, 0, &family);
-    mActualFontFamily.Assign((char *)family);
-    aFamily.Assign(mActualFontFamily);
 }
 
 PangoFont*
@@ -1063,60 +1042,31 @@ public:
     }
 
     static PRBool ExistsFont(FontSelector *aFs,
-                             nsACString &aName) {
+                             const nsAString &aName) {
         PRUint32 len = aFs->mFonts.Length();
         for (PRUint32 i = 0; i < len; ++i) {
-            nsCAutoString family;
-            aFs->mFonts[i]->GetActualFontFamily(family);
-            if (aName.Equals(family))
+            if (aName.Equals(aFs->mFonts[i]->GetName()))
                 return PR_TRUE;
         }
         return PR_FALSE;
     }
 
-    static PRBool IsAliasFontName(const nsACString &aName) {
-        return aName.Equals("serif",
-                            nsCaseInsensitiveCStringComparator()) ||
-               aName.Equals("sans-serif",
-                            nsCaseInsensitiveCStringComparator()) ||
-               aName.Equals("sans",
-                            nsCaseInsensitiveCStringComparator()) ||
-               aName.Equals("monospace",
-                            nsCaseInsensitiveCStringComparator());
-    }
-
     static PRBool AddFontCallback(const nsAString &aName,
                                   const nsACString &aGenericName,
-                                  const nsACString &aLangGroup,
                                   void *closure) {
         if (aName.IsEmpty())
             return PR_TRUE;
 
-        NS_ConvertUTF16toUTF8 name(aName);
         FontSelector *fs = NS_STATIC_CAST(FontSelector*, closure);
 
-        PRBool isASCIIFontName = IsASCII(name);
-
         // XXX do something better than this to remove dups
-        if (isASCIIFontName && !IsAliasFontName(name) && ExistsFont(fs, name))
+        if (ExistsFont(fs, aName))
             return PR_TRUE;
 
         nsRefPtr<gfxPangoFont> font = fs->mGroup->GetCachedFont(aName);
         if (!font) {
-            const gfxFontStyle *style = fs->mGroup->GetStyle();
-            font = new gfxPangoFont(aName, style, GetPangoLanguage(aLangGroup));
-
-            nsCAutoString family;
-            font->GetActualFontFamily(family);
-            if (!family.Equals(name) && ExistsFont(fs, family))
-                return PR_TRUE;
-
-            // XXX Asume that the alias name is ASCII in fontconfig.
-            //     Maybe, it is worong, but it is enough in general cases.
-            if (!isASCIIFontName)
-                fs->mGroup->PutCachedFont(aName, font);
-            else
-                fs->mGroup->PutCachedFont(NS_ConvertUTF8toUTF16(family), font);
+            font = new gfxPangoFont(aName, fs->mGroup->GetStyle());
+            fs->mGroup->PutCachedFont(aName, font);
         }
         fs->mFonts.AppendElement(font);
 

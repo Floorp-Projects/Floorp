@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,6 +66,9 @@ public:
 
     nsresult UpdateFontList();
 
+    nsresult ResolveFontName(const nsAString& aFontName,
+                             FontResolverCallback aCallback,
+                             void *aClosure, PRBool& aAborted);
 
     /* local methods */
     void FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aLangGroup, const char *aGeneric, nsString& array);
@@ -79,6 +83,10 @@ private:
                                      const NEWTEXTMETRICEXW *metrics,
                                      DWORD fontType, LPARAM data);
 
+    static int CALLBACK FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
+                                        const NEWTEXTMETRICEXW *metrics,
+                                        DWORD fontType, LPARAM data);
+
     static PLDHashOperator PR_CALLBACK HashEnumFunc(nsStringHashKey::KeyType aKey,
                                                     nsRefPtr<FontEntry>& aData,
                                                     void* userArg);
@@ -89,6 +97,8 @@ private:
 
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFonts;
     nsDataHashtable<nsStringHashKey, nsRefPtr<WeightTable> > mFontWeights;
+    nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontAliases;
+    nsStringArray mNonExistingFonts;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

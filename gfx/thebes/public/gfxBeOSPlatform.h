@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,16 @@
 
 #include "gfxPlatform.h"
 
+#include "nsTArray.h"
+#include "nsDataHashtable.h"
+
+class gfxFontNameList : public nsTArray<nsString>
+{
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontList)
+    PRBool Exists(nsAString& aName);
+};
+
 class NS_EXPORT gfxBeOSPlatform : public gfxPlatform {
 public:
     gfxBeOSPlatform();
@@ -58,6 +69,27 @@ public:
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
 
+    nsresult UpdateFontList();
+
+    nsresult ResolveFontName(const nsAString& aFontName,
+                             FontResolverCallback aCallback,
+                             void *aClosure, PRBool& aAborted);
+
+protected:
+    PRInt32 IsExistingFont(const nsACString& aFontName);
+    nsresult GetResolvedFonts(const nsACString& aName,
+                              gfxFontNameList* aResult);
+
+    nsresult GetFontListInternal(nsCStringArray& aListOfFonts,
+                                 const nsACString *aLangGroup = nsnull);
+    nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
+
+    nsCStringArray mFonts;
+    nsCStringArray mNonExistingFonts;
+    nsCStringArray mAliasForSingleFont;
+    nsCStringArray mAliasForMultiFonts;
+
+    nsDataHashtable<nsCStringHashKey, nsRefPtr<gfxFontNameList> > mAliasTable;
 };
 
 #endif /* GFX_PLATFORM_BEOS_H */

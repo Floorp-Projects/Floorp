@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -205,7 +206,6 @@ public:
      */
     typedef PRBool (*FontCreationCallback) (const nsAString& aName,
                                             const nsACString& aGenericName,
-                                            const nsACString& aLangGroup,
                                             void *closure);
     static PRBool ForEachFont(const nsAString& aFamilies,
                               const nsACString& aLangGroup,
@@ -228,6 +228,8 @@ protected:
                                       PRBool aResolveGeneric,
                                       FontCreationCallback fc,
                                       void *closure);
+
+    static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 };
 
 
