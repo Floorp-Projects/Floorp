@@ -880,15 +880,15 @@
    <section id="flag-askto">
      <title>Using flag requests</title>
      <para>
-       If a flag has been defined as 'requestable', 
-       users are allowed to set the flag's status to <quote>?</quote>.
-       This status indicates that someone (aka <quote>the requester</quote> is asking
-       for someone else to set the flag to either <quote>+</quote> or <quote>-</quote>.
+       If a flag has been defined as 'requestable', and a user has enough privileges
+       to request it (see below), the user can set the flag's status to <quote>?</quote>.
+       This status indicates that someone (a.k.a. <quote>the requester</quote>) is asking
+       someone else to set the flag to either <quote>+</quote> or <quote>-</quote>.
      </para>
      <para>
        If a flag has been defined as 'specifically requestable', 
        a text box will appear next to the flag into which the requester may
-       enter a Bugzilla username. That named person (aka <quote>the requestee</quote>)
+       enter a Bugzilla username. That named person (a.k.a. <quote>the requestee</quote>)
        will receive an email notifying them of the request, and pointing them
        to the bug/attachment in question.
      </para>
@@ -926,8 +926,7 @@
        </para>
 
        <para>
-         For a Bugzilla user, attachment flags show up in two 
-         places:
+         For a Bugzilla user, attachment flags show up in three places:
          <orderedlist>
            <listitem>
              <para>
@@ -946,6 +945,14 @@
               screen is where you set flags to ?, -, +, or unset them.
              </para>
            </listitem>
+           <listitem>
+             <para>
+               Requests are listed in the <quote>Request Queue</quote>, which
+               is accessible from the <quote>My Requests</quote> link (if you are
+               logged in) or <quote>Requests</quote> link (if you are logged out)
+               visible in the footer of all pages.
+             </para>
+           </listitem>
          </orderedlist>
        </para>
 
@@ -956,14 +963,13 @@
 
        <para>
          Bug flags are used to set a status on the bug itself. You can 
-         see Bug Flags in the <quote>Show Bug</quote> screen 
-         (<filename>editbug.cgi</filename>).
+         see Bug Flags in the <quote>Show Bug</quote> and <quote>Requests</quote>
+         screens, as described above.
        </para>
        <para>
-         Only users with the ability to edit the bug may 
-         set flags on bugs. This includes the assignee, reporter, and 
-         any user with the <computeroutput>editbugs</computeroutput> 
-         permission.
+         Only users with enough privileges (see below) may set flags on bugs.
+         This doesn't necessarily include the assignee, reporter, or users with the
+         <computeroutput>editbugs</computeroutput> permission.
        </para>
      </section>
 
@@ -998,17 +1004,18 @@
           <para>
             This is the name of the flag. This will be displayed 
             to Bugzilla users who are looking at or setting the flag. 
-            The name may consist of any valid Unicode character. 
+            The name may contain any valid Unicode characters except commas
+            and spaces.
           </para>
         </section>
 
         <section id="flags-create-field-description">
           <title>Description</title>
           <para>
-            This describes the flag in more detail. At present, this doesn't
-            show up anywhere helpful; ideally, it would be nice to have
-            it show up as a tooltip. This field 
-            can be as long as you like, and can contain any character you want.
+            The description describes the flag in more detail. It is visible
+            in a tooltip when hovering over a flag either in the <quote>Show Bug</quote>
+            or <quote>Edit Attachment</quote> pages. This field can be as
+            long as you like, and can contain any character you want.
           </para>
         </section>
 
@@ -1054,9 +1061,9 @@
 
           <para>
             You may select a Product without selecting a specific Component,
-            but it is illegal to select a Component without a Product, or to select a
-            Component that does not belong to the named Product. Doing so as of
-            this writing (2.18rc3) will raise an error... even if all your products
+            but you can't select a Component without a Product, or to select a
+            Component that does not belong to the named Product. If you do so,
+            Bugzilla will display an error message, even if all your products
             have a component by that name.
           </para>
 
@@ -1112,16 +1119,6 @@
           </para>
         </section>
 
-        <section id="flags-create-field-cclist">
-          <title>CC List</title>
-
-          <para>
-            If you want certain users to be notified every time this flag is 
-            set to ?, -, +, or unset, add them here. This is a comma-separated 
-            list of email addresses that need not be restricted to Bugzilla usernames..
-          </para>
-        </section>
-
         <section id="flags-create-field-specific">
           <title>Specifically Requestable</title>
           <para>
@@ -1145,6 +1142,38 @@
           </para>
         </section>
 
+	<section id="flags-create-field-cclist">
+          <title>CC List</title>
+
+          <para>
+            If you want certain users to be notified every time this flag is 
+            set to ?, -, +, or unset, add them here. This is a comma-separated 
+            list of email addresses that need not be restricted to Bugzilla usernames.
+          </para>
+        </section>
+
+        <section id="flags-create-grant-group">
+          <title>Grant Group</title>
+          <para>
+            When this field is set to some given group, only users in the group
+            can set the flag to <quote>+</quote> and <quote>-</quote>. This
+            field does not affect who can request or cancel the flag. For that,
+            see the <quote>Request Group</quote> field below. If this field
+            is left blank, all users can set or delete this flag. This field is
+            useful for restricting which users can approve or reject requests.
+          </para>
+        </section>
+
+        <section id="flags-create-request-group">
+          <title>Request Group</title>
+          <para>
+            When this field is set to some given group, only users in the group
+            can request or cancel this flag. Note that this field has no effect
+            if the <quote>grant group</quote> field is empty. You can set the
+            value of this field to a different group, but both fields have to be
+            set to a group for this field to have an effect.
+          </para>
+        </section>
       </section> <!-- flags-create -->
 
       <section id="flags-delete">
