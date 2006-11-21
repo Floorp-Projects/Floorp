@@ -437,40 +437,20 @@ calWcapCalendar.prototype.storeItem = function( item, oldItem, receiverFunc )
             } // else only dtend is set
         }
     }
-//     else {
-//         var ar = this.session.getUserPreferences(
-//             "X-NSCP-WCAP-PREF-ceDefaultAlarmStart", {});
-//         if (ar.length > 0 && ar[0].length > 0) {
-//             // workarounding cs duration bug, missing "T":
-//             var dur = ar[0].replace(/(^P)(\d+[HMS]$)/, "$1T$2");
-//             alarmStart = new CalDuration();
-//             alarmStart.icalString = dur;
-//             alarmStart.isNegative = !alarmStart.isNegative;
-//             this.log( "setting default alarm start: " + alarmStart.icalString );
-//         }
-//     }
     if (alarmStart) {
-        // minimal alarm server support: Alarms are currently off by default,
-        // so let server at least send reminder eMails...
         var emails = "";
         if (item.hasProperty("alarmEmailAddress"))
             emails = encodeURIComponent(item.getProperty("alarmEmailAddress"));
         else {
-            var ar = this.session.getUserPreferences(
-                "X-NSCP-WCAP-PREF-ceDefaultAlarmEmail", {});
-            if (ar.length > 0 && ar[0].length > 0) {
-                for each ( var i in ar ) {
-                    var ars = i.split(/[;,]/);
-                    for each ( var j in ars ) {
-                        j = trimString(j);
-                        if (j.length > 0) {
-                            if (emails.length > 0)
-                                emails += ";";
-                            emails += encodeURIComponent(j);
-                        }
-                    }
-                }
-            }
+            // minimal alarm server support:
+            // Alarms are currently off by default,
+            // so let server at least send reminder eMails...
+            this.session.getDefaultAlarmEmails({}).forEach(
+                function(email) {
+                    if (emails.length > 0)
+                        emails += ";";
+                    emails += encodeURIComponent(email);
+                } );
         }
         url += ("&alarmStart=" + alarmStart.icalString);
         url += ("&alarmEmails=" + emails);

@@ -37,9 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function createWcapCalendar( calId, session )
+function createWcapCalendar( calId, session, /*optional*/calProps )
 {
-    var cal = new calWcapCalendar( calId, session );
+    var cal = new calWcapCalendar( calId, session, calProps );
     switch (CACHE) {
     case "memory":
     case "storage":
@@ -52,10 +52,11 @@ function createWcapCalendar( calId, session )
     return cal;
 }
 
-function calWcapCalendar( calId, session ) {
+function calWcapCalendar( calId, session, /*optional*/calProps ) {
     this.wrappedJSObject = this;
     this.m_calId = calId;
     this.m_session = session;
+    this.m_calProps = calProps;
     this.m_bSuppressAlarms = SUPPRESS_ALARMS;
     
     // init queued calls:
@@ -71,6 +72,14 @@ function calWcapCalendar( calId, session ) {
                                    this, this.getItems_queued);
     this.syncChangesTo = makeQueuedCall(this.session.asyncQueue,
                                         this, this.syncChangesTo_queued);
+    
+    if (LOG_LEVEL > 0 && this.m_calProps) {
+        if (this.m_calId != this.getCalendarProperties(
+                "X-NSCP-CALPROPS-RELATIVE_CALID", {})[0]) {
+            this.notifyError("calId mismatch: " + this.m_calId +
+                             " vs. " + ar[0]);
+        }
+    }
 }
 calWcapCalendar.prototype = {
     m_ifaces: [ Components.interfaces.calIWcapCalendar,
@@ -182,10 +191,14 @@ calWcapCalendar.prototype = {
     
     // calICalendar:
     get name() {
-        return getCalendarManager().getCalendarPref( this, "NAME" );
+        // xxx todo: mismatch
+        if (this.session.isLoggedIn)
+            return this.displayName;
+        else
+            return getCalendarManager().getCalendarPref(this, "NAME");
     },
     set name( name ) {
-        getCalendarManager().setCalendarPref( this, "NAME", name );
+        getCalendarManager().setCalendarPref(this, "NAME", name);
     },
     
     get type() { return "wcap"; },
@@ -216,12 +229,29 @@ calWcapCalendar.prototype = {
         }
     },
     
-    // xxx todo: will potentially vanish from calICalendar:
-    get uri() { return this.session.uri; },
-    set uri( thatUri ) {
-        this.session.uri = thatUri;
+    resetCalProps:
+    function()
+    {
         this.m_calProps = null;
     },
+    
+    get uri() {
+        if (this.m_calId) {
+            var ret = this.session.uri.clone();
+            if (LOG_LEVEL == 42) { // xxx todo: interims hack for tbe
+                ret.path += ("?calid=" + encodeURIComponent(this.m_calId));
+            }
+            return ret;
+        }
+        else
+            return this.session.uri;
+    },
+    set uri( thatUri ) {
+        this.session.uri = thatUri;
+        // uri changes, but calId stays constant:
+        this.resetCalProps();
+    },
+    
     notifyObservers:
     function( func, args ) {
         this.session.notifyObservers( func, args );
@@ -258,10 +288,14 @@ calWcapCalendar.prototype = {
         this.m_bSuppressAlarms = bSuppressAlarms;
     },
     
-    get canRefresh() { return false; },
-    refresh: function() {
-        // no-op
-        this.log("refresh()");
+    get canRefresh() { return true; },
+    refresh:
+    function() {
+        // refresh session ticket immedidately, not queued:
+        this.log("refresh!");
+        this.session.logout();
+// logout sufficient, there is an upcoming getItems() call:
+//         this.session.login();
     },
     
     getCommandUrl:
@@ -275,7 +309,11 @@ calWcapCalendar.prototype = {
     // calIWcapCalendar:
     
     m_session: null,
-    get session() { return this.m_session; },
+    get session() {
+        if (this.m_session)
+            return this.m_session;
+        throw new Components.Exception("Disconnected from session!");
+    },
     
     // xxx todo: for now to make subscriptions context menu work,
     //           will vanish when UI has been revised and every subscribed
@@ -286,7 +324,7 @@ calWcapCalendar.prototype = {
     get calId() {
         if (this.m_calId)
             return this.m_calId;
-        this.session.assureLoggedIn();
+//         this.session.assureLoggedIn();
         return this.session.defaultCalId;
     },
     set calId( id ) {
@@ -298,7 +336,7 @@ calWcapCalendar.prototype = {
     
     get ownerId() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-PRIMARY-OWNER",{});
-        if (ar.length < 1 || ar[0].length == 0) {
+        if (ar.length == 0) {
             var calId = this.calId;
             this.logError(
                 "cannot determine primary owner of calendar " + calId );
@@ -313,7 +351,7 @@ calWcapCalendar.prototype = {
     
     get description() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-DESCRIPTION", {});
-        if (ar.length < 1 || ar[0].length == 0) {
+        if (ar.length == 0) {
             // fallback to display name:
             return this.displayName;
         }
@@ -322,11 +360,11 @@ calWcapCalendar.prototype = {
     
     get displayName() {
         var ar = this.getCalendarProperties("X-NSCP-CALPROPS-NAME", {});
-        if (ar.length < 1 || ar[0].length == 0) {
+        if (ar.length == 0) {
             // fallback to common name:
             ar = this.getCalendarProperties(
                 "X-S1CS-CALPROPS-COMMON-NAME", {});
-            if (ar.length < 1) {
+            if (ar.length == 0) {
                 return this.calId;
             }
         }
@@ -340,14 +378,8 @@ calWcapCalendar.prototype = {
     getCalendarProperties:
     function( propName, out_count )
     {
-        var ret = [];
-        var calProps = this.getCalProps_(false /* !async: waits for response*/);
-        if (calProps != null) {
-            var nodeList = calProps.getElementsByTagName(propName);
-            for ( var i = 0; i < nodeList.length; ++i ) {
-                ret.push( trimString(nodeList.item(i).textContent) );
-            }
-        }
+        var ret = filterCalProps(
+            propName, this.getCalProps_(false /* !async: waits for response*/));
         out_count.value = ret.length;
         return ret;
     },
@@ -355,7 +387,7 @@ calWcapCalendar.prototype = {
     getCalProps_:
     function( bAsync, bRefresh )
     {
-        this.session.assureLoggedIn();
+//         this.session.assureLoggedIn();
         try {
             if (bRefresh || !this.m_calProps) {
                 var url = this.getCommandUrl( "get_calprops" );
@@ -369,10 +401,10 @@ calWcapCalendar.prototype = {
                             this_.m_calProps = xml;
                     }
                     catch (exc) {
-                        // patch to read-only here, because error notification
-                        // call the readOnly attribute, thus we would run into
-                        // endless recursion here:
-                        this_.m_bReadOnly = true;
+//                         // patch to read-only here, because error notification
+//                         // call the readOnly attribute, thus we would run into
+//                         // endless recursion here:
+//                         this_.m_bReadOnly = true;
                         // just logging here, because user may have dangling
                         // users referred in his subscription list:
                         this_.logError( exc );
@@ -387,9 +419,9 @@ calWcapCalendar.prototype = {
             }
         }
         catch (exc) {
-            // patch to read-only here, because error notification call the
-            // readOnly attribute, thus we would run into endless recursion here
-            this.m_bReadOnly = true;
+//             // patch to read-only here, because error notification call the
+//             // readOnly attribute, thus we would run into endless recursion here
+//             this.m_bReadOnly = true;
             this.logError( exc );
             if (!bAsync)
                 throw exc;
@@ -399,8 +431,9 @@ calWcapCalendar.prototype = {
     
     get defaultTimezone() {
         var tzid = this.getCalendarProperties("X-NSCP-CALPROPS-TZID", {});
-        if (tzid.length < 1 || tzid[0].length == 0) {
-            this.logError( "cannot get X-NSCP-CALPROPS-TZID!" );
+        if (tzid.length == 0) {
+            this.logError("cannot get X-NSCP-CALPROPS-TZID!",
+                          "defaultTimezone");
             return "UTC"; // fallback
         }
         return tzid[0];

@@ -182,6 +182,19 @@ function forEachIcalComponent( icalRootComp, componentType, func, maxResult )
     }
 }
 
+function filterCalProps(propName, calProps)
+{
+    var ret = [];
+    if (calProps) {
+        var nodeList = calProps.getElementsByTagName(propName);
+        for ( var i = 0; i < nodeList.length; ++i ) {
+            var node = nodeList.item(i);
+            ret.push( trimString(node.textContent) );
+        }
+    }
+    return ret;
+}
+
 function trimString( str )
 {
     return str.replace( /(^\s+|\s+$)/g, "" );
@@ -276,6 +289,12 @@ function AsyncQueue()
 }
 AsyncQueue.prototype = {
     m_queue: null,
+    
+    reset:
+    function()
+    {
+        this.m_queue = [];
+    },
     
     m_proxy: null,
     get proxy() {
