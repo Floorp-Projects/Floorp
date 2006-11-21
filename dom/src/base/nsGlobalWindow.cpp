@@ -3561,7 +3561,9 @@ nsGlobalWindow::Focus()
    * place when the window is activated again.
    */
 
-  PRBool canFocus = CanSetProperty("dom.disable_window_flip");
+  PRBool canFocus =
+    CanSetProperty("dom.disable_window_flip") ||
+    CheckOpenAllow(CheckForAbusePoint()) == allowNoAbuse;
 
   PRBool isActive = PR_FALSE;
   nsIFocusController *focusController =
