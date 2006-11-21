@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -360,9 +361,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                              vp, wp->closure);
             if (ok) {
                 /*
-                 * Create pseudo-frame for call to setter so that any
-                 * stack-walking security code in the setter will correctly
-                 * identify the guilty party.
+                 * Create a pseudo-frame for the setter invocation so that any
+                 * stack-walking security code under the setter will correctly
+                 * identify the guilty party.  So that the watcher appears to
+                 * be active to obj_eval and other such code, point frame.pc
+                 * at the JSOP_STOP at the end of the function's script.
                  */
                 JSObject *funobj = (JSObject *) wp->closure;
                 JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, funobj);
@@ -376,6 +379,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 frame.script = FUN_SCRIPT(fun);
                 frame.fun = fun;
                 frame.down = cx->fp;
+                JS_ASSERT(frame.script->length >= JSOP_STOP_LENGTH);
+                frame.pc = frame.script->code + frame.script->length
+                         - JSOP_STOP_LENGTH;
                 frame.argv = argv + 2;
                 cx->fp = &frame;
                 ok = !wp->setter ||
