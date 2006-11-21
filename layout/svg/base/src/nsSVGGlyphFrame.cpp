@@ -1300,6 +1300,9 @@ void nsSVGGlyphFrame::SelectFont(cairo_t *ctx)
 void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
                                      PRBool suppressInvalidation)
 {
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
