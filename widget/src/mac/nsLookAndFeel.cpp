@@ -552,7 +552,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DragThresholdY:
         aMetric = 4;
         break;
-    case eMetric_ScrollbarWidth:
+    case eMetric_ScrollbarHeight: // height of horizontal scrollbar
+    case eMetric_ScrollbarWidth: // width of vertical scrollbar
         // It would be nice to use the native metric function, but we have always
         // used 16 before and it returns 15. We should make the change, but with a
         // complete audit to make sure things match up.
