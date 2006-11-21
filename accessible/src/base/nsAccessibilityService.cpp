@@ -1070,7 +1070,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   NS_ENSURE_ARG_POINTER(aAccessible);
   NS_ENSURE_ARG_POINTER(aFrameHint);
   *aAccessible = nsnull;
-  *aFrameHint = nsnull;
   if (!aPresShell || !aWeakShell) {
     return NS_ERROR_FAILURE;
   }
