@@ -132,7 +132,7 @@ txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
         if (path->getPathOpAt(i) == PathExpr::DESCENDANT_OP &&
             subExpr->getType() == Expr::LOCATIONSTEP_EXPR &&
             !subExpr->getSubExprAt(0)) {
-            LocationStep* step = NS_STATIC_CAST(LocationStep*, aInExpr);
+            LocationStep* step = NS_STATIC_CAST(LocationStep*, subExpr);
             if (step->getAxisIdentifier() == LocationStep::CHILD_AXIS) {
                 step->setAxisIdentifier(LocationStep::DESCENDANT_AXIS);
                 path->setPathOpAt(i, PathExpr::RELATIVE_OP);
