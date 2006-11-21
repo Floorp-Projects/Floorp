@@ -480,7 +480,8 @@ nsSVGPathElement::GetFlattenedPath(nsIDOMSVGMatrix *aMatrix)
     return nsnull;
 
   cairo_t *ctx = cairo_create(dummySurface);
-  if (!ctx) {
+  if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(ctx);
     cairo_surface_destroy(dummySurface);
     return nsnull;
   }

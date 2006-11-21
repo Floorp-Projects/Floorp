@@ -241,8 +241,12 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
     return nsnull;
 
   cairo_t *transferCtx = cairo_create(image);
-  if (!transferCtx)
+  if (cairo_status(transferCtx) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(transferCtx);
+    cairo_surface_destroy(image);
+    cairo_pattern_destroy(pattern);
     return nsnull;
+  }
 
   cairo_set_source_surface(transferCtx, surface, 0, 0);
   cairo_paint(transferCtx);
