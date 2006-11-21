@@ -555,9 +555,21 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
   nsCAutoString buffer;
   nsresult rv;
   
+  if (m_responseCode != 250)
+  {
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_SERVER_ERROR,
+                          m_responseText.get());
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+  }
+
   // extract the email address from the identity
   nsXPIDLCString emailAddress;
-  
   nsCOMPtr <nsIMsgIdentity> senderIdentity;
   rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
   if (NS_FAILED(rv) || !senderIdentity)
@@ -569,10 +581,6 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
   {
     senderIdentity->GetEmail(getter_Copies(emailAddress));
   }
-  
-  /* don't check for a HELO response because it can be bogus and
-  * we don't care
-  */
   
   if(!((const char *)emailAddress) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_16))
   {
@@ -659,9 +667,12 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
     if (m_responseCode != 250)
     {
-        /* EHLO must not be implemented by the server so fall back to the HELO case */
-        if (m_responseCode >= 500 && m_responseCode < 550)
+        /* EHLO must not be implemented by the server, so fall back to the HELO case
+         * if command is unrecognized or unimplemented.
+         */
+        if (m_responseCode == 500 || m_responseCode == 502)
         {
+            /* STARTTLS is only available when advertised which requires EHLO */
             if (m_prefTrySSL == PREF_SECURE_ALWAYS_STARTTLS)
             {
                 m_nextState = SMTP_ERROR_DONE;
@@ -685,25 +696,27 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
           }
           buffer += CRLF;
           status = SendData(url, buffer.get());
+
+            m_nextState = SMTP_RESPONSE;
+            m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
+            SetFlag(SMTP_PAUSE_FOR_READ);
+            return (status);
         }
-        // e.g. getting 421 "Server says unauthorized, bye"
+        /* e.g. getting 421 "Server says unauthorized, bye" or
+         * 501 "Syntax error in EHLOs parameters or arguments"
+         */
         else
         {
 #ifdef DEBUG
             nsresult rv = 
 #endif
-            nsExplainErrorDetails(m_runningURL,
-                          NS_ERROR_SMTP_SERVER_ERROR, m_responseText.get());
+            nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_SERVER_ERROR,
+                                  m_responseText.get());
             NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
             m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
         }
-
-        m_nextState = SMTP_RESPONSE;
-        m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
-        SetFlag(SMTP_PAUSE_FOR_READ);
-        return (status);
     }
 
     PRInt32 responseLength = m_responseText.Length();
@@ -839,7 +852,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         if(TestFlag(SMTP_EHLO_STARTTLS_ENABLED))
         {
             // Do not try to combine SMTPS with STARTTLS.
-            // PREF_SECURE_ALWAYS_SMTPS is used,
+            // If PREF_SECURE_ALWAYS_SMTPS is set,
             // we are alrady using a secure connection.
             // Do not attempt to do STARTTLS,
             // even if server offers it.
@@ -889,11 +902,24 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED) ||
             TestFlag(SMTP_AUTH_MSN_ENABLED))
             m_nextState = SMTP_SEND_AUTH_LOGIN_STEP0;
+        /* potential security flaw when using DIGEST_MD5 (and maybe GSSAPI)
+         * where not only the client is authenticated by the server
+         * but also vice versa. Faked server could just not advertise
+         * any mechanism to bypass authentication process.
+         */
         else
+        {
             m_nextState = SMTP_SEND_HELO_RESPONSE;
+            // fake to 250 because SendHeloResponse() tests for this
+            m_responseCode = 250;
+        }
     }
     else
+    {
         m_nextState = SMTP_SEND_HELO_RESPONSE;
+        // fake to 250 because SendHeloResponse() tests for this
+        m_responseCode = 250;
+    }
 
     return NS_OK;
 }
@@ -920,6 +946,8 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   {
     case 2:
       m_nextState = SMTP_SEND_HELO_RESPONSE;
+      // fake to 250 because SendHeloResponse() tests for this
+      m_responseCode = 250;
       break;
     case 3:
       m_nextState = SMTP_SEND_AUTH_LOGIN_STEP2;
@@ -1738,9 +1766,19 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
     */
     if(status < 0 && m_nextState != SMTP_FREE)
     {
+      nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+      // send a quit command to close the connection with the server.
+      if (SendData(url, "QUIT"CRLF) == NS_OK)
+      {
+        m_nextState = SMTP_RESPONSE;
+        m_nextStateAfterResponse = SMTP_ERROR_DONE;
+      }
+      else
+      {
       m_nextState = SMTP_ERROR_DONE;
       /* don't exit! loop around again and do the free case */
       ClearFlag(SMTP_PAUSE_FOR_READ);
+    }
     }
   } /* while(!SMTP_PAUSE_FOR_READ) */
 
