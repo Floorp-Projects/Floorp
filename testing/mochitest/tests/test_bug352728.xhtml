@@ -1,0 +1,195 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=352728
+-->
+<head>
+  <title>Test for Bug 352728</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=352728">Mozilla Bug 352728</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<!-- First make sure that a script consisting of multiple CDATA sections is
+     even supported -->
+<script class="testbody" type="text/javascript">
+  var cdataTest1 = false;
+  var cdataTest2 = false;
+  var cdataTest3 = false;
+</script>
+
+<script class="testbody" type="text/javascript">
+<![CDATA[
+  cdataTest1 = true;
+]]>
+  cdataTest2 = true;
+<![CDATA[
+  cdataTest3 = true;
+]]>
+</script>
+
+<script class="testbody" type="text/javascript">
+  is(cdataTest1, true, "Check first CDATA section");
+  is(cdataTest2, true, "Check in between CDATA sections");
+  is(cdataTest3, true, "Check second CDATA section");
+</script>
+
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 352728 **/
+function checkTypes(aNode, aNodeType, aTypeArray)
+{
+  for (var i = 0; i < aTypeArray.length; ++i) {
+    ok(aNode instanceof aTypeArray[i], aNodeType + " type test " + i,
+       aNodeType + " should be a " + aTypeArray[i]);
+  }
+}
+
+function checkInterfaces(aNode, aNodeType, aInterfaceArray)
+{
+  for (var i = 0; i < aInterfaceArray.length; ++i) {
+    ok(aNode instanceof Components.interfaces[aInterfaceArray[i]],
+       aNodeType + " interface test " + i,
+       aNodeType + " should be a " + aInterfaceArray[i]);
+  }
+}
+
+function testCharacterData(aNode, aText)
+{
+  is(aNode.length, aText.length, "Text length should match");
+  is(aNode.data, aText, "Text content should match");
+  is(aNode.nodeValue, aText, "Check nodeValue");
+  is(aNode.localName, null, "Check localName")
+  is(aNode.namespaceURI, null, "Check namespaceURI");
+}
+
+function testComment(aText, aShouldSucceed)
+{
+  try {
+    var comment = document.createComment(aText);
+    var types = [ Comment, CharacterData, Node ];
+    checkTypes(comment, "comment", types);
+
+    var interfaces = [ "nsIDOMComment", "nsIDOMCharacterData", "nsIDOMNode",
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
+    checkInterfaces(comment, "comment", interfaces);
+
+    testCharacterData(comment, aText);
+    is(comment.nodeName, "#comment", "Check nodeName");
+    is(comment.nodeType, Node.COMMENT_NODE, "Check nodeType");
+
+    if (!aShouldSucceed) {
+      ok(0, "Invalid comment creation",
+         "Shouldn't create comment with embedded \"--\"");
+    }
+  } catch (e) {
+    if (aShouldSucceed) {
+      ok(0, "Correct functioning of comment stuff", "something broke: " + e);
+    } else {
+      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
+    }
+  }
+}
+
+function testCDATASection(aText, aShouldSucceed)
+{
+  try {
+    var cdataSection = document.createCDATASection(aText);
+    var types = [ CDATASection, CharacterData, Node ];
+    checkTypes(cdataSection, "CDATA section", types);
+
+    var interfaces = [ "nsIDOMCDATASection", "nsIDOMCharacterData",
+                       "nsIDOMNode", "nsIDOM3Node", "nsIDOMEventTarget" ];
+    checkInterfaces(cdataSection, "CDATA section", interfaces);
+
+    testCharacterData(cdataSection, aText);
+    is(cdataSection.nodeName, "#cdata-section", "Check nodeName");
+    is(cdataSection.nodeType, Node.CDATA_SECTION_NODE, "Check nodeType");
+
+    if (!aShouldSucceed) {
+      ok(0, "Invalid CDATA section creation",
+]]>
+         "Shouldn't create CDATA section with embedded \"]]&gt;\"");
+<![CDATA[
+    }
+  } catch (e) {
+    if (aShouldSucceed) {
+      ok(0, "Correct functioning of CDATA section stuff",
+         "something broke: " + e);
+    } else {
+      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
+    }
+  }
+}
+
+function testPI(aTarget, aData, aShouldSucceed, aReason)
+{
+  try {
+    var pi = document.createProcessingInstruction(aTarget, aData);
+    var types = [ ProcessingInstruction, Node ];
+    checkTypes(pi, "processing instruction", types);
+
+    var interfaces = [ "nsIDOMProcessingInstruction", "nsIDOMNode",
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
+    checkInterfaces(pi, "processing instruction", interfaces);
+
+    is(pi.target, aTarget, "Check target");
+    is(pi.data, aData, "Check data");
+    is(pi.nodeName, aTarget, "Check nodeName");
+    is(pi.nodeValue, aData, "Check nodeValue");
+    is(pi.localName, null, "Check localName")
+    is(pi.namespaceURI, null, "Check namespaceURI");
+    
+    is(pi.nodeType, Node.PROCESSING_INSTRUCTION_NODE, "Check nodeType");
+
+    if (!aShouldSucceed) {
+      ok(0, "Invalid processing instruction creation", aReason);
+    }
+  } catch (e) {
+    if (aShouldSucceed) {
+      ok(0, "Correct functioning of processing instruction stuff",
+         "something broke: " + e);
+    } else {
+      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
+    }
+  }
+}
+
+testComment("Some text", true);
+testComment("Some text with a '-' in it", true);
+testComment("Some text with a '-' and a '-' and another '-'", true);
+testComment("Some text -- this shouldn't create a node!", false);
+testComment("<!-- This is an HTML comment -->", false);
+
+testCDATASection("Some text", true);
+testCDATASection("Some text with a '?' in it", true);
+testCDATASection("Some text with a '>' in it", true);
+testCDATASection("Some text with a '?' and a '>' in it", true);
+testCDATASection("Some text with a '? >' in it", true);
+testCDATASection("Some text -- ?> this should be ok", true);
+]]>
+testCDATASection("Some text ]]&gt; this should not create a node!", false);
+
+<![CDATA[
+
+testPI("foo", "bar", true);
+testPI("foo:bar", "baz", true);
+testPI("foo", "bar?", true);
+testPI("foo", "bar>", true);
+testPI("foo", "bar? >", true);
+testPI("<aaa", "bar", false, "Target should not contain '<'");
+testPI("aaa>", "bar", false, "Target should not contain '>'");
+testPI("aa?", "bar", false, "Target should not contain '?'");
+testPI("foo", "bar?>", false, "Data should not contain '?>'");
+]]>
+</script>
+</pre>
+</body>
+</html>
+
