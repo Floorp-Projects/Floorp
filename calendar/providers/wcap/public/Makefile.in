@@ -51,7 +51,6 @@ XPIDLSRCS       = calIWcapCalendar.idl \
                   calIWcapErrors.idl \
                   calIWcapFreeBusyEntry.idl \
                   calIWcapFreeBusyListener.idl \
-                  calIWcapSearchListener.idl \
                   calIWcapSession.idl \
                   $(NULL)
 
