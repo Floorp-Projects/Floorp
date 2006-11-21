@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -96,7 +97,6 @@ public:
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
                                const nsACString& aGenericName,
-                               const nsACString& aLangGroup,
                                void *closure);
 
     ATSUFontFallbacks mFallbacks;

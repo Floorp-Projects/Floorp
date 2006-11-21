@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,8 +50,7 @@
 class gfxPangoFont : public gfxFont {
 public:
     gfxPangoFont (const nsAString& aName,
-                  const gfxFontStyle *aFontStyle,
-                  PangoLanguage* aPangoLang = nsnull);
+                  const gfxFontStyle *aFontStyle);
     virtual ~gfxPangoFont ();
 
     virtual const gfxFont::Metrics& GetMetrics();
@@ -72,10 +72,6 @@ protected:
 
     PRBool mHasMetrics;
     Metrics mMetrics;
-
-    PangoLanguage *mPangoLang;
-    nsCString      mMozLang;
-    nsCString      mActualFontFamily;
 
     void RealizeFont(PRBool force = PR_FALSE);
     void RealizeXftFont(PRBool force = PR_FALSE);
@@ -109,7 +105,6 @@ public:
 protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsACString& genericName,
-                                const nsACString& aLangGroup,
                                 void *closure);
 private:
     nsDataHashtable<nsStringHashKey, nsRefPtr<gfxPangoFont> > mFontCache;

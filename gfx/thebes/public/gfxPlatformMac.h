@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,11 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
                                                          PRUint32 height,
                                                          gfxASurface::gfxImageFormat imageFormat);
+
+    nsresult ResolveFontName(const nsAString& aFontName,
+                             FontResolverCallback aCallback,
+                             void *aClosure, PRBool& aAborted);
+
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

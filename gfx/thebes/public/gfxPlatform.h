@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -95,6 +96,19 @@ public:
      * Rebuilds the any cached system font lists
      */
     virtual nsresult UpdateFontList();
+
+    /**
+     * Font name resolver, this returns actual font name(s) by the callback
+     * function. If the font doesn't exist, the callback function is not called.
+     * If the callback function returns PR_FALSE, the aAborted value is set to
+     * PR_TRUE, otherwise, PR_FALSE.
+     */
+    typedef PRBool (*FontResolverCallback) (const nsAString& aName,
+                                            void *aClosure);
+    virtual nsresult ResolveFontName(const nsAString& aFontName,
+                                     FontResolverCallback aCallback,
+                                     void *aClosure,
+                                     PRBool& aAborted) = 0;
 
     /* Returns PR_TRUE if the given block of ARGB32 data really has alpha, otherwise PR_FALSE */
     static PRBool DoesARGBImageDataHaveAlpha(PRUint8* data,

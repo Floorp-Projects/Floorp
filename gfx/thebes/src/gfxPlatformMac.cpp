@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -132,3 +133,14 @@ gfxPlatformMac::CreateOffscreenSurface(PRUint32 width,
     NS_IF_ADDREF(newSurface);
     return newSurface;
 }
+
+nsresult
+gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
+                                FontResolverCallback aCallback,
+                                void *aClosure, PRBool& aAborted)
+{
+    // XXX Implement me with GetFontList!
+    aAborted = !(*aCallback)(aFontName, aClosure);
+    return NS_OK;
+}
+

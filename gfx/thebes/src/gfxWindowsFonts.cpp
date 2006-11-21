@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -407,7 +408,6 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
 PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName,
                               const nsACString& aGenericName,
-                              const nsACString& aLangGroup,
                               void *closure)
 {
     if (!aName.IsEmpty()) {
@@ -436,6 +436,19 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
 
     if (mGenericFamily.IsEmpty())
         FindGenericFontFromStyle(MakeFont, this);
+
+    if (mFonts.Length() == 0) {
+        // Should append default GUI font if there are no available fonts.
+        HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
+        LOGFONTW logFont;
+        if (!hGDI ||
+            !::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
+            NS_ERROR("Failed to create font group");
+            return;
+        }
+        nsAutoString defaultFont(logFont.lfFaceName);
+        MakeFont(defaultFont, mGenericFamily, this);
+    }
 }
 
 gfxWindowsFontGroup::~gfxWindowsFontGroup()
@@ -966,7 +979,6 @@ public:
 
     static PRBool AddFontCallback(const nsAString& aName,
                                   const nsACString& aGenericName,
-                                  const nsACString& aLangGroup,
                                   void *closure) {
         if (aName.IsEmpty())
             return PR_TRUE;

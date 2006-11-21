@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,7 @@
 #include "nsReadableUtils.h"
 
 #include "gfxFont.h"
+#include "gfxPlatform.h"
 
 #include "prtypes.h"
 #include "gfxTypes.h"
@@ -76,6 +78,19 @@ gfxFontGroup::ForEachFont(const nsAString& aFamilies,
     return ForEachFontInternal(aFamilies, aLangGroup,
                                PR_FALSE, fc, closure);
 }
+
+struct ResolveData {
+    ResolveData(gfxFontGroup::FontCreationCallback aCallback,
+                nsACString& aGenericFamily,
+                void *aClosure) :
+        mCallback(aCallback),
+        mGenericFamily(aGenericFamily),
+        mClosure(aClosure) {
+    };
+    gfxFontGroup::FontCreationCallback mCallback;
+    nsCString mGenericFamily;
+    void *mClosure;
+};
 
 PRBool
 gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
@@ -167,8 +182,14 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         }
         
         if (!family.IsEmpty()) {
-            if (!((*fc) (family, NS_LossyConvertUTF16toASCII(genericFamily),
-                         lang, closure)))
+            NS_LossyConvertUTF16toASCII gf(genericFamily);
+            ResolveData data(fc, gf, closure);
+            PRBool aborted;
+            gfxPlatform *pf = gfxPlatform::GetPlatform();
+            nsresult rv = pf->ResolveFontName(family,
+                                              gfxFontGroup::FontResolverProc,
+                                              &data, aborted);
+            if (NS_FAILED(rv) || aborted)
                 return PR_FALSE;
         }
 
@@ -188,6 +209,13 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     }
 
     return PR_TRUE;
+}
+
+PRBool
+gfxFontGroup::FontResolverProc(const nsAString& aName, void *aClosure)
+{
+    ResolveData *data = reinterpret_cast<ResolveData*>(aClosure);
+    return (data->mCallback)(aName, data->mGenericFamily, data->mClosure);
 }
 
 void
@@ -214,8 +242,8 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
 
         rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
         if (NS_SUCCEEDED(rv)) {
-            (*fc)(familyName, NS_LossyConvertUTF16toASCII(genericName),
-                  mStyle.langGroup, closure);
+            ForEachFontInternal(familyName, mStyle.langGroup,
+                                PR_FALSE, fc, closure);
         }
 
         prefName.AssignLiteral("font.name-list.");

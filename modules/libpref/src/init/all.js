@@ -1784,6 +1784,8 @@ pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
 
+pref("font.alias-list", "sans,sans-serif,serif,monospace");
+
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -1940,6 +1942,8 @@ pref("print.whileInPrintPreview", false);
 
 pref("font.allow_double_byte_special_chars", true);
 // font names
+
+pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
 // ar
 
