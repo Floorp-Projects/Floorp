@@ -115,156 +115,120 @@ void  __stdcall _com_issue_error(HRESULT hr)
 //*** windows registry to mozilla prefs data type translation functions
 //***********************************************************************
 
-typedef void (*regEntryHandler)(unsigned char *, DWORD, DWORD,
+typedef void (*regEntryHandler)(nsIWindowsRegKey *, const nsString&,
                                 nsIPrefBranch *, char *);
 
 // yes/no string to T/F boolean
 void
-TranslateYNtoTF(unsigned char *aRegValue, DWORD aRegValueLength,
-                DWORD aRegValueType,
-                nsIPrefBranch *prefs, char *aPrefKeyName) {
-
-  PRInt32 prefIntValue = 0;
+TranslateYNtoTF(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
   // input type is a string, lowercase "yes" or "no"
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected yes/no data type");
-
-  if (aRegValueType == REG_SZ && aRegValue[0] != 0) {
-    // strcmp is safe; it's bounded by its second parameter
-    prefIntValue = strcmp(NS_REINTERPRET_CAST(char *, aRegValue), "yes") == 0;
-    prefs->SetBoolPref(aPrefKeyName, prefIntValue);
-  }
+  nsAutoString regValue; 
+  if (NS_SUCCEEDED(aRegKey->ReadStringValue(aRegValueName, regValue)))
+    aPrefs->SetBoolPref(aPrefKeyName, regValue.EqualsLiteral("yes"));
 }
 
 // yes/no string to F/T boolean
 void
-TranslateYNtoFT(unsigned char *aRegValue, DWORD aRegValueLength,
-                DWORD aRegValueType,
-                nsIPrefBranch *prefs, char *aPrefKeyName) {
-
-  PRInt32 prefIntValue = 0;
+TranslateYNtoFT(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
   // input type is a string, lowercase "yes" or "no"
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected yes/no data type");
-
-  if (aRegValueType == REG_SZ && aRegValue[0] != 0) {
-    // strcmp is safe; it's bounded by its second parameter
-    prefIntValue = strcmp(NS_REINTERPRET_CAST(char *, aRegValue), "yes") != 0;
-    prefs->SetBoolPref(aPrefKeyName, prefIntValue);
-  }
+  nsAutoString regValue; 
+  if (NS_SUCCEEDED(aRegKey->ReadStringValue(aRegValueName, regValue)))
+    aPrefs->SetBoolPref(aPrefKeyName, !regValue.EqualsLiteral("yes"));
 }
 
 void
-TranslateYNtoImageBehavior(unsigned char *aRegValue, DWORD aRegValueLength,
-                           DWORD aRegValueType,
-                           nsIPrefBranch *prefs, char *aPrefKeyName) {
+TranslateYNtoImageBehavior(nsIWindowsRegKey *aRegKey,
+                           const nsString& aRegValueName,
+                           nsIPrefBranch *aPrefs, char *aPrefKeyName) {
   // input type is a string, lowercase "yes" or "no"
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected yes/no data type");
-
-  if (aRegValueType == REG_SZ && aRegValue[0] != 0) {
-    // strcmp is safe; it's bounded by its second parameter
-    if (!strcmp(NS_REINTERPRET_CAST(char *, aRegValue), "yes"))
-      prefs->SetIntPref(aPrefKeyName, 1);
+  nsAutoString regValue; 
+  if (NS_SUCCEEDED(aRegKey->ReadStringValue(aRegValueName, regValue)) &&
+      !regValue.IsEmpty()) {
+    if (regValue.EqualsLiteral("yes"))
+      aPrefs->SetIntPref(aPrefKeyName, 1);
     else
-      prefs->SetIntPref(aPrefKeyName, 2);
+      aPrefs->SetIntPref(aPrefKeyName, 2);
   }
 }
 
 void
-TranslateDWORDtoHTTPVersion(unsigned char *aRegValue, DWORD aRegValueLength,
-                            DWORD aRegValueType,
-                            nsIPrefBranch *prefs, char *aPrefKeyName) {
-  // input type is a string, lowercase "yes" or "no"
-  if (aRegValueType != REG_DWORD)
-    NS_WARNING("unexpected signed int data type");
-
-  if (aRegValueType == REG_DWORD) {
-    DWORD val = *(NS_REINTERPRET_CAST(DWORD *, aRegValue));
+TranslateDWORDtoHTTPVersion(nsIWindowsRegKey *aRegKey,
+                            const nsString& aRegValueName,
+                            nsIPrefBranch *aPrefs, char *aPrefKeyName) {
+  PRUint32 val;
+  if (NS_SUCCEEDED(aRegKey->ReadIntValue(aRegValueName, &val))) {
     if (val & 0x1) 
-      prefs->SetCharPref(aPrefKeyName, "1.1");
+      aPrefs->SetCharPref(aPrefKeyName, "1.1");
     else
-      prefs->SetCharPref(aPrefKeyName, "1.0");
+      aPrefs->SetCharPref(aPrefKeyName, "1.0");
   }
 }
 
 // decimal RGB (1,2,3) to hex RGB (#010203)
 void
-TranslateDRGBtoHRGB(unsigned char *aRegValue, DWORD aRegValueLength,
-                    DWORD aRegValueType,
-                    nsIPrefBranch *prefs, char *aPrefKeyName) {
+TranslateDRGBtoHRGB(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                    nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
   // clear previous settings with defaults
   char prefStringValue[10];
 
-  // input type is a string
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected RGB data type");
-
-  if (aRegValueType == REG_SZ && aRegValue[0] != 0) {
+  nsAutoString regValue; 
+  if (NS_SUCCEEDED(aRegKey->ReadStringValue(aRegValueName, regValue)) &&
+      !regValue.IsEmpty()) {
     int red, green, blue;
-    ::sscanf(NS_REINTERPRET_CAST(char *, aRegValue), "%d,%d,%d",
-             &red, &green, &blue);
+    ::swscanf(regValue.get(), L"%d,%d,%d", &red, &green, &blue);
     ::sprintf(prefStringValue, "#%02X%02X%02X", red, green, blue);
-    prefs->SetCharPref(aPrefKeyName, prefStringValue);
+    aPrefs->SetCharPref(aPrefKeyName, prefStringValue);
   }
 }
 
 // translate a windows registry DWORD int to a mozilla prefs PRInt32
 void
-TranslateDWORDtoPRInt32(unsigned char *aRegValue, DWORD aRegValueLength,
-                        DWORD aRegValueType,
-                        nsIPrefBranch *prefs, char *aPrefKeyName) {
+TranslateDWORDtoPRInt32(nsIWindowsRegKey *aRegKey,
+                        const nsString& aRegValueName,
+                        nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
   // clear previous settings with defaults
   PRInt32 prefIntValue = 0;
 
-  if (aRegValueType != REG_DWORD)
-    NS_WARNING("unexpected signed int data type");
-
-  if (aRegValueType == REG_DWORD) {
-    prefIntValue = *(NS_REINTERPRET_CAST(DWORD *, aRegValue));
-    prefs->SetIntPref(aPrefKeyName, prefIntValue);
-  }
+  if (NS_SUCCEEDED(aRegKey->ReadIntValue(aRegValueName, 
+                   NS_REINTERPRET_CAST(PRUint32 *, &prefIntValue))))
+    aPrefs->SetIntPref(aPrefKeyName, prefIntValue);
 }
 
 // string copy
 void
-TranslateString(unsigned char *aRegValue, DWORD aRegValueLength,
-                DWORD aRegValueType,
-                nsIPrefBranch *prefs, char *aPrefKeyName) {
-
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected string data type");
-
-  if (aRegValueType == REG_SZ)
-    prefs->SetCharPref(aPrefKeyName,
-                       NS_REINTERPRET_CAST(char *, aRegValue));
+TranslateString(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                nsIPrefBranch *aPrefs, char *aPrefKeyName) {
+  nsAutoString regValue; 
+  if (NS_SUCCEEDED(aRegKey->ReadStringValue(aRegValueName, regValue)) &&
+      !regValue.IsEmpty()) {
+    aPrefs->SetCharPref(aPrefKeyName, NS_ConvertUTF16toUTF8(regValue).get());
+  }
 }
 
 // translate accepted language character set formats
 // (modified string copy)
 void
-TranslateLanglist(unsigned char *aRegValue, DWORD aRegValueLength,
-                  DWORD aRegValueType,
-                  nsIPrefBranch *prefs, char *aPrefKeyName) {
+TranslateLanglist(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                  nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
-  char prefStringValue[MAX_PATH]; // a convenient size, one hopes
-
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected string data type");
-
-  if (aRegValueType != REG_SZ)
-    return;
+  nsAutoString lang;
+  if (NS_FAILED(aRegKey->ReadStringValue(aRegValueName, lang)))
+      return;
 
   // copy source format like "en-us,ar-kw;q=0.7,ar-om;q=0.3" into
   // destination format like "en-us, ar-kw, ar-om"
 
-  char   *source = NS_REINTERPRET_CAST(char *, aRegValue),
-         *dest = prefStringValue,
-         *sourceEnd = source + aRegValueLength,
+  char prefStringValue[MAX_PATH]; // a convenient size, one hopes
+  NS_LossyConvertUTF16toASCII langCstr(lang);
+  const char   *source = langCstr.get(),
+               *sourceEnd = source + langCstr.Length();
+  char   *dest = prefStringValue,
          *destEnd = dest + (MAX_PATH-2); // room for " \0"
   PRBool  skip = PR_FALSE,
           comma = PR_FALSE;
@@ -284,41 +248,43 @@ TranslateLanglist(unsigned char *aRegValue, DWORD aRegValueLength,
   }
   *dest = 0;
 
-  prefs->SetCharPref(aPrefKeyName, prefStringValue);
+  aPrefs->SetCharPref(aPrefKeyName, prefStringValue);
 }
 
 static int CALLBACK
-fontEnumProc(const LOGFONT *aLogFont, const TEXTMETRIC *aMetric,
+fontEnumProc(const LOGFONTW *aLogFont, const TEXTMETRICW *aMetric,
              DWORD aFontType, LPARAM aClosure) {
   *((int *) aClosure) = aLogFont->lfPitchAndFamily & FF_ROMAN;
   return 0;
 }
 void
-TranslatePropFont(unsigned char *aRegValue, DWORD aRegValueLength,
-                  DWORD aRegValueType,
-                  nsIPrefBranch *prefs, char *aPrefKeyName) {
+TranslatePropFont(nsIWindowsRegKey *aRegKey, const nsString& aRegValueName,
+                  nsIPrefBranch *aPrefs, char *aPrefKeyName) {
 
-  HDC     dc = ::GetDC(0);
-  LOGFONT lf;
-  int     isSerif = 1;
+  HDC      dc = ::GetDC(0);
+  LOGFONTW lf;
+  int      isSerif = 1;
 
   // serif or sans-serif font?
   lf.lfCharSet = DEFAULT_CHARSET;
   lf.lfPitchAndFamily = 0;
-  PL_strncpyz(lf.lfFaceName, NS_REINTERPRET_CAST(char *, aRegValue),
-              LF_FACESIZE);
-  ::EnumFontFamiliesEx(dc, &lf, fontEnumProc, (LPARAM) &isSerif, 0);
+  nsAutoString font;
+  if (NS_FAILED(aRegKey->ReadStringValue(aRegValueName, font)))
+      return;
+
+  ::wcsncpy(lf.lfFaceName, font.get(), LF_FACESIZE);
+  lf.lfFaceName[LF_FACESIZE - 1] = L'\0';
+  ::EnumFontFamiliesExW(dc, &lf, fontEnumProc, (LPARAM) &isSerif, 0);
   ::ReleaseDC(0, dc);
 
-  if (isSerif) {
-    prefs->SetCharPref("font.name.serif.x-western",
-                       NS_REINTERPRET_CAST(char *, aRegValue));
-    prefs->SetCharPref("font.default.x-western", "serif");
-  } else {
-    prefs->SetCharPref("font.name.sans-serif.x-western",
-                       NS_REINTERPRET_CAST(char *, aRegValue));
-    prefs->SetCharPref("font.default.x-western", "sans-serif");
-  }
+  // XXX : For now, only x-western font is translated.
+  // All or Locale-dependent subset of fonts need to be translated.
+  nsDependentCString generic(isSerif ? "serif" : "sans-serif");
+  nsCAutoString prefName("font.name.");
+  prefName.Append(generic);
+  prefName.Append(".x-western");
+  aPrefs->SetCharPref(prefName.get(), NS_ConvertUTF16toUTF8(font).get());
+  aPrefs->SetCharPref("font.default.x-western", generic.get());
 }
 
 //***********************************************************************
@@ -331,7 +297,8 @@ struct regEntry {
   char            *prefKeyName;    // pref name ("javascript.enabled" ...)
   regEntryHandler  entryHandler;   // processing func
 };
-struct regEntry gRegEntries[] = {
+
+const regEntry gRegEntries[] = {
   { "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete",
      "AutoSuggest",
      "browser.urlbar.autocomplete.enabled",
@@ -340,6 +307,8 @@ struct regEntry gRegEntries[] = {
     "AcceptLanguage",
     "intl.accept_languages",
     TranslateLanglist },
+  // XXX : For now, only x-western font is translated.
+  // All or Locale-dependent subset of fonts need to be translated.
   { "Software\\Microsoft\\Internet Explorer\\International\\Scripts\\3",
     "IEFixedFontName",
     "font.name.monospace.x-western",
@@ -364,6 +333,7 @@ struct regEntry gRegEntries[] = {
   // Firefox supplies its own home page.
   { 0,
     "Start Page",
+     REG_SZ,
     "browser.startup.homepage",
     TranslateString },
 #endif
@@ -388,7 +358,7 @@ struct regEntry gRegEntries[] = {
     "browser.download.manager.showAlertOnComplete",
     TranslateYNtoTF },
   { 0,
-    "SmoothScroll",
+    "SmoothScroll",   // XXX DWORD 
     "general.smoothScroll",
     TranslateYNtoTF },
   { "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
@@ -405,7 +375,7 @@ struct regEntry gRegEntries[] = {
     "browser.history_expire_days",
     TranslateDWORDtoPRInt32 },
   { "Software\\Microsoft\\Internet Explorer\\Settings",
-    "Always Use My Colors",
+    "Always Use My Colors",            // XXX DWORD
     "browser.display.use_document_colors",
     TranslateYNtoFT },
   { 0,
@@ -425,7 +395,7 @@ struct regEntry gRegEntries[] = {
     "browser.visited_color",
     TranslateDRGBtoHRGB },
   { 0,
-    "Always Use My Font Face",
+    "Always Use My Font Face",    // XXX DWORD
     "browser.display.use_document_fonts",
     TranslateYNtoFT },
   { "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Url History",
@@ -860,7 +830,8 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
       unsigned long count = 0;
       unsigned char* data = NULL;
 
-      hr = aPStore->ReadItem(0, &IEPStoreSiteAuthGUID, &mtGuid, itemName, &count, &data, NULL, 0);
+      hr = aPStore->ReadItem(0, &IEPStoreSiteAuthGUID, &mtGuid, itemName,
+                             &count, &data, NULL, 0);
       if (SUCCEEDED(hr) && data) {
         unsigned long i;
         unsigned char* password = NULL;
@@ -872,22 +843,22 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
             break;
           }
 
-        nsAutoString tmp(itemName);
-        tmp.SetLength(6);
-        if (tmp.Equals(NS_LITERAL_STRING("DPAPI:"))) // often FTP logins
+        nsAutoString realm(itemName);
+        if (Substring(realm, 0, 6).EqualsLiteral("DPAPI:")) // often FTP logins
           password = NULL; // We can't handle these yet
 
         if (password) {
           int idx;
-          nsAutoString realm(itemName);
           idx = realm.FindChar('/');
           if (idx) {
             realm.Replace(idx, 1, NS_LITERAL_STRING(" ("));
-            realm.Append(NS_LITERAL_STRING(")"));
+            realm.Append(')');
           }
+          // XXX: username and password are always ASCII in IPStore?
+          // If not, are they in UTF-8 or the default codepage? (ref. bug 41489)
           pwmgr->AddUser(NS_ConvertUTF16toUTF8(realm),
-                         NS_ConvertUTF8toUTF16((char *)data),
-                         NS_ConvertUTF8toUTF16((char *)password));
+                         NS_ConvertASCIItoUTF16((char *)data),
+                         NS_ConvertASCIItoUTF16((char *)password));
         }
         ::CoTaskMemFree(data);
       }
@@ -966,7 +937,7 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
     if (validScheme) {
       nsCAutoString realm;
       uri->GetScheme(realm);
-      realm.Append(NS_LITERAL_CSTRING("://"));
+      realm.AppendLiteral("://");
 
       nsCAutoString host;
       uri->GetHost(host);
@@ -1437,17 +1408,17 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
     currFile->IsDirectory(&isDir);
 
     if (isSymlink) {
-      // It's a .lnk file.  Get the native path and check to see if it's
+      // It's a .lnk file.  Get the path and check to see if it's
       // a dir.  If so, create a bookmark for the dir.  If not, then
       // simply do nothing and continue.
 
-      // Get the native path that the .lnk file is pointing to.
-      nsCAutoString path;
-      rv = currFile->GetNativeTarget(path);
+      // Get the path that the .lnk file is pointing to.
+      nsAutoString path;
+      rv = currFile->GetTarget(path);
       if (NS_FAILED(rv)) continue;
 
       nsCOMPtr<nsILocalFile> localFile;
-      rv = NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
+      rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
       if (NS_FAILED(rv)) continue;
 
       // Check for dir here.  If path is not a dir, just continue with
@@ -1601,14 +1572,10 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 nsresult
 nsIEProfileMigrator::CopyPreferences(PRBool aReplace) 
 {
-  HKEY            regKey;
   PRBool          regKeyOpen = PR_FALSE;
-  struct regEntry *entry,
-                  *endEntry = gRegEntries +
-                              sizeof(gRegEntries)/sizeof(struct regEntry);
-  DWORD           regType;
-  DWORD           regLength;
-  unsigned char   regValue[MAX_PATH];  // a convenient size
+  const regEntry  *entry,
+                  *endEntry = gRegEntries + NS_ARRAY_LENGTH(gRegEntries);
+                              
 
   nsCOMPtr<nsIPrefBranch> prefs;
 
@@ -1620,33 +1587,34 @@ nsIEProfileMigrator::CopyPreferences(PRBool aReplace)
   if (!prefs)
     return NS_ERROR_FAILURE;
 
-  // step through gRegEntries table
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!regKey)
+    return NS_ERROR_UNEXPECTED;
   
+  // step through gRegEntries table
   for (entry = gRegEntries; entry < endEntry; ++entry) {
 
     // a new keyname? close any previous one and open the new one
     if (entry->regKeyName) {
       if (regKeyOpen) {
-        ::RegCloseKey(regKey);
+        regKey->Close();
         regKeyOpen = PR_FALSE;
       }
-      regKeyOpen = ::RegOpenKeyEx(HKEY_CURRENT_USER, entry->regKeyName, 0,
-                                  KEY_READ, &regKey) == ERROR_SUCCESS;
+      regKeyOpen = NS_SUCCEEDED(regKey->
+                                Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                NS_ConvertASCIItoUTF16(
+                                  nsDependentCString(entry->regKeyName)),
+                                nsIWindowsRegKey::ACCESS_READ));
     }
 
-    if (regKeyOpen) {
+    if (regKeyOpen) 
       // read registry data
-      regLength = MAX_PATH;
-      if (::RegQueryValueEx(regKey, entry->regValueName, 0,
-          &regType, regValue, &regLength) == ERROR_SUCCESS)
-
-        entry->entryHandler(regValue, regLength, regType,
-                            prefs, entry->prefKeyName);
-    }
+      entry->entryHandler(regKey,
+                          NS_ConvertASCIItoUTF16(
+                            nsDependentCString(entry->regValueName)),
+                          prefs, entry->prefKeyName);
   }
-
-  if (regKeyOpen)
-    ::RegCloseKey(regKey);
 
   nsresult rv = CopySecurityPrefs(prefs);
   if (NS_FAILED(rv)) return rv;
@@ -1681,11 +1649,12 @@ nsIEProfileMigrator::CopyCookies(PRBool aReplace)
     return NS_ERROR_FAILURE;
 
   // fetch the current user's name from the environment
-  char username[sUsernameLengthLimit+2];
-  ::GetEnvironmentVariable("USERNAME", username, sizeof(username));
-  username[sizeof(username)-2] = '\0';
-  PL_strcat(username, "@");
-  int usernameLength = PL_strlen(username);
+  PRUnichar username[sUsernameLengthLimit+2];
+  ::GetEnvironmentVariableW(L"USERNAME", username,
+                            sizeof(username)/sizeof(PRUnichar));
+  username[sUsernameLengthLimit] = L'\0';
+  wcscat(username, L"@");
+  int usernameLength = wcslen(username);
 
   // allocate a buffer into which to read each cookie file
   char *fileContents = (char *) PR_Malloc(sInitialCookieBufferSize);
@@ -1708,9 +1677,9 @@ nsIEProfileMigrator::CopyCookies(PRBool aReplace)
     }
 
     // is it a cookie file for the current user?
-    nsCAutoString fileName;
-    cookieFile->GetNativeLeafName(fileName);
-    const nsACString &fileOwner = Substring(fileName, 0, usernameLength);
+    nsAutoString fileName;
+    cookieFile->GetLeafName(fileName);
+    const nsAString &fileOwner = Substring(fileName, 0, usernameLength);
     if (!fileOwner.Equals(username, CaseInsensitiveCompare))
       continue;
 
@@ -1979,7 +1948,7 @@ nsIEProfileMigrator::GetUserStyleSheetFile(nsIFile **aUserFile)
       return;
 
     // establish the user content stylesheet file
-    userChrome->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
+    userChrome->Append(NS_LITERAL_STRING("userContent.css"));
     *aUserFile = userChrome;
     NS_ADDREF(*aUserFile);
   }
