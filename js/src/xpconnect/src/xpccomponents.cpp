@@ -3280,7 +3280,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsISupports *prinOrSop = nsnull;
     if (JSVAL_IS_STRING(argv[0])) {
         JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
-        nsAutoString codebase(JS_GetStringChars(codebasestr),
+        nsAutoString codebase(NS_REINTERPRET_CAST(PRUnichar*,
+                                                  JS_GetStringChars(codebasestr)),
                               JS_GetStringLength(codebasestr));
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), codebase);
