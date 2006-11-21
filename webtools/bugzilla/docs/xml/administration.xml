@@ -339,9 +339,9 @@
 
       <tip>
         <para>If you wish to add more administrative users, add them to 
-        the "admin" group and, optionally, add edit the tweakparams, editusers,
+        the "admin" group and, optionally, edit the tweakparams, editusers,
         creategroups, editcomponents, and editkeywords groups to add the
-        entire admin group to those groups.
+        entire admin group to those groups (which is the case by default).
         </para>
       </tip>
     </section>
@@ -349,61 +349,87 @@
     <section id="manageusers">
       <title>Managing Other Users</title>
 
+      <section id="user-account-search">
+        <title>Searching for existing users</title>
+
+        <para>
+          If you have <quote>editusers</quote> privileges or if you are allowed
+          to grant privileges for some groups, the <quote>Users</quote> link
+          appears in the footer.
+        </para>
+
+        <para>
+          The first screen you get is a search form to search for existing user
+          accounts. You can run searches based either on the ID, real name or
+          login name (i.e. the email address in most cases) of users. You can
+          search in different ways the listbox to the right of the text entry
+          box. You can match by case-insensitive substring (the default),
+          regular expression, a <emphasis>reverse</emphasis> regular expression
+          match, which finds every user name which does NOT match the regular
+          expression, or the exact string if you know exactly who you are looking for.
+        </para>
+
+        <para>
+          You can also restrict your search to users being in some specific group.
+          By default, the restriction is turned off. Then you get a list of
+          users matching your critera, and clicking their login name lets you
+          edit their properties.
+        </para>
+      </section>
+
       <section id="createnewusers">
         <title>Creating new users</title>
 
-        <para>Your users can create their own user accounts by clicking the
-        "New Account" link at the bottom of each page (assuming they
-        aren't logged in as someone else already.) However, should you
-        desire to create user accounts ahead of time, here is how you do
-        it.</para>
+        <section id="self-registration">
+          <title>Self-registration</title>
 
-        <orderedlist>
-          <listitem>
-            <para>After logging in, click the "Users" link at the footer of
-            the query page, and then click "Add a new user".</para>
-          </listitem>
+          <para>
+            By default, users can create their own user accounts by clicking the
+            <quote>New Account</quote> link at the bottom of each page (assuming
+            they aren't logged in as someone else already). If you want to disable
+            this self-registration, or if you want to restrict who can create his
+            own user account, you have to edit the <quote>createemailregexp</quote>
+            parameter in the <quote>Configuration</quote> page, see
+            <xref linkend="parameters" />.
+          </para>
+        </section>
 
-          <listitem>
-            <para>Fill out the form presented. This page is self-explanatory.
-            When done, click "Submit".</para>
+        <section id="user-account-creation">
+          <title>Accounts created by an administrator</title>
 
-            <note>
-              <para>Adding a user this way will 
-              <emphasis>not</emphasis>
+          <para>
+            Users with <quote>editusers</quote> privileges, such as administrators,
+            can create user accounts for other users:
+          </para>
 
-              send an email informing them of their username and password.
-              While useful for creating dummy accounts (watchers which
-              shuttle mail to another system, for instance, or email
-              addresses which are a mailing list), in general it is
-              preferable to log out and use the 
-              <quote>New Account</quote>
+          <orderedlist>
+            <listitem>
+              <para>After logging in, click the "Users" link at the footer of
+              the query page, and then click "Add a new user".</para>
+            </listitem>
 
-              button to create users, as it will pre-populate all the
-              required fields and also notify the user of her account name
-              and password.</para>
-            </note>
-          </listitem>
-        </orderedlist>
+            <listitem>
+              <para>Fill out the form presented. This page is self-explanatory.
+              When done, click "Submit".</para>
+
+              <note>
+                <para>Adding a user this way will <emphasis>not</emphasis>
+                send an email informing them of their username and password.
+                While useful for creating dummy accounts (watchers which
+                shuttle mail to another system, for instance, or email
+                addresses which are a mailing list), in general it is
+                preferable to log out and use the <quote>New Account</quote>
+                button to create users, as it will pre-populate all the
+                required fields and also notify the user of her account name
+                and password.</para>
+              </note>
+            </listitem>
+          </orderedlist>
+        </section>
       </section>
 
       <section id="modifyusers">
         <title>Modifying Users</title>
-
-        <para>To see a specific user, search for their login name
-        in the box provided on the "Edit Users" page. To see all users, 
-        leave the box blank.</para>
-
-        <para>You can search in different ways the listbox to the right
-        of the text entry box. You can match by 
-        case-insensitive substring (the default),
-        regular expression, or a 
-        <emphasis>reverse</emphasis>
-        regular expression match, which finds every user name which does NOT
-        match the regular expression. (Please see
-        the <command>man regexp</command>
-        manual page for details on regular expression syntax.)
-        </para>
 
         <para>Once you have found your user, you can change the following
         fields:</para>
@@ -413,9 +439,9 @@
             <para>
             <emphasis>Login Name</emphasis>: 
             This is generally the user's full email address. However, if you
-            have are using the emailsuffix Param, this may just be the user's
-            login name. Note that users can now change their login names
-            themselves (to any valid email address.)
+            have are using the <quote>emailsuffix</quote> parameter, this may
+            just be the user's login name. Note that users can now change their
+            login names themselves (to any valid email address).
             </para>
           </listitem>
 
@@ -436,6 +462,15 @@
 
           <listitem>
             <para>
+              <emphasis>Bugmail Disabled</emphasis>:
+              Mark this checkbox to disable bugmail and whinemail completely
+              for this account. This checkbox replaces the data/nomail file
+              which existed in older versions of Bugzilla.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
               <emphasis>Disable Text</emphasis>: 
               If you type anything in this box, including just a space, the
               user is prevented from logging in, or making any changes to 
@@ -449,8 +484,8 @@
               mail from Bugzilla; furthermore, they will not be able
               to log in themselves to change their own preferences and
               stop it. If you want an account (disabled or active) to
-              stop receiving mail, add the account name (one account
-              per line) to the file <filename>data/nomail</filename>.
+              stop receiving mail, simply check the
+              <quote>Bugmail Disabled</quote> checkbox above.
             </para>
             <note>
               <para>
@@ -548,7 +583,21 @@
           </listitem>
         </itemizedlist>
       </section>
-      
+
+      <section id="user-account-deletion">
+        <para>
+          If the <quote>allowuserdeletion</quote> parameter is turned on, see
+          <xref linkend="parameters" />, then you can also delete user accounts.
+          Note that this is most of the time not the best thing to do. If only
+          a warning in a yellow box is displayed, then the deletion is safe.
+          If a warning is also displayed in a red box, then you should NOT try
+          to delete the user account, else you will get referential integrity
+          problems in your database, which can lead to unexpected behavior,
+          such as bugs not appearing in bug lists anymore, or data displaying
+          incorrectly. You have been warned!
+        </para>
+      </section>
+
       <section id="impersonatingusers">
         <title>Impersonating Users</title>
         
