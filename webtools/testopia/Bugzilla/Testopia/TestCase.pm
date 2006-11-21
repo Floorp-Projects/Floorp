@@ -1342,10 +1342,13 @@ sub candelete {
     return 0 unless $self->canedit && Param("allow-test-deletion");
     return 1 if Bugzilla->user->in_group("admin");
 
-    # Allow plan author to delete if this case is linked to one plan only.
-    return 1 if Bugzilla->user->id == @{$self->plans}[0]->author->id &&
-        scalar(@{$self->plans}) == 1;
-
+    # Allow plan author to delete if this case is linked only to plans she owns.
+    my $own_all = 1;
+    foreach my $plan (@{$self->plans}){
+        $own_all == 0 if (Bugzilla->user->id != $plan->author->id);
+    }
+    return 1 if $own_all;
+    
     # Allow case author to delete if this case is not in any runs.
     return 1 if Bugzilla->user->id == $self->author->id &&
         $self->get_caserun_count == 0;
