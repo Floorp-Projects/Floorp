@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<?xul-overlay href="test018-overlay.xul" ?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="main"
+        style="background-color: green"
+        onload="checkDOM('xul-overlay', 'href=&quot;test018-overlay-2.xul&quot;');">
+  <script src="test017-020.js"/>
+</window>
