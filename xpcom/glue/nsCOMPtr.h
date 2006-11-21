@@ -819,16 +819,14 @@ class nsCOMPtr
 
         // Other pointer operators
 
-      nsDerivedSafe<T>*
+      T*
       get() const
           /*
             Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<T>*() const|.
-             Use |get()| _only_ to resolve ambiguity.
-
-            Returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|.
+             Use |get()| to resolve ambiguity or to get a castable pointer.
           */
         {
-          return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+          return NS_REINTERPRET_CAST(T*, mRawPtr);
         }
 
       operator nsDerivedSafe<T>*() const
@@ -840,14 +838,14 @@ class nsCOMPtr
             Prefer the implicit use of this operator to calling |get()|, except where necessary to resolve ambiguity.
           */
         {
-          return get();
+          return get_DerivedSafe();
         }
 
       nsDerivedSafe<T>*
       operator->() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
-          return get();
+          return get_DerivedSafe();
         }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -886,7 +884,7 @@ class nsCOMPtr
       operator*() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
-          return *get();
+          return *get_DerivedSafe();
         }
 
 #if 0
@@ -904,6 +902,14 @@ class nsCOMPtr
           return NS_REINTERPRET_CAST(T**, &mRawPtr);
 #endif
         }
+
+    private:
+      nsDerivedSafe<T>*
+      get_DerivedSafe() const
+        {
+          return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+        }
+
   };
 
 
@@ -1126,16 +1132,14 @@ class nsCOMPtr<nsISupports>
 
         // Other pointer operators
 
-      nsDerivedSafe<nsISupports>*
+      nsISupports*
       get() const
           /*
             Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<nsISupports>*() const|.
-             Use |get()| _only_ to resolve ambiguity.
-
-            Returns a |nsDerivedSafe<nsISupports>*| to deny clients the use of |AddRef| and |Release|.
+             Use |get()| to resolve ambiguity or to get a castable pointer.
           */
         {
-          return NS_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mRawPtr);
+          return NS_REINTERPRET_CAST(nsISupports*, mRawPtr);
         }
 
       operator nsDerivedSafe<nsISupports>*() const
@@ -1147,14 +1151,14 @@ class nsCOMPtr<nsISupports>
             Prefer the implicit use of this operator to calling |get()|, except where necessary to resolve ambiguity.
           */
         {
-          return get();
+          return get_DerivedSafe();
         }
 
       nsDerivedSafe<nsISupports>*
       operator->() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
-          return get();
+          return get_DerivedSafe();
         }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -1194,7 +1198,7 @@ class nsCOMPtr<nsISupports>
       operator*() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
-          return *get();
+          return *get_DerivedSafe();
         }
 
 #if 0
@@ -1212,6 +1216,14 @@ class nsCOMPtr<nsISupports>
           return NS_REINTERPRET_CAST(nsISupports**, &mRawPtr);
 #endif
         }
+
+    private:
+      nsDerivedSafe<nsISupports>*
+      get_DerivedSafe() const
+        {
+          return NS_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mRawPtr);
+        }
+
   };
 
 #ifndef NSCAP_FEATURE_USE_BASE
