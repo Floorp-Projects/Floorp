@@ -42,7 +42,9 @@
 #include "nsIStringBundle.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIPrefService.h"
+#ifndef __MINGW32__
 #include "nsIMapiSupport.h"
+#endif
 #include "shlobj.h"
 
 #include <mbstring.h>
@@ -340,11 +342,14 @@ nsWindowsShellService::setDefaultMail(PRBool aForAllUsers)
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
   SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE, aForAllUsers);
-
+#ifndef __MINGW32__
   // Tell the MAPI Service to register the mapi proxy dll now that we are the default mail application
   nsCOMPtr<nsIMapiSupport> mapiService (do_GetService(NS_IMAPISUPPORT_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   return mapiService->RegisterServer();
+#else
+  return NS_OK;
+#endif
 }
 
 nsresult
