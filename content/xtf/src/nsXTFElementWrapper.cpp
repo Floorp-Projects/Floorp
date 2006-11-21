@@ -513,8 +513,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsXTFElementWrapper* wrapper =
-    NS_STATIC_CAST(nsXTFElementWrapper*,
-                   NS_STATIC_CAST(nsIContent*, it.get()));
+    NS_STATIC_CAST(nsXTFElementWrapper*, it.get());
   nsresult rv = CopyInnerTo(wrapper);
 
   if (NS_SUCCEEDED(rv)) {

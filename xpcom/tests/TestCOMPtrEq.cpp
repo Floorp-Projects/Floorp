@@ -87,7 +87,7 @@ main()
     const nsICOMPtrEqTestFoo* rc = 0;
     nsICOMPtrEqTestFoo* const rk = 0;
     const nsICOMPtrEqTestFoo* const rkc = 0;
-    nsDerivedSafe<nsICOMPtrEqTestFoo>* d = s.get();
+    nsDerivedSafe<nsICOMPtrEqTestFoo>* d = s;
     
 #ifdef NSCAP_EQTEST_TEST_ACROSS_TYPES
     nsCOMPtr<nsICOMPtrEqTestFoo2> s2;
@@ -96,7 +96,7 @@ main()
     const nsICOMPtrEqTestFoo2* rc2 = 0;
     nsICOMPtrEqTestFoo2* const rk2 = 0;
     const nsICOMPtrEqTestFoo2* const rkc2 = 0;
-    nsDerivedSafe<nsICOMPtrEqTestFoo2>* d2 = s2.get();
+    nsDerivedSafe<nsICOMPtrEqTestFoo2>* d2 = s2;
 #endif
 
     return (!(PR_TRUE &&

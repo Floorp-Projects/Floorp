@@ -1200,8 +1200,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
         // Find a non-pseudo-insertion point and just jam ourselves in.
         // This is not 100% correct.  Hack city, baby.
         nsAnonymousContentList* contentList =
-          NS_STATIC_CAST(nsAnonymousContentList*,
-                         NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
+          NS_STATIC_CAST(nsAnonymousContentList*, nodeList.get());
 
         PRInt32 count = contentList->GetInsertionPointCount();
         for (PRInt32 i = 0; i < count; i++) {
@@ -1249,8 +1248,7 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
         // Find a non-pseudo-insertion point and just jam ourselves in.
         // This is not 100% correct.  Hack city, baby.
         nsAnonymousContentList* contentList =
-          NS_STATIC_CAST(nsAnonymousContentList*,
-                         NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
+          NS_STATIC_CAST(nsAnonymousContentList*, nodeList.get());
 
         PRInt32 count = contentList->GetInsertionPointCount();
         for (PRInt32 i = 0; i < count; i++) {

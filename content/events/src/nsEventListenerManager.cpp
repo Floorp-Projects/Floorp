@@ -983,9 +983,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       else {
         PRInt32 nameSpace = kNameSpaceID_Unknown;
         if (node && node->IsNodeOfType(nsINode::eCONTENT)) {
-          nsIContent* content =
-            NS_STATIC_CAST(nsIContent*,
-                           NS_STATIC_CAST(nsINode*, node.get()));
+          nsIContent* content = NS_STATIC_CAST(nsIContent*, node.get());
           nameSpace = content->GetNameSpaceID();
         }
         else if (doc) {

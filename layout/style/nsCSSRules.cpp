@@ -517,8 +517,7 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
   nsCOMPtr<nsIDOMMediaList> mediaList;
   rv = sheet->GetMedia(getter_AddRefs(mediaList));
   NS_ENSURE_SUCCESS(rv, rv);
-  mMedia = NS_STATIC_CAST(nsMediaList*,
-           NS_STATIC_CAST(nsIDOMMediaList*, mediaList.get()));
+  mMedia = NS_STATIC_CAST(nsMediaList*, mediaList.get());
   
   return NS_OK;
 }
