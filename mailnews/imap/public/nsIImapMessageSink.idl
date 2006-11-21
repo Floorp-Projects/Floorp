@@ -42,7 +42,7 @@
 interface nsIFileSpec;
 interface nsIMsgMailNewsUrl;
 
-[scriptable, uuid(71EDC407-FF4B-4D70-BE35-4001E992D8E7)]
+[scriptable, uuid(b92c9161-2345-4adb-af90-5a42cd898209)]
 
 interface nsIImapMessageSink : nsISupports {
     // set up messge download output stream
@@ -73,5 +73,6 @@ interface nsIImapMessageSink : nsISupports {
     void SetContentModified(in nsIImapUrl aImapUrl, in nsImapContentModifiedType modified);
     void SetImageCacheSessionForUrl(in nsIMsgMailNewsUrl aMailUrl);
     
-    unsigned long getCurMoveCopyMessageInfo(in nsIImapUrl runningUrl, out PRTime date);
+    unsigned long getCurMoveCopyMessageInfo(in nsIImapUrl runningUrl, 
+                                            out PRTime date, out string keywords);
 };

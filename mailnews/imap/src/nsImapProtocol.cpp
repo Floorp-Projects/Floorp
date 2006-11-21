@@ -5379,8 +5379,10 @@ void nsImapProtocol::OnAppendMsgFromFile()
       imapMessageFlagsType flagsToSet = 0;
       PRUint32 msgFlags = 0;
       PRTime date = 0;
+      nsXPIDLCString keywords;
       if (m_imapMessageSink)
-        m_imapMessageSink->GetCurMoveCopyMessageInfo(m_runningUrl, &date, &msgFlags);
+        m_imapMessageSink->GetCurMoveCopyMessageInfo(m_runningUrl, &date, 
+                                                    getter_Copies(keywords), &msgFlags);
       
       if (msgFlags & MSG_FLAG_READ)
         flagsToSet |= kImapMsgSeenFlag;
@@ -5394,7 +5396,7 @@ void nsImapProtocol::OnAppendMsgFromFile()
       rv = m_runningUrl->GetImapAction(&imapAction);
       if (NS_SUCCEEDED(rv) && (imapAction == nsIImapUrl::nsImapAppendDraftFromFile))
         flagsToSet |= kImapMsgDraftFlag;
-      UploadMessageFromFile(fileSpec, mailboxName, date, flagsToSet);
+      UploadMessageFromFile(fileSpec, mailboxName, date, flagsToSet, keywords);
       PR_Free( mailboxName );
     }
     else
@@ -5407,7 +5409,8 @@ void nsImapProtocol::OnAppendMsgFromFile()
 void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                                             const char* mailboxName,
                                             PRTime date,
-                                            imapMessageFlagsType flags)
+                                            imapMessageFlagsType flags,
+                                            nsCString &keywords)
 {
   if (!fileSpec || !mailboxName) return;
   IncrementCommandTagNumber();
@@ -5431,13 +5434,22 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
     command.Append(" append \"");
     command.Append(escapedName);
     command.Append("\"");
-    if (flags)
+    if (flags || keywords.Length())
     {
       command.Append(" (");
     
+      if (flags)
+      {
       SetupMessageFlagsString(flagString, flags,
         GetServerStateParser().SupportsUserFlags());
       command.Append(flagString);
+      }
+      if (keywords.Length())
+      {
+        if (flags)
+          command.Append(' ');
+        command.Append(keywords);
+      }
       command.Append(")");
     }
     
@@ -7465,8 +7477,7 @@ void nsImapProtocol::SetupMessageFlagsString(nsCString& flagString,
         userFlags & kImapMsgSupportMDNSentFlag))
         flagString.Append("$MDNSent "); // Not always available
     
-    if ((flags & kImapMsgLabelFlags) && (userFlags & (kImapMsgSupportUserFlag |
-      kImapMsgLabelFlags)))
+    if (flags & kImapMsgLabelFlags)
     {
       // turn into a number from 1-5
       PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;

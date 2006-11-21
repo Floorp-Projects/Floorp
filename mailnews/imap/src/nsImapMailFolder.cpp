@@ -4730,7 +4730,7 @@ nsImapMailFolder::SetImageCacheSessionForUrl(nsIMsgMailNewsUrl *mailurl)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageInfo(nsIImapUrl *runningUrl, PRTime *aDate, PRUint32 *aResult)
+NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageInfo(nsIImapUrl *runningUrl, PRTime *aDate, char **aKeywords, PRUint32 *aResult)
 {
   nsCOMPtr <nsISupports> copyState;
   runningUrl->GetCopyState(getter_AddRefs(copyState));
@@ -4740,12 +4740,19 @@ NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageInfo(nsIImapUrl *runningUrl
     if (mailCopyState && mailCopyState->m_message)
     {
       nsMsgLabelValue label;
+      PRUint32 supportedFlags = 0;
       mailCopyState->m_message->GetFlags(aResult);
+      GetSupportedUserFlags(&supportedFlags);
+      if (supportedFlags & (kImapMsgSupportUserFlag | kImapMsgLabelFlags))
+      {
       mailCopyState->m_message->GetLabel(&label);
       if (label != 0)
         *aResult |= label << 25;
+      }
       if (aDate)
         mailCopyState->m_message->GetDate(aDate);
+      if (aKeywords && (supportedFlags & (kImapMsgSupportUserFlag)))
+        mailCopyState->m_message->GetStringProperty("keywords", aKeywords);
     }
     // if we don't have a source header, and it's not the drafts folder,
     // then mark the message read, since it must be an append to the 
@@ -4893,7 +4900,10 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               nsCOMPtr<nsITransactionManager> txnMgr;
               m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
               if (txnMgr)
-                txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+              {
+                nsresult rv2 = txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+                NS_ASSERTION(NS_SUCCEEDED(rv2), "doing transaction failed");
+              }
             }
              (void) OnCopyCompleted(m_copyState->m_srcSupport, aExitCode);
           }
@@ -6878,7 +6888,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
           if (!junkScore.IsEmpty()) // ignore already scored messages.
             mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscore", junkScore.get(), 0);
           if (!junkScoreOrigin.IsEmpty())
-            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscoreorigin", junkScore.get(), 0);
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscoreorigin", junkScoreOrigin.get(), 0);
           msgDBHdr->GetLabel(&label);
           if (label != 0)
           {
