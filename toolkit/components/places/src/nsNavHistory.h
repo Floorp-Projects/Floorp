@@ -477,9 +477,18 @@ protected:
                          nsNavHistoryQueryOptions* aOptions,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
+  void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, 
+                          nsACString& aResult);
+
+  void GetStringFromName(const PRUnichar *aName, nsACString& aResult);
+
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
+
   nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
                                 const nsAString& aTitle);
+
+  nsresult GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+                       nsCOMArray<nsNavHistoryResultNode>* aDest);
 
   nsresult GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
                        nsCOMArray<nsNavHistoryResultNode>* aDest,

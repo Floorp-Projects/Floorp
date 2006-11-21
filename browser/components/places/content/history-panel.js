@@ -114,12 +114,12 @@ function SetPlace(aSearchString)
         placeURI += "&sort=" + NHQO.SORT_BY_DATE_DESCENDING;
         break; 
       case "dayandsite":
-        /* placeURI += "&group=" + NHQO.GROUP_BY_DAY; */
+        placeURI += "&group=" + NHQO.GROUP_BY_DAY;
         placeURI += "&group=" + NHQO.GROUP_BY_HOST; 
         placeURI += "&sort=" + NHQO.SORT_BY_TITLE_ASCENDING;
         break;
       default: /* "day" */
-        /* placeURI += "&group=" + NHQO.GROUP_BY_DAY; */
+        placeURI += "&group=" + NHQO.GROUP_BY_DAY;
         placeURI += "&sort=" + NHQO.SORT_BY_TITLE_ASCENDING;
         break;
     }

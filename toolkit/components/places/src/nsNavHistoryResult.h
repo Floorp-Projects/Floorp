@@ -275,7 +275,8 @@ public:
     return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
             type == nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER);
+            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
   }
   PRBool IsContainer() {
     PRUint32 type;
@@ -287,7 +288,8 @@ public:
     // itself, and is used when recursively updating a query. This currently
     // includes only host containers, but may be extended to support things
     // like days or other criteria. It doesn't include other queries and folders.
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST);
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
   }
   PRBool IsQuerySubcontainer() {
     PRUint32 type;
