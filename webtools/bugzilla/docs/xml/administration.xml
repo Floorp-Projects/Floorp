@@ -82,7 +82,7 @@
 
       <varlistentry>
         <term>
-          maildeliverymethod
+          mail_delivery_method
         </term>
         <listitem>
           <para>

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.133 2006/11/20 19:48:43 lpsolit%gmail.com Exp $ -->
+<!-- $Id: installation.xml,v 1.134 2006/11/21 21:17:01 lpsolit%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -608,8 +608,8 @@
         </para>
 
         <para>
-          For more information, see the "maildeliverymethod" parameter in 
-          <xref linkend="parameters" />.
+          For more information, see the <quote>mail_delivery_method</quote> parameter
+          in <xref linkend="parameters" />.
         </para>
       </note>
     
