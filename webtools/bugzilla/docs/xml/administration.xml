@@ -1214,7 +1214,57 @@
     <!-- XXX We should add a "Uses of Flags" section, here, with examples. -->
 
   </section> <!-- flags -->
-   
+
+  <section id="edit-values">
+    <title>Legal Values</title>
+
+    <para>
+      Since Bugzilla 2.20 RC1, legal values for Operating Systems, platforms,
+      bug priorities and severities can be edited from the User Interface
+      directly. This means that it is no longer required to manually edit
+      <filename>localconfig</filename>. Starting with Bugzilla 2.23.3, you
+      can also customize the list of valid resolutions from the same interface.
+    </para>
+
+    <section id="edit-values-list">
+      <title>Viewing/Editing legal values</title>
+      <para>
+        Editing legal values requires <quote>admin</quote> privileges.
+        A link named <quote>Field Values</quote> is visible in your footer and
+        clicking on it displays the list of fields whose values can be edited.
+      </para>
+      <para>
+	You can add as many legal values as you want, and each value must be
+	unique (on a per field basis). The sortkey is important to display these
+	values in the desired order.
+      </para>
+    </section>
+
+    <section id="edit-values-delete">
+      <title>Deleting legal values</title>
+      <para>
+        You can also delete legal values, but only if the two following conditions
+	are respected:
+      </para>
+
+      <orderedlist>
+        <listitem>
+	  <para>The value is not used by default for the field.</para>
+	</listitem>
+
+	<listitem>
+	  <para>No bug is currently using this value.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>
+        If any of these conditions is not respected, the value cannot be deleted.
+	The only way to delete these values is to reassign bugs to another value
+	and to set another value as default for the field.
+      </para>
+    </section>
+  </section>
+
   <section id="voting">
     <title>Voting</title>
 
