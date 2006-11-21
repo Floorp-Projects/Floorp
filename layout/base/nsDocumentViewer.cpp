@@ -1194,9 +1194,15 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
       // dialogue to 1024 characters.
       PRInt32 len = PR_MIN(event.text.Length(), 1024);
 
-      nsAutoString msg(preMsg + NS_LITERAL_STRING("\n\n") +
-                       StringHead(event.text, len) +
-                       NS_LITERAL_STRING("\n\n") + postMsg);
+      nsAutoString msg;
+      if (len == 0) {
+        msg = preMsg + StringHead(event.text, len) +
+              NS_LITERAL_STRING("\n\n") + postMsg;
+      } else {
+        msg = preMsg + NS_LITERAL_STRING("\n\n") +
+              StringHead(event.text, len) +
+              NS_LITERAL_STRING("\n\n") + postMsg;
+      } 
 
       // This doesn't pass a title, which makes the title be
       // "Confirm", is that ok, or do we want a localizable title for
