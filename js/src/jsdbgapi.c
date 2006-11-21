@@ -542,7 +542,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         }
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
         wp->object = obj;
-        wp->sprop = sprop;
         JS_ASSERT(sprop->setter != js_watch_set);
         wp->setter = sprop->setter;
         wp->nrefs = 1;
@@ -555,6 +554,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
             ok = JS_FALSE;
             goto out;
         }
+        wp->sprop = sprop;
     }
     wp->handler = handler;
     wp->closure = closure;
