@@ -60,6 +60,11 @@
             url:     "tr_show_case.cgi",
             content: {  component_id: comp_id, case_id: [% case.id FILTER none %], action: action },
             load:    function(type, data, evt){ 
+                if (data.ignore == 1){
+                  return;
+                  document.getElementById("addComp").disabled = false;
+                  document.getElementById("deleteComp").disabled = false;
+                }
                 var comps = document.getElementById("components");
                 comps.options.length = 0;
                 for (i in data){
@@ -79,8 +84,8 @@
         document.getElementById("addComp").disabled = true;
         document.getElementById("deleteComp").disabled = true;
         dojo.io.bind({
-            url:   "tr_show_case.cgi",
-            content: {  product_id: product, case_id: [% case.id FILTER none %], action: "getcomps" },
+            url:   "tr_new_plan.cgi",
+            content: {  product_id: product, action: "getcomps" },
             load:  function(type, data, evt){
                      var comps = document.getElementById("comp_pick");
                      comps.options.length = 0;

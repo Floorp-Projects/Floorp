@@ -25,17 +25,7 @@
 
 [% IF case.canedit %]
 <script type="text/javascript">
-    dojo.require("dojo.widget.Editor2");
-   
-    function chgTester(obj) {
-      [% IF Param("useqacontact") AND action == 'Add' %]
-        var components = [% components FILTER none %];
-        document.getElementById('tester').value = components[obj.selectedIndex];
-      [% ELSE %]
-        return;
-      [% END %]
-    }
-    
+    dojo.require("dojo.widget.Editor2");    
 </script>
 [% END %]
 <a name="attributes"></a>
@@ -110,11 +100,25 @@
   </table> 
  </td>
 [% IF action == "Add" %]
-  <td valign="top"><b>Components</b><br/>
-  [% comps = [] %]
-  [% FOREACH c = case.components %]
-    [% comps.push(c.id) %]
-  [% END %]
+
+  <td valign="top">
+    <table>
+      <tr><th align="center">Select Components From</th></tr>
+      <tr>
+      <td>
+      [% PROCESS select sel = { name      => 'prod_pick',
+                                list      => user.get_selectable_products,
+                                default   => case.get_product_ids.0,
+                                events    => 'onChange="getProdComps(this.value)"',
+                                accesskey => 'p' } %]
+      </td>
+    </tr>
+    <tr>
+        <td>
+    [% comps = [] %]
+    [% FOREACH c = case.components %]
+      [% comps.push(c.id) %]
+    [% END %]
   
     [% PROCESS select sel = { name      => 'components',
                               accesskey => 'c', 
@@ -124,12 +128,16 @@
                               deflist   => 1
                               elements  => 7 
                               events    => "onChange=\"chgTester(this)\""} %]
-   </td>
+
+        </td>
+      </tr>
+    </table>
+</td>
 [% END %]
 </tr> 
 </table>
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>
   
 <br><br>
@@ -171,7 +179,7 @@
     </tr>
   </table>      
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>
 
 [%# action, effect %]
@@ -180,26 +188,26 @@
             id="tcsetup" name="tcsetup" dojoType="Editor2" focusOnLoad="false">
 [% case.text.setup FILTER none %]</textarea>     
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>
     <h3>Break Down</h3>
   <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
             id="tcbreakdown" name="tcbreakdown" dojoType="Editor2" focusOnLoad="false">
 [% case.text.breakdown FILTER none %]</textarea>     
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>
   <h3>Action</h3>
   <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
             id="tcaction" name="tcaction" dojoType="Editor2" focusOnLoad="false">
 [% case.text.action FILTER none %]</textarea>     
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>
   <h3>Expected Results</h3>
   <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
             id="tceffect" name="tceffect" dojoType="Editor2" focusOnLoad="false">
 [% case.text.effect FILTER none %]</textarea>     
   <p align="right">
-    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
   </p>

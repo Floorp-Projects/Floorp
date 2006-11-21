@@ -30,6 +30,7 @@ use JSON;
 
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestPlan;
+use Bugzilla::Testopia::Product;
 
 require "globals.pl";
 
@@ -112,6 +113,22 @@ elsif ($action eq 'getversions'){
         @versions = @{$plan->get_product_versions($prod_id)};
     }
     print objToJson(\@versions);
+}
+# For use in new_case and show_case since new_plan does not require an id
+elsif ($action eq 'getcomps'){
+    Bugzilla->login;
+    my $product_id = $cgi->param('product_id');
+
+    detaint_natural($product_id);
+    my $product = Bugzilla::Testopia::Product->new($product_id);
+    
+    my @comps;
+    foreach my $c (@{$product->components}){
+        push @comps, {'id' => $c->id, 'name' => $c->name, 'qa_contact' => $c->default_qa_contact->login};
+    }
+    my $json = new JSON;
+    print $json->objToJson(\@comps);
+    exit;
 }
 ####################
 ### Display Form ###
