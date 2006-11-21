@@ -1360,7 +1360,8 @@ nsAccessibilityService::GetRelevantContentNodeFor(nsIDOMNode *aNode,
     nsIContent *bindingParent;
     nsCOMArray<nsIContent> bindingsStack;
 
-    for (bindingParent = content->GetBindingParent(); bindingParent != nsnull;
+    for (bindingParent = content->GetBindingParent(); bindingParent != nsnull &&
+         bindingParent != bindingParent->GetBindingParent();
          bindingParent = bindingParent->GetBindingParent()) {
       bindingsStack.AppendObject(bindingParent);
     }
