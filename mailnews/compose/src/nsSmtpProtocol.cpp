@@ -1354,7 +1354,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
     rv = nsExplainErrorDetails(m_runningURL,
      (m_responseCode == 452) ? NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED :
     ((m_responseCode == 552) ? NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2 :
-                               NS_ERROR_SENDING_FROM_COMMAND),
+                               NS_ERROR_SENDING_RCPT_COMMAND),
                                m_responseText.get());
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
