@@ -113,11 +113,10 @@
   
   function hrefAndLinkNodeForClickEvent(event)
   {
-    var target = event.target;
     var href = "";
     var linkNode = null;
-
-    var isKeyPress = (event.type == "keypress");
+    var isKeyCommand = (event.type == "command");
+    var target = isKeyCommand ? document.commandDispatcher.focusedElement : event.target;
 
     if ( target instanceof HTMLAnchorElement ||
          target instanceof HTMLAreaElement   ||
@@ -127,7 +126,7 @@
     }
     else if ( target instanceof HTMLInputElement
             && (event.target.type == "text") // text field
-            && !isKeyPress       // not a key event
+            && !isKeyCommand // not a key event
             && event.detail == 2 // double click
             && event.button == 0 // left mouse button
             && event.target.value.length == 0 // no text has been entered
@@ -174,11 +173,11 @@
       return true;
     }
 
-    var isKeyPress = (event.type == "keypress");
+    var isKeyCommand = (event.type == "command");
     var ceParams = hrefAndLinkNodeForClickEvent(event);
     if (ceParams) {
       var href = ceParams.href;
-      if (isKeyPress) {
+      if (isKeyCommand) {
         openNewTabWith(href, true, event.shiftKey);
         event.stopPropagation();
       }
@@ -192,7 +191,7 @@
       return true;
     }
 
-    if (pref && !isKeyPress && event.button == 1 &&
+    if (pref && !isKeyCommand && event.button == 1 &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste(event)) {
         event.stopPropagation();
