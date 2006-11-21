@@ -1154,6 +1154,21 @@ void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer, void* aClosure)
   history->mExpireNowTimer = nsnull;
 }
 
+static PRTime
+NormalizeTimeRelativeToday(PRTime aTime)
+{
+  // round to midnight this morning
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explodedTime);
+
+  // set to midnight (0:00)
+  explodedTime.tm_min =
+    explodedTime.tm_hour =
+    explodedTime.tm_sec =
+    explodedTime.tm_usec = 0;
+
+  return PR_ImplodeTime(&explodedTime);
+}
 
 // nsNavHistory::NormalizeTime
 //
@@ -1173,17 +1188,9 @@ nsNavHistory::NormalizeTime(PRUint32 aRelative, PRTime aOffset)
   {
     case nsINavHistoryQuery::TIME_RELATIVE_EPOCH:
       return aOffset;
-    case nsINavHistoryQuery::TIME_RELATIVE_TODAY: {
-      // round to midnight this morning
-      PRExplodedTime explodedTime;
-      PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &explodedTime);
-      explodedTime.tm_min =
-        explodedTime.tm_hour =
-        explodedTime.tm_sec =
-        explodedTime.tm_usec = 0;
-      ref = PR_ImplodeTime(&explodedTime);
+    case nsINavHistoryQuery::TIME_RELATIVE_TODAY:
+      ref = NormalizeTimeRelativeToday(PR_Now());
       break;
-    }
     case nsINavHistoryQuery::TIME_RELATIVE_NOW:
       ref = PR_Now();
       break;
@@ -1193,7 +1200,6 @@ nsNavHistory::NormalizeTime(PRUint32 aRelative, PRTime aOffset)
   }
   return ref + aOffset;
 }
-
 
 // nsNavHistory::CanLiveUpdateQuery
 //
@@ -3254,6 +3260,9 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
 
   nsresult rv;
   switch (aGroupingMode[0]) {
+    case nsINavHistoryQueryOptions::GROUP_BY_DAY:
+      rv = GroupByDay(aSource, aDest);
+      break;
     case nsINavHistoryQueryOptions::GROUP_BY_HOST:
       rv = GroupByHost(aSource, aDest, PR_FALSE);
       break;
@@ -3284,6 +3293,92 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
   return NS_OK;
 }
 
+// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
+// pass in a pre-normalized now and a date, and we'll find
+// the difference since midnight on each of the days.
+//
+// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
+static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
+static PRInt64
+GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
+{
+  PRTime dateMidnight = NormalizeTimeRelativeToday(aDate);
+  return ((aNormalizedNow - dateMidnight) / USECS_PER_DAY);
+}
+
+// XXX todo
+// we should make "group by date" more flexible and extensible, in order
+// to allow extension developers to write better history sidebars and viewers
+// see bug #359346
+// nsNavHistory::GroupByDay
+nsresult
+nsNavHistory::GroupByDay(const nsCOMArray<nsNavHistoryResultNode>& aSource,
+                         nsCOMArray<nsNavHistoryResultNode>* aDest)
+{
+  // 8 == today, yesterday, 2 ago, 3 ago, 4 ago, 5 ago, 6 ago, older than 6
+  const PRInt32 numDays = 8;
+
+  nsNavHistoryContainerResultNode *dates[numDays];
+  for (PRInt32 i = 0; i < numDays; i++)
+    dates[i] = nsnull;
+
+  nsCAutoString dateNames[numDays];
+  // special case: Today
+  GetStringFromName(NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(),  
+                    dateNames[0]);
+  // special case: Yesterday 
+  GetStringFromName(NS_LITERAL_STRING("finduri-AgeInDays-is-1").get(),  
+                    dateNames[1]);
+  for (PRInt32 curDay = 2; curDay <= numDays-2; curDay++) {
+    // common case:  "<curDay> days ago"
+    GetAgeInDaysString(curDay, NS_LITERAL_STRING("finduri-AgeInDays-is").get(),
+                       dateNames[curDay]);
+  }
+  // special case:  "Older than <numDays-2> days"
+  GetAgeInDaysString(numDays-2, 
+                     NS_LITERAL_STRING("finduri-AgeInDays-isgreater").get(),
+                     dateNames[numDays-1]);
+    
+  PRTime normalizedNow = NormalizeTimeRelativeToday(PR_Now());
+
+  for (PRInt32 i = 0; i < aSource.Count(); i ++) {
+    if (!aSource[i]->IsURI()) {
+      // what do we do with non-URLs? I'll just dump them into the top level
+      aDest->AppendObject(aSource[i]);
+      continue;
+    }
+
+    // get the date from aSource[i]
+    nsCAutoString curDateName;
+    PRInt64 ageInDays = GetAgeInDays(normalizedNow, aSource[i]->mTime);
+    if (ageInDays > (numDays - 1))
+      ageInDays = numDays - 1;
+    curDateName = dateNames[ageInDays];
+
+    if (!dates[ageInDays]) {
+      // need to create an entry for this date
+      dates[ageInDays] = new nsNavHistoryContainerResultNode(EmptyCString(), 
+          curDateName,
+          EmptyCString(),
+          nsNavHistoryResultNode::RESULT_TYPE_DAY,
+          PR_TRUE,
+          EmptyCString());
+
+      if (!dates[ageInDays])
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!dates[ageInDays]->mChildren.AppendObject(aSource[i]))
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (PRInt32 i = 0; i < numDays; i++) {
+    if (dates[i]) {
+      nsresult rv = aDest->AppendObject(dates[i]);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  return NS_OK;
+}
 
 // nsNavHistory::GroupByHost
 //
@@ -3768,15 +3863,34 @@ nsNavHistory::TitleForDomain(const nsCString& domain, nsACString& aTitle)
   }
 
   // use the localized one instead
-  nsXPIDLString value;
-  nsresult rv = mBundle->GetStringFromName(
-      NS_LITERAL_STRING("localhost").get(), getter_Copies(value));
-  if (NS_SUCCEEDED(rv))
-    CopyUTF16toUTF8(value, aTitle);
-  else
-    aTitle.Truncate(0);
+  GetStringFromName(NS_LITERAL_STRING("localhost").get(), aTitle);
 }
 
+void
+nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, nsACString& aResult)
+{
+  nsAutoString intString;
+  intString.AppendInt(aInt);
+  const PRUnichar* strings[1] = { intString.get() };
+  nsXPIDLString value;
+  nsresult rv = mBundle->FormatStringFromName(aName, strings, 
+                                              1, getter_Copies(value));
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(value, aResult);
+  else
+    aResult.Truncate(0);
+}
+
+void
+nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
+{
+  nsXPIDLString value;
+  nsresult rv = mBundle->GetStringFromName(aName, getter_Copies(value));
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(value, aResult);
+  else
+    aResult.Truncate(0);
+}
 
 // nsNavHistory::SetPageTitleInternal
 //

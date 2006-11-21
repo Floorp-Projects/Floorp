@@ -445,6 +445,9 @@ nsNavHistoryContainerResultNode::FillStats()
       container->FillStats();
     }
     mAccessCount += node->mAccessCount;
+    // this is how container nodes get sorted by date
+    // (of type nsINavHistoryResultNode::RESULT_TYPE_DAY, for example)
+    // The container gets the most recent time of the child nodes.
     if (node->mTime > mTime)
       mTime = node->mTime;
   }
@@ -696,6 +699,18 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
 
   if (aType != bType) {
     return bType - aType;
+  }
+
+  if (aType == nsINavHistoryResultNode::RESULT_TYPE_DAY) {
+    // for the history sidebar, when we do "View | By Date" or 
+    // "View | By Date and Site" we sort by SORT_BY_TITLE_ASCENDING.
+    //
+    // so to make the day container show up in the desired order
+    // we need to compare by time, instead of by title.
+    //
+    // hard coding this isn't ideal, but we can't currently have
+    // one sort per grouping.  see bug #359332 on that issue.
+    return -ComparePRTime(a->mTime, b->mTime);
   }
 
   nsICollation* collation = NS_STATIC_CAST(nsICollation*, closure);
@@ -1983,10 +1998,10 @@ nsNavHistoryQueryResultNode::GetSortType()
   } else if (mResult) {
     return mResult->mSortingMode;
   }
+
   NS_NOTREACHED("We should always have a result");
   return nsINavHistoryQueryOptions::SORT_BY_NONE;
 }
-
 
 // nsNavHistoryResultNode::OnBeginUpdateBatch
 
@@ -3864,10 +3879,14 @@ nsNavHistoryResultTreeViewer::ComputeShowSessions()
       mResult->mSortingMode != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
     return; // not date sorting
 
+  // showing sessions only makes sense if we are grouping by date
+  // any other grouping (or recursive grouping) doesn't make sense
   PRUint32 groupCount;
-  options->GroupingMode(&groupCount);
-  if (groupCount > 0)
-    return;
+  const PRUint32* groupings = options->GroupingMode(&groupCount);
+  for (PRUint32 i = 0; i < groupCount; i ++) {
+    if (groupings[i] != nsINavHistoryQueryOptions::GROUP_BY_DAY)
+      return; // non-time-based grouping
+  }
 
   mShowSessions = PR_TRUE;
 }

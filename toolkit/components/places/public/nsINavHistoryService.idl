@@ -83,6 +83,7 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_QUERY = 5;            // nsINavHistoryQueryResultNode
   const PRUint32 RESULT_TYPE_FOLDER = 6;           // nsINavHistoryFolderResultNode
   const PRUint32 RESULT_TYPE_SEPARATOR = 7;        // nsINavHistoryResultNode
+  const PRUint32 RESULT_TYPE_DAY = 8;              // nsINavHistoryContainerResultNode
   readonly attribute PRUint32 type;
 
   /**
@@ -934,6 +935,13 @@ interface nsINavHistoryQuery : nsISupports
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
+   * Grouping by day. The results will be an array of nsINavHistoryResults with
+   * type = RESULT_TYPE_DAY, one for each day where there are results. These
+   * will have children of corresponding to the search results of that day.
+   */
+  const PRUint32 GROUP_BY_DAY = 0;
+
+  /**
    * Groping by exact host. The results will be an array of nsINavHistoryResults
    * with type = RESULT_TYPE_HOST, one for each unique host (for example,
    * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
@@ -1003,8 +1011,11 @@ interface nsINavHistoryQueryOptions : nsISupports
   /**
    * The grouping mode to be used for this query.
    * Grouping mode is an array of GROUP_BY_* values that specifies the
-   * structure of the tree you want. If you don't want grouping, you can
-   * specify an empty array.
+   * structure of the tree you want.  For example, an array consisting of
+   * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
+   * a list of days, and whose second level is a list of domains, and whose
+   * third level is a list of pages in those domains.
+   * If you don't want grouping, you can specify an empty array.
    */
   void getGroupingMode(out PRUint32 groupCount,
                        [retval,array,size_is(groupCount)] out PRUint32 groupingMode);
