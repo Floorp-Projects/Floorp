@@ -2643,6 +2643,12 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
 {
   *aReturn = nsnull;
 
+  // Make sure the substring "--" is not present in aData.  Otherwise
+  // we'll create a document that can't be serialized.
+  if (FindInReadable(NS_LITERAL_STRING("--"), aData)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
   nsCOMPtr<nsIContent> comment;
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
 
@@ -2663,11 +2669,7 @@ nsDocument::CreateCDATASection(const nsAString& aData,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsReadingIterator<PRUnichar> begin;
-  nsReadingIterator<PRUnichar> end;
-  aData.BeginReading(begin);
-  aData.EndReading(end);
-  if (FindInReadable(NS_LITERAL_STRING("]]>"),begin,end))
+  if (FindInReadable(NS_LITERAL_STRING("]]>"), aData))
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
 
   nsCOMPtr<nsIContent> content;
@@ -2693,6 +2695,10 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
 
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (FindInReadable(NS_LITERAL_STRING("?>"), aData)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
 
   nsCOMPtr<nsIContent> content;
   rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content),
