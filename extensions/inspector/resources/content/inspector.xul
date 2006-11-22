@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,8 +40,6 @@
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
-
-<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 
 <?xul-overlay href="chrome://inspector/content/inspectorOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/toolboxOverlay.xul"?>
