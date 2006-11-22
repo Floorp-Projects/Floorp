@@ -208,7 +208,7 @@ $LocaleProduct = "calendar";
 $shiptalkback  = 1;
 #$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 #$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
-$build_hour    = "6";
+$build_hour    = "3";
 $package_creation_path = "/calendar/installer";
 # needs setting for mac + talkback:
 $mac_bundle_path = "/calendar/sunbird/app";
