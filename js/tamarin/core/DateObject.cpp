@@ -35,7 +35,7 @@
 namespace avmplus
 {
 
-	Stringp DateObject::toString(int index)
+	Stringp DateObject::dateToString(int index)
 	{
 		wchar buffer[256];
 		int len;
@@ -56,7 +56,7 @@ namespace avmplus
 
 	double DateObject::get(int index)
 	{
-		return date.getProperty(index);
+		return date.getDateProperty(index);
 	}
 
 	double DateObject::set(int index, Atom *argv, int argc)

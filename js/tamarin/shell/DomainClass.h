@@ -41,7 +41,7 @@ namespace avmshell
 		DomainObject(VTable *vtable, ScriptObject *delegate);
 		~DomainObject();
 
-		void construct(DomainObject *base);
+		void constructFromDomain(DomainObject *base);
 		Atom loadBytes(ByteArrayObject *bytes);
 		ClassClosure* getClass(Stringp name);
 		

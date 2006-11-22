@@ -74,7 +74,7 @@ namespace avmplus
 		NATIVE_METHOD(XML_AS3_parent, XMLObject::parent)
 		NATIVE_METHOD(XML_AS3_processingInstructions, XMLObject::processingInstructions)
 		NATIVE_METHOD(XML_AS3_prependChild, XMLObject::prependChild)
-		NATIVE_METHOD(XML_AS3_propertyIsEnumerable, XMLObject::propertyIsEnumerable)
+		NATIVE_METHOD(XML_AS3_propertyIsEnumerable, XMLObject::xmlPropertyIsEnumerable)
 		NATIVE_METHOD(XML_AS3_removeNamespace, XMLObject::removeNamespace)
 		NATIVE_METHOD(XML_AS3_replace, XMLObject::replace)
 		NATIVE_METHOD(XML_AS3_setChildren, XMLObject::setChildren)

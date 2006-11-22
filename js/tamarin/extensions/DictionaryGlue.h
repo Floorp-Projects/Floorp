@@ -40,15 +40,15 @@ namespace avmplus
 	public:
 		DictionaryObject(VTable *vtable, ScriptObject *delegate);
 		~DictionaryObject();
-		void construct(bool weakKeys);
+		void constructDictionary(bool weakKeys);
 	
 		virtual Hashtable* getTable() const { return table; }
 	
 		// multiname and Stringp forms fall through to ScriptObject
-		virtual Atom getProperty(Atom name) const;
-		virtual bool hasProperty(Atom name) const;
-		virtual bool deleteProperty(Atom name);
-		virtual void setProperty(Atom name, Atom value);
+		virtual Atom getAtomProperty(Atom name) const;
+		virtual bool hasAtomProperty(Atom name) const;
+		virtual bool deleteAtomProperty(Atom name);
+		virtual void setAtomProperty(Atom name, Atom value);
 
 		virtual Atom nextName(int index);
 		virtual int nextNameIndex(int index);

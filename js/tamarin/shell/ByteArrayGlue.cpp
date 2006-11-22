@@ -274,7 +274,7 @@ namespace avmshell
 		m_byteArray[i] = (U8)(core()->integer(value));
 	}
 	
-	Atom ByteArrayObject::getProperty(Atom name) const
+	Atom ByteArrayObject::getAtomProperty(Atom name) const
 	{
 		AvmCore *core = this->core();
 		uint32 index;
@@ -286,10 +286,10 @@ namespace avmshell
 			}
 		}
 
-		return ScriptObject::getProperty(name);
+		return ScriptObject::getAtomProperty(name);
 	}
 	
-	void ByteArrayObject::setProperty(Atom name, Atom value)
+	void ByteArrayObject::setAtomProperty(Atom name, Atom value)
 	{
 		AvmCore *core = this->core();
 		uint32 index;
@@ -297,13 +297,13 @@ namespace avmshell
 			int intValue = core->integer(value);
 			m_byteArray[index] = (U8)(intValue);
 		} else {
-			ScriptObject::setProperty(name, value);
+			ScriptObject::setAtomProperty(name, value);
 		}
 	}
 	
-	bool ByteArrayObject::hasProperty(Atom name) const
+	bool ByteArrayObject::hasAtomProperty(Atom name) const
 	{
-		return ScriptObject::hasProperty(name) || getProperty(name) != undefinedAtom;
+		return ScriptObject::hasAtomProperty(name) || getAtomProperty(name) != undefinedAtom;
 	}
 
 	void ByteArrayObject::setLength(uint32 newLength)

@@ -302,10 +302,10 @@ namespace avmplus
     }
 
 // for property assignment
-//	void ScriptObject::setProperty(Multiname* name, Atom value)
+//	void ScriptObject::setMultinameProperty(Multiname* name, Atom value)
 
 // get property 
-	Atom JObject::getProperty(Atom name) const
+	Atom JObject::getAtomProperty(Atom name) const
 	{
 		Java*	vm = jclass->jvm();
 		JNIEnv* jni = vm->jni;
@@ -375,7 +375,7 @@ namespace avmplus
 		return a;
 	}
 
-	bool JObject::hasProperty(Multiname* multi) const
+	bool JObject::hasMultinameProperty(Multiname* multi) const
 	{
 		String* nm = multi->getName();
 		bool has = jclass->hasField( (JObject*)this, nm);
@@ -383,7 +383,7 @@ namespace avmplus
 		return has;
 	}
 
-	void JObject::setProperty(Multiname* multi, Atom value)
+	void JObject::setMultinameProperty(Multiname* multi, Atom value)
 	{
 		Java*	vm = jclass->jvm();
 		JNIEnv* jni = vm->jni;

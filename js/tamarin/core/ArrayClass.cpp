@@ -648,7 +648,7 @@ namespace avmplus
 
 				}
 
-				// getProperty() returns undefined when that's the value of the property.
+				// getAtomProperty() returns undefined when that's the value of the property.
 				// It also returns undefined when the object does not have the property.
 				// 
 				// SortCompare() from ECMA 262 distinguishes these two cases. The end
@@ -1063,7 +1063,7 @@ namespace avmplus
 				// ECMA 262 : Section 15.4.4.11 lists the rules.
 				// There is a difference between the object has a property
 				// with value undefined, and it does not have the property,
-				// for which getProperty() returns undefined.
+				// for which getAtomProperty() returns undefined.
 
 				// def_x implies has_x
 				// def_y implies has_y
@@ -1073,8 +1073,8 @@ namespace avmplus
 				} else if (def_x) {
 					result = -1;
 				} else {
-					bool has_x = (toplevel->getBinding(obj_j->vtable->traits, &mname) != BIND_NONE) || obj_j->hasProperty(name);
-					bool has_y = (toplevel->getBinding(obj_k->vtable->traits, &mname) != BIND_NONE) || obj_k->hasProperty(name);
+					bool has_x = (toplevel->getBinding(obj_j->vtable->traits, &mname) != BIND_NONE) || obj_j->hasStringProperty(name);
+					bool has_y = (toplevel->getBinding(obj_k->vtable->traits, &mname) != BIND_NONE) || obj_k->hasStringProperty(name);
 
 					if (!has_x && has_y) {
 						result = 1;

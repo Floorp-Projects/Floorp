@@ -154,7 +154,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release Debugger|Win32"
+			Name="Release_Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="4"
@@ -220,7 +220,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug Debugger|Win32"
+			Name="Debug_Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="4"

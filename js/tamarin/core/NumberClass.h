@@ -58,7 +58,8 @@ namespace avmplus
 		}
 
 		Stringp convert(double n, int precision, int mode);
-		Stringp toString(double n, int radix);
+		// renamed to avoid hiding ScriptObject::toString
+		Stringp numberToString(double n, int radix);
 		
 		DECLARE_NATIVE_MAP(NumberClass)
     };

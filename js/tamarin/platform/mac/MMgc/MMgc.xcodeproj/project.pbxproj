@@ -319,6 +319,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
@@ -351,6 +352,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
@@ -372,7 +374,7 @@
 			};
 			name = Release;
 		};
-		8E8B52F709AABCC40057BEE4 /* Debug Debugger */ = {
+		8E8B52F709AABCC40057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH)";
@@ -403,9 +405,9 @@
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 				ZERO_LINK = NO;
 			};
-			name = "Debug Debugger";
+			name = Debug_Debugger;
 		};
-		8E8B52F809AABCC40057BEE4 /* Release Debugger */ = {
+		8E8B52F809AABCC40057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = (
@@ -437,9 +439,9 @@
 				PRODUCT_NAME = MMgc;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../codegen ../../../core";
 			};
-			name = "Release Debugger";
+			name = Release_Debugger;
 		};
-		8E8B52F909AABCC40057BEE4 /* Debug Debugger */ = {
+		8E8B52F909AABCC40057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
@@ -451,6 +453,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
@@ -469,9 +472,9 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Debug Debugger";
+			name = Debug_Debugger;
 		};
-		8E8B52FA09AABCC40057BEE4 /* Release Debugger */ = {
+		8E8B52FA09AABCC40057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
@@ -483,6 +486,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
 				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
@@ -502,7 +506,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Release Debugger";
+			name = Release_Debugger;
 		};
 /* End XCBuildConfiguration section */
 
@@ -511,9 +515,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,
-				8E8B52F709AABCC40057BEE4 /* Debug Debugger */,
+				8E8B52F709AABCC40057BEE4 /* Debug_Debugger */,
 				1DEB91ED08733DB70010E9CD /* Release */,
-				8E8B52F809AABCC40057BEE4 /* Release Debugger */,
+				8E8B52F809AABCC40057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -522,9 +526,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91F008733DB70010E9CD /* Debug */,
-				8E8B52F909AABCC40057BEE4 /* Debug Debugger */,
+				8E8B52F909AABCC40057BEE4 /* Debug_Debugger */,
 				1DEB91F108733DB70010E9CD /* Release */,
-				8E8B52FA09AABCC40057BEE4 /* Release Debugger */,
+				8E8B52FA09AABCC40057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

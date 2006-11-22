@@ -177,7 +177,7 @@ namespace avmshell
 		minstack = sp-kMaxAvmPlusStack;
 	}
 	
-	void alarmProc(int signum)
+	void alarmProc(int /*signum*/)
 	{
 		shell->interrupted = true;
 	}

@@ -37,7 +37,7 @@ namespace avmplus
 	BEGIN_NATIVE_MAP(DateClass)
 		NATIVE_METHOD(Date_parse,   DateClass::parse)
 		NATIVE_METHOD(Date_UTC,     DateClass::UTC)
-		NATIVE_METHOD(Date_private__toString, DateObject::toString)
+		NATIVE_METHOD(Date_private__toString, DateObject::dateToString)
 		NATIVE_METHOD(Date_AS3_valueOf, DateObject::valueOf)
 		NATIVE_METHOD(Date_private__setTime, DateObject::setTime)
 		NATIVE_METHOD(Date_private__get, DateObject::get)

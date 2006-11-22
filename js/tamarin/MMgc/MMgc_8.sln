@@ -4,18 +4,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MMgc", "MMgc_8.vcproj", "{B
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug Debugger|Win32 = Debug Debugger|Win32
+		Debug_Debugger|Win32 = Debug_Debugger|Win32
 		Debug|Win32 = Debug|Win32
-		Release Debugger|Win32 = Release Debugger|Win32
+		Release_Debugger|Win32 = Release_Debugger|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger|Win32.ActiveCfg = Debug Debugger|Win32
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug Debugger|Win32.Build.0 = Debug Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug_Debugger|Win32.ActiveCfg = Debug_Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug_Debugger|Win32.Build.0 = Debug_Debugger|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Debug|Win32.Build.0 = Debug|Win32
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger|Win32.ActiveCfg = Release Debugger|Win32
-		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release Debugger|Win32.Build.0 = Release Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release_Debugger|Win32.ActiveCfg = Release_Debugger|Win32
+		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release_Debugger|Win32.Build.0 = Release_Debugger|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.ActiveCfg = Release|Win32
 		{B004A8CC-B3A9-4600-A1A9-EF1BBCF2434B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

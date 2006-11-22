@@ -63,10 +63,10 @@ namespace avmplus
 
 		// sec 11.2.2.1 CallMethod(r,args)
 
-		Atom f = getDelegate()->getProperty(multiname);
+		Atom f = getDelegate()->getMultinameProperty(multiname);
 		if (f == undefinedAtom)
 		{
-			f = getProperty(multiname);
+			f = getMultinameProperty(multiname);
 			// If our method returned is a 0 element XMLList, it means that we did not
 			// find a matching property for this method name.  In this case, if our XMLList
 			// has one child, we get the child and callproperty on the child object.
@@ -84,7 +84,7 @@ namespace avmplus
 		return toplevel()->op_call(f, argc, argv);
 	}
 
-	Atom XMLListObject::getProperty(Multiname* m) const
+	Atom XMLListObject::getMultinameProperty(Multiname* m) const
 	{
 		AvmCore *core = this->core();
 		Toplevel* toplevel = this->toplevel();
@@ -110,7 +110,7 @@ namespace avmplus
 			if (xml && xml->getClass() == E4XNode::kElement)
 			{
 				// step 3ai
-				Atom gq = xml->getProperty (m);
+				Atom gq = xml->getMultinameProperty(m);
 				if (core->atomToXML (gq))
 				{
 					XMLObject *x = core->atomToXMLObject (gq);
@@ -131,7 +131,7 @@ namespace avmplus
 		return l->atom();
 	}
 
-	void XMLListObject::setProperty(Multiname* m, Atom V)
+	void XMLListObject::setMultinameProperty(Multiname* m, Atom V)
 	{
 		AvmCore *core = this->core();
 		Toplevel *toplevel = this->toplevel();
@@ -162,7 +162,7 @@ namespace avmplus
 			}
 
 			XMLObject *x = _getAt (0);
-			x->setProperty (m, V);		
+			x->setMultinameProperty(m, V);		
 		}
 		else if (_length() > 1)
 		{
@@ -180,7 +180,7 @@ namespace avmplus
 		return;
 	}
 
-	bool XMLListObject::deleteProperty(Multiname* m)
+	bool XMLListObject::deleteMultinameProperty(Multiname* m)
 	{
 		if (!m->isAnyName() && !m->isAttr())
 		{
@@ -197,7 +197,7 @@ namespace avmplus
 			XMLObject *xm = _getAt(i);
 			if (xm->getClass() == E4XNode::kElement)
 			{
-				xm->deleteProperty (m);
+				xm->deleteMultinameProperty(m);
 			}
 		}
 
@@ -227,19 +227,19 @@ namespace avmplus
 	}
 
    	// E4X 9.2.1.1, page 21
-	Atom XMLListObject::getProperty(Atom P) const
+	Atom XMLListObject::getAtomProperty(Atom P) const
 	{
 		Multiname m;
 		toplevel()->ToXMLName (P, m);
-		return getProperty (&m);
+		return getMultinameProperty(&m);
 	}
 
 	// E4X 9.2.1.2, pg 21 - [[PUT]]
-	void XMLListObject::setProperty(Atom P, Atom V)
+	void XMLListObject::setAtomProperty(Atom P, Atom V)
 	{
 		Multiname m;
 		toplevel()->ToXMLName (P, m);
-		setProperty (&m, V);
+		setMultinameProperty(&m, V);
 	}
 
 	Atom XMLListObject::getUintProperty(uint32 index) const
@@ -300,7 +300,7 @@ namespace avmplus
 			// step 2 c iii
 			if (m_targetProperty.isAttr())
 			{
-				Atom attributesExist = rx->getProperty (m_targetProperty);
+				Atom attributesExist = rx->getMultinameProperty(m_targetProperty);
 				if (core->isXMLList (attributesExist) && (core->atomToXMLList (attributesExist)->_length() > 0))
 					return;
 
@@ -389,8 +389,8 @@ namespace avmplus
 			XMLObject *parent = xi->getParent();
 			Multiname mxi;
 			xi->getQName (&mxi);
-			parent->setProperty (&mxi, V);
-			Atom attr = parent->getProperty (&mxi);
+			parent->setMultinameProperty(&mxi, V);
+			Atom attr = parent->getMultinameProperty(&mxi);
 			XMLListObject *attrx = core->atomToXMLList (attr);
 			// x[i] = attr[0]; 
 			m_children.setAt (i, attrx->_getAt(0) ->atom());
@@ -511,7 +511,7 @@ namespace avmplus
 		// step 2h
 		else
 		{
-			_getAt(i)->setProperty (core->kAsterisk, V);
+			_getAt(i)->setStringProperty(core->kAsterisk, V);
 		}
 	}
 
@@ -531,7 +531,7 @@ namespace avmplus
 				{
 					Multiname mx;
 					xi->getQName (&mx);
-					px->deleteProperty (&mx);
+					px->deleteMultinameProperty(&mx);
 				}
 				else
 				{
@@ -558,11 +558,11 @@ namespace avmplus
 	}
 
 	// E4X 9.2.1.3, pg 23
-	bool XMLListObject::deleteProperty (Atom P)
+	bool XMLListObject::deleteAtomProperty(Atom P)
 	{
 		Multiname m;
 		toplevel()->ToXMLName (P, m);
-		return deleteProperty (&m);
+		return deleteMultinameProperty(&m);
 	}
 
 	bool XMLListObject::hasUintProperty(uint32 index) const
@@ -570,7 +570,7 @@ namespace avmplus
 		return (index < _length());
 	}
 
-	bool XMLListObject::hasProperty(Multiname* m) const
+	bool XMLListObject::hasMultinameProperty(Multiname* m) const
 	{
 		if (!m->isAnyName() && !m->isAttr())
 		{
@@ -587,7 +587,7 @@ namespace avmplus
 			XMLObject *xm = _getAt(i);
 			if (xm->getClass() == E4XNode::kElement)
 			{
-				if (xm->hasProperty (m))
+				if (xm->hasMultinameProperty(m))
 					return true;
 			}
 		}
@@ -596,11 +596,11 @@ namespace avmplus
 	}
 
 	// E4X 9.2.1.5, pg 24
-	bool XMLListObject::hasProperty (Atom P) const
+	bool XMLListObject::hasAtomProperty(Atom P) const
 	{
 		Multiname m;
 		toplevel()->ToXMLName (P, m);
-		return hasProperty (&m);
+		return hasMultinameProperty(&m);
 	}
 
 	void XMLListObject::_append(E4XNode *v)
@@ -744,11 +744,11 @@ namespace avmplus
 		XMLListObject *target = 0;
 		if (core->isXML(base))
 		{
-			target = core->atomToXMLList(core->atomToXMLObject(base)->getProperty (m_targetProperty));
+			target = core->atomToXMLList(core->atomToXMLObject(base)->getMultinameProperty(m_targetProperty));
 		}
 		else if (core->isXMLList(base))
 		{
-			target = core->atomToXMLList(core->atomToXMLList(base)->getProperty (m_targetProperty));
+			target = core->atomToXMLList(core->atomToXMLList(base)->getMultinameProperty(m_targetProperty));
 		}
 		else
 		{
@@ -768,13 +768,13 @@ namespace avmplus
 
 			if (core->isXML(base))
 			{
-				core->atomToXMLObject(base)->setProperty (m_targetProperty, core->kEmptyString->atom());
-				return core->atomToXMLObject(base)->getProperty (m_targetProperty);
+				core->atomToXMLObject(base)->setMultinameProperty(m_targetProperty, core->kEmptyString->atom());
+				return core->atomToXMLObject(base)->getMultinameProperty(m_targetProperty);
 			}
 			else if (core->isXMLList(base))
 			{
-				core->atomToXMLList(base)->setProperty (m_targetProperty, core->kEmptyString->atom());
-				return core->atomToXMLList(base)->getProperty (m_targetProperty);
+				core->atomToXMLList(base)->setMultinameProperty(m_targetProperty, core->kEmptyString->atom());
+				return core->atomToXMLList(base)->getMultinameProperty(m_targetProperty);
 			}
 			else
 			{
@@ -873,13 +873,13 @@ namespace avmplus
 		// name= ToAttributeName (attributeName);
 		// return [[get]](name)
 
-		return core()->atomToXMLList (getProperty (toplevel()->ToAttributeName (arg)->atom()));
+		return core()->atomToXMLList(getAtomProperty(toplevel()->ToAttributeName(arg)->atom()));
 	}
 
 	// E4X 13.5.4.3, pg 88
 	XMLListObject *XMLListObject::attributes ()
 	{
-		return core()->atomToXMLList (getProperty (toplevel()->ToAttributeName(core()->kAsterisk)->atom()));
+		return core()->atomToXMLList(getAtomProperty(toplevel()->ToAttributeName(core()->kAsterisk)->atom()));
 	}
 
 	// E4X 13.5.4.4, pg 88
@@ -904,7 +904,7 @@ namespace avmplus
 
 	XMLListObject *XMLListObject::children ()
 	{
-		return core()->atomToXMLList (getProperty (core()->kAsterisk));
+		return core()->atomToXMLList(getStringProperty(core()->kAsterisk));
 	}
 
 	XMLListObject *XMLListObject::comments ()
@@ -977,7 +977,7 @@ namespace avmplus
 	// E4X 13.5.4.11, pg 90
 	bool XMLListObject::hasOwnProperty (Atom P)
 	{
-		if (hasProperty (P))
+		if (hasAtomProperty(P))
 			return true;
 
 		// If x has a property with name ToString(P), return true;
@@ -1067,11 +1067,11 @@ namespace avmplus
 				while (((i + 1) < _length()) && ((_getAt(i + 1)->getNode()->getClass() & (E4XNode::kText | E4XNode::kCDATA))))
 				{
 					x->setValue (core->concatStrings(x->getNode()->getValue(), _getAt(i + 1)->getNode()->getValue()));
-					deleteProperty (core->intToAtom (i + 1));
+					deleteAtomProperty(core->intToAtom(i + 1));
 				}
 				if (x->getValue()->length() == 0)
 				{
-					deleteProperty (core->intToAtom (i));
+					deleteAtomProperty(core->intToAtom(i));
 				}
 				else
 				{
@@ -1127,7 +1127,7 @@ namespace avmplus
 		return m;
 	}
 
-	bool XMLListObject::propertyIsEnumerable (Atom P)
+	bool XMLListObject::xmlListPropertyIsEnumerable(Atom P) // NOT virtual, NOT an override
 	{
 		AvmCore *core = this->core();
 		double index = core->number(P);

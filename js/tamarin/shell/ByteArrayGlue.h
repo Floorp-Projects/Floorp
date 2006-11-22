@@ -93,9 +93,9 @@ namespace avmshell
 		uint32 getLength() { return m_byteArray.GetLength(); }
 		void setLength(uint32 newLength);
 
-		virtual bool hasProperty(Atom name) const;
-		virtual void setProperty(Atom name, Atom value);
-		virtual Atom getProperty(Atom name) const;
+		virtual bool hasAtomProperty(Atom name) const;
+		virtual void setAtomProperty(Atom name, Atom value);
+		virtual Atom getAtomProperty(Atom name) const;
 		virtual Atom getUintProperty(uint32 i) const;
 		virtual void setUintProperty(uint32 i, Atom value);
 

@@ -50,7 +50,7 @@ namespace avmshell
 	{
 	}
 
-	void DomainObject::construct(DomainObject *parentDomain)
+	void DomainObject::constructFromDomain(DomainObject *parentDomain)
 	{
 		Shell *core = (Shell*) this->core();
 

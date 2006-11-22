@@ -61,8 +61,8 @@ namespace avmplus
 
 		int dontEnumMask() const { return hasDontEnumSupport() ? kDontEnumBit : 0; }
 		
-		bool propertyIsEnumerable(Atom name) const;
-		void setPropertyIsEnumerable(Atom name, bool enumerable);
+		bool getAtomPropertyIsEnumerable(Atom name) const;
+		void setAtomPropertyIsEnumerable(Atom name, bool enumerable);
 
 		// kDontEnumBit is or'd into atoms to indicate that the property is {DontEnum}
 		enum

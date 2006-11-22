@@ -35,11 +35,11 @@
 namespace avmplus
 {
 	BEGIN_NATIVE_MAP(ObjectClass)
-		NATIVE_METHOD(Object_private__hasOwnProperty, ObjectClass::hasOwnProperty)
-		NATIVE_METHOD(Object_private__propertyIsEnumerable, ObjectClass::propertyIsEnumerable)		
-		NATIVE_METHOD(Object_protected__setPropertyIsEnumerable, ObjectClass::setPropertyIsEnumerable)		
-		NATIVE_METHOD(Object_private__isPrototypeOf, ObjectClass::isPrototypeOf)
-		NATIVE_METHOD(Object_private__toString, ObjectClass::toString)
+		NATIVE_METHOD(Object_private__hasOwnProperty, ObjectClass::objectHasOwnProperty)
+		NATIVE_METHOD(Object_private__propertyIsEnumerable, ObjectClass::objectPropertyIsEnumerable)		
+		NATIVE_METHOD(Object_protected__setPropertyIsEnumerable, ObjectClass::objectSetPropertyIsEnumerable)		
+		NATIVE_METHOD(Object_private__isPrototypeOf, ObjectClass::objectIsPrototypeOf)
+		NATIVE_METHOD(Object_private__toString, ObjectClass::objectToString)
 	END_NATIVE_MAP()
 
 	ObjectClass::ObjectClass(VTable* cvtable)
@@ -110,7 +110,7 @@ namespace avmplus
 		4. Return true.
 		NOTE Unlike [[HasProperty]] (section 8.6.2.4), this method does not consider objects in the prototype chain.
      */
-	bool ObjectClass::hasOwnProperty(Atom thisAtom, Stringp name)
+	bool ObjectClass::objectHasOwnProperty(Atom thisAtom, Stringp name)
 	{
 		AvmCore* core = this->core();
 		name = name ? core->internString(name) : (Stringp)core->knull;
@@ -122,7 +122,7 @@ namespace avmplus
 			// ISSUE should this look in traits and dynamic vars, or just dynamic vars.
 			ScriptObject* obj = AvmCore::atomToScriptObject(thisAtom);
 			return obj->traits()->findBinding(name, core->publicNamespace) != BIND_NONE ||
-					 obj->hasProperty(name);
+					 obj->hasStringProperty(name);
 		}
 		case kNamespaceType:
 		case kStringType:
@@ -135,7 +135,7 @@ namespace avmplus
 		}
 	}
 
-	bool ObjectClass::propertyIsEnumerable(Atom thisAtom, Stringp name)
+	bool ObjectClass::objectPropertyIsEnumerable(Atom thisAtom, Stringp name)
 	{
 		AvmCore* core = this->core();
 		name = name ? core->internString(name) : (Stringp)core->knull;
@@ -143,7 +143,7 @@ namespace avmplus
 		if ((thisAtom&7) == kObjectType)
 		{
 			ScriptObject* obj = AvmCore::atomToScriptObject(thisAtom);
-			return obj->propertyIsEnumerable(name);
+			return obj->getStringPropertyIsEnumerable(name);
 		}
 		else if ((thisAtom&7) == kNamespaceType)
 		{
@@ -158,7 +158,7 @@ namespace avmplus
 		}
 	}
 
-	void ObjectClass::setPropertyIsEnumerable(Atom thisAtom, Stringp name, bool enumerable)
+	void ObjectClass::objectSetPropertyIsEnumerable(Atom thisAtom, Stringp name, bool enumerable)
 	{
 		AvmCore* core = this->core();
 		name = name ? core->internString(name) : (Stringp)core->knull;
@@ -166,7 +166,7 @@ namespace avmplus
 		if ((thisAtom&7) == kObjectType)
 		{
 			ScriptObject* obj = AvmCore::atomToScriptObject(thisAtom);
-			obj->setPropertyIsEnumerable(name, enumerable);
+			obj->setStringPropertyIsEnumerable(name, enumerable);
 		}
 		else
 		{
@@ -186,7 +186,7 @@ namespace avmplus
 		5. If O and V refer to the same object or if they refer to objects joined to each other (section 13.1.2), return true.
 		6. Go to step 3.     
 	*/
-	bool ObjectClass::isPrototypeOf(Atom thisAtom, Atom V)
+	bool ObjectClass::objectIsPrototypeOf(Atom thisAtom, Atom V)
 	{
 		// ECMA-262 Section 15.2.4.6
 		if (AvmCore::isNullOrUndefined(V))
@@ -204,7 +204,7 @@ namespace avmplus
 	/**
      * Object.prototype.toString()
      */
-	Stringp ObjectClass::toString(Atom thisAtom)
+	Stringp ObjectClass::objectToString(Atom thisAtom)
 	{		
 		AvmCore* core = this->core();
 

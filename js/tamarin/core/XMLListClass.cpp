@@ -52,7 +52,7 @@ namespace avmplus
 		NATIVE_METHOD(XMLList_AS3_normalize, XMLListObject::normalize)
 		NATIVE_METHOD(XMLList_AS3_parent, XMLListObject::parent)
 		NATIVE_METHOD(XMLList_AS3_processingInstructions, XMLListObject::processingInstructions)
-		NATIVE_METHOD(XMLList_AS3_propertyIsEnumerable, XMLListObject::propertyIsEnumerable)
+		NATIVE_METHOD(XMLList_AS3_propertyIsEnumerable, XMLListObject::xmlListPropertyIsEnumerable)
 		NATIVE_METHOD(XMLList_AS3_text, XMLListObject::text)
 		NATIVE_METHOD(XMLList_AS3_toString, XMLListObject::toStringMethod)
 		NATIVE_METHOD(XMLList_AS3_toXMLString, XMLListObject::toXMLString)

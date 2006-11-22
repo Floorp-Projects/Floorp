@@ -102,10 +102,10 @@ namespace avmplus
 
 		ScriptObject* createInstance(VTable *ivtable, ScriptObject *prototype);
 
-		Atom getProperty(Atom name) const;
-		bool hasProperty(Multiname* multi) const;
+		Atom getAtomProperty(Atom name) const;
+		bool hasMultinameProperty(Multiname* multi) const;
 		Atom callProperty(Multiname* multiname, int argc, Atom* argv);
-		void setProperty(Multiname* name, Atom value);
+		void setMultinameProperty(Multiname* name, Atom value);
 
 		// internal 
 		void setClass(JClass* clazz) { this->jclass = clazz; }
@@ -293,7 +293,7 @@ namespace avmplus
 	public:
 		JObjectClass(VTable *cvtable) : ClassClosure(cvtable) { }
 		void NYI();
-		DECLARE_NATIVE_MAP(JObjectClass);
+		DECLARE_NATIVE_MAP(JObjectClass)
 	};
 
 	class JObject : public ScriptObject

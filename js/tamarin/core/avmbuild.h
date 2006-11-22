@@ -156,13 +156,13 @@
 	#pragma warning(error:4265)	// 'class' : class has virtual functions, but destructor is not virtual
 	#pragma warning(error:4905)	// wide string literal cast to 'LPSTR'
 	#pragma warning(error:4906)	// string literal cast to 'LPWSTR'
+	#pragma warning(error:4263)	// 'function' : member function does not override any base class virtual member function
+	#pragma warning(error:4264)	// 'virtual_function' : no override available for virtual member function from base 'class'; function is hidden
+	#pragma warning(error:4266)	// 'function' : no override available for virtual member function from base 'type'; function is hidden
+	#pragma warning(error:4242) // 'identifier' : conversion from 'type1' to 'type2', possible loss of data
+	#pragma warning(error:4263) // member function does not override any base class virtual member function
 
 	// some that might be useful to turn on someday, but would require too much twiddly code tweaking right now
-//	#pragma warning(error:4263)	// 'function' : member function does not override any base class virtual member function
-//	#pragma warning(error:4264)	// 'virtual_function' : no override available for virtual member function from base 'class'; function is hidden
-//	#pragma warning(error:4266)	// 'function' : no override available for virtual member function from base 'type'; function is hidden
-//	#pragma warning(error:4242) // 'identifier' : conversion from 'type1' to 'type2', possible loss of data
-//	#pragma warning(error:4263) // member function does not override any base class virtual member function
 //	#pragma warning(error:4296)	// expression is always true (false) (Generally, an unsigned variable was used in a comparison operation with zero.)
 
 #endif

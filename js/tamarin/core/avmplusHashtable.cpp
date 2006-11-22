@@ -279,7 +279,7 @@ namespace avmplus
 		return 0;
 	}
 
-	bool Hashtable::propertyIsEnumerable(Atom name) const
+	bool Hashtable::getAtomPropertyIsEnumerable(Atom name) const
 	{
 		if (hasDontEnumSupport())
 		{
@@ -299,7 +299,7 @@ namespace avmplus
 		}
 	}
 
-	void Hashtable::setPropertyIsEnumerable(Atom name, bool enumerable)
+	void Hashtable::setAtomPropertyIsEnumerable(Atom name, bool enumerable)
 	{
 		if (hasDontEnumSupport())
 		{

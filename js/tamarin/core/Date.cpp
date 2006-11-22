@@ -573,7 +573,7 @@ namespace avmplus
 		return true;
 	}
 
-	double Date::getProperty(int index)
+	double Date::getDateProperty(int index)
 	{
 		double t = m_time;
 

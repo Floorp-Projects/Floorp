@@ -35,7 +35,7 @@
 namespace avmplus
 {
 	BEGIN_NATIVE_MAP(NumberClass)
-		NATIVE_METHOD(Number_private__toString, NumberClass::toString)
+		NATIVE_METHOD(Number_private__toString, NumberClass::numberToString)
 		NATIVE_METHOD(Number_private__convert, NumberClass::convert)
 	END_NATIVE_MAP()
 
@@ -87,7 +87,7 @@ namespace avmplus
 		return new (core->GetGC()) String(buffer,len);
 	}
 	
-	Stringp NumberClass::toString(double dVal, int radix)
+	Stringp NumberClass::numberToString(double dVal, int radix)
 	{
 		AvmCore* core = this->core();
 

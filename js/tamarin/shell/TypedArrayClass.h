@@ -55,12 +55,12 @@ namespace avmshell
 			m_length = 0;
 		}
 
-		virtual bool hasProperty(Atom name) const
+		virtual bool hasAtomProperty(Atom name) const
 		{
-			return ScriptObject::hasProperty(name) || getProperty(name) != undefinedAtom;
+			return ScriptObject::hasAtomProperty(name) || getAtomProperty(name) != undefinedAtom;
 		}
 		
-		virtual void setProperty(Atom name, Atom value)
+		virtual void setAtomProperty(Atom name, Atom value)
 		{
 			uint32 index;
 			if (core()->getIndexFromAtom(name, &index))
@@ -69,11 +69,11 @@ namespace avmshell
 			}
 			else
 			{
-				ScriptObject::setProperty(name, value);
+				ScriptObject::setAtomProperty(name, value);
 			}
 		}
 		
-		virtual Atom getProperty(Atom name) const
+		virtual Atom getAtomProperty(Atom name) const
 		{
 			uint32 index;
 			if (core()->getIndexFromAtom(name, &index))
@@ -82,7 +82,7 @@ namespace avmshell
 			}
 			else
 			{
-				return ScriptObject::getProperty(name);
+				return ScriptObject::getAtomProperty(name);
 			}
 		}
 			

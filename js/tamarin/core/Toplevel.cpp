@@ -542,7 +542,7 @@ namespace avmplus
 				// primitive types are not dynamic, so we can go directly
 				// to their __proto__ object
 				ScriptObject* proto = toPrototype(base);
-				Atom method = proto->getProperty(multiname);
+				Atom method = proto->getMultinameProperty(multiname);
 				return op_call(method, argc, atomv);
 			}
 		}
@@ -606,7 +606,7 @@ namespace avmplus
 				// primitive types are not dynamic, so we can go directly
 				// to their __proto__ object
 				ScriptObject* proto = toPrototype(obj);
-				Atom ctor = proto->getProperty(multiname);
+				Atom ctor = proto->getMultinameProperty(multiname);
 				return op_construct(ctor, argc, atomv);
 			}
 		}
@@ -805,7 +805,7 @@ namespace avmplus
 			{
 				// dynamic props should hide declared methods
 				ScriptObject* so = AvmCore::atomToScriptObject(obj);
-				return so->getProperty(multiname);
+				return so->getMultinameProperty(multiname);
 			}
 			// extracting a method
 			MethodEnv *m = vtable->methods[AvmCore::bindingToMethodId(b)];
@@ -830,7 +830,7 @@ namespace avmplus
 			{
 				// try dynamic lookup on instance.  even if the traits are sealed,
 				// we might need to search the prototype chain
-				return AvmCore::atomToScriptObject(obj)->getProperty(multiname);
+				return AvmCore::atomToScriptObject(obj)->getMultinameProperty(multiname);
 			}
 			else
 			{
@@ -841,7 +841,7 @@ namespace avmplus
 				ScriptObject* delegate = toPrototype(obj);
 				if (delegate->isValidDynamicName(multiname))
 				{
-					return delegate->ScriptObject::getPropertyFromProtoChain(multiname->getName(), delegate, toTraits(obj));
+					return delegate->ScriptObject::getStringPropertyFromProtoChain(multiname->getName(), delegate, toTraits(obj));
 				}
 				else
 				{
@@ -897,7 +897,7 @@ namespace avmplus
 			{
 				// dynamic props should hide declared methods
 				ScriptObject* so = AvmCore::atomToScriptObject(obj);
-				so->setProperty(multiname, value);
+				so->setMultinameProperty(multiname, value);
 				return;
 			}
 			// trying to assign to a method.  error.
@@ -951,7 +951,7 @@ namespace avmplus
 			#endif
 			if (AvmCore::isObject(obj))
 			{
-				AvmCore::atomToScriptObject(obj)->setProperty(multiname, value);
+				AvmCore::atomToScriptObject(obj)->setMultinameProperty(multiname, value);
 			}
 			else
 			{

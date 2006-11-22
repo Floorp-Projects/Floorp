@@ -244,6 +244,7 @@ namespace avmplus
 
 	void MethodEnv::debugExit(CallStackNode* callstack)
 	{
+		AvmAssert(this != 0);
 		AvmCore* core = this->core();
 
 		// update profiler 
@@ -362,7 +363,7 @@ namespace avmplus
 			}
 			else if(!multi->isRtns() && core()->isDictionary(obj))
 			{
-				return AvmCore::atomToScriptObject(obj)->getProperty(index);
+				return AvmCore::atomToScriptObject(obj)->getAtomProperty(index);
 			}
 			else
 			{
@@ -456,7 +457,7 @@ namespace avmplus
 			}	
 			else if(!multi->isRtns() && core()->isDictionary(obj))
 			{
-				AvmCore::atomToScriptObject(obj)->setProperty(index, value);
+				AvmCore::atomToScriptObject(obj)->setAtomProperty(index, value);
 				return;
 			}
 			else
@@ -491,7 +492,7 @@ namespace avmplus
 			}
 			else if(!multi->isRtns() && core->isDictionary(obj))
 			{
-				bool res = AvmCore::atomToScriptObject(obj)->deleteProperty(index);
+				bool res = AvmCore::atomToScriptObject(obj)->deleteAtomProperty(index);
 				return res ? trueAtom : falseAtom;
 			}
 			else
@@ -587,7 +588,7 @@ namespace avmplus
 			else
 			{
 				// negative - we must intern the integer
-				return AvmCore::atomToScriptObject(obj)->getProperty(method->core()->internInt(index)->atom());
+				return AvmCore::atomToScriptObject(obj)->getAtomProperty(method->core()->internInt(index)->atom());
 			}
 		}
 		else
@@ -597,7 +598,7 @@ namespace avmplus
 			AvmCore* core = method->core();
 			Toplevel *toplevel = this->toplevel();
 			ScriptObject *protoObject = toplevel->toPrototype(obj);
-			return protoObject->ScriptObject::getPropertyFromProtoChain(core->internInt(index), protoObject, toplevel->toTraits(obj));			
+			return protoObject->ScriptObject::getStringPropertyFromProtoChain(core->internInt(index), protoObject, toplevel->toTraits(obj));			
 		}
 	}
 
@@ -618,7 +619,7 @@ namespace avmplus
 			AvmCore* core = method->core();
 			Toplevel *toplevel = this->toplevel();
 			ScriptObject *protoObject = toplevel->toPrototype(obj);
-			return protoObject->ScriptObject::getPropertyFromProtoChain(core->internUint32(index), protoObject, toplevel->toTraits(obj));			
+			return protoObject->ScriptObject::getStringPropertyFromProtoChain(core->internUint32(index), protoObject, toplevel->toTraits(obj));			
 		}
 	}
 
@@ -707,7 +708,7 @@ namespace avmplus
 			//todo have the verifier take care of interning too
 			AvmAssert(AvmCore::isString(name));
 
-			o->setProperty(core->internString(name)->atom(), sp[0]);
+			o->setAtomProperty(core->internString(name)->atom(), sp[0]);
 		}
 #ifdef DEBUGGER
 		if( core->allocationTracking )
@@ -856,7 +857,7 @@ namespace avmplus
 				toplevel()->toPrototype(obj);
 		do
 		{
-			if (o->hasProperty(nameatom))
+			if (o->hasAtomProperty(nameatom))
 				return trueAtom;
 		}
 		while ((o = o->getDelegate()) != NULL);
@@ -899,8 +900,8 @@ namespace avmplus
 		c->setDelegate( functionClass->prototype );
 
 		c->createVanillaPrototype();
-		c->prototype->setProperty(core->kconstructor, c->atom());
-		c->prototype->setPropertyIsEnumerable(core->kconstructor, false);
+		c->prototype->setStringProperty(core->kconstructor, c->atom());
+		c->prototype->setStringPropertyIsEnumerable(core->kconstructor, false);
 
 		fenv->closure = c;
 		
@@ -997,8 +998,8 @@ namespace avmplus
 				cc->prototype->setDelegate( base->prototype );
 
 			// C.prototype.constructor = C {DontEnum}
-			cc->prototype->setProperty(core->kconstructor, cc->atom());
-			cc->prototype->setPropertyIsEnumerable(core->kconstructor, false);
+			cc->prototype->setStringProperty(core->kconstructor, cc->atom());
+			cc->prototype->setStringPropertyIsEnumerable(core->kconstructor, false);
 		}
 
 		AvmAssert(i == iscope->getSize()-1);
@@ -1046,7 +1047,7 @@ namespace avmplus
 			else
 			{
 				// negative index - we must intern the integer
-				o->setProperty(method->core()->internInt(index)->atom(), value);
+				o->setAtomProperty(method->core()->internInt(index)->atom(), value);
 			}
 		}
 		else
@@ -1138,7 +1139,7 @@ namespace avmplus
 			Binding b = toplevel->getBinding(traits, multiname);
 			if (b == BIND_NONE) 
 			{
-				bool b = AvmCore::atomToScriptObject(obj)->deleteProperty(multiname);
+				bool b = AvmCore::atomToScriptObject(obj)->deleteMultinameProperty(multiname);
 				return b ? trueAtom : falseAtom;
 			}
 			else if (AvmCore::isMethodBinding(b))
@@ -1147,7 +1148,7 @@ namespace avmplus
 				{
 					// dynamic props should hide declared methods on delete
 					ScriptObject* so = AvmCore::atomToScriptObject(obj);
-					bool b = so->deleteProperty(multiname);
+					bool b = so->deleteMultinameProperty(multiname);
 					return b ? trueAtom : falseAtom;
 				}
 			}
@@ -1280,7 +1281,7 @@ namespace avmplus
 				Binding b = toplevel->getBinding(o->traits(), multiname);
 				if (b != BIND_NONE)
 					return atom;
-				if (o->hasProperty(multiname))
+				if (o->hasMultinameProperty(multiname))
 					return atom;
 			}
 			while ((o = o->getDelegate()) != NULL);
@@ -1303,7 +1304,7 @@ namespace avmplus
 				Binding b = toplevel->getBinding(o->traits(), multiname);
 				if (b != BIND_NONE)
 					return atom;
-				if (o->hasProperty(multiname))
+				if (o->hasMultinameProperty(multiname))
 					return atom;
 			}
 			while ((o = o->getDelegate()) != NULL);
@@ -1441,7 +1442,7 @@ namespace avmplus
 		ScriptObject* o = global;
 		do
 		{
-			if (o->hasProperty(multiname))
+			if (o->hasMultinameProperty(multiname))
 				return global->atom();
 		}
 		while ((o = o->getDelegate()) != NULL);
@@ -1475,8 +1476,8 @@ namespace avmplus
 		{
 			closure = ((FunctionEnv*)this)->closure;
 		}
-		arguments->setProperty(core()->kcallee, closure->atom());
-		arguments->setPropertyIsEnumerable(core()->kcallee, false);
+		arguments->setStringProperty(core()->kcallee, closure->atom());
+		arguments->setStringPropertyIsEnumerable(core()->kcallee, false);
 		return arguments;
 	}
 

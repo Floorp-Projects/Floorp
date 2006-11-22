@@ -99,62 +99,65 @@ namespace avmplus
 		Atom getSlotAtom(int slot);
 		void setSlotAtom(int slot, Atom atom);
 
-		virtual Atom getProperty(Multiname* name) const;
-		virtual void setProperty(Multiname* name, Atom value);
-		virtual bool deleteProperty(Multiname* name);
-		virtual bool hasProperty(Multiname* name) const;
-
 		virtual Atom getDescendants(Multiname* name) const;
 
 		// argv[0] = receiver
 		virtual Atom callProperty(Multiname* name, int argc, Atom* argv);
 		virtual Atom constructProperty(Multiname* name, int argc, Atom* argv);
 
-		virtual Atom getProperty(Atom name) const;
-		virtual Atom getProperty(Stringp name) const {
-			return getProperty(name->atom());
-		}
+		// common set/set/has/delete/etc virtual methods renamed to explicitly name the expected arg types,
+		// to avoid potentially hidden virtual functions
+		virtual Atom getAtomProperty(Atom name) const;
+		virtual Atom getAtomPropertyFromProtoChain(Atom name, ScriptObject* protochain, Traits *origObjTraits) const;
+		virtual void setAtomProperty(Atom name, Atom value);
+		virtual bool deleteAtomProperty(Atom name);
+		virtual bool hasAtomProperty(Atom name) const;
+		virtual bool getAtomPropertyIsEnumerable(Atom name) const;
+		virtual void setAtomPropertyIsEnumerable(Atom name, bool enumerable);
 
-		virtual bool hasProperty(Atom name) const;
-		virtual bool hasProperty(Stringp name) const 
-		{
-			AvmAssert(name != NULL && name->isInterned());
-			return hasProperty(name->atom());
-		}
-
-		virtual bool propertyIsEnumerable(Atom name) const;
-		virtual bool propertyIsEnumerable(Stringp name) const
-		{
-			AvmAssert(name != NULL && name->isInterned());
-			return propertyIsEnumerable(name->atom());
-		}
-
-		virtual void setPropertyIsEnumerable(Atom name, bool enumerable);
-		virtual void setPropertyIsEnumerable(Stringp name, bool enumerable)
-		{
-			setPropertyIsEnumerable(name->atom(), enumerable);
-		}
-		
-		virtual bool deleteProperty(Atom name);
-		virtual bool deleteProperty(Stringp name) {
-			return deleteProperty(name->atom());
-		}
-
-		virtual void setProperty(Atom name, Atom value);
-		virtual void setProperty(Stringp name, Atom value) {
-			setProperty(name->atom(), value);
-		}
-
-		Atom getPropertyFromProtoChain(Atom name, ScriptObject* protochain, Traits *origObjTraits) const;
-		Atom getPropertyFromProtoChain(Stringp name, ScriptObject* protochain, Traits *origObjTraits) const
-		{
-			return getPropertyFromProtoChain(name->atom(), protochain, origObjTraits);
-		}
+		virtual Atom getMultinameProperty(Multiname* name) const;
+		virtual void setMultinameProperty(Multiname* name, Atom value);
+		virtual bool deleteMultinameProperty(Multiname* name);
+		virtual bool hasMultinameProperty(Multiname* name) const;
 
 		virtual Atom getUintProperty(uint32 i) const;
 		virtual void setUintProperty(uint32 i, Atom value);
 		virtual bool delUintProperty(uint32 i);
 		virtual bool hasUintProperty(uint32 i) const;
+
+		// convenience wrappers for passing Stringp instead of Atom
+		// inline, not virtual (should never need overriding)
+		inline Atom getStringProperty(Stringp name) const 
+		{
+			AvmAssert(name != NULL && name->isInterned());
+			return getAtomProperty(name->atom());
+		}
+		inline Atom getStringPropertyFromProtoChain(Stringp name, ScriptObject* protochain, Traits *origObjTraits) const
+		{
+			return getAtomPropertyFromProtoChain(name->atom(), protochain, origObjTraits);
+		}
+		inline void setStringProperty(Stringp name, Atom value) 
+		{
+			setAtomProperty(name->atom(), value);
+		}
+		inline bool deleteStringProperty(Stringp name) 
+		{
+			return deleteAtomProperty(name->atom());
+		}
+		inline bool hasStringProperty(Stringp name) const 
+		{
+			AvmAssert(name != NULL && name->isInterned());
+			return hasAtomProperty(name->atom());
+		}
+		inline bool getStringPropertyIsEnumerable(Stringp name) const
+		{
+			AvmAssert(name != NULL && name->isInterned());
+			return getAtomPropertyIsEnumerable(name->atom());
+		}
+		inline void setStringPropertyIsEnumerable(Stringp name, bool enumerable)
+		{
+			setAtomPropertyIsEnumerable(name->atom(), enumerable);
+		}
 
 		virtual Atom defaultValue();		// ECMA [[DefaultValue]]
 		virtual Atom toString();

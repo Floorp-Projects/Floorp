@@ -125,7 +125,7 @@ namespace avmplus
 			getTable()->reset();
 	}
 
-	void ArrayObject::setProperty(Atom name, Atom value)
+	void ArrayObject::setAtomProperty(Atom name, Atom value)
 	{
 		if (traits()->needsHashtable)
 		{
@@ -141,7 +141,7 @@ namespace avmplus
 				return setLength(core->toUInt32(value));
 		}
 
-		ScriptObject::setProperty(name, value);
+		ScriptObject::setAtomProperty(name, value);
 	}
 	
 	void ArrayObject::setUintProperty(uint32 index, Atom value)
@@ -191,15 +191,15 @@ namespace avmplus
 
 		// If our index value is going to overflow our int atom storage and be
 		// converted to a string, do that here instead of calling the
-		// SciptObject::setUintProperty which will call ArrayObject::setProperty
+		// SciptObject::setUintProperty which will call ArrayObject::setAtomProperty
 		// which will call back into this routine in an infinite loop.
 		if (index & ScriptObject::MAX_INTEGER_MASK)
-			ScriptObject::setProperty (core()->internUint32(index)->atom(), value);
+			ScriptObject::setAtomProperty(core()->internUint32(index)->atom(), value);
 		else
 			ScriptObject::setUintProperty(index, value);
 	}
 
-	Atom ArrayObject::getProperty(Atom name) const
+	Atom ArrayObject::getAtomProperty(Atom name) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -219,7 +219,7 @@ namespace avmplus
 				return core->intToAtom (getLength());
 		}
 
-		return ScriptObject::getProperty (name);
+		return ScriptObject::getAtomProperty(name);
 	}
 
 	Atom ArrayObject::getUintProperty(uint32 index) const
@@ -241,7 +241,7 @@ namespace avmplus
 		if (index >= 0) 
 			return getUintProperty(index);
 		else // integer is negative - we must intern it
-			return getProperty(core()->internInt(index));
+			return getStringProperty(core()->internInt(index));
 	}
 
 	void ArrayObject::setIntProperty(int index, Atom value)
@@ -249,11 +249,11 @@ namespace avmplus
 		if (index >= 0) 
 			setUintProperty(index, value);
 		else // integer is negative - we must intern it
-			setProperty(core()->internInt(index), value);
+			setStringProperty(core()->internInt(index), value);
 	}
 
 	// This does NOT affect the length of the array
-	bool ArrayObject::deleteProperty(Atom name)
+	bool ArrayObject::deleteAtomProperty(Atom name)
 	{
 		if (traits()->needsHashtable)
 		{
@@ -267,7 +267,7 @@ namespace avmplus
 			}
 		}
 
-		return ScriptObject::deleteProperty (name);
+		return ScriptObject::deleteAtomProperty(name);
 	}
 
 	bool ArrayObject::delUintProperty(uint32 index)
@@ -299,7 +299,7 @@ namespace avmplus
 		return ScriptObject::delUintProperty(index);
 	}
 
-	bool ArrayObject::propertyIsEnumerable(Atom name) const
+	bool ArrayObject::getAtomPropertyIsEnumerable(Atom name) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -316,10 +316,10 @@ namespace avmplus
 			}
 		}
 
-		return ScriptObject::propertyIsEnumerable(name);
+		return ScriptObject::getAtomPropertyIsEnumerable(name);
 	}
 	
-	bool ArrayObject::hasProperty(Atom name) const
+	bool ArrayObject::hasAtomProperty(Atom name) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -334,7 +334,7 @@ namespace avmplus
 			}
 		}
 
-		return ScriptObject::hasProperty (name);
+		return ScriptObject::hasAtomProperty(name);
 	}
 
 	bool ArrayObject::hasUintProperty(uint32 index) const

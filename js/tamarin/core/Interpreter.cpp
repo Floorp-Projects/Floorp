@@ -823,7 +823,7 @@ namespace avmplus
 						*sp = toplevel->getproperty(*sp, &multiname, toplevel->toVTable(*sp));
 					} else {
 						Atom key = *(sp--);
-						sp[0] = AvmCore::atomToScriptObject(sp[0])->getProperty(key);
+						sp[0] = AvmCore::atomToScriptObject(sp[0])->getAtomProperty(key);
 					}
 				}
 
@@ -850,7 +850,7 @@ namespace avmplus
 					} else {
 						Atom key = *(sp--);
 						Atom obj = *(sp--);
-						AvmCore::atomToScriptObject(obj)->setProperty(key, value);
+						AvmCore::atomToScriptObject(obj)->setAtomProperty(key, value);
 					}
 				}
                 continue;
@@ -975,7 +975,7 @@ namespace avmplus
 						sp[0] = env->delproperty(sp[0], &multiname);
 					} else {
 						Atom key = *(sp--);
-						bool res = AvmCore::atomToScriptObject(sp[0])->deleteProperty(key);
+						bool res = AvmCore::atomToScriptObject(sp[0])->deleteAtomProperty(key);
 						sp[0] = res ? trueAtom : falseAtom;
 					}
 				}

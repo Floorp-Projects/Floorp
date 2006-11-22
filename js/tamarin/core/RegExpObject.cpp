@@ -444,9 +444,9 @@ namespace avmplus
 		AvmCore *core = this->core();
 		ArrayObject *a = toplevel()->arrayClass->newArray(results);
 
-		a->setProperty(toplevel()->regexpClass()->kindex,
+		a->setAtomProperty(toplevel()->regexpClass()->kindex,
 			   core->intToAtom(Utf8ToUtf16Index(subject, utf8Subject, ovector[0])));
-		a->setProperty(toplevel()->regexpClass()->kinput,
+		a->setAtomProperty(toplevel()->regexpClass()->kinput,
 			   subject->atom());
 		a->setLength(results);
 
@@ -488,7 +488,7 @@ namespace avmplus
 
 				Atom value = stringFromUTF8(utf8Subject->c_str()+ovector[nameIndex*2], length);
 
-				a->setProperty(name, value);
+				a->setAtomProperty(name, value);
 
 				nameTable += entrySize;
 			}

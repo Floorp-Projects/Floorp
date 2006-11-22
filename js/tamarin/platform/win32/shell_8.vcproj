@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="shell"
 	ProjectGUID="{437E43D2-ED2D-406B-88DB-B5940F838AE9}"
+	RootNamespace="shell"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -184,7 +185,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release Debugger|Win32"
+			Name="Release_Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
@@ -269,7 +270,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug Debugger|Win32"
+			Name="Debug_Debugger|Win32"
 			OutputDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_8/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"

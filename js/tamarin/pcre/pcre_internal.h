@@ -907,6 +907,7 @@ extern BOOL        _pcre_xclass(int, const uschar *);
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244) // possible loss of data
+#pragma warning(disable:4242) // possible loss of data
 #endif
 
 #endif

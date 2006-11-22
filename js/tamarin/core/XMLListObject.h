@@ -110,22 +110,16 @@ namespace avmplus
 		// Put (setProperty)
 		Atom callProperty(Multiname* name, int argc, Atom* argv);
 
-		Atom getProperty(Atom name) const;			// [[Get]]
-		void setProperty(Atom name, Atom value);	// [[Put]]
-		bool deleteProperty(Atom name);				// [[Delete]
+		Atom getAtomProperty(Atom name) const;			// [[Get]]
+		void setAtomProperty(Atom name, Atom value);	// [[Put]]
+		bool deleteAtomProperty(Atom name);				// [[Delete]
 
-		Atom getProperty(Stringp name) const
-		{
-			AvmAssert(name != NULL && name->isInterned());
-			return getProperty(name->atom());
-		}
+		Atom getMultinameProperty(Multiname* name) const;
+		void setMultinameProperty(Multiname* name, Atom value);
+		bool deleteMultinameProperty(Multiname* name);
 
-		Atom getProperty(Multiname* name) const;
-		void setProperty(Multiname* name, Atom value);
-		bool deleteProperty(Multiname* name);
-
-		bool hasProperty(Multiname* name) const;
-		bool hasProperty(Atom name) const;
+		bool hasMultinameProperty(Multiname* name) const;
+		bool hasAtomProperty(Atom name) const;
 		bool hasUintProperty(uint32 i) const;
 
 		Atom getDescendants(Multiname* name) const;
@@ -171,7 +165,7 @@ namespace avmplus
 		XMLListObject *normalize ();
 		Atom parent ();
 		XMLListObject *processingInstructions (Atom name); 
-		bool propertyIsEnumerable (Atom P);
+		bool xmlListPropertyIsEnumerable(Atom P);	// NOT virtual, NOT an override
 		XMLListObject *text ();
 		Atom toString ();
 		Stringp toStringMethod();

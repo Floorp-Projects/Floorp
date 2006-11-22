@@ -70,7 +70,7 @@ namespace avmplus
 		weakKeys = false;
 	}
 
-	void DictionaryObject::construct(bool weakKeys)
+	void DictionaryObject::constructDictionary(bool weakKeys)
 	{
 		GCAssert(vtable->traits->isDictionary == true);
 		this->weakKeys = weakKeys;
@@ -93,7 +93,7 @@ namespace avmplus
 		return key;
 	}
 
-	Atom DictionaryObject::getProperty(Atom key) const
+	Atom DictionaryObject::getAtomProperty(Atom key) const
 	{
 		if(AvmCore::isObject(key)) {
 			key = getKeyFromObject(key);
@@ -102,10 +102,10 @@ namespace avmplus
 			else
 				return table->get(key);
 		} else
-			return ScriptObject::getProperty(key);
+			return ScriptObject::getAtomProperty(key);
 	}
 
-	bool DictionaryObject::hasProperty(Atom key) const
+	bool DictionaryObject::hasAtomProperty(Atom key) const
 	{
 		if(AvmCore::isObject(key)) {
 			key = getKeyFromObject(key);
@@ -114,10 +114,10 @@ namespace avmplus
 			else
 				return table->contains(key);
 		} else
-			return ScriptObject::hasProperty(key);
+			return ScriptObject::hasAtomProperty(key);
 	}
 
-	bool DictionaryObject::deleteProperty(Atom key)
+	bool DictionaryObject::deleteAtomProperty(Atom key)
 	{
 		if(AvmCore::isObject(key)) {
 			key = getKeyFromObject(key);
@@ -127,11 +127,11 @@ namespace avmplus
 				table->remove(key);
 			return true;
 		} else {
-			return ScriptObject::deleteProperty(key);
+			return ScriptObject::deleteAtomProperty(key);
 		}
 	}
 
-	void DictionaryObject::setProperty(Atom key, Atom value)
+	void DictionaryObject::setAtomProperty(Atom key, Atom value)
 	{
 		if(AvmCore::isObject(key)) {
 			key = getKeyFromObject(key);
@@ -140,7 +140,7 @@ namespace avmplus
 			else
 				table->add(key, value);
 		} else
-			ScriptObject::setProperty(key, value);
+			ScriptObject::setAtomProperty(key, value);
 	}
 
 	Atom DictionaryObject::nextName(int index)

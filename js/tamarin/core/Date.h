@@ -103,7 +103,7 @@ namespace avmplus
 			 double msec,
 			 bool utcFlag);
 		~Date() { m_time = 0; }
-		double getProperty(int index);
+		double getDateProperty(int index);
 		double getTime() const { return m_time; }
 		void setDate(double year,
 					 double month,

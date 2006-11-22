@@ -60,11 +60,12 @@ namespace avmplus
 		Atom construct(int argc, Atom* argv);
 
 		// native methods
-		bool hasOwnProperty(Atom thisAtom, Stringp name);
-		bool isPrototypeOf(Atom thisAtom, Atom other);
-		bool propertyIsEnumerable(Atom thisAtom, Stringp name);
-		void setPropertyIsEnumerable(Atom thisAtom, Stringp name, bool enumerable);		
-		Stringp toString(Atom thisAtom);
+		// (renamed to avoid hiding ScriptObject methods)
+		bool objectHasOwnProperty(Atom thisAtom, Stringp name);
+		bool objectIsPrototypeOf(Atom thisAtom, Atom other);
+		bool objectPropertyIsEnumerable(Atom thisAtom, Stringp name);
+		void objectSetPropertyIsEnumerable(Atom thisAtom, Stringp name, bool enumerable);		
+		Stringp objectToString(Atom thisAtom);
     };
 }
 

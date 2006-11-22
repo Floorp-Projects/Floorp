@@ -68,15 +68,10 @@ namespace avmplus
 		uint32 getLength() const { return (m_length); }
 		void setLength(uint32 newLength);
 
-		Atom getProperty(Stringp name) const { return getProperty(name->atom()); }
-		void setProperty(Stringp name, Atom value) { setProperty(name->atom(), value); }
-		bool deleteProperty(Stringp name) { return deleteProperty(name->atom()); }
-		bool hasProperty(Stringp name) const { return hasProperty(name->atom()); }
-
-		Atom getProperty(Atom name) const;
-		void setProperty(Atom name, Atom value);
-		bool deleteProperty(Atom name);
-		bool hasProperty(Atom name) const;
+		Atom getAtomProperty(Atom name) const;
+		void setAtomProperty(Atom name, Atom value);
+		bool deleteAtomProperty(Atom name);
+		bool hasAtomProperty(Atom name) const;
 
 		// Faster versions that takes direct indices
 		Atom getUintProperty(uint32 index) const;
@@ -87,7 +82,7 @@ namespace avmplus
 		Atom getIntProperty(int index) const;
 		void setIntProperty(int index, Atom value);
 
-		bool propertyIsEnumerable(Atom name) const;
+		bool getAtomPropertyIsEnumerable(Atom name) const;
 		
 		#ifdef AVMPLUS_MAC
 		// Hack for Mac; can't take addr of virtual function

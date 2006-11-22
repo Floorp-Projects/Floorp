@@ -109,7 +109,7 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Release Debugger|Win32"
+			Name="Release_Debugger|Win32"
 			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="4">
@@ -154,7 +154,7 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Debug Debugger|Win32"
+			Name="Debug_Debugger|Win32"
 			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="4"
@@ -262,13 +262,13 @@
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release Debugger|Win32">
+					Name="Release_Debugger|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug Debugger|Win32">
+					Name="Debug_Debugger|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"/>

@@ -145,11 +145,11 @@ namespace avmplus
      * @param name
      * @return
      */
-	Atom ScriptObject::getProperty(Atom name) const
+	Atom ScriptObject::getAtomProperty(Atom name) const
 	{
 		if (!traits()->needsHashtable)
 		{
-			return getPropertyFromProtoChain(name, delegate, traits());
+			return getAtomPropertyFromProtoChain(name, delegate, traits());
 		}
 		else
 		{
@@ -176,7 +176,7 @@ namespace avmplus
 		}			
 	}
 	
-	Atom ScriptObject::getPropertyFromProtoChain(Atom name, ScriptObject* o, Traits *origObjTraits) const
+	Atom ScriptObject::getAtomPropertyFromProtoChain(Atom name, ScriptObject* o, Traits *origObjTraits) const
 	{
         // todo will delegate always be non-null here?
 		if (o != NULL)
@@ -204,13 +204,13 @@ namespace avmplus
 		return undefinedAtom;
 	}
 
-	bool ScriptObject::hasProperty(Multiname* multiname) const
+	bool ScriptObject::hasMultinameProperty(Multiname* multiname) const
 	{
 		if (traits()->needsHashtable)
 		{
 			if (isValidDynamicName(multiname))
 			{
-				return hasProperty(multiname->getName()->atom());
+				return hasAtomProperty(multiname->getName()->atom());
 			}
 			else
 			{
@@ -224,7 +224,7 @@ namespace avmplus
 		}
 	}
 
-	bool ScriptObject::hasProperty(Atom name) const
+	bool ScriptObject::hasAtomProperty(Atom name) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -245,7 +245,7 @@ namespace avmplus
 		}
 	}
 
-    void ScriptObject::setProperty(Atom name, Atom value)
+    void ScriptObject::setAtomProperty(Atom name, Atom value)
     {
 		if (traits()->needsHashtable)
 		{
@@ -269,11 +269,11 @@ namespace avmplus
 		}
     }
 
-	void ScriptObject::setProperty(Multiname* name, Atom value)
+	void ScriptObject::setMultinameProperty(Multiname* name, Atom value)
 	{
 		if (traits()->needsHashtable && isValidDynamicName(name))
 		{
-			setProperty(name->getName(), value);
+			setStringProperty(name->getName(), value);
 		}
 		else
 		{
@@ -282,7 +282,7 @@ namespace avmplus
 		}
 	}
 
-	bool ScriptObject::propertyIsEnumerable(Atom name) const
+	bool ScriptObject::getAtomPropertyIsEnumerable(Atom name) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -294,7 +294,7 @@ namespace avmplus
 				name = ival;
 			}
 
-			return getTable()->propertyIsEnumerable(name);
+			return getTable()->getAtomPropertyIsEnumerable(name);
 		}
 		else
 		{
@@ -303,7 +303,7 @@ namespace avmplus
 		}
 	}
 
-	void ScriptObject::setPropertyIsEnumerable(Atom name, bool enumerable)
+	void ScriptObject::setAtomPropertyIsEnumerable(Atom name, bool enumerable)
 	{
 		if (traits()->needsHashtable)
 		{
@@ -315,7 +315,7 @@ namespace avmplus
 				name = ival;
 			}
 
-			getTable()->setPropertyIsEnumerable(name, enumerable);
+			getTable()->setAtomPropertyIsEnumerable(name, enumerable);
 		}
 		else
 		{
@@ -325,7 +325,7 @@ namespace avmplus
 		}
 	}
 	
-	bool ScriptObject::deleteProperty(Atom name)
+	bool ScriptObject::deleteAtomProperty(Atom name)
 	{
 		if (traits()->needsHashtable)
 		{
@@ -346,11 +346,11 @@ namespace avmplus
 		}
 	}
 	
-	bool ScriptObject::deleteProperty(Multiname* name)
+	bool ScriptObject::deleteMultinameProperty(Multiname* name)
 	{
 		if (traits()->needsHashtable && isValidDynamicName(name))
 		{
-			return deleteProperty(name->getName());
+			return deleteStringProperty(name->getName());
 		}
 		else
 		{
@@ -367,7 +367,7 @@ namespace avmplus
 			if (!traits()->needsHashtable)
 			{
 				Atom name = core->internUint32(i)->atom();
-				return getPropertyFromProtoChain(name, delegate, traits());
+				return getAtomPropertyFromProtoChain(name, delegate, traits());
 			}
 			else
 			{
@@ -388,7 +388,7 @@ namespace avmplus
 		}
 		else
 		{
-			return getProperty(core->internUint32(i)->atom());
+			return getAtomProperty(core->internUint32(i)->atom());
 		}		
 	}
 
@@ -413,7 +413,7 @@ namespace avmplus
 		}
 		else
 		{
-			setProperty(core->internUint32(i)->atom(), value);
+			setAtomProperty(core->internUint32(i)->atom(), value);
 		}
 	}
 
@@ -435,7 +435,7 @@ namespace avmplus
 		}
 		else
 		{
-			return deleteProperty(core->internUint32(i)->atom());
+			return deleteAtomProperty(core->internUint32(i)->atom());
 		}
 	}
 
@@ -457,15 +457,15 @@ namespace avmplus
 		}
 		else
 		{
-			return hasProperty(core->internUint32(i)->atom());
+			return hasAtomProperty(core->internUint32(i)->atom());
 		}
 	}
 
-	Atom ScriptObject::getProperty(Multiname* multiname) const
+	Atom ScriptObject::getMultinameProperty(Multiname* multiname) const
 	{
 		if (isValidDynamicName(multiname))
 		{
-			return getProperty(multiname->getName());
+			return getStringProperty(multiname->getName());
 		}
 		else
 		{
@@ -485,7 +485,7 @@ namespace avmplus
 	Atom ScriptObject::callProperty(Multiname* multiname, int argc, Atom* argv)
 	{
 		Toplevel* toplevel = this->toplevel();
-		Atom method = getProperty(multiname);
+		Atom method = getMultinameProperty(multiname);
 		if (!AvmCore::isObject(method))
 			toplevel->throwTypeError(kCallOfNonFunctionError, core()->toErrorString(multiname));
 		argv[0] = atom(); // replace receiver
@@ -494,7 +494,7 @@ namespace avmplus
 
 	Atom ScriptObject::constructProperty(Multiname* multiname, int argc, Atom* argv)
 	{
-		Atom ctor = getProperty(multiname);
+		Atom ctor = getMultinameProperty(multiname);
 		argv[0] = atom(); // replace receiver
 		return toplevel()->op_construct(ctor, argc, argv);
 	}

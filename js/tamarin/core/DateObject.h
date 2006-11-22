@@ -64,8 +64,9 @@ namespace avmplus
 			AvmAssert(traits()->sizeofInstance == sizeof(DateObject));
 			this->date = date;
 		}
-
-		Stringp toString(int index);
+		
+		// renamed to avoid hiding ScriptObject::toString
+		Stringp dateToString(int index);
 		double valueOf();
 		double setTime(double value);
 		double get(int index);

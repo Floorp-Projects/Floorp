@@ -1017,7 +1017,7 @@
 			};
 			name = Release;
 		};
-		8E8B52EB09AABCA50057BEE4 /* Debug Debugger */ = {
+		8E8B52EB09AABCA50057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_64_BIT)";
@@ -1051,9 +1051,9 @@
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 				ZERO_LINK = NO;
 			};
-			name = "Debug Debugger";
+			name = "Debug_Debugger";
 		};
-		8E8B52EC09AABCA50057BEE4 /* Release Debugger */ = {
+		8E8B52EC09AABCA50057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = x86_64;
@@ -1084,9 +1084,9 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 			};
-			name = "Release Debugger";
+			name = "Release_Debugger";
 		};
-		8E8B52ED09AABCA50057BEE4 /* Debug Debugger */ = {
+		8E8B52ED09AABCA50057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -1104,9 +1104,9 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Debug Debugger";
+			name = "Debug_Debugger";
 		};
-		8E8B52EE09AABCA50057BEE4 /* Release Debugger */ = {
+		8E8B52EE09AABCA50057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -1125,7 +1125,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Release Debugger";
+			name = "Release_Debugger";
 		};
 /* End XCBuildConfiguration section */
 
@@ -1134,9 +1134,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,
-				8E8B52EB09AABCA50057BEE4 /* Debug Debugger */,
+				8E8B52EB09AABCA50057BEE4 /* Debug_Debugger */,
 				1DEB91ED08733DB70010E9CD /* Release */,
-				8E8B52EC09AABCA50057BEE4 /* Release Debugger */,
+				8E8B52EC09AABCA50057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1145,9 +1145,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91F008733DB70010E9CD /* Debug */,
-				8E8B52ED09AABCA50057BEE4 /* Debug Debugger */,
+				8E8B52ED09AABCA50057BEE4 /* Debug_Debugger */,
 				1DEB91F108733DB70010E9CD /* Release */,
-				8E8B52EE09AABCA50057BEE4 /* Release Debugger */,
+				8E8B52EE09AABCA50057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -124,7 +124,7 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Release Debugger|Win32"
+			Name="Release_Debugger|Win32"
 			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"
@@ -179,7 +179,7 @@
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
-			Name="Debug Debugger|Win32"
+			Name="Debug_Debugger|Win32"
 			OutputDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			IntermediateDirectory="obj_7/$(ProjectName)/$(ConfigurationName)"
 			ConfigurationType="1"

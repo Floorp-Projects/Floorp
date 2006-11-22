@@ -425,7 +425,7 @@
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug_Debugger\"";
 				PRODUCT_NAME = shell64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				ZERO_LINK = YES;
@@ -443,7 +443,7 @@
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug_Debugger\"";
 				PRODUCT_NAME = shell64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 			};
@@ -499,7 +499,7 @@
 			};
 			name = Release;
 		};
-		8E8B52FE09AABD020057BEE4 /* Debug Debugger */ = {
+		8E8B52FE09AABD020057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_64_BIT)";
@@ -513,14 +513,14 @@
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug_Debugger\"";
 				PRODUCT_NAME = shell64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				ZERO_LINK = NO;
 			};
-			name = "Debug Debugger";
+			name = "Debug_Debugger";
 		};
-		8E8B52FF09AABD020057BEE4 /* Release Debugger */ = {
+		8E8B52FF09AABD020057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = x86_64;
@@ -531,13 +531,13 @@
 					"$(inherited)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug Debugger\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../platform/mac/flash/Builds/Debug_Debugger\"";
 				PRODUCT_NAME = shell64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 			};
-			name = "Release Debugger";
+			name = "Release_Debugger";
 		};
-		8E8B530009AABD020057BEE4 /* Debug Debugger */ = {
+		8E8B530009AABD020057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_64_BIT)";
@@ -565,9 +565,9 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "../../../core ../../../MMgc ../../../pcre ../../../codegen ../../../extensions ..";
 			};
-			name = "Debug Debugger";
+			name = "Debug_Debugger";
 		};
-		8E8B530109AABD020057BEE4 /* Release Debugger */ = {
+		8E8B530109AABD020057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -588,7 +588,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				USER_HEADER_SEARCH_PATHS = "../../../core ../../../MMgc ../../../pcre ../../../codegen ../../../extensions ..";
 			};
-			name = "Release Debugger";
+			name = "Release_Debugger";
 		};
 /* End XCBuildConfiguration section */
 
@@ -597,9 +597,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB928608733DD80010E9CD /* Debug */,
-				8E8B52FE09AABD020057BEE4 /* Debug Debugger */,
+				8E8B52FE09AABD020057BEE4 /* Debug_Debugger */,
 				1DEB928708733DD80010E9CD /* Release */,
-				8E8B52FF09AABD020057BEE4 /* Release Debugger */,
+				8E8B52FF09AABD020057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -608,9 +608,9 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB928A08733DD80010E9CD /* Debug */,
-				8E8B530009AABD020057BEE4 /* Debug Debugger */,
+				8E8B530009AABD020057BEE4 /* Debug_Debugger */,
 				1DEB928B08733DD80010E9CD /* Release */,
-				8E8B530109AABD020057BEE4 /* Release Debugger */,
+				8E8B530109AABD020057BEE4 /* Release_Debugger */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
