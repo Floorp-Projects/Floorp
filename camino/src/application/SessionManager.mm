@@ -200,4 +200,11 @@ const NSString* kBookmarkBarIsVisibleKey = @"BoomarkBarVisible";
     [self setWindowStateFromDictionary:state];
 }
 
+- (void)clearSavedState
+{
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  if ([fileManager fileExistsAtPath:mSessionStatePath])
+    [fileManager removeFileAtPath:mSessionStatePath handler:nil];
+}
+
 @end

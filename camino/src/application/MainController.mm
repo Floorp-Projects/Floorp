@@ -347,6 +347,8 @@ const int kReuseWindowOnAE = 2;
 #endif
   if ([[PreferenceManager sharedInstanceDontCreate] getBooleanPref:"camino.remember_window_state" withSuccess:NULL])
     [[SessionManager sharedInstance] saveWindowState];
+  else
+    [[SessionManager sharedInstance] clearSavedState];
 
   [NetworkServices shutdownNetworkServices];
 

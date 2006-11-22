@@ -56,4 +56,7 @@
 // Restores the window state from a file in the profile directory.
 - (void)restoreWindowState;
 
+// Deletes the window state file from the profile directory.
+- (void)clearSavedState;
+
 @end
