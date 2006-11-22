@@ -93,7 +93,11 @@ namespace MMgc
 			// after being poisoned.
 			void *item = m_firstBlock->firstFree;
 			while(item) {
+			#ifdef MMGC_64BIT
+				for(int i=3, n=(m_firstBlock->size>>2)-3; i<n; i++)
+			#else
 				for(int i=3, n=(m_firstBlock->size>>2)-1; i<n; i++)
+			#endif
 				{
 					unsigned int data = ((int*)item)[i];
 					if(data != 0xedededed)

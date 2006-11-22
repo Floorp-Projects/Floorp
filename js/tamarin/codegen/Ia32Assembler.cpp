@@ -81,7 +81,7 @@ namespace avmplus
  		*mip++ = (MDInstruction)(3<<6 | reg<<3 | operand);
  	}
 
-	void CodegenMIR::MODRM(Register reg, int disp, Register base, int lshift, Register index)
+	void CodegenMIR::MODRM(Register reg, sintptr disp, Register base, int lshift, Register index)
  	{
  		// reg <-> disp[base+index<<lshift]
  		AvmAssert(lshift >= 0 && lshift <= 3);
@@ -101,7 +101,7 @@ namespace avmplus
  		}
  	}
 
-	void CodegenMIR::MODRM(Register reg, int disp, Register base)
+	void CodegenMIR::MODRM(Register reg, sintptr disp, Register base)
  	{
  		// dest <-> disp[base]
 		if (base == Unknown) {
@@ -123,7 +123,7 @@ namespace avmplus
  		}
  	}
 
-	void CodegenMIR::PUSH(int imm)
+	void CodegenMIR::PUSH(sintptr imm)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -143,7 +143,7 @@ namespace avmplus
  		}
  	}
 
-	void CodegenMIR::MOV(Register dest, int imm32) 
+	void CodegenMIR::MOV(Register dest, sintptr imm32) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -156,7 +156,7 @@ namespace avmplus
 		IMM32(imm32);
 	}
 
-	void CodegenMIR::MOV(int disp, Register base, int imm) 
+	void CodegenMIR::MOV(int disp, Register base, sintptr imm) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -170,7 +170,7 @@ namespace avmplus
  		IMM32(imm);
 	}
 
-	void CodegenMIR::ALU (byte op, Register reg, int imm)
+	void CodegenMIR::ALU (byte op, Register reg, sintptr imm)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -289,7 +289,7 @@ namespace avmplus
 		MODRM(dest, src);
 	}
 
-	void CodegenMIR::SSE(int op, Register r, int disp, Register base)
+	void CodegenMIR::SSE(int op, Register r, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -331,7 +331,7 @@ namespace avmplus
 		IMM32(addr);
 	}
 
-	void CodegenMIR::IMUL(Register dst, int imm)
+	void CodegenMIR::IMUL(Register dst, sintptr imm)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -397,7 +397,7 @@ namespace avmplus
 		*mip++ = (MDInstruction)(imm8);
 	}
 
-	void CodegenMIR::ALU(int op, Register r, int disp, Register base)
+	void CodegenMIR::ALU(int op, Register r, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -423,7 +423,7 @@ namespace avmplus
 		MODRM(r, disp, base);
 	}
 
-	void CodegenMIR::JCC(byte op, int offset)
+	void CodegenMIR::JCC(byte op, sintptr offset)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -461,7 +461,7 @@ namespace avmplus
 		}
  	}
 	
-	void CodegenMIR::JMP(int offset)
+	void CodegenMIR::JMP(sintptr offset)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -479,7 +479,7 @@ namespace avmplus
 		}
 	}
 
-	void CodegenMIR::CALL(int offset)
+	void CodegenMIR::CALL(sintptr offset)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -514,7 +514,7 @@ namespace avmplus
 		*mip++ = (MDInstruction)(op&255 | r);
 	}
 
-	void CodegenMIR::FPU(int op, int disp, Register base)
+	void CodegenMIR::FPU(int op, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE

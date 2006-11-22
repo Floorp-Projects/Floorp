@@ -2382,6 +2382,11 @@ bail:
 
 		GCAssert(numBytes % 4 == 0);
 
+		#ifdef MMGC_64BIT // we use first 8-byte slot for the free list
+		if (numBytes == 4)
+			numBytes = 8;
+		#endif
+
 		// hit freelists first
 		if(m_bitsFreelists[sizeClass]) {
 			bits = m_bitsFreelists[sizeClass];

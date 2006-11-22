@@ -54,6 +54,23 @@ namespace avmplus
 		uint32 value;
 	};
 
+#ifdef AVMPLUS_64BIT
+	class hexQWord
+	{
+	public:
+		hexQWord(uint64 _value) { this->value = _value; }
+		hexQWord(const hexQWord& toCopy) { value = toCopy.value; }
+		hexQWord& operator= (const hexQWord& toCopy) {
+			value = toCopy.value;
+			return *this;
+		}
+		uint64 getValue() const { return value; }
+		
+	private:
+		uint64 value;
+	};
+#endif	
+	
 	/**
 	 * tabstop is an operator that can be used with PrintWriter
 	 * to advance to the specified tabstop
@@ -116,6 +133,7 @@ namespace avmplus
 		PrintWriter& operator<< (wchar value);		
 		PrintWriter& operator<< (int value);
 		PrintWriter& operator<< (uint64 value);
+		PrintWriter& operator<< (int64 value);
 		PrintWriter& operator<< (uint32 value);
 		PrintWriter& operator<< (double value);
 		PrintWriter& operator<< (Stringp str);
@@ -129,6 +147,11 @@ namespace avmplus
 		void writeHexByte(uint8 value);
 		void writeHexWord(uint16 value);
 		void writeHexDWord(uint32 value);
+		
+		#ifdef AVMPLUS_64BIT
+		PrintWriter& operator<< (hexQWord tabs);
+		void writeHexQWord(uint64 value);
+		#endif
 
 		#ifdef AVMPLUS_VERBOSE
 		void format(const char *format, ...);

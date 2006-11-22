@@ -472,7 +472,11 @@ namespace avmplus
 
 				// default value for this slot.
 				int slotOffset;
-				if (slotTraits == NUMBER_TYPE)
+				if ((slotTraits == NUMBER_TYPE)
+					#ifdef AVMPLUS_64BIT
+					|| ((slotTraits != INT_TYPE) && (slotTraits != UINT_TYPE) && (slotTraits != BOOLEAN_TYPE))
+					#endif			
+				)
 				{
 					// 8-aligned, 8-byte field
 					if (offset&7)
@@ -526,6 +530,16 @@ namespace avmplus
 					toplevel->throwVerifyError(kClassInfoOrderError, core->toErrorString(class_info));
 
 				int slotOffset;
+				#ifdef AVMPLUS_64BIT
+				// 8-aligned, 8-byte field
+				if (offset&7)
+				{
+					padoffset = offset;
+					offset += 4;
+				}
+				slotOffset = offset;
+				offset += 8;
+				#else
 				// 4-aligned, 4-byte field
 				if (padoffset != -1)
 				{
@@ -537,6 +551,7 @@ namespace avmplus
 					slotOffset = offset;
 					offset += 4;
 				}
+				#endif
 
 				traits->setSlotInfo(0, useSlotId, toplevel, cinit->declaringTraits, slotOffset, CPoolKind(0), gen);
 				break;
@@ -626,6 +641,16 @@ namespace avmplus
 				AbstractFunction *f = getMethodInfo(method_info);
 
 				int slotOffset;
+				#ifdef AVMPLUS_64BIT
+				// 8-aligned, 8-byte field
+				if (offset&7)
+				{
+					padoffset = offset;
+					offset += 4;
+				}
+				slotOffset = offset;
+				offset += 8;
+				#else
 				// 4-aligned, 4-byte field
 				if (padoffset != -1)
 				{
@@ -637,6 +662,7 @@ namespace avmplus
 					slotOffset = offset;
 					offset += 4;
 				}
+				#endif
 
 				traits->setSlotInfo(0, useSlotId, toplevel, f->declaringTraits, slotOffset, CPoolKind(0), gen);
 				if( tag & ATTR_metadata )
@@ -671,6 +697,7 @@ namespace avmplus
 				}
 				#endif
 
+				AvmAssert(0);
 				int slotOffset;
 				// 4-aligned, 4-byte field
 				if (padoffset != -1)

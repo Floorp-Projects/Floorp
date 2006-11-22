@@ -146,13 +146,19 @@ namespace avmplus
 
 	PrintWriter& PrintWriter::operator<< (uint64 value)
 	{
-		#ifdef AVMPLUS_64BIT
-		AvmAssert(0); // convertInteger routine needs to be upgraded to handle 64-bit ints
-		#endif
-	
 		wchar buffer[256];
 		int len;
-		if (MathUtils::convertIntegerToString((int)value, buffer, len)) {
+		if (MathUtils::convertIntegerToString((sintptr) value, buffer, len)) {
+			*this << buffer;
+		}
+		return *this;
+	}
+
+	PrintWriter& PrintWriter::operator<< (int64 value)
+	{
+		wchar buffer[256];
+		int len;
+		if (MathUtils::convertIntegerToString((sintptr) value, buffer, len)) {
 			*this << buffer;
 		}
 		return *this;
@@ -285,6 +291,26 @@ namespace avmplus
 		writeHexByte(uint8(value&0xff));
 	}
 
+	#ifdef AVMPLUS_64BIT
+	PrintWriter& PrintWriter::operator<< (hexQWord value)
+	{
+		writeHexQWord(value.getValue());
+		return *this;
+	}
+	
+	void PrintWriter::writeHexQWord(uint64 value)
+	{
+		writeHexByte(uint8((value>>54) & 0xff));
+		writeHexByte(uint8((value>>48) & 0xff));
+		writeHexByte(uint8((value>>40) & 0xff));
+		writeHexByte(uint8((value>>32) & 0xff));
+		writeHexByte(uint8((value>>24) & 0xff));
+		writeHexByte(uint8((value>>16) & 0xff));
+		writeHexByte(uint8(value>>8));
+		writeHexByte(uint8(value&0xff));
+	}
+	#endif
+	
 	void PrintWriter::formatTypeName(Traits* t)
 	{
 		if (!t)
@@ -384,7 +410,11 @@ namespace avmplus
 					break;
 	#ifdef AVMPLUS_MIR
 				case 'A': // addr
+	#ifdef AVMPLUS_64BIT
+					*this << hexQWord(va_arg(ap,int64));
+	#else
 					*this << hexDWord(va_arg(ap,int));
+	#endif				
 					break;
 
 				#ifdef AVMPLUS_ARM
@@ -454,6 +484,9 @@ namespace avmplus
 					break;
 				case 'd':
 					*this << va_arg(ap, int);
+					break;
+				case 'D':
+					*this << va_arg(ap, int64);
 					break;
 				}
 			} else {

@@ -226,7 +226,7 @@ namespace avmplus
 
 	  MainLoop:
 		TRY_UNLESS(core, !info->exceptions, kCatchAction_SearchForActionScriptExceptionHandler) {
-
+		
 		
 		// the verifier ensures we don't fall off the end of a method.  so
 		// we dont have to check the end pointer here.

@@ -43,7 +43,7 @@ using namespace MMgc;
 namespace avmplus
 {
 	BEGIN_NATIVE_MAP(DictionaryClass)
-		NATIVE_METHOD(flash_utils_Dictionary_Dictionary,        DictionaryObject::construct)
+		NATIVE_METHOD(flash_utils_Dictionary_Dictionary,        DictionaryObject::constructDictionary)
 	END_NATIVE_MAP()
 
 	DictionaryClass::DictionaryClass(VTable *vtable)
@@ -55,7 +55,7 @@ namespace avmplus
 
 	ScriptObject *DictionaryClass::createInstance(VTable *ivtable, ScriptObject* /*delegate*/)
 	{
-		GCAssert(ivtable->traits->isDictionary == true);
+ 		GCAssert(ivtable->traits->isDictionary == true);
 		return new (core()->GetGC(), ivtable->getExtraSize()) DictionaryObject(ivtable, prototype);
 	}
 	

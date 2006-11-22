@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1A91570F0B012A3F00744986 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A91570E0B012A3F00744986 /* libz.dylib */; };
-		47BA8F2C0B053ACC0092107F /* libMMgc64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 470266410B053A6F007B70DD /* libMMgc64.a */; };
-		47BA8F2D0B053AD40092107F /* libavmplus64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 47BA8F270B053AB10092107F /* libavmplus64.a */; };
+		47C458250B148CA500FCD007 /* libavmplus64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 47C458200B148C9300FCD007 /* libavmplus64.a */; };
+		47C458260B148CA900FCD007 /* libMMgc64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 47C458000B148C5900FCD007 /* libMMgc64.a */; };
 		6803D2C90A5064FD00C797BB /* JavaGlue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6803D2C70A5064FD00C797BB /* JavaGlue.cpp */; };
 		6803D2CA0A5064FD00C797BB /* JavaGlue.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6803D2C80A5064FD00C797BB /* JavaGlue.h */; };
 		8E8B529E09AABAA30057BEE4 /* avmshell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E8B527909AABAA20057BEE4 /* avmshell.cpp */; };
@@ -55,33 +55,33 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		470266400B053A6F007B70DD /* PBXContainerItemProxy */ = {
+		47C457FF0B148C5900FCD007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
-			remoteInfo = MMgc;
+			remoteInfo = MMgc64;
 		};
-		47BA8F260B053AB10092107F /* PBXContainerItemProxy */ = {
+		47C4581F0B148C9300FCD007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = avmplus64;
 		};
-		47BA8F280B053AC00092107F /* PBXContainerItemProxy */ = {
+		47C458210B148C9F00FCD007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = avmplus64;
 		};
-		47BA8F2A0B053AC40092107F /* PBXContainerItemProxy */ = {
+		47C458230B148C9F00FCD007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
-			remoteInfo = MMgc;
+			remoteInfo = MMgc64;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -179,8 +179,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				47BA8F2D0B053AD40092107F /* libavmplus64.a in Frameworks */,
-				47BA8F2C0B053ACC0092107F /* libMMgc64.a in Frameworks */,
+				47C458260B148CA900FCD007 /* libMMgc64.a in Frameworks */,
+				47C458250B148CA500FCD007 /* libavmplus64.a in Frameworks */,
 				8EDDB9F409AAD2B700FB9EE5 /* CoreServices.framework in Frameworks */,
 				1A91570F0B012A3F00744986 /* libz.dylib in Frameworks */,
 			);
@@ -217,18 +217,18 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4702663A0B053A6F007B70DD /* Products */ = {
+		47C457FC0B148C5900FCD007 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				470266410B053A6F007B70DD /* libMMgc64.a */,
+				47C458000B148C5900FCD007 /* libMMgc64.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		47BA8F200B053AB10092107F /* Products */ = {
+		47C4581C0B148C9300FCD007 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				47BA8F270B053AB10092107F /* libavmplus64.a */,
+				47C458200B148C9300FCD007 /* libavmplus64.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -320,8 +320,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				47BA8F290B053AC00092107F /* PBXTargetDependency */,
-				47BA8F2B0B053AC40092107F /* PBXTargetDependency */,
+				47C458220B148C9F00FCD007 /* PBXTargetDependency */,
+				47C458240B148C9F00FCD007 /* PBXTargetDependency */,
 			);
 			name = shell64;
 			productInstallPath = "$(HOME)/bin";
@@ -341,11 +341,11 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 47BA8F200B053AB10092107F /* Products */;
+					ProductGroup = 47C4581C0B148C9300FCD007 /* Products */;
 					ProjectRef = 47BA8F1F0B053AB10092107F /* avmplus64.xcodeproj */;
 				},
 				{
-					ProductGroup = 4702663A0B053A6F007B70DD /* Products */;
+					ProductGroup = 47C457FC0B148C5900FCD007 /* Products */;
 					ProjectRef = 470266390B053A6F007B70DD /* MMgc64.xcodeproj */;
 				},
 			);
@@ -358,18 +358,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		470266410B053A6F007B70DD /* libMMgc64.a */ = {
+		47C458000B148C5900FCD007 /* libMMgc64.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libMMgc64.a;
-			remoteRef = 470266400B053A6F007B70DD /* PBXContainerItemProxy */;
+			remoteRef = 47C457FF0B148C5900FCD007 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		47BA8F270B053AB10092107F /* libavmplus64.a */ = {
+		47C458200B148C9300FCD007 /* libavmplus64.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavmplus64.a;
-			remoteRef = 47BA8F260B053AB10092107F /* PBXContainerItemProxy */;
+			remoteRef = 47C4581F0B148C9300FCD007 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -398,15 +398,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		47BA8F290B053AC00092107F /* PBXTargetDependency */ = {
+		47C458220B148C9F00FCD007 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = avmplus64;
-			targetProxy = 47BA8F280B053AC00092107F /* PBXContainerItemProxy */;
+			targetProxy = 47C458210B148C9F00FCD007 /* PBXContainerItemProxy */;
 		};
-		47BA8F2B0B053AC40092107F /* PBXTargetDependency */ = {
+		47C458240B148C9F00FCD007 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = MMgc;
-			targetProxy = 47BA8F2A0B053AC40092107F /* PBXContainerItemProxy */;
+			name = MMgc64;
+			targetProxy = 47C458230B148C9F00FCD007 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -518,7 +518,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				ZERO_LINK = NO;
 			};
-			name = "Debug_Debugger";
+			name = Debug_Debugger;
 		};
 		8E8B52FF09AABD020057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -535,7 +535,7 @@
 				PRODUCT_NAME = shell64;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 			};
-			name = "Release_Debugger";
+			name = Release_Debugger;
 		};
 		8E8B530009AABD020057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -565,7 +565,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "../../../core ../../../MMgc ../../../pcre ../../../codegen ../../../extensions ..";
 			};
-			name = "Debug_Debugger";
+			name = Debug_Debugger;
 		};
 		8E8B530109AABD020057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -588,7 +588,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				USER_HEADER_SEARCH_PATHS = "../../../core ../../../MMgc ../../../pcre ../../../codegen ../../../extensions ..";
 			};
-			name = "Release_Debugger";
+			name = Release_Debugger;
 		};
 /* End XCBuildConfiguration section */
 

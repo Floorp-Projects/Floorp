@@ -808,10 +808,20 @@ namespace avmplus
 				*slot = 0;
 			} else { // machineType
 				AvmAssert(t->getTotalSize() == 1 || t->getTotalSize() == 4 || t->getTotalSize() == 8);
-				// The Boolean size is 1 but takes up 4 bytes.  (Important on Mac with reverse endian)
-				*slot = 0;
 				if (t->getTotalSize() == 8)
+				{
+					#ifdef AVMPLUS_64BIT
+					*slot = 0;
+					#else
+					*slot = 0;
 					*(slot + 1) = 0;
+					#endif
+				}
+				else // 4 byte slot
+				{
+					// The Boolean size is 1 but takes up 4 bytes.  (Important on Mac with reverse endian)
+					*(uint32 *)slot = 0;
+				}
 			}
 		}
 

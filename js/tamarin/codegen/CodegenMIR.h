@@ -611,17 +611,17 @@ namespace avmplus
 		#define EFADDR(f)   efAddr((int (ExceptionFrame::*)())(&f))
 		#define DEBUGGERADDR(f)   debuggerAddr((int (Debugger::*)())(&f))
 
-		static int coreAddr( int (AvmCore::*f)() );
-		static int gcAddr( int (MMgc::GC::*f)() );
-		static int envAddr( int (MethodEnv::*f)() );
-		static int toplevelAddr( int (Toplevel::*f)() );
+		static sintptr coreAddr( int (AvmCore::*f)() );
+		static sintptr gcAddr( int (MMgc::GC::*f)() );
+		static sintptr envAddr( int (MethodEnv::*f)() );
+		static sintptr toplevelAddr( int (Toplevel::*f)() );
 	#ifdef DEBUGGER
-		static int callStackAddr( int (CallStackNode::*f)() );
-		static int debuggerAddr( int (Debugger::*f)() );
+		static sintptr callStackAddr( int (CallStackNode::*f)() );
+		static sintptr debuggerAddr( int (Debugger::*f)() );
 	#endif
-		static int efAddr( int (ExceptionFrame::*f)() );
-		static int scriptAddr( int (ScriptObject::*f)() );
-		static int arrayAddr( int (ArrayObject::*f)() );
+		static sintptr efAddr( int (ExceptionFrame::*f)() );
+		static sintptr scriptAddr( int (ScriptObject::*f)() );
+		static sintptr arrayAddr( int (ArrayObject::*f)() );
 
 		friend class Verifier;
 
@@ -629,7 +629,7 @@ namespace avmplus
 		OP* ip;
 		OP* ipStart;
 		OP* ipEnd;
-		int mirBuffSize;
+		uintptr mirBuffSize;
 		int expansionFactor;
 		GrowableBuffer* mirBuffer;
 
@@ -1390,21 +1390,26 @@ namespace avmplus
 			mip += 4;
 		}
 
-		void MODRM(Register reg, int disp, Register base, int lshift, Register index);
-		void MODRM(Register reg, int disp, Register base);
+		void MODRM(Register reg, sintptr disp, Register base, int lshift, Register index);
+		void MODRM(Register reg, sintptr disp, Register base);
 		void MODRM(Register reg, Register operand);
 
 		void ALU(int op);
 		void RET()				{ ALU(0xc3); }
 		void NOP()				{ ALU(0x90); }
+		#ifdef AVMPLUS_64BIT
+		void PUSH(Register r);
+		void POP(Register r);
+		#else
 		void PUSH(Register r)	{ ALU(0x50|r); }
 		void POP(Register r)	{ ALU(0x58|r); }
+		#endif
 		void LAHF()				{ ALU(0x9F); }
 
-		void PUSH(int imm);
+		void PUSH(sintptr imm);
 
-		void MOV (Register dest, int imm32);
-		void MOV (int disp, Register base, int imm);
+		void MOV (Register dest, sintptr imm32);
+		void MOV (sintptr disp, Register base, sintptr imm);
 		
 		// sse data transfer
 
@@ -1420,23 +1425,23 @@ namespace avmplus
 
 		void XORPD(Register dest, uintptr src);
 
-		void SSE(int op, Register r, int disp, Register base);
-		void ADDSD(Register r, int disp, Register base)		{ SSE(0xf20f58, r, disp, base); }
-		void SUBSD(Register r, int disp, Register base)		{ SSE(0xf20f5C, r, disp, base); }
-		void MULSD(Register r, int disp, Register base)		{ SSE(0xf20f59, r, disp, base); }
-		void DIVSD(Register r, int disp, Register base)		{ SSE(0xf20f5E, r, disp, base); }
-		void MOVSD(Register r, int disp, Register base)		{ SSE(0xf20f10, r, disp, base); }
-		void MOVSD(int disp, Register base, Register r)		{ SSE(0xf20f11, r, disp, base); }
-		void CVTSI2SD(Register r, int disp, Register base)	{ SSE(0xf20f2a, r, disp, base); }
+		void SSE(int op, Register r, sintptr disp, Register base);
+		void ADDSD(Register r, sintptr disp, Register base)		{ SSE(0xf20f58, r, disp, base); }
+		void SUBSD(Register r, sintptr disp, Register base)		{ SSE(0xf20f5C, r, disp, base); }
+		void MULSD(Register r, sintptr disp, Register base)		{ SSE(0xf20f59, r, disp, base); }
+		void DIVSD(Register r, sintptr disp, Register base)		{ SSE(0xf20f5E, r, disp, base); }
+		void MOVSD(Register r, sintptr disp, Register base)		{ SSE(0xf20f10, r, disp, base); }
+		void MOVSD(sintptr disp, Register base, Register r)		{ SSE(0xf20f11, r, disp, base); }
+		void CVTSI2SD(Register r, sintptr disp, Register base)	{ SSE(0xf20f2a, r, disp, base); }
 
-		void ALU (byte op, Register reg, int imm);
-		void ADD(Register reg, int imm) { ALU(0x05, reg, imm); }
-		void SUB(Register reg, int imm) { ALU(0x2d, reg, imm); }
-		void AND(Register reg, int imm) { ALU(0x25, reg, imm); }
-		void XOR(Register reg, int imm) { ALU(0x35, reg, imm); }
-		void OR (Register reg, int imm) { ALU(0x0d, reg, imm); }
-		void CMP(Register reg, int imm) { ALU(0x3d, reg, imm); }
-		void IMUL(Register dst, int imm);
+		void ALU (byte op, Register reg, sintptr imm);
+		void ADD(Register reg, sintptr imm) { ALU(0x05, reg, imm); }
+		void SUB(Register reg, sintptr imm) { ALU(0x2d, reg, imm); }
+		void AND(Register reg, sintptr imm) { ALU(0x25, reg, imm); }
+		void XOR(Register reg, sintptr imm) { ALU(0x35, reg, imm); }
+		void OR (Register reg, sintptr imm) { ALU(0x0d, reg, imm); }
+		void CMP(Register reg, sintptr imm) { ALU(0x3d, reg, imm); }
+		void IMUL(Register dst, sintptr imm);
 
 		void ALU (int op, Register lhs_dest, Register rhs);
 		void OR (Register lhs, Register rhs)	{ ALU(0x0b, lhs, rhs); }
@@ -1468,14 +1473,14 @@ namespace avmplus
 		void SETLE (Register reg)	{ ALU2(0x0f9E, reg, reg); }
 		void MOVZX_r8 (Register dest, Register src) { ALU2(0x0fb6, dest, src); }
 
-		void ALU(int op, Register r, int disp, Register base);
-		void TEST(int disp, Register base, Register r)	{ ALU(0x85, r, disp, base); }
-		void LEA(Register r, int disp, Register base)	{ ALU(0x8d, r, disp, base); }
-		void CALL(int disp, Register base)				{ ALU(0xff, (Register)2, disp, base); }
-		void JMP(int disp, Register base)				{ ALU(0xff, (Register)4, disp, base); }
-		void PUSH(int disp, Register base)				{ ALU(0xff, (Register)6, disp, base); }
-		void MOV (int disp, Register base, Register r)  { ALU(0x89, r, disp, base); }
-		void MOV (Register r, int disp, Register base)  { ALU(0x8b, r, disp, base); }
+		void ALU(int op, Register r, sintptr disp, Register base);
+		void TEST(sintptr disp, Register base, Register r)	{ ALU(0x85, r, disp, base); }
+		void LEA(Register r, sintptr disp, Register base)	{ ALU(0x8d, r, disp, base); }
+		void CALL(sintptr disp, Register base)				{ ALU(0xff, (Register)2, disp, base); }
+		void JMP(sintptr disp, Register base)				{ ALU(0xff, (Register)4, disp, base); }
+		void PUSH(sintptr disp, Register base)				{ ALU(0xff, (Register)6, disp, base); }
+		void MOV (sintptr disp, Register base, Register r)  { ALU(0x89, r, disp, base); }
+		void MOV (Register r, sintptr disp, Register base)  { ALU(0x8b, r, disp, base); }
 
 		void SHIFT(int op, Register reg, int imm8);
 		void SAR(Register reg, int imm8) { SHIFT(7, reg, imm8); } // signed >> imm
@@ -1483,33 +1488,33 @@ namespace avmplus
 		void SHL(Register reg, int imm8) { SHIFT(4, reg, imm8); } // unsigned << imm
 		void TEST_AH(uint8 imm8);
 
-		void JCC (byte op, int offset);
-		void JB  (int offset) { JCC(0x02, offset); }	
-		void JNB (int offset) { JCC(0x03, offset); }
-		void JE  (int offset) { JCC(0x04, offset); }
-		void JNE (int offset) { JCC(0x05, offset); }
-		void JBE (int offset) { JCC(0x06, offset); }	
-		void JNBE(int offset) { JCC(0x07, offset); }
-		void JP  (int offset) { JCC(0x0A, offset); }
-		void JNP (int offset) { JCC(0x0B, offset); }
-		void JL  (int offset) { JCC(0x0C, offset); }
-		void JNL (int offset) { JCC(0x0D, offset); }
-		void JLE (int offset) { JCC(0x0E, offset); }
-		void JNLE(int offset) { JCC(0x0F, offset); }
-		void JMP (int offset);
-		void CALL(int offset);
+		void JCC (byte op, sintptr offset);
+		void JB  (sintptr offset) { JCC(0x02, offset); }	
+		void JNB (sintptr offset) { JCC(0x03, offset); }
+		void JE  (sintptr offset) { JCC(0x04, offset); }
+		void JNE (sintptr offset) { JCC(0x05, offset); }
+		void JBE (sintptr offset) { JCC(0x06, offset); }	
+		void JNBE(sintptr offset) { JCC(0x07, offset); }
+		void JP  (sintptr offset) { JCC(0x0A, offset); }
+		void JNP (sintptr offset) { JCC(0x0B, offset); }
+		void JL  (sintptr offset) { JCC(0x0C, offset); }
+		void JNL (sintptr offset) { JCC(0x0D, offset); }
+		void JLE (sintptr offset) { JCC(0x0E, offset); }
+		void JNLE(sintptr offset) { JCC(0x0F, offset); }
+		void JMP (sintptr offset);
+		void CALL(sintptr offset);
 
-		void FPU(int op, int disp, Register base);
-		void FSTQ(int disp, Register base)  { FPU(0xdd02, disp, base); }
-		void FSTPQ(int disp, Register base) { FPU(0xdd03, disp, base); }
-		void FCOM(int disp, Register base)	{ FPU(0xdc02, disp, base); } 
-		void FLDQ(int disp, Register base)  { x87Dirty=true; FPU(0xdd00, disp, base); }
-		void FILDQ(int disp, Register base)	{ x87Dirty=true; FPU(0xdf05, disp, base); }
-		void FILD(int disp, Register base)  { x87Dirty=true; FPU(0xdb00, disp, base); }
-		void FADDQ(int disp, Register base) { FPU(0xdc00, disp, base); }
-		void FSUBQ(int disp, Register base) { FPU(0xdc04, disp, base); }
-		void FMULQ(int disp, Register base) { FPU(0xdc01, disp, base); }
-		void FDIVQ(int disp, Register base) { FPU(0xdc06, disp, base); }
+		void FPU(int op, sintptr disp, Register base);
+		void FSTQ(sintptr disp, Register base)  { FPU(0xdd02, disp, base); }
+		void FSTPQ(sintptr disp, Register base) { FPU(0xdd03, disp, base); }
+		void FCOM(sintptr disp, Register base)	{ FPU(0xdc02, disp, base); } 
+		void FLDQ(sintptr disp, Register base)  { x87Dirty=true; FPU(0xdd00, disp, base); }
+		void FILDQ(sintptr disp, Register base)	{ x87Dirty=true; FPU(0xdf05, disp, base); }
+		void FILD(sintptr disp, Register base)  { x87Dirty=true; FPU(0xdb00, disp, base); }
+		void FADDQ(sintptr disp, Register base) { FPU(0xdc00, disp, base); }
+		void FSUBQ(sintptr disp, Register base) { FPU(0xdc04, disp, base); }
+		void FMULQ(sintptr disp, Register base) { FPU(0xdc01, disp, base); }
+		void FDIVQ(sintptr disp, Register base) { FPU(0xdc06, disp, base); }
 
 		void FPU(int op, Register r);
 		void FFREE(Register r)	{ FPU(0xddc0, r); }
@@ -1524,6 +1529,21 @@ namespace avmplus
 		void FCHS()			{ FPU(0xd9e0); }
 		void FNSTSW_AX()	{ FPU(0xdfe0); }
 		void EMMS()			{ FPU(0x0f77); x87Dirty=false;  }
+		#endif // IA32 or AMD64
+
+		#ifdef AVMPLUS_AMD64
+		void IMM64(int64 imm64) 
+		{
+			*(int64*)mip = imm64;
+			mip += 8;
+		}
+		void REX(Register a,  Register b=EAX);
+		
+		bool is32bit(sintptr i)
+		{
+			return ((int32)i) == i;
+		}
+			
 		#endif
 		
 		// macros
@@ -1548,7 +1568,7 @@ namespace avmplus
 		//  - callee pops args
 		
 		/** call a method using a relative offset */
-		void thincall(int addr) 
+		void thincall(sintptr addr) 
 		{
 			#ifdef AVMPLUS_PPC
 			int disp = addr - (int)mip;
@@ -1587,9 +1607,7 @@ namespace avmplus
 			CALL (addr - (5+(int)mip));
 			#endif
 			
-			// 64bit - not sure about this
 			#ifdef AVMPLUS_AMD64
-			AvmAssert(0);
 			CALL (addr - (5+(uintptr)mip));
 			#endif
 		}

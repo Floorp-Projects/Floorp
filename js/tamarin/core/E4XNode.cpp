@@ -87,7 +87,7 @@ namespace avmplus
 			convertToAtomArray();
 		}
 
-		AtomArray *aa = ((AtomArray *)(int)m_children);
+		AtomArray *aa = ((AtomArray *)(uintptr)m_children);
 		aa->push (AvmCore::gcObjectToAtom(childNode));
 	}
 
@@ -100,7 +100,7 @@ namespace avmplus
 			return 1;
 		else 
 		{
-			AtomArray *aa = ((AtomArray *)(int)m_children);
+			AtomArray *aa = ((AtomArray *)(uintptr)m_children);
 			return aa->getLength();
 		}
 	}
@@ -204,7 +204,7 @@ namespace avmplus
 		if (!m_nameOrAux)
 			return false;
 
-		int nameOrAux = m_nameOrAux;
+		uintptr nameOrAux = m_nameOrAux;
 		if (AUXBIT & nameOrAux)
 		{
 			E4XNodeAux *aux = (E4XNodeAux *)(nameOrAux & ~AUXBIT);
@@ -236,7 +236,7 @@ namespace avmplus
 	void E4XNode::setQName (AvmCore *core, Stringp name, Namespace *ns)
 	{
 		// If we already have an aux, use it.  (It may have notification atom set)
-		int nameOrAux = m_nameOrAux;
+		uintptr nameOrAux = m_nameOrAux;
 		if (AUXBIT & nameOrAux)
 		{
 			E4XNodeAux *aux = (E4XNodeAux *)(nameOrAux & ~AUXBIT);
@@ -892,7 +892,7 @@ namespace avmplus
 			if (!m_children)
 				m_children = uintptr(new (core->GetGC()) AtomArray (1));
 			convertToAtomArray();
-			AtomArray *aa = ((AtomArray *)(int)m_children);
+			AtomArray *aa = ((AtomArray *)(uintptr)m_children);
 			aa->push (Atom(0));
 		}
 		
@@ -955,7 +955,7 @@ namespace avmplus
 
 	void ElementE4XNode::setNotification(AvmCore *core, ScriptObject* f) 
 	{ 
-		int nameOrAux = m_nameOrAux;
+		uintptr nameOrAux = m_nameOrAux;
 		// We already have an aux structure
 		if (AUXBIT & nameOrAux)
 		{
@@ -974,7 +974,7 @@ namespace avmplus
 
 	ScriptObject* ElementE4XNode::getNotification() const 
 	{ 
-		int nameOrAux = m_nameOrAux;
+		uintptr nameOrAux = m_nameOrAux;
 		if (AUXBIT & m_nameOrAux)
 		{
 			E4XNodeAux *aux = (E4XNodeAux *)(nameOrAux & ~AUXBIT);

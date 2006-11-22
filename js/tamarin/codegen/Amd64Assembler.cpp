@@ -87,19 +87,55 @@ namespace avmplus
 		"fst5",
 		"fst6",
 		"fst7",
-	};
+	};			
+
 
 #endif // AVMPLUS_VERBOSE
-#endif // AVMPLUS_AMD64
 
-#ifdef AVMPLUS_AMD64
+	void CodegenMIR::REX(Register a, Register b)
+	{
+		// Needs REX prefix byte since we are working with a 64-bit register
+		// bits 7:4 - 0100 - 0x40
+		// bit 3 - Write - 1 implies 64-bit operand size
+		// bit 2 - Read - Extension of the ModR/M reg field
+		// bit 1 - X - Extension of the SIB index field
+		// bit 0 - B - Extension of the ModR/M r/m field, SIB base field or Opcode reg field 
+		AvmAssert (RAX == 8);
+		AvmAssert (R8 == 16);
+		#if 0 // not sure about this - okay in some circumstances but not others?
+		// both r and base can't be r8-r15.  Mac ASM code shows this as two instructions:
+		// Instead of 'mov r12, [r11+4]' it generates 'mov rax, r11; mov r12, [rax+4]'
+		AvmAssert ((a < 16) || (b < 16));
+		#endif
+				
+		if ((a >= 8) || (b >= 8))
+		{
+			int val = 0x48;
+			if (a >= 16)
+				val |= 0x04;
+			if (b >= 16) 
+				val |= 0x01;
+				
+			*mip++ = val; 
+		}	
+	}
+
 	void CodegenMIR::MODRM(Register reg, Register operand)
 	{
+		// Ignore upper part for RAX to R15
+		reg = (Register)(int(reg) & 0x7);
+		operand = (Register)(int(operand) & 0x7);
+	
  		*mip++ = 3<<6 | reg<<3 | operand;
  	}
 
-	void CodegenMIR::MODRM(Register reg, int disp, Register base, int lshift, Register index)
+	void CodegenMIR::MODRM(Register reg, sintptr disp, Register base, int lshift, Register index)
  	{
+		// Ignore upper part for RAX to R15
+		reg = (Register)(int(reg) & 0x7);
+		base = (Register)(int(base) & 0x7);
+		index = (Register)(int(index) & 0x7);
+	
  		// reg <-> disp[base+index<<lshift]
  		AvmAssert(lshift >= 0 && lshift <= 3);
  		if (disp == 0 && base != EBP) {
@@ -111,20 +147,35 @@ namespace avmplus
  			mip[1] = lshift<<6 | index<<3 | base;	// SIB
 			mip[2] = disp;
  			mip += 3;
- 		} else {
+ 		} else if (is32bit(disp)) {
  			*(mip++) =      2<<6 |   reg<<3 | 4;		// ModR/M
  			*(mip++) = lshift<<6 | index<<3 | base;		// SIB
  			IMM32(disp);
  		}
+		else
+		{
+			AvmAssert(0);
+		}
  	}
 
-	void CodegenMIR::MODRM(Register reg, int disp, Register base)
+	void CodegenMIR::MODRM(Register reg, sintptr disp, Register base)
  	{
+		// Ignore upper part for RAX to R15
+		reg = (Register)(int(reg) & 0x7);
+		base = (Register)(int(base) & 0x7);
+	
  		// dest <-> disp[base]
 		if (base == Unknown) {
-			// disp = absolute addr
-			*(mip++) = 0<<6 | reg<<3 | 5;
-			IMM32(disp);
+			if (is32bit (disp))
+			{
+				// disp = absolute addr
+				*(mip++) = 0<<6 | reg<<3 | 5;
+				IMM32(disp);
+			}
+			else
+			{
+				AvmAssert(0);
+			}
 		}
  		else if (base == ESP) {
  			MODRM(reg, disp, base, 0, (Register)4); // index==4 means ignore index
@@ -134,13 +185,37 @@ namespace avmplus
  		} else if (is8bit(disp)) {
  			*(mip++) = 1<<6 | reg<<3 | base; // mod r/m
  			*(mip++) = disp;
- 		} else {
+ 		} else if (is32bit(disp)) {
  			*(mip++) = 2<<6 | reg<<3 | base; // mod r/m
  			IMM32(disp);
  		}
+		else		
+		{
+			AvmAssert(0);
+		}
  	}
 
-	void CodegenMIR::PUSH(int imm)
+	void CodegenMIR::PUSH(Register r)
+	{
+		int reg = int(r);
+		AvmAssert (reg >= 8); // lower registers are not supported in 64-bit mode
+		if (r >= 16)
+			*mip++ = 0x41;
+			
+		ALU(0x50 | (reg & 0x7));
+	}
+	
+	void CodegenMIR::POP(Register r)
+	{
+		int reg = int(r);
+		AvmAssert (reg >= 8); // lower registers are not supported in 64-bit mode
+		if (r >= 16)
+			*mip++ = 0x41;
+			
+		ALU(0x58 | (reg & 0x7));
+	}
+
+	void CodegenMIR::PUSH(sintptr imm)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -153,27 +228,47 @@ namespace avmplus
 			mip[0] = 0x6a;
 			mip[1] = imm;
 			mip += 2;
- 		} else {
+ 		} else if (is32bit (imm)) {
 			// push imm32
  			*mip++ = 0x68;
  			IMM32(imm);
  		}
+		else
+		{
+			AvmAssert(0);
+		}
  	}
 
-	void CodegenMIR::MOV(Register dest, int imm32) 
+	void CodegenMIR::MOV(Register dest, sintptr imm) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
-			core->console.format("    %A  mov   %R, %d\n", mip, dest, imm32);
+			core->console.format("    %A  mov   %R, %D\n", mip, dest, imm);
 		#endif /* AVMPLUS_VERBOSE */
 
-		// mov reg, imm32
-		*mip++ = 0xb8 | dest;
-		IMM32(imm32);
+		if (dest < 8)
+		{
+			if (is32bit(imm))
+			{
+				// mov reg, imm
+				*mip++ = 0xb8 | dest;
+				IMM32(imm);
+			}
+			else
+			{
+				AvmAssert(0);
+			}	
+		}
+		else // 64-bit register
+		{
+			REX(EAX, dest);
+			*mip++ = 0xb8 | (int(dest) & 0x7);
+			IMM64(imm);
+		}
 	}
 
-	void CodegenMIR::MOV(int disp, Register base, int imm) 
+	void CodegenMIR::MOV(sintptr disp, Register base, sintptr imm) 
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -181,13 +276,25 @@ namespace avmplus
 			core->console.format("    %A  mov   %d(%R), %d\n", mip, disp, base, imm);
 		#endif /* AVMPLUS_VERBOSE */
 
-		// mov disp[base], imm32
- 		*mip++ = 0xc7;
- 		MODRM((Register)0, disp, base);
- 		IMM32(imm);
+		if (is32bit(imm))
+		{
+			if (base >= 8)
+			{
+				REX(EAX, base);
+			}
+			
+			// mov disp[base], imm32
+			*mip++ = 0xc7;
+			MODRM((Register)0, disp, base);
+			IMM32(imm);
+		}
+		else
+		{
+			AvmAssert(0);
+		}
 	}
 
-	void CodegenMIR::ALU (byte op, Register reg, int imm)
+	void CodegenMIR::ALU (byte op, Register reg, sintptr imm)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -206,13 +313,16 @@ namespace avmplus
 		}
 		#endif
 
+		REX(reg);
+		reg = (Register)(int(reg) & 0x7);
+				
  		if (is8bit(imm)) {
 			// <op> reg, imm8
  			mip[0] = 0x83;
  			mip[1] = 3<<6 | op&~7 | reg;
  			mip[2] = imm;
 			mip+=3;
- 		} else {
+ 		} else if (is32bit(imm)) {
  			if (reg == EAX) {
 				// <op> eax, imm32
  				*mip++ = op;
@@ -224,6 +334,10 @@ namespace avmplus
  			}
  			IMM32(imm);
  		}
+		else
+		{
+			AvmAssert(0);
+		}
  	}
 
 	void CodegenMIR::ALU(int op, Register r, Register rhs)
@@ -247,6 +361,8 @@ namespace avmplus
 			}
 		}
 		#endif /* AVMPLUS_VERBOSE */
+
+		REX(r, rhs);
 
 		*mip++ = op; 
 		MODRM(r, rhs);
@@ -275,6 +391,8 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
+		REX(r, rhs);
+
 		mip[0] = op>>8;
 		mip[1] = op; 
 		mip += 2;
@@ -299,6 +417,9 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
+		if ((dest >= 8) || (src >= 8))
+		AvmAssertMsg (0, "need support for REX byte?");
+
  		mip[0] = op>>16;
 		mip[1] = op>>8;
 		mip[2] = op;
@@ -306,7 +427,7 @@ namespace avmplus
 		MODRM(dest, src);
 	}
 
-	void CodegenMIR::SSE(int op, Register r, int disp, Register base)
+	void CodegenMIR::SSE(int op, Register r, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -323,6 +444,12 @@ namespace avmplus
 			}
 		}
 		#endif /* AVMPLUS_VERBOSE */
+		
+		if ((r >= 8) || (base >= 8))
+			AvmAssertMsg (0, "need support for REX byte?");
+			
+		if (!is32bit(disp))
+			AvmAssertMsg (0, "need support for 64-bit displacement?");
 
  		mip[0] = op>>16;
 		mip[1] = op>>8;
@@ -339,6 +466,12 @@ namespace avmplus
 			core->console.format("    %A  xorpd %F, %A\n", mip, dest, addr);
 		#endif /* AVMPLUS_VERBOSE */
 
+		if (dest >= 8)
+			AvmAssertMsg (0, "need support for REX byte?");
+
+		if (!is32bit(addr))
+			AvmAssertMsg (0, "need support for 64-bit addr?");
+
 		// xorpd dest, m128
  		mip[0] = 0x66;
 		mip[1] = 0x0f;
@@ -348,7 +481,7 @@ namespace avmplus
 		IMM32(addr);
 	}
 
-	void CodegenMIR::IMUL(Register dst, int imm)
+	void CodegenMIR::IMUL(Register dst, sintptr imm)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -362,11 +495,15 @@ namespace avmplus
 			MODRM(dst,dst);
 			*mip++ = imm;
 		}
-		else
+		else if (is32bit(imm))
 		{
 			*mip++ = 0x69;
 			MODRM(dst, dst);
 			IMM32(imm);
+		}
+		else
+		{
+			AvmAssert(0);
 		}
 	}
 
@@ -414,7 +551,7 @@ namespace avmplus
 		*mip++ = imm8;
 	}
 
-	void CodegenMIR::ALU(int op, Register r, int disp, Register base)
+	void CodegenMIR::ALU(int op, Register r, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -436,11 +573,13 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 
+		REX(r, base);
+
 		*mip++ = op;
 		MODRM(r, disp, base);
 	}
 
-	void CodegenMIR::JCC(byte op, int offset)
+	void CodegenMIR::JCC(byte op, sintptr offset)
  	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -470,15 +609,19 @@ namespace avmplus
 			mip[0] = 0x70 | op;
 			mip[1] = offset;
 			mip += 2;
-		} else {
+		} else if (is32bit(offset)) {
  			mip[0] = 0x0f;
  			mip[1] = 0x80 | op;
 			mip+=2;
  			IMM32(offset);
 		}
+		else
+		{
+			AvmAssert(0);
+		}
  	}
 	
-	void CodegenMIR::JMP(int offset)
+	void CodegenMIR::JMP(sintptr offset)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -490,22 +633,33 @@ namespace avmplus
 			mip[0] = 0xeb;
 			mip[1] = offset;
 			mip += 2;
-		} else {
+		} else if (is32bit(offset)) {
  			*mip++ = 0xe9;
  			IMM32(offset);
 		}
+		else
+		{
+			AvmAssert(0);
+		}
 	}
 
-	void CodegenMIR::CALL(int offset)
-	{
+	void CodegenMIR::CALL(sintptr offset)
+	{		
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
 			core->console.format("    %A  call  %A\n", mip, offset+(uintptr)(mip+5));
 		#endif /* AVMPLUS_VERBOSE */
 
-		*mip++ = 0xE8;
-		IMM32(offset);
+		if (is32bit(offset))
+		{		
+			*mip++ = 0xE8;
+			IMM32(offset);
+		}
+		else
+		{
+			AvmAssert(0);
+		}
 	}
 
 	void CodegenMIR::FPU(int op, Register r)
@@ -531,7 +685,7 @@ namespace avmplus
 		*mip++ = op&255 | r;
 	}
 
-	void CodegenMIR::FPU(int op, int disp, Register base)
+	void CodegenMIR::FPU(int op, sintptr disp, Register base)
 	{
 		incInstructionCount();
 		#ifdef AVMPLUS_VERBOSE
@@ -630,6 +784,7 @@ namespace avmplus
 	 */
 	void CodegenMIR::emitAllocaProbe(int growthAmt, MdLabel* returnTo)
 	{
+		AvmAssertMsg (true, "needs fixing for 64-bit");
 		#define _PAGESIZE_ 4096
 
 		MDInstruction* label_loop;
@@ -680,16 +835,67 @@ namespace avmplus
 	 * If the assert at the end ever fires, you must enlarge
 	 * this buffer.
 	 */
+	 
+	 /*
+
+	 Notes from the 64-bit ABI AMD64, System V documentation:
+	 
+	 Parameter passing conventions:
+	 
+	 Integer parameters go into rdi, rsi, rdx, rcx, r8 and r9
+	 SSE parameters go into xmm0 through xmm7
+	 SSEUP ? 
+	 X87 ? 
+	 
+	 // This routine is called with "MethodEnv* env, int argc, uint32 *ap"
+	 
+	 env = rdi
+	 argc = esi (signed extended to rsi?)
+	 rdx = ap
+
+	// The arguments passed in can be native types or Atom types.  They are all 8
+	// byte aligned (see unboxCoerceArgs) but types are determined by the traits
+	// of the function call.  
+	
+	// ??? : When pushing arguments on the stack, the called function will 
+	// probably expect 32-bit sized args to be only 4 byte pushes???	 	 
+	
+	*/
 	void CodegenMIR::emitNativeThunk(NativeMethod *info)
-	{
-		AvmAssert(0); // 64bit - needs complete rework
-		
+	{		
 		code = mip = mipStart = getMDBuffer(pool);
 		if (!code)
 		{
 			overflow = true;
 			return;
 		}
+
+
+		// test code to see what ASM bytecode is generated
+#if	0
+		asm
+		(
+			//"push %eax\n"
+			"push %rdi\n"
+			"push %r10\n"
+			"pop %rax\n" 
+			"pop %r11\n"
+			
+			// not valid - 8 byte push "push $0x1212345678"
+//			"mov $0xab12345678, %r10\n"  // 49 bA bytes of immediate data			
+//			"mov $0xab12345678, %rax\n" // 48 b8 8 bytes of immediate data
+			
+//			"mov %rax, %r10\n"
+//			"mov %r10, %r11\n"
+//			"mov 8(%r8), %rsi\n"
+//			"mov 8(%r9), %rsi\n"
+//			"mov 8(%r10), %rsi\n"
+//			"mov 8(%r11), %rsi\n"
+//			"mov 8(%r12), %rsi\n"
+//			"mov 8(%r13), %rsi\n"
+		);
+		
+#endif		
 
 #ifdef FEATURE_BUFFER_GUARD
 		GrowthGuard guard(pool->codeBuffer);
@@ -700,185 +906,158 @@ namespace avmplus
 
 		bool need_rest = ((info->flags & AbstractFunction::NEED_REST) != 0);
 
-		// the generated thunk does not call any helper methods, so we are
-		// free to use eax, ecx, edx as scratch regs.
-		// eax = scratch
-		// ecx = argc
-		// edx = ap
-		
-		// prologue
-		// save args in regs
-#ifdef DEBUGGER
-		const int stack_adjust = BIT_ROUND_UP(sizeof(CallStackNode), 16);
-#else		
-		const int stack_adjust = 0;
-#endif /* DEBUGGER */
-
-		const int _ap = 12 + stack_adjust;
-		const int _argc = 8 + stack_adjust;
-		const int _env = 4 + stack_adjust;
-		
-		(void)_env;	// stop compiler warning in some builds
-
 #ifdef AVMPLUS_VERBOSE
 		if (verbose())
 		{
 			core->console << "native thunk for " << info << "\n";
 		}
 #endif
-		
+
+		const int INTREGCOUNT = 6;
+		const int FLOATREGCOUNT = 8;
+		const Register intRegUsage[] = {RDI, RSI, RDX, RCX, R8, R9};
+		const Register floatRegUsage[] = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7};
+
+		int intParameterCount = 0;
+		int floatParameterCount = 0;
+		int stackAdjust = 0;
+
 #ifdef DEBUGGER
- 		SUB(ESP, stack_adjust);
+		const int stack_adjust = BIT_ROUND_UP(sizeof(CallStackNode), 16);
+ 		SUB(RSP, stack_adjust); // make room for callstack
+		PUSH (RDI); // env
+		PUSH (RDX); // ap 
+		PUSH (RSI); // argc
 
-		// Note: This call is already 16-byte aligned for MacOS X ABI
-		MOV (ECX, _env, ESP);
-		PUSH (0);   // eip
-		PUSH (0);   // framep
-		LEA(EDX, 8, ESP);
-		PUSH (EDX);	
-		PUSH (0);	// localCount
-		PUSH (0);	// frameTraits
-		PUSH (_ap+20, ESP); // va_list ap
-		PUSH (_argc+24, ESP); // int argc
-		#ifdef AVMPLUS_CDECL
-		PUSH (ECX);
-		#endif
+		//debugEnter: 
+		// RDI: env (same as func entry)
+		// RSI: int argc, (same as func entry)
+		// RDX: uint32 *ap, (same as func entry)
+		// RCX: Traits**frameTraits, 
+		// R8: int localCount, 
+		// R9: CallStackNode* callstack, 
+		// stack: Atom* framep, 
+		// stack: volatile int *eip
+
+		XOR (RCX, RCX);
+		XOR (R8, R8);
+		LEA(R9, 24, RSP); // callstack location
+
+		PUSH (R8); // framep - R8 is just a convenient zero value
+		PUSH (R8); // eip - R8 is just a convenient zero value
+
 		thincall(ENVADDR(MethodEnv::debugEnter));
-		#ifdef AVMPLUS_CDECL
-		ADD (ESP, 32);
-		#endif
-#endif /* DEBUGGER */
+		ADD (RSP, 16);  // pop off framep, eip 
 
-		#ifdef AVMPLUS_CDECL
-		int pushCount = 0;
-		#define INC_PUSHCOUNT() pushCount++
-		#else
-		#define INC_PUSHCOUNT()
-		#endif
-
-		#ifdef _MAC
-		byte *patch_esp_padding = NULL;
-		#endif
+		// reload AP, ARGC.   Leave ENV on stack
+		POP(RSI);
+		POP(RDX);
 		
-		// ap will be used heavily, store it in EDX
-		MOV (EDX, _ap, ESP);
+		stackAdjust = 8; // ENV is still on stack
+#endif
 
-		if (need_rest) {
-			INC_PUSHCOUNT();
-			INC_PUSHCOUNT();			
+		// System V ABI requires 16-byte stack alignment.
+		// This SUB will be patched with any needed padding.
+		byte *patch_esp_padding = NULL;
+		SUB (RSP, 8);
+		patch_esp_padding = mip-1;
+				
+		// rax, r11, r10 are scratch registers
+		// !!@ emit these only when needed?
+		MOV (R10, RDX); // AP
+		MOV (EAX, ESI); // ARGC
 
-			// If the method signature ends with "...",
-			// deliver any arguments after the explicitly
-			// specified ones as (Atom *argv, int argc)
-
-			// get argc in a register
-			MOV (ECX, _argc, ESP);
-
-			#ifdef _MAC
-			// System V ABI requires 16-byte stack alignment.
-			// This SUB will be patched with any needed padding.
-			SUB (ESP, 0);
-			patch_esp_padding = mip-1;
-			#endif
-			
-			// rest_count = argc-param_count
-			CMP (ECX, info->param_count);
-
-			// rest_count could be <0 if optionals omitted
-			JNB (1);
-			byte* patch_ip = mip;
-
-			// rest_count<0, push argc=0, argv=NULL
-			PUSH (0);
-			PUSH (0);
-			JMP (1);
-
-			patch_ip[-1] = mip-patch_ip;
-			patch_ip = mip;
-
-			// rest_count>=0
-			// push rest_count
-			// push rest_argv = ap+restOffset
-			SUB (ECX, info->param_count);
-			PUSH (ECX);
-			MOV (EAX, EDX);
-			ADD (EAX, info->restOffset);
-			PUSH (EAX);
-			if (info->optional_count) {
-				MOV (ECX, info->param_count); // ECX will contain new argc
-			}
-
-			patch_ip[-1] = mip-patch_ip;
-		}
-		else if (info->optional_count)
+		// place our 'this' pointer in the first reg slot (RDI)
+		MOV (intRegUsage[intParameterCount++], 0, RDX);
+		if (info->flags & AbstractFunction::UNBOX_THIS)
 		{
-			// get argc in a register
-			MOV (ECX, _argc, ESP);
-
-			#ifdef _MAC
-			// System V ABI requires 16-byte stack alignment.
-			// This SUB will be patched with any needed padding.
-			SUB (ESP, 0);
-			patch_esp_padding = mip-1;
-			#endif
+			AvmAssert(0); // needs testing
+			// void AND(Register reg, sintptr imm) { ALU(0x25, reg, imm); }
+			ALU(0x25,RDI,~7); // clear atom tag
 		}
-		#ifdef _MAC
-		else
+		
+		// Used for something like Date.getDate
+		if (info->flags & AbstractFunction::NATIVE_COOKIE)
 		{
-			// System V ABI requires 16-byte stack alignment.
-			// This SUB will be patched with any needed padding.
-			SUB (ESP, 0);
-			patch_esp_padding = mip-1;
+			MOV (intRegUsage[intParameterCount++], info->m_cookie);
 		}
-		#endif
+		
+		int push_count = 0;	
+		int first_optional = 1 + info->param_count - info->optional_count;
+		int arg_offset = 8; // skip our first arg
 
-		// push args right-to-left
-		int first_optional = 1+info->param_count-info->optional_count;
-		int arg_offset = info->restOffset;
-		for (int i=info->param_count; i > 0; i--)
+		for (int i=1; i <= info->param_count; i++)
 		{
 			// param 0 is receiver, real params start at 1
 			Traits* type = info->paramTraits(i);
 			AvmAssert(type != VOID_TYPE);
-
+		
 			// the arguments have already been coerced to the right type
 			// by the caller.  We do not do type conversions here.
 			byte* patch_jmp = NULL;
-			
-			if (i >= first_optional) {
+
+			if (i >= first_optional) 
+			{
 				// emit code to check whether argument
 				// was specified
-				CMP (ECX, i);
+				CMP (EAX, i);
 				JNB (1);
 				byte* patch_jae = mip;
-
+				
 				// emit code to push the default value
 				Atom arg = info->getDefaultValue(i-first_optional);
 
-				// the arguments have already been coerced to the right type
-				// by the caller.  We do not do type conversions here.
-
 				if (!type || type == OBJECT_TYPE)
 				{
-					// push Atom
-					PUSH (arg);
+					if (intParameterCount < INTREGCOUNT)
+					{
+						MOV (intRegUsage[intParameterCount], arg);
+					}
+					else
+					{
+						MOV (push_count, RSP, arg); 
+					}				
 				}
 				else if (type == BOOLEAN_TYPE)
 				{
 					// push bool
 					int b = arg>>3;
-					PUSH (b);
+					if (intParameterCount < INTREGCOUNT)
+					{
+						MOV (intRegUsage[intParameterCount], b);
+					}
+					else
+					{
+						MOV (push_count, RSP, b);
+					}	
 				}
 				else if (type == INT_TYPE)
 				{
 					int v = AvmCore::integer_i(arg);
-					PUSH (v);
+					if (intParameterCount < INTREGCOUNT)
+					{
+						MOV (intRegUsage[intParameterCount], v);
+					}
+					else
+					{
+						MOV (push_count, RSP, v);
+						//PUSH (v); // !!@ should be a push of 4 bytes
+					}	
 				}
 				else if (type == UINT_TYPE)
 				{
 					uint32 v = AvmCore::integer_u(arg);
-					PUSH (v);
-				}
+					if (intParameterCount < INTREGCOUNT)
+					{
+						MOV (intRegUsage[intParameterCount], v);
+					}
+					else
+					{
+						MOV (push_count, RSP, v);
+						PUSH (v); // !!@ should be a push of 4 bytes
+					}	
+
+				} 
 				else if (type == NUMBER_TYPE)
 				{
 					// push double
@@ -886,9 +1065,17 @@ namespace avmplus
 					// IA32 calling conventions don't require double's to be 8-aligned,
 					// but performance is better if they are.
 					double d = AvmCore::number_d(arg);
-					int *dp = (int*)&d;
-					PUSH (dp[1]); //msb
-					PUSH (dp[0]); //lsb
+					int64 dp = *(int64*)&d;
+					if (floatParameterCount < FLOATREGCOUNT)
+					{
+						// !!@ better way to do this?
+						MOV (-8, RSP, dp);
+						MOVSD (floatRegUsage[floatParameterCount], -8, RSP);
+					}
+					else
+					{
+						MOV (push_count, RSP, dp);
+					}
 				}
 				else
 				{
@@ -896,8 +1083,15 @@ namespace avmplus
 					// this case includes kStringType, kObjectType, and kNamespaceType
 					// default could be null, but won't be undefined
 					AvmAssert(arg != undefinedAtom);
-					int p = arg & ~7;
-					PUSH (p);
+					uint64 p = arg & ~7;
+					if (intParameterCount < INTREGCOUNT)
+					{
+						MOV (intRegUsage[intParameterCount], p);
+					}
+					else
+					{
+						MOV (push_count, RSP, p);
+					}	
 				}
 
 				// Insert a JMP instruction here to skip to
@@ -909,134 +1103,152 @@ namespace avmplus
 				// which is where the non-optional code will
 				// go.
 				patch_jae[-1] = mip-patch_jae;
-			}
+			}	
 
-			// Generate the code for the non-optional case.
-			// these args will already be converted to native form by the caller
-			
 			if (type == NUMBER_TYPE)
 			{
-				// push double
-				// TODO make this faster, we probably have memory stalls
-				// TODO stack alignment?
-				arg_offset -= 8;
-				PUSH (arg_offset+4, EDX);
-				PUSH (arg_offset, EDX);
-				INC_PUSHCOUNT();
-				INC_PUSHCOUNT();
+				// Put float value into register
+				if (floatParameterCount < FLOATREGCOUNT)
+				{
+					MOVSD (floatRegUsage[floatParameterCount++], arg_offset, R10);
+				}
+				else
+				{
+					MOV (R11, arg_offset, R10);
+					MOV (push_count, RSP, R11);
+					push_count += 8;
+				}
 			}
 			else
 			{
-				// push general type
-				// this case includes everything except Number/double
-				arg_offset -= 4;
-				PUSH (arg_offset, EDX);
-				INC_PUSHCOUNT();
+				// Put int/ptr value into register
+				if (intParameterCount < INTREGCOUNT)
+				{
+					MOV (intRegUsage[intParameterCount++], arg_offset, R10);
+				}
+				else
+				{
+					MOV (R11, arg_offset, R10);
+					MOV (push_count, RSP, R11);
+					push_count += 8;
+				}
 			}
 
+			arg_offset += 8;
+			
 			// Patch the JMP instruction, if applicable,
 			// to jump to here.
 			if (patch_jmp) {
 				patch_jmp[-1] = mip-patch_jmp;
-			}
-		}
-
-		if (info->flags & AbstractFunction::NATIVE_COOKIE)
+			}	
+		} // for each param
+					
+					
+					
+		// argv, argc need to be passed in either register or stack location
+		// depending on registers left over
+		if (need_rest)
 		{
-			PUSH (info->m_cookie);
-			INC_PUSHCOUNT();
-		}
+			// rest_count = argc-param_count
+			CMP (EAX, info->param_count);
 
-		// now handle the receiver object
+			// rest_count could be <0 if optionals omitted
+			JNB (1);
+			byte* patch_ip = mip;
+
+			// rest_count<0, push argc=0, argv=NULL
+			if (intParameterCount < INTREGCOUNT)
+			{
+				MOV(intRegUsage[intParameterCount], 0);
+			}
+			else
+			{
+				MOV (push_count, RSP, 0);
+			}
+			if ((intParameterCount + 1) < INTREGCOUNT)
+			{
+				MOV(intRegUsage[intParameterCount + 1], 0);
+			}
+			else
+			{
+				MOV (push_count + 8, RSP, 0);
+			}	
+				
+			JMP (1);
+
+			patch_ip[-1] = (byte)(mip-patch_ip);
+			patch_ip = mip;
+			if (intParameterCount < INTREGCOUNT)
+			{
+				LEA(intRegUsage[intParameterCount++], arg_offset, R10); // callstack location
+			}
+			else
+			{
+				LEA(R10, arg_offset, R10); // callstack location
+				MOV (push_count, RSP, R10);
+				push_count += 8;
+			}	
+
+			SUB (EAX, info->param_count);
+			if (intParameterCount < INTREGCOUNT)
+			{
+				MOV (intRegUsage[intParameterCount++], RAX);
+			}
+			else
+			{
+				MOV (push_count, RSP, RAX);
+				push_count += 8;
+			}	
+			
+			patch_ip[-1] = (byte)(mip-patch_ip);
+		}
 
 		// all args have been pushed, now call function using thiscall calling conventions
 		Traits* type = info->returnTraits();
 
-		MOV  (ECX, 0, EDX); // this is ap[0]
-
-		if (info->flags & AbstractFunction::UNBOX_THIS)
-		{
-			//		void AND(Register reg, int imm) { ALU(0x25, reg, imm); }
-			ALU(0x25,ECX,~7); // clear atom tag
-		}
-
-
-#ifdef NATIVE_GLOBAL_FUNCTION_HACK
-		// hack - native toplevel functions get invoked with user defined receiver
-		// but are expecting the global object.  this hack is totally unsound
-		// because it gives users the power to crash the vm.  we need to either
-		// directly support toplevel native functions, or not use them.
-		AND (ECX, ~7);
-#endif
-
-#ifdef AVMPLUS_CDECL
-		PUSH (ECX);
-#endif
-
 		byte* next_ip = mip+4;  // branch rel. to next instr
+		
+		// !!@ can our offset ever be > 32 bit
 		CALL (info->m_handler_addr - (uintptr)next_ip - 1);       // call the method as an instance method
 
-#ifdef AVMPLUS_CDECL
-		int popAmount = (pushCount+1)*4;
+		// stackAdjust is 0 or 8 - depending entirely on DEBUGGER flag
+		// push_count is how many bytes we pushed on the stack for args
+		int stackChange = (stackAdjust + push_count) & 0xF;
+		stackAdjust = (24 - stackChange) & 0xF;
+		*patch_esp_padding = push_count + stackAdjust;					
+		ADD(RSP, stackAdjust + push_count);
 
-		#ifdef _MAC
-		// 4 bytes of our callee area is caller's return address
-		// The rest is the parameters
-		int calleeAreaSize = popAmount+4;
-		
-		// Align the callee area to 16 byte boundary
-		int alignedCalleeAreaSize = (calleeAreaSize+15) & ~15;
-		
-		// The padding needed is the delta
-		int paddingNeeded = alignedCalleeAreaSize - calleeAreaSize;
-		if (paddingNeeded > 0)
-		{
-			*patch_esp_padding = (byte) paddingNeeded;
-			popAmount += paddingNeeded;
-		}
-		#endif
-		
-		ADD(ESP, popAmount);
-#endif
 
+// debugExit logic
 #ifdef DEBUGGER
-		MOV (ECX, _env, ESP);
 
-		int adjust = 0;
-		// store the return value on the stack if not a double.
-		if (type != NUMBER_TYPE)
-		{
-			PUSH(EAX);
-			adjust = 4;
-		}
+	// rdi - get ENV back off the stack
+	POP (RDI);  
+	// rsi - callstack pointer
+	LEA(RSI, 0, RSP); // callstack location
 
-#ifdef _MAC
-		// Align this call for MacOS X ABI
-		if (type != NUMBER_TYPE)
-		{
-			SUB(ESP, 4);
-			adjust += 4;
-		}
-#endif
-		LEA(EDX, adjust, ESP);    // callstack node addr
-		PUSH (EDX);	  
+	// store the return value on the stack if not a double.	
+	if (type != NUMBER_TYPE)
+	{
+		SUB (RSP, 8); // 16-byte stack alignment required
+		PUSH (RAX);
+	}
 
-#ifdef AVMPLUS_CDECL
-		PUSH(ECX);
-#endif
-		thincall(ENVADDR(MethodEnv::debugExit));
-#ifdef _MAC
-		ADD(ESP, (type != NUMBER_TYPE) ? 12 : 8);
-#else
-#ifdef AVMPLUS_CDECL
-		ADD(ESP, 8);
-#endif
-#endif
+	// call debugExit
+	thincall(ENVADDR(MethodEnv::debugExit));
+	
+	if (type != NUMBER_TYPE)
+	{
+		POP (RAX);
+		// patch up our stack - get rid of callstack allocation	
+		ADD(RSP, stack_adjust + 8);
+	}
+	else
+	{
+		// patch up our stack - get rid of callstack allocation	
+		ADD(RSP, stack_adjust);
+	}
 
-		if (type != NUMBER_TYPE)
-		{
-			POP(EAX);
-		}
 #endif
 
 		if (type != NUMBER_TYPE)
@@ -1047,26 +1259,26 @@ namespace avmplus
 			{
 				// return value already in EAX
 				// in VC++ bool is just a byte, so mask it off
-				MOVZX_r8 (EAX, EAX);
+				MOVZX_r8 (RAX, RAX);
 			}
 			else if (type == VOID_TYPE)
 			{
-				MOV (EAX, undefinedAtom);
+				MOV (RAX, undefinedAtom);
 			}
 		}
-		// else, result in FPU register ST(0)
-
-#ifdef DEBUGGER
-		ADD(ESP, stack_adjust);
-#endif /*DEBUGGER*/
-
+		// else, result in SSE register XMM0??
+		
 		RET  ();
 
 		bindMethod(info);
 	}
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	
 
+	///////////////////////////////////////////////////////////////////////////////////////////////
 	void* CodegenMIR::emitImtThunk(ImtBuilder::ImtEntry *e)
 	{
+		AvmAssert(0); // needs to be ported to 64-bit
 		mip = mipStart = getMDBuffer(pool);
 
 #ifdef FEATURE_BUFFER_GUARD

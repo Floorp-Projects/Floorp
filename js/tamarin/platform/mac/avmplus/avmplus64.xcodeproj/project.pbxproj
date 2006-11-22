@@ -1051,7 +1051,7 @@
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 				ZERO_LINK = NO;
 			};
-			name = "Debug_Debugger";
+			name = Debug_Debugger;
 		};
 		8E8B52EC09AABCA50057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -1084,7 +1084,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				USER_HEADER_SEARCH_PATHS = "$(USER_HEADER_SEARCH_PATHS) ../../../MMgc";
 			};
-			name = "Release_Debugger";
+			name = Release_Debugger;
 		};
 		8E8B52ED09AABCA50057BEE4 /* Debug_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -1104,7 +1104,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Debug_Debugger";
+			name = Debug_Debugger;
 		};
 		8E8B52EE09AABCA50057BEE4 /* Release_Debugger */ = {
 			isa = XCBuildConfiguration;
@@ -1125,7 +1125,7 @@
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SYMROOT = "$(PROJECT_DIR)/../../../../platform/mac/flash/Builds";
 			};
-			name = "Release_Debugger";
+			name = Release_Debugger;
 		};
 /* End XCBuildConfiguration section */
 

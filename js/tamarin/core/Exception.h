@@ -98,7 +98,7 @@ namespace avmplus
 
 		/** The target location to branch to when the exception occurs. */
 		union {
-			int target;
+			sintptr target;
 			CodegenMIR::OP* targetIns;
 		};
 

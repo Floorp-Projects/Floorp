@@ -87,7 +87,7 @@ return foo;
 #define RETURN_METHOD_PTR(_class, _method) \
 union { \
     int (_class::*bar)(); \
-    int foo; \
+    sintptr foo; \
 }; \
 bar = _method; \
 return foo;
@@ -95,54 +95,54 @@ return foo;
 
 #else
 #define RETURN_METHOD_PTR(_class, _method) \
-return *((int*)&_method);
+return *((sintptr*)&_method);
 #endif
 
 namespace avmplus
 {
-		int CodegenMIR::coreAddr( int (AvmCore::*f)() )
+		sintptr CodegenMIR::coreAddr( int (AvmCore::*f)() )
 		{
 			RETURN_METHOD_PTR(AvmCore, f);
 		}
 
-		int CodegenMIR::gcAddr( int (MMgc::GC::*f)() )
+		sintptr CodegenMIR::gcAddr( int (MMgc::GC::*f)() )
 		{
 			RETURN_METHOD_PTR(MMgc::GC, f);
 		}
 		
-		int CodegenMIR::envAddr( int (MethodEnv::*f)() )
+		sintptr CodegenMIR::envAddr( int (MethodEnv::*f)() )
 		{
 			RETURN_METHOD_PTR(MethodEnv, f);
 		}
 
-		int CodegenMIR::toplevelAddr( int (Toplevel::*f)() )
+		sintptr CodegenMIR::toplevelAddr( int (Toplevel::*f)() )
 		{
 			RETURN_METHOD_PTR(Toplevel, f);
 		}
 
 	#ifdef DEBUGGER
-		int CodegenMIR::callStackAddr( int (CallStackNode::*f)() )
+		sintptr CodegenMIR::callStackAddr( int (CallStackNode::*f)() )
 		{
 			RETURN_METHOD_PTR(CallStackNode, f);
 		}
 		
-		int CodegenMIR::debuggerAddr( int (Debugger::*f)() )
+		sintptr CodegenMIR::debuggerAddr( int (Debugger::*f)() )
 		{
 			RETURN_METHOD_PTR(Debugger, f);
 		}
 	#endif /* DEBUGGER */
 
-		int CodegenMIR::scriptAddr(int (ScriptObject::*f)())
+		sintptr CodegenMIR::scriptAddr(int (ScriptObject::*f)())
 		{
 			RETURN_METHOD_PTR(ScriptObject, f);
 		}
 
-		int CodegenMIR::arrayAddr(int (ArrayObject::*f)())
+		sintptr CodegenMIR::arrayAddr(int (ArrayObject::*f)())
 		{
 			RETURN_METHOD_PTR(ArrayObject, f);
 		}
 
-		int CodegenMIR::efAddr( int (ExceptionFrame::*f)() )
+		sintptr CodegenMIR::efAddr( int (ExceptionFrame::*f)() )
 		{
 			RETURN_METHOD_PTR(ExceptionFrame, f);
 		}

@@ -639,15 +639,16 @@ namespace avmplus
 		}
 	}
 
-	bool MathUtils::convertIntegerToString(int value,
+	bool MathUtils::convertIntegerToString(sintptr value,
 								           wchar *buffer,
 										   int& len,
 								           int radix /*=10*/,
 										   bool valIsUnsigned /*=false*/)
 	{
-		// buffer should be at least wchar[40].  largest should be
-		// radix 2, with sign plus 31 bits.
+		// buffer should be at least wchar[65].  largest should be
+		// radix 2, with sign plus 31/63 bits.
 		
+		#ifndef AVMPLUS_64BIT
 		// This routines does not work with this integer number since negating
 		// this value returns the same negative value and screws up our code 
 		// in the while loop below.
@@ -657,6 +658,7 @@ namespace avmplus
 			len = 11;
 			return true;
 		}
+		#endif
 
 		if (radix < 2 || radix > 36) 
 		{
@@ -664,7 +666,7 @@ namespace avmplus
 			return false;
 		}
 
-		wchar tmp[40];
+		wchar tmp[65];
 		const int size_buffer = sizeof(tmp)/sizeof(wchar);
 		wchar *src = tmp + size_buffer - 1;
 		wchar *srcEnd = src;
@@ -677,24 +679,24 @@ namespace avmplus
 		}
 		else
 		{
-			uint32 uVal;
+			uintptr uVal;
 			bool negative=false;
 
 			if (valIsUnsigned)
 			{
-				uVal = (uint32)value;
+				uVal = (uintptr)value;
 			}
 			else
 			{
 				negative = (value < 0);
 				if (negative)
 					value = -value;
-				uVal = (uint32)value;
+				uVal = (uintptr)value;
 			}
 
 			while (uVal != 0)
 			{
-				uint32 j = uVal;
+				uintptr j = uVal;
 				uVal = uVal / radix;
 				j -= (uVal * radix);
 

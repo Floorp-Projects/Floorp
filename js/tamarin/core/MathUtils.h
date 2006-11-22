@@ -114,7 +114,7 @@ namespace avmplus
 		#else
 		static int32 real2int(double val) { return (int32) val; }		
 		#endif
-		static bool convertIntegerToString(int value,
+		static bool convertIntegerToString(sintptr value,
 										   wchar *buffer,
 										   int& len,
 										   int radix=10,

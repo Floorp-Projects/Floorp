@@ -113,7 +113,11 @@ namespace avmplus
 
 		#ifdef AVMPLUS_INTERP
 		// turbo flag only available if interpreter is there
+		#ifdef AVMPLUS_64BIT // turbo disabled by default since MIR not working yet
+		turbo = false;
+		#else
 		turbo = true;
+		#endif
 		#endif
 
 		#ifdef AVMPLUS_VERIFYALL
@@ -2701,7 +2705,7 @@ return the result of the comparison ToPrimitive(x) == y.
 
     Stringp AvmCore::internInt(int value)
     {
-		wchar buffer[40];
+		wchar buffer[65];
 		int len;
 		MathUtils::convertIntegerToString(value, buffer, len);
 		return internAlloc(buffer, len);
@@ -3415,7 +3419,7 @@ return the result of the comparison ToPrimitive(x) == y.
 
 	Stringp AvmCore::intToString(int value)
 	{
-		wchar buffer[40];
+		wchar buffer[65];
 		int len;
 		MathUtils::convertIntegerToString(value, buffer, len);
 		return new (GetGC()) String(buffer, len);
@@ -3423,7 +3427,7 @@ return the result of the comparison ToPrimitive(x) == y.
 
 	Stringp AvmCore::uintToString(uint32 value)
 	{
-		wchar buffer[40];
+		wchar buffer[65];
 		int len;
 		if (value <= 0x7FFFFFFF)
 			MathUtils::convertIntegerToString(value, buffer, len);

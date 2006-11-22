@@ -82,7 +82,7 @@ namespace avmplus
 		int m_cookie;
 		union {
 			Handler m_handler;
-			int m_handler_addr;
+			uintptr m_handler_addr;
 		};
 		
 	};
