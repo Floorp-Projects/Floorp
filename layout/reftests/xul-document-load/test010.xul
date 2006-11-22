@@ -19,7 +19,7 @@
     assert(winEl.childNodes[1].nodeName == "xul-overlay", "xul-overlay PI is in the correct place");
   } catch(e) {
     dump(e);
-    assert(false);
+    assert(false, e);
     throw e;
   }
   </script>
