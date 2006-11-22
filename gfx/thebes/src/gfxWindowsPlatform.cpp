@@ -210,19 +210,26 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
     if (aFontName.IsEmpty())
         return NS_ERROR_FAILURE;
 
+    nsAutoString keyName(aFontName);
+    if (keyName.Length() >= LF_FACESIZE)
+        keyName.Truncate(LF_FACESIZE - 1);
+    ToLowerCase(keyName);
+
     nsRefPtr<FontEntry> fe;
-    if (mFonts.Get(aFontName, &fe) || mFontAliases.Get(aFontName, &fe)) {
+    if (mFonts.Get(keyName, &fe) || mFontAliases.Get(keyName, &fe)) {
         aAborted = !(*aCallback)(fe->mName, aClosure);
         // XXX If the font has font link, we should add the linked font.
         return NS_OK;
     }
 
-    if (mNonExistingFonts.IndexOf(aFontName) >= 0) {
+    if (mNonExistingFonts.IndexOf(keyName) >= 0) {
         aAborted = PR_FALSE;
         return NS_OK;
     }
 
     LOGFONTW logFont;
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfPitchAndFamily = 0;
     PRInt32 len = aFontName.Length();
     if (len >= LF_FACESIZE)
         len = LF_FACESIZE - 1;
@@ -231,13 +238,13 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
     logFont.lfFaceName[len] = 0;
 
     HDC dc = ::GetDC(nsnull);
-    ResolveData data(aCallback, this, &aFontName, aClosure);
+    ResolveData data(aCallback, this, &keyName, aClosure);
     aAborted =
         !EnumFontFamiliesExW(dc, &logFont,
                              (FONTENUMPROCW)gfxWindowsPlatform::FontResolveProc,
                              (LPARAM)&data, 0);
     if (data.mFoundCount == 0)
-        mNonExistingFonts.AppendString(aFontName);
+        mNonExistingFonts.AppendString(keyName);
     ::ReleaseDC(nsnull, dc);
 
     return NS_OK;
@@ -260,7 +267,9 @@ gfxWindowsPlatform::FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
 
     // Save the alias name to cache
     nsRefPtr<FontEntry> fe;
-    if (rData->mCaller->mFonts.Get(name, &fe))
+    nsAutoString keyName(name);
+    ToLowerCase(keyName);
+    if (rData->mCaller->mFonts.Get(keyName, &fe))
         rData->mCaller->mFontAliases.Put(*(rData->mFontName), fe);
 
     return (rData->mCallback)(name, rData->mClosure);
