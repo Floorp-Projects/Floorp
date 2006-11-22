@@ -3757,27 +3757,27 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocationURI)
   {
-   var location = aLocationURI ? aLocationURI.spec : "";
-
-   if (document.tooltipNode) {
-     // Optimise for the common case
-     if (aWebProgress.DOMWindow == content) {
-       document.getElementById("aHTMLTooltip").hidePopup();
-       document.tooltipNode = null;
-     }
-     else {
-       for (var tooltipWindow =
-              document.tooltipNode.target.ownerDocument.defaultView;
-            tooltipWindow != tooltipWindow.parent;
-            tooltipWindow = tooltipWindow.parent) {
-         if (tooltipWindow == aWebProgress.DOMWindow) {
-           document.getElementById("aHTMLTooltip").hidePopup();
-           document.tooltipNode = null;
-           break;
-         }
-       }
-     }
-   }
+    var location = aLocationURI ? aLocationURI.spec : "";
+ 
+    if (document.tooltipNode) {
+      // Optimise for the common case
+      if (aWebProgress.DOMWindow == content) {
+        document.getElementById("aHTMLTooltip").hidePopup();
+        document.tooltipNode = null;
+      }
+      else {
+        for (var tooltipWindow =
+               document.tooltipNode.target.ownerDocument.defaultView;
+             tooltipWindow != tooltipWindow.parent;
+             tooltipWindow = tooltipWindow.parent) {
+          if (tooltipWindow == aWebProgress.DOMWindow) {
+            document.getElementById("aHTMLTooltip").hidePopup();
+            document.tooltipNode = null;
+            break;
+          }
+        }
+      }
+    }
 
     // This code here does not compare uris exactly when determining
     // whether or not the message should be hidden since the message
@@ -3850,7 +3850,7 @@ nsBrowserStatusHandler.prototype =
           if (!gURIFixup)
             gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                                   .getService(Components.interfaces.nsIURIFixup);
-          if (aLocationURI && gURIFixup) {
+          if (location && gURIFixup) {
             try {
               location = gURIFixup.createExposableURI(aLocationURI).spec;
             } catch (ex) {}
