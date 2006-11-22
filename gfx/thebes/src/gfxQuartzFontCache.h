@@ -43,6 +43,7 @@
 #include "gfxAtsuiFonts.h"
 
 #include "nsUnicharUtils.h"
+#include "nsVoidArray.h"
 
 class gfxQuartzFontCache {
 public:
@@ -57,6 +58,9 @@ public:
 
     ATSUFontID GetDefaultATSUFontID (const gfxFontStyle* aStyle);
 
+    void GetFontList (const nsACString& aLangGroup,
+                      const nsACString& aGenericFamily,
+                      nsStringArray& aListOfFonts);
 private:
     static gfxQuartzFontCache *sSharedFontCache;
 

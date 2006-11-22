@@ -57,6 +57,10 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+
+    nsresult GetFontList(const nsACString& aLangGroup,
+                         const nsACString& aGenericFamily,
+                         nsStringArray& aListOfFonts);
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

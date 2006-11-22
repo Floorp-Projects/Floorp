@@ -389,3 +389,24 @@ gfxQuartzFontCache::GetDefaultATSUFontID (const gfxFontStyle* aStyle)
 {
     return [[NSFont userFontOfSize:aStyle->size] _atsFontID];
 }
+
+void
+gfxQuartzFontCache::GetFontList (const nsACString& aLangGroup,
+                                 const nsACString& aGenericFamily,
+                                 nsStringArray& aListOfFonts)
+{
+    NSFontManager *fontManager = [NSFontManager sharedFontManager];
+    NSArray *familyArray = [fontManager availableFontFamilies];
+
+    unsigned int nFamilies = [familyArray count];
+    for (unsigned int i = 0; i < nFamilies; i++) {
+        NSString *family = [familyArray objectAtIndex:i];
+        nsString str;
+        str.SetLength([family length]);
+        [family getCharacters:(str.BeginWriting())];
+        aListOfFonts.AppendString(str);
+    }
+
+    aListOfFonts.Sort();
+}
+
