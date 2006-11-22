@@ -888,12 +888,15 @@ function delayedOnLoadMessenger()
   
 #ifdef HAVE_SHELL_SERVICE
   var nsIShellService = Components.interfaces.nsIShellService;
-  var shellService = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+  var shellService;
+  try {
+    shellService = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+  } catch (ex) {}
   
   // show the default client dialog only if we have at least one account, 
   // if we should check for the default client, 
   // and we aren't already the default for all of our recognized types (mail, news, rss)
-  if (accountManager.defaultAccount && shellService.shouldCheckDefaultClient 
+  if (shellService && accountManager.defaultAccount && shellService.shouldCheckDefaultClient 
       && !shellService.isDefaultClient(true, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
     window.openDialog("chrome://messenger/content/defaultClientDialog.xul", "DefaultClient", 
                       "modal,centerscreen,chrome,resizable=no");

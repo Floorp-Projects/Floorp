@@ -56,7 +56,11 @@ var gGeneralPane = {
   checkDefaultNow: function (aAppType) 
   {   
     var nsIShellService = Components.interfaces.nsIShellService;
-    var shellSvc = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+    var shellSvc;
+    try {
+      shellSvc = Components.classes["@mozilla.org/mail/shell-service;1"].getService(nsIShellService);
+    } catch (ex) { return; }
+    
     // if we are already the default for all the types we handle, then alert the user.
     if (shellSvc.isDefaultClient(false, nsIShellService.MAIL | nsIShellService.NEWS | nsIShellService.RSS))
     {
