@@ -565,6 +565,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  PRBool aCompileEventHandlers)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+                  "Must have the same owner document");
   // XXXbz XUL elements are confused about their current doc when they're
   // cloned, so we don't assert if aParent is a XUL element and aDocument is
   // null, even if aParent->GetCurrentDoc() is non-null
@@ -607,11 +609,6 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
   }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocument> oldOwnerDocument = GetOwnerDoc();
-  nsIDocument *newOwnerDocument;
-  nsNodeInfoManager* nodeInfoManager;
-
   // XXXbz sXBL/XBL2 issue!
 
   // Set document
@@ -620,47 +617,6 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
     if (mText.IsBidi()) {
       aDocument->SetBidiEnabled(PR_TRUE);
-    }
-
-    newOwnerDocument = aDocument;
-    nodeInfoManager = newOwnerDocument->NodeInfoManager();
-  } else {
-    newOwnerDocument = aParent->GetOwnerDoc();
-    nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
-  }
-
-  if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
-    nsCOMPtr<nsINodeInfo> newNodeInfo;
-    // optimize common cases
-    nsIAtom* name = mNodeInfo->NameAtom();
-    if (name == nsLayoutAtoms::textTagName) {
-      newNodeInfo = nodeInfoManager->GetTextNodeInfo();
-      NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-    }
-    else if (name == nsLayoutAtoms::commentTagName) {
-      newNodeInfo = nodeInfoManager->GetCommentNodeInfo();
-      NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-    }
-    else {
-      rv = nodeInfoManager->GetNodeInfo(name,
-                                        mNodeInfo->GetPrefixAtom(),
-                                        mNodeInfo->NamespaceID(),
-                                        getter_AddRefs(newNodeInfo));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    mNodeInfo.swap(newNodeInfo);
-  }
-
-  if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument &&
-      HasProperties()) {
-    nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
-    if (newOwnerDocument) {
-      nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
-
-      oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
-    }
-    else {
-      oldTable->DeleteAllPropertiesFor(this);
     }
   }
 

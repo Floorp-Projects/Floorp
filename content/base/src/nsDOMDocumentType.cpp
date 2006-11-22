@@ -50,6 +50,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
+#include "nsIXPConnect.h"
+#include "nsIDOMDocument.h"
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
@@ -236,4 +238,61 @@ nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) cons
 {
   return new nsDOMDocumentType(aNodeInfo, mName, mEntities, mNotations,
                                mPublicId, mSystemId, mInternalSubset);
+}
+
+nsresult
+nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
+                              nsIContent *aBindingParent,
+                              PRBool aCompileEventHandlers)
+{
+  if (!HasSameOwnerDoc(NODE_FROM(aParent, aDocument))) {
+    NS_ASSERTION(!GetOwnerDoc(), "Need to adopt or import first!");
+
+    // DocumentType nodes are the only nodes that can have a null ownerDocument
+    // according to the DOM spec, so we need to give them a new nodeinfo in that
+    // case.
+    // XXX We may want to move this to nsDOMImplementation::CreateDocument if
+    //     we want to rely on the nodeinfo and wrappers being right before
+    //     getting into doReplaceOrInsertBefore or doInsertChildAt. That would
+    //     break inserting DOMDocumentType nodes through other DOM methods
+    //     though.
+    nsNodeInfoManager *nimgr = aParent ?
+                               aParent->NodeInfo()->NodeInfoManager() :
+                               aDocument->NodeInfoManager();
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
+    nsresult rv = nimgr->GetNodeInfo(mNodeInfo->NameAtom(),
+                                     mNodeInfo->GetPrefixAtom(),
+                                     mNodeInfo->NamespaceID(),
+                                     getter_AddRefs(newNodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mNodeInfo.swap(newNodeInfo);
+
+    nsCOMPtr<nsIDocument> oldOwnerDoc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromContext());
+    nsIDocument *newOwnerDoc = nimgr->GetDocument();
+    if (oldOwnerDoc && newOwnerDoc) {
+      nsIXPConnect *xpc = nsContentUtils::XPConnect();
+
+      JSContext *cx = nsnull;
+      JSObject *oldScope = nsnull, *newScope = nsnull;
+      rv = nsContentUtils::GetContextAndScopes(oldOwnerDoc, newOwnerDoc, &cx,
+                                               &oldScope, &newScope);
+      if (cx && xpc) {
+        nsISupports *node = NS_ISUPPORTS_CAST(nsIContent*, this);
+        nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
+        rv = xpc->ReparentWrappedNativeIfFound(cx, oldScope, newScope, node,
+                                               getter_AddRefs(oldWrapper));
+      }
+
+      if (NS_FAILED(rv)) {
+        mNodeInfo.swap(newNodeInfo);
+
+        return rv;
+      }
+    }
+  }
+
+  return nsGenericDOMDataNode::BindToTree(aDocument, aParent, aBindingParent,
+                                          aCompileEventHandlers);
 }

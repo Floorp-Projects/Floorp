@@ -1762,6 +1762,8 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                              PRBool aCompileEventHandlers)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+                  "Must have the same owner document");
   // XXXbz XUL elements are confused about their current doc when they're
   // cloned, so we don't assert if aParent is a XUL element and aDocument is
   // null, even if aParent->GetCurrentDoc() is non-null
@@ -1805,12 +1807,6 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
   }
 
-  nsresult rv;
-  
-  nsCOMPtr<nsIDocument> oldOwnerDocument = GetOwnerDoc();
-  nsIDocument *newOwnerDocument;
-  nsNodeInfoManager* nodeInfoManager;
-
   // XXXbz sXBL/XBL2 issue!
 
   // Finally, set the document
@@ -1826,51 +1822,10 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     // Being added to a document.
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-
-    newOwnerDocument = aDocument;
-    nodeInfoManager = newOwnerDocument->NodeInfoManager();
-  } else {
-    newOwnerDocument = aParent->GetOwnerDoc();
-    nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
-  }
-
-  // Handle a change in our owner document.
-
-  if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
-    nsCOMPtr<nsINodeInfo> newNodeInfo;
-    rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                      mNodeInfo->GetPrefixAtom(),
-                                      mNodeInfo->NamespaceID(),
-                                      getter_AddRefs(newNodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
-    mNodeInfo.swap(newNodeInfo);
-  }
-
-  if (oldOwnerDocument != newOwnerDocument) {
-    if (oldOwnerDocument && HasProperties()) {
-      nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
-      if (newOwnerDocument) {
-        nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
-
-        oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
-      }
-      else {
-        oldTable->DeleteAllPropertiesFor(this);
-      }
-    }
-
-    if (newOwnerDocument) {
-      // set a new nodeinfo on attribute nodes
-      nsDOMSlots *slots = GetExistingDOMSlots();
-      if (slots && slots->mAttributeMap) {
-        rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
   }
 
   // Now recurse into our kids
+  nsresult rv;
   PRUint32 i;
   for (i = 0; i < GetChildCount(); ++i) {
     // The child can remove itself from the parent in BindToTree.
@@ -2314,6 +2269,27 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
                   "Incorrect aDocument");
 
+  nsresult rv;
+  nsINode* container = NODE_FROM(aParent, aDocument);
+  if (!container->HasSameOwnerDoc(aKid)) {
+    if (aKid->GetOwnerDoc()) {
+      return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+    }
+
+    nsCOMPtr<nsIDOMNode> kid = do_QueryInterface(aKid, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint16 nodeType = 0;
+    rv = kid->GetNodeType(&nodeType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // DocumentType nodes are the only nodes that can have a null ownerDocument
+    // according to the DOM spec, and we need to allow inserting them.
+    if (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+      return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+    }
+  }
+
   PRUint32 childCount = aChildArray.ChildCount();
   NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
 
@@ -2323,7 +2299,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 
   mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
 
-  nsresult rv = aChildArray.InsertChildAt(aKid, aIndex);
+  rv = aChildArray.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aKid->BindToTree(aDocument, aParent, nsnull, PR_TRUE);
@@ -2341,7 +2317,6 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   // really need to stop running them while we're in the middle of modifying
   // the DOM....
 
-  nsINode* container = NODE_FROM(aParent, aDocument);
   if (aNotify && aKid->GetNodeParent() == container) {
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
@@ -2777,24 +2752,16 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsIDocument* old_doc = newContent->GetOwnerDoc();
+  if (!container->HasSameOwnerDoc(newContent)) {
+    // DocumentType nodes are the only nodes that can have a null ownerDocument
+    // according to the DOM spec, and we need to allow inserting them.
+    if (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
+        newContent->GetOwnerDoc()) {
+      return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+    }
 
-  // XXXbz The document code and content code have two totally different
-  // security checks here.  Why?  Because I'm afraid to change such things this
-  // close to 1.8.  But which should we do here, really?  Or both?  For example
-  // what should a caller with UniversalBrowserRead/Write/whatever be able to
-  // do, exactly?  Do we need to be more careful with documents because random
-  // callers _can_ get access to them?  That might be....
-  if (old_doc && old_doc != container->GetOwnerDoc()) {
-    if (aParent) {
-      if (!nsContentUtils::CanCallerAccess(aNewChild)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-    } else {
-      nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(aDocument));
-      if (NS_FAILED(nsContentUtils::CheckSameOrigin(doc, aNewChild))) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
+    if (!nsContentUtils::CanCallerAccess(aNewChild)) {
+      return NS_ERROR_DOM_SECURITY_ERR;
     }
   }
 
@@ -2947,8 +2914,8 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
         }
 
         if (newContent->GetNodeParent() ||
-            !IsAllowedAsChild(newContent, nodeType, aParent, aDocument, PR_FALSE,
-                              refContent)) {
+            !IsAllowedAsChild(newContent, nodeType, aParent, aDocument,
+                              PR_FALSE, refContent)) {
           return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
         }
       }
@@ -2957,7 +2924,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     if (!newContentIsXUL) {
       nsContentUtils::ReparentContentWrapper(newContent, aParent,
                                              container->GetOwnerDoc(),
-                                             old_doc);
+                                             container->GetOwnerDoc());
     }
 
     res = container->InsertChildAt(newContent, insPos, PR_TRUE);

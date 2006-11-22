@@ -248,11 +248,8 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       return NS_OK;
     }
 
-    // update nodeinfo if needed
-    nsIDocument* myDoc = mContent->GetOwnerDoc();
-    if (myDoc && myDoc != iAttribute->GetOwnerDoc()) {
-      rv = iAttribute->SetOwnerDocument(myDoc);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (!mContent->HasSameOwnerDoc(iAttribute)) {
+      return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
     }
 
     // Get nodeinfo and preexisting attribute (if it exists)

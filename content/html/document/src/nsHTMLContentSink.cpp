@@ -3153,24 +3153,20 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
     doc->GetDoctype(getter_AddRefs(oldDocType));
 
-    nsCOMPtr<nsIDOMDOMImplementation> domImpl;
-
-    rv = doc->GetImplementation(getter_AddRefs(domImpl));
-
-    if (NS_FAILED(rv) || !domImpl) {
-      return rv;
-    }
-
     if (name.IsEmpty()) {
       name.AssignLiteral("HTML");
     }
 
-    rv = domImpl->CreateDocumentType(name, publicId, systemId,
-                                     getter_AddRefs(docType));
-
-    if (NS_FAILED(rv) || !docType) {
-      return rv;
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
+    if (!nameAtom) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
+                               mDocument->NodeInfoManager(), nsnull,
+                               nameAtom, nsnull, nsnull, publicId, systemId,
+                               EmptyString());
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (oldDocType) {
       // If we already have a doctype we replace the old one.

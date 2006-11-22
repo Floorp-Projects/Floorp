@@ -3085,49 +3085,6 @@ nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
   return NS_OK;
 }
 
-struct nsHandlerData
-{
-  PRUint16 mOperation;
-  nsIDOMNode *mSource;
-  nsIDOMNode *mDest;
-};
-
-static void
-CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
-{
-  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
-  nsCOMPtr<nsIDOMUserDataHandler> handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
-
-  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
-  nsCOMPtr<nsIVariant> data =
-    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
-  NS_ASSERTION(data, "Handler without data?");
-
-  nsAutoString key;
-  aKey->ToString(key);
-  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
-                  handlerData->mDest);
-}
-
-/* static */
-void
-nsContentUtils::CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
-                                    const nsINode *aNode, nsIDOMNode *aSource,
-                                    nsIDOMNode *aDest)
-{
-#ifdef DEBUG
-  if (aOperation != nsIDOMUserDataHandler::NODE_DELETED) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
-    NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
-  }
-#endif
-
-  nsHandlerData handlerData = { aOperation, aSource, aDest };
-  aDocument->PropertyTable()->Enumerate(aNode, DOM_USER_DATA_HANDLER,
-                                        CallHandler, &handlerData);
-}
-
 /* static */
 nsresult
 nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,

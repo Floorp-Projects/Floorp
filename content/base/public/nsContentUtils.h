@@ -841,23 +841,6 @@ public:
                               nsIVariant **aResult);
 
   /**
-   * Call the UserDataHandler associated with aKey on node aNode.
-   * Should only be used to implement the DOM Level 3 UserData API.
-   *
-   * @param aDocument the document that contains the property table for aNode
-   * @param aOperation the type of operation that is being performed on the
-   *                   node. @see nsIDOMUserDataHandler
-   * @param aNode canonical nsINode pointer of the node to call the
-   *                UserDataHandler for
-   * @param aSource the node that aOperation is being performed on, or null if
-   *                the operation is a deletion
-   * @param aDest the newly created node if any, or null
-   */
-  static void CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
-                                  const nsINode *aNode, nsIDOMNode *aSource,
-                                  nsIDOMNode *aDest);
-
-  /**
    * Creates a DocumentFragment from text using a context node to resolve
    * namespaces.
    *

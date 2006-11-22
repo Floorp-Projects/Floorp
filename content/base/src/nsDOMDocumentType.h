@@ -79,6 +79,10 @@ public:
   // nsIContent overrides
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual const nsTextFragment* GetText();
+  virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
+                              nsIContent *aBindingParent,
+                              PRBool aCompileEventHandlers);
+
 
 protected:
   nsCOMPtr<nsIAtom> mName;

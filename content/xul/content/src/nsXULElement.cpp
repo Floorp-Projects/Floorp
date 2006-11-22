@@ -778,6 +778,8 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                          PRBool aCompileEventHandlers)
 {
     NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+    NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+                    "Must have the same owner document");
     // XXXbz XUL elements are confused about their current doc when they're
     // cloned, so we don't assert if aParent is a XUL element and aDocument is
     // null, even if aParent->GetCurrentDoc() is non-null
@@ -805,8 +807,6 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                      aParent->GetBindingParent() == GetBindingParent()),
                     "Already have a binding parent.  Unbind first!");
 
-    nsresult rv;
-
     if (!aBindingParent && aParent) {
         aBindingParent = aParent->GetBindingParent();
     }
@@ -821,10 +821,6 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     else {
         mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
     }
-
-    nsCOMPtr<nsIDocument> oldOwnerDocument = GetOwnerDoc();
-    nsIDocument *newOwnerDocument;
-    nsNodeInfoManager* nodeInfoManager;
 
     // XXXbz sXBL/XBL2 issue!
 
@@ -843,54 +839,10 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
         // Being added to a document.
         mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-
-        newOwnerDocument = aDocument;
-        nodeInfoManager = newOwnerDocument->NodeInfoManager();
-    } else {
-        newOwnerDocument = aParent->GetOwnerDoc();
-        nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
-    }
-
-    // Handle a change in our owner document.
-
-    if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
-        nsCOMPtr<nsINodeInfo> newNodeInfo;
-        nsresult rv =
-            nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                         mNodeInfo->GetPrefixAtom(),
-                                         mNodeInfo->NamespaceID(),
-                                         getter_AddRefs(newNodeInfo));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
-        mNodeInfo.swap(newNodeInfo);
-    }
-
-    if (oldOwnerDocument != newOwnerDocument) {
-        if (oldOwnerDocument && HasProperties()) {
-            nsPropertyTable *oldTable = oldOwnerDocument->PropertyTable();
-            if (newOwnerDocument) {
-                nsPropertyTable *newTable = newOwnerDocument->PropertyTable();
-
-                oldTable->TransferOrDeleteAllPropertiesFor(this, newTable);
-            }
-            else {
-                oldTable->DeleteAllPropertiesFor(this);
-            }
-        }
-
-        if (newOwnerDocument) {
-            // set a new nodeinfo on attribute nodes
-            nsDOMSlots *slots = GetExistingDOMSlots();
-            if (slots && slots->mAttributeMap) {
-                rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
-
-            RecompileScriptEventListeners();
-        }
     }
 
     // Now recurse into our kids
+    nsresult rv;
     PRUint32 i;
     for (i = 0; i < GetChildCount(); ++i) {
         // The child can remove itself from the parent in BindToTree.
