@@ -557,7 +557,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
         return rv;
     }
 
-    rv = cm_holder->GetJSObject(&file_jsobj);
+    rv = file_holder->GetJSObject(&file_jsobj);
     if (NS_FAILED(rv)) {
         return rv;
     }
