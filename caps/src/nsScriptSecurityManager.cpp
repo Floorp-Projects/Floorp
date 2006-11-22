@@ -357,6 +357,34 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     return result;
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
+                                             nsIPrincipal** aPrincipal)
+{
+    NS_PRECONDITION(aChannel, "Must have channel!");
+    nsCOMPtr<nsISupports> owner;
+    aChannel->GetOwner(getter_AddRefs(owner));
+    if (owner) {
+        CallQueryInterface(owner, aPrincipal);
+        if (*aPrincipal) {
+            return NS_OK;
+        }
+    }
+
+    // OK, get the principal from the URI.  Make sure this does the same thing
+    // as nsDocument::Reset and nsXULDocument::StartDocumentLoad.
+    nsCOMPtr<nsIURI> uri;
+    nsLoadFlags loadFlags = 0;
+    nsresult rv = aChannel->GetLoadFlags(&loadFlags);
+    if (NS_SUCCEEDED(rv) && (loadFlags & nsIChannel::LOAD_REPLACE)) {
+      aChannel->GetURI(getter_AddRefs(uri));
+    } else {
+      aChannel->GetOriginalURI(getter_AddRefs(uri));
+    }
+
+    return GetCodebasePrincipal(uri, aPrincipal);
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////
@@ -2948,16 +2976,18 @@ nsScriptSecurityManager::OnChannelRedirect(nsIChannel* oldChannel,
                                            nsIChannel* newChannel,
                                            PRUint32 redirFlags)
 {
-    nsCOMPtr<nsIURI> oldURI, newURI;
-    oldChannel->GetURI(getter_AddRefs(oldURI));
+    nsCOMPtr<nsIPrincipal> oldPrincipal;
+    GetChannelPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
+
+    nsCOMPtr<nsIURI> newURI;
     newChannel->GetURI(getter_AddRefs(newURI));
 
-    NS_ENSURE_STATE(oldURI && newURI);
+    NS_ENSURE_STATE(oldPrincipal && newURI);
 
     const PRUint32 flags =
         nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
         nsIScriptSecurityManager::DISALLOW_SCRIPT;
-    return CheckLoadURI(oldURI, newURI, flags);
+    return CheckLoadURIWithPrincipal(oldPrincipal, newURI, flags);
 }
 
 

@@ -81,7 +81,8 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-  virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
+  virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal);
   virtual nsStyleSet::sheetType GetAttrSheetType();
 
   virtual nsresult CreateShell(nsPresContext* aContext,
@@ -286,8 +287,10 @@ protected:
                                    nsIChannel* aChannel,
                                    PRInt32& aCharsetSource,
                                    nsACString& aCharset);
-  static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
-                                 PRInt32& charsetSource, nsACString& aCharset);
+  // aParentDocument could be null.
+  PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+                          nsIDocument* aParentDocument,
+                          PRInt32& charsetSource, nsACString& aCharset);
   static PRBool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
                                       nsACString& aCharset);
   static PRBool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,

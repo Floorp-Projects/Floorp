@@ -39,9 +39,10 @@
 #include "nsIPrincipal.idl"
 #include "nsIXPCSecurityManager.idl"
 interface nsIURI;
+interface nsIChannel;
 
 
-[scriptable, uuid(b9024f88-9ad2-491c-9777-ce5191033d3d)]
+[scriptable, uuid(c61d3ad1-00aa-407c-b7d7-de48b3f18662)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -299,6 +300,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * if no global or no principal.
      */
     [noscript] nsIPrincipal getPrincipalFromContext(in JSContextPtr cx);
+
+    /**
+     * Get the principal for the given channel.  This will typically be the
+     * channel owner if there is one, and the codebase principal for the
+     * channel's URI otherwise.  aChannel must not be null.
+     */
+    [noscript] nsIPrincipal getChannelPrincipal(in nsIChannel aChannel);
 };
 
 %{C++

@@ -43,6 +43,7 @@ interface nsIContentViewer;
 interface nsIStreamListener;
 interface nsIDocument;
 interface nsILoadGroup;
+interface nsIPrincipal;
 
 /**
  * To get a component that implements nsIDocumentLoaderFactory
@@ -52,7 +53,7 @@ interface nsILoadGroup;
  * The component is a service, so use GetService, not CreateInstance to get it.
  */
 
-[scriptable, uuid(df15f850-5d98-11d4-9f4d-0010a4053fd0)]
+[scriptable, uuid(5e7d2967-5a07-444f-95d5-25b533252d38)]
 interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstance(in string aCommand,
                               in nsIChannel aChannel,
@@ -66,5 +67,11 @@ interface nsIDocumentLoaderFactory : nsISupports {
                                          in nsIDocument aDocument,
                                          in string aCommand);
 
-    nsIDocument createBlankDocument(in nsILoadGroup aLoadGroup);
+    /**
+     * Create a blank document using the given loadgroup and given
+     * principal.  aPrincipal is allowed to be null, in which case the
+     * new document will get the about:blank codebase principal.
+     */
+    nsIDocument createBlankDocument(in nsILoadGroup aLoadGroup,
+                                    in nsIPrincipal aPrincipal);
 };

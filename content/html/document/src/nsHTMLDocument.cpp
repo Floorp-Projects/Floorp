@@ -404,11 +404,12 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 void
-nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
+nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
+                           nsIPrincipal* aPrincipal)
 {
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
-  nsDocument::ResetToURI(aURI, aLoadGroup);
+  nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
 
   InvalidateHashTables();
   PrePopulateHashTables();

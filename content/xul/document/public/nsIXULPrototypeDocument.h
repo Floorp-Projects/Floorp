@@ -52,7 +52,8 @@ class nsNodeInfoManager;
 class nsISupportsArray;
 
 #define NS_IXULPROTOTYPEDOCUMENT_IID \
-    {0xfc69c0c7,0xd101,0x4830,{0xa1,0x3e,0x3a,0x65,0xbc,0xc8,0xee,0xf2}}
+{ 0x054a0bfe, 0xe7bc, 0x44b0, \
+ { 0x90, 0x97, 0x6c, 0x95, 0xe4, 0xd6, 0x5f, 0xa3 } }
 
 /**
  * A "prototype" document that stores shared document information
@@ -64,9 +65,17 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPEDOCUMENT_IID)
 
     /**
-     * Access the URI of the document
+     * Method to initialize a prototype document's principal.  Either this
+     * method or Read() must be called immediately after the prototype document
+     * is created.  aURI must be non-null.  aPrincipal is allowed to be null;
+     * in this case the prototype will get a null principal object.  If this
+     * method returns error, do NOT use the prototype document for anything.
      */
-    NS_IMETHOD SetURI(nsIURI* aURI) = 0;
+    NS_IMETHOD InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal) = 0;
+
+    /**
+     * Retrieve the URI of the document
+     */
     NS_IMETHOD GetURI(nsIURI** aResult) = 0;
 
     /**
@@ -107,8 +116,9 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const = 0;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData) = 0;
 
-    virtual nsIPrincipal *GetDocumentPrincipal() = 0;
-    virtual void SetDocumentPrincipal(nsIPrincipal *aPrincipal) = 0;
+    // Guaranteed to return non-null for a properly-initialized prototype
+    // document.
+    virtual nsIPrincipal *DocumentPrincipal() = 0;
 
     virtual nsNodeInfoManager *GetNodeInfoManager() = 0;
 

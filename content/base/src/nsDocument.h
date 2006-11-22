@@ -298,7 +298,8 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
-  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
+  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
+                          nsIPrincipal* aPrincipal);
 
   // StartDocumentLoad is pure virtual so that subclasses must override it.
   // The nsDocument StartDocumentLoad does some setup, but does NOT set
