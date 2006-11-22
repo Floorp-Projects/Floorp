@@ -126,6 +126,7 @@
 #include "prenv.h"
 #include "prprf.h"
 #include "plstr.h"
+#include "prtime.h"
 
 #include <stdio.h>
 #ifdef WIN32
@@ -147,6 +148,7 @@ struct nsCycleCollectorParams
     PRBool mLogPointers;
     
     PRUint32 mEventDivisor;
+    PRTime mTimeStep;
     PRUint32 mScanDelay;
     
     nsCycleCollectorParams() :
@@ -158,13 +160,24 @@ struct nsCycleCollectorParams
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
         // The default number of tickles we receive from the event loop
-        // before we actually run the collection algorithm. 
+        // before we check the time.
         //
         // Making this number smaller causes:
         //   - More time to be spent in the collector (bad)
         //   - Collection to occur in finer-grained increments (good)
 
         mEventDivisor(64),
+
+        // The default number of microseconds we consider as "one
+        // aging step" for the pointers in the purple buffer. We only
+        // scan the purple buffer for ripe pointers once this many ms
+        // have passed.
+        //
+        // Making this number smaller causes:
+        //   - More time to be spent in the collector (bad)
+        //   - Collection to occur in finer-grained increments (good)
+
+        mTimeStep(1000000),
 
         // The default number of collections to "age" candidate
         // pointers in the purple buffer before we decide that any
@@ -176,11 +189,14 @@ struct nsCycleCollectorParams
         //   - Less delay between forming garbage and collecting it (good)
 
         mScanDelay(32)
-
     {
         char *s = PR_GetEnv("XPCOM_CC_EVENT_DIVISOR");
         if (s)
             PR_sscanf(s, "%d", &mEventDivisor);
+
+        s = PR_GetEnv("XPCOM_CC_TIME_STEP");
+        if (s)
+            PR_sscanf(s, "%d", &mTimeStep);
 
         s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
         if (s)
@@ -279,6 +295,7 @@ struct PtrInfo
         : mColor(black),
           mLang(nsIProgrammingLanguage::CPLUSPLUS),
           mInternalRefs(0), 
+          mRefCount(0),
           mBytes(0), 
           mName(nsnull)
     {}
@@ -287,6 +304,7 @@ struct PtrInfo
         : mColor(col),
           mLang(nsIProgrammingLanguage::CPLUSPLUS),
           mInternalRefs(0), 
+          mRefCount(0),
           mBytes(0), 
           mName(nsnull)
     {}
@@ -300,6 +318,7 @@ typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PtrInfo, PtrInfo> GCTable;
 struct nsCycleCollector
 {
     PRUint32 mTick;
+    PRTime mLastAging;
     PRUint32 mCurrGen;
     PRBool mCollectionInProgress;
     PRBool mScanInProgress;
@@ -1182,7 +1201,7 @@ static void InitMemHook(void)
 }
 
 
-#elif 0
+#elif 0 // defined(XP_MACOSX)
 
 #include <malloc/malloc.h>
 
@@ -1224,6 +1243,7 @@ InitMemHook(void)
 
 nsCycleCollector::nsCycleCollector() : 
     mTick(0),
+    mLastAging(0),
     mCurrGen(0), 
     mCollectionInProgress(PR_FALSE),
     mScanInProgress(PR_FALSE),
@@ -1495,11 +1515,19 @@ nsCycleCollector::Collect()
 
     if (mParams.mHookMalloc)
         InitMemHook();
-    
+
+    // First check if our event divisor has expired.
     if (mTick++ < mParams.mEventDivisor) 
         return;
 
     mTick = 0;
+
+    // Then check if the time limit has been reached.
+    PRTime now = PR_Now();
+    if ((mLastAging + mParams.mTimeStep) > now)
+        return;
+
+    mLastAging = now;
 
     // NB: It is strange, and also essential, that we collect our
     // purple candidates twice: both before *and* after calling
