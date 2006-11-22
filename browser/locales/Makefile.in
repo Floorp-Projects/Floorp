@@ -117,10 +117,10 @@ libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
 	$(INSTALL) $^ $(FINAL_TARGET)
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
-	$(INSTALL) $^ $(FINAL_TARGET)/defaults/profile
+	$(SYSINSTALL) $^ $(FINAL_TARGET)/defaults/profile
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
-	$(INSTALL) $^ $(FINAL_TARGET)/defaults/profile/chrome
+	$(SYSINSTALL) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
 install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
