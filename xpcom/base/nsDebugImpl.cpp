@@ -416,6 +416,7 @@ Break(const char *aMsg)
       WaitForSingleObject(pi.hProcess, INFINITE);
       GetExitCodeProcess(pi.hProcess, &code);
       CloseHandle(pi.hProcess);
+      CloseHandle(pi.hThread);
     }
 
     switch(code) {
