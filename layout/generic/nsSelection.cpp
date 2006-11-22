@@ -2257,6 +2257,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
 
   nsIFrame::ContentOffsets offsets =
       newFrame->GetContentOffsetsFromPoint(newPoint);
+  if (!offsets.content)
+    return;
 
   if ((newFrame->GetStateBits() & NS_FRAME_SELECTED_CONTENT) &&
        AdjustForMaintainedSelection(offsets.content, offsets.offset))
