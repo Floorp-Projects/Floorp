@@ -5145,19 +5145,12 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
         case nsMsgNavigationType::lastUnreadMessage:
             break;
         case nsMsgNavigationType::nextUnreadThread:
+            if (startIndex != nsMsgViewIndex_None)
             {
                 nsMsgKeyArray idsMarkedRead;
-
-                if (startIndex == nsMsgViewIndex_None) 
-                {
-                    NS_ASSERTION(0,"startIndex == nsMsgViewIndex_None");
-                    break;
-                }
-                rv = MarkThreadOfMsgRead(m_keys.GetAt(startIndex), startIndex, idsMarkedRead, PR_TRUE);
-                if (NS_SUCCEEDED(rv)) 
-                    return NavigateFromPos(nsMsgNavigationType::nextUnreadMessage, startIndex, pResultKey, pResultIndex, pThreadIndex, PR_TRUE);
-                break;
+                MarkThreadOfMsgRead(m_keys.GetAt(startIndex), startIndex, idsMarkedRead, PR_TRUE);
             }
+            return NavigateFromPos(nsMsgNavigationType::nextUnreadMessage, startIndex, pResultKey, pResultIndex, pThreadIndex, PR_TRUE);
         case nsMsgNavigationType::toggleThreadKilled:
             {
                 PRBool resultKilled;

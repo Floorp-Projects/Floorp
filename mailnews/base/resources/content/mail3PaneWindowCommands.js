@@ -985,9 +985,7 @@ function MsgNextFlaggedMessage()
 
 function MsgNextUnreadThread()
 {
-	//First mark the current thread as read.  Then go to the next one.
-	MsgMarkThreadAsRead();
-	GoNextMessage(nsMsgNavigationType.nextUnreadThread, true);
+  GoNextMessage(nsMsgNavigationType.nextUnreadThread, true);
 }
 
 function MsgPreviousMessage()
