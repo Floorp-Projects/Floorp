@@ -107,8 +107,6 @@ nsMsgSendLater::nsMsgSendLater()
   mIdentityKey = nsnull;
   mAccountKey = nsnull;
 
-  mRequestReturnReceipt = PR_FALSE;
-
   NS_NewISupportsArray(getter_AddRefs(mMessagesToSend));
 }
 
@@ -534,9 +532,6 @@ nsMsgSendLater::CompleteMailFileSend()
     fields->SetNewshost(m_newshost);
 #endif
 
-  if (mRequestReturnReceipt)
-    fields->SetReturnReceipt(PR_TRUE);
-
   // Create the listener for the send operation...
   SendOperationListener * sendListener = new SendOperationListener();
   if (!sendListener)
@@ -813,7 +808,6 @@ nsMsgSendLater::BuildHeaders()
   {
     PRBool prune_p = PR_FALSE;
     PRBool  do_flags_p = PR_FALSE;
-    PRBool  do_return_receipt_p = PR_FALSE;
     char *colon = PL_strchr(buf, ':');
     char *end;
     char *value = 0;
@@ -875,7 +869,7 @@ nsMsgSendLater::BuildHeaders()
           !PL_strncasecmp(HEADER_X_MOZILLA_STATUS, buf, end - buf))
           prune_p = do_flags_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_DRAFT_INFO, buf, end - buf))
-          prune_p = do_return_receipt_p = PR_TRUE;
+          prune_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_KEYWORDS, buf, end - buf))
           prune_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_NEWSHOST, buf, end - buf))
@@ -959,26 +953,6 @@ SEARCH_NEWLINE:
       m_flags = (m_flags << 4) | UNHEX(*s);
       s++;
       }
-    }
-    else if (do_return_receipt_p)
-    {
-      int L = buf - value;
-      char *draftInfo = (char*) PR_Malloc(L+1);
-      char *receipt = NULL;
-      if (!draftInfo) return NS_ERROR_OUT_OF_MEMORY;
-      memcpy(draftInfo, value, L);
-      *(draftInfo+L)=0;
-      receipt = PL_strstr(draftInfo, "receipt=");
-      if (receipt) 
-      {
-        char *s = receipt+8;
-        int requestForReturnReceipt = 0;
-        PR_sscanf(s, "%d", &requestForReturnReceipt);
-        
-        if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
-          mRequestReturnReceipt = PR_TRUE;
-      }
-      PR_Free(draftInfo);
     }
 
     if (*buf == nsCRT::CR || *buf == nsCRT::LF)
