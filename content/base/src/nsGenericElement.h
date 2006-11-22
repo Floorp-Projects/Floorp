@@ -61,6 +61,7 @@
 #include "mozFlushType.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -352,17 +353,13 @@ public:
   nsGenericElement(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericElement();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   /**
    * Called during QueryInterface to give the binding manager a chance to
    * get an interface for this element.
    */
   nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  // nsIDOMGCParticipant interface methods
-  virtual nsIDOMGCParticipant* GetSCCIndex();
-  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
   // nsINode interface methods
   virtual PRUint32 GetChildCount() const;
@@ -768,6 +765,8 @@ public:
   virtual void RecompileScriptEventListeners()
   {
   }
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsGenericElement)
 
 protected:
   /**

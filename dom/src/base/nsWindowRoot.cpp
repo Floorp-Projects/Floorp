@@ -52,8 +52,10 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsFocusController.h"
 #include "nsString.h"
-#include "nsDOMClassInfo.h"
 #include "nsEventDispatcher.h"
+#include "nsIProgrammingLanguage.h"
+
+#include "nsCycleCollectionParticipant.h"
 
 static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 
@@ -65,10 +67,10 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
   nsFocusController::Create(getter_AddRefs(mFocusController));
 
   nsCOMPtr<nsIDOMFocusListener> focusListener(do_QueryInterface(mFocusController));
-  ++mRefCnt;
+  mRefCnt.incr(NS_STATIC_CAST(nsIDOMEventReceiver*, this));
   AddEventListener(NS_LITERAL_STRING("focus"), focusListener, PR_TRUE);
   AddEventListener(NS_LITERAL_STRING("blur"), focusListener, PR_TRUE);
-  --mRefCnt;
+  mRefCnt.decr(NS_STATIC_CAST(nsIDOMEventReceiver*, this));
 }
 
 nsWindowRoot::~nsWindowRoot()
@@ -78,20 +80,22 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_2_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver, 
+                                     mListenerManager, mFocusController)
+
 NS_INTERFACE_MAP_BEGIN(nsWindowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
   NS_INTERFACE_MAP_ENTRY(nsPIWindowRoot)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WindowRoot) // XXX right name?
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsWindowRoot)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsWindowRoot)
-NS_IMPL_RELEASE(nsWindowRoot)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver)
 
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
@@ -234,16 +238,6 @@ nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return NS_ERROR_FAILURE;
 }
 
-nsIDOMGCParticipant*
-nsWindowRoot::GetSCCIndex()
-{
-  return this;
-}
-
-void
-nsWindowRoot::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
-{
-}
 
 NS_IMETHODIMP
 nsWindowRoot::PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor)

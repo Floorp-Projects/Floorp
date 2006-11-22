@@ -39,6 +39,8 @@
 #ifndef jslock_h__
 #define jslock_h__
 
+JS_BEGIN_EXTERN_C
+
 #ifdef JS_THREADSAFE
 
 #include "jstypes.h"
@@ -259,5 +261,7 @@ extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
 
 #define JS_LOCK(P,CX)               JS_LOCK0(P, CX_THINLOCK_ID(CX))
 #define JS_UNLOCK(P,CX)             JS_UNLOCK0(P, CX_THINLOCK_ID(CX))
+
+JS_END_EXTERN_C
 
 #endif /* jslock_h___ */

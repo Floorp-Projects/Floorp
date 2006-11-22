@@ -155,6 +155,8 @@ struct JSRuntime {
     uint16              gcPadding;
 
     JSGCCallback        gcCallback;
+    JSGCThingCallback   gcThingCallback;
+    void                *gcThingCallbackClosure;
     uint32              gcMallocBytes;
     JSGCArena           *gcUnscannedArenaStackTop;
 #ifdef DEBUG

@@ -102,7 +102,6 @@ static void PrintReqURL(imgIRequest* req) {
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
-    mRootRefCount(0),
     mLoadingEnabled(PR_TRUE),
     mStartingLoad(PR_FALSE),
     mLoading(PR_FALSE),
@@ -127,19 +126,6 @@ nsImageLoadingContent::DestroyImageLoadingContent()
   if (mPendingRequest) {
     mPendingRequest->Cancel(NS_ERROR_FAILURE);
     mPendingRequest = nsnull;
-  }
-
-  // This can actually fire for multipart/x-mixed-replace, since if the
-  // load is canceled between parts (e.g., by cancelling the load
-  // group), we won't get any notification.  See bug 321054 comment 31
-  // and bug 339610.  *If* that multipart/x-mixed-replace image has
-  // event handlers, we won't even get to this warning; we'll leak
-  // instead.
-  NS_WARN_IF_FALSE(mRootRefCount == 0,
-                   "unbalanced handler preservation refcount");
-  if (mRootRefCount != 0) {
-    mRootRefCount = 1;
-    UnpreserveLoadHandlers();
   }
 }
 
@@ -278,9 +264,6 @@ NS_IMETHODIMP
 nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, PRBool aLastPart)
 {
   LOOP_OVER_OBSERVERS(OnStopRequest(aRequest, aLastPart));
-
-  if (aLastPart)
-    UnpreserveLoadHandlers();
 
   return NS_OK;
 }
@@ -453,8 +436,6 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     return NS_OK;
   }
 
-  PreserveLoadHandlers();
-
   // Null out our mCurrentURI, in case we have no image requests right now.
   mCurrentURI = nsnull;
   
@@ -468,9 +449,6 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   // Make sure our state is up to date
   UpdateImageState(PR_TRUE);
-
-  if (NS_FAILED(rv))
-    UnpreserveLoadHandlers();
 
   return rv;
 }
@@ -589,8 +567,6 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     return NS_OK;
   }
 
-  PreserveLoadHandlers();
-
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
@@ -599,7 +575,6 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  getter_AddRefs(req));
   if (NS_FAILED(rv)) {
     FireEvent(NS_LITERAL_STRING("error"));
-    UnpreserveLoadHandlers();
     return NS_OK;
   }
 
@@ -740,7 +715,6 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
   NS_PRECONDITION(aRequest, "Must have a request here!");
   AutoStateChanger changer(this, aNotify);
   mCurrentURI = nsnull;
-  PreserveLoadHandlers();
   CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
 
   NS_ASSERTION(!mCurrentRequest, "We should not have a current request now");
@@ -800,7 +774,6 @@ public:
   ~Event()
   {
     mDocument->UnblockOnload(PR_TRUE);
-    mContent->UnpreserveLoadHandlers();
   }
 
   NS_IMETHOD Run();
@@ -860,39 +833,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   // Block onload for our event.  Since we unblock in the event destructor, we
   // want to block now, even if posting will fail.
   document->BlockOnload();
-  PreserveLoadHandlers();
   
   return NS_DispatchToCurrentThread(evt);
 }
 
-void
-nsImageLoadingContent::PreserveLoadHandlers()
-{
-  ++mRootRefCount;
-  NS_LOG_ADDREF(&mRootRefCount, mRootRefCount,
-                "nsImageLoadingContent::mRootRefCount", sizeof(mRootRefCount));
-  if (mRootRefCount == 1) {
-    nsCOMPtr<nsIDOMGCParticipant> part = do_QueryInterface(this);
-    nsresult rv = nsDOMClassInfo::SetExternallyReferenced(part);
-    // The worst that will happen if we ignore this failure is that
-    // onload or onerror will fail to fire.  I suppose we could fire
-    // onerror now as a result of that, but the only reason it would
-    // actually fail is out-of-memory, and it seems silly to bother and
-    // unlikely to work in that case.
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ignoring failure to root participant");
-  }
-}
-
-void
-nsImageLoadingContent::UnpreserveLoadHandlers()
-{
-  NS_ASSERTION(mRootRefCount != 0,
-               "load handler preservation refcount underflow");
-  --mRootRefCount;
-  NS_LOG_RELEASE(&mRootRefCount, mRootRefCount,
-                 "nsImageLoadingContent::mRootRefCount");
-  if (mRootRefCount == 0) {
-    nsCOMPtr<nsIDOMGCParticipant> part = do_QueryInterface(this);
-    nsDOMClassInfo::UnsetExternallyReferenced(part);
-  }
-}

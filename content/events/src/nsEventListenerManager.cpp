@@ -394,8 +394,7 @@ nsEventListenerManager::Shutdown()
   nsDOMEvent::Shutdown();
 }
 
-NS_IMPL_ADDREF(nsEventListenerManager)
-NS_IMPL_RELEASE(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
 
 NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventListenerManager)
@@ -403,7 +402,27 @@ NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+   NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsEventListenerManager)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager, nsIEventListenerManager)
+  PRInt32 i, count = tmp->mListeners.Count();
+  nsListenerStruct *ls;
+  for (i = 0; i < count; i++) {
+    ls = NS_STATIC_CAST(nsListenerStruct*, tmp->mListeners.ElementAt(i));
+    if (ls && ls->mListener.get()) {
+      cb.NoteXPCOMChild(ls->mListener.get());
+    }
+  }  
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventListenerManager, nsIEventListenerManager)
+  tmp->Disconnect();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 
 const EventTypeData*
 nsEventListenerManager::GetTypeDataForIID(const nsIID& aIID)
@@ -477,8 +496,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; i++) {
     ls = NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
-    nsRefPtr<nsIDOMEventListener> listener = ls->mListener.Get();
-    if (listener == aListener && ls->mFlags == aFlags &&
+    if (ls->mListener == aListener && ls->mFlags == aFlags &&
         ls->mGroupFlags == group &&
         (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
          EVENT_TYPE_DATA_EQUALS(aTypeData, ls->mTypeData))) {
@@ -492,9 +510,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls = new nsListenerStruct();
   NS_ENSURE_TRUE(ls, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIDOMGCParticipant> participant = do_QueryInterface(mTarget);
-  NS_ASSERTION(participant, "must implement nsIDOMGCParticipant");
-  ls->mListener.Set(aListener, participant);
+  ls->mListener = aListener;
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
   ls->mFlags = aFlags;
@@ -598,8 +614,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     ls = NS_STATIC_CAST(nsListenerStruct*, mListeners.ElementAt(i));
-    nsRefPtr<nsIDOMEventListener> listener = ls->mListener.Get();
-    if (listener == aListener &&
+    if (ls->mListener == aListener &&
         ls->mGroupFlags == group &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
@@ -1361,9 +1376,7 @@ found:
     // Check that the phase is same in event and event listener.
     // Handle only trusted events, except when listener permits untrusted events.
     if (useTypeInterface || useGenericInterface) {
-      nsRefPtr<nsIDOMEventListener> eventListener = ls->mListener.Get();
-      NS_ASSERTION(eventListener, "listener wasn't preserved properly");
-      if (eventListener) {
+      if (ls->mListener) {
         hasListener = PR_TRUE;
         if (ls->mFlags & aFlags &&
             ls->mGroupFlags == currentGroup &&
@@ -1375,10 +1388,10 @@ found:
           }
           if (*aDOMEvent) {
             if (useTypeInterface) {
-              DispatchToInterface(*aDOMEvent, eventListener,
+              DispatchToInterface(*aDOMEvent, ls->mListener,
                                   dispData->method, *typeData->iid);
             } else if (useGenericInterface) {
-              HandleEventSubType(ls, eventListener, *aDOMEvent,
+              HandleEventSubType(ls, ls->mListener, *aDOMEvent,
                                  aCurrentTarget, aFlags);
             }
           }
@@ -1421,11 +1434,6 @@ NS_IMETHODIMP
 nsEventListenerManager::Disconnect()
 {
   mTarget = nsnull;
-
-  // Bug 323807: nsDOMClassInfo::PreserveWrapper (and
-  // nsIDOMGCParticipant) require that we remove all event listeners now
-  // to remove any weak references in the nsDOMClassInfo's preserved
-  // wrapper table to the target.
   return RemoveAllListeners();
 }
 

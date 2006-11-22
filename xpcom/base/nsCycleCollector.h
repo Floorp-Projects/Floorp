@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +12,9 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications, Inc.
- * Portions created by the Initial Developer are Copyright (C) 1999
- * the Initial Developer. All Rights Reserved.
+ * The Original Code is mozilla.org code.
  *
  * Contributor(s):
- *   David W. Hyatt <hyatt@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,25 +30,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPIWindowRoot_h__
-#define nsPIWindowRoot_h__
+#ifndef nsCycleCollector_h__
+#define nsCycleCollector_h__
 
-#include "nsISupports.h"
+class nsISupports;
+class nsDeque;
+struct nsCycleCollectionTraversalCallback;
 
-class nsIFocusController;
+// An nsCycleCollectionLanguageRuntime is a per-language object that
+// implements language-specific aspects of the cycle collection task.
 
-// c18dee5a-dcf9-4391-a20c-581e769d095e
-#define NS_IWINDOWROOT_IID \
-{ 0xc18dee5a, 0xdcf9, 0x4391, \
-  { 0xa2, 0x0c, 0x58, 0x1e, 0x76, 0x9d, 0x09, 0x5e } }
+struct nsCycleCollectionLanguageRuntime
+{
+    virtual nsresult BeginCycleCollection() = 0;
 
-class nsPIWindowRoot : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
+    virtual nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
 
-  NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
+    virtual nsresult Root(const nsDeque &nodes) = 0;
+    virtual nsresult Unlink(const nsDeque &nodes) = 0;
+    virtual nsresult Unroot(const nsDeque &nodes) = 0;
+
+    virtual nsresult FinishCycleCollection() = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)
 
-#endif // nsPIWindowRoot_h__
+NS_COM PRBool nsCycleCollector_isScanSafe(nsISupports *n);
+NS_COM void nsCycleCollector_suspect(nsISupports *n);
+NS_COM void nsCycleCollector_forget(nsISupports *n);
+NS_COM void nsCycleCollector_collect();
+
+// Helpers for interacting with language-identified scripts
+
+NS_COM void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
+NS_COM void nsCycleCollector_forgetRuntime(PRUint32 langID);
+
+#endif // nsCycleCollector_h__

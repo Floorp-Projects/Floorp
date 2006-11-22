@@ -53,6 +53,8 @@
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsCycleCollector.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIClassInfoImpl.h"
@@ -420,9 +422,11 @@ private:
 
 const PRBool OBJ_IS_GLOBAL = PR_TRUE;
 const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
+struct JSObjectRefcounts;
 
 class nsXPConnect : public nsIXPConnect,
-                    public nsSupportsWeakReference
+                    public nsSupportsWeakReference,
+                    public nsCycleCollectionLanguageRuntime
 {
 public:
     // all the interface method declarations...
@@ -470,6 +474,14 @@ public:
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
+    // from nsCycleCollectionLanguageRuntime
+    nsresult BeginCycleCollection();
+    nsresult Root(const nsDeque &nodes);
+    nsresult Unlink(const nsDeque &nodes);
+    nsresult Unroot(const nsDeque &nodes);
+    nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+    nsresult FinishCycleCollection();
+
 #ifdef XPC_IDISPATCH_SUPPORT
 public:
     static PRBool IsIDispatchEnabled();
@@ -494,6 +506,7 @@ private:
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
+    JSObjectRefcounts*       mObjRefcounts;
 
 #ifdef XPC_TOOLS_SUPPORT
     nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
@@ -1833,9 +1846,10 @@ private:
 class XPCWrappedNative : public nsIXPConnectWrappedNative
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
+    NS_DECL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
 #ifndef XPCONNECT_STANDALONE
     virtual nsIPrincipal* GetObjectPrincipal() const;
@@ -2227,7 +2241,7 @@ private:
 // interface on the single underlying (possibly aggregate) JSObject.
 
 class nsXPCWrappedJS : protected nsAutoXPTCStub,
-                       public nsWeakRefToIXPConnectWrappedJS,
+                       public nsIXPConnectWrappedJS,
                        public nsSupportsWeakReference,
                        public nsIPropertyBag
 {
@@ -2235,8 +2249,9 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
-    //NS_DECL_NSISUPPORTSWEAKREFERENCE // methods also on nsIXPConnectWrappedJS
+    NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,
                           const XPTMethodDescriptor *info,

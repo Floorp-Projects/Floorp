@@ -642,6 +642,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 // nsGlobalWindow::nsISupports
 //*****************************************************************************
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 // QueryInterface implementation for nsGlobalWindow
 NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
@@ -654,7 +655,6 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -664,12 +664,105 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGlobalWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsGlobalWindow)
-NS_IMPL_RELEASE(nsGlobalWindow)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGlobalWindow, nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow, nsIScriptGlobalObject)
+
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow, nsIScriptGlobalObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
+
+  // Strange bug: If you uncomment this line you will find that
+  // the cycle collector crashes when working with multiple open
+  // top-level windows. It is as though the windows somehow
+  // race with one another. How can this be? Curious.
+  //
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpener)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgumentsLast)
+
+  for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContexts[i])
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(gGlobalStorageList)
+
+  for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolders[i])
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSessionStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDoc)
+
+  // Traverse any associated preserved wrappers.
+  {
+    nsISupports *preservedWrapper = nsnull;
+    if (tmp->mDoc) {
+      preservedWrapper = tmp->mDoc->GetReference(tmp);
+      if (preservedWrapper)
+        cb.NoteXPCOMChild(preservedWrapper);
+    }
+  }
+
+  // Traverse our possibly-inner window.
+  if (tmp->IsOuterWindow()
+      && tmp->GetCurrentInnerWindowInternal()) {    
+    cb.NoteXPCOMChild(NS_STATIC_CAST(nsIScriptGlobalObject*, 
+                                     tmp->GetCurrentInnerWindowInternal()));
+  }
+
+  // FIXME: somewhere in these commented lines lies a bug that causes
+  // a segfault. So we have disabled them, even though it seems wrong
+  // to do so. Other matters are more pressing at the moment.
+
+  // Traverse stuff from nsPIDOMWindow
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow, nsIScriptGlobalObject)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
+
+  // See comment about traversing mOpener above.
+  // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpener)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mControllers)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mArgumentsLast)
+
+  for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContexts[i])
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(gGlobalStorageList)
+
+  for (PRUint32 i = 0; i < NS_STID_ARRAY_UBOUND; ++i) {      
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInnerWindowHolders[i])
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSessionStorage)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDoc)
+
+  // Unlink any associated preserved wrapper.
+  if (tmp->mDoc)
+    tmp->mDoc->RemoveReference(tmp->mDoc.get());
+
+  // Unlink stuff from nsPIDOMWindow
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 //*****************************************************************************
@@ -5428,37 +5521,6 @@ nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
     return manager->GetSystemEventGroupLM(aGroup);
   }
   return NS_ERROR_FAILURE;
-}
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOMGCParticipant
-//*****************************************************************************
-
-nsIDOMGCParticipant*
-nsGlobalWindow::GetSCCIndex()
-{
-  return this;
-}
-
-static void AppendToReachableList(nsISupports *aObject,
-                                  nsCOMArray<nsIDOMGCParticipant>& aArray)
-{
-  nsCOMPtr<nsIDOMGCParticipant> p = do_QueryInterface(aObject);
-  if (p)
-    aArray.AppendObject(p);
-}
-
-void
-nsGlobalWindow::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
-{
-  AppendToReachableList(mChromeEventHandler, aArray);
-  AppendToReachableList(mDocument, aArray);
-  // XXXldb Do we want this to go both ways?
-  if (IsOuterWindow()) {
-    AppendToReachableList(mInnerWindow, aArray);
-  } else {
-    AppendToReachableList(mOuterWindow, aArray);
-  }
 }
 
 //*****************************************************************************

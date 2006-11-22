@@ -44,6 +44,9 @@
 
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
+#include "nsBaseHashtable.h"
+#include "nsHashKeys.h"
+#include "jsobj.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
@@ -66,13 +69,16 @@ nsXPConnect::nsXPConnect()
         mContextStack(nsnull),
         mDefaultSecurityManager(nsnull),
         mDefaultSecurityManagerFlags(0),
-        mShuttingDown(JS_FALSE)
+        mShuttingDown(JS_FALSE),
+        mObjRefcounts(nsnull)
 {
     // Ignore the result. If the runtime service is not ready to rumble
     // then we'll set this up later as needed.
     CreateRuntime();
 
     CallGetService(XPC_CONTEXT_STACK_CONTRACTID, &mContextStack);
+
+    nsCycleCollector_registerRuntime(nsIProgrammingLanguage::JAVASCRIPT, this);
 
 #ifdef XPC_TOOLS_SUPPORT
   {
@@ -101,12 +107,50 @@ nsXPConnect::nsXPConnect()
 
 }
 
+typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PRUint32, PRUint32> PointerSet;
+
+struct JSObjectRefcounts 
+{
+    PointerSet mRefCounts;
+    JSObjectRefcounts()
+    {
+        mRefCounts.Init();
+    }
+
+    void Clear()
+    {
+        mRefCounts.Clear();
+    }
+
+    void Ref(void *obj, uint8 flags)
+    {
+        PRUint32 refs;
+        if (mRefCounts.Get(obj, &refs))
+            refs++;
+        else
+            refs = 1;
+        mRefCounts.Put(obj, refs);
+    }
+
+    void Get(void *obj, PRUint32 &refcount)
+    {
+        mRefCounts.Get(obj, &refcount);
+    }
+};
+
 nsXPConnect::~nsXPConnect()
 {
     // XXX It would be nice if we could get away with doing a GC here and also
     // calling Release on the natives no longer reachable via XPConnect. As
     // noted all over the place, this makes bad things happen since shutdown is
     // an unstable time for so many modules who have not planned well for it.
+
+    nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
+    if (mObjRefcounts)
+    {
+        delete mObjRefcounts;
+        mObjRefcounts = NULL;
+    }
 
     mShuttingDown = JS_TRUE;
     { // scoped callcontext
@@ -385,6 +429,122 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 {
     return FindInfo(NameTester, name, mInterfaceInfoManager, info);
 }
+
+void XPCMarkNotification(void *thing, uint8 flags, void *closure)
+{
+    JSObjectRefcounts* jsr = NS_STATIC_CAST(JSObjectRefcounts*, closure);
+    jsr->Ref(thing, flags);
+}
+
+nsresult 
+nsXPConnect::BeginCycleCollection()
+{
+    if (!mObjRefcounts)
+        mObjRefcounts = new JSObjectRefcounts;
+
+    mObjRefcounts->Clear();
+    XPCCallContext cx(NATIVE_CALLER);
+    JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
+    JS_GC(cx);
+    JS_SetGCThingCallback(cx, nsnull, nsnull);
+
+    return NS_OK;
+}
+
+nsresult 
+nsXPConnect::FinishCycleCollection()
+{
+    if (mObjRefcounts)
+        mObjRefcounts->Clear();
+    return NS_OK;
+}
+
+nsresult 
+nsXPConnect::Root(const nsDeque &nodes)
+{
+    XPCCallContext cx(NATIVE_CALLER);
+    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
+    {
+        void *p = nodes.ObjectAt(i);
+        if (!p)
+            continue;
+        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        if (!JS_LockGCThing(cx, obj))
+            return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+nsresult 
+nsXPConnect::Unlink(const nsDeque &nodes)
+{
+    XPCCallContext cx(NATIVE_CALLER);
+    
+    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
+    {
+        void *p = nodes.ObjectAt(i);
+        if (!p)
+            continue;
+        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        JS_ClearScope(cx, obj);
+    }
+    return NS_OK;
+}
+
+nsresult 
+nsXPConnect::Unroot(const nsDeque &nodes)
+{
+    XPCCallContext cx(NATIVE_CALLER);
+    for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
+    {
+        void *p = nodes.ObjectAt(i);
+        if (!p)
+            continue;
+        JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+        if (!JS_UnlockGCThing(cx, obj))
+            return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+nsresult 
+nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
+{
+    XPCCallContext cx(NATIVE_CALLER);
+
+    PRUint32 refcount = 0;
+    mObjRefcounts->Get(p, refcount);
+    cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
+
+    if (!p)
+        return NS_OK;    
+    
+    JSObject *obj = NS_STATIC_CAST(JSObject*, p);
+
+    if (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE
+        && OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) 
+    {
+        void *v = JS_GetPrivate(cx, obj);
+        if (v)
+            cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, v));
+    }
+    
+    for (int i = JSSLOT_START(OBJ_GET_CLASS(cx, obj)); 
+         i < JS_MIN(obj->slots[-1], JS_MIN(obj->map->freeslot, obj->map->nslots)); ++i) 
+    {
+        jsval val = OBJ_GET_SLOT(cx, obj, i);
+        if (!JSVAL_IS_NULL(val) 
+            && JSVAL_IS_OBJECT(val)) 
+        {
+            JSObject *child = JSVAL_TO_OBJECT(val);
+            if (child) 
+                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, child);
+        }
+    }
+    
+    return NS_OK;
+}
+
 
 /***************************************************************************/
 /***************************************************************************/

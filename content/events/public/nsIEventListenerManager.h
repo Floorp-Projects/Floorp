@@ -157,13 +157,6 @@ public:
   * Tells the event listener manager that its target (which owns it) is
   * no longer using it (and could go away).
   *
-  * This causes the removal of all event listeners registered by this
-  * instance of the listener manager.  This is important for Bug 323807,
-  * since nsDOMClassInfo::PreserveWrapper (and nsIDOMGCParticipant)
-  * require that we remove all event listeners to remove any weak
-  * references in the nsDOMClassInfo's preserved wrapper table to the
-  * target.
-  *
   * It also clears the weak pointer set by the call to
   * |SetListenerTarget|.
   */

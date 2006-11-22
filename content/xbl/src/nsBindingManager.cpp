@@ -281,8 +281,100 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier,
-                   nsIMutationObserver)
+
+static PRBool PR_CALLBACK
+ReleaseBindings(void *aElement, void *aData);
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager, nsIBindingManager)
+  tmp->mBindingTable.Clear();
+  tmp->mDocumentTable.Clear();
+  tmp->mLoadingDocTable.Clear();
+
+  if (tmp->mContentListTable.ops)
+    PL_DHashTableFinish(&(tmp->mContentListTable));
+  tmp->mContentListTable.ops = nsnull;
+
+  if (tmp->mAnonymousNodesTable.ops)
+    PL_DHashTableFinish(&(tmp->mAnonymousNodesTable));
+  tmp->mAnonymousNodesTable.ops = nsnull;
+
+  if (tmp->mInsertionParentTable.ops)
+    PL_DHashTableFinish(&(tmp->mInsertionParentTable));
+  tmp->mInsertionParentTable.ops = nsnull;
+
+  if (tmp->mWrapperTable.ops)
+    PL_DHashTableFinish(&(tmp->mWrapperTable));
+  tmp->mWrapperTable.ops = nsnull;
+
+  tmp->mAttachedStack.EnumerateForwards(ReleaseBindings, nsnull);
+  tmp->mAttachedStack.Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+
+static PLDHashOperator
+DocumentInfoHashtableTraverser(nsIURI* key,
+                               nsIXBLDocumentInfo* di,
+                               void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+  cb->NoteXPCOMChild(di);
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+LoadingDocHashtableTraverser(nsIURI* key,
+                             nsIStreamListener* sl,
+                             void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+  cb->NoteXPCOMChild(sl);
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+XBLBindingHashtableTraverser(nsISupports* key,
+                             nsXBLBinding* binding,
+                             void* userArg)
+{  
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+ 
+  // XBLBindings aren't nsISupports, so we don't tell the cycle collector
+  // about them explicitly. Instead, we traverse their contents directly
+  // here.
+ 
+  while (binding) {
+    nsISupports *c = binding->GetAnonymousContent();
+    if (c)
+      cb->NoteXPCOMChild(c);
+    binding = binding->GetBaseBinding();
+  }
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager, nsIBindingManager)
+  if (tmp->mBindingTable.IsInitialized())
+      tmp->mBindingTable.EnumerateRead(&XBLBindingHashtableTraverser, &cb);
+  if (tmp->mDocumentTable.IsInitialized())
+      tmp->mDocumentTable.EnumerateRead(&DocumentInfoHashtableTraverser, &cb);
+  if (tmp->mLoadingDocTable.IsInitialized())
+      tmp->mLoadingDocTable.EnumerateRead(&LoadingDocHashtableTraverser, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsBindingManager)
+
+NS_INTERFACE_MAP_BEGIN(nsBindingManager)
+  NS_INTERFACE_MAP_ENTRY(nsIBindingManager)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRuleSupplier)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBindingManager)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsBindingManager)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsBindingManager, nsIBindingManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsBindingManager, nsIBindingManager)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
