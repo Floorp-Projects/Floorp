@@ -586,19 +586,6 @@ public:
                          nsIContent* aSecond);
 
   /**
-   * Set .document in the immediate children of said content (but not in
-   * content itself).  SetDocument() in the children will recursively call
-   * this.
-   *
-   * @param aContent the content to get the children of
-   * @param aDocument the document to set
-   * @param aCompileEventHandlers whether to initialize the event handlers in
-   *        the document (used by nsXULElement)
-   */
-  static void SetDocumentInChildrenOf(nsIContent* aContent, 
-				      nsIDocument* aDocument, PRBool aCompileEventHandlers);
-
-  /**
    * Check whether a spec feature/version is supported.
    * @param aObject the object, which should support the feature,
    *        for example nsIDOMNode or nsIDOMDOMImplementation

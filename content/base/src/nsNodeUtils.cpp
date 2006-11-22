@@ -39,7 +39,6 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIContent.h"
-#include "nsTArray.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
@@ -157,6 +156,30 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 
+struct nsHandlerData
+{
+  PRUint16 mOperation;
+  nsCOMPtr<nsIDOMNode> mSource, mDest;
+};
+
+static void
+CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
+{
+  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
+  nsCOMPtr<nsIDOMUserDataHandler> handler =
+    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
+
+  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
+  nsCOMPtr<nsIVariant> data =
+    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
+  NS_ASSERTION(data, "Handler without data?");
+
+  nsAutoString key;
+  aKey->ToString(key);
+  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
+                  handlerData->mDest);
+}
+
 void
 nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
 {
@@ -178,10 +201,13 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
   if (aNode->HasProperties()) {
     nsIDocument* document = aNode->GetOwnerDoc();
     if (document) {
-      nsContentUtils::CallUserDataHandler(document,
-                                          nsIDOMUserDataHandler::NODE_DELETED,
-                                          aNode, nsnull, nsnull);
-      document->PropertyTable()->DeleteAllPropertiesFor(aNode);
+      nsHandlerData handlerData;
+      handlerData.mOperation = nsIDOMUserDataHandler::NODE_DELETED;
+
+      nsPropertyTable *table = document->PropertyTable();
+
+      table->Enumerate(aNode, DOM_USER_DATA_HANDLER, CallHandler, &handlerData);
+      table->DeleteAllPropertiesFor(aNode);
     }
     aNode->UnsetFlags(NODE_HAS_PROPERTIES);
   }
@@ -219,26 +245,30 @@ nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                   "Expected aNodesWithProperties to contain original and "
                   "cloned nodes.");
 
+  nsPropertyTable *table = aOwnerDocument->PropertyTable();
+
   // Keep the document alive, just in case one of the handlers causes it to go
   // away.
   nsCOMPtr<nsIDocument> ownerDoc = aOwnerDocument;
+
+  nsHandlerData handlerData;
+  handlerData.mOperation = aOperation;
 
   PRUint32 i, count = aNodesWithProperties.Count();
   for (i = 0; i < count; ++i) {
     nsINode *nodeWithProperties = aNodesWithProperties[i];
 
     nsresult rv;
-    nsCOMPtr<nsIDOMNode> source = do_QueryInterface(nodeWithProperties, &rv);
+    handlerData.mSource = do_QueryInterface(nodeWithProperties, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMNode> dest;
     if (aCloned) {
-      dest = do_QueryInterface(aNodesWithProperties[++i], &rv);
+      handlerData.mDest = do_QueryInterface(aNodesWithProperties[++i], &rv);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsContentUtils::CallUserDataHandler(aOwnerDocument, aOperation,
-                                        nodeWithProperties, source, dest);
+    table->Enumerate(nodeWithProperties, DOM_USER_DATA_HANDLER, CallHandler,
+                     &handlerData);
   }
 
   return NS_OK;

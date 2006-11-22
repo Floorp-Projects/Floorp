@@ -4069,29 +4069,7 @@ nsDocument::RenameNode(nsIDOMNode *aNode,
                        const nsAString& qualifiedName,
                        nsIDOMNode **aReturn)
 {
-  if (!aNode) {
-    // not an element or attribute
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-  
-  PRUint16 nodeType;
-  aNode->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::ELEMENT_NODE ||
-      nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
-    // XXXcaa Write me - Coming soon to a document near you!
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-//  if (NS_SUCCEEDED(rv)) {
-//    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-//    if (node->HasProperties()) {
-//      nsContentUtils::CallUserDataHandler(this,
-//                                          nsIDOMUserDataHandler::NODE_RENAMED,
-//                                          node, aNode, *aReturn);
-//    }
-//  }
-
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
