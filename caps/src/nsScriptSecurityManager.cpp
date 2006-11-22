@@ -3658,8 +3658,8 @@ nsScriptSecurityManager::InitPrefs()
     if (NS_SUCCEEDED(rv) && prefCount > 0)
     {
         rv = InitPrincipals(prefCount, (const char**)prefNames, mSecurityPref);
-        NS_ENSURE_SUCCESS(rv, rv);
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     //-- Set a callback for principal changes
     prefBranchInternal->AddObserver(sPrincipalPrefix, this, PR_FALSE);
