@@ -4337,20 +4337,19 @@ to filter unwanted mail, and how phishing detection works.</p>
     The first time you send mail, you will be prompted for your password. At
     that time you can instruct &brandShortName; to save your password for
     future sessions.</li>
-  <li><strong>Use secure connection</strong>: If your outgoing server is
-    configured to support an encrypted connection, choose one of the following
-    (if you make a choice for which your server is not configured, you will
-    get an error message when sending mail):
+  <li><strong>Use secure connection</strong>: There are two methods for
+    establishing a secure connection to your outgoing server. Pick the one your
+    server supports (if you make a choice for which your server is not configured,
+    you will get an error message when sending mail).
     <ul>
-      <li><strong>No</strong>: If you don&apos;t want to use an encrypted
-        link.</li>
-      <li><strong>TLS, if available</strong>: &brandShortName; will try to use
-        a TLS encrypted connection. If the server doesn&apos;t support it, an
-        unencrypted connection is used.</li>
-      <li><strong>TLS</strong>: Require a TLS encrypted connection. This
-        mechanism will mostly run on the standard SMTP port 25.</li>
-      <li><strong>SSL</strong>: Require a SSL encrypted connection. The default
-        port for this is 465.</li>
+      <li><strong>STARTTLS, if available</strong>: &brandShortName; will try to
+        negotiate encryption using the STARTTLS method. If the server doesn&apos;t
+        support it, an unencrypted connection is used.</li>
+      <li><strong>STARTTLS</strong>: Require an encrypted connection, use the STARTTLS
+        method. This mechanism will mostly run on the standard SMTP port 25.</li>
+      <li><strong>SMTP-over-SSL</strong>: Require an encrypted connection, use the
+        SMTP-over-SSL (also known as SMTPS) method. The default port for this is 465.
+     </li>
     </ul>
   </li>
   <li><strong>Advanced</strong>: Click this button to set up additional SMTP

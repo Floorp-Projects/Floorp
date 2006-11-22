@@ -118,12 +118,12 @@
             <hbox class="indent">
                 <radio value="0" id="smtp.neverSecure"
                        label="&neverSecure.label;" accesskey="&neverSecure.accesskey;"/>
-                <radio value="1" id="smtp.sometimesSecure"
-                       label="&sometimesSecure.label;" accesskey="&sometimesSecure.accesskey;"/>
-                <radio value="2" id="smtp.alwaysSecure"
-                       label="&alwaysSecure.label;" accesskey="&alwaysSecure.accesskey;"/>
-                <radio value="3" id="smtp.alwaysSmtpSSL"
-                       label="&alwaysSmtpS.label;" accesskey="&alwaysSmtpS.accesskey;"/>
+                <radio value="1" id="smtp.sometimesSTARTTLS"
+                       label="&sometimesSTARTTLS.label;" accesskey="&sometimesSTARTTLS.accesskey;"/>
+                <radio value="2" id="smtp.alwaysSTARTTLS"
+                       label="&alwaysSTARTTLS.label;" accesskey="&alwaysSTARTTLS.accesskey;"/>
+                <radio value="3" id="smtp.alwaysSMTPOverSSL"
+                       label="&alwaysSMTPOverSSL.label;" accesskey="&alwaysSMTPOverSSL.accesskey;"/>
             </hbox>
         </radiogroup>
     </groupbox>

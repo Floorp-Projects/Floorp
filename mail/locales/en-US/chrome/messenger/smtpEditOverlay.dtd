@@ -13,11 +13,11 @@
 <!ENTITY isSecure.label "Use secure connection:">
 <!ENTITY neverSecure.label "No">
 <!ENTITY neverSecure.accesskey "N">
-<!ENTITY sometimesSecure.label "TLS, if available">
-<!ENTITY sometimesSecure.accesskey "a">
-<!ENTITY alwaysSecure.label "TLS">
-<!ENTITY alwaysSecure.accesskey "T">
-<!ENTITY alwaysSmtpS.label "SSL">
-<!ENTITY alwaysSmtpS.accesskey "L">
+<!ENTITY sometimesSTARTTLS.label "STARTTLS, if available">
+<!ENTITY sometimesSTARTTLS.accesskey "a">
+<!ENTITY alwaysSTARTTLS.label "STARTTLS">
+<!ENTITY alwaysSTARTTLS.accesskey "T">
+<!ENTITY alwaysSMTPOverSSL.label "SMTP-over-SSL">
+<!ENTITY alwaysSMTPOverSSL.accesskey "L">
 <!ENTITY smtpEditTitle.label "SMTP Server">
 <!ENTITY serverPortDefault.label "Default:">
