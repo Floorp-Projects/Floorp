@@ -1,4 +1,4 @@
-/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: objc; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -641,6 +641,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 #endif
 
     case NS_NATIVE_PLUGIN_PORT:
+    {
       // this needs to be a combination of the port and the offsets.
       if (!mPluginPort) {
         mPluginPort = new nsPluginPort;
@@ -662,17 +663,12 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
           // then, encode as "SetOrigin" ready values.
           mPluginPort->portx = (PRInt32)-viewOrigin.x;
           mPluginPort->porty = (PRInt32)-viewOrigin.y;
-
         }
-      }
-      else {
-#ifdef DEBUG
-        printf("@@@@ Couldn't get NSWindow for plugin port. @@@@\n");
-#endif
       }
 
       retVal = (void*)mPluginPort;
       break;
+    }
   }
 
   return retVal;
@@ -1051,9 +1047,6 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
-#ifdef MOZ_CAIRO_GFX
-  return NS_ERROR_FAILURE;
-#else
   NS_ASSERTION(mPluginPort, "StartDrawPlugin must only be called on a plugin widget");
   if (!mPluginPort)
     return NS_ERROR_FAILURE;
@@ -1075,7 +1068,15 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // visible region to be the entire port every time.
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
-    StPortSetter setter(mPluginPort->port);
+    PRBool portChanged = (mPluginPort->port != CGrafPtr(GetQDGlobalsThePort()));
+    CGrafPtr oldPort;
+    GDHandle oldDevice;
+
+    if (portChanged) {
+      ::GetGWorld(&oldPort, &oldDevice);
+      ::SetGWorld(mPluginPort->port, ::IsPortOffscreen(mPluginPort->port) ? nsnull : ::GetMainDevice());
+    }
+
     ::SetOrigin(0, 0);
     
     nsRect clipRect; // this is in native window coordinates
@@ -1095,11 +1096,13 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
     ::SetOrigin(origin.x, origin.y);
     
     ::DisposeRgn(pluginRegion);
+
+    if (portChanged)
+      ::SetGWorld(oldPort, oldDevice);
   }
 
   mPluginDrawing = PR_TRUE;
   return NS_OK;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1969,12 +1972,8 @@ nsChildView::GetQuickDrawPort()
 GrafPtr
 nsChildView::GetChildViewQuickDrawPort()
 {
-#ifndef MOZ_CAIRO_GFX
   if ([mView isKindOfClass:[ChildView class]])
     return (GrafPtr)[(ChildView*)mView qdPort];
-#endif
-
-  return nsnull;
 }
 
 #pragma mark -
