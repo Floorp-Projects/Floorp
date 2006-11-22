@@ -585,6 +585,7 @@
       </section>
 
       <section id="user-account-deletion">
+        <title>Deleting Users</title>
         <para>
           If the <quote>allowuserdeletion</quote> parameter is turned on, see
           <xref linkend="parameters" />, then you can also delete user accounts.
