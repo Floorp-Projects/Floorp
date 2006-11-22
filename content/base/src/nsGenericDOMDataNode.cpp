@@ -76,20 +76,14 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
                   "Please remove this from the document properly");
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode, nsIContent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode, nsIContent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_ADDREF(nsGenericDOMDataNode)
+NS_IMPL_RELEASE_WITH_DESTROY(nsGenericDOMDataNode,
+                             nsNodeUtils::LastRelease(this, PR_TRUE))
 
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))
@@ -103,12 +97,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGenericDOMDataNode)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericDOMDataNode, nsIContent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsGenericDOMDataNode, nsIContent,
-                                      nsNodeUtils::LastRelease(this, PR_TRUE))
 
 
 nsresult
@@ -537,6 +526,38 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 #endif
 
+/**
+ * See comment for nsGenericElement::GetSCCIndex
+ */
+nsIDOMGCParticipant*
+nsGenericDOMDataNode::GetSCCIndex()
+{
+  // This is an optimized way of walking nsIDOMNode::GetParentNode to
+  // the top of the tree.
+  nsINode *top = GetCurrentDoc();
+  if (!top) {
+    top = this;
+    nsINode *parent;
+    while ((parent = top->GetNodeParent())) {
+      top = parent;
+    }
+  }
+
+  return top;
+}
+
+void
+nsGenericDOMDataNode::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+  NS_ASSERTION(GetCurrentDoc() == nsnull,
+               "shouldn't be an SCC index if we're in a doc");
+
+  // This node is the root of a subtree that's been removed from the
+  // document (since AppendReachableList is only called on SCC index
+  // nodes).  The document is reachable from it (through
+  // .ownerDocument), but it's not reachable from the document.
+  aArray.AppendObject(GetOwnerDoc());
+}
 
 nsresult
 nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,

@@ -55,7 +55,6 @@ class nsEventChainPostVisitor;
 #include "nsPIWindowRoot.h"
 #include "nsIFocusController.h"
 #include "nsIDOMEventTarget.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsWindowRoot : public nsIDOMEventReceiver,
                      public nsIDOM3EventTarget,
@@ -67,7 +66,7 @@ public:
   nsWindowRoot(nsIDOMWindow* aWindow);
   virtual ~nsWindowRoot();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIDOM3EVENTTARGET
   NS_DECL_NSIDOMNSEVENTTARGET
@@ -82,10 +81,12 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
+  // nsIDOMGCParticipant
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
+
   // nsPIWindowRoot
   NS_IMETHOD GetFocusController(nsIFocusController** aResult);
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsWindowRoot)
 
 protected:
   // Members

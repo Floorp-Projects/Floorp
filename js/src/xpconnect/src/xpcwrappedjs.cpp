@@ -45,56 +45,6 @@
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
-
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
-   (nsISupports *s, nsCycleCollectionTraversalCallback &cb)
-{
-    // REVIEW ME PLEASE: this is a very odd area and it's easy to get
-    // it wrong. I'm not sure I got it right.
-    //
-    // We *might* have a stub that's not actually connected to an
-    // nsXPCWrappedJS, so we begin by QI'ing over to a "real"
-    // nsIXPConnectWrappedJS. Since that's a mostly-empty class, we
-    // then downcast from there to the "true" nsXPCWrappedJS.
-    //
-    // Is this right? It's hard to know. It seems to work, but who
-    // knows for how long. 
-
-    nsresult rv;
-    nsCOMPtr<nsIXPConnectWrappedJS> owner = do_QueryInterface(s, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsIXPConnectWrappedJS *base = owner.get();
-    nsXPCWrappedJS *tmp = NS_STATIC_CAST(nsXPCWrappedJS*, base);
-
-    // REVIEW ME PLEASE:
-    // 
-    // I am not sure when this represents the true refcount.
-
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(nsXPCWrappedJS), 
-                    "nsXPCWrappedJS");
-
-    if (tmp->IsValid()) 
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, 
-                           tmp->GetJSObject());
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(nsISupports *s)
-{
-    // NB: We might unlink our outgoing references in the future; for
-    // now we do nothing. This is a harmless conservative behavior; it
-    // just means that we rely on the cycle being broken by some of
-    // the external XPCOM objects' unlink() methods, not our
-    // own. Typically *any* unlinking will break the cycle.
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -129,17 +79,19 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {
-        *aInstancePtr = & NS_CYCLE_COLLECTION_NAME(nsXPCWrappedJS);
-        return NS_OK;
-    }
-
     // Always check for this first so that our 'outer' can get this interface
     // from us without recurring into a call to the outer's QI!
     if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
     {
         NS_ADDREF(this);
         *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
+        return NS_OK;
+    }
+
+    // This interface is a hack that says "don't AddRef me".
+    if(aIID.Equals(NS_GET_IID(nsWeakRefToIXPConnectWrappedJS)))
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsWeakRefToIXPConnectWrappedJS*, this);
         return NS_OK;
     }
 
@@ -244,10 +196,7 @@ do_decrement:
 NS_IMETHODIMP
 nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
 {
-    if(mRoot != this)
-        return mRoot->GetWeakReference(aInstancePtr);
-
-    return nsSupportsWeakReference::GetWeakReference(aInstancePtr);
+    return mRoot->nsSupportsWeakReference::GetWeakReference(aInstancePtr);
 }
 
 NS_IMETHODIMP

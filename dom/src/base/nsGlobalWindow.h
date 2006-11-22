@@ -50,7 +50,6 @@
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
 #include "nsDataHashtable.h"
-#include "nsCycleCollectionParticipant.h"
 
 // Interfaces Needed
 #include "nsDOMWindowList.h"
@@ -92,6 +91,7 @@
 #include "nsSize.h"
 #include "mozFlushType.h"
 #include "prclist.h"
+#include "nsIDOMGCParticipant.h"
 #include "nsIDOMStorage.h"
 #include "nsIDOMStorageList.h"
 #include "nsIDOMStorageWindow.h"
@@ -217,6 +217,7 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventReceiver,
+                       public nsIDOMGCParticipant,
                        public nsIDOM3EventTarget,
                        public nsIDOMNSEventTarget,
                        public nsIDOMViewCSS,
@@ -232,7 +233,7 @@ public:
   void ReallyCloseWindow();
 
   // nsISupports
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
@@ -286,6 +287,10 @@ public:
                                 nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+
+  // nsIDOMGCParticipant
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
   // nsPIDOMWindow
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
@@ -401,8 +406,6 @@ public:
                                           nsGlobalWindow *aWindow);
 
   friend class WindowStateHolder;
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 protected:
   // Object Management

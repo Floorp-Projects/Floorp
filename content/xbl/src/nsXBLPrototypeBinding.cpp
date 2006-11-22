@@ -755,10 +755,6 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
 
   nsCOMPtr<nsIContent> templParent = aTemplChild->GetParent();
   nsCOMPtr<nsIContent> childPoint;
-
-  // We may be disconnected from our parent during cycle collection.
-  if (!templParent)
-    return nsnull;
   
   if (aBoundElement) {
     if (templParent->NodeInfo()->Equals(nsXBLAtoms::children,

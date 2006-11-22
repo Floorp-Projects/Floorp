@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIScriptContext.h"
-#include "nsCycleCollectionParticipant.h"
 
 // nsJSEventListener interface
 // misnamed - JS no longer has exclusive rights over this interface!
@@ -57,7 +56,7 @@ public:
                     nsISupports* aObject);
   virtual ~nsJSEventListener();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   // nsIDOMEventListener interface
   NS_DECL_NSIDOMEVENTLISTENER
@@ -65,7 +64,6 @@ public:
   // nsIJSEventListener interface
   virtual void SetEventName(nsIAtom* aName);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 protected:
   nsCOMPtr<nsIAtom> mEventName;
   

@@ -47,7 +47,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
 class nsIXPConnectWrappedJS;
@@ -65,7 +64,7 @@ class nsBindingManager : public nsIBindingManager,
                          public nsIMutationObserver
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
 
   nsBindingManager();
@@ -136,8 +135,6 @@ public:
                        nsIStyleRuleProcessor::EnumFunc aFunc,
                        RuleProcessorData* aData,
                        PRBool* aCutOffInheritance);
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 
 protected:
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,

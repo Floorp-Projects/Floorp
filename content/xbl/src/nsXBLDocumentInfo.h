@@ -39,7 +39,6 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
 class nsObjectHashtable;
@@ -47,7 +46,7 @@ class nsObjectHashtable;
 class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsIScriptGlobalObjectOwner, public nsSupportsWeakReference
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   nsXBLDocumentInfo(nsIDocument* aDocument);
   virtual ~nsXBLDocumentInfo();
@@ -67,8 +66,6 @@ public:
 
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 
 private:
   nsCOMPtr<nsIDocument> mDocument;

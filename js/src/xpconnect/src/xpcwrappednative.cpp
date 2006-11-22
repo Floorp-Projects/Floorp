@@ -47,52 +47,6 @@
 
 /***************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
-
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
-                                                          nsCycleCollectionTraversalCallback &cb)
-{
-    XPCWrappedNative *tmp = NS_STATIC_CAST(XPCWrappedNative*, s);
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), "XPCWrappedNative");
-
-    if (tmp->mRefCnt.get() > 1) {
-
-        // If our refcount is > 1, our reference to the flat JS object is
-        // considered "strong", and we're going to traverse it. 
-        //
-        // If our refcount is <= 1, our reference to the flat JS object is
-        // considered "weak", and we're *not* going to traverse it.
-        //
-        // This reasoning is in line with the slightly confusing lifecycle rules
-        // for XPCWrappedNatives, described in a larger comment below and also
-        // on our wiki at http://wiki.mozilla.org/XPConnect_object_wrapping 
-
-        JSObject *obj = nsnull;
-        nsresult rv = tmp->GetJSObject(&obj);
-        if (NS_SUCCEEDED(rv) && obj) {
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
-        }
-    }
-
-    if (tmp->GetIdentityObject()) {
-        cb.NoteXPCOMChild(tmp->GetIdentityObject());
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(nsISupports *s)
-{
-    // NB: We might unlink our outgoing references in the future; for
-    // now we do nothing. This is a harmless conservative behavior; it
-    // just means that we rely on the cycle being broken by some of
-    // the external XPCOM objects' unlink() methods, not our
-    // own. Typically *any* unlinking will break the cycle.
-    return NS_OK;
-}
-
-
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);
 #else
@@ -874,7 +828,6 @@ NS_INTERFACE_MAP_BEGIN(XPCWrappedNative)
   NS_INTERFACE_MAP_ENTRY(nsIXPConnectWrappedNative)
   NS_INTERFACE_MAP_ENTRY(nsIXPConnectJSObjectHolder)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPConnectWrappedNative)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(XPCWrappedNative)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMPL_THREADSAFE_ADDREF(XPCWrappedNative)

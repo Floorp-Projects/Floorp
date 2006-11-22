@@ -91,7 +91,6 @@
 #include "nsTObserverArray.h"
 #include "nsStubMutationObserver.h"
 #include "nsIChannel.h"
-#include "nsCycleCollectionParticipant.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -296,7 +295,7 @@ class nsDocument : public nsIDocument,
                    public nsStubMutationObserver
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
@@ -494,9 +493,6 @@ public:
                                 nsIStyleRule* aStyleRule);
 
   virtual void FlushPendingNotifications(mozFlushType aType);
-  virtual void AddReference(void *aKey, nsISupports *aReference);
-  virtual nsISupports *GetReference(void *aKey);
-  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,
@@ -551,6 +547,10 @@ public:
   // for radio group
   nsresult GetRadioGroup(const nsAString& aName,
                          nsRadioGroupStruct **aRadioGroup);
+
+  // nsIDOMGCParticipant interface methods
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
@@ -642,8 +642,6 @@ public:
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDocument)
 
 protected:
 
@@ -751,7 +749,6 @@ protected:
   PRUint8 mDefaultElementType;
 
   nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject> *mBoxObjectTable;
-  nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports> *mContentWrapperHash;
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;

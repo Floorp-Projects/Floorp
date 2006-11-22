@@ -90,40 +90,16 @@ nsDOMAttributeMap::DropReference()
   mContent = nsnull;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap, nsIDOMNamedNodeMap)
-  tmp->DropReference();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-
-PLDHashOperator
-TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData, void* aUserArg)
-{
-  nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aUserArg);
-
-  if (aData.get())
-    cb->NoteXPCOMChild(aData.get());
-
-  return PL_DHASH_NEXT;
-}
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap, nsIDOMNamedNodeMap)
-  tmp->mAttributeCache.Enumerate(TraverseMapEntry, &cb);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
 
 // QueryInterface implementation for nsDOMAttributeMap
 NS_INTERFACE_MAP_BEGIN(nsDOMAttributeMap)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NamedNodeMap)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsDOMAttributeMap)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMAttributeMap)
+NS_IMPL_ADDREF(nsDOMAttributeMap)
+NS_IMPL_RELEASE(nsDOMAttributeMap)
 
 PLDHashOperator
 SetOwnerDocumentFunc(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData,

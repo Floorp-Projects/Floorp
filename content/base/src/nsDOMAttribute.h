@@ -53,7 +53,6 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOM3Attr.h"
 #include "nsDOMAttributeMap.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsDOMAttribute;
 
@@ -67,7 +66,11 @@ public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,
                  const nsAString& aValue);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMGCParticipant interface methods
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
   // nsIDOMNode interface
   NS_DECL_NSIDOMNODE
@@ -104,8 +107,6 @@ public:
 
   static void Initialize();
   static void Shutdown();
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
 
 protected:
   static PRBool sInitialized;
