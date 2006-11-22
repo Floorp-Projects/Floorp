@@ -152,6 +152,12 @@
 
       <listitem>
         <para>
+        <emphasis>*QA Contact:</emphasis>
+        The person responsible for quality assurance on this bug.</para>
+      </listitem>
+
+      <listitem>
+        <para>
         <emphasis>*URL:</emphasis>
         A URL associated with the bug, if any.</para>
       </listitem>
