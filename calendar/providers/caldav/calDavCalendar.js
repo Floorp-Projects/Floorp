@@ -188,8 +188,8 @@ calDavCalendar.prototype = {
 
     // void addObserver( in calIObserver observer );
     addObserver: function (aObserver, aItemFilter) {
-        for each (obs in aObserver) {
-            if (obs == aObserver) {
+        for each (obs in this.mObservers) {
+            if (compareObjects(obs, aObserver, Ci.calIObserver)) {
                 return;
             }
         }

@@ -145,8 +145,12 @@ function getUUID() {
 }
 
 /** Due to a bug in js-wrapping, normal == comparison can fail when we
- * have 2 calIItemBases.  Use this function to force them both to get wrapped
+ * have 2 objects.  Use these functions to force them both to get wrapped
  * the same way, allowing for normal comparison.
+ */
+ 
+/**
+ * calIItemBase comparer
  */
 function compareItems(aItem, aOtherItem) {
     var sip1 = Cc["@mozilla.org/supports-interface-pointer;1"].
@@ -158,6 +162,28 @@ function compareItems(aItem, aOtherItem) {
                createInstance(Ci.nsISupportsInterfacePointer);
     sip2.data = aOtherItem;
     sip2.dataIID = Ci.calIItemBase;
+    return sip1.data == sip2.data;
+}
+
+/**
+ * Generic object comparer
+ * Use to compare two objects which are not of type calIItemBase, in order
+ * to avoid the js-wrapping issues mentioned above.
+ *
+ * @param aObject        first object to be compared
+ * @param aOtherObject   second object to be compared
+ * @param aIID           IID to use in comparison
+ */
+function compareObjects(aObject, aOtherObject, aIID) {
+    var sip1 = Cc["@mozilla.org/supports-interface-pointer;1"].
+               createInstance(Ci.nsISupportsInterfacePointer);
+    sip1.data = aObject;
+    sip1.dataIID = aIID;
+
+    var sip2 = Cc["@mozilla.org/supports-interface-pointer;1"].
+               createInstance(Ci.nsISupportsInterfacePointer);
+    sip2.data = aOtherObject;
+    sip2.dataIID = aIID;
     return sip1.data == sip2.data;
 }
 
