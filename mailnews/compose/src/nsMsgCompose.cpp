@@ -134,11 +134,11 @@ static void GetReplyHeaderInfo(PRInt32* reply_header_type,
 {
   nsresult  rv;
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  
+
   *reply_header_type = 1;
   if(NS_SUCCEEDED(rv)) {
     prefBranch->GetIntPref("mailnews.reply_header_type", reply_header_type);
-    
+
     NS_GetUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_locale", EmptyString(), reply_header_locale);
     NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_authorwrote", NS_LITERAL_STRING("%s wrote"), reply_header_authorwrote);
     NS_GetLocalizedUnicharPreferenceWithDefault(prefBranch, "mailnews.reply_header_ondate", NS_LITERAL_STRING("On %s"), reply_header_ondate);
@@ -365,7 +365,7 @@ PRBool nsMsgCompose::IsEmbeddedObjectSafe(const char * originalScheme,
       }
     }
   }
-  
+
   return PR_FALSE;
 }
 
@@ -424,7 +424,7 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
     if (IsEmbeddedObjectSafe(originalScheme.get(), originalHost.get(),
                              originalPath.get(), node))
       continue; //Don't need to tag this object, it safe to send it.
-    
+
     //The source of this object should not be sent with the message 
     domElement = do_QueryInterface(node);
     if (domElement)
@@ -519,7 +519,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
       if( sigOnTop )
         m_editor->EndOfDocument();
-	}
+    }
   }
   else
   {
@@ -554,7 +554,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     }
   }
   m_editor->EndTransaction();
-  
+
   if (m_editor)
   {
     if (aBuf.IsEmpty())
@@ -602,16 +602,16 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
             // i'm not sure if you need to move the selection back to before the
             // break. expirement.
             selection->Collapse(parent, offset+1);
-   
+
             break;
           }
-        
+
         case 2  : 
         {
           m_editor->SelectAll();
           break;
         }
-        
+
         // This should set the cursor to the top!
         default : m_editor->BeginningOfDocument();    break;
       }
@@ -675,23 +675,23 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
 
     window->GetDocShell()->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
   }
-  
+
   MSG_ComposeFormat format;
   params->GetFormat(&format);
-  
+
   MSG_ComposeType type;
   params->GetType(&type);
 
   nsXPIDLCString originalMsgURI;
   params->GetOriginalMsgURI(getter_Copies(originalMsgURI));
   params->GetOrigMsgHdr(getter_AddRefs(mOrigMsgHdr));
-  
+
   nsCOMPtr<nsIMsgCompFields> composeFields;
   params->GetComposeFields(getter_AddRefs(composeFields));
 
   nsCOMPtr<nsIMsgComposeService> composeService = do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
- 
+
   rv = composeService->DetermineComposeHTML(m_identity, format, &m_composeHTML);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -733,7 +733,7 @@ nsresult nsMsgCompose::SetDocumentCharset(const char *charset)
 {
   // Set charset, this will be used for the MIME charset labeling.
   m_compFields->SetCharacterSet(charset);
-  
+
   // notify the change to editor
   m_editor->SetDocumentCharacterSet(nsDependentCString(charset));
 
@@ -743,10 +743,10 @@ nsresult nsMsgCompose::SetDocumentCharset(const char *charset)
 nsresult nsMsgCompose::RegisterStateListener(nsIMsgComposeStateListener *stateListener)
 {
   nsresult rv = NS_OK;
-  
+
   if (!stateListener)
     return NS_ERROR_NULL_POINTER;
-  
+
   if (!mStateListeners)
   {
     rv = NS_NewISupportsArray(getter_AddRefs(mStateListeners));
@@ -766,7 +766,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv = NS_OK;
-  
+
   // otherwise, see if it exists in our list
   if (!mStateListeners)
     return (nsresult)PR_FALSE;      // yeah, this sucks, but I'm emulating the behaviour of
@@ -783,7 +783,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
 nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const char *accountKey, PRBool entityConversionDone)
 {
   nsresult rv = NS_OK;
-    
+
   // clear saved message id if sending, so we don't send out the same message-id.
   if (deliverMode == nsIMsgCompDeliverMode::Now || deliverMode == nsIMsgCompDeliverMode::Later)
     m_compFields->SetMessageId("");
@@ -794,18 +794,18 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     nsXPIDLCString email;
     nsXPIDLString fullName;
     nsXPIDLString organization;
-    
+
     identity->GetEmail(getter_Copies(email));
     identity->GetFullName(getter_Copies(fullName));
     identity->GetOrganization(getter_Copies(organization));
-    
+
     char * sender = nsnull;
     nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
     if (parser) {
       // convert to UTF8 before passing to MakeFullAddress
       parser->MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(fullName).get(), email, &sender);
     }
-  
+
   if (!sender)
     m_compFields->SetFrom(email);
   else
@@ -813,7 +813,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   PR_FREEIF(sender);
 
     m_compFields->SetOrganization(organization);
-    
+
 #if defined(DEBUG_ducarroz) || defined(DEBUG_seth_)
   {
     printf("----------------------------\n");
@@ -861,7 +861,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       {
         // Convert body to mail charset
         char      *outCString;
-      
+
         if (  bodyString && *bodyString )
         {
           // Apply entity conversion then convert to a mail charset. 
@@ -873,21 +873,21 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
           {
             if (m_compFields->GetForceMsgEncoding())
               isAsciiOnly = PR_FALSE;
-              
+
             m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
             bodyString = outCString;
             newBody = PR_TRUE;
           }
         }
       }
-      
+
       bodyLength = PL_strlen(bodyString);
-      
+
       // Create the listener for the send operation...
       nsCOMPtr<nsIMsgComposeSendListener> composeSendListener = do_CreateInstance(NS_MSGCOMPOSESENDLISTENER_CONTRACTID);
       if (!composeSendListener)
         return NS_ERROR_OUT_OF_MEMORY;
-      
+
       // right now, AutoSaveAsDraft is identical to SaveAsDraft as
       // far as the msg send code is concerned. This way, we don't have
       // to add an nsMsgDeliverMode for autosaveasdraft, and add cases for
@@ -903,7 +903,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
         nsCOMPtr<nsIWebProgressListener> progressListener = do_QueryInterface(composeSendListener);
         mProgress->RegisterListener(progressListener);
       }
-            
+
       // If we are composing HTML, then this should be sent as
       // multipart/related which means we pass the editor into the
       // backend...if not, just pass nsnull
@@ -940,10 +940,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   }
   else
     rv = NS_ERROR_NOT_INITIALIZED;
-  
+
   if (NS_FAILED(rv))
     NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, rv);
-  
+
   return rv;
 }
 
@@ -973,7 +973,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
       const char *charset = m_compFields->GetCharacterSet();
       if(UseFormatFlowed(charset))
           flags |= nsIDocumentEncoder::OutputFormatFlowed;
-    
+
       rv = m_editor->OutputToString(NS_LITERAL_STRING("text/plain"), flags, msgBody);
     }
     else
@@ -1050,7 +1050,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
 
           params->SetSubject(msgSubject.get());
           params->SetDeliveryMode(deliverMode);
-        
+
           mProgress->OpenProgressDialog(m_window, aMsgWindow, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
           mProgress->GetPrompter(getter_AddRefs(prompt));
         }
@@ -1082,7 +1082,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
           vCardUrl += result;
           PR_Free(result);
           PR_Free(unescapedData);
-              
+
           nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv) && attachment)
           {
@@ -1103,7 +1103,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
                   userid.AppendLiteral(".vcf");
                   attachment->SetName(NS_ConvertASCIItoUTF16(userid));
               }
- 
+
               attachment->SetUrl(vCardUrl.get());
               m_compFields->AddAttachment(attachment);
           }
@@ -1148,10 +1148,9 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
     if (progress)
       progress->CloseProgressDialog(PR_TRUE);
   }
-  
+
   return rv;
 }
-
 
 // XXX when do we break this ref to the listener?
 NS_IMETHODIMP nsMsgCompose::SetRecyclingListener(nsIMsgComposeRecyclingListener *aRecyclingListener)
@@ -1159,7 +1158,7 @@ NS_IMETHODIMP nsMsgCompose::SetRecyclingListener(nsIMsgComposeRecyclingListener 
   mRecyclingListener = aRecyclingListener;
   return NS_OK;
 }
- 
+
 NS_IMETHODIMP nsMsgCompose::GetRecyclingListener(nsIMsgComposeRecyclingListener **aRecyclingListener)
 {
   NS_ENSURE_ARG_POINTER(aRecyclingListener);
@@ -1167,7 +1166,7 @@ NS_IMETHODIMP nsMsgCompose::GetRecyclingListener(nsIMsgComposeRecyclingListener 
   NS_IF_ADDREF(*aRecyclingListener);
   return NS_OK;
 }
- 
+
 /* attribute boolean recycledWindow; */
 NS_IMETHODIMP nsMsgCompose::GetRecycledWindow(PRBool *aRecycledWindow)
 {
@@ -1228,7 +1227,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   // unregister the compose object with the compose service
   rv = composeService->UnregisterComposeWindow(m_window);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   recycleIt = recycleIt && !IsLastWindow();
   if (recycleIt)
   {
@@ -1255,7 +1254,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
       if (mRecyclingListener)
       {
         mRecyclingListener->OnClose();
-        
+
         /**
          * In order to really free the memory, we need to call the JS garbage collector for our window.
          * If we don't call GC, the nsIMsgCompose object held by JS will not be released despite we set
@@ -1275,7 +1274,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
       return NS_OK;
     }
   }
-  
+
   //We are going away for real, we need to do some clean up first
   if (m_baseWindow)
   {
@@ -1290,7 +1289,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
     m_baseWindow = nsnull;
     rv = window->Destroy();
   }
-  
+
   return rv;
 }
 
@@ -1371,7 +1370,7 @@ nsresult nsMsgCompose::GetBodyModified(PRBool * modified)
     return NS_ERROR_NULL_POINTER;
 
   *modified = PR_TRUE;
-      
+
   if (m_editor)
   {
     rv = m_editor->GetDocumentModified(modified);
@@ -1409,7 +1408,6 @@ nsMsgCompose::GetDomWindow(nsIDOMWindowInternal * *aDomWindow)
   return NS_OK;
 }
 
-
 nsresult nsMsgCompose::GetCompFields(nsIMsgCompFields * *aCompFields)
 {
   *aCompFields = (nsIMsgCompFields*)m_compFields;
@@ -1417,20 +1415,18 @@ nsresult nsMsgCompose::GetCompFields(nsIMsgCompFields * *aCompFields)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
 {
   *aComposeHTML = m_composeHTML;
   return NS_OK;
 }
 
-
 nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 {
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
-  
+
   return prefBranch->GetIntPref("mailnews.wraplength", aWrapLength);
 }
 
@@ -1486,7 +1482,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     else
       return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   if (m_identity)
   {
       nsXPIDLCString::const_iterator start, end;
@@ -1564,7 +1560,6 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     }
   }
 
-
   // If we don't have an original message URI, nothing else to do...
   if (!originalMsgURI || *originalMsgURI == 0)
     return NS_OK;
@@ -1576,7 +1571,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   // If we are forwarding inline, mime did already setup the compose fields therefore we should stop now
   if (type == nsIMsgCompType::ForwardInline )
     return rv;
-  
+
   char *uriList = PL_strdup(originalMsgURI);
   if (!uriList)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1701,17 +1696,17 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           // firstly, get the database via the folder
           nsCOMPtr<nsIMsgFolder> folder;
           msgHdr->GetFolder(getter_AddRefs(folder));
-	  if (folder) {
+          if (folder) {
             nsCOMPtr<nsIMsgDatabase> db;
             folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
-  
-	    if (db) {
+
+            if (db) {
               nsCAutoString reference;
               msgHdr->GetStringReference(0, reference);
-  
+
               nsCOMPtr<nsIMsgDBHdr> refHdr;
               db->GetMsgHdrForMessageID(reference.get(), getter_AddRefs(refHdr));
-  
+
               if (refHdr) {
                 nsXPIDLCString refSubject;
                 rv = refHdr->GetSubject(getter_Copies(refSubject));
@@ -1724,12 +1719,11 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
                 }
               }
             }
-	  }
+          }
         }
         else
           strip = PR_FALSE;
       }
-  
 
       if (strip && wasFound) {
         // Strip off the "(was: old subject)" part
@@ -1757,7 +1751,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
             subject.Insert(NS_LITERAL_STRING("Re: "), 0);
             m_compFields->SetSubject(subject);
-          
+
             nsXPIDLCString author, authorEmailAddress;
             msgHdr->GetAuthor(getter_Copies(author));
             nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
@@ -1937,7 +1931,6 @@ NS_IMETHODIMP nsMsgCompose::GetOriginalMsgURI(char ** originalMsgURI)
   return (*originalMsgURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
 // FROM LIBMIME. THIS IS FOR QUOTING
@@ -1989,7 +1982,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       if (reply_on_top == 1)
         mCitePrefix.AppendLiteral("\n\n");
 
-      
+
       PRBool header, headerDate;
       PRInt32 replyHeaderType;
       nsAutoString replyHeaderLocale;
@@ -2041,7 +2034,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
           {  
             PRTime originalMsgDate;
             rv = originalMsgHdr->GetDate(&originalMsgDate); 
-                
+
             if (NS_SUCCEEDED(rv)) 
             {
               nsAutoString formattedDateString;
@@ -2051,7 +2044,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
               // Format date using "mailnews.reply_header_locale", if empty then use application default locale.
               if (!replyHeaderLocale.IsEmpty())
                 rv = localeService->NewLocale(replyHeaderLocale, getter_AddRefs(locale));
-              
+
               if (NS_SUCCEEDED(rv))
               {
                 rv = dateFormatter->FormatPRTime(locale,
@@ -2178,13 +2171,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 {
   nsresult rv = NS_OK;
   nsAutoString aCharset;
-  
+
   nsCOMPtr<nsIMsgCompose> compose = do_QueryReferent(mWeakComposeObj);
   if (compose) 
   {
     MSG_ComposeType type;
     compose->GetType(&type);
-    
+
     // Assign cite information if available...
     if (!mCiteReference.IsEmpty())
       compose->SetCiteReference(mCiteReference);
@@ -2204,6 +2197,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         aCharset.AssignLiteral("UTF-8");
         nsAutoString recipient;
         nsAutoString cc;
+        nsAutoString bcc;
         nsAutoString replyTo;
         nsAutoString mailReplyTo;
         nsAutoString mailFollowupTo;
@@ -2221,7 +2215,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         }
         nsXPIDLCString charset;
         compFields->GetCharacterSet(getter_Copies(charset));
-        
+
         if (type == nsIMsgCompType::ReplyAll)
         {
           mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, getter_Copies(outCString));
@@ -2229,19 +2223,28 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           {
             mMimeConverter->DecodeMimeHeader(outCString, recipient, charset);
           }
-              
+
           mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
             mMimeConverter->DecodeMimeHeader(outCString, cc, charset);
           }
-              
+
+          // preserve BCC for the reply-to-self case
+          mHeaders->ExtractHeader(HEADER_BCC, PR_TRUE, getter_Copies(outCString));
+          if (outCString)
+          {
+            mMimeConverter->DecodeMimeHeader(outCString, bcc, charset);
+            if (bcc.Length() > 0)
+              compFields->SetBcc(bcc);
+          }
+
           mHeaders->ExtractHeader(HEADER_MAIL_FOLLOWUP_TO, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
             mMimeConverter->DecodeMimeHeader(outCString, mailFollowupTo, charset);
           }
-          
+
           if (! mailFollowupTo.IsEmpty())
           { // handle Mail-Followup-To (http://cr.yp.to/proto/replyto.html)
             compFields->SetTo(mailFollowupTo);
@@ -2268,7 +2271,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           listPost.EndReading(mailtoEnd);
           nsAutoString mailtoText(NS_LITERAL_STRING("<mailto:"));
           PRBool mailtoFound = FindInReadable(mailtoText, mailtoStart, mailtoEnd);
-          
+
           // Strip off the leading "<mailto:" and trailing ">"
           if (mailtoFound && listPost.Equals(mailtoStart.get()) &&
               listPost.RFindChar('>') == listPost.Length() - 1)
@@ -2279,43 +2282,43 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             compFields->SetTo(listPost);
           }
         }
-              
+
         mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, replyTo, charset);
         }
-        
+
         mHeaders->ExtractHeader(HEADER_MAIL_REPLY_TO, PR_TRUE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, mailReplyTo, charset);
         }
-        
+
         mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, newgroups, charset);
         }
-        
+
         mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, followUpTo, charset);
         }
-        
+
         mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, messageId, charset);
         }
-        
+
         mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
           mMimeConverter->DecodeMimeHeader(outCString, references, charset);
         }
-        
+
         if (! ((type == nsIMsgCompType::ReplyAll) && ! mailFollowupTo.IsEmpty()) &&
             ! ((type == nsIMsgCompType::ReplyToList) && ! listPost.IsEmpty()))
         {
@@ -2330,7 +2333,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             needToRemoveDup = PR_TRUE;
           }
         }
-        
+
         if (! newgroups.IsEmpty())
         {
           if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
@@ -2338,7 +2341,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(EmptyString());
         }
-        
+
         if (! followUpTo.IsEmpty())
         {
           // Handle "followup-to: poster" magic keyword here
@@ -2350,7 +2353,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             if (composeWindow)
               composeWindow->GetPrompter(getter_AddRefs(prompt));
             nsMsgDisplayMessageByID(prompt, NS_MSG_FOLLOWUPTO_ALERT);
-            
+
             // If reply-to is empty, use the from header to fetch
             // the original sender's email
             if (!replyTo.IsEmpty())
@@ -2379,12 +2382,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
               compFields->SetTo(EmptyString());
           }
         }
-        
+
         if (! references.IsEmpty())
           references.Append(PRUnichar(' '));
         references += messageId;
         compFields->SetReferences(NS_LossyConvertUTF16toASCII(references).get());
-        
+
         if (needToRemoveDup)
         {
           //Remove duplicate addresses between TO && CC
@@ -2411,7 +2414,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         }    
       }
     }
-    
+
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
     composeService->TimeStamp("Done with MIME. Now we're updating the UI elements", PR_FALSE);
@@ -2426,7 +2429,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 
     if (! mHeadersOnly)
       mMsgBody.AppendLiteral("</html>");
-    
+
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
     // text before we try to insert it into the editor. If we don't, we
@@ -2507,7 +2510,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
         const PRInt32 kLocalBufSize = 4096;
         PRUnichar localBuf[kLocalBufSize];
         PRUnichar *unichars = localBuf;
-        
+
         if (unicharLength > kLocalBufSize)
         {
           // Otherwise, use the buffer of the class.
@@ -2619,7 +2622,7 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
       else
         mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));
     }
-      
+
   }
 
   if (aEditor)
@@ -2665,7 +2668,7 @@ NS_IMPL_ISUPPORTS1(QuotingOutputStreamListener, nsIStreamListener)
 /* attribute MSG_ComposeType type; */
 NS_IMETHODIMP nsMsgCompose::SetType(MSG_ComposeType aType)
 {
- 
+
   mType = aType;
   return NS_OK;
 }
@@ -2684,7 +2687,7 @@ nsMsgCompose::QuoteMessage(const char *msgURI)
   nsresult    rv;
 
   mQuotingToFollow = PR_FALSE;
-  
+
   // Create a mime parser (nsIStreamConverter)!
   mQuote = do_CreateInstance(NS_MSGQUOTE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2696,7 +2699,7 @@ nsMsgCompose::QuoteMessage(const char *msgURI)
   mQuoteStreamListener =
     new QuotingOutputStreamListener(msgURI, msgHdr, PR_FALSE, PR_FALSE, m_identity,
                                     m_compFields->GetCharacterSet(), mCharsetOverride, PR_FALSE);
-  
+
   if (!mQuoteStreamListener)
   {
 #ifdef NS_DEBUG
@@ -2719,7 +2722,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   nsresult    rv;
 
   mQuotingToFollow = PR_FALSE;
-  
+
   // Create a mime parser (nsIStreamConverter)!
   mQuote = do_CreateInstance(NS_MSGQUOTE_CONTRACTID, &rv);
   if (NS_FAILED(rv) || !mQuote)
@@ -2739,7 +2742,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   mQuoteStreamListener =
     new QuotingOutputStreamListener(originalMsgURI, originalMsgHdr, what != 1, !bAutoQuote, m_identity,
                                     mQuoteCharset.get(), mCharsetOverride, PR_TRUE);
-  
+
   if (!mQuoteStreamListener)
   {
 #ifdef NS_DEBUG
@@ -2967,7 +2970,7 @@ nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 
   return NS_OK;
 }
-  
+
 nsresult
 nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
@@ -3005,7 +3008,7 @@ nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 
   return NS_OK;
 }
-  
+
 nsresult nsMsgComposeSendListener::OnSendNotPerformed(const char *aMsgID, nsresult aStatus)
 {
  // since OnSendNotPerformed is called in the case where the user aborts the operation
@@ -3039,7 +3042,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
   {
     nsCOMPtr<nsIMsgProgress> progress;
     compose->GetProgress(getter_AddRefs(progress));
-    
+
     if (NS_SUCCEEDED(aStatus))
     {
 #ifdef NS_DEBUG
@@ -3145,7 +3148,7 @@ nsMsgComposeSendListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
   return NS_OK;
 }
-  
+
 nsresult
 nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 {
@@ -3157,7 +3160,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
     if (mDeliverMode == nsIMsgSend::nsMsgQueueForLater || 
           mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft)
       compose->RememberQueuedDisposition();
-      
+
     // Ok, if we are here, we are done with the send/copy operation so
     // we have to do something with the window....SHOW if failed, Close
     // if succeeded
@@ -3329,7 +3332,6 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
         }
       }
     }
-  
   }
 
   // Now get the new uid so that next save will remove the right msg
@@ -3387,13 +3389,13 @@ NS_IMETHODIMP nsMsgComposeSendListener::OnStateChange(nsIWebProgress *aWebProgre
     {
       nsCOMPtr<nsIMsgProgress> progress;
       compose->GetProgress(getter_AddRefs(progress));
-      
+
       //Time to stop any pending operation...
       if (progress)
       {
         //Unregister ourself from msg compose progress
         progress->UnregisterListener(this);
-    
+
         PRBool  bCanceled = PR_FALSE;
         progress->GetProcessCanceledByUser(&bCanceled);
         if (bCanceled)
@@ -3404,7 +3406,7 @@ NS_IMETHODIMP nsMsgComposeSendListener::OnStateChange(nsIWebProgress *aWebProgre
           progress->OnStatusChange(nsnull, nsnull, 0, msg);
         }
       }
-      
+
       nsCOMPtr<nsIMsgSend> msgSend;
       compose->GetMessageSend(getter_AddRefs(msgSend));
       if (msgSend)
@@ -3501,7 +3503,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
   nsInputFileStream tempFile(fSpec);
   if (!tempFile.is_open())
     return NS_MSG_ERROR_READING_FILE;  
-  
+
   readSize = fSpec.GetFileSize();
   ptr = readBuf = (char *)PR_Malloc(readSize + 1);  if (!readBuf)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3646,7 +3648,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
       }
     }
   }
-  
+
   // Now, if they didn't even want to use a signature, we should
   // just return nicely.
   //
@@ -3654,7 +3656,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     return NS_OK;
 
   nsFileSpec    testSpec(sigNativePath.get());
-  
+
   // If this file doesn't really exist, just bail!
   if (!testSpec.Exists())
     return NS_OK;
@@ -3675,7 +3677,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
   preopen = PR_smprintf(_preopen, wrapLength);
   if (!preopen)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   if (imageSig)
   {
     // We have an image signature. If we're using the in HTML composer, we
@@ -3728,12 +3730,12 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
         sigData.Find("\n-- \r", PR_TRUE) < 0)
     {
       nsDependentSubstring firstFourChars(sigData, 0, 4);
-    
+
       if (!(firstFourChars.EqualsLiteral("-- \n") ||
             firstFourChars.EqualsLiteral("-- \r")))
       {
         sigOutput.AppendLiteral(dashes);
-    
+
         if (!m_composeHTML || !htmlSig)
           sigOutput.AppendLiteral(CRLF);
         else if (m_composeHTML)
@@ -3742,7 +3744,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     }
 
     sigOutput.Append(sigData);
-    
+
     if (m_composeHTML)
     {
       if (htmlSig)
@@ -3797,7 +3799,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
     case nsIMsgCompType::Template :
       addSignature = PR_FALSE;
       break;
-    
+
     default :
       addSignature = PR_FALSE;
       break;
@@ -3825,7 +3827,7 @@ nsresult nsMsgCompose::NotifyStateListeners(PRInt32 aNotificationType, nsresult 
 {
   if (!mStateListeners)
     return NS_OK;    // maybe there just aren't any.
- 
+
   PRUint32 numListeners;
   nsresult rv = mStateListeners->Count(&numListeners);
   if (NS_FAILED(rv)) return rv;
@@ -3842,11 +3844,11 @@ nsresult nsMsgCompose::NotifyStateListeners(PRInt32 aNotificationType, nsresult 
         case nsIMsgComposeNotificationType::ComposeFieldsReady:
           thisListener->NotifyComposeFieldsReady();
           break;
-        
+
         case nsIMsgComposeNotificationType::ComposeProcessDone:
           thisListener->ComposeProcessDone(aResult);
           break;
-        
+
         case nsIMsgComposeNotificationType::SaveInFolderDone:
           thisListener->SaveInFolderDone(m_folderName.get());
           break;
@@ -3872,7 +3874,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* char
   nsCOMPtr<nsIUTF8ConverterService> utf8Cvt =
     do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(utf8Cvt, NS_ERROR_UNEXPECTED);
- 
+
   nsCAutoString utf8Scheme;
 
   if (PL_strncasestr(scheme, "file:", 5)) 
@@ -3902,7 +3904,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* char
   }
   if (PL_strncasestr(scheme, "http:", 5)) 
     _retval.Cut(0, 7);
-  
+
   return NS_OK;
 }
 
@@ -3939,7 +3941,7 @@ nsresult nsMsgCompose::GetABDirectories(const nsACString& dirUri, nsISupportsArr
 
   if (!searchSubDirectory)
       return rv;
-  
+
   nsCOMPtr<nsISimpleEnumerator> subDirectories;
   if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
   {
@@ -3958,7 +3960,7 @@ nsresult nsMsgCompose::GetABDirectories(const nsACString& dirUri, nsISupportsArr
             continue;
 
           nsCOMPtr<nsIRDFResource> source(do_QueryInterface(directory));
-    
+
           nsXPIDLCString uri;
           // rv = directory->GetDirUri(getter_Copies(uri));
           rv = source->GetValue(getter_Copies(uri));
@@ -4173,11 +4175,11 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
         stillNeedToSearch = PR_FALSE;
         break;
       }
-       
+
       abDirectory = do_QueryInterface(item, &rv);
       if (NS_FAILED(rv))
         return rv;
-      
+
       nsCOMPtr<nsIRDFResource> source(do_QueryInterface(abDirectory));
 
       nsXPIDLCString uri;
@@ -4280,7 +4282,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     if (!recipient)
                        return  NS_ERROR_OUT_OF_MEMORY;
                     NS_ADDREF(newRecipient);
-                    
+
                     if (bIsMailList)
                     {
                       stillNeedToSearch = PR_TRUE;
@@ -4345,7 +4347,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     nsXPIDLString plaintextDomains;
     nsXPIDLString htmlDomains;
     nsAutoString domain;
-    
+
     nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefBranch)
     {
@@ -4401,7 +4403,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
               atLeastOneRecipientPrefersUnknown = PR_TRUE;
               break;
           }
- 
+
           if (populateMailList)
           {
             if (! recipientsStr.IsEmpty())
@@ -4688,7 +4690,7 @@ nsresult nsMsgCompose::_BodyConvertible(nsIDOMNode *node, PRInt32 *_retval)
 
     nsresult rv;
     PRInt32 result;
-    
+
     // Check this node
     rv = TagConvertible(node, &result);
     if (NS_FAILED(rv))
@@ -4728,7 +4730,7 @@ nsresult nsMsgCompose::BodyConvertible(PRInt32 *_retval)
     NS_ENSURE_TRUE(_retval, NS_ERROR_NULL_POINTER);
 
     nsresult rv;
-    
+
     if (!m_editor)
       return NS_ERROR_FAILURE;
 
@@ -4736,18 +4738,18 @@ nsresult nsMsgCompose::BodyConvertible(PRInt32 *_retval)
     rv = m_editor->GetRootElement(getter_AddRefs(rootElement));
     if (NS_FAILED(rv) || nsnull == rootElement)
       return rv;
-      
+
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(rootElement);
     if (nsnull == node)
       return NS_ERROR_FAILURE;
-      
+
     return _BodyConvertible(node, _retval);
 }
 
 nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
 {
   nsresult rv;
-  
+
   if (! m_editor)
     return NS_ERROR_FAILURE;
 
@@ -4848,7 +4850,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
 
         tempNode = node;
       } while (searchState != 3 && NS_SUCCEEDED(tempNode->GetPreviousSibling(getter_AddRefs(node))) && node);
-      
+
       if (searchState == 3)
       {
         //Now, I am sure I get the right node!
@@ -4973,7 +4975,7 @@ nsMsgRecipient::nsMsgRecipient() :
   mProcessed(PR_FALSE)
 {
 }
- 
+
 nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 preferFormat, PRBool processed) :
   mAddress(fullAddress),
   mEmail(email),
@@ -4997,7 +4999,7 @@ NS_INTERFACE_MAP_END
 nsMsgMailList::nsMsgMailList()
 {
 }
- 
+
 nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbDirectory* directory) :
   mDirectory(directory)
 {
