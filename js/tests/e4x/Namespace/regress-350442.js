@@ -38,18 +38,34 @@
 
 var bug = 350442;
 var summary = 'toXMLString with namespace definitions';
-var actual = '';
-var expect = '';
+var actual, expect;
 
 printBugNumber (bug);
 printStatus (summary);
 
-var t1 = <tag1 xmlns="http://ns1"/>;
-var n2 = new Namespace("http://ns2");
-t1.@n2::a1="a1 from ns2";
+expect = false;
+actual = false;
 
-expect = (<tag1 xmlns="http://ns1" xmlns:ns2="http://ns2" ns2:a1="a1 from ns2"/>).toXMLString();
-actual = t1.toXMLString();
+try
+{
+  var t1 = <tag1 xmlns="http://ns1"/>;
+  var n2 = new Namespace("http://ns2");
+  t1.@n2::a1="a1 from ns2";
+
+  var t1XMLString = t1.toXMLString();
+
+  var attrMatch = /xmlns:([^=]+)="http:\/\/ns2"/.exec(t1XMLString);
+  if (!attrMatch)
+    throw "No @n2::a1 attribute present";
+
+  var nsRegexp = new RegExp(attrMatch[1] + ':a1="a1 from ns2"');
+  if (!nsRegexp.test(t1XMLString))
+    throw "No namespace declaration present for @ns2::a1";
+}
+catch (e)
+{
+  actual = e;
+}
 
 TEST(1, expect, actual);
 
