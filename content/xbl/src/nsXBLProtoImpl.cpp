@@ -48,8 +48,6 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsIDOMNode.h"
 
-nsresult NS_DOMClassInfo_PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
-
 nsresult
 nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement)
 {
@@ -150,9 +148,8 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   nsIDocument* doc = aBoundElement->GetOwnerDoc();
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> nativeWrapper(do_QueryInterface(wrapper));
-    if (nativeWrapper) {
-      NS_DOMClassInfo_PreserveNodeWrapper(nativeWrapper);
-    }
+    if (nativeWrapper)
+      doc->AddReference(aBoundElement, nativeWrapper);
   }
 
   wrapper.swap(*aScriptObjectHolder);

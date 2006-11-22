@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +12,9 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications, Inc.
- * Portions created by the Initial Developer are Copyright (C) 1999
- * the Initial Developer. All Rights Reserved.
+ * The Original Code is mozilla.org code.
  *
  * Contributor(s):
- *   David W. Hyatt <hyatt@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,25 +30,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPIWindowRoot_h__
-#define nsPIWindowRoot_h__
+#include "xpcom/nsCycleCollectionParticipant.h"
 
-#include "nsISupports.h"
+NS_INTERFACE_MAP_BEGIN(nsCycleCollectionParticipant)
+  NS_INTERFACE_MAP_ENTRY(nsCycleCollectionParticipant)
+NS_INTERFACE_MAP_END
 
-class nsIFocusController;
+NS_IMETHODIMP_(nsrefcnt) nsCycleCollectionParticipant::AddRef(void)
+{
+  // Do nothing, it's a singleton.
+  return 1;
+}
 
-// c18dee5a-dcf9-4391-a20c-581e769d095e
-#define NS_IWINDOWROOT_IID \
-{ 0xc18dee5a, 0xdcf9, 0x4391, \
-  { 0xa2, 0x0c, 0x58, 0x1e, 0x76, 0x9d, 0x09, 0x5e } }
+NS_IMETHODIMP_(nsrefcnt) nsCycleCollectionParticipant::Release(void)
+{
+  // Do nothing, it's a singleton.
+  return 1;
+}
 
-class nsPIWindowRoot : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
+NS_IMETHODIMP nsCycleCollectionParticipant::Unlink(nsISupports *n)
+{
+  return NS_OK;
+}
 
-  NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)
-
-#endif // nsPIWindowRoot_h__
+NS_IMETHODIMP 
+nsCycleCollectionParticipant::Traverse(nsISupports *n, 
+                                       nsCycleCollectionTraversalCallback &cb)
+{
+  return NS_OK;
+}

@@ -82,7 +82,6 @@
 #include "nsContentUtils.h"
 #include "jscntxt.h"
 #include "nsEventDispatcher.h"
-#include "nsIDOMGCParticipant.h"
 #include "nsIContent.h"
 
 // For locale aware string methods
@@ -3158,14 +3157,6 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 
   if (status == JSGC_BEGIN && !NS_IsMainThread())
     return JS_FALSE;
-
-  // XPCJSRuntime::GCCallback does marking from the JSGC_MARK_END callback.
-  // we need to call EndGCMark *after* marking is finished.
-  // XXX This relies on our callback being registered after
-  // XPCJSRuntime's, although if they were registered the other way
-  // around the ordering there would be correct.
-  if (status == JSGC_MARK_END)
-    nsDOMClassInfo::EndGCMark();
 
   return result;
 }

@@ -769,4 +769,31 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
 
+// Some cycle-collecting helper macros for nsIContent subclasses
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER \
+  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {           \
+    nsContentUtils::TraverseListenerManager(tmp, cb);     \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER      \
+  {                                                              \
+    nsISupports *preservedWrapper = nsnull;                      \
+    if (tmp->GetOwnerDoc())                                      \
+      preservedWrapper = tmp->GetOwnerDoc()->GetReference(tmp);  \
+    if (preservedWrapper)                                        \
+      cb.NoteXPCOMChild(preservedWrapper);                       \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER \
+  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {         \
+    nsContentUtils::RemoveListenerManager(tmp);         \
+    tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);          \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
+  if (tmp->GetOwnerDoc())                                 \
+    tmp->GetOwnerDoc()->RemoveReference(tmp);
+
+
 #endif /* nsIContent_h___ */

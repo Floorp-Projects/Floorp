@@ -782,6 +782,20 @@ public:
                                        PRBool *aDefaultAction = nsnull);
 
   /**
+   * Used only during traversal of the XPCOM graph by the cycle
+   * collector: push a pointer to the listener manager onto the
+   * children deque, if it exists. Do nothing if there is no listener
+   * manager.
+   *
+   * Crucially: does not perform any refcounting operations.
+   *
+   * @param aNode The node to traverse.
+   * @param children The buffer to push a listener manager pointer into.
+   */
+  static void TraverseListenerManager(nsINode *aNode,
+                                      nsCycleCollectionTraversalCallback &cb);
+
+  /**
    * Get the eventlistener manager for aNode. If a new eventlistener manager
    * was created, aCreated is set to PR_TRUE.
    *
@@ -933,7 +947,9 @@ private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,
                                            JSObject *aOldGlobal,
-                                           JSObject *aNewGlobal);
+                                           JSObject *aNewGlobal,
+                                           nsIDocument *aOldDocument,
+                                           nsIDocument *aNewDocument);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
 
