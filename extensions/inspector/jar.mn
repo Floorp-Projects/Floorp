@@ -13,7 +13,6 @@ inspector.jar:
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/dom/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/viewers/styleRules/popupOverlay.xul
 % overlay chrome://inspector/content/popupOverlay.xul chrome://inspector/content/search/modules/popupOverlay.xul
-% overlay chrome://browser/content/baseMenuOverlay.xul chrome://inspector/content/inspector.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 * content/inspector/contents.rdf                                      (resources/content/contents.rdf)
   content/inspector/inspector.xul                                     (resources/content/inspector.xul)
   content/inspector/inspector.js                                      (resources/content/inspector.js)
