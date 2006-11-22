@@ -41,7 +41,7 @@ sub environments {
         push @objs, Bugzilla::Testopia::Environment->new($id);
     }
     $self->{'environments'} = \@objs;
-    return $self->{'environmets'};
+    return $self->{'environments'};
 }
 
 sub builds {

@@ -337,8 +337,6 @@ sub get_cc_xml {
 sub do_update {
     my ($run) = @_;
     
-    ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if ($cgi->param('summary') eq '');
-    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($cgi->param('environment') eq '');
     my $timestamp;
     $timestamp = $run->stop_date;
     $timestamp = undef if $cgi->param('status') && $run->stop_date;
@@ -347,9 +345,12 @@ sub do_update {
     my $prodver = $cgi->param('product_version');
     my $planver = $cgi->param('plan_version');
     my $build = $cgi->param('build');
-    my $env = $cgi->param('environment');
+    my $env      = $cgi->param('environment') ? $cgi->param('environment') : $cgi->param('env_pick');
     my $manager = DBNameToIdAndCheck(trim($cgi->param('manager')));
     my $notes = trim($cgi->param('notes'));
+
+    ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if ($cgi->param('summary') eq '');
+    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($env eq '');
     
     trick_taint($summary);
     trick_taint($prodver);

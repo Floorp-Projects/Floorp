@@ -130,6 +130,21 @@ elsif ($action eq 'getcomps'){
     print $json->objToJson(\@comps);
     exit;
 }
+elsif ($action eq 'getenvs'){
+    Bugzilla->login;
+    my $product_id = $cgi->param('product_id');
+
+    detaint_natural($product_id);
+    my $product = Bugzilla::Testopia::Product->new($product_id);
+    
+    my @envs;
+    foreach my $e (@{$product->environments}){
+        push @envs, {'id' => $e->id, 'name' => $e->name};
+    }
+    my $json = new JSON;
+    print $json->objToJson(\@envs);
+    exit;
+}
 ####################
 ### Display Form ###
 ####################

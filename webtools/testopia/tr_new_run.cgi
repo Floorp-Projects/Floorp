@@ -85,7 +85,7 @@ if ($action eq 'Add'){
     my $build    = $cgi->param('build');
     my $summary  = $cgi->param('summary');
     my $notes    = $cgi->param('notes');    
-    my $env      = $cgi->param('environment');
+    my $env      = $cgi->param('environment') ? $cgi->param('environment') : $cgi->param('env_pick');
     
     ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if $summary  eq '';
     ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if $env  eq '';
