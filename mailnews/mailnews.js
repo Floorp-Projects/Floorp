@@ -245,6 +245,7 @@ pref("mailnews.reply_in_default_charset",   false);
 
 pref("mailnews.search_date_format",        "chrome://messenger/locale/messenger.properties");
 pref("mailnews.search_date_separator",     "chrome://messenger/locale/messenger.properties");
+pref("mailnews.search_date_leading_zeros", "chrome://messenger/locale/messenger.properties");
 
 pref("mailnews.language_sensitive_font",    true);
 

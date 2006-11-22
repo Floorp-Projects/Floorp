@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Magnus Melin <mkmelin+mozilla@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,15 +40,19 @@
 
 var gSearchDateFormat = 0;
 var gSearchDateSeparator;
+var gSearchDateLeadingZeros;
 
-// Get the short date format option of the current locale.
-// This supports the common case which the date separator is
-// either '/', '-', '.' and using Christian year.
-function getLocaleShortDateFormat()
+/**
+ * Get the short date format option of the current locale.
+ * This supports the common case which the date separator is
+ * either '/', '-', '.' and using Christian year.
+ */
+function initLocaleShortDateFormat()
 {
   // default to mm/dd/yyyy
   gSearchDateFormat = 3;
   gSearchDateSeparator = "/";
+  gSearchDateLeadingZeros = true;
 
   try {
     var dateFormatService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
@@ -56,7 +61,7 @@ function getLocaleShortDateFormat()
                                                   dateFormatService.dateFormatShort, 
                                                   1999, 
                                                   12, 
-                                                  31);
+                                                  1);
 
     // find out the separator
     var possibleSeparators = "/-.";
@@ -78,19 +83,23 @@ function getLocaleShortDateFormat()
     }
     else
     {
-      if ( arrayOfStrings[0] == "31" )
+      // the date will contain a zero if that system settings include leading zeros
+      gSearchDateLeadingZeros = /0/.test(dateString);
+
+      // match 1 as number, since that will match both "1" and "01"
+      if ( arrayOfStrings[0] == 1 )
       {
-        // 31.12.1999 or 31.1992.12
+        // 01.12.1999 or 01.1999.12
         gSearchDateFormat = arrayOfStrings[1] == "12" ? 5 : 6;
       }
-      else if ( arrayOfStrings[1] == "31" )
+      else if ( arrayOfStrings[1] == 1 )
       {
-        // 12.31.1999 or 1999.31.12
+        // 12.01.1999 or 1999.01.12
         gSearchDateFormat = arrayOfStrings[0] == "12" ? 3 : 2;
       }
-      else  // implies arrayOfStrings[2] == "31"
+      else  // implies arrayOfStrings[2] == 1
       {
-        // 12.1999.31 or 1999.12.31
+        // 12.1999.01 or 1999.12.01
         gSearchDateFormat = arrayOfStrings[0] == "12" ? 4 : 1;
       }
     }
@@ -117,27 +126,34 @@ function initializeSearchDateFormat()
 
     // if the option is 0 then try to use the format of the current locale
     if (gSearchDateFormat == 0)
-      getLocaleShortDateFormat();
+      initLocaleShortDateFormat();
     else
     {
-      if (gSearchDateFormat < 1 || gSearchDateFormat > 6)
+      // initialize the search date format based on preferences
+      if ( gSearchDateFormat < 1 || gSearchDateFormat > 6 )
         gSearchDateFormat = 3;
 
-      gSearchDateSeparator =
-                 pref.getComplexValue("mailnews.search_date_separator", 
-                                      Components.interfaces.nsIPrefLocalizedString);
+      gSearchDateSeparator = pref.getComplexValue("mailnews.search_date_separator", 
+                                  Components.interfaces.nsIPrefLocalizedString);
+
+      gSearchDateLeadingZeros = (pref.getComplexValue("mailnews.search_date_leading_zeros", 
+                      Components.interfaces.nsIPrefLocalizedString).data == "true");
     }
-  } catch (ex) {
+  }
+  catch (e)
+  {
+    dump("initializeSearchDateFormat: caught an exception: "+e+"\n");
     // set to mm/dd/yyyy in case of error
     gSearchDateFormat = 3;
     gSearchDateSeparator = "/";
+    gSearchDateLeadingZeros = true;
   }
 }
 
 function convertPRTimeToString(tm)
 {
   var time = new Date();
-  // PRTime is in microseconds, Javascript time is in milliseconds
+  // PRTime is in microseconds, JavaScript time is in milliseconds
   // so divide by 1000 when converting
   time.setTime(tm / 1000);
   
@@ -146,12 +162,15 @@ function convertPRTimeToString(tm)
 
 function convertDateToString(time)
 {
-  var year, month, date;
   initializeSearchDateFormat();
 
-  year = 1900 + time.getYear();
-  month = time.getMonth() + 1;  // since js month is 0-11
-  date = time.getDate();
+  var year = time.getFullYear();
+  var month = time.getMonth() + 1;  // since js month is 0-11
+  if ( gSearchDateLeadingZeros && month < 10 )
+    month = "0" + month;
+  var date = time.getDate();
+  if ( gSearchDateLeadingZeros && date < 10 )
+    date = "0" + date;
 
   var dateStr;
   var sep = gSearchDateSeparator;
@@ -238,7 +257,7 @@ function convertStringToPRTime(str)
   time.setMonth(month);
   time.setDate(date);
 
-  // Javascript time is in milliseconds, PRTime is in microseconds
+  // JavaScript time is in milliseconds, PRTime is in microseconds
   // so multiply by 1000 when converting
   return (time.getTime() * 1000);
 }
