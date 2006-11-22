@@ -1182,7 +1182,7 @@ static void InitMemHook(void)
 }
 
 
-#elif defined(XP_MACOSX)
+#elif 0
 
 #include <malloc/malloc.h>
 
