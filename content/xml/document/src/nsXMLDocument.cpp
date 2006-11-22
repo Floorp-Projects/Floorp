@@ -224,7 +224,8 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 void
-nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
+nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
+                          nsIPrincipal* aPrincipal)
 {
   if (mChannelIsPending) {
     StopDocumentLoad();
@@ -232,7 +233,7 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
     mChannelIsPending = nsnull;
   }
   
-  nsDocument::ResetToURI(aURI, aLoadGroup);
+  nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
 }
 
 /////////////////////////////////////////////////////
@@ -418,14 +419,15 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // event listener manager so that load listeners etc. will
   // remain. This should be done before the security check is done to
   // ensure that the document is reset even if the new document can't
-  // be loaded.
+  // be loaded.  Note that we need to hold a strong ref to |principal|
+  // here, because ResetToURI will null out our node principal before
+  // setting the new one.
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
   mListenerManager = nsnull;
 
-  ResetToURI(uri, nsnull);
+  ResetToURI(uri, nsnull, principal);
 
-  SetPrincipal(principal);
   mListenerManager = elm;
 
   // Get security manager, check to see if we're allowed to load this URI

@@ -882,8 +882,10 @@ void
 nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIPrincipal> principal;
   if (aChannel) {
-    // Note: this code is duplicated in nsXULDocument::StartDocumentLoad.
+    // Note: this code is duplicated in nsXULDocument::StartDocumentLoad and
+    // nsScriptSecurityManager::GetChannelPrincipal.    
     // Note: this should match nsDocShell::OnLoadingSite
     nsLoadFlags loadFlags = 0;
     nsresult rv = aChannel->GetLoadFlags(&loadFlags);
@@ -892,25 +894,23 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     } else {
       aChannel->GetOriginalURI(getter_AddRefs(uri));
     }
-  }
 
-  ResetToURI(uri, aLoadGroup);
-
-  if (aChannel) {
-    nsCOMPtr<nsISupports> owner;
-    if (NS_SUCCEEDED(aChannel->GetOwner(getter_AddRefs(owner)))) {
-      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-      if (principal) {
-        SetPrincipal(principal);
-      }
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
+    if (securityManager) {
+      securityManager->GetChannelPrincipal(aChannel,
+                                           getter_AddRefs(principal));
     }
   }
+
+  ResetToURI(uri, aLoadGroup, principal);
 
   mChannel = aChannel;
 }
 
 void
-nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
+nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
+                       nsIPrincipal* aPrincipal)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
 
@@ -984,15 +984,19 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mXMLDeclarationBits = 0;
 
   // Now get our new principal
-  nsIScriptSecurityManager *securityManager =
-    nsContentUtils::GetSecurityManager();
-  if (securityManager) {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv =
-      securityManager->GetCodebasePrincipal(mDocumentURI,
-                                            getter_AddRefs(principal));
-    if (NS_SUCCEEDED(rv)) {
-      SetPrincipal(principal);
+  if (aPrincipal) {
+    SetPrincipal(aPrincipal);
+  } else {
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
+    if (securityManager) {
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv =
+        securityManager->GetCodebasePrincipal(mDocumentURI,
+                                              getter_AddRefs(principal));
+      if (NS_SUCCEEDED(rv)) {
+        SetPrincipal(principal);
+      }
     }
   }
 }

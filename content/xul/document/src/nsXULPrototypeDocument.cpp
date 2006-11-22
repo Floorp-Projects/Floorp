@@ -126,8 +126,9 @@ public:
     NS_DECL_NSISERIALIZABLE
 
     // nsIXULPrototypeDocument interface
+    NS_IMETHOD InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal);
+    
     NS_IMETHOD GetURI(nsIURI** aResult);
-    NS_IMETHOD SetURI(nsIURI* aURI);
 
     NS_IMETHOD GetRootElement(nsXULPrototypeElement** aResult);
     NS_IMETHOD SetRootElement(nsXULPrototypeElement* aElement);
@@ -141,8 +142,7 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
 
-    virtual nsIPrincipal *GetDocumentPrincipal();
-    void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
+    virtual nsIPrincipal *DocumentPrincipal();
 
     NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult);
     NS_IMETHOD NotifyLoadDone();
@@ -159,7 +159,6 @@ protected:
     nsXULPrototypeElement* mRoot;
     nsTArray<nsXULPrototypePI*> mProcessingInstructions;
     nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
-    nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
     nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
 
@@ -314,15 +313,11 @@ NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 nsresult
 nsXULPrototypeDocument::NewXULPDGlobalObject(nsIScriptGlobalObject** aResult)
 {
-    nsIPrincipal *principal = GetDocumentPrincipal();
-    if (!principal)
-        return NS_ERROR_FAILURE;
-
-    // Now that GetDocumentPrincipal has succeeded, we can safely compare its
-    // result to gSystemPrincipal, in order to create gSystemGlobal if the two
-    // pointers are equal.  Thus, gSystemGlobal implies gSystemPrincipal.
+    // Now compare DocumentPrincipal() to gSystemPrincipal, in order to create
+    // gSystemGlobal if the two pointers are equal.  Thus, gSystemGlobal
+    // implies gSystemPrincipal.
     nsCOMPtr<nsIScriptGlobalObject> global;
-    if (principal == gSystemPrincipal) {
+    if (DocumentPrincipal() == gSystemPrincipal) {
         if (!gSystemGlobal) {
             gSystemGlobal = new nsXULPDGlobalObject();
             if (! gSystemGlobal)
@@ -366,17 +361,12 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         mStyleSheetReferences->AppendElement(referenceURI);
     }
 
-    // nsIPrincipal mDocumentPrincipal
+
+    // nsIPrincipal mNodeInfoManager->mPrincipal
     nsCOMPtr<nsIPrincipal> principal;
-    rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(principal));
-    if (! principal) {
-        principal = GetDocumentPrincipal();
-        if (!principal)
-            rv |= NS_ERROR_FAILURE;
-    } else {
-        mNodeInfoManager->SetDocumentPrincipal(principal);
-        mDocumentPrincipal = principal;
-    }
+    rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(principal));
+    // Better safe than sorry....
+    mNodeInfoManager->SetDocumentPrincipal(principal);
 
     // nsIScriptGlobalObject mGlobalObject
     NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
@@ -498,8 +488,9 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
     }
 
-    // nsIPrincipal mDocumentPrincipal
-    rv |= NS_WriteOptionalObject(aStream, mDocumentPrincipal, PR_TRUE);
+    // nsIPrincipal mNodeInfoManager->mPrincipal
+    rv |= aStream->WriteObject(mNodeInfoManager->DocumentPrincipal(),
+                               PR_TRUE);
     
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
@@ -544,27 +535,21 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 //
 
 NS_IMETHODIMP
+nsXULPrototypeDocument::InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    mURI = aURI;
+    mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
+    return NS_OK;
+}
+    
+
+NS_IMETHODIMP
 nsXULPrototypeDocument::GetURI(nsIURI** aResult)
 {
     *aResult = mURI;
     NS_IF_ADDREF(*aResult);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULPrototypeDocument::SetURI(nsIURI* aURI)
-{
-    NS_ASSERTION(!mURI, "Can't change the uri of a xul prototype document");
-    if (mURI)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    mURI = aURI;
-    if (!mDocumentPrincipal) {
-        // If the document doesn't have a principal yet we'll force the creation of one
-        // so that mNodeInfoManager properly gets one.
-        GetDocumentPrincipal();
-    }
     return NS_OK;
 }
 
@@ -638,46 +623,12 @@ nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsAString& aData)
 
 
 nsIPrincipal*
-nsXULPrototypeDocument::GetDocumentPrincipal()
+nsXULPrototypeDocument::DocumentPrincipal()
 {
     NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
-    if (!mDocumentPrincipal) {
-        nsIScriptSecurityManager *securityManager =
-            nsContentUtils::GetSecurityManager();
-        nsresult rv = NS_OK;
-
-        // XXX This should be handled by the security manager, see bug 160042
-        PRBool isChrome = PR_FALSE;
-        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome) {
-            if (gSystemPrincipal) {
-                mDocumentPrincipal = gSystemPrincipal;
-            } else {
-                rv = securityManager->
-                     GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
-                NS_IF_ADDREF(gSystemPrincipal = mDocumentPrincipal);
-            }
-        } else {
-            rv = securityManager->
-                 GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
-        }
-
-        if (NS_FAILED(rv))
-            return nsnull;
-
-        mNodeInfoManager->SetDocumentPrincipal(mDocumentPrincipal);
-    }
-
-    return mDocumentPrincipal;
+    return mNodeInfoManager->DocumentPrincipal();
 }
 
-
-void
-nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
-{
-    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
-    mDocumentPrincipal = aPrincipal;
-    mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
-}
 
 nsNodeInfoManager*
 nsXULPrototypeDocument::GetNodeInfoManager()
@@ -962,6 +913,6 @@ nsXULPDGlobalObject::GetPrincipal()
     nsCOMPtr<nsIXULPrototypeDocument> protoDoc
       = do_QueryInterface(mGlobalObjectOwner);
 
-    return protoDoc->GetDocumentPrincipal();
+    return protoDoc->DocumentPrincipal();
 }
 

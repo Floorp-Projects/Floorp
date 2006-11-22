@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x1ae3a9cc, 0x3c05, 0x4215, \
-  { 0xad, 0xed, 0xe7, 0x89, 0xc4, 0x08, 0x00, 0x91 } }
+{ 0xb138a9aa, 0x3d0d, 0x4d0b, \
+ { 0x98, 0x02, 0x72, 0x15, 0x54, 0x27, 0xe0, 0x2e } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -595,13 +595,17 @@ public:
   /**
    * Reset the document using the given channel and loadgroup.  This works
    * like ResetToURI, but also sets the document's channel to aChannel.
+   * The principal of the document will be set from the channel.
    */
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
 
   /**
-   * Reset this document to aURI and aLoadGroup.  aURI must not be null.
+   * Reset this document to aURI, aLoadGroup, and aPrincipal.  aURI must not be
+   * null.  If aPrincipal is null, a codebase principal based on aURI will be
+   * used.
    */
-  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
+  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup,
+                          nsIPrincipal* aPrincipal) = 0;
 
   /**
    * Set the container (docshell) for this document.

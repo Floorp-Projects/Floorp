@@ -319,7 +319,9 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
 }
 
 NS_IMETHODIMP
-nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocument)
+nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
+                                  nsIPrincipal* aPrincipal,
+                                  nsIDocument **aDocument)
 {
   *aDocument = nsnull;
 
@@ -333,7 +335,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank"));
     if (uri) {
-      blankDoc->ResetToURI(uri, aLoadGroup);
+      blankDoc->ResetToURI(uri, aLoadGroup, aPrincipal);
       rv = NS_OK;
     }
   }

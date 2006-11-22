@@ -1508,6 +1508,7 @@ nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
 
 NS_IMETHODIMP
 nsDirectoryViewerFactory::CreateBlankDocument(nsILoadGroup *aLoadGroup,
+                                              nsIPrincipal *aPrincipal,
                                               nsIDocument **_retval) {
 
   NS_NOTYETIMPLEMENTED("didn't expect to get here");
