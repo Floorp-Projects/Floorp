@@ -379,9 +379,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 frame.script = FUN_SCRIPT(fun);
                 frame.fun = fun;
                 frame.down = cx->fp;
-                JS_ASSERT(frame.script->length >= JSOP_STOP_LENGTH);
-                frame.pc = frame.script->code + frame.script->length
-                         - JSOP_STOP_LENGTH;
+                if (frame.script) {
+                    JS_ASSERT(frame.script->length >= JSOP_STOP_LENGTH);
+                    frame.pc = frame.script->code + frame.script->length
+                             - JSOP_STOP_LENGTH;
+                }
                 frame.argv = argv + 2;
                 cx->fp = &frame;
                 ok = !wp->setter ||
