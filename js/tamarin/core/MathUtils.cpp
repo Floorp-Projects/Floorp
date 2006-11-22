@@ -67,12 +67,16 @@ namespace avmplus
 
 	double MathUtils::infinity()
 	{
+		#ifdef UNIX
+		return INFINITY;
+		#else
 		float result;
 		*((uint32*)&result) = 0x7F800000;
 		return result;
+		#endif
 	}
 
-#if 0
+#if UNIX
 	/*
 	 * MathUtils::isNaN and MathUtils::isInfinite are modified versions of
 	 * s_isNaN.c and s_isInfinite.c, freely usable code by Sun.  Copyright follows:
@@ -135,6 +139,27 @@ namespace avmplus
 		hx = 0x7FF00000 - hx;
 		return (bool) (((uint32)(hx) >> 31) != 0);
 	}
+
+	bool MathUtils::isNegZero(double x)
+	{
+		union {
+			double value;
+			struct {
+#ifdef AVM10_BIG_ENDIAN
+				uint32 msw, lsw;
+#else
+				uint32 lsw, msw;
+#endif
+			} parts;
+		} u;
+		u.value = x;
+
+		int hx = u.parts.msw;
+		int lx = u.parts.lsw;
+
+		return (hx == 0x80000000 && lx == 0x0);
+	}
+
 #else
 	
 	/*
@@ -178,6 +203,9 @@ namespace avmplus
 
 	double MathUtils::nan()
 	{
+#ifdef UNIX
+		return NAN;
+#else
 #ifdef AVM10_BIG_ENDIAN
 		unsigned long nan[2]={0x7fffffff, 0xffffffff};
 #else
@@ -185,6 +213,7 @@ namespace avmplus
 #endif
 		double g = *(double*)nan;
 		return g;
+#endif
 	}
 
 	int MathUtils::nextPowerOfTwo(int n)
@@ -639,16 +668,15 @@ namespace avmplus
 		}
 	}
 
-	bool MathUtils::convertIntegerToString(sintptr value,
+	bool MathUtils::convertIntegerToString(int value,
 								           wchar *buffer,
 										   int& len,
 								           int radix /*=10*/,
 										   bool valIsUnsigned /*=false*/)
 	{
-		// buffer should be at least wchar[65].  largest should be
-		// radix 2, with sign plus 31/63 bits.
+		// buffer should be at least wchar[40].  largest should be
+		// radix 2, with sign plus 31 bits.
 		
-		#ifndef AVMPLUS_64BIT
 		// This routines does not work with this integer number since negating
 		// this value returns the same negative value and screws up our code 
 		// in the while loop below.
@@ -658,7 +686,6 @@ namespace avmplus
 			len = 11;
 			return true;
 		}
-		#endif
 
 		if (radix < 2 || radix > 36) 
 		{
@@ -666,7 +693,7 @@ namespace avmplus
 			return false;
 		}
 
-		wchar tmp[65];
+		wchar tmp[40];
 		const int size_buffer = sizeof(tmp)/sizeof(wchar);
 		wchar *src = tmp + size_buffer - 1;
 		wchar *srcEnd = src;
@@ -679,24 +706,24 @@ namespace avmplus
 		}
 		else
 		{
-			uintptr uVal;
+			uint32 uVal;
 			bool negative=false;
 
 			if (valIsUnsigned)
 			{
-				uVal = (uintptr)value;
+				uVal = (uint32)value;
 			}
 			else
 			{
 				negative = (value < 0);
 				if (negative)
 					value = -value;
-				uVal = (uintptr)value;
+				uVal = (uint32)value;
 			}
 
 			while (uVal != 0)
 			{
-				uintptr j = uVal;
+				uint32 j = uVal;
 				uVal = uVal / radix;
 				j -= (uVal * radix);
 
@@ -1964,6 +1991,4 @@ namespace avmplus
 		return result;
 	}
    */
-
-
 }

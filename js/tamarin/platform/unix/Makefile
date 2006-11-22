@@ -40,7 +40,9 @@ AR     := ar
 
 MMGC_ROOT := ../../MMgc
 AVMPLUS_ROOT := ../..
-ZLIB_ROOT := ../../..
+ZLIB_ROOT := ../../../../modules/zlib/src
+
+LDFLAGS := -ldl
 
 # avmplus and MMgc make files
 include makecommon
@@ -71,7 +73,9 @@ SHELL_SRCS := ../../shell/TypedArrayClass.cpp \
 	../../shell/ConsoleOutputStream.cpp \
 	../../shell/ByteArrayGlue.cpp \
 	../../shell/avmshell.cpp \
-	../../extensions/DictionaryGlue.cpp
+	../../extensions/DictionaryGlue.cpp \
+	../../extensions/JavaGlue.cpp \
+	unixcpuid.cpp
 
 # Use this target to generate a list of source files
 gensrclist : 

@@ -52,8 +52,8 @@ jmp_buf buf;
 #endif // AVMPLUS_ARM
 #endif // _MSC_VER
 
-#if defined(AVMPLUS_MAC) || defined(AVMPLUS_ARM)
-// Hack; can't take addr of a virtual function
+#ifdef AVMPLUS_NOVIRTUAL
+// Hack for Mac/Unix/Arm; can't take addr of a virtual function
 #define getUintProperty _getUintProperty
 #define getIntProperty  _getIntProperty
 #define setUintProperty _setUintProperty

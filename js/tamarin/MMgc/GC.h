@@ -293,10 +293,10 @@ namespace MMgc
 		void Add(RCObject *obj);
 		void Remove(RCObject *obj);
 		void Reap();
-#if !defined(WIN32) && defined(MMGC_IA32)
-		int StackTop;
-#endif // !defined(WIN32) && defined(MMGC_IA32)
 	private:
+		// for MMGC_GET_STACK_EXENTS
+		uintptr StackTop;
+
 		GC *gc;
 
 		// in pages

@@ -111,6 +111,7 @@ namespace MMgc
 #include "GCMemoryProfiler.h"
 #include "FixedAlloc.h"
 #include "FixedMalloc.h"
+#include "GCGlobalNew.h"
 #include "GCHashtable.h"
 #include "GC.h"
 #include "GCObject.h"

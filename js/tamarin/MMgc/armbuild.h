@@ -52,7 +52,6 @@
  * This turns on incremental collection as well as all of
  * the write barriers.
  */
-// TODO_LINUX
 //#define WRITE_BARRIERS
 
 /**

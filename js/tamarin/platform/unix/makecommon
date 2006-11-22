@@ -60,23 +60,23 @@ AVMPLUS_LIBS := -L. -L${AVMPLUS_ROOT}/MMgc -lavmplus -lmmgc -lpthread
 # Source files
 #****************************************************************************
 
-ZLIB_SRCS := ${ZLIB_ROOT}/zlib/zutil.cpp \
-    ${ZLIB_ROOT}/zlib/uncompr.cpp \
-    ${ZLIB_ROOT}/zlib/trees.cpp \
-    ${ZLIB_ROOT}/zlib/inftrees.cpp \
-    ${ZLIB_ROOT}/zlib/inflate.cpp \
-    ${ZLIB_ROOT}/zlib/inffas86.cpp \
-    ${ZLIB_ROOT}/zlib/infback.cpp \
-    ${ZLIB_ROOT}/zlib/deflate.cpp \
-    ${ZLIB_ROOT}/zlib/crc32.cpp \
-    ${ZLIB_ROOT}/zlib/compress.cpp \
-    ${ZLIB_ROOT}/zlib/adler32.cpp
+ZLIB_SRCS := ${ZLIB_ROOT}/zutil.cpp \
+    ${ZLIB_ROOT}/uncompr.cpp \
+    ${ZLIB_ROOT}/trees.cpp \
+    ${ZLIB_ROOT}/inftrees.cpp \
+    ${ZLIB_ROOT}/inflate.cpp \
+    ${ZLIB_ROOT}/inffast.cpp \
+    ${ZLIB_ROOT}/infback.cpp \
+    ${ZLIB_ROOT}/deflate.cpp \
+    ${ZLIB_ROOT}/crc32.cpp \
+    ${ZLIB_ROOT}/compress.cpp \
+    ${ZLIB_ROOT}/adler32.cpp
 
 AVMPLUS_SRCS := ${AVMPLUS_ROOT}/core/AbcEnv.cpp \
+	${AVMPLUS_ROOT}/core/AbcData.cpp \
 	${AVMPLUS_ROOT}/core/AbcGen.cpp \
 	${AVMPLUS_ROOT}/core/AbcParser.cpp \
 	${AVMPLUS_ROOT}/core/AbstractFunction.cpp \
-	${AVMPLUS_ROOT}/core/Accessor.cpp \
 	${AVMPLUS_ROOT}/core/ActionBlockConstants.cpp \
 	${AVMPLUS_ROOT}/core/ArrayClass.cpp \
 	${AVMPLUS_ROOT}/core/ArrayObject.cpp \
@@ -88,9 +88,9 @@ AVMPLUS_SRCS := ${AVMPLUS_ROOT}/core/AbcEnv.cpp \
 	${AVMPLUS_ROOT}/core/avmplusDebugger.cpp \
 	${AVMPLUS_ROOT}/core/avmplusHashtable.cpp \
 	${AVMPLUS_ROOT}/core/avmplusProfiler.cpp \
+	${AVMPLUS_ROOT}/core/AvmPlusScriptableObject.cpp \
 	${AVMPLUS_ROOT}/core/BigInteger.cpp \
 	${AVMPLUS_ROOT}/core/BooleanClass.cpp \
-	${AVMPLUS_ROOT}/core/builtin.cpp \
 	${AVMPLUS_ROOT}/codegen/Ia32Assembler.cpp \
 	${AVMPLUS_ROOT}/codegen/CodegenMIR.cpp \
 	${AVMPLUS_ROOT}/core/BuiltinTraits.cpp \
@@ -174,7 +174,7 @@ AVMPLUS_SRCS := ${AVMPLUS_ROOT}/core/AbcEnv.cpp \
 #****************************************************************************
 
 ifeq (YES, ${DEBUGGER})
-AVMPLUS_DEFS := -DUNIX -DCYGWIN -DAVMPLUS_IA32 -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
+    AVMPLUS_DEFS := -DUNIX -DCYGWIN -DAVMPLUS_IA32 -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
 else
 	AVMPLUS_DEFS := -DUNIX -DCYGWIN -DAVMPLUS_IA32 -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
 endif

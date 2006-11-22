@@ -37,7 +37,9 @@
 #ifdef DEBUGGER
 #include <unistd.h>
 #include <pthread.h>
+#ifdef AVMPLUS_MAC
 #include <CoreServices/CoreServices.h>
+#endif
 #endif
 
 namespace avmplus
@@ -90,5 +92,5 @@ namespace avmplus
 		pthread_join(data->thread, NULL);
 		delete data;
 	}
-#endif DEBUGGER
+#endif // DEBUGGER
 }

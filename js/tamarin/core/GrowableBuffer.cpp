@@ -42,6 +42,11 @@
 #include <unistd.h>
 #endif
 
+#ifdef AVMPLUS_LINUX
+#define _GNU_SOURCE
+#include <signal.h>
+#endif
+
 /* number of pages commited each time grow() is called */
 #define PAGES_PER_GROW	4
 
@@ -823,11 +828,125 @@ namespace avmplus
 		return false;
 	}	
 #endif // AVMPLUS_MACH_EXCEPTIONS
-	
+
+#ifdef AVMPLUS_LINUX
+    static pthread_key_t guardKey = 0;
+    static struct sigaction orig_sa;
+
+    static void dispatchHandleException(int sig, siginfo_t *info, void *context)
+    {
+        GenericGuard *genericGuard = (GenericGuard*) pthread_getspecific(guardKey);
+        bool handled = false;
+
+        while (genericGuard && !handled)
+        {
+            handled = genericGuard->handleException((byte*) info->si_addr);
+            genericGuard = genericGuard->next;
+        }
+
+        if (!handled)
+        {
+            sigaction(SIGSEGV, &orig_sa, NULL);
+        }
+    }
+
+    void GenericGuard::init()
+    {
+        next = NULL;
+        if (!guardKey)
+        {
+            pthread_key_create(&guardKey, NULL);
+        }
+    }
+
+    void GenericGuard::registerHandler()
+    {
+        GenericGuard *genericGuard = (GenericGuard*) pthread_getspecific(guardKey);
+
+        if (!genericGuard)
+        {
+            // Make "this" the beginning.
+            pthread_setspecific(guardKey, this);
+
+            // install the signal handler
+            struct sigaction sa;
+        
+            sa.sa_handler = 0;
+            sa.sa_sigaction = dispatchHandleException;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags = SA_SIGINFO;
+
+            sigaction(SIGSEGV, &sa, &orig_sa);
+        }
+        else
+        {
+            // Add "this" to the end.
+            while (genericGuard->next)
+            {
+                genericGuard = genericGuard->next;
+            }
+
+            genericGuard->next = this;
+        }
+    }
+
+    void GenericGuard::unregisterHandler()
+    {
+        GenericGuard *genericGuard = (GenericGuard*) pthread_getspecific(guardKey);
+
+        if (genericGuard == this)
+        {
+            // "this" is the first in the linked list
+            if (genericGuard->next)
+            {
+                // Make "next" the beginning.
+                pthread_setspecific(guardKey, genericGuard->next);
+            }
+            else
+            {
+                // "this" is the only element of the linked list, so
+                // null out the thread local and remove the signal
+                // handler.
+                pthread_setspecific(guardKey, NULL);
+                sigaction(SIGSEGV, &orig_sa, NULL);
+            }
+        }
+        else
+        {
+            while (genericGuard && genericGuard->next != this)
+            {
+                genericGuard = genericGuard->next;
+            }
+
+            if (genericGuard && genericGuard->next == this)
+            {
+                if (genericGuard->next->next)
+                {
+                    // "this" is in the middle of the linked list, so
+                    // make the "before" point to the "after".
+                    genericGuard->next = genericGuard->next->next;
+                }
+                else
+                {
+                    // "this" is at the end of the linked list, so
+                    // just null out the pointer to it.
+                    genericGuard->next = NULL;
+                }
+            }
+        }
+    }
+#endif // AVMPLUS_LINUX
+
 	// BufferGuard
+	#ifdef AVMPLUS_LINUX
+	BufferGuard::BufferGuard(jmp_buf jmpBuf)
+	{
+		this->jmpBuf[0] = *jmpBuf;
+	#else
 	BufferGuard::BufferGuard(int *jmpBuf)
 	{
 		this->jmpBuf = jmpBuf;
+	#endif // AVMPLUS_LINUX
 		init();
 		if (jmpBuf) 
 			registerHandler();
@@ -928,6 +1047,14 @@ namespace avmplus
 	
 #endif /* AVMPLUS_MACH_EXCEPTIONS */
 
+#ifdef AVMPLUS_LINUX
+    bool BufferGuard::handleException(byte *addr)
+    {
+        printf("BufferGuard::handleException: not implemented yet\n");
+        return false;
+    }
+#endif // AVMPLUS_LINUX
+
 	// GrowthGuard
 	GrowthGuard::GrowthGuard(GrowableBuffer* buffer)
 	{
@@ -974,6 +1101,31 @@ namespace avmplus
 	}
 
 #endif /* AVMPLUS_WIN32 */
+
+#ifdef AVMPLUS_LINUX
+    bool GrowthGuard::handleException(byte* addr)
+    {
+        GrowableBuffer* g = buffer;
+        byte* nextPage = g->uncommitted();
+        bool result = false;
+
+        if (addr == nextPage)
+        {
+            // sequential write access to buffer
+            g->grow();
+            result = true;
+        }
+        else if (addr > nextPage && addr < g->end())
+        {
+            // random access into buffer (commit next page after the hit)
+            byte* page = g->pageAfter(addr);
+            g->growBy(page - nextPage);
+            result = true;
+        }
+
+        return result;
+    }
+#endif /* AVMPLUS_LINUX */
 
 #endif /* FEATURE_BUFFER_GUARD */
 }

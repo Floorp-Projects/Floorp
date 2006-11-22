@@ -3102,7 +3102,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		// handle integer values w/out allocation
 		// this logic rounds in the wrong direction for E3, but
 		// we never use a rounded value, only cleanly converted values.
-		#ifdef WIN32 // LINUX_TODO: need linux port
+		#ifdef WIN32 
 		int id3;
 		_asm {
 			movsd xmm0,n
@@ -3142,7 +3142,27 @@ return the result of the comparison ToPrimitive(x) == y.
 			}
 		}
 		return allocDouble(n);
+		#elif AVMPLUS_LINUX
+		int id3;
+		asm("movups %1, %%xmm0;"
+			"cvttsd2si %%xmm0, %%ecx;"
+			"shl $0x3, %%ecx;"
+			"mov %%ecx, %%eax;"
+			"sar $0x3, %%ecx;"
+			"cvtsi2sd %%ecx, %%xmm1;"
+			"ucomisd %%xmm1, %%xmm0;"
+			"jne d2a_alloc;"
+			"jp d2a_alloc;"
+			"movl %%eax, %0" : "=r" (id3) : "m" (n));
+
+		if (id3 != 0 || !MathUtils::isNegZero(n))
+		{
+			return id3 | kIntegerType;
+		}
+
+		asm("d2a_alloc:");
 		#endif
+		return allocDouble(n);
 	}
 #endif
 
@@ -3625,7 +3645,7 @@ return the result of the comparison ToPrimitive(x) == y.
 	int AvmCore::integer_d_sse2(double d)
 	{
 		int id;
-		#ifdef WIN32 // LINUX_TODO: need linux and ppc port
+		#ifdef WIN32 
 		_asm {
 			cvttsd2si eax,d
 			mov id,eax
@@ -3636,6 +3656,12 @@ return the result of the comparison ToPrimitive(x) == y.
 		id = _mm_cvttsd_si32(_mm_set_sd(d));
 		if (id != (int)0x80000000)
 			return id;
+        #elif AVMPLUS_LINUX
+        asm("movups %1, %%xmm0;"
+            "cvttsd2si %%xmm0, %%eax;"
+            "movl %%eax, %0" : "=r" (id) : "m" (d) : "%eax");
+        if (id != 0x80000000)
+            return id;
 		#endif
 
 		return doubleToInt32(d);

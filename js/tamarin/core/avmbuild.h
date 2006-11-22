@@ -81,10 +81,7 @@
 // of the non-guard logic and we'll see the end of the days of estimatation!
 // [rickr-Jun16,05]
 
-// TODO_LINUX: no buffer guard for linux yet
-#ifndef AVMPLUS_LINUX
-  #define FEATURE_BUFFER_GUARD
-#endif
+#define FEATURE_BUFFER_GUARD
 
 // FEATURE_BUFFER_GUARD not yet supported on ARM
 #ifdef AVMPLUS_ARM
@@ -100,6 +97,15 @@
   #ifdef AVMPLUS_AMD64
     #undef FEATURE_BUFFER_GUARD
   #endif
+#endif
+
+// Some platforms need special treatment of virtual funcs
+#ifdef AVMPLUS_MAC
+  #define AVMPLUS_NOVIRTUAL
+#endif
+
+#ifdef AVMPLUS_ARM
+  #define AVMPLUS_NOVIRTUAL
 #endif
 
 #define AVMPLUS_MIR

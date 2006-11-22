@@ -148,7 +148,7 @@ namespace MMgc
 		if(traceTable[index].memtag)
 			return traceTable[index].memtag;
 		const char*name="unknown";
-#ifdef WIN32
+#if defined (WIN32) || defined(AVMPLUS_LINUX)
 		try {
 			const std::type_info *ti = &typeid(*(MMgc::GCObject*)obj);
 			if(ti->name())
@@ -199,10 +199,8 @@ namespace MMgc
 
 			const char *name = "unknown";
 #ifndef _MAC
-#ifndef AVMPLUS_LINUX // TODO_LINUX
 #ifndef MMGC_ARM
 			name = GetTypeName(i, &traceTable[i].vtable);
-#endif //AVMPLUS_LINUX
 #endif //MMGC_ARM
 #endif
 			TypeGroup *tg = (TypeGroup*) typeTable.get((void*)name);

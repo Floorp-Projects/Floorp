@@ -84,7 +84,7 @@ namespace avmplus
 
 		bool getAtomPropertyIsEnumerable(Atom name) const;
 		
-		#ifdef AVMPLUS_MAC
+		#ifdef AVMPLUS_NOVIRTUAL
 		// Hack for Mac; can't take addr of virtual function
 		Atom _getUintProperty(uint32 index) const 
 		{

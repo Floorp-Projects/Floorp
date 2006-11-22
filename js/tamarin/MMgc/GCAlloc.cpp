@@ -655,6 +655,15 @@ start:
 	{
 		GCAssert(alloc->m_numAlloc != 0);
 
+#ifdef _DEBUG		
+		// check that its not already been freed
+		void *free = firstFree;
+		while(free) {
+			GCAssert(free != item);
+			free = *((void**) free);
+		}
+#endif
+
 		void *oldFree = firstFree;
 		firstFree = item;
 #ifdef MEMORY_INFO

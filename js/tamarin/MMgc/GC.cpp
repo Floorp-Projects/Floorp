@@ -547,11 +547,13 @@ namespace MMgc
 			return;
 		}
 
+		bool isLarge;
+
 		if(collecting) {
 			goto bail;
 		}
 
-		bool isLarge = GCLargeAlloc::IsLargeBlock(GetRealPointer(item));
+		isLarge = GCLargeAlloc::IsLargeBlock(GetRealPointer(item));
 
 		if (marking) {
 			// if its on the work queue don't delete it, if this item is
@@ -879,11 +881,11 @@ bail:
 	void GC::MarkGCPages(void *item, uint32 numPages, int to)
 	{
 		uintptr addr = (uintptr)item;
-		int shiftAmount=0;
+		uint32 shiftAmount=0;
 		unsigned char *dst = pageMap;
 
 		// save the current live range in case we need to move/copy
-		int numBytesToCopy = (memEnd-memStart)>>14;
+		uint32 numBytesToCopy = (memEnd-memStart)>>14;
 
 		if(addr < memStart) {
 			// round down to nearest 16k boundary, makes shift logic work cause it works
@@ -920,6 +922,7 @@ bail:
 		addr = (uintptr)item;
 		while(numPages--)
 		{
+			GCAssert(GetPageMapValue(addr) == 0);
 			SetPageMapValue(addr, to);
 			addr += GCHeap::kBlockSize;
 		}
@@ -1400,6 +1403,47 @@ bail:
 		reaping = false;
 	}
 
+#ifdef AVMPLUS_LINUX
+	pthread_key_t stackTopKey = 0;
+
+	uint32 GC::GetStackTop() const
+	{
+		if(stackTopKey == 0)
+		{
+			int res = pthread_key_create(&stackTopKey, NULL);
+			GCAssert(res == 0);
+		}
+
+		void *stackTop = pthread_getspecific(stackTopKey);
+		if(stackTop)
+			return (uint32)stackTop;
+
+		size_t sz;
+		void *s_base;
+		pthread_attr_t attr;
+		
+		// WARNING: stupid expensive function, hence the TLS
+		int res = pthread_getattr_np(pthread_self(),&attr);
+		GCAssert(res == 0);
+		
+		if(res)
+		{
+			// not good
+			return 0;
+		}
+
+		res = pthread_attr_getstack(&attr,&s_base,&sz);
+		GCAssert(res == 0);
+		pthread_attr_destroy(&attr);
+
+		stackTop = (void*) ((size_t)s_base + sz);
+		// stackTop has to be greater than current stack pointer
+		GCAssert(stackTop > &sz);
+		pthread_setspecific(stackTopKey, stackTop);
+		return (uint32)stackTop;
+		
+	}
+#endif // AVMPLUS_LINUX
 //#define ENABLE_GC_LOG
 
 	#if defined(WIN32) && defined(ENABLE_GC_LOG)

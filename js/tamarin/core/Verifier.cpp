@@ -233,8 +233,16 @@ namespace avmplus
 #ifdef FEATURE_BUFFER_GUARD
 		#ifdef AVMPLUS_MIR
 		// allow the mir buffer to grow dynamically
+		#ifdef AVMPLUS_LINUX
+		// Linux requires the GrowthGuard to be allocated from the
+		// heap, otherwise a segfault occurs when the GrowthGuard is
+		// accessed outside of this function.
+		this->growthGuard = new GrowthGuard(mir ? mir->mirBuffer : NULL);
+		#else
+		// Windows requires the GrowthGuard to be allocated from the stack.
 		GrowthGuard guard( mir ? mir->mirBuffer : NULL);
 		this->growthGuard = &guard;
+		#endif //AVMPLUS_LINUX
 		#endif //AVMPLUS_MIR
 #endif /* FEATURE_BUFFER_GUARD */
 
@@ -2283,6 +2291,9 @@ namespace avmplus
 
 		#ifdef FEATURE_BUFFER_GUARD
 		#ifdef AVMPLUS_MIR
+		#ifdef AVMPLUS_LINUX
+		delete growthGuard;
+		#endif //AVMPLUS_LINUX
 		growthGuard = NULL;
 		#endif
 		#endif

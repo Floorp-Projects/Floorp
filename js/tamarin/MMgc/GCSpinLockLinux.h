@@ -34,6 +34,8 @@
 
 #include <pthread.h>
 
+#define USE_X86_SPINLOCK
+
 namespace MMgc
 {
 	/**
@@ -45,6 +47,50 @@ namespace MMgc
 	class GCSpinLock
 	{
 	public:
+#ifdef USE_X86_SPINLOCK
+
+		GCSpinLock()
+ 		{
+			lock = 0;
+			__asm__ volatile("" : : : "memory");
+		}
+	
+		~GCSpinLock()
+		{
+			lock = 0;
+			__asm__ volatile("" : : : "memory");
+		}
+
+		inline void Acquire()
+		{
+			while ( X86_TestAndSet(&lock, 1) != 0 ) {
+				X86_Pause();
+			}
+			__asm__ volatile("" : : : "memory");
+		}
+		
+		inline void Release()
+		{
+			__asm__ volatile("" : : : "memory");
+			lock = 0;
+		}
+
+	private:
+
+		inline int X86_TestAndSet(volatile int *ptr, int val) {
+			__asm__ volatile("xchgl %0, (%2)" :"=r"(val) : "0"(val), "r"(ptr));
+			return val;
+		}
+
+		inline void X86_Pause(void)
+		{
+			__asm__ volatile("pause");
+		}
+
+		volatile int lock;
+
+#else // USE_X86_SPINLOCK
+
 		GCSpinLock()
 		{
 			pthread_spin_init( &m1, 0 );
@@ -67,6 +113,8 @@ namespace MMgc
 
 	private:
 		pthread_spinlock_t m1;
+
+#endif // USE_X86_SPINLOCK
 	};
 
 	/**

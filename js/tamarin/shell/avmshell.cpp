@@ -41,8 +41,11 @@
 #include <Mmsystem.h>
 #include "dbghelp.h"
 bool P4Available();
+#elif defined AVMPLUS_LINUX
+bool P4Available();
 #endif
 
+#ifndef OVERRIDE_GLOBAL_NEW
 // Custom new and delete operators
 // User-defined operator new.
 
@@ -100,6 +103,7 @@ void *operator new[](size_t size)
 		if (fm)
 			fm->Free(p);
     }
+#endif // OVERRIDE_GLOBAL_NEW
 
 
 namespace avmshell
@@ -478,7 +482,7 @@ namespace avmshell
 	{
 		TRY(this, kCatchAction_ReportAsError)
 		{
-			#ifdef WIN32
+			#if defined (WIN32) || defined(AVMPLUS_LINUX)
 			if (!P4Available()) {
 				sse2 = false;
 			}
@@ -1141,10 +1145,12 @@ int main(int argc, char *argv[])
 int StackTop;
 #endif
 
+#ifndef AVMPLUS_LINUX
 #ifdef AVMPLUS_IA32
 // TODO this is a hack until we learn how to determine stack top
 // in IA-32 System V ABI
 int StackTop;
+#endif
 #endif
 
 int main(int argc, char *argv[])
@@ -1154,7 +1160,9 @@ int main(int argc, char *argv[])
 	asm("mov %0,sp" : "=r" (sp));
 	StackTop = sp;
 	#elif defined AVMPLUS_IA32
+	#ifndef AVMPLUS_LINUX
 	asm("movl %%esp,%0\n" : "=r" (StackTop));
+	#endif
 	#endif
 
 #ifdef AVMPLUS_MACH_EXCEPTIONS

@@ -34,15 +34,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef USE_MMAP
-#include <sys/mman.h>
-#endif
-
 #include <unistd.h>
 
 #include "GCDebug.h"
 #include "MMgc.h"
 #include "GC.h"
+
+#ifdef USE_MMAP
+#include <sys/mman.h>
+#endif
+
+#if defined(MEMORY_INFO) && defined(AVMPLUS_LINUX)
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#endif
 
 // avmplus standalone uses UNIX  
 #ifdef _MAC
@@ -283,7 +288,13 @@ namespace MMgc
 	// Bandaid implementations for these functions. Windows has its own version.
 	void GetInfoFromPC(int pc, char *buff, int buffSize) 
 	{
-	  sprintf(buff, "0x%x", pc);
+#ifdef AVMPLUS_LINUX
+		Dl_info dlip;
+		dladdr((void *const)pc, &dlip);
+		sprintf(buff, "0x%08x:%s", pc, dlip.dli_sname);
+#else
+		sprintf(buff, "0x%x", pc);
+#endif
 	}
 
 #ifdef MMGC_PPC
@@ -308,7 +319,31 @@ namespace MMgc
 #endif
 
 #ifdef MMGC_IA32
-	void GetStackTrace(int *trace, int len, int skip) {}
+	void GetStackTrace(int *trace, int len, int skip)
+	{
+		void **ebp;
+		asm("mov %%ebp, %0" : "=r" (ebp));
+
+		while(skip-- && *ebp)
+		{
+			ebp = (void**)(*ebp);
+		}
+
+		/* save space for 0 terminator */
+		len--;
+
+		int i = 0;
+
+		while (i < len && *ebp)
+		{
+			/* store the current frame pointer */
+			trace[i++] = *((int*) ebp + 1);
+			/* get the next frame pointer */
+			ebp = (void**)(*ebp);
+		}
+
+		trace[i] = 0;
+	}
 #endif
 
 #ifdef MMGC_ARM

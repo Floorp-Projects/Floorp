@@ -88,7 +88,11 @@ namespace avmplus
 		static uint64  frexp(double x, int *eptr);
 		static double infinity();
 		static int isInfinite(double value);
+		#ifdef UNIX
+		static bool isNaN(double value);
+		#else
 		static bool isNaN(double value) { return value != value; }
+		#endif
 		static bool isNegZero(double x);
 		static bool isHexNumber(const wchar *ptr);
 		static double log(double value);		

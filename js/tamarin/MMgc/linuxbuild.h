@@ -56,7 +56,6 @@
  * This turns on incremental collection as well as all of
  * the write barriers.
  */
-// TODO_LINUX
 #define WRITE_BARRIERS
 
 /**
@@ -66,21 +65,24 @@
 #define MMGC_AVMPLUS
 
 /**
+ * Use VirtualAlloc to reserve/commit memory
+ */
+#define USE_MMAP
+
+/**
  *
  */
 #define DECOMMIT_MEMORY
-
-/**
- * USE_MMAP only for MACHO builds
- */
-#if TARGET_RT_MAC_MACHO
-#ifndef USE_MMAP
-#define USE_MMAP
-#endif
-#endif
 
 /**
  * Controls whether DRC is in use
  */
 
 #define MMGC_DRC
+
+/**
+ * This makes JIT code buffers read-only to reduce the probability of
+ * heap overflow attachs
+ */
+
+#define AVMPLUS_JIT_READONLY
