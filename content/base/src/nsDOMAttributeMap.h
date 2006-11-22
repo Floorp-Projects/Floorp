@@ -46,7 +46,6 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsString.h"
 #include "nsInterfaceHashtable.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsIAtom;
 class nsIContent;
@@ -127,7 +126,7 @@ public:
    */
   PRBool Init();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   // nsIDOMNamedNodeMap interface
   NS_DECL_NSIDOMNAMEDNODEMAP
@@ -169,8 +168,6 @@ public:
    * @return The number of attribute nodes that aFunc was called for.
    */
   PRUint32 Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
 
 private:
   nsIContent* mContent; // Weak reference

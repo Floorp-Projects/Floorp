@@ -55,6 +55,7 @@ nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
 nsIDocumentObserver.h \
+nsIDOMGCParticipant.h \
 nsIMutationObserver.h \
 nsINameSpaceManager.h \
 nsINode.h \

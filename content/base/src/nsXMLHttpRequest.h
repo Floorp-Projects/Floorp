@@ -59,7 +59,6 @@
 #include "nsCOMArray.h"
 #include "nsJSUtils.h"
 #include "nsTArray.h"
-#include "nsCycleCollectionParticipant.h"
 
 #include "nsIDOMLSProgressEvent.h"
 
@@ -73,13 +72,14 @@ class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIChannelEventSink,
                          public nsIProgressEventSink,
                          public nsIInterfaceRequestor,
+                         public nsIDOMGCParticipant,
                          public nsSupportsWeakReference
 {
 public:
   nsXMLHttpRequest();
   virtual ~nsXMLHttpRequest();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   // nsIXMLHttpRequest
   NS_DECL_NSIXMLHTTPREQUEST
@@ -115,9 +115,12 @@ public:
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
+  // nsIDOMGCParticipant
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
 protected:
+  typedef nsMarkedJSFunctionHolder<nsIDOMEventListener> ListenerHolder;
 
   nsresult DetectCharset(nsACString& aCharset);
   nsresult ConvertBodyToText(nsAString& aOutBuffer);
@@ -147,8 +150,8 @@ protected:
                        nsIDOMEvent** domevent);
 
   // Make a copy of a pair of members to be passed to NotifyEventListeners.
-  void CopyEventListeners(nsCOMPtr<nsIDOMEventListener>& aListener,
-                          const nsCOMArray<nsIDOMEventListener>& aListenerArray,
+  void CopyEventListeners(ListenerHolder& aListener,
+                          const nsTArray<ListenerHolder*>& aListenerArray,
                           nsCOMArray<nsIDOMEventListener>& aCopy);
 
   // aListeners must be a "non-live" list (i.e., addEventListener and
@@ -164,19 +167,19 @@ protected:
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
 
-  nsCOMArray<nsIDOMEventListener> mLoadEventListeners;
-  nsCOMArray<nsIDOMEventListener> mErrorEventListeners;
-  nsCOMArray<nsIDOMEventListener> mProgressEventListeners;
-  nsCOMArray<nsIDOMEventListener> mUploadProgressEventListeners;
-  nsCOMArray<nsIDOMEventListener> mReadystatechangeEventListeners;
+  nsTArray<ListenerHolder*> mLoadEventListeners;
+  nsTArray<ListenerHolder*> mErrorEventListeners;
+  nsTArray<ListenerHolder*> mProgressEventListeners;
+  nsTArray<ListenerHolder*> mUploadProgressEventListeners;
+  nsTArray<ListenerHolder*> mReadystatechangeEventListeners;
   
   nsCOMPtr<nsIScriptContext> mScriptContext;
 
-  nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
-  nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
-  nsCOMPtr<nsIDOMEventListener> mOnProgressListener;
-  nsCOMPtr<nsIDOMEventListener> mOnUploadProgressListener;
-  nsCOMPtr<nsIDOMEventListener> mOnReadystatechangeListener;
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mOnLoadListener;
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mOnErrorListener;
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mOnProgressListener;
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mOnUploadProgressListener;
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 

@@ -753,7 +753,6 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
   delete mBoxObjectTable;
-  delete mContentWrapperHash;
   nsLayoutStatics::Release();
 }
 
@@ -769,8 +768,6 @@ nsDocument::LastRelease()
   delete this;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
-
 NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
@@ -785,6 +782,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -795,7 +793,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
@@ -812,72 +809,8 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   else
 NS_INTERFACE_MAP_END
 
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDocument, nsIDocument)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument, 
-                                                        nsIDocument,
-                                                        LastRelease())
-
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument, nsIDocument)
-  // Traverse the mChildren nsAttrAndChildArray.
-  for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
-    cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
-  }
-
-  // Traverse all nsIDocument nsCOMPtrs.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBindingManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
-
-  // Traverse all nsDocument nsCOMPtrs.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParser)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptGlobalObject)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptLoader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStyleAttrStyleSheet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptEventManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXPathEvaluatorTearoff)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
-
-  // Traverse all our nsCOMArrays.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
-
-  // Traverse any associated preserved wrapper.
-  {
-    nsISupports *preservedWrapper = tmp->GetReference(tmp);
-    if (preservedWrapper)
-      cb.NoteXPCOMChild(preservedWrapper);
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument, nsIDocument)
-  // Unlink the mChildren nsAttrAndChildArray.
-  for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
-       indx >= 0; --indx) {
-    tmp->mChildren.ChildAt(indx)->UnbindFromTree();
-    tmp->mChildren.RemoveChildAt(indx);
-  }
-
-  // Unlink any associated preserved wrapper.
-  tmp->RemoveReference(tmp);
-
-  tmp->mParentDocument = nsnull;
-  tmp->mRootContent = nsnull;
-
-  // nsDocument has a pretty complex destructor, so we're going to
-  // assume that *most* cycles you actually want to break somewhere
-  // else, and not unlink an awful lot here.
-  //
-  // In rare cases where you think an unlink will help here, add one
-  // manually.
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
+NS_IMPL_ADDREF(nsDocument)
+NS_IMPL_RELEASE_WITH_DESTROY(nsDocument, LastRelease())
 
 nsresult
 nsDocument::Init()
@@ -3415,6 +3348,23 @@ nsDocument::SetDir(const nsAString& aDirection)
   return NS_OK;
 }
 
+//
+// nsIDOMGCParticipant methods
+//
+nsIDOMGCParticipant*
+nsDocument::GetSCCIndex()
+{
+  return this;
+}
+
+void
+nsDocument::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+  nsCOMPtr<nsIDOMGCParticipant> gcp = do_QueryInterface(mScriptGlobalObject);
+  if (gcp)
+    aArray.AppendObject(gcp);
+}
+
 
 //
 // nsIDOMNode methods
@@ -4425,46 +4375,6 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   }
 }
 
-void
-nsDocument::AddReference(void *aKey, nsISupports *aReference)
-{
-  if (mScriptGlobalObject) {
-    if (!mContentWrapperHash) {
-      mContentWrapperHash = new nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports>;
-      if (mContentWrapperHash) {
-        mContentWrapperHash->Init(10);
-      }
-    }
-    
-    if (mContentWrapperHash)
-      mContentWrapperHash->Put(aKey, aReference);
-  }
-}
-
-nsISupports*
-nsDocument::GetReference(void *aKey)
-{
-  // NB: This method is part of content cycle collection,
-  // and must *not* Addref its return value.
-    
-  if (mContentWrapperHash)
-    return mContentWrapperHash->GetWeak(aKey);
-  return nsnull;
-}
-
-already_AddRefed<nsISupports>
-nsDocument::RemoveReference(void *aKey)
-{
-  nsISupports* oldReference = nsnull;
-
-  if (mContentWrapperHash) {
-    mContentWrapperHash->Get(aKey, &oldReference);    
-    mContentWrapperHash->Remove(aKey);
-  }
-
-  return oldReference;
-}
-
 nsIScriptEventManager*
 nsDocument::GetScriptEventManager()
 {
@@ -5098,8 +5008,6 @@ nsDocument::Destroy()
   mLayoutHistoryState = nsnull;
 
   nsContentList::OnDocumentDestroy(this);
-  delete mContentWrapperHash;
-  mContentWrapperHash = nsnull;
 }
 
 already_AddRefed<nsILayoutHistoryState>

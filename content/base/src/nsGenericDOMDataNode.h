@@ -50,7 +50,7 @@
 #include "nsDOMError.h"
 #include "nsIEventListenerManager.h"
 #include "nsGenericElement.h"
-#include "nsCycleCollectionParticipant.h"
+
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -63,7 +63,7 @@ class nsURI;
 class nsGenericDOMDataNode : public nsIContent
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   nsGenericDOMDataNode(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericDOMDataNode();
@@ -168,6 +168,10 @@ public:
   nsresult ReplaceData(PRUint32 aOffset, PRUint32 aCount,
                        const nsAString& aArg);
 
+  // nsIDOMGCParticipant interface methods
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
+
   // nsINode methods
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
@@ -257,8 +261,6 @@ public:
 #ifdef DEBUG
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
 
 protected:
   /**
