@@ -39,6 +39,8 @@
 
 #include "calIWcapCalendar.idl"
 #include "calIWcapFreeBusyListener.idl"
+#include "calIWcapSearchListener.idl"
+#include "calIDuration.idl"
 
 /**
  * WCAP session.
@@ -65,10 +67,10 @@ interface calIWcapSession : nsISupports
     readonly attribute boolean isLoggedIn;
     
     /**
-     * Explicitly performs a session establishment.
+     * Explicitly performs a session establishment if the user is not logged
+     * in already.
      * Commonly not needed, because any attempt to get a calendar instance
      * will establish a session automatically.
-     * If the user is already logged in, she will be logged out before.
      * UI will prompt for a userId and password.
      */
     void login();
@@ -89,6 +91,7 @@ interface calIWcapSession : nsISupports
      * @exception NS_ERROR_INVALID_ARG
      */
     string getWcapErrorString( in unsigned long rc );
+
     
     /**
      * The user's default calendar.
@@ -124,6 +127,40 @@ interface calIWcapSession : nsISupports
         [array, size_is(count), retval] out calIWcapCalendar subscribedCals );
     
     /**
+     * Specifies how to match the searchString.
+     */
+    const unsigned long SEARCH_STRING_CONTAINS = 0;
+    const unsigned long SEARCH_STRING_BEGINS_WITH = 1;
+    const unsigned long SEARCH_STRING_ENDS_WITH = 2;
+    const unsigned long SEARCH_STRING_EXACT = 3;
+    /**
+     * Specifies what properties to include.
+     */
+    const unsigned long SEARCH_INCLUDE_CALID = 1 << 2;
+    const unsigned long SEARCH_INCLUDE_NAME = 1 << 3;
+    const unsigned long SEARCH_INCLUDE_OWNER = 1 << 4;
+    
+    /* xxx todo searching: separate into own interface? */
+    /**
+     * Searches for calendars matching the specified searchString.
+     * Results are notified to the passed listener instance.
+     * An error is notified to all registered calIObservers and
+     * to calIWcapSearchListener::onGetFreeBusyTimes with rc != NS_OK.
+     * The returned count of calendars (with respect to Sun calendar
+     * servers) is limited to 200.
+     *
+     * @param searchString the search string to match
+     * @param searchOptions the search options
+     * @param listener listener receiving results
+     * @param requestId request id to distinguish asynchronous requests
+     */
+    void searchForCalendars(
+        in string searchString,
+        in unsigned long searchOptions,
+        in calIWcapSearchListener listener,
+        in unsigned long requestId );
+    
+    /**
      * Creates a new calendar for the session's user.
      *
      * @param calId calendar's calId (portion);
@@ -136,51 +173,37 @@ interface calIWcapSession : nsISupports
      *        - Underscore (_)
      *        - Period (.)
      * @param name calendar's name, e.g. "My Work Cal"
-     * @param bAllowDoubleBooking whether double booking (events/todos) is
-     *                            allowed
-     * @param bSetCalProps whether properties of the new calendar are set
-     * @param bAddToSubscribed allows a user to specify if the newly
-     *                         created calendar should be added to the
-     *                         user’s subscribed calendar list
      * @return created calendar
      */
-    calIWcapCalendar createCalendar(
-        in string calId,
-        in string name,
-        in boolean bAllowDoubleBooking,
-        in boolean bSetCalProps,
-        in boolean bAddToSubscribed );
+    calIWcapCalendar createCalendar( in string calId, in string name );
     
     /**
-     * Deletes a calendar.
+     * Deletes a calendar. Don't do any further calls on the deleted instance.
      *
-     * @param calId full calId (incl. "<user>:")
-     * @param bRemoveFromSubscribed whether calendar ought to be removed
-     *                              from subscription list
+     * @param cal calendar to be deleted
      */
-    void deleteCalendar(
-        in string calId,
-        in boolean bRemoveFromSubscribed );
+    void deleteCalendar( in calIWcapCalendar cal );
     
     /**
      * Subscribe to calendar(s).
      *
-     * @param count number of calIds
-     * @param calIds array of calIds (calid or "mailto:rfc822addr")
+     * @param count length of cals
+     * @param calendars array of cals
      */
     void subscribeToCalendars(
         in unsigned long count,
-        [array, size_is(count)] in string calIds );
+        [array, size_is(count)] in calIWcapCalendar cals );
     
     /**
      * Unsubscribe from calendar(s).
      *
-     * @param count number of calIds
-     * @param calIds array of calIds (calid or "mailto:rfc822addr")
+     * @param count length of cals
+     * @param calendars array of cals
      */
     void unsubscribeFromCalendars(
         in unsigned long count,
-        [array, size_is(count)] in string calIds );
+        [array, size_is(count)] in calIWcapCalendar cals );
+
     
     /**
      * Gets the user's preferences.
@@ -193,10 +216,23 @@ interface calIWcapSession : nsISupports
         out unsigned long count,
         [array, size_is(count), retval] out string properties );
     
+    /**
+     * Gets this user's default alarm start.
+     */
+    readonly attribute calIDuration defaultAlarmStart;
+    
+    /**
+     * Gets this user's default alarm eMail addresses.
+     */
+    void getDefaultAlarmEmails(
+        out unsigned long count,
+        [array, size_is(count), retval] out string emails );
+
+    
     /* xxx todo freebusy: separate into own interface? */
     /**
      * Gets free-busy entries for calid.
-     * Results are notified to passed listener instance.
+     * Results are notified to the passed listener instance.
      * An error is notified to all registered calIObservers and
      * to calIWcapFreeBusyListener::onGetFreeBusyTimes with rc != NS_OK.
      *

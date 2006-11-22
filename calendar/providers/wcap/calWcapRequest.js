@@ -205,7 +205,7 @@ function issueSyncRequest( url, receiverFunc, bLogging )
         url, "" /* charset */, null /* baseURI */ );
     channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
     
-    var stream = channel.open();    
+    var stream = channel.open();
     var status = channel.status;
     if (status == Components.results.NS_OK) {
         var charset = channel.contentCharset;
