@@ -145,7 +145,6 @@
   locale/@AB_CD@/messenger-region/region.properties                     (%chrome/messenger-region/region.properties)
 % locale mozldap @AB_CD@ %locale/@AB_CD@/mozldap/
   locale/@AB_CD@/mozldap/ldap.properties                                (%chrome/mozldap/ldap.properties)
-+ locale/@AB_CD@/mozapps/downloads/pref-downloads.dtd                   (%chrome/mozapps/downloads/pref-downloads.dtd)
 % locale communicator @AB_CD@ %locale/@AB_CD@/communicator/
   locale/@AB_CD@/communicator/contentAreaCommands.dtd        (%chrome/communicator/contentAreaCommands.dtd)
   locale/@AB_CD@/communicator/contentAreaCommands.properties (%chrome/communicator/contentAreaCommands.properties)
