@@ -5633,27 +5633,30 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
   PRBool thisIsImapFolder = (imapFolder != nsnull);
   if (thisIsImapFolder) //need to update the imap-delete model, can change more than once in a session.
     GetImapDeleteModel(nsnull);
+
+  // If mail.delete_matches_sort_order is true, 
+  // for views sorted in descending order (newest at the top), make msgToSelectAfterDelete
+  // advance in the same direction as the sort order.
+  PRBool deleteMatchesSort = PR_FALSE;
+  if (m_sortOrder == nsMsgViewSortOrder::descending && *msgToSelectAfterDelete)
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    prefBranch->GetBoolPref("mail.delete_matches_sort_order", &deleteMatchesSort);
+  }
+
   if (mDeleteModel == nsMsgImapDeleteModels::IMAPDelete)
   {
     if (selectionCount > 1 || (endRange-startRange) > 0)  //multiple selection either using Ctrl or Shift keys
       *msgToSelectAfterDelete = nsMsgViewIndex_None;
+    else if(deleteMatchesSort)
+      *msgToSelectAfterDelete -= 1;
     else
       *msgToSelectAfterDelete += 1;
   }
-  else
+  else if (deleteMatchesSort)
   {
-    // If mail.delete_matches_sort_order is true, 
-    // for views sorted in descending order (newest at the top), make msgToSelectAfterDelete
-    // advance in the same direction as the sort order. 
-    if (m_sortOrder == nsMsgViewSortOrder::descending && *msgToSelectAfterDelete)
-    {
-      nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRBool deleteMatchesSort = PR_FALSE;
-      prefBranch->GetBoolPref("mail.delete_matches_sort_order", &deleteMatchesSort);
-      if (deleteMatchesSort)
-        *msgToSelectAfterDelete -= 1;
-    }
+    *msgToSelectAfterDelete -= 1;
   }
 
   return NS_OK;
