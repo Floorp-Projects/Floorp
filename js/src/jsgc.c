@@ -2973,7 +2973,6 @@ restart:
      * rather than nest badly and leave the unmarked newborn to be swept.
      */
     js_SweepAtomState(&rt->atomState);
-    js_SweepScopeProperties(rt);
 
     /*
      * Finalize smaller objects before larger, to guarantee finalization of
@@ -3019,6 +3018,12 @@ restart:
             limit = GC_THINGS_SIZE;
         }
     }
+
+    /*
+     * Sweep the runtime's property tree after finalizing objects, in case any
+     * had watchpoints referencing tree nodes.
+     */
+    js_SweepScopeProperties(rt);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop
