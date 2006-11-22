@@ -629,20 +629,6 @@ net_FindCharInSet(const char *iter, const char *stop, const char *set)
 }
 
 char *
-net_RFindCharInSet(const char *stop, const char *iter, const char *set)
-{
-    --iter;
-    --stop;
-    for (; iter != stop; --iter) {
-        for (const char *s = set; *s; ++s) {
-            if (*iter == *s)
-                return (char *) iter;
-        }
-    }
-    return (char *) iter;
-}
-
-char *
 net_FindCharNotInSet(const char *iter, const char *stop, const char *set)
 {
 repeat:

@@ -183,12 +183,6 @@ NS_HIDDEN_(char *) net_FindCharInSet(const char *str, const char *end, const cha
 NS_HIDDEN_(char *) net_FindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
- * returns pointer to last character of |str| in the given set.  if not found,
- * then |str - 1| is returned.
- */
-NS_HIDDEN_(char *) net_RFindCharInSet(const char *str, const char *end, const char *set);
-
-/**
  * returns pointer to last character of |str| NOT in the given set.  if all
  * characters are in the given set, then |str - 1| is returned.
  */
@@ -219,10 +213,6 @@ inline char *net_FindCharInSet(const char *str, const char *set)
 inline char *net_FindCharNotInSet(const char *str, const char *set)
 {
     return net_FindCharNotInSet(str, NET_MAX_ADDRESS, set);
-}
-inline char *net_RFindCharInSet(const char *str, const char *set)
-{
-    return net_RFindCharInSet(str, str + strlen(str), set);
 }
 inline char *net_RFindCharNotInSet(const char *str, const char *set)
 {
