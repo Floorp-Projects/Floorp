@@ -287,10 +287,8 @@ protected:
                                    nsIChannel* aChannel,
                                    PRInt32& aCharsetSource,
                                    nsACString& aCharset);
-  // aParentDocument could be null.
-  PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
-                          nsIDocument* aParentDocument,
-                          PRInt32& charsetSource, nsACString& aCharset);
+  static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+                                 PRInt32& charsetSource, nsACString& aCharset);
   static PRBool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
                                       nsACString& aCharset);
   static PRBool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
