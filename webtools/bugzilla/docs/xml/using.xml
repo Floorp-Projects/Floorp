@@ -597,40 +597,97 @@
     the failure go a long way toward ensuring accurate, responsible fixes
     for the bug that bit you.</para>
 
-    <para>The procedure for filing a test bug is as follows:</para>
+    <para>The procedure for filing a bug is as follows:</para>
 
     <orderedlist>
       <listitem>
-        <para>Go to 
-        <ulink url="&landfillbase;">
-        Landfill</ulink>
-        in your browser and click 
-        <ulink
-        url="&landfillbase;enter_bug.cgi">
-        Enter a new bug report</ulink>.
+        <para>
+          Click the <quote>New</quote> link available in the footer
+          of pages, or the <quote>Enter a new bug report</quote> link
+          displayed on the home page of the Bugzilla installation.
+        </para>
+
+        <note>
+          <para>
+            If you want to file a test bug to see how Bugzilla works,
+            you can do it on one of our test installations on
+            <ulink url="&landfillbase;">Landfill</ulink>.
+          </para>
+        </note>
+      </listitem>
+
+      <listitem>
+        <para>
+          You first have to select the product in which you found a bug.
         </para>
       </listitem>
 
       <listitem>
-        <para>Select a product - any one will do.</para>
+        <para>
+          You now see a form where you can specify the component (part of
+          the product which is affected by the bug you discovered; if you have
+          no idea, just select <quote>General</quote> if such a component exists),
+          the version of the program you were using, the Operarting System and
+          platform your program is running on and the severity of the bug (if the
+          bug you found crashes the program, it's probably a major or a critical
+          bug; if it's a typo somewhere, that's something pretty minor; if it's
+          something you would like to see implemented, then that's an enhancement).
+        </para>
       </listitem>
 
       <listitem>
-        <para>Fill in the fields. Bugzilla should have made reasonable
-        guesses, based upon your browser, for the "Platform" and "OS"
-        drop-down boxes. If they are wrong, change them.</para>
+        <para>
+          You now have to give a short but descriptive summary of the bug you found.
+          <quote>My program is crashing all the time</quote> is a very poor summary
+          and doesn't help developers at all. Try something more meaningful or
+          your bug will probably be ignored due to a lack of precision.
+          The next step is to give a very detailed list of steps to reproduce
+          the problem you encountered. Try to limit these steps to a minimum set
+          required to reproduce the problem. This will make the life of
+          developers easier, and the probability that they consider your bug in
+          a reasonable timeframe will be much higher.
+        </para>
+
+        <note>
+          <para>
+            Try to make sure that everything in the summary is also in the first
+            comment. Summaries are often updated and this will ensure your original
+            information is easily accessible.
+          </para>
+        </note>
       </listitem>
 
       <listitem>
-        <para>Select "Commit" and send in your bug report.</para>
+        <para>
+          As you file the bug, you can also attach a document (testcase, patch,
+          or screenshot of the problem).
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>
+          Depending on the Bugzilla installation you are using and the product in
+          which you are filing the bug, you can also request developers to consider
+          your bug in different ways (such as requesting review for the patch you
+          just attached, requesting your bug to block the next release of the
+          product, and many other product specific requests).
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>
+          Now is a good time to read your bug report again. Remove all misspellings,
+          otherwise your bug may not be found by developers running queries for some
+          specific words, and so your bug would not get any attention.
+          Also make sure you didn't forget any important information developers
+          should know in order to reproduce the problem, and make sure your
+          description of the problem is explicit and clear enough.
+          When you think your bug report is ready to go, the last step is to
+          click the <quote>Commit</quote> button to add your report into the database.
+        </para>
       </listitem>
     </orderedlist>
-    
-      <para>Try to make sure that everything said in the summary is also 
-      said in the first comment. Summaries are often updated and this will
-      ensure your original information is easily accessible.
-      </para>
-      
+
       <para>
       You do not need to put "any" or similar strings in the URL field.
       If there is no specific URL associated with the bug, leave this 
