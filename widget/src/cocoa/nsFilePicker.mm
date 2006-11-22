@@ -304,7 +304,6 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   [thePanel setCanChooseDirectories:YES];
   [thePanel setCanChooseFiles:NO];
   [thePanel setResolvesAliases:YES];          //this is default - probably doesn't need to be set
-  [thePanel setCanCreateDirectories:YES];
   
   // packages != folders
   [thePanel setTreatsFilePackagesAsDirectories:NO];
