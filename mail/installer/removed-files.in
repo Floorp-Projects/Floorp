@@ -47,7 +47,6 @@ components/accessibility.xpt
 components/addrbook.xpt
 components/alerts.xpt
 components/appshell.xpt
-components/autocomplete.xpt
 components/caps.xpt
 components/chardet.xpt
 components/commandhandler.xpt
