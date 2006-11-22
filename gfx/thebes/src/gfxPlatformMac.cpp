@@ -41,6 +41,8 @@
 #include "gfxImageSurface.h"
 #include "gfxQuartzSurface.h"
 
+#include "gfxQuartzFontCache.h"
+
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
 #include "glitz-agl.h"
@@ -144,3 +146,11 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
     return NS_OK;
 }
 
+nsresult
+gfxPlatformMac::GetFontList(const nsACString& aLangGroup,
+                            const nsACString& aGenericFamily,
+                            nsStringArray& aListOfFonts)
+{
+    gfxQuartzFontCache::SharedFontCache()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
+    return NS_OK;
+}
