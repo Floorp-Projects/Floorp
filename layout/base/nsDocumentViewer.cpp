@@ -1196,8 +1196,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
 
       nsAutoString msg;
       if (len == 0) {
-        msg = preMsg + StringHead(event.text, len) +
-              NS_LITERAL_STRING("\n\n") + postMsg;
+        msg = preMsg + NS_LITERAL_STRING("\n\n") + postMsg;
       } else {
         msg = preMsg + NS_LITERAL_STRING("\n\n") +
               StringHead(event.text, len) +
