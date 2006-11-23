@@ -1381,7 +1381,7 @@ static JSBool
 obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
                   void *closure)
 {
-    JSObject *funobj;
+    JSObject *callable;
     JSRuntime *rt;
     JSStackFrame *caller;
     JSPrincipals *subject, *watcher;
@@ -1391,7 +1391,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
     jsval argv[3];
     JSBool ok;
 
-    funobj = (JSObject *) closure;
+    callable = (JSObject *) closure;
 
     rt = cx->runtime;
     if (rt->findObjectPrincipals) {
@@ -1402,7 +1402,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
              * Only call the watch handler if the watcher is allowed to watch
              * the currently executing script.
              */
-            watcher = rt->findObjectPrincipals(cx, funobj);
+            watcher = rt->findObjectPrincipals(cx, callable);
             subject = JS_StackFramePrincipals(cx, caller);
 
             if (watcher && subject && !watcher->subsume(watcher, subject)) {
@@ -1424,7 +1424,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
     argv[0] = id;
     argv[1] = old;
     argv[2] = *nvp;
-    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(funobj), 3, argv, nvp);
+    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(callable), 3, argv, nvp);
     js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
     return ok;
 }
