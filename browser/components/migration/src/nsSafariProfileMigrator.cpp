@@ -993,7 +993,7 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
 #endif
                                               PRBool aIsAtRootLevel)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   CFIndex count = ::CFArrayGetCount(aChildren);
   for (PRInt32 i = 0; i < count; ++i) {
