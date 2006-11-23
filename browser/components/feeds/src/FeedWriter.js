@@ -148,7 +148,7 @@ FeedWriter.prototype = {
   },
 
   __bundle: null,
-  get bundle() {
+  get _bundle() {
     if (!this.__bundle) {
       this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
                       getService(Ci.nsIStringBundleService).
