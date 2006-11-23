@@ -75,35 +75,19 @@ UrlClassifierTableUrl.inherits(UrlClassifierTable);
  * Look up a URL in a URL table
  */
 UrlClassifierTableUrl.prototype.exists = function(url, callback) {
+  // PROT_URLCanonicalizer.canonicalizeURL_ is the old way of canonicalizing a
+  // URL.  Unfortunately, it doesn't normalize numeric domains so alternate IP
+  // formats (hex, octal, etc) won't trigger a match.
+  // this.enchashDecrypter_.getCanonicalUrl does the right thing and
+  // normalizes a URL to 4 decimal numbers, but the update server may still be
+  // giving us encoded IP addresses.  So to be safe, we check both cases.
+  var oldCanonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
   var canonicalized = this.enchashDecrypter_.getCanonicalUrl(url);
-  G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");
-
-  var dbservice_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                   .getService(Ci.nsIUrlClassifierDBService);
-  var callbackHelper = new UrlLookupCallback(callback);
-  dbservice_.exists(this.name,
-                    canonicalized,
-                    BindToObject(callbackHelper.dbCallback,
-                                 callbackHelper));
-}
-
-/**
- * A helper class for handling url lookups in the database.  This allows us to
- * break our reference to callback to avoid memory leaks.
- * @param callback nsIUrlListManagerCallback
- */
-function UrlLookupCallback(callback) {
-  this.callback_ = callback;
-}
-
-/**
- * Callback function from nsIUrlClassifierDBService.exists.  For url lookup,
- * any non-empty string value is a database hit.
- * @param value String
- */
-UrlLookupCallback.prototype.dbCallback = function(value) {
-  this.callback_.handleEvent(value.length > 0);
-  this.callback_ = null;
+  G_Debug(this, "Looking up: " + url + " (" + oldCanonicalized + " and " +
+                canonicalized + ")");
+  (new ExistsMultiQuerier([oldCanonicalized, canonicalized],
+                          this.name,
+                          callback)).run();
 }
 
 /////////////////////////////////////////////////////////////////////
