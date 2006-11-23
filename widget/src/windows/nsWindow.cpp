@@ -4660,11 +4660,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_CONTEXTMENU:
     {
       // if the context menu is brought up from the keyboard, |lParam|
-      // will be maxlong. Send a different event msg instead.
-      PRUint32 msg;
+      // will be maxlong.
       LPARAM pos;
       PRBool contextMenukey = PR_FALSE;
-      msg = NS_CONTEXTMENU;
       if (lParam == 0xFFFFFFFF)
       {
         contextMenukey = PR_TRUE;
@@ -4674,7 +4672,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       {
         pos = lParamToClient(lParam);
       }
-      result = DispatchMouseEvent(msg, wParam, pos, contextMenukey);
+      result = DispatchMouseEvent(NS_CONTEXTMENU, wParam, pos, contextMenukey,
+                                  nsMouseEvent::eRightButton);
     }
     break;
 
