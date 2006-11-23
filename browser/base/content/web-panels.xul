@@ -41,7 +41,12 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
+<!DOCTYPE page [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+<!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
+%textcontextDTD;
+]>
 
 <page id="webpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
