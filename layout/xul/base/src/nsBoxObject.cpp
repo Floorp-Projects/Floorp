@@ -356,7 +356,8 @@ nsBoxObject::GetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports**
     return NS_OK;
   }
   nsDependentString propertyName(aPropertyName);
-  return mPropertyTable->Get(propertyName, aResult); // Addref here.
+  mPropertyTable->Get(propertyName, aResult); // Addref here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -384,14 +385,19 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
   }
 
   nsDependentString propertyName(aPropertyName);
-  return mPropertyTable->Put(propertyName, aValue);
+  if (!mPropertyTable->Put(propertyName, aValue))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
 {
   nsCOMPtr<nsISupports> data;
-  if (NS_FAILED(GetPropertyAsSupports(aPropertyName,getter_AddRefs(data)))) {
+  nsresult rv = GetPropertyAsSupports(aPropertyName,getter_AddRefs(data));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!data) {
     *aResult = nsnull;
     return NS_OK;
   }
