@@ -106,9 +106,9 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 }
 
 #if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+EXPORT_XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
 {
 #ifdef __GNUC__            /* Gnu compiler. */
   PRUint32 result;
