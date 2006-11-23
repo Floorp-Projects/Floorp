@@ -545,88 +545,140 @@
         </para>
       </section>
     </section>
-  </section>
 
-  <section id="list">
-    <title>Bug Lists</title>
+    <section id="quicksearch">
+      <title>Quicksearch</title>
 
-    <para>If you run a search, a list of matching bugs will be returned.
-    </para>
+      <para>
+        Quicksearch is a single-text-box query tool which uses
+        metacharacters to indicate what is to be searched. For example, typing
+        "<literal>foo|bar</literal>"
+        into Quicksearch would search for "foo" or "bar" in the
+        summary and status whiteboard of a bug; adding
+        "<literal>:BazProduct</literal>" would
+        search only in that product.
+        You can use it to find a bug by its number or its alias, too.
+      </para>
 
-    <para>The format of the list is configurable. For example, it can be
-    sorted by clicking the column headings. Other useful features can be
-    accessed using the links at the bottom of the list: 
-    <simplelist>
-      <member>
-      <emphasis>Long Format:</emphasis>
+      <para>
+        You'll find the Quicksearch box in Bugzilla's footer area.
+        On Bugzilla's front page, there is an additional
+        <ulink url="../../page.cgi?id=quicksearch.html">Help</ulink>
+        link which details how to use it.
+      </para>
+    </section>
 
-      this gives you a large page with a non-editable summary of the fields
-      of each bug.</member>
+    <section id="list">
+      <title>Bug Lists</title>
 
-      <member>
-      <emphasis>CSV:</emphasis>
+      <para>If you run a search, a list of matching bugs will be returned.
+      </para>
 
-      get the buglist as comma-separated values, for import into e.g.
-      a spreadsheet.</member>
-     
-      <member>
-      <emphasis>RSS</emphasis>
+      <para>The format of the list is configurable. For example, it can be
+      sorted by clicking the column headings. Other useful features can be
+      accessed using the links at the bottom of the list:
+      <simplelist>
+        <member>
+        <emphasis>Long Format:</emphasis>
 
-      get the buglist as an RSS 1.0 feed.  Copy this link into your
-      favorite feed reader.  If you are using Firefox, you can also
-      save the list as a live bookmark by clicking the live bookmark
-      icon in the status bar.  To limit the number of bugs in the feed,
-      add a limit=n parameter to the URL.</member>
+        this gives you a large page with a non-editable summary of the fields
+        of each bug.</member>
 
-      <member>
-      <emphasis>iCalendar</emphasis>
+        <member>
+        <emphasis>CSV:</emphasis>
 
-      Get the buglist as an iCalendar file. Each bug is represented as a 
-      to-do item in the imported calendar.</member>
-     
-      <member>
-      <emphasis>Change Columns:</emphasis>
+        get the buglist as comma-separated values, for import into e.g.
+        a spreadsheet.</member>
 
-      change the bug attributes which appear in the list.</member>
+        <member>
+        <emphasis>Feed:</emphasis>
 
-      <member>
-      <emphasis>Change several bugs at once:</emphasis>
+        get the buglist as an Atom feed.  Copy this link into your
+        favorite feed reader.  If you are using Firefox, you can also
+        save the list as a live bookmark by clicking the live bookmark
+        icon in the status bar.  To limit the number of bugs in the feed,
+        add a limit=n parameter to the URL.</member>
 
-      If your account is sufficiently empowered, you can make the same
-      change to all the bugs in the list - for example, changing their
-      assignee.</member>
+        <member>
+        <emphasis>iCalendar:</emphasis>
 
-      <member>
-      <emphasis>Send mail to bug assignees:</emphasis>
+        Get the buglist as an iCalendar file. Each bug is represented as a
+        to-do item in the imported calendar.</member>
 
-      Sends mail to the assignees of all bugs on the list.</member>
+        <member>
+        <emphasis>Change Columns:</emphasis>
 
-      <member>
-      <emphasis>Edit Search:</emphasis>
+        change the bug attributes which appear in the list.</member>
 
-      If you didn't get exactly the results you were looking for, you can
-      return to the Query page through this link and make small revisions
-      to the query you just made so you get more accurate results.</member>
-      
-      <member>
-      <emphasis>Remember Search As:</emphasis>
+        <member>
+        <emphasis>Change several bugs at once:</emphasis>
 
-      You can give a search a name and remember it; a link will appear
-      in your page footer giving you quick access to run it again later.
-      </member>
-    </simplelist>
-    </para>
+        If your account is sufficiently empowered, and more than one bug
+        appear in the bug list, this link is displayed which lets you make
+        the same change to all the bugs in the list - for example, changing
+        their assignee.</member>
 
-    <para>
-      If you would like to access the bug list from another program 
-      it is often useful to have the list returned in something other
-      than HTML. By adding the ctype=type parameter into the bug list URL
-      you can specify several alternate formats. The supported formats
-      are: Comma Separated Values (ctype=csv), iCalendar (ctype=ics),
-      RDF Site Summary (RSS) 1.0 (ctype=rss), ECMAScript, also known
-      as JavaScript (ctype=js), and finally Resource Description Framework
-      RDF/XML (ctype=rdf).
-    </para>
+        <member>
+        <emphasis>Send mail to bug assignees:</emphasis>
+
+        If more than one bug appear in the bug list and there are at least
+        two distinct bug assignees, this links is displayed which lets you
+        easily send a mail to the assignees of all bugs on the list.</member>
+
+        <member>
+        <emphasis>Edit Search:</emphasis>
+
+        If you didn't get exactly the results you were looking for, you can
+        return to the Query page through this link and make small revisions
+        to the query you just made so you get more accurate results.</member>
+
+        <member>
+        <emphasis>Remember Search As:</emphasis>
+
+        You can give a search a name and remember it; a link will appear
+        in your page footer giving you quick access to run it again later.
+        </member>
+      </simplelist>
+      </para>
+
+      <para>
+        If you would like to access the bug list from another program
+        it is often useful to have the list returned in something other
+        than HTML. By adding the ctype=type parameter into the bug list URL
+        you can specify several alternate formats. Besides the types described
+        above, the following formats are also supported: ECMAScript, also known
+        as JavaScript (ctype=js), and Resource Description Framework RDF/XML
+        (ctype=rdf).
+      </para>
+    </section>
+
+    <section id="individual-buglists">
+      <title>Adding/removing individual bugs from bug lists</title>
+      <para>
+        You can at any time add and remove individual bugs to a special type
+        of saved searches, known as <quote>lists of bugs</quote>. The distinction
+        between both types is that saved searches, as described in the previous
+        section, are stored in the form of a list of matching criteria, while
+        a list of bugs is an enumerated list of bug numbers. As it is a simple
+        list of bug numbers, you can easily edit this list by either adding or
+        removing bugs from it. To enable this feature, you have to turn on the
+        <quote>Add individual bugs to saved searches</quote> user preference,
+        see <xref linkend="userpreferences" />. This feature is disabled by
+        default.
+      </para>
+
+      <para>
+        This feature is useful when you want to keep track of several bugs, but
+        for different reasons. Instead of adding yourself to the CC list of all
+        these bugs and mixing all these reasons, you can now store these bugs in
+        different lists, e.g. <quote>Bugs I want to see fixed before the next
+        release</quote>, <quote>Interesting bugs</quote>, or <quote>Bugs I have
+        to think about</quote>. One big advantage of this way to manage bug lists
+        is that you can easily add or remove bugs one by one, which is not
+        possible to do with saved searches without having to edit the search
+        criteria again.
+      </para>
+    </section>
   </section>
 
   <section id="bugreports">
@@ -905,25 +957,6 @@
       </para>
     </section>
 
-    <section id="quicksearch">
-      <title>Quicksearch</title>
-
-      <para>Quicksearch is a single-text-box query tool which uses
-      metacharacters to indicate what is to be searched. For example, typing
-      "<filename>foo|bar</filename>" 
-      into Quicksearch would search for "foo" or "bar" in the 
-      summary and status whiteboard of a bug; adding 
-      "<filename>:BazProduct</filename>" would
-      search only in that product.
-      You can use it to find a bug by its number or its alias, too.
-      </para>
-
-      <para>You'll find the Quicksearch box in Bugzilla's footer area.
-      On Bugzilla's front page, there is an additional
-      <ulink url="../../page.cgi?id=quicksearch.html">Help</ulink>
-      link which details how to use it.</para>
-    </section>
-    
     <section id="commenting">
       <title>Comments</title>
 
