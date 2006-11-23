@@ -101,7 +101,7 @@ nsCOMPtr_base::assign_from_qi( const nsQueryInterface qi, const nsIID& iid )
 void
 nsCOMPtr_base::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( qi(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);
@@ -110,7 +110,7 @@ nsCOMPtr_base::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, c
 void
 nsCOMPtr_base::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);
@@ -119,7 +119,7 @@ nsCOMPtr_base::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& iid 
 void
 nsCOMPtr_base::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& gs, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);
@@ -128,7 +128,7 @@ nsCOMPtr_base::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& 
 void
 nsCOMPtr_base::assign_from_gs_contractid( const nsGetServiceByContractID gs, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);
@@ -137,7 +137,7 @@ nsCOMPtr_base::assign_from_gs_contractid( const nsGetServiceByContractID gs, con
 void
 nsCOMPtr_base::assign_from_gs_contractid_with_error( const nsGetServiceByContractIDWithError& gs, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( gs(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);
@@ -146,7 +146,7 @@ nsCOMPtr_base::assign_from_gs_contractid_with_error( const nsGetServiceByContrac
 void
 nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& iid )
   {
-    union {nsISupports* mSupports; void *mVoid; } newRawPtr;
+    union { nsISupports* mSupports; void *mVoid; } newRawPtr;
     if ( NS_FAILED( helper(iid, &newRawPtr.mVoid) ) )
       newRawPtr.mSupports = 0;
     assign_assuming_AddRef(newRawPtr.mSupports);

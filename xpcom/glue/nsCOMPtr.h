@@ -1311,7 +1311,9 @@ void**
 nsCOMPtr<T>::begin_assignment()
   {
     assign_assuming_AddRef(0);
-    return NS_REINTERPRET_CAST(void**, &mRawPtr);
+    union { T** mT; void** mVoid; } result;
+    result.mT = &mRawPtr;
+    return result.mVoid;
   }
 #endif
 
