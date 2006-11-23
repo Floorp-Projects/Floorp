@@ -1032,7 +1032,6 @@ nsresult
 nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
   // Find Opera Bookmarks
-  nsresult rv;
   nsCOMPtr<nsIFile> operaBookmarks;
   mOperaProfile->Clone(getter_AddRefs(operaBookmarks));
   operaBookmarks->Append(OPERA_BOOKMARKS_FILE_NAME);
@@ -1044,6 +1043,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
 
 #ifdef MOZ_PLACES_BOOKMARKS
+  nsresult rv;
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt64 root;
