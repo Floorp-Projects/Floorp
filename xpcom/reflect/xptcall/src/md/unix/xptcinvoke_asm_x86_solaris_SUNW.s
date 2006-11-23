@@ -1,6 +1,6 @@
-	.globl XPTC_InvokeByIndex
-	.type XPTC_InvokeByIndex, @function
-XPTC_InvokeByIndex:
+	.globl NS_InvokeByIndex
+	.type NS_InvokeByIndex, @function
+NS_InvokeByIndex:
 	push       %ebp
 	movl       %esp,%ebp
 	push       %ebx
@@ -51,5 +51,5 @@ XPTC_InvokeByIndex:
 	movl       %ebp,%esp
 	pop        %ebp
 	ret        
-	.size XPTC_InvokeByIndex, . - XPTC_InvokeByIndex
+	.size NS_InvokeByIndex, . - NS_InvokeByIndex
 
