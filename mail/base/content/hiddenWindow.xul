@@ -102,10 +102,6 @@
   <commandset id="globalEditMenuItems"/>
   <commandset id="selectEditMenuItems"/>
   <commandset id="clipboardEditMenuItems"/>
-  <commandset id="FocusRingUpdate_Mail"
-        commandupdater="true"
-        events="focus"
-        oncommandupdate="FocusRingUpdate_Mail()"/>
   <commandset id="tasksCommands"/>
   <commandset id="macWindowMenuItems"/>
 </commandset>
