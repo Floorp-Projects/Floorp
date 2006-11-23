@@ -2421,10 +2421,8 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     nsresult rv = auth->GetAuthFlags(&authFlags);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString realmUTF16;
-    ParseRealm(challenge, realmUTF16);
-
-    NS_ConvertUTF16toUTF8 realm(realmUTF16);
+    nsCAutoString realm;
+    ParseRealm(challenge, realm);
 
     // if no realm, then use the auth type as the realm.  ToUpperCase so the
     // ficticious realm stands out a bit more.
@@ -2643,7 +2641,7 @@ nsHttpChannel::GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity &ident)
 }
 
 void
-nsHttpChannel::ParseRealm(const char *challenge, nsAString &realm)
+nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
 {
     //
     // From RFC2617 section 1.2, the realm value is defined as such:
@@ -2654,15 +2652,19 @@ nsHttpChannel::ParseRealm(const char *challenge, nsAString &realm)
     // but, we'll accept anything after the the "=" up to the first space, or
     // end-of-line, if the string is not quoted.
     //
-    nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
-         do_GetService("@mozilla.org/network/mime-hdrparam;1");
-
-    if (!mimeHdrParser)
-        return;
-
-    mimeHdrParser->GetParameter(nsDependentCString(challenge),
-                                "realm", EmptyCString(), PR_FALSE,
-                                nsnull, realm);
+    const char *p = PL_strcasestr(challenge, "realm=");
+    if (p) {
+        p += 6;
+        if (*p == '"')
+            p++;
+        const char *end = PL_strchr(p, '"');
+        if (!end)
+            end = PL_strchr(p, ' ');
+        if (end)
+            realm.Assign(p, end - p);
+        else
+            realm.Assign(p);
+    }
 }
 
 
@@ -2701,7 +2703,8 @@ nsHttpChannel::PromptForIdentity(PRUint32    level,
     if (!authPrompt)
         return NS_ERROR_NO_INTERFACE;
 
-    NS_ConvertUTF8toUTF16 realmU(realm);
+    // XXX i18n: need to support non-ASCII realm strings (see bug 41489)
+    NS_ConvertASCIItoUTF16 realmU(realm);
 
     nsresult rv;
 
