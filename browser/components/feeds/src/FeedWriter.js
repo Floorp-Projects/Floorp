@@ -21,7 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Jeff Walden <jwalden+code@mit.edu>
-#   Asaf Romano <mozilla.mano@sent.com>
+#   Asaf Romano <mano@mozilla.com>
 #   Robert Sayre <sayrer@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -146,12 +146,15 @@ FeedWriter.prototype = {
       // Not allowed to load this link because secman.checkLoadURIStr threw
     }
   },
-  
-  get _bundle() {
-    var sbs = 
-        Cc["@mozilla.org/intl/stringbundle;1"].
-        getService(Ci.nsIStringBundleService);
-    return sbs.createBundle(URI_BUNDLE);
+
+  __bundle: null,
+  get bundle() {
+    if (!this.__bundle) {
+      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                      getService(Ci.nsIStringBundleService).
+                      createBundle(URI_BUNDLE);
+    }
+    return this.__bundle;
   },
   
   _getFormattedString: function FW__getFormattedString(key, params) {
