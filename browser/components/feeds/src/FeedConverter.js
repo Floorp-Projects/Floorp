@@ -106,6 +106,11 @@ FeedConverter.prototype = {
    * docshell for the load.
    */
   _listener: null,
+
+  /**
+   * Records if the feed was sniffed
+   */
+  _sniffed: false,
   
   /**
    * See nsIStreamConverter.idl
@@ -220,7 +225,11 @@ FeedConverter.prototype = {
           Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
       var chromeChannel;
-      if (result.doc) {
+
+      // show the feed page if it wasn't sniffed and we have a document,
+      // or we have a document, title, and link or id
+      if (result.doc && (!this._sniffed ||
+          (result.doc.title && (result.doc.link || result.doc.id)))) {
 
         // If there was no automatic handler, or this was a podcast,
         // photostream or some other kind of application, we must always
@@ -261,6 +270,17 @@ FeedConverter.prototype = {
    */
   onStartRequest: function FC_onStartRequest(request, context) {
     var channel = request.QueryInterface(Ci.nsIChannel);
+
+    // Check for a header that tells us there was no sniffing
+    // The value doesn't matter.
+    try {
+      var httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+      var noSniff = httpChannel.getResponseHeader("X-Moz-Is-Feed");
+    }
+    catch (ex) {
+      this._sniffed = true;
+    }
+
     this._request = request;
     
     // Save and reset the forced state bit early, in case there's some kind of
@@ -270,7 +290,6 @@ FeedConverter.prototype = {
         getService(Ci.nsIFeedResultService);
     this._forcePreviewPage = feedService.forcePreviewPage;
     feedService.forcePreviewPage = false;
-
 
     // Parse feed data as it comes in
     this._processor =
@@ -513,7 +532,10 @@ FeedProtocolHandler.prototype = {
     else
       uri.scheme = "http";
 
-    var channel = ios.newChannelFromURI(uri, null);
+    var channel =
+      ios.newChannelFromURI(uri, null).QueryInterface(Ci.nsIHttpChannel);
+    // Set this so we know this is supposed to be a feed
+    channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
     channel.originalURI = uri;
     return channel;
   },
