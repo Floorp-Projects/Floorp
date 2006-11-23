@@ -76,7 +76,6 @@
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
 #include "nsAuthInformationHolder.h"
-#include "nsIMIMEHeaderParam.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
