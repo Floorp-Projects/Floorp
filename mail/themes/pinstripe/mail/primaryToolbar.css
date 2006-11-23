@@ -499,7 +499,7 @@ toolbar[iconsize="small"] #button-next[disabled] {
 
 #remoteContentImage {
   list-style-image: url("chrome://global/skin/console/console-toolbar.png");
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 
 #remoteContentBar {
@@ -518,7 +518,7 @@ toolbar[iconsize="small"] #button-next[disabled] {
 #phishingBarImage {
 /* for now, temporarily copy the remote image icon until we can get a new one */
   list-style-image: url("chrome://global/skin/console/console-toolbar.png");
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 
 #phishingBar {
