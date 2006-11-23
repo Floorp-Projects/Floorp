@@ -515,30 +515,31 @@ FeedWriter.prototype = {
       return;
     }
 
-    switch (event.type) {
-      case "command" : {
-        switch (event.target.id) {
-          case "subscribeButton":
-            this.subscribe();
-            break;
-          case "chooseApplicationMenuItem":
-            // For keyboard-only users, we only show the file picker once the 
-            // subscribe button is pressed. See click event handling for the
-            // mouse-case.
-            break;
-          default:
-            this._setAlwaysUseLabel();
-        }
-        break;
-      }
-      case "click": {
-        if (event.target.id == "chooseApplicationMenuItem") {
-          if (!this._chooseClientApp()) {
-            // Select the (per-prefs) selected handler if no application was
-            // selected
-            this._setSelectedHandler();
+    if (event.type == "command") {
+      switch (event.target.id) {
+        case "subscribeButton":
+          this.subscribe();
+          break;
+        case "chooseApplicationMenuItem":
+          /* Bug 351263: Make sure to not steal focus if the "Choose
+           * Application" item is being selected with the keyboard. We do this
+           * by ignoring command events while the dropdown is closed (user
+           * arrowing through the combobox), but handling them while the
+           * combobox dropdown is open (user pressed enter when an item was
+           * selected). If we don't show the filepicker here, it will be shown
+           * when clicking "Subscribe Now".
+           */
+          if (this._document.getElementById("handlersMenuList")
+                  .getAttribute("open") == "true") {
+            if (!this._chooseClientApp()) {
+              // Select the (per-prefs) selected handler if no application was
+              // selected
+              this._setSelectedHandler();
+            }
           }
-        }
+          break;
+        default:
+          this._setAlwaysUseLabel();
       }
     }
   },
@@ -689,7 +690,6 @@ FeedWriter.prototype = {
     menuItem = this._document.createElementNS(XUL_NS, "menuitem");
     menuItem.id = "chooseApplicationMenuItem";
     menuItem.setAttribute("label", this._getString("chooseApplicationMenuItem"));
-    menuItem.addEventListener("click", this, false);
     handlersMenuPopup.appendChild(menuItem);
 
     // separator
