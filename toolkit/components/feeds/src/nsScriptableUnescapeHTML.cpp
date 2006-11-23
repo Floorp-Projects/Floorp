@@ -42,7 +42,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsScriptLoader.h"
-
+#include "nsEscape.h"
 #include "nsIParser.h"
 #include "nsIDTD.h"
 #include "nsNetCID.h"
@@ -157,7 +157,12 @@ nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
       base.Append(NS_LITERAL_CSTRING(XHTML_DIV_TAG));
       base.Append(NS_LITERAL_CSTRING(" xml:base=\""));
       aBaseURI->GetSpec(spec);
-      base = base + spec;
+      // nsEscapeHTML is good enough, because we only need to get
+      // quotes, ampersands, and angle brackets
+      char* escapedSpec = nsEscapeHTML(spec.get());
+      if (escapedSpec)
+        base += escapedSpec;
+      NS_Free(escapedSpec);
       base.Append(NS_LITERAL_CSTRING("\""));
       tagStack.AppendElement(ToNewUnicode(base));
     }  else {
