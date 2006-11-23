@@ -14,6 +14,21 @@
       <title>General Questions</title>
 
       <qandaentry>
+        <question id="faq-general-tryout">
+          <para>
+            Can I try out Bugzilla somewhere?
+          </para>
+        </question>
+        <answer>
+          <para>
+            If you want to take a test ride, there are test installations
+            at <ulink url="http://landfill.bugzilla.org/"/>,
+            ready to play with directly from your browser.
+          </para>
+        </answer>
+      </qandaentry>
+
+      <qandaentry>
         <question id="faq-general-license">
           <para>
             What license is Bugzilla distributed under?
@@ -126,7 +141,7 @@
           </para>
           <para>
             The best way to make an enhancement request is to <ulink 
-            url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">file
+            url="https://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">file
             a bug at bugzilla.mozilla.org</ulink> and set the Severity
             to 'enhancement'. Your 'request for enhancement' (RFE) will
             start out in the UNCONFIRMED state, and will stay there until
@@ -169,35 +184,44 @@
             and was available for the hardware Netscape intended to run it on.
           </para>
           <para>
-            There is currently work in progress to make Bugzilla work on
-            PostgreSQL; track the progress of this initiative in <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">bug 98304</ulink>.
-          </para>
-          <para>
-            Sybase support is no longer being worked on.  Even if it eventually
-            happens, it's VERY unlikely to work without the end-user-company
-            having to stick a few developers on making several manual changes.
-            Sybase is just NOT very standards-compliant (despite all the hype),
-            and it turned out that way too much had to be changed to make it
-            work -- like moving half of the application logic into stored
-            procedures to get any kind of decent performance out of it.
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=173130">Bug
-            173130</ulink> is the relevant bug.
+            Bugzilla 2.20 contains experimental support for PostgreSQL.
+            Bugzilla 2.22 contains complete, stable support for PostgreSQL.
+            As of this release, using PostgreSQL with Bugzilla should
+            be as stable as using MySQL. If you experience any problems
+            with PostgreSQL compatibility, they will be taken as
+            seriously as if you were running MySQL.
           </para>
           <para>
             Red Hat once ran a version of Bugzilla that worked on Oracle, 
             but that was long, long ago; that version (Bugzilla 2.8) is
-            now obsolete, insecure, and totally unsupported. Red Hat's
-            current Bugzilla (based on Bugzilla 2.17.1) uses PostgreSQL,
-            and work is being done to merge those changes into the main
-            distribution. (See above.) At this time we know of no recent
-            ports of Bugzilla to Oracle. (In our honest opinion, Bugzilla
-            doesn't need what Oracle offers.)
+            now obsolete, insecure, and totally unsupported.
           </para>
           <para>
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=237862">Bug
-            237862</ulink> is a good bug to read through if you'd like to see
-            what progress is being made on general database compatibility.
+            In August of 2005, Wim Coekaerts (Director of Linux
+            Engineering at Oracle Corporation) wrote to Dave Miller
+            confirming that Oracle intends to implement and support
+            Bugzilla. Since then, no further information has been
+            forthcoming. Track progress at
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=189947">
+            Bug 189947</ulink>.
+          </para>
+          <para>
+            Sybase support is no longer being worked on. Even if it
+            eventually happens, it's VERY unlikely to work without
+            the end-user-company having to stick a few developers on
+            making several manual changes. Sybase is just NOT very
+            standards-compliant (despite all the hype), and it turned
+            out that way too much had to be changed to make it work --
+            like moving half of the application logic into stored
+            procedures to get any kind of decent performance out of it.
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=173130">
+            Bug 173130</ulink> is the relevant bug.
+          </para>
+          <para>
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=237862">
+            Bug 237862</ulink> is a good bug to read through if you'd
+            like to see what progress is being made on general database
+            compatibility.
           </para>
         </answer>
       </qandaentry>
@@ -301,7 +325,7 @@ perl runtests.pl 2 --verbose
           </para>
         </answer>
       </qandaentry>
-      
+
       <qandaentry>
         <question id="faq-mod-perl">
           <para>
@@ -318,7 +342,22 @@ perl runtests.pl 2 --verbose
           </para>
         </answer>
       </qandaentry>
-      
+
+      <qandaentry>
+        <question id="faq-general-selinux">
+          <para>
+            How can Bugzilla be made to work under SELinux?
+          </para>
+        </question>
+        <answer>
+          <para>
+            Unfortunately there are no step-by-step instructions,
+            but the following URL contains hints on how to do it:
+            <ulink url="http://fedora.redhat.com/docs/selinux-apache-fc3/sn-debugging-and-customizing.html" />
+          </para>
+        </answer>
+      </qandaentry>
+
     </qandadiv>
 
     <qandadiv id="faq-phb">
@@ -355,7 +394,7 @@ perl runtests.pl 2 --verbose
           <para>
             There is no GUI for adding fields to Bugzilla at this
             time. You can follow development of this feature in 
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=91037">bug 91037</ulink>
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=91037">bug 91037</ulink>
           </para>
         </answer>
       </qandaentry>
@@ -369,7 +408,7 @@ perl runtests.pl 2 --verbose
         </question>
         <answer>
           <para>
-            Yes. Look at <ulink url="http://bugzilla.mozilla.org/report.cgi"/>
+            Yes. Look at <ulink url="https://bugzilla.mozilla.org/report.cgi"/>
             for samples of what Bugzilla can do in reporting and graphing.
             Fuller documentation is provided in <xref linkend="reporting"/>.
           </para>
@@ -481,7 +520,7 @@ perl runtests.pl 2 --verbose
             Some admin interfaces have been templatized (for easy localization)
             but many of them are still available in English only. Also, there
             may be issues with the charset not being declared. See <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug 126226</ulink>
+            url="https://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug 126226</ulink>
             for more information.
           </para>
         </answer>
@@ -598,7 +637,7 @@ perl runtests.pl 2 --verbose
             See the documentation on Customization for more details,
             specifically <xref linkend="template-specific"/>.
           </para>
-        </answer>      
+        </answer>
       </qandaentry>
 
     </qandadiv>
@@ -712,7 +751,7 @@ perl runtests.pl 2 --verbose
           </para>
           <para>
             See also the instructions in <xref linkend="upgrade-cvs"/>.
-          </para>      
+          </para>
         </answer>
       </qandaentry>
 
@@ -781,7 +820,7 @@ password=mypassword
               command line.
             </para>
           </warning>
-              
+
           <para>
             On your new machine, follow the instructions found in <xref 
             linkend="installing-bugzilla"/> as far as setting up the physical
@@ -833,7 +872,7 @@ password=mypassword
             Run MySQL like this: <command>mysqld --skip-grant-tables</command>.
             Please remember that <emphasis>this makes MySQL as secure as
             taping a $100 to the floor of a football stadium bathroom for
-            safekeeping.</emphasis> 
+            safekeeping.</emphasis>
           </para>
           <warning>
             <para>
@@ -952,7 +991,7 @@ password=mypassword
             For older versions of Bugzilla, you may be able to apply 
             Klaas Freitag's patch for <quote>whineatassigned</quote>,
             which can be found in
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=6679">bug
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=6679">bug
             6679</ulink>. Note that this patch was made in 2000, so it may take
             some work to apply cleanly to any releases of Bugzilla newer than
             that, but you can use it as a starting point.
@@ -961,7 +1000,7 @@ password=mypassword
           <para>
             An updated (and much-expanded) version of this functionality is
             due to be released as part of Bugzilla 2.20; see 
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=185090">bug
+            <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=185090">bug
             185090</ulink> for the discussion, and for more up-to-date patches
             if you just can't wait.
           </para>
@@ -1124,6 +1163,61 @@ password=mypassword
               as a troubleshooting step.
             </para>
           </warning>
+          <para>
+            You may also be suffering from a client version mismatch:
+          </para>
+          <para>
+            MySQL 4.1 and up uses an authentication protocol based on
+            a password hashing algorithm that is incompatible with that
+            used by older clients. If you upgrade the server to 4.1,
+            attempts to connect to it with an older client may fail
+            with the following message:
+          </para>
+          <para>
+            <screen><prompt>shell&gt;</prompt> mysql
+            Client does not support authentication protocol requested
+            by server; consider upgrading MySQL client
+            </screen>
+          </para>
+          <para>
+            To solve this problem, you should use one of the following
+            approaches:
+          </para>
+          <para>
+            <itemizedlist>
+              <listitem>
+                <para>
+                  Upgrade all client programs to use a 4.1.1 or newer
+                  client library.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  When connecting to the server with a pre-4.1 client
+                  program, use an account that still has a
+                  pre-4.1-style password.
+                </para>
+              </listitem>
+              <listitem>
+                <para>
+                  Reset the password to pre-4.1 style for each user
+                  that needs to use a pre-4.1 client program.
+                  This can be done using the SET PASSWORD statement
+                  and the OLD_PASSWORD() function:
+                  <screen>
+                    <prompt>mysql&gt;</prompt> SET PASSWORD FOR
+                    <prompt>    -&gt;</prompt> ' some_user '@' some_host ' = OLD_PASSWORD(' newpwd ');
+                  </screen>
+                </para>
+              </listitem>
+            </itemizedlist>
+            
+          </para>
+
+
+          <para>
+          </para>
+
         </answer>
       </qandaentry>
 
@@ -1358,16 +1452,16 @@ password=mypassword
             have your choice of patches: 
             <simplelist>
               <member>
-                <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=35195">Bug 35195</ulink>
+                <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=35195">Bug 35195</ulink>
                 seeks to add an <quote>...and accept the bug</quote> checkbox
                 to the UI. It has two patches attached to it: 
-                <ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">attachment 8029</ulink>
+                <ulink url="https://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">attachment 8029</ulink>
                 was originally created for Bugzilla 2.12, while 
-                <ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=91372">attachment 91372</ulink>
+                <ulink url="https://bugzilla.mozilla.org/showattachment.cgi?attach_id=91372">attachment 91372</ulink>
                 is an updated version for Bugzilla 2.16
               </member>
               <member>
-                <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=37613">Bug
+                <ulink url="https://bugzilla.mozilla.org/show_bug.cgi?id=37613">Bug
                 37613</ulink> also provides two patches (against Bugzilla
                 2.12): one to add a 'Take Bug' option, and the other to
                 automatically reassign the bug on 'Accept'. 
@@ -1501,13 +1595,13 @@ password=mypassword
         </question>
         <answer>
           <para>
-            Try <ulink url="http://bugzilla.mozilla.org/buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;product=Bugzilla">
+            Try <ulink url="https://bugzilla.mozilla.org/buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;product=Bugzilla">
             this link</ulink> to view current bugs or requests for
             enhancement for Bugzilla.
           </para>
           <para>
             You can view bugs marked for &bz-nextver; release
-            <ulink url="http://bugzilla.mozilla.org/buglist.cgi?product=Bugzilla&amp;target_milestone=Bugzilla+&amp;bz-nextver;">here</ulink>.
+            <ulink url="https://bugzilla.mozilla.org/buglist.cgi?product=Bugzilla&amp;target_milestone=Bugzilla+&amp;bz-nextver;">here</ulink>.
             This list includes bugs for the &bz-nextver; release that have already
             been fixed and checked into CVS. Please consult the
             <ulink url="http://www.bugzilla.org/">
@@ -1529,7 +1623,7 @@ password=mypassword
         <answer>
           <para>
             This is well-documented in <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862">bug
+            url="https://bugzilla.mozilla.org/show_bug.cgi?id=49862">bug
             49862</ulink>. Ultimately, it's as easy as adding the
             <quote>---</quote> priority field to your localconfig file
             in the appropriate area, re-running checksetup.pl, and then
@@ -1552,7 +1646,7 @@ password=mypassword
               <listitem>
                 <para>
                   Enter a bug into bugzilla.mozilla.org for the <quote><ulink
-                  url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">Bugzilla</ulink></quote>
+                  url="https://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">Bugzilla</ulink></quote>
                   product.
                 </para>
               </listitem>
@@ -1571,7 +1665,7 @@ password=mypassword
               <listitem>
                 <para>
                   Announce your patch and the associated URL
-                  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX)
+                  (https://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX)
                   for discussion in the newsgroup
                   (mozilla.support.bugzilla). You'll get a
                   really good, fairly immediate reaction to the
