@@ -1240,70 +1240,70 @@ template <class T>
 void
 nsCOMPtr<T>::assign_from_qi( const nsQueryInterface qi, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( qi(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( qi(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( qi(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( qi(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( gs(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& gs, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( gs(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_gs_contractid( const nsGetServiceByContractID gs, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( gs(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_gs_contractid_with_error( const nsGetServiceByContractIDWithError& gs, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( gs(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
 void
 nsCOMPtr<T>::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& aIID )
   {
-    T* newRawPtr;
-    if ( NS_FAILED( helper(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
-      newRawPtr = 0;
-    assign_assuming_AddRef(newRawPtr);
+    union { T* mT; void *mVoid; } newRawPtr;
+    if ( NS_FAILED( helper(aIID, &newRawPtr.mVoid) ) )
+      newRawPtr.mT = 0;
+    assign_assuming_AddRef(newRawPtr.mT);
   }
 
 template <class T>
