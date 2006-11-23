@@ -712,7 +712,7 @@ const gXPInstallObserver = {
             label: browserBundle.getString("xpinstallPromptWarningButton"),
             accessKey: browserBundle.getString("xpinstallPromptWarningButton.accesskey"),
             popup: null,
-            callback: function() { return xpinstallEditPermissions(browser.docShell); }
+            callback: function() { return xpinstallEditPermissions(shell); }
           }];
         }
 
