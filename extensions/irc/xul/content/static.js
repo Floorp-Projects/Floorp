@@ -3497,6 +3497,29 @@ function c_updatemenus(menus)
     return this.menuManager.updateMenus(document, menus);
 }
 
+client.adoptNode =
+function cli_adoptnode(node, doc)
+{
+    try
+    {
+        doc.adoptNode(node);
+    }
+    catch(ex)
+    {
+        dd(formatException(ex));
+        var err = ex.name;
+        // TypeError from before adoptNode was added; NOT_IMPL after.
+        if ((err == "TypeError") || (err == "NS_ERROR_NOT_IMPLEMENTED"))
+            client.adoptNode = cli_adoptnode_noop;
+    }
+    return node;
+}
+
+function cli_adoptnode_noop(node, doc)
+{
+    return node;
+}
+
 client.addNetwork =
 function cli_addnet(name, serverList, temporary)
 {
@@ -4317,7 +4340,7 @@ function addHistory (source, obj, mergeData)
     if ("frame" in source)
         needScroll = checkScroll(source.frame);
     if (obj)
-        appendTo.appendChild(obj);
+        appendTo.appendChild(client.adoptNode(obj, appendTo.ownerDocument));
 
     if (source.MAX_MESSAGES)
     {

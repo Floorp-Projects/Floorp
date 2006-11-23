@@ -133,7 +133,7 @@ function stock_initOutputWindow(newClient, newView, newClickHandler)
     updateMotifSettings();
 
     var output = document.getElementById("output");
-    output.appendChild(view.messages);
+    output.appendChild(adoptNode(view.messages));
 
     if (view.TYPE in headers)
     {
@@ -291,6 +291,11 @@ function getMotifSettings()
     return rv;
 }
 
+function adoptNode(node)
+{
+    return client.adoptNode(node, document);
+}
+
 function setText(field, text, checkCondition)
 {
     if (!header[field].firstChild)
@@ -440,7 +445,7 @@ function updateChannel()
             var data = getObjectDetails(view);
             data.dontLogURLs = true;
             var nodes = client.munger.munge(view.topic, null, data);
-            header["topicnodes"].appendChild(nodes);
+            header["topicnodes"].appendChild(adoptNode(nodes));
         }
         else
         {
@@ -479,7 +484,7 @@ function updateUser()
         var data = getObjectDetails(view);
         data.dontLogURLs = true;
         var nodes = client.munger.munge(view.desc, null, data);
-        header["descnodes"].appendChild(nodes);
+        header["descnodes"].appendChild(adoptNode(nodes));
     }
     else
     {
