@@ -555,7 +555,7 @@ gfxPlatformGtk::IsExistingFont(const nsACString &aFontName)
         goto end;
 
     result = fs->nfont;
-    NS_ASSERTION(result == 1, "What's this case?");
+    NS_ASSERTION(result == 0 || result == 1, "What's this case?");
 
     if (result > 0)
         mAliasForSingleFont.AppendCString(aFontName);
