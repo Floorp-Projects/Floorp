@@ -773,10 +773,10 @@
     <para>
       If you have a really large attachment, something that does not need to
       be recorded forever (as most attachments are), you can mark your
-      attachment as a &quote;Big File&quote;, assuming the administrator of the
+      attachment as a <quote>Big File</quote>, assuming the administrator of the
       installation has enabled this feature.  Big Files are stored directly on
       disk instead of in the database, and can be deleted when it is no longer
-      needed.  The maximum size of a &quote;Big File&quote; is normally larger
+      needed.  The maximum size of a <quote>Big File</quote> is normally larger
       than the maximum size of a regular attachment.
     </para>
 
