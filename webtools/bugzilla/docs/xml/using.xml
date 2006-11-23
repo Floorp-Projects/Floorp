@@ -585,6 +585,11 @@
         of each bug.</member>
 
         <member>
+        <emphasis>XML:</emphasis>
+
+        get the buglist in the XML format.</member>
+
+        <member>
         <emphasis>CSV:</emphasis>
 
         get the buglist as comma-separated values, for import into e.g.
