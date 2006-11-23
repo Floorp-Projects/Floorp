@@ -2379,7 +2379,7 @@ nsresult
 nsXULElement::HideWindowChrome(PRBool aShouldHide)
 {
     nsIDocument* doc = GetCurrentDoc();
-    if (!doc)
+    if (!doc || doc->GetRootContent() != this)
       return NS_ERROR_UNEXPECTED;
 
     nsIPresShell *shell = doc->GetShellAt(0);
@@ -2394,8 +2394,9 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
             nsIView* view = frame->GetClosestView();
 
             if (view) {
-                // XXXldb Um, not all views have widgets...
-                view->GetWidget()->HideWindowChrome(aShouldHide);
+                nsIWidget* w = view->GetWidget();
+                NS_ENSURE_STATE(w);
+                w->HideWindowChrome(aShouldHide);
             }
         }
     }
