@@ -63,7 +63,10 @@
 //
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
-PRLogModuleInfo* observerServiceLog = nsnull;
+  PRLogModuleInfo* observerServiceLog = PR_NewLogModule("ObserverService");
+  #define LOG(x)  PR_LOG(observerServiceLog, PR_LOG_DEBUG, x)
+#else
+  #define LOG(x)
 #endif /* PR_LOGGING */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,10 +98,7 @@ nsObserverService::Shutdown()
 NS_METHOD
 nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-#if defined(PR_LOGGING)
-    if (!observerServiceLog)
-        observerServiceLog = PR_NewLogModule("ObserverService");
-#endif
+    LOG(("nsObserverService::Create()"));
 
     nsRefPtr<nsObserverService> os = new nsObserverService();
 
@@ -124,6 +124,9 @@ NS_IMETHODIMP
 nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic,
                                PRBool ownsWeak)
 {
+    LOG(("nsObserverService::AddObserver(%p: %s)",
+         (void*) anObserver, aTopic));
+
     NS_ENSURE_VALIDCALL
     NS_ENSURE_ARG(anObserver && aTopic);
 
@@ -137,6 +140,8 @@ nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic,
 NS_IMETHODIMP
 nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
 {
+    LOG(("nsObserverService::RemoveObserver(%p: %s)",
+         (void*) anObserver, aTopic));
     NS_ENSURE_VALIDCALL
     NS_ENSURE_ARG(anObserver && aTopic);
 
@@ -166,6 +171,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
                                                  const char *aTopic,
                                                  const PRUnichar *someData)
 {
+    LOG(("nsObserverService::NotifyObservers(%s)", aTopic));
+
     NS_ENSURE_VALIDCALL
     NS_ENSURE_ARG(aTopic);
 
