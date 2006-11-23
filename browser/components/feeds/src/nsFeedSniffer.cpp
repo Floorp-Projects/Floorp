@@ -299,15 +299,31 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // doing. 
   nsCAutoString contentType;
   channel->GetContentType(contentType);
-  if (contentType.EqualsLiteral(TYPE_RSS) ||
-      contentType.EqualsLiteral(TYPE_ATOM)) {
-    
+  PRBool noSniff = contentType.EqualsLiteral(TYPE_RSS) ||
+                   contentType.EqualsLiteral(TYPE_ATOM);
+
+  // Check to see if this was a feed request from the location bar or from
+  // the feed: protocol. This is also a reliable indication.
+  // The value of the header doesn't matter.  
+  if (!noSniff) {
+    nsCAutoString sniffHeader;
+    nsresult foundHeader =
+      channel->GetRequestHeader(NS_LITERAL_CSTRING("X-Moz-Is-Feed"),
+                                sniffHeader);
+    noSniff = NS_SUCCEEDED(foundHeader);
+  }
+
+  if (noSniff) {
     // check for an attachment after we have a likely feed.
     if(HasAttachmentDisposition(channel)) {
       sniffedType.Truncate();
       return NS_OK;
     }
-    
+
+    // set the feed header as a response header, since we have good metadata
+    // telling us that the feed is supposed to be RSS or Atom
+    channel->SetResponseHeader(NS_LITERAL_CSTRING("X-Moz-Is-Feed"),
+                               NS_LITERAL_CSTRING("1"), PR_FALSE);
     sniffedType.AssignLiteral(TYPE_MAYBE_FEED);
     return NS_OK;
   }
