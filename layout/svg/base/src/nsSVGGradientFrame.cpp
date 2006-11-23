@@ -335,6 +335,13 @@ nsSVGGradientFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
 {
   *aClosure = nsnull;
 
+  PRUint32 nStops = GetStopCount();
+
+  // SVG specification says that no stops should be treated like
+  // the corresponding fill or stroke had "none" specified.
+  if (nStops == 0)
+    return NS_ERROR_FAILURE;
+
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
   GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
@@ -360,7 +367,6 @@ nsSVGGradientFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
   cairo_pattern_set_matrix(gradient, &patternMatrix);
 
   // setup stops
-  PRUint32 nStops = GetStopCount();
   float lastOffset = 0.0f;
 
   for (PRUint32 i = 0; i < nStops; i++) {
