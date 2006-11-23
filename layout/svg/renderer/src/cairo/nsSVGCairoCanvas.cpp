@@ -177,6 +177,12 @@ nsSVGCairoCanvas::~nsSVGCairoCanvas()
   mMozContext = nsnull;
   mPresContext = nsnull;
 
+#if defined(MOZ_ENABLE_CAIRO_GFX) && defined(XP_MACOSX)
+  // show the surface we pushed in ...::Init for nquartz fallbacks
+  cairo_pop_group_to_source(mCR);
+  cairo_paint(mCR);
+#endif
+
   if (mOwnsCR) {
     cairo_destroy(mCR);
   }
@@ -212,6 +218,13 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   void* data = ctx->GetNativeGraphicData(nsIRenderingContext::NATIVE_CAIRO_CONTEXT);
   mCR = (cairo_t*)data;
   cairo_get_matrix(mCR, &mInitialTransform);
+
+#ifdef XP_MACOSX
+  // nquartz fallback paths, which svg tends to trigger, need
+  // a non-window context target
+  cairo_push_group(mCR);
+#endif
+
   return NS_OK;
 
 #else // !MOZ_ENABLE_CAIRO_GFX

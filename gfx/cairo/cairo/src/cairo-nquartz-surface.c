@@ -671,7 +671,7 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
     {
 	CGShadingRef shading = _cairo_nquartz_cairo_gradient_pattern_to_quartz (source);
 	if (!shading)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    return DO_UNSUPPORTED;
 
 	surface->sourceShading = shading;
 
@@ -679,7 +679,7 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	CGPatternRef pattern = _cairo_nquartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
 	if (!pattern)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    return DO_UNSUPPORTED;
 
 	float patternAlpha = 1.0f;
 
