@@ -23,12 +23,12 @@
 			</Description>
 		</em:targetApplication>
 		
-		<!-- target: SeaMonkey, version 1.0 to 1.1 -->
+		<!-- target: SeaMonkey, version 1.0 to 1.5a -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
 				<em:minVersion>1.0</em:minVersion>
-				<em:maxVersion>1.1</em:maxVersion>
+				<em:maxVersion>1.5a</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		
