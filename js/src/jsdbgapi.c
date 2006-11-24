@@ -279,14 +279,18 @@ DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
 }
 
 void
-js_MarkWatchPoints(JSRuntime *rt)
+js_MarkWatchPoints(JSContext *cx)
 {
+    JSRuntime *rt;
     JSWatchPoint *wp;
 
+    rt = cx->runtime;
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         MARK_SCOPE_PROPERTY(wp->sprop);
+        if (wp->sprop->attrs & JSPROP_SETTER)
+            JS_MarkGCThing(cx, wp->setter, "wp->setter", NULL);
     }
 }
 

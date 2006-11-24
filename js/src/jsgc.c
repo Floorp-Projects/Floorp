@@ -2849,7 +2849,7 @@ restart:
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, keepAtoms, gc_mark_atom_key_thing, cx);
-    js_MarkWatchPoints(rt);
+    js_MarkWatchPoints(cx);
     js_MarkScriptFilenames(rt, keepAtoms);
     js_MarkNativeIteratorStates(cx);
 
