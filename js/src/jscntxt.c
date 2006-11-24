@@ -1094,9 +1094,12 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
 error:
     if (reportp->messageArgs) {
-        i = 0;
-        while (reportp->messageArgs[i])
-            JS_free(cx, (void *)reportp->messageArgs[i++]);
+        /* free the arguments only if we allocated them */
+        if (charArgs) {
+            i = 0;
+            while (reportp->messageArgs[i])
+                JS_free(cx, (void *)reportp->messageArgs[i++]);
+        }
         JS_free(cx, (void *)reportp->messageArgs);
         reportp->messageArgs = NULL;
     }
