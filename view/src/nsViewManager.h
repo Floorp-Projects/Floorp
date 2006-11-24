@@ -51,14 +51,8 @@
 #include "nsIBlender.h"
 #include "nsView.h"
 
-class nsIRegion;
-class nsIEvent;
 class nsISupportsArray;
-struct DisplayListElement2;
-struct DisplayZTreeNode;
 class BlendingBuffers;
-struct PLArenaPool;
-class nsHashtable;
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -300,18 +294,8 @@ private:
    * Refresh aView (which must be non-null) with our default background color
    */
   void DefaultRefresh(nsView* aView, nsIRenderingContext *aContext, const nsRect* aRect);
-  PRBool BuildRenderingDisplayList(nsIView* aRootView,
-    const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
-    PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping,
-    nsIView* aSuppressScrolling);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
                    const nsRegion& aRegion, nsIDrawingSurface* aRCSurface);
-
-  void RenderDisplayListElement(DisplayListElement2* element,
-                                nsIRenderingContext* aRC);
-
-  void PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
-                 const nsRect &aDamageRect);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
@@ -322,45 +306,11 @@ private:
                                                  const nsRect& aArea);
   virtual nsIBlender* GetBlender() { return mBlender; }
 
-  void ReparentViews(DisplayZTreeNode* aNode, nsHashtable &);
-  void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                        PRBool aCaptured, nsIView* aSuppressScrolling,
-                        nsVoidArray* aDisplayList, PLArenaPool &aPool);
-  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsPoint aPoint,
-                            PRBool aCaptured, PLArenaPool &aPool);
-
-  PRBool CreateDisplayList(nsView *aView,
-                           DisplayZTreeNode* &aResult,
-                           nscoord aOriginX, nscoord aOriginY,
-                           nsView *aRealView, const nsRect *aDamageRect,
-                           nsView *aTopView, nscoord aX, nscoord aY,
-                           PRBool aPaintFloats, PRBool aEventProcessing,
-                           nsIView* aSuppressClip,
-                           nsHashtable&, PLArenaPool &aPool);
-  PRBool AddToDisplayList(nsView *aView,
-                          DisplayZTreeNode* &aParent, nsRect &aClipRect,
-                          nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
-                          PRBool aAssumeIntersection, PLArenaPool &aPool,
-                          nsIView* aStopClippingAtView);
-  void OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
-                           nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
-                           PRBool aTreatUniformAsOpaque);
-
   void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                         nsView* aRootView);
 
   // Predicates
   PRBool DoesViewHaveNativeWidget(nsView* aView);
-
-  void PauseTimer(void);
-  void RestartTimer(void);
-  void OptimizeDisplayListClipping(const nsVoidArray* aDisplayList, PRBool aHaveClip,
-                                   nsRect& aClipRect, PRInt32& aIndex,
-                                   PRBool& aAnyRendered);
-  nsRect OptimizeTranslucentRegions(const nsVoidArray& aDisplayList,
-                                    PRInt32* aIndex, nsRegion* aOpaqueRegion);
-
-  void ShowDisplayList(const nsVoidArray* aDisplayList);
 
   // Utilities
 
