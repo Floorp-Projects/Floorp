@@ -710,10 +710,16 @@ nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*          aPresContext,
 {
   nsHTMLFramesetFrame* framesetParent = GetFramesetParent(this);
   if (nsnull == framesetParent) {
-    nsRect area = aPresContext->GetVisibleArea();
+    if (aPresContext->IsPaginated()) {
+      // XXX This needs to be changed when framesets paginate properly
+      aDesiredSize.width = aReflowState.availableWidth;
+      aDesiredSize.height = aReflowState.availableHeight;
+    } else {
+      nsRect area = aPresContext->GetVisibleArea();
 
-    aDesiredSize.width = area.width;
-    aDesiredSize.height= area.height;
+      aDesiredSize.width = area.width;
+      aDesiredSize.height= area.height;
+    }
   } else {
     nsSize size;
     framesetParent->GetSizeOfChild(this, size);
