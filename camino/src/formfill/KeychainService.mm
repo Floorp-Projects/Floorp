@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Benoit Foucher <bfoucher@mac.com>
+ *   Stuart Morgan <stuart.morgan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,14 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Security must be imported first, because of uint32 declaration conflicts
+#import <Security/Security.h>
+
 #import "NSString+Utils.h"
 
+#import "KeychainItem.h"
 #import "KeychainService.h"
 #import "CHBrowserService.h"
 #import "PreferenceManager.h"
-
-#import <CoreServices/CoreServices.h>
-#import <Carbon/Carbon.h>
 
 #include "nsIPref.h"
 #include "nsIObserverService.h"
@@ -71,7 +73,11 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-const PRUint32 kKCAuthTypeHTTPDigestReversed = 'dtth';
+#ifdef __LITTLE_ENDIAN__
+const PRUint32 kSecAuthenticationTypeHTTPDigestReversed = 'httd';
+#else
+const PRUint32 kSecAuthenticationTypeHTTPDigestReversed = 'dtth';
+#endif
 
 // from CHBrowserService.h
 extern NSString* const XPCOMShutDownNotificationName;
@@ -79,8 +85,7 @@ extern NSString* const XPCOMShutDownNotificationName;
 
 nsresult
 FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInputElement** outUsername,
-                            nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound);
-
+                           nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound);
 
 @implementation KeychainService
 
@@ -98,27 +103,27 @@ int KeychainPrefChangedCallback(const char* pref, void* data);
 int KeychainPrefChangedCallback(const char* inPref, void* unused)
 {
   BOOL success = NO;
-  if ( strcmp(inPref, gUseKeychainPref) == 0 )
+  if (strcmp(inPref, gUseKeychainPref) == 0)
     [KeychainService instance]->mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
   
   return NS_OK;
 }
 
 
-+ (KeychainService*) instance
++ (KeychainService*)instance
 {
   return sInstance ? sInstance : sInstance = [[self alloc] init];
 }
 
-- (id) init
+- (id)init
 {
-  if ( (self = [super init]) ) {
+  if ((self = [super init])) {
     // Add a new form submit observer. We explicitly hold a ref in case the
     // observer service uses a weakref.
     nsCOMPtr<nsIObserverService> svc = do_GetService("@mozilla.org/observer-service;1");
     NS_ASSERTION(svc, "Keychain can't get observer service");
     mFormSubmitObserver = new KeychainFormSubmitObserver();
-    if ( mFormSubmitObserver && svc ) {
+    if (mFormSubmitObserver && svc) {
       NS_ADDREF(mFormSubmitObserver);
       svc->AddObserver(mFormSubmitObserver, NS_FORMSUBMIT_SUBJECT, PR_FALSE);
     }
@@ -132,7 +137,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     // nsIPref is obsolete, but i'm not about to create an nsIObserver just for this.
     mFormPasswordFillIsEnabled = NO;
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if ( pref ) {
+    if (pref) {
       BOOL success = NO;
       mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
       pref->RegisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
@@ -145,7 +150,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
   // unregister for shutdown notification. It may have already happened, but just in case.
   NS_IF_RELEASE(mFormSubmitObserver);
@@ -154,7 +159,6 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   [super dealloc];
 }
 
-
 //
 // shutdown:
 //
@@ -162,222 +166,67 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 // browser service before it terminates embedding and shuts down xpcom. Allows us
 // to get rid of anything we're holding onto for the length of the app.
 //
-- (void) shutdown:(id)unused
+- (void)shutdown:(id)unused
 {
   // unregister ourselves as listeners of prefs before prefs go away
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-  if ( pref )
+  if (pref)
     pref->UnregisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
   
   [sInstance release];
 }
 
 
-- (BOOL) formPasswordFillIsEnabled
+- (BOOL)formPasswordFillIsEnabled
 {
   return mFormPasswordFillIsEnabled;
 }
 
-//
-// -findInKeychain:port:buffer:bufferLength:item:
-//
-// A helper that wraps the fact that there's a bug in the Keychain API when
-// using keychain items generated on different endian hardware.
-//
-- (BOOL) findInKeychain:(NSString*)inRealm port:(PRInt32)inPort buffer:(char*)inBuffer bufferLength:(UInt32*)ioBufferLen item:(KCItemRef*)outItemRef 
+- (KeychainItem*)findKeychainEntryForHost:(NSString*)host port:(PRInt32)port;
 {
-  BOOL found = YES;
-
-  if (kcfindinternetpassword([inRealm UTF8String], 0, 0, inPort,
-                             kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
-                             *ioBufferLen, inBuffer,
-                             ioBufferLen, outItemRef) != noErr) {
-    // if you create keychain entries and transfer them to an opposite-endian
-    // machine (PPC -> x86, or vice versa), the authentication type stored in
-    // the entry will be reversed. As a workaround, if we fail to look up the
-    // "real" one, try looking up the reversed one. If that too fails, well,
-    // then it's really not there.
-    if (kcfindinternetpassword([inRealm UTF8String], 0, 0, inPort,
-                               kKCProtocolTypeHTTP,
-                               kKCAuthTypeHTTPDigestReversed, 
-                               *ioBufferLen, inBuffer,
-                               ioBufferLen, outItemRef) != noErr)
-      found = NO;
-  }
-  return found;
-}
-
-//
-// getUsernameAndPassword:user:password:item
-//
-// looks up the username and password based on the realm. |username| and |pwd| must
-// be existing, non-null NSMutableStrings and are filled in by this method. It
-// also fills in the keychain's reference to this item in |outItemRef| so that
-// routines following this don't have to look it up again to make changes.
-//
-- (BOOL) getUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSMutableString*)username password:(NSMutableString*)pwd item:(KCItemRef*)outItemRef 
-{
-  if ( !outItemRef )
-    return false;
-  if ( !realm || ![realm length] )
-    return false;
-
-  const int kBufferLen = 255;
-  char buffer[kBufferLen];
-  UInt32 bufferLen = kBufferLen;
-
-  if (inPort == -1)
-    inPort = kAnyPort;
-    
-  if (![self findInKeychain:realm port:inPort buffer:buffer bufferLength:&bufferLen item:outItemRef])
-    return false;
-
-  //
-  // Set password and username
-  //
-  buffer[bufferLen] = '\0';
-  [pwd setString:[NSString stringWithUTF8String:buffer]];
-
-  KCAttribute attr;
-  attr.tag = kAccountKCItemAttr;
-  attr.length = kBufferLen;
-  attr.data = buffer;
-  OSStatus status = KCGetAttribute(*outItemRef, &attr, &bufferLen);
-  if (status != noErr)
-    return false;
-  
-  buffer[bufferLen] = '\0';
-  [username setString:[NSString stringWithUTF8String:buffer]];
-  
-  return true;
-}
-
-- (BOOL) findUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort
-{
-  KCItemRef ignore;
-	return [self getUsernameAndPassword:realm port:inPort user:[NSMutableString string] password:[NSMutableString string] item:&ignore];
-}
-
-
-//
-// updateUsernameAndPassword:user:passowrd:item
-//
-// updates an existing username and password associated with the given realm. If |inItemRef| is
-// a valid keychain item, it uses that (bypassing additional queries to the chain), if not
-// it will look it up based on the realm.
-//
-- (void) updateUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd item:(KCItemRef)inItemRef
-{
-  const int kBufferLen = 255;
-  char buffer[kBufferLen];
-  UInt32 bufferLen = kBufferLen;
-
-  if ( !inItemRef ) {
-    if ( inPort == -1 )
-      inPort = kAnyPort;
-    if (![self findInKeychain:realm port:inPort buffer:buffer bufferLength:&bufferLen item:&inItemRef])
-      return;
-  }
-  KCAttribute attr;
-
-  //
-  // Update item username and password.
-  //
-  attr.tag = kAccountKCItemAttr;
-  attr.data = (char*)[username UTF8String];
-  attr.length = strlen(NS_REINTERPRET_CAST(const char*, attr.data));
-  OSStatus status = KCSetAttribute(inItemRef, &attr);
-  if(status != noErr)
-    NSLog(@"Couldn't update keychain item account");
-
-  status = KCSetData(inItemRef, strlen([pwd UTF8String]), [pwd UTF8String]);
-  if(status != noErr)
-    NSLog(@"Couldn't update keychain item data");
-
-  //
-  // Update the item now.
-  //
-  status = KCUpdateItem(inItemRef);
-  if(status != noErr)
-    NSLog(@"Couldn't update keychain item");
-}
-
-
-//
-// storeUsernameAndPassword:port:user:password
-//
-// Adds a new username/password combo to the keychain based on the given realm
-//
-- (void) storeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd
-{
-  if ( inPort == -1 )
-    inPort = kAnyPort;
-  kcaddinternetpassword([realm UTF8String], 0, [username UTF8String], inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
-                        strlen([pwd UTF8String]), [pwd UTF8String], 0);
-}
-
-
-//
-// removeUsernameAndPassword:item
-//
-// removes the username/password combo from the keychain. If |inItemRef| is a valid item, it
-// uses that. If it's a null ref, it will look it up in the keychain based on the realm.
-//
-- (void)removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)inItemRef
-{
-  if (inPort == -1)
-    inPort = kAnyPort;
-  const int kBufferLen = 255;
-  char buffer[kBufferLen];
-  UInt32 actualSize;
-
-  if (!inItemRef) {
-    kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort,
-                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
-                           kBufferLen, buffer, &actualSize, &inItemRef);
+  if (port == -1)
+    port = kAnyPort;
+  KeychainItem* item = [KeychainItem keychainItemForHost:host
+                                                    port:(UInt16)port
+                                                protocol:kSecProtocolTypeHTTP
+                                      authenticationType:kSecAuthenticationTypeHTTPDigest];
+  if (!item) {
+    // check for an improperly stored version created by an endian bug in KeychainManager
+    item = [KeychainItem keychainItemForHost:host
+                                        port:(UInt16)port
+                                    protocol:kSecProtocolTypeHTTP
+                          authenticationType:kSecAuthenticationTypeHTTPDigestReversed];
+    // fix it so it doesn't require a double search in the future
+    [item setAuthenticationType:kSecAuthenticationTypeHTTPDigest];
   }
 
-  if (inItemRef)
-    KCDeleteItem(inItemRef);
+  return item;
+}
 
-  // There still might be an entry in the keychain with the type stored in
-  // other-endian byte order.  This can happen if the entries were added before
-  // findInKeychain was added.  Seek and destroy, otherwise findInKeychain
-  // will find the entry, which is not what the user wanted if we got here.
-  KCItemRef itemRefReversed = NULL;
-  kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort,
-                         kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigestReversed,
-                         kBufferLen, buffer, &actualSize, &itemRefReversed);
-  if (itemRefReversed)
-    KCDeleteItem(itemRefReversed);
+- (void)storeUsername:(NSString*)username password:(NSString*)password forHost:(NSString*)host port:(PRInt32)port
+{
+  if (port == -1)
+    port = kAnyPort;
+  const char* serverName = [host UTF8String];
+  const char* accountName = [username UTF8String];
+  const char* passwordData = [password UTF8String];
+  OSStatus result = SecKeychainAddInternetPassword(NULL, strlen(serverName), serverName, 0, NULL, strlen(accountName), accountName,
+                                                   0, NULL, (UInt16)port, kSecProtocolTypeHTTP, kSecAuthenticationTypeHTTPDigest,
+                                                   strlen(passwordData), passwordData, NULL);
+  if (result != noErr)
+    NSLog(@"Couldn't add keychain item");
 }
 
 - (void)removeAllUsernamesAndPasswords
 {
-  const int kBufferLen = 255;
-  char buffer[kBufferLen];
-  UInt32 actualSize;
-  KCItemRef itemRef;
-
-  do {
-    itemRef = NULL;
-    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort,
-                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
-                           kBufferLen, buffer, &actualSize, &itemRef);
-    if (itemRef)
-      KCDeleteItem(itemRef);
-  } while (itemRef);
-
-  // Now do the same thing to clean up any entries stored with the
-  // other-endian type, or else findInKeychain will still be able to find them
-  do {
-    itemRef = NULL;
-    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort,
-                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigestReversed,
-                           kBufferLen, buffer, &actualSize, &itemRef);
-    if (itemRef)
-      KCDeleteItem(itemRef);
-  } while (itemRef);
+  KeychainItem* item;
+  while ((item = [KeychainItem keychainItemForHost:nil port:kAnyPort protocol:kSecProtocolTypeHTTP authenticationType:kSecAuthenticationTypeHTTPDigest])) {
+    [item removeFromKeychain];
+  }
+  // repeat with any reversed items
+  while ((item = [KeychainItem keychainItemForHost:nil port:kAnyPort protocol:kSecProtocolTypeHTTP authenticationType:kSecAuthenticationTypeHTTPDigestReversed])) {
+    [item removeFromKeychain];
+  }
 }
 
 //
@@ -386,7 +235,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 // Add a listener to the view to auto fill username and passwords
 // fields if the values are stored in the Keychain.
 //
-- (void) addListenerToView:(CHBrowserView*)view
+- (void)addListenerToView:(CHBrowserView*)view
 {
   [view addListener:[[[KeychainBrowserListener alloc] initWithBrowser:view] autorelease]];
 }
@@ -427,8 +276,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   [confirmStorePasswordPanel close];
   
   KeychainPromptResult keychainAction = kDontRemember;
-  switch (result)
-  {
+  switch (result) {
     case NSAlertDefaultReturn:    keychainAction = kSave;          break;
     default:
     case NSAlertAlternateReturn:  keychainAction = kDontRemember;  break;
@@ -452,12 +300,12 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 }
 
 
-- (void) addHostToDenyList:(NSString*)host
+- (void)addHostToDenyList:(NSString*)host
 {
   [[KeychainDenyList instance] addHost:host];
 }
 
-- (BOOL) isHostInDenyList:(NSString*)host
+- (BOOL)isHostInDenyList:(NSString*)host
 {
   return [[KeychainDenyList instance] isHostPresent:host];
 }
@@ -466,7 +314,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 
 
 @interface KeychainDenyList (KeychainDenyListPrivate)
-- (NSString*) pathToDenyListFile;
+- (NSString*)pathToDenyListFile;
 @end
 
 
@@ -474,16 +322,16 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 
 static KeychainDenyList *sDenyListInstance = nil;
 
-+ (KeychainDenyList*) instance
++ (KeychainDenyList*)instance
 {
   return sDenyListInstance ? sDenyListInstance : sDenyListInstance = [[self alloc] init];
 }
 
-- (id) init
+- (id)init
 {
-  if ( (self = [super init]) ) {
+  if ((self = [super init])) {
     mDenyList = [[NSUnarchiver unarchiveObjectWithFile:[self pathToDenyListFile]] retain];
-    if ( !mDenyList )
+    if (!mDenyList)
       mDenyList = [[NSMutableArray alloc] init];
     
     mIsDirty = NO;
@@ -495,7 +343,7 @@ static KeychainDenyList *sDenyListInstance = nil;
   return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
   [self writeToDisk];
   [mDenyList release];
@@ -509,7 +357,7 @@ static KeychainDenyList *sDenyListInstance = nil;
 // browser service before it terminates embedding and shuts down xpcom. Allows us
 // to get rid of anything we're holding onto for the length of the app.
 //
-- (void) shutdown:(id)unused
+- (void)shutdown:(id)unused
 {
   [sDenyListInstance release];
 }
@@ -520,32 +368,31 @@ static KeychainDenyList *sDenyListInstance = nil;
 // flushes the deny list to the save file in the user's profile, but only
 // if it has changed since we read it in.
 //
-- (void) writeToDisk
+- (void)writeToDisk
 {
-  if ( mIsDirty )
-  {
+  if (mIsDirty) {
     // XXX erm, why not save it in a format that mortals can read (like a plist???)
     [NSArchiver archiveRootObject:mDenyList toFile:[self pathToDenyListFile]];
   }
   mIsDirty = NO;
 }
 
-- (BOOL) isHostPresent:(NSString*)host
+- (BOOL)isHostPresent:(NSString*)host
 {
   return [mDenyList containsObject:host];
 }
 
-- (void) addHost:(NSString*)host
+- (void)addHost:(NSString*)host
 {
-  if ( ![self isHostPresent:host] ) {
+  if (![self isHostPresent:host]) {
     [mDenyList addObject:host];
     mIsDirty = YES;
   }
 }
 
-- (void) removeHost:(NSString*)host
+- (void)removeHost:(NSString*)host
 {
-  if ( [self isHostPresent:host] ) {
+  if ([self isHostPresent:host]) {
     [mDenyList removeObject:host];
     mIsDirty = YES;
   }
@@ -558,13 +405,13 @@ static KeychainDenyList *sDenyListInstance = nil;
 // returns a path ('/' delimited) that cocoa can use to point to the
 // deny list save file in the current user's profile
 //
-- (NSString*) pathToDenyListFile
+- (NSString*)pathToDenyListFile
 {
   NSMutableString* path = [[[NSMutableString alloc] init] autorelease];
 
   nsCOMPtr<nsIFile> appProfileDir;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(appProfileDir));
-  if ( appProfileDir ) {
+  if (appProfileDir) {
     nsAutoString profilePath;
     appProfileDir->GetPath(profilePath);
     [path setString:[NSString stringWith_nsAString:profilePath]];
@@ -579,12 +426,12 @@ static KeychainDenyList *sDenyListInstance = nil;
 
 //
 // Keychain prompt implementation.
-// 
+//
 NS_IMPL_ISUPPORTS2(KeychainPrompt,
                    nsIAuthPrompt,
                    nsIAuthPromptWrapper)
 
-KeychainPrompt::KeychainPrompt() 
+KeychainPrompt::KeychainPrompt()
 {
 }
 
@@ -595,7 +442,7 @@ KeychainPrompt::~KeychainPrompt()
 
 
 //
-// TODO: add support for ftp username/password. 
+// TODO: add support for ftp username/password.
 //
 // Get server name and port from the realm ("hostname:port (realm)",
 // see nsHttpChannel.cpp). we can't use CFURL routines or nsIURI
@@ -607,26 +454,26 @@ KeychainPrompt::~KeychainPrompt()
 void
 KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost, PRInt32* outPort)
 {
-  if ( !outHost || !outPort )
+  if (!outHost || !outPort)
     return;
   *outHost = @"";
-  *outPort = kAnyPort;
+  *outPort = -1;
   
   NSString* realmStr = [NSString stringWithPRUnichars:inRealm];
 
   // first check for an ftp url and pull out the server from the realm
-  if ( [realmStr rangeOfString:@"ftp://"].location != NSNotFound ) {
+  if ([realmStr rangeOfString:@"ftp://"].location != NSNotFound) {
     // cut out ftp://
     realmStr = [realmStr substringFromIndex:strlen("ftp://")];
     
     // cut out any of the path
     NSRange pathDelimeter = [realmStr rangeOfString:@"/"];
-    if ( pathDelimeter.location != NSNotFound )
+    if (pathDelimeter.location != NSNotFound)
       realmStr = [realmStr substringToIndex:pathDelimeter.location-1];
     
     // now we're left with "username@server" with username being optional
     NSRange usernameMarker = [realmStr rangeOfString:@"@"];
-    if ( usernameMarker.location != NSNotFound )
+    if (usernameMarker.location != NSNotFound)
       *outHost = [realmStr substringFromIndex:usernameMarker.location+1];
     else
       *outHost = realmStr;
@@ -634,13 +481,13 @@ KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost,
   else {
     // we're an http url, strip off the "(realm)" part
     NSRange firstParen = [realmStr rangeOfString:@"("];
-    if ( firstParen.location == NSNotFound )
+    if (firstParen.location == NSNotFound)
       firstParen.location = [realmStr length];
     realmStr = [realmStr substringToIndex:firstParen.location-1];
     
     // separate the host and the port
     NSRange endOfHost = [realmStr rangeOfString:@":"];
-    if ( endOfHost.location == NSNotFound )
+    if (endOfHost.location == NSNotFound)
       *outHost = realmStr;
     else {
       *outHost = [realmStr substringToIndex:endOfHost.location];
@@ -658,22 +505,13 @@ KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pw
   PRInt32 port = -1;
   ExtractHostAndPort(realm, &host, &port);
 
-  NSMutableString* username = nil;
-  NSMutableString* password = nil;
-  if ( user )
-    username = [NSMutableString stringWithCharacters:*user length:(*user ? nsCRT::strlen(*user) : 0)];
-  if ( pwd )
-  	password = [NSMutableString stringWithCharacters:*pwd length:(*pwd ? nsCRT::strlen(*pwd) : 0)];
-
-  //
   // Pre-fill user/password if found in the keychain.
-  //
-  KCItemRef ignore;
-  if([keychain getUsernameAndPassword:(NSString*)host port:port user:username password:password item:&ignore]) {
-    if ( user )
-      *user = [username createNewUnicodeBuffer];
-    if ( pwd )
-      *pwd = [password createNewUnicodeBuffer];
+  KeychainItem* entry = [keychain findKeychainEntryForHost:host port:port];
+  if (entry) {
+    if (user)
+      *user = [[entry username] createNewUnicodeBuffer];
+    if (pwd)
+      *pwd = [[entry password] createNewUnicodeBuffer];
   }
 }
 
@@ -689,34 +527,30 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* u
 
   KeychainService* keychain = [KeychainService instance];
 
-  NSMutableString* origUsername = [NSMutableString string];
-  NSMutableString* origPwd = [NSMutableString string];
-  KCItemRef itemRef;
-  bool found = [keychain getUsernameAndPassword:(NSString*)host port:port user:origUsername password:origPwd item:&itemRef];
+  KeychainItem* existingEntry = [keychain findKeychainEntryForHost:(NSString*)host port:port];
   
-  //
   // Update, store or remove the user/password depending on the user
   // choice and whether or not we found the username/password in the
   // keychain.
-  //
-  if(checked && !found)
-    [keychain storeUsernameAndPassword:(NSString*)host port:port user:username password:password];
-  else if(checked && found && (![origUsername isEqualToString:username] || ![origPwd isEqualToString:password]))
-    [keychain updateUsernameAndPassword:(NSString*)host port:port user:username password:password item:itemRef];
-  else if(!checked && found)
-    [keychain removeUsernameAndPassword:(NSString*)host port:port item:itemRef];
+  if(checked && !existingEntry)
+    [keychain storeUsername:username password:password forHost:(NSString*)host port:port];
+  else if(checked && existingEntry && (![[existingEntry username] isEqualToString:username] ||
+                                       ![[existingEntry password] isEqualToString:password]))
+    [existingEntry setUsername:username password:password];
+  else if(!checked && existingEntry)
+    [existingEntry removeFromKeychain];
 }
 
 //
 // Implementation of nsIAuthPrompt
 //
 NS_IMETHODIMP
-KeychainPrompt::Prompt(const PRUnichar *dialogTitle, 
-                        const PRUnichar *text, 
-                        const PRUnichar *passwordRealm, 
+KeychainPrompt::Prompt(const PRUnichar *dialogTitle,
+                        const PRUnichar *text,
+                        const PRUnichar *passwordRealm,
                         PRUint32 savePassword,
-                        const PRUnichar *defaultText, 
-                        PRUnichar **result, 
+                        const PRUnichar *defaultText,
+                        PRUnichar **result,
                         PRBool *_retval)
 {
   if (defaultText)
@@ -729,11 +563,11 @@ KeychainPrompt::Prompt(const PRUnichar *dialogTitle,
 
 NS_IMETHODIMP
 KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
-                                            const PRUnichar *text, 
+                                            const PRUnichar *text,
                                             const PRUnichar *realm,
-                                            PRUint32 savePassword, 
-                                            PRUnichar **user, 
-                                            PRUnichar **pwd, 
+                                            PRUint32 savePassword,
+                                            PRUnichar **user,
+                                            PRUnichar **pwd,
                                             PRBool *_retval)
 {
   PreFill(realm, user, pwd);
@@ -742,7 +576,7 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptUsernameAndPassword(dialogTitle, text, user, pwd, checkTitle, &checked, _retval);
-  if ( checkTitle )
+  if (checkTitle)
     nsMemory::Free(checkTitle);
   if (NS_FAILED(rv))
     return rv;
@@ -755,10 +589,10 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 
 NS_IMETHODIMP
 KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
-                                const PRUnichar *text, 
+                                const PRUnichar *text,
                                 const PRUnichar *realm,
-                                PRUint32 savePassword, 
-                                PRUnichar **pwd, 
+                                PRUint32 savePassword,
+                                PRUnichar **pwd,
                                 PRBool *_retval)
 {
   PreFill(realm, nsnull, pwd);
@@ -767,7 +601,7 @@ KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptPassword(dialogTitle, text, pwd, checkTitle, &checked, _retval);
-  if ( checkTitle )
+  if (checkTitle)
     nsMemory::Free(checkTitle);
   if (NS_FAILED(rv))
     return rv;
@@ -803,16 +637,16 @@ KeychainFormSubmitObserver::~KeychainFormSubmitObserver()
 }
 
 NS_IMETHODIMP
-KeychainFormSubmitObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) 
+KeychainFormSubmitObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* window, nsIURI* actionURL, 
+NS_IMETHODIMP
+KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* window, nsIURI* actionURL,
                                     PRBool* cancelSubmit)
 {
-	KeychainService* keychain = [KeychainService instance];
+  KeychainService* keychain = [KeychainService instance];
   if (![keychain formPasswordFillIsEnabled])
     return NS_OK;
 
@@ -822,21 +656,20 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
 
   // seek out the username and password fields. If there are two password fields, we don't
   // want to do anything since it's probably not a signin form. Passing PR_FALSE in the last
-  // param will cause FUPF to look for multiple password fields and then bail if that is the 
+  // param will cause FUPF to look for multiple password fields and then bail if that is the
   // case, seting |passwordElement| to nsnull.
   nsCOMPtr<nsIDOMHTMLInputElement> usernameElement, passwordElement;
   nsresult rv = FindUsernamePasswordFields(formNode, getter_AddRefs(usernameElement), getter_AddRefs(passwordElement),
                                            PR_FALSE);
 
   if (NS_SUCCEEDED(rv) && usernameElement && passwordElement) {
-  
     // extract username and password from the fields
     nsAutoString uname, pword;
     usernameElement->GetValue(uname);
     passwordElement->GetValue(pword);
     NSString* username = [NSString stringWith_nsAString:uname];
     NSString* password = [NSString stringWith_nsAString:pword];
-    if ( ![username length] || ![password length] )      // bail if either is empty
+    if (![username length] || ![password length])      // bail if either is empty
       return NS_OK;
 
     nsCOMPtr<nsIDocument> doc = node->GetDocument();
@@ -854,7 +687,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
 
     // is the host in the deny list? if yes, bail. otherwise check the keychain.
     NSString* realm = [NSString stringWithCString:host.get()];
-    if ( [keychain isHostInDenyList:realm] )
+    if ([keychain isHostInDenyList:realm])
       return NS_OK;
     
     //
@@ -863,19 +696,16 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     // it as necessary. If there's no entry, ask if they want to remember it
     // and then put it into the keychain
     //
-    NSMutableString* existingUser = [NSMutableString string];
-    NSMutableString* existingPassword = [NSMutableString string];
-    KCItemRef itemRef;
-    BOOL foundExistingPassword = [keychain getUsernameAndPassword:realm port:port user:existingUser password:existingPassword item:&itemRef];
-    if ( foundExistingPassword ) {
-      if ( !([existingUser isEqualToString:username] && [existingPassword isEqualToString:password]) )
-        if ( CheckChangeDataYN(window) )
-          [keychain updateUsernameAndPassword:realm port:port user:username password:password item:itemRef];
+    KeychainItem* existingEntry = [keychain findKeychainEntryForHost:realm port:port];
+    if (existingEntry) {
+      if (!([[existingEntry username] isEqualToString:username] && [[existingEntry password] isEqualToString:password]))
+        if (CheckChangeDataYN(window))
+          [existingEntry setUsername:username password:password];
     }
     else {
       switch (CheckStorePasswordYN(window)) {
         case kSave:
-          [keychain storeUsernameAndPassword:realm port:port user:username password:password];
+          [keychain storeUsername:username password:password forHost:realm port:port];
           break;
         
         case kNeverRemember:
@@ -920,13 +750,13 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
 - (id)initWithBrowser:(CHBrowserView*)aBrowser
 {
-  if ( (self = [super init]) ) {
+  if ((self = [super init])) {
     mBrowserView = aBrowser;
   }
   return self;
 }
 
-- (void) dealloc
+- (void)dealloc
 {
   // NSLog(@"Keychain browser listener died.");
   [super dealloc];
@@ -947,7 +777,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   inDOMWindow->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
+  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domDoc));
   if (!doc) {
     NS_ASSERTION(0, "no document available");
     return;
@@ -959,7 +789,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
   nsCOMPtr<nsIDOMHTMLCollection> forms;
   nsresult rv = htmldoc->GetForms(getter_AddRefs(forms));
-  if (NS_FAILED(rv) || !forms) 
+  if (NS_FAILED(rv) || !forms)
     return;
 
   PRUint32 numForms;
@@ -979,13 +809,13 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
     // search the current form for the text fields
     nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
-    if (!formElement) 
+    if (!formElement)
       continue;
     nsCOMPtr<nsIDOMHTMLInputElement> usernameElement, passwordElement;
-    rv = FindUsernamePasswordFields(formElement, getter_AddRefs(usernameElement), getter_AddRefs(passwordElement), 
+    rv = FindUsernamePasswordFields(formElement, getter_AddRefs(usernameElement), getter_AddRefs(passwordElement),
                                     PR_TRUE);
 
-    if (NS_SUCCEEDED(rv) && usernameElement && passwordElement) {    
+    if (NS_SUCCEEDED(rv) && usernameElement && passwordElement) {
       //
       // We found the text field and password field. Check if there's
       // a username/password stored in the keychain for this host and
@@ -994,9 +824,6 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
       nsIURI* docURL = doc->GetDocumentURI();
       if (!docURL)
         return;
-  
-      NSMutableString* username = [NSMutableString string];
-      NSMutableString* password = [NSMutableString string];
       
       nsCAutoString host;
       docURL->GetHost(host);
@@ -1004,11 +831,11 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
       PRInt32 port = -1;
       docURL->GetPort(&port);
       
-      KCItemRef ignore;
-      if ([keychain getUsernameAndPassword:hostStr port:port user:username password:password item:&ignore]) {
+      KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:hostStr port:port];
+      if (keychainEntry) {
         nsAutoString user, pwd;
-        [username assignTo_nsAString:user];
-        [password assignTo_nsAString:pwd];
+        [[keychainEntry username] assignTo_nsAString:user];
+        [[keychainEntry password] assignTo_nsAString:pwd];
         
         // if the server specifies a value attribute (bug 169760), only autofill
         // the password if what we have in keychain matches what the server supplies,
@@ -1021,12 +848,11 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
           rv = passwordElement->SetValue(pwd);
         }
       }
-        
+
       // We found the sign-in form so return now. This means we don't
       // support pages where there's multiple sign-in forms.
       return;
     }
-
   } // for each form on page
 
   // recursively check sub-frames and iframes
@@ -1054,7 +880,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
   if (!domWin)
     return;
   
-  // recursively fill frames and iFrames. 
+  // recursively fill frames and iFrames.
   [self fillDOMWindow:domWin];
 }
 
@@ -1123,14 +949,14 @@ nsresult
 FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInputElement** outUsername,
                             nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound)
 {
-  if ( !outUsername || !outPassword )
+  if (!outUsername || !outPassword)
     return NS_ERROR_FAILURE;
   *outUsername = *outPassword = nsnull;
 
   PRBool autoCompleteOverride = [[PreferenceManager sharedInstance] getBooleanPref:"wallet.crypto.autocompleteoverride" withSuccess:NULL];
 
   // pages can specify that they don't want autofill by setting a
-  // "autocomplete=off" attribute on the form. 
+  // "autocomplete=off" attribute on the form.
   nsAutoString autocomplete;
   inFormElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
   if (autocomplete.EqualsIgnoreCase("off") && !autoCompleteOverride)
@@ -1146,7 +972,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
   //
   nsCOMPtr<nsIDOMHTMLCollection> elements;
   nsresult rv = inFormElement->GetElements(getter_AddRefs(elements));
-  if (NS_FAILED(rv) || !elements) 
+  if (NS_FAILED(rv) || !elements)
     return NS_OK;
 
   PRUint32 numElements;
@@ -1172,7 +998,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
     bool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
     inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-    if ((!isText && !isPassword) || (autocomplete.EqualsIgnoreCase("off")  && !autoCompleteOverride))
+    if ((!isText && !isPassword) || (autocomplete.EqualsIgnoreCase("off") && !autoCompleteOverride))
       continue;
 
     //

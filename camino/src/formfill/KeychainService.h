@@ -38,9 +38,9 @@
 #ifndef __KeychainService_h__
 #define __KeychainService_h__
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 
-#include "CHBrowserView.h"
+#import "CHBrowserView.h"
 
 #include "nsEmbedAPI.h"
 #include "nsIFactory.h"
@@ -54,7 +54,7 @@ class nsIPrefBranch;
 enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 
 @class CHBrowserView;
-
+@class KeychainItem;
 
 @interface KeychainService : NSObject
 {
@@ -66,8 +66,8 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
   nsIObserver* mFormSubmitObserver;
 }
 
-+ (KeychainService*) instance;
-- (void) shutdown:(id)sender;
++ (KeychainService*)instance;
+- (void)shutdown:(id)sender;
 
 - (IBAction)hitButtonOK:(id)sender;
 - (IBAction)hitButtonCancel:(id)sender;
@@ -76,21 +76,18 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent;
 - (BOOL)confirmChangedPassword:(NSWindow*)parent;
 
-- (BOOL) getUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSMutableString*)username password:(NSMutableString*)pwd item:(KCItemRef*)outItem;
-- (BOOL) findUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort;
-- (void) storeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd;
-- (void) removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)item;
-- (void) removeAllUsernamesAndPasswords;
-- (void) updateUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd item:(KCItemRef)item;
+- (KeychainItem*)findKeychainEntryForHost:(NSString*)host port:(PRInt32)port;
+- (void)storeUsername:(NSString*)username password:(NSString*)password forHost:(NSString*)host port:(PRInt32)port;
+- (void)removeAllUsernamesAndPasswords;
 
-- (void) addListenerToView:(CHBrowserView*)view;
+- (void)addListenerToView:(CHBrowserView*)view;
 
-- (BOOL) formPasswordFillIsEnabled;
+- (BOOL)formPasswordFillIsEnabled;
 
 // routines to manipulate the keychain deny list for which hosts we shouldn't
 // ask about
-- (void) addHostToDenyList:(NSString*)host;
-- (BOOL) isHostInDenyList:(NSString*)host;
+- (void)addHostToDenyList:(NSString*)host;
+- (BOOL)isHostInDenyList:(NSString*)host;
 
 @end
 
