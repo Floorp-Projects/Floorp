@@ -300,6 +300,7 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
   wrapper.setAttribute("minheight", "0");
   wrapper.setAttribute("minwidth", "0");
 
+  document.adoptNode(aPaletteItem);
   wrapper.appendChild(aPaletteItem);
   
   // XXX We need to call this AFTER the palette item has been appended
@@ -322,7 +323,8 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
 function wrapToolbarItem(aToolbarItem)
 {
   var wrapper = createWrapper(aToolbarItem.id);
-  
+  gToolboxDocument.adoptNode(wrapper);
+
   cleanupItemForToolbar(aToolbarItem, wrapper);
   wrapper.flex = aToolbarItem.flex;
 
@@ -821,6 +823,7 @@ var toolbarDNDObserver =
       
       // Create a new wrapper for the item. We don't know the id yet.
       var wrapper = createWrapper("");
+      gToolboxDocument.adoptNode(wrapper);
 
       // Ask the toolbar to clone the item's template, place it inside the wrapper, and insert it in the toolbar.
       var newItem = toolbar.insertItem(draggedItemId, gCurrentDragOverItem == toolbar ? null : gCurrentDragOverItem, wrapper);
