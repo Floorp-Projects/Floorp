@@ -59,34 +59,6 @@
 
 JS_BEGIN_EXTERN_C
 
-/*
- * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
- * given pc in a script.
- */
-typedef struct JSGSNCache {
-    JSScript        *script;
-    JSDHashTable    table;
-#ifdef JS_GSNMETER
-    uint32          hits;
-    uint32          misses;
-    uint32          fills;
-    uint32          clears;
-# define GSN_CACHE_METER(cx,cnt) (++JS_GSN_CACHE(cx).cnt)
-#else
-# define GSN_CACHE_METER(cx,cnt) /* nothing */
-#endif
-} JSGSNCache;
-
-#define JS_CLEAR_GSN_CACHE(cx)                                                \
-    JS_BEGIN_MACRO                                                            \
-        JS_GSN_CACHE(cx).script = NULL;                                       \
-        if (JS_GSN_CACHE(cx).table.ops) {                                     \
-            JS_DHashTableFinish(&JS_GSN_CACHE(cx).table);                     \
-            JS_GSN_CACHE(cx).table.ops = NULL;                                \
-        }                                                                     \
-        GSN_CACHE_METER(cx, clears);                                          \
-    JS_END_MACRO
-
 #ifdef JS_THREADSAFE
 
 /*
@@ -113,18 +85,7 @@ struct JSThread {
     /* Flag indicating that the current thread is executing close hooks. */
     JSBool              gcRunningCloseHooks;
 #endif
-
-    /*
-     * Store the GSN cache in struct JSThread, not struct JSContext, both to
-     * save space and to simplify cleanup in js_GC.  Any embedding (Firefox
-     * or another Gecko application) that uses many contexts per thread is
-     * unlikely to interleave js_GetSrcNote-intensive loops in the decompiler
-     * among two or more contexts running script in one thread.
-     */
-    JSGSNCache          gsnCache;
 };
-
-#define JS_GSN_CACHE(cx) ((cx)->thread->gsnCache)
 
 extern void JS_DLL_CALLBACK
 js_ThreadDestructorCB(void *ptr);
@@ -388,18 +349,6 @@ struct JSRuntime {
      * js_MarkNativeIteratorStates for details.
      */
     JSNativeIteratorState *nativeIteratorStates;
-
-#ifndef JS_THREADSAFE
-    /*
-     * For thread-unsafe embeddings, the GSN cache lives in the runtime and
-     * not each context, since we expect it to be filled once when decompiling
-     * a longer script, then hit repeatedly as js_GetSrcNote is called during
-     * the decompiler activation that filled it.
-     */
-    JSGSNCache          gsnCache;
-
-#define JS_GSN_CACHE(cx) ((cx)->runtime->gsnCache)
-#endif
 
 #ifdef DEBUG
     /* Function invocation metering. */
@@ -766,11 +715,37 @@ struct JSContext {
     /* Top of the GC mark stack. */
     void                *gcCurrentMarkNode;
 #endif
+
+    /*
+     * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for
+     * a given pc in a script.
+     */
+    struct JSGSNCache {
+        JSScript        *script;
+        JSDHashTable    table;
+#ifdef JS_GSNMETER
+        uint32          hits;
+        uint32          misses;
+        uint32          fills;
+        uint32          clears;
+# define GSN_CACHE_METER(cx,cnt) (++(cx)->gsnCache.cnt)
+#else
+# define GSN_CACHE_METER(cx,cnt) /* nothing */
+#endif
+    } gsnCache;
 };
 
-#ifdef JS_THREADSAFE
-# define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
-#endif
+#define JS_CLEAR_GSN_CACHE(cx)                                                \
+    JS_BEGIN_MACRO                                                            \
+        (cx)->gsnCache.script = NULL;                                         \
+        if ((cx)->gsnCache.table.ops) {                                       \
+            JS_DHashTableFinish(&(cx)->gsnCache.table);                       \
+            (cx)->gsnCache.table.ops = NULL;                                  \
+        }                                                                     \
+        GSN_CACHE_METER(cx, clears);                                          \
+    JS_END_MACRO
+
+#define JS_THREAD_ID(cx)        ((cx)->thread ? (cx)->thread->id : 0)
 
 #ifdef __cplusplus
 /* FIXME(bug 332648): Move this into a public header. */
