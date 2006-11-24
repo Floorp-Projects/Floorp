@@ -2824,11 +2824,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * freelist more than once. To avoid redundant clearing we unroll the
      * current thread's step.
      *
-     * Also, in case a JSScript wrapped within an object was finalized, we
-     * null acx->thread->gsnCache.script and finish the cache's hashtable.
-     * Note that js_DestroyScript, called from script_finalize, will have
-     * already cleared cx->thread->gsnCache above during finalization, so we
-     * don't have to here.
+     * Also, in case a JSScript wrapped in an object was finalized, we clear
+     * the acx->gsnCache.script pointer and finish the cache's hashtable.
      */
     memset(cx->thread->gcFreeLists, 0, sizeof cx->thread->gcFreeLists);
     iter = NULL;
@@ -2838,9 +2835,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         JS_CLEAR_GSN_CACHE(acx);
     }
-#else
-    /* The thread-unsafe case just has to clear the runtime's GSN cache. */
-    JS_CLEAR_GSN_CACHE(cx);
 #endif
 
 restart:
@@ -2977,7 +2971,10 @@ restart:
      * Finalize as we sweep, outside of rt->gcLock but with rt->gcRunning set
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
-     *
+     */
+    js_SweepAtomState(&rt->atomState);
+
+    /*
      * Finalize smaller objects before larger, to guarantee finalization of
      * GC-allocated obj->slots after obj.  See FreeSlots in jsobj.c.
      */
@@ -3024,16 +3021,14 @@ restart:
 
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
-     * had watchpoints referencing tree nodes.  Then sweep atoms, which may be
-     * referenced from dead property ids.
+     * had watchpoints referencing tree nodes.
      */
     js_SweepScopeProperties(rt);
-    js_SweepAtomState(&rt->atomState);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop
-     * above. In this way when a scripted function's finalizer destroys the
-     * script and calls rt->destroyScriptHook, the hook can still access the
+     * above. In this way when scripted function's finalizer destroys script
+     * triggering a call to rt->destroyScriptHook, the hook can still access
      * script's filename. See bug 323267.
      */
     js_SweepScriptFilenames(rt);
