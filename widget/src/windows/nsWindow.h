@@ -306,7 +306,7 @@ protected:
   virtual PRBool          OnPaint(HDC aDC = nsnull);
   virtual PRBool          OnResize(nsRect &aWindowRect);
 
-  BOOL                    OnChar(UINT charCode, PRUint32 aFlags = 0);
+  BOOL                    OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags = 0);
 
   BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
   BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);

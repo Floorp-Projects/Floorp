@@ -176,6 +176,11 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #define SPI_GETWHEELSCROLLCHARS 0x006C
 #endif
 
+#ifndef MAPVK_VSC_TO_VK
+#define MAPVK_VSC_TO_VK  1
+#define MAPVK_VK_TO_CHAR 2
+#endif
+  
 #ifdef MOZ_XUL
 
 #ifndef AC_SRC_ALPHA
@@ -3526,7 +3531,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
            (msg.message == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR",
            msg.wParam, msg.wParam, msg.lParam);
 #endif
-    return OnChar(msg.wParam, extraFlags);
+    return OnChar(msg.wParam, msg.lParam, extraFlags);
   } else if (!mIsControlDown && !mIsAltDown &&
              (KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode) ||
               KeyboardLayout::IsNumpadKey(aVirtualKeyCode)))
@@ -3646,7 +3651,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
+BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
 {
   // These must be checked here too as a lone WM_CHAR could be received
   // if a child window didn't handle it (for example Alt+Space in a content window)
@@ -3693,6 +3698,18 @@ BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
       uniChar = charCode;
       charCode = 0;
     }
+  }
+
+  // Keep the characters unshifted for shortcuts and accesskeys and make sure
+  // that numbers are always passed as such (among others: bugs 50255 and 351310)
+  if (uniChar && (mIsControlDown || mIsAltDown)) {
+    UINT virtualKeyCode = ::MapVirtualKey(HIWORD(keyData) & 0xFF, MAPVK_VSC_TO_VK);
+    UINT unshiftedCharCode =
+      virtualKeyCode >= '0' && virtualKeyCode <= '9' ? virtualKeyCode :
+      mIsShiftDown ? ::MapVirtualKey(virtualKeyCode, MAPVK_VK_TO_CHAR) : 0;
+    // ignore diacritics (top bit set) and key mapping errors (char code 0)
+    if ((INT)unshiftedCharCode > 0)
+      uniChar = unshiftedCharCode;
   }
 
   // Fix for bug 285161 (and 295095) which was caused by the initial fix for bug 178110.
@@ -4461,7 +4478,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef KE_DEBUG
       printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR", wParam, wParam, lParam);
 #endif
-      result = OnChar(wParam);
+      result = OnChar(wParam, lParam);
     }
     break;
 
