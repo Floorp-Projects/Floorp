@@ -1321,14 +1321,8 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
     WCHAR *path = NS_CONST_CAST(WCHAR*, mFollowSymlinks ? mResolvedPath.get() 
                                                         : mWorkingPath.get());
 
-    // Per http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/resources/versioninformation/versioninformationreference/versioninformationfunctions/getfileversioninfosize.asp
-    // if the "short" version of this file name is > 125 characters, 
-    // GetFileVersionInfoSize will not work (for Win9x compatibility)
-    WCHAR shortPath[126];
-    ::GetShortPathNameW(path, shortPath, sizeof(shortPath));
-
     DWORD dummy;
-    DWORD size = ::GetFileVersionInfoSizeW(shortPath, &dummy);
+    DWORD size = ::GetFileVersionInfoSizeW(path, &dummy);
     if (!size)
         return rv;
 
