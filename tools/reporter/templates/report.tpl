@@ -78,6 +78,10 @@ function show(aItem){
 			<div class="data">{$report_language}</div>
 		</div>
 		<div>
+			<div class="title">Character Set:</div>
+			<div class="data">{$report_charset}&nbsp;</div>
+		</div>
+		<div>
 			<div class="title">User Agent:</div>
 			<div class="data">{$report_useragent}</div>
 		</div>

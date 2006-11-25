@@ -109,6 +109,7 @@ $content->assign('report_buildconfig',     $reportQuery->fields['report_buildcon
 $content->assign('report_platform',        $reportQuery->fields['report_platform']);
 $content->assign('report_oscpu',           $reportQuery->fields['report_oscpu']);
 $content->assign('report_language',        $reportQuery->fields['report_language']);
+$content->assign('report_charset',         $reportQuery->fields['report_charset']);
 $content->assign('report_file_date',       $reportQuery->fields['report_file_date']);
 $content->assign('report_email',           $reportQuery->fields['report_email']);
 $content->assign('report_ip',              $reportQuery->fields['report_ip']);

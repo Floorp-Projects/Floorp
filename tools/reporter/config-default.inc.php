@@ -128,6 +128,7 @@ $config['fields']['report_buildconfig']    = 'Build Config';
 $config['fields']['report_platform']       = 'Platform';
 $config['fields']['report_oscpu']          = 'OSCPU';
 $config['fields']['report_language']       = 'Language';
+$config['fields']['report_charset']        = 'Charset';
 $config['fields']['report_file_date']      = 'File Date';
 $config['fields']['report_email']          = 'Email';
 $config['fields']['report_ip']             = 'IP';

@@ -45,6 +45,7 @@ CREATE TABLE "report" (
   "report_problem_type" varchar(5) collate utf8_unicode_ci NOT NULL default '0',
   "report_description" text collate utf8_unicode_ci NOT NULL,
   "report_behind_login" int(11) NOT NULL default '0',
+  "report_charset" varchar(25) collate utf8_unicode_ci NOT NULL default '',
   "report_useragent" varchar(255) collate utf8_unicode_ci NOT NULL default '',
   "report_platform" varchar(20) collate utf8_unicode_ci NOT NULL default '',
   "report_oscpu" varchar(100) collate utf8_unicode_ci NOT NULL default '',

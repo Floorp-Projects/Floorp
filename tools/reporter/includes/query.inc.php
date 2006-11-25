@@ -18,6 +18,7 @@ class query
                                   'report_id',
                                   'report_buildconfig',
                                   'report_description',
+                                  'report_charset',
 /*                                'report_email',
                                   'report_ip',
 */                                'report_host_id',
@@ -38,7 +39,8 @@ class query
                                  'report_gecko',
                                  'report_buildconfig',
                                  'report_product',
-                                 'report_file_date'
+                                 'report_file_date',
+                                 'report_charset'
     );
 
     var $orderbyChecked = false; // If we are ordering, used by continuity params
@@ -283,7 +285,7 @@ class query
         $sql_where = 'WHERE ';
 
         $host_join_str = 'host.host_id = report_host_id AND '; // this is a var to help them remain consistant for when it's deleted
-
+                                                 
         $sql_where .= $host_join_str;
 
         foreach($this->where as $where_child){
