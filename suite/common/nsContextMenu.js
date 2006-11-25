@@ -50,24 +50,25 @@
 ------------------------------------------------------------------------------*/
 
 function nsContextMenu( xulMenu ) {
-    this.target         = null;
-    this.menu           = null;
-    this.popupURL       = null;
-    this.onTextInput    = false;
-    this.onImage        = false;
-    this.onLoadedImage  = false;
-    this.onLink         = false;
-    this.onMailtoLink   = false;
-    this.onSaveableLink = false;
-    this.onMetaDataItem = false;
-    this.onMathML       = false;
-    this.link           = false;
-    this.inFrame        = false;
-    this.hasBGImage     = false;
-    this.isTextSelected = false;
-    this.inDirList      = false;
-    this.shouldDisplay  = true;
-    this.autoDownload   = false;
+    this.target            = null;
+    this.menu              = null;
+    this.popupURL          = null;
+    this.onTextInput       = false;
+    this.onImage           = false;
+    this.onLoadedImage     = false;
+    this.onLink            = false;
+    this.onMailtoLink      = false;
+    this.onSaveableLink    = false;
+    this.onMetaDataItem    = false;
+    this.onMathML          = false;
+    this.link              = false;
+    this.inFrame           = false;
+    this.hasBGImage        = false;
+    this.isTextSelected    = false;
+    this.isContentSelected = false;
+    this.inDirList         = false;
+    this.shouldDisplay     = true;
+    this.autoDownload      = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -93,6 +94,7 @@ nsContextMenu.prototype = {
                         document.popupRangeOffset );
 
         this.isTextSelected = this.isTextSelection();
+        this.isContentSelected = this.isContentSelection();
 
         this.initPopupURL();
 
@@ -124,7 +126,7 @@ nsContextMenu.prototype = {
         // Forward determined by canGoForward broadcaster.
         this.setItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
 
-        var showNav = !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput );
+        var showNav = !( this.isContentSelected || this.onLink || this.onImage || this.onTextInput );
         
         this.showItem( "context-back", showNav );
         this.showItem( "context-forward", showNav );
@@ -138,7 +140,7 @@ nsContextMenu.prototype = {
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        var showSave = !( this.inDirList || this.isTextSelected || this.onTextInput || this.onStandaloneImage ||
+        var showSave = !( this.inDirList || this.isContentSelected || this.onTextInput || this.onStandaloneImage ||
                        ( this.onLink && this.onImage ) );
         if (showSave)
           goSetMenuValue( "context-savepage", this.autoDownload ? "valueSave" : "valueSaveAs" );
@@ -158,15 +160,15 @@ nsContextMenu.prototype = {
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
-        this.showItem( "context-viewpartialsource-selection", this.isTextSelected && !this.onTextInput );
-        this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isTextSelected );
+        this.showItem( "context-viewpartialsource-selection", this.isContentSelected && !this.onTextInput );
+        this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isContentSelected );
 
-        var showView = !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput );
+        var showView = !( this.inDirList || this.onImage || this.isContentSelected || this.onLink || this.onTextInput );
 
         this.showItem( "context-viewsource", showView );
         this.showItem( "context-viewinfo", showView );
 
-        this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
+        this.showItem( "context-sep-properties", !( this.inDirList || this.isContentSelected || this.onTextInput ) );
         // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
         var isWin = navigator.appVersion.indexOf("Windows") != -1;
         this.showItem( "context-setWallpaper", isWin && (this.onLoadedImage || this.onStandaloneImage));
@@ -195,7 +197,7 @@ nsContextMenu.prototype = {
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
-        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onStandaloneImage ) );
+        this.showItem( "context-bookmarkpage", !( this.isContentSelected || this.onTextInput || this.onStandaloneImage ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
         this.showItem( "context-searchselect", this.isTextSelected && !this.onTextInput );
         this.showItem( "frame", this.inFrame );
@@ -270,12 +272,12 @@ nsContextMenu.prototype = {
         this.showItem( "context-redo", this.onTextInput );
         this.showItem( "context-sep-undo", this.onTextInput );
         this.showItem( "context-cut", this.onTextInput );
-        this.showItem( "context-copy", this.isTextSelected || this.onTextInput);
+        this.showItem( "context-copy", this.isContentSelected || this.onTextInput);
         this.showItem( "context-paste", this.onTextInput );
         this.showItem( "context-delete", this.onTextInput );
         this.showItem( "context-sep-paste", this.onTextInput );
         this.showItem( "context-selectall", !( this.onLink || this.onImage ) );
-        this.showItem( "context-sep-selectall", this.isTextSelected && !this.onTextInput );
+        this.showItem( "context-sep-selectall", this.isContentSelected && !this.onTextInput );
         // In a text area there will be nothing after select all, so we don't want a sep
         // Otherwise, if there's text selected then there are extra menu items
         // (search for selection and view selection source), so we do want a sep
@@ -899,6 +901,11 @@ nsContextMenu.prototype = {
         searchStr = searchStr.replace(/\s+$/, "");
         searchStr = searchStr.replace(/\s+/g, " ");
         return searchStr;
+    },
+
+    // Returns true if anything is selected.
+    isContentSelection: function() {
+        return !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
     },
     
     // Convert relative URL to absolute, using document's <base>.

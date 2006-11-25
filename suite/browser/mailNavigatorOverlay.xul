@@ -135,7 +135,7 @@
     function initMailContextMenuItems(aEvent)
     {
       var shouldShowSendPage = !(gContextMenu.onTextInput || 
-                               gContextMenu.isTextSelected) && 
+                               gContextMenu.isContentSelected) && 
                                !(gContextMenu.onLink && gContextMenu.onImage) &&
                                gHasIntegratedMailClient;
       gContextMenu.showItem("context-sendpage", shouldShowSendPage);
