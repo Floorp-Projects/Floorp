@@ -10,7 +10,7 @@
 <!ENTITY mnEditPaste.accesskey "l">
 <!ENTITY mnEditInsert.label "Insérer">
 <!ENTITY mnEditInsert.accesskey "I">
-<!ENTITY mnEditEdit.label "Ouvrir">
+<!ENTITY mnEditEdit.label "Modifier la valeur">
 <!ENTITY mnEditEdit.accesskey "v">
 <!ENTITY mnEditDelete.label "Supprimer">
 <!ENTITY mnEditDelete.accesskey "u">
