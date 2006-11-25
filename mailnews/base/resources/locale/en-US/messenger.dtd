@@ -219,12 +219,6 @@
 <!ENTITY groupBySort.accesskey "G">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
-<!ENTITY viewAll.label "All">
-<!ENTITY viewUnread.label "Unread">
-<!ENTITY viewAll.accesskey "A">
-<!ENTITY viewUnread.accesskey "U">
-<!ENTITY viewCustomView.label "Customize...">
-<!ENTITY viewCustomView.accesskey "C">
 <!ENTITY threads.label "Threads">
 <!ENTITY threads.accesskey "e">
 <!ENTITY allMsgsCmd.label "All">

@@ -378,7 +378,7 @@ function SwitchView(command)
   // when switching thread views, we might be coming out of quick search
   // or a message view.
   // first set view picker to all
-  ViewMessagesBy("viewPickerAll");
+  ViewChangeByValue(kViewItemAll);
 
   // clear the QS text, if we need to
   ClearQSIfNecessary();

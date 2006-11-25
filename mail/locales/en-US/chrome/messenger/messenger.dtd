@@ -180,12 +180,6 @@
 <!ENTITY groupBySortCmd.key "G">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
-<!ENTITY viewAll.label "All">
-<!ENTITY viewAll.accesskey "A">
-<!ENTITY viewUnread.label "Unread">
-<!ENTITY viewUnread.accesskey "U">
-<!ENTITY viewCustomView.label "Customize...">
-<!ENTITY viewCustomView.accesskey "C">
 <!ENTITY threads.label "Threads">
 <!ENTITY threads.accesskey "e">
 <!ENTITY allMsgsCmd.label "All">
@@ -527,12 +521,6 @@
 <!ENTITY folderContextFavoriteFolder.accesskey "a">
 
 <!-- Search Bar -->
-<!ENTITY viewPicker.label "View:">
-<!ENTITY viewPicker.accesskey "i">
-<!ENTITY viewPickerAll.label "All">
-<!ENTITY viewPickerUnread.label "Unread">
-<!ENTITY viewPickerCustomView.label "Customize...">
-<!ENTITY viewPickerSaveAsVirtualFolder.label "Save View as a Folder...">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY clearButton.label "Clear">

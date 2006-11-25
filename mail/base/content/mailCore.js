@@ -71,7 +71,7 @@ function MailToolboxCustomizeDone(aToolboxChanged)
 
   // make sure the mail views search box is initialized
   if (document.getElementById("mailviews-container"))
-    viewPickerOnLoad();
+    ViewPickerOnLoad();
     
   // make sure the folder location picker is initialized
   if (document.getElementById("folder-location-container"))

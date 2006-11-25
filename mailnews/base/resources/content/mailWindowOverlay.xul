@@ -52,6 +52,8 @@
 <!DOCTYPE overlay [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
 %messengerDTD;
+<!ENTITY % msgViewPickerDTD SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd" >
+%msgViewPickerDTD;
 <!ENTITY % msgHdrViewPopupDTD SYSTEM "chrome://messenger/locale/msgHdrViewPopup.dtd" >
 %msgHdrViewPopupDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
@@ -1239,21 +1241,22 @@
           <menuitem id="groupBySort" type="radio" name="group" label="&groupBySort.label;" accesskey="&groupBySort.accesskey;" oncommand="MsgGroupBySort();"/>
         </menupopup>
       </menu>
-      <menu id="viewMessageViewMenu" label="&msgsMenu.label;"
-            accesskey="&msgsMenu.accesskey;" observes="mailHideMenus">
-        <menupopup id="viewMessageViewPopup" onpopupshowing="InitViewMessageViewMenu()">
-          <menuitem id="viewAll" type="radio" name="viewmessages" label="&viewAll.label;" accesskey="&viewAll.accesskey;" oncommand="ViewMessagesBy('viewPickerAll');"/>
-          <menuitem id="viewUnread" type="radio" name="viewmessages" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;" oncommand="ViewMessagesBy('viewPickerUnread');"/>
+      <menu id="viewMessageViewMenu" label="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;"
+            observes="mailHideMenus" oncommand="ViewChangeByMenuitem(event.target);">
+        <menupopup id="viewMessagePopup">
+          <menuitem id="viewMessageAll"    value="0" type="radio" label="&viewAll.label;" accesskey="&viewAll.accesskey;"/>
+          <menuitem id="viewMessageUnread" value="1" type="radio" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;"/>
           <menuseparator/>
-          <menuitem id="viewLabelMenuItem1" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem1');" />
-          <menuitem id="viewLabelMenuItem2" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem2');" />
-          <menuitem id="viewLabelMenuItem3" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem3');" />
-          <menuitem id="viewLabelMenuItem4" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem4');" />
-          <menuitem id="viewLabelMenuItem5" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem5');" />
-          <menuseparator id="viewLastDefaultView"/>
-          <menuseparator id="viewCreateCustomViewSeparator"/>
-          <menuitem id="viewCreateCustomView" label="&viewCustomView.label;" accesskey="&viewCustomView.accesskey;" oncommand="LaunchCustomizeDialog();" />
-       </menupopup>
+          <menu id="viewMessageTags" label="&viewTags.label;" accesskey="&viewTags.accesskey;">
+            <menupopup id="viewMessageTagsPopup" onpopupshowing="RefreshTagsPopup(this, false);"/>
+          </menu>
+          <menu id="viewMessageCustomViews" label="&viewCustomViews.label;" accesskey="&viewCustomViews.accesskey;">
+            <menupopup id="viewMessageCustomViewsPopup" onpopupshowing="RefreshCustomViewsPopup(this, false);"/>
+          </menu>
+          <menuseparator/>
+          <menuitem id="viewMessageVirtualFolder" value="7" label="&viewVirtualFolder.label;" accesskey="&viewVirtualFolder.accesskey;"/>
+          <menuitem id="viewMessageCustomize"     value="8" label="&viewCustomizeView.label;" accesskey="&viewCustomizeView.accesskey;"/>
+        </menupopup>
       </menu>
       <menu id="viewMessagesMenu" label="&threads.label;"
             accesskey="&threads.accesskey;" observes="mailHideMenus">

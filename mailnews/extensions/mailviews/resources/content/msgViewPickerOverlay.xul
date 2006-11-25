@@ -22,6 +22,7 @@
    -
    - Contributor(s):
    -   Scott MacGregor <mscott@netscape.com>
+   -   Karsten Düsterloh <mnyromyr@tprac.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,30 +40,32 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd">
 
-<overlay
-  xmlns:nc="http://home.netscape.com/NC-rdf#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://messenger/content/msgViewPickerOverlay.js"/>
   
   <hbox id="searchBox">
     <hbox id="viewPickerBox" insertbefore="searchCriteria" align="center">
-      <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
-      <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
-       <menupopup id="viewPickerPopup">
-         <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
-         <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
-         <menuseparator/>
-         <menuitem value="2" id="labelMenuItem1"/>
-         <menuitem value="3" id="labelMenuItem2"/>
-         <menuitem value="4" id="labelMenuItem3"/>
-         <menuitem value="5" id="labelMenuItem4"/>
-         <menuitem value="6" id="labelMenuItem5"/>
-         <menuseparator id="lastDefaultView"/>
-         <menuseparator id="createCustomViewSeparator"/>
-         <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
-         <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
-       </menupopup>
+      <label value="&viewPicker.label;" control="viewPicker"/>
+      <menulist id="viewPicker" oncommand="ViewChangeByMenuitem(event.target);">
+        <menupopup id="viewPickerPopup">
+          <menuitem id="viewPickerAll"    value="0" label="&viewAll.label;"/>
+          <menuitem id="viewPickerUnread" value="1" label="&viewUnread.label;"/>
+          <menuseparator/>
+          <menu id="viewPickerTags" label="&viewTags.label;">
+            <menupopup id="viewPickerTagsPopup"
+                       class="menulist-menupopup"
+                       onpopupshowing="RefreshTagsPopup(this, true);"/>
+          </menu>
+          <menu id="viewPickerCustomViews" label="&viewCustomViews.label;">
+            <menupopup id="viewPickerCustomViewsPopup"
+                       class="menulist-menupopup"
+                       onpopupshowing="RefreshCustomViewsPopup(this, true);"/>
+          </menu>
+          <menuseparator/>
+          <menuitem id="viewPickerVirtualFolder" value="7" label="&viewVirtualFolder.label;"/>
+          <menuitem id="viewPickerCustomize"     value="8" label="&viewCustomizeView.label;"/>
+        </menupopup>
       </menulist>
     </hbox>
     <!-- overlay the advanced button to save space -->

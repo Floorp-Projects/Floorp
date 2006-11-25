@@ -48,6 +48,8 @@
   %globalDTD;
   <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd">
   %messengerDTD;
+  <!ENTITY % msgViewPickerDTD SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd" >
+  %msgViewPickerDTD;
   <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd">
   %contentAreaCommandsDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -1372,22 +1374,24 @@
             </menupopup>
           </menu>
 
-          <menu label="&msgsMenu.label;" id="viewMessageViewMenu" accesskey="&msgsMenu.accesskey;">
-            <menupopup id="viewMessageViewPopup" onpopupshowing="InitViewMessageViewMenu()">
-              <menuitem id="viewAll" type="radio" name="viewmessages" label="&viewAll.label;" accesskey="&viewAll.accesskey;" oncommand="ViewMessagesBy('viewPickerAll');"/>
-              <menuitem id="viewUnread" type="radio" name="viewmessages" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;" oncommand="ViewMessagesBy('viewPickerUnread');"/>
+          <menu id="viewMessageViewMenu" label="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;"
+                observes="mailHideMenus" oncommand="ViewChangeByMenuitem(event.target);">
+            <menupopup id="viewMessagePopup">
+              <menuitem id="viewMessageAll"    value="0" type="radio" label="&viewAll.label;" accesskey="&viewAll.accesskey;"/>
+              <menuitem id="viewMessageUnread" value="1" type="radio" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;"/>
               <menuseparator/>
-              <menuitem id="viewLabelMenuItem1" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem1');" />
-              <menuitem id="viewLabelMenuItem2" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem2');" />
-              <menuitem id="viewLabelMenuItem3" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem3');" />
-              <menuitem id="viewLabelMenuItem4" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem4');" />
-              <menuitem id="viewLabelMenuItem5" type="radio" name="viewmessages" oncommand="ViewMessagesBy('labelMenuItem5');" />
-              <menuseparator id="viewLastDefaultView"/>
-              <menuseparator id="viewCreateCustomViewSeparator"/>
-              <menuitem id="viewCreateCustomView" label="&viewCustomView.label;" accesskey="&viewCustomView.accesskey;" oncommand="LaunchCustomizeDialog();" />
-           </menupopup>
+              <menu id="viewMessageTags" label="&viewTags.label;" accesskey="&viewTags.accesskey;">
+                <menupopup id="viewMessageTagsPopup" onpopupshowing="RefreshTagsPopup(this, false);"/>
+              </menu>
+              <menu id="viewMessageCustomViews" label="&viewCustomViews.label;" accesskey="&viewCustomViews.accesskey;">
+                <menupopup id="viewMessageCustomViewsPopup" onpopupshowing="RefreshCustomViewsPopup(this, false);"/>
+              </menu>
+              <menuseparator/>
+              <menuitem id="viewMessageVirtualFolder" value="7" label="&viewVirtualFolder.label;" accesskey="&viewVirtualFolder.accesskey;"/>
+              <menuitem id="viewMessageCustomize"     value="8" label="&viewCustomizeView.label;" accesskey="&viewCustomizeView.accesskey;"/>
+            </menupopup>
           </menu>
-          
+
           <menu label="&threads.label;" id="viewMessagesMenu" accesskey="&threads.accesskey;">
             <menupopup onpopupshowing="InitViewMessagesMenu()">
               <menuitem id="viewAllMessagesMenuItem" type="radio" name="viewmessages" label="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
@@ -2131,21 +2135,25 @@
       </toolbaritem>
       
       <toolbaritem id="mailviews-container" title="&mailViewsToolbarItem.title;" align="center" class="chromeclass-toolbar-additional">
-        <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
-        <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
+        <label value="&viewPicker.label;" control="viewPicker" accesskey="&viewPicker.accesskey;"/>
+        <menulist id="viewPicker" oncommand="ViewChangeByMenuitem(event.target);">
           <menupopup id="viewPickerPopup">
-            <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
-            <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
+            <menuitem id="viewPickerAll"    value="0" label="&viewAll.label;"/>
+            <menuitem id="viewPickerUnread" value="1" label="&viewUnread.label;"/>
             <menuseparator/>
-            <menuitem value="2" id="labelMenuItem1"/>
-            <menuitem value="3" id="labelMenuItem2"/>
-            <menuitem value="4" id="labelMenuItem3"/>
-            <menuitem value="5" id="labelMenuItem4"/>
-            <menuitem value="6" id="labelMenuItem5"/>
-            <menuseparator id="lastDefaultView"/>
-            <menuseparator id="createCustomViewSeparator"/>
-            <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
-            <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
+            <menu id="viewPickerTags" label="&viewTags.label;">
+              <menupopup id="viewPickerTagsPopup"
+                         class="menulist-menupopup"
+                         onpopupshowing="RefreshTagsPopup(this, true);"/>
+            </menu>
+            <menu id="viewPickerCustomViews" label="&viewCustomViews.label;">
+              <menupopup id="viewPickerCustomViewsPopup"
+                         class="menulist-menupopup"
+                         onpopupshowing="RefreshCustomViewsPopup(this, true);"/>
+            </menu>
+            <menuseparator/>
+            <menuitem id="viewPickerVirtualFolder" value="7" label="&viewVirtualFolder.label;"/>
+            <menuitem id="viewPickerCustomize"     value="8" label="&viewCustomizeView.label;"/>
           </menupopup>
         </menulist>
       </toolbaritem>

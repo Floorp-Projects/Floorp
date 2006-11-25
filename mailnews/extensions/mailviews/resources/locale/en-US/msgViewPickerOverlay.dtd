@@ -2,7 +2,15 @@
 
 <!ENTITY viewPicker.label "View:">
 <!ENTITY viewPicker.accesskey "i">
-<!ENTITY viewPickerSaveAsVirtualFolder.label "Save View as a Folder...">
-<!ENTITY viewPickerCustomView.label "Customize...">
-<!ENTITY viewPickerAll.label "All">
-<!ENTITY viewPickerUnread.label "Unread">
+<!ENTITY viewAll.label "All">
+<!ENTITY viewAll.accesskey "A">
+<!ENTITY viewUnread.label "Unread">
+<!ENTITY viewUnread.accesskey "U">
+<!ENTITY viewTags.label "Tags">
+<!ENTITY viewTags.accesskey "T">
+<!ENTITY viewCustomViews.label "Custom Views">
+<!ENTITY viewCustomViews.accesskey "V">
+<!ENTITY viewVirtualFolder.label "Save View as a Folder...">
+<!ENTITY viewVirtualFolder.accesskey "S">
+<!ENTITY viewCustomizeView.label "Customize...">
+<!ENTITY viewCustomizeView.accesskey "C">
