@@ -1101,7 +1101,7 @@ function scv_hookChromeFilter(e)
                         if ("parentRecord" in rec)
                             continue;
                         //dd ("cmdChromeFilter: append " +
-                        //    tov_formatRecord(rec, ""));
+                        //    xtv_formatRecord(rec, ""));
                         nodes.appendChild(rec);
                     }
                 }

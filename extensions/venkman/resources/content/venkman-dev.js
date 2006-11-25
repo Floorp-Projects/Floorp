@@ -137,7 +137,7 @@ function cmdDumpTree(e)
 {
     if (!e.depth)
         e.depth = 0;
-    dd(e.tree + ":\n" + tov_formatBranch (eval(e.tree), "", e.depth));
+    dd(e.tree + ":\n" + xtv_formatBranch(eval(e.tree), "", e.depth));
 }
 
 function cmdDumpScripts(e)
