@@ -82,10 +82,8 @@ function GetFields(aPageData)
     if (entry.localName == 'listitem')
     {
       // update taginfo with current values from textbox and colorpicker
-      var taginfo = entry.taginfo;
-      taginfo.tag   = entry.firstChild.firstChild.value;
-      taginfo.color = entry.lastChild.lastChild.color;
-      tags.push(taginfo);
+      UpdateTagInfo(entry.taginfo, entry);
+      tags.push(entry.taginfo);
     }
   aPageData[ACTIVE_TAGS_ID] = tags;
 
@@ -129,6 +127,13 @@ function SetFields(aPageData)
 
   // grab the list of tags to be deleted in the OKHandler
   gDeletedTags = (DELETED_TAGS_ID in aPageData) ? aPageData[DELETED_TAGS_ID] : {};
+}
+
+// read text and color from the listitem
+function UpdateTagInfo(aTagInfo, aEntry)
+{
+  aTagInfo.tag   = aEntry.firstChild.firstChild.value;
+  aTagInfo.color = aEntry.lastChild.lastChild.color;
 }
 
 // set text and color of the listitem
@@ -251,6 +256,7 @@ function MoveTag(aMoveUp)
   // This reordering may require changing ordinal strings, which will happen
   // when we write tag data to the preferences system in the OKHandler.
   var entry = gTagList.selectedItem;
+  UpdateTagInfo(entry.taginfo, entry); // remember changed values
   var successor = aMoveUp ? gTagList.getPreviousItem(entry, 1)
                           : gTagList.getNextItem(entry, 2);
   entry.parentNode.insertBefore(entry, successor);
