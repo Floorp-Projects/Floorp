@@ -54,16 +54,16 @@
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/CGI.pm/"/>
         PPM Download Link: Part of core distribution.
-        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/CGI.html"/>
+        Documentation: <ulink url="http://perldoc.perl.org/CGI.html"/>
       </literallayout>
     </para>
 
     <para>
       Data-Dumper:
       <literallayout>
-        CPAN Download Page: <ulink url="http://search.cpan.org/src/ILYAM/Data-Dumper-2.121/Dumper.pm"/>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Data-Dumper/"/>
         PPM Download Page: Part of core distribution.
-        Documentation: <ulink url="http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/Data-Dumper/Dumper.pm"/>
       </literallayout>
     </para>
     
@@ -95,11 +95,20 @@
     </para>
 
     <para>
+      DBD::Pg:
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/DBD-Pg/"/>
+        PPM Download Link: <ulink url="http://theoryx5.uwinnipeg.ca/ppms/x86/DBD-Pg.tar.gz"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/DBD-Pg/Pg.pm"/>
+      </literallayout>
+    </para>
+
+    <para>
       File::Spec:
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Spec/"/>
         PPM Download Page: Part of core distribution.
-        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Spec.html"/>
+        Documentation: <ulink url="http://perldoc.perl.org/File/Spec.html"/>
       </literallayout>
     </para>
 
@@ -117,7 +126,7 @@
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/GD/"/>
         PPM Download Link: <ulink url="http://landfill.bugzilla.org/ppm/GD.ppd"/>
-        Documentation: <ulink url="http://stein.cshl.org/WWW/software/GD/"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/GD/GD.pm"/>
       </literallayout>
     </para>
 
@@ -126,7 +135,6 @@
       <literallayout>
        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Template-GD/" />
        PPM Download Link:  (Just install Template-Toolkit using the instructions below)
-
        Documentation: <ulink url="http://www.template-toolkit.org/docs/aqua/Modules/index.html" />
       </literallayout>
     </para>
@@ -159,7 +167,7 @@
       <literallayout>
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/Chart/"/>
         PPM Download Page: <ulink url="http://landfill.bugzilla.org/ppm/Chart.ppd"/>
-        Documentation: <ulink url="http://search.cpan.org/src/CHARTGRP/Chart-2.3/doc/Documentation.pdf"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/Chart/Chart.pod"/>
       </literallayout>
     </para>
 
@@ -208,4 +216,4 @@
       </literallayout>
     </para>
    </section>
-</appendix>  
+</appendix>
