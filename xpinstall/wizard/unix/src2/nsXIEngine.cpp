@@ -781,9 +781,6 @@ nsXIEngine::DeleteXPIs(int aCustom, nsComponentList *aComps)
     nsComponent *currComp = aComps->GetHead();
     char currXPIPath[MAXPATHLEN];
 
-    if (!aComps || !mOriginalDir)
-        return E_PARAM;
-
     while (currComp)
     {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
