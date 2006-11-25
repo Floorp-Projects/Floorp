@@ -56,6 +56,7 @@ toolbox {
 
 toolbar {
   -moz-appearance: toolbar;
+  min-width: 1px; /* DON'T DELETE! */
   border-top: 1px solid;
   border-bottom: 1px solid;
   -moz-border-top-colors: ThreeDHighlight;
@@ -65,12 +66,14 @@ toolbar {
 toolbar[type="menubar"], menubar {
   background-color: Menu;
   -moz-appearance: toolbar;
+  min-width: 1px; /* DON'T DELETE! */
   border-top: none !important;
   border-bottom: 1px solid;
   -moz-border-bottom-colors: ThreeDShadow;
 }
 
 toolbar:first-child, menubar:first-child {
+  min-width: 1px; /* DON'T DELETE! */
   border-top: none !important;
 }
 
@@ -156,4 +159,3 @@ toolbarpaletteitem[dragover="left"] {
 toolbarpaletteitem[dragover="right"] {
   border-right-color: #000000;
 }
-
