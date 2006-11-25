@@ -408,6 +408,10 @@
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"
                 key="checkspellingkb"   observes="cmd_spelling" disabled="true"
                 label="&checkSpellingCmd.label;"/>
+      <menuitem id="menu_inlinespellcheck" type="checkbox"
+                label="&enableInlineSpellChecker.label;"
+                accesskey="&enableInlineSpellChecker.accesskey;"
+                oncommand="InlineSpellCheckerUI.enabled = !InlineSpellCheckerUI.enabled"/>
       <menuseparator id="menu_prefsSep"/>
       <menuitem id="menu_preferences"     observes="cmd_preferences"/>
       <!-- Note: other Edit items (menu_validate, menu_publishSettings) are inserted from composerOverlay.xul -->

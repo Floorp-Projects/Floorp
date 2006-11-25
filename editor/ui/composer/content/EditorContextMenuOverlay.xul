@@ -45,10 +45,23 @@
 
 <script type="application/x-javascript" src="chrome://editor/content/EditorContextMenu.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/StructBarContextMenu.js"/>
+<script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    onpopupshowing="EditorFillContextMenu(event, this);"> 
+    <menuitem id="spellCheckNoSuggestions" label="&spellCheckNoSuggestions.label;" disabled="true"/>
+    <menuseparator id="spellCheckAddSep"/>
+    <menuitem id="spellCheckAddToDictionary"
+              label="&spellCheckAddToDictionary.label;"
+              accesskey="&spellCheckAddToDictionary.accesskey;"
+              oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+    <menuitem id="spellCheckIgnoreWord"
+              label="&spellCheckIgnoreWord.label;"
+              accesskey="&spellCheckIgnoreWord.accesskey;"
+              oncommand="InlineSpellCheckerUI.ignoreWord();"/>
+    <menuseparator id="spellCheckSuggestionsSeparator"/>
+
     <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
     <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;" command="cmd_redo"/>
     <menuseparator id="undoredo-separator"/>
