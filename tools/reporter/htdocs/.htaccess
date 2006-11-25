@@ -1,10 +1,7 @@
-#<IfModule mod_rewrite.c>
+<IfModule mod_rewrite.c>
 RewriteEngine On
 
 RewriteBase /
-
-
-
 
 RewriteRule ^service(/)?([A-Za-z0-9.-]+)? service.php?v=$2 [QSA]
 RewriteRule ^app/query(/)?(.*)$ query.php$2 [QSA,L]
@@ -17,5 +14,5 @@ RewriteRule ^app/privacy(/)? privacy.php$1 [QSA,L]
 RewriteRule ^app index.php [QSA,L]
 
 #Static Content
-#RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
-#</IfModule>
+RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
+</IfModule>
