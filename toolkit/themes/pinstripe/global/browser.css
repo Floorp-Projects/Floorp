@@ -283,10 +283,8 @@ tabbrowser > tabbox > tabpanels {
   margin: 2px 0px 3px 0px;
   width: 18px;
   height: 18px;
-%if 0
   background-image: url("chrome://global/skin/tab-arrow-end-bkgnd-animate.png") !important;
   background-repeat: no-repeat;
-%endif
   opacity: 0.0;
 }
 
@@ -374,10 +372,8 @@ tabbrowser > tabbox > tabpanels {
   margin: 2px 0px 3px 0px;
   width: 16px;
   height: 18px;
-%if 0
   background-image: url("chrome://global/skin/alltabs-box-overflow-bkgnd-animate.png");
   background-repeat: no-repeat;
-%endif
   opacity: 0.0;
 }
 
