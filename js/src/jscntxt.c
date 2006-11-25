@@ -79,6 +79,7 @@ js_ThreadDestructorCB(void *ptr)
         return;
     while (!JS_CLIST_IS_EMPTY(&thread->contextList))
         JS_REMOVE_AND_INIT_LINK(thread->contextList.next);
+    GSN_CACHE_CLEAR(&thread->gsnCache);
     free(thread);
 }
 
@@ -100,7 +101,7 @@ js_GetCurrentThread(JSRuntime *rt)
 
     thread = (JSThread *)PR_GetThreadPrivate(rt->threadTPIndex);
     if (!thread) {
-        thread = (JSThread *) malloc(sizeof(JSThread));
+        thread = (JSThread *) calloc(1, sizeof(JSThread));
         if (!thread)
             return NULL;
 
@@ -116,10 +117,6 @@ js_GetCurrentThread(JSRuntime *rt)
 #ifdef DEBUG
         memset(thread->gcFreeLists, JS_FREE_PATTERN,
                sizeof(thread->gcFreeLists));
-#endif
-        thread->gcMallocBytes = 0;
-#if JS_HAS_GENERATORS
-        thread->gcRunningCloseHooks = JS_FALSE;
 #endif
     }
     return thread;
@@ -438,8 +435,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         }
         JS_free(cx, lrs);
     }
-
-    JS_CLEAR_GSN_CACHE(cx);
 
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);

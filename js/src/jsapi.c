@@ -776,6 +776,8 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->setSlotDone);
     if (rt->scopeSharingDone)
         JS_DESTROY_CONDVAR(rt->scopeSharingDone);
+#else
+    GSN_CACHE_CLEAR(&rt->gsnCache);
 #endif
     js_FinishPropertyTree(rt);
     free(rt);
