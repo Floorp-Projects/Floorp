@@ -2,17 +2,17 @@
 <!-- LOCALIZATION NOTE : FILE Do not translate "accel" or "shift",
                          You may want to translate the Cmd.key and accesskey --> 
 
-<!ENTITY closeCmd.label			"Close">  
-<!ENTITY closeCmd.key			"W">  
-<!ENTITY closeCmd.accesskey		"c">
+<!ENTITY closeCmd.label                 "Close">  
+<!ENTITY closeCmd.key                   "W">  
+<!ENTITY closeCmd.accesskey             "c">
 
-<!ENTITY quitApplicationCmd.label	"Exit"> 
-<!ENTITY quitApplicationCmd.key		"Q"> 
-<!ENTITY quitApplicationCmd.accesskey	"x">
+<!ENTITY quitApplicationCmd.label       "Exit"> 
+<!ENTITY quitApplicationCmd.key         "Q"> 
+<!ENTITY quitApplicationCmd.accesskey   "x">
 
-<!ENTITY redoCmd.label			"Redo">  
-<!ENTITY redoCmd.key			"Y">  
-<!ENTITY redoCmd.accesskey		"r">
+<!ENTITY redoCmd.label                  "Redo">  
+<!ENTITY redoCmd.key                    "Y">  
+<!ENTITY redoCmd.accesskey              "r">
 
 <!ENTITY findTypeTextCmd.key            "/">
 <!ENTITY findTypeLinksCmd.key           "'">
@@ -23,3 +23,9 @@
 <!ENTITY openHelpCmd.label              "Help Contents">
 <!ENTITY openHelpCmd.accesskey          "H">
 <!ENTITY openHelpCmd.key                "VK_F1">
+
+<!-- Key labels, for mousewheel prefs -->
+<!ENTITY ctrlKey.label                  "Ctrl">
+<!ENTITY altKey.label                   "Alt">
+<!ENTITY shiftKey.label                 "Shift">
+

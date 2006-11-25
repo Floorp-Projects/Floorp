@@ -1,39 +1,44 @@
 <!-- mac -->
 <!-- LOCALIZATION NOTE : FILE Do not translate all the Cmd.key--> 
 
-<!ENTITY closeCmd.label			"Close">  
-<!ENTITY closeCmd.key			"W">  
+<!ENTITY closeCmd.label                 "Close">  
+<!ENTITY closeCmd.key                   "W">  
 
-<!ENTITY printSetupCmd.label		"Page Setup...">
-<!ENTITY printSetupCmd.accesskey	"u">
+<!ENTITY printSetupCmd.label            "Page Setup...">
+<!ENTITY printSetupCmd.accesskey        "u">
 
-<!ENTITY quitApplicationCmd.label	"Quit"> 
-<!ENTITY quitApplicationCmd.key		"Q"> 
+<!ENTITY quitApplicationCmd.label       "Quit"> 
+<!ENTITY quitApplicationCmd.key         "Q"> 
 
-<!ENTITY redoCmd.label			"Redo">  
-<!ENTITY redoCmd.key			"Z">  
+<!ENTITY redoCmd.label                  "Redo">  
+<!ENTITY redoCmd.key                    "Z">  
 
-<!ENTITY historyCmd.key   "H">  
+<!ENTITY historyCmd.key                 "H">  
 
-<!ENTITY findTypeTextCmd.key        "">
-<!ENTITY findTypeLinksCmd.key       "">
+<!ENTITY findTypeTextCmd.key            "">
+<!ENTITY findTypeLinksCmd.key           "">
 
-<!ENTITY accel.emacs_conflict       "accel">
+<!ENTITY accel.emacs_conflict           "accel">
 
-<!ENTITY minimizeWindowCmd.label    "Minimize">
-<!ENTITY minimizeWindowCmd.key      "M">
-<!ENTITY zoomWindowCmd.label        "Zoom">
+<!ENTITY minimizeWindowCmd.label        "Minimize">
+<!ENTITY minimizeWindowCmd.key          "M">
+<!ENTITY zoomWindowCmd.label            "Zoom">
 
 <!-- Help viewer -->
-<!ENTITY openHelpCmd.label          "&brandShortName; Help">
-<!ENTITY openHelpCmd.accesskey      "H">
+<!ENTITY openHelpCmd.label              "&brandShortName; Help">
+<!ENTITY openHelpCmd.accesskey          "H">
 
 <!-- LOCALIZATION NOTE: openHelpFrontend.key and openHelpFrontend.modifiers
   will show the standard OS X shortcut (Cmd+? on most locales) in the Help
   menu. To make the shortcut work, mapping (Cmd+Shift+/ on en-US) is done with
   openHelpCmd.key and openHelpCmd.modifiers. -->
-<!ENTITY openHelpFrontend.key       "?">
-<!ENTITY openHelpFrontend.modifiers "accel">
-<!ENTITY openHelpCmd.key            "/">
-<!ENTITY openHelpCmd.modifiers      "accel,shift">
-<!ENTITY openHelp2Cmd.key           "VK_HELP">
+<!ENTITY openHelpFrontend.key            "?">
+<!ENTITY openHelpFrontend.modifiers      "accel">
+<!ENTITY openHelpCmd.key                 "/">
+<!ENTITY openHelpCmd.modifiers           "accel,shift">
+<!ENTITY openHelp2Cmd.key                "VK_HELP">
+
+<!-- Key labels, for mousewheel prefs -->
+<!ENTITY ctrlKey.label                   "Ctrl">
+<!ENTITY altKey.label                    "Option">
+<!ENTITY shiftKey.label                  "Shift">

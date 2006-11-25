@@ -43,8 +43,8 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!DOCTYPE page [
-<!ENTITY % platformDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
-%platformDTD;
+<!ENTITY % platformCommunicatorDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd" >
+%platformCommunicatorDTD;
 <!ENTITY % prefMousewheelDTD SYSTEM "chrome://communicator/locale/pref/pref-mousewheel.dtd" >
 %prefMousewheelDTD;
 ]>

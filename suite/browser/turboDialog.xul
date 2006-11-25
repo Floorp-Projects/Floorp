@@ -43,8 +43,6 @@
 <!DOCTYPE dialog [
   <!ENTITY % turboDialogDTD SYSTEM "chrome://navigator/locale/turboDialog.dtd" >
   %turboDialogDTD;
-  <!ENTITY % dialogOverlayDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
-  %dialogOverlayDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   %brandDTD;
 ]>
