@@ -1044,18 +1044,6 @@ prefwindow {
 prefpane {
   -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefpane");  
   -moz-box-orient: vertical;
-  opacity: 0.0;
-}
-
-prefpane[selected="true"] {
-  opacity: 0.0;
-}
-
-prefwindow[animate="off"] > prefpane,
-prefwindow[animate="off"] > prefpane[selected="true"],
-prefwindow[type="child"] > prefpane,
-prefwindow[type="child"] > prefpane[selected="true"] {
-  opacity: 1.0;
 }
 
 prefwindow > .paneDeckContainer {
