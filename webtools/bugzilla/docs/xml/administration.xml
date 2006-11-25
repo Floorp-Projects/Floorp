@@ -1265,6 +1265,125 @@
 
   </section> <!-- flags -->
 
+  <section id="custom-fields">
+    <title>Custom Fields</title>
+
+    <para>
+      One of the most requested features was the ability to add your own custom
+      fields to bugs, based on your needs. With the release of Bugzilla 3.0, this
+      dream finally comes true. Administrators can manage these fields using the
+      <quote>Custom Fields</quote> link in the footer of pages. The first thing
+      they will see is the list of existing custom fields (which is empty by default).
+    </para>
+
+    <section id="add-custom-fields">
+      <title>Adding Custom Fields</title>
+
+      <para>
+        The <quote>Add a new custom field</quote> link permits you to add a
+        new field which can be either a free text box or a drop down menu.
+        More field types will be available in future releases.
+      </para>
+
+      <para>
+        The following attributes must be set for each new custom field:
+        <itemizedlist>
+          <listitem>
+            <para>
+              <emphasis>Name:</emphasis>
+              the name of the field, used internally. This name MUST begin
+              with <quote>cf_</quote>. If you omit this string, it will
+              be automatically added to the name you entered. This way, all
+              custom fields added to Bugzilla begin with <quote>cf_</quote>,
+              avoiding any conflict with default fields.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Description:</emphasis>
+              the string which is used as a label for this custom field.
+              That is the string that users will see, and so should be
+              short and explicit.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Type:</emphasis>
+              as mentioned above, only two types are implemented so far.
+              Free text boxes let you type any string, while drop down menus
+              only let you choose one value in the list provided. The list of
+              legal values for this field can be created and edited as soon as
+              this custom field is added to the DB. See
+              <xref linkend="edit-values-list" /> for information about editing
+              legal values.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Sortkey:</emphasis>
+              this integer determines in which order custom fields are
+              displayed in the UI, especially when viewing a bug. Fields
+              with lower values are displayed first.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Can be set on bug creation:</emphasis>
+              this boolean determines whether this field can be set on
+              bug creation or not. If not, then you have to create the
+              bug first before being able to set this field. Else you
+              can set its value at the same time you file a bug,
+              see <xref linkend="bugreports" /> about filing bugs.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Displayed in bugmail for new bugs:</emphasis>
+              this boolean determines whether the value set on this field
+              should appear in bugmail when the bug is filed. This attribute
+              has no effect if the field cannot be set on bug creation.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              <emphasis>Is obsolete:</emphasis>
+              this boolean determines whether or not this field should
+              be displayed at all. Obsolete custom fields are hidden.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </para>
+    </section>
+
+    <section id="edit-custom-fields">
+      <title>Editing Custom Fields</title>
+
+      <para>
+        As soon as a custom field is created, its name and type cannot be
+        changed. If this field is a drop down menu, its legal values can
+        be set as described in <xref linkend="edit-values-list" />. All
+        other attributes can be edited as described above.
+      </para>
+    </section>
+
+    <section id="delete-custom-fields">
+      <title>Deleting Custom Fields</title>
+
+      <para>
+        At this point, it is not possible to delete custom fields from
+        your web browser. If you don't want to make one available anymore,
+        mark it as obsolete. This way, you will preserve your DB
+        referential integrity.
+      </para>
+    </section>
+  </section>
+
   <section id="edit-values">
     <title>Legal Values</title>
 
