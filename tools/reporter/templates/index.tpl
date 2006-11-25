@@ -16,7 +16,7 @@
 	<table id="reporterSearch">
 		<tr>
 			<td class="label"><label for="report_description">Description:</label></td>
- 			<td><input id="report_description" name="report_description" type="text" size="35" value="{$report_description}"></td>
+			<td><input id="report_description" name="report_description" type="text" size="35" value="{$report_description}"></td>
 			<td rowspan="5">
 				<table>
 					<tr>
@@ -112,7 +112,7 @@
 			</td>
 		</tr>
 		<tr>
-  			<td></td>
+			<td></td>
 			<td colspan="2">
 				<input id="submit_query" name="submit_query" value="Search" type="submit">
 			</td>

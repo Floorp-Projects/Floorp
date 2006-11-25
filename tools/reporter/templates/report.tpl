@@ -2,14 +2,14 @@
 {literal}
 <script type="text/javascript">
 function show(aItem){
-    if(aItem == 'data'){
-        document.getElementById('report_screenshot').style.display = 'none';
-        document.getElementById('report_data').style.display = '';
-    } else {
-        document.getElementById('report_screenshot').innerHTML="<img src=\"screenshot/?report_id={/literal}{$report_id}{literal}\" alt=\"Screenshot for {/literal}{$report_id}{literal}\" id=\"screenshot\" />";
-        document.getElementById('report_screenshot').style.display = '';
-        document.getElementById('report_data').style.display = 'none';
-    }
+	if(aItem == 'data'){
+		document.getElementById('report_screenshot').style.display = 'none';
+		document.getElementById('report_data').style.display = '';
+	} else {
+		document.getElementById('report_screenshot').innerHTML="<img src=\"screenshot/?report_id={/literal}{$report_id}{literal}\" alt=\"Screenshot for {/literal}{$report_id}{literal}\" id=\"screenshot\" />";
+		document.getElementById('report_screenshot').style.display = '';
+		document.getElementById('report_data').style.display = 'none';
+	}
 }
 </script>
 {/literal}
@@ -18,16 +18,16 @@ function show(aItem){
 {literal}
 <style type="text/css">
 #report_tabs ul li {
-    display: inline;
-    border: 1px solid #ccc;
-    background: 1px solid #eee;
-    padding: 0.5em; 2em;
-    margin: 0.5em; 4em;
+	display: inline;
+	border: 1px solid #ccc;
+	background: 1px solid #eee;
+	padding: 0.5em; 2em;
+	margin: 0.5em; 4em;
 }
 
 #report_screenshot {
-    margin: 0 auto 0 auto;
-    text-align: center;
+	margin: 0 auto 0 auto;
+	text-align: center;
 }
 </style>
 {/literal}
@@ -70,7 +70,7 @@ function show(aItem){
 			<div class="data">{$report_platform}</div>
 		</div>
 		<div>
-		        <div class="title">OS/CPU:</div>
+			<div class="title">OS/CPU:</div>
 			<div class="data">{$report_oscpu}</div>
 		</div>
 		<div>
@@ -116,65 +116,65 @@ function show(aItem){
 			{/if}
 		</ul>
 	</div>
-        {/if}
+{/if}
 </div>
 <div id="reportNavigation">
-    <p>
-    {if $showReportNavigation == true}
-        <strong>Report List ({$index+1} of {$total}):</strong> &nbsp;
-        {strip}
-        {if $first_report != 'disable'}
-            <a href="{$base_url}/app/report/?report_id={$first_report}&amp;{$nav_continuity_params}" accesskey="f" title="First Report in List (Access Key 'F')">
-        {/if}
-        First
-        {if $first_report != 'disable'}
-            </a>
-        {/if}
-        {/strip}
+	<p>
+	{if $showReportNavigation == true}
+		<strong>Report List ({$index+1} of {$total}):</strong> &nbsp;
+		{strip}
+		{if $first_report != 'disable'}
+			<a href="{$base_url}/app/report/?report_id={$first_report}&amp;{$nav_continuity_params}" accesskey="f" title="First Report in List (Access Key 'F')">
+		{/if}
+		First
+		{if $first_report != 'disable'}
+			</a>
+		{/if}
+		{/strip}
 
-         |
+	|
 
-        {strip}
-        {if $previous_report != 'disable'}
-            <a href="{$base_url}/app/report/?report_id={$previous_report}&amp;{$nav_continuity_params}" accesskey="p" title="Previous Report in List (Access Key 'p')">
-        {/if}
-        Previous
-        {if $previous_report != 'disable'}
-            </a>
-        {/if}
-        {/strip}
+		{strip}
+		{if $previous_report != 'disable'}
+		<a href="{$base_url}/app/report/?report_id={$previous_report}&amp;{$nav_continuity_params}" accesskey="p" title="Previous Report in List (Access Key 'p')">
+		{/if}
+		Previous
+		{if $previous_report != 'disable'}
+		</a>
+		{/if}
+		{/strip}
 
-         |
+	|
 
-        {strip}
-        {if $next_report != 'disable'}
-            <a href="{$base_url}/app/report/?report_id={$next_report}&amp;{$nav_continuity_params}" accesskey="n" title="Next Report in List (Access Key 'N')">
-        {/if}
-        Next
-        {if $next_report != 'disable'}
-            </a>
-        {/if}
-        {/strip}
+		{strip}
+		{if $next_report != 'disable'}
+		<a href="{$base_url}/app/report/?report_id={$next_report}&amp;{$nav_continuity_params}" accesskey="n" title="Next Report in List (Access Key 'N')">
+		{/if}
+		Next
+		{if $next_report != 'disable'}
+		</a>
+		{/if}
+		{/strip}
 
-         |
+	|
 
-        {strip}
-        {if $last_report != 'disable'}
-            <a href="{$base_url}/app/report/?report_id={$last_report}&amp;{$nav_continuity_params}" accesskey="l" title="Last Report in List (Access Key 'L')">
-        {/if}
-        Last
-        {if $last_report != 'disable'}
-            </a>
-        {/if}
-        {/strip}
+		{strip}
+		{if $last_report != 'disable'}
+		<a href="{$base_url}/app/report/?report_id={$last_report}&amp;{$nav_continuity_params}" accesskey="l" title="Last Report in List (Access Key 'L')">
+		{/if}
+		Last
+		{if $last_report != 'disable'}
+		</a>
+		{/if}
+		{/strip}
 
-         |
+	|
 
-    {/if}
-        <a href="{$base_url}/app/query/?{$nav_continuity_params}" accesskey="b" title="Back to the Query List (Access Key 'B')">Back To List</a>
+	{/if}
+	<a href="{$base_url}/app/query/?{$nav_continuity_params}" accesskey="b" title="Back to the Query List (Access Key 'B')">Back To List</a>
 
-         |
-        <a href="{$base_url}/app/" accesskey="q" title="New Search (Access Key 'Q')">New Search</a>
-    </p>
+	|
+	<a href="{$base_url}/app/" accesskey="q" title="New Search (Access Key 'Q')">New Search</a>
+	</p>
 </div>
 {/if}

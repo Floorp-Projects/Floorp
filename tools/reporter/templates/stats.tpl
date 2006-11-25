@@ -28,27 +28,27 @@
 		<div class="title">By Platform:</div>
 		<div class="data">
 		<table>
-    		{section name=sys loop=$platform}
+		{section name=sys loop=$platform}
 			<tr>
-                        	<td>{$platform[sys].report_platform}</td>
+				<td>{$platform[sys].report_platform}</td>
 				<td>{$platform[sys].total}</td>
 			</tr>
-    		{/section}
-    		</table>
-                </div>
+		{/section}
+		</table>
+		</div>
 	</div>
 	<div>
 		<div class="title">By Product:</div>
 		<div class="data">
 		<table>
-    		{section name=prod loop=$product}
+		{section name=prod loop=$product}
 			<tr>
-                        	<td>{$product[prod].report_product}</td>
+				<td>{$product[prod].report_product}</td>
 				<td>{$product[prod].total}</td>
 			</tr>
-    		{/section}
-    		</table>
-                </div>
+		{/section}
+		</table>
+		</div>
 	</div>
 
 </div>
