@@ -1796,22 +1796,21 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
       <title>Version Definitions</title>
 
       <para>
-        Bugzilla displays the version you are using at the top of most
-        pages you load. It will look something like '2.16.7' or '2.18rc3'
-        or '2.19.1+'. The first number in this series is the Major Version.
-        This does not change very often (that is to say, almost never);
+        Bugzilla displays the version you are using at the top of the home
+        page <filename>index.cgi</filename>. It looks something like
+        '2.20.3', '2.22.1' or '3.0rc1'. The first number in this series is
+        the Major Version. This does not change very often;
         Bugzilla was 1.x.x when it was first created, and went to 2.x.x
-        when it was re-written in perl in Sept 1998. If/When the major version
-        is changed to 3.x.x, it will signify a significant structural change
-        and will be accompanied by much fanfare and many instructions on
-        how to upgrade, including a revision to this page. :)
+        when it was re-written in perl in Sept 1998. The major version
+        3.x.x, released in early 2007, is pretty far from what the 2.x.x
+        series looked like, both about its UI and its code.
       </para>
 
       <para>
         The second number in the version is called the 'minor number', and
         a release that changes the minor number is called a 'point release'.
-        An even number in this position (2.14, 2.16, 2.18, 2.20, etc.)
-        represents a stable version, while an odd number (2.17, 2.19, etc.)
+        An even number in this position (2.18, 2.20, 2.22, 3.0, 3.2, etc.)
+        represents a stable version, while an odd number (2.19, 2.21, 2.23, etc.)
         represents a development version. In the past, stable point releases
         were feature-based, coming when certain enhancements had been
         completed, or the Bugzilla development team felt that enough
@@ -1823,25 +1822,38 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
 
       <para>
         The third number in the Bugzilla version represents a bugfix version.
-        Bugfix Revisions are normally released only to address security
-        vulnerabilities; in the future, it is likely that the Bugzilla
-        development team will back-port bugfixes in a new point release to
-        the old point release for a limited period. Once enough of these
+        Bugfix Revisions are released only to address security vulnerabilities
+        and, for a limited period, bug fixes. Once enough of these
         bugfixes have accumulated (or a new security vulnerability is
-        identified and closed), a bugfix release will be made. As an 
-        example, 2.16.6 was a bugfix release, and improved on 2.16.5.
+        identified and closed), a bugfix release is made. As an
+        example, 2.20.3 was a bugfix release, and improved on 2.20.2.
       </para>
 
       <note>
         <para>
           When reading version numbers, everything separated by a point ('.')
           should be read as a single number. It is <emphasis>not</emphasis>
-          the same as decimal. 2.14 is newer than 2.8 because minor version
-          14 is greater than minor version 8. 2.24.11 would be newer than
-          2.24.9 (because bugfix 11 is greater than bugfix 9. This is
+          the same as decimal. 2.22 is newer than 2.8 because minor version
+          22 is greater than minor version 8. The now unsupported release 2.16.11
+          was newer than 2.16.9 (because bugfix 11 is greater than bugfix 9. This is
           confusing to some people who aren't used to dealing with software.
         </para>
       </note>
+    </section>
+
+    <section id="upgrading-notifications">
+      <title>Upgrading - Notifications</title>
+
+      <para>
+        Bugzilla 3.0 introduces the ability to automatically notify
+        administrators when new releases are available, based on the
+        <literal>upgrade_notification</literal> parameter, see
+        <xref linkend="parameters"/>. Administrators will see these
+        notifications when they access the <filename>index.cgi</filename>
+        page, i.e. generally when logging in. Bugzilla will check once a
+        week for new releases, unless the parameter is set to
+        <quote>disabled</quote>.
+      </para>
     </section>
 
     <section id="upgrading-methods">
@@ -1880,8 +1892,8 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
       <para>
         The larger the jump you are trying to make, the more difficult it
         is going to be to upgrade if you have made local customizations.
-        Upgrading from 2.18 to 2.18.1 should be fairly painless even if
-        you are heavily customized, but going from 2.14 to 2.18 is going
+        Upgrading from 2.22 to 2.22.1 should be fairly painless even if
+        you are heavily customized, but going from 2.18 to 3.0 is going
         to mean a fair bit of work re-writing your local changes to use
         the new files, logic, templates, etc. If you have done no local
         changes at all, however, then upgrading should be approximately
@@ -1900,7 +1912,7 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
 
       <para>
         The examples in the following sections are written as though the
-        user were updating to version 2.18.1, but the procedures are the
+        user were updating to version 2.22.1, but the procedures are the
         same regardless of whether one is updating to a new point release
         or simply trying to obtain a new bugfix release. Also, in the
         examples the user's Bugzilla installation is found at
@@ -1939,10 +1951,9 @@ bash$ <command>cd /var/www/html/bugzilla</command>
 bash$ <command>cvs login</command>
 Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
 CVS password: <emphasis>('anonymous', or just leave it blank)</emphasis>
-bash$ <command>cvs -q update -r BUGZILLA-2_18_1 -dP</command>
+bash$ <command>cvs -q update -r BUGZILLA-2_22_1 -dP</command>
 P checksetup.pl
 P collectstats.pl
-P globals.pl
 P docs/rel_notes.txt
 P template/en/default/list/quips.html.tmpl
 <emphasis>(etc.)</emphasis>
@@ -1980,19 +1991,18 @@ P template/en/default/list/quips.html.tmpl
 
         <programlisting>
 bash$ <command>cd /var/www/html</command>
-bash$ <command>wget ftp://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.18.1.tar.gz</command>
+bash$ <command>wget http://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.22.1.tar.gz</command>
 <emphasis>(Output omitted)</emphasis>
-bash$ <command>tar xzvf bugzilla-2.18.1.tar.gz</command>
-bugzilla-2.18.1/
-bugzilla-2.18.1/.cvsignore
-bugzilla-2.18.1/1x1.gif
+bash$ <command>tar xzvf bugzilla-2.22.1.tar.gz</command>
+bugzilla-2.22.1/
+bugzilla-2.22.1/.cvsignore
 <emphasis>(Output truncated)</emphasis>
-bash$ <command>cd bugzilla-2.18.1</command>
+bash$ <command>cd bugzilla-2.22.1</command>
 bash$ <command>cp ../bugzilla/localconfig* .</command>
 bash$ <command>cp -r ../bugzilla/data .</command>
 bash$ <command>cd ..</command>
 bash$ <command>mv bugzilla bugzilla.old</command>
-bash$ <command>mv bugzilla-2.18.1 bugzilla</command>
+bash$ <command>mv bugzilla-2.22.1 bugzilla</command>
         </programlisting>
 
         <warning>
@@ -2022,7 +2032,7 @@ bash$ <command>mv bugzilla-2.18.1 bugzilla</command>
 
         <para>
           If you are doing a bugfix upgrade -- that is, one where only the 
-          last number of the revision changes, such as from 2.16.6 to 2.16.7
+          last number of the revision changes, such as from 2.22 to 2.22.1
           -- then you have the option of obtaining and applying a patch file
           from the <ulink
           url="http://www.bugzilla.org/download/">Download Page</ulink>.
@@ -2044,13 +2054,12 @@ bash$ <command>mv bugzilla-2.18.1 bugzilla</command>
 
         <programlisting>
 bash$ <command>cd /var/www/html/bugzilla</command>
-bash$ <command>wget ftp://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.18.0-to-2.18.1.diff.gz</command>
+bash$ <command>wget http://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.22-to-2.22.1.diff.gz</command>
 <emphasis>(Output omitted)</emphasis>
-bash$ <command>gunzip bugzilla-2.18.0-to-2.18.1.diff.gz</command>
-bash$ <command>patch -p1 &lt; bugzilla-2.18.0-to-2.18.1.diff</command>
+bash$ <command>gunzip bugzilla-2.22-to-2.22.1.diff.gz</command>
+bash$ <command>patch -p1 &lt; bugzilla-2.22-to-2.22.1.diff</command>
 patching file checksetup.pl
 patching file collectstats.pl
-patching file globals.pl
 <emphasis>(etc.)</emphasis>
         </programlisting>
 
