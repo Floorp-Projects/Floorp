@@ -526,7 +526,7 @@ nsXULDocument::EndLoad()
                     continue;
                 }
 
-                if (useXULCache && IsChromeURI(sheetURI)) {
+                if (IsChromeURI(sheetURI)) {
                     mCurrentPrototype->AddStyleSheetReference(sheetURI);
                 }
             }
