@@ -44,8 +44,11 @@
 
 <!ENTITY namespaceTitle.null.label "null">
 <!ENTITY namespaceTitle.default.label "Document par défaut">
+<!ENTITY namespaceTitle.custom.label "Personnalisé">
 
-<!-- LOCALIZATION NOTE: DO NOT LOCALIZE These are generic Namespaces -->
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                         Please consult http://www.w3.org/Consortium/Translation/
+                         for appropriate translation or leave unchanged. -->
 <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
 <!ENTITY namespaceTitle.XML.label "XML">
 <!ENTITY namespaceTitle.XHTML.label "XHTML">
@@ -59,4 +62,3 @@
 <!ENTITY namespaceTitle.XMLEvents.label "Événements XML">
 <!ENTITY namespaceTitle.WAIRoles.label "Rôles WAI">
 <!ENTITY namespaceTitle.WAIProperties.label "Propriétés WAI">
-<!ENTITY namespaceTitle.custom.label "Personnalisé">
