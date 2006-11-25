@@ -1248,7 +1248,7 @@ function BrowserSearchInternet()
   }
 
   // Fallback if the stuff above fails: use the hard-coded search engine
-  loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
+  openTopWin(gNavigatorRegionBundle.getString("otherSearchURL"));
 }
 
 
