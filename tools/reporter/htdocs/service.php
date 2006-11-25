@@ -44,6 +44,7 @@ require_once($config['base_path'].'/includes/contrib/nusoap/lib/nusoap.php');
 // Turn off Error Reporting because it breaks xml formatting and causes errors
 error_reporting(0);
 
+// If debugging is enabled, we turn it on (mostly a negative thing)
 if($config['debug']){
     $debug = 1;
 }
@@ -72,36 +73,109 @@ $server->register(
     'encoded'                                // use
 );
 
-$server->register(
-    'submitReport',                     // method name
-    array('rmoVers' => 'xsd:string',
-          'url' => 'xsd:string',
-          'problem_type' => 'xsd:string',
-          'description' => 'xsd:string',
-          'behind_login' => 'xsd:string',
-          'platform' => 'xsd:string',
-          'oscpu' => 'xsd:string',
-          'gecko' => 'xsd:string',
-          'product' => 'xsd:string',
-          'useragent' => 'xsd:string',
-          'buildconfig' => 'xsd:string',
-          'language' => 'xsd:string',
-          'email' => 'xsd:string',
-          'sysid' => 'xsd:string',
-          'screenshot' => 'xsd:base64Binary',
-          'screenshot_format' => 'xsd:string'),     // input parameters
-    array('return' => 'xsd:string'),                // output parameters
-    'uri:MozillaReporter',                          // namespace
-    'uri:MozillaReporter/submitReport',             // SOAPAction
-    'rpc',                                          // style
-    'encoded'                                       // use
-);
+/******************************************************
+ *            submitReport Method
+ *
+ * In version 0.2, the service is envoked merely though /service/
+ * In version 0.3 the service has a version number appended to it
+ * such that it's now /service/0.3/.
+ * We detect this and register the correct version of the API for
+ * that client.  This is a a simple workaround for nuSOAP's inability
+ * to know what is what in a SOAP request (it simply goes by order)
+ * and saves us a lot of trouble.  No this isn't pretty, but it's a
+ * really simple fix to this one limitation.
+ ******************************************************/
 
-function submitReport($rmoVers, $url, $problem_type, $description, $behind_login,
-                      $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, 
-                      $language, $email, $sysid, $screenshot, $screenshot_format) {
+/***
+ * v0.3 Firefox > 2.0 (Minefield and later)
+ ***/
+if($_REQUEST['v'] == '0.3'){
+    $server->register(
+        'submitReport',                                 // method name
+        array('rmoVers' => 'xsd:string',
+              'url' => 'xsd:string',
+              'problem_type' => 'xsd:string',
+              'description' => 'xsd:string',
+              'behind_login' => 'xsd:string',
+              'platform' => 'xsd:string',
+              'oscpu' => 'xsd:string',
+              'gecko' => 'xsd:string',
+              'product' => 'xsd:string',
+              'useragent' => 'xsd:string',
+              'buildconfig' => 'xsd:string',
+              'language' => 'xsd:string',
+              'email' => 'xsd:string',
+              'sysid' => 'xsd:string',
+              'charset' => 'xsd:string',
+              'screenshot' => 'xsd:base64Binary',
+              'screenshot_format' => 'xsd:string'),     // input parameters
+        array('return' => 'xsd:string'),                // output parameters
+        'uri:MozillaReporter',                          // namespace
+        'uri:MozillaReporter/submitReport',             // SOAPAction
+        'rpc',                                          // style
+        'encoded'                                       // use
+    );
+
+    function submitReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                 $platform, $oscpu, $gecko, $product, $useragent, $buildconfig,
+                 $language, $email, $sysid, $screenshot, $screenshot_format, $charset){
+
+        // What we're really calling
+        return processReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                             $platform, $oscpu, $gecko, $product, $useragent, $buildconfig,
+                             $language, $email, $sysid, $screenshot, $screenshot_format, $charset);
+    }
+}
+
+/***
+ * v0.2 Shipped in Firefox 1.5.x and Firefox 2.0.x.
+ *   Note it's critical we support service/  without a version param to handle older < 2.0+ clients.
+ ***/
+else if($_REQUEST['v'] == '0.2' || !isset($_REQUEST['v']) || $_REQUEST['v'] == ''){
+    $server->register(
+        'submitReport',                                 // method name
+        array('rmoVers' => 'xsd:string',
+              'url' => 'xsd:string',
+              'problem_type' => 'xsd:string',
+              'description' => 'xsd:string',
+              'behind_login' => 'xsd:string',
+              'platform' => 'xsd:string',
+              'oscpu' => 'xsd:string',
+              'gecko' => 'xsd:string',
+              'product' => 'xsd:string',
+              'useragent' => 'xsd:string',
+              'buildconfig' => 'xsd:string',
+              'language' => 'xsd:string',
+              'email' => 'xsd:string',
+              'sysid' => 'xsd:string'),                 // input parameters
+        array('return' => 'xsd:string'),                // output parameters
+        'uri:MozillaReporter',                          // namespace
+        'uri:MozillaReporter/submitReport',             // SOAPAction
+        'rpc',                                          // style
+        'encoded'                                       // use
+    );
+
+    function submitReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                 $platform, $oscpu, $gecko, $product, $useragent, $buildconfig,
+                 $language, $email, $sysid){
+
+        // What we're really calling
+        return processReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                             $platform, $oscpu, $gecko, $product, $useragent, $buildconfig,
+                             $language, $email, $sysid);
+    }
+}
+// If someone attempts a version > we support (url hacking) we just won't have a submitRequest method for them.
+
+
+/***
+ * This is the actual submitReport.  Everything after the earliest version supported should be =null, so it's ignored.
+ ***/
+function processReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                       $platform, $oscpu, $gecko, $product, $useragent, $buildconfig,
+                       $language, $email, $sysid, $screenshot = null, $screenshot_format = null, $charset = null) {
     global $config;
-    
+
     if ($config['service_active'] == false){
             return new soap_fault('SERVER', '', 'The service is currently unavailable.  Please try again in a few minutes.');
     }
@@ -127,6 +201,7 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     $screenshot_format = trim(strip_all_tags($screenshot_format));
     $screenshot_width = trim(strip_all_tags($screenshot_width));
     $screenshot_height = trim(strip_all_tags($screenshot_height));
+    $charset = trim(strip_all_tags($charset));
 
     // check verison
     if ($rmoVers < $config['min_vers']){
@@ -168,11 +243,6 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     if (!$sysid) {
         return new soap_fault('Client', '', 'No SysID Entered', $sysid);
     }
-    /* We don't require email... it's optional
-    if    (!$email) {
-        return new soap_fault('Client', '', 'Invalid Email', $email);
-    }
-    */
 
     // Image Validation
     if($screenshot != null) {
@@ -186,15 +256,29 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
         }
     }
 
-    // create report_id.    We just MD5 it, becase we don't need people counting reports, since it's inaccurate.
+    // create report_id.    We just use a timestamp, because we don't need people counting reports, since it's inaccurate.
     // we can have dup's, so it's not a good thing for people to be saying 'mozilla.org reports 500,000 incompatable sites'
-    $report_id = 'RMO'.str_replace(".", "", array_sum(explode(' ', microtime())));
+    $id = str_replace(".", "", array_sum(explode(' ', microtime())));
+
+    // Make sure it's always 14 chars long
+    $idlen = strlen($id);
+    if($idlen < 14){
+        for($i=$idlen;$i<14; $i++){
+            $id = '0'.$id;
+        }
+    }
+    unset($idlen);
+
+    $report_id = 'RMO'.$id;
+    unset($id);
+
 
     /**********
      * Open DB
      **********/
     $db = NewDBConnection($config['db_dsn']);
     $db->SetFetchMode(ADODB_FETCH_ASSOC);
+    $db->debug = false;  // no good reason to ever let this be true, since it breaks things
 
     /**********
      * Check for valid sysid
@@ -254,6 +338,7 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
                                         report.report_problem_type,
                                         report.report_description,
                                         report.report_behind_login,
+                                        report.report_charset,
                                         report.report_useragent,
                                         report.report_platform,
                                         report.report_oscpu,
@@ -273,6 +358,7 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
                                         ".$db->quote($problem_type).",
                                         ".$db->quote($description).",
                                         ".$db->quote($behind_login).",
+                                        ".$db->quote($charset).",
                                         ".$db->quote($useragent).",
                                         ".$db->quote($platform).",
                                         ".$db->quote($oscpu).",
@@ -319,7 +405,6 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
      * Disconnect (optional really)
      **********/
     $db->disconnect();
-
     return $report_id;
 }
 
@@ -331,6 +416,7 @@ function register($language){
      **********/
     $db = NewDBConnection($config['db_dsn']);
     $db->SetFetchMode(ADODB_FETCH_ASSOC);
+    $db->debug = false;  // no good reason to ever let this be true, since it breaks things
 
     /**********
      * Generate an ID
