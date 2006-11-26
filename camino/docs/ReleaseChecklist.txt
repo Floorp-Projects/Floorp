@@ -1,5 +1,6 @@
 Checklist of things to do before releasing a new Camino version:
 
+- Make sure embed-replacements are all up to date
 - Update version number in project file (both Camino and CaminoStatic targets)
 - Update version number in all-camino.js
 - Update version number in ChimeraVersion.r
