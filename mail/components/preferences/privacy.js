@@ -43,17 +43,12 @@ var gPrivacyPane = {
   init: function ()
   {
     this.mPane = document.getElementById("panePrivacy");
-    this.updateRemoteImagesState(); 
     
     this.updateManualMarkMode(document.getElementById('manualMark').checked);
     this.updateJunkLogButton(document.getElementById('enableJunkLogging').checked);
     
     // Update the MP buttons
     this.updateMasterPasswordButton();
-
-    // build the local address book menu list. We do this by hand instead of using the xul template
-    // builder because of Bug #285076, 
-    this.createLocalDirectoriesList();
 
     var preference = document.getElementById("mail.preferences.privacy.selectedTabIndex");
     if (preference.value)
@@ -66,61 +61,6 @@ var gPrivacyPane = {
     if (this.mInitialized)
       document.getElementById("mail.preferences.privacy.selectedTabIndex")
               .valueFromPreferences = document.getElementById("privacyPrefs").selectedIndex;
-  },
-
-  createLocalDirectoriesList: function () 
-  {
-    var abPopup = document.getElementById("whitelist-menupopup");
-
-    if (abPopup) 
-      this.loadLocalDirectories(abPopup);
-  },
-
-  loadLocalDirectories: function (aPopup)
-  {
-    var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                     .getService(Components.interfaces.nsIRDFService);
-
-    var parentDir = rdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
-    var enumerator = parentDir.childNodes;
-    var preference = document.getElementById("mailnews.message_display.disable_remote_images.whiteListAbURI");
-
-    if (enumerator)
-    {
-      while (enumerator.hasMoreElements())
-      {
-        var addrbook = enumerator.getNext();
-        if (addrbook instanceof Components.interfaces.nsIAbDirectory && !addrbook.isRemote && !addrbook.isMailList)
-        {
-          var abURI = addrbook.directoryProperties.URI;
-          item = document.createElement("menuitem");
-          item.setAttribute("label", addrbook.dirName);
-          item.setAttribute("value", abURI);
-          aPopup.appendChild(item);   
-          if (preference.value == abURI)
-          {
-            aPopup.parentNode.value = abURI;
-            aPopup.selectedItem = item;
-          }
-        }
-      }
-    }
-  },
-
-  updateRemoteImagesState: function()
-  {
-    var checkbox = document.getElementById('networkImageDisableImagesInMailNews');
-
-    if (checkbox.checked) 
-    {
-      document.getElementById('useWhiteList').removeAttribute('disabled');
-      document.getElementById('whiteListAbURI').removeAttribute('disabled');
-    }
-    else
-    {
-      document.getElementById('useWhiteList').setAttribute('disabled', 'true');
-      document.getElementById('whiteListAbURI').setAttribute('disabled', 'true');
-    }    
   },
 
   updateManualMarkMode: function(aEnableRadioGroup)
