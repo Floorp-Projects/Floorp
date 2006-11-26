@@ -2401,11 +2401,8 @@ function HandleMDNResponse(aUrl)
 
   var msgFolder = aUrl.folder;
   var msgURI = GetLoadedMessage();
-  if (!msgFolder || !msgURI)
+  if (!msgFolder || !msgURI || IsNewsMessage(msgURI))
     return;
-
-	if (IsNewsMessage(msgURI))
-		return;
 
   // if the message is marked as junk, do NOT attempt to process a return receipt
   // in order to better protect the user
@@ -2431,7 +2428,7 @@ function HandleMDNResponse(aUrl)
     if (mimeMsgId)
       msgHdr.messageId = mimeMsgId;
   }
-  
+
   // After a msg is downloaded it's already marked READ at this point so we must check if
   // the msg has a "Disposition-Notification-To" header and no MDN report has been sent yet.
   var msgFlags = msgHdr.flags;
@@ -2442,7 +2439,7 @@ function HandleMDNResponse(aUrl)
   var oldDNTHeader = mimeHdr.extractHeader("Return-Receipt-To", false);
   if (!DNTHeader && !oldDNTHeader)
     return;
- 
+
   // Everything looks good so far, let's generate the MDN response.
   var mdnGenerator = Components.classes["@mozilla.org/messenger-mdn/generator;1"].
                                   createInstance(Components.interfaces.nsIMsgMdnGenerator);
