@@ -68,12 +68,6 @@ function onLoadViewSource()
 {
   viewSource(window.arguments[0]);
   document.commandDispatcher.focusedWindow = content;
-  gFindBar.initFindBar();
-}
-
-function onUnloadViewSource()
-{
-  gFindBar.uninitFindBar();
 }
 
 function getBrowser()

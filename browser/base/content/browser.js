@@ -94,6 +94,7 @@ var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gURLBar = null;
+var gFindBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
@@ -788,11 +789,10 @@ function BrowserStartup()
 
   var sidebarSplitter;
   if (window.opener && !window.opener.closed) {
-    if (window.opener.gFindBar && window.opener.gFindBar.mFindMode == FIND_NORMAL) {
-      var openerFindBar = window.opener.document.getElementById("FindToolbar");
-      if (openerFindBar && !openerFindBar.hidden)
-        gFindBar.openFindBar();
-    }
+    var openerFindBar = window.opener.gFindBar;
+    if (openerFindBar && !openerFindBar.hidden &&
+        openerFindBar.findMode == gFindBar.FIND_NORMAL)
+      gFindBar.open();
 
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // The opener can be the hidden window too, if we're coming from the state
@@ -882,6 +882,7 @@ function prepareForStartup()
   gURLBar = document.getElementById("urlbar");
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
+  gFindBar = document.getElementById("FindToolbar");
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
@@ -986,8 +987,6 @@ function delayedStartup()
     var sidebarBox = document.getElementById("sidebar-box");
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
-
-  gFindBar.initFindBar();
 
 #ifndef MOZ_PLACES_BOOKMARKS
   // add bookmark options to context menu for tabs
@@ -1162,8 +1161,6 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
-  
-  gFindBar.uninitFindBar();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -2558,9 +2555,8 @@ function toggleAffectedChrome(aHide)
     gChromeState.statusbarOpen = !statusbar.hidden;
     statusbar.hidden = aHide;
 
-    var findBar = document.getElementById("FindToolbar");
-    gChromeState.findOpen = !findBar.hidden;
-    gFindBar.closeFindBar();
+    gChromeState.findOpen = !gFindBar.hidden;
+    gFindBar.close();
   }
   else {
     if (gChromeState.notificationsOpen) {
@@ -2573,7 +2569,7 @@ function toggleAffectedChrome(aHide)
     }
 
     if (gChromeState.findOpen)
-      gFindBar.openFindBar();
+      gFindBar.open();
   }
 
   if (gChromeState.sidebarOpen)
@@ -3817,7 +3813,6 @@ nsBrowserStatusHandler.prototype =
     // Do not update urlbar if there was a subframe navigation
 
     var browser = getBrowser().selectedBrowser;
-    var findField = document.getElementById("find-field");
     if (aWebProgress.DOMWindow == content) {
 
       if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
@@ -3835,9 +3830,6 @@ nsBrowserStatusHandler.prototype =
 
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
-
-      if (findField)
-        setTimeout(function() { findField.value = browser.findString; }, 0, findField, browser);
 
       //XXXBlake don't we have to reinit this.urlBar, etc.
       //         when the toolbar changes?
@@ -3870,14 +3862,17 @@ nsBrowserStatusHandler.prototype =
       }
     }
     UpdateBackForwardButtons();
-    if (findField && gFindBar.mFindMode != FIND_NORMAL) {
+
+    if (gFindBar.findMode != gFindBar.FIND_NORMAL) {
       // Close the Find toolbar if we're in old-style TAF mode
-      gFindBar.closeFindBar();
+      gFindBar.close();
     }
 
-    //fix bug 253793 - turn off highlight when page changes
-    if (document.getElementById("highlight").checked)
-      document.getElementById("highlight").removeAttribute("checked");
+    // XXXmano new-findbar, do something useful once it lands.
+    // Of course, this is especially wrong with bfcache on...
+
+    // fix bug 253793 - turn off highlight when page changes
+    gFindBar.getElement("highlight").checked = false;
 
     // See bug 358202, when tabs are switched during a drag operation,
     // timers don't fire on windows (bug 203573)
@@ -4011,7 +4006,6 @@ nsBrowserStatusHandler.prototype =
       observerService.notifyObservers(content, notification, urlStr);
     } catch (e) {
     }
-    setTimeout(function() { if (document.getElementById("highlight").checked) toggleHighlight(true); }, 0);
   }
 }
 

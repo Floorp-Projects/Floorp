@@ -75,7 +75,7 @@
 
 toolbarbutton.bookmark-item:hover
 {
-  background:url("chrome://browser/skin/bookmark-hover-left.png") no-repeat left center;
+  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-left.png") no-repeat left center;
 }
 
 toolbarbutton.bookmark-item:hover:active, toolbarbutton.bookmark-item[open="true"] {
@@ -90,38 +90,18 @@ toolbarbutton.bookmark-item:not([container]) > .toolbarbutton-text {
   padding-right: 7px;
 }
 
-#find-next > .toolbarbutton-text,
-#find-previous > .toolbarbutton-text,
-#highlight > .toolbarbutton-text {
-  -moz-margin-start: 0px;
-}
 
 toolbarbutton.bookmark-item:not([container]):hover > .toolbarbutton-text,
-toolbarbutton.bookmark-item[container]:not([open]):hover > .toolbarbutton-menu-dropmarker,
-#find-next:not([disabled]):hover > .toolbarbutton-text, 
-#find-previous:not([disabled]):hover > .toolbarbutton-text,
-#highlight:not([disabled]):hover > .toolbarbutton-text
+toolbarbutton.bookmark-item[container]:not([open]):hover > .toolbarbutton-menu-dropmarker 
 {
-  background: url("chrome://browser/skin/bookmark-hover-right.png") no-repeat right center;
+  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-right.png") no-repeat right center;;
   color: #fff;
 }
 
-#find-next:not([disabled]):hover, 
-#find-previous:not([disabled]):hover,
-#highlight:not([disabled]):hover
+toolbarbutton.bookmark-item[container]:hover > .toolbarbutton-text
 {
-  background:url("chrome://browser/skin/bookmark-hover-left.png") no-repeat left center;
-}
-
-toolbarbutton.bookmark-item[container]:hover > .toolbarbutton-text,
-#FindToolbar > toolbarbutton:not([disabled]):hover > .toolbarbutton-icon 
-{
-  background: url("chrome://browser/skin/bookmark-hover-mid.png") repeat-x;
+  background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-mid.png") repeat-x;
   color: #fff;
-}
-
-#find-closebutton > .toolbarbutton-icon  {
-	background-image: none !important;
 }
 
 toolbarbutton.bookmark-item:not([container]):hover:active  > .toolbarbutton-text,

@@ -162,7 +162,7 @@
              disablesecurity="true" disablehistory="true" type="content-primary" 
              src="about:blank" onclick="return contentAreaClick(event);" autofind="false"/>
     <hbox id="attachmentView"/>
-    <toolbar id="FindToolbar"/>
+    <findbar id="FindToolbar" browserid="messagepane"/>
   </vbox>  
 
   <statusbar class="chromeclass-status" id="status-bar"/>

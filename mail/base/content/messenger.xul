@@ -404,7 +404,7 @@
                    disablehistory="true" type="content-primary" src="about:blank"
                    disablesecurity="true" onclick="return contentAreaClick(event);"/>
           <hbox id="attachmentView"/>
-          <toolbar id="FindToolbar"/>
+          <findbar id="FindToolbar" browserid="messagepane"/>
         </vbox>  
       </box>
     </vbox>             

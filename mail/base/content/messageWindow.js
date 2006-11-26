@@ -319,8 +319,6 @@ function delayedOnLoadMessageWindow()
 
   CreateView(originalView);
   
-  gFindBar.initFindBar();
-  
   // initialize the customizeDone method on the customizeable toolbar
   var toolbox = document.getElementById("mail-toolbox");
   toolbox.customizeDone = MailToolboxCustomizeDone;
@@ -550,8 +548,6 @@ function OnUnloadMessageWindow()
 	OnUnloadMsgHeaderPane();
 
 	OnMailWindowUnload();
-	
-	gFindBar.uninitFindBar();
 }
 
 function CreateMessageWindowGlobals()

@@ -911,8 +911,6 @@ function delayedOnLoadMessenger()
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
   
-  gFindBar.initFindBar();  
-  
   // initialize the customizeDone method on the customizeable toolbar
   var toolbox = document.getElementById("mail-toolbox");
   toolbox.customizeDone = MailToolboxCustomizeDone;
@@ -928,8 +926,6 @@ function OnUnloadMessenger()
   pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pref.removeObserver("mail.pane_config.dynamic", MailPrefObserver);
   pref.removeObserver("mail.showFolderPaneColumns", MailPrefObserver);
-  
-  gFindBar.uninitFindBar();
 
   // FIX ME - later we will be able to use onload from the overlay
   OnUnloadMsgHeaderPane();

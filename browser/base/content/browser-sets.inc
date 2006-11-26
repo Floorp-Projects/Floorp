@@ -47,7 +47,6 @@
   <stringbundleset id="stringbundleset"> 
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
-    <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 #ifdef MOZ_PLACES
     <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
@@ -136,9 +135,15 @@
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-    <command id="cmd_find" oncommand="gFindBar.onFindCmd();" observes="isImage"/>
-    <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);" observes="isImage"/>
-    <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);" observes="isImage"/>
+    <command id="cmd_find"
+             oncommand="gFindBar.onFindCommand();"
+             observes="isImage"/>
+    <command id="cmd_findAgain"
+             oncommand="gFindBar.onFindAgainCommand(false);"
+             observes="isImage"/>
+    <command id="cmd_findPrevious"
+             oncommand="gFindBar.onFindAgainCommand(true);"
+             observes="isImage"/>
 #ifdef MOZ_PLACES_BOOKMARKS
     <command id="Browser:AddLinkBookmark"
              oncommand="PlacesCommandHook.bookmarkLink(gContextMenu.linkURL, gContextMenu.linkText());"/>

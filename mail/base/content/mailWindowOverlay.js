@@ -1525,11 +1525,12 @@ function MsgViewPageSource()
 
 function MsgFind()
 {
-  gFindBar.onFindCmd();
+  document.getElementById("FindToolbar").onFindCommand();
 }
+
 function MsgFindAgain(reverse)
 {
-  gFindBar.onFindAgainCmd(reverse);
+  document.getElementById("FindToolbar").onFindAgainCommand(reverse);
 }
 
 function MsgFilters(emailAddress, folder)
@@ -2415,8 +2416,9 @@ function OnMsgParsed(aUrl)
   // If the find bar is visible and we just loaded a new message, re-run 
   // the find command. This means the new message will get highlighted and
   // we'll scroll to the first word in the message that matches the find text.
-  if (gFindBar.isFindBarVisible())
-    gFindBar.find();
+  var findBar = document.getElementById("FindToolbar");
+  if (!findBar.hidden)
+    findBar.onFindAgainCommand(false);
     
   gMessageNotificationBar.setPhishingMsg(aUrl);
 }

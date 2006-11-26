@@ -75,8 +75,6 @@ function onLoadViewPartialSource()
   } else {
     document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
-  
-  gFindBar.initFindBar();
 
   if (window.arguments[3] == 'selection')
     viewPartialSourceForSelection(window.arguments[2]);
@@ -84,11 +82,6 @@ function onLoadViewPartialSource()
     viewPartialSourceForFragment(window.arguments[2], window.arguments[3]);
 
   window._content.focus();
-}
-
-function onUnloadViewPartialSource()
-{
-  gFindBar.uninitFindBar();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
