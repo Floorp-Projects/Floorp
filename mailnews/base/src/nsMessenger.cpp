@@ -2816,7 +2816,7 @@ nsresult nsDelAttachListener::DeleteOriginalMessage()
     messageArray,         // messages
     mMsgWindow,           // msgWindow
     PR_TRUE,              // deleteStorage
-    PR_TRUE,              // isMove
+    PR_FALSE,              // isMove
     listenerCopyService,  // listener
     PR_FALSE);            // allowUndo
 }

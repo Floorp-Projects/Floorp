@@ -56,12 +56,18 @@
 #include "nsIURI.h"
 #include "nsIDialogParamBlock.h"
 #include "nsUnicharUtils.h"
+
 #ifdef MOZ_XUL_APP
 #include "nsICommandLine.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
-#endif
+#include "nsNativeCharsetUtils.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
+#include "nsIMsgHdr.h"
+#include "nsMsgUtils.h"
+#endif // MOZ_XUL_APP
 
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap)
 NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap)
@@ -134,6 +140,51 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
   {
     nsAutoString arg;
     aCmdLine->GetArgument(0, arg);
+#ifdef XP_MACOSX
+    if (StringEndsWith(arg, NS_LITERAL_STRING(".mozeml"), nsCaseInsensitiveStringComparator()))
+    {
+      // parse file name - get path to containing folder, and message-id of message we're looking for
+      // Then, open that message (in a 3-pane window?)
+      // We're going to have a native path file url:
+      // file://<folder path>.mozmsgs/<message-id>.mozeml
+      PRInt32 mozmsgsIndex = arg.Find(NS_LITERAL_STRING(".mozmsgs"));
+      // take off the file:// part
+      nsString folderPath;
+      arg.Left(folderPath, mozmsgsIndex);
+      // need to convert to 8 bit chars...i.e., a local path.
+      nsCAutoString nativeArg;
+      NS_CopyUnicodeToNative(folderPath, nativeArg);
+      nsCString folderUri;
+      rv = MsgMailboxGetURI(nativeArg.get(), folderUri);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIRDFResource> res;
+      rv = rdf->GetResource(folderUri, getter_AddRefs(res));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIMsgFolder> containingFolder;
+      containingFolder = do_QueryInterface(res, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // once we have the folder uri, open the db and search for the message id.
+      nsAutoString unicodeMessageid;
+      // strip off .mozeml at the end as well
+      arg.Mid(unicodeMessageid, mozmsgsIndex + 9, arg.Length() - (mozmsgsIndex + 9 + 7));
+      nsCAutoString messageId;
+      NS_CopyUnicodeToNative(unicodeMessageid, messageId);
+      nsCOMPtr <nsIMsgDatabase> msgDB;
+      containingFolder->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
+      nsCOMPtr<nsIMsgDBHdr> msgHdr;
+      if (msgDB)
+        msgDB->GetMsgHdrForMessageID(messageId.get(), getter_AddRefs(msgHdr));
+      if (msgHdr)
+      {
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
+        rv = OpenMessengerWindowWithUri("mail:3pane", folderUri.get(), msgKey);  
+        return rv;
+      }
+    }
+#endif
     if (StringEndsWith(arg, NS_LITERAL_STRING(".eml"), nsCaseInsensitiveStringComparator()))
     {
       nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));

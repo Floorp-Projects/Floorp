@@ -70,68 +70,6 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 #include "nsIMsgAccountManager.h"
 #include "nsMsgUtils.h"
 
-static char *nsMailboxGetURI(const char *nativepath)
-{
-  
-  nsresult rv;
-  char *uri = nsnull;
-  
-  nsCOMPtr<nsIMsgAccountManager> accountManager = 
-    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return nsnull;
-  
-  nsCOMPtr<nsISupportsArray> serverArray;
-  accountManager->GetAllServers(getter_AddRefs(serverArray));
-  
-  // do a char*->fileSpec->char* conversion to normalize the path
-  nsFilePath filePath(nativepath);
-  
-  PRUint32 cnt;
-  rv = serverArray->Count(&cnt);
-  if (NS_FAILED(rv)) return nsnull;
-  PRInt32 count = cnt;
-  PRInt32 i;
-  for (i=0; i<count; i++) {
-    
-    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(serverArray, i);
-    
-    if (!server) continue;
-    
-    // get the path string, convert it to an nsFilePath
-    nsCOMPtr<nsIFileSpec> nativeServerPath;
-    rv = server->GetLocalPath(getter_AddRefs(nativeServerPath));
-    if (NS_FAILED(rv)) continue;
-    
-    nsFileSpec spec;
-    nativeServerPath->GetFileSpec(&spec);
-    nsFilePath serverPath(spec);
-    
-    // check if filepath begins with serverPath
-    PRInt32 len = PL_strlen(serverPath);
-    if (PL_strncasecmp(serverPath, filePath, len) == 0) {
-      nsXPIDLCString serverURI;
-      rv = server->GetServerURI(getter_Copies(serverURI));
-      if (NS_FAILED(rv)) continue;
-      
-      // the relpath is just past the serverpath
-      const char *relpath = nativepath + len;
-      // skip past leading / if any
-      while (*relpath == '/') relpath++;
-      nsCAutoString pathStr(relpath);
-      PRInt32 sbdIndex;
-      while((sbdIndex = pathStr.Find(".sbd", PR_TRUE)) != -1)
-      {
-        pathStr.Cut(sbdIndex, 4);
-      }
-      
-      uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.get());
-      
-      break;
-    }
-  }
-  return uri;
-}
-
 
 // helper function for parsing the search field of a url
 char * extractAttributeValue(const char * searchString, const char * attributeName);
@@ -252,14 +190,15 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
     GetFileSpec(&filePath);
     if (filePath)
     {
-      char * baseuri = nsMailboxGetURI(m_file);
+      nsCAutoString baseUri;
+      nsresult rv = MsgMailboxGetURI(m_file, baseUri);
+      NS_ENSURE_SUCCESS(rv, rv);
       char * baseMessageURI;
-      nsCreateLocalBaseMessageURI(baseuri, &baseMessageURI);
+      nsCreateLocalBaseMessageURI(baseUri.get(), &baseMessageURI);
       char * uri = nsnull;
       nsCAutoString uriStr;
       nsFileSpec folder = *filePath;
       nsBuildLocalMessageURI(baseMessageURI, m_messageKey, uriStr);
-      PL_strfree(baseuri);
       nsCRT::free(baseMessageURI);
       uri = ToNewCString(uriStr);
       *aURI = uri;

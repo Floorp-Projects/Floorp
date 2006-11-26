@@ -192,5 +192,7 @@ NS_MSG_BASE PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keyword
 
 NS_MSG_BASE PRBool MsgHostDomainIsTrusted(nsCString &host, nsCString &trustedMailDomains);
 
+NS_MSG_BASE nsresult MsgMailboxGetURI(const char *nativepath, nsCString &mailboxUri);
+
 #endif
 

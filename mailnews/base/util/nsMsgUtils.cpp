@@ -76,6 +76,7 @@
 #include "nsIRssIncomingServer.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgMessageService.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIOutputStream.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
@@ -1382,3 +1383,69 @@ PRBool MsgHostDomainIsTrusted(nsCString &host, nsCString &trustedMailDomains)
   } while (*end);
   return domainIsTrusted;
 }
+
+nsresult MsgMailboxGetURI(const char *nativepath, nsCString &mailboxUri)
+{
+  
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISupportsArray> serverArray;
+  accountManager->GetAllServers(getter_AddRefs(serverArray));
+  
+  // do a char*->fileSpec->char* conversion to normalize the path
+  nsFilePath filePath(nativepath);
+  
+  PRUint32 cnt;
+  rv = serverArray->Count(&cnt);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 count = cnt;
+  PRInt32 i;
+  for (i=0; i<count; i++) 
+  {
+    
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(serverArray, i);
+    
+    if (!server) continue;
+    
+    // get the path string, convert it to an nsFilePath
+    nsCOMPtr<nsIFileSpec> nativeServerPath;
+    rv = server->GetLocalPath(getter_AddRefs(nativeServerPath));
+    if (NS_FAILED(rv)) continue;
+    
+    nsFileSpec spec;
+    nativeServerPath->GetFileSpec(&spec);
+    nsFilePath serverPath(spec);
+    
+    // check if filepath begins with serverPath
+    PRInt32 len = PL_strlen(serverPath);
+    if (PL_strncasecmp(serverPath, filePath, len) == 0) 
+    {
+      nsXPIDLCString serverURI;
+      rv = server->GetServerURI(getter_Copies(serverURI));
+      if (NS_FAILED(rv)) continue;
+      
+      // the relpath is just past the serverpath
+      const char *relpath = nativepath + len;
+      // skip past leading / if any
+      while (*relpath == '/')
+        relpath++;
+      
+      nsCAutoString pathStr(relpath);
+      PRInt32 sbdIndex;
+      while((sbdIndex = pathStr.Find(".sbd", PR_TRUE)) != -1)
+        pathStr.Cut(sbdIndex, 4);
+      
+      mailboxUri = serverURI;
+      mailboxUri.Append('/');
+      mailboxUri.Append(pathStr);
+      break;
+    }
+  }
+  return mailboxUri.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
+}
+
+
