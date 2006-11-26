@@ -72,6 +72,9 @@
       <preference id="pref.browser.homepage.disable_button.bookmark_page"
                   name="pref.browser.homepage.disable_button.bookmark_page"
                   type="bool"/>
+      <preference id="pref.browser.homepage.disable_button.restore_default"
+                  name="pref.browser.homepage.disable_button.restore_default"
+                  type="bool"/>
 
       <!-- Downloads -->
       <preference id="browser.download.manager.showWhenStarting"
