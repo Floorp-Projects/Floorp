@@ -588,8 +588,9 @@ class nsTArray : public nsTArray_base {
     // AppendElement operations to minimize heap re-allocations.  This method
     // will not reduce the number of elements in this array.
     // @param capacity  The desired capacity of this array.
-    void SetCapacity(size_type capacity) {
-      EnsureCapacity(capacity, sizeof(elem_type));
+    // @return True if the operation succeeded; false if we ran out of memory
+    PRBool SetCapacity(size_type capacity) {
+      return EnsureCapacity(capacity, sizeof(elem_type));
     }
 
     // This method modifies the length of the array.  If the new length is
