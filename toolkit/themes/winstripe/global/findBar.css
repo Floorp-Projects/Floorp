@@ -1,6 +1,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#find-closebutton {
+findbar > toolbarbutton.findbar-closebutton {
   border: 1px solid transparent;
   padding: 3px 2px 4px 2px !important;
   list-style-image: url("chrome://global/skin/icons/close.png");
@@ -8,21 +8,21 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-#find-closebutton > .toolbarbutton-icon {
+findbar > toolbarbutton.findbar-closebutton > .toolbarbutton-icon {
   -moz-margin-end: 0px !important;
   -moz-padding-end: 2px !important;
   -moz-padding-start: 2px !important;
 }
 
-#find-closebutton:hover {
+findbar > toolbarbutton.findbar-closebutton:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-#find-closebutton:hover:active {
+findbar > toolbarbutton.findbar-closebutton:hover:active {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-#FindToolbar {
+findbar {
   -moz-appearance: none !important;
   border-top: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight !important;
@@ -32,59 +32,58 @@
 
 /* find-next button */
 
-#find-next {
+findbar > toolbarbutton.findbar-find-next {
   list-style-image: url("chrome://global/skin/icons/find.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#find-next:hover {
+findbar > toolbarbutton.findbar-find-next:hover {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 
-#find-next[disabled="true"] {
+findbar > toolbarbutton.findbar-find-next[disabled="true"] {
   -moz-image-region: rect(32px 16px 48px 0px) !important;
 }
 
 /* find-previous button */
 
-#find-previous {
+findbar > toolbarbutton.findbar-find-previous {
   list-style-image: url("chrome://global/skin/icons/find.png");
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-#find-previous:hover {
+findbar > toolbarbutton.findbar-find-previous:hover {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 
-#find-previous[disabled="true"] {
+findbar > toolbarbutton.findbar-find-previous[disabled="true"] {
   -moz-image-region: rect(32px 32px 48px 16px) !important;
 }
 
 /* highlight button */
 
-#highlight {
+findbar > toolbarbutton.findbar-highlight {
   list-style-image: url("chrome://global/skin/icons/find.png");
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-#highlight:hover {
+findbar > toolbarbutton.findbar-highlight:hover {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
 
-#highlight[disabled="true"] {
+findbar > toolbarbutton.findbar-highlight[disabled="true"] {
   -moz-image-region: rect(32px 48px 48px 32px) !important;
 }
 
-#highlight:active, #highlight[checked="true"] {
+findbar > toolbarbutton.findbar-highlight:active, findbar > .findbar-highlight[checked="true"] {
   -moz-image-region: rect(48px 48px 64px 32px);
 }
 
-#highlight[checked="true"]:hover {
+findbar > toolbarbutton.findbar-highlight[checked="true"]:hover {
   -moz-image-region: rect(64px 48px 80px 32px);
 }
 
-#find-status-icon
-{
+findbar > image.find-status-icon {
   list-style-image: none;
   margin-top: 2px;
   margin-bottom: 0px;
@@ -94,8 +93,7 @@
   height: 16px;
 }
 
-#find-status
-{
+findbar > label.findbar-find-status {
   margin-top: 0px;
   margin-bottom: 0px;
   -moz-margin-start: 3px;
@@ -103,35 +101,30 @@
   padding: 2px;
 }
 
-#find-status-icon[status="notfound"]
-{
+findbar > image.find-status-icon[status="notfound"] {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
-#find-field
-{
+findbar > .find-field-container > textbox.findbar-textbox {
+  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
   -moz-appearance: none;
   border: none;
   margin: 0px;
 }
 
-#find-field[status="notfound"]
-{
+findbar > .find-field-container > textbox.findbar-textbox[status="notfound"] {
   background-color: #FF6666;
   color: #FFFFFF;
 }
 
-#FindToolbar[flash="true"]  > #find-field-container > #find-field
-{
+findbar[flash="true"]  > .find-field-container > textbox.findbar-textbox {
   background-color: yellow;
 }
 
-#find-status-icon[status="wrapped"]
-{
+findbar > image.find-status-icon[status="wrapped"] {
   list-style-image: url("chrome://global/skin/icons/wrap.png");
 }
 
-#find-field-container
-{
+findbar > .find-field-container {
   -moz-appearance: textfield;
 }

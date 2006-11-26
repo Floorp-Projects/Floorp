@@ -9,8 +9,6 @@
 %globalRegionDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
 %charsetDTD;
-<!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
-%findBarDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
 %textcontextDTD;
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET

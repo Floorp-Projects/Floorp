@@ -44,7 +44,6 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -53,14 +52,11 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
-<!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
-%findBarDTD;
 ]>
 
 <window id="viewSource"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewSource();"
-        onunload="onUnloadViewSource();"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
@@ -77,8 +73,7 @@
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
-  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
+  
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
@@ -87,9 +82,12 @@
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
-  <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
-  <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);"/>
-  <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);"/>
+  <command id="cmd_find"
+           oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  <command id="cmd_findAgain"
+           oncommand="document.getElementById('FindToolbar').onFindAgainCommand(false);"/>
+  <command id="cmd_findPrevious"
+           oncommand="document.getElementById('FindToolbar').onFindAgainCommand(true);"/>
   <command id="cmd_reload" oncommand="ViewSourceReload();"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
@@ -206,7 +204,7 @@
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              disablehistory="true" context="viewSourceContextMenu"/>
-#include ../../typeaheadfind/content/findBar.inc
+    <findbar id="FindToolbar" browserid="content"/>
   </vbox> 
 
   <statusbar id="status-bar" class="chromeclass-status">

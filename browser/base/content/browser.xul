@@ -56,7 +56,6 @@
 #endif
 
 <?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 
@@ -526,7 +525,7 @@
 #endif
   </stack>
 
-#include ../../../toolkit/components/typeaheadfind/content/findBar.inc
+  <findbar browserid="content" id="FindToolbar"/>
   
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">

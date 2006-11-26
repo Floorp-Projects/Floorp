@@ -39,7 +39,6 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://help/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://help/content/helpContextOverlay.xul"?>
 <!DOCTYPE window [
@@ -47,8 +46,6 @@
     %brandDTD;
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
-    <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
-    %findBarDTD;
     <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
     %globalDTD;
 ]>
@@ -70,16 +67,13 @@
         persist="width height screenX screenY"
 #endif
         onload="init();"
-        onunload="gFindBar.uninitFindBar(); window.XULBrowserWindow.destroy();">
+        onunload="window.XULBrowserWindow.destroy();">
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
-    
   <menupopup id="backMenu" position="after_start"
              onpopupshowing="return createBackMenu(event);"
              oncommand="gotoHistoryIndex(event);"/>
@@ -102,9 +96,12 @@
     <command id="cmd_closeWindow" oncommand="close();"/>
     <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-    <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
-    <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd(false);"/>
-    <command id="cmd_findPrevious" oncommand="gFindBar.onFindAgainCmd(true);"/>
+    <command id="cmd_find"
+             oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+    <command id="cmd_findAgain"
+             oncommand="document.getElementById('FindToolbar').onFindAgainCommand(false);"/>
+    <command id="cmd_findPrevious"
+             oncommand="document.getElementById('FindToolbar').onFindAgainCommand(true);"/>
     <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
     <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
   </commandset>
@@ -310,7 +307,7 @@
         <browser context="contentAreaContextMenu"
                  type="content-primary" id="help-content"
                  src="about:blank" flex="1"/>
-#include ../../typeaheadfind/content/findBar.inc
+        <findbar id="FindToolbar" browserid="help-content"/>
       </vbox>
     </hbox>
   </vbox>
