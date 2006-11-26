@@ -62,9 +62,6 @@ public:
   
 protected:
   float mA, mB, mC, mD, mE, mF;
-
-  // implementation helpers:
-  nsresult RotateRadians(float rad, nsIDOMSVGMatrix **_retval);
 };
 
 //----------------------------------------------------------------------
@@ -255,36 +252,34 @@ NS_IMETHODIMP nsSVGMatrix::ScaleNonUniform(float scaleFactorX, float scaleFactor
 /* nsIDOMSVGMatrix rotate (in float angle); */
 NS_IMETHODIMP nsSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 {
-  RotateRadians(angle*radPerDegree, _retval);
+  double ca = cos( angle*radPerDegree );
+  double sa = sin( angle*radPerDegree );
+  
+  return NS_NewSVGMatrix(_retval,
+                         (float) (mA*ca + mC*sa), (float) (mB*ca + mD*sa),
+                         (float) (mC*ca - mA*sa), (float) (mD*ca - mB*sa),
+                         mE,                      mF);  
 }
 
 /* nsIDOMSVGMatrix rotateFromVector (in float x, in float y); */
 NS_IMETHODIMP nsSVGMatrix::RotateFromVector(float x, float y, nsIDOMSVGMatrix **_retval)
 {
-  if (x == 0.0 || y == 0.0)
-    return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
-
-  double rad = atan2(y, x);
-
-  RotateRadians(rad, _retval);
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::RotateFromVector");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix flipX (); */
 NS_IMETHODIMP nsSVGMatrix::FlipX(nsIDOMSVGMatrix **_retval)
 {
-  return NS_NewSVGMatrix(_retval,
-                          -mA, -mB,
-                           mC,  mD,
-                           mE,  mF);
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::FlipX");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix flipY (); */
 NS_IMETHODIMP nsSVGMatrix::FlipY(nsIDOMSVGMatrix **_retval)
 {
-  return NS_NewSVGMatrix(_retval,
-                           mA,  mB,
-                          -mC, -mD,
-                           mE,  mF);
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::FlipY");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix skewX (in float angle); */
@@ -324,19 +319,4 @@ nsSVGMatrix::GetValueString(nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("nsSVGMatrix::GetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-//----------------------------------------------------------------------
-// Implementation helpers:
-nsresult
-nsSVGMatrix::RotateRadians(float rad, nsIDOMSVGMatrix **_retval)
-{
-  double ca = cos(rad);
-  double sa = sin(rad);
-
-  return NS_NewSVGMatrix(_retval,
-                         (float) (mA*ca + mC*sa), (float) (mB*ca + mD*sa),
-                         (float) (mC*ca - mA*sa), (float) (mD*ca - mB*sa),
-                         mE,                      mF);
 }
