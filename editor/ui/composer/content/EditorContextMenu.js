@@ -42,19 +42,6 @@ function EditorFillContextMenu(event, contextMenuNode)
   if ( event.target != contextMenuNode )
     return;
 
-  // if we have a mispelled word, show spellchecker context
-  // menuitems as well as the usual context menu
-  InlineSpellCheckerUI.clearSuggestionsFromMenu();
-  InlineSpellCheckerUI.initFromEvent(document.popupRangeParent, document.popupRangeOffset);
-  var onMisspelling = InlineSpellCheckerUI.overMisspelling;
-  document.getElementById('spellCheckSuggestionsSeparator').hidden = !onMisspelling;
-  document.getElementById('spellCheckAddToDictionary').hidden = !onMisspelling;
-  document.getElementById('spellCheckIgnoreWord').hidden = !onMisspelling;
-  var separator = document.getElementById('spellCheckAddSep');
-  separator.hidden = !onMisspelling;
-  document.getElementById('spellCheckNoSuggestions').hidden = !onMisspelling ||
-      InlineSpellCheckerUI.addSuggestionsToMenu(contextMenuNode, separator, 5);
-
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
   var isInLink = objectName == "href";
@@ -130,6 +117,19 @@ function EditorFillContextMenu(event, contextMenuNode)
   ShowMenuItem("tableInsertMenu_cm",  inCell);
   ShowMenuItem("tableSelectMenu_cm",  inCell);
   ShowMenuItem("tableDeleteMenu_cm",  inCell);
+
+  // if we have a mispelled word, show spellchecker context
+  // menuitems as well as the usual context menu
+  InlineSpellCheckerUI.clearSuggestionsFromMenu();
+  InlineSpellCheckerUI.initFromEvent(document.popupRangeParent, document.popupRangeOffset);
+  var onMisspelling = InlineSpellCheckerUI.overMisspelling;
+  document.getElementById('spellCheckSuggestionsSeparator').hidden = !onMisspelling;
+  document.getElementById('spellCheckAddToDictionary').hidden = !onMisspelling;
+  document.getElementById('spellCheckIgnoreWord').hidden = !onMisspelling;
+  var separator = document.getElementById('spellCheckAddSep');
+  separator.hidden = !onMisspelling;
+  document.getElementById('spellCheckNoSuggestions').hidden = !onMisspelling ||
+      InlineSpellCheckerUI.addSuggestionsToMenu(contextMenuNode, separator, 5);
 }
 
 function IsItemOrCommandEnabled( item )
