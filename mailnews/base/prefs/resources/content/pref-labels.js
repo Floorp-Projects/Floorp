@@ -260,8 +260,8 @@ function MoveTag(aMoveUp)
   var successor = aMoveUp ? gTagList.getPreviousItem(entry, 1)
                           : gTagList.getNextItem(entry, 2);
   entry.parentNode.insertBefore(entry, successor);
-  UpdateTagEntry(entry.taginfo, entry);
   FocusTagEntry(entry);
+  UpdateTagEntry(entry.taginfo, entry); // needs to be visible
 }
 
 function Restore()

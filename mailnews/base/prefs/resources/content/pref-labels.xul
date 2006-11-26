@@ -56,7 +56,7 @@
   <![CDATA[
     var _elementIDs = ["addTagButton", "deleteTagButton",
                        "raiseTagButton", "lowerTagButton",
-                       "restoreDefaultsButton"];
+                       "restoreButton"];
   ]]>
   </script>
 
