@@ -37,10 +37,10 @@
 // Each tag entry in our list looks like this, where <key> is tag's unique key:
 //    <listitem>
 //      <listcell>
-//        <textbox onfocus='OnFocus(<key>)/>
+//        <textbox/>
 //      </listcell>
 //      <listcell>
-//        <colorpicker onfocus='OnFocus(<key>) type='button'/>
+//        <colorpicker type='button'/>
 //      </listcell>
 //    </listitem>
 const TAGPANEL_URI    = 'chrome://messenger/content/pref-labels.xul';
@@ -174,11 +174,7 @@ function AppendTagEntry(aTagInfo, aRefChild)
 
 function OnFocus(aEvent)
 {
-  // walk up until we find the listitem
-  var entry = aEvent.target;
-  while (entry.localName != 'listitem')
-    entry = entry.parentNode;
-  gTagList.selectedItem = entry;
+  gTagList.selectedItem = this;
   UpdateButtonStates();
 }
 
