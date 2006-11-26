@@ -75,7 +75,9 @@
                   onchange="gContentPane._rebuildFonts();"/>
 
       <!-- FILE TYPES -->
-
+      <preference id="pref.downloads.disable_button.edit_actions"
+                  name="pref.downloads.disable_button.edit_actions"
+                  type="bool"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
@@ -214,7 +216,8 @@
         <button id="manageTypes"
                 label="&manage.label;"
                 accesskey="&manage.accesskey;"
-                oncommand="gContentPane.configureFileTypes();"/>
+                oncommand="gContentPane.configureFileTypes();"
+                preference="pref.downloads.disable_button.edit_actions"/>
       </hbox>
     </groupbox>
 
