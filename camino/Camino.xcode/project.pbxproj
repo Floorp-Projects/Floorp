@@ -5,6 +5,78 @@
 	};
 	objectVersion = 39;
 	objects = {
+		0081150A0B180DDE001CB3F0 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libthebes.a;
+			path = ../gfx/thebes/src/libthebes.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0081150B0B180DDE001CB3F0 = {
+			fileRef = 0081150A0B180DDE001CB3F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0081150C0B180DFA001CB3F0 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libgkgfxthebes.a;
+			path = ../gfx/src/thebes/libgkgfxthebes.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0081150D0B180DFA001CB3F0 = {
+			fileRef = 0081150C0B180DFA001CB3F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		008115420B180F35001CB3F0 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			name = libthebes.dylib;
+			path = ../dist/bin/libthebes.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		008115430B180F35001CB3F0 = {
+			fileRef = 008115420B180F35001CB3F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		008115440B181032001CB3F0 = {
+			fileRef = 008115420B180F35001CB3F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		008115470B1811F0001CB3F0 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libgkgfxthebes.dylib;
+			path = ../dist/bin/components/libgkgfxthebes.dylib;
+			refType = 2;
+			sourceTree = "<absolute>";
+		};
+		008115480B1811F0001CB3F0 = {
+			fileRef = 008115470B1811F0001CB3F0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//000
+//001
+//002
+//003
+//004
+//030
+//031
+//032
+//033
+//034
 		032FFDCC077351A800440548 = {
 			children = (
 				032FFDCD077351A800440548,
@@ -988,7 +1060,6 @@
 		};
 		0E6A988C097E0007007962C1 = {
 			children = (
-				0E6A988D097E0044007962C1,
 				0E6A988E097E0044007962C1,
 				0E6A988F097E0044007962C1,
 				0E6A9890097E0044007962C1,
@@ -1004,14 +1075,6 @@
 			path = ../dist/Embed/res/fonts;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
-		};
-		0E6A988D097E0044007962C1 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = text;
-			path = fontEncoding.properties;
-			refType = 4;
-			sourceTree = "<group>";
 		};
 		0E6A988E097E0044007962C1 = {
 			fileEncoding = 30;
@@ -1108,7 +1171,6 @@
 			dstPath = res/fonts;
 			dstSubfolderSpec = 6;
 			files = (
-				0E6A98A8097E010C007962C1,
 				0E6A98A9097E010C007962C1,
 				0E6A98AA097E010C007962C1,
 				0E6A98AB097E010C007962C1,
@@ -1121,12 +1183,6 @@
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0E6A98A8097E010C007962C1 = {
-			fileRef = 0E6A988D097E0044007962C1;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		0E6A98A9097E010C007962C1 = {
 			fileRef = 0E6A988E097E0044007962C1;
@@ -1591,6 +1647,7 @@
 			files = (
 				E4C7D98C0A32108500B455AD,
 				DEDDE2930ABFB4B400D415F2,
+				008115480B1811F0001CB3F0,
 				0E6A98A1097E0091007962C1,
 				82180ACB07368BF2002EFA6D,
 				3F44ACD005BDFB9F00CB4B08,
@@ -1603,7 +1660,6 @@
 				3F44ACEA05BDFB9F00CB4B08,
 				3F44ACEB05BDFB9F00CB4B08,
 				3F44ACEC05BDFB9F00CB4B08,
-				3F44ACED05BDFB9F00CB4B08,
 				3F44ACEE05BDFB9F00CB4B08,
 				3F44ACEF05BDFB9F00CB4B08,
 				3F44ACFA05BDFB9F00CB4B08,
@@ -1800,7 +1856,7 @@
 				F6BD63A901B3131201A962F7,
 				F6BD63AA01B3131201A962F7,
 				F6BD63AB01B3131201A962F7,
-				F6BD63AC01B3131201A962F7,
+				008115470B1811F0001CB3F0,
 				F6BD63B101B3131201A962F7,
 				F6BD63DF01B313EE01A962F7,
 				F6BD63E101B313EE01A962F7,
@@ -5925,12 +5981,6 @@
 			settings = {
 			};
 		};
-		3F44ACED05BDFB9F00CB4B08 = {
-			fileRef = F6BD63AC01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44ACEE05BDFB9F00CB4B08 = {
 			fileRef = F5D3F1CE0209235A014E447F;
 			isa = PBXBuildFile;
@@ -6634,6 +6684,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
+				008115440B181032001CB3F0,
 				3F12FC57072E8ECB00995ED9,
 				3FE5BA0D068A1A6F0001CECD,
 				3F44AD6105BDFB9F00CB4B08,
@@ -6827,6 +6878,7 @@
 				34884A36074F7C5D000EA76B,
 				0FF288560961EDDD007527B4,
 				DEB968320B0D8E9F0023F8B1,
+				008115430B180F35001CB3F0,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7888,7 +7940,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/txtsvc ../dist/include/editor ../dist/include/spellchecker ../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/js ../dist/include/xpconnect ../dist/include/ ../dist/public/nss $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader /Users/smorgan/camino_trunk/mozilla/gfx/thebes/src /Users/smorgan/camino_trunk/mozilla/gfx/src/thebes";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
 				PRODUCT_NAME = Camino;
@@ -10549,7 +10601,6 @@
 				3F44AF9B05BDFBA000CB4B08,
 				DEDDE3CC0ABFB97A00D415F2,
 				3F44AF9C05BDFBA000CB4B08,
-				3F44AF9D05BDFBA000CB4B08,
 				3F44AF9E05BDFBA000CB4B08,
 				3F44AF9F05BDFBA000CB4B08,
 				3F44AFA005BDFBA000CB4B08,
@@ -10570,6 +10621,8 @@
 				3F44AFB005BDFBA000CB4B08,
 				3F44AFB105BDFBA000CB4B08,
 				3F44AFB205BDFBA000CB4B08,
+				0081150D0B180DFA001CB3F0,
+				0081150B0B180DDE001CB3F0,
 				3F44AFB305BDFBA000CB4B08,
 				3F44AFB405BDFBA000CB4B08,
 				3F44AFB505BDFBA000CB4B08,
@@ -10655,12 +10708,6 @@
 		};
 		3F44AF9C05BDFBA000CB4B08 = {
 			fileRef = F56F244602AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AF9D05BDFBA000CB4B08 = {
-			fileRef = F56F244702AC714601A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -13002,7 +13049,6 @@
 			dstPath = res/fonts;
 			dstSubfolderSpec = 6;
 			files = (
-				4DD0F00009918C2300B6BBFD,
 				4DD0F00109918C2300B6BBFD,
 				4DD0F00209918C2300B6BBFD,
 				4DD0F00309918C2300B6BBFD,
@@ -13015,12 +13061,6 @@
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4DD0F00009918C2300B6BBFD = {
-			fileRef = 0E6A988D097E0044007962C1;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		4DD0F00109918C2300B6BBFD = {
 			fileRef = 0E6A988E097E0044007962C1;
@@ -16815,7 +16855,6 @@
 				F56F244502AC714601A967F3,
 				DEDDE3310ABFB7E500D415F2,
 				F56F244602AC714601A967F3,
-				F56F244702AC714601A967F3,
 				F56F244902AC714601A967F3,
 				F56F244D02AC714601A967F3,
 				F56F245002AC714601A967F3,
@@ -16836,6 +16875,8 @@
 				F56F249002AC729901A967F3,
 				F56F249402AC729901A967F3,
 				F507423C02AD808201A967F3,
+				0081150C0B180DFA001CB3F0,
+				0081150A0B180DDE001CB3F0,
 				F524EF6702AD8B9301A967F3,
 				F54AD84402C115D901A967F3,
 				F5E47654030C5FD501A967F3,
@@ -16897,14 +16938,6 @@
 			lastKnownFileType = archive.ar;
 			name = libchrome.a;
 			path = ../rdf/chrome/build/libchrome.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F56F244702AC714601A967F3 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libgfx_mac.a;
-			path = ../gfx/src/mac/libgfx_mac.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -18207,6 +18240,7 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F50DCB4302C2856001A967F3,
+				008115420B180F35001CB3F0,
 				F6BD638701B30F5301A962F7,
 				0E6A9882097DFF9A007962C1,
 				3FE5B9FC068A090F0001CECD,
@@ -18466,14 +18500,6 @@
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libembedcomponents.dylib;
 			path = ../dist/Embed/components/libembedcomponents.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD63AC01B3131201A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libgfx_mac.dylib;
-			path = ../dist/Embed/components/libgfx_mac.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

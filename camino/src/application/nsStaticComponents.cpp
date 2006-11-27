@@ -66,7 +66,7 @@
     MODULE(nsChromeModule) \
     MODULE(nsRDFModule) \
     MODULE(nsParserModule) \
-    MODULE(nsGfxMacModule) \
+    MODULE(nsGfxModule) \
     MODULE(nsImageLib2Module) \
     MODULE(nsPluginModule) \
     MODULE(nsWidgetMacModule) \
