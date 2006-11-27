@@ -190,7 +190,6 @@
 
   * {
     cursor: default !important;
-    -moz-user-select: none !important;
   }
 
   *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas,
