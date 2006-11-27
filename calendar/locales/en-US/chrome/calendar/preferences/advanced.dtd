@@ -60,5 +60,16 @@
 <!ENTITY pref.calendar.advanced.viewPasswords.accesskey "V">
 
 <!-- Update -->
-<!ENTITY pref.calendar.advanced.update.enableAddonUpdate.label "Automatically check for updates to installed Add-ons">
-<!ENTITY pref.calendar.advanced.update.enableAddonUpdate.accesskey "A">
+<!ENTITY pref.calendar.advanced.update.autoCheck.label "Automatically check for updates to:">
+<!ENTITY pref.calendar.advanced.update.enableAppUpdate.accesskey "r">
+<!ENTITY pref.calendar.advanced.update.enableAddonsUpdate.label "Installed Add-ons">
+<!ENTITY pref.calendar.advanced.update.enableAddonsUpdate.accesskey "n">
+<!ENTITY pref.calendar.advanced.update.whenUpdatesFound.label "When updates to &brandShortName; are found:">
+<!ENTITY pref.calendar.advanced.update.modeAskMe.label "Ask me what I want to do">
+<!ENTITY pref.calendar.advanced.update.modeAskMe.accesskey "k">
+<!ENTITY pref.calendar.advanced.update.modeAuto.label "Automatically download and install the update">
+<!ENTITY pref.calendar.advanced.update.modeAuto.accesskey "d">
+<!ENTITY pref.calendar.advanced.update.modeAutoWarn.label "Warn me if this will disable any of my add-ons">
+<!ENTITY pref.calendar.advanced.update.modeAutoWarn.accesskey "W">
+<!ENTITY pref.calendar.advanced.update.showHistory.label "Show Update History…">
+<!ENTITY pref.calendar.advanced.update.showHistory.accesskey "U">

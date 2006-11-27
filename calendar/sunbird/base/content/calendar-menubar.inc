@@ -470,6 +470,12 @@
            <menuitem accesskey="&releaseCmd.accesskey;"
                      label="&releaseCmd.label;"
                      oncommand="openReleaseNotes();"/>
+           <menuseparator id="menu_HelpUpdatesSeparator"/>
+           <menuitem id="checkForUpdates"
+                     class="menuitem-iconic"
+                     label="&updateCmd.label;"
+                     accesskey="&updateCmd.accesskey;"
+                     oncommand="sbCheckForUpdates();"/>
 
 # On Mac OS X, the "About Sunbird" menuitem belongs under the "Sunbird" menu.
 # We hide it (and its separator) here, but we don't ifdef the entire menuitem

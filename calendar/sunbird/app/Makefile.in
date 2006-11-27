@@ -47,7 +47,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= profile/extensions
 
-PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
+PREF_JS_EXPORTS = \
+    $(srcdir)/profile/sunbird.js \
+    $(srcdir)/profile/channel-prefs.js \
+    $(NULL)
 
 # hardcode en-US for the moment
 AB_CD = en-US

@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Matthew Willis <lilmatt@mozilla.com>
+   -   Jeff Walden <jwalden+code@mit.edu>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,16 +61,38 @@
             <preference id="calendar.preferences.advanced.selectedTabIndex"
                         name="calendar.preferences.advanced.selectedTabIndex"
                         type="int"/>
+
+            <!-- Passwords tab -->
             <preference id="signon.rememberSignons"
                         name="signon.rememberSignons"
                         type="bool"/>
             <preference id="pref.privacy.disable_button.view_passwords"
                         name="pref.privacy.disable_button.view_passwords"
                         type="bool"/>
+
+            <!-- Advanced tab -->
+            <preference id="app.update.enabled"
+                        name="app.update.enabled"
+                        type="bool"
+                        onchange="gAdvancedPane.updateAppUpdateItems();
+                                  gAdvancedPane.updateAutoItems();
+                                  gAdvancedPane.updateModeItems();"/>
             <preference id="extensions.update.enabled"
                         name="extensions.update.enabled"
                         type="bool"
                         onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+            <preference id="app.update.auto"
+                        name="app.update.auto"
+                        type="bool"
+                        onchange="gAdvancedPane.updateAutoItems();
+                                  gAdvancedPane.updateModeItems();"/>
+            <preference id="app.update.mode"
+                        name="app.update.mode"
+                        type="int"
+                        onchange="gAdvancedPane.updateModeItems();"/>
+            <preference id="app.update.disable_button.showUpdateHistory"
+                        name="app.update.disable_button.showUpdateHistory"
+                        type="bool"/>
         </preferences>
 
         <tabbox id="advancedPrefs"
@@ -138,15 +161,53 @@
                 </tabpanel>
 
                 <!-- Update -->
-                <tabpanel orient="vertical" align="start">
-                    <!-- This is indented like this so we don't hose cvs blame
-                       - when we add the rest of the aus stuff. -->
-                        <vbox class="indent">
-                            <checkbox id="enableAddonUpdate"
-                                      label="&pref.calendar.advanced.update.enableAddonUpdate.label;"
-                                      accesskey="&pref.calendar.advanced.update.enableAddonUpdate.accesskey;"
-                                      preference="extensions.update.enabled"/>
-                        </vbox>
+                <tabpanel id="updatePanel" orient="vertical" align="start">
+                    <label control="autoUpdateGroup">&pref.calendar.advanced.update.autoCheck.label;</label>
+                    <vbox id="autoUpdateGroup" class="indent">
+                        <checkbox id="enableAppUpdate"
+                                  label="&brandShortName;"
+                                  accesskey="&pref.calendar.advanced.update.enableAppUpdate.accesskey;"
+                                  preference="app.update.enabled"/>
+                        <checkbox id="enableAddonUpdate"
+                                  label="&pref.calendar.advanced.update.enableAddonsUpdate.label;"
+                                  accesskey="&pref.calendar.advanced.update.enableAddonsUpdate.accesskey;"
+                                  preference="extensions.update.enabled"/>
+                    </vbox>
+
+                    <separator id="updateSeparator1"/>
+
+                    <label id="updateModeLabel"
+                           control="updateMode">&pref.calendar.advanced.update.whenUpdatesFound.label;</label>
+                    <radiogroup id="updateMode"
+                                class="indent"
+                                preference="app.update.auto">
+                        <radio id="ask"
+                               value="false"
+                               label="&pref.calendar.advanced.update.modeAskMe.label;"
+                               accesskey="&pref.calendar.advanced.update.modeAskMe.accesskey;"/>
+                        <radio id="automatic"
+                               value="true"
+                               label="&pref.calendar.advanced.update.modeAuto.label;"
+                               accesskey="&pref.calendar.advanced.update.modeAuto.accesskey;"/>
+                        <hbox class="indent">
+                            <checkbox id="warnIncompatible"
+                                      label="&pref.calendar.advanced.update.modeAutoWarn.label;"
+                                      accesskey="&pref.calendar.advanced.update.modeAutoWarn.accesskey;"
+                                      preference="app.update.mode"
+                                      onsyncfrompreference="return gAdvancedPane.readAddonWarn();"
+                                      onsynctopreference="return gAdvancedPane.writeAddonWarn();"/>
+                        </hbox>
+                    </radiogroup>
+
+                    <separator id="updateSeparator2"/>
+
+                    <hbox>
+                        <button id="showUpdateHistory"
+                                label="&pref.calendar.advanced.update.showHistory.label;"
+                                accesskey="&pref.calendar.advanced.update.showHistory.accesskey;"
+                                preference="app.update.disable_button.showUpdateHistory"
+                                oncommand="gAdvancedPane.showUpdates();"/>
+                    </hbox>
                 </tabpanel>
             </tabpanels>
         </tabbox>

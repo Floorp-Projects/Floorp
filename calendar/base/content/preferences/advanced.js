@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Matthew Willis <lilmatt@mozilla.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,10 @@ var gAdvancedPane = {
             return;
         }
         advancedPrefs.selectedIndex = preference.value;
+
+        this.updateAppUpdateItems();
+        this.updateAutoItems();
+        this.updateModeItems();
     },
 
     tabSelectionChanged: function advPaneTabSelectionChanged() {
@@ -60,6 +65,8 @@ var gAdvancedPane = {
         preference.valueFromPreferences = advancedPrefs.selectedIndex;
     },
 
+    // GENERAL TAB
+
     showConnections: function advPaneShowConnections() {
         var url = "chrome://calendar/content/preferences/connection.xul";
         document.documentElement.openSubDialog(url, "", "chrome,dialog");
@@ -70,6 +77,9 @@ var gAdvancedPane = {
                                             "chrome://global/content/config.xul",
                                             "", null);
     },
+
+
+    // PASSWORDS TAB
 
     /**
      * Caches the security module service for multiple use.
@@ -181,14 +191,162 @@ var gAdvancedPane = {
                                             "", null);
     },
 
+    // UPDATE TAB
+
     /**
-     * The Extensions checkbox and button are disabled only if the enable
-     * Addon update preference is locked.
+     * Preferences:
+     *
+     * app.update.enabled
+     * - true if updates to the application are enabled, false otherwise
+     * extensions.update.enabled
+     * - true if updates to extensions and themes are enabled, false otherwise
+     * app.update.auto
+     * - true if updates should be automatically downloaded and installed,
+     *   possibly with a warning if incompatible extensions are installed (see
+     *   app.update.mode); false if the user should be asked what he wants to
+     *   do when an update is available
+     * app.update.mode
+     * - an integer:
+     *     0    do not warn if an update will disable extensions or themes
+     *     1    warn if an update will disable extensions or themes
+     *     2    warn if an update will disable extensions or themes *or* if
+     *          the update is a major update
+     */
+
+    /**
+     * Enables and disables various UI preferences as necessary to reflect
+     * locked, disabled, and checked/unchecked states.
+     *
+     * UI state matrix for update preference conditions
+     * 
+     * UI Elements:                                   Preferences
+     * 1 = Sunbird checkbox                           i   = app.update.enabled
+     * 2 = When updates for Sunbird are found label   ii  = app.update.auto
+     * 3 = Automatic Radiogroup (Ask vs. Auto)        iii = app.update.mode
+     * 4 = Warn before disabling add-ons checkbox
+     * 
+     * States:
+     * Element  Disabled    Pref  Value   Locked
+     * 1        false       i     t/f     f
+     *          true        i     t/f     t
+     *          false       ii    t/f     t/f
+     *          false       iii   0/1/2   t/f
+     * 2,3      false       i     t       t/f
+     *          true        i     f       t/f
+     *          false       ii    t/f     f
+     *          true        ii    t/f     t
+     *          false       iii   0/1/2   t/f
+     * 4        false       i     t       t/f
+     *          true        i     f       t/f
+     *          false       ii    t       t/f
+     *          true        ii    f       t/f
+     *          false       iii   0/1/2   f
+     *          true        iii   0/1/2   t
+     *
+     */
+    updateAppUpdateItems: function advPaneUpdateAppUpdateItems() {
+        var aus = Components.classes["@mozilla.org/updates/update-service;1"]
+                            .getService(Components.interfaces.nsIApplicationUpdateService);
+
+        var enabledPref = document.getElementById("app.update.enabled");
+        var enableAppUpdate = document.getElementById("enableAppUpdate");
+
+        enableAppUpdate.disabled = !aus.canUpdate || enabledPref.locked;
+    },
+
+    /**
+     * Enables/disables UI for "when updates are found" based on the values,
+     * and "locked" states of associated preferences.
+     */
+    updateAutoItems: function advPaneUpdateAutoItems() {
+        var enabledPref = document.getElementById("app.update.enabled");
+        var autoPref = document.getElementById("app.update.auto");
+
+        var updateModeLabel = document.getElementById("updateModeLabel");
+        var updateMode = document.getElementById("updateMode");
+
+        var disable = enabledPref.locked || !enabledPref.value ||
+                      autoPref.locked;
+
+        updateMode.disabled = disable;
+        updateModeLabel.disabled = updateMode.disabled;
+    },
+
+    /**
+     * Enables/disables the "warn if incompatible add-ons exist" UI based on
+     * the values and "locked" states of various preferences.
+     */
+    updateModeItems: function advPaneUpdateModeItems() {
+        var enabledPref = document.getElementById("app.update.enabled");
+        var autoPref = document.getElementById("app.update.auto");
+        var modePref = document.getElementById("app.update.mode");
+
+        var warnIncompatible = document.getElementById("warnIncompatible");
+
+        var disable = enabledPref.locked || !enabledPref.value ||
+                      autoPref.locked || !autoPref.value || modePref.locked;
+
+        warnIncompatible.disabled = disable;
+    },
+
+    /**
+     * The Add-ons checkbox and button are disabled only if the enable
+     * add-on update preference is locked.
      */
     updateAddonUpdateUI: function advPaneUpdateAddonUpdateUI() {
-      var enabledPref = document.getElementById("extensions.update.enabled");
-      var enableAddonUpdate = document.getElementById("enableAddonUpdate");
+        var enabledPref = document.getElementById("extensions.update.enabled");
+        var enableAddonUpdate = document.getElementById("enableAddonUpdate");
 
-      enableAddonUpdate.disabled = enabledPref.locked;
+        enableAddonUpdate.disabled = enabledPref.locked;
+    },
+
+    /**
+     * Stores the value of the app.update.mode preference, which is a tristate
+     * integer preference.  We store the value here so that we can properly
+     * restore the preference value if the UI reflecting the preference value
+     * is in a state which can represent either of two integer values (as
+     * opposed to only one possible value in the other UI state).
+     */
+    _modePreference: -1,
+
+    /**
+     * Reads the app.update.mode preference and converts its value into a
+     * true/false value for use in determining whether the "Warn me if this
+     * will disable any of my add-ons" checkbox is checked.  We also save the
+     * value of the preference so that the preference value can be properly
+     * restored if the user's preferences cannot adequately be expressed by a
+     * single checkbox.
+     *
+     * app.update.mode   Checkbox State   Meaning
+     * 0                 Unchecked        Do not warn
+     * 1                 Checked          Warn if there are incompatibilities
+     * 2                 Checked          Warn if there are incompatibilities,
+     *                                    or the update is major.
+     */
+    readAddonWarn: function advPaneReadAddonWarn() {
+        var preference = document.getElementById("app.update.mode");
+        var warnMe = preference.value != 0;
+        this._modePreference = warnMe ? preference.value : 1;
+        return warnMe;
+    },
+
+    /**
+     * Converts the state of the "Warn me if this will disable any of my
+     * add-ons" checkbox into the integer preference which represents it,
+     * returning that value.
+     */
+    writeAddonWarn: function advPaneWriteAddonWarn() {
+        var warnIncompatible = document.getElementById("warnIncompatible");
+        return warnIncompatible.checked ? this._modePreference : 0;
+    },
+
+    /**
+     * Displays the history of installed updates.
+     */
+    showUpdates: function advPaneShowUpdates() {
+        var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
+                                 .createInstance(Components.interfaces.nsIUpdatePrompt);
+        prompter.showUpdateHistory(window);
     }
+
 };
