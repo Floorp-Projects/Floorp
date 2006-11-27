@@ -186,7 +186,7 @@ var BookmarksCommand = {
     while (popup.hasChildNodes()) 
       popup.removeChild(popup.firstChild);
         
-    var commonCommands = [];
+    var commonCommands = this.flattenEnumerator(this.getValidCommands(popup.id));
     for (var i = 0; i < aSelection.length; ++i) {
       var commands = this.getCommands(aSelection.item[i]);
       if (!commands) {
@@ -194,7 +194,6 @@ var BookmarksCommand = {
         return;
       }
       commands = this.flattenEnumerator(commands);
-      if (!commonCommands.length) commonCommands = commands;
       commonCommands = this.findCommonNodes(commands, commonCommands);
     }
 
@@ -330,6 +329,21 @@ var BookmarksCommand = {
     }
 
     return new CommandArrayEnumerator(commands);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // For a given target ID, return an enumeration that contains the possible
+  // commands.
+  getValidCommands: function (aTargetID)
+  {
+    var valid = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_managefolder",
+                 "bm_separator", "bm_newfolder", "bm_sortfolder", "bm_sortfolderbyname",
+                 "bm_cut", "bm_copy", "bm_paste", "bm_movebookmark", "bm_rename",
+                 "bm_delete", "bm_properties"];
+    if (aTargetID != "bookmarks-context-menu")
+      valid.push("bm_expandfolder");
+
+    return new CommandArrayEnumerator(valid);
   },
   
   /////////////////////////////////////////////////////////////////////////////
