@@ -74,13 +74,15 @@ function SuggestAutoCompleteResult(searchString,
                                    defaultIndex,
                                    errorDescription,
                                    results,
-                                   comments) {
+                                   comments,
+                                   formHistoryResult) {
   this._searchString = searchString;
   this._searchResult = searchResult;
   this._defaultIndex = defaultIndex;
   this._errorDescription = errorDescription;
   this._results = results;
   this._comments = comments;
+  this._formHistoryResult = formHistoryResult;
 }
 SuggestAutoCompleteResult.prototype = {
   /**
@@ -109,7 +111,7 @@ SuggestAutoCompleteResult.prototype = {
   _errorDescription: "",
 
   /**
-   * The list of URLs returned by the Suggest Service
+   * The list of words returned by the Suggest Service
    * @private
    */
   _results: [],
@@ -120,6 +122,12 @@ SuggestAutoCompleteResult.prototype = {
    * @private
    */
   _comments: [],
+
+  /**
+   * A reference to the form history nsIAutocompleteResult that we're wrapping.
+   * We use this to forward removeEntryAt calls as needed.
+   */
+  _formHistoryResult: null,
 
   /**
    * @return the user's query string
@@ -198,6 +206,14 @@ SuggestAutoCompleteResult.prototype = {
    * @param  index    the index of the result to remove
    */
   removeValueAt: function(index, removeFromDatabase) {
+    // Forward the removeValueAt call to the underlying result if we have one
+    // Note: this assumes that the form history results were added to the top
+    // of our arrays.
+    if (removeFromDatabase && this._formHistoryResult &&
+        index < this._formHistoryResult.matchCount) {
+      // Delete the history result from the DB
+      this._formHistoryResult.removeValueAt(index, true);
+    }
     this._results.splice(index, 1);
     this._comments.splice(index, 1);
   },
@@ -370,8 +386,7 @@ SuggestAutoComplete.prototype = {
     } else if (!this._sentSuggestRequest) {
       // We didn't send a request, so just send back the form history results.
       this._listener.onSearchResult(this, this._formHistoryResult);
-      // don't hold onto this until component shutdown!
-      this._formHistoryResult = null;
+      this._reset();
     }
   },
 
@@ -548,8 +563,6 @@ SuggestAutoComplete.prototype = {
         historyResults.push(term);
         historyComments.push("");
       }
-
-      this._formHistoryResult = null;
     }
 
     // fill out the comment column for the suggestions
@@ -565,7 +578,8 @@ SuggestAutoComplete.prototype = {
     var finalComments = historyComments.concat(comments);
 
     // Notify the FE of our new results
-    this.onResultsReady(searchString, finalResults, finalComments);
+    this.onResultsReady(searchString, finalResults, finalComments,
+                        this._formHistoryResult);
 
     // Reset our state for next time.
     this._reset();
@@ -578,7 +592,8 @@ SuggestAutoComplete.prototype = {
    * @param comments      an array of metadata corresponding to the results
    * @private
    */
-  onResultsReady: function(searchString, results, comments) {
+  onResultsReady: function(searchString, results, comments,
+                           formHistoryResult) {
     if (this._listener) {
       var result = new SuggestAutoCompleteResult(
           searchString,
@@ -586,8 +601,14 @@ SuggestAutoComplete.prototype = {
           0,
           "",
           results,
-          comments);
+          comments,
+          formHistoryResult);
+
       this._listener.onSearchResult(this, result);
+
+      // Null out listener to make sure we don't notify it twice, in case our
+      // timer callback still hasn't run.
+      this._listener = null;
     }
   },
 
