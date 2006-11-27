@@ -1039,8 +1039,20 @@
       <property name="monthgridrows" readonly="true"
 	onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'monthgridrows');"/>
 
-      <method name="refresh">
+      <field name="mRefreshQueue">[]</field>
+      <field name="mRefreshPending">false</field>
+
+      <method name="popRefreshQueue">
         <body><![CDATA[
+          if (this.mRefreshPending) {
+            return;
+          }
+
+          var refreshJob = this.mRefreshQueue.pop();
+          if (!refreshJob) {
+            return;
+          }
+
           if (!this.startDate || !this.endDate)
             return;
 
@@ -1057,11 +1069,21 @@
           else
             filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
 
+          this.mRefreshPending = true;
+
           this.mCalendar.getItems(filter,
                                   0,
                                   this.startDate,
                                   this.queryEndDate,
                                   this.mOperationListener);
+        ]]></body>
+      </method>
+
+      <method name="refresh">
+        <body><![CDATA[
+          var refreshJob = {};
+          this.mRefreshQueue.push(refreshJob);
+          this.popRefreshQueue();
         ]]></body>
       </method>
 
@@ -1343,7 +1365,13 @@
             return this;
           },
   
-          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {},
+          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            // signal that the current operation finished.
+            this.calView.mRefreshPending = false;
+
+            // immediately start the next job on the queue.
+            this.calView.popRefreshQueue();
+          },
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             if (!Components.isSuccessCode(aStatus))
               return;
