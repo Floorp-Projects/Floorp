@@ -258,7 +258,7 @@
 <!ENTITY releaseCmd.accesskey                   "R">
 <!ENTITY aboutCmd.label                         "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey                     "A">
-<!ENTITY updateCmd.label                        "Check for Updatesâ€¦">
+<!ENTITY updateCmd.label                        "Check for Updates…">
 <!ENTITY updateCmd.accesskey                    "o">
 
 <!-- Mac OS X "Window" menu items -->
