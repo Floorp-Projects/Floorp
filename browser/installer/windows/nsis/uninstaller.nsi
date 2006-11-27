@@ -374,8 +374,15 @@ Function un.preInstFiles
     ClearErrors
     ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
     ; Delete the app exe to prevent launching the app while we are uninstalling.
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ${If} ${Errors}
+      ClearErrors
+      ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
+      ClearErrors
+      ; Try one more time and if that fails uninstall what ever we are able to.
+      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ${EndIf}
   ${EndIf}
 FunctionEnd
 

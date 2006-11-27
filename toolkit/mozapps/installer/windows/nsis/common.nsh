@@ -1044,13 +1044,16 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
 /**
  * Posts WM_QUIT to the application's message window which is found using the
- * message window's class.
+ * message window's class. This macro uses the nsProcess plugin available
+ * from http://nsis.sourceforge.net/NsProcess_plugin
+ *
  * @param   _MSG
  *          The message text to display in the message box.
  * @param   _PROMPT
  *          If false don't prompt the user and automatically exit the
  *          application if it is running.
  *
+ * $R6 = return value for nsProcess::_FindProcess and nsProcess::_KillProcess
  * $R7 = value returned from FindWindow
  * $R8 = _PROMPT
  * $R9 = _MSG
@@ -1067,23 +1070,42 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       Exch 1
       Exch $R8
       Push $R7
+      Push $R6
 
       loop:
-      FindWindow $R7 "${WindowClass}"
-      IntCmp $R7 0 end
+      Push $R6
+      nsProcess::_FindProcess /NOUNLOAD "${FileMainEXE}"
+      Pop $R6
+      StrCmp $R6 0 0 end
+
       StrCmp $R8 "false" +2 0
       MessageBox MB_OKCANCEL|MB_ICONQUESTION "$R9" IDCANCEL exit 0
 
+      FindWindow $R7 "${WindowClass}"
+      IntCmp $R7 0 +4
       System::Call 'user32::PostMessage(i r17, i ${WM_QUIT}, i 0, i 0)'
       # The amount of time to wait for the app to shutdown before prompting again
-      Sleep 4000
+      Sleep 5000
+
+      Push $R6
+      nsProcess::_FindProcess /NOUNLOAD "${FileMainEXE}"
+      Pop $R6
+      StrCmp $R6 0 0 end
+      Push $R6
+      nsProcess::_KillProcess /NOUNLOAD "${FileMainEXE}"
+      Pop $R6
+      Sleep 2000
+
       Goto loop
 
       exit:
+      nsProcess::_Unload
       Quit
 
       end:
+      nsProcess::_Unload
 
+      Pop $R6
       Pop $R7
       Exch $R8
       Exch 1
@@ -1769,3 +1791,58 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   !endif
 !macroend
 
+/**
+ * Displays a error message when a file can't be copied.
+ *
+ * $0 = file name inserted into the error message
+ */
+!macro DisplayCopyErrMsg
+
+  !ifndef ${_MOZFUNC_UN}DisplayCopyErrMsg
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}DisplayCopyErrMsg "!insertmacro ${_MOZFUNC_UN}DisplayCopyErrMsgCall"
+
+    Function ${_MOZFUNC_UN}DisplayCopyErrMsg
+      Exch $0
+
+      MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$(^FileError_NoIgnore)" IDRETRY +2
+      Quit
+
+      Exch $0
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro DisplayCopyErrMsgCall _FILE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_FILE}"
+  Call DisplayCopyErrMsg
+  !verbose pop
+!macroend
+
+!macro un.DisplayCopyErrMsgCall _FILE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_FILE}"
+  Call un.DisplayCopyErrMsg
+  !verbose pop
+!macroend
+
+!macro un.DisplayCopyErrMsg
+  !ifndef un.DisplayCopyErrMsg
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro DisplayCopyErrMsg
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
