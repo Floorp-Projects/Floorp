@@ -559,8 +559,7 @@ NS_IMETHODIMP nsMsgProtocol::GetURI(nsIURI* *aURI)
  
 NS_IMETHODIMP nsMsgProtocol::Open(nsIInputStream **_retval)
 {
-  NS_NOTREACHED("Open");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)

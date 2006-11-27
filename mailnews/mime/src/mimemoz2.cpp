@@ -346,12 +346,6 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
     return NS_OK;
   
   nsMsgAttachmentData *tmp = &(aAttachData[attIndex++]);
-  nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
-
-	PR_FREEIF(urlSpec);
-
-  if ( (NS_FAILED(rv)) || (!tmp->url) )
-    return NS_ERROR_OUT_OF_MEMORY;
 
   tmp->real_type = object->content_type ? nsCRT::strdup(object->content_type) : nsnull;
   tmp->real_encoding = object->encoding ? nsCRT::strdup(object->encoding) : nsnull;
@@ -456,6 +450,23 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
     else
       tmp->real_name = mime_part_address(object);
   }
+  nsCString urlString(urlSpec);
+
+  if (tmp->real_name)
+  {
+    urlString.Append("&filename=");
+    urlString.Append(tmp->real_name);
+    if (tmp->real_type && !strcmp(tmp->real_type, "message/rfc822") &&
+           !StringEndsWith(urlString, NS_LITERAL_CSTRING(".eml"), nsCaseInsensitiveCStringComparator()))
+      urlString.Append(".eml");
+  }
+  nsresult rv = nsMimeNewURI(&(tmp->url), urlString.get(), nsnull);
+
+  PR_FREEIF(urlSpec);
+
+  if ( (NS_FAILED(rv)) || (!tmp->url) )
+    return NS_ERROR_OUT_OF_MEMORY;
+
   ValidateRealName(tmp, object->headers);
 
   return NS_OK;

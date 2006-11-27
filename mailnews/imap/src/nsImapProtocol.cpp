@@ -5440,9 +5440,9 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
     
       if (flags)
       {
-      SetupMessageFlagsString(flagString, flags,
-        GetServerStateParser().SupportsUserFlags());
-      command.Append(flagString);
+        SetupMessageFlagsString(flagString, flags,
+          GetServerStateParser().SupportsUserFlags());
+        command.Append(flagString);
       }
       if (keywords.Length())
       {
@@ -8206,8 +8206,7 @@ NS_IMETHODIMP nsImapMockChannel::SetURI(nsIURI* aURI)
  
 NS_IMETHODIMP nsImapMockChannel::Open(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("nsImapMockChannel::Open");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP
