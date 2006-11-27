@@ -383,7 +383,7 @@
   <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrevious')"  modifiers="accel, shift"/>
   <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
   <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrevious')"  modifiers="shift"/>
-  <key key="&quickSearchCmd.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
+  <key id="key_quickSearchFocus" key="&quickSearchCmd.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
 
   <keyset id="viewZoomKeys">
