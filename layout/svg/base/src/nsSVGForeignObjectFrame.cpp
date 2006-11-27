@@ -307,6 +307,7 @@ nsSVGForeignObjectFrame::InitialUpdate()
 {
   UpdateCoveredRegion();
   DoReflow();
+  mState &= ~(NS_FRAME_FIRST_REFLOW);
   return NS_OK;
 }
 
