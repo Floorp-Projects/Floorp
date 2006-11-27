@@ -94,6 +94,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
+#include "jsnum.h"
 
 #include "nsTArray.h"
 
@@ -178,6 +179,47 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static PRBool CheckSaneImageSize (PRInt32 width, PRInt32 height);
 static PRBool CheckSaneSubrectSize (PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRInt32 realWidth, PRInt32 realHeight);
 
+/* Float validation stuff */
+
+#define VALIDATE(_f)  if (!JSDOUBLE_IS_FINITE(_f)) return PR_FALSE
+
+/* These must take doubles as args, because JSDOUBLE_IS_FINITE expects
+ * to take the address of its argument; we can't cast/convert in the
+ * macro.
+ */
+
+static PRBool FloatValidate (double f1) {
+    VALIDATE(f1);
+    return PR_TRUE;
+}
+
+static PRBool FloatValidate (double f1, double f2) {
+    VALIDATE(f1); VALIDATE(f2);
+    return PR_TRUE;
+}
+
+static PRBool FloatValidate (double f1, double f2, double f3) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3);
+    return PR_TRUE;
+}
+
+static PRBool FloatValidate (double f1, double f2, double f3, double f4) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4);
+    return PR_TRUE;
+}
+
+static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5);
+    return PR_TRUE;
+}
+
+static PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
+    VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5); VALIDATE(f6);
+    return PR_TRUE;
+}
+
+#undef VALIDATE
+
 /**
  ** nsCanvasGradient
  **/
@@ -211,6 +253,9 @@ public:
                              const nsAString& colorstr)
     {
         nscolor color;
+
+        if (!FloatValidate(offset))
+            return NS_ERROR_DOM_SYNTAX_ERR;
 
         if (offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1136,6 +1181,9 @@ nsCanvasRenderingContext2D::Restore()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Scale(float x, float y)
 {
+    if (!FloatValidate(x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_scale (mCairo, x, y);
     return NS_OK;
 }
@@ -1143,6 +1191,9 @@ nsCanvasRenderingContext2D::Scale(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rotate(float angle)
 {
+    if (!FloatValidate(angle))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_rotate (mCairo, angle);
     return NS_OK;
 }
@@ -1150,6 +1201,9 @@ nsCanvasRenderingContext2D::Rotate(float angle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Translate(float x, float y)
 {
+    if (!FloatValidate(x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_translate (mCairo, x, y);
     return NS_OK;
 }
@@ -1161,6 +1215,9 @@ nsCanvasRenderingContext2D::Translate(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
 {
+    if (!FloatValidate(aGlobalAlpha))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     // ignore invalid values, as per spec
     if (aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
         return NS_OK;
@@ -1253,6 +1310,9 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, float y1,
                                                  nsIDOMCanvasGradient **_retval)
 {
+    if (!FloatValidate(x0,y0,x1,y1))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_pattern_t *gradpat = nsnull;
     gradpat = cairo_pattern_create_linear ((double) x0, (double) y0, (double) x1, (double) y1);
     nsCanvasGradient *grad = new nsCanvasGradient(gradpat, mCSSParser);
@@ -1269,6 +1329,9 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, float x1, float y1, float r1,
                                                  nsIDOMCanvasGradient **_retval)
 {
+    if (!FloatValidate(x0,y0,r0,x1,y1,r1))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_pattern_t *gradpat = nsnull;
     gradpat = cairo_pattern_create_radial ((double) x0, (double) y0, (double) r0,
                                            (double) x1, (double) y1, (double) r1);
@@ -1337,6 +1400,8 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetX(float x)
 {
+    if (!FloatValidate(x))
+        return NS_ERROR_DOM_SYNTAX_ERR;
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
@@ -1351,6 +1416,8 @@ nsCanvasRenderingContext2D::GetShadowOffsetX(float *x)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetY(float y)
 {
+    if (!FloatValidate(y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
@@ -1365,6 +1432,8 @@ nsCanvasRenderingContext2D::GetShadowOffsetY(float *y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowBlur(float blur)
 {
+    if (!FloatValidate(blur))
+        return NS_ERROR_DOM_SYNTAX_ERR;
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
@@ -1397,6 +1466,9 @@ nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
+    if (!FloatValidate(x,y,w,h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_save (mCairo);
     cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
     cairo_new_path (mCairo);
@@ -1410,6 +1482,9 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 {
+    if (!FloatValidate(x,y,w,h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
 
@@ -1422,6 +1497,9 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 {
+    if (!FloatValidate(x,y,w,h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
 
@@ -1475,6 +1553,9 @@ nsCanvasRenderingContext2D::Clip()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MoveTo(float x, float y)
 {
+    if (!FloatValidate(x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_move_to(mCairo, x, y);
     return NS_OK;
 }
@@ -1482,6 +1563,9 @@ nsCanvasRenderingContext2D::MoveTo(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::LineTo(float x, float y)
 {
+    if (!FloatValidate(x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_line_to(mCairo, x, y);
     return NS_OK;
 }
@@ -1489,6 +1573,9 @@ nsCanvasRenderingContext2D::LineTo(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
+    if (!FloatValidate(cpx,cpy,x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     double cx, cy;
 
     // we will always have a current point, since beginPath forces
@@ -1510,6 +1597,9 @@ nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
                                           float cp2x, float cp2y,
                                           float x, float y)
 {
+    if (!FloatValidate(cp1x,cp1y,cp2x,cp2y,x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_curve_to(mCairo, cp1x, cp1y, cp2x, cp2y, x, y);
     return NS_OK;
 }
@@ -1517,6 +1607,9 @@ nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float radius)
 {
+    if (!FloatValidate(x1,y1,x2,y2,radius))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (radius <= 0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
@@ -1604,6 +1697,9 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, int ccw)
 {
+    if (!FloatValidate(x,y,r,startAngle,endAngle))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (ccw)
         cairo_arc_negative (mCairo, x, y, r, startAngle, endAngle);
     else
@@ -1614,6 +1710,9 @@ nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, flo
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 {
+    if (!FloatValidate(x,y,w,h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_rectangle (mCairo, x, y, w, h);
     return NS_OK;
 }
@@ -1625,6 +1724,9 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetLineWidth(float width)
 {
+    if (!FloatValidate(width))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_set_line_width(mCairo, width);
     return NS_OK;
 }
@@ -1712,6 +1814,9 @@ nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetMiterLimit(float miter)
 {
+    if (!FloatValidate(miter))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     cairo_set_miter_limit(mCairo, miter);
     return NS_OK;
 }
@@ -1727,6 +1832,9 @@ nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
 {
+    if (!FloatValidate(x,y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     *retVal = (PRBool) cairo_in_fill(mCairo, x, y);
     return NS_OK;
 }
@@ -1826,6 +1934,11 @@ nsCanvasRenderingContext2D::DrawImage()
         goto FAIL;
     }
 #undef GET_ARG
+
+    if (!FloatValidate(sx,sy,sw,sh))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(dx,dy,dw,dh))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     // check args
     if (sx < 0.0 || sy < 0.0 ||
