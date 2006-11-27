@@ -119,7 +119,26 @@
       <field name="mEndHourDefault">19</field>
 
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
 
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+          return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mZoomFactor = val;
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          while(hours.childNodes.length > 1) {
+            hours.removeChild(hours.lastChild);
+          }
+          return val;
+          ]]>
+        </setter>
+      </property>
+      
       <property name="force24Hours">
         <getter>
           <![CDATA[
@@ -218,39 +237,33 @@
 
           // first set the formatted date string as title
           var day = document.getAnonymousElementByAttribute(this, "anonid", "day");
-          var value = this.mDateFormatter.formatDateLong(date);
+          var value = (this.mZoomFactor > 100) ?
+            this.mDateFormatter.formatDateShort(date) :
+            this.mDateFormatter.formatDateLong(date);
           day.setAttribute("value",value);
-          
+
           // now create as many 'hour' elements as needed
+          var step_in_minutes = Math.floor(60 * this.mZoomFactor / 100);
           var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
           date.hour = this.mStartHour;
           if(hours.childNodes.length <= 1) {
             var template = hours.childNodes[0];
             var time = this.mDateFormatter.formatTime(date);
             template.setAttribute("value",time);
-            date.hour++;
-            while(date.hour < this.mEndHour) {
+            date.minute += step_in_minutes;
+            date.normalize();
+            var count = Math.ceil((this.mEndHour-this.mStartHour)*60/step_in_minutes);
+            var remain = count-1;
+            while(remain--) {
               var newNode = template.cloneNode(false);
               var value = this.mDateFormatter.formatTime(date);
               newNode.setAttribute("value",value);
               hours.appendChild(newNode);
-              date.hour++;
+              date.minute += step_in_minutes;
+              date.normalize();
             }
           }
           
-          // last but not least set the 'scheduled' attribute according
-          // to the specified start- and enddate.
-          var numChilds = hours.childNodes.length;
-          for(var i=0; i<numChilds; i++) {
-            var hour = hours.childNodes[i];
-            date.hour = i + this.mStartHour;
-            if (date.compare(this.mStartDate) >= 0 && date.compare(this.mEndDate) < 0) {
-              hour.setAttribute("scheduled","true");
-            } else {
-              hour.removeAttribute("scheduled");
-            }
-          }
-
           return val;
           ]]>
         </setter>
@@ -295,6 +308,33 @@
       <field name="mEndHourDefault">19</field>
 
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
+
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+          return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mZoomFactor = val;
+
+          var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+          var parent = template.parentNode;
+          while(parent.childNodes.length > 1) {
+            parent.removeChild(parent.lastChild);
+          }
+
+          template.force24Hours = this.mForce24Hours;
+          template.zoomFactor = this.mZoomFactor;
+          
+          this.onLoad();
+          
+          return val;
+          ]]>
+        </setter>
+      </property>      
 
       <property name="force24Hours">
         <getter>
@@ -315,6 +355,7 @@
           }
 
           template.force24Hours = this.mForce24Hours;
+          template.zoomFactor = this.mZoomFactor;
           
           this.onLoad();
           
@@ -519,12 +560,15 @@
             
             // set the number of 'freebusy-day'-elements we need to fill up the content box.
             // TODO: hardcoded value
-            this.mNumDays = 4;
+            this.mNumDays = 4 * this.mZoomFactor / 100;
+            if(this.mNumDays < 2)
+              this.mNumDays = 2;
             
             // now create those elements and set their date property.
             var date = this.mStartDate.clone();
             var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
             template.force24Hours = this.mForce24Hours;
+            template.zoomFactor = this.mZoomFactor;
             template.startDate = this.mStartDate;
             template.endDate = this.mEndDate;
             template.date = date;
@@ -537,6 +581,7 @@
                   date.normalize();
                   var newNode = template.cloneNode(false);
                   newNode.force24Hours = this.mForce24Hours;
+                  newNode.zoomFactor = this.mZoomFactor;
                   newNode.startDate = this.mStartDate;
                   newNode.endDate = this.mEndDate;
                   newNode.date = date;
@@ -602,7 +647,30 @@
       <field name="mEndHourDefault">19</field>
 
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
 
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+          return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mZoomFactor = val;
+
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          while(hours.childNodes.length > 1) {
+            hours.removeChild(hours.lastChild);
+          }
+
+          this.onLoad();
+
+          return val;
+          ]]>
+        </setter>
+      </property>
+      
       <property name="force24Hours">
         <getter>
           <![CDATA[
@@ -648,12 +716,20 @@
         </setter>
       </property>
 
+      <property name="numHours">
+        <getter>
+          <![CDATA[
+            var numHours = this.mEndHour - this.mStartHour;
+            return Math.floor(numHours * 100 / this.mZoomFactor);
+          ]]>
+        </getter>
+      </property>      
+      
       <property name="contentWidth">
         <getter>
           <![CDATA[
           var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
-          var numHours = this.mEndHour - this.mStartHour;
-          return (hours.childNodes[1].boxObject.x-hours.childNodes[0].boxObject.x)*numHours;
+          return (hours.childNodes[1].boxObject.x-hours.childNodes[0].boxObject.x)*this.numHours;
         ]]>
         </getter>
       </property>
@@ -670,8 +746,7 @@
       <property name="dayOffset">
         <setter>
           <![CDATA[
-          var numHours = this.mEndHour - this.mStartHour;
-          this.mOffset = val*numHours;
+          this.mOffset = val*this.numHours;
           this.showState();
           return val;
         ]]>
@@ -734,6 +809,7 @@
             this.mState[i] = 0;
           }
           
+          var step_in_minutes = Math.floor(60 * this.mZoomFactor / 100);
           var formatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
                                     .getService(Components.interfaces.calIDateTimeFormatter);
           var date = jsDateToDateTime(new Date());
@@ -745,19 +821,27 @@
             var template = hours.childNodes[0];
             var time = formatter.formatTime(date);
             template.setAttribute("value",time);
-            date.hour++;
+            date.minute += step_in_minutes;
+            date.normalize();
             // TODO: hardcoded value
-            for(var day=1; day<=4; day++) {
-              while(date.hour < this.mEndHour) {
+            var num_days = 4 * this.mZoomFactor / 100;
+            if(num_days < 2)
+              num_days = 2;
+            var count = Math.ceil((this.mEndHour-this.mStartHour)*60/step_in_minutes);
+            var remain = count-1;              
+            for(var day=1; day<=num_days; day++) {
+              while(remain--) {
                 var newNode = template.cloneNode(false);
                 var value = formatter.formatTime(date);
                 newNode.setAttribute("value",value);
                 hours.appendChild(newNode);
-                date.hour++;
+                date.minute += step_in_minutes;
+                date.normalize();
               }
               date.hour = this.mStartHour;
               date.day++;
               date.normalize();
+              remain = count;
             }
           }
           ]]>
@@ -794,7 +878,7 @@
               this.mState[i] = 1;
             }
 
-            var numHours = this.mEndHour - this.mStartHour;
+            var numHours = this.numHours;
 
             // iterate all incoming freebusy entries
             for each(var entry in aEntries) {
@@ -834,22 +918,44 @@
                     offset.addDuration(dayoffset);
                     
                     var duration = rangeEnd.subtractDate(rangeStart);
-                    var startHours = Math.floor(offset.inSeconds / 3600);
-                    var endHours = startHours +
-                                   Math.ceil((duration.inSeconds / 3600) +
-                                   (offset.inSeconds / 3600 % startHours));
-
-                    // set all affected state slots to 'busy'
-                    for(var i=startHours; i<endHours; i++) {
+                    var start_in_minutes = Math.floor(offset.inSeconds / 60);
+                    var end_in_minutes = start_in_minutes +
+                      Math.ceil((duration.inSeconds / 60) +
+                      (offset.inSeconds / 60 % start_in_minutes));
+                      
+                    var minute2offset = function(value,fNumHours,numHours,start_hour,zoomfactor) {
                     
-                      // 'i' is some integer in the interval [0,range*24].
+                      // 'value' is some integer in the interval [0,range*24*60].
                       // we need to map this offset into our array which
                       // holds elements for 'range' days with [start,end] hours each.
-                      var day = (i-(i%24))/24;
-                      var hour = Math.floor(i%24) - this.mStartHour;
-                      if(hour >= 0 && hour < numHours) {
-                        this.mState[numHours*day+hour] = 2;
-                      }
+                      var minutes_per_day = 24*60;
+                      var day = (value-(value%minutes_per_day))/minutes_per_day;
+                      var minute = Math.floor(value%minutes_per_day) - (start_hour*60);
+                      
+                      if(minute < 0)
+                        minute = 0;
+                      if(minute >= (numHours*60))
+                        minute = (numHours*60)-1;
+                        
+                      // how to get from minutes to offset?
+                      // 60 = 100%, 30 = 50%, 15 = 25%, etc.
+                      var minutes_per_block = 60 * zoomfactor / 100;
+                      
+                      var block = Math.floor(minute / minutes_per_block);
+                      
+                      return Math.ceil(fNumHours)*day+block;
+                    }
+                    
+                    // number of hours (fractional representation)
+                    var numHours = this.mEndHour - this.mStartHour;
+                    var fNumHours = numHours * 100 / this.mZoomFactor;
+                    
+                    var start_offset = minute2offset(start_in_minutes,fNumHours,numHours,this.mStartHour,this.mZoomFactor);
+                    var end_offset = minute2offset(end_in_minutes-1,fNumHours,numHours,this.mStartHour,this.mZoomFactor);
+                    
+                    // set all affected state slots to 'busy'
+                    for(var i=start_offset; i<=end_offset; i++) {
+                      this.mState[i] = 2;
                     }
                   }
                 }
@@ -1090,7 +1196,30 @@
       <field name="mEndHourDefault">19</field>
 
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
 
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+          return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mZoomFactor = val;
+
+          for (var i=1; i<=this.mMaxFreeBusy; i++) {
+            var freebusy = this.getFreeBusyElement(i);
+            freebusy.zoomFactor = this.mZoomFactor;
+          }
+
+          this.forceRefresh();
+
+          return val;
+          ]]>
+        </setter>
+      </property>
+      
       <property name="force24Hours">
         <getter>
           <![CDATA[
@@ -1284,6 +1413,7 @@
             grid.endDate = this.mEndDate;
             
             grid.force24Hours = this.mForce24Hours;
+            grid.zoomFactor = this.mZoomFactor;
 
             // We always clone the first row.  The problem is that the first row
             // could be focused.  When we clone that row, we end up with a cloned

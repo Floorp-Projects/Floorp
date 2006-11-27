@@ -1450,7 +1450,22 @@
       <field name="mMargin">0</field>
       <field name="mWidth">0</field>
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
 
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+            return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.mZoomFactor = val;
+            return val;
+        ]]>
+        </setter>
+      </property>
+            
       <property name="force24Hours">
         <getter>
           <![CDATA[
@@ -1823,6 +1838,20 @@
           </xul:columns>
           <xul:rows>
             <xul:row align="center">
+              <xul:button label="toggle" oncommand="onToggle();"/>
+            </xul:row>
+            <xul:row align="center">
+              <xul:menulist anonid="zoom-menulist" oncommand="onZoomFactor(this.value);">
+                <xul:menupopup>
+                  <xul:menuitem label="400%" value="25"/>
+                  <xul:menuitem label="200%" value="50"/>
+                  <xul:menuitem label="100%" value="100"/>
+                  <xul:menuitem label="50%" value="200"/>
+                  <xul:menuitem label="25%" value="400"/>
+                </xul:menupopup>
+              </xul:menulist>
+            </xul:row>
+            <xul:row align="center">
               <xul:button label="&event.freebusy.previous.slot;" anonid="previous-slot" oncommand="onPreviousSlot();"/>
               <xul:button label="&event.freebusy.next.slot;" anonid="next-slot" oncommand="onNextSlot();"/>
               <xul:spacer/>
@@ -1864,7 +1893,50 @@
       <field name="mUndoStack">[]</field>
 
       <field name="mForce24Hours">false</field>
+      <field name="mZoomFactor">100</field>
 
+      <property name="zoomFactor">
+        <getter>
+          <![CDATA[
+          return this.mZoomFactor;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          if(this.mZoomFactor == val)
+            return val;
+            
+          this.mZoomFactor = val;
+          
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          timebar.zoomFactor = this.mZoomFactor;
+
+          var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+          selectionbar.zoomFactor = this.mZoomFactor;
+
+          var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+          grid.zoomFactor = this.mZoomFactor;
+
+          // calling onResize() will update the scrollbars and everything else
+          // that needs to adopt the previously made changes. we need to call
+          // this after the changes have actually been made...
+          this.onResize();
+
+          var scrollbar = document.getAnonymousElementByAttribute(this, "anonid", "horizontal-scrollbar");
+          if (scrollbar.hasAttribute("maxpos")) {
+            var curpos = scrollbar.getAttribute("curpos");
+            var maxpos = scrollbar.getAttribute("maxpos");
+            var ratio = curpos/maxpos;
+            timebar.scroll = ratio;
+            grid.scroll = ratio;
+            selectionbar.ratio = ratio;
+          }
+
+          return val;
+          ]]>
+        </setter>
+      </property>      
+      
       <property name="force24Hours">
         <getter>
           <![CDATA[
@@ -1876,13 +1948,13 @@
           this.mForce24Hours = val;
           
           this.initTimeRange();
-          
+
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
           timebar.force24Hours = this.mForce24Hours;
-          
+
           var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
           selectionbar.force24Hours = this.mForce24Hours;
-          
+
           var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
           grid.force24Hours = this.mForce24Hours;
 
@@ -1935,6 +2007,23 @@
           ]]>
       </constructor>
 
+      <method name="onToggle">
+        <body>
+          <![CDATA[
+            this.force24Hours = !this.force24Hours;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onZoomFactor">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            this.zoomFactor = parseInt(aValue);
+          ]]>
+        </body>
+      </method>
+      
       <method name="initTimeRange">
         <body>
           <![CDATA[
@@ -2090,7 +2179,11 @@
             if((begin.hour < this.mStartHour) ||
                (end.hour > this.mEndHour) ||
                (begin.isDate)) {
-              this.force24Hours = true;
+              /*var self = this;
+              var callback = function func() {
+                self.force24Hours = true;
+              }
+              setTimeout(callback, 1000);*/
             }
 
             this.onChangeCalendar(calendar);
@@ -2115,6 +2208,9 @@
             this.setTimeRange(startTime,endTime);
             
             this.updateButtons();
+            
+            var zoom = document.getAnonymousElementByAttribute(this, "anonid", "zoom-menulist");
+            zoom.selectedIndex = 2;
           ]]>
         </body>
       </method>
