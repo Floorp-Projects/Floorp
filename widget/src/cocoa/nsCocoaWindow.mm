@@ -39,13 +39,7 @@
 #include "nsCocoaWindow.h"
 
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"    // for drag and drop
 #include "nsWidgetsCID.h"
-#include "nsIDragService.h"
-#include "nsIDragSession.h"
-#include "nsIDragSessionMac.h"
-#include "nsIScreen.h"
-#include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
 #include "nsChildView.h"
@@ -54,9 +48,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
-
-// Define Class IDs -- i hate having to do this
-static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // externs defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -234,9 +225,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // Configure the window we will create based on the window type
     switch (mWindowType)
     {
+      case eWindowType_invisible:
       case eWindowType_child:
-        // In Carbon, we made this a window of type kPlainWindowClass.
-        // I think that is pretty much equiv to NSBorderlessWindowMask.
         break;
       case eWindowType_dialog:
         if (aInitData) {
@@ -296,8 +286,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
           features |= NSClosableWindowMask;
         if (allOrDefault || aInitData->mBorderStyle & eBorderStyle_resizeh)
           features |= NSResizableWindowMask;
-        break;
-      case eWindowType_invisible:
         break;
       default:
         NS_ERROR("Unhandled window type!");
@@ -363,9 +351,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     }
 
     [mWindow setBackgroundColor:[NSColor whiteColor]];
-
     [mWindow setContentMinSize:NSMakeSize(60, 60)];
-
     [mWindow setReleasedWhenClosed:NO];
     
     // setup our notification delegate. Note that setDelegate: does NOT retain.
@@ -394,9 +380,8 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  return(StandardCreate(nsnull, aRect, aHandleEventFunction,
-                          aContext, aAppShell, aToolkit, aInitData,
-                            aNativeWindow));
+  return(StandardCreate(nsnull, aRect, aHandleEventFunction, aContext,
+                        aAppShell, aToolkit, aInitData, aNativeWindow));
 }
 
 
@@ -408,8 +393,8 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  return(StandardCreate(aParent, aRect, aHandleEventFunction,
-                        aContext, aAppShell, aToolkit, aInitData, nsnull));
+  return(StandardCreate(aParent, aRect, aHandleEventFunction, aContext,
+                        aAppShell, aToolkit, aInitData, nsnull));
 }
 
 
@@ -445,8 +430,10 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
       retVal = mWindow;
       break;
       
-    case NS_NATIVE_GRAPHIC: // quickdraw port of top view (for now)
-      retVal = [[mWindow contentView] qdPort];
+    case NS_NATIVE_GRAPHIC:
+      // There isn't anything that makes sense to return here,
+      // and it doesn't matter so just return nsnull.
+      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
   }
 
@@ -619,9 +606,6 @@ NS_METHOD nsCocoaWindow::AddMouseListener(nsIMouseListener * aListener)
 }
 
 
-//
-// Processes a mouse pressed event
-//
 NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 {
   nsBaseWidget::AddEventListener(aListener);
@@ -633,12 +617,6 @@ NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 }
 
 
-/*
- * Add a menu listener
- * This interface should only be called by the menu services manager
- * This will AddRef() the menu listener
- * This will Release() a previously set menu listener
- */
 NS_METHOD nsCocoaWindow::AddMenuListener(nsIMenuListener * aListener)
 {
   nsBaseWidget::AddMenuListener(aListener);
