@@ -49,14 +49,13 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGRect.h"
 #include "nsLayoutAtoms.h"
-#include "nsISVGRenderer.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPatternElement.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGPatternFrame.h"
-#include "nsISVGCairoCanvas.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
 
 #ifdef DEBUG_scooter
 static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM);
@@ -204,8 +203,7 @@ nsSVGPatternFrame::GetCanvasTM() {
 }
 
 nsresult
-nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas, 
-                                cairo_surface_t** surface,
+nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
                                 nsIDOMSVGMatrix** patternMatrix,
                                 nsSVGGeometryFrame *aSource)
 {
@@ -288,11 +286,14 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   if (!patternSurface)
     return NS_ERROR_FAILURE;
 
-  // Push the surface
-  if (NS_FAILED(canvas->PushSurface(patternSurface, PR_FALSE))) {
-    cairo_surface_destroy(patternSurface);
-    return NS_ERROR_FAILURE; //?
-  }
+  gfxUnknownSurface tmpSurface(patternSurface);
+  gfxContext tmpContext(&tmpSurface);
+
+  // thebes types don't like being stack allocated - addref the surface
+  // so that gfxContext doesn't try destroying it (scope will delete it)
+  tmpSurface.AddRef();
+
+  nsSVGRenderState tmpState(&tmpContext);
 
   // OK, now render -- note that we use "firstKid", which
   // we got at the beginning because it takes care of the
@@ -304,11 +305,10 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   nsRect dummyRect;
   for (nsIFrame* kid = firstKid; kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(canvas, nsnull, kid);
+    nsSVGUtils::PaintChildWithEffects(&tmpState, nsnull, kid);
   }
   mSource = nsnull;
 
-  canvas->PopSurface();
   *surface = patternSurface;
   return NS_OK;
 }
@@ -787,15 +787,12 @@ nsSVGPatternFrame::CreateSurface(nsIDOMSVGRect *bbox)
 // nsSVGPaintServerFrame methods:
 
 nsresult
-nsSVGPatternFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
-                                    cairo_t *aCtx,
+nsSVGPatternFrame::SetupPaintServer(cairo_t *aCtx,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure)
 {
   *aClosure = nsnull;
-
-  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
 
   cairo_matrix_t matrix;
   cairo_get_matrix(aCtx, &matrix);
@@ -804,8 +801,7 @@ nsSVGPatternFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
   cairo_surface_t *surface;
   nsCOMPtr<nsIDOMSVGMatrix> pMatrix;
   cairo_identity_matrix(aCtx);
-  nsresult rv = PaintPattern(aCanvas, &surface,
-                             getter_AddRefs(pMatrix), aSource);
+  nsresult rv = PaintPattern(&surface, getter_AddRefs(pMatrix), aSource);
   cairo_set_matrix(aCtx, &matrix);
   if (NS_FAILED(rv)) {
     cairo_surface_destroy(surface);
@@ -814,7 +810,8 @@ nsSVGPatternFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
 
   // Translate the pattern frame
   cairo_matrix_t pmatrix = nsSVGUtils::ConvertSVGMatrixToCairo(pMatrix);
-  cairoCanvas->AdjustMatrixForInitialTransform(&pmatrix);
+  cairo_matrix_invert(&matrix);
+  cairo_matrix_multiply(&pmatrix, &pmatrix, &matrix);
   if (cairo_matrix_invert(&pmatrix)) {
     cairo_surface_destroy(surface);
     return NS_ERROR_FAILURE;

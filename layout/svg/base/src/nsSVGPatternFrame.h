@@ -49,6 +49,7 @@ class nsIDOMSVGAnimatedPreserveAspectRatio;
 class nsIFrame;
 class nsSVGLength2;
 class nsSVGElement;
+class gfxContext;
 
 typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
 
@@ -63,14 +64,12 @@ public:
 
   nsSVGPatternFrame(nsStyleContext* aContext) : nsSVGPatternFrameBase(aContext) {}
 
-  nsresult PaintPattern(nsISVGRendererCanvas *canvas,
-                        cairo_surface_t **surface,
+  nsresult PaintPattern(cairo_surface_t **surface,
                         nsIDOMSVGMatrix **patternMatrix,
                         nsSVGGeometryFrame *aSource);
 
   // nsSVGPaintServerFrame methods:
-  virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
-                                    cairo_t *aCtx,
+  virtual nsresult SetupPaintServer(cairo_t *aCtx,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure);

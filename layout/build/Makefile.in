@@ -187,7 +187,6 @@ SHARED_LIBRARY_LIBS += \
                 ../svg/base/src/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
-                ../svg/renderer/src/cairo/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
 

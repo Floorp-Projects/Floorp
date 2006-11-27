@@ -56,14 +56,12 @@
 #include "nsISVGChildFrame.h"
 #include "nsContentDLF.h"
 #include "nsContentUtils.h"
-#include "nsISVGRenderer.h"
 #include "nsSVGFilterFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGPoint.h"
 #include "nsDOMError.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "nsSVGMatrix.h"
@@ -77,7 +75,10 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsIScriptError.h"
 #include "cairo.h"
-#include "nsISVGCairoCanvas.h"
+#include "gfxContext.h"
+#include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "gfxImageSurface.h"
 
 struct nsSVGFilterProperty {
   nsRect mFilterRect;
@@ -85,6 +86,7 @@ struct nsSVGFilterProperty {
 };
 
 cairo_surface_t *nsSVGUtils::mCairoComputationalSurface = nsnull;
+gfxASurface     *nsSVGUtils::mThebesComputationalSurface = nsnull;
 
 static PRBool gSVGEnabled;
 static PRBool gSVGRendererAvailable = PR_FALSE;
@@ -567,7 +569,7 @@ AddEffectProperties(nsIFrame *aFrame)
 }
 
 static cairo_pattern_t *
-GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
+GetComplexClipSurface(nsSVGRenderState *aContext, nsIFrame *aFrame)
 {
   cairo_pattern_t *pattern = nsnull;
 
@@ -579,13 +581,12 @@ GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
     clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
 
-    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
-    cairo_t *ctx = cairoCanvas->GetContext();
+    cairo_t *ctx = aContext->GetGfxContext()->GetCairo();
 
     cairo_push_group(ctx);
 
     nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
-    nsresult rv = clip->ClipPaint(aCanvas, svgChildFrame, matrix);
+    nsresult rv = clip->ClipPaint(aContext, svgChildFrame, matrix);
     pattern = cairo_pop_group(ctx);
 
     if (NS_FAILED(rv) && pattern) {
@@ -598,7 +599,7 @@ GetComplexClipSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame)
 }
 
 static cairo_pattern_t *
-GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
+GetMaskSurface(nsSVGRenderState *aContext, nsIFrame *aFrame, float opacity)
 {
   if (aFrame->GetStateBits() & NS_STATE_SVG_MASKED) {
     nsISVGChildFrame *svgChildFrame;
@@ -609,7 +610,7 @@ GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
                           aFrame->GetProperty(nsGkAtoms::mask));
 
     nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGUtils::GetCanvasTM(aFrame);
-    return mask->ComputeMaskAlpha(aCanvas, svgChildFrame, matrix, opacity);
+    return mask->ComputeMaskAlpha(aContext, svgChildFrame, matrix, opacity);
   }
 
   return nsnull;
@@ -619,7 +620,7 @@ GetMaskSurface(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame, float opacity)
 // ************************************************************
 
 void
-nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
+nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
                                   nsRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
@@ -662,14 +663,14 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
    * + Merge opacity and masking if both used together.
    */
 
+  gfxContext *gfx = aContext->GetGfxContext();
   cairo_t *ctx = nsnull;
 
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0 ||
       state & (NS_STATE_SVG_CLIPPED_COMPLEX | NS_STATE_SVG_MASKED)) {
-    nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
-    ctx = cairoCanvas->GetContext();
+    ctx = gfx->GetCairo();
     cairo_save(ctx);
     cairo_push_group(ctx);
   }
@@ -682,9 +683,9 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
     clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
 
-    aCanvas->PushClip();
+    gfx->Save();
     nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM(aFrame);
-    clip->ClipPaint(aCanvas, svgChildFrame, matrix);
+    clip->ClipPaint(aContext, svgChildFrame, matrix);
   }
 
   /* Paint the child */
@@ -692,13 +693,13 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
     nsSVGFilterProperty *property;
     property = NS_STATIC_CAST(nsSVGFilterProperty *,
                               aFrame->GetProperty(nsGkAtoms::filter));
-    property->mFilter->FilterPaint(aCanvas, svgChildFrame);
+    property->mFilter->FilterPaint(aContext, svgChildFrame);
   } else {
-    svgChildFrame->PaintSVG(aCanvas, aDirtyRect);
+    svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }
 
   if (state & NS_STATE_SVG_CLIPPED_TRIVIAL) {
-    aCanvas->PopClip();
+    gfx->Restore();
   }
 
   /* No more effects, we're done. */
@@ -707,8 +708,8 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
 
   cairo_pop_group_to_source(ctx);
 
-  cairo_pattern_t *maskSurface     = GetMaskSurface(aCanvas, aFrame, opacity);
-  cairo_pattern_t *clipMaskSurface = GetComplexClipSurface(aCanvas, aFrame);
+  cairo_pattern_t *maskSurface     = GetMaskSurface(aContext, aFrame, opacity);
+  cairo_pattern_t *clipMaskSurface = GetComplexClipSurface(aContext, aFrame);
 
   if (clipMaskSurface) {
     // Still more set after clipping, so clip to another surface
@@ -918,6 +919,19 @@ nsSVGUtils::GetCairoComputationalSurface()
   return mCairoComputationalSurface;
 }
 
+gfxASurface *
+nsSVGUtils::GetThebesComputationalSurface()
+{
+  if (!mThebesComputationalSurface) {
+    mThebesComputationalSurface =
+      new gfxImageSurface(GetCairoComputationalSurface());
+    // we want to keep this surface around
+    NS_IF_ADDREF(mThebesComputationalSurface);
+  }
+
+  return mThebesComputationalSurface;
+}
+
 PRBool
 nsSVGUtils::IsSingular(const cairo_matrix_t *aMatrix)
 {
@@ -990,4 +1004,52 @@ nsSVGUtils::UserToDeviceBBox(cairo_t *ctx,
     *ymin = PR_MIN(*ymin, y[i]);
     *ymax = PR_MAX(*ymax, y[i]);
   }
+}
+
+void
+nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
+                                   cairo_surface_t *aSurface,
+                                   nsIDOMSVGMatrix *aCTM, float aOpacity)
+{
+  cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aCTM);
+  if (IsSingular(&matrix))
+    return;
+
+  aContext->Save();
+
+  aContext->Multiply(gfxMatrix(matrix));
+
+  cairo_set_source_surface(aContext->GetCairo(), aSurface, 0.0, 0.0);
+  cairo_paint_with_alpha(aContext->GetCairo(), aOpacity);
+
+  aContext->Restore();
+}
+
+void
+nsSVGUtils::SetClipRect(gfxContext *aContext,
+                        nsIDOMSVGMatrix *aCTM, float aX, float aY,
+                        float aWidth, float aHeight)
+{
+  cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aCTM);
+  if (IsSingular(&matrix))
+    return;
+
+  gfxMatrix oldMatrix = aContext->CurrentMatrix();
+  aContext->Multiply(gfxMatrix(matrix));
+  aContext->Clip(gfxRect(aX, aY, aWidth, aHeight));
+  aContext->SetMatrix(oldMatrix);
+}
+
+// ----------------------------------------------------------------------
+
+nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
+  mRenderMode(NORMAL), mRenderingContext(aContext)
+{
+  mGfxContext = NS_STATIC_CAST(gfxContext*,
+                               aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+}
+
+nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
+  mRenderMode(NORMAL), mRenderingContext(nsnull), mGfxContext(aContext)
+{
 }

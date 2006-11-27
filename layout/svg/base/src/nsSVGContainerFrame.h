@@ -105,7 +105,7 @@ public:
                          nsIFrame*       aOldFrame);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();

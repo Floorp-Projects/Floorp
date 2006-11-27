@@ -1325,10 +1325,6 @@ if [ "$MOZ_SVG" ]; then
 	layout/svg/Makefile
 	layout/svg/base/Makefile
 	layout/svg/base/src/Makefile
-	layout/svg/renderer/Makefile
-	layout/svg/renderer/public/Makefile
-	layout/svg/renderer/src/Makefile
-	layout/svg/renderer/src/cairo/Makefile
 "
 fi
 

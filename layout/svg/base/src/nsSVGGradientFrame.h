@@ -56,8 +56,7 @@ class nsSVGGradientFrame : public nsSVGGradientFrameBase,
 {
 public:
   // nsSVGPaintServerFrame methods:
-  virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
-                                    cairo_t *aCtx,
+  virtual nsresult SetupPaintServer(cairo_t *aCtx,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure);
@@ -94,7 +93,7 @@ public:
 #endif // DEBUG
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas)
+  NS_IMETHOD PaintSVG(gfxContext* aContext)
   {
     return NS_OK;  // override - our frames don't directly render
   }

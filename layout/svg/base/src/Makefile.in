@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  docshell \
+		  thebes \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -120,7 +121,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../xul/base/src \
 		-I$(srcdir)/../../../../content/svg/content/src \
 		-I$(srcdir)/../../../../content/base/src \
-		-I$(topsrcdir)/layout/svg/renderer/src/cairo \
 		$(NULL)
 
 libs::

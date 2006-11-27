@@ -60,7 +60,6 @@ class nsIDOMSVGMatrix;
 class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
-class nsISVGRendererCanvas;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
 class nsISVGValueObserver;
 class nsIAtom;
@@ -68,6 +67,9 @@ class nsSVGLength2;
 class nsSVGElement;
 class nsSVGCoordCtxProvider;
 class nsAttrValue;
+class gfxContext;
+class gfxASurface;
+class nsIRenderingContext;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -101,6 +103,41 @@ class nsAttrValue;
  * to cairo.h usage) can still query this information.
  */
 PRBool NS_SVGEnabled();
+
+class nsSVGRenderState
+{
+public:
+  enum RenderMode { NORMAL, CLIP, CLIP_MASK };
+
+  nsSVGRenderState(nsIRenderingContext *aContext);
+  nsSVGRenderState(gfxContext *aContext);
+
+  nsIRenderingContext *GetRenderingContext() { return mRenderingContext; }
+  gfxContext *GetGfxContext() { return mGfxContext; }
+
+  void SetRenderMode(RenderMode aMode) { mRenderMode = aMode; }
+  RenderMode GetRenderMode() { return mRenderMode; }
+
+private:
+  RenderMode           mRenderMode;
+  nsIRenderingContext *mRenderingContext;
+  gfxContext          *mGfxContext;
+};
+
+class nsAutoSVGRenderMode
+{
+public:
+  nsAutoSVGRenderMode(nsSVGRenderState *aState,
+                      nsSVGRenderState::RenderMode aMode) : mState(aState) {
+    mOriginalMode = aState->GetRenderMode();
+    aState->SetRenderMode(aMode);
+  }
+  ~nsAutoSVGRenderMode() { mState->SetRenderMode(mOriginalMode); }
+
+private:
+  nsSVGRenderState            *mState;
+  nsSVGRenderState::RenderMode mOriginalMode;
+};
 
 class nsSVGUtils
 {
@@ -178,7 +215,7 @@ public:
   /* Paint frame with SVG effects - aDirtyRect is the area being
    * redrawn, in frame offset pixel coordinates */
   static void
-  PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
+  PaintChildWithEffects(nsSVGRenderState *aContext,
                         nsRect *aDirtyRect,
                         nsIFrame *aFrame);
 
@@ -247,6 +284,8 @@ public:
    */
   static cairo_surface_t *
   GetCairoComputationalSurface();
+  static gfxASurface *
+  GetThebesComputationalSurface();
 
   /*
    * A singular matrix is a non invertible square matrix.
@@ -276,9 +315,18 @@ public:
                    double *xmin, double *ymin,
                    double *xmax, double *ymax);
 
+  static void CompositeSurfaceMatrix(gfxContext *aContext,
+                                     cairo_surface_t *aSurface,
+                                     nsIDOMSVGMatrix *aCTM, float aOpacity);
+
+  static void SetClipRect(gfxContext *aContext,
+                          nsIDOMSVGMatrix *aCTM, float aX, float aY,
+                          float aWidth, float aHeight);
+
 private:
-  /* Cairo computational (nil) surface */
+  /* Computational (nil) surfaces */
   static cairo_surface_t *mCairoComputationalSurface;
+  static gfxASurface *mThebesComputationalSurface;
 };
 
 #endif

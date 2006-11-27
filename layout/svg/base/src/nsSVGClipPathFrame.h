@@ -52,7 +52,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   nsSVGClipPathFrame(nsStyleContext* aContext) : nsSVGClipPathFrameBase(aContext) {}
 
   // nsSVGClipPathFrame methods:
-  NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
+  NS_IMETHOD ClipPaint(nsSVGRenderState* aContext,
                        nsISVGChildFrame* aParent,
                        nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
 
