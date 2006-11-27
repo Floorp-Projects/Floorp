@@ -46,8 +46,6 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGNumber.h"
 
-class nsISVGRenderer;
-
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
 
@@ -115,7 +113,6 @@ public:
   /* Invalidate takes a nsRect in screen pixel coordinates */
   nsresult InvalidateRect(nsRect aRect);
   nsresult IsRedrawSuspended(PRBool* isSuspended);
-  nsresult GetRenderer(nsISVGRenderer** renderer);
 
   // nsISVGSVGFrame interface:
   NS_IMETHOD SuspendRedraw();
@@ -137,9 +134,7 @@ protected:
                                nsPresContext* aPresContext,
                                const nsHTMLReflowState& aReflowState);
 
-//  nsIView* mView;
   PRUint32 mRedrawSuspendCount;
-  nsCOMPtr<nsISVGRenderer> mRenderer;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 
   // zoom and pan

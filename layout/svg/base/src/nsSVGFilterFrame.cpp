@@ -38,8 +38,6 @@
 #include "nsIDocument.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGMatrix.h"
-#include "nsISVGRenderer.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsISVGFilter.h"
 #include "nsSVGAtoms.h"
@@ -49,6 +47,8 @@
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilters.h"
 #include "nsSVGContainerFrame.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 
@@ -74,7 +74,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
   // nsISVGFilterFrame interface:
-  NS_IMETHOD FilterPaint(nsISVGRendererCanvas *aCanvas,
+  NS_IMETHOD FilterPaint(nsSVGRenderState *aContext,
                          nsISVGChildFrame *aTarget);
   NS_IMETHOD_(nsRect) GetInvalidationRegion(nsIFrame *aTarget);
 
@@ -102,7 +102,7 @@ public:
 
 private:
   // implementation helpers
-  void FilterFailCleanup(nsISVGRendererCanvas *aCanvas,
+  void FilterFailCleanup(nsSVGRenderState *aContext,
                          nsISVGChildFrame *aTarget);
   
 private:
@@ -237,17 +237,17 @@ nsSVGFilterFrame::InitSVG()
 }
 
 void
-nsSVGFilterFrame::FilterFailCleanup(nsISVGRendererCanvas *aCanvas,
+nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
                                     nsISVGChildFrame *aTarget)
 {
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
-  aTarget->PaintSVG(aCanvas, nsnull);
+  aTarget->PaintSVG(aContext, nsnull);
 }
 
 NS_IMETHODIMP
-nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
+nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                               nsISVGChildFrame *aTarget)
 {
   nsCOMPtr<nsIDOMSVGFilterElement> aFilter = do_QueryInterface(mContent);
@@ -281,7 +281,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     if (unimplementedFilter)
       fprintf(stderr, "FilterFrame: unimplemented filter element\n");
 #endif
-    aTarget->PaintSVG(aCanvas, nsnull);
+    aTarget->PaintSVG(aContext, nsnull);
     return NS_OK;
   }
 
@@ -362,15 +362,24 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   cairo_surface_t *surface =
     cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
                                filterResX, filterResY);
-
   if (!surface) {
-    FilterFailCleanup(aCanvas, aTarget);
+    FilterFailCleanup(aContext, aTarget);
     return NS_OK;
   }
 
-  aCanvas->PushSurface(surface, PR_FALSE);
-  aTarget->PaintSVG(aCanvas, nsnull);
-  aCanvas->PopSurface();
+  gfxUnknownSurface tmpSurface(surface);
+  gfxContext tmpContext(&tmpSurface);
+
+  // thebes types don't like being stack allocated - addref the surface
+  // so that gfxContext doesn't try destroying it (scope will delete it)
+  tmpSurface.AddRef();
+
+  // tmpSurface now owns the cairo surface
+  cairo_surface_destroy(surface);
+
+  nsSVGRenderState tmpState(&tmpContext);
+
+  aTarget->PaintSVG(&tmpState, nsnull);
 
   mPrimitiveUnits->GetAnimVal(&type);
   nsSVGFilterInstance instance(target, bbox,
@@ -384,8 +393,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
                                  filterResX, filterResY);
 
     if (!alpha) {
-      cairo_surface_destroy(surface);
-      FilterFailCleanup(aCanvas, aTarget);
+      FilterFailCleanup(aContext, aTarget);
       return NS_OK;
     }
 
@@ -415,7 +423,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
 
     nsCOMPtr<nsISVGFilter> filter = do_QueryInterface(child);
     if (filter && NS_FAILED(filter->Filter(&instance))) {
-      FilterFailCleanup(aCanvas, aTarget);
+      FilterFailCleanup(aContext, aTarget);
       return NS_OK;
     }
   }
@@ -433,13 +441,14 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
 
   ctm->Multiply(scale, getter_AddRefs(fini));
 
-  nsresult rv = aCanvas->CompositeSurfaceMatrix(filterResult, fini, 1.0);
+  nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
+                                     filterResult, fini, 1.0);
 
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsRect)

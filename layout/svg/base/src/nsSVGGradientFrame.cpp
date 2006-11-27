@@ -327,8 +327,7 @@ nsSVGGradientFrame::GetSpreadMethod()
 // nsSVGPaintServerFrame methods:
 
 nsresult
-nsSVGGradientFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
-                                     cairo_t *aCtx,
+nsSVGGradientFrame::SetupPaintServer(cairo_t *aCtx,
                                      nsSVGGeometryFrame *aSource,
                                      float aOpacity,
                                      void **aClosure)

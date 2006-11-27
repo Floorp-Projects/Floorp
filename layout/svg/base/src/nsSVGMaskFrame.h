@@ -40,6 +40,8 @@
 #include "nsSVGContainerFrame.h"
 #include "cairo.h"
 
+class gfxContext;
+
 typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 
 class nsSVGMaskFrame : public nsSVGMaskFrameBase
@@ -53,7 +55,7 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
 
   // nsSVGMaskFrame method:
-  cairo_pattern_t *ComputeMaskAlpha(nsISVGRendererCanvas* aCanvas,
+  cairo_pattern_t *ComputeMaskAlpha(nsSVGRenderState *aContext,
                                     nsISVGChildFrame* aParent,
                                     nsIDOMSVGMatrix* aMatrix,
                                     float aOpacity = 1.0f);

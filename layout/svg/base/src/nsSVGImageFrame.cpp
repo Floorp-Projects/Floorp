@@ -35,8 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererCanvas.h"
-#include "nsISVGRenderer.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGPresAspectRatio.h"
@@ -49,8 +47,8 @@
 #include "nsSVGUtils.h"
 #include "nsIImage.h" /* for MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP */
 #include "nsSVGMatrix.h"
-#include "nsISVGCairoCanvas.h"
 #include "cairo.h"
+#include "gfxContext.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -90,7 +88,7 @@ public:
   nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
   // nsSVGGeometryFrame overload:
@@ -252,7 +250,7 @@ nsSVGImageFrame::GetImageTransform()
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
-nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
+nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
   nsresult rv = NS_OK;
 
@@ -283,6 +281,8 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
   }
 
   if (mSurface) {
+    gfxContext *gfx = aContext->GetGfxContext();
+
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
     GetCanvasTM(getter_AddRefs(ctm));
 
@@ -293,17 +293,15 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
     nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
 
     if (GetStyleDisplay()->IsScrollableOverflow()) {
-      canvas->PushClip();
-      rv = canvas->SetClipRect(ctm, x, y, width, height);
+      gfx->Save();
+      nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
     }
 
-    if (NS_SUCCEEDED(rv)) {
-      rv = canvas->CompositeSurfaceMatrix(mSurface, fini,
-                                          mStyleContext->GetStyleDisplay()->mOpacity);
-    }
+    nsSVGUtils::CompositeSurfaceMatrix(gfx, mSurface, fini,
+                                       mStyleContext->GetStyleDisplay()->mOpacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
-      canvas->PopClip();
+      gfx->Restore();
   }
 
   return rv;

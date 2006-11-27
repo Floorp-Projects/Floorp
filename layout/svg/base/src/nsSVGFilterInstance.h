@@ -87,7 +87,7 @@ private:
   class ImageEntry {
   public:
     ImageEntry(cairo_surface_t *aImage, nsRect aRegion) :
-      mImage(aImage), mRegion(aRegion) {}
+      mImage(aImage), mRegion(aRegion) { cairo_surface_reference(aImage); }
     ~ImageEntry() { cairo_surface_destroy(mImage); }
 
     cairo_surface_t *mImage;

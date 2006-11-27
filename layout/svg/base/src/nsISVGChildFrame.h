@@ -43,14 +43,15 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 
-class nsISVGRendererCanvas;
+class gfxContext;
 class nsPresContext;
 class nsIDOMSVGRect;
 class nsIDOMSVGMatrix;
+class nsSVGRenderState;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0xa365580d, 0x9d14, 0x4e33, { 0x99, 0xfa, 0x81, 0x07, 0x0d, 0xa0, 0xfe, 0xa6 } }
+{ 0x154fa60f, 0xc605, 0x49c7, { 0x88, 0xc4, 0xc5, 0xb4, 0xdc, 0x12, 0x47, 0xeb } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -59,7 +60,7 @@ public:
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)=0;
+  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect)=0;
 
   // Check if this frame or children contain the given point,
   // specified in device pixels relative to the origin of the outer

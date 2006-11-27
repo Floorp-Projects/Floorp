@@ -38,7 +38,6 @@
 
 #include "nsSVGForeignObjectFrame.h"
 
-#include "nsISVGRendererCanvas.h"
 #include "nsISVGValue.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsIDOMSVGForeignObjectElem.h"
@@ -46,7 +45,6 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsSpaceManager.h"
-#include "nsISVGRenderer.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsISVGValueUtils.h"
 #include "nsRegion.h"
@@ -61,6 +59,8 @@
 #include "nsGkAtoms.h"
 #include "nsSVGForeignObjectElement.h"
 #include "nsSVGContainerFrame.h"
+#include "gfxContext.h"
+#include "gfxMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -216,7 +216,7 @@ TransformRect(float* aX, float *aY, float* aWidth, float *aHeight,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
                                   nsRect *aDirtyRect)
 {
   nsIFrame* kid = GetFirstChild(nsnull);
@@ -225,20 +225,22 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
 
-  nsCOMPtr<nsIRenderingContext> ctx;
-  canvas->LockRenderingContext(tm, getter_AddRefs(ctx));
-  
+  nsIRenderingContext *ctx = aContext->GetRenderingContext();
   if (!ctx) {
     NS_WARNING("Can't render foreignObject element!");
     return NS_ERROR_FAILURE;
   }
-    
+
+  gfxContext *gfx = aContext->GetGfxContext();
+
+  gfx->Save();
+  gfx->Multiply(gfxMatrix(nsSVGUtils::ConvertSVGMatrixToCairo(tm)));
+
   nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
                                           NS_RGBA(0,0,0,0));
-  
-  ctx = nsnull;
-  canvas->UnlockRenderingContext();
-  
+
+  gfx->Restore();
+
   return rv;
 }
 

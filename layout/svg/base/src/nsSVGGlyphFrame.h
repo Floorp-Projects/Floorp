@@ -42,10 +42,10 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGChildFrame.h"
+#include "gfxContext.h"
 
 class nsSVGTextFrame;
 class nsSVGGlyphFrame;
-class nsISVGCairoCanvas;
 
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
@@ -95,7 +95,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();
@@ -168,25 +168,25 @@ protected:
                                 const nsAString &aText,
                                 nsSVGCharacterPosition **cp);
 
-    ~nsSVGAutoGlyphHelperContext()
+    operator gfxContext * ()
     {
-      cairo_destroy(mCT);
+      return mCT;
     }
 
     operator cairo_t * ()
     {
-      return mCT;
+      return mCT->GetCairo();
     }
 
   private:
     void Init (nsSVGGlyphFrame *aSource);
 
-    cairo_t *mCT;
+    nsRefPtr<gfxContext> mCT;
   };
 
-  void SelectFont(cairo_t *ctx);
+  void SelectFont(gfxContext *aContext);
   PRBool GetCharacterData(nsAString & aCharacterData);
-  nsresult GetCharacterPosition(cairo_t *ctx,
+  nsresult GetCharacterPosition(gfxContext *aContext,
                                 const nsAString &aText,
                                 nsSVGCharacterPosition **aCharacterPosition);
   static void LoopCharacters(cairo_t *aCtx,
@@ -198,7 +198,7 @@ protected:
   void UpdateMetrics();
   nsSVGTextFrame *GetTextFrame();
   PRBool ContainsPoint(float x, float y);
-  nsresult GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas *aCanvas);
+  nsresult GetGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
 

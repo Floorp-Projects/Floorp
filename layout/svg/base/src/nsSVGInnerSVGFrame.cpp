@@ -38,13 +38,13 @@
 
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGContainerFrame.h"
+#include "gfxContext.h"
 
 typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -87,7 +87,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
@@ -171,11 +171,13 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
+nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
   nsresult rv = NS_OK;
 
-  canvas->PushClip();
+  gfxContext *gfx = aContext->GetGfxContext();
+
+  gfx->Save();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
@@ -192,16 +194,13 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, nsRect *aDirtyRect)
       clipTransform = parent->GetCanvasTM();
     }
 
-    if (clipTransform) {
-      rv = canvas->SetClipRect(clipTransform, x, y, width, height);
-    }
+    if (clipTransform)
+      nsSVGUtils::SetClipRect(gfx, clipTransform, x, y, width, height);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsSVGInnerSVGFrameBase::PaintSVG(canvas, aDirtyRect);
-  }
+  rv = nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
 
-  canvas->PopClip();
+  gfx->Restore();
 
   return rv;
 }

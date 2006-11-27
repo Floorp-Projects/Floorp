@@ -385,6 +385,9 @@ nsSVGFilterResource::ReleaseTarget()
   }
   FixupTarget();
   mInstance->DefineImage(mResult, mTargetImage, mRect);
+
+  // filter instance now owns the image
+  cairo_surface_destroy(mTargetImage);
   mTargetImage = nsnull;
 }
 

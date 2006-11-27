@@ -41,7 +41,7 @@
 #include "nsSVGValue.h"
 #include "cairo.h"
 
-class nsISVGRendererCanvas;
+class gfxContext;
 class nsSVGGeometryFrame;
 
 typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
@@ -53,8 +53,7 @@ public:
   nsSVGPaintServerFrame(nsStyleContext* aContext) :
       nsSVGPaintServerFrameBase(aContext) {}
 
-  virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
-                                    cairo_t *aCtx,
+  virtual nsresult SetupPaintServer(cairo_t *aCtx,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
                                     void **aClosure) = 0;

@@ -40,7 +40,6 @@
 #include "nsIDOMSVGDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
-#include "nsISVGRenderer.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGContainerFrame.h"
 #include "nsReadableUtils.h"
@@ -52,7 +51,6 @@
 #include "nsIViewManager.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsISVGRendererCanvas.h"
 #include "nsIViewManager.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterFrame.h"
@@ -61,8 +59,8 @@
 #include "nsSVGGraphicElement.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGRect.h"
-#include "nsISVGCairoCanvas.h"
 #include "nsSVGPathGeometryElement.h"
+#include "gfxContext.h"
 
 struct nsSVGMarkerProperty {
   nsSVGMarkerFrame *mMarkerStart;
@@ -259,14 +257,14 @@ nsSVGPathGeometryFrame::RemovePathProperties()
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
                                  nsRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
   /* render */
-  Render(canvas);
+  Render(aContext);
 
   if (NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->IsMarkable()) {
     nsSVGMarkerProperty *property = GetMarkerProperty();
@@ -284,16 +282,16 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
       PRUint32 num = marks.Length();
         
       if (num && property->mMarkerStart)
-        property->mMarkerStart->PaintMark(canvas, this,
+        property->mMarkerStart->PaintMark(aContext, this,
                                           &marks[0], strokeWidth);
         
       if (num && property->mMarkerMid)
         for (PRUint32 i = 1; i < num - 1; i++)
-          property->mMarkerMid->PaintMark(canvas, this,
+          property->mMarkerMid->PaintMark(aContext, this,
                                           &marks[i], strokeWidth);
         
       if (num && property->mMarkerEnd)
-        property->mMarkerEnd->PaintMark(canvas, this,
+        property->mMarkerEnd->PaintMark(aContext, this,
                                         &marks[num-1], strokeWidth);
     }
   }
@@ -312,10 +310,12 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 
   PRBool isHit = PR_FALSE;
 
-  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
+  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  cairo_t *ctx = context.GetCairo();
+
   cairo_set_tolerance(ctx, 1.0);
 
-  GeneratePath(ctx, nsnull);
+  GeneratePath(&context);
   double xx = x, yy = y;
   cairo_device_to_user(ctx, &xx, &yy);
 
@@ -336,8 +336,6 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
     SetupCairoStrokeHitGeometry(ctx);
     isHit = cairo_in_stroke(ctx, xx, yy);
   }
-
-  cairo_destroy(ctx);
 
   if (isHit && nsSVGUtils::HitTestClip(this, x, y))
     *hit = this;
@@ -403,8 +401,10 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
   mRect.Empty();
 
-  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
-  GeneratePath(ctx, nsnull);
+  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  cairo_t *ctx = context.GetCairo();
+
+  GeneratePath(&context);
 
   double xmin, ymin, xmax, ymax;
 
@@ -418,8 +418,6 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   }
   if (!IsDegeneratePath(xmin, ymin, xmax, ymax))
     mRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
-
-  cairo_destroy(ctx);
 
   // Add in markers
   mRect = GetCoveredRegion();
@@ -478,8 +476,10 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   double xmin, ymin, xmax, ymax;
 
-  cairo_t *ctx = cairo_create(nsSVGUtils::GetCairoComputationalSurface());
-  GeneratePath(ctx, nsnull);
+  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+  cairo_t *ctx = context.GetCairo();
+
+  GeneratePath(&context);
   cairo_identity_matrix(ctx);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
@@ -489,8 +489,6 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
     cairo_set_line_width(ctx, 0.0001);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   }
-
-  cairo_destroy(ctx);
 
   return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
@@ -575,24 +573,19 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 // nsSVGPathGeometryFrame methods:
 
 void
-nsSVGPathGeometryFrame::Render(nsISVGRendererCanvas *aCanvas)
+nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 {
-  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(aCanvas);
-  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
-  if (!cairoCanvas)
-    return;
+  gfxContext *gfx = aContext->GetGfxContext();
+  cairo_t *ctx = gfx->GetCairo();
 
-  cairo_t *ctx = cairoCanvas->GetContext();
-
-  PRUint16 renderMode;
-  aCanvas->GetRenderMode(&renderMode);
+  PRUint16 renderMode = aContext->GetRenderMode();
 
   /* save/pop the state so we don't screw up the xform */
   cairo_save(ctx);
 
-  GeneratePath(ctx, cairoCanvas);
+  GeneratePath(gfx);
 
-  if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+  if (renderMode != nsSVGRenderState::NORMAL) {
     cairo_restore(ctx);
 
     if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
@@ -600,7 +593,7 @@ nsSVGPathGeometryFrame::Render(nsISVGRendererCanvas *aCanvas)
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
-    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK) {
+    if (renderMode == nsSVGRenderState::CLIP_MASK) {
       cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
       cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
       cairo_fill(ctx);
@@ -620,14 +613,14 @@ nsSVGPathGeometryFrame::Render(nsISVGRendererCanvas *aCanvas)
   }
 
   void *closure;
-  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(aCanvas, ctx, &closure))) {
+  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(gfx, &closure))) {
     cairo_fill_preserve(ctx);
-    CleanupCairoFill(ctx, closure);
+    CleanupCairoFill(gfx, closure);
   }
 
-  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(aCanvas, ctx, &closure))) {
+  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(gfx, &closure))) {
     cairo_stroke(ctx);
-    CleanupCairoStroke(ctx, closure);
+    CleanupCairoStroke(gfx, closure);
   }
 
   cairo_new_path(ctx);
@@ -636,28 +629,26 @@ nsSVGPathGeometryFrame::Render(nsISVGRendererCanvas *aCanvas)
 }
 
 void
-nsSVGPathGeometryFrame::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
+nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
   GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
   cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(ctm);
-  if (aCanvas) {
-    aCanvas->AdjustMatrixForInitialTransform(&matrix);
-  }
+  cairo_t *ctx = aContext->GetCairo();
 
   if (nsSVGUtils::IsSingular(&matrix)) {
     cairo_identity_matrix(ctx);
     cairo_new_path(ctx);
     return;
   }
-  cairo_set_matrix(ctx, &matrix);
+
+  aContext->Multiply(gfxMatrix(matrix));
 
   cairo_new_path(ctx);
   NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(ctx);
 }
-
 
 PRUint16
 nsSVGPathGeometryFrame::GetHittestMask()
