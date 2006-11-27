@@ -115,9 +115,44 @@
       <field name="mEndDate">null</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
+
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          this.initTimeRange();
+
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          while(hours.childNodes.length > 1) {
+            hours.removeChild(hours.lastChild);
+          }
+
+          return val;
+        ]]>
+        </setter>
+      </property>
 
       <constructor>
         <![CDATA[
+          this.initTimeRange();
+        ]]>
+      </constructor>
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
           var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
 
           // get default start/end times from prefs and set on the
@@ -128,8 +163,14 @@
             this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
             this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
           } catch (ex) {}
-        ]]>
-      </constructor>
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
+          ]]>
+        </body>
+      </method>
 
       <property name="startDate">
         <setter>
@@ -250,6 +291,37 @@
       <field name="mScrollOffset">0</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
+
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          this.initTimeRange();
+
+          var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+
+          var parent = template.parentNode;
+          while(parent.childNodes.length > 1) {
+            parent.removeChild(parent.lastChild);
+          }
+
+          template.force24Hours = this.mForce24Hours;
+          
+          this.onLoad();
+          
+          return val;
+        ]]>
+        </setter>
+      </property>
 
       <property name="contentWidth">
         <getter>
@@ -380,16 +452,7 @@
           var startTime = args.startTime;
           var endTime = args.endTime;
 
-          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
-
-          // get default start/end times from prefs and set on the
-          // view.  if we hit an error (eg because sunbird's pref
-          // infrastructure hasn't created the pref yet), the
-          // defaults will do
-          try {
-            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
-            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
-          } catch (ex) {}
+          this.initTimeRange();
 
           // the basedate is the date/time from which the display
           // of the timebar starts. the range is the number of days
@@ -430,6 +493,21 @@
       <method name="onLoad">
         <body>
           <![CDATA[
+            this.initialize();
+            
+            var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+            var event = document.createEvent('Events'); 
+            event.initEvent('timebar', true, false);
+            event.details = this.contentWidth;
+            event.height = template.dayHeight;
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="initialize">
+        <body>
+          <![CDATA[
             var args = window.arguments[0];
             var startTime = args.startTime;
             var endTime = args.endTime;
@@ -446,31 +524,55 @@
             // now create those elements and set their date property.
             var date = this.mStartDate.clone();
             var template = document.getAnonymousElementByAttribute(this, "anonid", "template");
+            template.force24Hours = this.mForce24Hours;
             template.startDate = this.mStartDate;
             template.endDate = this.mEndDate;
             template.date = date;
             var parent = template.parentNode;
-            var count = this.mNumDays-1;
-            if(count > 0) {
-              for(var i=0; i<count; i++) {
-                date.day++;
-                date.normalize();
-                var newNode = template.cloneNode(false);
-                newNode.startDate = this.mStartDate;
-                newNode.endDate = this.mEndDate;
-                newNode.date = date;
-                parent.appendChild(newNode);
+            if(parent.childNodes.length <= 1) {
+              var count = this.mNumDays-1;
+              if(count > 0) {
+                for(var i=0; i<count; i++) {
+                  date.day++;
+                  date.normalize();
+                  var newNode = template.cloneNode(false);
+                  newNode.force24Hours = this.mForce24Hours;
+                  newNode.startDate = this.mStartDate;
+                  newNode.endDate = this.mEndDate;
+                  newNode.date = date;
+                  parent.appendChild(newNode);
+                }
               }
             }
-            
-            var event = document.createEvent('Events'); 
-            event.initEvent('timebar', true, false);
-            event.details = this.contentWidth;
-            event.height = template.dayHeight;
-            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
+          ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 
@@ -496,6 +598,33 @@
       <field name="mRange">0</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
+
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          this.initTimeRange();
+          
+          var hours = document.getAnonymousElementByAttribute(this, "anonid", "hours");
+          while(hours.childNodes.length > 1) {
+            hours.removeChild(hours.lastChild);
+          }
+
+          this.onLoad();
+          
+          return val;
+        ]]>
+        </setter>
+      </property>
 
       <property name="startDate">
         <setter>
@@ -588,25 +717,10 @@
 
       <constructor>
         <![CDATA[
-          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
-
-          // get default start/end times from prefs and set on the
-          // view.  if we hit an error (eg because sunbird's pref
-          // infrastructure hasn't created the pref yet), the
-          // defaults will do
-          try {
-            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
-            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
-          } catch (ex) {}
+          this.initTimeRange();
 
           this.mRange = Number(this.getAttribute("range"));
-        
-          var numHours = this.mEndHour - this.mStartHour;
-          this.mState = new Array(this.mRange*numHours);
-          for(var i=0; i<this.mState.length; i++) {
-            this.mState[i] = 0;
-          }
-          
+                  
           this.onLoad();
         ]]>
       </constructor>
@@ -614,6 +728,12 @@
       <method name="onLoad">
         <body>
           <![CDATA[
+          var numHours = this.mEndHour - this.mStartHour;
+          this.mState = new Array(this.mRange*numHours);
+          for(var i=0; i<this.mState.length; i++) {
+            this.mState[i] = 0;
+          }
+          
           var formatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
                                     .getService(Components.interfaces.calIDateTimeFormatter);
           var date = jsDateToDateTime(new Date());
@@ -895,7 +1015,32 @@
           ]]>
         </body>
       </method>
-      
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
+          ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 
@@ -906,7 +1051,7 @@
 
   <!-- id's are evil, use anonid -->
   <binding id="freebusy-grid">
-    
+
     <content>
       <xul:listbox anonid="listbox"
                    seltype="multiple"
@@ -924,7 +1069,7 @@
         </xul:listitem>
       </xul:listbox>
     </content>
-    
+
     <implementation>
 
       <field name="mContentHeight">0</field>
@@ -941,6 +1086,31 @@
       <field name="mRange">0</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
+
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          this.initTimeRange();
+
+          for (var i=1; i<=this.mMaxFreeBusy; i++) {
+            var freebusy = this.getFreeBusyElement(i);
+            freebusy.force24Hours = this.mForce24Hours;
+          }
+          
+          return val;
+        ]]>
+        </setter>
+      </property>
 
       <field name="mFreeBusyListener">
         <![CDATA[
@@ -972,16 +1142,7 @@
         <![CDATA[
           var args = window.arguments[0];
 
-          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
-
-          // get default start/end times from prefs and set on the
-          // view.  if we hit an error (eg because sunbird's pref
-          // infrastructure hasn't created the pref yet), the
-          // defaults will do
-          try {
-            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
-            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
-          } catch (ex) {}
+          this.initTimeRange();
 
           this.mRange = Number(this.getAttribute("range"));
         
@@ -1121,6 +1282,8 @@
             // propagate start/enddate to the new row.
             grid.startDate = this.mStartDate;
             grid.endDate = this.mEndDate;
+            
+            grid.force24Hours = this.mForce24Hours;
 
             // We always clone the first row.  The problem is that the first row
             // could be focused.  When we clone that row, we end up with a cloned
@@ -1577,6 +1740,32 @@
           ]]>
         </getter>
       </property>
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
+          ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 

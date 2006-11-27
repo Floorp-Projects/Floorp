@@ -1436,6 +1436,8 @@
       <field name="mRange">0</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
       <field name="mContentWidth">0</field>
       <field name="mHeaderHeight">0</field>
       <field name="mRatio">0</field>
@@ -1447,6 +1449,23 @@
       <field name="mDragState">0</field>
       <field name="mMargin">0</field>
       <field name="mWidth">0</field>
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          this.initTimeRange();
+          this.update();
+          return val;
+        ]]>
+        </setter>
+      </property>
 
       <property name="ratio">
         <setter>
@@ -1460,16 +1479,7 @@
 
       <constructor>
         <![CDATA[
-          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
-
-          // get default start/end times from prefs and set on the
-          // view.  if we hit an error (eg because sunbird's pref
-          // infrastructure hasn't created the pref yet), the
-          // defaults will do
-          try {
-            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
-            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
-          } catch (ex) {}
+          this.initTimeRange();
 
           // the basedate is the date/time from which the display
           // of the timebar starts. the range is the number of days
@@ -1565,6 +1575,9 @@
       <method name="update">
         <body>
           <![CDATA[
+            if(!this.mStartDate || !this.mEndDate)
+              return;
+            
             // calculate the relation of startdate/basedate and enddate/startdate.
             var offset = this.mStartDate.subtractDate(this.mBaseDate);
             var duration = this.mEndDate.subtractDate(this.mStartDate);
@@ -1611,6 +1624,31 @@
           <![CDATA[
             var scrollbox = document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
             scrollbox.setAttribute("width",width);
+          ]]>
+        </body>
+      </method>
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
           ]]>
         </body>
       </method>
@@ -1814,6 +1852,8 @@
       <field name="mEndDate">null</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
+      <field name="mStartHourDefault">8</field>
+      <field name="mEndHourDefault">19</field>
 
       <field name="mOwnerID">null</field>
       <field name="mUserID">null</field>
@@ -1823,20 +1863,54 @@
 
       <field name="mUndoStack">[]</field>
 
+      <field name="mForce24Hours">false</field>
+
+      <property name="force24Hours">
+        <getter>
+          <![CDATA[
+          return this.mForce24Hours;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this.mForce24Hours = val;
+          
+          this.initTimeRange();
+          
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          timebar.force24Hours = this.mForce24Hours;
+          
+          var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+          selectionbar.force24Hours = this.mForce24Hours;
+          
+          var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+          grid.force24Hours = this.mForce24Hours;
+
+          // calling onResize() will update the scrollbars and everything else
+          // that needs to adopt the previously made changes. we need to call
+          // this after the changes have actually been made...
+          this.onResize();
+
+          var scrollbar = document.getAnonymousElementByAttribute(this, "anonid", "horizontal-scrollbar");
+          if (!scrollbar.hasAttribute("maxpos"))
+            return;
+          var curpos = scrollbar.getAttribute("curpos");
+          var maxpos = scrollbar.getAttribute("maxpos");
+          var ratio = curpos/maxpos;
+          timebar.scroll = ratio;
+          grid.scroll = ratio;
+          selectionbar.ratio = ratio;
+
+          return val;
+        ]]>
+        </setter>
+      </property>
+
       <constructor>
         <![CDATA[
           var args = window.arguments[0];
 
-          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
-
-          // get default start/end times from prefs and set on the
-          // view.  if we hit an error (eg because sunbird's pref
-          // infrastructure hasn't created the pref yet), the
-          // defaults will do
-          try {
-            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
-            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
-          } catch (ex) {}
+          this.initTimeRange();
 
           var self = this;
           var load = function loadHandler() { self.onLoad(); };
@@ -1860,6 +1934,31 @@
           this.addEventListener('rowchange', focus, true);
           ]]>
       </constructor>
+
+      <method name="initTimeRange">
+        <body>
+          <![CDATA[
+          this.mStartHour = this.mStartHourDefault;
+          this.mEndHour = this.mEndHourDefault;
+
+          var pb2 = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch2);
+
+          // get default start/end times from prefs and set on the
+          // view.  if we hit an error (eg because sunbird's pref
+          // infrastructure hasn't created the pref yet), the
+          // defaults will do
+          try {
+            this.mStartHour = pb2.getIntPref("calendar.view.defaultstarthour");
+            this.mEndHour = pb2.getIntPref("calendar.view.defaultendhour");
+          } catch (ex) {}
+          
+          if(this.force24Hours) {
+            this.mStartHour = 0;
+            this.mEndHour = 24;
+          }
+          ]]>
+        </body>
+      </method>
 
       <method name="setTimeRange">
         <parameter name="aStartDate"/>
@@ -1948,6 +2047,10 @@
       <method name="onResize">
         <body>
           <![CDATA[
+            // don't do anything if we haven't been initialized.
+            if(!this.mStartDate || !this.mEndDate)
+              return;
+          
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
             var gridScrollbar = document.getAnonymousElementByAttribute(this, "anonid", "horizontal-scrollbar");
             grid.fitDummyRows();
@@ -1980,6 +2083,15 @@
             var startTime = args.startTime;
             var endTime = args.endTime;
             var calendar = args.calendar;
+
+            var kDefaultTimezone = calendarDefaultTimezone();
+            var begin = startTime.getInTimezone(kDefaultTimezone);
+            var end = endTime.getInTimezone(kDefaultTimezone);
+            if((begin.hour < this.mStartHour) ||
+               (end.hour > this.mEndHour) ||
+               (begin.isDate)) {
+              this.force24Hours = true;
+            }
 
             this.onChangeCalendar(calendar);
 
@@ -2261,7 +2373,6 @@
       <method name="scrollToCurrentTime">
         <body>
           <![CDATA[
-            debugger;
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             var ratio = (this.mStartDate.hour-this.mStartHour) * timebar.step;
             if(ratio <= 0.0)
