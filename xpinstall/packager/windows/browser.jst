@@ -170,6 +170,12 @@ function createShortcuts()
     {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       registerProgramFolderKey(winreg, fFolderPath);
+
+      // This is so that Windows Media Player works with us
+      var subkey = "SOFTWARE\\Microsoft\\MediaPlayer\\ShimInclusionList\\$MainExeFile$";
+      winreg.createKey(subkey, "");
+      subkey = "SOFTWARE\\Microsoft\\MediaPlayer\\ShimInclusionList\\SEAMON~1.exe"
+      winreg.createKey(subkey, "");
     }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
