@@ -4381,7 +4381,6 @@ xulrunner)
 
 camino) 
   MOZ_APP_NAME=mozilla
-  _PLATFORM_DEFAULT_TOOLKIT=cocoa
   ENABLE_TESTS=
   ACCESSIBILITY=
   MOZ_JSDEBUGGER=
