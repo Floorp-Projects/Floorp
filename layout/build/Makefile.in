@@ -211,7 +211,7 @@ endif
 ifdef MOZ_ENABLE_CAIRO_GFX
 EXTRA_DSO_LIBS += thebes
 else
-ifneq (,$(MOZ_SVG)$(MOZ_ENABLE_CANVAS))
+ifdef MOZ_ENABLE_CANVAS
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 endif
 endif
