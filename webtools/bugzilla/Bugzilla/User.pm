@@ -1461,16 +1461,16 @@ sub wants_mail {
     # No mail if there are no events
     return 0 if !scalar(@$events);
 
-    # Skip DB query if relationship is explicit
-    return 1 if $relationship == REL_GLOBAL_WATCHER;
-    
-    my $dbh = Bugzilla->dbh;
-    
     # If a relationship isn't given, default to REL_ANY.
     if (!defined($relationship)) {
         $relationship = REL_ANY;
     }
-    
+
+    # Skip DB query if relationship is explicit
+    return 1 if $relationship == REL_GLOBAL_WATCHER;
+
+    my $dbh = Bugzilla->dbh;
+
     my $wants_mail = 
         $dbh->selectrow_array('SELECT 1
                                  FROM email_setting
