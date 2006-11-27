@@ -66,21 +66,6 @@ nsRegisterItem::~nsRegisterItem()
     MOZ_COUNT_DTOR(nsRegisterItem);
 }
 
-#if defined (XP_MAC)
-static void SwapSlashColon(char * s)
-{
-	while (*s)
-	{
-		if (*s == '/')
-			*s++ = ':';
-		else if (*s == ':')
-			*s++ = '/';
-		else
-			*s++;
-	}
-} 
-#endif
-
 #if defined(XP_WIN)
 #include <windows.h>
 #endif
@@ -111,19 +96,11 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
         s++;
     }
 #endif
-#if defined( XP_MAC )
-    // Swap the / and colons to convert to an url
-    SwapSlashColon(ePath.BeginWriting());
-#endif
     // Escape the path with the directory mask
     nsCAutoString tmp(ePath);
     tmp.ReplaceChar(":", '|');
-#ifdef XP_MAC
-    nsCAutoString escPath("file:///");
-#else
     nsCAutoString escPath("file://");
-#endif
-	escPath += tmp;
+    escPath += tmp;
 //    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
 //    if (NS_SUCCEEDED(rv)) {
         PRBool dir;

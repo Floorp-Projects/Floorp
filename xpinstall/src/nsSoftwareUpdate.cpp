@@ -198,11 +198,7 @@ nsSoftwareUpdate::Shutdown()
         {
             nsCOMPtr<nsIFile> tmp;
             rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(tmp));
-#if defined (XP_MAC)
-            tmp->AppendNative(ESSENTIAL_FILES);
-#endif
             pathToCleanupUtility = do_QueryInterface(tmp);
-
         }
         else
         {

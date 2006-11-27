@@ -45,20 +45,9 @@
 
 #define CLEANUP_MESSAGE_FILENAME  NS_LITERAL_CSTRING("cmessage.txt")
 
-#ifndef XP_MAC
 #define CLEANUP_REGISTRY          NS_LITERAL_CSTRING("xpicleanup.dat")
-#endif
 
-#if defined (XP_MAC)
-#define CLEANUP_REGISTRY          NS_LITERAL_CSTRING("XPICleanup Data")
-#define ESSENTIAL_FILES           NS_LITERAL_CSTRING("Essential Files")
-#ifdef DEBUG
-#define CLEANUP_UTIL              NS_LITERAL_CSTRING("XPICleanupDebug")
-#else
-#define CLEANUP_UTIL              NS_LITERAL_CSTRING("XPICleanup")
-#endif //DEBUG
-
-#elif defined (XP_WIN)
+#if defined (XP_WIN)
 #define CLEANUP_UTIL              NS_LITERAL_CSTRING("xpicleanup.exe")
 
 #elif defined (XP_OS2)
