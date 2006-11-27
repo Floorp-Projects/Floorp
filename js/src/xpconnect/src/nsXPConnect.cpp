@@ -830,13 +830,12 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
             // Now, reparent the wrapper, since we know that it wants to be
             // reparented.
 
-            XPCWrappedNative *junk;
+            nsRefPtr<XPCWrappedNative> junk;
             rv = XPCWrappedNative::ReparentWrapperIfFound(ccx, oldScope,
-                                                          newScope, aNewScope,
+                                                          newScope, newParent,
                                                           wrapper->GetIdentityObject(),
-                                                          &junk);
+                                                          getter_AddRefs(junk));
             NS_ENSURE_SUCCESS(rv, rv);
-            NS_IF_RELEASE(junk);
         }
     }
 
