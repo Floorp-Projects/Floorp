@@ -20,6 +20,7 @@
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+    <RDF:li resource="chrome://inspector/content/inspector.xul"/>
     <RDF:li resource="chrome://inspector/content/commandOverlay.xul"/>
     <RDF:li resource="chrome://inspector/content/keysetOverlay.xul"/>
     <RDF:li resource="chrome://inspector/content/popupOverlay.xul"/>
@@ -36,6 +37,11 @@
   </RDF:Seq>
 
   <!-- Inspector Overlays -->
+
+  <RDF:Seq about="chrome://inspector/content/inspector.xul">
+    <RDF:li>chrome://communicator/content/utilityOverlay.xul</RDF:li>
+    <RDF:li>chrome://communicator/content/tasksOverlay.xul</RDF:li>
+  </RDF:Seq>
 
   <RDF:Seq about="chrome://inspector/content/commandOverlay.xul">
     <RDF:li>chrome://inspector/content/viewers/dom/commandOverlay.xul</RDF:li>
