@@ -1345,7 +1345,7 @@ sub candelete {
     # Allow plan author to delete if this case is linked only to plans she owns.
     my $own_all = 1;
     foreach my $plan (@{$self->plans}){
-        $own_all == 0 if (Bugzilla->user->id != $plan->author->id);
+        $own_all = 0 if (Bugzilla->user->id != $plan->author->id);
         last;
     }
     return 1 if $own_all;
