@@ -149,9 +149,6 @@ nsresult GetRegFilePath(nsACString &regFilePath)
         if (NS_FAILED(rv) || !tmp) 
             return nsnull;
 
-#if defined (XP_MAC)
-        tmp->AppendNative(ESSENTIAL_FILES);
-#endif
         iFileUtilityPath = do_QueryInterface(tmp);
     }
     else

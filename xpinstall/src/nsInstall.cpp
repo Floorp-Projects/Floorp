@@ -95,7 +95,7 @@
 #include "nsInstallFileOpEnums.h"
 #include "nsInstallFileOpItem.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <Gestalt.h>
 #include "nsAppleSingleDecoder.h"
 #include "nsILocalFileMac.h"
@@ -106,7 +106,7 @@
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
-#endif /* XP_UNIX */
+#endif
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -338,7 +338,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
     // Gather platform.
 #if defined(XP_WIN)
     mInstallPlatform = "Windows";
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
     mInstallPlatform = "Macintosh";
 #elif defined (XP_UNIX)
     mInstallPlatform = "X11";
@@ -387,7 +387,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
        mInstallPlatform += ' ';
        mInstallPlatform += (char*)name.machine;
     }
-#elif defined (XP_MAC) || defined (XP_MACOSX)
+#elif defined(XP_MACOSX)
     mInstallPlatform += "PPC";
 #elif defined(XP_OS2)
     ULONG os2ver = 0;
@@ -951,12 +951,12 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     return NS_OK;
 }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #define GESTALT_CHAR_CODE(x)          (((unsigned long) ((x[0]) & 0x000000FF)) << 24) \
                                     | (((unsigned long) ((x[1]) & 0x000000FF)) << 16) \
                                     | (((unsigned long) ((x[2]) & 0x000000FF)) << 8)  \
                                     | (((unsigned long) ((x[3]) & 0x000000FF)))
-#endif /* XP_MACOS || XP_MACOSX */
+#endif
 
 PRInt32
 nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
@@ -970,7 +970,7 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
         *aReturn = SaveError( result );
         return NS_OK;
     }
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
     long    response = 0;
     char    selectorChars[4];
@@ -994,7 +994,7 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
     else
         *aReturn = response;
 
-#endif /* XP_MAC || XP_MACOSX */
+#endif /* XP_MACOSX */
     return NS_OK;
 }
 
@@ -2187,7 +2187,7 @@ nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32
 
   *aReturn = nsInstall::SUCCESS;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, aSourceFile, aAliasFile, aReturn);
   if (!ifop)
@@ -2216,7 +2216,7 @@ nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32
 
   SaveError(*aReturn);
 
-#endif /* XP_MAC || XP_MACOSX */
+#endif /* XP_MACOSX */
 
   return NS_OK;
 }
@@ -2721,7 +2721,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         }
     }
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     FSRef finalRef, extractedRef;
 
     nsCOMPtr<nsILocalFileMac> tempExtractHereSpec;
@@ -2754,7 +2754,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             extractHereSpec = do_QueryInterface(tempExtractHereSpec, &rv);
         }
     }
-#endif /* XP_MAC || XP_MACOSX */
+#endif /* XP_MACOSX */
 
     extractHereSpec->Clone(aRealName);
     
