@@ -75,6 +75,20 @@ extern "C" {
 
 #endif
 
+#ifdef MOZ_MACBROWSER
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
+/* From the 10.4u headers */
+const int kThemeCheckBoxSmall = 13;
+const int kThemeRadioButtonSmall = 14;
+enum {
+  kHIThemeTabPositionFirst = 0,
+  kHIThemeTabPositionMiddle = 1,
+  kHIThemeTabPositionLast = 2,
+  kHIThemeTabPositionOnly = 3,
+};
+#endif
+#endif
+
 /* copied from nsRenderingContextMac */
 PRBool
 OnTigerOrLater()
@@ -234,8 +248,10 @@ nsNativeThemeCocoa::DrawTabPanel (CGContextRef cgContext, const HIRect& inBoxRec
   tpdi.state = kThemeStateActive;
   tpdi.direction = kThemeTabNorth; // uh what?
   tpdi.size = kHIThemeTabSizeNormal; // XXX
+#ifndef MOZ_MACBROWSER
   tpdi.kind = kHIThemeTabKindNormal;
   tpdi.adornment = kHIThemeTabPaneAdornmentNormal;
+#endif
 
   HIThemeDrawTabPane (&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
 }
@@ -296,8 +312,10 @@ nsNativeThemeCocoa::DrawTab (CGContextRef cgContext, const HIRect& inBoxRect,
   // hmm.  we could give a useful hint here.
   tdi.size = kHIThemeTabSizeNormal;
   // do we care about focus hint?
+#ifndef MOZ_MACBROWSER
   tdi.adornment = kHIThemeTabAdornmentTrailingSeparator;
   tdi.kind = kHIThemeTabKindNormal;
+#endif
   tdi.position = inPosition;
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
