@@ -447,6 +447,8 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
         thebesContext->SetMatrix(roundedCTM);
     }
 
+    nsRefPtr<gfxASurface> tmpSurfaceGrip;
+
     if (mSinglePixel && !hasPadding) {
         thebesContext->SetColor(mSinglePixelColor);
     } else {
@@ -457,9 +459,10 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
             /* Ugh we have padding; create a temporary surface that's the size of the surface + pad area,
              * and render the image into it first.  Then we'll tile that surface. */
             width = mWidth + xPadding;
-            height = mHeight + xPadding;
+            height = mHeight + yPadding;
             surface = new gfxImageSurface(gfxASurface::ImageFormatARGB32,
                                           width, height);
+            tmpSurfaceGrip = surface;
 
             nsRefPtr<gfxContext> tmpContext = new gfxContext(surface);
             if (mSinglePixel) {
@@ -500,6 +503,7 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     thebesContext->Rectangle(targetRect, doSnap);
     thebesContext->Fill();
 
+    thebesContext->SetColor(gfxRGBA(0,0,0,0));
     if (doSnap)
         thebesContext->SetMatrix(savedCTM);
 
