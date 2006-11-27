@@ -326,7 +326,7 @@ sub check_notification {
 
 sub check_timezone {
     my $tz = shift;
-    unless (tz_offset($tz)) {
+    unless (defined(tz_offset($tz))) {
         return "must be empty or a legal timezone name, such as PDT or JST";
     }
     return "";
