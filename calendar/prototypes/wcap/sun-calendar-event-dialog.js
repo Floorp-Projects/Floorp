@@ -47,6 +47,8 @@
 var gStartTime = null;
 var gEndTime = null;
 var gItemDuration = null;
+var gStartTimezone = null;
+var gEndTimezone = null;
 var gIsReadOnly = false;
 var gOwnerID = null;
 var gUserID = null;
@@ -229,7 +231,7 @@ function onCancel()
 
 function timezoneString(date)
 {
-  var fragments = date.timezone.split('/');
+  var fragments = date.split('/');
   var num = fragments.length;
   if(num <= 1)
     return fragments[0];
@@ -412,9 +414,15 @@ function loadDateTime(item) {
       endTime.normalize();
       startTime.normalize();
     }
-    
-    gStartTime = startTime;
-    gEndTime = endTime;
+
+    // store the start/end-times as calIDateTime-objects
+    // converted to the default timezone. store the timezones
+    // separately.
+    var kDefaultTimezone = calendarDefaultTimezone();
+    gStartTimezone = startTime.timezone;
+    gEndTimezone = endTime.timezone;
+    gStartTime = startTime.getInTimezone(kDefaultTimezone);
+    gEndTime = endTime.getInTimezone(kDefaultTimezone);
     gItemDuration = duration;
   }
 
@@ -424,12 +432,19 @@ function loadDateTime(item) {
     var endTime = null;
     var duration = null;
     
+    var kDefaultTimezone = calendarDefaultTimezone();
     var hasEntryDate = (item.entryDate != null);
-    if (hasEntryDate)
+    if (hasEntryDate) {
       startTime = item.entryDate;
+      gStartTimezone = startTime.timezone;
+      startTime = startTime.getInTimezone(kDefaultTimezone);
+    }
     var hasDueDate = (item.dueDate != null);
-    if (hasDueDate)
+    if (hasDueDate) {
       endTime = item.dueDate;
+      gEndTimezone = endTime.timezone;
+      endTime = endTime.getInTimezone(kDefaultTimezone);
+    }
     if (hasEntryDate && hasDueDate)
       duration = endTime.subtractDate(startTime);
 
@@ -468,12 +483,20 @@ function updateStartTime()
   var kDefaultTimezone = calendarDefaultTimezone();
   var start = jsDateToDateTime(getElementValue(startWidgetId));
   start = start.getInTimezone(kDefaultTimezone);
-  start.timezone = gStartTime.timezone;
+  var menuItem = document.getElementById('menu-options-timezone');
+  if(menuItem.getAttribute('checked') == 'true') {
+    start.timezone = gStartTimezone;
+  }
   gStartTime = start.clone();
-  if(gItemDuration)
+  if(gItemDuration) {
     start.addDuration(gItemDuration);
+    start = start.getInTimezone(gEndTimezone);
+  }
   if(gEndTime) {
-    start.timezone = gEndTime.timezone;
+    var menuItem = document.getElementById('menu-options-timezone');
+    if(menuItem.getAttribute('checked') == 'true') {
+      start.timezone = gEndTimezone
+    }
     gEndTime = start;
   }
   
@@ -554,26 +577,25 @@ function updateEndTime()
   if(gStartTime) {
     var start = jsDateToDateTime(getElementValue(startWidgetId));
     start = start.getInTimezone(kDefaultTimezone);
-    start.timezone = gStartTime.timezone;
+    var menuItem = document.getElementById('menu-options-timezone');
+    if(menuItem.getAttribute('checked') == 'true') {
+      start.timezone = gStartTimezone;
+    }
     gStartTime = start;
   }
   if(gEndTime) {
     var end = jsDateToDateTime(getElementValue(endWidgetId));
     end = end.getInTimezone(kDefaultTimezone);
-    // this is a hack in my point of view. we need to convert
-    // the endtime into the timezone that is associated with the
-    // endtime. but in case it is "UTC" and starttime/endtime
-    // have different timezones, we convert into the timezone
-    // of the starttime. this makes editing starttime/endtime
-    // consistent but leaves the user with a hidden modification
-    // to the event.
-    var timezone = gEndTime.timezone;
+    var timezone = gEndTimezone;
     if(timezone == "UTC") {
-      if(gStartTime && gStartTime.timezone != gEndTime.timezone) {
-        timezone = gStartTime.timezone;
+      if(gStartTime && gStartTimezone != gEndTimezone) {
+        timezone = gStartTimezone;
       }
     }
-    end.timezone = timezone;
+    var menuItem = document.getElementById('menu-options-timezone');
+    if(menuItem.getAttribute('checked') == 'true') {
+      end.timezone = timezone;
+    }
     gEndTime = end;
   }
   
@@ -1133,8 +1155,8 @@ function saveDateTime(item) {
 
   if (isEvent(item)) {
 
-    var startTime = gStartTime;
-    var endTime = gEndTime;
+    var startTime = gStartTime.getInTimezone(gStartTimezone);
+    var endTime = gEndTime.getInTimezone(gEndTimezone);
 
     var isAllDay = getElementValue("event-all-day", "checked");
     if (isAllDay) {
@@ -1163,8 +1185,8 @@ function saveDateTime(item) {
 
   if (isToDo(item)) {
 
-    var startTime = gStartTime;
-    var endTime = gEndTime;
+    var startTime = gStartTime ? gStartTime.getInTimezone(gStartTimezone) : null;
+    var endTime = gEndTime ? gEndTime.getInTimezone(gEndTimezone) : null;
 
     setItemProperty(item,"entryDate",startTime);
     setItemProperty(item,"dueDate",endTime);
@@ -1230,8 +1252,30 @@ function updateAccept()
   var startDate;
   var endDate;
   if (isEvent(window.calendarItem)) {
+
       startDate = jsDateToDateTime(getElementValue("event-starttime"));
       endDate = jsDateToDateTime(getElementValue("event-endtime"));
+
+      var menuItem = document.getElementById('menu-options-timezone');
+      if(menuItem.getAttribute('checked') == 'true') {
+
+        startTimezone = gStartTimezone;
+        endTimezone = gEndTimezone;
+        if(endTimezone == "UTC") {
+          if(gStartTimezone != gEndTimezone) {
+            endTimezone = gStartTimezone;
+          }
+        }
+
+        startDate = startDate.getInTimezone(kDefaultTimezone);
+        endDate = endDate.getInTimezone(kDefaultTimezone);
+
+        startDate.timezone = startTimezone;
+        endDate.timezone = endTimezone;
+      }
+
+      startDate = startDate.getInTimezone(kDefaultTimezone);
+      endDate = endDate.getInTimezone(kDefaultTimezone);
 
       // For all-day events we are not interested in times and compare only dates.
       if (getElementValue("event-all-day", "checked")) {
@@ -1245,8 +1289,6 @@ function updateAccept()
           // during the following comparison.
           // Calling getInTimezone() ensures that we use the same dates as 
           // displayed to the user in datetimepicker for comparison.
-          startDate = startDate.getInTimezone(kDefaultTimezone);
-          endDate = endDate.getInTimezone(kDefaultTimezone);
           startDate.isDate = true;
           endDate.isDate = true;
       }
@@ -2260,19 +2302,19 @@ function editStartTimezone()
     return;
 
   var args = new Object();
-  args.time = gStartTime;
+  args.time = gStartTime.getInTimezone(gStartTimezone);
   args.onOk = function(datetime) {
 
     var equalTimezones = false;
-    if(gStartTime && gEndTime) {
-      if(gStartTime.timezone == gEndTime.timezone) {
+    if(gStartTimezone && gEndTimezone) {
+      if(gStartTimezone == gEndTimezone) {
         equalTimezones = true;
       }
     }
 
-    gStartTime = datetime;
+    gStartTimezone = datetime.timezone;
     if(equalTimezones)
-      gEndTime = gEndTime.getInTimezone(datetime.timezone);
+      gEndTimezone = datetime.timezone;
 
     updateDateTime();
   };
@@ -2292,19 +2334,19 @@ function editEndTimezone()
     return;
 
   var args = new Object();
-  args.time = gEndTime;
+  args.time = gEndTime.getInTimezone(gEndTimezone);
   args.onOk = function(datetime) {
     
     var equalTimezones = false;
-    if(gStartTime && gEndTime) {
-      if(gStartTime.timezone == gEndTime.timezone) {
+    if(gStartTimezone && gEndTimezone) {
+      if(gStartTimezone == gEndTimezone) {
         equalTimezones = true;
       }
     }
     
     if(equalTimezones)
-      gStartTime = gStartTime.getInTimezone(datetime.timezone);
-    gEndTime = datetime;
+      gStartTimezone = datetime.timezone;
+    gEndTimezone = datetime.timezone;
     
     updateDateTime();
   };
@@ -2351,8 +2393,8 @@ function updateDateTime()
 
     if (isEvent(item)) {
 
-      var startTime = gStartTime.clone();
-      var endTime = gEndTime.clone();
+      var startTime = gStartTime.getInTimezone(gStartTimezone);
+      var endTime = gEndTime.getInTimezone(gEndTimezone);
 
       if (startTime.isDate)
         setElementValue("event-all-day", true, "checked");
@@ -2380,8 +2422,8 @@ function updateDateTime()
     
     if (isToDo(item)) {
     
-      var startTime = gStartTime ? gStartTime.clone() : null;
-      var endTime = gEndTime ? gEndTime.clone() : null;
+      var startTime = gStartTime ? gStartTime.getInTimezone(gStartTimezone) : null;
+      var endTime = gEndTime ? gEndTime.getInTimezone(gEndTimezone) : null;
     
       var hasEntryDate = (startTime != null);
       var hasDueDate = (endTime != null);
@@ -2474,7 +2516,6 @@ function updateDateTime()
 function updateTimezone()
 {
   //gConsoleService.logStringMessage("### updateTimezone()");
-
   var menuItem = document.getElementById('menu-options-timezone');
 
   // convert to default timezone if the timezone option
@@ -2482,12 +2523,12 @@ function updateTimezone()
   // and display the labels in order to modify the timezone.
   if(menuItem.getAttribute('checked') == 'true') {
 
-    var startTime = gStartTime ? gStartTime.clone() : null;
-    var endTime = gEndTime ? gEndTime.clone() : null;
+    var startTimezone = gStartTimezone;
+    var endTimezone = gEndTimezone;
 
     var equalTimezones = false;
-    if(startTime && endTime) {
-      if(startTime.timezone == endTime.timezone || endTime.timezone == "UTC") {
+    if(startTimezone && endTimezone) {
+      if(startTimezone == endTimezone || endTimezone == "UTC") {
         equalTimezones = true;
       }
     }
@@ -2495,9 +2536,9 @@ function updateTimezone()
     var tzStart = document.getElementById('timezone-starttime');
     var tzEnd = document.getElementById('timezone-endtime');
     
-    if(startTime != null) {
+    if(startTimezone != null) {
       tzStart.removeAttribute('collapsed');
-      tzStart.value = timezoneString(startTime);
+      tzStart.value = timezoneString(startTimezone);
       if(gIsReadOnly) {
         tzStart.removeAttribute('class');
         tzStart.removeAttribute('onclick');
@@ -2508,9 +2549,9 @@ function updateTimezone()
     }
   
     // we never display the second timezone if both are equal
-    if(endTime != null && !equalTimezones) {  
+    if(endTimezone != null && !equalTimezones) {  
       tzEnd.removeAttribute('collapsed');
-      tzEnd.value = timezoneString(endTime);
+      tzEnd.value = timezoneString(endTimezone);
       if(gIsReadOnly) {
         tzEnd.removeAttribute('class');
         tzEnd.removeAttribute('onclick');
