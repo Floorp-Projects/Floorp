@@ -875,7 +875,13 @@ DOMViewer.prototype =
   onPrefChanged: function(aName)
   {
     if (aName == "inspector.dom.showAnon")
-      this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
+      this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), true);
+
+    if (aName == "inspector.dom.showWhitespaceNodes")
+      this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
+
+    if (aName == "inspector.dom.showAccessibleNodes")
+      this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes", true);
 
     if (aName == "inspector.blink.on")
       this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
