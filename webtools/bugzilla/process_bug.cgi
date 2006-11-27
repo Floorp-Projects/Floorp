@@ -1273,11 +1273,8 @@ sub SnapShotBug {
 
 
 sub SnapShotDeps {
-    my ($i, $target, $me) = (@_);
-    my $dbh = Bugzilla->dbh;
-    my $list = $dbh->selectcol_arrayref(qq{SELECT $target FROM dependencies
-                                        WHERE $me = ? ORDER BY $target},
-                                        undef, $i);
+    my ($bug_id, $target, $me) = (@_);
+    my $list = Bugzilla::Bug::EmitDependList($me, $target, $bug_id);
     return join(',', @$list);
 }
 

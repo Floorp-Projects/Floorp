@@ -1363,18 +1363,15 @@ sub editable_bug_fields {
     return sort(@fields);
 }
 
-# This method is private and is not to be used outside of the Bug class.
+# XXX - When Bug::update() will be implemented, we should make this routine
+#       a private method.
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);
     my $dbh = Bugzilla->dbh;
-    my $list_ref =
-        $dbh->selectcol_arrayref(
-          "SELECT dependencies.$targetfield
-             FROM dependencies, bugs
-            WHERE dependencies.$myfield = ?
-              AND bugs.bug_id = dependencies.$targetfield
-         ORDER BY dependencies.$targetfield",
-         undef, ($bug_id));
+    my $list_ref = $dbh->selectcol_arrayref(
+          "SELECT $targetfield FROM dependencies
+            WHERE $myfield = ? ORDER BY $targetfield",
+            undef, $bug_id);
     return $list_ref;
 }
 
