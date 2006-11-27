@@ -220,7 +220,9 @@ nsShouldIgnoreFile(nsString& name)
       name.LowerCaseEqualsLiteral("feeditems.rdf"))
     return PR_TRUE;
 
-  return (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,SUMMARY_SUFFIX));
+  // The .mozmsgs dir is for spotlight support
+    return (nsStringEndsWith(name, ".mozmsgs") || nsStringEndsWith(name,".sbd") ||
+            nsStringEndsWith(name,SUMMARY_SUFFIX));
 }
 
 NS_IMETHODIMP
