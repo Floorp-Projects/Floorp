@@ -4283,7 +4283,6 @@ suite)
 
 browser)
   MOZ_APP_NAME=firefox
-  MOZ_APP_DISPLAYNAME=Minefield
   MOZ_XUL_APP=1
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
@@ -4295,6 +4294,7 @@ browser)
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter"
   AC_DEFINE(MOZ_PHOENIX)
+  # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
   ;;
 
 minimo)
@@ -4874,6 +4874,15 @@ esac
 MOZ_ARG_WITH_STRING(branding,
 [  --with-branding=dir    Use branding from the specified directory.],
     MOZ_BRANDING_DIRECTORY=$withval)
+
+REAL_BRANDING_DIRECTORY="${MOZ_BRANDING_DIRECTORY}"
+if test -z "$REAL_BRANDING_DIRECTORY"; then
+  REAL_BRANDING_DIRECTORY=${MOZ_BUILD_APP}/branding/nightly
+fi
+
+if test -e "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"; then
+  . "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"
+fi
 
 AC_SUBST(MOZ_BRANDING_DIRECTORY)
 
