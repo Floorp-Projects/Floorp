@@ -357,8 +357,10 @@ typedef enum
 // cache the toolbar defaults we parse from a plist
 + (NSArray*) toolbarDefaults;
 
-// Get the load-in-background pref
-+ (BOOL)shouldLoadInBackground;
+// Get the load-in-background pref.  If possible, aSender's keyEquivalentModifierMask
+// is used to determine the shift key's state.  Otherwise (if aSender doesn't respond to
+// keyEquivalentModifierMask or aSender is nil) uses the current event's modifier flags.
++ (BOOL)shouldLoadInBackground:(id)aSender;
 
 // Accessor to get the proxy icon view
 - (PageProxyIcon *)proxyIconView;

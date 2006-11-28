@@ -181,45 +181,27 @@ const long kOpenInTabsTag = 0xBEEF;
 - (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus withAlternates:(BOOL)withAlternates
 {
   NSString *title = [[inItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
+  NSMenuItem *menuItem;
 
-  NSMenuItem *menuItem = nil;
-  if ([inItem isKindOfClass:[Bookmark class]]) {
-    if (![(Bookmark *)inItem isSeparator]) {  // normal bookmark
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
-      [menuItem setTarget:[NSApp delegate]];
-      [menuItem setAction:@selector(openMenuBookmark:)];
-      [menuItem setImage:[inItem icon]];
-      [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
-      [self addItem:menuItem];
+  if ([(Bookmark *)inItem isSeparator])
+    menuItem = [[NSMenuItem separatorItem] retain];
+  else
+    menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
 
-      if (withAlternates) {
-        // Create command and command-shift alternates for the "in new foo" pref and shift-toggle
-        NSMenuItem *altMenuItem  = [NSMenu alternateMenuItemWithTitle:title
-                                                               action:@selector(openMenuBookmark:)
-                                                               target:[NSApp delegate]
-                                                            modifiers:NSCommandKeyMask];
-        [altMenuItem setRepresentedObject:inItem];
-        [altMenuItem setImage:[inItem icon]];
-        [self addItem:altMenuItem];
+  [menuItem setRepresentedObject:inItem];
+  [self addItem:menuItem];
 
-        altMenuItem = [NSMenu alternateMenuItemWithTitle:title
-                                                  action:@selector(openMenuBookmark:)
-                                                  target:[NSApp delegate]
-                                               modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
-        [altMenuItem setRepresentedObject:inItem];
-        [altMenuItem setImage:[inItem icon]];
-        [self addItem:altMenuItem];
-      }
-    }
-    else {   //separator
-      menuItem = [[NSMenuItem separatorItem] retain];
-      [self addItem:menuItem];
-    }
+  if ([inItem isKindOfClass:[Bookmark class]] && ![(Bookmark *)inItem isSeparator]) { // normal bookmark
+    [menuItem setTarget:[NSApp delegate]];
+    [menuItem setAction:@selector(openMenuBookmark:)];
+    [menuItem setImage:[inItem icon]];
+
+    if (withAlternates)
+      [self addCommandKeyAlternatesForMenuItem:menuItem];
   }
   else if ([inItem isKindOfClass:[BookmarkFolder class]]) {
     BookmarkFolder* curFolder = (BookmarkFolder*)inItem;
     if (![curFolder isGroup]) {  // normal folder
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setImage:[inItem icon]];
 
       BookmarkMenu* subMenu = [[BookmarkMenu alloc] initWithTitle:title bookmarkFolder:curFolder];
@@ -231,16 +213,12 @@ const long kOpenInTabsTag = 0xBEEF;
       [subMenu release];
     }
     else {  // group
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""];
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
       [menuItem setImage:[inItem icon]];
     }
-
-    [self addItem:menuItem];
   }
 
-  [menuItem setRepresentedObject:inItem];
   [menuItem release];
 }
 

@@ -100,7 +100,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   if ((metaKey && button == 0) || button == 1) {
     // The command key is down or we got a middle click.  Open the link in a new window or tab.
     BOOL useTab           = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
-    BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground];
+    BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground:nil];
 
     NSString* referrer = [[[mBrowserController getBrowserWrapper] getBrowserView] getFocusedURLString];
     

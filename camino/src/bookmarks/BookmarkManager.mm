@@ -740,7 +740,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [menuItem setKeyEquivalentModifierMask:0]; //Needed since by default NSMenuItems have NSCommandKeyMask
   [contextMenu addItem:menuItem];
 
-  NSMenuItem *shiftMenuItem = [NSMenu alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) target:target modifiers:NSShiftKeyMask];
+  NSMenuItem *shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) target:target modifiers:NSShiftKeyMask];
   [contextMenu addItem:shiftMenuItem];
 
   // open in new tabs in new window
@@ -752,7 +752,7 @@ static BookmarkManager* gBookmarkManager = nil;
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
 
-    shiftMenuItem = [NSMenu alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) target:target modifiers:NSShiftKeyMask];
+    shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarksInTabsInNewWindow:) target:target modifiers:NSShiftKeyMask];
     [contextMenu addItem:shiftMenuItem];
   }
 
@@ -767,7 +767,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
 
-  shiftMenuItem = [NSMenu alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) target:target modifiers:NSShiftKeyMask];
+  shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) target:target modifiers:NSShiftKeyMask];
   [contextMenu addItem:shiftMenuItem];
 
   if (!outlineView || ([items count] == 1)) {

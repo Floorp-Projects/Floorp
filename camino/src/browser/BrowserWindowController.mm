@@ -1224,13 +1224,18 @@ enum BWCOpenDest {
 //
 // gets the foreground/background tab loading pref
 //
-
-+ (BOOL)shouldLoadInBackground
++ (BOOL)shouldLoadInBackground:(id)aSender
 {
   BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
-  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
-    loadInBackground = !loadInBackground;
+  if ([aSender respondsToSelector:@selector(keyEquivalentModifierMask)]) {
+    if ([aSender keyEquivalentModifierMask] & NSShiftKeyMask)
+      loadInBackground = !loadInBackground;
+  }
+  else {
+    if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+      loadInBackground = !loadInBackground;
+  }
 
   return loadInBackground;
 }
@@ -2461,7 +2466,7 @@ enum BWCOpenDest {
   if (modifiers & NSCommandKeyMask) {
     BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
     BWCOpenDest destination = loadInTab ? kDestinationNewTab : kDestinationNewWindow;
-    [self performSearch:mSearchBar inView:destination inBackground:[BrowserWindowController shouldLoadInBackground]];
+    [self performSearch:mSearchBar inView:destination inBackground:[BrowserWindowController shouldLoadInBackground:nil]];
   }
   else
     [self performSearch:mSearchBar];
@@ -3397,7 +3402,7 @@ enum BWCOpenDest {
     if (tabViewItem)
     {
       NSString* url = [[tabViewItem view] getCurrentURI];
-      BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
+      BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:nil];
 
       [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
 
@@ -3621,7 +3626,7 @@ enum BWCOpenDest {
   
   // if we replace all tabs (because we opened a tab group), or we open additional tabs
   // with the "focus new tab"-pref on, focus the first new tab.
-  if (!((tabPolicy == eAppendTabs) && [BrowserWindowController shouldLoadInBackground]))
+  if (!((tabPolicy == eAppendTabs) && [BrowserWindowController shouldLoadInBackground:nil]))
     [mTabBrowser selectTabViewItem:tabViewToSelect];
     
 }
@@ -4011,8 +4016,7 @@ enum BWCOpenDest {
     NSArray* menuArray = [result itemArray];
     BOOL inNewTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
 
-    unsigned i;
-    for (i = 0; i < [menuArray count]; i++) {
+    for (int i = [menuArray count] - 1; i >= 0; i--) {
       NSMenuItem* menuItem = [menuArray objectAtIndex:i];
 
       // Only create alternates for the items that need them
@@ -4027,15 +4031,15 @@ enum BWCOpenDest {
         id target = [menuItem target];
 
         // Create the alternates and insert them into the two places after the menu item
-        NSMenuItem* cmdMenuItem = [NSMenu alternateMenuItemWithTitle:altMenuItemTitle
-                                                              action:action
-                                                              target:target
-                                                           modifiers:NSCommandKeyMask];
+        NSMenuItem* cmdMenuItem = [NSMenuItem alternateMenuItemWithTitle:altMenuItemTitle
+                                                                  action:action
+                                                                  target:target
+                                                               modifiers:NSCommandKeyMask];
         [result insertItem:cmdMenuItem atIndex:(i + 1)];
-        NSMenuItem* cmdShiftMenuItem = [NSMenu alternateMenuItemWithTitle:altMenuItemTitle
-                                                                   action:action
-                                                                   target:target
-                                                                modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
+        NSMenuItem* cmdShiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:altMenuItemTitle
+                                                                       action:action
+                                                                       target:target
+                                                                    modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
         [result insertItem:cmdShiftMenuItem atIndex:(i + 2)];
       }
     }
@@ -4055,10 +4059,10 @@ enum BWCOpenDest {
       // @"Force Format" = @"Force %@", so this gives the menu's title prepended with "Force"
       NSString* title = [NSString stringWithFormat:NSLocalizedString(@"Force Format", nil), [menuItem title]];
 
-      NSMenuItem* forceReloadItem = [NSMenu alternateMenuItemWithTitle:title
-                                                                action:[menuItem action]
-                                                                target:[menuItem target]
-                                                             modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
+      NSMenuItem* forceReloadItem = [NSMenuItem alternateMenuItemWithTitle:title
+                                                                    action:[menuItem action]
+                                                                    target:[menuItem target]
+                                                                 modifiers:([menuItem keyEquivalentModifierMask] | NSShiftKeyMask)];
 
       [inMenu insertItem:forceReloadItem atIndex:(i + 1)];
     }
@@ -4179,22 +4183,22 @@ enum BWCOpenDest {
 
 - (IBAction)openLinkInNewWindow:(id)aSender
 {
-  [self openLinkInNewWindowOrTab: YES];
+  [self openLinkInNewWindowOrTab:YES];
 }
 
 - (IBAction)openLinkInNewTab:(id)aSender
 {
-  [self openLinkInNewWindowOrTab: NO];
+  [self openLinkInNewWindowOrTab:NO];
 }
 
--(void)openLinkInNewWindowOrTab: (BOOL)aUseWindow
+-(void)openLinkInNewWindowOrTab:(BOOL)aUseWindow
 {
   NSString* hrefStr = [self getContextMenuNodeHrefText];
 
   if ([hrefStr length] == 0)
     return;
 
-  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground];
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackground:nil];
 
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
@@ -4284,7 +4288,7 @@ enum BWCOpenDest {
 
     if (modifiers & NSCommandKeyMask) {
       BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
-      BOOL loadInBG = [BrowserWindowController shouldLoadInBackground];
+      BOOL loadInBG = [BrowserWindowController shouldLoadInBackground:nil];
       if (loadInTab)
         [self openNewTabWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO setJumpback:NO];
       else

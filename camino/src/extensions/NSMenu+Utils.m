@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Ian Leue (froodian) <stridey@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -180,20 +181,55 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   return ([inObject pointerValue] == _NSGetCarbonMenu(self));
 }
 
-+ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers
+- (void)addCommandKeyAlternatesForMenuItem:(NSMenuItem *)inMenuItem
 {
-  NSMenuItem* altMenuItem = [[[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:@""] autorelease];
-  [altMenuItem setTarget:target];
-  [altMenuItem setKeyEquivalentModifierMask:modifiers];
-  [altMenuItem setAlternate:YES];
-  
-  return altMenuItem;
+  [inMenuItem setKeyEquivalentModifierMask:0]; // Needed since by default NSMenuItems have NSCommandKeyMask
+
+  NSString* title = [inMenuItem title];
+  SEL action = [inMenuItem action];
+  id target = [inMenuItem target];
+  id representedObject = [inMenuItem representedObject];
+  NSImage* image = [inMenuItem image];
+
+  NSMenuItem* altMenuItem = [[NSMenuItem alloc] initAlternateWithTitle:title
+                                                                action:action
+                                                                target:target
+                                                             modifiers:NSCommandKeyMask];
+  [altMenuItem setRepresentedObject:representedObject];
+  [altMenuItem setImage:image];
+  [self addItem:altMenuItem];
+  [altMenuItem release];
+
+  altMenuItem = [[NSMenuItem alloc] initAlternateWithTitle:title
+                                                    action:action
+                                                    target:target
+                                                 modifiers:(NSCommandKeyMask | NSShiftKeyMask)];
+  [altMenuItem setRepresentedObject:representedObject];
+  [altMenuItem setImage:image];
+  [self addItem:altMenuItem];
+  [altMenuItem release];
 }
 
 @end
 
 
 @implementation NSMenuItem(ChimeraMenuItemUtils)
+
+- (id)initAlternateWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers
+{
+  if (self = [self initWithTitle:title action:action keyEquivalent:@""]) {
+    [self setTarget:target];
+    [self setKeyEquivalentModifierMask:modifiers];
+    [self setAlternate:YES];
+  }
+
+  return self;
+}
+
++ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers
+{
+  return [[[NSMenuItem alloc] initAlternateWithTitle:title action:action target:target modifiers:modifiers] autorelease];
+}
 
 - (int)tagRemovingMask:(int)tagMask
 {

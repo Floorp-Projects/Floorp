@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <smfr@smfr.org>
+ *   Ian Leue (froodian) <stridey@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,13 +72,18 @@ extern NSString* const NSMenuClosedNotification;
 // the param should be the [NSNotification object]
 - (BOOL)isTargetOfMenuDisplayNotification:(id)inObject;
 
-// create and return an autoreleased alternate menu item
-+ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers;
+// add command and shift-command alternate menu items with attributes matching the input param
+- (void)addCommandKeyAlternatesForMenuItem:(NSMenuItem *)inMenuItem;
 
 @end
 
 
 @interface NSMenuItem(ChimeraMenuItemUtils)
+
+- (id)initAlternateWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers;
+
+// create and return an autoreleased alternate menu item
++ (NSMenuItem *)alternateMenuItemWithTitle:(NSString *)title action:(SEL)action target:(id)target modifiers:(int)modifiers;
 
 - (int)tagRemovingMask:(int)tagMask;
 

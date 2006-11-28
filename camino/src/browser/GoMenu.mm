@@ -311,6 +311,8 @@ static const unsigned int kMaxTitleLength = 50;
       [newItem setTarget:self];
       [newItem setRepresentedObject:curChild];
       [self addItem:newItem];
+
+      [self addCommandKeyAlternatesForMenuItem:newItem];
     }
     else if ([curChild isKindOfClass:[HistoryCategoryItem class]] && ([curChild numberOfChildren] > 0))
     {
@@ -339,6 +341,9 @@ static const unsigned int kMaxTitleLength = 50;
           [todayMenuItem setTarget:self];
           [todayMenuItem setRepresentedObject:curTodayItem];
           [self addItem:todayMenuItem];
+
+          [self addCommandKeyAlternatesForMenuItem:todayMenuItem];
+
           separatorPending = YES;
         }
         
@@ -428,9 +433,9 @@ static const unsigned int kMaxTitleLength = 50;
     BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
     if (bwc)
     {
-      if ([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask)
+      if ([sender keyEquivalentModifierMask] & NSCommandKeyMask)
       {
-        BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground];
+        BOOL backgroundLoad = [BrowserWindowController shouldLoadInBackground:sender];
         if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
           [bwc openNewTabWithURL:itemURL referrer:nil loadInBackground:backgroundLoad allowPopups:NO setJumpback:NO];
         else

@@ -330,7 +330,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
   if (overTabViewItem) {
     [[overTabViewItem view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
 
-    if (![BrowserWindowController shouldLoadInBackground])
+    if (![BrowserWindowController shouldLoadInBackground:nil])
       [self selectTabViewItem:overTabViewItem];
 
     return YES;
@@ -340,7 +340,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     return YES;
   }
   else {
-    [self addTabForURL:url referrer:nil inBackground:[BrowserWindowController shouldLoadInBackground]];
+    [self addTabForURL:url referrer:nil inBackground:[BrowserWindowController shouldLoadInBackground:nil]];
     return YES;
   }
   
