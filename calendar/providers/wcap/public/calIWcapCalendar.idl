@@ -186,5 +186,133 @@ interface calIWcapCalendar : calICalendar
         in unsigned long itemFilter,
         in calIDateTime dtFrom,
         in calIOperationListener listener );
+
+    /* xxx todo:
+       separate out into another interface and leave only an attribute
+       
+       readonly attribute calIWcapAccessControl accessControl;
+
+       here?
+       This would bloat client code somehow like
+
+       if (cal.accessControl &&
+           cal.accessControl.check(calIAccessControl.AC_COMP_WRITE))
+           cal.deleteItem(item, listener);
+
+       but makes it easier for provider implementors not implementing the
+       whole stuff...
+
+       Right now, the below are similar to *nix fs rights, i.e. "write" includes
+       "add", "delete" and "modify".
+       Does it make sense to separate "add" and "delete" out of "write"?
+    */
+    
+    /**
+     * Whether it is allowed or denied to get availability information
+     * (i.e. free-busy times).
+     */
+    const unsigned long AC_FREEBUSY = 1 << 0;
+    
+    /**
+     * Whether it is allowed or denied to invite a calendar's
+     * owner placing an invitation into the calendar.
+     */
+    const unsigned long AC_SCHEDULE = 1 << 1;
+    
+    /**
+     * Whether it is allowed or denied to read components.
+     */
+    const unsigned long AC_COMP_READ = 1 << 2;
+    
+    /**
+     * Whether it is allowed or denied to add, modify or delete components.
+     */
+    const unsigned long AC_COMP_WRITE = 1 << 3;
+    
+    /**
+     * Whether it is allowed or denied to read properties.
+     */
+    const unsigned long AC_PROP_READ = 1 << 4;
+    
+    /**
+     * Whether it is allowed or denied to add, modify or delete properties.
+     */
+    const unsigned long AC_PROP_WRITE = 1 << 5;
+    
+    /**
+     * Full access, includes all of the above.
+     */
+    const unsigned long AC_FULL = (AC_FREEBUSY    |
+                                   AC_SCHEDULE    |
+                                   AC_COMP_READ   |
+                                   AC_COMP_WRITE  |
+                                   AC_PROP_READ   |
+                                   AC_PROP_WRITE);
+    
+    /**
+     * Checks whether the currently logged in user can perform the specified
+     * actions. Clients should check these bits before performing operations
+     * on a calendar instance, e.g.
+     *
+     * if (cal.checkAccess(calIWcapCalendar.AC_COMP_WRITE))
+     *     cal.deleteItem(item, listener);
+     *
+     * or
+     * 
+     * if (cal.checkAccess(calIWcapCalendar.AC_PROP_WRITE))
+     *     cal.name = newName;
+     *
+     * @param accessControlBits access control bits (above AC_ definitions)
+     * @return true if access is granted, false otherwise
+     */
+    boolean checkAccess( in unsigned long accessControlBits );
+    
+    /**
+     * Defines granted and denied permissions for a specific user or
+     * user domain. Specific user entries precede over domain entries.
+     *
+     * Examples:
+     * a) Allow all users availability and read access,
+     *    but jdoe only availability access:
+     *    defineAccessControl("@", AC_FREEBUSY | AC_COMP_READ);
+     *    defineAccessControl("jdoe", AC_FREEBUSY);
+     *
+     * b) Restrict jdoe to have no access:
+     *    defineAccessControl("jdoe", 0);
+     *
+     * Follow-up definition calls for the same user will overwrite previous
+     * definitions.
+     * 
+     * @param userId user that is affected by the access control bits
+     *               WCAP specific:
+     *                    - @ stands in for everybody
+     *                    xxx todo: change the above
+     * @param accessControlBits access control bits (above AC_ definitions)
+     */
+    void defineAccessControl(
+        in string userId, in unsigned long accessControlBits );
+    
+    /**
+     * To reset a user's access control definition to the default ones
+     * that everybody is granted.
+     * In case the user has no specific access control definition,
+     * Components.results.NS_ERROR_INVALID_ARG is thrown.
+     *
+     * @param userId user id
+     */
+    void resetAccessControl( in string userId );
+    
+    /**
+     * Gets the set of access control definitions (including "everybody").
+     * Both out arrays have the same length.
+     *
+     * @param count length of returned arrays
+     * @param users users ids
+     * @param accessControlBits access control bits
+     */
+    void getAccessControlDefinitions(
+        out unsigned long count,
+        [array, size_is(count)] out string users,
+        [array, size_is(count)] out unsigned long accessControlBits );
 };
 

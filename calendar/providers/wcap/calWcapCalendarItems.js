@@ -563,7 +563,7 @@ calWcapCalendar.prototype.adoptItem_queued = function( item, listener )
 {
     this.log( "adoptItem() call: " + item.title );
     try {
-        this.assureReadWrite();
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_WRITE);
         
         // xxx todo: workaround really necessary for adding an occurrence?
         var oldItem = null;
@@ -642,7 +642,8 @@ calWcapCalendar.prototype.modifyItem_queued = function(
 {
     this.log( "modifyItem() call: " + newItem.id );    
     try {
-        this.assureReadWrite();
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_WRITE);
+        
         if (!newItem.id)
             throw new Components.Exception("new item has no id!");
         
@@ -702,7 +703,8 @@ calWcapCalendar.prototype.deleteItem_queued = function( item, listener )
 {
     this.log( "deleteItem() call: " + item.id );
     try {
-        this.assureReadWrite();
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_WRITE);
+        
         if (item.id == null)
             throw new Components.Exception("no item id!");
         
@@ -860,6 +862,15 @@ calWcapCalendar.prototype.parseItems_ = function(
                 item.calendar = this_.superCalendar;
                 var rid = item.recurrenceId;
                 if (rid) {
+                    var startDate = (isEvent(item)
+                                     ? item.startDate : item.entryDate);
+                    if (startDate.isDate && !rid.isDate) {
+                        // cs ought to return proper all-day RECURRENCE-ID!
+                        // get into startDate's timezone before cutting:
+                        rid = rid.getInTimezone(startDate.timezone);
+                        rid.isDate = true;
+                        item.recurrenceId = rid;
+                    }
                     if (LOG_LEVEL > 1) {
                         this_.log( "exception item: " + item.title +
                                    "\nrid=" + rid.icalString,
@@ -963,6 +974,8 @@ calWcapCalendar.prototype.getItem_queued = function( id, listener )
     //           try events first, fallback to todos... in the future...
     this.log( ">>>>>>>>>>>>>>>> getItem() call!");
     try {
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_READ);
+        
         var this_ = this;
         var syncResponseFunc = function( wcapResponse ) {
             var icalRootComp = wcapResponse.data; // first statement, may throw
@@ -1032,7 +1045,9 @@ calWcapCalendar.prototype.getItems_resp = function(
     try {
         var exc = wcapResponse.exception;
         // check whether access is denied,
-        // then use free-busy information instead:
+        // then try to use free-busy information instead:
+        // xxx todo: reuse these bits here; should be shifted to
+        //           getItems_queued directly if (!checkAccess(AC_COMP_READ))...
         if (testResultCode( exc, Components.interfaces.
                             calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
             if (listener &&
@@ -1084,6 +1099,12 @@ calWcapCalendar.prototype.getItems_resp = function(
                         }
                     }
                 };
+                // for the exotic case that someone can read this calendar,
+                // but has no freebusy access...
+                // cannot check this in session, because that API is also for
+                // looking up users...
+                this.assureAccess(
+                    Components.interfaces.calIWcapCalendar.AC_FREEBUSY);
                 this.session.getFreeBusyTimes(
                     this.calId, rangeStart, rangeEnd, true /*bBusyOnly*/,
                     freeBusyListener, true/*async*/, 0 /*requestId*/ );
@@ -1179,6 +1200,8 @@ calWcapCalendar.prototype.getItems_queued = function(
               ",\n\trangeStart=" + zRangeStart +
               ",\n\trangeEnd=" + zRangeEnd );
     try {
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_READ);
+        
         var url = this.getCommandUrl( "fetchcomponents_by_range" );
         url += ("&relativealarm=1&compressed=1&recurring=1" +
                 "&fmt-out=text%2Fcalendar");
@@ -1325,6 +1348,8 @@ calWcapCalendar.prototype.syncChangesTo_queued = function(
     const SYNC = Components.interfaces.calIWcapCalendar.SYNC;
     
     try {
+        this.assureAccess(Components.interfaces.calIWcapCalendar.AC_COMP_READ);
+        
         var this_ = this;
         // new stamp for this sync:
         var now = getTime();

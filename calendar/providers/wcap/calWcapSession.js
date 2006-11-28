@@ -53,18 +53,6 @@ function calWcapSession() {
         this.asyncQueue, this, this.getFreeBusyTimes_queued);
     this.searchForCalendars = makeQueuedCall(
         this.asyncQueue, this, this.searchForCalendars_queued);
-    
-    // listen for shutdown, being logged out:
-    // network:offline-about-to-go-offline will be fired for
-    // XPCOM shutdown, too.
-    // xxx todo: alternatively, add shutdown notifications to cal manager
-    // xxx todo: how to simplify this for multiple topics?
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-        .getService(Components.interfaces.nsIObserverService);
-    observerService.addObserver( this, "quit-application",
-                                 false /* don't hold weakly: xxx todo */ );
-    observerService.addObserver( this, "network:offline-about-to-go-offline",
-                                 false /* don't hold weakly: xxx todo */ );
 }
 
 calWcapSession.prototype = {
@@ -72,6 +60,7 @@ calWcapSession.prototype = {
     get asyncQueue() { return this.m_asyncQueue; },
     
     m_ifaces: [ Components.interfaces.calIWcapSession,
+                Components.interfaces.calICalendarManagerObserver,
                 Components.interfaces.nsIInterfaceRequestor,
                 Components.interfaces.nsIClassInfo,
                 Components.interfaces.nsISupports ],
@@ -188,27 +177,6 @@ calWcapSession.prototype = {
     {
         this.m_observers = this.m_observers.filter(
             function(x) { return x != observer; } );
-    },
-    
-    // nsIObserver:
-    observe:
-    function( subject, topic, data )
-    {
-        this.log( "observing: " + topic + ", data: " + data );
-        if (topic == "network:offline-about-to-go-offline") {
-            this.logout();
-        }
-        else if (topic == "quit-application") {
-            this.logout();
-            // xxx todo: valid upon notification?
-            var observerService =
-                Components.classes["@mozilla.org/observer-service;1"]
-                .getService(Components.interfaces.nsIObserverService);
-            observerService.removeObserver(
-                this, "quit-application" );
-            observerService.removeObserver(
-                this, "network:offline-about-to-go-offline" );
-        }
     },
     
     getSupportedTimezones:
@@ -337,8 +305,8 @@ calWcapSession.prototype = {
                     catch (exc) {
                         // restore scheme:
                         sessionUri.scheme = this.uri.scheme;
-                        if (testResultCode( exc, Components.interfaces.
-                                            calIWcapErrors.WCAP_LOGIN_FAILED))
+                        if (testResultCode(exc, Components.interfaces.
+                                           calIWcapErrors.WCAP_LOGIN_FAILED))
                             throw exc; // forward login failures
                         // but ignore connection errors
                     }
@@ -352,6 +320,8 @@ calWcapSession.prototype = {
                 this.log( "no logins anymore." );
                 throw exc;
             }
+            
+            this.assureInstalledLogoutObservers();
             
             this.getServerTimeDiff(true /* refresh */);
             
@@ -406,8 +376,10 @@ calWcapSession.prototype = {
     getSessionId_:
     function( sessionUri )
     {
-        this.log( "attempting to get a session id for " + sessionUri.spec );
+        // probe whether server is accessible:
+        var loginText = this.getServerInfo(sessionUri);
         
+        this.log( "attempting to get a session id for " + sessionUri.spec );
         var outUser = { value: this.userId };
         var outPW = { value: null };
         
@@ -420,20 +392,25 @@ calWcapSession.prototype = {
         if (pwHost[pwHost.length - 1] == '/')
             pwHost = pwHost.substr(0, pwHost.length - 1);
         this.log( "looking in pw db for: " + pwHost );
-        var enumerator = passwordManager.enumerator;
-        while (enumerator.hasMoreElements()) {
-            var pwEntry = enumerator.getNext().QueryInterface(
-                Components.interfaces.nsIPassword );
-            if (LOG_LEVEL > 1) {
-                this.log( "pw entry:\n\thost=" + pwEntry.host +
-                          "\n\tuser=" + pwEntry.user );
+        try {
+            var enumerator = passwordManager.enumerator;
+            while (enumerator.hasMoreElements()) {
+                var pwEntry = enumerator.getNext().QueryInterface(
+                    Components.interfaces.nsIPassword );
+                if (LOG_LEVEL > 1) {
+                    this.log( "pw entry:\n\thost=" + pwEntry.host +
+                              "\n\tuser=" + pwEntry.user );
+                }
+                if (pwEntry.host == pwHost) {
+                    // found an entry matching URI:
+                    outUser.value = pwEntry.user;
+                    outPW.value = pwEntry.password;
+                    break;
+                }
             }
-            if (pwEntry.host == pwHost) {
-                // found an entry matching URI:
-                outUser.value = pwEntry.user;
-                outPW.value = pwEntry.password;
-                break;
-            }
+        }
+        catch (exc) { // just log error
+            this.logError(exc, "password manager lookup");
         }
         
         if (outPW.value) {
@@ -446,7 +423,6 @@ calWcapSession.prototype = {
             this.log( "no password entry found for " + pwHost );
         
         if (!this.m_sessionId) {
-            var loginText = this.getServerInfo(sessionUri);
             if (outPW.value) {
                 // login failed before, so try to remove from pw db:
                 try {
@@ -499,9 +475,6 @@ calWcapSession.prototype = {
     login_:
     function( sessionUri, user, pw )
     {
-        if (this.m_sessionId != null) {
-            this.logout();
-        }
         var str;
         var icalRootComp = null;
         try {
@@ -690,6 +663,8 @@ calWcapSession.prototype = {
                 // sensible default for user id login:
                 var username = decodeURIComponent( thatUri.username );
                 if (username != "") {
+                    // xxx todo: might vanish soon...
+                    // patching the default calId via url:
                     this.m_defaultCalId = username;
                     var nColon = username.indexOf(':');
                     this.m_userId = (nColon >= 0
@@ -752,7 +727,7 @@ calWcapSession.prototype = {
                 this.log( "logout succeeded." );
             }
             catch (exc) {
-                this.log( "logout failed: " + exc );
+                this.log(exc, "logout failed.");
                 Components.utils.reportError( exc );
             }
             this.m_sessionId = null;
@@ -763,6 +738,14 @@ calWcapSession.prototype = {
         this.m_userPrefs = null; // reread prefs
         this.m_defaultCalId = null;
         this.m_bNoLoginsAnymore = false;
+    },
+    
+    refresh:
+    function()
+    {
+        if (this.m_bNoLoginsAnymore)
+            this.logout(); // reset this session
+        // else the next call will refresh any timed out ticket...
     },
     
     getWcapErrorString:
@@ -863,6 +846,8 @@ calWcapSession.prototype = {
     {
         try {
 //             this.assureLoggedIn();
+            // xxx todo:
+            cal.assureAccess(Components.interfaces.calIWcapCalendar.AC_FULL);
             var calId = cal.calId;
             var url = this.getCommandUrl("deletecalendar");
             url += ("&calid=" + encodeURIComponent(calId));
@@ -920,7 +905,7 @@ calWcapSession.prototype = {
     },
     
     unsubscribeFromCalendars:
-    function( count, calIds )
+    function( count, cals )
     {
         this.modifyCalendarSubscriptions(cals, false/*!bSubscribe*/);
     },
@@ -1085,7 +1070,7 @@ calWcapSession.prototype = {
                     try {
                         checkWcapXmlErrno(node);
                         var ar = filterCalProps(
-                            "X-NSCP-CALPROPS-RELATIVE_CALID");
+                            "X-NSCP-CALPROPS-RELATIVE-CALID", node);
                         if (ar.length > 0) {
                             var calId = ar[0];
                             // take existing one from subscribed list;
@@ -1167,6 +1152,98 @@ calWcapSession.prototype = {
             if (listener)
                 listener.onSearchForCalendarsResults(exc, requestId, 0, []);
         }
+    },
+    
+    m_bInstalledLogoutObservers: false,
+    assureInstalledLogoutObservers:
+    function()
+    {
+        // don't do this in ctor, calendar manager calls back to all
+        // registered calendars!
+        if (!this.m_bInstalledLogoutObservers) {
+            this.m_bInstalledLogoutObservers = true;
+            // listen for shutdown, being logged out:
+            // network:offline-about-to-go-offline will be fired for
+            // XPCOM shutdown, too.
+            // xxx todo: alternatively, add shutdown notifications to
+            //           cal manager
+            // xxx todo: how to simplify this for multiple topics?
+            var observerService =
+                Components.classes["@mozilla.org/observer-service;1"]
+                .getService(Components.interfaces.nsIObserverService);
+            observerService.addObserver(
+                this, "quit-application",
+                false /* don't hold weakly: xxx todo */);
+            observerService.addObserver(
+                this, "network:offline-about-to-go-offline",
+                false /* don't hold weakly: xxx todo */);
+            getCalendarManager().addObserver(this);
+        }
+    },
+    
+    // nsIObserver:
+    observe:
+    function( subject, topic, data )
+    {
+        this.log( "observing: " + topic + ", data: " + data );
+        if (topic == "network:offline-about-to-go-offline") {
+            this.logout();
+        }
+        else if (topic == "quit-application") {
+            this.logout();
+            // xxx todo: valid upon notification?
+            getCalendarManager().removeObserver(this);
+            var observerService =
+                Components.classes["@mozilla.org/observer-service;1"]
+                .getService(Components.interfaces.nsIObserverService);
+            observerService.removeObserver(
+                this, "quit-application" );
+            observerService.removeObserver(
+                this, "network:offline-about-to-go-offline" );
+        }
+    },
+    
+    // calICalendarManagerObserver:
+    
+    // called after the calendar is registered
+    onCalendarRegistered:
+    function( cal )
+    {
+    },
+    
+    // called before the unregister actually takes place
+    onCalendarUnregistering:
+    function( cal )
+    {
+        try {
+            cal = cal.QueryInterface(Components.interfaces.calIWcapCalendar);
+        }
+        catch (exc) {
+            cal = null;
+        }
+        if (cal && cal.session.wrappedJSObject == this &&
+            cal.calId == this.defaultCalId) {
+            // calendar is to be deleted, so logout before:
+            this.logout();
+        }
+    },
+    
+    // called before the delete actually takes place
+    onCalendarDeleting:
+    function( cal )
+    {
+    },
+    
+    // called after the pref is set
+    onCalendarPrefSet:
+    function( cal, name, value )
+    {
+    },
+    
+    // called before the pref is deleted
+    onCalendarPrefDeleting:
+    function( cal, name )
+    {
     }
 };
 
@@ -1184,33 +1261,39 @@ function confirmInsecureLogin( uri )
         }
     }
     
+    var bConfirmed = false;
+    
     var host = uri.hostPort;
     var encodedHost = encodeURIComponent(host);
     var confirmedEntry = g_confirmedHttpLogins[encodedHost];
-    if (confirmedEntry)
-        return (confirmedEntry == "1" ? true : false);
-    
-    var prompt = getWindowWatcher().getNewPrompter(null);
-    var bundle = getWcapBundle();
-    var dontAskAgain = { value: false };
-    var bConfirmed = prompt.confirmCheck(
-        bundle.GetStringFromName("noHttpsConfirmation.label"),
-        bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1),
-        bundle.GetStringFromName("noHttpsConfirmation.check.text"),
-        dontAskAgain );
-    
-    if (dontAskAgain.value) {
-        // save decision for all running calendars and all future confirmations:
-        var confirmedHttpLogins = getPref(
-            "calendar.wcap.confirmed_http_logins", "");
-        if (confirmedHttpLogins.length > 0)
-            confirmedHttpLogins += ",";
-        confirmedEntry = (bConfirmed ? "1" : "0");
-        confirmedHttpLogins += (encodedHost + ":" + confirmedEntry);
-        setPref("calendar.wcap.confirmed_http_logins", confirmedHttpLogins);
-        g_confirmedHttpLogins[encodedHost] = confirmedEntry;
+    if (confirmedEntry) {
+        bConfirmed = (confirmedEntry == "1" ? true : false);
+    }
+    else {
+        var prompt = getWindowWatcher().getNewPrompter(null);
+        var bundle = getWcapBundle();
+        var dontAskAgain = { value: false };
+        var bConfirmed = prompt.confirmCheck(
+            bundle.GetStringFromName("noHttpsConfirmation.label"),
+            bundle.formatStringFromName("noHttpsConfirmation.text", [host], 1),
+            bundle.GetStringFromName("noHttpsConfirmation.check.text"),
+            dontAskAgain );
+        
+        if (dontAskAgain.value) {
+            // save decision for all running calendars and
+            // all future confirmations:
+            var confirmedHttpLogins = getPref(
+                "calendar.wcap.confirmed_http_logins", "");
+            if (confirmedHttpLogins.length > 0)
+                confirmedHttpLogins += ",";
+            confirmedEntry = (bConfirmed ? "1" : "0");
+            confirmedHttpLogins += (encodedHost + ":" + confirmedEntry);
+            setPref("calendar.wcap.confirmed_http_logins", confirmedHttpLogins);
+            g_confirmedHttpLogins[encodedHost] = confirmedEntry;
+        }
     }
     
+    logMessage("confirmInsecureLogin(" + host + ")", "returned: " + bConfirmed);
     return bConfirmed;
 }
 

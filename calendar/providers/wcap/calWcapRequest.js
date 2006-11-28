@@ -176,7 +176,7 @@ function streamToString( inStream, charset )
         Components.classes["@mozilla.org/intl/converter-input-stream;1"]
         .createInstance(Components.interfaces.nsIConverterInputStream);
     try {
-        convStream.init( inStream, charset, 0, 0x0000 );
+        convStream.init( inStream, charset, 0, 63 /* '?' */ );
         var str = "";
         var str_ = {};
         while (convStream.readString( -1, str_ )) {

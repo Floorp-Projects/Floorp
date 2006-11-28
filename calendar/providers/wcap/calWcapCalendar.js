@@ -75,7 +75,7 @@ function calWcapCalendar( calId, session, /*optional*/calProps ) {
     
     if (LOG_LEVEL > 0 && this.m_calProps) {
         if (this.m_calId != this.getCalendarProperties(
-                "X-NSCP-CALPROPS-RELATIVE_CALID", {})[0]) {
+                "X-NSCP-CALPROPS-RELATIVE-CALID", {})[0]) {
             this.notifyError("calId mismatch: " + this.m_calId +
                              " vs. " + ar[0]);
         }
@@ -191,14 +191,12 @@ calWcapCalendar.prototype = {
     
     // calICalendar:
     get name() {
-        // xxx todo: mismatch
-        if (this.session.isLoggedIn)
-            return this.displayName;
-        else
-            return getCalendarManager().getCalendarPref(this, "NAME");
+        return getCalendarManager().getCalendarPref(
+            this.session.defaultCalendar, "NAME");
     },
     set name( name ) {
-        getCalendarManager().setCalendarPref(this, "NAME", name);
+        getCalendarManager().setCalendarPref(
+            this.session.defaultCalendar, "NAME", name);
     },
     
     get type() { return "wcap"; },
@@ -210,24 +208,15 @@ calWcapCalendar.prototype = {
     m_bReadOnly: false,
     get readOnly() {
         return (this.m_bReadOnly ||
+                // xxx todo:
                 // read-only if not logged in, this flag is tested quite
                 // early, so don't log in here if not logged in already...
                 !this.session.isLoggedIn ||
-                // xxx todo: take permissions into account:
-                !this.isOwnedCalendar);
+                // limit to write permission on components:
+                !this.checkAccess(
+                    Components.interfaces.calIWcapCalendar.AC_COMP_WRITE));
     },
     set readOnly( bReadOnly ) { this.m_bReadOnly = bReadOnly; },
-    
-    assureReadWrite:
-    function()
-    {
-        this.session.getSessionId(); // assure being logged in
-        if (this.readOnly) {
-            throw new Components.Exception(
-                "Calendar is read-only.",
-                Components.interfaces.calIErrors.CAL_IS_READONLY );
-        }
-    },
     
     resetCalProps:
     function()
@@ -291,11 +280,11 @@ calWcapCalendar.prototype = {
     get canRefresh() { return true; },
     refresh:
     function() {
+        // xxx todo: somehow misusing reload remote calendars for
+        //           session renewal...
         // refresh session ticket immedidately, not queued:
         this.log("refresh!");
-        this.session.logout();
-// logout sufficient, there is an upcoming getItems() call:
-//         this.session.login();
+        this.session.refresh();
     },
     
     getCommandUrl:
@@ -388,43 +377,36 @@ calWcapCalendar.prototype = {
     function( bAsync, bRefresh )
     {
 //         this.session.assureLoggedIn();
-        try {
-            if (bRefresh || !this.m_calProps) {
-                var url = this.getCommandUrl( "get_calprops" );
-                url += "&fmt-out=text%2Fxml";
-                var this_ = this;
-                function resp( wcapResponse ) {
-                    try {
-                        // first statement, may throw:
-                        var xml = wcapResponse.data;
-                        if (this_.m_calProps == null)
-                            this_.m_calProps = xml;
-                    }
-                    catch (exc) {
-//                         // patch to read-only here, because error notification
-//                         // call the readOnly attribute, thus we would run into
-//                         // endless recursion here:
-//                         this_.m_bReadOnly = true;
-                        // just logging here, because user may have dangling
-                        // users referred in his subscription list:
-                        this_.logError( exc );
-                        // though we continue to try to get that calprops
-                        // next time...
+        if (bRefresh || !this.m_calProps) {
+            this.m_calProps = null;
+            var url = this.getCommandUrl( "get_calprops" );
+            url += "&fmt-out=text%2Fxml";
+            var this_ = this;
+            function resp( wcapResponse ) {
+                try {
+                    // first statement, may throw:
+                    var xml = wcapResponse.data;
+                    if (this_.m_calProps == null)
+                        this_.m_calProps = xml;
+                }
+                catch (exc) {
+                    // just logging here, because user may have dangling
+                    // users referred in his subscription list:
+                    this_.logError(exc);
+                    if (!bAsync && testResultCode(
+                            exc, Components.interfaces.
+                            calIWcapErrors.WCAP_ACCESS_DENIED_TO_CALENDAR)) {
+                        // the user obviously has no property access,
+                        // forward in case of synchronous calls.
+                        // async will be swallowed though.
+                        throw exc;
                     }
                 }
-                if (bAsync)
-                    this.session.issueAsyncRequest( url, stringToXml, resp );
-                else
-                    this.session.issueSyncRequest( url, stringToXml, resp );
             }
-        }
-        catch (exc) {
-//             // patch to read-only here, because error notification call the
-//             // readOnly attribute, thus we would run into endless recursion here
-//             this.m_bReadOnly = true;
-            this.logError( exc );
-            if (!bAsync)
-                throw exc;
+            if (bAsync)
+                this.session.issueAsyncRequest( url, stringToXml, resp );
+            else
+                this.session.issueSyncRequest( url, stringToXml, resp );
         }
         return this.m_calProps;
     },
@@ -460,6 +442,52 @@ calWcapCalendar.prototype = {
         }
         else // is ok (supported):
             return tzid;
+    },
+    
+    checkAccess:
+    function( accessControlBits )
+    {
+        // xxx todo: take real acl into account
+        // for now, assuming that owners have been granted full access,
+        // and all others can read, but not add/modify/delete.
+        var granted = Components.interfaces.calIWcapCalendar.AC_FULL;
+        if (!this.isOwnedCalendar) {
+            // burn out write access:
+            granted &= ~(Components.interfaces.calIWcapCalendar.AC_COMP_WRITE |
+                         Components.interfaces.calIWcapCalendar.AC_PROP_WRITE);
+        }
+        // check whether every bit fits:
+        return ((accessControlBits & granted) == accessControlBits);
+    },
+    
+    assureAccess:
+    function( accessControlBits )
+    {
+        if (!this.checkAccess(accessControlBits)) {
+            throw new Components.Exception("Access denied!",
+                                           Components.interfaces.calIWcapErrors
+                                           .WCAP_ACCESS_DENIED_TO_CALENDAR);
+            // xxx todo: throwing different error here, no
+            //           calIErrors.CAL_IS_READONLY anymore
+        }
+    },
+    
+    defineAccessControl:
+    function( userId, accessControlBits )
+    {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    
+    resetAccessControl:
+    function( userId )
+    {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    
+    getAccessControlDefinitions:
+    function( out_count, out_users, out_accessControlBits )
+    {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }
 };
 

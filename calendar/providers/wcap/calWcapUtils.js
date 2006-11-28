@@ -335,7 +335,6 @@ AsyncQueue.prototype = {
     },
     
     m_ifaces: [ Components.interfaces.nsIRunnable,
-                Components.interfaces.nsISecurityCheckedComponent,
                 Components.interfaces.nsIClassInfo,
                 Components.interfaces.nsISupports ],
     
@@ -369,12 +368,6 @@ AsyncQueue.prototype = {
     implementationLanguage:
     Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
     flags: 0,
-    
-    // nsISecurityCheckedComponent;
-    canCreateWrapper: function(iid) { return "AllAccess"; },
-    canCallMethod: function(iid, methodName) { return "AllAccess"; },
-    canGetProperty: function(iid, propertyName) { return "AllAccess"; },
-    canSetProperty: function(iid, propertyName) { return "AllAccess"; },
     
     // nsIRunnable:
     run:
