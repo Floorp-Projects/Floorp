@@ -85,6 +85,10 @@ static nsresult pref_InitInitialObjects(void);
  */
 
 nsPrefService::nsPrefService()
+: mDontWriteUserPrefs(PR_FALSE)
+#if MOZ_PROFILESHARING
+  , mDontWriteSharedUserPrefs(PR_FALSE)
+#endif
 {
 }
 
@@ -351,6 +355,18 @@ nsresult nsPrefService::UseUserPrefFile()
   return rv;
 }
 
+nsresult nsPrefService::MakeBackupPrefFile(nsIFile *aFile)
+{
+  // Example: this copies "prefs.js" to "Invalidprefs.js" in the same directory.
+  nsAutoString newFilename;
+  nsresult rv = aFile->GetLeafName(newFilename);
+  NS_ENSURE_SUCCESS(rv, rv);
+  newFilename.Insert(NS_LITERAL_STRING("Invalid"), 0);
+  rv = aFile->CopyTo(nsnull, newFilename);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
 nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG(aFile);
@@ -365,6 +381,9 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
 #endif
 
   nsresult rv = openPrefFile(mCurrentFile);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
+    mDontWriteUserPrefs = NS_FAILED(MakeBackupPrefFile(mCurrentFile));
+  }
 
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
@@ -388,6 +407,9 @@ nsresult nsPrefService::ReadAndOwnSharedUserPrefFile(nsIFile *aFile)
 #endif
 
   nsresult rv = openPrefFile(mCurrentSharedFile);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
+    mDontWriteSharedUserPrefs = NS_FAILED(MakeBackupPrefFile(mCurrentSharedFile));
+  }
 
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
@@ -455,6 +477,16 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
 
   if (!gHashTable.ops)
     return NS_ERROR_NOT_INITIALIZED;
+
+  // Don't save user prefs if there was an error reading them and we failed
+  // to make a backup copy, since all prefs from the error line to the end of
+  // the file would be lost (bug 361102).
+  if (mDontWriteUserPrefs && aFile == mCurrentFile)
+    return NS_OK;
+#if MOZ_PROFILESHARING
+  if (mDontWriteSharedUserPrefs && aFile == mCurrentSharedFile)
+    return NS_OK;
+#endif
 
   // execute a "safe" save by saving through a tempfile
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
@@ -554,16 +586,19 @@ static nsresult openPrefFile(nsIFile* aFile)
 
   PrefParseState ps;
   PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  nsresult rv2 = NS_OK;
   for (;;) {
     PRUint32 amtRead = 0;
     rv = inStr->Read(readBuf, sizeof(readBuf), &amtRead);
     if (NS_FAILED(rv) || amtRead == 0)
       break;
 
-    PREF_ParseBuf(&ps, readBuf, amtRead); 
+    if (!PREF_ParseBuf(&ps, readBuf, amtRead)) {
+      rv2 = NS_ERROR_FILE_CORRUPTED;
+    }
   }
   PREF_FinalizeParseState(&ps);
-  return rv;        
+  return NS_FAILED(rv) ? rv : rv2;        
 }
 
 /*

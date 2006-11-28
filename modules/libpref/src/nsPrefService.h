@@ -75,11 +75,16 @@ protected:
   nsresult ReadAndOwnSharedUserPrefFile(nsIFile *aFile);
   nsresult SavePrefFileInternal(nsIFile* aFile);
   nsresult WritePrefFile(nsIFile* aFile);
+  nsresult MakeBackupPrefFile(nsIFile *aFile);
 
 private:
   nsCOMPtr<nsIPrefBranch2> mRootBranch;
   nsCOMPtr<nsIFile>       mCurrentFile;
+  PRPackedBool            mDontWriteUserPrefs;
+#if MOZ_PROFILESHARING
   nsCOMPtr<nsIFile>       mCurrentSharedFile;
+  PRPackedBool            mDontWriteSharedUserPrefs;
+#endif
 };
 
 #endif // nsPrefService_h__
