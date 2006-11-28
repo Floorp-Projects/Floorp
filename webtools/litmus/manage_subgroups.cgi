@@ -171,7 +171,7 @@ if ($rebuild_cache) {
   Litmus::Cache::rebuildCache();
 }
 
-my $subgroups = Litmus::FormWidget->getSubgroups;
+my $subgroups = Litmus::FormWidget->getSubgroups(0,1);
 my $products = Litmus::FormWidget->getProducts();
 my $testcases = Litmus::FormWidget->getTestcases;
 

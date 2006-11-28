@@ -191,7 +191,7 @@ if ($rebuild_cache) {
   Litmus::Cache::rebuildCache();
 }
 
-my $testcases = Litmus::FormWidget->getTestcases();
+my $testcases = Litmus::FormWidget->getTestcases(0,1);
 my $products = Litmus::FormWidget->getProducts();
 my $authors = Litmus::FormWidget->getAuthors();
 
