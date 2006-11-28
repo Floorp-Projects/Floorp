@@ -125,11 +125,11 @@
                     orient="vertical" oncommand="gGeneralPane.updatePlaySound();">
           <radio value="0" 
 #ifdef XP_MACOSX
-                 label="&systemsoundMac.label;"
+                 label="&systemsoundMac.label;" accesskey="&systemsoundMac.accesskey;"
 #else
-                 label="&systemsound.label;"
+                 label="&systemsound.label;" accesskey="&systemsound.accesskey;"
 #endif
-                 accesskey="&systemsound.accesskey;" id="system"/>
+                 id="system"/>
           <radio value="1" label="&customsound.label;" 
                  accesskey="&customsound.accesskey;" id="custom"/>
           <hbox class="indent">
