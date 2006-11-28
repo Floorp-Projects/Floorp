@@ -73,6 +73,7 @@
 #include "nsPresState.h"
 #include "nsIComponentManager.h"
 #include "nsCheapSets.h"
+#include "nsLayoutErrors.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -268,6 +269,11 @@ public:
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
 
+  /**
+   * Called when an attribute is about to be changed
+   */
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
   
@@ -455,7 +461,9 @@ protected:
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
-  PRBool    mIsDoneAddingChildren;
+  PRPackedBool    mIsDoneAddingChildren;
+  /** true if our disabled state has changed from the default **/
+  PRPackedBool    mDisabledChanged;
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;
   /** The number of optgroups anywhere under the select */
@@ -488,6 +496,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
   : nsGenericHTMLFormElement(aNodeInfo),
     mOptions(new nsHTMLOptionCollection(this)),
     mIsDoneAddingChildren(!aFromParser),
+    mDisabledChanged(PR_FALSE),
     mNonOptionChildren(0),
     mOptGroupCount(0),
     mSelectedIndex(-1)
@@ -1678,6 +1687,19 @@ nsHTMLSelectElement::SelectSomething()
 }
 
 nsresult
+nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aName == nsHTMLAtoms::disabled &&
+      aNameSpaceID == kNameSpaceID_None) {
+    mDisabledChanged = PR_TRUE;
+  }
+
+  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
+                                                 aValue, aNotify);
+}
+
+nsresult
 nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
@@ -1867,6 +1889,19 @@ nsHTMLSelectElement::SaveState()
     rv = presState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
                                            state);
     NS_ASSERTION(NS_SUCCEEDED(rv), "selecteditems set failed!");
+
+    if (mDisabledChanged) {
+      PRBool disabled;
+      GetDisabled(&disabled);
+      if (disabled) {
+        rv |= presState->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                          NS_LITERAL_STRING("t"));
+      } else {
+        rv |= presState->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                          NS_LITERAL_STRING("f"));
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+    }
   }
 
   return rv;
@@ -1885,6 +1920,13 @@ nsHTMLSelectElement::RestoreState(nsPresState* aState)
     // Don't flush, if the frame doesn't exist yet it doesn't care if
     // we're reset or not.
     DispatchContentReset();
+  }
+
+  nsAutoString disabled;
+  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.EqualsLiteral("t"));
   }
 
   return PR_FALSE;

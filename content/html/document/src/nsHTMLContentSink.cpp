@@ -1126,6 +1126,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       }
       break;
 
+    case eHTMLTag_button:
+      content->DoneCreatingElement();
+      break;
+      
     default:
       break;
   }
@@ -1349,7 +1353,6 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         break;
 
       case eHTMLTag_input:
-      case eHTMLTag_button:
         content->DoneCreatingElement();
 
         break;
