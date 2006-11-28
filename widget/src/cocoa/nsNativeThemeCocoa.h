@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <Appearance.h>
+#include <Carbon/Carbon.h>
 
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
@@ -104,7 +104,7 @@ protected:
   void DrawTab (CGContextRef context, const HIRect& inBoxRect,
                 PRBool inIsDisabled, PRBool inIsFrontmost, 
                 PRBool inIsHorizontal, PRBool inTabBottom,
-                PRInt32 inPosition, PRInt32 inState);
+                PRInt32 inState);
   void DrawTabPanel (CGContextRef context, const HIRect& inBoxRect,
                      PRBool inIsDisabled);
   void DrawScale (CGContextRef context, const HIRect& inBoxRect,
