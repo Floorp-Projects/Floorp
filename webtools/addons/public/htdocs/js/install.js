@@ -32,14 +32,18 @@ function getPlatformName()
 
 function install( aEvent, extName, iconURL, extHash)  {   
 
-    if (aEvent.altKey)
+    if (aEvent.altKey || !window.InstallTrigger)
         return true;
 
-    var url = aEvent.target.href;
-    if (!url) {
-        // rustico puts it somewhere else, of course
-        url = aEvent.target.parentNode.href;
-    }
+    // The event target might be a child of the link, not the link itself
+    var target = aEvent.target;
+    while (target && !target.href)
+      target = target.parentNode;
+
+    if (!target)
+      return true;
+
+    var url = target.href;
     if (url.match(/^.+\.xpi$/)) {
 
         var params = new Array();
