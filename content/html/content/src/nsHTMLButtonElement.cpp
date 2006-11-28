@@ -58,6 +58,8 @@
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsEventDispatcher.h"
+#include "nsPresState.h"
+#include "nsLayoutErrors.h"
 
 #define NS_IN_SUBMIT_CLICK (1 << 0)
 
@@ -92,12 +94,20 @@ public:
   NS_IMETHOD Click();
   NS_IMETHOD SetType(const nsAString& aType);
 
-  // overrided nsIFormControl method
+  // overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return mType; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
+  NS_IMETHOD SaveState();
+  PRBool RestoreState(nsPresState* aState);
 
+  /**
+   * Called when an attribute is about to be changed
+   */
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+  
   // nsIContent overrides...
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
@@ -109,10 +119,12 @@ public:
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual void DoneCreatingElement();
 
 protected:
   PRInt8 mType;
   PRPackedBool mHandlingClick;
+  PRPackedBool mDisabledChanged;
 
 private:
   // The analogue of defaultValue in the DOM for input and textarea
@@ -128,10 +140,11 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Button)
 
 
 nsHTMLButtonElement::nsHTMLButtonElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo),
+    mType(NS_FORM_BUTTON_SUBMIT),  // default
+    mHandlingClick(PR_FALSE),
+    mDisabledChanged(PR_FALSE)
 {
-  mType = NS_FORM_BUTTON_SUBMIT; // default
-  mHandlingClick = PR_FALSE;
 }
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
@@ -564,4 +577,63 @@ nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   rv = aFormSubmission->AddNameValuePair(this, name, value);
 
   return rv;
+}
+
+void
+nsHTMLButtonElement::DoneCreatingElement()
+{
+  // Restore state as needed.
+  RestoreFormControlState(this, this);
+}
+
+nsresult
+nsHTMLButtonElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aName == nsHTMLAtoms::disabled &&
+      aNameSpaceID == kNameSpaceID_None) {
+    mDisabledChanged = PR_TRUE;
+  }
+
+  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
+                                                 aValue, aNotify);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::SaveState()
+{
+  if (!mDisabledChanged) {
+    return NS_OK;
+  }
+  
+  nsPresState *state = nsnull;
+  nsresult rv = GetPrimaryPresState(this, &state);
+  if (state) {
+    PRBool disabled;
+    GetDisabled(&disabled);
+    if (disabled) {
+      rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                    NS_LITERAL_STRING("t"));
+    } else {
+      rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                    NS_LITERAL_STRING("f"));
+    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+  }
+
+  return rv;
+}
+
+PRBool
+nsHTMLButtonElement::RestoreState(nsPresState* aState)
+{
+  nsAutoString disabled;
+  nsresult rv =
+    aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.EqualsLiteral("t"));
+  }
+
+  return PR_FALSE;
 }

@@ -72,6 +72,7 @@
 #include "nsReadableUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
+#include "nsLayoutErrors.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -143,6 +144,11 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  /**
+   * Called when an attribute is about to be changed
+   */
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
 protected:
   nsCOMPtr<nsIControllers> mControllers;
   /** The current value.  This is null if the frame owns the value. */
@@ -154,7 +160,9 @@ protected:
   /** Whether or not we are done adding children (always PR_TRUE if not
       created by a parser */
   PRPackedBool             mDoneAddingChildren;
-
+  /** Whether our disabled state has changed from the default **/
+  PRPackedBool             mDisabledChanged;
+  
   NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
    * Get the value, whether it is from the content or the frame.
@@ -180,7 +188,8 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo,
     mValue(nsnull),
     mValueChanged(PR_FALSE),
     mHandlingSelect(PR_FALSE),
-    mDoneAddingChildren(!aFromParser)
+    mDoneAddingChildren(!aFromParser),
+    mDisabledChanged(PR_FALSE)
 {
 }
 
@@ -852,8 +861,8 @@ nsHTMLTextAreaElement::SaveState()
   nsresult rv = NS_OK;
 
   // Only save if value != defaultValue (bug 62713)
+  nsPresState *state = nsnull;
   if (mValueChanged) {
-    nsPresState *state = nsnull;
     rv = GetPrimaryPresState(this, &state);
     if (state) {
       nsAutoString value;
@@ -869,6 +878,23 @@ nsHTMLTextAreaElement::SaveState()
     }
   }
 
+  if (mDisabledChanged) {
+    if (!state) {
+      rv = GetPrimaryPresState(this, &state);
+    }
+    if (state) {
+      PRBool disabled;
+      GetDisabled(&disabled);
+      if (disabled) {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                      NS_LITERAL_STRING("t"));
+      } else {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                      NS_LITERAL_STRING("f"));
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+    }
+  }
   return rv;
 }
 
@@ -876,12 +902,30 @@ PRBool
 nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
 {
   nsAutoString value;
-#ifdef DEBUG
   nsresult rv =
-#endif
     aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
   NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
   SetValue(value);
 
+  nsAutoString disabled;
+  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.EqualsLiteral("t"));
+  }
+
   return PR_FALSE;
+}
+
+nsresult
+nsHTMLTextAreaElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                     const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aName == nsHTMLAtoms::disabled &&
+      aNameSpaceID == kNameSpaceID_None) {
+    mDisabledChanged = PR_TRUE;
+  }
+
+  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
+                                                 aValue, aNotify);
 }
