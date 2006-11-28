@@ -1056,7 +1056,6 @@ mail/themes/pinstripe/Makefile
 mail/themes/qute/mail/Makefile
 mail/themes/qute/editor/Makefile
 mail/themes/qute/Makefile
-xpfe/components/build2/Makefile
 "
 
 MAKEFILES_standalone_composer="
