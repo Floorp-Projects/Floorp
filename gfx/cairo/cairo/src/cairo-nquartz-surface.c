@@ -727,6 +727,8 @@ _cairo_nquartz_setup_source (cairo_nquartz_surface_t *surface,
 	CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
 	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
+	CGContextSetStrokeColorSpace (surface->cgContext, patternSpace);
+	CGContextSetStrokePattern (surface->cgContext, pattern, &patternAlpha);
 	CGColorSpaceRelease (patternSpace);
 
 	/* Quartz likes to munge the pattern phase (as yet unexplained
@@ -1326,6 +1328,8 @@ _cairo_nquartz_surface_stroke (void *abstract_surface,
     } else {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    _cairo_nquartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
 
