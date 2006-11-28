@@ -881,7 +881,7 @@ DOMViewer.prototype =
       this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
 
     if (aName == "inspector.dom.showAccessibleNodes")
-      this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes", true);
+      this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes", true));
 
     if (aName == "inspector.blink.on")
       this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
