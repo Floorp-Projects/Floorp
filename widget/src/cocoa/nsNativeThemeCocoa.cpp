@@ -315,8 +315,8 @@ nsNativeThemeCocoa::DrawTab (CGContextRef cgContext, const HIRect& inBoxRect,
 #ifndef MOZ_MACBROWSER
   tdi.adornment = kHIThemeTabAdornmentTrailingSeparator;
   tdi.kind = kHIThemeTabKindNormal;
-#endif
   tdi.position = inPosition;
+#endif
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
