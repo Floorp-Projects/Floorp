@@ -75,20 +75,6 @@ extern "C" {
 
 #endif
 
-#ifdef MOZ_MACBROWSER
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
-/* From the 10.4u headers */
-const int kThemeCheckBoxSmall = 13;
-const int kThemeRadioButtonSmall = 14;
-enum {
-  kHIThemeTabPositionFirst = 0,
-  kHIThemeTabPositionMiddle = 1,
-  kHIThemeTabPositionLast = 2,
-  kHIThemeTabPositionOnly = 3,
-};
-#endif
-#endif
-
 /* copied from nsRenderingContextMac */
 PRBool
 OnTigerOrLater()
@@ -480,15 +466,20 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_CHECKBOX_SMALL:
+#ifndef MOZ_MACBROWSER
       if (aRect.height == 15) {
       	// draw at 14x16, see comment in GetMinimumWidgetSize
         // XXX this should probably happen earlier, before transform; this is very fragile
         macRect.size.height += 1.0;
       }
       DrawCheckboxRadio (cgContext, kThemeCheckBoxSmall, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
+#else
+      DrawCheckboxRadio (cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
+#endif
       break;
 
     case NS_THEME_RADIO_SMALL:
+#ifndef MOZ_MACBROWSER
       if (aRect.height == 14) {
         // draw at 14x15, see comment in GetMinimumWidgetSize
         // XXX this should probably happen earlier, before transform; this is very fragile
@@ -496,6 +487,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       }
       DrawCheckboxRadio (cgContext, kThemeRadioButtonSmall, macRect,
                          IsSelected(aFrame), IsDisabled(aFrame), eventState);
+#else
+      DrawCheckboxRadio (cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
+#endif
       break;
 
     case NS_THEME_BUTTON:
@@ -658,6 +652,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       PRBool firstTab = IsFirstTab(aFrame);
       PRBool lastTab = IsLastTab(aFrame);
 
+#ifndef MOZ_MACBROWSER
       DrawTab (cgContext, macRect,
                IsDisabled(aFrame), IsSelectedTab(aFrame),
                PR_TRUE, IsBottomTab(aFrame),
@@ -666,6 +661,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                lastTab ? kHIThemeTabPositionLast :
                kHIThemeTabPositionMiddle,
                eventState);
+#endif
     }
       break;
 
