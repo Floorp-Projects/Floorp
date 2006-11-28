@@ -221,7 +221,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
     return PR_TRUE;
   }
 
-  if (aSize < oldsize) {
+  if ((PRUint32) aSize < oldsize) {
     // No point in allocating if it won't free the current Impl anyway.
     return PR_TRUE;
   }
