@@ -1942,9 +1942,13 @@
 
   <hbox id="remoteContentBar" class="msgNotificationBar" align="center">
     <image id="remoteContentImage"/>
-    <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
+    <vbox>
+      <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
+      <label id="allowRemoteContentForAuthorDesc" class="text-link" flex="1"
+             onclick="allowRemoteContentForSender();"/>
+    </vbox>
     <spacer flex="1"/>
-    <button label="&loadRemoteContentButton.label;" oncommand="LoadMsgWithRemoteContent();"/>
+    <button label="&loadRemoteContentButton.label;" oncommand="loadMsgWithRemoteContent();"/>
   </hbox>
 </deck>
 
