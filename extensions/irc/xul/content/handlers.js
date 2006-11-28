@@ -2992,10 +2992,19 @@ function phand_onpaste(e, data)
     str.value.QueryInterface(Components.interfaces.nsISupportsString);
     str.value.data = str.value.data.replace(/(^\s*[\r\n]+|[\r\n]+\s*$)/g, "");
 
-    if (str.value.data.indexOf("\n") == -1)
+    // XXX part of what follows is a very ugly hack to make links (with a title)
+    // not open the multiline box. We 'should' be able to ask the transferable
+    // what flavours it supports, but testing showed that by the time we can ask
+    // for that info, it's forgotten about everything apart from text/unicode.
+    var lines = str.value.data.split("\n");
+    var m = lines[0].match(client.linkRE);
+
+    if ((str.value.data.indexOf("\n") == -1) ||
+        (m && (m[0] == lines[0]) && (lines.length == 2)))
     {
         // If, after stripping leading/trailing empty lines, the string is a
-        // single line, put it back in the transferable and return.
+        // single line, or it's a link with a title, put it back in
+        // the transferable and return.
         data.setTransferData("text/unicode", str.value,
                              str.value.data.length * 2);
         return true;
