@@ -52,7 +52,8 @@
 #include "nsNotifyAddrListener.h"
 #include "nsString.h"
 
-#include <IPTypes.h>
+#include <iptypes.h>
+#include <iphlpapi.h>
 
 typedef DWORD (WINAPI *GetAdaptersAddressesFunc)(ULONG, DWORD, PVOID,
                                                  PIP_ADAPTER_ADDRESSES,
