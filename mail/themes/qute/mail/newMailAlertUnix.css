@@ -1,0 +1,21 @@
+/* ===== newMailAlertUnix.css ===============================================
+   == Styles specific to the unix alerts dialog.
+   == See bug 332160 on the problem this fixes.
+   ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Reset the default CSS rules for #newMailAlertNotification. */
+#newMailAlertNotification {
+  min-height: inherit;
+  border: none;
+  background-color: inherit;
+}
+
+/* Apply the default CSS rules of #newMailAlertNotification on #alertContainer instead. */
+#alertContainer {
+  min-height: 60px;
+  border: ridge #5486DA 4px;
+  background-color: white;
+}
+

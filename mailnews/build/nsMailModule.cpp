@@ -114,6 +114,9 @@
 #ifdef XP_MACOSX
 #include "nsMessengerOSXIntegration.h"
 #endif
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#include "nsMessengerUnixIntegration.h"
+#endif
 #include "nsCURILoader.h"
 #include "nsMessengerContentHandler.h"
 
@@ -340,6 +343,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init)
 #endif
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOSXIntegration, Init)
+#endif
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerUnixIntegration, Init)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgContentPolicy, Init)
@@ -852,6 +858,12 @@ static const nsModuleComponentInfo gComponents[] = {
     { "OSX OS Integration", NS_MESSENGEROSXINTEGRATION_CID,
       NS_MESSENGEROSINTEGRATION_CONTRACTID,
       nsMessengerOSXIntegrationConstructor,
+    },
+#endif
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+    { "Unix OS Integration", NS_MESSENGERUNIXINTEGRATION_CID,
+      NS_MESSENGEROSINTEGRATION_CONTRACTID,
+      nsMessengerUnixIntegrationConstructor,
     },
 #endif
     { "application/x-message-display content handler",
