@@ -148,7 +148,7 @@ nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot,
 {
   NS_ENSURE_ARG_POINTER(aRoot);
   NS_ENSURE_ARG_POINTER(aStream);
-  // The charset arg can be null, in which case we get the document's
+  // The charset arg can be empty, in which case we get the document's
   // charset and use that when serializing.
 
   if (!nsContentUtils::CanCallerAccess(aRoot)) {
