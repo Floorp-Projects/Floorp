@@ -5379,3 +5379,10 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessag
   return rv;
 }
 
+ 
+NS_IMETHODIMP nsMsgDBFolder::GetCustomIdentity(nsIMsgIdentity **aIdentity)
+{
+  NS_ENSURE_ARG_POINTER(aIdentity);
+  *aIdentity = nsnull;
+  return NS_OK;
+}

@@ -89,6 +89,8 @@ pref("mail.delete_matches_sort_order", false);
 // mailnews tcp read+write timeout in seconds.
 pref("mailnews.tcptimeout", 60);
 
+pref("mailnews.headers.showSender", false);
+
 // Mail server preferences, pop by default
 pref("mail.server_type",	0); 	// 0 pop, 1 imap,
 					// (Unix only:)
@@ -121,6 +123,10 @@ pref("mail.imap.mime_parts_on_demand_threshold", 30000);
 pref("mail.imap.use_literal_plus",          true);
 pref("mail.imap.expunge_after_delete",      false);
 pref("mail.imap.check_deleted_before_expunge", false);
+// if true, we assume that a user access a folder in the other users namespace
+// is acting as a delegate for that folder, and wishes to use the other users
+// identity when acting on messages in other users folders.
+pref("mail.imap.delegateOtherUsersFolders", false);
 pref("mail.thread_without_re",	            true);  // if false, only thread by subject if Re:
 pref("mail.strict_threading",               false); // if true, don't thread by suject at all
 pref("mail.leave_on_server",                false);

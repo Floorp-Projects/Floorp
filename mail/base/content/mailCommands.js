@@ -193,7 +193,9 @@ function ComposeMessage(type, format, folder, messageArray)
         newsgroup = folder.folderURL;
       }
 
-      identity = getIdentityForServer(server);
+      identity = folder.customIdentity;
+      if (!identity)
+        identity = getIdentityForServer(server);
       // dump("identity = " + identity + "\n");
     }
   }
@@ -246,6 +248,13 @@ function ComposeMessage(type, format, folder, messageArray)
       var hdr = messenger.msgHdrFromURI(messageUri);
       // If we treat reply from sent specially, do we check for that folder flag here ?
       var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
+      var customIdentity = null;
+      if (folder)
+      {
+        server = folder.server;
+        customIdentity = folder.customIdentity;
+      }
+      
       var accountKey = hdr.accountKey;
       if (accountKey.length > 0)
       {
@@ -254,8 +263,9 @@ function ComposeMessage(type, format, folder, messageArray)
           server = account.incomingServer;
       }
 
-      if (server)
-        identity = getIdentityForServer(server, hintForIdentity);
+      identity = (server && !customIdentity) 
+        ? getIdentityForServer(server, hintForIdentity)
+        : customIdentity;                         
 
       var messageID = hdr.messageId;
       var messageIDScheme = messageID ? messageID.split(":")[0] : "";

@@ -114,6 +114,8 @@
 #include "nsMsgCompCID.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIMsgIdentity.h"
+
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -8588,4 +8590,85 @@ NS_IMETHODIMP nsImapMailFolder::RemoveKeywordFromMessages(nsISupportsArray *aMes
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
   return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetCustomIdentity(nsIMsgIdentity **aIdentity)
+{
+  if (mFlags & MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+  {
+    nsresult rv;
+    PRBool delegateOtherUsersFolders = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
+     prefBranch->GetBoolPref("mail.imap.delegateOtherUsersFolders", &delegateOtherUsersFolders);
+    // if we're automatically delegating other user's folders, we need to 
+    // cons up an e-mail address for the other user. We do that by
+    // taking the other user's name and the current user's domain name,
+    // assuming they'll be the same. So, <otherUsersName>@<ourDomain>
+    if (delegateOtherUsersFolders)
+    {
+      nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(mServer, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIMsgAccountManager> accountManager = 
+               do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr <nsIMsgIdentity> ourIdentity;
+      nsCOMPtr <nsIMsgIdentity> retIdentity;
+      nsCOMPtr <nsIMsgAccount> account;
+      nsXPIDLCString foldersUserName;
+      nsXPIDLCString ourEmailAddress;
+
+      accountManager->FindAccountForServer(server, getter_AddRefs(account));
+      NS_ENSURE_SUCCESS(rv, rv);
+      account->GetDefaultIdentity(getter_AddRefs(ourIdentity));
+      NS_ENSURE_SUCCESS(rv, rv);
+      ourIdentity->GetEmail(getter_Copies(ourEmailAddress));
+      PRInt32 atPos = ourEmailAddress.FindChar('@');
+      if (atPos != -1)
+      {
+        nsXPIDLCString otherUsersEmailAddress;
+
+        GetFolderOwnerUserName(getter_Copies(otherUsersEmailAddress));
+        otherUsersEmailAddress.Append(Substring(ourEmailAddress, atPos, ourEmailAddress.Length()));
+        nsCOMPtr <nsISupportsArray> identities;
+        rv = accountManager->GetIdentitiesForServer(server, getter_AddRefs(identities));
+        NS_ENSURE_SUCCESS(rv, rv);
+        PRUint32 numIdentities;
+        rv = identities->Count(&numIdentities);
+        NS_ENSURE_SUCCESS(rv, rv);
+        for (PRUint32 identityIndex = 0; identityIndex < numIdentities; identityIndex++)
+        {
+          nsCOMPtr<nsIMsgIdentity> identity = do_QueryElementAt(identities, identityIndex);
+          if (!identity)
+            continue;
+          nsXPIDLCString identityEmail;
+          identity->GetEmail(getter_Copies(identityEmail));
+          if (identityEmail.Equals(otherUsersEmailAddress))
+          {
+            retIdentity = identity;;
+            break;
+          }
+        }
+        if (!retIdentity)
+        {
+          // create the identity
+          rv = accountManager->CreateIdentity(getter_AddRefs(retIdentity));
+          NS_ENSURE_SUCCESS(rv, rv);
+          retIdentity->SetEmail(otherUsersEmailAddress);
+          nsCOMPtr <nsIMsgAccount> account;
+          accountManager->FindAccountForServer(server, getter_AddRefs(account));
+          NS_ENSURE_SUCCESS(rv, rv);
+          account->AddIdentity(retIdentity);
+
+        }
+      }
+      if (retIdentity)
+      {
+        NS_ADDREF(*aIdentity = retIdentity);
+        return NS_OK;
+      }
+    }
+  }
+  return nsMsgDBFolder::GetCustomIdentity(aIdentity);
 }

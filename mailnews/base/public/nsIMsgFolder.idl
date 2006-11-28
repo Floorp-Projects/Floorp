@@ -65,12 +65,13 @@ interface nsIFileSpec;
 interface nsIOutputStream;
 interface nsIInputStream;
 interface nsILocalFile;
+interface nsIMsgIdentity;
 
 typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(cc921aaf-8ff1-4fd3-8a3d-1269bf87f459)]
+[scriptable, uuid(07f2093e-fcd6-4b51-8e95-7c73129d7bda)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -496,5 +497,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   // would figure out the diffs, but these methods might be more convenient.
   void addKeywordToMessages(in nsISupportsArray aMessages, in string aKeyword);
   void removeKeywordFromMessages(in nsISupportsArray aMessages, in string aKeyword);
+  // this allows a folder to have a special identity. E.g., you might want to
+  // associate an identity with a particular newsgroup, or for IMAP shared folders in
+  // the other users namespace, you might want to create a delegated identity
+  readonly attribute nsIMsgIdentity customIdentity;
 
 };
