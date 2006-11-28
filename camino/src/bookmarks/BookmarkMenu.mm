@@ -216,6 +216,9 @@ const long kOpenInTabsTag = 0xBEEF;
       [menuItem setTarget:[NSApp delegate]];
       [menuItem setAction:@selector(openMenuBookmark:)];
       [menuItem setImage:[inItem icon]];
+
+      if (withAlternates)
+        [self addCommandKeyAlternatesForMenuItem:menuItem];
     }
   }
 
