@@ -721,7 +721,12 @@ nsXMLHttpRequest::Abort()
 
   ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE, PR_TRUE);
 
-  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
+  // The ChangeState call above calls onreadystatechange handlers which
+  // if they load a new url will cause nsXMLHttpRequest::OpenRequest to clear
+  // the abort state bit. If this occurs we're not uninitialized (bug 361773).
+  if (mState & XML_HTTP_REQUEST_ABORTED) {
+    ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
+  }
 
   return NS_OK;
 }
