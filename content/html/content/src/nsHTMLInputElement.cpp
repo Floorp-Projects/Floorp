@@ -1441,6 +1441,19 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // We must cache type because mType may change during JS event (bug 2369)
   aVisitor.mItemFlags |= NS_STATIC_CAST(PRUint8, mType);
+
+  // Fire onchange (if necessary), before we do the blur, bug 357684.
+  if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    nsIFrame* primaryFrame = GetPrimaryFrame();
+    if (primaryFrame) {
+      nsITextControlFrame* textFrame = nsnull;
+      CallQueryInterface(primaryFrame, &textFrame);
+      if (textFrame) {
+        textFrame->CheckFireOnChange();
+      }
+    }
+  }
+
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
