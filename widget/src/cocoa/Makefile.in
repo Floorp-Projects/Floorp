@@ -200,9 +200,6 @@ LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(srcdir)/../xpwidgets \
 	-I$(srcdir)/../mac \
-	-I/System/Library/Frameworks/Carbon.Framework/Headers \
-	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
-	-I/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Headers \
 	$(NULL)
 
 LDFLAGS	+= \

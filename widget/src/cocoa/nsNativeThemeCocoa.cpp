@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Vladimir Vukicevic <vladimir@pobox.com> (HITheme rewrite)
+ *    Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,9 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include <Gestalt.h>
-#include <HITheme.h>
 
 #include "nsNativeThemeCocoa.h"
 #include "nsIRenderingContext.h"
@@ -74,21 +72,6 @@ extern "C" {
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 
 #endif
-
-/* copied from nsRenderingContextMac */
-PRBool
-OnTigerOrLater()
-{
-  static PRBool sInitVer = PR_FALSE;
-  static PRBool sOnTigerOrLater = PR_FALSE;
-  if (!sInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    sOnTigerOrLater = ((err == noErr) && (version >= 0x00001040));
-    sInitVer = PR_TRUE;
-  }
-  return sOnTigerOrLater;
-}
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
@@ -226,21 +209,18 @@ nsNativeThemeCocoa::DrawProgress (CGContextRef cgContext,
 
 
 void
-nsNativeThemeCocoa::DrawTabPanel (CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDisabled)
+nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDisabled)
 {
   HIThemeTabPaneDrawInfo tpdi;
 
-  tpdi.version = 1;
+  tpdi.version = 0;
   tpdi.state = kThemeStateActive;
-  tpdi.direction = kThemeTabNorth; // uh what?
-  tpdi.size = kHIThemeTabSizeNormal; // XXX
-#ifndef MOZ_MACBROWSER
-  tpdi.kind = kHIThemeTabKindNormal;
-  tpdi.adornment = kHIThemeTabPaneAdornmentNormal;
-#endif
+  tpdi.direction = kThemeTabNorth;
+  tpdi.size = kHIThemeTabSizeNormal;
 
-  HIThemeDrawTabPane (&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
+  HIThemeDrawTabPane(&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
 }
+
 
 void
 nsNativeThemeCocoa::DrawScale (CGContextRef cgContext, const HIRect& inBoxRect,
@@ -270,14 +250,14 @@ nsNativeThemeCocoa::DrawScale (CGContextRef cgContext, const HIRect& inBoxRect,
 
 
 void
-nsNativeThemeCocoa::DrawTab (CGContextRef cgContext, const HIRect& inBoxRect,
-                             PRBool inIsDisabled, PRBool inIsFrontmost,
-                             PRBool inIsHorizontal, PRBool inTabBottom,
-                             PRInt32 inPosition, PRInt32 inState)
+nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
+                            PRBool inIsDisabled, PRBool inIsFrontmost,
+                            PRBool inIsHorizontal, PRBool inTabBottom,
+                            PRInt32 inState)
 {
   HIThemeTabDrawInfo tdi;
 
-  tdi.version = 1;
+  tdi.version = 0;
 
   if (inIsFrontmost) {
     if (inIsDisabled) 
@@ -295,14 +275,8 @@ nsNativeThemeCocoa::DrawTab (CGContextRef cgContext, const HIRect& inBoxRect,
 
   // don't yet support vertical tabs
   tdi.direction = inTabBottom ? kThemeTabSouth : kThemeTabNorth;
-  // hmm.  we could give a useful hint here.
   tdi.size = kHIThemeTabSizeNormal;
-  // do we care about focus hint?
-#ifndef MOZ_MACBROWSER
-  tdi.adornment = kHIThemeTabAdornmentTrailingSeparator;
-  tdi.kind = kHIThemeTabKindNormal;
-  tdi.position = inPosition;
-#endif
+  tdi.adornment = kThemeAdornmentNone;
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
@@ -462,34 +436,26 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_RADIO:
-      DrawCheckboxRadio (cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
+      DrawCheckboxRadio(cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_CHECKBOX_SMALL:
-#ifndef MOZ_MACBROWSER
       if (aRect.height == 15) {
       	// draw at 14x16, see comment in GetMinimumWidgetSize
         // XXX this should probably happen earlier, before transform; this is very fragile
         macRect.size.height += 1.0;
       }
-      DrawCheckboxRadio (cgContext, kThemeCheckBoxSmall, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
-#else
-      DrawCheckboxRadio (cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
-#endif
+      DrawCheckboxRadio(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_RADIO_SMALL:
-#ifndef MOZ_MACBROWSER
       if (aRect.height == 14) {
         // draw at 14x15, see comment in GetMinimumWidgetSize
         // XXX this should probably happen earlier, before transform; this is very fragile
         macRect.size.height += 1.0;
       }
-      DrawCheckboxRadio (cgContext, kThemeRadioButtonSmall, macRect,
+      DrawCheckboxRadio (cgContext, kThemeSmallRadioButton, macRect,
                          IsSelected(aFrame), IsDisabled(aFrame), eventState);
-#else
-      DrawCheckboxRadio (cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
-#endif
       break;
 
     case NS_THEME_BUTTON:
@@ -644,29 +610,20 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
     
     case NS_THEME_LISTBOX:
-      DrawFrame (cgContext, kHIThemeFrameListBox,
-                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
+      DrawFrame(cgContext, kHIThemeFrameListBox,
+                macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
     
     case NS_THEME_TAB: {
-      PRBool firstTab = IsFirstTab(aFrame);
-      PRBool lastTab = IsLastTab(aFrame);
-
-#ifndef MOZ_MACBROWSER
-      DrawTab (cgContext, macRect,
-               IsDisabled(aFrame), IsSelectedTab(aFrame),
-               PR_TRUE, IsBottomTab(aFrame),
-               (firstTab && lastTab) ? kHIThemeTabPositionOnly :
-               firstTab ? kHIThemeTabPositionFirst :
-               lastTab ? kHIThemeTabPositionLast :
-               kHIThemeTabPositionMiddle,
-               eventState);
-#endif
+      DrawTab(cgContext, macRect,
+              IsDisabled(aFrame), IsSelectedTab(aFrame),
+              PR_TRUE, IsBottomTab(aFrame),
+              eventState);
     }
       break;
 
     case NS_THEME_TAB_PANELS:
-      DrawTabPanel (cgContext, macRect, IsDisabled(aFrame));
+      DrawTabPanel(cgContext, macRect, IsDisabled(aFrame));
       break;
   }
 
