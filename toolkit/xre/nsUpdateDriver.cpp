@@ -268,7 +268,7 @@ SetStatus(nsILocalFile *statusFile, const char *status)
 }
 
 static PRBool
-CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
+CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
                          nsCOMPtr<nsIFile> &updater)
 {
   // We have to move the updater binary and its resource file.
@@ -298,7 +298,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
     file->Remove(PR_FALSE);
 
     // Now, copy into the target location.
-    rv = appDir->Clone(getter_AddRefs(file));
+    rv = greDir->Clone(getter_AddRefs(file));
     if (NS_FAILED(rv))
       return PR_FALSE;
     rv = file->AppendNative(leaf);
@@ -334,7 +334,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   //  - run updater w/ appDir as the current working dir
 
   nsCOMPtr<nsIFile> updater;
-  if (!CopyUpdaterIntoUpdateDir(greDir, updateDir, updater)) {
+  if (!CopyUpdaterIntoUpdateDir(greDir, appDir, updateDir, updater)) {
     LOG(("failed copying updater\n"));
     return;
   }
@@ -469,7 +469,7 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, int argc, char **argv)
   nsresult rv;
 
   nsCOMPtr<nsIFile> updatesDir;
-  rv = greDir->Clone(getter_AddRefs(updatesDir));
+  rv = appDir->Clone(getter_AddRefs(updatesDir));
   if (NS_FAILED(rv))
     return rv;
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("updates"));
