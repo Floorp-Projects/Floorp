@@ -2285,7 +2285,7 @@ var gMessageNotificationBar =
 };
 
 /**
- * LoadMsgWithRemoteContent
+ * loadMsgWithRemoteContent
  *   Reload the current message, allowing remote content
  */
 function loadMsgWithRemoteContent()
@@ -2344,23 +2344,27 @@ function allowRemoteContentForSender()
       cardForEmailAddress = addrbook.cardForEmailAddress(authorEmailAddress);
   }
 
+  var allowRemoteContent = false;
   if (cardForEmailAddress)
   {
     // set the property for remote content
     cardForEmailAddress.allowRemoteContent = true;
     cardForEmailAddress.editCardToDatabase(""); 
+    allowRemoteContent = true;
   }
   else
   {
+    var args = {primaryEmail:authorEmailAddress, displayName:names.value[0],
+                allowRemoteContent:true};
     // create a new card and set the property
     window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-                      "",
-                      "chrome,resizable=no,titlebar,modal,centerscreen",
-                      {primaryEmail:authorEmailAddress, displayName:names.value[0], allowRemoteContent:'true'});
+                      "", "chrome,resizable=no,titlebar,modal,centerscreen", args);
+    allowRemoteContent = args.allowRemoteContent;
   } 
   
-  // reload the message now that we've updated the remote content policy for the sender  
-  MsgReload();
+  // reload the message if we've updated the remote content policy for the sender  
+  if (allowRemoteContent)
+    MsgReload();
 }
 
 function MsgIsNotAScam()

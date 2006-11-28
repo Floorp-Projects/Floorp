@@ -2197,8 +2197,8 @@
       <image id="remoteContentImage"/>
       <vbox>
         <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
-        <description id="allowRemoteContentForAuthorDesc" class="text-link" flex="1" 
-                     onclick="allowRemoteContentForSender();"></description>
+        <label id="allowRemoteContentForAuthorDesc" class="text-link" flex="1"
+               onclick="allowRemoteContentForSender();"/>
       </vbox>
       <spacer flex="1"/>
       <button label="&loadRemoteContentButton1.label;" oncommand="loadMsgWithRemoteContent();"/>

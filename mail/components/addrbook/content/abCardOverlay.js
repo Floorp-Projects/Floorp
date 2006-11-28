@@ -140,10 +140,11 @@ function OnLoadNewCard()
     if ("aimScreenName" in window.arguments[0])
       gEditCard.card.aimScreenName = window.arguments[0].aimScreenName;
     
-    if ("allowRemoteContent" in window.arguments[0])
-        document.getElementById('allowRemoteContent').checked = 
-          window.arguments[0].allowRemoteContent == 'true';
-    
+    if ("allowRemoteContent" in window.arguments[0]) {
+      gEditCard.card.allowRemoteContent = window.arguments[0].allowRemoteContent;
+      window.arguments[0].allowRemoteContent = false;
+    }
+
     if ("okCallback" in window.arguments[0])
       gOkCallback = window.arguments[0].okCallback;
 
@@ -409,6 +410,8 @@ function NewCardOKButton()
       // the card that got created.
       gEditCard.card = GetDirectoryFromURI(uri).addCard(gEditCard.card);
       NotifySaveListeners();
+      if ("arguments" in window && window.arguments[0])
+        window.arguments[0].allowRemoteContent = gEditCard.card.allowRemoteContent;
     }
   }
 
