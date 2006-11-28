@@ -192,19 +192,11 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   CreateLocalFolder(path, "Trash");
   if (NS_FAILED(rv)) return rv;
   
-  rv = CreateLocalFolder(path, "Sent");
-  if (NS_FAILED(rv)) return rv;
-  rv = CreateLocalFolder(path, "Drafts");
-  if (NS_FAILED(rv)) return rv;
-  
   // copy the default templates into the Templates folder
   nsCOMPtr<nsIFileSpec> parentDir;
   rv = path->GetParent(getter_AddRefs(parentDir));
   if (NS_FAILED(rv)) return rv;
   rv = CopyDefaultMessages("Templates",parentDir);
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = CreateLocalFolder(path, "Drafts");
   if (NS_FAILED(rv)) return rv;
   
   (void ) CreateLocalFolder(path, "Unsent Messages");

@@ -409,13 +409,7 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   (void) path->AppendRelativeUnixPath("Inbox");
   nsresult rv = CreateLocalFolder(path, "Inbox");
   if (NS_FAILED(rv)) return rv;
-  rv = CreateLocalFolder(path, "Trash");
-  if (NS_FAILED(rv)) return rv;
-  rv = CreateLocalFolder(path, "Sent");
-  if (NS_FAILED(rv)) return rv;
-  rv = CreateLocalFolder(path, "Drafts");
-  if (NS_FAILED(rv)) return rv;
-  return CreateLocalFolder(path, "Templates");
+  return CreateLocalFolder(path, "Trash");
 }
 
 // override this so we can say that deferred accounts can't have messages
