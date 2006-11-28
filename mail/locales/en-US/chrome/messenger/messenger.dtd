@@ -442,8 +442,8 @@
 <!ENTITY fileButton.label "File">
 <!ENTITY nextButton.label "Next">
 <!ENTITY previousButton.label "Previous">
-<!ENTITY backButton.label "Go Back">
-<!ENTITY goForwardButton.label "Go Forward">
+<!ENTITY backButton1.label "Back">
+<!ENTITY goForwardButton1.label "Forward">
 <!ENTITY deleteButton.label "Delete">
 <!ENTITY markButton.label "Mark">
 <!ENTITY printButton.label "Print">
