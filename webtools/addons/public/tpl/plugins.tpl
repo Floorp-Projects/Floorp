@@ -18,15 +18,15 @@
 </div>
 
 <div class="item">
-    <h2 class="first"><a href="http://www.macromedia.com/software/flashplayer/">Flash Player</a></h2>
-    <p class="first">By <a href="http://www.macromedia.com">Macromedia</a></p>
-    <p class="first">Macromedia Flash Player is the universal rich client for delivering effective Macromedia Flash experiences across desktops and devices.</p>
-    <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.macromedia.com/go/getflashplayer">Flash Player download page</a> to select the latest version for your operating system.</p>
+    <h2 class="first"><a href="http://www.adobe.com/go/getflashplayer/">Adobe Flash Player</a></h2>
+    <p class="first">By <a href="http://www.adobe.com">Adobe</a></p>
+    <p class="first">Adobe Flash Player is the universal rich client for delivering effective Adobe Flash experiences across desktops and devices.</p>
+    <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.adobe.com/go/getflashplayer">Adobe Flash Player download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 50px">
-        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 9</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 7</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 9</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 7</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
     </div>
 
     <div class="baseline"><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Flash">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Flash">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Flash">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/flash.html">Flash Player FAQ</a></div>
@@ -75,9 +75,9 @@
 </div>
 
 <div class="item">
-    <h2 class="first"><a href="http://www.macromedia.com/software/shockwaveplayer/">Shockwave</a></h2>
-    <p class="first">By <a href="http://www.macromedia.com">Macromedia</a></p>
-    <p class="first">Shockwave Player displays Web content that has been created by Macromedia Director.</p>
+    <h2 class="first"><a href="http://www.adobe.com/shockwave/download/">Shockwave</a></h2>
+    <p class="first">By <a href="http://www.adobe.com">Adobe</a></p>
+    <p class="first">Shockwave Player displays Web content that has been created by Adobe Director.</p>
     <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.adobe.com/shockwave/download/">Shockwave download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 38px">
@@ -124,15 +124,15 @@
 </div>
 
 <div class="item">
-    <h2 class="first"><a href="http://www.macromedia.com/software/flashplayer/">Flash Player</a></h2>
-    <p class="first">By <a href="http://www.macromedia.com">Macromedia</a></p>
-    <p class="first">Macromedia Flash Player is the universal rich client for delivering effective Macromedia Flash experiences across desktops and devices.</p>
-    <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.macromedia.com/go/getflashplayer">Flash Player download page</a> to select the latest version for your operating system.</p>
+    <h2 class="first"><a href="http://www.adobe.com/go/getflashplayer/">Adobe Flash Player</a></h2>
+    <p class="first">By <a href="http://www.adobe.com">Adobe</a></p>
+    <p class="first">Adobe Flash Player is the universal rich client for delivering effective Adobe Flash experiences across desktops and devices.</p>
+    <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.adobe.com/go/getflashplayer">Adobe Flash Player download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 50px">
-        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 9</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 7</a></div>
-        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.macromedia.com/go/getflashplayer">Version 9</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/windows_icon.png" height="34" width="34" alt=""/>&nbsp;For Windows:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/linux_icon.png" height="34" width="34" alt=""/>&nbsp;For Linux:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 7</a></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/macosx_icon.png" height="34" width="34" alt=""/>&nbsp;For MacOSX:<br/>&nbsp;&nbsp;<a href="http://www.adobe.com/go/getflashplayer">Version 9</a></div>
     </div>
 
     <div class="baseline"><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Flash">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Flash">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Flash">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/flash.html">Flash Player FAQ</a></div>
@@ -181,9 +181,9 @@
 </div>
 
 <div class="item">
-    <h2 class="first"><a href="http://www.macromedia.com/software/shockwaveplayer/">Shockwave</a></h2>
-    <p class="first">By <a href="http://www.macromedia.com">Macromedia</a></p>
-    <p class="first">Shockwave Player displays Web content that has been created by Macromedia Director.</p>
+    <h2 class="first"><a href="http://www.adobe.com/products/shockwaveplayer/">Shockwave</a></h2>
+    <p class="first">By <a href="http://www.adobe.com">Adobe</a></p>
+    <p class="first">Shockwave Player displays Web content that has been created by Adobe Director.</p>
     <p><img src="{$config.webpath}/images/faq_small.png" style="float: left;" height="16" width="16" alt=""/>&nbsp;Visit the <a href="http://www.adobe.com/shockwave/download/">Shockwave download page</a> to select the latest version for your operating system.</p>
     <h3><img src="{$config.webpath}/images/install.png" height="24" width="24" alt=""/>&nbsp;Download</h3>
     <div style="margin-top: 5px; height: 38px">
