@@ -78,6 +78,7 @@ static nsSystemFontsWin *gSystemFonts = nsnull;
 static nsSystemFontsBeOS *gSystemFonts = nsnull;
 #elif XP_MACOSX
 #include "nsSystemFontsMac.h"
+#include "gfxQuartzPDFSurface.h"
 static nsSystemFontsMac *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
@@ -178,6 +179,14 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 
     if (OSVal != 0)
         dpi = OSVal;
+
+#elif defined(XP_MACOSX)
+
+    if (mPrinter) {
+        dpi = 72;
+        do_round = PR_FALSE;
+    }
+
 #endif
 
     int in2pt = 72;
@@ -218,6 +227,16 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
     }
 
     SetDPI(prefVal);
+
+#ifdef XP_MACOSX
+    if (mPrinter) {
+        gfxSize size = ((gfxQuartzPDFSurface*)(mPrintingSurface.get()))->GetSize();
+        mWidth = NSFloatPointsToTwips(size.width);
+        mHeight = NSFloatPointsToTwips(size.height);
+    }
+
+    mDepth = 24;
+#endif
 
 #ifdef MOZ_ENABLE_GTK2
     if (getenv ("MOZ_X_SYNC")) {
@@ -453,7 +472,7 @@ nsThebesDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHei
 {
     if (mPrinter) {
         // we have a printer device
-#ifdef MOZ_ENABLE_GTK2
+#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aWidth = mWidth;
         aHeight = mHeight;
 #else
@@ -477,7 +496,7 @@ nsThebesDeviceContext::GetRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
-#ifdef MOZ_ENABLE_GTK2
+#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aRect.width = NSToIntRound(mWidth);
         aRect.height = NSToIntRound(mHeight);
 #else
@@ -497,7 +516,7 @@ nsThebesDeviceContext::GetClientRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
-#ifdef MOZ_ENABLE_GTK2
+#if defined(MOZ_ENABLE_GTK2) || defined(XP_MACOSX)
         aRect.width = NSToIntRound(mWidth);
         aRect.height = NSToIntRound(mHeight);
 #else

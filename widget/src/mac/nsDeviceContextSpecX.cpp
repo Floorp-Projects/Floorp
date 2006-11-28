@@ -43,6 +43,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
+#include <unistd.h>
 
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
@@ -50,6 +51,7 @@
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxQuartzSurface.h"
+#include "gfxQuartzPDFSurface.h"
 #endif
 
 /** -------------------------------------------------------
@@ -161,12 +163,14 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
     OSStatus status = ::PMSessionBeginPage(mPrintSession, mPageFormat, NULL);
     if (status != noErr) return NS_ERROR_ABORT;
     
+#ifndef MOZ_CAIRO_GFX
     ::GetPort(&mSavedPort);
     void *graphicsContext;
     status = ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextQuickdraw, &graphicsContext);
     if (status != noErr)
       return NS_ERROR_ABORT;
     ::SetPort((CGrafPtr)graphicsContext);
+#endif
     return NS_OK;
 }
 
@@ -211,23 +215,25 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, dou
 #ifdef MOZ_CAIRO_GFX
 NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 {
-#if 0
-    // open this when cairo-mac / cairo-cocoa printing is ready
+    // PDF surface -- prints to file and then uses cups to spool
+    char *filename;
+    char tmpfilename[] = "/tmp/printing.XXXXXX";
+    filename = mktemp(tmpfilename);
+
     double top, left, bottom, right;
     GetPageRect(&top, &left, &bottom, &right);
-  
-    nsRefPtr<gfxASurface> newSurface = new gfxQuartzSurface(gfxASurface::ImageFormatRGB24, right - left, bottom - top, PR_TRUE);
 
-    if (newSurface) {
-        *surface = newSurface;
-        NS_ADDREF(*surface);
+    const double width = right - left;
+    const double height = bottom - top;
 
-        return NS_OK;
-    }
-    NS_WARNING("GetSurfaceForPrinter failed to create gfxQuartzSurface.");
-#endif
-    *surface = nsnull;
+    nsRefPtr<gfxASurface> newSurface = new gfxQuartzPDFSurface(filename, gfxSize(width, height));
 
-    return NS_ERROR_FAILURE;
+    if (!newSurface)
+      return NS_ERROR_FAILURE;
+
+    *surface = newSurface;
+    NS_ADDREF(*surface);
+
+    return NS_OK;
 }
 #endif
