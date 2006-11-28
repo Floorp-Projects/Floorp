@@ -134,6 +134,7 @@ function initCommands()
          ["load",              cmdLoad,                            CMD_CONSOLE],
          ["log",               cmdLog,                             CMD_CONSOLE],
          ["map",               cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
+         ["match-users",       cmdMatchUsers,      CMD_NEED_CHAN | CMD_CONSOLE],
          ["me",                cmdMe,                              CMD_CONSOLE],
          ["motd",              cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
          ["mode",              cmdMode,             CMD_NEED_SRV | CMD_CONSOLE],
@@ -1865,6 +1866,29 @@ function cmdAttach(e)
     }
 
     gotoIRCURL(e.ircUrl);
+}
+
+function cmdMatchUsers(e)
+{
+    var matches = e.channel.findUsers(e.mask);
+    var uc = matches.unchecked;
+    var msgNotChecked = "";
+
+    // Get a pretty list of nicknames:
+    var nicknames = [];
+    for (var i = 0; i < matches.users.length; i++)
+        nicknames.push(matches.users[i].unicodeName);
+
+    var nicknameStr = arraySpeak(nicknames);
+
+    // Were we unable to check one or more of the users?
+    if (uc != 0)
+        msgNotChecked = getMsg(MSG_MATCH_UNCHECKED, uc);
+
+    if (matches.users.length == 0)
+        display(getMsg(MSG_NO_MATCHING_NICKS, msgNotChecked));
+    else 
+        display(getMsg(MSG_MATCHING_NICKS, [nicknameStr, msgNotChecked]));
 }
 
 function cmdMe(e)

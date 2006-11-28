@@ -2914,6 +2914,23 @@ function chan_inviteuser (nick)
     return true;
 }
 
+CIRCChannel.prototype.findUsers = 
+function chan_findUsers(mask)
+{
+    var ary = [];
+    var unchecked = 0;
+    mask = getHostmaskParts(mask);
+    for (var nick in this.users)
+    {
+        var user = this.users[nick];
+        if (!user.host || !user.name)
+            unchecked++;
+        else if (hostmaskMatches(user, mask))
+            ary.push(user);
+    }
+    return { users: ary, unchecked: unchecked };
+}
+
 /*
  * channel mode
  */
