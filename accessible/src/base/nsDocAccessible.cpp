@@ -1236,8 +1236,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       containerAccessible = this;  // At the root of UI or content
     }
   }
-  if (!containerAccessible && privateChildAccessible) {
-    privateChildAccessible->GetCachedParent(getter_AddRefs(containerAccessible));
+  if (!containerAccessible && childAccessible) {
+    GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =
     do_QueryInterface(containerAccessible);
