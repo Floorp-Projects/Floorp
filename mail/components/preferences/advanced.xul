@@ -63,9 +63,6 @@
       <preference id="mail.showFolderPaneColumns" name="mail.showFolderPaneColumns" type="bool"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="mailnews.tcptimeout" name="mailnews.tcptimeout" type="int"/>
-      <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
-      <preference id="offline.send.unsent_messages"          name="offline.send.unsent_messages" type="int"/>
-      <preference id="offline.download.download_messages"    name="offline.download.download_messages"    type="int"/>
       <preference id="mail.prompt_purge_threshhold"          name="mail.prompt_purge_threshhold"    type="bool"/>
       <preference id="mail.purge_threshhold"                 name="mail.purge_threshhold"    type="int"/> 
       <preference id="app.update.enabled" name="app.update.enabled" type="bool"
@@ -81,13 +78,23 @@
       <preference id="app.update.disable_button.showUpdateHistory"
                   name="app.update.disable_button.showUpdateHistory"
                   type="bool"/>
+      <preference id="security.disable_button.openCertManager"
+                  name="security.disable_button.openCertManager"
+                  type="bool"/>
+      <preference id="security.OCSP.disable_button.managecrl"
+                  name="security.OCSP.disable_button.managecrl"
+                  type="bool"/>
+      <preference id="security.disable_button.openDeviceManager"
+                  name="security.disable_button.openDeviceManager"
+                  type="bool"/>      
     </preferences>
 
     <tabbox id="advancedPrefs" flex="1" onselect="gAdvancedPane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemGeneral.label;"/>
-        <tab id="offlineTab" label="&itemOffline.label;"/>
+        <tab id="networkingTab" label="&itemNetworking.label;"/>
         <tab label="&itemUpdate.label;"/>
+        <tab label="&itemCertificates.label;"/>
       </tabs>
       
       <tabpanels flex="1">
@@ -115,14 +122,8 @@
           <hbox align="center" pack="start">
             <checkbox id="showFolderPaneColumns" label="&showFolderColumns.label;" 
                       accesskey="&showFolderColumns.accesskey;" preference="mail.showFolderPaneColumns"/>
-          </hbox> 
-          
-          <hbox align="center" pack="start">
-            <label value="&connectionTimeout.label;" accesskey="&connectionTimeout.accesskey;" control="connectionTimeoutBox" />
-            <textbox  id="connectionTimeoutBox" size="3" preference="mailnews.tcptimeout"/>
-            <label value="&connectionSeconds.label;"/>
           </hbox>
-                    
+ 
           <separator class="thin"/>
 
           <vbox>
@@ -145,43 +146,43 @@
             <button id="configEditor" label="&configEdit.label;" 
                     accesskey="&configEdit.accesskey;" oncommand="gAdvancedPane.showConfigEdit();"/>
           </hbox>
+
+          <hbox align="center">
+            <description flex="1">&returnReceiptsInfo.label;</description>
+            <button label="&showReturnReceipts.label;"
+                    accesskey="&showReturnReceipts.accesskey;"
+                    oncommand="gAdvancedPane.showReturnReceipts();"/>
+          </hbox>
         </tabpanel>
 
         <tabpanel orient="vertical">
-          <!-- Offline --> 
+          <!-- Networking & Disk Space -->
           <groupbox>
-            <caption label="&offline.label;"/>
+            <caption label="&connectionsInfo.caption;"/>
+            <hbox align="center">
+              <description flex="1" control="catProxiesButton">&proxiesInfo.label;</description>
+              <button id="catProxiesButton" label="&showConnections.label;" 
+                      accesskey="&showConnections.accesskey;" 
+                      oncommand="gAdvancedPane.showConnections();"/>
+            </hbox>
 
-            <label value="&textStartUp;"/>
-              <radiogroup id="whenStartingUp" class="indent" preference="offline.startup_state">
-                <radio value="0" label="&radioRememberPrevState;" accesskey="&radioRememberPrevState.accesskey;"/>
-                <radio value="1" label="&radioAskMe;" accesskey="&radioAskMe.accesskey;"/>
-                <radio value="2" label="&radioAlwaysOnline;" accesskey="&radioAlwaysOnline.accesskey;"/>
-              </radiogroup>
-
-            <separator class="thin"/>
-
-            <label value="&textGoingOnline;"/>
-              <radiogroup id="whengoingOnlinestate" orient="horizontal" class="indent"
-                          preference ="offline.send.unsent_messages">
-                <radio value="1" label="&radioAutoSend;"  accesskey="&radioAutoSend.accesskey;"/>
-                <radio value="2" label="&radioNotSend;"   accesskey="&radioNotSend.accesskey;"/>
-                <radio value="0" label="&radioAskUnsent;" accesskey="&radioAskUnsent.accesskey;"/>
-              </radiogroup>
-
-            <separator class="thin"/>
-
-            <label value="&textGoingOffline;"/>
-               <radiogroup id="whengoingOfflinestate" orient="horizontal" class="indent" 
-                           preference="offline.download.download_messages">
-                  <radio value="1" label="&radioAutoDownload;" accesskey="&radioAutoDownload.accesskey;"/>
-                  <radio value="2" label="&radioNotDownload;"  accesskey="&radioNotDownload.accesskey;"/>
-                  <radio value="0" label="&radioAskDownload;"  accesskey="&radioAskDownload.accesskey;"/>
-              </radiogroup>
+            <hbox align="center" pack="start">
+              <label value="&connectionTimeout.label;" accesskey="&connectionTimeout.accesskey;" control="connectionTimeoutBox" />
+              <textbox  id="connectionTimeoutBox" size="3" preference="mailnews.tcptimeout"/>
+              <label value="&connectionSeconds.label;"/>
+            </hbox>            
           </groupbox>
-
-          <separator class="thin"/>
-
+          
+          <groupbox>
+            <caption label="&offlineInfo.caption;"/>
+            <hbox align="center">
+              <description flex="1" control="offlineSettingsButton">&offlineInfo.label;</description>
+              <button id="offlineSettingsButton" label="&showOffline.label;" 
+                      accesskey="&showOffline.accesskey;" 
+                      oncommand="gAdvancedPane.showOffline();"/>
+            </hbox>
+          </groupbox>
+          
           <groupbox>
             <caption label="&Diskspace;"/>	    
             <hbox align="center">
@@ -235,10 +236,27 @@
                     oncommand="gAdvancedPane.showUpdates();"/>
           </hbox>
         </tabpanel>
+        
+        <!-- Certificates -->
+        <tabpanel orient="vertical">
+          <description>&certificatesInfo.label;</description>
+          <separator class="thin"/>
+          <description class="indent">
+            <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
+                    oncommand="gAdvancedPane.showCertificates();"
+                    preference="security.disable_button.openCertManager"/>
+            <button label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;" 
+                    oncommand="gAdvancedPane.showCRLs();"
+                    preference="security.OCSP.disable_button.managecrl"/>
+            <button label="&viewOCSP.label;" accesskey="&viewOCSP.accesskey;" 
+                    oncommand="gAdvancedPane.showOCSP();"/>
+            <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
+                    oncommand="gAdvancedPane.showSecurityDevices();"
+                    preference="security.disable_button.openDeviceManager"/>
+          </description>
+        </tabpanel>        
       </tabpanels>
     </tabbox>
-
     <separator/>
-
   </prefpane>
 </overlay>

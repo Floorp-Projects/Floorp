@@ -1,6 +1,7 @@
 <!ENTITY itemGeneral.label       "General">
 <!ENTITY itemUpdate.label        "Update">
-<!ENTITY itemOffline.label       "Offline &amp; Disk Space">
+<!ENTITY itemNetworking.label    "Network &amp; Disk Space">
+<!ENTITY itemCertificates.label  "Certificates">
 
 <!-- General Settings -->
 
@@ -15,7 +16,7 @@
 <!ENTITY markAsReadEnd.label           "seconds before marking a message as read">
 <!ENTITY markAsReadEnd.accesskey       "d">
 <!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane">
-<!ENTITY showFolderColumns.accesskey   "f">
+<!ENTITY showFolderColumns.accesskey   "l">
 <!ENTITY rememberLastMsg.label         "Remember the last selected message">
 <!ENTITY rememberLastMsg.accesskey     "b">
 <!ENTITY openMsgIn.label               "Open messages in:">
@@ -29,6 +30,9 @@
 <!ENTITY configEditDesc.label          "Advanced Configuration">
 <!ENTITY configEdit.label              "Config Editor...">
 <!ENTITY configEdit.accesskey          "g">
+<!ENTITY returnReceiptsInfo.label      "Determine how &brandShortName; handles return receipts">
+<!ENTITY showReturnReceipts.label      "Return Receipts...">
+<!ENTITY showReturnReceipts.accesskey  "R">
 
 <!-- Update -->
 <!ENTITY autoCheck.label                "Automatically check for updates to:">
@@ -43,35 +47,32 @@
 <!ENTITY modeAutomatic.label            "Automatically download and install the update">
 <!ENTITY modeAutomatic.accesskey        "m">
 <!ENTITY modeAutoAddonWarn.label        "Warn me if this will disable any of my add-ons">
-<!ENTITY modeAutoAddonWarn.accesskey    "W">
+<!ENTITY modeAutoAddonWarn.accesskey    "-">
 <!ENTITY showUpdates.label              "Show Update History">
-<!ENTITY showUpdates.accesskey          "U">
+<!ENTITY showUpdates.accesskey          "y">
 
-<!-- Offline and Disk Space -->
-<!ENTITY offline.label  "Offline">
-<!ENTITY textStartUp   "When starting up:">
-<!ENTITY radioRememberPrevState "Remember previous online state">
-<!ENTITY radioRememberPrevState.accesskey "R">
-<!ENTITY radioAskMe "Ask me for online state at startup">
-<!ENTITY radioAskMe.accesskey "u">
-<!ENTITY radioAlwaysOnline "Always start up online">
-<!ENTITY radioAlwaysOnline.accesskey "l"> 
+<!-- Networking and Disk Space -->
+<!ENTITY showConnections.label         "Connection...">
+<!ENTITY showConnections.accesskey     "n">
+<!ENTITY proxiesInfo.label             "Determine how &brandShortName; connects to the Internet.">
+<!ENTITY connectionsInfo.caption       "Connection">
+<!ENTITY offlineInfo.caption           "Offline">
+<!ENTITY offlineInfo.label             "Configure offline settings">
+<!ENTITY showOffline.label             "Offline...">
+<!ENTITY showOffline.accesskey         "O">
 
-<!ENTITY textGoingOnline "Send unsent messages when going online?">
-<!ENTITY radioAutoSend "Yes">
-<!ENTITY radioAutoSend.accesskey "Y">
-<!ENTITY radioNotSend "No">
-<!ENTITY radioNotSend.accesskey "N">
-<!ENTITY radioAskUnsent "Ask me">
-<!ENTITY radioAskUnsent.accesskey "s">
-<!ENTITY textGoingOffline "Download messages for offline use when going offline?">
-<!ENTITY radioAutoDownload "Yes">
-<!ENTITY radioAutoDownload.accesskey "e">
-<!ENTITY radioNotDownload "No">
-<!ENTITY radioNotDownload.accesskey "o">
-<!ENTITY radioAskDownload "Ask me">
-<!ENTITY radioAskDownload.accesskey "a">
 <!ENTITY Diskspace "Disk Space">
 <!ENTITY offlineCompact.label "Compact folders when it will save over">
 <!ENTITY offlineCompact.accesskey "v">
 <!ENTITY kb.label "KB">
+
+<!-- Certificates -->
+<!ENTITY certificatesInfo.label         "Manage certificates, revocation lists, certificate verification and security devices.">
+<!ENTITY viewCertificates.label         "View Certificates">
+<!ENTITY viewCertificates.accesskey     "a">
+<!ENTITY viewCRLs.label                 "Revocation Lists">
+<!ENTITY viewCRLs.accesskey             "e">
+<!ENTITY viewOCSP.label                 "Verification">
+<!ENTITY viewOCSP.accesskey             "f">
+<!ENTITY viewSecurityDevices.label      "Security Devices">
+<!ENTITY viewSecurityDevices.accesskey  "u">

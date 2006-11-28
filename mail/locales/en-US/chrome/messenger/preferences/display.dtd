@@ -25,19 +25,16 @@
 <!ENTITY variableWidth.label              "Variable width font">
 <!ENTITY variableWidth.accesskey          "V">
 <!ENTITY readingMessagesHeader.label      "For incoming messages">
-<!ENTITY messageWrapping.label            "Message Wrapping">
-<!ENTITY wrapInMsg.label                  "Wrap text to fit window width">
-<!ENTITY wrapInMsg.accesskey              "W">
+<!ENTITY colors.label                     "Colors">
+<!ENTITY overrideColors.label             "When displaying messages, use the following colors:">
+<!ENTITY textColor.label                  "Text Color:">
+<!ENTITY textColor.accesskey              "T">
+<!ENTITY backgroundColor.label            "Background Color:">
+<!ENTITY backgroundColor.accesskey        "b">
+
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
-<!ENTITY convertEmoticons.label           "Display emoticons as graphics">
-<!ENTITY convertEmoticons.accesskey       "D">
-<!ENTITY htmlColors.label                 "HTML Messages">
-<!ENTITY overrideSender.label             "When displaying HTML messages, use the following:">
-<!ENTITY overrideSender.accesskey         "n"> 
-<!ENTITY  textColor.label                 "Text Color:">
-<!ENTITY  textColor.accesskey             "T">
-<!ENTITY  backgroundColor.label           "Background Color:">
-<!ENTITY  backgroundColor.accesskey       "b">
+<!ENTITY convertEmoticons.label        "Display emoticons as graphics">
+<!ENTITY convertEmoticons.accesskey    "D">
 
 <!-- labels -->
 <!ENTITY displayTagsText.label    "Tags can be used to categorize and prioritize your messages.">
@@ -49,20 +46,7 @@
 <!ENTITY removeTagButton.accesskey "l">
 
 <!-- Fonts -->
-<!ENTITY fontsDescription.label       "Configure the fonts used by &brandShortName;">
-<!ENTITY fontsCaption.label      "Fonts">
+<!ENTITY fontAndEncodingsDescription.label  "Configure the fonts and encodings used by &brandShortName;">
+<!ENTITY fontsAndEncodingsCaption.label      "Fonts &amp; Encodings">
 <!ENTITY fontOptions.accesskey   "F">
 <!ENTITY fontOptions.label       "Fonts...">
-
-<!-- Language settings -->
-<!ENTITY sendDefaultCharset.label         "Outgoing Mail:">
-<!ENTITY sendDefaultCharset.accesskey     "u">
-<!ENTITY languagesTitle.label				  "Character encodings">
-<!ENTITY composingDescription.label       "Set the default character encodings for sending and receiving mail">
-
-<!ENTITY viewDefaultCharsetList.label     "Incoming Mail:">
-<!ENTITY viewDefaultCharsetList.accesskey	"I">
-<!ENTITY forceCharsetOverride.label       "Apply the default character encoding to all incoming messages">
-<!ENTITY forceCharsetOverride.accesskey   "p">
-<!ENTITY replyInDefaultCharset.label      "Use the default character encoding in replies">
-<!ENTITY replyInDefaultCharset.accesskey   "h">

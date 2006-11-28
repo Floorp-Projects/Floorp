@@ -40,10 +40,12 @@
 <!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % composeDTD SYSTEM "chrome://messenger/locale/preferences/compose.dtd">
+<!ENTITY % editorOverlayDTD SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 %brandDTD;
 %composeDTD;
+%editorOverlayDTD;
 ]>
-
+  
 <overlay id="ComposePaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -73,17 +75,22 @@
       <preference id="mail.collect_email_address_outgoing" name="mail.collect_email_address_outgoing" type="bool"/>
       <preference id="mail.collect_addressbook" name="mail.collect_addressbook" type="string"/>
       <preference id="spellchecker.dictionary"  name="spellchecker.dictionary"   type="wstring"/>
+      <preference id="msgcompose.font_face"      name="msgcompose.font_face" type="string"/>
+      <preference id="msgcompose.font_size"      name="msgcompose.font_size" type="string"/>
+      <preference id="msgcompose.text_color"     name="msgcompose.text_color" type="string"/>
+      <preference id="msgcompose.background_color" name="msgcompose.background_color" type="string"/>      
     </preferences>
 
-    <tabbox id="composePrefs" flex="1" onselect="gComposePane.tabSelectionChanged();">
+    <tabbox id="composePrefs" onselect="gComposePane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemGeneral.label;"/>
         <tab label="&itemAutoComplete.label;"/>
         <tab label="&itemSpellCheck.label;"/>
       </tabs>
 
-      <tabpanels flex="1">
-         <tabpanel orient="vertical">
+      <tabpanels>
+        <tabpanel orient="vertical">
+          <groupbox>
             <hbox align="center">
               <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;" control="forwardMessageMode"/>
               <menulist id="forwardMessageMode" preference="mail.forward_message_mode">
@@ -94,6 +101,13 @@
               </menulist>
             </hbox>
 
+            <hbox align="center" pack="start">
+              <checkbox id="autoSave" label="&autoSave.label;" preference="mail.compose.autosave"
+                        accesskey="&autoSave.accesskey;"/>
+              <textbox  id="autoSaveInterval" size="2" preference="mail.compose.autosaveinterval"/>
+              <label value="&autoSaveEnd.label;" accesskey="&autoSaveEnd.accesskey;" control="autoSaveInterval"/>
+            </hbox>
+
             <checkbox id="strictlyMime" label="&useMIME.label;"
                       preference="mail.strictly_mime"
                       accesskey="&useMIME.accesskey;"/>
@@ -102,39 +116,62 @@
                       preference="mail.warn_on_send_accel_key"
                       accesskey="&warnOnSendAccelKey.accesskey;"/>
 
-              <hbox align="center" pack="start">
-                <checkbox id="autoSave" label="&autoSave.label;" preference="mail.compose.autosave"
-                          accesskey="&autoSave.accesskey;"/>
-                <textbox  id="autoSaveInterval" size="2" preference="mail.compose.autosaveinterval"/>
-                <label value="&autoSaveEnd.label;" accesskey="&autoSaveEnd.accesskey;" control="autoSaveInterval"/>
-              </hbox>
-  
             <hbox align="center">
               <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
               <textbox id="wrapLength" size="3" preference="mailnews.wraplength"/>
               <label value="&char.label;"/>
-            </hbox>
-  
+            </hbox>            
+          </groupbox>
+
+          <groupbox>
+            <caption label="&htmlComposeHeader.label;"/>
             <hbox align="center">
-              <description flex="1">&sendOptionsDescription.label;</description>
-              <button label="&sendOptions.label;" 
-                      accesskey="&sendOptions.accesskey;"
-                      oncommand="gComposePane.sendOptionsDialog();"/>
+              <label control="FontSelect" value="&font.label;" accesskey="&font.accesskey;"/>
+              <menulist id="FontSelect" preference="msgcompose.font_face">
+                <menupopup>
+                  <menuitem value="" label="&fontVarWidth.label;"/>
+                  <menuitem value="tt" label="&fontFixedWidth.label;"/>
+                  <menuseparator/>
+                  <menuitem value="Helvetica, Arial, sans-serif" label="&fontHelveticaFont.label;"/>
+                  <menuitem value="Times New Roman, Times, serif" label="&fontTimes.label;"/>
+                  <menuitem value="Courier New, Courier, monospace" label="&fontCourier.label;"/>
+                  <menuseparator/>
+                </menupopup>
+              </menulist>
+              
+              <label control="fontSizeSelect" value="&size.label;" accesskey="&size.accesskey;"/>
+              <menulist id="fontSizeSelect" preference="msgcompose.font_size">
+                <menupopup>
+                  <menuitem value="x-small" label="&size-x-smallCmd.label;"/>
+                  <menuitem value="small"   label="&size-smallCmd.label;"/>
+                  <menuitem value="medium"  label="&size-mediumCmd.label;"/>
+                  <menuitem value="large"   label="&size-largeCmd.label;"/>
+                  <menuitem value="x-large" label="&size-x-largeCmd.label;"/>
+                  <menuitem value="xx-large" label="&size-xx-largeCmd.label;"/>
+                </menupopup>
+              </menulist>
             </hbox>
 
+            <separator class="thin"/>
+
             <hbox align="center">
-              <description flex="1">&htmlComposeDescription.label;</description>
-              <button label="&htmlCompose.label;" 
-                      accesskey="&htmlCompose.accesskey;"
-                      oncommand="gComposePane.htmlComposeDialog();"/>
+              <label control="textColorButton" value="&fontColor.label;" accesskey="&fontColor.accesskey;"/>
+              <colorpicker type="button" id="textColorButton" preference="msgcompose.text_color"/>
+              <spring/>
+              <label control="backgroundColorButton" value="&bgColor.label;" accesskey="&bgColor.accesskey;"/>
+              <colorpicker type="button" id="backgroundColorButton" preference="msgcompose.background_color"/>
+              <spring flex="1"/>
+              <button label="&restoreHTMLDefaults.label;" accesskey="&restoreHTMLDefaults.accesskey;"
+                      oncommand="gComposePane.restoreHTMLDefaults();"/>
             </hbox>
-           
-            <hbox align="center">
-              <description flex="1">&returnReceiptsInfo.label;</description>
-              <button label="&showReturnReceipts.label;"
-                      accesskey="&showReturnReceipts.accesskey;"
-                      oncommand="gComposePane.showReturnReceipts();"/>
-            </hbox> 
+          </groupbox>
+  
+          <hbox align="center">
+            <description flex="1">&sendOptionsDescription.label;</description>
+            <button label="&sendOptions.label;" 
+                    accesskey="&sendOptions.accesskey;"
+                    oncommand="gComposePane.sendOptionsDialog();"/>
+          </hbox>      
          </tabpanel>
 
          <tabpanel orient="vertical">
@@ -185,7 +222,7 @@
 
             <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
                       preference="mail.spellcheck.inline"
-                      accesskey="&spellCheckInline.accesskey;"/>
+                      accesskey="&spellCheckInline1.accesskey;"/>
 
             <separator class="thin"/>
 

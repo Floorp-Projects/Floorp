@@ -54,12 +54,11 @@
 
     <preferences>
       <preference id="mail.preferences.display.selectedTabIndex" name="mail.preferences.display.selectedTabIndex" type="int"/>
-      <preference id="mail.wrap_long_lines" name="mail.wrap_long_lines" type="bool"/>
-      <preference id="mail.display_glyph" name="mail.display_glyph" type="bool"/>
       <preference id="mail.fixed_width_messages" name="mail.fixed_width_messages" type="bool"/>
       <preference id="mail.quoted_style" name="mail.quoted_style" type="int"/>
       <preference id="mail.quoted_size" name="mail.quoted_size" type="int"/>
       <preference id="mail.citation_color" name="mail.citation_color" type="string"/>
+      <preference id="mail.display_glyph" name="mail.display_glyph" type="bool"/>
       <preference id="browser.display.foreground_color" name="browser.display.foreground_color" type="string"/>     
       <preference id="browser.display.background_color" name="browser.display.background_color" type="string"/>
       <preference id="mailnews.labels.description.1" name="mailnews.labels.description.1" type="wstring"/>
@@ -72,35 +71,35 @@
       <preference id="mailnews.labels.color.4" name="mailnews.labels.color.4" type="string"/>
       <preference id="mailnews.labels.description.5" name="mailnews.labels.description.5" type="wstring"/>
       <preference id="mailnews.labels.color.5" name="mailnews.labels.color.5" type="string"/>
-      <preference id="mailnews.send_default_charset" name="mailnews.send_default_charset" type="wstring"/>
-      <preference id="mailnews.view_default_charset" name="mailnews.view_default_charset" type="wstring"/>
-      <preference id="mailnews.force_charset_override" name="mailnews.force_charset_override" type="bool"/>
-      <preference id="mailnews.reply_in_default_charset" name="mailnews.reply_in_default_charset" type="bool"/>
     </preferences>
 
     <tabbox id="displayPrefs" flex="1" onselect="gDisplayPane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemFormatting.label;"/>
         <tab label="&itemTags.label;"/>
-        <tab label="&itemFonts.label;"/>
       </tabs>
       
       <tabpanels flex="1">
 
         <!-- Plain Text and HTML Formatting --> 
-        <tabpanel orient="vertical">
+        <tabpanel orient="vertical">       
           <groupbox>
-            <caption label="&displayWidth.label;"/>
-            <description>&viewingPlainText.label;</description>
-            <vbox class="indent" align="start">
-              <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
-                        preference="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
-              <checkbox id="displayGlyph" label="&convertEmoticons.label;"
-                        preference="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
-            </vbox>
-    
-            <separator class="thin"/>
-    
+            <caption label="&colors.label;"/>
+            <description>&overrideColors.label;</description>
+            <hbox align="center" class="indent">
+              <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
+
+              <colorpicker type="button" id="foregroundtextmenu" palettename="standard" preference="browser.display.foreground_color"/>
+              <spacer style="width: 25px"/>
+              <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
+              <colorpicker type="button" id="backgroundmenu" palettename="standard" preference="browser.display.background_color"/>
+            </hbox>
+          </groupbox>
+          
+          <groupbox>
+            <checkbox id="displayGlyph" label="&convertEmoticons.label;"
+                      preference="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
+            <caption label="&displayWidth.label;"/>    
             <hbox align="center"> 
               <description>&plainText.label;</description>
     
@@ -138,17 +137,14 @@
           </groupbox>
 
           <groupbox>
-            <caption label="&htmlColors.label;"/>
-            <description>&overrideSender.label;</description>
-            <hbox align="center" class="indent">
-              <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
-
-              <colorpicker type="button" id="foregroundtextmenu" palettename="standard" preference="browser.display.foreground_color"/> 
-              <spacer style="width: 25px"/>
-              <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
-              <colorpicker type="button" id="backgroundmenu" palettename="standard" preference="browser.display.background_color"/> 
+            <caption label="&fontsAndEncodingsCaption.label;"/>
+            <hbox align="center">
+              <description flex="1">&fontAndEncodingsDescription.label;</description>
+              <button label="&fontOptions.label;" 
+                      accesskey="&fontOptions.accesskey;"
+                      oncommand="gDisplayPane.fontOptionsDialog();"/>
             </hbox>
-          </groupbox>
+          </groupbox>          
         </tabpanel>
 
         <tabpanel orient="vertical">
@@ -162,62 +158,6 @@
                       oncommand="gDisplayPane.removeTag();"/>
             </vbox>
           </hbox>
-        </tabpanel>
-
-        <tabpanel orient="vertical">
-          <groupbox>
-            <caption label="&fontsCaption.label;"/> 
-            <hbox align="center">
-              <description flex="1">&fontsDescription.label;</description>
-              <button label="&fontOptions.label;" 
-                      accesskey="&fontOptions.accesskey;"
-                      oncommand="gDisplayPane.fontOptionsDialog();"/>
-            </hbox>
-          </groupbox>
-
-          <groupbox align="start">
-            <caption label="&languagesTitle.label;"/>
-
-            <label value="&composingDescription.label;"/>
-
-            <separator class="thin"/>
-            <grid>
-              <columns>
-                <column/>
-                <column flex="1"/>
-              </columns>
-
-              <rows>
-                <row align="center" class="indent">
-                  <label control="sendDefaultCharsetList"
-                         value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
-
-                  <menulist id="sendDefaultCharsetList" flex="1" preference="mailnews.send_default_charset" onsyncfrompreference="return gDisplayPane.readDefaultCharset();">
-                    <menupopup id="sendDefaultCharset-menupopup">
-                    </menupopup>
-                  </menulist>
-                </row> 
-        
-                <row align="center" class="indent">
-                  <label control="viewDefaultCharsetList"
-                         value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
-                  <menulist id="viewDefaultCharsetList" preference="mailnews.view_default_charset">
-                    <menupopup id="viewDefaultCharset-menupopup">
-                    </menupopup>
-                  </menulist>
-                </row>
-              </rows>
-            </grid> 
-    
-            <separator class="thin"/>
-
-            <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
-                      preference="mailnews.force_charset_override"
-                      accesskey="&forceCharsetOverride.accesskey;"/>
-            <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
-                      preference="mailnews.reply_in_default_charset"
-                      accesskey="&replyInDefaultCharset.accesskey;"/>
-          </groupbox> 
         </tabpanel>
       </tabpanels>
     </tabbox>

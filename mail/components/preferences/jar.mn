@@ -8,8 +8,6 @@ messenger.jar:
 *   content/messenger/preferences/compose.js
 *   content/messenger/preferences/sendoptions.xul
 *   content/messenger/preferences/sendoptions.js
-*   content/messenger/preferences/htmlcompose.xul
-*   content/messenger/preferences/htmlcompose.js
 *   content/messenger/preferences/privacy.xul
 *   content/messenger/preferences/privacy.js
 *   content/messenger/preferences/viewpasswords.js
@@ -31,7 +29,7 @@ messenger.jar:
 *   content/messenger/preferences/fonts.js
 *   content/messenger/preferences/fonts.xul
 *   content/messenger/preferences/notifications.xul
-*   content/messenger/preferences/notifications.js
+*   content/messenger/preferences/offline.xul
 *   content/messenger/AccountManager.xul                            (/mailnews/base/prefs/resources/content/AccountManager.xul)
     content/messenger/AccountManager.js                             (/mailnews/base/prefs/resources/content/AccountManager.js)
     content/messenger/am-main.xul                                   (/mailnews/base/prefs/resources/content/am-main.xul)

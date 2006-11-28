@@ -61,10 +61,14 @@
       <preference id="pref.general.disable_button.default_mail"
                   name="pref.general.disable_button.default_mail"
                   type="bool"/>
+      <preference id="mail.biff.play_sound.type" name="mail.biff.play_sound.type" type="int"/>
+      <preference id="mail.biff.play_sound.url" name="mail.biff.play_sound.url" type="string"/>      
 #ifdef XP_MACOSX
       <preference id="mail.biff.animate_dock_icon" name="mail.biff.animate_dock_icon" type="bool"/>
 #endif
     </preferences>
+
+    <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
 
 #ifdef HAVE_SHELL_SERVICE
     <stringbundle id="bundleShell" src="chrome://messenger/locale/shellservice.properties"/>
@@ -89,7 +93,7 @@
                     accesskey="&enableStartPage.accesskey;"/>
         </hbox>
         <hbox align="center">
-          <label value="&location.label;" accesskey="&location.accesskey;" control="mailnewsStartPageUrl"/>
+          <label value="&location.label;" accesskey="&location1.accesskey;" control="mailnewsStartPageUrl"/>
           <textbox id="mailnewsStartPageUrl" flex="1" preference="mailnews.start_page.url"/>
           <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
                   oncommand="gGeneralPane.setHomePageToDefaultPage();">
@@ -101,32 +105,45 @@
 
     <groupbox flex="1">
       <caption label="&newMessagesArrive.label;"/>
-        <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;" flex="1" accesskey="&showAnimatedAlert.accesskey;"
-                  preference="mail.biff.show_alert"/>
 #ifdef XP_MACOSX
       <checkbox id="newMailNotificationBounce" label="&bounceSystemDockIcon.label;"
                 preference="mail.biff.animate_dock_icon"
                 accesskey="&bounceSystemDockIcon.accesskey;"/>
-#endif
+#else
       <hbox align="center" flex="1">
-        <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
-                  preference="mail.biff.play_sound" label="&playSound.label;" flex="1"/>
-        <button id="customizeNewMailBehavior" label="&customizeNewMailBehavior.label;" accesskey="&customizeNewMailBehavior.accesskey;"
-                oncommand="gGeneralPane.customizeNewMailBehavior();"/>
+        <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;" accesskey="&showAnimatedAlert.accesskey;"
+                  preference="mail.biff.show_alert" flex="1"/>
+        <button id="customizeMailAlert" label="&customizeMailAlert.label;" accesskey="&customizeMailAlert.accesskey;"
+                oncommand="gGeneralPane.customizeMailAlert();"/>
       </hbox>
-    </groupbox>
-    
-    <groupbox>
-      <caption label="&connectionsInfo.caption;"/>
-      <hbox align="center">
-        <description flex="1" control="catProxiesButton">&proxiesInfo.label;</description>
-        <button id="catProxiesButton" label="&showConnections.label;" 
-                accesskey="&showConnections.accesskey;" 
-                oncommand="gGeneralPane.showConnections();"/>
-      </hbox>
-    </groupbox>
+#endif
+      <checkbox id="newMailNotification" accesskey="&playSound1.accesskey;"
+                preference="mail.biff.play_sound" label="&playSound.label;"
+                oncommand="gGeneralPane.updatePlaySound();"/>
 
+        <radiogroup id="soundType" preference="mail.biff.play_sound.type" class="indent" 
+                    orient="vertical" oncommand="gGeneralPane.updatePlaySound();">
+          <radio value="0" 
+#ifdef XP_MACOSX
+                 label="&systemsoundMac.label;"
+#else
+                 label="&systemsound.label;"
+#endif
+                 accesskey="&systemsound.accesskey;" id="system"/>
+          <radio value="1" label="&customsound.label;" 
+                 accesskey="&customsound.accesskey;" id="custom"/>
+          <hbox class="indent">
+            <filefield id="soundUrlLocation" flex="1" preference="mail.biff.play_sound.url"
+                       preference-editable="true"
+                       onsyncfrompreference="return gGeneralPane.readSoundLocation();"/>
+            <button id="browseForSound" label="&browse.label;" 
+                    accesskey="&browse.accesskey;" oncommand="gGeneralPane.browseForSoundFile();">
+              <observes element="soundUrlLocation" attribute="disabled"/>
+            </button>
+            <button id="playSound" label="&play.label;" accesskey="&play.accesskey;" oncommand="gGeneralPane.previewSound();"/>
+          </hbox>          
+        </radiogroup>
+    </groupbox>
     <separator/>
-
   </prefpane>
 </overlay>

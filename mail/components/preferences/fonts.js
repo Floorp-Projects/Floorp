@@ -48,7 +48,14 @@ const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
 var gFontsDialog = {
-
+  _init: function()
+  {
+    // build the charset menu list. We do this by hand instead of using the xul template
+    // builder because of Bug #285076, 
+    this.createCharsetMenus(document.getElementById("viewDefaultCharset-menupopup"), "NC:DecodersRoot",
+                            document.getElementById('mailnews.view_default_charset').value);  
+  },
+  
   _selectLanguageGroup: function (aLanguageGroup)
   {
     var prefs = [{ format: kDefaultFontType,          type: "string", element: "defaultFontType", fonttype: null},
@@ -140,5 +147,59 @@ var gFontsDialog = {
   {
     var useDocumentFonts = document.getElementById("useDocumentFonts");
     return useDocumentFonts.checked ? 1 : 0;
-  }
+  },
+  addMenuItem: function(aMenuPopup, aLabel, aValue)
+  { 
+    var menuItem = document.createElement('menuitem');
+    menuItem.setAttribute('label', aLabel);
+    menuItem.setAttribute('value', aValue);
+    aMenuPopup.appendChild(menuItem);
+  },
+
+  readRDFString: function(aDS,aRes,aProp) 
+  {
+    var n = aDS.GetTarget(aRes, aProp, true);
+    return (n) ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
+  },
+
+  createCharsetMenus: function(aMenuPopup, aRoot, aPreferenceValue)
+  {
+    var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                     .getService(Components.interfaces.nsIRDFService);
+    var kNC_Root = rdfService.GetResource(aRoot);
+    var kNC_Name = rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
+
+    var rdfDataSource = rdfService.GetDataSource("rdf:charset-menu");
+    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
+    rdfContainer.Init(rdfDataSource, kNC_Root);
+
+    var charset;
+    var availableCharsets = rdfContainer.GetElements();
+
+    for (var i = 0; i < rdfContainer.GetCount(); i++) 
+    {
+      charset = availableCharsets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+
+      this.addMenuItem(aMenuPopup, this.readRDFString(rdfDataSource, charset, kNC_Name), charset.Value);
+      if (charset.Value == aPreferenceValue)
+        aMenuPopup.parentNode.value = charset.Value;
+    }         
+  },
+  
+  mCharsetMenuInitialized: false,
+  readDefaultCharset: function()
+  {
+    if (!this.mCharsetMenuInitialized) 
+    {
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService(Components.interfaces.nsIObserverService)
+                .notifyObservers(null, "charsetmenu-selected", "mailedit");
+      // build the charset menu list. We do this by hand instead of using the xul template
+      // builder because of Bug #285076, 
+      this.createCharsetMenus(document.getElementById("sendDefaultCharset-menupopup"), "NC:MaileditCharsetMenuRoot",
+                              document.getElementById('mailnews.send_default_charset').value);
+      this.mCharsetMenuInitialized = true;
+    }
+    return undefined;
+  },  
 };

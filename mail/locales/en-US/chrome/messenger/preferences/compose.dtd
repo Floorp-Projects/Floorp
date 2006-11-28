@@ -11,11 +11,23 @@
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
 
+<!ENTITY htmlComposeHeader.label              "HTML">
+<!ENTITY font.label                           "Font:">
+<!ENTITY font.accesskey                       "n">
+<!ENTITY size.label                           "Size:">
+<!ENTITY size.accesskey                       "z">
+<!ENTITY fontColor.label                      "Text Color:">
+<!ENTITY fontColor.accesskey                  "x">
+<!ENTITY bgColor.label                        "Background Color:">
+<!ENTITY bgColor.accesskey                    "B">
+<!ENTITY restoreHTMLDefaults.label            "Restore Defaults">
+<!ENTITY restoreHTMLDefaults.accesskey        "R">
+
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "C">
 <!ENTITY spellCheckInline.label               "Enable spell check as you type">
-<!ENTITY spellCheckInline.accesskey           "n">
+<!ENTITY spellCheckInline1.accesskey           "k">
 <!ENTITY languagePopup.label                  "Language:">
 <!ENTITY languagePopup.accessKey              "g">
 <!ENTITY downloadDictionaries.label           "Download More Dictionaries">
@@ -50,11 +62,3 @@
 <!ENTITY sendOptionsDescription.label          "Configure text format behavior">
 <!ENTITY sendOptions.label                     "Send Options...">
 <!ENTITY sendOptions.accesskey                 "S">
-
-<!ENTITY htmlComposeDescription.label          "Configure default HTML options">
-<!ENTITY htmlCompose.label                     "HTML Options...">
-<!ENTITY htmlCompose.accesskey                 "H">
-
-<!ENTITY returnReceiptsInfo.label         "Determine how &brandShortName; handles return receipts">
-<!ENTITY showReturnReceipts.label         "Return Receipts...">
-<!ENTITY showReturnReceipts.accesskey     "R">

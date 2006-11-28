@@ -7,6 +7,7 @@
 
 <!ENTITY paneGeneral.title        "General">
 <!ENTITY paneDisplay.title        "Display">
+<!ENTITY paneTags.title           "Tags">
 <!ENTITY paneComposition.title    "Composition">
 <!ENTITY paneAttachments.title    "Attachments">
 <!ENTITY panePrivacy.title        "Privacy">

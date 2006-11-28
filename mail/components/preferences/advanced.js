@@ -202,5 +202,58 @@ var gAdvancedPane = {
     textbox.disabled = !document.getElementById('markAsRead').checked;
     if (!textbox.disabled && aFocusTextBox)
         textbox.focus();
+  },
+  
+  /** 
+   * open the return receipts configuration dialog 
+   */
+  showReturnReceipts: function()
+  {
+    document.documentElement.openSubDialog("chrome://messenger/content/preferences/receipts.xul",
+                                           "", null);
+  },  
+  
+  /** 
+   * open the connections dialog 
+   */
+  showConnections: function ()
+  {
+    document.documentElement
+            .openSubDialog("chrome://messenger/content/preferences/connection.xul",
+                           "", null);
+  },
+  
+  /** 
+   * open the offline settings dialog
+   */
+  showOffline: function()
+  {
+    document.documentElement
+            .openSubDialog("chrome://messenger/content/preferences/offline.xul",
+                           "", null);  
+  },
+  
+  showCertificates: function ()
+  {
+    document.documentElement.openWindow("mozilla:certmanager", "chrome://pippki/content/certManager.xul",
+                                        "width=600,height=400", null);
+  },
+  
+  showCRLs: function ()
+  {
+    document.documentElement.openWindow("Mozilla:CRLManager", "chrome://pippki/content/crlManager.xul",
+                                        "width=600,height=400", null);
+  },
+  
+  showOCSP: function ()
+  {
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/ocsp.xul",
+                                           "", null);
+  },
+  
+  showSecurityDevices: function ()
+  {
+    document.documentElement.openWindow("mozilla:devicemanager", "chrome://pippki/content/device_manager.xul",
+                                        "width=600,height=400", null);
   }
 };

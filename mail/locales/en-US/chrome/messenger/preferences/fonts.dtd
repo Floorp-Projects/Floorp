@@ -1,4 +1,4 @@
-<!ENTITY  fontsDialog.title                       "Fonts">
+<!ENTITY  fontsAndEncodingsDialog.title           "Fonts &amp; Encodings">
 <!ENTITY  window.width                            "39em">
 <!ENTITY  window.macWidth                         "43em">
 <!ENTITY  window.unixWidth                        "41em">
@@ -64,3 +64,16 @@
 
 <!ENTITY  useDocumentFonts.label                  "Allow messages to use other fonts">
 <!ENTITY  useDocumentFonts.accesskey              "o">
+
+<!-- Language settings -->
+<!ENTITY sendDefaultCharset.label         "Outgoing Mail:">
+<!ENTITY sendDefaultCharset.accesskey     "u">
+<!ENTITY languagesTitle1.label				    "Character Encodings">
+<!ENTITY composingDescription.label       "Set the default character encodings for sending and receiving mail">
+
+<!ENTITY viewDefaultCharsetList.label     "Incoming Mail:">
+<!ENTITY viewDefaultCharsetList.accesskey	"I">
+<!ENTITY forceCharsetOverride.label       "Apply the default character encoding to all incoming messages">
+<!ENTITY forceCharsetOverride.accesskey   "A">
+<!ENTITY replyInDefaultCharset.label      "Use the default character encoding in replies">
+<!ENTITY replyInDefaultCharset.accesskey  "h">

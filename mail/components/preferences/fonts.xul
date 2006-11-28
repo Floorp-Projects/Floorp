@@ -47,7 +47,7 @@
 
 <prefwindow id="FontsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&fontsDialog.title;"
+            title="&fontsAndEncodingsDialog.title;"
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
@@ -59,7 +59,7 @@
 #endif
             dlgbuttons="accept,cancel">
 
-  <prefpane id="FontsDialogPane">
+  <prefpane id="FontsDialogPane" onpaneload="gFontsDialog._init();">
   
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
@@ -67,6 +67,10 @@
                   name="browser.display.use_document_fonts"
                   type="int"/>
       <preference id="intl.charset.default" name="intl.charset.default" type="wstring"/>
+      <preference id="mailnews.send_default_charset" name="mailnews.send_default_charset" type="wstring"/>
+      <preference id="mailnews.view_default_charset" name="mailnews.view_default_charset" type="wstring"/>
+      <preference id="mailnews.force_charset_override" name="mailnews.force_charset_override" type="bool"/>
+      <preference id="mailnews.reply_in_default_charset" name="mailnews.reply_in_default_charset" type="bool"/>      
     </preferences>
 
     <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
@@ -270,6 +274,51 @@
                   onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
                   onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>
       </hbox>
+    </groupbox>
+
+    <groupbox align="start">
+      <caption label="&languagesTitle1.label;"/>
+
+      <label value="&composingDescription.label;"/>
+
+      <separator class="thin"/>
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+
+        <rows>
+          <row align="center" class="indent">
+            <label control="sendDefaultCharsetList"
+                   value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
+
+            <menulist id="sendDefaultCharsetList" flex="1" preference="mailnews.send_default_charset" 
+                      onsyncfrompreference="return gFontsDialog.readDefaultCharset();">
+              <menupopup id="sendDefaultCharset-menupopup">
+              </menupopup>
+            </menulist>
+          </row>
+
+          <row align="center" class="indent">
+            <label control="viewDefaultCharsetList"
+                   value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
+            <menulist id="viewDefaultCharsetList" preference="mailnews.view_default_charset">
+              <menupopup id="viewDefaultCharset-menupopup">
+              </menupopup>
+            </menulist>
+          </row>
+        </rows>
+      </grid>
+
+      <separator class="thin"/>
+
+      <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
+                preference="mailnews.force_charset_override"
+                accesskey="&forceCharsetOverride.accesskey;"/>
+      <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
+                preference="mailnews.reply_in_default_charset"
+                accesskey="&replyInDefaultCharset.accesskey;"/>
     </groupbox>
     <separator/>
   </prefpane>

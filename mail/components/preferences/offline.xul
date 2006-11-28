@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 # -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -18,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Scott MacGregor.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -43,29 +42,49 @@
 <?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
 
 <!DOCTYPE prefwindow [
-  <!ENTITY % notificationsDTD SYSTEM "chrome://messenger/locale/preferences/notifications.dtd">
-  %notificationsDTD;
+  <!ENTITY % offlineDTD SYSTEM "chrome://messenger/locale/preferences/offline.dtd">
+  %offlineDTD;
 ]>
 
-<prefwindow id="NotificationsDialog" type="child"
+<prefwindow id="OfflineSettingsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
-            title="&notificationsDialog2.title;">
+            title="&offlineDialog.title;">
 
-  <prefpane id="NotificationsDialogPane" onpaneload="gNotificationsDialog.init();">
-    <script type="application/x-javascript" src="chrome://messenger/content/preferences/notifications.js"/>
+  <prefpane id="OfflineSettingsDialogPane" onpaneload="gOfflineDialog.init();">
 
     <preferences>
-      <preference id="mail.biff.alert.show_preview" name="mail.biff.alert.show_preview" type="bool"/>
-      <preference id="mail.biff.alert.show_subject" name="mail.biff.alert.show_subject" type="bool"/>
-      <preference id="mail.biff.alert.show_sender" name="mail.biff.alert.show_sender" type="bool"/>
+      <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
+      <preference id="offline.send.unsent_messages"          name="offline.send.unsent_messages" type="int"/>
+      <preference id="offline.download.download_messages"    name="offline.download.download_messages"    type="int"/>
     </preferences>
+    
+    <label value="&textStartUp;"/>
+    <radiogroup id="whenStartingUp" class="indent" preference="offline.startup_state">
+      <radio value="0" label="&radioRememberPrevState;" accesskey="&radioRememberPrevState.accesskey;"/>
+      <radio value="1" label="&radioAskMe;" accesskey="&radioAskMe.accesskey;"/>
+      <radio value="2" label="&radioAlwaysOnline;" accesskey="&radioAlwaysOnline.accesskey;"/>
+    </radiogroup>
 
-    <description>&alertCustomization.intro;</description>
-    <checkbox id="previewText" class="indent" label="&previewText.label;" accesskey="&previewText.accesskey;" preference="mail.biff.alert.show_preview"/>
-    <checkbox id="subject" class="indent" label="&subject.label;" accesskey="&subject.accesskey;" preference="mail.biff.alert.show_subject"/>
-    <checkbox id="sender"  class="indent" label="&sender.label;" accesskey="&sender.accesskey;" preference="mail.biff.alert.show_sender"/>
+    <separator class="thin"/>
+    
+    <label value="&textGoingOnline;"/>
+    <radiogroup id="whengoingOnlinestate" orient="horizontal" class="indent"
+                preference ="offline.send.unsent_messages">
+      <radio value="1" label="&radioAutoSend;"  accesskey="&radioAutoSend.accesskey;"/>
+      <radio value="2" label="&radioNotSend;"   accesskey="&radioNotSend.accesskey;"/>
+      <radio value="0" label="&radioAskUnsent;" accesskey="&radioAskUnsent.accesskey;"/>
+    </radiogroup>
 
+    <separator class="thin"/>
+
+    <label value="&textGoingOffline;"/>
+    <radiogroup id="whengoingOfflinestate" orient="horizontal" class="indent" 
+                preference="offline.download.download_messages">
+      <radio value="1" label="&radioAutoDownload;" accesskey="&radioAutoDownload.accesskey;"/>
+      <radio value="2" label="&radioNotDownload;"  accesskey="&radioNotDownload.accesskey;"/>
+      <radio value="0" label="&radioAskDownload;"  accesskey="&radioAskDownload.accesskey;"/>
+    </radiogroup>    
     <separator/>
   </prefpane>
 </prefwindow>
