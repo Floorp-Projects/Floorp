@@ -24,5 +24,7 @@ ac_add_options --enable-static
 ac_add_options --disable-shared
 ac_add_options --enable-installer
 ac_add_options --disable-tests
+# SVG now requires Cairo, so disable it for now.
+ac_add_options --disable-svg
 #ac_add_options --enable-codesighs
 #ac_add_options --enable-official-branding
