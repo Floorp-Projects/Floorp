@@ -48,12 +48,12 @@
 /* This tells gcc3.4+ not to optimize away symbols.
  * @see http://gcc.gnu.org/gcc-3.4/changes.html
  */
-#define DONT_DROP_OR_WARN __attribute__(used)
+#define DONT_DROP_OR_WARN __attribute__((used))
 #else
 /* This tells older gccs not to warn about unused vairables.
  * @see http://docs.freebsd.org/info/gcc/gcc.info.Variable_Attributes.html
  */
-#define DONT_DROP_OR_WARN __attribute__(unused)
+#define DONT_DROP_OR_WARN __attribute__((unused))
 #endif
 
 /* Specify explicitly a symbol for this function, don't try to guess the c++ mangled symbol.  */
