@@ -160,9 +160,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRInt32   mMaxColumn;
   nsString  mLineBreak;
 
-  nsCString mCharSet;
-
- // To keep track of startvalue of OL and first list item for nested lists
+  // To keep track of startvalue of OL and first list item for nested lists
   struct olState {
     olState(PRInt32 aStart, PRBool aIsFirst):startVal(aStart),isFirstListItem(aIsFirst)
     {

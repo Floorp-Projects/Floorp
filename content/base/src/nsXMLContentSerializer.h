@@ -153,6 +153,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
+
+  // The charset that was passed to Init()
+  nsCString mCharset;
+  
   PRPackedBool mInAttribute;
   PRPackedBool mAddNewline;
 };

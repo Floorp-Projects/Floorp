@@ -96,6 +96,7 @@ NS_IMETHODIMP
 nsXMLContentSerializer::Init(PRUint32 flags, PRUint32 aWrapColumn,
                              const char* aCharSet, PRBool aIsCopying)
 {
+  mCharset = aCharSet;
   return NS_OK;
 }
 
@@ -1002,9 +1003,17 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
 
   aStr += NS_LITERAL_STRING("<?xml version=\"") + version + endQuote;
   
-  if (!encoding.IsEmpty()) {
-    aStr += NS_LITERAL_STRING(" encoding=\"") + encoding + endQuote;
+  if (!mCharset.IsEmpty()) {
+    aStr += NS_LITERAL_STRING(" encoding=\"") +
+      NS_ConvertASCIItoUTF16(mCharset) + endQuote;
   }
+  // Otherwise just don't output an encoding attr.  Not that we expect
+  // mCharset to ever be empty.
+#ifdef DEBUG
+  else {
+    NS_WARNING("Empty mCharset?  How come?");
+  }
+#endif
 
   if (!standalone.IsEmpty()) {
     aStr += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;

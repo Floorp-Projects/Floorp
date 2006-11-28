@@ -67,7 +67,8 @@ interface nsIDOMSerializer : nsISupports
    *             be any node, including a Document.
    * @param stream The byte stream to which the subtree is serialized.
    * @param charset The name of the character set to use for the encoding
-   *                to a byte stream.
+   *                to a byte stream.  If this string is empty and root is
+   *                a document, the document's character set will be used.
    */
   void serializeToStream(in nsIDOMNode root, in nsIOutputStream stream,
                          in AUTF8String charset);
