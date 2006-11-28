@@ -372,7 +372,7 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
 
   mFrame->SetHasFocus(PR_FALSE);
 
-  return mFrame->CheckFireOnChange();
+  return NS_OK;
 }
 
 // END nsIFocusListener
