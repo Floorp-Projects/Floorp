@@ -121,6 +121,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsITimer.h"
+#include "nsIScriptSecurityManager.h"
 
 #ifdef NS_DEBUG
 /**
@@ -228,6 +229,12 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
   if (!doc)
     return;
 
+  nsCOMPtr<nsIScriptSecurityManager> ssmgr =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+  if (!ssmgr) {
+    return;
+  }
+
   // value contains relative URIs split on spaces (U+0020)
   const PRUnichar *start = value.BeginReading();
   const PRUnichar *end   = value.EndReading();
@@ -243,7 +250,9 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
         ios->NewURI(NS_ConvertUTF16toUTF8(Substring(start, iter)),
                     doc->GetDocumentCharacterSet().get(),
                     baseURI, getter_AddRefs(uri));
-        if (uri) {
+        if (uri && NS_SUCCEEDED(ssmgr->CheckLoadURIWithPrincipal(
+              content->NodePrincipal(), uri,
+              nsIScriptSecurityManager::STANDARD))) {
           // Ignore non-HTTP(S) pings:
           PRBool match;
           if ((NS_SUCCEEDED(uri->SchemeIs("http", &match)) && match) ||
