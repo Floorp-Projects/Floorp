@@ -60,6 +60,7 @@ endif
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
 EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzSurface.h \
+		gfxQuartzPDFSurface.h \
 		gfxAtsuiFonts.h \
 		$(NULL)
 

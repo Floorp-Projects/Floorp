@@ -19,8 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,31 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_QUARTZSURFACE_H
-#define GFX_QUARTZSURFACE_H
+#ifndef GFX_QUARTZPDFSURFACE_H
+#define GFX_QUARTZPDFSURFACE_H
 
 #include "gfxASurface.h"
 
 #include <Carbon/Carbon.h>
 
-class THEBES_API gfxQuartzSurface : public gfxASurface {
+class THEBES_API gfxQuartzPDFSurface : public gfxASurface {
 public:
-    gfxQuartzSurface(gfxImageFormat format,
-                     int width, int height);
-    gfxQuartzSurface(CGContextRef context,
-                     int width, int height,
-                     PRBool y_grows_down);
-    gfxQuartzSurface(cairo_surface_t *csurf);
+    gfxQuartzPDFSurface(const char *filename, gfxSize aSizeInPoints);
+    virtual ~gfxQuartzPDFSurface();
 
-    virtual ~gfxQuartzSurface();
+    nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    nsresult EndPrinting();
+    nsresult AbortPrinting();
+    nsresult BeginPage();
+    nsresult EndPage();
 
-    unsigned long Width() { return mWidth; }
-    unsigned long Height() { return mHeight; }
+    gfxSize GetSize() {
+        gfxSize size(mRect.size.width, mRect.size.height);
+        return size;
+    }
 
     CGContextRef GetCGContext() { return mCGContext; }
 
 protected:
     CGContextRef mCGContext;
-    unsigned long mWidth, mHeight;
+    char *mFilename;
+    CGRect mRect;
+    PRBool mAborted;
 };
-#endif /* GFX_QUARTZSURFACE_H */
+#endif /* GFX_QUARTZPDFSURFACE_H */

@@ -81,13 +81,13 @@ endif
 
 
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
-CPPSRCS	+= 	gfxQuartzSurface.cpp gfxPlatformMac.cpp gfxAtsuiFonts.cpp
+CPPSRCS	+= 	gfxQuartzSurface.cpp gfxQuartzPDFSurface.cpp gfxPlatformMac.cpp gfxAtsuiFonts.cpp
 #CPPSRCS +=	gfxPDFSurface.cpp
 
 CMMSRCS = gfxQuartzFontCache.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework Cocoa -framework QuickTime
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework Cocoa -framework QuickTime -lcups
 endif
 
 ifdef MOZ_ENABLE_GLITZ
