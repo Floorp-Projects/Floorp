@@ -526,6 +526,9 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
                                       getter_Copies(prefValue));
         if (NS_FAILED(rv) || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
+        PRInt32 commandIndex = prefValue.FindChar(',');
+        if (commandIndex != kNotFound)
+          prefValue.Truncate(commandIndex);
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") +
             prefValue + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
