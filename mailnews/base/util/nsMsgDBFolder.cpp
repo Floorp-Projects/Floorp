@@ -5141,33 +5141,34 @@ NS_IMETHODIMP nsMsgDBFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint3
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream) 
+NS_IMETHODIMP nsMsgDBFolder::GetMsgTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream, PRInt32 bytesToRead, PRInt32 aMaxOutputLen, nsACString &aMsgText) 
 {
   /*
-  1. non mime message - the message body starts after the blank line following the headers.
-  2. mime message, multipart/alternative - we could simply scan for the boundary line, 
-     advance past its headers, and treat the next few lines as the text.
-  3. mime message, text/plain - body follows headers
-  4. multipart/mixed - scan past boundary, treat next part as body.
-
-     TODO need to worry about quoted printable and other encodings, 
-     so look for content transfer encoding.
-  */
-
+   1. non mime message - the message body starts after the blank line following the headers.
+   2. mime message, multipart/alternative - we could simply scan for the boundary line, 
+   advance past its headers, and treat the next few lines as the text.
+   3. mime message, text/plain - body follows headers
+   4. multipart/mixed - scan past boundary, treat next part as body.
+   
+   TODO need to worry about quoted printable and other encodings, 
+   so look for content transfer encoding.
+   */
+  
   // If we've got a header charset, we'll use that, otherwise we'll look for one in
   // the mime parts.
   nsXPIDLCString strCharset;
+  nsCString msgText;
   msgHdr->GetCharset(getter_Copies(strCharset));
   nsAutoString charset (NS_ConvertUTF8toUTF16(strCharset.get()));
-
+  
   PRUint32 len;
   msgHdr->GetMessageSize(&len);
   nsLineBuffer<char> *lineBuffer;
-
+  
   nsresult rv = NS_InitLineBuffer(&lineBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString boundary, msgBody;
+  
+  nsCAutoString boundary;
   nsCAutoString curLine;
   // might want to use a state var instead of bools.
   PRBool inMsgBody = PR_FALSE, msgBodyIsHtml = PR_FALSE, lookingForBoundary = PR_FALSE;
@@ -5203,10 +5204,10 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
       {
         if (!boundary.IsEmpty() && boundary.Equals(curLine))
           break;
-        msgBody.Append(curLine);
-        msgBody.Append(" "); // convert each end of line delimter into a space
-        // how much html should we parse for text? 2K? 4K?
-        if (msgBody.Length() > 2048 || (!msgBodyIsHtml && msgBody.Length() > 255))
+        msgText.Append(curLine);
+        msgText.Append(" "); // convert each end of line delimter into a space
+                             // how much html should we parse for text? 2K? 4K?
+        if (msgText.Length() > bytesToRead || (!msgBodyIsHtml && msgText.Length() > aMaxOutputLen))
           break;
         continue;
       }
@@ -5224,17 +5225,17 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
         continue;
       }
       if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Type:"),
-                          nsCaseInsensitiveCStringComparator()))
+                           nsCaseInsensitiveCStringComparator()))
       {
         // look for a charset in the Content-Type header line, we'll take the first one we find.
         nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv) && charset.IsEmpty())
-           mimehdrpar->GetParameter(curLine, "charset", EmptyCString(), false, nsnull, charset);
+          mimehdrpar->GetParameter(curLine, "charset", EmptyCString(), false, nsnull, charset);
         if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine,
-          nsCaseInsensitiveCStringComparator()))
+                           nsCaseInsensitiveCStringComparator()))
         {
           msgBodyIsHtml = PR_TRUE;
-//        bodyFollowsHeaders = PR_TRUE;
+          //        bodyFollowsHeaders = PR_TRUE;
         }
         else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine,
                                 nsCaseInsensitiveCStringComparator()))
@@ -5250,7 +5251,7 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
 
   // Note: in order to convert from a specific charset to UTF-8 we have to go through unicode first.
   nsAutoString unicodeMsgBodyStr;
-  ConvertToUnicode(NS_ConvertUTF16toUTF8(charset).get(), msgBody, unicodeMsgBodyStr);
+  ConvertToUnicode(NS_ConvertUTF16toUTF8(charset).get(), msgText, unicodeMsgBodyStr);
 
   // now we've got a msg body. If it's html, convert it to plain text.
   // Then, set the previewProperty on the msg hdr to the plain text.
@@ -5261,22 +5262,22 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
     // Create a parser
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
+    
     // Create the appropriate output sink
     nsCOMPtr<nsIContentSink> sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID,&rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
+    
     nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
     NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
     PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak 
-                   | nsIDocumentEncoder::OutputNoScriptContent
-                   | nsIDocumentEncoder::OutputNoFramesContent
-                   | nsIDocumentEncoder::OutputBodyOnly;
-
+      | nsIDocumentEncoder::OutputNoScriptContent
+      | nsIDocumentEncoder::OutputNoFramesContent
+      | nsIDocumentEncoder::OutputBodyOnly;
+    
     textSink->Initialize(&bodyText, flags, 80);
-
+    
     parser->SetContentSink(sink);
-
+    
     nsAutoString msgBodyStr;
     rv = parser->Parse(unicodeMsgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
     // push bodyText back into unicodeMsgBodyStr
@@ -5284,8 +5285,15 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
   }
 
   // now convert back to utf-8 for storage
-  CopyUTF16toUTF8(unicodeMsgBodyStr, msgBody);
+  CopyUTF16toUTF8(unicodeMsgBodyStr, aMsgText);
+  return rv;
 
+}
+
+nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream) 
+{
+  nsCString msgBody;
+  nsresult rv = GetMsgTextFromStream(msgHdr, stream, 2048, 255, msgBody);
   // replaces all tabs and line returns with a space, then trims off leading and trailing white space
   msgBody.CompressWhitespace(PR_TRUE, PR_TRUE);
   msgHdr->SetStringProperty("preview", msgBody.get());
