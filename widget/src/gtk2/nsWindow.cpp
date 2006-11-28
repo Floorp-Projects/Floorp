@@ -2122,6 +2122,20 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                event.charCode >= GDK_A &&
                event.charCode <= GDK_Z)
             event.charCode = gdk_keyval_to_lower(event.charCode);
+
+           // Keep the characters unshifted for shortcuts and accesskeys and
+           // make sure that numbers are always passed as such (among others:
+           // bugs 50255 and 351310)
+           if (event.isShift && (event.charCode < GDK_0 || event.charCode > GDK_9)) {
+               GdkKeymapKey k = { aEvent->hardware_keycode, aEvent->group, 0 };
+               guint savedKeyval = aEvent->keyval;
+               aEvent->keyval = gdk_keymap_lookup_key(gdk_keymap_get_default(), &k);
+               PRUint32 unshiftedCharCode = nsConvertCharCodeToUnicode(aEvent);
+               if (unshiftedCharCode)
+                   event.charCode = unshiftedCharCode;
+               else
+                   aEvent->keyval = savedKeyval;
+           }
         }
     }
 
