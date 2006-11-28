@@ -143,9 +143,6 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   mFrame->GetWidth(&width);
   mFrame->GetHeight(&height);
 
-  NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
-                 NS_ERROR_UNEXPECTED);
-  
   PRInt32 rownum;
 #if defined(MOZ_CAIRO_GFX)
   PRUint8 *row = (PRUint8*)malloc(bpr);
@@ -175,6 +172,9 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   }
   free(row);
 #else
+  NS_ENSURE_TRUE(buf_end - data >= PRInt32(bpr + abpr) * height,
+                 NS_ERROR_UNEXPECTED);
+
   for (rownum = 0; rownum < height; ++rownum, data += bpr)
     mFrame->SetImageData(data, bpr, rownum * bpr);
 
