@@ -386,21 +386,28 @@ case "$target" in
     WINVER=400
     ;;
 *)
-    WINVER=500
+    if test -n "$GNU_CC"; then  
+        WINVER=501
+    else    
+        WINVER=500
+    fi
     ;;
 esac
 
 MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=400|500  Minimum Windows version to support
-                                  400: Windows 95; 500: Windows 2000],
+[  --with-windows-version=WINVER
+                          Minimum Windows version (WINVER) to support
+                              400: Windows 95
+                              500: Windows 2000
+                              501: Windows XP],
   WINVER=$withval)
 
 case "$WINVER" in
-400|500)
+400|500|501)
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400 or 500]);
+    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400, 500 or 501]);
     ;;
 
 esac
