@@ -46,20 +46,17 @@
 {
   // use a set for automatic duplicate elimination
   NSMutableSet* browsersSet = [NSMutableSet setWithCapacity:10];
-  
-  NSArray* apps = [(NSArray*)LSCopyApplicationURLsForURL((CFURLRef)[NSURL URLWithString:@"http:"], kLSRolesViewer) autorelease];
-  
-  // Put all the browsers into a new array, but only if they also support https and have a bundle ID we can access
+
+  // Once we are 10.4+, switch this all to LSCopyAllHandlersForURLScheme
+  NSArray* apps = [(NSArray*)LSCopyApplicationURLsForURL((CFURLRef)[NSURL URLWithString:@"https:"], kLSRolesViewer) autorelease];
+
+  // Put all the browsers IDs into a new array
   NSEnumerator *appEnumerator = [apps objectEnumerator];
   NSURL* anApp;
   while ((anApp = [appEnumerator nextObject])) {
-    Boolean canHandleHTTPS;
-    if ((LSCanURLAcceptURL((CFURLRef)[NSURL URLWithString:@"https:"], (CFURLRef)anApp, kLSRolesAll, kLSAcceptDefault, &canHandleHTTPS) == noErr) &&
-        canHandleHTTPS) {
-      NSString *tmpBundleID = [self identifierForBundle:anApp];
-      if (tmpBundleID)
-        [browsersSet addObject:tmpBundleID];
-    }
+    NSString *tmpBundleID = [self identifierForBundle:anApp];
+    if (tmpBundleID)
+      [browsersSet addObject:tmpBundleID];
   }
   
   // add default browser in case it hasn't been already
