@@ -741,6 +741,8 @@
             return null;
           }
 
+          var contentDocument = contentEnvelope.ownerDocument;
+
           var selectedValues = "";
           if (this.selection == "open") {
             selectedValues = this.control.getFreeEntryValues();
@@ -784,7 +786,7 @@
                 } else {
                   copyNode = item.copyNode;
                   if (copyNode) {
-                    var clone = copyNode.cloneNode(true);
+                    var clone = contentDocument.importNode(copyNode, true);
                     contentEnvelope.appendChild(clone);
 
                     if (!options[i].wasSelected) {
@@ -823,7 +825,7 @@
           // write out the text nodes before we handle copy
           if (boundType == Node.ELEMENT_NODE) {
             if (selectedValues.length > 0) {
-              var textNode = document.createTextNode(selectedValues);
+              var textNode = contentDocument.createTextNode(selectedValues);
               if (copyNode) {
                 // making sure all selected 'values' are in the first text node
                 // under the bound node.

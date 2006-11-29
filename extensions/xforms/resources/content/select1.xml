@@ -1096,16 +1096,18 @@
           if (!contentEnvelope) {
             return null;
           }
+          var contentDocument = contentEnvelope.ownerDocument;
 
           if (contentEnvelope.nodeType == Node.ELEMENT_NODE) { 
             var contentNode = null;
             if (this._selected.isCopyItem) {
               var copyNode = this._selected.copyNode;
               if (copyNode) {
-                contentNode = copyNode.cloneNode(true);
+                contentNode = contentDocument.importNode(copyNode, true);
               }
             } else {
-              contentNode = document.createTextNode(this._selected.value);
+              contentNode =
+                contentDocument.createTextNode(this._selected.value);
             }
 
             contentEnvelope.appendChild(contentNode);
