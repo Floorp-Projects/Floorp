@@ -164,6 +164,7 @@ pref("mail.addr_book.im.onlineCheckAllowed", false);
 pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
 pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
+pref("mail.accountwizard.deferstorage", false);
 #endif
 
 // the format for "mail.addr_book.quicksearchquery.format" is:

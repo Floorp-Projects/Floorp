@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Manuel Reimer <Manuel.Reimer@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -134,6 +135,12 @@ function onAccountWizardLoad() {
         // on a new profile
         gDefaultAccount = null;
     }
+
+    // Set default value for global inbox checkbox
+    var checkGlobalInbox = document.getElementById("deferStorage");
+    try {
+        checkGlobalInbox.checked = gPrefs.getBoolPref("mail.accountwizard.deferstorage");
+    } catch(e) {}
 }
 
 function onCancel() 

@@ -117,6 +117,6 @@
 <!ENTITY smtpServerNamePrefix.label "Outgoing Server Name (SMTP):">
 <!ENTITY newsServerNamePrefix.label "News Server Name (NNTP):">
 <!ENTITY downloadOnLogin.label "Download messages now">
-<!ENTITY deferStorageDesc.label "Uncheck this checkbox to store mail for this account in its own directory. That will make this account appear as a top-level account. Otherwise, it will be part of the Local Folders Global Inbox account.">
+<!ENTITY deferStorageDesc.label "Check this checkbox to store mail for this account in the Local Folders Global Inbox. Otherwise the account appears as a top-level account and its mail is stored in its own directory.">
 <!ENTITY deferStorage.label "Use Global Inbox (store mail in Local Folders)">
 <!ENTITY clickFinish.label "Click Finish to save these settings and exit the Account Wizard.">
