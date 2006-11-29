@@ -50,6 +50,7 @@ CHROMEEND
 # set env vars so Firefox doesn't quit weirdly and break the script
 $ENV{'MOZ_NO_REMOTE'} = '1';
 $ENV{'NO_EM_RESTART'} = '1';
+$ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
 
 # mark the start
 $start = localtime;
