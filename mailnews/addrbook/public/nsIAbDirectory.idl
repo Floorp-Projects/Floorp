@@ -72,7 +72,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(831251b9-3d8d-462a-9460-71674e505f6c)]
+[scriptable, uuid(fe882bec-0fd8-41cf-913b-72db4ca11901)]
 interface nsIAbDirectory : nsISupports {
 
   // Types of operation
@@ -142,7 +142,7 @@ interface nsIAbDirectory : nsISupports {
   // Deletes either a mailing list or a top
   // level directory, which also updates the
   // preferences
-  void deleteDirectory(in nsIAbDirectory directory);
+  void deleteDirectory(in nsIAbDirectory dierctory);
 
   // Check if directory contains card
   // If the implementation is asynchronous the card

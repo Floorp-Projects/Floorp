@@ -261,7 +261,7 @@ nsAbDirProperty::ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProper
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-nsAbDirProperty::DeleteDirectory(nsIAbDirectory *directory)
+nsAbDirProperty::DeleteDirectory(nsIAbDirectory *dierctory)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
