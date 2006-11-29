@@ -30,21 +30,24 @@ function getPlatformName()
   return "Unknown";
 }
 
+function getInstallURL(eEvent) {
+ 
+    // The event target might be the link itself or one of its children
+    var target = aEvent.target;
+    while (target && !target.href)
+      target = target.parentNode;
+    
+    return target && target.href;
+}
+
 function install( aEvent, extName, iconURL, extHash)  {   
 
     if (aEvent.altKey || !window.InstallTrigger)
         return true;
 
-    // The event target might be a child of the link, not the link itself
-    var target = aEvent.target;
-    while (target && !target.href)
-      target = target.parentNode;
+    var url = getInstallURL();
 
-    if (!target)
-      return true;
-
-    var url = target.href;
-    if (url.match(/^.+\.xpi$/)) {
+    if (url && url.match(/^.+\.xpi$/)) {
 
         var params = new Array();
 
@@ -76,11 +79,13 @@ function install( aEvent, extName, iconURL, extHash)  {
 }
 
 function installTheme( aEvent, extName) {
-    var url = aEvent.target.href;
-    if (!url) {
-        // rustico puts it somewhere else, of course
-        url = aEvent.target.parentNode.href;
-    }
+    if(!window.InstallTrigger) 
+        return true;
+    
+    var url = getInstallURL(aEvent);
+    if (!url)
+        return true;
+
     InstallTrigger.installChrome(InstallTrigger.SKIN,url,extName);
 
     try {
