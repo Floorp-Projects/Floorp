@@ -87,7 +87,7 @@ namespace avmplus
 	{
 		if(m_toplevel) return m_toplevel;
 		if(base) return base->toplevel();
-		AvmAssert(NULL);
+		AvmAssert(0);
 		return NULL;
 	}
 }

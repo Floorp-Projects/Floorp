@@ -167,7 +167,7 @@ namespace avmplus
 		profiler		   = NULL;
 		callStack          = NULL;
 		stackTraces        = NULL;
-		numTraces          = NULL;
+		numTraces          = 0;
 		samples            = NULL;
 		takeSample         = false;
 		samplingNow        = false;
