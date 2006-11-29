@@ -37,6 +37,8 @@
 
 #include "nsToolkit.h"
 
+#include <Gestalt.h>
+
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
@@ -69,4 +71,19 @@ nsToolkit::InitEventQueue(PRThread * aThread)
 nsToolkitBase* NS_CreateToolkitInstance()
 {
   return new nsToolkit();
+}
+
+
+
+long nsToolkit::OSXVersion()
+{
+  static long gOSXVersion = 0x0;
+  if (gOSXVersion == 0x0) {
+    OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
+    if (err != noErr) {
+      NS_ERROR("Couldn't determine OS X version, assuming 10.3");
+      gOSXVersion = MAC_OS_X_VERSION_10_3_HEX;
+    }
+  }
+  return gOSXVersion;
 }

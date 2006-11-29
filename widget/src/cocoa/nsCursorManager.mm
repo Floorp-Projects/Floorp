@@ -84,26 +84,6 @@ static nsCursorManager *gInstance;
 + (nsMacCursor *) createNSCursor: (SEL) aPantherCursor orImageCursor: (NSString *) aImageName withHotspot: (NSPoint) aPoint;
 @end
 
-/*! @function   isPantherOrLater
-    @abstract   Determine whether we are running on Panther (Mac OS X 10.3) or later
-    @result     YES if the current operating system version is 10.3 or later, else NO
-*/
-static BOOL isPantherOrLater();
-
-static BOOL isPantherOrLater() 
-{
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnPantherOrLater = PR_FALSE;
-  if(!gInitVer)
-  {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnPantherOrLater = (err == noErr && version >= 0x00001030);
-    gInitVer = PR_TRUE;
-  }
-  return gOnPantherOrLater;
-}
-
 @implementation nsCursorManager
 
 + (nsCursorManager *) sharedInstance
@@ -216,14 +196,12 @@ static BOOL isPantherOrLater()
 
 + (nsMacCursor *) createNSCursor: (SEL) aPantherCursor orThemeCursor: (ThemeCursor) aJaguarCursor
 {
-  return isPantherOrLater() ?   [nsMacCursor cursorWithCursor: [NSCursor performSelector: aPantherCursor]] :
-                                [nsMacCursor cursorWithThemeCursor: aJaguarCursor];
+  return [nsMacCursor cursorWithCursor:[NSCursor performSelector:aPantherCursor]];
 }
 
 + (nsMacCursor *) createNSCursor: (SEL) aPantherCursor orImageCursor: (NSString *) aImageName withHotspot: (NSPoint) aPoint
 {
-  return isPantherOrLater() ?	[nsMacCursor cursorWithCursor: [NSCursor performSelector: aPantherCursor]] :
-                                [nsMacCursor cursorWithImageNamed: aImageName hotSpot: aPoint];
+  return [nsMacCursor cursorWithCursor:[NSCursor performSelector:aPantherCursor]];
 }
 
 - (id) init
