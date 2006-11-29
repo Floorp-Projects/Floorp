@@ -173,7 +173,7 @@ DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
-LIBS	+= -framework QuickTime -framework IOKit
+LIBS	+= -framework QuickTime -framework IOKit -lcups
 endif
 endif
 
