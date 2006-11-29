@@ -898,12 +898,15 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 
   PRInt64 folder;
 #else
-  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
+  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIRDFResource> root;
   rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
 
-  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-  NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRBool dummy;
   bms->ReadBookmarks(&dummy);
 
@@ -957,29 +960,21 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   // We put the contents of the "BookmarksBar" folder into our Personal Toolbar
   // and merge the contents of the "BookmarksMenu" folder and the other toplevel
   // non-special folders under our NC:BookmarksRoot.
-  if (!::CFDictionaryContainsKey(safariBookmarks, CFSTR("Children")) ||
-      !::CFDictionaryContainsKey(safariBookmarks, CFSTR("WebBookmarkFileVersion")) ) {
-    ::CFRelease(safariBookmarks);
-    return NS_OK;
+  if (::CFDictionaryContainsKey(safariBookmarks, CFSTR("Children")) &&
+      ::CFDictionaryContainsKey(safariBookmarks, CFSTR("WebBookmarkFileVersion")) ) {
+    CFNumberRef intValue =
+      (CFNumberRef)::CFDictionaryGetValue(safariBookmarks,
+                                          CFSTR("WebBookmarkFileVersion"));
+    PRInt32 value = 0;
+    if (::CFNumberGetValue(intValue, kCFNumberSInt32Type, &value) && value ==1) {
+      CFArrayRef children =
+        (CFArrayRef)::CFDictionaryGetValue(safariBookmarks, CFSTR("Children"));
+      if (children)
+        rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
+    }
   }
-
-  CFNumberRef intValue = (CFNumberRef)::CFDictionaryGetValue(safariBookmarks,
-                                                             CFSTR("WebBookmark" \
-                                                             "FileVersion"));
-  PRInt32 value = 0;
-  if (!::CFNumberGetValue(intValue, kCFNumberSInt32Type, &value) || value != 1)
-    return NS_OK;
-
-  CFArrayRef children = (CFArrayRef)::CFDictionaryGetValue(safariBookmarks,
-                                                           CFSTR("Children"));
-  if (children) {
-    nsresult rv = ParseBookmarksFolder(children, folder, bms, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-  }
-
   ::CFRelease(safariBookmarks);
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult
