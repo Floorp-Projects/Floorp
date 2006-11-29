@@ -53,6 +53,7 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsIMenuCommandDispatcher.h"
+#include "nsToolkit.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -1150,7 +1151,10 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   else if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
     if (kind == kEventMenuOpening && gRollupListener != nsnull && gRollupWidget != nsnull) {
       gRollupListener->Rollup();
-      return userCanceledErr;
+      // We can only return userCanceledErr on Tiger or later because it crashes on Panther.
+      // See bug 351230.
+      if (nsToolkit::OSXVersion() >= MAC_OS_X_VERSION_10_4_HEX)
+        return userCanceledErr;
     }
     
     nsISupports* supports = reinterpret_cast<nsISupports*>(userData);
