@@ -95,6 +95,7 @@ public:
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
   // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // nsISVGValueObserver
@@ -308,6 +309,18 @@ nsSVGInnerSVGFrame::NotifyViewportChange()
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
+
+already_AddRefed<nsSVGCoordCtxProvider>
+nsSVGInnerSVGFrame::GetCoordContextProvider()
+{
+  NS_ASSERTION(mContent, "null parent");
+
+  // Our <svg> content element is the CoordContextProvider for our children:
+  nsSVGCoordCtxProvider *provider;
+  CallQueryInterface(mContent, &provider);
+
+  return provider;
+}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGInnerSVGFrame::GetCanvasTM()
