@@ -568,16 +568,16 @@ nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
   // loading it, and do *not* allow loading URIs that would inherit our
   // principal.
   
-  var pluginPage = window.opener.content.location.href;
+  var pluginPagePrincipal =
+    window.opener.content.document.nodePrincipal;
 
   const nsIScriptSecurityManager =
     Components.interfaces.nsIScriptSecurityManager;
-  var secMan =
-    Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-    .getService(nsIScriptSecurityManager);
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(nsIScriptSecurityManager);
 
-  secMan.checkLoadURIStr(pluginPage, aUrl,
-                         nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+  secMan.checkLoadURIStrWithPrincipal(pluginPagePrincipal, aUrl,
+    nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
 
   window.opener.open(aUrl);
 }
