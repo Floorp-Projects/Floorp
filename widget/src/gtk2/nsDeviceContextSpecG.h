@@ -52,6 +52,8 @@
 #endif /* USE_XPRINT */
 #include "nsCRT.h" /* should be <limits.h>? */
 
+#include "nsIPrintJobGTK.h"
+
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1
 
@@ -81,6 +83,8 @@ public:
 
   NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
+  NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
+  NS_IMETHOD EndDocument();
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
   NS_IMETHOD GetIsPrintPreview(PRBool &aIsPPreview);
@@ -127,6 +131,7 @@ protected:
   float  mRight;              /* right margin */
   float  mTop;                /* top margin */
   float  mBottom;             /* bottom margin */
+  nsIPrintJobGTK * mPrintJob;
 };
 
 //-------------------------------------------------------------------------

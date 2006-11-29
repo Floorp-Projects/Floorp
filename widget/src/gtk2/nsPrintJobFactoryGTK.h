@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ex: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Foundation Code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is
+ * Kenneth Herron <kherron@fastmail.us>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,50 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxPSSurface.h"
+#ifndef nsPrintJobFactoryGTK_h__
+#define nsPrintJobFactoryGTK_h__
 
-#include <cairo-ps.h>
+#include "nscore.h"
+#include "nsIPrintJobGTK.h"
+#include "nsDeviceContextSpecG.h"
 
-#ifdef UNTESTED_CODE
-static cairo_status_t
-write_func(void *closure,
-           const unsigned char *data,
-           unsigned int length)
+/* Factory class for the print job subsystem. This class determines
+ * which print job class should handle a print job, and constructs
+ * an object of the appropriate class.
+ */
+
+
+class nsPrintJobFactoryGTK
 {
-    fwrite(data, 1, length, (FILE*)closure);
-}
-#endif
+public:
+    /**
+     * Construct a print job object for the given device context spec.
+     * On success, the print job object is owned by the caller and should
+     * be destroyed when no longer needed.
+     *
+     * @param aSpec     An nsIDeviceContextSpecGTK object for the print
+     *                  job in question.
+     * @param aPrintJob If NS_OK is returned, this will be filled in with
+     *                  a pointer to a print job object.
+     * @return NS_OK or a suitable error value.
+     */
+    static nsresult CreatePrintJob(nsDeviceContextSpecGTK *aSpec,
+	    nsIPrintJobGTK* &aPrintJob);
+};
 
-gfxPSSurface::gfxPSSurface(const char *filename, gfxSize aSizeInPoints)
-    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
-{
-    Init(cairo_ps_surface_create(filename, mSize.width, mSize.height));
-}
 
-#ifdef UNTESTED_CODE
-gfxPSSurface::gfxPSSurface(FILE *file, gfxSize aSizeInPoints)
-    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
-{
-    Init(cairo_ps_surface_create_for_stream(write_func, file, mSize.width, mSize.height));
-}
-#endif
-
-gfxPSSurface::~gfxPSSurface()
-{
-    Destroy();
-}
-
-void
-gfxPSSurface::SetDPI(double xDPI, double yDPI)
-{
-    mXDPI = xDPI;
-    mYDPI = yDPI;
-    cairo_surface_set_fallback_resolution(CairoSurface(), xDPI, yDPI);
-}
-
-void
-gfxPSSurface::GetDPI(double *xDPI, double *yDPI)
-{
-    *xDPI = mXDPI;
-    *yDPI = mYDPI;
-}
+#endif /* nsPrintJobFactoryGTK_h__ */

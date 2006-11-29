@@ -111,6 +111,8 @@ CPPSRCS		= \
 		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
+		nsPrintJobFactoryGTK.cpp \
+		nsPrintJobGTK.cpp \
 		$(NULL)
 
 # build our subdirs, too

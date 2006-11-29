@@ -38,10 +38,14 @@
 #ifndef GFX_PSSURFACE_H
 #define GFX_PSSURFACE_H
 
+#include <stdio.h>
 #include "gfxASurface.h"
 
 class THEBES_API gfxPSSurface : public gfxASurface {
 public:
+#ifdef UNTESTED_CODE
+    gfxPSSurface(FILE *file, gfxSize aSizeInPonits); /* does not close the file */
+#endif
     gfxPSSurface(const char *filename, gfxSize aSizeInPonits);
     virtual ~gfxPSSurface();
 

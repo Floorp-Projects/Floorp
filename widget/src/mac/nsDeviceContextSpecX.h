@@ -57,6 +57,11 @@ public:
     NS_DECL_ISUPPORTS
 #ifdef MOZ_CAIRO_GFX
     NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+    NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                             PRUnichar*  aPrintToFileName,
+                             PRInt32     aStartPage, 
+                             PRInt32     aEndPage) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
 #endif
 
     /**

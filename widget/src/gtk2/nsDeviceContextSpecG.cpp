@@ -69,6 +69,8 @@
 #include "nsPaperPS.h"  /* Paper size list */
 #endif /* USE_POSTSCRIPT */
 
+#include "nsPrintJobFactoryGTK.h"
+
 /* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
 #define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
 
@@ -379,11 +381,13 @@ nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
+  mPrintJob = nsnull;
 }
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()\n"));
+  delete mPrintJob;
 }
 
 /* Use both PostScript and Xprint module */
@@ -417,7 +421,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 #include "nsUnitConversion.h"
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
 {
-  const char *path = nsnull;
+  const char *path;
   GetPath(&path);
 
   PRInt32 width, height;
@@ -427,14 +431,15 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   w = width/20;
   h = height/20;
 
-  printf("%s, %d, %d\n", path, width, height);
+  printf("\"%s\", %d, %d\n", path, width, height);
 
+  nsPrintJobFactoryGTK::CreatePrintJob((this), mPrintJob);
 #ifdef USE_PDF
   gfxPDFSurface *surface = new gfxPDFSurface(path, gfxSize(w, h));
 #else
   gfxPSSurface *surface = new gfxPSSurface(path, gfxSize(w, h));
 #endif
-  surface->SetDPI(600, 600);
+//  surface->SetDPI(600, 600);
   
   *aSurface = surface;
   NS_ADDREF(*aSurface);
@@ -710,6 +715,30 @@ nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMetho
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
+{
+  return NS_OK;
+}
+#include <errno.h>
+NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
+{
+  if (mToPrinter) {
+    const char *path;
+    GetPath(&path);
+    FILE *src = fopen(path, "r");
+    FILE *dst;
+    mPrintJob->StartSubmission(&dst);
+    while(!feof(src)) {
+      char data[255] = {0};
+      size_t s = fread(data, 1, sizeof(data), src);
+      fwrite(data, 1, s, dst);
+    }
+    fclose(src);
+    mPrintJob->FinishSubmission();
+  }
   return NS_OK;
 }
 

@@ -58,6 +58,11 @@ public:
 
 #ifdef MOZ_CAIRO_GFX
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+  NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                           PRUnichar*  aPrintToFileName,
+                           PRInt32     aStartPage, 
+                           PRInt32     aEndPage) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
 #else
   // kill these when we move to CAIRO_GFX
   NS_IMETHOD GetType(PRUint16 *aType) { *aType = nsISupportsPrimitive::TYPE_VOID; return NS_OK; }
