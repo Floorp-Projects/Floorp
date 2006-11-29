@@ -7934,7 +7934,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lpthread -lm";
+				OTHER_LDFLAGS = "-lpthread -lm -lcups";
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WRAPPER_EXTENSION = app;
