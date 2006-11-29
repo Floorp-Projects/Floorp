@@ -64,6 +64,7 @@ XPIDLSRCS = \
 
 CPPSRCS = calDateTime.cpp \
 	  calDuration.cpp \
+	  calPeriod.cpp \
 	  calICSService.cpp \
 	  calRecurrenceRule.cpp \
 	  calRecurrenceDate.cpp \
