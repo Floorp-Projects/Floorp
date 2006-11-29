@@ -973,6 +973,15 @@ nsThebesRenderingContext::DrawImage(imgIContainer *aImage,
     pxDr.width = NSToIntRound(FROM_TWIPS(twDestRect.width));
     pxDr.height = NSToIntRound(FROM_TWIPS(twDestRect.height));
 
+    // If we were asked to draw a 0-width or 0-height image,
+    // as either the src or dst, just bail; we can't do anything
+    // useful with this.
+    if (pxSr.width == 0 || pxSr.height == 0 ||
+        pxDr.width == 0 || pxDr.height == 0)
+    {
+        return NS_OK;
+    }
+
     if (pxImgFrameRect.x > 0) {
         pxSr.x -= pxImgFrameRect.x;
 
