@@ -748,10 +748,17 @@ static BOOL gMadePrefManager;
 
       // Build the list of languages the user understands (from System Preferences | International).
       BOOL languagesOkaySoFar = YES;
-      for (unsigned long i = 0; languagesOkaySoFar && i < [languages count]; ++i) {
+      int indexOfGenericEnglish = -1;
+      BOOL englishDialectExists = NO;
+      for (unsigned int i = 0; languagesOkaySoFar && i < [languages count]; ++i) {
         NSString* language = [PreferenceManager convertLocaleToHTTPLanguage:[languages objectAtIndex:i]];
-        if (language)
+        if (language) {
           [acceptableLanguages addObject:language];
+          if ((indexOfGenericEnglish == -1) && !englishDialectExists && [language isEqualToString:@"en"])
+            indexOfGenericEnglish = i;
+          else if (!englishDialectExists && [language hasPrefix:@"en-"])
+            englishDialectExists = YES;
+        }
         else {
           // If we don't understand a language don't set any, rather than risk leaving the user with
           // their n'th choice (which may be one Apple made and they don't actually read)
@@ -760,6 +767,12 @@ static BOOL gMadePrefManager;
           languagesOkaySoFar = NO;
         }
       }
+
+      // Some servers will disregard a generic 'en', causing a fallback to a subsequent
+      // language (see bug 300905). So if the user has only a generic 'en', convert
+      // it to 'en-US', 'en'.
+      if ((indexOfGenericEnglish != -1) && !englishDialectExists)
+        [acceptableLanguages insertObject:@"en-US" atIndex:indexOfGenericEnglish];
 
       // If we understood all the languages in the list set the accept-language header.
       // Note that necko will determine quality factors itself.
