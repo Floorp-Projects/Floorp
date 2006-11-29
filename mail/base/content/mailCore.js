@@ -51,8 +51,12 @@ function CustomizeMailToolbar(id)
     
   var customizePopup = document.getElementById("CustomizeMailToolbar"); 
   customizePopup.setAttribute("disabled", "true");
-   
-  window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
+
+  var wintype = document.documentElement.getAttribute("windowtype");
+  wintype = wintype.replace(/:/g, "");
+
+  window.openDialog("chrome://global/content/customizeToolbar.xul",
+                    "CustomizeToolbar"+wintype,
                     "chrome,all,dependent", document.getElementById(id));
 }
 
