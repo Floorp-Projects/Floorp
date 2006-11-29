@@ -3289,11 +3289,27 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     tileRect.height = y1 - y0;
   }
 
-  // Take the intersection again to paint only the required area
+  // Take the intersection again to paint only the required area.
   nsRect absTileRect = tileRect + aBorderArea.TopLeft();
   nsRect drawRect;
   if (drawRect.IntersectRect(absTileRect, dirtyRect)) {
-    aRenderingContext.DrawTile(image, absTileRect.x, absTileRect.y, &drawRect);
+    // Note that due to the way FindTileStart works we're guaranteed
+    // that drawRect overlaps the top-left-most tile when repeating.
+    NS_ASSERTION(drawRect.x >= absTileRect.x && drawRect.y >= absTileRect.y,
+                 "Bogus intersection");
+    NS_ASSERTION(drawRect.x < absTileRect.x + tileWidth,
+                 "Bogus x coord for draw rect");
+    NS_ASSERTION(drawRect.y < absTileRect.y + tileHeight,
+                 "Bogus y coord for draw rect");
+    // Figure out whether we can get away with not tiling at all.
+    nsRect sourceRect = drawRect - absTileRect.TopLeft();
+    if (sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight) {
+      // The entire drawRect is contained inside a single tile; just
+      // draw the corresponding part of the image once.
+      aRenderingContext.DrawImage(image, sourceRect, drawRect);
+    } else {
+      aRenderingContext.DrawTile(image, absTileRect.x, absTileRect.y, &drawRect);
+    }
   }
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
