@@ -260,8 +260,13 @@ NS_IMETHODIMP
 nsAbDirProperty::ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
+
 NS_IMETHODIMP
 nsAbDirProperty::DeleteDirectory(nsIAbDirectory *dierctory)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP
+nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
@@ -286,12 +291,6 @@ NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri, nsIAbCard
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::AddCard(nsIAbCard *childCard, nsIAbCard **addedCard)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP nsAbDirProperty::ModifyCard(nsIAbCard *aModifiedCard)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::DropCard(nsIAbCard *childCard, PRBool needToCopyCard)

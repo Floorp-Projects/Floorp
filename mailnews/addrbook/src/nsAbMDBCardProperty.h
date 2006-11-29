@@ -53,8 +53,11 @@ public:
 	nsAbMDBCardProperty(void);
 	virtual ~nsAbMDBCardProperty();
 
+	NS_IMETHOD EditCardToDatabase(const char *uri);
   NS_IMETHOD Equals(nsIAbCard *card, PRBool *result);
+
 protected:
+	nsresult GetCardDatabase(const char *uri);
 
 	PRUint32 m_key;
 	PRUint32 m_dbTableID;

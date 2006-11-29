@@ -2349,7 +2349,7 @@ function allowRemoteContentForSender()
   {
     // set the property for remote content
     cardForEmailAddress.allowRemoteContent = true;
-    addrbook.modifyCard(cardForEmailAddress); 
+    cardForEmailAddress.editCardToDatabase(""); 
     allowRemoteContent = true;
   }
   else

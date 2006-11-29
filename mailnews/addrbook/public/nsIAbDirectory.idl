@@ -72,7 +72,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(fe882bec-0fd8-41cf-913b-72db4ca11901)]
+[scriptable, uuid(b81e0275-7b19-46e2-9f4a-086f1fc55080)]
 interface nsIAbDirectory : nsISupports {
 
   // Types of operation
@@ -144,6 +144,9 @@ interface nsIAbDirectory : nsISupports {
   // preferences
   void deleteDirectory(in nsIAbDirectory dierctory);
 
+  // Delete the array of cards
+  void deleteCards(in nsISupportsArray cards);
+
   // Check if directory contains card
   // If the implementation is asynchronous the card
   // may not yet have arrived. If it is in the process
@@ -156,22 +159,13 @@ interface nsIAbDirectory : nsISupports {
   boolean hasDirectory(in nsIAbDirectory dir);
 
   /**
-   * Adds a card to the database. card may be an abstract card.
-   *
-   * @return "Real" card (eg nsIAbMDBCard) that can be used for some
-   *         extra functions.
+   * return value is the card that got added
+   * we need to do this, as the card we pass in might
+   * be an abstract nsIAbCard, and the caller might need
+   * the "real" card (the mdbcard or similar) to get / set 
+   * non-standard card values
    */
   nsIAbCard addCard(in nsIAbCard card);
-
-  /**
-   * Modifies a card in the database to match that supplied.
-   */
-  void modifyCard(in nsIAbCard modifiedCard);
-
-  /**
-   * Deletes the array of cards from the database
-   */
-  void deleteCards(in nsISupportsArray cards);
 
   void dropCard(in nsIAbCard card, in boolean needToCopyCard);
 

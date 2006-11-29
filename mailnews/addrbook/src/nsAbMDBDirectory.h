@@ -97,7 +97,6 @@ public:
   NS_IMETHOD CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating);
   NS_IMETHOD AddMailList(nsIAbDirectory *list);
   NS_IMETHOD AddCard(nsIAbCard *card, nsIAbCard **addedCard);
-  NS_IMETHOD ModifyCard(nsIAbCard *aModifiedCard);
   NS_IMETHOD DropCard(nsIAbCard *card, PRBool needToCopyCard);
   NS_IMETHOD EditMailListToDatabase(const char *uri, nsIAbCard *listCard);
 

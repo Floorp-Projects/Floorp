@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,7 +43,6 @@
 
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
-#include "nsAbOutlookCard.h"
 #include "nsXPIDLString.h"
 #include "nsAbDirectoryQuery.h"
 #include "nsIAbBooleanExpression.h"
@@ -58,8 +57,6 @@
 #include "nsCRT.h"
 #include "prlog.h"
 #include "prthread.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gAbOutlookDirectoryLog
@@ -119,7 +116,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 
     mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery.get(), stub, entry) ;
     if (mAbWinType == nsAbWinType_Unknown) {
-        PRINTF(("Huge problem URI=%s.\n", mURINoQuery))
+        PRINTF(("Huge problem URI=%s.\n", mURINoQuery)) ;
         return NS_ERROR_INVALID_ARG ;
     }
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
@@ -130,11 +127,11 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     mMapiData->Assign(entry) ;
     if (!mapiAddBook->GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
-        PRINTF(("Cannot get type.\n"))
+        PRINTF(("Cannot get type.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     if (!mapiAddBook->GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
-        PRINTF(("Cannot get name.\n"))
+        PRINTF(("Cannot get name.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignLiteral("OP ") ; }
@@ -337,7 +334,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
 
             cardEntry.Assign(entryString) ;
             if (!mapiAddBook->DeleteEntry(*mMapiData, cardEntry)) {
-                PRINTF(("Cannot delete card %s.\n", entryString.get()))
+                PRINTF(("Cannot delete card %s.\n", entryString.get())) ;
             }
             else {
                 nsVoidKey key (NS_STATIC_CAST(void *, element)) ;
@@ -349,7 +346,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
             }
         }
         else {
-            PRINTF(("Card doesn't belong in this directory.\n"))
+            PRINTF(("Card doesn't belong in this directory.\n")) ;
         }
     }
     return NS_OK ;
@@ -376,7 +373,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 
         directoryEntry.Assign(entryString) ;
         if (!mapiAddBook->DeleteEntry(*mMapiData, directoryEntry)) {
-            PRINTF(("Cannot delete directory %s.\n", entryString.get()))
+            PRINTF(("Cannot delete directory %s.\n", entryString.get())) ;
         }
         else {
             m_AddressList->RemoveElement(aDirectory) ;
@@ -385,7 +382,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
         }
     }
     else {
-        PRINTF(("Directory doesn't belong to this folder.\n"))
+        PRINTF(("Directory doesn't belong to this folder.\n")) ;
     }
     return retCode ;
 }
@@ -403,7 +400,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **addedC
     retCode = HasCard(aData, &hasCard) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (hasCard) {
-        PRINTF(("Has card.\n"))
+        PRINTF(("Has card.\n")) ;
         NS_IF_ADDREF(*addedCard = aData);
         return NS_OK ; 
     }
@@ -737,11 +734,11 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
     retCode = expressions->Count(&nbExpressions) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (nbExpressions == 0) { 
-        PRINTF(("Error, no expressions.\n"))
+        PRINTF(("Error, no expressions.\n")) ;
         return NS_OK ;
     }
     if (operationType == nsIAbBooleanOperationTypes::NOT && nbExpressions != 1) {
-        PRINTF(("Error, unary operation NOT with multiple operands.\n"))
+        PRINTF(("Error, unary operation NOT with multiple operands.\n")) ;
         return NS_OK ;
     }
     LPSRestriction restrictionArray = new SRestriction [nbExpressions] ;
@@ -760,7 +757,7 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
                 if (NS_SUCCEEDED(retCode)) {
                     if (!skipItem) { ++ restrictionArray ; ++ realNbExpressions ; }
                 }
-                else { PRINTF(("Cannot build restriction for item %d %08x.\n", i, retCode)) }
+                else { PRINTF(("Cannot build restriction for item %d %08x.\n", i, retCode)) ; }
             }
             else { 
                 nsCOMPtr<nsIAbBooleanExpression> subExpression (do_QueryInterface(element, &retCode)) ;
@@ -773,12 +770,10 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
                         }
                     }
                 }
-                else
-                  PRINTF(("Cannot get interface for item %d %08x.\n", i, retCode));
+                else { PRINTF(("Cannot get interface for item %d %08x.\n", i, retCode)) ; }
             }
         }
-        else
-          PRINTF(("Cannot get item %d %08x.\n", i, retCode));
+        else { PRINTF(("Cannot get item %d %08x.\n", i, retCode)) ; }
     }
     restrictionArray -= realNbExpressions ;
     if (realNbExpressions > 1) {
@@ -792,8 +787,9 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
             aRestriction.res.resAnd.lpRes = restrictionArray ;
             aRestriction.res.resAnd.cRes = realNbExpressions ;
         }
-        else
-          PRINTF(("Unsupported operation %d.\n", operationType));
+        else {
+            PRINTF(("Unsupported operation %d.\n", operationType)) ;
+        }
     }
     else if (realNbExpressions == 1) {
         if (operationType == nsIAbBooleanOperationTypes::NOT) {
@@ -1132,7 +1128,7 @@ nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards,
     retCode = NS_NewISupportsArray(getter_AddRefs(cards)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!mapiAddBook->GetCards(*mMapiData, restriction, cardEntries)) {
-        PRINTF(("Cannot get cards.\n"))
+        PRINTF(("Cannot get cards.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
@@ -1170,7 +1166,7 @@ nsresult nsAbOutlookDirectory::GetChildNodes(nsISupportsArray **aNodes)
     retCode = NS_NewISupportsArray(getter_AddRefs(nodes)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!mapiAddBook->GetNodes(*mMapiData, nodeEntries)) {
-        PRINTF(("Cannot get nodes.\n"))
+        PRINTF(("Cannot get nodes.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
@@ -1221,7 +1217,7 @@ nsresult nsAbOutlookDirectory::CommitAddressList(void)
     PRUint32 i = 0 ;
     
     if (!m_IsMailList) { 
-        PRINTF(("We are not in a mailing list, no commit can be done.\n"))
+        PRINTF(("We are not in a mailing list, no commit can be done.\n")) ;
         return NS_ERROR_UNEXPECTED ;
     }
     retCode = GetChildCards(getter_AddRefs(oldList), nsnull) ;
@@ -1338,138 +1334,10 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     if (!didCopy) {
         retCode = newCard->Copy(aData) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
-        retCode = ModifyCard(newCard) ;
+        retCode = newCard->EditCardToDatabase(mURINoQuery.get()) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
     }
     *aNewCard = newCard ;
     NS_ADDREF(*aNewCard) ;
     return retCode ;
-}
-
-static void UnicodeToWord(const PRUnichar *aUnicode, WORD& aWord)
-{
-    aWord = 0 ;
-    if (aUnicode == nsnull || *aUnicode == 0) { return ; }
-    PRInt32 errorCode = 0 ;
-    nsAutoString unichar (aUnicode) ;
-
-    aWord = NS_STATIC_CAST(WORD, unichar.ToInteger(&errorCode)) ;
-    if (errorCode != 0) {
-        PRINTF(("Error conversion string %S: %08x.\n", unichar.get(), errorCode))
-    }
-}
-
-#define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
-
-NS_IMETHODIMP nsAbOutlookDirectory::ModifyCard(nsIAbCard *aModifiedCard)
-{
-  NS_ENSURE_ARG_POINTER(aModifiedCard);
-
-  nsresult retCode = NS_OK;
-  nsXPIDLString *properties = nsnull;
-  nsAutoString utility;
-  nsAbWinHelperGuard mapiAddBook(mAbWinType);
-
-  if (!mapiAddBook->IsOK())
-    return NS_ERROR_FAILURE;
-
-  // First, all the standard properties in one go
-  properties = new nsXPIDLString[index_LastProp];
-  if (!properties) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aModifiedCard->GetFirstName(getter_Copies(properties[index_FirstName]));
-  aModifiedCard->GetLastName(getter_Copies(properties[index_LastName]));
-  // This triple search for something to put in the name
-  // is because in the case of a mailing list edition in 
-  // Mozilla, the display name will not be provided, and 
-  // MAPI doesn't allow that, so we fall back on an optional
-  // name, and when all fails, on the email address.
-  aModifiedCard->GetDisplayName(getter_Copies(properties[index_DisplayName]));
-  if (*properties[index_DisplayName].get() == 0) {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    PRInt32 format;
-    rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &format);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIAddrBookSession> abSession =
-      do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = abSession->GenerateNameFromCard(aModifiedCard, format, getter_Copies(properties [index_DisplayName]));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    if (*properties[index_DisplayName].get() == 0) {
-      aModifiedCard->GetPrimaryEmail(getter_Copies(properties[index_DisplayName]));
-    }
-  }
-  aModifiedCard->SetDisplayName(properties[index_DisplayName]);
-  aModifiedCard->GetNickName(getter_Copies(properties[index_NickName]));
-  aModifiedCard->GetPrimaryEmail(getter_Copies(properties[index_EmailAddress]));
-  aModifiedCard->GetWorkPhone(getter_Copies(properties[index_WorkPhoneNumber]));
-  aModifiedCard->GetHomePhone(getter_Copies(properties[index_HomePhoneNumber]));
-  aModifiedCard->GetFaxNumber(getter_Copies(properties[index_WorkFaxNumber]));
-  aModifiedCard->GetPagerNumber(getter_Copies(properties[index_PagerNumber]));
-  aModifiedCard->GetCellularNumber(getter_Copies(properties[index_MobileNumber]));
-  aModifiedCard->GetHomeCity(getter_Copies(properties[index_HomeCity]));
-  aModifiedCard->GetHomeState(getter_Copies(properties[index_HomeState]));
-  aModifiedCard->GetHomeZipCode(getter_Copies(properties[index_HomeZip]));
-  aModifiedCard->GetHomeCountry(getter_Copies(properties[index_HomeCountry]));
-  aModifiedCard->GetWorkCity(getter_Copies(properties[index_WorkCity]));
-  aModifiedCard->GetWorkState(getter_Copies(properties[index_WorkState]));
-  aModifiedCard->GetWorkZipCode(getter_Copies(properties[index_WorkZip]));
-  aModifiedCard->GetWorkCountry(getter_Copies(properties[index_WorkCountry]));
-  aModifiedCard->GetJobTitle(getter_Copies(properties[index_JobTitle]));
-  aModifiedCard->GetDepartment(getter_Copies(properties[index_Department]));
-  aModifiedCard->GetCompany(getter_Copies(properties[index_Company]));
-  aModifiedCard->GetWebPage1(getter_Copies(properties[index_WorkWebPage]));
-  aModifiedCard->GetWebPage2(getter_Copies(properties[index_HomeWebPage]));
-  aModifiedCard->GetNotes(getter_Copies(properties[index_Comments]));
-  if (!mapiAddBook->SetPropertiesUString(*mMapiData, OutlookCardMAPIProps, 
-                                         index_LastProp, properties))
-    PRINTF(("Cannot set general properties.\n"))
-
-  delete [] properties;
-  nsXPIDLString unichar;
-  nsXPIDLString unichar2;
-  WORD year = 0;
-  WORD month = 0;
-  WORD day = 0;
-
-  aModifiedCard->GetHomeAddress(getter_Copies(unichar));
-  aModifiedCard->GetHomeAddress2(getter_Copies(unichar2));
-
-  utility.Assign(unichar.get());
-  if (!utility.IsEmpty())
-    utility.AppendWithConversion(CRLF);
-
-  utility.Append(unichar2.get());
-  if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_HOME_ADDRESS_STREET_W, utility.get()))
-    PRINTF(("Cannot set home address.\n"))
-
-  aModifiedCard->GetWorkAddress(getter_Copies(unichar));
-  aModifiedCard->GetWorkAddress2(getter_Copies(unichar2));
-
-  utility.Assign(unichar.get());
-  if (!utility.IsEmpty())
-    utility.AppendWithConversion(CRLF);
-
-  utility.Append(unichar2.get());
-  if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_BUSINESS_ADDRESS_STREET_W, utility.get()))
-        PRINTF(("Cannot set work address.\n"))
-
-  aModifiedCard->GetBirthYear(getter_Copies(unichar));
-  UnicodeToWord(unichar.get(), year);
-  aModifiedCard->GetBirthMonth(getter_Copies(unichar));
-  UnicodeToWord(unichar.get(), month);
-  aModifiedCard->GetBirthDay(getter_Copies(unichar));
-  UnicodeToWord(unichar.get(), day);
-  if (!mapiAddBook->SetPropertyDate(*mMapiData, PR_BIRTHDAY, year, month, day))
-    PRINTF(("Cannot set date.\n"))
-
-  return retCode;
 }
