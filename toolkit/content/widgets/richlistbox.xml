@@ -564,7 +564,13 @@
       <handler event="click">
         <![CDATA[
           var listbox = this.control;
-          if ((event.target == this) && event.ctrlKey && (listbox.selectedItem == this)) {
+          if ((event.target == this) &&
+#ifdef XP_MACOSX
+              event.metaKey &&
+#else
+              event.ctrlKey &&
+#endif
+              (listbox.selectedItem == this)) {
             listbox.clearSelection();
           } else {
             listbox.selectedItem = this;
