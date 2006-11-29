@@ -226,7 +226,7 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
-LIBS	+= -framework QuickTime -framework IOKit
+LIBS	+= -framework QuickTime -framework IOKit -lcups
 ifdef USE_PREBINDING
 BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
 endif
@@ -394,6 +394,6 @@ libs::
 
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-	
+
 install:: $(srcdir)/profile/prefs.js
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
