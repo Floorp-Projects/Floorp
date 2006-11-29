@@ -2049,6 +2049,11 @@ nsMenuPopupFrame::Destroy()
   if (mCloseTimer)
     mCloseTimer->Cancel();
 
+  nsPresContext* rootPresContext = GetPresContext()->RootPresContext();
+  if (rootPresContext->ContainsActivePopup(this)) {
+    rootPresContext->NotifyRemovedActivePopup(this);
+  }
+
   RemoveKeyboardNavigator();
   nsBoxFrame::Destroy();
 }
