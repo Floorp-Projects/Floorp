@@ -37,7 +37,10 @@
 
 #include "calPeriod.h"
 #include "calBaseCID.h"
+
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
 
 NS_IMPL_ISUPPORTS1_CI(calPeriod, calIPeriod)
 
