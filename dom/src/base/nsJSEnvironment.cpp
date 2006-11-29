@@ -776,7 +776,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
                                   getter_Copies(stopButton));
   rv |= bundle->GetStringFromName(NS_LITERAL_STRING("WaitForScriptButton").get(),
                                   getter_Copies(waitButton));
-  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("NeverShowDialogAgain").get(),
+  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("DontAskAgain").get(),
                                   getter_Copies(neverShowDlg));
 
 
