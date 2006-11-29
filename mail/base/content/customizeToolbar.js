@@ -49,6 +49,8 @@ var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
+var gPreviousMode = null;
+var gPreviousIconSize = null;
 
 function onLoad()
 {
@@ -91,6 +93,10 @@ function onCancel()
     toolbar = toolbar.nextSibling;
   }
 
+  // restore the previous mode and iconsize
+  updateIconSize(gPreviousIconSize == "small");
+  updateToolbarMode(gPreviousMode);
+
   repositionDialog();
   gToolboxChanged = true;
 
@@ -107,20 +113,20 @@ function initDialog()
 {
   document.getElementById("main-box").collapsed = false;
   
-  var mode = gToolbox.getAttribute("mode");
-  document.getElementById("modelist").value = mode;
-  var iconSize = gToolbox.getAttribute("iconsize");
+  gPreviousMode = gToolbox.getAttribute("mode");
+  document.getElementById("modelist").value = gPreviousMode;
+  gPreviousIconSize = gToolbox.getAttribute("iconsize");
   var smallIconsCheckbox = document.getElementById("smallicons");
-  if (mode == "text")
+  if (gPreviousMode == "text")
     smallIconsCheckbox.disabled = true;
   else
-    smallIconsCheckbox.checked = iconSize == "small"; 
+    smallIconsCheckbox.checked = gPreviousIconSize == "small";
 
   // Build up the palette of other items.
   buildPalette();
 
   // Wrap all the items on the toolbar in toolbarpaletteitems.
-  wrapToolbarItems();
+  wrapToolbarItems(true);
 }
 
 function repositionDialog()
@@ -212,13 +218,13 @@ function persistCurrentSets()
 /**
  * Wraps all items in all customizable toolbars in a toolbox.
  */
-function wrapToolbarItems()
+function wrapToolbarItems(aStorePreviousSet)
 {
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
-      // save off the current set for each toolbar in case the user hits cancel
-      toolbar.setAttribute('previousset', toolbar.currentSet);
+      if (aStorePreviousSet)
+        toolbar.setAttribute('previousset', toolbar.currentSet);
 
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var item = toolbar.childNodes[k];
@@ -607,8 +613,8 @@ function restoreDefaultSet()
   // Now rebuild the palette.
   buildPalette();
 
-  // Now re-wrap the items on the toolbar.
-  wrapToolbarItems();
+  // Now re-wrap the items on the toolbar, but don't clobber previousset.
+  wrapToolbarItems(false);
 
   repositionDialog();
   gToolboxChanged = true;
