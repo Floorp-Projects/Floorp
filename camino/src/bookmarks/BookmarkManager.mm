@@ -108,6 +108,7 @@ enum {
 
 // Reading bookmark files
 - (BOOL)readBookmarks;
+- (void)showCorruptBookmarksAlert;
 
 // these versions assume that we're reading all the bookmarks from the file (i.e. not an import into a subfolder)
 - (BOOL)readPListBookmarks:(NSString *)pathToFile;    // camino or safari
@@ -1238,10 +1239,20 @@ static BookmarkManager* gBookmarkManager = nil;
   NSFileManager *fM = [NSFileManager defaultManager];
   NSString *bookmarkPath = [profileDir stringByAppendingPathComponent:@"bookmarks.plist"];
   [self setPathToBookmarkFile:bookmarkPath];
+  BOOL bookmarksAreCorrupt = NO;
   if ([fM isReadableFileAtPath:bookmarkPath]) {
-    if ([self readPListBookmarks:bookmarkPath])
+    NSString *backupPath = [bookmarkPath stringByAppendingString:@".bak"];
+    if ([self readPListBookmarks:bookmarkPath]) {
+      // since the bookmarks look good, save them aside as a backup in case something goes
+      // wrong later (e.g., bug 337750) since users really don't like losing their bookmarks.
+      if ([fM fileExistsAtPath:backupPath])
+        [fM removeFileAtPath:backupPath handler:self];
+      [fM copyPath:bookmarkPath toPath:backupPath handler:self];
+
       return YES;
+    }
     else {
+      bookmarksAreCorrupt = YES;
       // save the corrupted bookmarks to a backup file
       long long bmFileSize = [fM sizeOfFileAtPath:bookmarkPath traverseLink:YES];
       NSLog(@"Corrupted bookmarks file '%@' is %qi bytes", bookmarkPath, bmFileSize);
@@ -1250,32 +1261,48 @@ static BookmarkManager* gBookmarkManager = nil;
       NSLog(@"Corrupted bookmarks.plist was last modified %@", modificationDate);
 
       NSString* uniqueName = [fM backupFileNameFromPath:bookmarkPath withSuffix:@"-corrupted"];
-      BOOL withSuccess = [fM copyPath:bookmarkPath toPath:uniqueName handler:nil];
+      if ([fM movePath:bookmarkPath toPath:uniqueName handler:nil])
+        NSLog(@"Moved corrupted bookmarks file to '%@'", uniqueName);
+      else
+        NSLog(@"Failed to move corrupted bookmarks file to '%@'", uniqueName);
 
-      NSLog(@"Copied corrupted bookmarks file to %@ (OK? %d)", uniqueName, withSuccess);
+      // Try to recover from the backup, if there is one
+      if ([fM fileExistsAtPath:backupPath]) {
+        NSLog(@"Recovering from backup bookmarks file '%@'", backupPath);
+        if ([self readPListBookmarks:backupPath]) {
+          [fM copyPath:backupPath toPath:bookmarkPath handler:self];
+          return YES;
+        }
+      }
     }
   }
   else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]]) {
     if ([self readCaminoXMLBookmarks:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
       return YES;
   }
-  else {
-    NSString *defaultBookmarks = [[NSBundle mainBundle] pathForResource:@"bookmarks" ofType:@"plist"];
-    if ([fM copyPath:defaultBookmarks toPath:bookmarkPath handler:nil]) {
-        if ([self readPListBookmarks:bookmarkPath])
-          return YES;
-    }
+
+  // if we're here, we have either no bookmarks or corrupted bookmarks with no backup; either way,
+  // install the default plist so the bookmarks aren't totally empty.
+  NSString *defaultBookmarks = [[NSBundle mainBundle] pathForResource:@"bookmarks" ofType:@"plist"];
+  if ([fM copyPath:defaultBookmarks toPath:bookmarkPath handler:nil]) {
+    if ([self readPListBookmarks:bookmarkPath] && !bookmarksAreCorrupt)
+      return YES;
   }
 
-  // maybe just look for safari bookmarks here??
+  // if we're here, we've had a problem.
+  // This is a background thread, so we can't put up an alert directly.
+  [self performSelectorOnMainThread:@selector(showCorruptBookmarksAlert) withObject:nil waitUntilDone:NO];
 
-  // if we're here, we've had a problem
+  return NO;
+}
+
+- (void)showCorruptBookmarksAlert
+{
   NSRunAlertPanel(NSLocalizedString(@"CorruptedBookmarksAlert", nil),
                   NSLocalizedString(@"CorruptedBookmarksMsg", nil),
                   NSLocalizedString(@"OKButtonText", nil),
                   nil,
                   nil);
-  return NO;
 }
 
 - (BOOL)readPListBookmarks:(NSString *)pathToFile
