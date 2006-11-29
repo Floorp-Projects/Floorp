@@ -510,7 +510,7 @@ nsDogbertProfileMigrator::CopyCookies(PRBool aReplace)
   nsresult rv;
   if (aReplace) {
 #ifdef NEED_TO_FIX_4X_COOKIES
-    nsresult rv = CopyFile(COOKIES_FILE_NAME_IN_4x, COOKIES_FILE_NAME_IN_5x);
+    rv = CopyFile(COOKIES_FILE_NAME_IN_4x, COOKIES_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
 
     rv = FixDogbertCookies();
