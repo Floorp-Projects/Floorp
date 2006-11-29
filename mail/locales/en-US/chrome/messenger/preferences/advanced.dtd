@@ -24,6 +24,8 @@
 <!ENTITY reuseExpRadio0.accesskey      "i">
 <!ENTITY reuseExpRadio1.label          "An existing message window">
 <!ENTITY reuseExpRadio1.accesskey      "x">
+<!ENTITY reuseExpRadio2.label          "A new message tab">
+<!ENTITY reuseExpRadio2.accesskey      "Z">
 <!ENTITY connectionTimeout.label       "Connection timeout: ">
 <!ENTITY connectionTimeout.accesskey   "C">
 <!ENTITY connectionSeconds.label       "seconds">

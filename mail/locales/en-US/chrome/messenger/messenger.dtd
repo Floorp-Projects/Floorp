@@ -5,6 +5,10 @@
 <!-- File Menu -->
 <!ENTITY newFolderCmd.label "Folder...">
 <!ENTITY newFolderCmd.accesskey "F">
+<!ENTITY newTabCmd.label "New Tab">
+<!ENTITY newTabCmd.accesskey "T">
+<!ENTITY newTabCmd.label "Close Tab">
+<!ENTITY newTabCmd.accesskey "e">
 <!ENTITY newVirtualFolderCmd.label "Saved Search...">
 <!ENTITY newVirtualFolderCmd.accesskey "S">
 <!ENTITY newAccountCmd.label "Account...">
@@ -491,6 +495,8 @@
 <!-- Folder Pane Context Menu -->
 <!ENTITY folderContextOpenNewWindow.label "Open">
 <!ENTITY folderContextOpenNewWindow.accesskey "O">
+<!ENTITY folderContextOpenNewTab.label "Open in New Tab">
+<!ENTITY folderContextOpenNewTab.accesskey "T">
 <!ENTITY folderContextNew.label "New Subfolder...">
 <!ENTITY folderContextNew.accesskey "N">
 <!ENTITY folderContextRename.label "Rename">
@@ -579,6 +585,8 @@
 <!-- Thread Pane Context Menu -->
 <!ENTITY contextOpenNewWindow.label "Open Message in New Window">
 <!ENTITY contextOpenNewWindow.accesskey "W">
+<!ENTITY contextOpenNewTab.label "Open Message in New Tab">
+<!ENTITY contextOpenNewTab.accesskey "T">
 <!ENTITY contextEditAsNew.label "Edit As New...">
 <!ENTITY contextEditAsNew.accesskey "E">
 <!ENTITY contextReplySender.label "Reply to Sender Only">
