@@ -43,6 +43,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleTreeWalker.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSEditableElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -797,23 +798,18 @@ void nsXULTextFieldAccessible::CheckForEditor()
 
   nsCOMPtr<nsIDOMNode> inputField;
   textBox->GetInputField(getter_AddRefs(inputField));
-  nsCOMPtr<nsIContent> inputContent = do_QueryInterface(inputField);
-  if (!inputContent) {
+  if (!inputField) {
     return;
   }
-  
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  nsIFrame *inputFrame = presShell->GetPrimaryFrameFor(inputContent);
-  if (!inputFrame) {
+
+  nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(inputField));
+  if (!editableElt) {
     return;
   }
-  
-  nsITextControlFrame *textFrame;
-  inputFrame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
-  if (textFrame) {
-    nsCOMPtr<nsIEditor> editor;
-    textFrame->GetEditor(getter_AddRefs(editor));
+
+  nsCOMPtr<nsIEditor> editor;
+  nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
+  if (NS_SUCCEEDED(rv)) {
     SetEditor(editor);
   }
 }
-

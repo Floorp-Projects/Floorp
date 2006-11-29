@@ -41,6 +41,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -417,15 +418,15 @@ void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 
 void nsHTMLTextFieldAccessible::CheckForEditor()
 {
-  nsIFrame *frame = GetFrame();
-  if (frame) {
-    nsITextControlFrame *textFrame;
-    frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
-    if (textFrame) {
-      nsCOMPtr<nsIEditor> editor;
-      textFrame->GetEditor(getter_AddRefs(editor));
-      SetEditor(editor);
-    }
+  nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mDOMNode));
+  if (!editableElt) {
+    return;
+  }
+
+  nsCOMPtr<nsIEditor> editor;
+  nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
+  if (NS_SUCCEEDED(rv)) {
+    SetEditor(editor);
   }
 }
 
