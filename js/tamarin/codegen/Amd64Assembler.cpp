@@ -92,7 +92,7 @@ namespace avmplus
 
 #endif // AVMPLUS_VERBOSE
 
-	void CodegenMIR::REX(Register a, Register b)
+	void CodegenMIR::REX(Register a, Register b, bool set64bit)
 	{
 		// Needs REX prefix byte since we are working with a 64-bit register
 		// bits 7:4 - 0100 - 0x40
@@ -110,7 +110,9 @@ namespace avmplus
 				
 		if ((a >= 8) || (b >= 8))
 		{
-			int val = 0x48;
+			int val = 0x40;
+			if (set64bit)
+				val	|= 0x08;
 			if (a >= 16)
 				val |= 0x04;
 			if (b >= 16) 
@@ -445,16 +447,18 @@ namespace avmplus
 		}
 		#endif /* AVMPLUS_VERBOSE */
 		
-		if ((r >= 8) || (base >= 8))
-			AvmAssertMsg (0, "need support for REX byte?");
 			
 		if (!is32bit(disp))
 			AvmAssertMsg (0, "need support for 64-bit displacement?");
 
- 		mip[0] = op>>16;
-		mip[1] = op>>8;
-		mip[2] = op;
-		mip += 3;
+ 		*mip++ = op>>16;
+
+		if ((r >= 8) || (base >= 16))
+			REX(r, base, false);
+		
+		mip[0] = op>>8;
+		mip[1] = op;
+		mip += 2;
  		MODRM(r, disp, base);
 	}
 	
@@ -863,6 +867,8 @@ namespace avmplus
 	*/
 	void CodegenMIR::emitNativeThunk(NativeMethod *info)
 	{		
+		//pool->verbose = true;
+	
 		code = mip = mipStart = getMDBuffer(pool);
 		if (!code)
 		{
@@ -875,11 +881,14 @@ namespace avmplus
 #if	0
 		asm
 		(
+			// NOT VALID "mov $0xabcd12345678, 8(%rsp)\n"
+		
+			"movsd 8(%r10), %xmm0\n"
 			//"push %eax\n"
-			"push %rdi\n"
-			"push %r10\n"
-			"pop %rax\n" 
-			"pop %r11\n"
+			//"push %rdi\n"
+			//"push %r10\n"
+			//"pop %rax\n" 
+			//"pop %r11\n"
 			
 			// not valid - 8 byte push "push $0x1212345678"
 //			"mov $0xab12345678, %r10\n"  // 49 bA bytes of immediate data			
@@ -1069,12 +1078,14 @@ namespace avmplus
 					if (floatParameterCount < FLOATREGCOUNT)
 					{
 						// !!@ better way to do this?
-						MOV (-8, RSP, dp);
+						MOV (R11, dp);
+						MOV (-8, RSP, R11);
 						MOVSD (floatRegUsage[floatParameterCount], -8, RSP);
 					}
 					else
 					{
-						MOV (push_count, RSP, dp);
+						MOV (R11, dp);
+						MOV (push_count, RSP, R11);
 					}
 				}
 				else
@@ -1271,6 +1282,8 @@ namespace avmplus
 		RET  ();
 
 		bindMethod(info);
+		
+		//pool->verbose = false;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	

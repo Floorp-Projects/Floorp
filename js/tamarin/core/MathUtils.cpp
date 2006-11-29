@@ -207,9 +207,9 @@ namespace avmplus
 		return NAN;
 #else
 #ifdef AVM10_BIG_ENDIAN
-		unsigned long nan[2]={0x7fffffff, 0xffffffff};
+		uint32 nan[2]={0x7fffffff, 0xffffffff};
 #else
-		unsigned long nan[2]= {0xffffffff, 0x7fffffff}; 
+		uint32 nan[2]= {0xffffffff, 0x7fffffff}; 
 #endif
 		double g = *(double*)nan;
 		return g;

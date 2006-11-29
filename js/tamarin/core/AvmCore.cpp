@@ -1604,7 +1604,7 @@ return the result of the comparison ToPrimitive(x) == y.
 
 		int exception_count = info->exceptions->exception_count;
 		ExceptionHandler* handler = info->exceptions->exceptions;
-		int atom = exception->atom;
+		Atom atom = exception->atom;
 		
 		while (--exception_count >= 0) 
 		{

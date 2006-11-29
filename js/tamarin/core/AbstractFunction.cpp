@@ -206,18 +206,18 @@ namespace avmplus
 				}
 				else if (t == INT_TYPE)
 				{
-					out[i] = core->intToAtom(*(int*) ap);
-					ap++;
+					out[i] = core->intToAtom((int32)*(Atom*) ap);
+					ap += sizeof(Atom) / sizeof(uint32);
 				}
 				else if (t == UINT_TYPE)
 				{
-					out[i] = core->uintToAtom(*(uint32*) ap);
-					ap++;
+					out[i] = core->uintToAtom((uint32)*(Atom*) ap);
+					ap += sizeof(Atom) / sizeof(uint32);
 				}
 				else if (t == BOOLEAN_TYPE)
 				{
-					out[i] = (*(int*) ap) ? trueAtom : falseAtom;
-					ap++;
+					out[i] = (*(Atom*) ap) ? trueAtom : falseAtom;
+					ap += sizeof(Atom) / sizeof(uint32);
 				}
 				else if (!t || t == OBJECT_TYPE)
 				{

@@ -52,14 +52,6 @@ jmp_buf buf;
 #endif // AVMPLUS_ARM
 #endif // _MSC_VER
 
-#ifdef AVMPLUS_NOVIRTUAL
-// Hack for Mac/Unix/Arm; can't take addr of a virtual function
-#define getUintProperty _getUintProperty
-#define getIntProperty  _getIntProperty
-#define setUintProperty _setUintProperty
-#define setIntProperty  _setIntProperty
-#endif
-
 #ifdef AVMPLUS_ARM
 #ifdef _MSC_VER
 #define RETURN_METHOD_PTR(_class, _method) \
@@ -1620,10 +1612,10 @@ namespace avmplus
 		names->add(ENVADDR(MethodEnv::astype), "MethodEnv::astype");
 		names->add(TOPLEVELADDR(Toplevel::instanceof), "Toplevel::instanceof");
 		names->add(TOPLEVELADDR(Toplevel::getproperty), "Toplevel::getproperty");
-		names->add(ARRAYADDR(ArrayObject::getUintProperty), "ArrayObject::getUintProperty");
-		names->add(ARRAYADDR(ArrayObject::getIntProperty), "ArrayObject::getIntProperty");
-		names->add(ARRAYADDR(ArrayObject::setUintProperty), "ArrayObject::setUintProperty");
-		names->add(ARRAYADDR(ArrayObject::setIntProperty), "ArrayObject::setIntProperty");
+		names->add(ARRAYADDR(ArrayObject::_getUintProperty), "ArrayObject::_getUintProperty");
+		names->add(ARRAYADDR(ArrayObject::_getIntProperty), "ArrayObject::_getIntProperty");
+		names->add(ARRAYADDR(ArrayObject::_setUintProperty), "ArrayObject::_setUintProperty");
+		names->add(ARRAYADDR(ArrayObject::_setIntProperty), "ArrayObject::_setIntProperty");
 		names->add(ENVADDR(MethodEnv::getpropertylate_i), "MethodEnv::getpropertylate_i");
 		names->add(ENVADDR(MethodEnv::getpropertylate_u), "MethodEnv::getpropertylate_u");
 		names->add(ENVADDR(MethodEnv::npe), "MethodEnv::npe");
@@ -1880,6 +1872,17 @@ namespace avmplus
 					 defineArgInsPos(12);
         #endif /* AVMPLUS_IA32 */
 
+		#ifdef AVMPLUS_AMD64
+		// 64bit - completely wrong
+		// callee saved args
+		calleeVars = defineArgInsReg(EBX);
+		            defineArgInsReg(ESI);
+		            defineArgInsReg(EDI);
+		// incoming args either in a register or stack position relative to stack on entry
+		methodArgs = defineArgInsPos(4);
+					 defineArgInsPos(8);
+					 defineArgInsPos(12);
+        #endif /* AVMPLUS_IA32 */
         #ifdef AVMPLUS_PPC
 		calleeVars = NULL;
 		methodArgs = defineArgInsReg(R3);
@@ -3654,7 +3657,7 @@ namespace avmplus
 					OP *value;
 					if (objType == ARRAY_TYPE)
 					{
-						value = callIns(MIR_cm, ARRAYADDR(ArrayObject::getIntProperty), 2,
+						value = callIns(MIR_cm, ARRAYADDR(ArrayObject::_getIntProperty), 2,
 							localGet(sp-1), index);
 					}
 					else
@@ -3680,7 +3683,7 @@ namespace avmplus
 					OP *value;
 					if (objType == ARRAY_TYPE)
 					{
-						value = callIns(MIR_cm, ARRAYADDR(ArrayObject::getUintProperty), 2,
+						value = callIns(MIR_cm, ARRAYADDR(ArrayObject::_getUintProperty), 2,
 							localGet(sp-1), index);
 					}
 					else
@@ -3767,7 +3770,7 @@ namespace avmplus
 
 					if (objType == ARRAY_TYPE)
 					{
-						callIns(MIR_cm, ARRAYADDR(ArrayObject::setIntProperty), 3,
+						callIns(MIR_cm, ARRAYADDR(ArrayObject::_setIntProperty), 3,
 							localGet(objDisp), index, value);
 					}
 					else
@@ -3790,7 +3793,7 @@ namespace avmplus
 
 					if (objType == ARRAY_TYPE)
 					{
-						callIns(MIR_cm, ARRAYADDR(ArrayObject::setUintProperty), 3,
+						callIns(MIR_cm, ARRAYADDR(ArrayObject::_setUintProperty), 3,
 							localGet(objDisp), index, value);
 					}
 					else

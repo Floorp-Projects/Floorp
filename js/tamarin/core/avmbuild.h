@@ -99,15 +99,6 @@
   #endif
 #endif
 
-// Some platforms need special treatment of virtual funcs
-#ifdef AVMPLUS_MAC
-  #define AVMPLUS_NOVIRTUAL
-#endif
-
-#ifdef AVMPLUS_ARM
-  #define AVMPLUS_NOVIRTUAL
-#endif
-
 #define AVMPLUS_MIR
 #define AVMPLUS_INTERP
 

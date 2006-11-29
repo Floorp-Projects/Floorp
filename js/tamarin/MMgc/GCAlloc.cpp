@@ -250,7 +250,7 @@ start:
 			item = b->firstFree;
 			b->firstFree = *((void**)item);
 			// clear free list pointer, the rest was zero'd in free
-			*(int*) item = 0;
+			*(sintptr*) item = 0;
 #ifdef MEMORY_INFO
 			// ensure previously used item wasn't written to
 			// -1 because write back pointer space isn't poisoned.

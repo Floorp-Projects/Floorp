@@ -134,7 +134,7 @@ namespace avmplus
 			uint32 index;
 			if (core->getIndexFromAtom (name, &index))
 			{
-				return setUintProperty (index, value);
+				return _setUintProperty (index, value);
 			}
 			
 			if (name == core->klength->atom())
@@ -144,7 +144,7 @@ namespace avmplus
 		ScriptObject::setAtomProperty(name, value);
 	}
 	
-	void ArrayObject::setUintProperty(uint32 index, Atom value)
+	void ArrayObject::_setUintProperty(uint32 index, Atom value)
 	{
 		if (traits()->needsHashtable)
 		{
@@ -222,7 +222,7 @@ namespace avmplus
 		return ScriptObject::getAtomProperty(name);
 	}
 
-	Atom ArrayObject::getUintProperty(uint32 index) const
+	Atom ArrayObject::_getUintProperty(uint32 index) const
 	{
 		if (traits()->needsHashtable)
 		{
@@ -236,18 +236,18 @@ namespace avmplus
 		return ScriptObject::getUintProperty (index);
 	}
 
-	Atom ArrayObject::getIntProperty(int index) const
+	Atom ArrayObject::_getIntProperty(int index) const
 	{
 		if (index >= 0) 
-			return getUintProperty(index);
+			return _getUintProperty(index);
 		else // integer is negative - we must intern it
 			return getStringProperty(core()->internInt(index));
 	}
 
-	void ArrayObject::setIntProperty(int index, Atom value)
+	void ArrayObject::_setIntProperty(int index, Atom value)
 	{
 		if (index >= 0) 
-			setUintProperty(index, value);
+			_setUintProperty(index, value);
 		else // integer is negative - we must intern it
 			setStringProperty(core()->internInt(index), value);
 	}
@@ -446,7 +446,7 @@ namespace avmplus
 
 		if (getLength() != 0)
 		{
-			Atom outAtom = getUintProperty(getLength()-1);
+			Atom outAtom = _getUintProperty(getLength()-1);
 			setLength(getLength()-1);
 			return outAtom;
 		} 
@@ -466,7 +466,7 @@ namespace avmplus
 		else
 		{
 			for (int i=0; i < argc; i++) {
-				setUintProperty(getLength(), argv[i]);
+				_setUintProperty(getLength(), argv[i]);
 			}
 		}
 		return m_length;
@@ -488,11 +488,11 @@ namespace avmplus
 				uint32 len = getLength();
 				for (i=len; i > 0; ) {  // note: i is unsigned, can't check if --i >=0.
 					i--;
-					setUintProperty(i+argc, getUintProperty(i));
+					_setUintProperty(i+argc, _getUintProperty(i));
 				}
 				
 				for (i=0; i < ((uint32)argc); i++) {
-					setUintProperty(i, argv[i]);
+					_setUintProperty(i, argv[i]);
 				}
 
 				setLength(len+argc);

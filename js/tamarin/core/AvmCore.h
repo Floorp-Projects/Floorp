@@ -1017,6 +1017,8 @@ const int kBufferPadding = 16;
 
 		/** env of the highest catch handler on the call stack, or NULL */
 		ExceptionFrame *exceptionFrame;
+		
+		Exception *exceptionAddr;
 
 		/**
 		 * Searches the exception handler table of info for

@@ -1537,7 +1537,7 @@ namespace avmplus
 			*(int64*)mip = imm64;
 			mip += 8;
 		}
-		void REX(Register a,  Register b=EAX);
+		void REX(Register a,  Register b=EAX, bool set64bit=true);
 		
 		bool is32bit(sintptr i)
 		{

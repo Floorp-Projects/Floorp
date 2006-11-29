@@ -74,35 +74,32 @@ namespace avmplus
 		bool hasAtomProperty(Atom name) const;
 
 		// Faster versions that takes direct indices
-		Atom getUintProperty(uint32 index) const;
-		void setUintProperty(uint32 index, Atom value);
+		Atom getUintProperty(uint32 index) const
+		{
+			 return _getUintProperty(index);
+		}
+		void setUintProperty(uint32 index, Atom value)
+		{
+			_setUintProperty(index, value);
+		}
 		bool delUintProperty(uint32 index);
 		bool hasUintProperty(uint32 i) const;
 
-		Atom getIntProperty(int index) const;
-		void setIntProperty(int index, Atom value);
+		Atom getIntProperty(int index) const
+		{
+			return _getIntProperty(index);
+		}
+		void setIntProperty(int index, Atom value)
+		{
+			_setIntProperty(index, value);
+		}
 
 		bool getAtomPropertyIsEnumerable(Atom name) const;
 		
-		#ifdef AVMPLUS_NOVIRTUAL
-		// Hack for Mac; can't take addr of virtual function
-		Atom _getUintProperty(uint32 index) const 
-		{
-			 return getUintProperty(index);
-		}
-		void _setUintProperty(uint32 index, Atom value)
-		{
-			setUintProperty(index, value);
-		}
-		Atom _getIntProperty(int index) const
-		{
-			return getIntProperty(index);
-		}
-		void _setIntProperty(int index, Atom value)
-		{
-			setIntProperty(index, value);
-		}
-		#endif
+		Atom _getUintProperty(uint32 index) const;
+		void _setUintProperty(uint32 index, Atom value);
+		Atom _getIntProperty(int index) const;
+		void _setIntProperty(int index, Atom value);
 
 		// Iterator support - for in, for each
 		Atom nextName(int index);

@@ -120,7 +120,8 @@ namespace avmplus
 	
 	void ExceptionFrame::throwException(Exception *exception)
 	{
-		longjmp(jmpbuf, (uintptr)exception);
+		core->exceptionAddr = exception;
+		longjmp(jmpbuf, (int)(uintptr)exception); // returning exception ptr still important for MIR 32-bit
 	}
 
 	void ExceptionFrame::beginCatch()

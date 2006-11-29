@@ -210,26 +210,30 @@ namespace avmplus
 		ExceptionFrame _ef; \
 		_ef.beginTry(core); \
 		_ef.catchAction = (CATCH_ACTION); \
-		Exception* _ee; \
-		if ((_ee=(Exception*)::setjmp(_ef.jmpbuf)) == NULL)
+		int _setjmpVal = ::setjmp(_ef.jmpbuf); \
+		Exception* _ee = core->exceptionAddr; \
+		if (!_setjmpVal)
 #else
 	#define TRY(core, CATCH_ACTION) { \
 		ExceptionFrame _ef; \
 		_ef.beginTry(core); \
-		Exception* _ee; \
-		if ((_ee=(Exception*)::setjmp(_ef.jmpbuf)) == NULL)
+		int _setjmpVal = ::setjmp(_ef.jmpbuf); \
+		Exception* _ee = core->exceptionAddr; \
+		if (!_setjmpVal)
 #endif
 
 #ifdef DEBUGGER
 	#define TRY_UNLESS(core,expr,CATCH_ACTION) { \
 		ExceptionFrame _ef; \
 		Exception* _ee; \
-		if ((expr) || (_ef.beginTry(core), _ef.catchAction=(CATCH_ACTION), (_ee=(Exception*)::setjmp(_ef.jmpbuf)) == NULL))
+		int _setjmpVal = 0; \
+		if ((expr) || (_ef.beginTry(core), _ef.catchAction=(CATCH_ACTION), _setjmpVal = ::setjmp(_ef.jmpbuf), _ee=core->exceptionAddr, (_setjmpVal == 0)))
 #else
 	#define TRY_UNLESS(core,expr,CATCH_ACTION) { \
 		ExceptionFrame _ef; \
 		Exception* _ee; \
-		if ((expr) || (_ef.beginTry(core), (_ee=(Exception*)::setjmp(_ef.jmpbuf)) == NULL))
+		int _setjmpVal = 0; \
+		if ((expr) || (_ef.beginTry(core), _setjmpVal = ::setjmp(_ef.jmpbuf), _ee=core->exceptionAddr, (_setjmpVal == 0)))
 #endif
     #define CATCH(x) else { _ef.beginCatch(); x = _ee;
     #define END_CATCH }
