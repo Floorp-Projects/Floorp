@@ -721,7 +721,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 
       viewManager->UpdateView(view, rect, NS_VMREFRESH_IMMEDIATE);
       viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
-
+      GetPresContext()->RootPresContext()->NotifyAddedActivePopupToTop(menuPopup);
   } else {
     if (mMenuOpen) {
       nsWeakFrame weakFrame(this);
@@ -740,6 +740,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
     }
     // set here so hide chain can close the menu as well.
     mMenuOpen = PR_FALSE;
+    GetPresContext()->RootPresContext()->NotifyRemovedActivePopup(menuPopup);
   }
   
   return NS_OK;

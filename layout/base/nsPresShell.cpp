@@ -5864,7 +5864,30 @@ PresShell::HandleEvent(nsIView         *aView,
     NS_ASSERTION(frame, "Nothing to handle this event!");
     if (!frame)
       return NS_OK;
-      
+
+    nsPresContext* framePresContext = frame->GetPresContext();
+    nsPresContext* rootPresContext = framePresContext->RootPresContext();
+    NS_ASSERTION(rootPresContext = mPresContext->RootPresContext(),
+                 "How did we end up outside the connected prescontext/viewmanager hierarchy?"); 
+    // If we aren't starting our event dispatch from the root frame of the root prescontext,
+    // then someone must be capturing the mouse. In that case we don't want to search the popup
+    // list.
+    if (framePresContext == rootPresContext &&
+        frame == FrameManager()->GetRootFrame()) {
+      const nsTArray<nsIFrame*>& popups = rootPresContext->GetActivePopups();
+      PRInt32 i;
+      // Search from top to bottom
+      for (i = popups.Length() - 1; i >= 0; i--) {
+        nsIFrame* popup = popups[i];
+        if (popup->GetOverflowRect().Contains(
+                nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup))) {
+          // The event should target the popup
+          frame = popup;
+          break;
+        }
+      }
+    }
+
     nsPoint eventPoint
         = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
     nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);

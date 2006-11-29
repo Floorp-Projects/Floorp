@@ -74,6 +74,8 @@
 #include "nsAutoPtr.h"
 #include "nsEventStateManager.h"
 #include "nsThreadUtils.h"
+#include "nsFrameManager.h"
+#include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -866,6 +868,26 @@ nsPresContext::Observe(nsISupports* aSubject,
 
   NS_WARNING("unrecognized topic in nsPresContext::Observe");
   return NS_ERROR_FAILURE;
+}
+
+// We may want to replace this with something faster, maybe caching the root prescontext
+nsPresContext*
+nsPresContext::RootPresContext()
+{
+  nsPresContext* pc = this;
+  for (;;) {
+    if (pc->mShell) {
+      nsIFrame* rootFrame = pc->mShell->FrameManager()->GetRootFrame();
+      if (rootFrame) {
+        nsIFrame* f = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+        if (f) {
+          pc = f->GetPresContext();
+          continue;
+        }
+      }
+    }
+    return pc;
+  }
 }
 
 void
