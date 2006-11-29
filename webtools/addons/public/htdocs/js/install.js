@@ -30,7 +30,7 @@ function getPlatformName()
   return "Unknown";
 }
 
-function getInstallURL(eEvent) {
+function getInstallURL(aEvent) {
  
     // The event target might be the link itself or one of its children
     var target = aEvent.target;
