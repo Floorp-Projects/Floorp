@@ -12,11 +12,6 @@ menuitem.spell-suggestion {
   font-weight:bold;
 }
 
-#noPreviewAvailable {
-  background-color: white !important;
-  font-size: 12px !important;
-}
-
 #sidebar-box toolbarbutton.tabs-closebutton {
   -moz-user-focus: normal;
 }

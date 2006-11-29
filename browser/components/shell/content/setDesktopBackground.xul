@@ -39,7 +39,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/setDesktopBackground.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/setDesktopBackground.dtd">
 
@@ -96,10 +96,8 @@
         <vbox id="monitor" align="center" pack="center"
               style="width: 153px !important; height: 114px !important; overflow: hidden;"
               left="13" top="18"/>
-        
-        <!-- XXXben - this needs to be skinable - on MacOSX we want to draw a
-             bucket, not a monitor -->
-        <image src="chrome://browser/content/monitor.png"/>
+
+        <image id="monitorImage"/>
       </stack>
     </groupbox>
     
