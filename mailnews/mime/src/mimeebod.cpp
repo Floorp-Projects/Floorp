@@ -340,6 +340,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 							(site ? strlen(site) : 0) +
 							(svr ? strlen(svr) : 0) +
 							(subj ? strlen(subj) : 0) +
+                                                        (ct ? strlen(ct) : 0) +
 							(url ? strlen(url) : 0) + 100);
 	  if (!h)
 		{
