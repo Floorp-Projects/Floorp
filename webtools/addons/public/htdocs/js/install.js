@@ -45,7 +45,7 @@ function install( aEvent, extName, iconURL, extHash)  {
     if (aEvent.altKey || !window.InstallTrigger)
         return true;
 
-    var url = getInstallURL();
+    var url = getInstallURL(aEvent);
 
     if (url && url.match(/^.+\.xpi$/)) {
 
