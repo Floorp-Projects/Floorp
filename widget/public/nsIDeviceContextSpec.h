@@ -55,6 +55,13 @@ public:
 
 #ifdef MOZ_CAIRO_GFX
    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
+
+   NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                            PRUnichar*  aPrintToFileName,
+                            PRInt32     aStartPage, 
+                            PRInt32     aEndPage) = 0;
+
+   NS_IMETHOD EndDocument() = 0;
 #endif
 };
 

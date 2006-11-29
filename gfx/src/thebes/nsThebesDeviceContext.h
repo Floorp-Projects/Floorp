@@ -146,6 +146,7 @@ private:
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 
     nsRefPtr<gfxASurface> mPrintingSurface;
+    nsIDeviceContextSpec * mDeviceContextSpec;
 };
 
 #endif /* _NS_CAIRODEVICECONTEXT_H_ */

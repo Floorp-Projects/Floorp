@@ -557,6 +557,10 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     
     NS_ADDREF(aDevice);
 
+#ifdef MOZ_ENABLE_GTK2
+    newDevCon->mDeviceContextSpec = aDevice;
+#endif
+
     newDevCon->mPrinter = PR_TRUE;
 
     aDevice->GetSurfaceForPrinter(getter_AddRefs(newDevCon->mPrintingSurface));
@@ -605,6 +609,11 @@ nsThebesDeviceContext::EndDocument(void)
 {
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
     thebes->EndPrinting();
+
+    cairo_surface_finish(mPrintingSurface->CairoSurface());
+
+    if (mDeviceContextSpec)
+        mDeviceContextSpec->EndDocument();
     return NS_OK;
 }
 
