@@ -3378,7 +3378,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
          * Note: we have to make sure that we root obj around the call to
          * JS_Enumerate to protect against multiple allocations under it.
          */
-        JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
+        JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(iterobj), &tvr);
         ida = JS_Enumerate(cx, obj);
         JS_POP_TEMP_ROOT(cx, &tvr);
         if (!ida)
@@ -3387,9 +3387,9 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
         index = ida->length;
     }
 
-    if (!JS_SetPrivate(cx, iterobj, pdata))
-        goto bad;
-    OBJ_SET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(index));
+    /* iterobj can not escape to other threads here. */
+    iterobj->slots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(pdata);
+    iterobj->slots[JSSLOT_ITER_INDEX] = INT_TO_JSVAL(index);
     return iterobj;
 
 bad:
