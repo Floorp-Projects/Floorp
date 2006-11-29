@@ -73,5 +73,3 @@ nsresult nsAbMDBCard::NotifyPropertyChanged(const char *property, const PRUnicha
 
 	return NS_OK;
 }
-
-

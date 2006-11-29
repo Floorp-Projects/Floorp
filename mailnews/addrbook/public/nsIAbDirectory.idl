@@ -72,7 +72,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(b81e0275-7b19-46e2-9f4a-086f1fc55080)]
+[scriptable, uuid(831251b9-3d8d-462a-9460-71674e505f6c)]
 interface nsIAbDirectory : nsISupports {
 
   // Types of operation
@@ -142,10 +142,7 @@ interface nsIAbDirectory : nsISupports {
   // Deletes either a mailing list or a top
   // level directory, which also updates the
   // preferences
-  void deleteDirectory(in nsIAbDirectory dierctory);
-
-  // Delete the array of cards
-  void deleteCards(in nsISupportsArray cards);
+  void deleteDirectory(in nsIAbDirectory directory);
 
   // Check if directory contains card
   // If the implementation is asynchronous the card
@@ -159,13 +156,22 @@ interface nsIAbDirectory : nsISupports {
   boolean hasDirectory(in nsIAbDirectory dir);
 
   /**
-   * return value is the card that got added
-   * we need to do this, as the card we pass in might
-   * be an abstract nsIAbCard, and the caller might need
-   * the "real" card (the mdbcard or similar) to get / set 
-   * non-standard card values
+   * Adds a card to the database. card may be an abstract card.
+   *
+   * @return "Real" card (eg nsIAbMDBCard) that can be used for some
+   *         extra functions.
    */
   nsIAbCard addCard(in nsIAbCard card);
+
+  /**
+   * Modifies a card in the database to match that supplied.
+   */
+  void modifyCard(in nsIAbCard modifiedCard);
+
+  /**
+   * Deletes the array of cards from the database
+   */
+  void deleteCards(in nsISupportsArray cards);
 
   void dropCard(in nsIAbCard card, in boolean needToCopyCard);
 

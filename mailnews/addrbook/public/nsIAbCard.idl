@@ -44,7 +44,7 @@ interface nsIAbPreferMailFormat {
     const unsigned long html      = 2; 
 }; 
 
-[scriptable, uuid(6B46BDD5-10DB-44f4-99C9-C7FFE0D3D954)]
+[scriptable, uuid(e4e2a043-4b06-43a3-b52b-146e155d9ec5)]
 interface nsIAbCard : nsISupports {
 	// Card properties
 	attribute wstring firstName;
@@ -123,17 +123,13 @@ interface nsIAbCard : nsISupports {
 
 	void setCardValue(in string attrname, in wstring value);
 
-	// Copies the card attributes from srcCard
-	void copy(in nsIAbCard srcCard);
+  /**
+   * This function will copy all values from one card to another.
+   *
+   * @param  srcCard  The source card to copy values from.
+   */
+  void copy(in nsIAbCard srcCard);
 	
-	// Edits an existing card in the directory defined by 'uri'
-	// Rename to editCardInDirectory
-	// Component will be an RDF card, since it has already
-	// been created
-	//
-	// XXX FIX ME, this should not be a the card, it should be on the addressbook.
-	void  editCardToDatabase(in string uri);
-
 	boolean equals(in nsIAbCard card);
 
 	string convertToBase64EncodedXML();

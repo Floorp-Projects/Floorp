@@ -47,8 +47,6 @@ class nsAbLDAPCard : public nsAbCardProperty
 public:
     NS_DECL_ISUPPORTS_INHERITED
 
-    NS_IMETHOD EditCardToDatabase(const char *aURI);
-
     nsAbLDAPCard();
     virtual ~nsAbLDAPCard();
 };

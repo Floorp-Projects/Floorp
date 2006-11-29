@@ -38,6 +38,10 @@
 
 #include "nsAbLDAPCard.h"
 
+// XXX Although this has no real use at the moment, its planned to be
+// used for writeable ldap directories as part of bug 86405 so we don't
+// want to remove it just to add it back in later...
+
 nsAbLDAPCard::nsAbLDAPCard()
 {
 }
@@ -45,12 +49,6 @@ nsAbLDAPCard::nsAbLDAPCard()
 nsAbLDAPCard::~nsAbLDAPCard()
 {
 }
-
-NS_IMETHODIMP nsAbLDAPCard::EditCardToDatabase(const char *aURI)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsAbLDAPCard, nsAbCardProperty)
 
