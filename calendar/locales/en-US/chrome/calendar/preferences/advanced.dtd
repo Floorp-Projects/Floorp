@@ -61,6 +61,7 @@
 
 <!-- Update -->
 <!ENTITY pref.calendar.advanced.update.autoCheck.label "Automatically check for updates to:">
+<!ENTITY pref.calendar.advanced.update.enableAppUpdate.label "&brandShortName;">
 <!ENTITY pref.calendar.advanced.update.enableAppUpdate.accesskey "r">
 <!ENTITY pref.calendar.advanced.update.enableAddonsUpdate.label "Installed Add-ons">
 <!ENTITY pref.calendar.advanced.update.enableAddonsUpdate.accesskey "n">

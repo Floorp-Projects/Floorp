@@ -165,7 +165,7 @@
                     <label control="autoUpdateGroup">&pref.calendar.advanced.update.autoCheck.label;</label>
                     <vbox id="autoUpdateGroup" class="indent">
                         <checkbox id="enableAppUpdate"
-                                  label="&brandShortName;"
+                                  label="&pref.calendar.advanced.update.enableAppUpdate.label;"
                                   accesskey="&pref.calendar.advanced.update.enableAppUpdate.accesskey;"
                                   preference="app.update.enabled"/>
                         <checkbox id="enableAddonUpdate"
