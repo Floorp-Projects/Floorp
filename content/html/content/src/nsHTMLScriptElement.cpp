@@ -533,26 +533,20 @@ nsHTMLScriptElement::MaybeProcessScript()
 {
   nsresult rv = nsScriptElement::MaybeProcessScript();
   if (rv == NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
+    // Don't return NS_CONTENT_SCRIPT_IS_EVENTHANDLER since callers can't deal
+    rv = NS_OK;
 
-    // If the script has NOT been executed yet then create a script
-    // event handler if necessary...
-    if (!mIsEvaluated && !mScriptEventHandler) {
-      // Set mIsEvaluated, this element will be handled by the
-      // nsIScriptEventManager
-      mIsEvaluated = PR_TRUE;
+    // We tried to evaluate the script but realized it was an eventhandler
+    // mEvaluated will already be set at this point
+    NS_ASSERTION(mIsEvaluated, "should have set mIsEvaluated already");
+    NS_ASSERTION(!mScriptEventHandler, "how could we have an SEH already?");
 
-      mScriptEventHandler = new nsHTMLScriptEventHandler(this);
-      NS_ENSURE_TRUE(mScriptEventHandler, NS_ERROR_OUT_OF_MEMORY);
+    mScriptEventHandler = new nsHTMLScriptEventHandler(this);
+    NS_ENSURE_TRUE(mScriptEventHandler, NS_ERROR_OUT_OF_MEMORY);
 
-      // The script-loader will make sure that the script is not evaluated
-      // right away.
-    }
-
-    if (mScriptEventHandler) {
-      nsAutoString event_val;
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, event_val);
-      mScriptEventHandler->ParseEventString(event_val);
-    }
+    nsAutoString event_val;
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, event_val);
+    mScriptEventHandler->ParseEventString(event_val);
   }
 
   return rv;
