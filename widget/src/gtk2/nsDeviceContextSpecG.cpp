@@ -391,6 +391,10 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 }
 
 /* Use both PostScript and Xprint module */
+#ifdef MOZ_CAIRO_GFX
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
+                   nsIDeviceContextSpec)
+#else
 #if defined(USE_XPRINT) && defined(USE_POSTSCRIPT)
 NS_IMPL_ISUPPORTS3(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec,
@@ -412,6 +416,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
 #else
 #error "This should not happen"
+#endif
 #endif
 
 #ifdef MOZ_CAIRO_GFX

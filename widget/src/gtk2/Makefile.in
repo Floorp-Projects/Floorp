@@ -113,6 +113,7 @@ CPPSRCS		= \
 		nsAccessibilityHelper.cpp \
 		nsPrintJobFactoryGTK.cpp \
 		nsPrintJobGTK.cpp \
+		nsTempfilePS.cpp \
 		$(NULL)
 
 # build our subdirs, too
