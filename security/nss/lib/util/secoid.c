@@ -327,8 +327,8 @@ CONST_OID x509NameConstraints[]       		= { ID_CE_OID, 30 };
 CONST_OID x509CRLDistPoints[]         		= { ID_CE_OID, 31 };
 CONST_OID x509CertificatePolicies[]   		= { ID_CE_OID, 32 };
 CONST_OID x509PolicyMappings[]        		= { ID_CE_OID, 33 };
-CONST_OID x509PolicyConstraints[]     		= { ID_CE_OID, 34 };
 CONST_OID x509AuthKeyID[]             		= { ID_CE_OID, 35 };
+CONST_OID x509PolicyConstraints[]     		= { ID_CE_OID, 36 };
 CONST_OID x509ExtKeyUsage[]           		= { ID_CE_OID, 37 };
 CONST_OID x509AuthInfoAccess[]        		= { PKIX_CERT_EXTENSIONS, 1 };
 
@@ -1843,7 +1843,7 @@ SECOID_Shutdown(void)
     /* Have to handle the case where the lock was created, but
     ** the pool wasn't. 
     ** I'm not going to attempt to create the lock, just to protect
-    ** the destruction of data the probably isn't inisialized anyway.
+    ** the destruction of data that probably isn't initialized anyway.
     */
     if (dynOidLock) {
 	NSSRWLock_LockWrite(dynOidLock);
