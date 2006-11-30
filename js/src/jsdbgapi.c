@@ -375,7 +375,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSClass *clasp;
                 JSFunction *fun;
                 JSScript *script;
-                jsval argv[2];
+                uintN nslots;
+                jsval smallv[5];
+                jsval *argv;
                 JSStackFrame frame;
 
                 closure = (JSObject *) wp->closure;
@@ -390,8 +392,27 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     fun = NULL;
                     script = NULL;
                 }
+
+                nslots = 2;
+                if (fun) {
+                    nslots += fun->nargs;
+                    if (FUN_NATIVE(fun))
+                        nslots += fun->u.n.extra;
+                }
+
+                if (nslots <= JS_ARRAY_LENGTH(smallv)) {
+                    argv = smallv;
+                } else {
+                    argv = JS_malloc(cx, nslots);
+                    if (!argv) {
+                        DropWatchPoint(cx, wp);
+                        return JS_FALSE;
+                    }
+                }
+
                 argv[0] = OBJECT_TO_JSVAL(closure);
                 argv[1] = JSVAL_NULL;
+                memset(argv + 2, 0, nslots - 2);
 
                 memset(&frame, 0, sizeof(frame));
                 frame.script = script;
@@ -411,6 +432,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                         1, vp, vp)
                       : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
                 cx->fp = frame.down;
+                if (argv != smallv)
+                    JS_free(cx, argv);
             }
             return DropWatchPoint(cx, wp) && ok;
         }
