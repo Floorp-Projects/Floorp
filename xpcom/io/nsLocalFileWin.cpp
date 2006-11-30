@@ -2268,7 +2268,10 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         // Search for any of the set of executable extensions.
         const char * const executableExts[] = {
             "ad",
+            "ade",         // access project extension
             "adp",
+            "app",         // executable application
+            "application", // from bug 348763
             "asp",
             "bas",
             "bat",
@@ -2278,6 +2281,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "cpl",
             "crt",
             "exe",
+            "fxp",         // FoxPro compiled app
             "hlp",
             "hta",
             "inf",
@@ -2286,15 +2290,38 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "js",
             "jse",
             "lnk",
+            "mad",         // Access Module Shortcut
+            "maf",         // Access
+            "mag",         // Access Diagram Shortcut
+            "mam",         // Access Macro Shortcut
+            "maq",         // Access Query Shortcut
+            "mar",         // Access Report Shortcut
+            "mas",         // Access Stored Procedure
+            "mat",         // Access Table Shortcut
+            "mau",         // Media Attachment Unit
+            "mav",         // Access View Shortcut
+            "maw",         // Access Data Access Page
+            "mda",         // Access Add-in, MDA Access 2 Workgroup
             "mdb",
             "mde",
+            "mdt",         // Access Add-in Data
+            "mdw",         // Access Workgroup Information
+            "mdz",         // Access Wizard Template
             "msc",
+            "msh",         // Microsoft Shell
+            "mshxml",      // Microsoft Shell
             "msi",
             "msp",
             "mst",
+            "ops",         // Office Profile Settings
             "pcd",
             "pif",
+            "plg",         // Developer Studio Build Log
+            "prf",         // windows system file
+            "prg",
+            "pst",
             "reg",
+            "scf",         // Windows explorer command
             "scr",
             "sct",
             "shb",
@@ -2304,6 +2331,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "vbe",
             "vbs",
             "vsd",
+            "vsmacros",    // Visual Studio .NET Binary-based Macro Project
             "vss",
             "vst",
             "vsw",
