@@ -1974,6 +1974,7 @@ nsChildView::GetChildViewQuickDrawPort()
 {
   if ([mView isKindOfClass:[ChildView class]])
     return (GrafPtr)[(ChildView*)mView qdPort];
+  return NULL;
 }
 
 #pragma mark -
@@ -2733,7 +2734,43 @@ NSEvent* globalDragEvent = nil;
 
 - (void)mouseMoved:(NSEvent*)theEvent
 {
-  NSView* view = [[[self window] contentView] hitTest:[theEvent locationInWindow]];
+  // Most of the time we don't want mouse moved events to go to any window
+  // but the active one. That isn't the case for popup windows though!
+  if ([mWindow level] == NSPopUpMenuWindowLevel) {
+    NSPoint screenLocation = [mWindow convertBaseToScreen:[theEvent locationInWindow]];
+    NSRect windowFrame = [mWindow frame];
+    // just take the event if it is over our own window
+    if (!NSPointInRect(screenLocation, windowFrame)) {
+      // it isn't over our own window, look for another popup window that is under the mouse
+      NSArray* appWindows = [NSApp windows];
+      unsigned int appWindowsCount = [appWindows count];
+      for (unsigned int i = 0; i < appWindowsCount; i++) {
+        NSWindow* currentWindow = [appWindows objectAtIndex:i];
+        // make sure this window is not our own window, is a popup window, is visible, and is
+        // underneath the event
+        if (!(currentWindow != mWindow &&
+             [currentWindow level] == NSPopUpMenuWindowLevel &&
+             [currentWindow isVisible] &&
+             NSPointInRect(screenLocation, [currentWindow frame])))
+          continue;
+        // found another popup window to send the event to, do it
+        NSPoint newLocationInWindow = [currentWindow convertScreenToBase:screenLocation];
+        NSEvent* newEvent = [NSEvent mouseEventWithType:NSMouseMoved
+                                               location:newLocationInWindow
+                                          modifierFlags:[theEvent modifierFlags]
+                                              timestamp:[theEvent timestamp]
+                                           windowNumber:[currentWindow windowNumber]
+                                                context:nil
+                                            eventNumber:[theEvent eventNumber]
+                                             clickCount:0
+                                               pressure:0.0];
+        [[currentWindow contentView] mouseMoved:newEvent];
+        return;
+      }
+    }
+  }
+
+  NSView* view = [[mWindow contentView] hitTest:[theEvent locationInWindow]];
   if (view != (NSView*)self) {
     // We shouldn't handle this.  Send it to the right view.
     [view mouseMoved: theEvent];
