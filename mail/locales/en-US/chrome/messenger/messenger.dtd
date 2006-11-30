@@ -644,6 +644,8 @@
 <!ENTITY CreateFilter.accesskey "F">
 <!ENTITY BlockAddress.label "Block Address">
 <!ENTITY BlockAddress.accesskey "A">
+<!ENTITY reportPhishingURL.label "Report E-mail Scam">
+<!ENTITY reportPhishingURL.accesskey "o">
 
 <!-- Statusbar -->
 <!ENTITY statusText.label "Done">
