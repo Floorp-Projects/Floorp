@@ -1080,7 +1080,9 @@ public:
             // I'm not sure that claiming glyphs are missing if they're zero width is valid
             // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
             // which are zero width and non-invalidGlyph.
-            else if (mAttr[i].fZeroWidth == PR_TRUE) {
+            // At any rate, only make this check for non-complex scripts.
+            else if (mAttr[i].fZeroWidth == PR_TRUE &&
+                     ScriptProperties()->fComplex == PR_FALSE) {
                 PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width"));
                 return PR_TRUE;
             }
