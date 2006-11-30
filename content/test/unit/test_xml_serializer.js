@@ -12,6 +12,7 @@ var tests = [
   test5,
   test6,
   test7,
+  test8,
   null
 ];
 
@@ -258,4 +259,32 @@ function test7() {
   do_check_eq(SerializeXML(doc),
               '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
               '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""/></child1></root>');
+}
+
+function test8() {
+  // Test behavior of serializing with a given charset.
+  var str1 = '<?xml version="1.0" encoding="ISO-8859-1"?>\n<root/>';
+  var str2 = '<?xml version="1.0" encoding="UTF8"?>\n<root/>';
+  var doc1 = ParseXML(str1);
+  var doc2 = ParseXML(str2);
+
+  var p = Pipe();
+  DOMSerializer().serializeToStream(doc1, p.outputStream, "ISO-8859-1");
+  p.outputStream.close();
+  do_check_eq(ScriptableInput(p).read(-1), str1);
+
+  p = Pipe();
+  DOMSerializer().serializeToStream(doc2, p.outputStream, "ISO-8859-1");
+  p.outputStream.close();
+  do_check_eq(ScriptableInput(p).read(-1), str1);
+
+  p = Pipe();
+  DOMSerializer().serializeToStream(doc1, p.outputStream, "UTF8");
+  p.outputStream.close();
+  do_check_eq(ScriptableInput(p).read(-1), str2);
+
+  p = Pipe();
+  DOMSerializer().serializeToStream(doc2, p.outputStream, "UTF8");
+  p.outputStream.close();
+  do_check_eq(ScriptableInput(p).read(-1), str2);
 }
