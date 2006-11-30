@@ -58,6 +58,9 @@ PR_IMPLEMENT(PRUint32) PR_vfprintf(PRFileDesc* fd, const char *fmt, va_list ap)
     /* XXX this could be better */
     PRUint32 rv, len;
     char* msg = PR_vsmprintf(fmt, ap);
+    if (NULL == msg) {
+        return -1;
+    }
     len = strlen(msg);
 #ifdef XP_OS2
     /*
