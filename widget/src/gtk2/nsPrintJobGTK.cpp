@@ -39,7 +39,6 @@
 
 #include "nscore.h"
 #include "nsIDeviceContext.h"   // NS_ERROR_GFX_*
-#include "nsIDeviceContextPS.h" // NS_POSTSCRIPT_DRIVER_NAME_LEN
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecG.h"
 

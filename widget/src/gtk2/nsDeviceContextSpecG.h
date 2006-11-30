@@ -44,12 +44,16 @@
 #include "nsIPrintOptions.h" 
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
+
+#ifndef MOZ_CAIRO_GFX
 #ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
 #endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
+#endif
+
 #include "nsCRT.h" /* should be <limits.h>? */
 
 #include "nsIPrintJobGTK.h"
@@ -65,12 +69,14 @@ typedef enum
 } PrintMethod;
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
+#ifndef MOZ_CAIRO_GFX
 #ifdef USE_POSTSCRIPT
                               , public nsIDeviceContextSpecPS
 #endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
                               , public nsIDeviceContextSpecXp
 #endif /* USE_XPRINT */
+#endif
 {
 public:
   nsDeviceContextSpecGTK();
