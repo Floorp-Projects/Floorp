@@ -544,6 +544,9 @@ mp_bdivmod(const mp_int *y, const mp_int *x, const mp_int *pp,
     MP_CHECKOK( mp_copy(u, r) );
 
 CLEANUP:
+    mp_clear(&aa);
+    mp_clear(&bb);
+    mp_clear(&uu);
     return res;
 
 }
