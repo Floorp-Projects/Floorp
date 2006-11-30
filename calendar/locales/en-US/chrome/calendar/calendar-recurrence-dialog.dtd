@@ -53,7 +53,7 @@
 <!ENTITY newevent.repeat.until.label         "Repeat until" >
 
 <!-- Information messages -->
-<!ENTITY newevent.recurnumberoftimes.warning "Your must specify the number of times to repeat.">
-<!ENTITY newevent.recurinterval.warning      "Your must specify how often to repeat.">
+<!ENTITY newevent.recurnumberoftimes.warning "You must specify the number of times to repeat.">
+<!ENTITY newevent.recurinterval.warning      "You must specify how often to repeat.">
 <!ENTITY newevent.recurrence.title           "Edit Recurrence" >
 <!ENTITY newevent.recurrence.lastday.label   "Last day of the month" >
