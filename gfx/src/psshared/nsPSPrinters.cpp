@@ -39,7 +39,6 @@
 #include "nscore.h"
 #include "nsCUPSShim.h"
 #include "nsIDeviceContext.h"       // GFX error codes
-#include "nsIDeviceContextSpecPS.h" // NS_POSTSCRIPT_DRIVER_NAME
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -54,6 +53,8 @@
 #define NS_CUPS_PRINTER "CUPS/"
 #define NS_CUPS_PRINTER_LEN (sizeof(NS_CUPS_PRINTER) - 1)
 
+/* dummy printer name for the gfx/src/ps driver */
+#define NS_POSTSCRIPT_DRIVER_NAME "PostScript/"
 
 /* Initialize the printer manager object */
 nsresult
