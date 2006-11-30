@@ -167,3 +167,21 @@ function do_check_serialize(dom) {
   do_check_equiv(dom, roundtrip(dom));
 }
 
+function Pipe() {
+  var p = C["@mozilla.org/pipe;1"].createInstance(I.nsIPipe);
+  p.init(false, false, 0, 0xffffffff, null);
+  return p;
+}
+
+function ScriptableInput(arg) {
+  if (arg instanceof I.nsIPipe) {
+    arg = arg.inputStream;
+  }
+
+  var str = C["@mozilla.org/scriptableinputstream;1"].
+    createInstance(I.nsIScriptableInputStream);
+
+  str.init(arg);
+
+  return str;
+}
