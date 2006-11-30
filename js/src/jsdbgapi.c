@@ -424,6 +424,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 frame.fun = fun;
                 frame.argv = argv + 2;
                 frame.down = cx->fp;
+                frame.scopeChain = OBJ_GET_PARENT(cx, closure);
 
                 cx->fp = &frame;
                 ok = !wp->setter ||
