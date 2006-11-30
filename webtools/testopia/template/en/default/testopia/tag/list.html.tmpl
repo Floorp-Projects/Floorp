@@ -47,9 +47,9 @@
 [% FOREACH tag = tags %]
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]"> 
     <td width="200">[% tag.name FILTER html %]</td>
-    <td align="center"><a href="tr_list_cases.cgi?case_id=[% tag.case_list %]">[% tag.case_count FILTER html %]</a></td>
-    <td align="center"><a href="tr_list_plans.cgi?plan_id=[% tag.plan_list %]">[% tag.plan_count FILTER html %]</a></td>
-    <td align="center"><a href="tr_list_runs.cgi?run_id=[% tag.run_list %]">[% tag.run_count FILTER html %]</a></td>
+    <td align="center"><a href="tr_list_cases.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.case_count FILTER html %]</a></td>
+    <td align="center"><a href="tr_list_plans.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.plan_count FILTER html %]</a></td>
+    <td align="center"><a href="tr_list_runs.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.run_count FILTER html %]</a></td>
     <td>
   [% IF type %]
       <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% id FILTER none %]&type=[% type FILTER url_quote %]&method=html">Remove</a>
