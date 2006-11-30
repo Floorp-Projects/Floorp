@@ -75,7 +75,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,usp10)
 endif
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
 ifdef MOZ_ENABLE_GLITZ
-EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
+EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL -lcups
 endif
 endif
 endif # MOZ_ENABLE_CAIRO_GFX
