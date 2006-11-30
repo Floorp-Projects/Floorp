@@ -105,6 +105,7 @@ if ($action eq 'Commit'){
         my $priority = $cgi->param('priority') == -1 ? $case->{'priority_id'} : $cgi->param('priority');
         my $category = $cgi->param('category') == -1 ? $case->{'category_id'} : $cgi->param('category');
         my $isautomated = $cgi->param('isautomated') == -1 ? $case->isautomated : $cgi->param('isautomated');
+        my @comps       = $cgi->param("components");
         my $tester = $cgi->param('tester') || ''; 
         if ($tester && $tester ne '--Do Not Change--'){
             $tester = DBNameToIdAndCheck(trim($cgi->param('tester')));
@@ -122,7 +123,14 @@ if ($action eq 'Commit'){
         detaint_natural($priority);
         detaint_natural($category);
         detaint_natural($isautomated);
-        
+
+        my @components;
+        foreach my $id (@comps){
+            detaint_natural($id);
+            validate_selection($id, 'id', 'components');
+            push @components, $id;
+        }
+
         my %newvalues = ( 
             'case_status_id' => $status,
             'category_id'    => $category,
@@ -135,6 +143,7 @@ if ($action eq 'Commit'){
         );
       
         $case->update(\%newvalues);
+        $case->add_component($_) foreach (@components);
         if ($cgi->param('addtags')){
             foreach my $name (split(/[,]+/, $cgi->param('addtags'))){
                 trick_taint($name);

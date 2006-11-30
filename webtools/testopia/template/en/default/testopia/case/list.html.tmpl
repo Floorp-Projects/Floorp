@@ -42,7 +42,29 @@
 [% PROCESS testopia/messages.html.tmpl %]
 
 <script src="testopia/js/util.js" type="text/javascript"></script>
-
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+  dojo.require("dojo.io");
+  function getProdComps(product){
+      document.getElementById("components").disabled = true;
+      document.getElementById("action").disabled = true;
+      dojo.io.bind({
+          url:   "tr_new_plan.cgi",
+          content: {  product_id: product, action: "getcomps" },
+          load:  function(type, data, evt){
+                   var comps = document.getElementById("components");
+                   comps.options.length = 0;
+                   for (i in data){
+                     var myOp = new Option(data[i].name, data[i].id);
+                     addOption(comps, myOp);
+                   }
+                   document.getElementById("components").disabled = false;
+                   document.getElementById("action").disabled = false;
+                 },
+          error: function(type, error){ alert(error.message);},
+          mimetype: "text/json"
+      });
+  }   </script>
 [% PROCESS testopia/case/filter.html.tmpl IF addrun %]
 
 <form id="table" action="tr_list_cases.cgi" method="POST">
@@ -72,6 +94,30 @@ found.
     <td><input name="requirement" value="--Do Not Change--" size="30"></td>
     <td align="right"><b>Add Tags</b></td>
     <td><input name="addtags" size="30"></td>
+    <td rowspan="5">
+      <table>
+        <tr><th align="center">Add Components From</th></tr>
+        <tr>
+        <td>
+        [% PROCESS select sel = { name      => 'prod_pick',
+                                  list      => user.get_selectable_products,
+                                  default   => case.get_product_ids.0,
+                                  events    => 'onChange="getProdComps(this.value)"',
+                                  accesskey => 'p' } %]
+        </td>
+      </tr>
+      <tr>
+          <td>
+    
+      [% PROCESS select sel = { name      => 'components',
+                                accesskey => 'c', 
+                                mult      => 1
+                                elements  => 7 }%]
+  
+          </td>
+        </tr>
+      </table>
+    </td>
   </tr>
   
   <tr>
@@ -139,9 +185,11 @@ found.
 
 <p align="right">
   <input type="hidden" name="getlist" value="1"/>
-  <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">
+  <input TYPE="SUBMIT" name="action" id="action" class="tr_button" VALUE="Commit">
 </p>
-  
+<script type="text/javascript">
+  getProdComps(document.getElementById('prod_pick').value);
+</script>  
 
 [% END %]
 </form>
