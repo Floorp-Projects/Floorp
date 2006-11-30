@@ -48,6 +48,8 @@
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
   <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd" > %dtd3;
   <!ENTITY % dtd4 SYSTEM "chrome://branding/locale/brand.dtd" > %dtd4;
+  <!ENTITY % calendar-event-dialogDTD SYSTEM "chrome://calendar/locale/calendar-event-dialog.dtd">
+  %calendar-event-dialogDTD;
 ]>     
 
 <dialog

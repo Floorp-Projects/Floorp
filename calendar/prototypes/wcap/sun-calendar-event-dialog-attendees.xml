@@ -42,6 +42,8 @@
   <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" >  %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" >  %dtd2;
   <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd" >  %dtd3;
+  <!ENTITY % calendar-event-dialogDTD SYSTEM "chrome://calendar/locale/calendar-event-dialog.dtd">
+  %calendar-event-dialogDTD;
 ]>
 
 <bindings xmlns="http://www.mozilla.org/xbl"

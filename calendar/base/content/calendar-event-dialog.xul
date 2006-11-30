@@ -46,7 +46,8 @@
 
 <!DOCTYPE dialog
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd1;
+    <!ENTITY % calendar-event-dialogDTD SYSTEM "chrome://calendar/locale/calendar-event-dialog.dtd">
+    %calendar-event-dialogDTD;
 ]>     
 
 <dialog

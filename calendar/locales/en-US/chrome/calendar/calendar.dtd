@@ -44,137 +44,9 @@
 <!-- General -->
 <!ENTITY calendar.file.default.name  "My Calendar" >
 
-<!-- Alarm -->
-<!ENTITY alarm.units.minutes  "minutes" >
-<!ENTITY alarm.units.hours    "hours" >
-<!ENTITY alarm.units.days     "days" >
-
-<!ENTITY alarm.units.minutes.singular  "minute " >
-<!ENTITY alarm.units.hours.singular    "hour " >
-<!ENTITY alarm.units.days.singular     "day " >
-
-<!ENTITY alarm.start.warning     "This alarm requires a starting date" >
-<!ENTITY alarm.due.warning     "This alarm requires a due date" >
-
-<!ENTITY repeat.units.occurence.both         "occurrence(s)" >
-
-<!ENTITY repeat.units.days     "Days" >
-<!ENTITY repeat.units.weeks    "Weeks" >
-<!ENTITY repeat.units.months   "Months" >
-<!ENTITY repeat.units.years    "Years" >
-
-<!ENTITY repeat.units.days.singular    "Day" >
-<!ENTITY repeat.units.weeks.singular    "Week" >
-<!ENTITY repeat.units.months.singular   "Month" >
-<!ENTITY repeat.units.years.singular    "Year" >
-
-<!ENTITY priority.level.none              "Not specified">
-<!ENTITY priority.level.none.accesskey    "N">
-<!ENTITY priority.level.low               "Low">
-<!ENTITY priority.level.low.accesskey     "L">
-<!ENTITY priority.level.medium            "Medium">
-<!ENTITY priority.level.medium.accesskey  "M">
-<!ENTITY priority.level.high              "High">
-<!ENTITY priority.level.high.accesskey    "H">
-
-<!ENTITY newevent.title.label        "Title" >
-<!ENTITY newevent.title.accesskey    "i" >
-<!ENTITY newevent.location.label     "Location" >
-<!ENTITY newevent.location.accesskey "L" >
-<!ENTITY newevent.date.label         "Date" >
-<!ENTITY newevent.date.accesskey     "a" >
-<!ENTITY newevent.from.label         "From" >
-<!ENTITY newevent.from.accesskey     "F" >
-<!ENTITY newevent.to.label           "To" >
-<!ENTITY newevent.to.accesskey       "T" >
-<!ENTITY newevent.enddate.label      "End" >
-<!ENTITY newevent.set.label          "Set pattern..." >
-<!ENTITY newevent.set.accesskey      "n" >
-<!ENTITY newevent.none.label         "none" >
-<!ENTITY newevent.custom.label       "Custom..." >
-<!ENTITY newevent.alldayevent.label  "All Day" >
-<!ENTITY newevent.alldayevent.accesskey "A" >
-<!ENTITY newevent.description.label  "Description" >
-<!ENTITY newevent.description.accesskey "D" >
-<!ENTITY newevent.uri.label          "URL" >
-<!ENTITY newevent.uri.accesskey      "U" >
-<!ENTITY newevent.uri.visit.label    "Visit URL" >
-<!ENTITY newevent.uri.visit.accesskey "V" >
-<!ENTITY newevent.before.label       "before" >
-<!ENTITY newevent.after.label        "after" >
-<!ENTITY newevent.private.label      "Private" >
-<!ENTITY newevent.privacy.label      "Privacy" >
-<!ENTITY newevent.privacy.accesskey  "P" >
-<!ENTITY newevent.public.label       "Public" >
-<!ENTITY newevent.confidential.label "Confidential" >
-<!ENTITY newevent.alarm.label        "Alarm" >
-<!ENTITY newevent.alarm.accesskey    "m" >
-<!ENTITY newevent.server.label       "Calendar" >
-<!ENTITY newevent.server.accesskey   "C" >
-<!ENTITY newevent.invite.label       "Invite" >
-<!ENTITY newevent.details.label      "Details" >
-<!ENTITY newevent.beforealarm.label  "before this event" >
-<!ENTITY newevent.begin.label        "begins" >
-<!ENTITY newevent.end.label          "ends" >
-<!ENTITY newevent.isdue.label        "is due" >
-<!ENTITY newevent.repeat.label       "Repeat every" >
-<!ENTITY newevent.repeat2.label      "Repeat" >
-<!ENTITY newevent.repeat2.accesskey  "R" >
-<!ENTITY newevent.until.label        "Until" >
-<!ENTITY newevent.forever.label      "Forever" >
-<!ENTITY newevent.addexceptions.label "Add Exception">
-<!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
-<!ENTITY newevent.15minutes.before.label        "15 minutes before" >
-<!ENTITY newevent.30minutes.before.label        "30 minutes before" >
-<!ENTITY newevent.recurnumberoftimes.warning    "Your must specify the number of times to repeat.">
-<!ENTITY newevent.readonly.item.warning    "This item is in a read-only calendar.  You may not edit it.">
-<!ENTITY newevent.readonly.cal.warning    "This calendar is read-only.">
-<!ENTITY newevent.recurinterval.warning    "Your must specify how often to repeat.">
-<!ENTITY newevent.recurrence.title          "Edit Recurrence" >
-<!ENTITY newevent.recurrence.occurs.label   "Occurs" >
-<!ENTITY newevent.recurrence.day.label      "daily" >
-<!ENTITY newevent.recurrence.week.label     "weekly" >
-<!ENTITY newevent.recurrence.weeks.label    "weeks on" >
-<!ENTITY newevent.recurrence.month.label    "monthly" >
-<!ENTITY newevent.recurrence.months.label   "months on the" >
-<!ENTITY newevent.recurrence.year.label     "annually" >
-<!ENTITY newevent.recurrence.every.label    "Every:" >
-<!ENTITY newevent.recurrence.lastday.label  "Last day of the month" >
-<!ENTITY newevent.repeat.onthe.label        "Repeat on the" >
-<!ENTITY newevent.repeat.forever.label      "Repeat forever" >
-<!ENTITY newevent.repeat.for.label          "Repeat for" >
-<!ENTITY newevent.repeat.until.label        "Repeat until" >
-<!ENTITY newevent.recurrence.exceptions.label    "Exceptions:" >
-
-<!ENTITY newevent.attendees.label           "Attendees" >
-<!ENTITY newevent.attendees.accesskey       "e" >
-<!ENTITY newevent.status.label "Status" >
-<!ENTITY newevent.status.accesskey "S" >
-<!ENTITY newevent.status.needsaction.label "Needs Action" >
-<!ENTITY newevent.status.inprogress.label  "In Process" >
-<!ENTITY newevent.status.completed.label   "Completed on" >
-<!ENTITY newevent.status.cancelled.label   "Cancelled" >
-<!ENTITY newevent.status.tentative.label   "Tentative" >
-<!ENTITY newevent.status.confirmed.label   "Confirmed" >
-<!ENTITY newevent.status.none.label        "Not specified" >
-<!ENTITY newevent.itemType.event.label      "Event" >
-<!ENTITY newevent.itemType.todo.label       "Task" >
-
-<!ENTITY newtodo.duedate.label "Due Date">
-<!ENTITY newtodo.duedate.accesskey "t">
-<!ENTITY newtodo.startdate.label "Start Date">
-<!ENTITY newtodo.priority.label "Priority">
-<!ENTITY newtodo.priority.accesskey "y">
-<!ENTITY newtodo.percentcomplete.label "&#37; complete">
-<!ENTITY newtodo.categories.label "Category">
-<!ENTITY newtodo.categories.accesskey "o">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
-
 <!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
-
-<!ENTITY event.title.label       "Edit Item" >
 
 <!ENTITY calendar.flat.topbar.choosedate       "Go to Date" >
 <!ENTITY calendar.flat.topbar.dayview          "Day View" >
@@ -201,11 +73,6 @@
 <!ENTITY calendar.calendartab.label "Date">
 <!ENTITY calendar.listofcalendarstab.label "Calendars">
 <!ENTITY calendar.gototoday.button.label        "Go to Today" >
-
-<!ENTITY calendar.more.label "More">
-<!ENTITY calendar.less.label "Less">
-
-<!ENTITY calendar.calendarlistbox.label "Calendars">
 
 <!ENTITY calendar.events.filter.all.label "All Events">
 <!ENTITY calendar.events.filter.today.label "Today's Events">
@@ -289,13 +156,11 @@
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.close.mac        "Close" >
 <!ENTITY calendar.menu.options.close.key        "W">
 
 <!ENTITY calendar.search.options.searchfor " contain">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
-<!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
 <!ENTITY calendar.menu.numberofweeks.2      "2 Weeks" >
 <!ENTITY calendar.menu.numberofweeks.3      "3 Weeks" >
 <!ENTITY calendar.menu.numberofweeks.4      "4 Weeks" >
@@ -365,8 +230,6 @@
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "New Calendar…">
 <!ENTITY calendar.context.newserver.accesskey          "N">
-<!ENTITY calendar.context.editserver.label             "Edit Calendar…">
-<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.reloadserver.label           "Reload Remote Calendars">
