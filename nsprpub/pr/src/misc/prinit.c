@@ -241,6 +241,7 @@ static void _PR_InitStuff(void)
     _PR_InitLinker();
     _PR_InitCallOnce();
     _PR_InitDtoa();
+    _PR_InitTime();
     _PR_InitMW();
     _PR_InitRWLocks();
 
@@ -420,6 +421,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 #endif
 
         _PR_CleanupMW();
+        _PR_CleanupTime();
         _PR_CleanupDtoa();
         _PR_CleanupCallOnce();
 		_PR_ShutdownLinker();
