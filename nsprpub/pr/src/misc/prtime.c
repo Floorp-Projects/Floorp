@@ -547,6 +547,7 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 extern struct tm *Maclocaltime(const time_t * t);
 #endif
 
+#define _PR_HAVE_LOCALTIME_MONITOR 1
 static PRLock *monitor = NULL;
 
 static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
@@ -556,12 +557,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
                                        * against NSPR threads only when the
                                        * NSPR thread system is activated. */
 
-    if (needLock) {
-        if (monitor == NULL) {
-            monitor = PR_NewLock();
-        }
-        PR_Lock(monitor);
-    }
+    if (needLock) PR_Lock(monitor);
 
     /*
      * Microsoft (all flavors) localtime() returns a NULL pointer if 'clock'
@@ -605,6 +601,21 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
 }
 
 #endif  /* definition of MT_safe_localtime() */
+
+void _PR_InitTime(void)
+{
+#ifdef _PR_HAVE_LOCALTIME_MONITOR
+    monitor = PR_NewLock();
+#endif
+}
+
+void _PR_CleanupTime(void)
+{
+#ifdef _PR_HAVE_LOCALTIME_MONITOR
+    PR_DestroyLock(monitor);
+    monitor = NULL;
+#endif
+}
 
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 

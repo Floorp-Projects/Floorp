@@ -938,6 +938,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
         PR_Unlock(pt_book.ml);
 
         _PR_CleanupMW();
+        _PR_CleanupTime();
         _PR_CleanupDtoa();
         _PR_CleanupCallOnce();
         _PR_ShutdownLinker();
