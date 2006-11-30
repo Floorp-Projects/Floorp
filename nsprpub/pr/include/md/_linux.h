@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * This file is used by not only Linux but also other glibc systems
+ * such as GNU/Hurd and GNU/k*BSD.
+ */
+
 #ifndef nspr_linux_defs_h___
 #define nspr_linux_defs_h___
 
@@ -89,6 +94,10 @@
  */
 #define HAVE_DLL
 #define USE_DLFCN
+
+#ifdef __FreeBSD_kernel__
+#define _PR_HAVE_SOCKADDR_LEN
+#endif
 
 #if defined(__i386__)
 #define _PR_HAVE_ATOMIC_OPS
