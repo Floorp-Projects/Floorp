@@ -78,8 +78,11 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX()
   ClosePrintManager();
 }
 
+#ifdef MOZ_CAIRO_GFX
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecX, nsIDeviceContextSpec)
+#else
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContext)
-
+#endif
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
@@ -122,6 +125,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 	return NS_OK;
 }  
 
+#ifndef MOZ_CAIRO_GFX
 NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
                                                   PRUnichar*  aPrintToFileName,
                                                   PRInt32     aStartPage, 
@@ -186,6 +190,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
       return NS_ERROR_ABORT;
     return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
 {
