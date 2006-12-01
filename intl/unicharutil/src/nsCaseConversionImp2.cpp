@@ -73,7 +73,7 @@ struct nsCompressedMap {
   PRUint32 mCache[CASE_MAP_CACHE_SIZE];
   PRUint32 mLastBase;
 
-  PRUnichar nsCompressedMap::Map(PRUnichar aChar)
+  PRUnichar Map(PRUnichar aChar)
   {
     // no need to worry about thread safety since cached values are
     // not objects but primitive data types which could be 
@@ -112,10 +112,10 @@ struct nsCompressedMap {
     return res;
   }
 
-  PRUnichar nsCompressedMap::Lookup(PRUint32 l,
-                                    PRUint32 m,
-                                    PRUint32 r,
-                                    PRUnichar aChar)
+  PRUnichar Lookup(PRUint32 l,
+                   PRUint32 m,
+                   PRUint32 r,
+                   PRUnichar aChar)
   {
     PRUint32 base = m*3;
     if ( aChar >  ((mTable[base+kSizeEveryIdx] >> 8) + 
