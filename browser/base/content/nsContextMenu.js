@@ -1118,5 +1118,9 @@ nsContextMenu.prototype = {
 
   savePageAs: function() {
     saveDocument(this.browser.contentDocument);
+  },
+
+  printFrame: function() {
+    PrintUtils.print(this.target.ownerDocument.defaultView);
   }
 };
