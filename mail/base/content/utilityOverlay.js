@@ -188,3 +188,18 @@ function validateFileName(aFileName)
   
   return aFileName.replace(re, "_");
 }
+
+function goToggleToolbar( id, elementID )
+{
+  var toolbar = document.getElementById( id );
+  var element = document.getElementById( elementID );
+  if ( toolbar )
+  {
+    var isHidden = toolbar.getAttribute("hidden") == "true";
+    toolbar.setAttribute("hidden", !isHidden);
+    if ( element )
+      element.setAttribute("checked", isHidden)
+    document.persist(id, 'hidden');
+    document.persist(elementID, 'checked');
+  }
+}
