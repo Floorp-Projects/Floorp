@@ -779,12 +779,6 @@ sub insert_attachment_for_bug {
         $$hr_vars->{'message'} = 'user_match_multiple';
     }
 
-    # Flag::validate() should not detect any reference to existing flags
-    # when creating a new attachment. Setting the third param to -1 will
-    # force this function to check this point.
-    # XXX needs $throw_error treatment
-    Bugzilla::Flag::validate($cgi, $bug->bug_id, -1);
-
     # Escape characters in strings that will be used in SQL statements.
     my $description = $cgi->param('description');
     trick_taint($description);
@@ -854,9 +848,28 @@ sub insert_attachment_for_bug {
                           $timestamp, $fieldid, 0, 1));
     }
 
-    # Create flags.
     my $attachment = Bugzilla::Attachment->get($attachid);
-    Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
+
+    # 1. Add flags, if any. To avoid dying if something goes wrong
+    # while processing flags, we will eval() flag validation.
+    # This requires errors to die().
+    # XXX: this can go away as soon as flag validation is able to
+    #      fail without dying.
+    #
+    # 2. Flag::validate() should not detect any reference to existing flags
+    # when creating a new attachment. Setting the third param to -1 will
+    # force this function to check this point.
+    my $error_mode_cache = Bugzilla->error_mode;
+    Bugzilla->error_mode(ERROR_MODE_DIE);
+    eval {
+        Bugzilla::Flag::validate($cgi, $bug->bug_id, -1);
+        Bugzilla::Flag::process($bug, $attachment, $timestamp, $cgi);
+    };
+    Bugzilla->error_mode($error_mode_cache);
+    if ($@) {
+        $$hr_vars->{'message'} = 'flag_creation_failed';
+        $$hr_vars->{'flag_creation_error'} = $@;
+    }
 
     # Return the ID of the new attachment.
     return $attachid;
