@@ -421,7 +421,7 @@ namespace MMgc
 		 */
 		int ISD;
 
-		const static size_t collectThreshold;
+		size_t collectThreshold;
 
 		bool gcstats;
 
@@ -433,13 +433,6 @@ namespace MMgc
 #endif
 
 		bool incremental;
-
-#ifdef _DEBUG
-		/**
-		 * turn on memory profiling
-		 */
-		const static bool enableMemoryProfiling;
-#endif
 
 		// -- Interface
 		GC(GCHeap *heap);

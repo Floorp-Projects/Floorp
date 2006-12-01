@@ -81,9 +81,6 @@ namespace MMgc
 		/** Size of a block */
 		const static int kBlockSize = 4096;
 
-		/** Initial heap size, in blocks */
-		const static int kInitialHeapSize;
-
 		/** Default size of address space reserved per region */
 		const static int kDefaultReserve = 4096;
 		
@@ -116,10 +113,17 @@ namespace MMgc
 
 		bool heapVerbose;
 
+#ifdef _DEBUG
+		/**
+		 * turn on memory profiling
+		 */
+		bool enableMemoryProfiling;
+#endif
+
 		/**
 		 * Init must be called to set up the GCHeap singleton
 		 */
-		static void Init(GCMallocFuncPtr malloc = NULL, GCFreeFuncPtr free = NULL);
+		static void Init(GCMallocFuncPtr malloc = NULL, GCFreeFuncPtr free = NULL, int initialSize=128);
 
 		/**
 		 * Destroy the GCHeap singleton
@@ -239,7 +243,7 @@ namespace MMgc
 
 		// -- Implementation
 		static GCHeap *instance;
-		GCHeap(GCMallocFuncPtr m, GCFreeFuncPtr f);
+		GCHeap(GCMallocFuncPtr m, GCFreeFuncPtr f, int initialSize);
 		~GCHeap();
 		
 		// Heap regions

@@ -38,6 +38,9 @@ namespace avmplus
 
 	int String::Length(const wchar *str)
 	{
+		if (!str) 
+			return 0;
+
 		int len = 0;
 		while (*str) {
 			len++;
@@ -48,6 +51,9 @@ namespace avmplus
 
 	int String::Length(const char *str)
 	{
+		if (!str) 
+			return 0;
+
 		int len = 0;
 		while (*str) {
 			len++;

@@ -358,7 +358,7 @@ namespace MMgc
 			traceIndex = GetStackTraceIndex(skip);
 		}
 
-		if(GC::enableMemoryProfiling && memtype)
+		if(GCHeap::GetGCHeap()->enableMemoryProfiling && memtype)
 		{
 			// if an allocation is tagged with MMGC_MEM_TYPE its a sub
 			// allocation of a "master" type and this flag prevents it
@@ -386,7 +386,7 @@ namespace MMgc
 
 		// save these off so we can save the vtable (which is assigned after memory is
 		// allocated)
-		if(GC::enableMemoryProfiling)
+		if(GCHeap::GetGCHeap()->enableMemoryProfiling)
 		{
 			if(memtag || memtype) {
 				if(memtag)

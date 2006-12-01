@@ -55,10 +55,10 @@ namespace MMgc
 	// happening too frequently
 	const bool decommitStress = false;
 
-	void GCHeap::Init(GCMallocFuncPtr m, GCFreeFuncPtr f)
+	void GCHeap::Init(GCMallocFuncPtr m, GCFreeFuncPtr f, int initialSize)
 	{
 		GCAssert(instance == NULL);
-		instance = new GCHeap(m,f);
+		instance = new GCHeap(m,f, initialSize);
 	}
 
 	void GCHeap::Destroy()
@@ -68,12 +68,15 @@ namespace MMgc
 		instance = NULL;
 	}
 
-	const int GCHeap::kInitialHeapSize = 128;
-
-	GCHeap::GCHeap(GCMallocFuncPtr m, GCFreeFuncPtr f)
+	GCHeap::GCHeap(GCMallocFuncPtr m, GCFreeFuncPtr f, int initialSize)
 		: heapVerbose(false),
 		  kNativePageSize(0)
 	{
+#ifdef _DEBUG
+		// dump memory profile after sweeps
+		enableMemoryProfiling = false;
+#endif
+
 #if defined(_MAC) || defined(MMGC_ARM)
 		m_malloc = m ? m : malloc;
 		m_free = f ? f : free;		
@@ -120,7 +123,7 @@ namespace MMgc
 #endif
 
 		// Create the initial heap
-		ExpandHeap(kInitialHeapSize);
+		ExpandHeap(initialSize);
 
 		decommitTicks = 0;
 		decommitThresholdTicks = kDecommitThresholdMillis * GC::GetPerformanceFrequency() / 1000;

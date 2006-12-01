@@ -94,9 +94,9 @@ const int kBufferPadding = 16;
 		Debugger *debugger;
 		Profiler *profiler;
 		bool allocationTracking;
-		static bool sampling;
+		bool sampling;
 		// call startSampling in AvmCore ctor
-		static bool autoStartSampling;
+		bool autoStartSampling;
 
 		bool samplingNow;
 		int takeSample;

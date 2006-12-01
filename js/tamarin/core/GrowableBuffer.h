@@ -90,8 +90,8 @@ namespace avmplus
 	class GenericGuard
 	{
 	public:
-		void disable()	{ registerHandler(); }
-		void enable()	{ unregisterHandler(); }
+		void enable()	{ registerHandler(); }
+		void disable()	{ unregisterHandler(); }
 
 		#ifdef AVMPLUS_MACH_EXCEPTIONS
 		static void staticInit();

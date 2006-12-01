@@ -36,11 +36,6 @@ namespace avmplus
 {
 	using namespace MMgc;
 
-#ifdef DEBUGGER	
-		bool AvmCore::sampling = false;
-		bool AvmCore::autoStartSampling = false;
-#endif
-
 	BEGIN_NATIVE_CLASSES(AvmCore)
 		NATIVE_CLASS(abcclass_Object,				ObjectClass,	ScriptObject)
 		NATIVE_CLASS(abcclass_Class,				ClassClass,		ClassClosure)
@@ -106,6 +101,11 @@ namespace avmplus
 		AvmAssert (sizeof(uintptr) == 4);		
 		#endif	
 			
+		#ifdef DEBUGGER	
+		sampling = false;
+		autoStartSampling = false;
+		#endif
+
 		// set default mode flags
 		#ifdef AVMPLUS_VERBOSE
 		verbose = false;

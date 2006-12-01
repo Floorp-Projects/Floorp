@@ -94,9 +94,6 @@ namespace MMgc
 	// get detailed info on each size class allocators
 	const bool dumpSizeClassState = false;
 	
-	// Expand, don't collect, until we hit this threshold
-	const size_t GC::collectThreshold = 256;
-
 	/**
 	 * Free Space Divisor.  This value may be tuned for optimum
  	 * performance.  The FSD is based on the Boehm collector.
@@ -163,12 +160,6 @@ namespace MMgc
 	};
 	const size_t kLargestAlloc = 1968;
 
-
-#ifdef _DEBUG
-  // dump memory profile after sweeps
-	const bool GC::enableMemoryProfiling = false;
-#endif
-
 	GC::GC(GCHeap *gcheap)
 		: disableThreadCheck(false),
 #ifdef MMGC_DRC
@@ -223,7 +214,9 @@ namespace MMgc
 		  largeEmptyPageList(NULL),
 		  sweepStart(0),
 		  heapSizeAtLastAlloc(gcheap->GetTotalHeapSize()),
-		  finalizedValue(true)
+		  finalizedValue(true),
+		  // Expand, don't collect, until we hit this threshold
+		  collectThreshold(256)
 	{		
 		// sanity check for all our types
 		GCAssert (sizeof(int8) == 1);
@@ -637,7 +630,7 @@ bail:
 		int heapSize = heap->GetUsedHeapSize();
 
 #ifdef MEMORY_INFO
-		if(enableMemoryProfiling) {
+		if(heap->enableMemoryProfiling) {
 			GCDebugMsg(false, "Pre sweep memory info:\n");
 			DumpMemoryInfo();
 		}
@@ -694,7 +687,7 @@ bail:
 		SAMPLE_CHECK();
 
 #ifdef MEMORY_INFO
-		if(enableMemoryProfiling) {			
+		if(heap->enableMemoryProfiling) {			
 			GCDebugMsg(false, "Post sweep memory info:\n");
 			DumpMemoryInfo();
 		}
@@ -1558,7 +1551,7 @@ bail:
 
 	void GC::DumpMemoryInfo()
 	{
-		if(enableMemoryProfiling)
+		if(heap->enableMemoryProfiling)
 		{
 			DumpFatties();
 			if (dumpSizeClassState)

@@ -193,11 +193,11 @@ namespace avmplus
 	FakeCallStackNode::FakeCallStackNode(AvmCore *core, const char *name)
 	{
 		this->core = core;
-		if(AvmCore::sampling && core && core->fakeMethodInfos && core->builtinPool)
+		if(core && core->sampling && core->fakeMethodInfos && core->builtinPool)
 		{
 			this->core = core;
 			// have to turn sampling off during allocations to avoid recursion
-			AvmCore::sampling = false;
+			core->sampling = false;
 			Stringp s = core->internAllocAscii(name);
 			Atom a = core->fakeMethodInfos->get(s->atom());
 			AbstractFunction *af = (AbstractFunction*)AvmCore::atomToGCObject(a);
@@ -210,7 +210,7 @@ namespace avmplus
 				af->pool = core->builtinPool;
 			}
 			initialize(NULL, af, NULL, NULL, 0, NULL, NULL);
-			AvmCore::sampling = true;
+			core->sampling = true;
 			core->sampleCheck();
 		}
 		else
