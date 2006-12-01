@@ -499,6 +499,10 @@ function updateStartTime()
     }
     gEndTime = start;
   }
+
+  var isAllDay = getElementValue("event-all-day", "checked");
+  if(isAllDay)
+    gStartTime.isDate = true;
   
   updateDateTime();
   updateTimezone();
@@ -598,6 +602,10 @@ function updateEndTime()
     }
     gEndTime = end;
   }
+
+  var isAllDay = getElementValue("event-all-day", "checked");
+  if(isAllDay)
+    gStartTime.isDate = true;
   
   // calculate the new duration of start/end-time.
   // don't allow for negative durations.
@@ -1367,6 +1375,9 @@ function updateTaskAlarmWarnings()
 // event is configured as 'all-day' or not.
 function updateAllDay()
 {
+  if(gIgnoreUpdate)
+    return;
+
   //gConsoleService.logStringMessage("### updateAllDay()");
 
   if (!isEvent(window.calendarItem))
@@ -1386,6 +1397,9 @@ function updateAllDay()
     updateShowTimeAs();
   }
 
+  gStartTime.isDate = allDay;
+  gEndTime.isDate = allDay;
+
   // disable the timezone links if 'allday' is checked OR the
   // calendar of this item is read-only. in any other case we
   // enable the links.
@@ -1401,6 +1415,7 @@ function updateAllDay()
     tzEnd.setAttribute("class","text-link");
   }
 
+  updateDateTime();
   updateRepeatDetails();
   updateAccept();
 }
@@ -1468,15 +1483,43 @@ function editAttendees()
   var callback = function(attendees,organizer,startTime,endTime) {
     savedWindow.attendees = attendees;
     savedWindow.organizer = organizer;
-    gStartTime = startTime;
-    gEndTime = endTime;
+    var duration = endTime.subtractDate(startTime);
+    startTime = startTime.clone();
+    endTime = endTime.clone();
+    endTime.normalize();
+    startTime.normalize();
+    var kDefaultTimezone = calendarDefaultTimezone();
+    gStartTimezone = startTime.timezone;
+    gEndTimezone = endTime.timezone;
+    gStartTime = startTime.getInTimezone(kDefaultTimezone);
+    gEndTime = endTime.getInTimezone(kDefaultTimezone);
+    gItemDuration = duration;
     updateAttendees();
     updateDateTime();
   };
-  
+
+  var startTime = gStartTime.getInTimezone(gStartTimezone);
+  var endTime = gEndTime.getInTimezone(gEndTimezone);
+
+  var isAllDay = getElementValue("event-all-day", "checked");
+  if (isAllDay) {
+    startTime.isDate = true;
+    startTime.normalize();
+    endTime.isDate = true;
+    endTime.day += 1;
+    endTime.normalize();
+  } else {
+    startTime.isDate = false;
+    endTime.isDate = false;
+  }
+
+  var menuItem = document.getElementById('menu-options-timezone');
+  var displayTimezone = menuItem.getAttribute('checked') == 'true';
+
   var args = new Object();
-  args.startTime = gStartTime;
-  args.endTime = gEndTime;
+  args.startTime = startTime;
+  args.endTime = endTime;
+  args.displayTimezone = displayTimezone;
   args.attendees = window.attendees;
   args.organizer = window.organizer;
   args.calendar = calendar;
@@ -1816,61 +1859,6 @@ function updateCalendar()
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// onTabSelected
-//////////////////////////////////////////////////////////////////////////////
-
-function onTabSelected()
-{
-  var statusbarPanel = document.getElementById("statusbarpanel");
-  statusbarPanel.removeAttribute("label");
-  
-  var tab = document.getElementById("dialog-tab");
-  var index = tab.selectedIndex;
-  var attendees = document.getElementById("attendees-page");
-  var main = document.getElementById("main-page");
-
-  if(index == 0) {
-    if(attendees.startDate) {
-      setElementValue("event-starttime",attendees.startDate.jsDate);
-      setElementValue("event-endtime",attendees.endDate.jsDate);
-    }
-  } else if(index == 1) {
-    // disable/enable recurrence options based on whether or not
-    // we're editing a task and whether or not this task has
-    // an associated startdate.
-    var item = window.calendarItem;
-    if (isToDo(item)) {
-      var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
-                      jsDateToDateTime(getElementValue("todo-entrydate")) : null;
-      if(entryDate) {
-        var kDefaultTimezone = calendarDefaultTimezone();
-        entryDate = entryDate.getInTimezone(kDefaultTimezone);
-      }
-      var recurrencepage = document.getElementById("recurrence-page");
-      recurrencepage.mStartDate = entryDate;
-      recurrencepage.disableOrEnable(item);
-      recurrencepage.updateRecurrenceControls();
-    }
-  } else if(index == 2) {
-    var kDefaultTimezone = calendarDefaultTimezone();
-    var startDate = jsDateToDateTime(getElementValue("event-starttime"));
-    var endDate = jsDateToDateTime(getElementValue("event-endtime"));
-    startDate = startDate.getInTimezone(kDefaultTimezone);
-    endDate = endDate.getInTimezone(kDefaultTimezone);
-    var isAllDay = getElementValue("event-all-day", "checked");
-    if (isAllDay) {
-        startDate.isDate = true;
-        startDate.normalize();
-        endDate.isDate = true;
-        endDate.day += 1;
-        endDate.normalize();
-    }
-    attendees.setTimeRange(startDate,endDate);
-  }
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
 // splitRecurrenceRules
 //////////////////////////////////////////////////////////////////////////////
 
@@ -1890,7 +1878,6 @@ function splitRecurrenceRules(recurrenceInfo)
 
   return [rules, exceptions];
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 // editRepeat
@@ -2378,8 +2365,8 @@ function updateDateTime()
 {
   //gConsoleService.logStringMessage(
     //"### updateDateTime()\n"+
-    //"startTime: "+gStartTime.toString()+"\n"+
-    //"endTime: "+gEndTime.toString()+"\n");
+    //"startTime: "+gStartTime.toString()+" "+gStartTime.isDate+"\n"+
+    //"endTime: "+gEndTime.toString()+" "+gStartTime.isDate+"\n");
 
   gIgnoreUpdate = true;
 
@@ -2396,8 +2383,11 @@ function updateDateTime()
       var startTime = gStartTime.getInTimezone(gStartTimezone);
       var endTime = gEndTime.getInTimezone(gEndTimezone);
 
-      if (startTime.isDate)
+      if (startTime.isDate) {
         setElementValue("event-all-day", true, "checked");
+      } else {
+        setElementValue("event-all-day", false, "checked");
+      }
 
       // in the case where the timezones are different but
       // the timezone of the endtime is "UTC", we convert
@@ -2456,8 +2446,11 @@ function updateDateTime()
       var startTime = gStartTime.getInTimezone(kDefaultTimezone);
       var endTime = gEndTime.getInTimezone(kDefaultTimezone);
 
-      if (startTime.isDate)
+      if (startTime.isDate) {
         setElementValue("event-all-day", true, "checked");
+      } else {
+        setElementValue("event-all-day", false, "checked");
+      }
 
       // before feeding the date/time value into the control we need
       // to set the timezone to 'floating' in order to avoid the

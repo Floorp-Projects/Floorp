@@ -58,6 +58,7 @@ function onLoad()
 function onAccept()
 {
   var attendeespage = document.getElementById("attendees-page");
+  attendeespage.saveDateTime();
   var attendees = attendeespage.attendees;
   var organizer = attendeespage.organizer;
   var startTime = attendeespage.startDate;

@@ -145,10 +145,44 @@
 
           this.mIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
           this.mIsOffline = this.mIOService.offline;
+          
+          this.onInitialize();
         ]]>
       </constructor>
 
       <method name="onLoad">
+        <body>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+
+            // we need to enfore several layout constraints which can't be modelled
+            // with plain xul and css, at least as far as i know.
+            const kStylesheet = "chrome://calendar/content/sun-calendar-event-dialog.css";
+            for each(var stylesheet in document.styleSheets) {
+                if (stylesheet.href == kStylesheet) {
+
+                    // the height of the text blocks contained in the grid items needs
+                    // to have the same height as the items of the attendee-list.
+                    var height = template.boxObject.height-1;
+                    stylesheet.insertRule(".freebusy-grid { min-height: "+height+"px; }", 0);
+                    break;
+                }
+            }
+            
+            // this trigger the continous update chain, which
+            // effectively calls this.onModify() on predefined
+            // time intervals [each second].
+            var self = this;
+            var callback = function func() {
+              setTimeout(callback, 1000);
+              self.onModify();
+            }
+            callback();
+          ]]>
+        </body>
+      </method>
+      <method name="onInitialize">
         <body>
           <![CDATA[
             var args = window.arguments[0];
@@ -186,20 +220,6 @@
             var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
             var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
             template.focus();
-
-            // we need to enfore several layout constraints which can't be modelled
-            // with plain xul and css, at least as far as i know.
-            const kStylesheet = "chrome://calendar/content/sun-calendar-event-dialog.css";
-            for each(var stylesheet in document.styleSheets) {
-                if (stylesheet.href == kStylesheet) {
-
-                    // the height of the text blocks contained in the grid items needs
-                    // to have the same height as the items of the attendee-list.
-                    var height = template.boxObject.height-1;
-                    stylesheet.insertRule(".freebusy-grid { min-height: "+height+"px; }", 0);
-                    break;
-                }
-            }
 
             if(this.mIsReadOnly || !this.mIsOrganizer)
               listbox.setAttribute("disabled","true");
@@ -240,16 +260,6 @@
 
             this.fitDummyRows();
             this.addDirectoryServerObserver();
-
-            // this trigger the continous update chain, which
-            // effectively calls this.onModify() on predefined
-            // time intervals [each second].
-            var self = this;
-            var callback = function func() {
-              setTimeout(callback, 1000);
-              self.onModify();
-            }
-            callback();
             
             this.setFocus(this.mMaxAttendees);
             ]]>
@@ -1426,9 +1436,9 @@
     <content>
       <xul:scrollbox anonid="scrollbox" width="0" orient="horizontal" flex="1">
         <xul:box class="selection-bar" anonid="selection-bar">
-          <xul:box width="3"/>
-          <xul:spacer flex="1"/>
-          <xul:box width="3"/>
+          <xul:box width="3" style="cursor: e-resize"/>
+          <xul:spacer flex="1" style="cursor: -moz-grab"/>
+          <xul:box width="3" style="cursor: e-resize"/>
         </xul:box>
       </xul:scrollbox>
     </content>
@@ -1537,6 +1547,11 @@
           return val;
         ]]>
         </setter>
+        <getter>
+          <![CDATA[
+            return this.mStartDate;
+          ]]>
+        </getter>
       </property>
 
       <property name="endDate">
@@ -1547,10 +1562,18 @@
           // with our timebar display.
           var kDefaultTimezone = calendarDefaultTimezone();
           this.mEndDate = val.getInTimezone(kDefaultTimezone);
+          if(this.mEndDate.isDate)
+            this.mEndDate.day += 1;
+          this.mEndDate.normalize();
           this.mEndDate.makeImmutable();
           return val;
         ]]>
         </setter>
+        <getter>
+          <![CDATA[
+            return this.mEndDate;
+          ]]>
+        </getter>
       </property>
 
       <method name="init">
@@ -1625,12 +1648,21 @@
 
             // the final margin is the difference between
             // the date-based margin and the scroll-based margin.
-            var margin = this.mMargin - offset;
+            this.mMargin -= offset;
 
             // set the styles based on the calculations above for the 'selection-bar'.
             var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
-            var style = "width: "+this.mWidth+"px; margin-left: "+margin+"px; margin-top: "+this.mHeaderHeight+"px;";
+            var style = "width: "+this.mWidth+"px; margin-left: "+this.mMargin+"px; margin-top: "+this.mHeaderHeight+"px;";
             selectionbar.setAttribute("style",style);
+            
+            var event = document.createEvent('Events'); 
+            event.initEvent('timechange', true, false);
+            event.startDate = this.mStartDate;
+            event.endDate = this.mEndDate.clone();
+            if(event.endDate.isDate)
+              event.endDate.day -= 1;
+            event.endDate.makeImmutable();
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
@@ -1670,6 +1702,64 @@
         </body>
       </method>
 
+      <method name="moveTime">
+        <parameter name="time"/>
+        <parameter name="delta"/>
+        <body>
+          <![CDATA[
+            var num_hours = this.mEndHour - this.mStartHour;
+            var hour_width = this.mContentWidth / num_hours;
+            var minutes_per_pixel = 60 / hour_width;
+            var newTime = time.clone();
+            var minute_shift = minutes_per_pixel * delta;
+            var clip_minutes = 60 * this.zoomFactor / 100;
+            if(delta > 0) {
+              if(time.isDate) {
+                if(minute_shift >= clip_minutes) {
+                  newTime.day++;
+                  newTime.normalize();
+                }
+              } else {
+                if(minute_shift >= clip_minutes) {
+                  newTime.minute -= newTime.minute % clip_minutes;
+                  newTime.minute += clip_minutes;
+                  newTime.normalize();
+                }
+              }
+            
+            } else if(delta < 0) {
+              if(time.isDate) {
+                if(-minute_shift >= clip_minutes) {
+                  newTime.day--;
+                  newTime.normalize();
+                }
+              } else {
+                if(-minute_shift >= clip_minutes) {
+                  newTime.minute -= newTime.minute % clip_minutes;
+                  newTime.minute -= clip_minutes;
+                  newTime.normalize();
+                }
+              }
+            }
+
+            if(!newTime.isDate) {
+              if(newTime.hour < this.mStartHour) {
+                newTime.hour = this.mEndHour-1;
+                newTime.day--;
+              }
+              if(newTime.hour >= this.mEndHour) {
+                newTime.hour = this.mStartHour;
+                newTime.day++;
+              }
+            }
+            
+            newTime.normalize();
+                        
+            return newTime;
+          ]]>
+        </body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -1682,9 +1772,12 @@
           if(this.mMouseX >= this.mMargin) {
             if(this.mMouseX < (this.mMargin+this.mWidth)) {
               this.mDragState = 1;
+              window.setCursor("-moz-grab");
               if(this.mMouseX <= (this.mMargin+3)) {
+                window.setCursor("e-resize");
                 this.mDragState = 2;
               } else if(this.mMouseX >= (this.mMargin+this.mWidth-3)) {
+                window.setCursor("e-resize");
                 this.mDragState = 3;
               }
             }
@@ -1699,40 +1792,62 @@
             var mouseX = event.clientX - element.boxObject.x;
             var mouseY = event.clientY - element.boxObject.y;
             var delta = mouseX - this.mMouseX;
-            this.mMargin += delta;
-            if(this.mMargin < 0)
-              this.mMargin = 0;
-            this.mMouseX = mouseX;
-            this.mMouseY = mouseY;
-            this.update();
+            var newStart = this.moveTime(this.mStartDate,delta);
+            if(newStart.compare(this.mStartDate) != 0) {
+              newEnd = this.moveTime(this.mEndDate,delta);
+
+              // we need to adapt this date in case we're dealing with
+              // an all-day event. this is because setting 'endDate' will
+              // automatically add one day extra for all-day events.
+              if(newEnd.isDate) {
+                newEnd.day -= 1;
+                newEnd.normalize();
+              }
+              
+              this.startDate = newStart;
+              this.endDate = newEnd;
+              this.mMouseX = mouseX;
+              this.mMouseY = mouseY;
+              this.update();
+            }
           } else if(this.mDragState == 2) {
             var element = event.target;
             var mouseX = event.clientX - element.boxObject.x;
             var mouseY = event.clientY - element.boxObject.y;
             var delta = mouseX - this.mMouseX;
-            var newMargin = this.mMargin + delta;
-            if(newMargin < 0)
-              newMargin = 0;
-            var newWidth = this.mWidth - (newMargin - this.mMargin);
-            if(newWidth >= 8) {
-              this.mWidth = newWidth;
-              this.mMargin = newMargin;
+            var newStart = this.moveTime(this.mStartDate,delta);
+            if(newStart.compare(this.mStartDate) != 0) {
+              this.startDate = newStart;
+              this.mMouseX = mouseX;
+              this.mMouseY = mouseY;
               this.update();
             }
-            this.mMouseX = mouseX;
-            this.mMouseY = mouseY;
           } else if(this.mDragState == 3) {
             var element = event.target;
             var mouseX = event.clientX - element.boxObject.x;
             var mouseY = event.clientY - element.boxObject.y;
             var delta = mouseX - this.mMouseX;
-            var newWidth = this.mWidth + delta;
-            if(newWidth >= 8) {
-              this.mWidth = newWidth;
-              this.update();
+            var newEnd = this.moveTime(this.mEndDate,delta);
+            if(newEnd.compare(this.mEndDate) != 0) {
+            
+              // we need to adapt this date in case we're dealing with
+              // an all-day event. this is because setting 'endDate' will
+              // automatically add one day extra for all-day events.
+              if(newEnd.isDate) {
+                newEnd.day -= 1;
+                newEnd.normalize();
+              }
+              
+              // don't allow all-day events to be shorter than a single day.
+              if(!newEnd.isDate ||
+                 (newEnd.compare(this.startDate) >= 0)) {
+
+                this.endDate = newEnd;
+                this.mMouseX = mouseX;
+                this.mMouseY = mouseY;
+                this.update();
+              }
             }
-            this.mMouseX = mouseX;
-            this.mMouseY = mouseY;
           }
         ]]>
       </handler>
@@ -1740,6 +1855,7 @@
       <handler event="mouseup">
         <![CDATA[
           this.mDragState = 0;
+          window.setCursor("auto");
         ]]>
       </handler>
 
@@ -1840,7 +1956,7 @@
           </xul:columns>
           <xul:rows>
             <xul:row align="center">
-              <xul:button label="toggle" oncommand="onToggle();"/>
+              <xul:checkbox anonid="all-day" oncommand="changeAllDay();" label="&event.alldayevent.label;"/>
             </xul:row>
             <xul:row align="center">
               <xul:menulist anonid="zoom-menulist" oncommand="onZoomFactor(this.value);">
@@ -1858,14 +1974,28 @@
               <xul:button label="&event.freebusy.next.slot;" anonid="next-slot" oncommand="onNextSlot();"/>
               <xul:spacer/>
               <xul:label value="&newevent.from.label;"/>
-              <xul:datetimepicker anonid="event-starttime" disabled="true"/>
+              <xul:datetimepicker anonid="event-starttime" onchange="updateStartTime();"/>
+              <xul:label anonid="timezone-starttime"
+                         crop="right"
+                         class="text-link"
+                         flex="1"
+                         collapsed="true"
+                         hyperlink="true"
+                         onclick="editStartTimezone()"/>
             </xul:row>
             <xul:row align="center">
               <xul:button label="&event.freebusy.minus;" flex="1" oncommand="onMinus();"/>
               <xul:button label="&event.freebusy.plus;" flex="1" oncommand="onPlus();"/>
               <xul:spacer/>
               <xul:label value="&newevent.to.label;"/>
-              <xul:datetimepicker anonid="event-endtime" disabled="true"/>
+              <xul:datetimepicker anonid="event-endtime" onchange="updateEndTime();"/>
+              <xul:label anonid="timezone-endtime"
+                         crop="right"
+                         class="text-link"
+                         flex="1"
+                         collapsed="true"
+                         hyperlink="true"
+                         onclick="editEndTimezone()"/>
             </xul:row>
             <xul:row align="center" collapsed="true" anonid="event-organizer-row" >
               <xul:label value="&event.organizer.label;" disabled="true"/>
@@ -1881,6 +2011,9 @@
 
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
+      <field name="mStartTimezone">null</field>
+      <field name="mEndTimezone">null</field>
+      <field name="mDuration">null</field>
       <field name="mStartHour">8</field>
       <field name="mEndHour">19</field>
       <field name="mStartHourDefault">8</field>
@@ -1891,6 +2024,8 @@
       <field name="mOrganizerID">null</field>
       <field name="mIsReadOnly">false</field>
       <field name="mIsOrganizer">false</field>
+      <field name="mIgnoreUpdate">false</field>
+      <field name="mDisplayTimezone">true</field>
 
       <field name="mUndoStack">[]</field>
 
@@ -1947,6 +2082,9 @@
         </getter>
         <setter>
           <![CDATA[
+          if(this.mForce24Hours == val)
+            return val;
+            
           this.mForce24Hours = val;
           
           this.initTimeRange();
@@ -2009,14 +2147,6 @@
           ]]>
       </constructor>
 
-      <method name="onToggle">
-        <body>
-          <![CDATA[
-            this.force24Hours = !this.force24Hours;
-          ]]>
-        </body>
-      </method>
-
       <method name="onZoomFactor">
         <parameter name="aValue"/>
         <body>
@@ -2051,52 +2181,446 @@
         </body>
       </method>
 
-      <method name="setTimeRange">
+      <method name="loadDateTime">
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
         <body>
           <![CDATA[
+            this.mDuration = aEndDate.subtractDate(aStartDate);
             var kDefaultTimezone = calendarDefaultTimezone();
+            this.mStartTimezone = aStartDate.timezone;
+            this.mEndTimezone = aEndDate.timezone;
             this.mStartDate = aStartDate.getInTimezone(kDefaultTimezone);
             this.mEndDate = aEndDate.getInTimezone(kDefaultTimezone);
-            var endDate = this.mEndDate.getInTimezone(kDefaultTimezone);
-                
-            // Check if an all-day event has been passed in (to adapt endDate).
-            if (this.mStartDate.isDate) {
-                this.mEndDate.day -= 1;
-
-                // The date/timepicker uses jsDate internally. Because jsDate does
-                // not know the concept of dates we end up displaying times unequal
-                // to 00:00 for all-day events depending on local timezone setting. 
-                // Calling normalize() recalculates that times to represent 00:00
-                // in local timezone.
-                this.mEndDate.normalize();
-                this.mStartDate.normalize();
-                endDate.normalize();
-            }
+            this.mStartDate.normalize();
+            this.mEndDate.normalize();
             this.mStartDate.makeImmutable();
             this.mEndDate.makeImmutable();
-            endDate.makeImmutable();
+          ]]>
+        </body>
+      </method>
 
-            document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
-            document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
+      <method name="saveDateTime">
+        <body>
+          <![CDATA[
+            var kDefaultTimezone = calendarDefaultTimezone();
+
+            var startTime = this.mStartDate.getInTimezone(this.mStartTimezone);
+            var endTime = this.mEndDate.getInTimezone(this.mEndTimezone);
+            
+            this.mStartDate = startTime;
+            this.mEndDate = endTime;
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="propagateDateTime">
+        <body>
+          <![CDATA[
+            // fill the controls
+            this.updateDateTime();
 
             // tell the timebar about the new start/enddate
             var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
             timebar.startDate = this.mStartDate;
-            timebar.endDate = endDate;
+            timebar.endDate = this.mEndDate;
             timebar.refresh();
             
             // tell the selection-bar about the new start/enddate
             var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
             selectionbar.startDate = this.mStartDate;
-            selectionbar.endDate = endDate;
+            selectionbar.endDate = this.mEndDate;
             selectionbar.update();
             
             // tell the freebusy grid about the new start/enddate
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
             grid.startDate = this.mStartDate;
-            grid.endDate = endDate;
+            grid.endDate = this.mEndDate;
+
+            // expand to 24hrs if the new range is outside of the default range.
+            var kDefaultTimezone = calendarDefaultTimezone();
+            var startTime = this.mStartDate.getInTimezone(kDefaultTimezone);
+            var endTime = this.mEndDate.getInTimezone(kDefaultTimezone);
+            if((startTime.hour < this.mStartHour) ||
+               (endTime.hour > this.mEndHour) ||
+               (startTime.isDate)) {
+              this.force24Hours = true;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!-- assumes this.mStartDate and this.mEndDate are up to date. -->
+      <method name="updateDateTime">
+        <body>
+          <![CDATA[
+            // convert to default timezone if the timezone option
+            // is *not* checked, otherwise keep the specific timezone
+            // and display the labels in order to modify the timezone.
+            if(this.mDisplayTimezone) {
+
+              var startTime = this.mStartDate.getInTimezone(this.mStartTimezone);
+              var endTime = this.mEndDate.getInTimezone(this.mEndTimezone);
+
+              if (startTime.isDate) {
+                document.getAnonymousElementByAttribute(this, "anonid", "all-day").setAttribute("checked","true");
+              }
+
+              // in the case where the timezones are different but
+              // the timezone of the endtime is "UTC", we convert
+              // the endtime into the timezone of the starttime.
+              if(startTime && endTime) {
+                if(startTime.timezone != endTime.timezone) {
+                  if(endTime.timezone == "UTC") {
+                    endTime = endTime.getInTimezone(startTime.timezone);
+                  }
+                }
+              }
+
+              // before feeding the date/time value into the control we need
+              // to set the timezone to 'floating' in order to avoid the
+              // automatic conversion back into the OS timezone.
+              startTime.timezone = "floating";
+              endTime.timezone = "floating";
+
+              document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = startTime.jsDate;
+              document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = endTime.jsDate;
+
+            } else {
+
+              var kDefaultTimezone = calendarDefaultTimezone();
+
+              var startTime = this.mStartDate.getInTimezone(kDefaultTimezone);
+              var endTime = this.mEndDate.getInTimezone(kDefaultTimezone);
+
+              if (startTime.isDate) {
+                document.getAnonymousElementByAttribute(this, "anonid", "all-day").setAttribute("checked","true");
+              }
+
+              // before feeding the date/time value into the control we need
+              // to set the timezone to 'floating' in order to avoid the
+              // automatic conversion back into the OS timezone.
+              startTime.timezone = "floating";
+              endTime.timezone = "floating";
+
+              document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = startTime.jsDate;
+              document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = endTime.jsDate;
+            }
+
+            this.updateTimezone();
+            this.updateAllDay();
+          ]]>
+        </body>
+      </method>
+
+      <method name="timezoneString">
+        <parameter name="date"/>
+        <body>
+          <![CDATA[
+            var fragments = date.split('/');
+            var num = fragments.length;
+            if(num <= 1)
+              return fragments[0];
+            return fragments[num-2]+'/'+fragments[num-1];
+          ]]>
+        </body>
+      </method>
+
+      <!-- assumes this.mStartDate and this.mEndDate are up to date. -->
+      <method name="updateTimezone">
+        <body>
+          <![CDATA[
+            this.mIgnoreUpdate = true;
+          
+            if(this.mDisplayTimezone) {
+
+              var startTimezone = this.mStartTimezone;
+              var endTimezone = this.mEndTimezone;
+
+              var equalTimezones = false;
+              if(startTimezone && endTimezone) {
+                if(startTimezone == endTimezone || endTimezone == "UTC") {
+                  equalTimezones = true;
+                }
+              }
+
+              var tzStart = document.getAnonymousElementByAttribute(this, "anonid", "timezone-starttime");
+              var tzEnd = document.getAnonymousElementByAttribute(this, "anonid", "timezone-endtime");
+              
+              if(startTimezone != null) {
+                tzStart.removeAttribute('collapsed');
+                tzStart.value = this.timezoneString(startTimezone);
+              } else {
+                tzStart.setAttribute('collapsed','true');
+              }
+            
+              // we never display the second timezone if both are equal
+              if(endTimezone != null && !equalTimezones) {  
+                tzEnd.removeAttribute('collapsed');
+                tzEnd.value = this.timezoneString(endTimezone);
+              } else {
+                tzEnd.setAttribute('collapsed','true');
+              }
+            
+            } else {
+
+              document.getAnonymousElementByAttribute(this, "anonid", "timezone-starttime").setAttribute('collapsed','true');
+              document.getAnonymousElementByAttribute(this, "anonid", "timezone-endtime").setAttribute('collapsed','true');
+            }
+
+            this.mIgnoreUpdate = false;
+          
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateStartTime">
+        <body>
+          <![CDATA[
+            if(this.mIgnoreUpdate)
+              return;
+
+            var startWidgetId = "event-starttime";
+            var endWidgetId = "event-endtime";
+            
+            var startWidget = document.getAnonymousElementByAttribute(this, "anonid", startWidgetId);
+            var endWidget = document.getAnonymousElementByAttribute(this, "anonid", endWidgetId);
+            
+            // jsDate is always in OS timezone, thus we create a calIDateTime
+            // object from the jsDate representation and simply set the new
+            // timezone instead of converting.
+            var kDefaultTimezone = calendarDefaultTimezone();
+            var start = jsDateToDateTime(startWidget.value);
+            start = start.getInTimezone(kDefaultTimezone);
+            if(this.mDisplayTimezone) {
+              start.timezone = this.mStartTimezone;
+            }
+            this.mStartDate = start.clone();
+            start.addDuration(this.mDuration);
+            start = start.getInTimezone(this.mEndTimezone);
+            if(this.mDisplayTimezone) {
+              start.timezone = this.mEndTimezone;
+            }
+            this.mEndDate = start;
+
+            var allDayElement = document.getAnonymousElementByAttribute(this, "anonid", "all-day");
+            var allDay = allDayElement.getAttribute("checked") == "true";
+            if(allDay) {
+              this.mStartDate.isDate = true;
+              this.mEndDate.isDate = true;
+            }
+            
+            this.propagateDateTime();
+          ]]>
+          </body>
+        </method>
+
+        <method name="updateEndTime">
+          <body>
+            <![CDATA[
+            if(this.mIgnoreUpdate)
+              return;
+
+            var startWidgetId = "event-starttime";
+            var endWidgetId = "event-endtime";
+            
+            var startWidget = document.getAnonymousElementByAttribute(this, "anonid", startWidgetId);
+            var endWidget = document.getAnonymousElementByAttribute(this, "anonid", endWidgetId);
+
+            var saveStartTime = this.mStartDate;
+            var saveEndTime = this.mEndDate;
+            var kDefaultTimezone = calendarDefaultTimezone();
+
+            var start = jsDateToDateTime(startWidget.value);
+            start = start.getInTimezone(kDefaultTimezone);
+            if(this.mDisplayTimezone) {
+              start.timezone = this.mStartTimezone;
+            }
+            this.mStartDate = start;
+
+            var end = jsDateToDateTime(endWidget.value);
+            end = end.getInTimezone(kDefaultTimezone);
+            var timezone = this.mEndTimezone;
+            if(timezone == "UTC") {
+              if(this.mStartDate && this.mStartTimezone != this.mEndTimezone) {
+                timezone = this.mStartTimezone;
+              }
+            }
+            if(this.mDisplayTimezone) {
+              end.timezone = timezone;
+            }
+            this.mEndDate = end;
+            
+            var allDayElement = document.getAnonymousElementByAttribute(this, "anonid", "all-day");
+            var allDay = allDayElement.getAttribute("checked") == "true";
+            if(allDay) {
+              this.mStartDate.isDate = true;
+              this.mEndDate.isDate = true;
+            }
+            
+            // calculate the new duration of start/end-time.
+            // don't allow for negative durations.
+            var warning = false;
+            if(this.mEndDate.compare(this.mStartDate) >= 0) {
+              this.mDuration = end.subtractDate(start);
+            } else {
+              this.mStartDate = saveStartTime;
+              this.mEndDate = saveEndTime;
+              warning = true;
+            }
+
+            this.propagateDateTime();
+            
+            if(warning) {
+              var callback = function func() {
+                var promptService = 
+                         Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                   .getService(Components.interfaces.nsIPromptService);
+                promptService.alert(null,document.title,"The end date you entered occurs before the start date.");
+              }
+              setTimeout(callback, 1);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="editStartTimezone">
+        <body>
+          <![CDATA[
+            var tzStart = document.getAnonymousElementByAttribute(this, "anonid", "timezone-starttime");
+            if(tzStart.hasAttribute("disabled"))
+              return;
+
+            var self = this;
+            var args = new Object();
+            args.time = this.mStartDate.getInTimezone(this.mStartTimezone);
+            args.onOk = function(datetime) {
+
+              var equalTimezones = false;
+              if(self.mStartTimezone && self.mEndTimezone) {
+                if(self.mStartTimezone == self.mEndTimezone) {
+                  equalTimezones = true;
+                }
+              }
+
+              self.mStartTimezone = datetime.timezone;
+              if(equalTimezones)
+                self.mEndTimezone = datetime.timezone;
+
+              self.propagateDateTime();
+            };
+
+            // open the dialog modally
+            openDialog("chrome://calendar/content/sun-calendar-event-dialog-timezone.xul", "_blank", "chrome,titlebar,modal,resizable", args);
+          ]]>
+        </body>
+      </method>
+
+      <method name="editEndTimezone">
+        <body>
+          <![CDATA[
+            var tzStart = document.getAnonymousElementByAttribute(this, "anonid", "timezone-endtime");
+            if(tzStart.hasAttribute("disabled"))
+              return;
+
+            var self = this;
+            var args = new Object();
+            args.time = gEndTime.getInTimezone(gEndTimezone);
+            args.onOk = function(datetime) {
+              
+              var equalTimezones = false;
+              if(self.mStartTimezone && self.mEndTimezone) {
+                if(self.mStartTimezone == self.mEndTimezone) {
+                  equalTimezones = true;
+                }
+              }
+              
+              if(equalTimezones)
+                self.mStartTimezone = datetime.timezone;
+              self.mEndTimezone = datetime.timezone;
+              
+              self.propagateDateTime();
+            };
+
+            // open the dialog modally
+            openDialog("chrome://calendar/content/sun-calendar-event-dialog-timezone.xul", "_blank", "chrome,titlebar,modal,resizable", args);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateAllDay">
+        <body>
+          <![CDATA[
+            if(this.mIgnoreUpdate)
+              return;
+
+            var allDayElement = document.getAnonymousElementByAttribute(this, "anonid", "all-day");
+            var allDay = allDayElement.getAttribute("checked") == "true";
+            var startpicker = document.getAnonymousElementByAttribute(this, "anonid", "event-starttime");
+            var endpicker = document.getAnonymousElementByAttribute(this, "anonid", "event-endtime");
+            if(allDay) {
+              startpicker.setAttribute("timepickerdisabled","true");
+              endpicker.setAttribute("timepickerdisabled","true");
+            } else {
+              startpicker.removeAttribute("timepickerdisabled");
+              endpicker.removeAttribute("timepickerdisabled");
+            }
+
+            var tzStart = document.getAnonymousElementByAttribute(this, "anonid", "timezone-starttime");
+            var tzEnd = document.getAnonymousElementByAttribute(this, "anonid", "timezone-endtime");
+
+            // disable the timezone links if 'allday' is checked OR the
+            // calendar of this item is read-only. in any other case we
+            // enable the links.
+            if(allDay) {
+              tzStart.setAttribute("disabled","true");
+              tzEnd.setAttribute("disabled","true");
+              tzStart.removeAttribute("class");
+              tzEnd.removeAttribute("class");
+            } else {
+              tzStart.removeAttribute("disabled");
+              tzEnd.removeAttribute("disabled");
+              tzStart.setAttribute("class","text-link");
+              tzEnd.setAttribute("class","text-link");
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="changeAllDay">
+        <body>
+          <![CDATA[
+            var allDayElement = document.getAnonymousElementByAttribute(this, "anonid", "all-day");
+            var allDay = allDayElement.getAttribute("checked") == "true";
+
+            this.mStartDate = this.mStartDate.clone();
+            this.mEndDate = this.mEndDate.clone();
+            if(allDay) {
+              this.mStartDate.isDate = true;
+              this.mEndDate.isDate = true;
+            } else {
+              this.mStartDate.isDate = false;
+              this.mEndDate.isDate = false;
+            }
+            
+            this.mStartDate.normalize();
+            this.mEndDate.normalize();
+
+            this.propagateDateTime();
+
+            // after propagating the modified times we enforce some constraints
+            // on the zoom-factor. in case this events is now said to be all-day,
+            // we automatically enforce a 25% zoom-factor and disable the control.
+            var zoom = document.getAnonymousElementByAttribute(this, "anonid", "zoom-menulist");
+            if(allDay) {
+              zoom.value = "400";
+              zoom.setAttribute("disabled","true");
+              this.zoomFactor = zoom.value;
+              this.force24Hours = true;
+            } else {
+              zoom.removeAttribute("disabled");
+            }
           ]]>
         </body>
       </method>
@@ -2174,19 +2698,8 @@
             var startTime = args.startTime;
             var endTime = args.endTime;
             var calendar = args.calendar;
-
-            var kDefaultTimezone = calendarDefaultTimezone();
-            var begin = startTime.getInTimezone(kDefaultTimezone);
-            var end = endTime.getInTimezone(kDefaultTimezone);
-            if((begin.hour < this.mStartHour) ||
-               (end.hour > this.mEndHour) ||
-               (begin.isDate)) {
-              /*var self = this;
-              var callback = function func() {
-                self.force24Hours = true;
-              }
-              setTimeout(callback, 1000);*/
-            }
+            
+            this.mDisplayTimezone = args.displayTimezone;
 
             this.onChangeCalendar(calendar);
 
@@ -2207,12 +2720,37 @@
                 }
             }
 
-            this.setTimeRange(startTime,endTime);
+            var zoom = document.getAnonymousElementByAttribute(this, "anonid", "zoom-menulist");
+            zoom.value = "100";
+
+            // Check if an all-day event has been passed in (to adapt endDate).
+            if (startTime.isDate) {
+
+              startTime = startTime.clone();
+              endTime = endTime.clone();
+
+              endTime.day -= 1;
+
+              // The date/timepicker uses jsDate internally. Because jsDate does
+              // not know the concept of dates we end up displaying times unequal
+              // to 00:00 for all-day events depending on local timezone setting. 
+              // Calling normalize() recalculates that times to represent 00:00
+              // in local timezone.
+              endTime.normalize();
+              startTime.normalize();
+
+              // for all-day events we expand to 24hrs, set zoom-factor to 25%
+              // and disable the zoom-control.
+              this.force24Hours = true;
+              zoom.value = "400";
+              zoom.setAttribute("disabled","true");
+              this.zoomFactor = zoom.value;
+            }
+
+            this.loadDateTime(startTime,endTime);
+            this.propagateDateTime();
             
             this.updateButtons();
-            
-            var zoom = document.getAnonymousElementByAttribute(this, "anonid", "zoom-menulist");
-            zoom.selectedIndex = 2;
           ]]>
         </body>
       </method>
@@ -2327,25 +2865,7 @@
             this.mEndDate.makeImmutable();
             endDate.makeImmutable();
 
-            // show the new start/enddate in the appropriate controls
-            document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
-            document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
-
-            // tell the grid about the new start/enddate
-            grid.startDate = this.mStartDate;
-            grid.endDate = endDate;
-            
-            // tell the timebar about the new start/enddate
-            var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-            timebar.startDate = this.mStartDate;
-            timebar.endDate = endDate;
-            timebar.refresh();
-
-            // tell the selection-bar about the new start/enddate
-            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
-            selectionbar.startDate = this.mStartDate;
-            selectionbar.endDate = endDate;
-            selectionbar.update();
+            this.propagateDateTime();
 
             // scroll the grid/timebar such that the current time is visible
             this.scrollToCurrentTime();
@@ -2372,59 +2892,7 @@
             this.mEndDate = previousSlot.endTime.clone();
             var endDate = this.mEndDate.clone();
             
-            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
-                    
-            /* // the following block was used to really search for the previous
-             * // slot instead of relying on a simple undeo/redo stack.
-             * // ask the grid for the previous timeslot.
-             * var duration = this.mEndDate.subtractDate(this.mStartDate);
-             * var start = grid.previousSlot();
-             * var end = start.clone();
-             * end.addDuration(duration);
-             * if(start.isDate) {
-             *   end.day++;
-             *   end.normalize();
-             * }
-             * this.mStartDate = start.clone();
-             * this.mEndDate = end.clone();
-             * var endDate = this.mEndDate.clone();
-             * // Check if an all-day event has been passed in (to adapt endDate).
-             * if (this.mStartDate.isDate) {
-             *     this.mEndDate.day -= 1;
-             * 
-             *     // The date/timepicker uses jsDate internally. Because jsDate does
-             *     // not know the concept of dates we end up displaying times unequal
-             *     // to 00:00 for all-day events depending on local timezone setting. 
-             *     // Calling normalize() recalculates that times to represent 00:00
-             *     // in local timezone.
-             *     this.mEndDate.normalize();
-             *     this.mStartDate.normalize();
-             *     endDate.normalize();
-             * }
-             * this.mStartDate.makeImmutable();
-             * this.mEndDate.makeImmutable();
-             * endDate.makeImmutable();
-             */
-
-            // show the new start/enddate in the appropriate controls
-            document.getAnonymousElementByAttribute(this, "anonid", "event-starttime").value = this.mStartDate.jsDate;
-            document.getAnonymousElementByAttribute(this, "anonid", "event-endtime").value = this.mEndDate.jsDate;
-
-            // tell the grid about the new start/enddate
-            grid.startDate = this.mStartDate;
-            grid.endDate = endDate;
-            
-            // tell the timebar about the new start/enddate
-            var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-            timebar.startDate = this.mStartDate;
-            timebar.endDate = endDate;
-            timebar.refresh();
-            
-            // tell the selection-bar about the new start/enddate
-            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
-            selectionbar.startDate = this.mStartDate;
-            selectionbar.endDate = endDate;
-            selectionbar.update();
+            this.propagateDateTime();
             
             // scroll the grid/timebar such that the current time is visible
             this.scrollToCurrentTime();
@@ -2432,6 +2900,7 @@
             this.updateButtons();
             
             if(refresh) {
+              var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
               grid.forceRefresh();
             }
           ]]>
@@ -2522,6 +2991,32 @@
         <![CDATA[
           var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
           selectionbar.init(event.details,event.height);
+        ]]>
+      </handler>
+
+      <handler event="timechange">
+        <![CDATA[
+          var start = event.startDate.getInTimezone(this.mStartTimezone);
+          var end = event.endDate.getInTimezone(this.mEndTimezone);
+          
+          start.normalize();
+          end.normalize();
+          
+          this.loadDateTime(start,end);
+        
+          // fill the controls
+          this.updateDateTime();
+
+          // tell the timebar about the new start/enddate
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+          timebar.startDate = this.mStartDate;
+          timebar.endDate = this.mEndDate;
+          timebar.refresh();
+          
+          // tell the freebusy grid about the new start/enddate
+          var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+          grid.startDate = this.mStartDate;
+          grid.endDate = this.mEndDate;
         ]]>
       </handler>
 

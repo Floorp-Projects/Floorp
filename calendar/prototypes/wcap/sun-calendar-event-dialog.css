@@ -173,9 +173,6 @@ listbox {
 
 .selection-bar
 {
-  /*cursor: -moz-grab;*/
-  /*cursor: e-resize;*/
-  /*cursor: e-resize;*/
   background-color: #008080;
   opacity: 0.2;
   -moz-border-radius-topleft: 10px;
