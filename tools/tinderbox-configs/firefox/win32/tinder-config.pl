@@ -151,7 +151,7 @@ $moz_cvsroot = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
 #$ObjDir = 'fx-trunk-cairo';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Release';
+$BuildNameExtra = 'Nightly';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -170,7 +170,7 @@ $BuildNameExtra = 'Release';
 $BuildTree  = 'Firefox';
 
 #$BuildName = '';
-$BuildTag = 'MOZILLA_1_9a1_RELEASE';
+#$BuildTag = '';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
@@ -192,7 +192,7 @@ $BinaryName = 'firefox.exe';
 # Release build options
 $ReleaseBuild  = 1;
 $shiptalkback  = 1;
-$ReleaseToLatest = 0; # Push the release to latest-<milestone>?
+$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 $ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "4";
 $package_creation_path = "/browser/installer";
@@ -204,7 +204,7 @@ $ftp_path      = "/home/ftp/pub/firefox/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly";
 $tbox_ftp_path = "/home/ftp/pub/firefox/tinderbox-builds";
 $tbox_url_path = "http://ftp.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds";
-$milestone     = "mozilla1.9a1";
+$milestone     = "trunk";
 $notify_list   = 'build-announce@mozilla.org';
 $stub_installer = 0;
 $sea_installer = 1;
@@ -217,7 +217,7 @@ $update_platform = "WINNT_x86-msvc";
 $update_hash = "sha1";
 $update_filehost = "ftp.mozilla.org";
 $update_ver_file = 'browser/config/version.txt';
-$update_pushinfo = 0;
+$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
@@ -244,5 +244,5 @@ $update_pushinfo = 0;
 # - processes that tbox scripts cannot kill. 
 #$ENV{NO_EM_RESTART} = '1';
 
-# Do not build XForms
-$BuildXForms = 0;
+# Build XForms
+$BuildXForms = 1;

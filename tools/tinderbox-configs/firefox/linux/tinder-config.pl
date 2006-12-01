@@ -1,12 +1,13 @@
 #
-## hostname: argo-vm
-## uname: Linux argo-vm.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
+## hostname: argo
+## uname: Linux argo.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
 #
 
 #- tinder-config.pl - Tinderbox configuration file.
 #-    Uncomment the variables you need to set.
 #-    The default values are the same as the commented variables.
 
+$BuildXForms = "1";
 $ENV{MOZILLA_OFFICIAL} = 1;
 $ENV{CVS_RSH} = "ssh";
 #$ENV{PATH} = "/usr/gcc-3.3.2rh/bin:$ENV{PATH}";
@@ -82,7 +83,7 @@ $DHTMLPerformanceTest     = 0;  # Tdhtml
 #$XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
 
-$TestsPhoneHome           = 0;  # Should test report back to server?
+$TestsPhoneHome           = 1;  # Should test report back to server?
 $GraphNameOverride        = 'argo-vm';
 
 # $results_server
@@ -158,7 +159,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 #$ObjDir = '';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Release';
+$BuildNameExtra = 'Nightly';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -176,7 +177,7 @@ $BuildNameExtra = 'Release';
 $BuildTree  = 'Firefox';
 
 #$BuildName = '';
-$BuildTag = 'MOZILLA_1_9a1_RELEASE';
+#$BuildTag = '';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
@@ -198,7 +199,7 @@ $BinaryName = 'firefox-bin';
 # Release build options
 $ReleaseBuild  = 1;
 $shiptalkback  = 1;
-$ReleaseToLatest = 0; # Push the release to latest-<milestone>?
+$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 $ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = 4;
 $package_creation_path = "/browser/installer";
@@ -210,13 +211,13 @@ $ftp_path      = "/home/ftp/pub/firefox/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly";
 $tbox_ftp_path = "/home/ftp/pub/firefox/tinderbox-builds";
 $tbox_url_path = "http://ftp.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds";
-$milestone     = "mozilla1.9a1";
+$milestone     = "trunk";
 $notify_list   = 'build-announce@mozilla.org';
 $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
 $push_raw_xpis = 0;
-$update_pushinfo = 0;
+$update_pushinfo = 1;
 $update_package = 1;
 $update_product = "Firefox";
 $update_version = "trunk";
@@ -249,6 +250,3 @@ $update_ver_file = 'browser/config/version.txt';
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill. 
 #$ENV{NO_EM_RESTART} = '1';
-
-# Do not build XForms
-$BuildXForms = 0;
