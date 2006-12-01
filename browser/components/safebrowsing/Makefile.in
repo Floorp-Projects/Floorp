@@ -49,7 +49,7 @@ ifdef ENABLE_TESTS
 DIRS     += tests
 endif
 
-ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
+ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
 DEFINES += -DOFFICIAL_BUILD=1
 endif
 
