@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <smfr@smfr.org> (Original Author)
- *   Smokey Ardisson <alqahira@mindspring.com>
+ *   Smokey Ardisson <alqahira@ardisson.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,6 +98,7 @@ a:link[href*="save.TV"] img,
 a:link[href*="exclick."] img,
 a:link[href*="adclick."] img,
 a:link[href*="clickbank.net"] img,
+a:link[href*=".ru4.com"] img,
 
 embed[src*="/us.yimg.com/a/"],
 embed[type="application/x-shockwave-flash"][src*="/ad."],
@@ -164,6 +165,8 @@ embed[type="application/x-shockwave-flash"][src*="images.anandtech.com/banners"]
 embed[type="application/x-shockwave-flash"][src*="precisionclick.com"],
 embed[type="application/x-shockwave-flash"][src*="adsatt.espn.go.com"],
 embed[type="application/x-shockwave-flash"][src*="blogsmithmedia.com"],
+embed[type="application/x-shockwave-flash"][src*=".ru4.com"],
+embed[type="application/x-shockwave-flash"][src*=".adjuggler.com"],
 
 img[src*="googlesyndication.com"],
 img[src*=".doubleclick.net"],
@@ -218,6 +221,7 @@ img[src*="content.ipro.com/images"],
 img[src*="static.fmpub.net/banners"],
 img[src*="content.cpxinteractive.com"],
 img[src*="righthandads"],
+img[src*=".ru4.com"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
@@ -294,6 +298,9 @@ iframe[src*="adspace"],
 iframe[src*="AdPlaceholder"],
 iframe[src*="ffxcam.fairfax.com.au"],
 iframe[src*="contextweb.com"],
+iframe[src*="ads-rm.looksmart.com"], 
+iframe[src*=".ru4.com"],
+iframe[src*=".kanoodle.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -315,6 +322,8 @@ div[id*="ad300x100"],
 div.werbeblock,
 div.werbung,
 div[id$="_ad"],
+div[id$="_ads"],
+div[id*="ad_google"],
 div.top_ad_image,
 div[class*="_ad_"],
 div[id*="swf_728x90"],
