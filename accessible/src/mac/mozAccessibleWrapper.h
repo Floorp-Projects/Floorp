@@ -70,4 +70,8 @@ struct AccessibleWrapper {
   mozAccessible* getNativeObject () {
     return object;
   }
+ 
+  PRBool isIgnored () {
+    return (PRBool)[object accessibilityIsIgnored];
+  }
 };

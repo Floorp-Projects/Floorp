@@ -122,6 +122,9 @@
 #ifdef DEBUG
 - (void)printHierarchy;
 - (void)printHierarchyWithLevel:(unsigned)numSpaces;
+
+- (void)sanityCheckChildren;
+- (void)sanityCheckChildren:(NSArray *)theChildren;
 #endif
 
 // ---- NSAccessibility methods ---- //
