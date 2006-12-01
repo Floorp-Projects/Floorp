@@ -223,7 +223,8 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           if (ShouldFocus(this)) {
             // Focus the for content.
-            content->SetFocus(aVisitor.mPresContext);
+            aVisitor.mPresContext->EventStateManager()->
+              ChangeFocusWith(content, nsIEventStateManager::eEventFocusedByKey);
           }
 
           // Dispatch a new click event to |content|
