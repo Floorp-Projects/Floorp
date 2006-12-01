@@ -211,6 +211,8 @@ nsSVGInnerSVGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
+  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  svg->InvalidateViewBoxToViewport();
 
   return nsSVGInnerSVGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
