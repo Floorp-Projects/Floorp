@@ -136,7 +136,6 @@ pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
 pref("mail.shell.checkDefaultClient", true);
-pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.spellcheck.inline", true);
 pref("mail.showPreviewText", true); // enables preview text in mail alerts and folder tooltips
 
@@ -362,6 +361,28 @@ pref("alerts.totalOpenTime", 3000);
 // 1 opens a progress dialog
 // 2 and other values, no download manager, no progress dialog. 
 pref("browser.downloadmanager.behavior", 1);
+
+pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
+
+pref("browser.safebrowsing.enabled", false);
+
+// Non-enhanced mode (local url lists) URL list to check for updates
+pref("browser.safebrowsing.provider.0.updateURL", "");
+pref("browser.safebrowsing.dataProvider", 0);
+
+// Does the provider name need to be localizable?
+pref("browser.safebrowsing.provider.0.name", "");
+pref("browser.safebrowsing.provider.0.lookupURL", "");
+pref("browser.safebrowsing.provider.0.keyURL", "");
+pref("browser.safebrowsing.provider.0.reportURL", "");
+
+// HTML report pages
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+
+// FAQ URL
+pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
 
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
