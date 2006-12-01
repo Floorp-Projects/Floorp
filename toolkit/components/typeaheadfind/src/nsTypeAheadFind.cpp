@@ -868,13 +868,15 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   *aIsStartingLink = PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aHasFocus,
-    PRUint16* aResult)
 /* Find another match in the page. */
+NS_IMETHODIMP
+nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aLinksOnly,
+                           PRBool aHasFocus, PRUint16* aResult)
+
 {
   *aResult = FIND_NOTFOUND;
 
+  mLinksOnly = aLinksOnly;
   if (!mTypeAheadBuffer.IsEmpty())
     FindItNow(nsnull, mLinksOnly, PR_FALSE, aFindBackwards, aHasFocus, aResult);
 
