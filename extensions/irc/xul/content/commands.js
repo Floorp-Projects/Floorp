@@ -212,8 +212,8 @@ function initCommands()
          ["part",             "leave",                             CMD_CONSOLE],
          ["raw",              "quote",                             CMD_CONSOLE],
          // Shortcuts to useful URLs:
-         ["faq",              "goto-url http://chatzilla.hacksrus.com/faq/", 0],
-         ["homepage",         "goto-url http://chatzilla.hacksrus.com/",     0],
+         ["faq",              "goto-url faq",                                0],
+         ["homepage",         "goto-url homepage",                           0],
          // Used to display a nickname in the menu only.
          ["label-user",       "echo",                                        0],
          // These are all the font family/size menu commands...
@@ -2191,7 +2191,6 @@ function cmdFocusInput(e)
 
 function cmdGotoURL(e)
 {
-    const IO_SVC = "@mozilla.org/network/io-service;1";
     const EXT_PROTO_SVC = "@mozilla.org/uriloader/external-protocol-service;1";
 
     if (e.url.search(/^ircs?:/i) == 0)
@@ -2208,13 +2207,28 @@ function cmdGotoURL(e)
         return;
     }
 
+    try
+    {
+        var uri = client.iosvc.newURI(e.url, "UTF-8", null);
+    }
+    catch (ex)
+    {
+        var localeURLKey = "msg.localeurl." + e.url;
+        if (localeURLKey != getMsg(localeURLKey))
+            dispatch(e.command.name + " " + getMsg(localeURLKey));
+        else
+            display(getMsg(MSG_ERR_INVALID_URL, e.url), MT_ERROR);
+
+        dispatch("focus-input");
+        return;
+    }
+
     if ((e.command.name == "goto-url-external") || (client.host == "XULrunner"))
     {
-        const ioSvc = getService(IO_SVC, "nsIIOService");
         const extProtoSvc = getService(EXT_PROTO_SVC,
                                        "nsIExternalProtocolService");
-        var uri = ioSvc.newURI(e.url, "UTF-8", null);
         extProtoSvc.loadUrl(uri);
+        dispatch("focus-input");
         return;
     }
 
