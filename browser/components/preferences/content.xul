@@ -212,7 +212,7 @@
       <caption label="&fileTypes.label;"/>
 
       <hbox id="configureFileTypesRow" align="center">
-        <description flex="1">&configureFileTypes.label;</description>
+        <description control="manageTypes" flex="1">&configureFileTypes.label;</description>
         <button id="manageTypes"
                 label="&manage.label;"
                 accesskey="&manage.accesskey;"
