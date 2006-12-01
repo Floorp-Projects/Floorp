@@ -319,6 +319,8 @@ function delayedOnLoadMessageWindow()
 
   CreateView(originalView);
   
+  gPhishingDetector.init();
+
   // initialize the customizeDone method on the customizeable toolbar
   var toolbox = document.getElementById("mail-toolbox");
   toolbox.customizeDone = MailToolboxCustomizeDone;

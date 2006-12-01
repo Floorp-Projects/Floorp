@@ -2251,15 +2251,9 @@ var gMessageNotificationBar =
     this.updateMsgNotificationBar(kMsgNotificationRemoteImages, true);
   },
 
-  // aUrl is the nsIURI for the message currently loaded in the message pane
-  setPhishingMsg: function(aUrl)
+  setPhishingMsg: function()
   {
-    // if we've explicitly marked this message as not being an email scam, then don't
-    // bother checking it with the phishing detector.
-    var phishingMsg = false;
-    if (!checkMsgHdrPropertyIsNot("notAPhishMessage", kIsAPhishMessage))
-      phishingMsg = isMsgEmailScam(aUrl);
-    this.updateMsgNotificationBar(kMsgNotificationPhishingBar, phishingMsg);
+    this.updateMsgNotificationBar(kMsgNotificationPhishingBar, true);
   },
 
   clearMsgNotifications: function()
@@ -2269,7 +2263,6 @@ var gMessageNotificationBar =
     this.mMsgNotificationBar.collapsed = true;
   },
 
-  // private method used to set our message notification deck to the correct value...
   updateMsgNotificationBar: function(aIndex, aSet)
   {
     var chunk = this.mBarFlagValues[aIndex];
@@ -2279,9 +2272,18 @@ var gMessageNotificationBar =
     // the phishing message takes precedence over the junk message
     // which takes precedence over the remote content message
     this.mMsgNotificationBar.selectedIndex = this.mBarFlagValues.indexOf(status & -status);
-
     this.mMsgNotificationBar.collapsed = !status;
-  }
+  },
+  
+  /**
+   * @param aFlag (kMsgNotificationPhishingBar, kMsgNotificationJunkBar, kMsgNotificationRemoteImages
+   * @return true if aFlag is currently set for the loaded message
+   */
+  isFlagSet: function(aFlag)
+  {
+    var chunk = this.mBarFlagValues[aFlag];
+    return this.mBarStatus & chunk;
+  },
 };
 
 /**
@@ -2424,7 +2426,9 @@ function OnMsgParsed(aUrl)
   if (!findBar.hidden)
     findBar.onFindAgainCommand(false);
     
-  gMessageNotificationBar.setPhishingMsg(aUrl);
+  // run the phishing detector on the message
+  if (!checkMsgHdrPropertyIsNot("notAPhishMessage", kIsAPhishMessage))
+    gPhishingDetector.analyzeMsgForPhishingURLs(aUrl);
 }
 
 function OnMsgLoaded(aUrl)

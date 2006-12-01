@@ -510,8 +510,10 @@ function fillMessagePaneContextMenu()
   SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
   SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
 
-  ShowMenuItem( "context-addemail", gContextMenu.onMailtoLink );
-  ShowMenuItem( "context-composeemailto", gContextMenu.onMailtoLink );
+  ShowMenuItem("context-addemail", gContextMenu.onMailtoLink );
+  ShowMenuItem("context-composeemailto", gContextMenu.onMailtoLink );
+  
+  ShowMenuItem("reportPhishingURL", gContextMenu.onLink && !gContextMenu.onMailtoLink);
   
   // if we are on an image, go ahead and show this separator
   //if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
@@ -525,6 +527,7 @@ function fillMessagePaneContextMenu()
   ShowMenuItem("messagePaneContext-sep-saveAs", shouldShowSeparator("messagePaneContext-sep-saveAs"));
   ShowMenuItem("messagePaneContext-sep-edit", shouldShowSeparator("messagePaneContext-sep-edit"));
   ShowMenuItem("messagePaneContext-sep-copy", shouldShowSeparator("messagePaneContext-sep-copy"));
+  ShowMenuItem("messagePaneContext-sep-reportPhishing", shouldShowSeparator("messagePaneContext-sep-reportPhishing"));
 }
 
 // Determines whether or not the separator with the specified ID should be 

@@ -21,11 +21,7 @@
 <!ENTITY resetTrainingData.accesskey "D">
 
 <!-- Phishing Detector -->
-<!ENTITY phishingDetector.intro      "&brandShortName; can analyze messages for possible email scams by looking for common techniques used to deceive you.">
-<!ENTITY enablePhishingDetector.label    "Check mail messages for email scams">
-<!ENTITY enablePhishingDetector.accesskey  "C">
-
-<!ENTITY phishingDetector1.intro      "&brandShortName; can analyze messages for suspected email scams by looking for common techniques used to deceive you.">
+<!ENTITY phishingDetector1.intro  "&brandShortName; can analyze messages for suspected email scams by looking for common techniques used to deceive you.">
 <!ENTITY enablePhishingDetector1.label    "Tell me if the message I'm reading is a suspected email scam">
 <!ENTITY enablePhishingDetector1.accesskey  "e">
 <!ENTITY useDownloadedList.label "Use a downloaded list of suspected email scams">

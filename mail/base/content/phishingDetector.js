@@ -44,220 +44,311 @@ const kPhishingNotSuspicious = 0;
 const kPhishingWithIPAddress = 1;
 const kPhishingWithMismatchedHosts = 2;
 
-//////////////////////////////////////////////////////////////////////////////
-// isEmailScam --> examines the message currently loaded in the message pane
-//                 and returns true if we think that message is an e-mail scam.
-//                 Assumes the message has been completely loaded in the message pane (i.e. OnMsgParsed has fired)
-// aUrl: nsIURI object for the msg we want to examine...
-//////////////////////////////////////////////////////////////////////////////
-function isMsgEmailScam(aUrl)
-{
-  var isEmailScam = false; 
-  if (!aUrl || !gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
-    return isEmailScam;
+var gPhishingDetector = {
+  mPhishingWarden: null,
+  /**
+   * initialize the phishing warden. 
+   * initialize the black and white list url tables. 
+   * update the local tables if necessary
+   */
+  init: function() 
+  {
+    // set up the anti phishing service
+    var appContext = Components.classes["@mozilla.org/phishingprotection/application;1"]
+                       .getService().wrappedJSObject;
 
-  // Ignore nntp and RSS messages
-  // nsIMsgMailNewsUrl.folder can throw an error, especially if we are opening
-  // a .eml message.
-  var folder;
-  try {
-    folder = aUrl.folder;
-  } catch (ex) {}
+    this.mPhishingWarden  = new appContext.PROT_PhishingWarden();
+
+    // Register tables
+    // XXX: move table names to a pref that we originally will download
+    // from the provider (need to workout protocol details)
+    this.mPhishingWarden.registerWhiteTable("goog-white-domain");
+    this.mPhishingWarden.registerWhiteTable("goog-white-url");
+    this.mPhishingWarden.registerBlackTable("goog-black-url");
+    this.mPhishingWarden.registerBlackTable("goog-black-enchash");
+
+    // Download/update lists if we're in non-enhanced mode
+    this.mPhishingWarden.maybeToggleUpdateChecking();  
+  },
   
-  if (folder && (folder.server.type == 'nntp' || folder.server.type == 'rss'))
-    return isEmailScam;
-
-  // loop through all of the link nodes in the message's DOM, looking for phishing URLs...
-  var msgDocument = document.getElementById('messagepane').contentDocument;
-
-  // examine all links...
-  var linkNodes = msgDocument.links;
-  for (var index = 0; index < linkNodes.length && !isEmailScam; index++)
-    isEmailScam = isPhishingURL(linkNodes[index], true);
-
-  // if an e-mail contains a form element, then assume the message is a phishing attack.
-  // Legitimate sites should not be using forms inside of e-mail.
-  if (!isEmailScam && msgDocument.getElementsByTagName("form").length > 0)
-    isEmailScam = true;
-
-  // we'll add more checks here as our detector matures....
-  return isEmailScam;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// isPhishingURL --> examines the passed in linkNode and returns true if we think
-//                   the URL is an email scam.
-// aLinkNode: the link node to examine
-// aSilentMode: don't prompt the user to confirm
-//////////////////////////////////////////////////////////////////////////////
-
-function isPhishingURL(aLinkNode, aSilentMode)
-{
-  if (!gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
-    return false;
-
-  var phishingType = kPhishingNotSuspicious;
-  var href = aLinkNode.href;
-  if (!href)
-    return false;
-
-  var linkTextURL = {};
-  var unobscuredHostName = {};
-  var isPhishingURL = false;
-
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  var hrefURL;
-  // make sure relative link urls don't make us bail out
-  try {
-    hrefURL = ioService.newURI(href, null, null);
-  }
-  catch(ex) 
-  { 
-    return false;
-  }
-  
-  // only check for phishing urls if the url is an http or https link.
-  // this prevents us from flagging imap and other internally handled urls
-  if (hrefURL.schemeIs('http') || hrefURL.schemeIs('https'))
+  /**
+   * Analyzes the urls contained in the currently loaded message in the message pane, looking for
+   * phishing URLs.
+   * Assumes the message has finished loading in the message pane (i.e. OnMsgParsed has fired).
+   * 
+   * @param aUrl nsIURI for the message being analyzed.
+   *
+   * @return asynchronously calls gMessageNotificationBar.setPhishingMsg if the message
+   *         is identified as a scam.         
+   */
+  analyzeMsgForPhishingURLs: function (aUrl)
   {
-    unobscuredHostName.value = hrefURL.host;
-
-    if (hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !isLocalIPAddress(unobscuredHostName))
-      phishingType = kPhishingWithIPAddress;
-    else if (misMatchedHostWithLinkText(aLinkNode, hrefURL, linkTextURL))
-      phishingType = kPhishingWithMismatchedHosts;
-
-    isPhishingURL = phishingType != kPhishingNotSuspicious;
-
-    if (!aSilentMode && isPhishingURL) // allow the user to override the decision
-      isPhishingURL = confirmSuspiciousURL(phishingType, unobscuredHostName.value);
-  }
-
-  return isPhishingURL;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// helper methods in support of isPhishingURL
-//////////////////////////////////////////////////////////////////////////////
-
-function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
-{
-  var linkNodeText = gatherTextUnder(aLinkNode);
-
-  // gatherTextUnder puts a space between each piece of text it gathers,
-  // so strip the spaces out (see bug 326082 for details).
-  linkNodeText = linkNodeText.replace(/ /g, "");
-
-  // only worry about http and https urls
-  if (linkNodeText)
-  {
-    // does the link text look like a http url?
-     if (linkNodeText.search(/(^http:|^https:)/) != -1)
-     {
-       var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-       var linkTextURL  = ioService.newURI(linkNodeText, null, null);
-       aLinkTextURL.value = linkTextURL;
-       return aHrefURL.host != linkTextURL.host;
-     }
-  }
-
-  return false;
-}
-
-// returns true if the hostName is an IP address
-// if the host name is an obscured IP address, returns the unobscured host
-function hostNameIsIPAddress(aHostName, aUnobscuredHostName)
-{
-  // TODO: Add Support for IPv6
-
-  var index;
-
-  // scammers frequently obscure the IP address by encoding each component as octal, hex
-  // or in some cases a mix match of each. The IP address could also be represented as a DWORD.
-
-  // break the IP address down into individual components.
-  var ipComponents = aHostName.split(".");
-
-  // if we didn't find at least 4 parts to our IP address it either isn't a numerical IP
-  // or it is encoded as a dword
-  if (ipComponents.length < 4)
-  {
-    // Convert to a binary to test for possible DWORD.
-    var binaryDword = parseInt(aHostName).toString(2);
-    if (isNaN(binaryDword))
-      return false;
-
-    // convert the dword into its component IP parts.
-    ipComponents = new Array;
-    ipComponents[0] = (aHostName >> 24) & 255;
-    ipComponents[1] = (aHostName >> 16) & 255;
-    ipComponents[2] = (aHostName >>  8) & 255;
-    ipComponents[3] = (aHostName & 255);
-  }
-  else
-  {
-    for (index = 0; index < ipComponents.length; ++index)
+    if (!aUrl || !gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
+      return;  
+      
+    // Ignore nntp and RSS messages
+    var folder;
+    try {
+      folder = aUrl.folder;
+    } catch (ex) {}
+    
+    if (folder.server.type == 'nntp' || folder.server.type == 'rss')
+      return;
+      
+    // extract the link nodes in the message and analyze them, looking for suspicious URLs...
+    var linkNodes = document.getElementById('messagepane').contentDocument.links;
+    for (var index = 0; index < linkNodes.length; index++)
+      this.analyzeUrl(linkNodes[index].href, gatherTextUnder(linkNodes[index]));
+      
+    // extract the action urls associated with any form elements in the message and analyze them.
+    var formNodes = document.getElementById('messagepane').contentDocument.getElementsByTagName("form");
+    for (index = 0; index < formNodes.length; index++)
     {
-      // by leaving the radix parameter blank, we can handle IP addresses
-      // where one component is hex, another is octal, etc.
-      ipComponents[index] = parseInt(ipComponents[index]);
+      if (formNodes[index].action)
+        this.analyzeUrl(formNodes[index].action);
     }
-  }
+  },
+  
+  /** 
+   * Analyze the url contained in aLinkNode for phishing attacks. If a phishing URL is found,
+   * 
+   * @param aHref the url to be analyzed
+   * @param aLinkText (optional) user visible link text associated with aHref in case
+   *        we are dealing with a link node.
+   * @return asynchronously calls gMessageNotificationBar.setPhishingMsg if the link node
+   *         conains a phishing URL.  
+   */
+   analyzeUrl: function (aUrl, aLinkText)
+   {
+     if (!aUrl)
+       return;
 
-  // make sure each part of the IP address is in fact a number
-  for (index = 0; index < ipComponents.length; ++index)
-    if (isNaN(ipComponents[index])) // if any part of the IP address is not a number, then we can safely return
-      return false;
 
-  var hostName = ipComponents[0] + '.' +  ipComponents[1] + '.' + ipComponents[2] + '.' + ipComponents[3];
-
-  // only set aUnobscuredHostName if we are looking at an IPv4 host name
-  if (isIPv4HostName(hostName))
+     var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+     var hrefURL;
+     // make sure relative link urls don't make us bail out
+     try {
+       hrefURL = ioService.newURI(aUrl, null, null);
+     } catch(ex) { return; }
+  
+     // only check for phishing urls if the url is an http or https link.
+     // this prevents us from flagging imap and other internally handled urls
+     if (hrefURL.schemeIs('http') || hrefURL.schemeIs('https'))
+     {
+       var failsStaticTests = false;      
+       var linkTextURL = {};
+       var unobscuredHostName = {};
+       unobscuredHostName.value = hrefURL.host;
+       
+       if (this.hostNameIsIPAddress(hrefURL.host, unobscuredHostName) && !this.isLocalIPAddress(unobscuredHostName))
+         failsStaticTests = true;
+       else if (aLinkText && this.misMatchedHostWithLinkText(hrefURL, aLinkText, linkTextURL))
+         failsStaticTests = true;
+       
+       // Lookup the url against our local list. We want to do this even if the url fails our static
+       // test checks because the url might be in the white list.
+       this.mPhishingWarden.isEvilURL(GetLoadedMessage(), failsStaticTests, aUrl, this.localListCallback);
+    }
+  },
+  
+  /**
+    * 
+    * @param aMsgURI the uri for the loaded message when the look up was initiated.
+    * @param aFailsStaticTests true if our static tests think the url is a phishing scam
+    * @param aUrl the url we looked up in the phishing tables
+    * @param aLocalListStatus the result of the local lookup (PROT_ListWarden.IN_BLACKLIST,
+    *        PROT_ListWarden.IN_WHITELIST or PROT_ListWarden.NOT_FOUND.
+    */
+  localListCallback: function (aMsgURI, aFailsStaticTests, aUrl, aLocalListStatus)
+  {  
+    // for urls in the blacklist, notify the phishing bar.
+    // for urls in the whitelist, do nothing
+    // for all other urls, fall back to the static tests
+    if (aMsgURI == GetLoadedMessage())
+    {
+      if (aLocalListStatus == 0 /* PROT_ListWarden.IN_BLACKLIST */ ||
+          (aLocalListStatus == 2 /* PROT_ListWarden.PROT_ListWarden.NOT_FOUND */ && aFailsStaticTests))
+        gMessageNotificationBar.setPhishingMsg();
+    }
+  },
+  
+  /**
+   * Looks up the report phishing url for the current phishing provider, appends aPhishingURL to the url,
+   * and loads it in the default browser where the user can submit the url as a phish.
+   * @param aPhishingURL the url we want to report back as a phishing attack
+   */
+   reportPhishingURL: function(aPhishingURL)
+   {
+     var appContext = Components.classes["@mozilla.org/phishingprotection/application;1"]
+                       .getService().wrappedJSObject;
+     var reportUrl = appContext.getReportPhishingURL();
+     if (reportUrl)
+     {
+       reportUrl += "&url=" + encodeURIComponent(aPhishingURL);
+       // now send the url to the default browser
+       
+       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                       .getService(Components.interfaces.nsIIOService);                       
+       var uri = ioService.newURI(reportUrl, null, null);
+       var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                         .getService(Components.interfaces.nsIExternalProtocolService);
+       protocolSvc.loadUrl(uri);
+     }
+   },   
+  
+  /**
+   * Private helper method to determine if the link node contains a user visible
+   * url with a host name that differs from the actual href the user would get taken to.
+   * i.e. <a href="http://myevilsite.com">http://mozilla.org</a>
+   * 
+   * @return true if aHrefURL.host matches the host of the link node text. 
+   * @return aLinkTextURL the nsIURI for the link node text
+   */
+  misMatchedHostWithLinkText: function(aHrefURL, aLinkNodeText, aLinkTextURL)
   {
-    aUnobscuredHostName.value = hostName;
-    return true;
-  }
+    // gatherTextUnder puts a space between each piece of text it gathers,
+    // so strip the spaces out (see bug 326082 for details).
+    aLinkNodeText = aLinkNodeText.replace(/ /g, "");
 
-  return false;
-}
+    // only worry about http and https urls
+    if (aLinkNodeText)
+    {
+      // does the link text look like a http url?
+       if (aLinkNodeText.search(/(^http:|^https:)/) != -1)
+       {
+         var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+         aLinkTextURL.value = ioService.newURI(aLinkNodeText, null, null);
+         return aHrefURL.host != aLinkTextURL.value.host;
+       }
+    }
 
-function isIPv4HostName(aHostName)
-{
-  var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
-  // treat 0.0.0.0 as an invalid IP address
-  return ipv4HostRegExp.test(aHostName) && aHostName != '0.0.0.0';
-}
-
-// returns true if the user confirms the URL is a scam
-function confirmSuspiciousURL(aPhishingType, aSuspiciousHostName)
-{
-  var brandShortName = gBrandBundle.getString("brandShortName");
-  var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
-  var dialogMsg;
-
-  switch (aPhishingType)
+    return false;
+  },
+  
+  /**
+   * Private helper method to determine if aHostName is an obscured IP address 
+   * @return unobscured host name (if there is one)
+   * @return true if aHostName is an IP address
+   */
+  hostNameIsIPAddress: function(aHostName, aUnobscuredHostName)
   {
-    case kPhishingWithIPAddress:
-    case kPhishingWithMismatchedHosts:
-      dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl" + aPhishingType, [brandShortName, aSuspiciousHostName], 2);
-      break;
-    default:
-      return false;
-  }
+    // TODO: Add Support for IPv6
+    var index;
 
-  const nsIPS = Components.interfaces.nsIPromptService;
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPS);
-  var buttons = nsIPS.STD_YES_NO_BUTTONS + nsIPS.BUTTON_POS_1_DEFAULT;
-  return promptService.confirmEx(window, titleMsg, dialogMsg, buttons, "", "", "", "", {}); /* the yes button is in position 0 */
-}
+    // scammers frequently obscure the IP address by encoding each component as octal, hex
+    // or in some cases a mix match of each. The IP address could also be represented as a DWORD.
 
-// returns true if the IP address is a local address.
-function isLocalIPAddress(unobscuredHostName)
-{
-  var ipComponents = unobscuredHostName.value.split(".");
+    // break the IP address down into individual components.
+    var ipComponents = aHostName.split(".");
 
-  return ipComponents[0] == 10 ||
-         (ipComponents[0] == 192 && ipComponents[1] == 168) ||
-         (ipComponents[0] == 169 && ipComponents[1] == 254) ||
-         (ipComponents[0] == 172 && ipComponents[1] >= 16 && ipComponents[1] < 32);
-}
+    // if we didn't find at least 4 parts to our IP address it either isn't a numerical IP
+    // or it is encoded as a dword
+    if (ipComponents.length < 4)
+    {
+      // Convert to a binary to test for possible DWORD.
+      var binaryDword = parseInt(aHostName).toString(2);
+      if (isNaN(binaryDword))
+        return false;
+
+      // convert the dword into its component IP parts.
+      ipComponents = new Array;
+      ipComponents[0] = (aHostName >> 24) & 255;
+      ipComponents[1] = (aHostName >> 16) & 255;
+      ipComponents[2] = (aHostName >>  8) & 255;
+      ipComponents[3] = (aHostName & 255);
+    }
+    else
+    {
+      for (index = 0; index < ipComponents.length; ++index)
+      {
+        // by leaving the radix parameter blank, we can handle IP addresses
+        // where one component is hex, another is octal, etc.
+        ipComponents[index] = parseInt(ipComponents[index]);
+      }
+    }
+
+    // make sure each part of the IP address is in fact a number
+    for (index = 0; index < ipComponents.length; ++index)
+      if (isNaN(ipComponents[index])) // if any part of the IP address is not a number, then we can safely return
+        return false;
+
+    var hostName = ipComponents[0] + '.' +  ipComponents[1] + '.' + ipComponents[2] + '.' + ipComponents[3];
+
+    // only set aUnobscuredHostName if we are looking at an IPv4 host name
+    if (this.isIPv4HostName(hostName))
+    {
+      aUnobscuredHostName.value = hostName;
+      return true;
+    }
+    return false;
+  },
+  
+  /**
+   * Private helper method.
+   * @return true if aHostName is an IPv4 address
+   */
+  isIPv4HostName: function(aHostName)
+  {
+    var ipv4HostRegExp = new RegExp(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);  // IPv4
+    // treat 0.0.0.0 as an invalid IP address
+    return ipv4HostRegExp.test(aHostName) && aHostName != '0.0.0.0';
+  },
+  
+  /** 
+   * Private helper method.
+   * @return true if unobscuredHostName is a local IP address.
+   */
+  isLocalIPAddress: function(unobscuredHostName)
+  {
+    var ipComponents = unobscuredHostName.value.split(".");
+
+    return ipComponents[0] == 10 ||
+           (ipComponents[0] == 192 && ipComponents[1] == 168) ||
+           (ipComponents[0] == 169 && ipComponents[1] == 254) ||
+           (ipComponents[0] == 172 && ipComponents[1] >= 16 && ipComponents[1] < 32);
+  },
+  
+  /** 
+   * If the current message has been identified as an email scam, prompts the user with a warning
+   * before allowing the link click to be processed. The warning prompt includes the unobscured host name
+   * of the http(s) url the user clicked on.
+   *
+   * @param aUrl the url 
+   * @return true if the link should be allowed to load
+   */
+  warnOnSuspiciousLinkClick: function(aUrl)
+  {
+    // if the loaded message has been flagged as a phishing scam, 
+    if (!gMessageNotificationBar.isFlagSet(kMsgNotificationPhishingBar))
+      return true;
+
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+    var hrefURL;
+    // make sure relative link urls don't make us bail out
+    try {
+      hrefURL = ioService.newURI(aUrl, null, null);
+    } catch(ex) { return false; }
+    
+    // only prompt for http and https urls
+    if (hrefURL.schemeIs('http') || hrefURL.schemeIs('https'))
+    {
+      // unobscure the host name in case it's an encoded ip address..
+      var unobscuredHostName = {};
+      unobscuredHostName.value = hrefURL.host;
+      this.hostNameIsIPAddress(hrefURL.host, unobscuredHostName);
+      
+      var brandShortName = gBrandBundle.getString("brandShortName");
+      var titleMsg = gMessengerBundle.getString("confirmPhishingTitle");
+      var dialogMsg = gMessengerBundle.getFormattedString("confirmPhishingUrl", 
+                        [brandShortName, unobscuredHostName.value], 2);
+
+      const nsIPS = Components.interfaces.nsIPromptService;
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPS);
+      return !promptService.confirmEx(window, titleMsg, dialogMsg, nsIPS.STD_YES_NO_BUTTONS + nsIPS.BUTTON_POS_1_DEFAULT, 
+                                     "", "", "", "", {}); /* the yes button is in position 0 */
+    }
+
+    return true; // allow the link to load
+  },  
+};

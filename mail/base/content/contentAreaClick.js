@@ -46,32 +46,44 @@
  */
 
   var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-
-  function linkNodeForClickEvent(event)
+  
+  /** 
+   * extract the href from the link click event. 
+   * We look for HTMLAnchorElement, HTMLAreaElement, HTMLLinkElement,
+   * HTMLInputElement.form.action, and nested anchor tags.
+   * 
+   * @return href for the url being clicked
+   */
+  function hRefForClickEvent(event)
   {
     var target = event.target;
-    var linkNode;
-    var linkNodeText;
-
+    var href;
     var isKeyPress = (event.type == "keypress");
 
-    if ( target instanceof HTMLAnchorElement ||
-         target instanceof HTMLAreaElement   ||
-         target instanceof HTMLLinkElement ) {
+    if (target instanceof HTMLAnchorElement ||
+        target instanceof HTMLAreaElement   ||
+        target instanceof HTMLLinkElement)
+    {
       if (target.hasAttribute("href")) 
-        linkNode = target;
+        href = target.href;
     }
-    else if (!(target instanceof HTMLInputElement)) {
+    else if (target instanceof HTMLInputElement)
+    {
+      if (target.form && target.form.action)
+        href = target.form.action;      
+    }
+    else 
+    {
+      // we may be nested inside of a link node
       linkNode = event.originalTarget;
       while (linkNode && !(linkNode instanceof HTMLAnchorElement))
         linkNode = linkNode.parentNode;
-      // <a> cannot be nested.  So if we find an anchor without an
-      // href, there is no useful <a> around the target
-      if (linkNode && !linkNode.hasAttribute("href"))
-        linkNode = null;
+      
+      if (linkNode)
+        href = linkNode.href;
     }
 
-    return linkNode;
+    return href;
   }
 
   // Called whenever the user clicks in the content area,
@@ -79,17 +91,14 @@
   // should always return true for click to go through
   function contentAreaClick(event) 
   {
-    var linkNode = linkNodeForClickEvent(event);
-    if (linkNode && linkNode.href) 
+    var href = hRefForClickEvent(event);
+    if (href) 
     {
-      handleLinkClick(event, linkNode.href, null);
-
-      // block the link click if we determine that this URL
-      // is phishy (i.e. a potential email scam) 
+      handleLinkClick(event, href, null);
       if (!event.button)  // left click only
-        return !isPhishingURL(linkNode, false); 
+        return gPhishingDetector.warnOnSuspiciousLinkClick(href); // let the phishing detector check the link
     }
-
+    
     return true;
   }
 

@@ -1109,7 +1109,9 @@
               label="&saveImageCmd.label;"
               accesskey="&saveImageCmd.accesskey;"
               oncommand="gContextMenu.saveImage();"/>
-
+    <menuseparator id="messagePaneContext-sep-reportPhishing"/>
+    <menuitem id="reportPhishingURL" label="&reportPhishingURL.label;" accesskey="&reportPhishingURL.accesskey;"
+              oncommand="gPhishingDetector.reportPhishingURL(gContextMenu.linkURL());"/>
 </popup>
 
 <popup id="toolbar-context-menu">
