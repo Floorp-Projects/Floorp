@@ -50,8 +50,7 @@
 <prefwindow id="SanitizeDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
-            title="&sanitizeDialog.title;"><!--
-            style="width: &window.width; !important;"-->
+            title="&sanitizeDialog.title;">
 
   <prefpane id="SanitizeDialogPane"
             helpTopic="prefs-clear-private-data" helpURI="chrome://browser/locale/help/help.rdf">

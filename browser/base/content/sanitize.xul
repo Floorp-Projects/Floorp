@@ -52,7 +52,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             title="&sanitizeDialog.title;"
-            style="width: 30em !important;"
+            style="width: &window.width;;"
             ondialogaccept="gSanitizePromptDialog.sanitize();">
 
   <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
