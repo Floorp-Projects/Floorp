@@ -66,9 +66,9 @@ var PrintUtils = {
     return true;
   },
 
-  print: function ()
+  print: function (aWindow)
   {
-    var webBrowserPrint = this.getWebBrowserPrint();
+    var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings = this.getPrintSettings();
     try {
       webBrowserPrint.print(printSettings, null);
@@ -88,7 +88,7 @@ var PrintUtils = {
     }
   },
 
-  printPreview: function (aEnterPPCallback, aExitPPCallback)
+  printPreview: function (aEnterPPCallback, aExitPPCallback, aWindow)
   {
     // if we're already in PP mode, don't set the callbacks; chances
     // are they're null because someone is calling printPreview() to
@@ -107,7 +107,7 @@ var PrintUtils = {
     this._webProgressPP = {};
     var ppParams        = {};
     var notifyOnOpen    = {};
-    var webBrowserPrint = this.getWebBrowserPrint();
+    var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings   = this.getPrintSettings();
     // Here we get the PrintingPromptService so we can display the PP Progress from script
     // For the browser implemented via XUL with the PP toolbar we cannot let it be
@@ -136,10 +136,11 @@ var PrintUtils = {
     }
   },
 
-  getWebBrowserPrint: function ()
+  getWebBrowserPrint: function (aWindow)
   {
-    return _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIWebBrowserPrint);
+    var contentWindow = aWindow ? aWindow : window.content;
+    return contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIWebBrowserPrint);
   },
 
   ////////////////////////////////////////
@@ -205,9 +206,9 @@ var PrintUtils = {
     }
   },
 
-  enterPrintPreview: function ()
+  enterPrintPreview: function (aWindow)
   {
-    var webBrowserPrint = this.getWebBrowserPrint();
+    var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings   = this.getPrintSettings();
     try {
       webBrowserPrint.printPreview(printSettings, null, this._webProgressPP.value);
@@ -252,7 +253,8 @@ var PrintUtils = {
     // disable chrome shortcuts...
     window.addEventListener("keypress", this.onKeyPressPP, true);
  
-    _content.focus();
+    var contentWindow = aWindow ? aWindow : window.content;
+    contentWindow.focus();
 
     // on Enter PP Call back
     if (this._onEnterPP) {
@@ -261,7 +263,7 @@ var PrintUtils = {
     }
   },
 
-  exitPrintPreview: function ()
+  exitPrintPreview: function (aWindow)
   {
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
@@ -277,14 +279,15 @@ var PrintUtils = {
     if ("getStripVisibility" in getBrowser())
       getBrowser().setStripVisibilityTo(this._chromeState.hadTabStrip);
 
-    var webBrowserPrint = this.getWebBrowserPrint();
+    var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     webBrowserPrint.exitPrintPreview(); 
 
     // remove the print preview toolbar
     var printPreviewTB = document.getElementById("print-preview-toolbar");
     getBrowser().parentNode.removeChild(printPreviewTB);
 
-    _content.focus();
+    var contentWindow = aWindow ? aWindow : window.content;
+    contentWindow.focus();
 
     // on Exit PP Call back
     if (this._onExitPP) {

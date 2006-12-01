@@ -207,12 +207,16 @@
                     accesskey="&saveFrameCmd.accesskey;"
                     oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
           <menuseparator/>
+          <menuitem label="&printFrameCmd.label;"
+                    accesskey="&printFrameCmd.accesskey;"
+                    oncommand="gContextMenu.printFrame();"/>
+          <menuseparator/>
           <menuitem label="&viewFrameSourceCmd.label;"
                     accesskey="&viewFrameSourceCmd.accesskey;"
                     oncommand="gContextMenu.viewFrameSource();"/>
           <menuitem label="&viewFrameInfoCmd.label;"
                     accesskey="&viewFrameInfoCmd.accesskey;"
-                    oncommand="gContextMenu.viewFrameInfo();"/>        
+                    oncommand="gContextMenu.viewFrameInfo();"/>
         </menupopup>
       </menu>
       <menuseparator id="context-sep-properties"/>

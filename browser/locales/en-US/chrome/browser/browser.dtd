@@ -281,6 +281,8 @@
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "F">
+<!ENTITY printFrameCmd.label          "Print Frame...">
+<!ENTITY printFrameCmd.accesskey      "P">
 <!ENTITY saveLinkCmd.label            "Save Link As...">
 <!ENTITY saveLinkCmd.accesskey        "k">
 <!ENTITY sendLinkCmd.label            "Send Link..."> 
