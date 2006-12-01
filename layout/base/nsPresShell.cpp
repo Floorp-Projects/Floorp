@@ -6202,6 +6202,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
           if (NS_SUCCEEDED(rv) && targetContent) {
             nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,
                                         nsnull, aStatus, &eventCB);
+          } else if (mDocument) {
+            nsEventDispatcher::Dispatch(mDocument, mPresContext, aEvent,
+                                        nsnull, aStatus, nsnull);
           }
         }
       }

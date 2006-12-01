@@ -320,7 +320,7 @@ protected:
    virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
    virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
    PRBool  DispatchStandardEvent( PRUint32 aMsg);
-   PRBool  DispatchAppCommandEvent(PRUint32 aEventCommand);
+   PRBool  DispatchCommandEvent(PRUint32 aEventCommand);
    PRBool  DispatchDragDropEvent( PRUint32 aMsg);
    virtual PRBool DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2, 
                                      PRBool aIsContextMenuKey = PR_FALSE,

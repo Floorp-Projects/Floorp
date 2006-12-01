@@ -724,13 +724,11 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_POPUP_EVENT;
       break;
     }
-    case NS_APPCOMMAND_EVENT:
+    case NS_COMMAND_EVENT:
     {
-      newEvent = new nsAppCommandEvent(PR_FALSE, msg, nsnull);
+      newEvent = new nsCommandEvent(PR_FALSE, mEvent->userType,
+        NS_STATIC_CAST(nsCommandEvent*, mEvent)->command, nsnull);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
-      NS_STATIC_CAST(nsAppCommandEvent*, newEvent)->appCommand =
-        NS_STATIC_CAST(nsAppCommandEvent*, mEvent)->appCommand;
       break;
     }
     case NS_POPUPBLOCKED_EVENT:

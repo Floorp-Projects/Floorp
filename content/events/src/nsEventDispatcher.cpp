@@ -760,6 +760,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
       return NS_NewDOMXULCommandEvent(aDOMEvent, aPresContext,
                                       NS_STATIC_CAST(nsXULCommandEvent*,
                                                      aEvent));
+    case NS_COMMAND_EVENT:
+      return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
+                                   NS_STATIC_CAST(nsCommandEvent*, aEvent));
     }
 
     // For all other types of events, create a vanilla event object.
@@ -802,6 +805,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   if (aEventType.LowerCaseEqualsLiteral("xulcommandevent") ||
       aEventType.LowerCaseEqualsLiteral("xulcommandevents"))
     return NS_NewDOMXULCommandEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("commandevent") ||
+      aEventType.LowerCaseEqualsLiteral("commandevents"))
+    return NS_NewDOMCommandEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

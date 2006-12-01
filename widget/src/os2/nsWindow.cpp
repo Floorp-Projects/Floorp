@@ -63,6 +63,7 @@
 #include "nsDragService.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
+#include "nsWidgetAtoms.h"
 
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
@@ -506,13 +507,28 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 // Dispatch app command event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
+PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 {
-  nsAppCommandEvent event(PR_TRUE, NS_APPCOMMAND_START, this);
+  nsCOMPtr<nsIAtom> command;
+  switch (aEventCommand) {
+    case APPCOMMAND_BROWSER_BACKWARD:
+      command = nsWidgetAtoms::Back;
+      break;
+    case APPCOMMAND_BROWSER_FORWARD:
+      command = nsWidgetAtoms::Forward;
+      break;
+    case APPCOMMAND_BROWSER_REFRESH:
+      command = nsWidgetAtoms::Reload;
+      break;
+    case APPCOMMAND_BROWSER_STOP:
+      command = nsWidgetAtoms::Stop;
+      break;
+    default:
+      return PR_FALSE;
+  }
+  nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, command, this);
 
   InitEvent(event);
-  event.appCommand = NS_APPCOMMAND_START + aEventCommand;
-
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
@@ -2890,7 +2906,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             case APPCOMMAND_BROWSER_FORWARD:
             case APPCOMMAND_BROWSER_REFRESH:
             case APPCOMMAND_BROWSER_STOP:
-              DispatchAppCommandEvent(appCommand);
+              DispatchCommandEvent(appCommand);
               // tell the driver that we handled the event
               rc = (MRESULT)1;
               result = PR_TRUE;

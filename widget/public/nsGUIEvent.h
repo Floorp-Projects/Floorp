@@ -90,7 +90,7 @@ class nsHashKey;
 #define NS_FORM_EVENT                     21
 #define NS_FOCUS_EVENT                    22
 #define NS_POPUP_EVENT                    23
-#define NS_APPCOMMAND_EVENT               24
+#define NS_COMMAND_EVENT                  24
 #define NS_POPUPBLOCKED_EVENT             25
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
@@ -276,17 +276,6 @@ class nsHashKey;
 #define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
 
 #define NS_USER_DEFINED_EVENT         2000
-
-// custom OS events
-#define NS_APPCOMMAND_START           2100
-#define NS_APPCOMMAND                 (NS_APPCOMMAND_START)
-#define NS_APPCOMMAND_BACK            (NS_APPCOMMAND_START + 1)
-#define NS_APPCOMMAND_FORWARD         (NS_APPCOMMAND_START + 2)
-#define NS_APPCOMMAND_REFRESH         (NS_APPCOMMAND_START + 3)
-#define NS_APPCOMMAND_STOP            (NS_APPCOMMAND_START + 4)
-#define NS_APPCOMMAND_SEARCH          (NS_APPCOMMAND_START + 5)
-#define NS_APPCOMMAND_FAVORITES       (NS_APPCOMMAND_START + 6)
-#define NS_APPCOMMAND_HOME            (NS_APPCOMMAND_START + 7)
  
 // composition events
 #define NS_COMPOSITION_EVENT_START    2200
@@ -869,21 +858,23 @@ public:
 };
 
 /**
- * App Command event
+ * Command event
  *
- * Custom commands from the operating system.  eg. WM_APPCOMMAND on Windows
+ * Custom commands for example from the operating system.
  */
 
-class nsAppCommandEvent : public nsInputEvent
+class nsCommandEvent : public nsGUIEvent
 {
 public:
-  nsAppCommandEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_APPCOMMAND_EVENT),
-      appCommand(0)
+  nsCommandEvent(PRBool isTrusted, nsIAtom* aEventType,
+                 nsIAtom* aCommand, nsIWidget* w)
+    : nsGUIEvent(isTrusted, NS_USER_DEFINED_EVENT, w, NS_COMMAND_EVENT)
   {
+    userType = aEventType;
+    command = aCommand;
   }
 
-  PRUint32     appCommand;
+  nsCOMPtr<nsIAtom> command;
 };
 
 /**
