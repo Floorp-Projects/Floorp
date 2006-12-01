@@ -86,9 +86,14 @@ if ($action eq 'Add'){
     my $summary  = $cgi->param('summary');
     my $notes    = $cgi->param('notes');    
     my $env      = $cgi->param('environment') ? $cgi->param('environment') : $cgi->param('env_pick');
-    
-    ThrowUserError('testopia-missing-required-field', {'field' => 'summary'}) if $summary  eq '';
-    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if $env  eq '';
+    if ($summary  eq ''){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-missing-required-field', {'field' => 'summary'});
+    }
+    if ($env  eq ''){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-missing-required-field', {'field' => 'environment'});
+    }
     
     validate_test_id($env, 'environment');
      
@@ -163,7 +168,10 @@ if ($action eq 'Add'){
     $cgi->param('run_id', $run_id);
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_show_run.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
+    if ($table->view_count > $query_limit){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
+    }
     
     $vars->{'run'} = $run;
     $vars->{'table'} = $table;
@@ -195,8 +203,8 @@ else {
                         {'run_id' => 0,
                          'plan'   => $plan,
                          'plan_text_version' => $plan->version } );
-    ThrowUserError('testopia-create-environment') unless (scalar @{$run->environments} > 0);
     print $cgi->header;
+    ThrowUserError('testopia-create-environment') unless (scalar @{$run->environments} > 0);
     $vars->{'run'} = $run;
     $template->process("testopia/run/add.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());

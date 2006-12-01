@@ -64,9 +64,14 @@ if ($action eq 'Commit'){
     my $reg = qr/r_([\d]+)/;
     my $params = join(" ", $cgi->param());
     my @params = $cgi->param();
-    
-    ThrowUserError('testopia-none-selected', {'object' => 'run'}) unless $params =~ $reg;
-    ThrowUserError('testopia-missing-required-field', {'field' => 'environment'}) if ($cgi->param('environment') eq '');
+    unless ($params =~ $reg){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'run'});
+    }
+    if ($cgi->param('environment') eq ''){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-missing-required-field', {'field' => 'environment'});
+    }
     
     my $progress_interval = 250;
     my $i = 0;
@@ -85,8 +90,10 @@ if ($action eq 'Commit'){
             $template->process("testopia/progress.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
         }
-        
-        ThrowUserError("testopia-read-only", {'object' => 'run', 'id' => $run->id}) unless $run->canedit;
+        unless ($run->canedit){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'run', 'id' => $run->id});
+        }
         my $manager   = DBNameToIdAndCheck(trim($cgi->param('manager'))) if $cgi->param('manager');
         my $status;
         if ($cgi->param('run_status')){
@@ -140,7 +147,10 @@ else {
     $cgi->param('current_tab', 'run');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('run', 'tr_list_runs.cgi', $cgi, undef, $search->query);
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
+    if ($table->view_count > $query_limit){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
+    }
     
     if ($table->list_count > 0){
         my $plan_id = $table->list->[0]->plan->product_id;

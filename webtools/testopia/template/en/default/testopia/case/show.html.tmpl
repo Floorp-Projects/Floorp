@@ -75,7 +75,7 @@
                 document.getElementById("addComp").disabled = false;
                 document.getElementById("deleteComp").disabled = false;
                 },
-            error:   function(type, error){ alert("ERROR");},
+            error:   function(type, error){ alert(error.message);},
             mimetype: "text/json"
         });
     }

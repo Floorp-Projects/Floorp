@@ -408,7 +408,10 @@ sub display {
 sub export {
 	my ($case_id) = @_;
 	my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'case'}) unless $case->canview;
+    unless ($case->canview){
+        print $cgi->header;
+        ThrowUserError("testopia-permission-denied", {'object' => 'case'});
+    } 
     $cgi->param('case_id', $case->id);
     $cgi->param('isactive', 1);
     $cgi->param('current_tab', 'case_run');
@@ -428,8 +431,6 @@ sub export {
     }
 	
 	# Suggest a name for the bug list if the user wants to save it as a file.
-    # If we are doing server push, then we did this already in the HTTP headers
-    # that started the server push, so we don't have to do it again here.
     my @time = localtime(time());
     my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 	my $filename = "testcase-$case_id-$date.$format->{extension}";

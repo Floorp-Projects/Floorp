@@ -63,8 +63,10 @@ if ($action eq 'Commit'){
     my $reg = qr/p_([\d]+)/;
     my $params = join(" ", $cgi->param());
     my @params = $cgi->param();
-    
-    ThrowUserError('testopia-none-selected', {'object' => 'plan'}) unless $params =~ $reg;
+    unless ($params =~ $reg){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'plan'});
+    }
 
     my $progress_interval = 250;
     my $i = 0;
@@ -84,7 +86,10 @@ if ($action eq 'Commit'){
               || ThrowTemplateError($template->error());
         }
         
-        ThrowUserError("testopia-read-only", {'object' => 'plan', 'id' => $plan->id}) unless $plan->canedit;
+        unless ($plan->canedit){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'plan', 'id' => $plan->id});
+        }
         my $plan_type = $cgi->param('plan_type')    == -1 ? $plan->type_id : $cgi->param('plan_type');
         my $product   = $cgi->param('product_id')   == -1 ? $plan->product_id : $cgi->param('product_id');
         my $prodver   = $cgi->param('prod_version') == -1 ? $plan->product_version : $cgi->param('prod_version');
@@ -130,7 +135,10 @@ else {
     $cgi->param('current_tab', 'plan');
     my $search = Bugzilla::Testopia::Search->new($cgi);
     my $table = Bugzilla::Testopia::Table->new('plan', 'tr_list_plans.cgi', $cgi, undef, $search->query);    
-    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
+    if ($table->view_count > $query_limit){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
+    }
 
     my $p = Bugzilla::Testopia::TestPlan->new({'plan_id' => 0 });
     my $product_list   = $p->get_available_products;

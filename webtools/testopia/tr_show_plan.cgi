@@ -73,6 +73,7 @@ $vars->{'form_action'} = "tr_show_plan.cgi";
 
 ### Archive or Unarchive ###
 if ($action eq 'Archive' || $action eq 'Unarchive'){
+    print $cgi->header;
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
@@ -82,7 +83,6 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
     $vars->{'tr_message'} = 
         $plan->isactive == 0 ? "Plan archived":"Plan Unarchived";
     $vars->{'backlink'} = $plan;
-    print $cgi->header;
     display($plan);
         
 }
@@ -90,12 +90,12 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
 ### Clone ###
 #############
 elsif ($action eq 'Clone'){
+    print $cgi->header;
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
+    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless ($plan->canedit);
     do_update($plan);
     $vars->{'plan'} = $plan;
-    print $cgi->header;
     $template->process("testopia/plan/clone.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
     
@@ -103,8 +103,6 @@ elsif ($action eq 'Clone'){
 elsif ($action eq 'do_clone'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
-    my $plan_name = $cgi->param('plan_name');
     if ($serverpush) {
         print $cgi->multipart_init();
         print $cgi->multipart_start();
@@ -113,6 +111,11 @@ elsif ($action eq 'do_clone'){
           || ThrowTemplateError($template->error());
 
     }
+    unless ($plan->canedit){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError("testopia-read-only", {'object' => 'plan'});
+    }
+    my $plan_name = $cgi->param('plan_name');
 
     # All DB actions use place holders so we are OK doing this
     trick_taint($plan_name);
@@ -176,33 +179,33 @@ elsif ($action eq 'do_clone'){
 
 ### Changes to Plan Attributes or Doc ###
 elsif ($action eq 'Commit'){
+    print $cgi->header;
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
     do_update($plan);
     $vars->{'tr_message'} = "Test plan updated";
     $vars->{'backlink'} = $plan;
-    print $cgi->header;
     display($plan);    
 }
 
 elsif ($action eq 'Print'){
+    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    $vars->{'plan'} = $plan; 
-    print $cgi->header;   
+    $vars->{'plan'} = $plan;    
     $template->process("testopia/plan/show-document.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
 
 elsif ($action eq 'History'){
+    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
     $vars->{'plan'} = $plan; 
     $vars->{'diff'} = $plan->diff_plan_doc($cgi->param('new'),$cgi->param('old'));
     $vars->{'new'} = $cgi->param('new');
     $vars->{'old'} = $cgi->param('old');
-    print $cgi->header;
     $template->process("testopia/plan/history.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
        
@@ -211,6 +214,7 @@ elsif ($action eq 'History'){
 ### Add attachments ###
 #######################
 elsif ($action eq 'Attach'){
+    print $cgi->header;
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
@@ -243,7 +247,6 @@ elsif ($action eq 'Attach'){
     $vars->{'tr_message'} = "Attachment added successfully";
     $vars->{'backlink'} = $plan;
     do_update($plan);
-    print $cgi->header;
     display(Bugzilla::Testopia::TestPlan->new($plan_id));
 }
 #TODO: Import plans
@@ -251,11 +254,11 @@ elsif ($action eq 'import'){
     
 }
 elsif ($action eq 'Delete'){
+    print $cgi->header;
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
     $vars->{'plan'} = $plan;
-    print $cgi->header;
     $template->process("testopia/plan/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
     
@@ -263,7 +266,10 @@ elsif ($action eq 'Delete'){
 elsif ($action eq 'do_delete'){
     Bugzilla->login(LOGIN_REQUIRED);
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->candelete;
+    unless ($plan->candelete){
+        print $cgi->header;
+        ThrowUserError("testopia-read-only", {'object' => 'plan'});
+    }
     if ($serverpush) {
         print $cgi->multipart_init();
         print $cgi->multipart_start();
@@ -294,12 +300,12 @@ elsif ($action eq 'do_delete'){
 ### Ajax Actions ###
 ####################
 elsif ($action eq 'caselist'){
+    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
     my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, $plan->test_cases);
     $table->{'ajax'} = 1;
     $vars->{'table'} = $table;
-    print $cgi->header;
     $template->process("testopia/case/table.html.tmpl", $vars)
         || ThrowTemplateError($template->error()); 
         
@@ -308,9 +314,9 @@ elsif ($action eq 'caselist'){
 ### Just show it ###
 ####################
 else{
+    print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
-    print $cgi->header;
     display($plan);
 }
 ###################

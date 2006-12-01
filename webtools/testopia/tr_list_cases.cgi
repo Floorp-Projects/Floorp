@@ -79,8 +79,11 @@ if ($action eq 'Commit'){
     my $reg = qr/c_([\d]+)/;
     my $params = join(" ", $cgi->param());
     my @params = $cgi->param();
-    
-    ThrowUserError('testopia-none-selected', {'object' => 'case'}) unless $params =~ $reg;
+
+    unless ($params =~ $reg){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'case'});
+    }
 
     my $progress_interval = 250;
     my $i = 0;
@@ -90,7 +93,10 @@ if ($action eq 'Commit'){
         my $case = Bugzilla::Testopia::TestCase->new($1) if $p =~ $reg;
         next unless $case;
         
-        ThrowUserError("testopia-read-only", {'object' => 'case', 'id' => $case->id}) unless $case->canedit;
+        unless ($case->canedit){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'case', 'id' => $case->id});
+        }
         
         $i++;
         if ($i % $progress_interval == 0 && $serverpush){
@@ -212,8 +218,10 @@ if ($action eq 'Commit'){
 $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case', 'tr_list_cases.cgi', $cgi, undef, $search->query);
-ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
-
+if ($table->view_count > $query_limit){
+    print $cgi->multipart_end if $serverpush;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
+}
 # Check that all of the test cases returned only belong to one product.
 if ($table->list_count > 0){
     my %case_prods;
@@ -296,8 +304,6 @@ else {
     }
 
     # Suggest a name for the bug list if the user wants to save it as a file.
-    # If we are doing server push, then we did this already in the HTTP headers
-    # that started the server push, so we don't have to do it again here.
     print $cgi->header(-type => $contenttype,
 					   -content_disposition => "$disp; filename=$filename");
 } 

@@ -71,8 +71,10 @@ if ($action eq 'Commit'){
     my $params = join(" ", $cgi->param());
     my @params = $cgi->param();
     my @buglist;
-
-    ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) unless $params =~ $reg;
+    unless ($params =~ $reg){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'case-run'});
+    }
     foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
         ValidateBugID($bug);
         push @buglist, $bug;
@@ -95,8 +97,10 @@ if ($action eq 'Commit'){
             $template->process("testopia/progress.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
         }
-        
-        ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id}) unless $caserun->canedit;
+        unless ($caserun->canedit){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
+        }
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
         my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));
@@ -172,14 +176,20 @@ elsif ($action eq 'Delete Selected'){
     my @caseruns;
     foreach my $p ($cgi->param()){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
-        ThrowUserError("testopia-read-only", {'object' => 'case run'}) if ($caserun && !$caserun->candelete);
+        if (($caserun && !$caserun->candelete)){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'case run'});
+        }
         push @caseruns, $caserun if $caserun;
     }
     if ($serverpush) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;
     }
-    ThrowUserError('testopia-none-selected', {'object' => 'case-run'}) if (scalar @caseruns < 1);
+    if ((scalar @caseruns < 1)){
+        print $cgi->multipart_end if $serverpush;
+        ThrowUserError('testopia-none-selected', {'object' => 'case-run'});
+    }
     $vars->{'caseruns'} = \@caseruns;
     $vars->{'caseruncount'} = scalar @caseruns;
     $vars->{'title'} = "Remove Test Cases from Run"; 
@@ -196,7 +206,10 @@ elsif ($action eq 'do_delete'){
     foreach my $id ($cgi->param('caserun_id')){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($id);
         push @caseruns, $caserun;
-        ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
+        if (!$caserun->candelete){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'case run'});
+        }
     }
     my $progress_interval = 250;
     my $i = 0;
@@ -229,7 +242,10 @@ elsif ($action eq 'do_delete'){
 $cgi->param('current_tab', 'case_run');
 my $search = Bugzilla::Testopia::Search->new($cgi);
 my $table = Bugzilla::Testopia::Table->new('case_run', 'tr_list_caseruns.cgi', $cgi, undef, $search->query);
-ThrowUserError('testopia-query-too-large', {'limit' => $query_limit}) if $table->view_count > $query_limit;
+if ($table->view_count > $query_limit){
+    print $cgi->multipart_end if $serverpush;
+    ThrowUserError('testopia-query-too-large', {'limit' => $query_limit});
+}
 
 if ($table->list_count > 0){
     my $prod_id = $table->list->[0]->run->plan->product_id;
