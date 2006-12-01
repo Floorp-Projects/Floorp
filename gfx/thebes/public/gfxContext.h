@@ -430,6 +430,17 @@ public:
     gfxFloat CurrentMiterLimit() const;
 
     /**
+     ** Fill Properties
+     **/
+
+    enum FillRule {
+        FILL_RULE_WINDING,
+        FILL_RULE_EVEN_ODD
+    };
+    void SetFillRule(FillRule rule);
+    FillRule CurrentFillRule() const;
+
+    /**
      ** Operators and Rendering control
      **/
 

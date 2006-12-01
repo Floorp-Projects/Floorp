@@ -523,6 +523,17 @@ gfxContext::CurrentMiterLimit() const
     return cairo_get_miter_limit(mCairo);
 }
 
+void
+gfxContext::SetFillRule(FillRule rule)
+{
+    cairo_set_fill_rule(mCairo, (cairo_fill_rule_t)rule);
+}
+
+gfxContext::FillRule
+gfxContext::CurrentFillRule() const
+{
+    return (FillRule)cairo_get_fill_rule(mCairo);
+}
 
 // clipping
 void
