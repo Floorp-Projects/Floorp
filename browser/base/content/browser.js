@@ -877,6 +877,36 @@ function BrowserStartup()
   setTimeout(delayedStartup, 0);
 }
 
+function HandleAppCommandEvent(evt)
+{
+  evt.stopPropagation();
+  switch (evt.command) {
+  case "Back":
+    BrowserBack();
+    break;
+  case "Forward":
+    BrowserForward();
+    break;
+  case "Reload":
+    BrowserReloadSkipCache();
+    break;
+  case "Stop":
+    BrowserStop();
+    break;
+  case "Search":
+    BrowserSearch.webSearch();
+    break;
+  case "Bookmarks":
+    toggleSidebar('viewBookmarksSidebar');
+    break;
+  case "Home":
+    BrowserHome();
+    break;
+  default:
+    break;
+  }
+}
+
 function prepareForStartup()
 {
   gURLBar = document.getElementById("urlbar");
@@ -888,6 +918,7 @@ function prepareForStartup()
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
+  window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
   var webNavigation;
   try {
