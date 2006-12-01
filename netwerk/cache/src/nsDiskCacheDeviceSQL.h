@@ -59,7 +59,7 @@ public:
   virtual nsresult        Shutdown();
 
   virtual const char *    GetDeviceID(void);
-  virtual nsCacheEntry *  FindEntry(nsCString * key);
+  virtual nsCacheEntry *  FindEntry(nsCString * key, PRBool *collision);
   virtual nsresult        DeactivateEntry(nsCacheEntry * entry);
   virtual nsresult        BindEntry(nsCacheEntry * entry);
   virtual void            DoomEntry( nsCacheEntry * entry );

@@ -143,7 +143,7 @@ nsMemoryCacheDevice::GetDeviceID()
 
 
 nsCacheEntry *
-nsMemoryCacheDevice::FindEntry(nsCString * key)
+nsMemoryCacheDevice::FindEntry(nsCString * key, PRBool *collision)
 {
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nsnull;
