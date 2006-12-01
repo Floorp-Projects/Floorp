@@ -265,19 +265,6 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Select) {   // default action
     DoCommand();
-    nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
-    if (parentAccessible) {
-      PRUint32 role;
-      parentAccessible->GetRole(&role);
-      if (role == ROLE_LIST) {
-        nsCOMPtr<nsIAccessible> buttonAccessible;
-        parentAccessible->GetPreviousSibling(getter_AddRefs(buttonAccessible));
-        PRUint32 state;
-        buttonAccessible->GetFinalState(&state);
-        if (state & STATE_PRESSED)
-          buttonAccessible->DoAction(nsXULButtonAccessible::eAction_Click);
-      }
-    }
     return NS_OK;
   }
 
