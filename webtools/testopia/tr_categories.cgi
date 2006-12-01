@@ -162,10 +162,7 @@ elsif ($action eq 'do_delete'){
 ### View plan Categories ###
 ############################
 else {
-    $vars->{'canmanage'} = $plan->canedit;
-    $vars->{'plan'} = $plan;
-    $template->process("testopia/category/list.html.tmpl", $vars) 
-      || ThrowTemplateError($template->error());
+    display($plan);
 }
 
 sub get_categories_xml {
@@ -185,24 +182,6 @@ sub get_categories_xml {
 sub display{
     my $plan = shift;
     $vars->{'plan'} = $plan;
-    $vars->{'action'} = "update";
-    $vars->{'form_action'} = "tr_show_plan.cgi";
-
-    $cgi->delete_all;
-    $cgi->param('plan_id', $plan->id); 
-    my $casequery = new Bugzilla::CGI($cgi);
-    my $runquery  = new Bugzilla::CGI($cgi);
-
-    $casequery->param('current_tab', 'case');
-    my $search = Bugzilla::Testopia::Search->new($casequery);
-    my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);
-    $vars->{'case_table'} = $table;    
-  
-    $runquery->param('current_tab', 'run');
-    $search = Bugzilla::Testopia::Search->new($runquery);
-    $table = Bugzilla::Testopia::Table->new('run', 'tr_show_plan.cgi', $runquery, undef, $search->query);
-    $vars->{'run_table'} = $table;
-    $template->process("testopia/plan/show.html.tmpl", $vars)
-       || ThrowTemplateError($template->error());
-    
+    $template->process("testopia/category/list.html.tmpl", $vars) 
+      || ThrowTemplateError($template->error());
 }
