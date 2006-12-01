@@ -3464,7 +3464,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
-  // VK_BROWSER_BACK and VK_BROWSER_FORWARD are converted to nsAppCommandEvents
+#ifdef VK_BROWSER_BACK
+  // VK_BROWSER_BACK and VK_BROWSER_FORWARD are converted to nsCommandEvents
   if (aVirtualKeyCode == VK_BROWSER_BACK) 
   {
     DispatchCommandEvent(APPCOMMAND_BROWSER_BACKWARD);
@@ -3475,6 +3476,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     DispatchCommandEvent(APPCOMMAND_BROWSER_FORWARD);
     return TRUE;
   }
+#endif
 
   gKbdLayout.OnKeyDown (aVirtualKeyCode);
 
@@ -3678,8 +3680,11 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
+#ifdef VK_BROWSER_BACK
   if (aVirtualKeyCode == VK_BROWSER_BACK || aVirtualKeyCode == VK_BROWSER_FORWARD) 
     return TRUE;
+#endif
+
   aVirtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
   BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
   return result;
