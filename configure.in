@@ -4880,7 +4880,7 @@ if test -z "$REAL_BRANDING_DIRECTORY"; then
   REAL_BRANDING_DIRECTORY=${MOZ_BUILD_APP}/branding/nightly
 fi
 
-if test -e "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"; then
+if test -f "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"; then
   . "$topsrcdir/$REAL_BRANDING_DIRECTORY/configure.sh"
 fi
 
