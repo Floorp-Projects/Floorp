@@ -103,7 +103,7 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
     nsCOMPtr<nsIProxyInfo> info;
     proxied->GetProxyInfo(getter_AddRefs(info));
-    NS_ASSERTION(proxied, "proxy auth needs nsIProxyInfo");
+    NS_ASSERTION(info, "proxy auth needs nsIProxyInfo");
 
     nsCAutoString idnhost;
     info->GetHost(idnhost);
