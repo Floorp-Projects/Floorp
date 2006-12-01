@@ -260,6 +260,7 @@
       <field name="_tmpOutline">null</field>
       <field name="_tmpOutlineOffset">"0"</field>
       <field name="_drawOutline">false</field>
+      <field name="_foundLink">null</field>
 
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
@@ -1137,6 +1138,7 @@
               this._findStatusIcon.setAttribute("status", "wrapped");
               this._findStatusLabel.value =
                 aFindPrevious ? this._wrappedToBottomStr : this._wrappedToTopStr;
+              this._findField.removeAttribute("status");
               break;
             case this.nsITypeAheadFind.FIND_NOTFOUND:
               this._findStatusIcon.setAttribute("status", "notfound");
