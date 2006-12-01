@@ -333,7 +333,7 @@ sub AddUser() {
         PrintHeader();
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
-                a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your new mozilla.org account has been created.  It initially has a%0apassword $mailwords.  Please go to http://despot.mozilla.org/despot.cgi%0aand change your password as soon as possible.  You won't actually be%0aable to use it for anything until you do."},
+                a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your new mozilla.org account has been created.  It initially has a%0apassword $mailwords.  Please go to https://despot.mozilla.org/despot.cgi%0aand change your password as soon as possible.  You won't actually be%0aable to use it for anything until you do."},
                   "send mail") .
                 " and have the user change the password!");
         print hr();
@@ -472,7 +472,7 @@ sub GeneratePassword {
     print h1("OK, new password generated.");
     print "$email now has a new password of '" . tt($plain) . "'.  ";
     print "Please " .
-        a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your mozilla.org account now has a password of '$plain'.  Please go to%0ahttp://despot.mozilla.org/despot.cgi and change your password as soon as%0apossible.  You won't actually be able to use your mozilla.org account%0afor anything until you do."},
+        a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your mozilla.org account now has a password of '$plain'.  Please go to%0ahttps://despot.mozilla.org/despot.cgi and change your password as soon as%0apossible.  You won't actually be able to use your mozilla.org account%0afor anything until you do."},
           "send mail") .
               " to have the user change the password!";
     $::db->do("INSERT INTO syncneeded (needed) VALUES (1)");
