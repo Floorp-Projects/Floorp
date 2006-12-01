@@ -1113,8 +1113,11 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           var fastFind = this._browser.fastFind;
-          var findFieldFocused =  this._findField.getAttribute("focused") == "true";
-          var res = fastFind.findAgain(aFindPrevious, findFieldFocused);
+          var findFieldFocused =
+            this._findField.getAttribute("focused") == "true";
+          var res = fastFind.findAgain(aFindPrevious,
+                                       this._findMode == this.FIND_LINKS,
+                                       findFieldFocused);
           this._updateFoundLink(res);
           this._updateStatusUI(res, aFindPrevious);
 

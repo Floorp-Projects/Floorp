@@ -51,7 +51,7 @@ interface nsIDocShell;
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(e6a9966a-5fc8-41a4-9d9d-9c15e9664c45)]
+[scriptable, uuid(1280e20d-d739-45cc-980b-182abda4fbe0)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -70,7 +70,7 @@ interface nsITypeAheadFind : nsISupports
   unsigned short find(in AString aSearchString, in boolean aLinksOnly, in boolean aHasFocus);
 
   /* Find another match in the page. */
-  unsigned short findAgain(in boolean findBackwards, in boolean aHasFocus);
+  unsigned short findAgain(in boolean findBackwards, in boolean aLinksOnly, in boolean aHasFocus);
 
 
   /**************************** Helper functions ***************************/
