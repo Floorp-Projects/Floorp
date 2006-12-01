@@ -547,7 +547,8 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 extern struct tm *Maclocaltime(const time_t * t);
 #endif
 
-#define _PR_HAVE_LOCALTIME_MONITOR 1
+#define HAVE_LOCALTIME_MONITOR 1  /* We use 'monitor' to serialize our calls
+                                   * to localtime(). */
 static PRLock *monitor = NULL;
 
 static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
@@ -604,16 +605,18 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
 
 void _PR_InitTime(void)
 {
-#ifdef _PR_HAVE_LOCALTIME_MONITOR
+#ifdef HAVE_LOCALTIME_MONITOR
     monitor = PR_NewLock();
 #endif
 }
 
 void _PR_CleanupTime(void)
 {
-#ifdef _PR_HAVE_LOCALTIME_MONITOR
-    PR_DestroyLock(monitor);
-    monitor = NULL;
+#ifdef HAVE_LOCALTIME_MONITOR
+    if (monitor) {
+        PR_DestroyLock(monitor);
+        monitor = NULL;
+    }
 #endif
 }
 
