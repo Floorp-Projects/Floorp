@@ -3233,7 +3233,9 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     nsAutoString attrName;
     aName->ToString(attrName);
     nsCOMPtr<nsIDOMAttr> attrNode;
-    GetAttributeNode(attrName, getter_AddRefs(attrNode));
+    nsAutoString ns;
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
     mutation.mRelatedNode = attrNode;
 
     mutation.mAttrName = aName;
@@ -3431,10 +3433,11 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // Grab the attr node if needed before we remove it from the attr map
   nsCOMPtr<nsIDOMAttr> attrNode;
   if (hasMutationListeners) {
-    // XXXbz namespaces, dude!
     nsAutoString attrName;
     aName->ToString(attrName);
-    GetAttributeNode(attrName, getter_AddRefs(attrNode));
+    nsAutoString ns;
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+    GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
   }
 
   // Clear binding to nsIDOMNamedNodeMap
