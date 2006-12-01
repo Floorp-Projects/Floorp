@@ -1518,9 +1518,21 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
           if (NS_FAILED(rv)) return rv;
 
-          rv = serializer->SerializeToString(doc, serial);
-          if (NS_FAILED(rv))
-            return rv;
+          // Serialize to a stream so that the encoding used will
+          // match the document's.
+          nsCOMPtr<nsIInputStream> input;
+          nsCOMPtr<nsIOutputStream> output;
+          rv = NS_NewPipe(getter_AddRefs(input), getter_AddRefs(output),
+                          0, PR_UINT32_MAX);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Empty string for encoding means to use document's current
+          // encoding.
+          rv = serializer->SerializeToStream(doc, output, EmptyCString());
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          output->Close();
+          postDataStream = input;
         } else {
           // nsISupportsString?
           nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
