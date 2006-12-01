@@ -188,6 +188,14 @@ nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
   return childCount;
 }
 
+// if we for some reason have no native accessible, we should be skipped over (and traversed)
+// when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
+PRBool 
+nsAccessibleWrap::IsIgnored() 
+{
+  return (mNativeWrapper == nsnull) || mNativeWrapper->isIgnored();
+}
+
 void
 nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aChildrenArray)
 {

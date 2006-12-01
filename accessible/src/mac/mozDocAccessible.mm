@@ -80,7 +80,7 @@ static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible
   
   mParallelView = getNativeViewFromRootAccessible (mGeckoAccessible);
   
-  NSAssert(mParallelView, @" can't return root accessible's native parallel view.");
+  NSAssert(mParallelView, @"can't return root accessible's native parallel view.");
   return mParallelView;
 }
 

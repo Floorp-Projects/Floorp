@@ -49,6 +49,8 @@
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleEditableText.h"
 
+#include "nsRootAccessible.h"
+
 // These constants are only defined in OS X SDK 10.4, so we define them in order
 // to be able to use for earlier OS versions.
 const NSString *kInstanceDescriptionAttribute = @"AXDescription";       // NSAccessibilityDescriptionAttribute
@@ -65,31 +67,49 @@ ConvertCocoaToGeckoPoint(NSPoint &aInPoint, nsPoint &aOutPoint)
   aOutPoint.MoveTo ((nscoord)aInPoint.x, (nscoord)(mainScreenHeight - aInPoint.y));
 }
 
-// returns an object if it is not ignored. if it's ignored, will return
-// the first unignored ancestor.
-static inline id
-ObjectOrUnignoredAncestor(id anObject)
+// all mozAccessibles are either abstract objects (that correspond to XUL widgets, HTML frames, etc) or are
+// attached to a certain view; for example a document view. when we hand an object off to an AT, we always want
+// to give it the represented view, in the latter case.
+static inline id <mozAccessible>
+GetObjectOrRepresentedView(id <mozAccessible> anObject)
 {
-  if ([anObject accessibilityIsIgnored])
-    return NSAccessibilityUnignoredAncestor(anObject);
+  if ([anObject hasRepresentedView])
+    return [anObject representedView];
   return anObject;
 }
 
+// returns the passed in object if it is not ignored. if it's ignored, will return
+// the first unignored ancestor.
+static inline id
+GetClosestInterestingAccessible(id anObject)
+{
+  // this object is not ignored, so let's return it.
+  if (![anObject accessibilityIsIgnored])
+    return GetObjectOrRepresentedView(anObject);
+  
+  // find the closest ancestor that is not ignored.
+  id unignoredObject = anObject;
+  while ((unignoredObject = [unignoredObject accessibilityAttributeValue:NSAccessibilityParentAttribute])) {
+    if (![unignoredObject accessibilityIsIgnored])
+      // object is not ignored, so let's stop the search.
+      break;
+  }
+  
+  // if it's a mozAccessible, we need to take care to maybe return the view we
+  // represent, to the AT.
+  if ([unignoredObject respondsToSelector:@selector(hasRepresentedView)])
+    return GetObjectOrRepresentedView(unignoredObject);
+  
+  return unignoredObject;
+}
+
 static inline mozAccessible* 
-NativeFromGeckoAccessible(nsIAccessible *anAccessible)
+GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   mozAccessible *native = nil;
   anAccessible->GetNativeInterface ((void**)&native);
-  return [native hasRepresentedView] ? [native representedView] : native;
+  return native;
 }
-
-#pragma mark -
-
-@interface mozAccessible (Private)
-#ifdef DEBUG
-- (void)sanityCheckChildren:(NSArray*)theChildren;
-#endif
-@end
 
 #pragma mark -
  
@@ -233,20 +253,26 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
   // the point we're given is guaranteed to be bottom-left screen coordinates.
   nsPoint geckoPoint;
   ConvertCocoaToGeckoPoint (point, geckoPoint);
+
+  // start iterating as deep down as we can on this point, with the current accessible as the root.
+  // as soon as GetChildAtPoint() returns null, or can't descend further (without getting the same accessible again)
+  // we stop.
+  nsCOMPtr<nsIAccessible> deepestFoundChild, newChild(mGeckoAccessible);
+  do {
+    deepestFoundChild = newChild;
+    deepestFoundChild->GetChildAtPoint((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs(newChild));
+  } while (newChild && newChild.get() != deepestFoundChild.get());
   
-  // see if we can find an accessible at that point.
-  nsCOMPtr<nsIAccessible> foundChild;
-  mGeckoAccessible->GetChildAtPoint ((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs (foundChild));
-  
-  if (foundChild) {
-    // if we found something, return its native accessible.
-    mozAccessible *nativeChild = NativeFromGeckoAccessible(foundChild);
+
+  // if we found something, return its native accessible.
+  if (deepestFoundChild) {
+    mozAccessible *nativeChild = GetNativeFromGeckoAccessible(deepestFoundChild);
     if (nativeChild)
-      return ObjectOrUnignoredAncestor (nativeChild);
+      return GetClosestInterestingAccessible(nativeChild);
   }
   
   // if we didn't find anything, return ourself (or the first unignored ancestor).
-  return ObjectOrUnignoredAncestor ([self hasRepresentedView] ? [self representedView] : self); 
+  return GetClosestInterestingAccessible(self); 
 }
 
 - (NSArray*)accessibilityActionNames 
@@ -272,13 +298,13 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
   mGeckoAccessible->GetFocusedChild (getter_AddRefs (focusedGeckoChild));
   
   if (focusedGeckoChild) {
-    mozAccessible *focusedChild = NativeFromGeckoAccessible(focusedGeckoChild);
+    mozAccessible *focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
     if (focusedChild)
-      return ObjectOrUnignoredAncestor(focusedChild);
+      return GetClosestInterestingAccessible(focusedChild);
   }
   
   // return ourself if we can't get a native focused child.
-  return ObjectOrUnignoredAncestor([self hasRepresentedView] ? [self representedView] : self);
+  return GetClosestInterestingAccessible(self);
 }
 
 #pragma mark -
@@ -287,26 +313,21 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
   if (accessibleParent) {
-    id nativeParent = NativeFromGeckoAccessible(accessibleParent);
-    if (nativeParent) {
-      nativeParent = ObjectOrUnignoredAncestor(nativeParent);
-      NSAssert(![nativeParent accessibilityIsIgnored], @"returned parent should not be ignored!");
-      
-      // if the object doesn't have a representedView method, we might have the NSWindow or any kind of
-      // parent object far up in the hierarchy.
-      if ([nativeParent respondsToSelector:@selector(hasRepresentedView)] && 
-          [nativeParent hasRepresentedView])
-        return [nativeParent representedView];
-      
-      return nativeParent;
-    }
+    id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
+    if (nativeParent)
+      return GetClosestInterestingAccessible(nativeParent);
   }
   
-#ifdef DEBUG
-  NSLog (@"!!! we can't find a parent for %@", self);
-#endif
-  // we didn't find a parent
-  return nil;
+  // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
+  // the root accessible. so we'll have to return whatever native accessible is above our root accessible 
+  // (which might be the owning NSWindow in the application, for example).
+  //
+  // get the native root accessible, and tell it to return its first parent unignored accessible.
+  nsRefPtr<nsRootAccessible> root(mGeckoAccessible->GetRootAccessible());
+  id nativeParent = GetNativeFromGeckoAccessible(NS_STATIC_CAST(nsIAccessible*, root));
+  NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
+  
+  return GetClosestInterestingAccessible(nativeParent);
 }
 
 - (BOOL)hasRepresentedView
@@ -330,9 +351,8 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   if (mChildren)
     return mChildren;
-  
-  if (!mChildren)
-    mChildren = [[NSMutableArray alloc] init];
+    
+  mChildren = [[NSMutableArray alloc] init];
   
   // get the array of children.
   nsTArray<nsRefPtr<nsAccessibleWrap> > childrenArray;
@@ -345,9 +365,9 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
   for (; index < totalCount; index++) {
     nsAccessibleWrap *curAccessible = childrenArray.ElementAt(index);
     if (curAccessible) {
-      mozAccessible *curNative = NativeFromGeckoAccessible(curAccessible);
+      mozAccessible *curNative = GetNativeFromGeckoAccessible(curAccessible);
       if (curNative)
-        [mChildren addObject:curNative];
+        [mChildren addObject:GetObjectOrRepresentedView(curNative)];
     }
   }
   
@@ -471,7 +491,7 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NSLog (@"%@ received focus!", self);
 #endif
   NSAssert1(![self accessibilityIsIgnored], @"trying to set focus to ignored element! (%@)", self);
-  NSAccessibilityPostNotification([self hasRepresentedView] ? [self representedView] : self,
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
                                   NSAccessibilityFocusedUIElementChangedNotification);
 }
 
@@ -511,15 +531,25 @@ NativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 // will check that our children actually reference us as their
 // parent.
-- (void)sanityCheckChildren
+- (void)sanityCheckChildren:(NSArray *)children
 {
   NSAssert(![self accessibilityIsIgnored], @"can't sanity check children of an ignored accessible!");
-  NSEnumerator *iter = [[self children] objectEnumerator];
+  NSEnumerator *iter = [children objectEnumerator];
   mozAccessible *curObj = nil;
   
-  while ((curObj = [iter nextObject]))
-    NSAssert2([curObj parent] == self, 
-              @"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, self);
+  NSLog(@"sanity checking %@", self);
+  
+  while ((curObj = [iter nextObject])) {
+    id realSelf = GetObjectOrRepresentedView(self);
+    NSLog(@"checking %@", realSelf);
+    NSAssert2([curObj parent] == realSelf, 
+              @"!!! %@ not returning %@ as AXParent, even though it is a AXChild of it!", curObj, realSelf);
+  }
+}
+
+- (void)sanityCheckChildren
+{
+  [self sanityCheckChildren:[self children]];
 }
 
 - (void)printHierarchy

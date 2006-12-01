@@ -89,11 +89,9 @@ class nsAccessibleWrap : public nsAccessible
               role == ROLE_AUTOCOMPLETE);
     }
     
-    // if we for some reason have no native accessible, we should be skipped over (and traversed)
-    // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
-    PRBool IsIgnored() {
-      return (mNativeWrapper == nsnull);
-    }
+    // ignored means that the accessible might still have children, but is not displayed
+    // to the user. it also has no native accessible object represented for it.
+    PRBool IsIgnored();
     
     PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
     
