@@ -833,10 +833,9 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
 {
   ResetIfSet();
 
-  nsAutoString val(aValue);
   while (aTable->tag) {
-    if (aCaseSensitive ? val.EqualsASCII(aTable->tag) :
-                         val.EqualsIgnoreCase(aTable->tag)) {
+    if (aCaseSensitive ? aValue.EqualsASCII(aTable->tag) :
+                         aValue.LowerCaseEqualsASCII(aTable->tag)) {
 
       // Find index of EnumTable
       PRInt16 index = sEnumTableArray->IndexOf(aTable);
