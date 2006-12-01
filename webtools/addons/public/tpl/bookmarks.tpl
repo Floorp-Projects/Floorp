@@ -8,7 +8,7 @@
 	<div class="addon-feature-text corner-box">
   	<h2><a href="{$config.webpath}/{$app}/{$primary.id}/">{$primary.name}</a> <span>by</span> <span class="author">{$primary.username}</span></h2>
 		<p>{$primary.body}</p>
-		<p class="install-button"><a href="{$primary.uri}" onclick="return install(event,'{$recommended[re].name} {$primary.version}', '{$config.webpath}/images/default.png', '{$primary.hash}');" title="Install {$primary.name} {$primary.version} (Right-Click to Download)"><span>Install now ({$primary.size} KB)</span></a></p>
+		<p class="install-button"><a href="{$primary.uri}" onclick="return install(event,'{$recommended[re].name} {$primary.version}', '{$config.webpath}/images/default.png', '{$primary.hash}');" title="Install {$primary.name} {$primary.version} (Right-Click to Download)"><span class="install-green-button"><span class="install-button-text">Install now ({$primary.size} KB)</span></span></a></p>
 		{if $primary.id eq SUPER_MAGIC_YAHOO_ID}
 <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
 		{/if}
@@ -23,7 +23,7 @@
 		<div class="addon-feature-text corner-box">
 			<h4><a href="{$config.webpath}/{$app}/{$other[re].id}/">{$other[re].name}</a> <span>by {$other[re].username}</span></h4>
 			<p>{$other[re].body}</p>
-			<p class="install-button"><a href="{$other[re].uri}" onclick="return install(event,'{$recommended[re].name} {$other[re].version}', '{$config.webpath}/images/default.png', '{$other[re].hash}');" title="Install {$other[re].name} {$other[re].version} (Right-Click to Download)"><span>Install now ({$other[re].size} KB)</span></a></p>
+			<p class="install-button"><a href="{$other[re].uri}" onclick="return install(event,'{$recommended[re].name} {$other[re].version}', '{$config.webpath}/images/default.png', '{$other[re].hash}');" title="Install {$other[re].name} {$other[re].version} (Right-Click to Download)"><span class="install-green-button"><span class="install-button-text">Install now ({$other[re].size} KB)</span></span></a></p>
       {if $other[re].id eq SUPER_MAGIC_YAHOO_ID}
       <p class="eula">By clicking Install, you agree to the <a href="http://del.icio.us/help/firefox/bookmarks/license">Software License</a> for this add-on.</p>
       {/if}
