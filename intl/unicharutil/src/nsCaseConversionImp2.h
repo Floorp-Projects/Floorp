@@ -49,7 +49,6 @@ class nsCaseConversionImp2 : public nsICaseConversion {
   NS_DECL_ISUPPORTS 
 
 public:
-  nsCaseConversionImp2();
   virtual ~nsCaseConversionImp2() { };
 
 

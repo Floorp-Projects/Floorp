@@ -41,97 +41,32 @@
 #include "nsUnicharUtils.h"
 #include "nsUnicharUtilCIID.h"
 
-#include "nsCOMPtr.h"
-#include "nsCRTGlue.h"
+#include "nsCRT.h"
 #include "nsICaseConversion.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsThreadUtils.h"
-#include "nsXPCOMCID.h"
 #include "nsXPCOMStrings.h"
 
 #include <ctype.h>
 
-// global cache of the case conversion service, set only on the main thread
-static nsICaseConversion *gCaseConv = nsnull;
+static nsICaseConversion* gCaseConv = nsnull;
 
-class nsShutdownObserver : public nsIObserver
-{
-public:
-  nsShutdownObserver() { }
-  virtual ~nsShutdownObserver() {}
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD Observe(nsISupports *aSubject,
-                     const char *aTopic,
-                     const PRUnichar *aData)
-  {
-    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)==0)
-      NS_IF_RELEASE(gCaseConv);
-    return NS_OK;
-  }
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsShutdownObserver, nsIObserver)
-
-already_AddRefed<nsICaseConversion>
+nsICaseConversion*
 NS_GetCaseConversion()
 {
-  // If we've already cached the conversion service then return it
-  if (gCaseConv) {
-    NS_ADDREF(gCaseConv);
-    return gCaseConv;
-  }
-
-  // If we're on a non-main thread then just return the service manager's copy
-  nsresult rv;
-  if (!NS_IsMainThread()) {
-    nsICaseConversion* caseConv;
-    rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &caseConv);
+  if (!gCaseConv) {
+    nsresult rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
     if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get the case conversion service");
-      return nsnull;
+      NS_ERROR("Failed to get the case conversion service!");
+      gCaseConv = nsnull;
     }
-    return caseConv;
   }
-
-  // We must be on the main thread so try to cache the service and register a
-  // shutdown observer.
-
-  // Return null if we can't get the service
-  rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get the case conversion service");
-    return gCaseConv = nsnull;
-  }
-
-  NS_ADDREF(gCaseConv);
-
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-
-  // Try to register for shutdown notification, but we'll return a valid
-  // pointer even if that fails.
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIObserver> observer;
-    NS_NEWXPCOM(observer, nsShutdownObserver);
-    if (observer)
-      obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-    else
-      NS_WARNING("Failed to create an nsShutdownObserver");
-  }
-  else
-    NS_WARNING("Failed to get the observer service");
-
   return gCaseConv;
 }
 
 void
 ToLowerCase(nsAString& aString)
 {
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv) {
     PRUnichar *buf = aString.BeginWriting();
     caseConv->ToLower(buf, buf, aString.Length());
@@ -150,7 +85,7 @@ ToLowerCase(const nsAString& aSource,
   PRUnichar *out;
   NS_StringGetMutableData(aDest, len, &out);
 
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (out && caseConv)
     caseConv->ToLower(in, out, len);
   else {
@@ -162,7 +97,7 @@ ToLowerCase(const nsAString& aSource,
 void
 ToUpperCase(nsAString& aString)
 {
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv) {
     PRUnichar *buf = aString.BeginWriting();
     caseConv->ToUpper(buf, buf, aString.Length());
@@ -181,7 +116,7 @@ ToUpperCase(const nsAString& aSource,
   PRUnichar *out;
   NS_StringGetMutableData(aDest, len, &out);
 
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (out && caseConv)
     caseConv->ToUpper(in, out, len);
   else {
@@ -198,7 +133,7 @@ nsCaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                               PRUint32 aLength) const
 {
   PRInt32 result;
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv)
     caseConv->CaseInsensitiveCompare(lhs, rhs, aLength, &result);
   else {
@@ -217,7 +152,7 @@ nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
   if (lhs == rhs)
     return 0;
   
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv) {
     caseConv->ToLower(lhs, &lhs);
     caseConv->ToLower(rhs, &rhs);
@@ -245,7 +180,7 @@ CaseInsensitiveCompare(const PRUnichar *a,
                        const PRUnichar *b,
                        PRUint32 len)
 {
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (!caseConv)
     return NS_strcmp(a, b);
 
@@ -260,7 +195,7 @@ PRUnichar
 ToLowerCase(PRUnichar aChar)
 {
   PRUnichar result;
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv)
     caseConv->ToLower(aChar, &result);
   else {
@@ -277,7 +212,7 @@ PRUnichar
 ToUpperCase(PRUnichar aChar)
 {
   PRUnichar result;
-  nsCOMPtr<nsICaseConversion> caseConv = NS_GetCaseConversion();
+  nsICaseConversion* caseConv = NS_GetCaseConversion();
   if (caseConv)
     caseConv->ToUpper(aChar, &result);
   else {
