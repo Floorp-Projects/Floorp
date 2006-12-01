@@ -40,7 +40,7 @@ sub RegisterConfig {
     $self->SUPER::RegisterConfig(@_);
     $self->registerVariables(
       # [ name, save?, settable? ]
-        ['bugsURI', 1, 1, 'http://bugzilla.mozilla.org/'], 
+        ['bugsURI', 1, 1, 'https://bugzilla.mozilla.org/'], 
         ['bugsDWIMQueryDefault', 1, 1, 'short_desc_type=substring&short_desc='], 
         ['bugsDWIMQueryChannelDefault', 1, 1, {}],
         ['bugsHistory', 0, 0, {}], 

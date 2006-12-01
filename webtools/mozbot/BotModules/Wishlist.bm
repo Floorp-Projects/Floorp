@@ -11,8 +11,8 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     my $reply = {
-        '' => 'A module to store wishlist items, typically used to file bugs on the bot, but really for that you should use Bugzilla -- http://bugzilla.mozilla.org/ -- component MozBot in product WebTools.',
-        'wish' => 'Adds an item to the wishlist. Please use Bugzilla for this purpose though, see http://bugzilla.mozilla.org/ product WebTools, component Mozbot. Syntax: \'wish <text of wish>\'',
+        '' => 'A module to store wishlist items, typically used to file bugs on the bot, but really for that you should use Bugzilla -- https://bugzilla.mozilla.org/ -- component MozBot in product Webtools.',
+        'wish' => 'Adds an item to the wishlist. Please use Bugzilla for this purpose though, see https://bugzilla.mozilla.org/ product Webtools, component Mozbot. Syntax: \'wish <text of wish>\'',
         'wishes' => 'Causes the bot to list all the wishes that have been made. Since this may be long, it may only be done in a /msg. Syntax: \'wishes\'',
     };
     $$reply{''} .= ' To remove wishes, use the following command: vars Wishlist wishes \'-<full text of the wish to remove>\'' if $self->isAdmin($event);

@@ -52,7 +52,7 @@
 #   http://sunsite.cnlab-switch.ch/ftp/doc/standard/rfc/14xx/1459
 #
 # Please file bugs in Bugzilla, under the 'Webtools' product,
-# component 'Mozbot'.  http://bugzilla.mozilla.org/
+# component 'Mozbot'.  https://bugzilla.mozilla.org/
 
 # TO DO LIST
 # XXX Something that checks modules that failed to compile and then
