@@ -49,7 +49,6 @@ calendar.jar:
   content/calendar/sun-calendar-event-dialog-attendees.xml  (/calendar/prototypes/wcap/sun-calendar-event-dialog-attendees.xml)
   content/calendar/sun-calendar-event-dialog-freebusy.xml  (/calendar/prototypes/wcap/sun-calendar-event-dialog-freebusy.xml)
   content/calendar/sun-calendar-event-dialog-recurrence.xul  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence.xul)
-
   content/calendar/sun-calendar-event-dialog-recurrence.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence.js)
   content/calendar/sun-calendar-event-dialog-recurrence.xml  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence.xml)
   content/calendar/sun-calendar-event-dialog-recurrence-datepicker.css  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-datepicker.css)
@@ -57,20 +56,13 @@ calendar.jar:
   content/calendar/sun-calendar-event-dialog-recurrence-preview.css  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-preview.css)
   content/calendar/sun-calendar-event-dialog-recurrence-preview.xml  (/calendar/prototypes/wcap/sun-calendar-event-dialog-recurrence-preview.xml)
   content/calendar/sun-calendar-event-dialog-reminder.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog-reminder.js)
-
   content/calendar/sun-calendar-event-dialog-reminder.xul  (/calendar/prototypes/wcap/sun-calendar-event-dialog-reminder.xul)
-
   content/calendar/sun-calendar-event-dialog-timezone.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog-timezone.js)
-
   content/calendar/sun-calendar-event-dialog-timezone.xul  (/calendar/prototypes/wcap/sun-calendar-event-dialog-timezone.xul)
-
   content/calendar/sun-calendar-event-dialog-attendees.xul  (/calendar/prototypes/wcap/sun-calendar-event-dialog-attendees.xul)
-
   content/calendar/sun-calendar-event-dialog-attendees.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog-attendees.js)
   content/calendar/sun-calendar-customize-toolbar.xul  (/calendar/prototypes/wcap/sun-calendar-customize-toolbar.xul)
-
   content/calendar/sun-calendar-customize-toolbar.js  (/calendar/prototypes/wcap/sun-calendar-customize-toolbar.js)
-
 #expand    skin/classic/calendar/all_day_event.png  (/calendar/resources/skin/classic/all_day_event.png)
 #expand    skin/classic/calendar/all_day_event_down.png  (/calendar/resources/skin/classic/all_day_event_down.png)
 #expand    skin/classic/calendar/all_day_event_hover.png  (/calendar/resources/skin/classic/all_day_event_hover.png)
