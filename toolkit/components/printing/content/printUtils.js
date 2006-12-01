@@ -138,7 +138,7 @@ var PrintUtils = {
 
   getWebBrowserPrint: function (aWindow)
   {
-    var contentWindow = aWindow ? aWindow : window.content;
+    var contentWindow = aWindow || window.content;
     return contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIWebBrowserPrint);
   },
@@ -253,7 +253,7 @@ var PrintUtils = {
     // disable chrome shortcuts...
     window.addEventListener("keypress", this.onKeyPressPP, true);
  
-    var contentWindow = aWindow ? aWindow : window.content;
+    var contentWindow = aWindow || window.content;
     contentWindow.focus();
 
     // on Enter PP Call back
@@ -286,7 +286,7 @@ var PrintUtils = {
     var printPreviewTB = document.getElementById("print-preview-toolbar");
     getBrowser().parentNode.removeChild(printPreviewTB);
 
-    var contentWindow = aWindow ? aWindow : window.content;
+    var contentWindow = aWindow || window.content;
     contentWindow.focus();
 
     // on Exit PP Call back
