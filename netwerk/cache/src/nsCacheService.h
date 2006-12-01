@@ -191,7 +191,7 @@ private:
 
     nsCacheDevice *  EnsureEntryHasDevice(nsCacheEntry * entry);
 
-    nsCacheEntry *   SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
+    nsCacheEntry *   SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy, PRBool *collision);
 
     void             DeactivateEntry(nsCacheEntry * entry);
 

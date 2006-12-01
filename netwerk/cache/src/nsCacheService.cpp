@@ -1023,7 +1023,11 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     if (!entry) {
         // search cache devices for entry
-        entry = SearchCacheDevices(request->mKey, request->StoragePolicy());
+        PRBool collision = PR_FALSE;
+        entry = SearchCacheDevices(request->mKey, request->StoragePolicy(), &collision);
+        // When there is a hashkey collision just refuse to cache it...
+        if (collision) return NS_ERROR_CACHE_IN_USE;
+
         if (entry)  entry->MarkInitialized();
     }
 
@@ -1084,14 +1088,15 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
 
 nsCacheEntry *
-nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
+nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy, PRBool *collision)
 {
     nsCacheEntry * entry = nsnull;
 
+    *collision = PR_FALSE;
     if ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_IN_MEMORY)) {
         // If there is no memory device, then there is nothing to search...
         if (mMemoryDevice)
-            entry = mMemoryDevice->FindEntry(key);
+            entry = mMemoryDevice->FindEntry(key, collision);
     }
 
     if (!entry && 
@@ -1105,7 +1110,7 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
                     return nsnull;
             }
             
-            entry = mDiskDevice->FindEntry(key);
+            entry = mDiskDevice->FindEntry(key, collision);
         }
 #endif // !NECKO_DISK_CACHE
     }
