@@ -1502,16 +1502,18 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     if (!aState) {
       if (reUseInnerWindow) {
-        newInnerWindow->mDocument = do_QueryInterface(aDocument);
-        newInnerWindow->mDoc = aDocument;
+        if (newInnerWindow->mDoc != aDocument) {
+          newInnerWindow->mDocument = do_QueryInterface(aDocument);
+          newInnerWindow->mDoc = aDocument;
 
-        // We're reusing the inner window for a new document. In this
-        // case we don't clear the inner window's scope, but we must
-        // make sure the cached document property gets updated.
+          // We're reusing the inner window for a new document. In this
+          // case we don't clear the inner window's scope, but we must
+          // make sure the cached document property gets updated.
 
-        // XXXmarkh - tell other languages about this?
-        JSAutoRequest ar(cx);
-        ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
+          // XXXmarkh - tell other languages about this?
+          JSAutoRequest ar(cx);
+          ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
+        }
       } else {
         rv = newInnerWindow->SetNewDocument(aDocument, nsnull,
                                             aClearScopeHint, PR_TRUE);
