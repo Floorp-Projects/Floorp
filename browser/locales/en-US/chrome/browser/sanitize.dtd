@@ -19,3 +19,4 @@
 <!ENTITY itemDownloads.accesskey      "D">
 <!ENTITY itemSessions.label           "Authenticated Sessions">
 <!ENTITY itemSessions.accesskey       "S">
+<!ENTITY window.width                 "30em">
