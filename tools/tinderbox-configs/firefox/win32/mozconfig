@@ -12,15 +12,14 @@ mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
 mk_add_options MOZ_PACKAGE_NSIS=1
 
 ac_add_options --enable-application=browser
-ac_add_options --enable-update-channel=nightly
+ac_add_options --enable-update-channel=beta
 ac_add_options --enable-optimize
 ac_add_options --disable-debug
-# ac_add_options --enable-codesighs
 ac_add_options --disable-tests
 ac_add_options --enable-static
 ac_add_options --disable-shared
-# ac_add_options --enable-official-branding
 ac_add_options --enable-svg
 ac_add_options --enable-canvas
 ac_add_options --enable-default-toolkit=cairo-windows
 ac_add_options --enable-update-packaging
+ac_add_options --with-branding=browser/branding/unofficial

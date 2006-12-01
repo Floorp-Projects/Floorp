@@ -11,7 +11,7 @@ mk_add_options MOZ_CO_PROJECT="browser"
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/universal
 
 ac_add_options --enable-application=browser
-ac_add_options --enable-update-channel=nightly
+ac_add_options --enable-update-channel=beta
 ac_add_options --enable-optimize="-O2 -g"
 ac_add_options --disable-debug
 ac_add_options --disable-tests
@@ -19,7 +19,7 @@ ac_add_options --enable-update-packaging
 
 ac_add_options --enable-static
 ac_add_options --disable-shared
-# ac_add_options --enable-official-branding
 ac_add_app_options ppc --enable-prebinding
 ac_add_options --enable-svg
 ac_add_options --enable-canvas
+ac_add_options --with-branding=browser/branding/unofficial

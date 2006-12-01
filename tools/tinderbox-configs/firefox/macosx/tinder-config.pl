@@ -14,8 +14,6 @@ $ENV{CVS_RSH} = "ssh";
 
 $MacUniversalBinary = 1;
 
-$BuildXForms = 1;
-
 # $ENV{MOZ_PACKAGE_MSI}
 #-----------------------------------------------------------------------------
 #  Default: 0
@@ -79,7 +77,7 @@ $LayoutPerformanceTest    = 1;  # Tp
 #$XULWindowOpenTest        = 1;  # Txul
 $StartupPerformanceTest   = 1;  # Ts
 
-$TestsPhoneHome           = 1;  # Should test report back to server?
+$TestsPhoneHome           = 0;  # Should test report back to server?
 
 $GraphNameOverride        = 'xserve06.build.mozilla.org_Fx-Trunk';
 
@@ -156,7 +154,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 $ObjDir = '../build/universal';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Universal Nightly';
+$BuildNameExtra = 'Release';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -174,7 +172,7 @@ $BuildNameExtra = 'Universal Nightly';
 $BuildTree  = 'Firefox';
 
 #$BuildName = '';
-#$BuildTag = '';
+$BuildTag = 'MOZILLA_1_9a1_RELEASE';
 #$BuildConfigDir = 'mozilla/config';
 #$Topsrcdir = 'mozilla';
 
@@ -196,8 +194,8 @@ $BinaryName = 'firefox-bin';
 # Release build options
 $ReleaseBuild  = 1;
 $shiptalkback  = 1;
-#$ReleaseToLatest = 1; # Push the release to latest-<milestone>?
-#$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
+$ReleaseToLatest = 0; # Push the release to latest-<milestone>?
+$ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
 $build_hour    = "4";
 $package_creation_path = "/browser/installer";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
@@ -209,7 +207,7 @@ $ftp_path      = "/home/ftp/pub/firefox/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly";
 $tbox_ftp_path = "/home/ftp/pub/firefox/tinderbox-builds";
 $tbox_url_path = "http://ftp.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds";
-$milestone     = "trunk";
+$milestone     = "mozilla1.9a1";
 $notify_list   = "build-announce\@mozilla.org";
 $stub_installer = 0;
 $sea_installer = 0;
@@ -223,7 +221,7 @@ $update_hash = "md5";
 $update_filehost = "ftp.mozilla.org";
 $update_appv = "3.0a1";
 $update_extv = "3.0a1";
-$update_pushinfo = 1;
+$update_pushinfo = 0;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
@@ -249,3 +247,6 @@ $update_pushinfo = 1;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill. 
 #$ENV{NO_EM_RESTART} = '1';
+
+# Do not build XForms
+$BuildXForms = 0;
