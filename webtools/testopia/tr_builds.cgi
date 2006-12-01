@@ -183,7 +183,7 @@ else {
 sub get_builds_xml {
     my ($plan) = @_;
     my $ret = "<items>";
-    foreach my $c (@{$plan->builds}){
+    foreach my $c (@{$plan->product->builds}){
         $ret .= "<build>";
         $ret .= "<id>". $c->id ."</id>";
         $ret .= "<name>". $c->name ."</name>";

@@ -88,19 +88,24 @@ sub add_tag()
 	push @{$self->tags}, $tag;
 }
 
-# Temporary copy of Bugzilla::Testopia::TestPlan->get_available_products().  Remove when bug 220134 is fixed.
-sub TEMP_get_product_components {
-    my ($product_id) = @_;
+=head2 get_available_products
+
+Returns a list of products.  This is the same code as Bugzilla::Testopia::TestPlan->get_available_products
+without view restrictions.
+
+=cut
+
+sub get_available_products {
     my $dbh = Bugzilla->dbh;
-    my $ref = $dbh->selectall_arrayref(
-            "SELECT DISTINCT id, name 
-               FROM components
-              WHERE product_id IN($product_id)
-           ORDER BY name",
-           {'Slice'=>{}});
-           
-    return $ref;
+    
+    my $products = $dbh->selectall_arrayref(
+            "SELECT id, name 
+               FROM products
+           ORDER BY name", 
+             {"Slice"=>{}});
+    return $products;
 }
+
 sub add_component()
 {
 	my ($self,$component,$component_product) = @_;
@@ -110,7 +115,7 @@ sub add_component()
 	return "Component $component needs to provide a product." if ( $component_product eq "" );
 	
 	# Find the product identifier.
-	my $products_ref = Bugzilla::Testopia::TestPlan->get_available_products();
+	my $products_ref = get_available_products();
 	foreach my $product (@$products_ref)
 	{
 		if ( $component_product eq $product->{name} )
@@ -122,7 +127,7 @@ sub add_component()
 	return "Cannot find product $component_product for component $component." if ( $product_id eq "" );
 	
 	# Find the component identifier for the product's componet
-	my $components_ref = TEMP_get_product_components($product_id);
+	my $components_ref = Bugzilla::Testopia::TestPlan->get_product_components($product_id,1);
 	foreach my $product_component ( @$components_ref )
 	{
 		if ( $component eq $product_component->{name} )
@@ -305,7 +310,7 @@ sub store()
 	{
 		my $categoryid = -1;
 		
-		push my @categories, @{$testplan->categories};
+		push my @categories, @{$testplan->product->categories};
     	foreach my $category (@categories)
     	{
     		if ( $category->name eq $self->category )

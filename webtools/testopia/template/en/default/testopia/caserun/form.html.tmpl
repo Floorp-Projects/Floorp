@@ -24,7 +24,7 @@
   #%]
   
 [% IF NOT dotweak %]
-  [% build_list = caserun.run.plan.builds %]
+  [% build_list = caserun.run.plan.product.builds %]
   [% default_build = caserun.build.name %]
 [% ELSE %]
   [% default_build = "--Do Not Change--" %]
@@ -88,7 +88,7 @@
     <th align="right">Assignee</th>
     <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
     <th align="right" valign="top" colspan="2">Attach [% terms.Bugs %]</th>
-    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product_name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New [% terms.Bug %]</a></td>
+    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New [% terms.Bug %]</a></td>
     
   </tr>
 </table>

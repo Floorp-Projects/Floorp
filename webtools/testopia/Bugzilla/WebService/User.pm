@@ -15,51 +15,43 @@
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
 #                 Dallas Harken <dharken@novell.com>
 
-package Bugzilla::WebService::Testopia::Build;
+package Bugzilla::WebService::User;
 
 use strict;
 
+use Bugzilla;
+
 use base qw(Bugzilla::WebService);
 
-use Bugzilla::Testopia::Build;
-
-sub lookup_name_by_id
+sub lookup_login_by_id
 {
   my $self = shift;
-  my ($build_id) = @_;
-  
-  die "Invalid Build ID" 
-      unless defined $build_id && length($build_id) > 0 && $build_id > 0;
-      
+  my ($author_id) = @_;
+
   $self->login;
   
-  my $build = new Bugzilla::Testopia::Build($build_id);
+  my $user = new Bugzilla::User($author_id);
 
-  my $result = defined $build ? $build->name : '';
+  my $result = defined $user ? $user->login : '';
   
   $self->logout;
   
-  # Result is build name string or empty string if failed
+  # Result is user login string or empty string if failed
   return $result;
 }
 
-sub lookup_id_by_name
+sub lookup_id_by_login
 {
   my $self = shift;
-  my ($name) = @_;
+  my ($author) = @_;
 
   $self->login;
 
-  my $result = Bugzilla::Testopia::Build->check_build_by_name($name);
+  my $result = Bugzilla::User::login_to_id($author);
   
   $self->logout;
-
-  if (!defined $result)
-  {
-    $result = 0;
-  }
-
-  # Result is build id or 0 if failed
+  
+  # Result is user id or 0 if failed
   return $result;
 }
 

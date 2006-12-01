@@ -20,7 +20,7 @@
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Test Categories for $plan.product_name"
+  title = "Test Categories for $plan.product.name"
 %]
 <table>
   <tr>
@@ -28,7 +28,7 @@
     <th class="bz_row_header" align="right">Description</th>
     <th class="bz_row_header" align="right">Actions</th>
   </tr>    
-[% FOREACH cat = plan.categories %]
+[% FOREACH cat = plan.product.categories %]
   <tr>
     <td valign="top">[% cat.name FILTER html %]</td>
     <td valign="top">[% cat.description FILTER html %]</td>

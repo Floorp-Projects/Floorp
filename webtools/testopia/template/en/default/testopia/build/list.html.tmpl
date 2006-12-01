@@ -20,7 +20,7 @@
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Product Builds for $plan.product_name"
+  title = "Product Builds for $plan.product.name"
 %]
 
 <table>
@@ -31,7 +31,7 @@
     <th class="bz_row_header" align="right">Actions</th>
   </tr>
   
-[% FOREACH cat = plan.builds %]
+[% FOREACH cat = plan.product.builds %]
 <tr>
   <td valign="top">[% cat.name FILTER html %]</td>
   <td valign="top">[% cat.milestone FILTER html %]</td>

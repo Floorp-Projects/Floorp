@@ -15,31 +15,31 @@
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
 #                 Dallas Harken <dharken@novell.com>
 
-package Bugzilla::WebService::Testopia::Build;
+package Bugzilla::WebService::Testopia::Product;
 
 use strict;
 
 use base qw(Bugzilla::WebService);
 
-use Bugzilla::Testopia::Build;
+use Bugzilla::Testopia::Product;
 
 sub lookup_name_by_id
 {
   my $self = shift;
-  my ($build_id) = @_;
+  my ($product_id) = @_;
   
-  die "Invalid Build ID" 
-      unless defined $build_id && length($build_id) > 0 && $build_id > 0;
+  die "Invalid Product ID" 
+      unless defined $product_id && length($product_id) > 0 && $product_id > 0;
       
   $self->login;
   
-  my $build = new Bugzilla::Testopia::Build($build_id);
+  my $product = new Bugzilla::Testopia::Product($product_id);
 
-  my $result = defined $build ? $build->name : '';
+  my $result = defined $product ? $product->name : '';
   
   $self->logout;
   
-  # Result is build name string or empty string if failed
+  # Result is product name string or empty string if failed
   return $result;
 }
 
@@ -50,7 +50,7 @@ sub lookup_id_by_name
 
   $self->login;
 
-  my $result = Bugzilla::Testopia::Build->check_build_by_name($name);
+  my $result = Bugzilla::Testopia::Product->check_product_by_name($name);
   
   $self->logout;
 
@@ -59,8 +59,25 @@ sub lookup_id_by_name
     $result = 0;
   }
 
-  # Result is build id or 0 if failed
+  # Result is product id or 0 if failed
   return $result;
 }
+
+#sub get_product 
+#{
+#    my $self = shift;
+#    my ($product_id) = @_;
+#
+#    Bugzilla->login;
+#
+#    # We can detaint immediately if what we get passed is fully numeric.
+#    # We leave bug alias checks to Bugzilla::Testopia::TestPlan::new.
+#    
+#    if ($product_id =~ /^[0-9]+$/) {
+#        detaint_natural($product_id);
+#    }
+#
+#    return new Bugzilla::Product($product_id);
+#}
 
 1;

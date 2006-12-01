@@ -49,8 +49,14 @@ $cgi->send_cookie(-name => "TEST_LAST_ORDER",
                   -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
 Bugzilla->login();
 
+# Determine the format in which the user would like to receive the output.
+# Uses the default format if the user did not specify an output format;
+# otherwise validates the user's choice against the list of available formats.
+my $format = $template->get_format("testopia/case/list", scalar $cgi->param('format'), scalar $cgi->param('ctype'));
+       
 my $action = $cgi->param('action') || '';
-my $serverpush = support_server_push($cgi);
+my $serverpush = ( support_server_push($cgi) ) && ( $format->{'extension'} eq "html" );
+
 if ($serverpush) {
     print $cgi->multipart_init;
     print $cgi->multipart_start;
@@ -58,9 +64,7 @@ if ($serverpush) {
     $template->process("list/server-push.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
-else {
-    print $cgi->header;
-}
+
 # prevent DOS attacks from multiple refreshes of large data
 $::SIG{TERM} = 'DEFAULT';
 $::SIG{PIPE} = 'DEFAULT';
@@ -262,11 +266,43 @@ $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
 $vars->{'dotweak'} = UserInGroup('edittestcases');
 $vars->{'table'} = $table;
+$vars->{'urlquerypart'} = $cgi->canonicalise_query('cmdtype');
+
+my $contenttype;
+
+if ($format->{'extension'} eq "html") {
+    $contenttype = "text/html";
+}
+else {
+    $contenttype = $format->{'ctype'};
+}
+
 if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;
     print $cgi->multipart_start;
-}
-$template->process("testopia/case/list.html.tmpl", $vars)
-    || ThrowTemplateError($template->error());
+}                              
+else {
+	my @time = localtime(time());
+	my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+	my $filename = "testcases-$date.$format->{extension}";
+	
+	my $disp = "inline";
+	# We set CSV files to be downloaded, as they are designed for importing
+    # into other programs.
+    if ($format->{'extension'} eq "csv")
+    {
+		$disp = "attachment";
+		$vars->{'displaycolumns'} = \@Bugzilla::Testopia::Constants::TESTCASE_EXPORT;
+    }
 
+    # Suggest a name for the bug list if the user wants to save it as a file.
+    # If we are doing server push, then we did this already in the HTTP headers
+    # that started the server push, so we don't have to do it again here.
+    print $cgi->header(-type => $contenttype,
+					   -content_disposition => "$disp; filename=$filename");
+} 
+                                       
+$template->process($format->{'template'}, $vars)
+    || ThrowTemplateError($template->error());
+    
 print $cgi->multipart_final if $serverpush;

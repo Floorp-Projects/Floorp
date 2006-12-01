@@ -51,6 +51,7 @@ use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::Category;
 use Bugzilla::Testopia::Build;
 use Bugzilla::Testopia::TestTag;
+use Bugzilla::Testopia::Product;
 use Bugzilla::Bug;
 
 #TODO: Add this to checksetup
@@ -1002,34 +1003,6 @@ sub attachments {
     
 }
 
-=head2 builds
-
-Returns a reference to a list of Testopia::Build objects associated 
-with this plan
-
-=cut
-
-sub builds {
-    my ($self) = @_;
-    my $dbh = Bugzilla->dbh;
-    return $self->{'builds'} if exists $self->{'builds'};
-
-    my $builds = 
-      $dbh->selectcol_arrayref(
-              "SELECT build_id
-                 FROM test_builds
-                WHERE product_id = ?", 
-               undef, $self->{'product_id'});
-    
-    my @builds;
-    foreach my $id (@{$builds}){
-        push @builds, Bugzilla::Testopia::Build->new($id);
-    }
-    $self->{'builds'} = \@builds;
-    return $self->{'builds'};
-    
-}
-
 =head2 bugs
 
 Returns a reference to a list of Bugzilla::Bug objects associated
@@ -1057,51 +1030,19 @@ sub bugs {
     return $self->{'bugs'};
 }
 
-=head2 product_name
+=head2 product
 
-Returns the name of the product this plan is associated with
-
-=cut
-
-sub product_name {
-    my ($self) = @_;
-    my $dbh = Bugzilla->dbh;
-    return $self->{'product_name'} if exists $self->{'product_name'};
-
-    $self->{'product_name'} = undef;
-    $self->{'product_name'} = $dbh->selectrow_array(
-            "SELECT name FROM products
-              WHERE id = ?", 
-             undef, $self->{'product_id'});
-    return $self->{'product_name'};
-}
-
-=head2 categories
-
-Returns a reference to a list of Testopia::Category objects 
-associated with this plan
+Returns the product this plan is associated with
 
 =cut
 
-sub categories {
+sub product {
     my ($self) = @_;
-    my $dbh = Bugzilla->dbh;
-    return $self->{'categories'} if exists $self->{'categories'};
-
-    my $categories = 
-      $dbh->selectcol_arrayref(
-             "SELECT category_id
-                FROM test_case_categories
-               WHERE product_id = ?", 
-              undef, $self->{'product_id'});
-        
-    my @categories;
-    foreach my $c (@{$categories}){
-        push @categories, Bugzilla::Testopia::Category->new($c);
-    }
-    $self->{'categories'} = \@categories;
-    return $self->{'categories'};
     
+    return $self->{'product'} if exists $self->{'product'};
+
+    $self->{'product'} = Bugzilla::Testopia::Product->new($self->product_id);
+    return $self->{'product'};
 }
 
 =head2 test_cases

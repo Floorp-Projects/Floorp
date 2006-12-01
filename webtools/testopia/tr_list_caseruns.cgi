@@ -241,7 +241,7 @@ if ($table->list_count > 0){
     }
     if (!$vars->{'multiprod'}){
         my $p = $table->list->[0]->run->plan;
-        my $build_list  = $p->builds;
+        my $build_list  = $p->product->builds;
         unshift @{$build_list},  {'id' => -1, 'name' => "--Do Not Change--"};
         $vars->{'build_list'} = $build_list;
     }

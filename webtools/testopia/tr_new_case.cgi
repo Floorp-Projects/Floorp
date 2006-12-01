@@ -70,7 +70,7 @@ foreach my $id (keys %seen){
     my $plan = Bugzilla::Testopia::TestPlan->new($id);
     push @plan_ids, $id;
     push @plans, $plan;
-    push @categories, @{$plan->categories};
+    push @categories, @{$plan->product->categories};
 }
 
 ThrowUserError('testopia-create-category', {'plan' => $plans[0] }) if scalar @categories < 1;

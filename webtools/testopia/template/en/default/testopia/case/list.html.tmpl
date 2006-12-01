@@ -193,6 +193,15 @@ found.
 
 [% END %]
 </form>
+
+<div id="buglist_actions">
+	<div class="links">
+		<span class="label">Export:</span>
+		<a href="tr_list_cases.cgi?
+		[% urlquerypart FILTER remove('&viewall=.') FILTER html %]&amp;ctype=csv&amp;viewall=1"><image src="testopia/img/csv.png" class="image"></a>
+	</div>
+</div>
+
 [%############################################################################%]
 [%# Page Footer                                                              #%]
 [%############################################################################%]

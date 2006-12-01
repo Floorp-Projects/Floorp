@@ -366,7 +366,7 @@ sub get_product_ids {
     if ($self->id == 0){
         my @ids;
         foreach my $plan (@{$self->plans}){
-            push @ids, $plan->product_id if Bugzilla->user->can_see_product($plan->product_name);
+            push @ids, $plan->product_id if Bugzilla->user->can_see_product($plan->product->name);
         }
         return \@ids;
     }
@@ -1345,8 +1345,10 @@ sub candelete {
     # Allow plan author to delete if this case is linked only to plans she owns.
     my $own_all = 1;
     foreach my $plan (@{$self->plans}){
-        $own_all = 0 if (Bugzilla->user->id != $plan->author->id);
-        last;
+        if (Bugzilla->user->id != $plan->author->id) {
+            $own_all = 0;
+            last;
+        }
     }
     return 1 if $own_all;
     
@@ -1551,7 +1553,10 @@ sub components {
     
     my @comps;
     foreach my $id (@$comps){
-        push @comps, Bugzilla::Component->new($id);
+		my $comp = Bugzilla::Component->new($id);
+		my $prod = Bugzilla::Product->new($comp->product_id);
+		$comp->{'product_name'} = $prod->name;
+        push @comps, $comp;
     }
     $self->{'components'} = \@comps;
     return $self->{'components'};

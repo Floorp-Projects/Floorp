@@ -20,7 +20,7 @@
   #%]
 
 [% PROCESS global/header.html.tmpl
-  title = "Delete Category $category.name From Product $plan.product_name"
+  title = "Delete Category $category.name From Product $plan.product.name"
 %]
 
 <form method="POST" action="tr_categories.cgi">

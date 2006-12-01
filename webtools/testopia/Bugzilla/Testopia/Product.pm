@@ -50,8 +50,9 @@ sub builds {
     
     my $ref = $dbh->selectcol_arrayref(
                    "SELECT build_id 
-                    FROM test_builds 
-                    WHERE product_id = ?",
+                      FROM test_builds 
+                     WHERE product_id = ?
+                  ORDER BY name",
                     undef, $self->{'id'});
     my @objs;
     foreach my $id (@{$ref}){
@@ -68,7 +69,8 @@ sub categories {
     my $ref = $dbh->selectcol_arrayref(
                    "SELECT category_id 
                     FROM test_case_categories 
-                    WHERE product_id = ?",
+                    WHERE product_id = ?
+                 ORDER BY name",
                     undef, $self->{'id'});
     my @objs;
     foreach my $id (@{$ref}){

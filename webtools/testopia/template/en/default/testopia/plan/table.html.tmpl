@@ -52,7 +52,7 @@ Select:
   <td><a href="tr_show_plan.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.name FILTER html %]</a></td>
   <td>[% plan.author.login FILTER html %]</td>
   <td>[% plan.creation_date FILTER time %]</td>
-  <td>[% plan.product_name FILTER html%]</td>
+  <td>[% plan.product.name FILTER html%]</td>
   <td>[% plan.product_version FILTER html%]</td>
   <td align="center">[% plan.plan_type FILTER html %]</td>
   <td align="center">

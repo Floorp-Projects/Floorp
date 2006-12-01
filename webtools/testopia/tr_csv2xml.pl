@@ -184,8 +184,8 @@ sub remove_field_list
 		s/\342\200\246/&#133;/g;
 		s/\342\200\223/-/g;
 		s/\342\200\224/&#8212;/g;
-		s/\342\200\234/&#8221;/g;
-		s/\342\200\235/&#8222;/g;
+		s/\342\200\234/&#8220;/g;
+		s/\342\200\235/&#8221;/g;
 		s/\302\251/&copy;/g;
 		s/\031/'/g;
 		s/\221/&apos;/g;
@@ -227,6 +227,10 @@ sub remove_field_list
 			print CSVWORK $_ . "\n";
 			next;
 		}
+		
+		# Missing or empty environment in TCDB has this value in the environment field.  Set it to
+		# null and hope it was not in the middle of a field.  
+		s/"\$EMPTYENV"/""/;
 		
 		# TCDB CSV options that are not handled correctly:
 		#   If a field contains some thing like:
@@ -545,7 +549,6 @@ foreach my $line (@{$csv->lines()}) {
 	if ( defined($fields{'environment'}) )
 	{
 		my $environment = $line->environment();
-		$environment = "" if ( $environment eq "\$EMPTYENV" );
 		$summary .= " - " . fix_entities($environment) if ( $environment ne "" );
 	}
 	error("No summary for Test Case at line $line_count in $csv_work_filename") if ( $summary eq "" );
@@ -574,6 +577,7 @@ foreach my $line (@{$csv->lines()}) {
 	if ( defined($fields{'environment'}) )
 	{
 		my @environments = split(/,/,$line->environment());
+
 		foreach my $environment (@environments)
 		{
 			print XMLOUTPUT "		<tag>" . fix_entities(remove_white_space($environment)) . "</tag>\n";

@@ -21,63 +21,11 @@ use strict;
 
 use base qw(Bugzilla::WebService);
 
-use Bugzilla::Util qw(detaint_natural);
-use Bugzilla::Product;
+use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Testopia::TestPlan;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
-
-# Convert string field values to their respective integer id's
-sub _convert_to_ids
-{
-    my ($hash) = @_;
-
-    if (defined($$hash{"author"}))
-    {
-    	$$hash{"author_id"} = login_to_id($$hash{"author"});
-    }
-   	delete $$hash{"author"};
-    if (defined($$hash{"product"}))
-    {
-    	my $product = Bugzilla::Product::check_product($$hash{"product"});
-    	$$hash{"product_id"} = $product->id;
-    }
-   	delete $$hash{"product"};
-
-    if (defined($$hash{"type"}))
-    {
-    	$$hash{"type_id"} = Bugzilla::Testopia::TestPlan::lookup_type_by_name($$hash{"type"});
-    }
-    delete $$hash{"type"};
-}
-
-# Convert fields with integer id's to their respective string values
-sub _convert_to_strings
-{
-	my ($hash) = @_;
-
-	$$hash{"author"} = ""; 
-    if (defined($$hash{"author_id"}))
-    {
-    	$$hash{"author"} = new Bugzilla::User($$hash{"author_id"})->login;
-    }
-   	delete $$hash{"author_id"};
-
-	$$hash{"product"} = ""; 
-    if (defined($$hash{"product_id"}))
-    {
-    	$$hash{"product"} = new Bugzilla::Product($$hash{"product_id"})->name;
-    }
-   	delete $$hash{"product_id"};
-
-	$$hash{"type"} = ""; 
-    if (defined($$hash{"type_id"}))
-    {
-    	$$hash{"type"} = Bugzilla::Testopia::TestPlan->lookup_type($$hash{"type_id"});
-    }
-   	delete $$hash{"type_id"};
-}
 
 # Utility method called by the list method
 sub _list
@@ -85,8 +33,6 @@ sub _list
     my ($query) = @_;
     
     my $cgi = Bugzilla->cgi;
-
-    $cgi->param("viewall", 1);
 
     $cgi->param("current_tab", "plan");
     
@@ -111,42 +57,38 @@ sub get
     my $self = shift;
     my ($test_plan_id) = @_;
 
-    Bugzilla->login;
-
-    # We can detaint immediately if what we get passed is fully numeric.
-    # We leave bug alias checks to Bugzilla::Testopia::TestPlan::new.
-    
-    if ($test_plan_id =~ /^[0-9]+$/) {
-        detaint_natural($test_plan_id);
-    }
+    $self->login;    
 
 	#Result is a test plan hash map
-    my $testplan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
     
-    _convert_to_strings($testplan);
-    
-    Bugzilla->logout;
-    
-    return $testplan;
+    $self->logout;
+
+    return $test_plan;
 }
 
 sub list
 {
-    Bugzilla->login;
-    
     my $self = shift;
     my ($query) = @_;
-    
-    _convert_to_ids($query);
-    
+
+    $self->login;
+   
 	my $list = _list($query);
 	
-	foreach (@$list)
-	{
-		_convert_to_strings($_);
-	}
-	    
-    Bugzilla->logout;
+    $self->logout;
     
     return $list;	
 }
@@ -156,16 +98,16 @@ sub create
 	my $self =shift;
 	my ($new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
-    _convert_to_ids($new_values);
-	
 	my $test_plan = new Bugzilla::Testopia::TestPlan($new_values);
 	
-	Bugzilla->logout;
+	my $result = $test_plan->store(); 
+	
+	$self->logout;
 	
 	# Result is new test plan id
-	return $test_plan->store();
+	return $result;
 }
 
 sub update
@@ -173,18 +115,154 @@ sub update
 	my $self =shift;
 	my ($test_plan_id, $new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
 	my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+	
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
 
-    _convert_to_ids($new_values);
-	
-	$test_plan->update($new_values);
-	
-	Bugzilla->logout;
-	
+    my $result = $test_plan->update($new_values);
+
+	$self->logout;
+
 	# Result is zero on success, otherwise an exception will be thrown
-	return 0;
+	return $test_plan;
+}
+
+sub get_test_cases
+{
+	my $self =shift;
+    my ($test_plan_id) = @_;
+
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_plan->test_cases();
+	
+	$self->logout;
+
+	# Result is list of test cases for the given test plan
+	return $result;
+}
+
+sub get_test_runs
+{
+	my $self =shift;
+    my ($test_plan_id) = @_;
+
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_plan->test_runs();
+
+	$self->logout;
+	
+	# Result is list of test runs for the given test plan
+	return $result;
+}
+
+sub get_categories
+{
+	my $self =shift;
+    my ($test_plan_id) = @_;
+
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_plan->product->categories();
+
+	$self->logout;
+	
+	# Result is list of test runs for the given test plan
+	return $result;
+}
+
+sub lookup_type_name_by_id
+{
+	my $self =shift;
+    my ($id) = @_;
+    
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan({});
+    
+    my $result = $test_plan->lookup_type($id);
+
+	$self->logout;
+	
+	# Result is test plan type name for the given test plan type id
+	return $result;
+}
+
+sub lookup_type_id_by_name
+{
+	my $self =shift;
+    my ($name) = @_;
+    
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan({});
+    
+    my $result = $test_plan->lookup_type_by_name($name);
+
+	$self->logout;
+
+    if (!defined $result) 
+    {
+      $result = 0;
+    };
+	
+	# Result is test plan type id for the given test plan type name
+	return $result;
 }
 
 1;

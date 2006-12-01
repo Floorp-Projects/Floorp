@@ -71,7 +71,7 @@
       <th align="right"><a href="tr_builds.cgi?plan_id=[% run.plan.id FILTER none %]">Build</a></td>
       <td>
         [% PROCESS select sel = { name => "build", 
-                                  list => run.plan.builds,
+                                  list => run.plan.product.builds,
                                   default => run.build.id }
          %]
        [% IF action == 'Add' %]

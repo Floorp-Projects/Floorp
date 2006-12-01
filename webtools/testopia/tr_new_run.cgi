@@ -63,7 +63,7 @@ detaint_natural($plan_id);
 validate_test_id($plan_id, 'plan');
 
 my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-unless (scalar @{$plan->builds} >0){
+unless (scalar @{$plan->product->builds} >0){
     print $cgi->header;
     ThrowUserError('testopia-create-build', {'plan' => $plan});
 }

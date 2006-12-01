@@ -137,7 +137,7 @@
       <th>Created</th>
       </tr>
     <tr class="bz_row_data">
-      <td>[% plan.product_name FILTER html %]</td>
+      <td>[% plan.product.name FILTER html %]</td>
       <td>[% plan.product_version FILTER html %]</td>
       <td>[% plan.creation_date FILTER time %]</td>
       </tr>
@@ -181,7 +181,7 @@
   <tr>
     <td align="left">
     [% PROCESS select sel = { name      => 'category',
-                              list      => plan.categories
+                              list      => plan.product.categories
                               accesskey => 'c'
                               elements  => 7 } %]
     <br>
@@ -200,7 +200,7 @@
     </td>
     <td align="right">
     [% PROCESS select sel = { name      => 'build',
-                              list      => plan.builds
+                              list      => plan.product.builds
                               accesskey => 'b'
                               elements  => 7 } %]
     <br>

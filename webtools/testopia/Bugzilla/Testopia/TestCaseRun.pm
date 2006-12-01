@@ -991,7 +991,7 @@ sub candelete {
 
 =head2 obliterate
 
-Removes this caserun, it's history, and all things that reference it.
+Removes this caserun, its history, and all things that reference it.
 
 =cut
 

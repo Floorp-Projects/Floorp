@@ -39,7 +39,7 @@
     <td align="left"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
     <td align="right" valign="top">
     [% PROCESS select sel = { name => "caserun_build", 
-                              list => caserun.run.plan.builds, 
+                              list => caserun.run.plan.product.builds, 
                            default => caserun.build.name 
                            events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
      %]

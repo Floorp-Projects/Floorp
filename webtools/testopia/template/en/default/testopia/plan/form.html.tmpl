@@ -23,6 +23,7 @@
 <script type="text/javascript">
     dojo.require("dojo.io");
     dojo.require("dojo.widget.Editor2");
+    dojo.require("dojo.widget.Editor2Plugin.DialogCommands");
 </script>
 <a name="attributes"></a>
 <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
@@ -35,7 +36,7 @@
     <th class="bz_row_header" align="right" width="100">Product</th>
     <td>[% IF plan.test_case_count OR plan.test_run_count %]
         <input type="hidden" name='product_id' value="[% plan.product_id FILTER none %]" />
-        [% plan.product_name FILTER html %]
+        [% plan.product.name FILTER html %]
         [% ELSE %]
         [% PROCESS select sel = { name      => 'product_id',
                                   list      =>  plan.get_available_products,

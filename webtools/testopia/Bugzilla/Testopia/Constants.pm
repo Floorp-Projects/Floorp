@@ -51,6 +51,37 @@ RELATIONSHIPS
 
 );
 
+#
+# Fields to include when exporting a Test Case.
+#
+# All _id fields but case_id are converted to a string representation.
+#
+@Bugzilla::Testopia::Constants::TESTCASE_EXPORT = qw(
+case_id
+summary
+set_up
+break_down
+action
+expected_results
+alias
+arguments
+author_id
+blocks
+case_status_id
+category_id
+components
+creation_date
+default_tester_id
+depends_on
+isautomated
+plans
+priority_id
+requirement
+script
+tags
+version
+);
+
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
 
 # Test Case Status

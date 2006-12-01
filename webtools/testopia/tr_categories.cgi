@@ -58,7 +58,7 @@ ThrowUserError("testopia-read-only", {'object' => 'Plan'}) unless $plan->canedit
 if ($action eq 'add'){
     $vars->{'plan'} = $plan;
     $vars->{'action'} = 'do_add';
-    $vars->{'title'} = "Create a New Category for ". $plan->product_name;
+    $vars->{'title'} = "Create a New Category for ". $plan->product->name;
     $template->process("testopia/category/form.html.tmpl", $vars) 
       || ThrowTemplateError($template->error());
 }
@@ -171,7 +171,7 @@ else {
 sub get_categories_xml {
     my ($plan) = @_;
     my $ret = "<items>";
-    foreach my $c (@{$plan->categories}){
+    foreach my $c (@{$plan->product->categories}){
         $ret .= "<category>";
         $ret .= "<id>". $c->id ."</id>";
         $ret .= "<name>". $c->name ."</name>";

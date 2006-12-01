@@ -301,6 +301,17 @@
 
 [% END %]
 </FORM>
+
+<div id="buglist_actions">
+	<div class="links">
+		<span class="label">Export:</span>
+		<a href="tr_show_case.cgi?
+		&amp;case_id=[% case.id FILTER none %]&amp;ctype=csv"><image src="images/csv.png" class="image"></a>
+[%#		<img src="https://secure-www.novell.com/img/link_divbar.gif" width="1" height="20" alt="line" class="bar"> #%]
+[%#		<a href="tr_list_cases.cgi? #%]
+[%#		&amp;ctype=xml"><image src="images/xml.png" class="image"></a> #%]
+	</div>
+</div>
 [%##### Footer #####%]
 
 [% PROCESS global/footer.html.tmpl %]

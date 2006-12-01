@@ -69,7 +69,7 @@
   <tr>
     <td valign="TOP" align="RIGHT">Build:</td>
     <td>[% PROCESS select sel = { name => 'build', 
-                                  list => run.plan.builds 
+                                  list => run.plan.product.builds 
                                   accesskey => 'b' 
                                   default => run.build.id } %]</td>
   </tr>
