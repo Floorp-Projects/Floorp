@@ -278,14 +278,6 @@
         </getter>
       </property>
       
-      <property name="findString" readonly="true">
-        <getter>
-        <![CDATA[
-          return this.fastFind.searchString;
-        ]]>
-        </getter>
-      </property>
-      
       <property name="webProgress"
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>

@@ -2212,10 +2212,6 @@
         </getter>
       </property>
 
-      <property name="findString"
-                onget="return this.mCurrentBrowser.findString;"
-                readonly="true"/>
-
       <property name="docShell"
                 onget="return this.mCurrentBrowser.docShell"
                 readonly="true"/>
@@ -2267,30 +2263,6 @@
       <property name="securityUI"
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
-
-      <method name="find">
-        <body>
-          <![CDATA[
-            return this.mCurrentBrowser.find();
-          ]]>
-        </body>
-      </method>
-
-      <method name="findAgain">
-        <body>
-          <![CDATA[
-            return this.mCurrentBrowser.findAgain();
-          ]]>
-        </body>
-      </method>
-
-      <method name="findPrevious">
-        <body>
-          <![CDATA[
-            return this.mCurrentBrowser.findPrevious();
-          ]]>
-        </body>
-      </method>
 
       <method name="dragDropSecurityCheck">
         <parameter name="aEvent"/>
