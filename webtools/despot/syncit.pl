@@ -381,8 +381,8 @@ while (@reprow = $repquery->fetchrow_array()) {
                 }
                 foreach $i (split(/[,\s]+/, $newsgroups)) {
                     my $base = "news:";
-                    if ($i =~ /^netscape\.public/) {
-                        $base = "nntp://news.mozilla.org/";
+                    if ($i =~ /^mozilla\./) {
+                        $base = "news://news.mozilla.org/";
                     }
                     push @grouplist, qq|<a href="$base$i">$i</a>|;
                 }
