@@ -69,6 +69,7 @@ XPIDLSRCS =					\
 	nsIDOMNSEventTarget.idl			\
 	nsIDOMSmartCardEvent.idl                \
 	nsIDOMPageTransitionEvent.idl		\
+	nsIDOMCommandEvent.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

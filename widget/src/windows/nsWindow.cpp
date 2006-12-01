@@ -74,6 +74,7 @@
 #include "gfxIImageFrame.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsKeyboardLayout.h"
+#include "nsWidgetAtoms.h"
 #include <windows.h>
 #include <process.h>
 
@@ -532,10 +533,10 @@ static PRBool is_vk_down(int vk)
 #define APPCOMMAND_BROWSER_FORWARD        2
 #define APPCOMMAND_BROWSER_REFRESH        3
 #define APPCOMMAND_BROWSER_STOP           4
+#define APPCOMMAND_BROWSER_SEARCH         5
+#define APPCOMMAND_BROWSER_FAVORITES      6
+#define APPCOMMAND_BROWSER_HOME           7
 // keep these around in case we want them later
-//#define APPCOMMAND_BROWSER_SEARCH         5
-//#define APPCOMMAND_BROWSER_FAVORITES      6
-//#define APPCOMMAND_BROWSER_HOME           7
 //#define APPCOMMAND_VOLUME_MUTE            8
 //#define APPCOMMAND_VOLUME_DOWN            9
 //#define APPCOMMAND_VOLUME_UP              10
@@ -1160,17 +1161,41 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 // Dispatch app command event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
+PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 {
-  nsAppCommandEvent event(PR_TRUE, NS_APPCOMMAND_START, this);
+  nsCOMPtr<nsIAtom> command;
+  switch (aEventCommand) {
+    case APPCOMMAND_BROWSER_BACKWARD:
+      command = nsWidgetAtoms::Back;
+      break;
+    case APPCOMMAND_BROWSER_FORWARD:
+      command = nsWidgetAtoms::Forward;
+      break;
+    case APPCOMMAND_BROWSER_REFRESH:
+      command = nsWidgetAtoms::Reload;
+      break;
+    case APPCOMMAND_BROWSER_STOP:
+      command = nsWidgetAtoms::Stop;
+      break;
+    case APPCOMMAND_BROWSER_SEARCH:
+      command = nsWidgetAtoms::Search;
+      break;
+    case APPCOMMAND_BROWSER_FAVORITES:
+      command = nsWidgetAtoms::Bookmarks;
+      break;
+    case APPCOMMAND_BROWSER_HOME:
+      command = nsWidgetAtoms::Home;
+      break;
+    default:
+      return PR_FALSE;
+  }
+  nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, command, this);
 
   InitEvent(event);
-  event.appCommand = NS_APPCOMMAND_START + aEventCommand;
-
   DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
-  return NS_OK;
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -3439,6 +3464,18 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
+  // VK_BROWSER_BACK and VK_BROWSER_FORWARD are converted to nsAppCommandEvents
+  if (aVirtualKeyCode == VK_BROWSER_BACK) 
+  {
+    DispatchCommandEvent(APPCOMMAND_BROWSER_BACKWARD);
+    return TRUE;
+  } 
+  else if (aVirtualKeyCode == VK_BROWSER_FORWARD) 
+  {
+    DispatchCommandEvent(APPCOMMAND_BROWSER_FORWARD);
+    return TRUE;
+  }
+
   gKbdLayout.OnKeyDown (aVirtualKeyCode);
 
   // Use only DOMKeyCode for XP processing.
@@ -3641,6 +3678,8 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
+  if (aVirtualKeyCode == VK_BROWSER_BACK || aVirtualKeyCode == VK_BROWSER_FORWARD) 
+    return TRUE;
   aVirtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
   BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
   return result;
@@ -4753,7 +4792,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case APPCOMMAND_BROWSER_FORWARD:
         case APPCOMMAND_BROWSER_REFRESH:
         case APPCOMMAND_BROWSER_STOP:
-          DispatchAppCommandEvent(appCommand);
+        case APPCOMMAND_BROWSER_SEARCH:
+        case APPCOMMAND_BROWSER_FAVORITES:
+        case APPCOMMAND_BROWSER_HOME:
+          DispatchCommandEvent(appCommand);
           // tell the driver that we handled the event
           *aRetValue = 1;
           result = PR_TRUE;

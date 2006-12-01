@@ -53,6 +53,7 @@ class nsPresContext;
 class nsIDOMEventTarget;
 class nsIDOMEvent;
 class nsEvent;
+class nsCommandEvent;
 
 class nsIPrivateDOMEvent : public nsISupports
 {
@@ -97,5 +98,7 @@ NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class 
 #endif // MOZ_SVG
 nsresult
 NS_NewDOMXULCommandEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsXULCommandEvent* aEvent);
+nsresult
+NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsCommandEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

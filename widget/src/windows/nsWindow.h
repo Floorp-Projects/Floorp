@@ -346,7 +346,7 @@ protected:
                        { return aStatus == nsEventStatus_eConsumeNoDefault; }
 
   PRBool DispatchStandardEvent(PRUint32 aMsg);
-  PRBool DispatchAppCommandEvent(PRUint32 aEventCommand);
+  PRBool DispatchCommandEvent(PRUint32 aEventCommand);
   void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
   void GetNonClientBounds(nsRect &aRect);
