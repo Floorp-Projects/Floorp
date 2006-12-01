@@ -15414,7 +15414,7 @@ fi
 fi
 
 
-if test "$OS_ARCH" = "WINNT"; then
+if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
    MOZ_AIRBAG=1
 fi
 
