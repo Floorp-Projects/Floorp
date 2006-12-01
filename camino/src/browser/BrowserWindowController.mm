@@ -88,6 +88,7 @@
 #include "nsIHistoryItems.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -125,6 +126,7 @@
 
 // for spellchecking
 #include "nsIEditor.h"
+#include "nsIEditingSession.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsISelection.h"
@@ -3068,17 +3070,12 @@ enum BWCOpenDest {
   [self forward:sender];
 }
 
-//
-// -focusedElement
-//
-// Returns the currently focused DOM element in the currently visible tab
-//
-- (void)focusedElement:(nsIDOMElement**)outElement
+- (void)focusController:(nsIFocusController**)outController
 {
   #define ENSURE_TRUE(x) if (!x) return;
-  if (!outElement)
+  if (!outController)
     return;
-  *outElement = nsnull;
+  *outController = nsnull;
 
   nsCOMPtr<nsIWebBrowser> webBrizzle = dont_AddRef([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
   ENSURE_TRUE(webBrizzle);
@@ -3086,20 +3083,36 @@ enum BWCOpenDest {
   webBrizzle->GetContentDOMWindow(getter_AddRefs(domWindow));
   nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(domWindow);
   ENSURE_TRUE(privateWindow);
-  nsIFocusController *controller = privateWindow->GetRootFocusController();
-  ENSURE_TRUE(controller);
+  *outController = privateWindow->GetRootFocusController();
+  NS_IF_ADDREF(*outController);
+  #undef ENSURE_TRUE
+}
+
+//
+// -focusedElement
+//
+// Returns the currently focused DOM element in the currently visible tab
+//
+- (void)focusedElement:(nsIDOMElement**)outElement
+{
+  if (!outElement)
+    return;
+  *outElement = nsnull;
+
+  nsCOMPtr<nsIFocusController> controller;
+  [self focusController:getter_AddRefs(controller)];
+  if (!controller)
+    return;
   nsCOMPtr<nsIDOMElement> focusedItem;
   controller->GetFocusedElement(getter_AddRefs(focusedItem));
   *outElement = focusedItem.get();
   NS_IF_ADDREF(*outElement);
-
-  #undef ENSURE_TRUE
 }
 
 //
 // -currentEditor:
 //
-// Returns the nsIEditor of the currently focused text area or input
+// Returns the nsIEditor of the currently focused text area, input, or midas editor
 //
 - (void)currentEditor:(nsIEditor**)outEditor
 {
@@ -3110,8 +3123,36 @@ enum BWCOpenDest {
   nsCOMPtr<nsIDOMElement> focusedElement;
   [self focusedElement:getter_AddRefs(focusedElement)];
   nsCOMPtr<nsIDOMNSEditableElement> editElement = do_QueryInterface(focusedElement);
-  if (editElement)
+  if (editElement) {
     editElement->GetEditor(outEditor);
+  }
+  // if there's no element focused, we're probably in a Midas editor
+  else {
+    #define ENSURE_TRUE(x) if (!x) return;
+    nsCOMPtr<nsIFocusController> controller;
+    [self focusController:getter_AddRefs(controller)];
+    ENSURE_TRUE(controller);
+    nsCOMPtr<nsIDOMWindowInternal> winInternal;
+    controller->GetFocusedWindow(getter_AddRefs(winInternal));
+    nsCOMPtr<nsIDOMWindow> focusedWindow(do_QueryInterface(winInternal));
+    ENSURE_TRUE(focusedWindow);
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    focusedWindow->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc(do_QueryInterface(domDoc));
+    ENSURE_TRUE(htmlDoc);
+    nsAutoString designMode;
+    htmlDoc->GetDesignMode(designMode);
+    if (designMode.EqualsLiteral("on")) {
+      // we are in a Midas editor, so find its editor
+      nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
+      ENSURE_TRUE(privateWindow);
+      nsIDocShell *docshell = privateWindow->GetDocShell();
+      nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
+      ENSURE_TRUE(editSession)
+      editSession->GetEditorForWindow(focusedWindow, outEditor);
+    }
+    #undef ENSURE_TRUE
+  }
 }
 
 //
@@ -3898,16 +3939,40 @@ enum BWCOpenDest {
   BOOL showSpellingItems = NO;
   BOOL needsAlternates = NO;
 
-  NSMenu* menuPrototype = nil;
-  int contextMenuFlags = mDataOwner->mContextMenuFlags;
-
   NSArray* emailAddresses = nil;
   unsigned numEmailAddresses = 0;
 
   BOOL hasSelection = [[mBrowserView getBrowserView] canCopy];
+  BOOL isMidas = NO;
 
-  if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
-  {
+  if (mDataOwner->mContextMenuNode) {
+    nsCOMPtr<nsIDOMDocument> ownerDoc;
+    mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+
+    // Check to see if it's a Midas frame
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
+    if (htmlDoc) {
+      nsAutoString designMode;
+      htmlDoc->GetDesignMode(designMode);
+      isMidas = designMode.EqualsLiteral("on");
+    }
+
+    // If it's not a Midas frame, check to see if it's a subframe
+    if (!isMidas) {
+      nsCOMPtr<nsIDOMWindow> contentWindow = [[mBrowserView getBrowserView] getContentWindow];
+
+      nsCOMPtr<nsIDOMDocument> contentDoc;
+      if (contentWindow)
+        contentWindow->GetDocument(getter_AddRefs(contentDoc));
+
+      showFrameItems = (contentDoc != ownerDoc);
+    }
+  }
+
+  NSMenu* menuPrototype = nil;
+  int contextMenuFlags = mDataOwner->mContextMenuFlags;
+
+  if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0) {
     emailAddresses = [self mailAddressesInContextMenuLinkNode];
     if (emailAddresses != nil)
       numEmailAddresses = [emailAddresses count];
@@ -3928,7 +3993,9 @@ enum BWCOpenDest {
     }
   }
   else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
-           (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
+           (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0 ||
+           isMidas)
+  {
     menuPrototype = mInputMenu;
     showSpellingItems = YES;
   }
@@ -3944,19 +4011,6 @@ enum BWCOpenDest {
     [mBackItem    setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
     [mCopyItem    setEnabled:hasSelection];
-  }
-
-  if (mDataOwner->mContextMenuNode) {
-    nsCOMPtr<nsIDOMDocument> ownerDoc;
-    mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
-
-    nsCOMPtr<nsIDOMWindow> contentWindow = [[mBrowserView getBrowserView] getContentWindow];
-
-    nsCOMPtr<nsIDOMDocument> contentDoc;
-    if (contentWindow)
-      contentWindow->GetDocument(getter_AddRefs(contentDoc));
-
-    showFrameItems = (contentDoc != ownerDoc);
   }
 
   // we have to clone the menu and return that, so that we don't change
