@@ -53,6 +53,7 @@ var gPhishingDetector = {
    */
   init: function() 
   {
+    try {
     // set up the anti phishing service
     var appContext = Components.classes["@mozilla.org/phishingprotection/application;1"]
                        .getService().wrappedJSObject;
@@ -69,6 +70,7 @@ var gPhishingDetector = {
 
     // Download/update lists if we're in non-enhanced mode
     this.mPhishingWarden.maybeToggleUpdateChecking();  
+    } catch (ex) { dump('unable to create the phishing warde: ' + ex + '\n');}
   },
   
   /**
@@ -147,7 +149,10 @@ var gPhishingDetector = {
        
        // Lookup the url against our local list. We want to do this even if the url fails our static
        // test checks because the url might be in the white list.
+       if (this.mPhishingWarden)
        this.mPhishingWarden.isEvilURL(GetLoadedMessage(), failsStaticTests, aUrl, this.localListCallback);
+       else
+         this.localListCallback(GetLoadedMessage(), failsStaticTests, aUrl, 2 /* not found */);
     }
   },
   
