@@ -176,6 +176,13 @@ bin\defaults\autoconfig\platform.js
 bin\defaults\autoconfig\prefcalls.js
 bin\components\autoconfig.xpt
 
+; Phishing Protection
+bin\components\nsPhishingProtectionApplication.js
+bin\components\nsUrlClassifierListManager.js
+bin\components\nsUrlClassifierLib.js
+bin\components\nsUrlClassifierTable.js
+bin\components\url-classifier.xpt
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

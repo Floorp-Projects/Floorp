@@ -1044,6 +1044,7 @@ mail/components/preferences/Makefile
 mail/components/build/Makefile
 mail/components/shell/Makefile
 mail/components/shell/public/Makefile
+mail/components/phishing/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/config/Makefile

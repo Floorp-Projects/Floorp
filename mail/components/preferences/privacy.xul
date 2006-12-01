@@ -71,7 +71,10 @@
                   type="bool"/>
       <preference id="mail.phishing.detection.enabled"
                   name="mail.phishing.detection.enabled"
-                  type="bool"/> 
+                  type="bool"/>
+      <preference id="browser.safebrowsing.enabled"
+                  name="browser.safebrowsing.enabled"
+                  type="bool"/>
       <preference id="mailnews.downloadToTempFile"
                   name="mailnews.downloadToTempFile"
                   type="bool"/>                   
@@ -129,12 +132,15 @@
         
         <!-- Phishing Detector --> 
         <tabpanel orient="vertical">
-          <description>&phishingDetector.intro;</description>
+          <description>&phishingDetector1.intro;</description>
           <class separator="thin"/>
           <checkbox id="enablePhishingDetector"
-                    label="&enablePhishingDetector.label;" accesskey="&enablePhishingDetector.accesskey;"
+                    label="&enablePhishingDetector1.label;" accesskey="&enablePhishingDetector1.accesskey;"
+                    oncommand="gPrivacyPane.updateDownloadedPhishingListState()" 
                     preference="mail.phishing.detection.enabled"/>
-
+          <checkbox id="useDownloadedList" class="indent" label="&useDownloadedList.label;"
+                    accesskey="&useDownloadedList.accesskey;" 
+                    preference="browser.safebrowsing.enabled"/>
         </tabpanel>
 
         <!-- Anti Virus --> 

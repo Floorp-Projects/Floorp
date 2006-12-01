@@ -49,6 +49,9 @@ var gPrivacyPane = {
     
     // Update the MP buttons
     this.updateMasterPasswordButton();
+    
+    // update the checkbox for downloading phishing url tables
+    this.updateDownloadedPhishingListState();
 
     var preference = document.getElementById("mail.preferences.privacy.selectedTabIndex");
     if (preference.value)
@@ -158,5 +161,10 @@ var gPrivacyPane = {
       this.updateMasterPasswordButton();
       document.getElementById("setMasterPassword").focus();
     }
-  }
+  },
+
+  updateDownloadedPhishingListState: function()
+  {
+    document.getElementById('useDownloadedList').disabled = !document.getElementById('enablePhishingDetector').checked;
+  },
 };
