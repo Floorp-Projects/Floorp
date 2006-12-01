@@ -592,13 +592,19 @@ char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *c
 
   if (!_src)
     return nsnull;
-  if ((src = src_head = nsCRT::strdup(_src)) == nsnull)
+
+  //<TAB>=?<charset>?<B/Q>?...?=<CRLF>
+  PRInt32 perLineOverhead = strlen(charset) + 10;
+
+  if (perLineOverhead > foldlen || (src = src_head = nsCRT::strdup(_src)) == nsnull)
     return nsnull;
 
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
-  outputlen = strlen(src) * 4 + kMAX_CSNAME + 8;
+  PRInt32 charsPerLine = (foldlen - perLineOverhead) / 4;
+  PRInt32 maxNumLines = (strlen(src) / charsPerLine) + 1;
+  outputlen = strlen(src) * 4 + (maxNumLines * perLineOverhead) + 20 /* fudge */;
   if ((outputtail = output = (char *)PR_Malloc(outputlen)) == nsnull) {
     PR_Free(src_head);
     return nsnull;
