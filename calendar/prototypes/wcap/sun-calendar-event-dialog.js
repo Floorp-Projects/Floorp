@@ -438,12 +438,16 @@ function loadDateTime(item) {
       startTime = item.entryDate;
       gStartTimezone = startTime.timezone;
       startTime = startTime.getInTimezone(kDefaultTimezone);
+    } else {
+      gStartTimezone = kDefaultTimezone;
     }
     var hasDueDate = (item.dueDate != null);
     if (hasDueDate) {
       endTime = item.dueDate;
       gEndTimezone = endTime.timezone;
       endTime = endTime.getInTimezone(kDefaultTimezone);
+    } else {
+      gEndTimezone = kDefaultTimezone;
     }
     if (hasEntryDate && hasDueDate)
       duration = endTime.subtractDate(startTime);
