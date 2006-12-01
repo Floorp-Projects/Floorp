@@ -1227,8 +1227,8 @@
             if (cols[i].boxObject.width > 0) ++visible;
             
           if (visible > 1) {
-            window.addEventListener("mousemove", this.onDragMouseMove, false);
-            window.addEventListener("mouseup", this.onDragMouseUp, false);
+            window.addEventListener("mousemove", this.onDragMouseMove, true);
+            window.addEventListener("mouseup", this.onDragMouseUp, true);
             document.treecolDragging = this;
             this.mDragGesturing = true;
             this.mStartDragX = event.clientX;
