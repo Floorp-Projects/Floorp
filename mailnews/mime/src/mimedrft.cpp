@@ -428,8 +428,12 @@ CreateCompositionFields(const char        *from,
   
   if (priority) {
     val = MIME_DecodeMimeHeader(priority, charset, PR_FALSE, PR_TRUE);
-    cFields->SetPriority(val ? val : priority);
+    nsMsgPriorityValue priorityValue;
+    NS_MsgGetPriorityFromString(val ? val : priority, priorityValue);
     PR_FREEIF(val);
+    nsCAutoString priorityName;
+    NS_MsgGetUntranslatedPriorityName(priorityValue, priorityName);
+    cFields->SetPriority(priorityName.get());
   }
   
   if (newspost_url) {
