@@ -1337,10 +1337,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     nsCOMPtr<nsIDOMAttr> attrNode;
     if (hasMutationListeners) {
-        // XXXbz namespaces, dude!
         nsAutoString attrName;
         aName->ToString(attrName);
-        GetAttributeNode(attrName, getter_AddRefs(attrNode));
+        nsAutoString ns;
+        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+        GetAttributeNodeNS(ns, attrName, getter_AddRefs(attrNode));
     }
 
     nsDOMSlots *slots = GetExistingDOMSlots();
