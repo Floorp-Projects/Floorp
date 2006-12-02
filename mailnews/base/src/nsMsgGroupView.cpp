@@ -324,7 +324,8 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pN
   // check if new hdr became thread root
   if (!newThread && foundThread->m_keys[0] == msgKey)
   {
-    m_keys.SetAt(viewIndexOfThread, msgKey);
+    if (viewIndexOfThread != nsMsgKey_None)
+      m_keys.SetAt(viewIndexOfThread, msgKey);
     if (GroupViewUsesDummyRow())
       foundThread->m_keys.SetAt(1, msgKey); // replace the old duplicate dummy header.
   }
@@ -558,18 +559,22 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
 
   nsMsgGroupThread *groupThread = NS_STATIC_CAST(nsMsgGroupThread *, (nsIMsgThread *) thread);
 
-  PRBool rootDeleted = m_keys.GetAt(viewIndexOfThread) == keyDeleted;
+  PRBool rootDeleted = viewIndexOfThread != nsMsgKey_None &&
+    m_keys.GetAt(viewIndexOfThread) == keyDeleted;
   rv = nsMsgDBView::OnHdrDeleted(aHdrDeleted, aParentKey, aFlags, aInstigator);
   if (groupThread->m_dummy)
   {
     if (!groupThread->NumRealChildren())
     {
       thread->RemoveChildAt(0); // get rid of dummy
-      nsMsgDBView::RemoveByIndex(viewIndexOfThread - 1);
-      if (m_deletingRows)
-        mIndicesToNoteChange.Add(viewIndexOfThread - 1);
+      if (viewIndexOfThread != nsMsgKey_None)
+      {
+        nsMsgDBView::RemoveByIndex(viewIndexOfThread - 1);
+        if (m_deletingRows)
+          mIndicesToNoteChange.Add(viewIndexOfThread - 1);
+      }
     }
-    else if (rootDeleted)
+    else if (rootDeleted && viewIndexOfThread > 0)
     {
       m_keys.SetAt(viewIndexOfThread - 1, m_keys.GetAt(viewIndexOfThread));
       OrExtraFlag(viewIndexOfThread - 1, MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_ISTHREAD);
