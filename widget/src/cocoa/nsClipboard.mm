@@ -130,7 +130,7 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
       PRUint32 imageLength = ((stride * height) / 4);
       for (PRUint32 i = 0; i < imageLength; i++) {
         PRUint32 pixel = imageData[i];
-        reorderedData[i] = (pixel << 8) | (pixel >> 24);
+        reorderedData[i] = CFSwapInt32HostToBig((pixel << 8) | (pixel >> 24));
       }
 
       PRUint8* planes[2];
