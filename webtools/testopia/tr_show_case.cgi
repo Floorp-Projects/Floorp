@@ -349,6 +349,11 @@ sub do_update{
         ValidateBugID($bug);
         push @buglist, $bug;
     }
+    my @runs;
+    foreach my $runid (split(/[\s,]+/, $cgi->param('addruns'))){
+        validate_test_id($runid, 'run');
+        push @runs, Bugzilla::Testopia::TestRun->new($runid);
+    }
     
     ThrowUserError('testiopia-alias-exists', 
         {'alias' => $alias}) if $case->check_alias($alias);
@@ -384,6 +389,10 @@ sub do_update{
     # Attach bugs
     foreach my $bug (@buglist){
         $case->attach_bug($bug);
+    }
+    # Add to runs
+    foreach my $run (@runs){
+        $run->add_case_run($case->id);
     }
     $cgi->delete_all;
     $cgi->param('case_id', $case->id);

@@ -125,6 +125,11 @@ if ($action eq 'Add'){
         validate_selection($id, 'id', 'components');
         push @components, $id;
     }
+    my @runs;
+    foreach my $runid (split(/[\s,]+/, $cgi->param('addruns'))){
+        validate_test_id($runid, 'run');
+        push @runs, Bugzilla::Testopia::TestRun->new($runid);
+    }
     
     my $case = Bugzilla::Testopia::TestCase->new({
             'alias'          => $alias || undef,
@@ -178,6 +183,9 @@ if ($action eq 'Add'){
             my $tag_id = $tag->store;
             $case->add_tag($tag_id);
         }
+    }
+    foreach my $run (@runs){
+        $run->add_case_run($case->id);
     }
 
     $vars->{'action'} = "Commit";
