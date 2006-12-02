@@ -610,6 +610,7 @@
 <!ENTITY contextPrint.label "Print...">
 <!ENTITY contextPrint.accesskey "P">
 <!ENTITY contextPrintPreview.label "Print Preview">
+<!ENTITY contextPrintPreview.accesskey "v">
 <!ENTITY contextDelete.label "Delete">
 <!ENTITY contextDelete.accesskey "D">
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
