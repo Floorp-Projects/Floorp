@@ -186,7 +186,7 @@ DocumentFunctionCall::getReturnType()
 PRBool
 DocumentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
-    return argsSensitiveTo(aContext);
+    return (aContext & PRIVATE_CONTEXT) || argsSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING

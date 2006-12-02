@@ -943,78 +943,45 @@ TX_ConstructXSLTFunction(nsIAtom* aName, txStylesheetCompilerState* aState,
                          FunctionCall** aFunction)
 {
     if (aName == txXSLTAtoms::document) {
-        if (aFunction) {
-            *aFunction =
-                new DocumentFunctionCall(aState->mElementContext->mBaseURI);
-            NS_ENSURE_TRUE(*aFunction, NS_ERROR_OUT_OF_MEMORY);
-        }
-
-        return NS_OK;
+        *aFunction =
+            new DocumentFunctionCall(aState->mElementContext->mBaseURI);
     }
-
-    if (aName == txXSLTAtoms::key) {
-        if (aFunction) {
-            *aFunction =
-                new txKeyFunctionCall(aState->mElementContext->mMappings);
-            NS_ENSURE_TRUE(*aFunction, NS_ERROR_OUT_OF_MEMORY);
-        }
-
-        return NS_OK;
+    else if (aName == txXSLTAtoms::key) {
+        *aFunction =
+            new txKeyFunctionCall(aState->mElementContext->mMappings);
     }
-
-    if (aName == txXSLTAtoms::formatNumber) {
-        if (aFunction) {
-            *aFunction =
-                new txFormatNumberFunctionCall(aState->mStylesheet,
-                                               aState->mElementContext->mMappings);
-            NS_ENSURE_TRUE(*aFunction, NS_ERROR_OUT_OF_MEMORY);
-        }
-
-        return NS_OK;
+    else if (aName == txXSLTAtoms::formatNumber) {
+        *aFunction =
+            new txFormatNumberFunctionCall(aState->mStylesheet,
+                                           aState->mElementContext->mMappings);
     }
-
-    if (aName == txXSLTAtoms::current) {
-        if (aFunction) {
-            *aFunction = new CurrentFunctionCall();
-            NS_ENSURE_TRUE(*aFunction, NS_ERROR_OUT_OF_MEMORY);
-        }
-
-        return NS_OK;
+    else if (aName == txXSLTAtoms::current) {
+        *aFunction = new CurrentFunctionCall();
     }
-
-    if (aName == txXSLTAtoms::unparsedEntityUri) {
+    else if (aName == txXSLTAtoms::unparsedEntityUri) {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
-
-    if (aName == txXSLTAtoms::generateId) {
-        if (aFunction) {
-            *aFunction = new GenerateIdFunctionCall();
-            NS_ENSURE_TRUE(*aFunction, NS_ERROR_OUT_OF_MEMORY);
-        }
-
-        return NS_OK;
+    else if (aName == txXSLTAtoms::generateId) {
+        *aFunction = new GenerateIdFunctionCall();
     }
-
-    txXSLTEnvironmentFunctionCall::eType type;
-    if (aName == txXSLTAtoms::systemProperty) {
-        type = txXSLTEnvironmentFunctionCall::SYSTEM_PROPERTY;
+    else if (aName == txXSLTAtoms::systemProperty) {
+        *aFunction = new txXSLTEnvironmentFunctionCall(
+            txXSLTEnvironmentFunctionCall::SYSTEM_PROPERTY,
+            aState->mElementContext->mMappings);
     }
     else if (aName == txXSLTAtoms::elementAvailable) {
-        type = txXSLTEnvironmentFunctionCall::ELEMENT_AVAILABLE;
+        *aFunction = new txXSLTEnvironmentFunctionCall(
+            txXSLTEnvironmentFunctionCall::ELEMENT_AVAILABLE,
+            aState->mElementContext->mMappings);
     }
     else if (aName == txXSLTAtoms::functionAvailable) {
-        type = txXSLTEnvironmentFunctionCall::FUNCTION_AVAILABLE;
+        *aFunction = new txXSLTEnvironmentFunctionCall(
+            txXSLTEnvironmentFunctionCall::FUNCTION_AVAILABLE,
+            aState->mElementContext->mMappings);
     }
     else {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }
-
-    if (!aFunction) {
-        return NS_OK;
-    }
-
-    txNamespaceMap *map = aState->mElementContext->mMappings;
-    *aFunction = new txXSLTEnvironmentFunctionCall(type, map);
 
     return *aFunction ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1068,7 +1035,14 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
 extern PRBool
 TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
 {
-    return NS_SUCCEEDED(findFunction(aName, aNameSpaceID, nsnull, nsnull));
+    nsRefPtr<txStylesheetCompiler> compiler =
+        new txStylesheetCompiler(EmptyString(), nsnull);
+    NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
+
+    nsAutoPtr<FunctionCall> fnCall;
+
+    return NS_SUCCEEDED(findFunction(aName, aNameSpaceID, compiler,
+                                     getter_Transfers(fnCall)));
 }
 
 nsresult
