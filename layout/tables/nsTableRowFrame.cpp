@@ -1529,7 +1529,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 {
   const nsStyleVisibility* rowVis = GetStyleVisibility();
   PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = NS_STATIC_CAST(nsTableFrame*, nsTableFrame::GetTableFrame(this)->GetFirstInFlow());
   if (!tableFrame)
       return 0;
   if (collapseRow) {
