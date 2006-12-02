@@ -1159,9 +1159,11 @@
 
             if (this.mTabs.length == 2 &&
                 !this.mTabs[0].linkedBrowser.webNavigation.sessionHistory.count)
-              this.removeTab(this.mTabs[0]);
-            else // if there's only one tab, it's selected anyway
+              this.removeTab(this.mTabs[0]); // only one tab => selected anyway
+            else {
               this.selectedTab = t;
+              this.mStrip.collapsed = false;
+            }
           ]]>
         </body>
       </method>
