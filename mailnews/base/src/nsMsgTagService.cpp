@@ -211,7 +211,7 @@ NS_IMETHODIMP nsMsgTagService::GetKeyForTag(const nsAString &aTag, nsACString &a
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, prefList);
   ToLowerCase(aKey);
-  return aKey.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
+  return NS_OK;
 }
 
 /* ACString getTopKey (in string keylist); */

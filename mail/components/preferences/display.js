@@ -86,7 +86,6 @@ var gDisplayPane = {
   
   removeTag: function()
   {
-    var tagItemToRemove = this.mTagListBox.getSelectedItem();
     var index = this.mTagListBox.selectedIndex;
     if (index >= 0)
     {
@@ -97,6 +96,24 @@ var gDisplayPane = {
       var numItemsInListBox = this.mTagListBox.getRowCount();
       this.mTagListBox.selectedIndex = index < numItemsInListBox ? index : numItemsInListBox - 1;
     }
+  },
+  
+  /** 
+   * Open the edit tag dialog
+   */
+  editTag: function()
+  {
+    var index = this.mTagListBox.selectedIndex;
+    if (index >= 0)
+    {
+      var tagElToEdit = this.mTagListBox.getItemAtIndex(index);
+      var args = {result: "", keyToEdit: tagElToEdit.getAttribute("value"), okCallback: editTagCallback};
+      var dialog = window.openDialog(
+			      "chrome://messenger/content/newTagDialog.xul",
+			      "",
+			      "chrome,titlebar,modal",
+			      args);        
+    }  
   },
 
   addTag: function()
@@ -112,7 +129,8 @@ var gDisplayPane = {
 
 function addTagCallback(aName, aColor)
 {
-  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService);
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                    .getService(Components.interfaces.nsIMsgTagService);
   tagService.addTag(aName, aColor, '');
  
   var item = gDisplayPane.appendTagItem(aName, tagService.getKeyForTag(aName), aColor);
@@ -120,4 +138,21 @@ function addTagCallback(aName, aColor)
   tagListBox.ensureElementIsVisible(item);
   tagListBox.selectItem(item);
   tagListBox.focus();
+}
+
+function editTagCallback()
+{
+  // update the values of the selected item
+  var tagListEl = document.getElementById('tagList');
+  var index = tagListEl.selectedIndex;
+  if (index >= 0)
+  {
+    var tagElToEdit = tagListEl.getItemAtIndex(index);
+    var key = tagElToEdit.getAttribute("value");
+    var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
+                     .getService(Components.interfaces.nsIMsgTagService);
+    // update the color and label elements
+    tagElToEdit.setAttribute("label", tagService.getTagForKey(key));
+    tagElToEdit.style.color = tagService.getColorForKey(key);
+  }        
 }

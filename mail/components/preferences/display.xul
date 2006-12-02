@@ -36,7 +36,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
+ 
 <!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % displayDTD SYSTEM "chrome://messenger/locale/preferences/display.dtd" >
@@ -148,12 +148,14 @@
         </tabpanel>
 
         <tabpanel orient="vertical">
-            <description>&displayTagsText.label;</description>
+          <description>&displayTagsText.label;</description>
           <hbox>
             <listbox id="tagList" flex="1" rows="10"/>
             <vbox>
               <button label="&addTagButton.label;" accesskey="&addTagButton.accesskey;"
                       oncommand="gDisplayPane.addTag();"/>
+              <button label="&editTagButton.label;" accesskey="&editTagButton.accesskey;"
+                      oncommand="gDisplayPane.editTag();"/>              
               <button label="&removeTagButton.label;" accesskey="&removeTagButton.accesskey;" 
                       oncommand="gDisplayPane.removeTag();"/>
             </vbox>
