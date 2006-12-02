@@ -44,12 +44,6 @@ function validBugid(bugid) {
   return (v != NaN) && (v > 0);
 }
 
-function edt_attch(index) {
-  
-  var bugid=document.getElementById('mbg'+index).value;
-  document.getElementById('sk'+index).disabled = !validBugid(bugid);
-}
-
 function fillrow(data, idx){
 	//document.write(data);
 	if (data.substring(0,5) == 'Error'){

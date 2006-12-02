@@ -41,6 +41,7 @@ my $query_limit = 15000;
 require "globals.pl";
 
 Bugzilla->login();
+Bugzilla->batch(1);
 print Bugzilla->cgi->header();
    
 my $dbh = Bugzilla->dbh;
@@ -296,7 +297,13 @@ elsif ($action eq 'attach_bug'){
     }
     my @buglist;
     foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
-        ValidateBugID($bug);
+        eval{
+            ValidateBugID($bug);
+        };
+        if ($@){
+            print "<span style='font-weight:bold; color:#FF0000;'>Error - Invalid bug id or alias</span>";
+            exit;
+        }
         push @buglist, $bug;
     }
     foreach my $bug (@buglist){
