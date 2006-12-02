@@ -938,6 +938,9 @@ suite/components/Makefile
 suite/components/xulappinfo/Makefile
 suite/locales/Makefile
 suite/profile/Makefile
+suite/profile/migration/Makefile
+suite/profile/migration/public/Makefile
+suite/profile/migration/src/Makefile
 "
 
 MAKEFILES_xulrunner="

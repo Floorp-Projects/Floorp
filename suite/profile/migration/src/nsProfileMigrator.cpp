@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is The Browser Profile Migrator.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Ben Goodger.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *  Ben Goodger <ben@bengoodger.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,29 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsSuiteDirectoryProvider.h"
 #include "nsProfileMigrator.h"
 
-/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// nsIProfileMigrator
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSuiteDirectoryProvider)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
+NS_IMETHODIMP
+nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
+{
+  return NS_OK;
+}
 
-/////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsProfileMigrator::Import()
+{
+  // This is purposely broken as using this would mean that we have
+  // to use data from where profiles exist currently. We want to copy
+  // it so that we can create a "fresh" profile. There may be a way
+  // to do it from here, but currently we haven't found an easy one.
+  //if (ImportRegistryProfiles(NS_LITERAL_CSTRING("mozilla")))
+  //    return NS_OK;
 
-static const nsModuleComponentInfo components[] = {
-  { "nsSuiteDirectoryProvider",
-    NS_SUITEDIRECTORYPROVIDER_CID,
-    NS_SUITEDIRECTORYPROVIDER_CONTRACTID,
-    nsSuiteDirectoryProviderConstructor,
-    nsSuiteDirectoryProvider::Register,
-    nsSuiteDirectoryProvider::Unregister },
+  return NS_ERROR_FAILURE;
+}
 
-  { "Profile Migrator",
-    NS_SUITEPROFILEMIGRATOR_CID,
-    NS_PROFILEMIGRATOR_CONTRACTID,
-    nsProfileMigratorConstructor }
-};
+///////////////////////////////////////////////////////////////////////////////
+// nsProfileMigrator
 
-NS_IMPL_NSGETMODULE(SuiteModule, components)
+NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)

@@ -14,12 +14,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-#   Mark Banner <bugzilla@standard8.demon.co.uk>
-#
+# the mozilla.org SeaMonkey project.
 # Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Mark Banner <bugzilla@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,72 +35,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= suite
-LIBRARY_NAME	= suite
-EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsSuiteModule
-MOZILLA_INTERNAL_API = 1
-
-REQUIRES	= \
-		xpcom \
-		string \
-		xulapp \
-		intl \
-		necko \
-		dom \
-		libreg \
-		pref \
-		rdf \
-		unicharutil \
-		windowwatcher \
-		suitemigration \
-		appcomps \
-		$(NULL)
-
-CPPSRCS 	= \
-		nsSuiteModule.cpp \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
-
-LOCAL_INCLUDES += \
-		-I$(topsrcdir)/suite/profile \
-		-I$(topsrcdir)/suite/profile/migration/src \
-		$(NULL)
-
-SHARED_LIBRARY_LIBS = \
-	../profile/$(LIB_PREFIX)suiteprofile_s.$(LIB_SUFFIX) \
-	../profile/migration/src/$(LIB_PREFIX)suitemigration_s.$(LIB_SUFFIX)
-        $(NULL)
-
-# Link to gkgfx for GNOME shell service
-ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
-EXTRA_DSO_LIBS += gkgfx
-endif
-
-EXTRA_DSO_LDOPTS += \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(MOZ_JS_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
-
-# Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += \
-	$(TK_LIBS) \
-	$(NULL)
-endif
+DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk
-

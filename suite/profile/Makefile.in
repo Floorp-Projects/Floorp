@@ -42,6 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= migration
+
 MODULE		= suiteprofile
 LIBRARY_NAME	= suiteprofile_s
 MOZILLA_INTERNAL_API = 1
