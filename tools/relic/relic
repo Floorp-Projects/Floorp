@@ -64,6 +64,8 @@
                             have a complete license.
         -A, --add           Add a license to files that do not appear to
                             have one.
+        -I, --initial-developers
+	                    Display initial developer for each file.
 
     General Options:
         -h, --help          dump this help and exit
@@ -106,10 +108,6 @@
         relic -r mozilla/js/src     # re-license files
 
 """
-# Possible TODOs:
-# - Perhaps try to infer the comment delimiter from the file is it is
-#   not known. This would help for .s files, though I don't know if that
-#   is sufficient to bother.
 
 import os
 import sys
@@ -154,67 +152,55 @@ _version_ = (0, 7, 0)
 # skipped.
 _g_skip_exts = [".mdp", ".order", ".dsp", ".dsw", ".uf"]
 _g_skip_file_basenames = [
+    # Used by CVS (and this script)
     ".cvsignore",
+    
     # GPL with autoconf exception
     "config.guess",
     "config.sub",
+
     # Auto-generated from other files
     "configure",
 ]
 _g_skip_files = [
-    # Files containing copies of the licence which confuse the script
-    # TODO: update them all.
-    "LICENSE",
-    "COPYING",
-    "extensions/xmlterm/doc/MPL",
-    "xpfe/global/resources/content/NPL-1.1.html",
-    "xpinstall/wizard/unix/src2/MPL-1.1.txt",
-    "xpfe/global/resources/content/MPL-1.1.html",
-    "parser/htmlparser/tests/html/bug23680.html",
-    "nsprpub/pkg/solaris/common_files/copyright",
-    "security/nss/pkg/solaris/common_files/copyright",
-    "security/jss/pkg/solaris/common_files/copyright",
-    "toolkit/content/NPL-1.1.html",
-    "toolkit/content/MPL-1.1.html",
-    "security/nss/lib/freebl/mpi/utils/LICENSE-MPL", # Currently MPL/GPL
-    "security/nss/lib/freebl/mpi/tests/LICENSE-MPL", # Currently MPL/GPL
-    "security/nss/lib/freebl/mpi/doc/LICENSE-MPL",   # Currently MPL/GPL
-    
-    # TODO: update with MPL block
+    # TODO: update with MPL block - or CVS remove (check history)
     "tools/wizards/templates/licenses/MPL/lic.mak",
     "tools/wizards/templates/licenses/MPL/lic.pl",
 
-    # Files containing licensing information
-    # TODO: Update
-    "xpfe/global/resources/content/license.html",
-    "toolkit/content/license.html",
-    
-    # Files the script can't handle
-    # TODO: Add license block
-    "testing/performance/win32/page_load_test/base/lxr.mozilla.org/20001028.html.orig",
-    "testing/performance/win32/page_load_test/base/lxr.mozilla.org/index.html",
-    "tools/performance/pageload/base/lxr.mozilla.org/index.html",
-    
 ###########################################################################
 # Everything in _g_skip_files below this line needs no further work.
 ###########################################################################
+    
+    # Files containing copies of licence text which confuses the script
+    "js2/COPYING",
+    "security/svrcore/LICENSE",
+    "extensions/xmlterm/doc/MPL",
+    "xpinstall/wizard/unix/src2/MPL-1.1.txt",
+    "nsprpub/pkg/solaris/common_files/copyright",
+    "security/nss/pkg/solaris/common_files/copyright",
+    "security/jss/pkg/solaris/common_files/copyright",
+    "security/nss/lib/freebl/mpi/utils/LICENSE-MPL",
+    "security/nss/lib/freebl/mpi/tests/LICENSE-MPL",
+    "security/nss/lib/freebl/mpi/doc/LICENSE-MPL",
+    "gfx/cairo/cairo/COPYING-LGPL-2.1",
+    "gfx/cairo/cairo/COPYING-MPL-1.1",
+    
+    # Files containing global licensing information
+    "xpfe/global/resources/content/license.html",
+    "toolkit/content/license.html",
     
     # Ben Bucksch - files are tri-licensed with an extra clause.
     "netwerk/streamconv/converters/mozTXTToHTMLConv.cpp",
     "netwerk/streamconv/converters/mozTXTToHTMLConv.h",
     "netwerk/streamconv/public/mozITXTToHTMLConv.idl",
     
-    # License files which are not to be updated
-    "gfx/cairo/cairo/COPYING-LGPL-2.1",
-    "gfx/cairo/cairo/COPYING-MPL-1.1",
-
     # GPLed build tools
     "config/preprocessor.pl",
     "intl/uconv/tools/parse-mozilla-encoding-table.pl",
     "intl/uconv/tools/gen-big5hkscs-2001-mozilla.pl",
     "js2/missing",
     
-    # Text files which the script can't handle. All have been relicensed
+    # Files which the script doesn't handle well. All have been relicensed
     # manually.
     "xpinstall/wizard/windows/builder/readme.txt",
     "xpfe/bootstrap/icons/windows/readme.txt",
@@ -227,6 +213,13 @@ _g_skip_files = [
     "security/nss/lib/freebl/ecl/README",
     "security/nss/lib/freebl/mpi/README",
     "lib/mac/UserInterface/Tables/TableClasses.doc",
+    "parser/htmlparser/tests/html/bug23680.html",
+    "security/nss/lib/freebl/mpi/montmulfv9.s",
+    "tools/performance/pageload/base/lxr.mozilla.org/index.html",
+    "testing/performance/win32/page_load_test/" +\
+                                            "base/lxr.mozilla.org/index.html",
+    "testing/performance/win32/page_load_test/" +\
+                                    "base/lxr.mozilla.org/20001028.html.orig",
     
     # Not sure what to do with this...
     "gfx/cairo/stdint.diff",
@@ -240,9 +233,14 @@ _g_skip_files = [
     
     # Public domain or equivalent
     "nsprpub/config/nspr.m4",
-
+    "toolkit/airbag/airbag/aclocal.m4",
+    "security/nss/lib/freebl/mpi/mp_comba_amd64_sun.s",
+    
     # GSSAPI has BSD-like licence requiring some attribution
     "extensions/auth/gssapi.h",
+
+    # This script
+    "tools/relic/relic",
 ]
 _g_skip_dir_basenames = [
     "CVS",
@@ -254,28 +252,24 @@ _g_skip_dir_basenames_cvs_only = [
 
 # Complete path from mozilla dir to a dir to skip.
 _g_skip_dirs = [
-    ###########################################################################
-# Everything in_g_skip_dirs below this line needs no further work.    ###########################################################################
-    
-    # This script, and its test files which cause it to crash!
-    "tools/relic/relic",
+     # Test files for this script, which cause it to crash!
     "tools/relic/test",
     
-    # License template files
+    # License template files (TODO: this directory may disappear)
     "tools/wizards/templates/licenses",
         
     # As per the "New Original Source Files" section of:
     #   http://www.mozilla.org/MPL/license-policy.html
-    "apache", # Obsolete mod_gzip code
-    "cck", # Don't know what mkaply is doing, but it's not core code anyway.
+    "apache",             # Obsolete mod_gzip code
+    "cck",                # mkaply's baby; not core code anyway.
     "dbm",
     "directory/java-sdk", # Java LDAP SDK
-    "directory/perldap", # Perl LDAP SDK
-    "ef", # Multi-platform Java JIT
-    "grendel", # Mail client in Java
-    "js/rhino", # Currently MPL/GPL - may end up BSD
-    "mstone", # Mail server performance testing tool
-    "webtools", # Various MPLed webtools
+    "directory/perldap",  # Perl LDAP SDK
+    "ef",                 # Multi-platform Java JIT
+    "grendel",            # Mail client in Java
+    "js/rhino",           # Currently MPL/GPL - may end up BSD
+    "mstone",             # Mail server performance testing tool
+    "webtools",           # Various MPLed webtools
     
     # These could be done, but no-one's clamouring for it, and it's a hassle
     # sorting it all out, so let sleeping dogs lie.
@@ -295,8 +289,8 @@ _g_skip_dirs = [
     "other-licenses",
     
     # Other directories we want to exclude
-    "embedding/tests",  # Agreed as BSD
-    "calendar/libical", # LGPL/MPL
+    "embedding/tests",     # Agreed as BSD
+    "calendar/libical",    # LGPL/MPL
     "gfx/cairo/cairo/src", # LGPL/MPL
 ]
 
@@ -445,7 +439,6 @@ _g_ext_to_comment_info = {
 
     ".properties": (["#"], ),
     ".win":        (["#"], ),
-    ".s":          (["#"], ["//"], ["!"], [";"], ["<!--", "   -", "-->"]),
     ".dsp":        (["#"], ),
     ".exp":        (["#"], ),
     ".mk":         (["#"], ),
@@ -521,10 +514,12 @@ _g_ext_to_comment_info = {
     ".script": (["(*", " *", "*)"], ),
 
     ".3x":  (['.\\"'], ),
+	    
+    # What a mess...
+    ".s": (["#"], ["//"], ["/*", " *", "*/"], ["!"], [";"], ["/"]),
 }
 _g_shebang_pattern_to_comment_info = [
-    (re.compile(ur'\A#!.*/bin/sh.*$', re.IGNORECASE), (["#"], )),
-    (re.compile(ur'\A#!.*/bin/bash.*$', re.IGNORECASE), (["#"], )),
+    (re.compile(ur'\A#!.*/bin/(ba)?sh.*$', re.IGNORECASE), (["#"], )),
     (re.compile(ur'\A#!.*perl.*$', re.IGNORECASE), (["#"], )),
     (re.compile(ur'\A#!.*php.*$', re.IGNORECASE), (["#"], )),
     (re.compile(ur'\A#!.*python.*$', re.IGNORECASE), (["#"], )),
@@ -699,10 +694,6 @@ def _should_skip_file(path):
     if _g_check_all:
         return 0
     ext = os.path.splitext(path)[1]
-    if ext == ".s":
-        # '.s' file comment delimiters are all over the map.
-        log.info("Skipping '%s' ('.s' files are wacky)", path)
-        return 1
     if ext in _g_skip_exts:
         log.info("Skipping '%s' (according to '_g_skip_exts').", path)
         return 1
@@ -746,7 +737,7 @@ def _should_skip_dir(path):
     return 0
 
 
-def _get_license_info(filename, quick=0):
+def _get_license_info(filename, show_initial):
     """Return license block information for the given file.
 
         "filename" is the path to the file to scan.
@@ -832,9 +823,6 @@ def _get_license_info(filename, quick=0):
     elif (parts == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
           parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
         log.info("license looks good, no changes necessary")
-        return lic_info
-
-    if quick:
         return lic_info
 
     # Otherwise, the license needs to be fixed, so gather more detailed
@@ -1274,8 +1262,8 @@ def _get_license_info(filename, quick=0):
     # 2) Edit init-devs.txt to remove the trailing summary text.
     # 3) /usr/src/relic/make-id-list < init-devs.txt > list.txt
     ###########################################################################
-    # if initial_developer:
-    #     print initial_developer
+    if (show_initial):
+        print initial_developer
     
     lic_info["initial_copyright_date"] = initial_copyright_date
     log.info("initial developer paragraph: %r", paragraph)
@@ -1369,15 +1357,15 @@ def _get_license_info(filename, quick=0):
     return lic_info
 
 
-def _report_on_file(path, (results, switch_to_mpl, _errors)):
+def _report_on_file(path, (results, switch_to_mpl, show_initial, _errors)):
     log.debug("_report_on_file(path='%s', results)", path)
-    print path
+    output = path + "\n"
     if _is_binary(path):
-        print "... binary, skipping this file"
+        output += "... binary, skipping this file\n"
         return
 
     try:
-        lic_info = _get_license_info(path)
+        lic_info = _get_license_info(path, show_initial)
     except RelicError, ex:
         return _relicensing_error(ex, path, _errors)
 
@@ -1385,34 +1373,44 @@ def _report_on_file(path, (results, switch_to_mpl, _errors)):
         pprint.pprint(lic_info)
     parts = lic_info["parts"]
     if not parts:
-        print "... no license found"
+        output += "... no license found\n"
     elif "unknown" in parts:
-        print "... unknown license (possibly) found"
+        output += "... unknown license (possibly) found\n"
     elif ((parts == ["block_begin", "mpl", "gpl", "lgpl", "block_end"] or
            parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]) and
           not lic_info.get("unindented_contributor_lines")):
         if (switch_to_mpl and
             parts == ["block_begin", "npl", "gpl", "lgpl", "block_end"]):
-            print "... %s found (looks complete, but is not MPL)"\
-                  % "/".join(parts)
+            output += "... %s found (looks complete, but is not MPL)"\
+                      % "/".join(parts) + "\n"
         else:
-            print "... %s found (looks complete)"\
-                  % "/".join(parts)
+            output += "... %s found (looks complete)"\
+                      % "/".join(parts) + "\n"
     else:
-        print "... %s found" % "/".join(parts)
-        print "... license block lines: %(begin_line)d-%(end_line)d" % lic_info
+        output += "... %s found" % "/".join(parts) + "\n"
+        output += "... license block lines: %(begin_line)d-%(end_line)d"\
+	          % lic_info + "\n"
         if lic_info["original_code_is"]:
-            print "... original code is: %(original_code_is)s" % lic_info
+            output += "... original code is: %(original_code_is)s"\
+		      % lic_info + "\n"
         if lic_info["original_code_date"]:
-            print "... original code date: %(original_code_date)s" % lic_info
+            output += "... original code date: %(original_code_date)s"\
+	              % lic_info + "\n"
         if lic_info["initial_developer"]:
-            print "... initial developer: %(initial_developer)s" % lic_info
+            output += "... initial developer: %(initial_developer)s"\
+	              % lic_info + "\n"
         if lic_info["initial_copyright_date"]:
-            print "... initial copyright date: %(initial_copyright_date)s" % lic_info
+            output += "... initial copyright date: %(initial_copyright_date)s"\
+	              % lic_info + "\n"
         if lic_info["contributors"]:
-            print "... contributors: %s" % ", ".join(lic_info["contributors"])
+            output += "... contributors: %s"\
+		      % ", ".join(lic_info["contributors"]) + "\n"
         if lic_info.get("unindented_contributor_lines"):
-            print "... one or more contributor lines were not indented properly"
+            output += "... one or more contributor lines were not indented properly"\
+	              + "\n"
+
+        if (not show_initial):
+	    print output;
 
 
 def _gather_info_on_file(path, (results, _errors)):
@@ -1428,7 +1426,7 @@ def _gather_info_on_file(path, (results, _errors)):
             path, _errors)
 
     try:
-        results[path] = _get_license_info(path)
+        results[path] = _get_license_info(path, show_initial)
     except RelicError, ex:
         return _relicensing_error(ex, path, _errors, 1)
 
@@ -1559,7 +1557,7 @@ def _relicense_file(original_path,
             original_path, _errors)
 
     try:
-        lic_info = _get_license_info(original_path)
+        lic_info = _get_license_info(original_path, show_initial)
     except RelicError, ex:
         return _relicensing_error(ex, original_path, _errors)
 
@@ -1782,7 +1780,7 @@ def _add_license_to_file(original_path,
             original_path, _errors)
 
     try:
-        lic_info = _get_license_info(original_path)
+        lic_info = _get_license_info(original_path, show_initial)
     except RelicError, ex:
         return _relicensing_error(ex, original_path, _errors)
 
@@ -2178,7 +2176,7 @@ def addlicense(paths,
     print "-----------------------------------------------------------------"
 
 
-def report(paths, switch_to_mpl, _errors):
+def report(paths, switch_to_mpl, show_initial, _errors):
     """Report on the existing licenses in the given file(s).
     
         "paths" is either a list of files or directories, or it is an
@@ -2194,7 +2192,9 @@ def report(paths, switch_to_mpl, _errors):
     """
     log.debug("report(paths=%s)", paths)
     results = {}
-    _traverse(paths, _report_on_file, (results, switch_to_mpl, _errors))
+    _traverse(paths,\
+	      _report_on_file,\
+	      (results, switch_to_mpl, show_initial, _errors))
 
 
 def statistics(paths, extended=0, _errors=None):
@@ -2307,11 +2307,11 @@ def statistics(paths, extended=0, _errors=None):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv[1:], "VvadhfML:sxry:i:o:D:AR",
+        opts, args = getopt.getopt(argv[1:], "VvadhfML:sxry:i:o:D:ARI",
             ["version", "verbose", "all", "help", "debug",
              "dry-run", "force", "MPL", "license=",
              "statistics", "relicense", "backup", "add", "defaults",
-             "force-relicense"])
+             "force-relicense", "initial-developers"])
     except getopt.GetoptError, ex:
         log.error(str(ex))
         log.error("Try `%s --help'.", argv[0])
@@ -2327,6 +2327,7 @@ def main(argv):
     fallback_original_code_is = None
     fallback_original_code_date = None
     switch_to_mpl = 0
+    show_initial = 0
     for opt, optarg in opts:
         if opt in ("-h", "--help"):
             sys.stdout.write(__doc__)
@@ -2372,6 +2373,8 @@ def main(argv):
             fallback_original_code_is = optarg
         elif opt == "-D":
             fallback_original_code_date = optarg
+        elif opt in ("-I", "--initial-developers"):
+            show_initial = 1
         elif opt == "--defaults":
             fallback_original_code_is = "mozilla.org Code"
             fallback_initial_copyright_date = "2001"
@@ -2400,7 +2403,7 @@ def main(argv):
         elif mode == "statistics":
             statistics(paths, extended, _errors=_errors)
         elif mode == "report":
-            report(paths, switch_to_mpl, _errors=_errors)
+            report(paths, switch_to_mpl, show_initial, _errors=_errors)
         elif mode == "add":
             addlicense(paths,
                        fallback_initial_copyright_date,
