@@ -104,7 +104,6 @@
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">
-<!ENTITY closeMessage.tooltip             "Close this message">
 
 <!ENTITY updateSuccess.label              "Update completed successfully.">
 <!ENTITY installSuccess.label             "Install completed successfully.">

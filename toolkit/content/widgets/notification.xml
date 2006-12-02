@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+<!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
+%notificationDTD;
+]>
+
 <bindings id="notificationBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
@@ -315,6 +320,7 @@
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            class="messageCloseButton tabbable"
                            xbl:inherits="hidden=hideclose"
+                           tooltiptext="&closeNotification.tooltip;"
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
     </content>
