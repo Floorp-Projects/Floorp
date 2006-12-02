@@ -42,6 +42,64 @@
 #include "txAtoms.h"
 #include "txXPathNode.h"
 #include "txExpr.h"
+#include "txIXPathContext.h"
+
+class txEarlyEvalContext : public txIEvalContext
+{
+public:
+    txEarlyEvalContext(txResultRecycler* aRecycler)
+        : mRecycler(aRecycler)
+    {
+    }
+
+    // txIEvalContext
+    nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
+                         txAExprResult*& aResult)
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+        return NS_ERROR_FAILURE;
+    }
+    PRBool isStripSpaceAllowed(const txXPathNode& aNode)
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+        return PR_FALSE;
+    }
+    void* getPrivateContext()
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+        return nsnull;
+    }
+    txResultRecycler* recycler()
+    {
+        return mRecycler;
+    }
+    void receiveError(const nsAString& aMsg, nsresult aRes)
+    {
+    }
+    const txXPathNode& getContextNode()
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+
+        // This will return an invalid node, but we should never
+        // get here so that's fine.
+
+        return *NS_STATIC_CAST(txXPathNode*, nsnull);
+    }
+    PRUint32 size()
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+        return 1;
+    }
+    PRUint32 position()
+    {
+        NS_NOTREACHED("shouldn't depend on this context");
+        return 1;
+    }
+
+private:
+    txResultRecycler* mRecycler;
+};
+
 
 nsresult
 txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
@@ -49,7 +107,31 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
     *aOutExpr = nsnull;
     nsresult rv = NS_OK;
 
-    // First optimize sub expressions
+    // First check if the expression will produce the same result
+    // under any context.
+    Expr::ExprType exprType = aInExpr->getType();
+    if (exprType != Expr::LITERAL_EXPR &&
+        !aInExpr->isSensitiveTo(Expr::ANY_CONTEXT)) {
+        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
+        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
+
+        rv = recycler->init();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        txEarlyEvalContext context(recycler);
+        nsRefPtr<txAExprResult> exprRes;
+
+        // Don't throw if this fails since it could be that the expression
+        // is or contains an error-expression.
+        rv = aInExpr->evaluate(&context, getter_AddRefs(exprRes));
+        if (NS_SUCCEEDED(rv)) {
+            *aOutExpr = new txLiteralExpr(exprRes);
+        }
+        
+        return NS_OK;
+    }
+
+    // Then optimize sub expressions
     PRUint32 i = 0;
     Expr* subExpr;
     while ((subExpr = aInExpr->getSubExprAt(i))) {
@@ -64,8 +146,8 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
         ++i;
     }
 
-    // Then see if current expression can be optimized
-    switch (aInExpr->getType()) {
+    // Finally see if current expression can be optimized
+    switch (exprType) {
         case Expr::LOCATIONSTEP_EXPR:
             return optimizeStep(aInExpr, aOutExpr);
 

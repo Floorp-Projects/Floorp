@@ -46,6 +46,9 @@
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
 
+extern PRBool
+TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID);
+
 class txHandlerTable;
 class txElementContext;
 class txInstructionContainer;
@@ -200,6 +203,8 @@ class txStylesheetCompiler : private txStylesheetCompilerState,
 {
 public:
     friend class txStylesheetCompilerState;
+    friend PRBool TX_XSLTFunctionAvailable(nsIAtom* aName,
+                                           PRInt32 aNameSpaceID);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txACompileObserver* aObserver);
     txStylesheetCompiler(const nsAString& aStylesheetURI,

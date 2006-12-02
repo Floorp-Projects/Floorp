@@ -205,7 +205,7 @@ txEXSLTNodeSetFunctionCall::getReturnType()
 PRBool
 txEXSLTNodeSetFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
-    return argsSensitiveTo(aContext);
+    return (aContext & PRIVATE_CONTEXT) || argsSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
@@ -271,7 +271,7 @@ txEXSLTObjectTypeFunctionCall::getReturnType()
 PRBool
 txEXSLTObjectTypeFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
-    return argsSensitiveTo(aContext);
+    return (aContext & PRIVATE_CONTEXT) || argsSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
@@ -290,22 +290,15 @@ TX_ConstructEXSLTCommonFunction(nsIAtom *aName,
                                 FunctionCall **aResult)
 {
     if (aName == txXSLTAtoms::nodeSet) {
-       if (aResult) {
-           *aResult = new txEXSLTNodeSetFunctionCall();
-           NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-       }
-
-       return NS_OK;
+        *aResult = new txEXSLTNodeSetFunctionCall();
+    }
+    else if (aName == txXSLTAtoms::objectType) {
+        *aResult = new txEXSLTObjectTypeFunctionCall();
+    }
+    else {
+        return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }
 
-    if (aName == txXSLTAtoms::objectType) {
-       if (aResult) {
-           *aResult = new txEXSLTObjectTypeFunctionCall();
-           NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-       }
+    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
-       return NS_OK;
-    }
-
-    return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 }

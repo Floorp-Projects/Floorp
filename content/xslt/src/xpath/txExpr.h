@@ -96,6 +96,7 @@ public:
         LOCATIONSTEP_EXPR,
         PATH_EXPR,
         UNION_EXPR,
+        LITERAL_EXPR,
         OTHER_EXPR
     };
     virtual ExprType getType()
@@ -674,6 +675,10 @@ class txLiteralExpr : public Expr {
 public:
     txLiteralExpr(double aDbl);
     txLiteralExpr(const nsAString& aStr);
+    txLiteralExpr(txAExprResult* aValue)
+      : mValue(aValue)
+    {
+    }
 
     TX_DECL_EXPR
 

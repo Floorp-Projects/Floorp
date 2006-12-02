@@ -96,6 +96,21 @@ void
 txLiteralExpr::toString(nsAString& aStr)
 {
     switch (mValue->getResultType()) {
+        case txAExprResult::NODESET:
+        {
+            aStr.AppendLiteral(" { Nodeset literal } ");
+            return;
+        }
+        case txAExprResult::BOOLEAN:
+        {
+            if (mValue->booleanValue()) {
+              aStr.AppendLiteral("true()");
+            }
+            else {
+              aStr.AppendLiteral("false()");
+            }
+            return;
+        }
         case txAExprResult::NUMBER:
         {
             Double::toString(mValue->numberValue(), aStr);
@@ -113,6 +128,11 @@ txLiteralExpr::toString(nsAString& aStr)
             aStr.Append(ch);
             aStr.Append(strRes->mValue);
             aStr.Append(ch);
+            return;
+        }
+        case txAExprResult::RESULT_TREE_FRAGMENT:
+        {
+            aStr.AppendLiteral(" { RTF literal } ");
             return;
         }
     }
