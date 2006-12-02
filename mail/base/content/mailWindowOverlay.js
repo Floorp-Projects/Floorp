@@ -512,7 +512,7 @@ function RemoveAllMessageTags()
     if (keywords.length > 0)
       msgHdr.folder.removeKeywordFromMessages(msg, keywords);
   }
-  onTagsChange();
+  OnTagsChange();
 }
 
 function ToggleMessageTagKey(index)
@@ -586,7 +586,7 @@ function ToggleMessageTag(key, addKey)
   }
   if (prevHdrFolder)
     prevHdrFolder[toggler](messages, key);
-  onTagsChange();
+  OnTagsChange();
 }
 
 function AddTag()
@@ -660,10 +660,12 @@ function InitMessageTags(menuPopup)
     SetMessageTagLabel(newMenuItem, i + 1, taginfo.tag);
     newMenuItem.setAttribute("value", taginfo.key);
     newMenuItem.setAttribute("type", "checkbox");
-    newMenuItem.style.color = tagService.getColorForKey(taginfo.key);
     var removeKey = (" " + curKeys + " ").indexOf(" " + taginfo.key + " ") > -1;
     newMenuItem.setAttribute('checked', removeKey);
     newMenuItem.setAttribute('oncommand', 'ToggleMessageTagMenu(event.target);');
+    var color = taginfo.color;
+    if (color)
+      newMenuItem.setAttribute("class", "lc-" + color.substr(1));    
     menuPopup.insertBefore(newMenuItem, menuseparator);
   }
 }

@@ -398,7 +398,7 @@ var messageHeaderSink = {
       } // while we have more headers to parse
       
       // process message tags as if they were headers in the message
-      setTagHeader();      
+      SetTagHeader();      
 
       if (("from" in currentHeaderData) && ("sender" in currentHeaderData) && msgHeaderParser)
       {
@@ -522,56 +522,52 @@ var messageHeaderSink = {
     }
 };
 
-// private method which generates a space delimited list of tag names
-// for the current message. This list is then stored in
-// currentHeaderData['tags']. Each tag is encoded.
-function setTagHeader()
+function SetTagHeader()
 {
-  // it would be nice if we passed in the msg hdr from the back end  
+  // it would be nice if we passed in the msgHdr from the back end
   var msgHdr;
-  try {
+  try
+  {
     msgHdr = gDBView.hdrForFirstSelectedMessage;
   }
-  catch (ex) { return; } // no msgHdr to add our tags to.
-  
-  var tagsString = "";
-  
-  // extract the tags from the msg hdr
-  var tags = msgHdr.getStringProperty('keywords'); 
-  var label = msgHdr.label;
-  if (label > 0)
+  catch (ex)
   {
-    var labelTag = '$label' + label;
-    if (!tags || !tags.search(labelTag)) // don't add the label if it's already in our keyword list
-      tagsString = labelTag;
+    return; // no msgHdr to add our tags to
   }
-  
-  // rebuild the keywords string with just the keys that are
-  // actual tags and not other keywords like Junk and NonJunk.
+
+  // get the list of known tags
   var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                    .getService(Components.interfaces.nsIMsgTagService);
-  var tagsArray = tags.split(' ');
-  for (var index = 0; index < tagsArray.length; index++)
+  var tagArray = tagService.getAllTags({});
+  var tagKeys = {};
+  for each (var tagInfo in tagArray)
+    if (tagInfo.tag)
+      tagKeys[tagInfo.key] = true;
+
+  // extract the tag keys from the msgHdr
+  var msgKeyArray = msgHdr.getStringProperty("keywords").split(" ");
+
+  // attach legacy label to the front if not already there
+  var label = msgHdr.label;
+  if (label)
   {
-      var tagName;
-      try {
-        // if we got a bad tag name, getTagForKey will throw an exception, skip it 
-        // and go to the next one.
-        tagName = tagService.getTagForKey(tagsArray[index]);
-      } catch (ex) { continue; }
-      
-      if (tagName)
-      {          
-        if (tagsString)
-          tagsString += " ";
-      tagsString += tagsArray[index];
-    }
+    var labelKey = "$label" + label;
+    if (msgKeyArray.indexOf(labelKey) < 0)
+      msgKeyArray.unshift(labelKey);
   }
-  
-  if (tagsString)
-    currentHeaderData['tags'] = { headerName: 'tags', headerValue: tagsString};
-  else if (currentHeaderData['tags']) // no more tags, so clear out the header field
-    currentHeaderData['tags'] = null;
+
+ // Rebuild the keywords string with just the keys that are actual tags or
+  // legacy labels and not other keywords like Junk and NonJunk.
+  // Retain their order, though, with the label as oldest element.
+  for (var i = msgKeyArray.length - 1; i >= 0; --i)
+    if (!(msgKeyArray[i] in tagKeys))
+      msgKeyArray.splice(i, 1); // remove non-tag key
+  var msgKeys = msgKeyArray.join(" ");
+
+  if (msgKeys)
+    currentHeaderData.tags = {headerName: "tags", headerValue: msgKeys};
+  else // no more tags, so clear out the header field
+    delete currentHeaderData.tags;
 }
 
 function EnsureSubjectValue()
@@ -591,30 +587,26 @@ function CheckNotify()
     NotifyClearAddresses();
 }
 
-// Public method called by the tag front end code when the tags for the selected
-// message has changed. 
-function onTagsChange()
+function OnTagsChange()
 {
   // rebuild the tag headers
-  setTagHeader();
-  
+  SetTagHeader();
+
   // now update the expanded header view to rebuild the tags,
   // and then show or hide the tag header box.  
   if (gBuiltExpandedView)
   {
-    headerEntry = gExpandedHeaderView['tags'];
+    var headerEntry = gExpandedHeaderView.tags;
     if (headerEntry)
     {
-      if (currentHeaderData['tags'])
-      {
-        headerEntry.outputFunction(headerEntry, currentHeaderData['tags'].headerValue);
-        headerEntry.valid = true;
-      }
+      headerEntry.valid = ("tags" in currentHeaderData);
+      if (headerEntry.valid)
+        headerEntry.outputFunction(headerEntry, currentHeaderData.tags.headerValue);
       
       // if we are showing the expanded header view then we may need to collapse or
       // show the tag header box...
       if (!gCollapsedHeaderViewMode)
-        headerEntry.enclosingBox.collapsed = !currentHeaderData['tags'];
+        headerEntry.enclosingBox.collapsed = !headerEntry.valid;
     }
   }
 }
