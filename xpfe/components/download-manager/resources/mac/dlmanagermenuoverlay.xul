@@ -45,7 +45,21 @@
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
 
-  <stringbundleset id="stringbundleset"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    function dmOverlayStartup() {
+      pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefService).getBranch(null);
+      gNavigatorBundle = document.getElementById("bundle_navigator");
+    }
+
+    addEventListener("load", dmOverlayStartup, false);
+  ]]>
+  </script>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+  </stringbundleset>
 
   <!-- keys are appended from the overlay -->
   <keyset id="tasksKeys">
