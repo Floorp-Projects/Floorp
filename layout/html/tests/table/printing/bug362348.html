@@ -1,0 +1,15 @@
+<html>
+<head>
+<title>
+Testcase bug 362348 - Crash [@ nsTableRowFrame::CollapseRowIfNecessary] on print preview with testcase, using display: table-footer-group; visibility: collapse;
+</title>
+</head>
+<body>
+This page should not crash on print preview
+<div style="display: table;">
+    <div style="height:6100px;"></div>
+  <div style="display: table-footer-group; visibility: collapse;"></div>
+</div>
+
+</body>
+</html>
