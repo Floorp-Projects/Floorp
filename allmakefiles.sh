@@ -1473,10 +1473,6 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/reporter/locales/Makefile
             " ;;
 
-        safe-browsing ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/safe-browsing/Makefile
-            " ;;
-
         tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/tasks/Makefile
             " ;;
