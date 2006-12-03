@@ -4289,6 +4289,7 @@ browser)
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_PLACES=
+  MOZ_PLACES_BOOKMARKS=
   # always enabled for form history
   MOZ_MORKREADER=1
   MOZ_SAFE_BROWSING=1
@@ -5963,6 +5964,16 @@ if test -n "$MOZ_PLACES"; then
     MOZ_MORKREADER=1
 fi
 
+dnl ========================================================
+dnl = Enable places bookmarks (use places for bookmarks)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(places-bookmarks,
+[  --enable-places_bookmarks        Enable 'places' for bookmarks backend],
+    MOZ_PLACES_BOOKMARKS=1,
+    MOZ_PLACES_BOOKMARKS= )
+if test -n "$MOZ_PLACES_BOOKMARKS"; then
+    AC_DEFINE(MOZ_PLACES_BOOKMARKS)
+fi
 
 dnl ========================================================
 dnl = Disable feed handling components
@@ -7591,6 +7602,7 @@ AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
+AC_SUBST(MOZ_PLACES_BOOKMARKS)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
