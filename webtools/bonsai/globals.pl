@@ -1499,16 +1499,18 @@ sub SanitizeUsernames {
 # We should use the routine from File::Spec but perl 5.004 doesn't have it
 #
 sub canonpath {
-    my ($path) = @_;
+    my ($root, $path) = @_;
     my (@list);
 
     return "" if (!defined($path) || $path eq "");
+    my $nroot = split('/', $root);
     $path =~ s@//+@/@g;
     foreach my $dir (split('/', $path)) {
         if ($dir eq '.') {
             next;
         } elsif ($dir eq '..') {
             pop @list;
+            return "" if (@list < $nroot);
         } else {
             push @list, $dir;
         }
@@ -1520,7 +1522,7 @@ sub canonpath {
 # Do not allow access to files outside of cvsroot
 sub ChrootFilename {
     my ($root, $path) = @_;
-    my $cpath = canonpath($path);
+    my $cpath = canonpath($root, $path);
     #print STDERR "ChrootFilename($root, $path, $cpath)\n";
     CheckHidden($path);
     die "Browsing outside of cvsroot not allowed.\n" 
