@@ -4427,7 +4427,9 @@ char* nsImapProtocol::CreateNewLineFromSocket()
         case NS_ERROR_NET_RESET:
         case NS_BASE_STREAM_CLOSED:
         case NS_ERROR_NET_INTERRUPT:
-          if (TestFlag(IMAP_RECEIVED_GREETING) && m_runningUrl && !m_retryUrlOnError)
+          // we should retry on RESET, especially for SSL...
+          if ((TestFlag(IMAP_RECEIVED_GREETING) || rv == NS_ERROR_NET_RESET) &&
+              m_runningUrl && !m_retryUrlOnError)
           {
             m_runningUrl->SetRerunningUrl(PR_TRUE);
             m_retryUrlOnError = PR_TRUE;
