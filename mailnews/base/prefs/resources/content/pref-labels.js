@@ -338,11 +338,7 @@ function OnOK()
       {
         // newly added tag, need to create a key and read it
         tagService.addTag(tagInfo.tag, '', '');
-        try
-        {
-          tagInfo.key = tagService.getKeyForTag(tagInfo.tag);
-        }
-        catch (e) {}
+        tagInfo.key = tagService.getKeyForTag(tagInfo.tag);
       }
 
       if (tagInfo.key)
