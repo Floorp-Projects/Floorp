@@ -10,6 +10,15 @@
 == bugs/351641-1b.html bugs/351641-1-ref.html
 == bugs/351641-2a.html bugs/351641-2-ref.html
 f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
+f== bugs/362594-1a.html bugs/362594-1-ref.html # will be equal once reflow branch lands
+f== bugs/362594-1b.html bugs/362594-1-ref.html # will be equal once reflow branch lands
+!= bugs/362594-2.html bugs/362594-1-ref.html
+== bugs/362594-2.html bugs/362594-2-ref.html
+f== bugs/362594-3.html bugs/362594-3-ref.html # will be equal once reflow branch lands
+!= bugs/362594-4a.html bugs/362594-3-ref.html
+== bugs/362594-4a.html bugs/362594-4-ref.html
+== bugs/362594-4b.html bugs/362594-4-ref.html
+
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
