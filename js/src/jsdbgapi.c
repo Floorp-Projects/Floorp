@@ -403,7 +403,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (nslots <= JS_ARRAY_LENGTH(smallv)) {
                     argv = smallv;
                 } else {
-                    argv = JS_malloc(cx, nslots);
+                    argv = JS_malloc(cx, nslots * sizeof(jsval));
                     if (!argv) {
                         DropWatchPoint(cx, wp);
                         return JS_FALSE;
@@ -412,7 +412,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                 argv[0] = OBJECT_TO_JSVAL(closure);
                 argv[1] = JSVAL_NULL;
-                memset(argv + 2, 0, nslots - 2);
+                memset(argv + 2, 0, (nslots - 2) * sizeof(jsval));
 
                 memset(&frame, 0, sizeof(frame));
                 frame.script = script;
