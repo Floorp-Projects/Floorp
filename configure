@@ -12512,6 +12512,7 @@ browser)
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_PLACES=
+  MOZ_PLACES_BOOKMARKS=
   # always enabled for form history
   MOZ_MORKREADER=1
   MOZ_SAFE_BROWSING=1
@@ -16132,6 +16133,24 @@ EOF
     MOZ_MORKREADER=1
 fi
 
+# Check whether --enable-places-bookmarks was given.
+if test "${enable_places_bookmarks+set}" = set; then
+  if !test -n "$MOZ_PLACES"; then
+    { echo "configure: error: Option, places_bookmarks, requires --enable-places ($enableval)." 1>&2; exit 1; }
+  fi
+  enableval="$enable_places_bookmarks"
+  if test "$enableval" = "yes"; then
+    MOZ_PLACES_BOOKMARKS=1
+  else
+    { echo "configure: error: Option, places, does not take an argument ($enableval)." 1>&2; exit 1; }
+  fi
+fi
+
+if test -n "$MOZ_PLACES_BOOKMARKS"; then
+    cat >> confdefs.h <<\EOF
+#define MOZ_PLACES_BOOKMARKS 1
+EOF
+fi
 
 # Check whether --enable-feeds or --disable-feeds was given.
 if test "${enable_feeds+set}" = set; then
@@ -21422,6 +21441,7 @@ s%@LDAP_CFLAGS@%$LDAP_CFLAGS%g
 s%@LDAP_LIBS@%$LDAP_LIBS%g
 s%@LIBICONV@%$LIBICONV%g
 s%@MOZ_PLACES@%$MOZ_PLACES%g
+s%@MOZ_PLACES_BOOKMARKS@%$MOZ_PLACES_BOOKMARKS%g
 s%@MOZ_STORAGE@%$MOZ_STORAGE%g
 s%@MOZ_FEEDS@%$MOZ_FEEDS%g
 s%@NS_PRINTING@%$NS_PRINTING%g
