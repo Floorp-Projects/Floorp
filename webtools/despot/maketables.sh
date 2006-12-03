@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Reed Loden <reed@reedloden.com>
 
 mysql > /dev/null 2>/dev/null << OK_ALL_DONE
 
@@ -33,11 +34,7 @@ OK_ALL_DONE
 
 mysql << OK_ALL_DONE
 
-
-
-
 use mozusers;
-
 
 create table repositories (
     id smallint not null auto_increment primary key,
@@ -80,7 +77,6 @@ create table branches (
     unique(name)
 );
 
-
 create table members (
     userid mediumint not null,
     partitionid mediumint not null,
@@ -91,23 +87,21 @@ create table members (
     index(partitionid),
     index(class)
 );
-    
-
 
 create table users (
     id mediumint not null auto_increment primary key,
     email varchar(128) not null,
     realname varchar(255) not null,
     pserverhosts varchar(255),
-    passwd varchar(64),
-    gila_group enum("None", "webmonkey", "cvsadm"),
-    cvs_group enum("None", "webmonkey", "cvsadm"),
-    despot enum("No", "Yes"),
-    neednewpassword enum("No", "Yes"),
-    disabled enum("No", "Yes"),
-    voucher mediumint not null,
-    signedform enum("No", "Yes"),
-    bugzillaid mediumint not null,
+    passwd varchar(64) not null,
+    gila_group enum("None", "webmonkey", "cvsadm") not null default "None",
+    cvs_group enum("None", "cvsuser", "cvsadm") not null default "None",
+    despot enum("No", "Yes") not null default "No",
+    neednewpassword enum("No", "Yes") not null default "No",
+    disabled enum("No", "Yes") not null default "No",
+    voucher mediumint not null default 0,
+    signedform enum("No", "Yes") not null default "No",
+    bugzillaid mediumint not null default 0,
 
     unique(email)
 );
@@ -125,10 +119,8 @@ create table changes (
     index(changed_when)
 );
 
-
 show columns from changes;
 show index from changes;
-
 
 create table syncneeded (
     needed tinyint not null
@@ -137,6 +129,5 @@ create table syncneeded (
 insert into syncneeded (needed) values (1);
 
 insert into branches (id,name) values (1, "HEAD");
-
 
 OK_ALL_DONE

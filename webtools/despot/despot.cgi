@@ -21,6 +21,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Zach Lipton <zach@zachlipton.org>
+#                 Reed Loden <reed@reedloden.com>
 
 use strict;
 use diagnostics;
@@ -324,12 +325,13 @@ sub AddUser() {
     if ($row[0] < 1) {
         my $p = "";
         my $realname = "";
+        my $pserverhosts = "";
         my $plain = pickrandompassword();
         $p = cryptit($plain);
         my $feedback = "'" . tt($plain) . "'";
         my $mailwords = "of '$plain'";
-        my $sth = $::db->do("INSERT INTO users (email, passwd, neednewpassword, realname) VALUES (?,?,?,?)",
-            undef, $email, $p, 'Yes', $realname);
+        my $sth = $::db->do("INSERT INTO users (email, passwd, neednewpassword, realname, pserverhosts) VALUES (?,?,?,?,?)",
+            undef, $email, $p, 'Yes', $realname, $pserverhosts);
         PrintHeader();
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
