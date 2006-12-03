@@ -468,6 +468,11 @@ sub GeneratePassword {
     Punt("$email is not an email address in the database.") unless ($query->fetchrow_array());
     my $plain = pickrandompassword();
     my $p = cryptit($plain);
+    my $query2 = $::db->prepare("SELECT neednewpassword FROM users WHERE email = ?");
+    $query2->execute($email);
+    my $old_neednewpassword = $query2->fetchrow_array();
+    $::db->do("INSERT INTO changes (email, field, oldvalue, newvalue, who) VALUES (?,?,?,?,?)",
+        undef, $email, 'neednewpassword', $old_neednewpassword, 'Yes', $F::loginname);
     $::db->do("UPDATE users SET passwd = ?, neednewpassword='Yes' WHERE email = ?",
         undef, $p, $email);
     PrintHeader();
