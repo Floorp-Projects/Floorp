@@ -1241,7 +1241,7 @@ sub EmailToId {
         return $row[0];
     }
     if ($forcevalid || $email ne "") {
-        Punt("$email is not a registered email address.");
+        Punt("$email is not an email address in the database.");
     }
     return 0;
 }
