@@ -41,7 +41,7 @@ use Date::Calc qw(Add_Delta_Days);  # CPAN, or http://www.engelschall.com/u/sb/d
 
 my $req = new CGI::Request;
 
-# Pull out cgi arguments from URL.
+# Clean CGI arguments and assign.  Set them to '' unless they meet the required format.
 my $TESTNAME  = lc($req->param('testname'));
 my $UNITS     = lc($req->param('units'));
 my $TBOX      = lc($req->param('tbox'));
@@ -53,6 +53,16 @@ my $POINTS    = lc($req->param('points'));
 my $SHOWPOINT = lc($req->param('showpoint'));
 my $AVG       = lc($req->param('avg'));
 
+$TESTNAME = '' unless $TESTNAME =~ m/^[-_\.\w\d]+$/;
+$UNITS = '' unless $UNITS =~ m/^[\w]+$/;
+$TBOX = '' unless $TBOX =~ m/^[-_\.\w\d]+$/;
+$AUTOSCALE = '' unless $AUTOSCALE =~ m/^[01]$/;
+$SIZE = '' unless $SIZE =~ m/^\d*\.?\d*/; 
+$DAYS = '' unless $DAYS =~ m/^\d*$/;
+$LTYPE = '' unless $LTYPE =~ m/^(?:lines|steps)$/;
+$POINTS = '' unless $POINTS =~ m/^[01]$/;
+$SHOWPOINT = '' unless $SHOWPOINT =~ m/^(?:\d+:){5}\d+,\d+$/;
+$AVG = '' unless $AVG =~ m/^[01]$/;
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
 my $DATAFILE_AVG = $DATAFILE . "_avg";
 
@@ -180,7 +190,7 @@ sub show_graph {
   }
 
   # Set units.  Assume ms unless otherwise specified.
-  unless($UNITS) {
+  unless($UNITS =~ /^\w+$/) {
 	$UNITS = "ms";
   }
 
@@ -200,12 +210,12 @@ sub show_graph {
   # Highlight a point, e.g. 2002:03:21:06:52:28,4087
   if($SHOWPOINT) {
     my @xy = split(",",$SHOWPOINT);
-
-    open POINTFILE, ">db/$TESTNAME/point.$$";
+    my $file = "db/$TESTNAME/point.$$";
+    open POINTFILE, '>', $file;
     print POINTFILE "$xy[0]\t$xy[1]\n";
     close POINTFILE;
 
-    $plot_cmd .= ", \"db/$TESTNAME/point.$$\" using 1:2 with points ls 4";
+    $plot_cmd .= qq|, "$file" using 1:2 with points ls 4|;
   }
 
 
@@ -258,7 +268,7 @@ sub show_graph {
   close (GNUPLOT) || die "Empty data set?  Gnuplot failed to set up the plot command string : $!";
 
   # Actually do the gnuplot command.
-  open  (GNUPLOT, "< $PNGFILE") || die "can't read: $!";
+  open  (GNUPLOT, '<', $PNGFILE) || die "can't read: $!";
   { local $/; $blob = <GNUPLOT>; }
   close (GNUPLOT) || die "can't close: $!";
   unlink $PNGFILE || die "can't unlink $PNGFILE: $!";

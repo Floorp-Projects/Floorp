@@ -95,12 +95,12 @@ unless (-d "db/$testname") {
 # If file doesn't exist, try creating empty file.
 my $datafile = "db/$testname/$tbox";
 unless (-f $datafile) {
-  open(FILE, "> $datafile") || die "Can't create new file $datafile: $!";
+  open(FILE, '>', $datafile) || die "Can't create new file $datafile: $!";
   close(FILE);
 }
 
 # Record data.
-open(FILE, ">> $datafile") ||
+open(FILE, '>>', $datafile) ||
      die "Can't open $datafile: $!";
 print FILE "$time\t$value\t$data\t$ip\t$tbox\t$ua\n";
 close(FILE);
@@ -111,7 +111,7 @@ my $num_pts = 10;
 
 # Run through the data file, count data points.
 my $total_pts = 0;
-open(FILE, "db/$testname/$tbox");
+open(FILE, '<', "db/$testname/$tbox");
   while (<FILE>) {
 	$total_pts++;
   }
@@ -123,7 +123,7 @@ if($total_pts >= $num_pts) {
   my $i = 0;
   my @line_array;
   my $sum = 0;
-  open(FILE, "db/$testname/$tbox");
+  open(FILE, '<', "db/$testname/$tbox");
   while (<FILE>) {
 	if($i >= ($total_pts - $num_pts)) {
 	  @line_array = split("\t","$_");
@@ -138,12 +138,12 @@ if($total_pts >= $num_pts) {
   # If average datafile doesn't exist, try creating empty file.
   my $datafile_avg = $datafile . "_avg";
   unless (-f $datafile_avg) {
-    open(FILE, "> $datafile_avg") || die "Can't create new file $datafile_avg: $!";
+    open(FILE, '>', $datafile_avg) || die "Can't create new file $datafile_avg: $!";
     close(FILE);
   }
 
   # Write the data.
-  open(FILE, ">> $datafile_avg") ||
+  open(FILE, '>>', $datafile_avg) ||
        die "Can't open $datafile_avg: $!";
   print FILE "$time\t$avg\n";
   close(FILE);

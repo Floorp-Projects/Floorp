@@ -37,6 +37,18 @@ my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
 my $AVG       = lc($req->param('avg'));
 
+# Clean CGI arguments.  Set them to '' unless they meet the required format.
+$TESTNAME = '' unless $TESTNAME =~ m/^[-_\.\w\d]+$/;
+# print_testnames
+$UNITS = '' unless $UNITS =~ m/^\w*$/;
+$TBOXES = '' unless $TBOXES =~ m/^(?:[-_\.\w\d]+,?)*$/;
+# print_machines
+$AUTOSCALE = '' unless $AUTOSCALE =~ m/^[01]$/;
+$DAYS = '' unless $DAYS =~ m/^\d+$/;
+$LTYPE = '' unless $LTYPE =~ m/^(?:lines|steps)$/;
+$POINTS = '' unless $POINTS =~ m/^[01]$/;
+$AVG = '' unless $AVG =~ m/^[01]$/;
+
 sub make_filenames_list {
   my ($dir) = @_;
 

@@ -40,6 +40,19 @@ my $POINTS    = lc($req->param('points'));
 my $SHOWPOINT = lc($req->param('showpoint'));
 my $AVG       = lc($req->param('avg'));
 
+# Clean CGI arguments.  Set them to '' unless they meet the required format.
+$TESTNAME = '' unless $TESTNAME=~ m/^[-_\.\w\d]+$/;
+# print_testnames
+$UNITS = '' unless $UNITS =~ m/^\w*$/;
+$TBOX = '' unless $TBOX =~ m/^[-_\.\w\d]+$/;
+# print_machines
+$AUTOSCALE = '' unless $AUTOSCALE =~ m/^[01]$/;
+$SIZE = '' unless $SIZE =~ m/^\d+$/;
+$DAYS = '' unless $DAYS =~ m/^\d+$/;
+$LTYPE = '' unless $LTYPE =~ m/^(?:lines|steps)$/;
+$POINTS = '' unless $POINTS =~ m/^[01]$/;
+$SHOWPOINT = '' unless $SHOWPOINT =~ m/^(?:\d+:){5}\d+,\d+$/;
+$AVG = '' unless $AVG =~ m/^[01]$/;
 
 # Testing only:
 #

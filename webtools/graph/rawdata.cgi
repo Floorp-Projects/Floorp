@@ -32,6 +32,14 @@ my $req = new CGI::Request;
 my $TESTNAME  = lc($req->param('testname'));
 my $TBOX      = lc($req->param('tbox'));
 my $DAYS      = lc($req->param('days'));
+
+# Clean CGI arguments.  Set them to '' unless they meet the required format.
+$TESTNAME = '' unless $TESTNAME =~ m/^[-_\.\w\d]+$/;
+# print_testnames
+$TBOX = '' unless $TBOX =~ m/^[-_\.\w\d]+$/;
+# print_machines
+$DAYS = '' unless $DAYS =~ m/^\d+$/;
+
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
 
 
@@ -66,7 +74,7 @@ sub show_data {
 
   # Print data that got plotted.
   print "<a name=\"plot\"><b>Data in plot form: #, (t, y)</b><br>\n";
-  open DATA, "$DATAFILE" or die "Couldn't open file, $DATAFILE: $!";
+  open DATA, '<', $DATAFILE or die "Couldn't open file, $DATAFILE: $!";
   my $i = 0;
   print "<pre>\n";
   while (<DATA>) {
@@ -83,7 +91,7 @@ sub show_data {
   print "<br>\n";
   print "<br>\n";
   print "<a name=\"raw\"><b>Data in raw form: #, (t, y, opaque data, ip, user agent)</b><br>\n";
-  open DATA, "$DATAFILE" or die "Couldn't open file, $DATAFILE: $!";
+  open DATA, '<', $DATAFILE or die "Couldn't open file, $DATAFILE: $!";
   $i = 0;
   print "<pre>\n";
   while (<DATA>) {

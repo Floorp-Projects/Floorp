@@ -87,6 +87,10 @@ unless($TESTS) {
 
 }
 
+die "Unexpected value for parameter 'tests' supplied"
+     unless $TESTS =~ /^(?:\w[-_\.\d\w]*,?)*$/;
+die "Unexpected value for parameter 'tboxes' supplied"
+     unless $TBOXES =~ /^(?:\w[-_\.\d\w]*,?)*$/;
 
 sub getMachineOptionValues {
     # assume we just want a list of machines from the first test,
