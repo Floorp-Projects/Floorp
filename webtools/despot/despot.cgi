@@ -445,12 +445,14 @@ sub ChangeUser() {
             }
             $::db->do("INSERT INTO changes (email, field, oldvalue, newvalue, who) VALUES (?,?,?,?,?)",
                 undef, $F::orig_email, $row[0], $old, $new, $F::loginname);
+            push(@list, "$row[0] = ?");
+            push(@values, $new);
         }
-        push(@list, "$row[0] = ?");
-        push(@values, $new);
     }
-    my $qstr = "UPDATE users SET " . join(",", @list) . " WHERE email = ?";
-    $::db->do($qstr, undef, @values, $F::orig_email);
+    if (@list) {
+        my $qstr = "UPDATE users SET " . join(",", @list) . " WHERE email = ?";
+        $::db->do($qstr, undef, @values, $F::orig_email);
+    }
     PrintHeader();
     print h1("OK, record for $F::email has been updated.");
     print hr();
