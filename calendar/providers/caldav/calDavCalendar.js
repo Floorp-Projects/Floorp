@@ -295,7 +295,7 @@ calDavCalendar.prototype = {
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.putFromString(eventResource, "text/calendar", 
+        webSvc.putFromString(eventResource, "text/calendar; charset=utf-8",
                              aItem.icalString, listener, this, null);
 
         return;
@@ -425,7 +425,7 @@ calDavCalendar.prototype = {
         LOG("modifyItem: aNewItem.icalString = " + aNewItem.icalString);
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.putFromString(eventResource, "text/calendar",
+        webSvc.putFromString(eventResource, "text/calendar; charset=utf-8",
                              modifiedItemICS, listener, this, null);
 
         return;

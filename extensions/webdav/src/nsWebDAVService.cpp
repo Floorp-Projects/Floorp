@@ -191,6 +191,16 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
     NS_ENSURE_SUCCESS(rv, rv);
     
     channel->SetRequestMethod(nsDependentCString(method));
+    channel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                              NS_LITERAL_CSTRING("text/xml; charset=utf-8"),
+                              PR_FALSE);
+    channel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                              NS_LITERAL_CSTRING("text/xml"),
+                              PR_FALSE);
+    channel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Charset"),
+                              NS_LITERAL_CSTRING("utf-8,*;q=0.1"),
+                              PR_FALSE);
+    
 
     if (withDepth) {
         channel->SetRequestHeader(NS_LITERAL_CSTRING("Depth"),
