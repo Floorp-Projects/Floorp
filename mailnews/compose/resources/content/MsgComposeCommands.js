@@ -240,7 +240,6 @@ var gComposeRecyclingListener = {
 
     //Reset menu options
     document.getElementById("format_auto").setAttribute("checked", "true");
-    document.getElementById("priority_normal").setAttribute("checked", "true");
 
     //Reset toolbars that could be hidden
     if (gHideMenus) {
@@ -2030,20 +2029,24 @@ function MessageFcc(menuItem)
   }
 }
 
+function updatePriorityMenu(priorityMenu)
+{
+  if (gMsgCompose)
+  {
+    var msgCompFields = gMsgCompose.compFields;
+    if (msgCompFields && msgCompFields.priority)
+      priorityMenu.getElementsByAttribute("value", msgCompFields.priority)[0]
+                  .setAttribute("checked", "true");
+  }
+}
+
 function PriorityMenuSelect(target)
 {
   if (gMsgCompose)
   {
     var msgCompFields = gMsgCompose.compFields;
     if (msgCompFields)
-      switch (target.getAttribute('id'))
-      {
-        case "priority_lowest":  msgCompFields.priority = "Lowest";   break;
-        case "priority_low":     msgCompFields.priority = "Low";      break;
-        case "priority_normal":  msgCompFields.priority = "Normal";   break;
-        case "priority_high":    msgCompFields.priority = "High";     break;
-        case "priotity_highest": msgCompFields.priority = "Highest";  break;
-      }
+      msgCompFields.priority = target.getAttribute("value");
   }
 }
 

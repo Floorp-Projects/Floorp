@@ -355,12 +355,12 @@
             </menupopup>
           </menu>
           <menu id="priorityMenu" label="&priorityMenu.label;" accesskey="&priorityMenu.accesskey;" oncommand="PriorityMenuSelect(event.target);">
-            <menupopup>
-              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" id="priority_lowest"/>
-              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" id="priority_low"/>
-              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" id="priority_normal" checked="true"/>
-              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" id="priority_high"/>
-              <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="priotity_highest"/>
+            <menupopup onpopupshowing="updatePriorityMenu(this);">
+              <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" value="Highest"/>
+              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" value="High"/>
+              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" value="Normal"/>
+              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" value="Low"/>
+              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" value="Lowest"/>
             </menupopup>
           </menu>
           <menu id="maileditCharsetMenu" />
