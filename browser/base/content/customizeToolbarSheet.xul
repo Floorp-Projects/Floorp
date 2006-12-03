@@ -70,11 +70,11 @@
   <keyset id="CustomizeToolbarSheetKeyset">
     <key id="cmd_close_sheet"
          keycode="VK_ESCAPE"
-         oncommand="window.close();"/>
+         oncommand="gCustomizeToolbarSheet.done();"/>
     <key id="cmd_close_sheet" keycode="VK_RETURN"
-         oncommand="window.close();"/>
+         oncommand="gCustomizeToolbarSheet.done();"/>
     <key id="cmd_close_sheet" keycode="VK_ENTER"
-         oncommand="window.close();"/>
+         oncommand="gCustomizeToolbarSheet.done();"/>
   </keyset>
 
   <vbox id="main-box" flex="1" collapsed="true">
