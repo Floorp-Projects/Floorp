@@ -396,25 +396,23 @@ sub EditUser() {
     print MyForm("GeneratePassword") . hidden(-name=>"email");
     print submit("Generate a new random password for this user");
     print end_form();
-# DeleteUser is currently a bad idea, as it leaves dangling pointers.  
-# See bugzilla.mozilla.org bug 17589
-#
-#    print MyForm("DeleteUser") . hidden(-name=>"email");
-#    print submit("Delete user");
-#    print end_form();
+    print MyForm("DeleteUser") . hidden(-name=>"email");
+    print submit("Delete user");
+    print end_form();
 }
 
-# DeleteUser is currently a bad idea, as it leaves dangling pointers.  
-# See bugzilla.mozilla.org bug 17589
-# 
-#sub DeleteUser() {
-#    $::db->do("DELETE FROM users WHERE email = ?", undef, $F::email);
-#    $::db->do("INSERT INTO syncneeded (needed) VALUES (1)");
-#    PrintHeader();
-#    print h1("OK, $F::email is gone.");
-#    print hr();
-#    MainMenu();
-#}
+sub DeleteUser() {
+    my $id = EmailToId($F::email, 1);
+    $::db->do("DELETE FROM members WHERE userid = ?", undef, $id);
+    $::db->do("DELETE FROM users WHERE id = ?", undef, $id);
+    $::db->do("INSERT INTO changes (email, field, oldvalue, newvalue, who) VALUES (?,?,?,?,?)",
+              undef, $F::email, 'deleted', 'No', 'Yes', $F::loginname);
+    $::db->do("INSERT INTO syncneeded (needed) VALUES (1)");
+    PrintHeader();
+    print h1("OK, $F::email is gone.");
+    print hr();
+    MainMenu();
+}
 
 sub ChangeUser() {
     foreach my $field ("email") {
@@ -1254,7 +1252,7 @@ sub EmailToId {
 }
 
 {
-    my $EnableDeleteUser = 0;
+    my $EnableDeleteUser = 1;
     for ( defined $F::command ? $F::command : 'MainMenu')
     {
         /^FindPartition$/ || do { Authenticate(); };
