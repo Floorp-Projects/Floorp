@@ -259,7 +259,7 @@ ldap_parse_passwordpolicy_control_ext (
 	int i, foundPPControl;
 	LDAPControl *PPCtrlp = NULL;
 
-	if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) || pp == NULL ) {
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) ) {
 	    return( LDAP_PARAM_ERROR );
 	}
 	
