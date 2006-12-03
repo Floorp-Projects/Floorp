@@ -59,7 +59,7 @@ import org.mozilla.classfile.ClassFileWriter;
  * (or not) that the script source files are signed in whatever 
  * implementation-specific way you're using.
  * @author Attila Szegedi
- * @version $Id: PolicySecurityController.java,v 1.4 2006/11/10 15:27:37 gerv%gerv.net Exp $
+ * @version $Id: PolicySecurityController.java,v 1.5 2006/12/03 19:46:12 szegedia%freemail.hu Exp $
  */
 public class PolicySecurityController extends SecurityController
 {
@@ -190,6 +190,12 @@ public class PolicySecurityController extends SecurityController
         ClassFileWriter cfw = new ClassFileWriter(
                 secureCallerClassName + "Impl", secureCallerClassName, 
                 "<generated>");
+        cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
+        cfw.addALoad(0);
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, secureCallerClassName, 
+                "<init>", "()V");
+        cfw.add(ByteCode.RETURN);
+        cfw.stopMethod((short)1);
         String callableCallSig = 
             "Lorg/mozilla/javascript/Context;" +
             "Lorg/mozilla/javascript/Scriptable;" +
