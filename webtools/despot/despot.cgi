@@ -253,8 +253,8 @@ sub MainMenu {
                            -default=>$vals[0],
                            -labels=>\%labels);
     push(@list, li(MyForm("FindPartition") .
-                   submit("Find partition containing file") .
-                   "named<nobr> " .
+                   submit("Find partition containing file with path") .
+                   "<nobr> " .
                    textfield(-name=>"file", -size=>60) .
                    "</nobr> in <nobr>repository " . $radio .
                    end_form()));
