@@ -120,7 +120,7 @@ sub Authenticate {
     my $query = $::db->prepare("SELECT passwd, despot, neednewpassword, id, disabled FROM users WHERE email = ?");
     $query->execute($F::loginname);
     my @row = $query->fetchrow_array();
-    if (!@row || !checkpassword($F::loginpassword, $row[0])) {
+    if (!@row || ($F::loginpassword && !checkpassword($F::loginpassword, $row[0]))) {
         PrintHeader();
         print h1("Authentication Failed");
         print p("I can't figure out who you are.  Either your email address/password " . 
