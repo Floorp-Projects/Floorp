@@ -491,9 +491,9 @@ gtk_moz_embed_common_clean_all_history () {
   nsCOMPtr<nsIGlobalHistory2> globalHistory(do_GetService("@mozilla.org/browser/global-history;2"));
   if (!globalHistory) return NS_ERROR_NULL_POINTER; 
   // The browser history interface
-  nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(globalHistory, &rv);
+  nsCOMPtr<nsIObserver> myHistory = do_QueryInterface(globalHistory, &rv);
   if (!myHistory) return NS_ERROR_NULL_POINTER ;
-  myHistory->RemoveAllPages();
+  myHistory->Observe(nsnull, "RemoveAllPages", nsnull);
   return 1;
 }
 
