@@ -74,21 +74,8 @@ function finishToolbarCustomization()
   notifyParentComplete();
 }
 
-function onUnload(aEvent)
-{
-  finishToolbarCustomization();
-}
-
-function onAccept(aEvent)
-{
-  document.getElementById("main-box").collapsed = true;
-  window.close();
-}
-
 function initDialog()
 {
-  document.getElementById("main-box").collapsed = false;
-  
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
   gToolboxIconSize = gToolbox.getAttribute("iconsize");

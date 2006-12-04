@@ -54,7 +54,6 @@
         title="&dialog.title;"
         style="&dialog.style;"
         onload="gCustomizeToolbarSheet.init();"
-        onclose="gCustomizeToolbarSheet.done();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"
@@ -70,14 +69,14 @@
   <keyset id="CustomizeToolbarSheetKeyset">
     <key id="cmd_close_sheet"
          keycode="VK_ESCAPE"
-         oncommand="gCustomizeToolbarSheet.done();"/>
+         oncommand="finishToolbarCustomization();"/>
     <key id="cmd_close_sheet" keycode="VK_RETURN"
-         oncommand="gCustomizeToolbarSheet.done();"/>
+         oncommand="finishToolbarCustomization();"/>
     <key id="cmd_close_sheet" keycode="VK_ENTER"
-         oncommand="gCustomizeToolbarSheet.done();"/>
+         oncommand="finishToolbarCustomization();"/>
   </keyset>
 
-  <vbox id="main-box" flex="1" collapsed="true">
+  <vbox id="main-box" flex="1">
     <label id="instructions" value="&instructions.description;"/>
 
     <vbox flex="1" id="palette-box"
@@ -113,7 +112,7 @@
 
     <hbox align="center" pack="end">
       <button label="&saveChanges.label;"
-              oncommand="gCustomizeToolbarSheet.done();"
+              oncommand="finishToolbarCustomization();"
               default="true"
               icon="close"/>
     </hbox>
