@@ -472,23 +472,15 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   SEL action = [menuItem action];
 
-  if (action == @selector(openHistoryItem:))
+  if (action == @selector(openHistoryItem:) ||
+      action == @selector(openHistoryItemInNewWindow:) ||
+      action == @selector(openHistoryItemInNewTab:) ||
+      action == @selector(openHistoryItemsInTabsInNewWindow:) ||
+      action == @selector(deleteHistoryItems:) ||
+      action == @selector(copyURLs:))
+  {
     return [self anyHistorySiteItemsSelected];
-
-  if (action == @selector(openHistoryItemInNewWindow:))
-    return [self anyHistorySiteItemsSelected];
-
-  if (action == @selector(openHistoryItemInNewTab:))
-    return [self anyHistorySiteItemsSelected];
-
-  if (action == @selector(openHistoryItemsInTabsInNewWindow:))
-    return [self anyHistorySiteItemsSelected];
-  
-  if (action == @selector(deleteHistoryItems:))
-    return [self anyHistorySiteItemsSelected];
-
-  if (action == @selector(copyURLs:))
-    return [self anyHistorySiteItemsSelected];
+  }
 
   return YES;
 }
@@ -564,14 +556,16 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
 - (BOOL)anyHistorySiteItemsSelected
 {
-  NSEnumerator* rowEnum = [mHistoryOutlineView selectedRowEnumerator];
-  int currentRow;
-  while ((currentRow = [[rowEnum nextObject] intValue]))
-  {
-    HistoryItem * item = [mHistoryOutlineView itemAtRow:currentRow];
-    if ([item isKindOfClass:[HistorySiteItem class]])
+  NSIndexSet* selectedIndexes = [mHistoryOutlineView selectedRowIndexes];
+  unsigned int currentRow = [selectedIndexes firstIndex];
+
+  while (currentRow != NSNotFound) {
+    if ([[mHistoryOutlineView itemAtRow:currentRow] isKindOfClass:[HistorySiteItem class]])
       return YES;
+
+    currentRow = [selectedIndexes indexGreaterThanIndex:currentRow];
   }
+
   return NO;
 }
 
