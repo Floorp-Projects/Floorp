@@ -423,42 +423,54 @@ nsFrameManager::SetPrimaryFrameFor(nsIContent* aContent,
                                    nsIFrame*   aPrimaryFrame)
 {
   NS_ENSURE_ARG_POINTER(aContent);
-  // it's ok if aPrimaryFrame is null
+  NS_ASSERTION(aPrimaryFrame && aPrimaryFrame->GetParent(),
+               "BOGUS!");
 
-  // If aPrimaryFrame is NULL, then remove the mapping
-  if (!aPrimaryFrame) {
-    if (mPrimaryFrameMap.ops) {
-      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
-    }
-  } else {
   // This code should be used if/when we switch back to a 2-word entry
   // in the primary frame map.
 #if 0
-    NS_PRECONDITION(aPrimaryFrame->GetContent() == aContent, "wrong content");
+  NS_PRECONDITION(aPrimaryFrame->GetContent() == aContent, "wrong content");
 #endif
 
-    // Create a new hashtable if necessary
-    if (!mPrimaryFrameMap.ops) {
-      if (!PL_DHashTableInit(&mPrimaryFrameMap, PL_DHashGetStubOps(), nsnull,
-                             sizeof(PrimaryFrameMapEntry), 16)) {
-        mPrimaryFrameMap.ops = nsnull;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+  // Create a new hashtable if necessary
+  if (!mPrimaryFrameMap.ops) {
+    if (!PL_DHashTableInit(&mPrimaryFrameMap, PL_DHashGetStubOps(), nsnull,
+                           sizeof(PrimaryFrameMapEntry), 16)) {
+      mPrimaryFrameMap.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // Add a mapping to the hash table
-    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
-        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
-#ifdef DEBUG_dbaron
-    if (entry->frame) {
-      NS_WARNING("already have primary frame for content");
-    }
-#endif
-    entry->frame = aPrimaryFrame;
-    entry->content = aContent;
   }
+
+  // Add a mapping to the hash table
+  PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
+#ifdef DEBUG_dbaron
+  if (entry->frame) {
+    NS_WARNING("already have primary frame for content");
+  }
+#endif
+  entry->frame = aPrimaryFrame;
+  entry->content = aContent;
     
   return NS_OK;
+}
+
+void
+nsFrameManager::RemoveAsPrimaryFrame(nsIContent* aContent,
+                                     nsIFrame* aPrimaryFrame)
+{
+  NS_PRECONDITION(aPrimaryFrame, "Must have a frame");
+  if (aContent && mPrimaryFrameMap.ops) {
+    PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+        PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aPrimaryFrame) {
+      // Don't use PL_DHashTableRawRemove, since we want the table to
+      // shrink as needed.
+      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
+    }
+  }
+
+  aPrimaryFrame->RemovedAsPrimaryFrame();
 }
 
 void

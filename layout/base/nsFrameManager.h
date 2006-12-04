@@ -114,8 +114,16 @@ public:
   // instead of calling IndexOf(aContent).
   NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent,
                                            PRInt32 aIndexHint);
+  // aPrimaryFrame must not be null.  If you're trying to remove a primary frame
+  // mapping, use RemoveAsPrimaryFrame.
   NS_HIDDEN_(nsresult)  SetPrimaryFrameFor(nsIContent* aContent,
                                            nsIFrame* aPrimaryFrame);
+  // If aPrimaryFrame is the current primary frame for aContent, remove the
+  // relevant hashtable entry.  If the current primary frame for aContent is
+  // null, this does nothing.  aPrimaryFrame must not be null, and this method
+  // handles calling RemovedAsPrimaryFrame on aPrimaryFrame.
+  NS_HIDDEN_(void)      RemoveAsPrimaryFrame(nsIContent* aContent,
+                                             nsIFrame* aPrimaryFrame);
   NS_HIDDEN_(void)      ClearPrimaryFrameMap();
 
   // Placeholder frame functions

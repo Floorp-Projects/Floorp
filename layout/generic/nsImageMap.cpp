@@ -762,7 +762,7 @@ nsImageMap::FreeAreas()
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
-    frameManager->SetPrimaryFrameFor(area->mArea, nsnull);
+    frameManager->RemoveAsPrimaryFrame(area->mArea, mImageFrame);
 
     nsCOMPtr<nsIContent> areaContent;
     area->GetArea(getter_AddRefs(areaContent));
