@@ -236,14 +236,14 @@ function EditCardOKButton()
   
   CheckAndSetCardValues(gEditCard.card, document, false);
 
-  gEditCard.card.editCardToDatabase(gEditCard.abURI);
+  directory.modifyCard(gEditCard.card);
   
   for (i=0; i<foundDirectoriesCount; i++) {
       // Update the addressLists item for this card
       foundDirectories[i].directory.addressLists.
               SetElementAt(foundDirectories[i].index, gEditCard.card);
   }
-  NotifySaveListeners();
+  NotifySaveListeners(directory);
 
   // callback to allow caller to update
   if (gOkCallback)
@@ -323,7 +323,7 @@ function RegisterSaveListener(func)
 
 // this is used by people who extend the ab card dialog
 // like Netscape does for screenname
-function NotifySaveListeners()
+function NotifySaveListeners(directory)
 {
   if (!gOnSaveListeners.length)
     return;
@@ -333,7 +333,7 @@ function NotifySaveListeners()
 
   // the save listeners might have tweaked the card
   // in which case we need to commit it.
-  gEditCard.card.editCardToDatabase(gEditCard.abURI);
+  directory.modifyCard(gEditCard.card);
 }
 
 function InitPhoneticFields()

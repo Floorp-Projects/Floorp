@@ -698,6 +698,22 @@ NS_IMETHODIMP nsAbMDBDirectory::AddCard(nsIAbCard* card, nsIAbCard **addedCard)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbMDBDirectory::ModifyCard(nsIAbCard *aModifiedCard)
+{
+  NS_ENSURE_ARG_POINTER(aModifiedCard);
+
+  nsresult rv;
+  if (!mDatabase)
+  {
+    rv = GetAbDatabase();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDatabase->EditCard(aModifiedCard, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
+}
+
 NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard)
 {
   NS_ENSURE_ARG_POINTER(aCard);

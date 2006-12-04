@@ -40,8 +40,66 @@
 
 #include "nsRDFResource.h"
 #include "nsAbCardProperty.h"
+#include "nsAbWinHelper.h"
 
 struct nsMapiEntry ;
+
+enum 
+{
+    index_DisplayName = 0,
+    index_EmailAddress,
+    index_FirstName,
+    index_LastName,
+    index_NickName,
+    index_WorkPhoneNumber,
+    index_HomePhoneNumber,
+    index_WorkFaxNumber,
+    index_PagerNumber,
+    index_MobileNumber,
+    index_HomeCity,
+    index_HomeState,
+    index_HomeZip,
+    index_HomeCountry,
+    index_WorkCity,
+    index_WorkState,
+    index_WorkZip,
+    index_WorkCountry,
+    index_JobTitle,
+    index_Department,
+    index_Company,
+    index_WorkWebPage,
+    index_HomeWebPage,
+    index_Comments,
+    index_LastProp
+} ;
+
+static const ULONG OutlookCardMAPIProps[] = 
+{
+    PR_DISPLAY_NAME_W,
+    PR_EMAIL_ADDRESS_W,
+    PR_GIVEN_NAME_W,
+    PR_SURNAME_W,
+    PR_NICKNAME_W,
+    PR_BUSINESS_TELEPHONE_NUMBER_W,
+    PR_HOME_TELEPHONE_NUMBER_W,
+    PR_BUSINESS_FAX_NUMBER_W,
+    PR_PAGER_TELEPHONE_NUMBER_W,
+    PR_MOBILE_TELEPHONE_NUMBER_W,
+    PR_HOME_ADDRESS_CITY_W,
+    PR_HOME_ADDRESS_STATE_OR_PROVINCE_W,
+    PR_HOME_ADDRESS_POSTAL_CODE_W,
+    PR_HOME_ADDRESS_COUNTRY_W,
+    PR_BUSINESS_ADDRESS_CITY_W,
+    PR_BUSINESS_ADDRESS_STATE_OR_PROVINCE_W,
+    PR_BUSINESS_ADDRESS_POSTAL_CODE_W,
+    PR_BUSINESS_ADDRESS_COUNTRY_W,
+    PR_TITLE_W,
+    PR_DEPARTMENT_NAME_W,
+    PR_COMPANY_NAME_W,
+    PR_BUSINESS_HOME_PAGE_W,
+    PR_PERSONAL_HOME_PAGE_W,
+    PR_COMMENT_W
+} ;
 
 class nsAbOutlookCard : public nsRDFResource, 
                         public nsAbCardProperty
@@ -54,9 +112,7 @@ public:
     
     // nsIRDFResource method
     NS_IMETHOD Init(const char *aUri) ;
-    // nsIAbCard methods
-    NS_IMETHOD EditCardToDatabase(const char *aUri) ;
-    
+
 protected:
     nsMapiEntry *mMapiData ;
     PRUint32 mAbWinType ;

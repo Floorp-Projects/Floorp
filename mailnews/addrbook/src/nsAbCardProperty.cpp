@@ -1166,8 +1166,12 @@ NS_IMETHODIMP
 nsAbCardProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 { return m_LastModDate = aLastModifiedDate; }
 
+// This function may be overriden by derived classes for
+// nsAb*Card specific implementations.
 NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 {
+  NS_ENSURE_ARG_POINTER(srcCard);
+
 	nsXPIDLString str;
 	srcCard->GetFirstName(getter_Copies(str));
 	SetFirstName(str);
@@ -1288,12 +1292,15 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	srcCard->GetNotes(getter_Copies(str));
 	SetNotes(str);
 
-	return NS_OK;
-}
+  PRBool isMailList;
+  srcCard->GetIsMailList(&isMailList);
+  SetIsMailList(isMailList);
 
-NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
+  nsXPIDLCString mailListURI;
+  srcCard->GetMailListURI(getter_Copies(mailListURI));
+  SetMailListURI(mailListURI);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::Equals(nsIAbCard *card, PRBool *result)

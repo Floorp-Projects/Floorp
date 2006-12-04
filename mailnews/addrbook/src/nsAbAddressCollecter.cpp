@@ -190,8 +190,8 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
         }
       }
 
-      if (setScreenName || setNames || setPreferMailFormat)
-        existingCard->EditCardToDatabase(m_abURI.get());
+      if ((setScreenName || setNames || setPreferMailFormat) && m_directory)
+        m_directory->ModifyCard(existingCard);
     }
 
     curName += strlen(curName) + 1;

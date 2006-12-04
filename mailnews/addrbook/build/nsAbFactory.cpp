@@ -64,12 +64,6 @@
 #include "nsAddbookUrl.h"
 #include "nsCURILoader.h"
 
-#if defined(XP_WIN) && !defined(__MINGW32__)
-#include "nsAbOutlookDirectory.h"
-#include "nsAbOutlookCard.h"
-#include "nsAbOutlookDirFactory.h"
-#endif
-
 #include "nsAbDirectoryQuery.h"
 #include "nsAbBooleanExpression.h"
 #include "nsAbDirectoryQueryProxy.h"
@@ -88,6 +82,15 @@
 #include "nsAbLDAPChangeLogQuery.h"
 #include "nsAbLDAPChangeLogData.h"
 #include "nsLDAPAutoCompleteSession.h"
+#endif
+
+#if defined(XP_WIN) && !defined(__MINGW32__)
+#include "nsAbOutlookDirFactory.h"
+// These two cause windows.h to be included, if not placed after *DirFactory.h
+// then this can cause problems with CreateDirectory not being
+// defined.
+#include "nsAbOutlookDirectory.h"
+#include "nsAbOutlookCard.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
