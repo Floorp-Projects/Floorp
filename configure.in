@@ -5165,13 +5165,22 @@ then
     MOZ_ENABLE_DBUS=1
 
     MOZ_ARG_DISABLE_BOOL(dbus,
-    [  --disable-dbus       Disable dbus support (default: force, optional at runtime) ],
+    [  --disable-dbus       Disable dbus support (default: auto, optional at runtime) ],
         MOZ_ENABLE_DBUS=,
         MOZ_ENABLE_DBUS=force)
 
     if test "$MOZ_ENABLE_DBUS"
     then
-        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1)
+        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1,
+        [
+            MOZ_ENABLE_DBUS=1
+        ],[
+            if test "$MOZ_ENABLE_DBUS" = "force"
+            then
+                AC_MSG_ERROR([* * * Could not find dbus-glib-1])
+            fi
+            MOZ_ENABLE_DBUS=
+        ])
     fi
 
     if test "$MOZ_ENABLE_DBUS"; then
