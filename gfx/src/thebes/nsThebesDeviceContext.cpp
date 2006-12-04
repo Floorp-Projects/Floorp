@@ -113,6 +113,7 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mHeight = 0;
 
     mPrinter = PR_FALSE;
+    mDeviceContextSpec = nsnull;
 
     mWidgetSurfaceCache.Init();
 
@@ -557,9 +558,7 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     
     NS_ADDREF(aDevice);
 
-#ifdef MOZ_ENABLE_GTK2
     newDevCon->mDeviceContextSpec = aDevice;
-#endif
 
     newDevCon->mPrinter = PR_TRUE;
 
