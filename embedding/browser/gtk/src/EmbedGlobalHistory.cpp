@@ -42,6 +42,7 @@
  */
 #include "EmbedGlobalHistory.h"
 #include "nsIObserverService.h"
+#include "nsAutoPtr.h"
 #include <nsIURI.h>
 #include <nsInt64.h>
 #include <nsIIOService.h>
@@ -270,7 +271,7 @@ void history_entry_foreach_to_remove (gpointer data, gpointer user_data)
 //*****************************************************************************
 // EmbedGlobalHistory - Creation/Destruction
 //*****************************************************************************   
-NS_IMPL_ISUPPORTS3(EmbedGlobalHistory, nsIGlobalHistory2, nsIBrowserHistory, nsIObserver)
+NS_IMPL_ISUPPORTS2(EmbedGlobalHistory, nsIGlobalHistory2, nsIObserver)
 /* static */
 EmbedGlobalHistory*
 EmbedGlobalHistory::GetInstance()
@@ -489,98 +490,6 @@ NS_IMETHODIMP EmbedGlobalHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
   return rv;
 }
 
-// It is called when Mozilla get real name of a URL
-NS_IMETHODIMP EmbedGlobalHistory::SetPageTitle(nsIURI *aURI,
-                                               const nsAString & aTitle)
-{
-  NS_ENSURE_ARG(aURI);
-  nsresult rv;
-  // skip about: URIs to avoid reading in the db (about:blank, especially)
-  PRBool isAbout;
-  rv = aURI->SchemeIs("about", &isAbout);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (isAbout)
-    return NS_OK;
-  nsCAutoString URISpec;
-  aURI->GetSpec(URISpec);
-  const char *aURL = URISpec.get();
-  rv |= LoadData();
-  BROKEN_RV_HANDLING_CODE(rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  GList *node = g_list_find_custom(mURLList, aURL,
-                                   (GCompareFunc) history_entry_find_exist);
-  HistoryEntry *entry = NULL;
-  if (node)
-    entry = (HistoryEntry *)(node->data);
-  if (entry) {
-    nsCString title;
-    CopyUTF16toUTF8(aTitle, title);
-    SET_TITLE(entry, title);
-    BROKEN_RV_HANDLING_CODE(rv);
-    if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
-      rv |= FlushData(kFlushModeAppend);
-    BROKEN_RV_HANDLING_CODE(rv);
-  }
-  return rv;
-}
-
-//*****************************************************************************
-// EmbedGlobalHistory::nsIBrowserHistory
-//*****************************************************************************
-// Add a page with url, title and last visit time
-NS_IMETHODIMP EmbedGlobalHistory::AddPageWithDetails(nsIURI *aURI,
-                                                     const PRUnichar *aTitle,
-                                                     PRInt64 aLastVisited)
-{
-  return NS_OK;
-}
-
-// Get the last page visited
-NS_IMETHODIMP EmbedGlobalHistory::GetLastPageVisited(nsACString & aLastPageVisited)
-{
-  BROKEN_STRING_GETTER(aLastPageVisited);
-  return NS_OK;
-}
-
-// Get the number of items in the history
-NS_IMETHODIMP EmbedGlobalHistory::GetCount(PRUint32 *aCount)
-{
-  return NS_OK;
-}
-
-// Remove a page from history
-NS_IMETHODIMP EmbedGlobalHistory::RemovePage(nsIURI *aURI)
-{
-  nsCAutoString URISpec;
-  nsresult rv = aURI->GetSpec(URISpec);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = LoadData();
-  NS_ENSURE_SUCCESS(rv, rv);
-  const char *aURL = URISpec.get();
-  GList *node = g_list_find_custom(mURLList, aURL,
-                                   (GCompareFunc) history_entry_find_exist);
-  if (node && node->data) {
-    mURLList = g_list_remove(mURLList, node->data);
-#ifdef DEBUG
-    g_print("[HISTORY] Removed URL: %s\n", aURL);
-#endif
-    if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
-      rv |= FlushData(kFlushModeFullWrite);    
-  }
-  return rv;
-}
-
-// Remove all the pages from a host
-NS_IMETHODIMP EmbedGlobalHistory::RemovePagesFromHost(const nsACString & aHost,
-                                                      PRBool aEntireDomain)
-{
-  return NS_OK;
-}
-
-// Remove all pages from history
 NS_IMETHODIMP EmbedGlobalHistory::RemoveAllPages()
 {
   nsresult rv;
@@ -593,18 +502,6 @@ NS_IMETHODIMP EmbedGlobalHistory::RemoveAllPages()
   rv = FlushData(kFlushModeFullWrite);
   mEntriesAddedSinceFlush = 0;
   return rv;
-}
-
-// Hide a page
-NS_IMETHODIMP EmbedGlobalHistory::HidePage(nsIURI *aURI)
-{
-  return NS_OK;
-}
-
-// 
-NS_IMETHODIMP EmbedGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
-{
-  return NS_OK;
 }
 
 //*****************************************************************************
@@ -626,6 +523,8 @@ NS_IMETHODIMP EmbedGlobalHistory::Observe(nsISupports *aSubject,
     }
     if (handle)
       close_file_handle(handle);
+  } else if (strcmp(aTopic, "RemoveAllPages") == 0) {
+    RemoveAllPages();
   }
   return rv;
 }
@@ -820,8 +719,8 @@ nsresult EmbedGlobalHistory::ReadEntries(void *file_handle)
   int numStrings = 0;
   bytes = file_handle_file_info_block_size (file_handle);
   /* Optimal buffer size for reading/writing the file. */
-  char line[bytes];
-  char buffer[bytes];
+  nsAutoArrayPtr<char> line(new char[bytes]);
+  nsAutoArrayPtr<char> buffer(new char[bytes]);
   do {
     read_bytes = file_handle_read(file_handle, (gpointer) buffer, bytes-1);
     if (read_bytes < 0)

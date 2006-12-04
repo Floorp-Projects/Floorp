@@ -39,7 +39,6 @@
 #ifndef __EMBEDGLOBALHISTORY_h
 #define __EMBEDGLOBALHISTORY_h
 #include <nsIGlobalHistory2.h>
-#include <nsIBrowserHistory.h>
 #include <nsIObserver.h>
 #include "EmbedPrivate.h"
 #include <prenv.h>
@@ -55,7 +54,7 @@
 /** The Mozilla History Class
   * This class is responsible for handling the history stuff.
   */
-class EmbedGlobalHistory: public nsIBrowserHistory,
+class EmbedGlobalHistory: public nsIGlobalHistory2,
                           public nsIObserver
 {
     public:
@@ -67,8 +66,9 @@ class EmbedGlobalHistory: public nsIBrowserHistory,
     nsresult GetContentList(GtkMozHistoryItem**, int *count);
     NS_DECL_ISUPPORTS
     NS_DECL_NSIGLOBALHISTORY2
-    NS_DECL_NSIBROWSERHISTORY
     NS_DECL_NSIOBSERVER
+    nsresult RemoveAllPages();
+
     protected:
     enum { 
         kFlushModeAppend,      /** < Add a new entry in the history file */
