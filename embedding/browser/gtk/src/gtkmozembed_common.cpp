@@ -326,13 +326,13 @@ gtk_moz_embed_common_set_pref(GtkType type, gchar *name, gpointer value)
     case GTK_TYPE_BOOL:
       {
         /* I doubt this cast pair is correct */
-        rv = pref->SetBoolPref (name, (int)(int*)value != 0 ? PR_TRUE : PR_FALSE);
+        rv = pref->SetBoolPref (name, !!*(int*)value);
         break;
       }
     case GTK_TYPE_INT:
       {
         /* I doubt this cast pair is correct */
-        rv = pref->SetIntPref (name, (int)(int*)value);
+        rv = pref->SetIntPref (name, *(int*)value);
         break;
       }
     case GTK_TYPE_STRING:

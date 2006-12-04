@@ -83,7 +83,7 @@ SHARED_LIBRARY_LIBS += \
 
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
 SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
+  -lgtkembedmoz
 endif
 
 

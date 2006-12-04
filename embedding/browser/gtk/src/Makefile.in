@@ -51,8 +51,10 @@ FORCE_STATIC_LIB = 1
 #Define for building GtkmozEmbed with MOZILLA_1_8_BRANCH
 #MOZILLA_1_8_BRANCH = 1
 
-ifdef MOZILLA_1_8_BRANCH
+ifndef MOZ_ENABLE_LIBXUL
 MOZ_GTKEMBED_DYN = 1
+endif
+ifdef MOZILLA_1_8_BRANCH
 DEFINES += -DMOZILLA_1_8_BRANCH
 endif
 
@@ -104,7 +106,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  pipnss \
 		  history \
-		  profdirserviceprovider \
 		  pref \
 		  nspr \
 		  xulapp \
@@ -164,9 +165,15 @@ CPPSRCS         += \
 endif
 endif
 
+ifndef MOZ_ENABLE_LIBXUL
+REQUIRES += \
+		profdirserviceprovider \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/config.mk
 
-ifdef MOZILLA_1_8_BRANCH
+ifndef MOZ_ENABLE_LIBXUL
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
@@ -186,7 +193,16 @@ EXTRA_DSO_LDOPTS += -L$(DIST)/lib -lgtksuperwin
 endif
 
 ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) $(MOZ_COMPONENT_LIBS) $(MOZ_GNOMEVFS_LIBS) $(DIST)/lib/libxpcom_core.a
+EXTRA_DSO_LDOPTS += \
+		$(XLDFLAGS) \
+		$(XLIBS) \
+		$(MOZ_GTK_LDFLAGS) \
+		$(MOZ_XFT_LIBS) \
+		$(MOZ_GTK2_LIBS) \
+		$(XT_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_GNOMEVFS_LIBS) \
+		$(NULL)
 endif
 
 endif
