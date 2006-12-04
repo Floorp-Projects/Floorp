@@ -214,6 +214,7 @@ bin/components/nsURLFormatter.js
 bin/components/urlformatter.xpt
 bin/components/libbrowserdirprovider.so
 bin/components/libbrowsercomps.so
+bin/components/txEXSLTRegExFunctions.js
 
 ; Safe Browsing
 bin/components/nsSafebrowsingApplication.js

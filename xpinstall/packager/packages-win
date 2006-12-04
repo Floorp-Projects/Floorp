@@ -170,6 +170,7 @@ bin\components\nsResetPref.js
 bin\components\nsUpdateNotifier.js
 bin\components\nsURLFormatter.js
 bin\components\urlformatter.xpt
+bin\components\txEXSLTRegExFunctions.js
 
 bin\components\xulappinfo.js
 bin\components\xulappinfo.xpt
