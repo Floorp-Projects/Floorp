@@ -1077,10 +1077,10 @@ pref("font.name.cursive.el", "Comic Sans MS");
 pref("font.name.serif.he", "Narkisim");
 pref("font.name.sans-serif.he", "Arial");
 pref("font.name.monospace.he", "Fixed Miriam Transparent");
-pref("font.name.cursive.he", "Gutmann Yad");
+pref("font.name.cursive.he", "Guttman Yad");
 pref("font.name-list.serif.he", "Narkisim, David");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
-pref("font.name-list.cursive.he", "Gutmann Yad, Ktav, Arial");
+pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 
 // For CJK fonts, we list a font twice in name-list, once in the native script and once in English
 // because the name of a CJK font returned by Win32 API is beyond our control and depends on
