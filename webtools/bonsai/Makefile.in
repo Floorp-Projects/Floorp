@@ -110,6 +110,8 @@ install: all
 	cp bonsai.ico $(PREFIX)
 	chmod 644 $(PREFIX)/bonsai.ico
 	-mkdir -p $(PREFIX)/data && chmod 777 $(PREFIX)/data
+	cp htaccess-dist $(PREFIX)/data/.htaccess
+	chmod 644 $(PREFIX)/data/.htaccess
 	# put trapdoor into data
 	cp trapdoor $(PREFIX)/data
 	chmod 755 $(PREFIX)/data/trapdoor
