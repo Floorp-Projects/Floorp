@@ -43,7 +43,6 @@
 #include "EmbedPrivate.h"
 #include <prenv.h>
 #include <gtk/gtk.h>
-#include <libgnomevfs/gnome-vfs.h>
 #include <nsDocShellCID.h>
 //#include "gtkmozembed_common.h"
 /* {2f977d51-5485-11d4-87e2-0010a4e75ef2} */

@@ -51,6 +51,10 @@
 #ifndef MOZILLA_INTERNAL_API
 #include "nsCRT.h"
 #endif
+#ifdef MOZ_ENABLE_GNOMEVFS
+#include <libgnomevfs/gnome-vfs.h>
+#endif
+
 // Constants
 #define defaultSeparator 1
 // Number of changes in history before automatic flush
@@ -78,24 +82,39 @@ typedef struct _HistoryEntry {
 static void close_file_handle(void *file_handle)
 {
   g_return_if_fail(file_handle);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return;
+#else
   gnome_vfs_close((GnomeVFSHandle*) file_handle);
+#endif
 }
 
 static bool file_handle_uri_exists(const void *uri)
 {
   g_return_val_if_fail(uri, false);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return false;
+#else
   return gnome_vfs_uri_exists((GnomeVFSURI*)uri);
+#endif
 }
 
 static void* file_handle_uri_new(const char *uri)
 {
   g_return_val_if_fail(uri, nsnull);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return nsnull;
+#else
   return gnome_vfs_uri_new(uri);
+#endif
 }
 
 static bool file_handle_create_uri(void *file_handle, const void *uri)
 {
   g_return_val_if_fail(file_handle, false);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return false;
+#else
   return gnome_vfs_create_uri(
     (GnomeVFSHandle**)file_handle,
     (GnomeVFSURI*)uri,
@@ -103,41 +122,57 @@ static bool file_handle_create_uri(void *file_handle, const void *uri)
     1,
     0600
   ) == GNOME_VFS_OK;
+#endif
 }
 
 static bool file_handle_open_uri(void *file_handle, const void *uri)
 {
   g_return_val_if_fail(file_handle, false);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return false;
+#else
   return gnome_vfs_open_uri(
     (GnomeVFSHandle**)file_handle,
     (GnomeVFSURI*)uri,
     (GnomeVFSOpenMode)(GNOME_VFS_OPEN_WRITE
                       | GNOME_VFS_OPEN_RANDOM
                       | GNOME_VFS_OPEN_READ));
+#endif
 }
 
 static bool file_handle_seek(void *file_handle, gboolean end)
 {
   g_return_val_if_fail(file_handle, false);
-
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return false;
+#else
   return gnome_vfs_seek((GnomeVFSHandle*)file_handle,
                         end ? GNOME_VFS_SEEK_END : GNOME_VFS_SEEK_START, 0);
+#endif
 }
 
 static bool file_handle_truncate(void *file_handle)
 {
   g_return_val_if_fail(file_handle, false);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return false;
+#else
   return gnome_vfs_truncate_handle ((GnomeVFSHandle*)file_handle, 0);
+#endif
 }
 
 static int file_handle_file_info_block_size(void *file_handle)
 {
   g_return_val_if_fail(file_handle, 0);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return 0;
+#else
   GnomeVFSFileInfo info;
   gnome_vfs_get_file_info_from_handle ((GnomeVFSHandle *)file_handle,
                                        &info,
                                        GNOME_VFS_FILE_INFO_DEFAULT);
   return info.io_block_size;
+#endif
 }
 
 static int64 file_handle_read(void *file_handle, gpointer buffer, guint64 bytes)
@@ -156,12 +191,16 @@ static int64 file_handle_read(void *file_handle, gpointer buffer, guint64 bytes)
 static guint64 file_handle_write(void *file_handle, gpointer line)
 {
   g_return_val_if_fail(file_handle, 0);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return 0;
+#else
   GnomeVFSFileSize written;
   gnome_vfs_write ((GnomeVFSHandle *)file_handle,
                    (gpointer)line,
                    strlen((const char*)line),
                    &written);
   return written;
+#endif
 }
 
 // Static Routine Prototypes
@@ -601,7 +640,9 @@ nsresult EmbedGlobalHistory::InitFile()
   }
   rs = file_handle_open_uri(&handle, uri);
   if (rs) {
+#ifdef MOZ_ENABLE_GNOMEVFS
     //g_print("Could not open history URI. Result: %s\n", gnome_vfs_result_to_string(rs));
+#endif
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
