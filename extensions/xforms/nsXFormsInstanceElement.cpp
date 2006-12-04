@@ -364,7 +364,8 @@ nsXFormsInstanceElement::BackupOriginalDocument()
     NS_ENSURE_TRUE(instanceRoot, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMNode> nodeReturn;
-    rv = instanceRoot->CloneNode(PR_TRUE, getter_AddRefs(newNode)); 
+    rv = mOriginalDocument->ImportNode(instanceRoot, PR_TRUE,
+                                       getter_AddRefs(newNode));
     if(NS_SUCCEEDED(rv)) {
       rv = mOriginalDocument->AppendChild(newNode, getter_AddRefs(nodeReturn));
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), 
