@@ -236,9 +236,10 @@ NS_IMETHODIMP
 GTKEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
                                    nsIFile* *aResult)
 {
+  nsresult rv;
   if (EmbedPrivate::sAppFileLocProvider) {
-    nsresult rv = EmbedPrivate::sAppFileLocProvider->GetFile(aKey, aPersist,
-                                                             aResult);
+    rv = EmbedPrivate::sAppFileLocProvider->GetFile(aKey, aPersist,
+                                                    aResult);
     if (NS_SUCCEEDED(rv))
       return rv;
   }
