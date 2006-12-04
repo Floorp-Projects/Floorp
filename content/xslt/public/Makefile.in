@@ -57,6 +57,7 @@ XPIDLSRCS	= \
 		nsIXSLTProcessorPrivate.idl  \
 		txIFunctionEvaluationContext.idl  \
 		txINodeSet.idl  \
+		txIEXSLTRegExFunctions.idl  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

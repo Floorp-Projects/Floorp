@@ -156,6 +156,8 @@ public:
 
     void SetErrorOffset(PRUint32 aOffset);
 
+    static void shutdown();
+
 
     nsRefPtr<txStylesheet> mStylesheet;
     txHandlerTable* mHandlerTable;

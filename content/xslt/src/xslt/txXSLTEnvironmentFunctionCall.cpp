@@ -145,7 +145,6 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
     }
 
     return NS_OK;
-
 }
 
 Expr::ResultType
