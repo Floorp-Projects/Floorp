@@ -141,18 +141,19 @@
           
           <separator class="thin"/>
 
-          <hbox align="center" pack="start">
-            <description flex="1">&configEditDesc.label;</description>
-            <button id="configEditor" label="&configEdit.label;" 
-                    accesskey="&configEdit.accesskey;" oncommand="gAdvancedPane.showConfigEdit();"/>
-          </hbox>
-
           <hbox align="center">
             <description flex="1">&returnReceiptsInfo.label;</description>
             <button label="&showReturnReceipts.label;"
                     accesskey="&showReturnReceipts.accesskey;"
                     oncommand="gAdvancedPane.showReturnReceipts();"/>
           </hbox>
+
+          <hbox align="center" pack="start">
+            <description flex="1">&configEditDesc.label;</description>
+            <button id="configEditor" label="&configEdit.label;" 
+                    accesskey="&configEdit.accesskey;" oncommand="gAdvancedPane.showConfigEdit();"/>
+          </hbox>
+          
         </tabpanel>
 
         <tabpanel orient="vertical">
