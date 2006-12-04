@@ -54,6 +54,11 @@
 <!-- SELECT/SELECT1 CONTROLS
   The section contains xforms select/select1 controls implementations for XHTML.
   All controls are inherited from interface bindings realized in select.xml.
+
+  XXX: select of minimal appearance is not implemented (see bug 332928).
+
+  select1 of minimal appearance is implemented in select1.xml file.
+  select/select1 of appearance="full" is implemented in selects-xhtml.xml file.
 -->
 
   <!-- SELECT APPEARANCE='COMPACT' : <DEFAULT> -->
@@ -70,22 +75,6 @@
     </content>
   </binding>
 
-  <!-- SELECT APPEARANCE='FULL' -->
-  <binding id="xformswidget-select-full"
-           extends="chrome://xforms/content/select.xml#xformswidget-select-base">
-    <content>
-      <html:table xbl:inherits="style">
-        <html:tr>
-          <html:td valign="top"><children includes="label"/></html:td>
-          <html:td>
-            <html:span anonid="control" xbl:inherits="style, accesskey"/>
-          </html:td>
-        </html:tr>
-      </html:table>
-      <children/>
-    </content>
-  </binding>
-
   <!-- SELECT1 APPEARANCE='COMPACT' : <DEFAULT> -->
   <binding id="xformswidget-select1-compact"
            extends="chrome://xforms/content/select.xml#xformswidget-select1-base">
@@ -97,22 +86,6 @@
         <html:span anonid="control" xbl:inherits="style, accesskey"/>
         <children/>
       </html:label>
-    </content>
-  </binding>
-
-  <!-- SELECT1 APPEARANCE='FULL' -->
-  <binding id="xformswidget-select1-full"
-           extends="chrome://xforms/content/select.xml#xformswidget-select1-base">
-    <content>
-      <html:table xbl:inherits="style">
-        <html:tr>
-          <html:td valign="top"><children includes="label"/></html:td>
-          <html:td>
-            <html:span anonid="control" xbl:inherits="style, accesskey"/>
-          </html:td>
-        </html:tr>
-      </html:table>
-      <children/>
     </content>
   </binding>
 
@@ -229,163 +202,6 @@
           element only.
       -->
     </handlers>
-
-  </binding>
-
-
-  <!-- BASE CONTROL WIDGET FOR SELECT/SELECT1 APPEARANCE='FULL' -->
-  <binding id="controlwidget-selects-full-base"
-           extends="chrome://xforms/content/select.xml#controlwidget-nonativewidget-base">
-
-    <implementation>
-      <method name="removeAllItems">
-        <body>
-          for (var i = this.control.childNodes.length; i > 0; i--) {
-           this.control.removeChild(this.control.childNodes[i-1]);
-          }
-        </body>
-      </method>
-
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <parameter name="aGroup"/>
-        <body>
-          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-        </body>
-      </method>
-
-      <method name="appendGroup">
-        <parameter name="aLabel"/>
-        <parameter name="aGroup"/>
-        <body>
-          var mainDiv = document.createElementNS(this.XHTML_NS, "div");
-
-          var labelDiv = document.createElementNS(this.XHTML_NS, "div");
-          if (aLabel) {
-            labelDiv.className = "select-choice-label";
-            labelDiv.appendChild(aLabel.cloneNode(true));
-          }
-          mainDiv.appendChild(labelDiv);
-
-          var contentDiv = document.createElementNS(this.XHTML_NS, "div");
-          contentDiv.className = "select-choice-content";
-          mainDiv.appendChild(contentDiv);
-
-          if (aGroup) {
-            aGroup.appendChild(mainDiv);
-          } else {
-            this.control.appendChild(mainDiv);
-          }
-
-          return contentDiv;
-        </body>
-      </method>
-
-      <method name="addItemToSelection">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.checked = true;
-        </body>
-      </method>
-
-      <method name="removeItemFromSelection">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.checked = false;
-        </body>
-      </method>
-
-      <method name="isItemSelected">
-        <parameter name="aItem"/>
-        <body>
-          return aItem.firstChild.checked;
-        </body>
-      </method>
-
-      <method name="advanceFocusToItem">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.focus();
-        </body>
-      </method>
-
-      <method name="isItemElement">
-        <parameter name="aElement"/>
-        <body>
-          return aElement.getAttribute("anonid") == "wcontrol";
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="change">
-        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
-          this.updateInstanceData(true);
-      </handler>
-
-      <handler event="blur" phase="capturing">
-        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
-          this.updateInstanceData(false);
-      </handler>
-
-      <!--
-        XXX: need to send DOMFocusIn/DOMFocusOut events
-        XXX: when incremental='false' then model data should be updated on 
-        'blur' event for xforms:select only
-      -->
-    </handlers>
-  </binding>
-
-
-  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
-  <binding id="controlwidget-select-full"
-           extends="#controlwidget-selects-full-base">
-
-    <content>
-      <html:div anonid="control"/>
-    </content>
-
-    <implementation>
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <parameter name="aGroup"/>
-        <body>
-          var div = document.createElementNS(this.XHTML_NS, "div");
-          div.setAttribute("anonid", "itemcontainer");
-
-          var input = document.createElementNS(this.XHTML_NS, "input");
-          input.setAttribute("type", "checkbox");
-          input.setAttribute("value", aValue);
-          input.setAttribute("anonid", "wcontrol");
-          if (this.readonly)
-            input.setAttribute("disabled", "true");
-
-          div.appendChild(input);
-          if (aLabel) {
-            div.appendChild(aLabel.cloneNode(true));
-          }
-
-          if (aGroup) {
-            aGroup.appendChild(div);
-          } else {
-            this.control.appendChild(div);
-          }
-          return div;
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="click">
-        if (event.originalTarget.getAttribute("anonid") == "itemcontainer") {
-          event.originalTarget.firstChild.checked =
-            !event.originalTarget.firstChild.checked;
-          this.updateInstanceData(true);
-        }
-      </handler>
-    </handlers>
   </binding>
 
 
@@ -394,13 +210,6 @@
   controls.
 -->
 
-
-  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='MINIMAL'
-    Now select1 appearance='minimal' control is implemented in select1.xml
-    as separate widget.
-  -->
-
-
   <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='COMPACT' -->
   <binding id="controlwidget-select1-compact"
            extends="#controlwidget-select-compact">
@@ -408,60 +217,6 @@
       <html:select xbl:inherits="style, accesskey, disabled=readonly"
                    class="xf-value" size="5" anonid="control"/>
     </content>
-  </binding>
-
-
-  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='FULL' -->
-  <binding id="controlwidget-select1-full"
-           extends="#controlwidget-selects-full-base">
-
-    <content>
-      <html:form anonid="control"/>
-    </content>
-
-    <implementation>
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <parameter name="aGroup"/>
-        <body>
-          var div = document.createElementNS(this.XHTML_NS, "div");
-          div.setAttribute("anonid", "itemcontainer");
-
-          var input = document.createElementNS(this.XHTML_NS, "input");
-          input.setAttribute("type", "radio");
-          input.setAttribute("value", aValue);
-          input.setAttribute("name", "radioControlForXFormsSelect1");
-          input.setAttribute("anonid", "wcontrol");
-          if (this.readonly)
-            input.setAttribute('disabled', 'true');
-          div.appendChild(input);
-
-          if (aLabel)
-            div.appendChild(aLabel.cloneNode(true));
-
-          if (aGroup) {
-            aGroup.appendChild(div);
-          } else {
-            this.control.appendChild(div);
-          }
-
-          return div;
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="click">
-      <![CDATA[
-        if (event.originalTarget.getAttribute("anonid") == "itemcontainer" &&
-            !event.originalTarget.firstChild.checked) {
-          event.originalTarget.firstChild.checked = true;
-          this.updateInstanceData(true);
-        }
-      ]]>
-      </handler>
-    </handlers>
   </binding>
 
 </bindings>

@@ -43,7 +43,7 @@
 /**
  * Interface implemented by the item element.
  */
-[scriptable, uuid(ec8d3556-8ed2-4143-88d1-6b7b2c8b0b3b)]
+[scriptable, uuid(e7e65a10-bf37-488f-9c74-add34abdd309)]
 interface nsIXFormsItemElement : nsISupports
 {
   /**
@@ -83,4 +83,14 @@ interface nsIXFormsItemElement : nsISupports
    */
   readonly attribute nsIDOMNode copyNode;
 
+  /**
+   * Compare given DOM node and copy node (i.e. node that the contained copy
+   * element is bound to.
+   *
+   * @param nsIDOMNode aNode - given DOM node to compare with copy node
+   *
+   * @return boolean - return true if given node equals in copy node
+   */
+  boolean copyNodeEquals(in nsIDOMNode aNode);
 };
+

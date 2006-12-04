@@ -54,6 +54,10 @@
   The section contains xforms select and select1 controls implementations for
   XUL. All controls are inherited from interface bindings realized in
   select.xml file.
+
+  XXX: Element select of minimal appearance is not implemented (see bug 332928).
+
+  select/select1 of full appearance are implemented in selects-xul.xml file.
 -->
 
   <binding id="xformswidget-select"
@@ -90,16 +94,10 @@
   <binding id="xformswidget-select-compact"
            extends="#xformswidget-select"/>
 
-  <binding id="xformswidget-select-full"
-           extends="#xformswidget-select"/>
-
   <binding id="xformswidget-select1-minimal"
            extends="#xformswidget-select1"/>
 
   <binding id="xformswidget-select1-compact"
-           extends="#xformswidget-select1"/>
-
-  <binding id="xformswidget-select1-full"
            extends="#xformswidget-select1"/>
 
 <!-- CONTROL WIDGETS FOR SELECT CONTROLS
@@ -108,12 +106,6 @@
   widget for xforms select controls ask for. You can find interface description
   in 'select.xml' file.
 -->
-
-
-  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='MINIMAL'
-    XXX: Widget is not implemented.
-  -->
-
 
   <!-- CONTROL WIDGET FOR SELECT APPEARANCE='COMPACT' -->
   <binding id="controlwidget-select-compact"
@@ -238,150 +230,6 @@
           element only.
       -->
     </handlers>
-  </binding>
-
-
-  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
-  <binding id="controlwidget-select-full"
-           extends="chrome://xforms/content/select.xml#controlwidget-nonativewidget-base">
-
-    <content>
-      <xul:vbox xbl:inherits="orient" anonid="control"/>
-    </content>
-
-    <implementation>
-      <method name="removeAllItems">
-        <body>
-          for (var i = this.control.childNodes.length; i > 0; i--) {
-            this.control.removeChild(this.control.childNodes[i-1]);
-          }
-        </body>
-      </method>
-
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <parameter name="aGroup"/>
-        <body>
-          var box = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
-          box.setAttribute("align", "center");
-
-          var checkbox = this.ownerDocument.createElementNS(this.XUL_NS, "checkbox");
-          checkbox.setAttribute("value", aValue);
-          checkbox.setAttribute("anonid", "wcontrol");
-          if (this.readonly)
-            checkbox.setAttribute("disabled", "true");
-
-          box.appendChild(checkbox);
-          if (aLabel) {
-            // since label node can contains textnodes then we use
-            // 'description' element as container for label node.
-            var description = this.ownerDocument.
-              createElementNS(this.XUL_NS, "description");
-            description.setAttribute("anonid", "labelcontainer");
-            description.appendChild(aLabel.cloneNode(true));
-            box.appendChild(description);
-          }
-
-          if (aGroup) {
-            aGroup.appendChild(box);
-          } else {
-            this.control.appendChild(box);
-          }
-
-          return box;
-        </body>
-      </method>
-
-      <method name="appendGroup">
-        <parameter name="aLabel"/>
-        <parameter name="aGroup"/>
-        <body>
-          var mainBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
-
-          var labelBox = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
-          if (aLabel) {
-            labelBox.className = "select-choice-label";
-            labelBox.appendChild(aLabel.cloneNode(true));
-          }
-          mainBox.appendChild(labelBox);
-
-          var contentBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
-          contentBox.className = "select-choice-content";
-          mainBox.appendChild(contentBox);
-
-          if (aGroup) {
-            aGroup.appendChild(mainBox);
-          } else {
-            this.control.appendChild(mainBox);
-          }
-
-          return contentBox;
-        </body>
-      </method>
-
-      <method name="addItemToSelection">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.checked = true;
-        </body>
-      </method>
-
-      <method name="removeItemFromSelection">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.checked = false;
-        </body>
-      </method>
-
-      <method name="isItemSelected">
-        <parameter name="aItem"/>
-        <body>
-          return aItem.firstChild.checked;
-        </body>
-      </method>
-
-      <method name="advanceFocusToItem">
-        <parameter name="aItem"/>
-        <body>
-          aItem.firstChild.focus();
-        </body>
-      </method>
-
-      <method name="isItemElement">
-        <parameter name="aElement"/>
-        <body>
-          return aElement.getAttribute("anonid") == "wcontrol";
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="click">
-        if (event.originalTarget.getAttribute("anonid") == "labelcontainer") {
-          event.originalTarget.previousSibling.checked =
-            !event.originalTarget.previousSibling.checked;
-          this.updateInstanceData(true);
-        }
-      </handler>
-
-      <handler event="command">
-        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
-          this.updateInstanceData(true);
-      </handler>
-
-      <handler event="blur" phase="capturing">
-        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
-          this.updateInstanceData(false);
-      </handler>
-
-      <!--
-        XXX: We need to send DOMFocusIn/DOMFocusOut events
-        XXX: When incremental='false' then model data should be updated on 
-          'blur' event for xforms:select only
-      -->
-    </handlers>
-
   </binding>
 
 
@@ -541,140 +389,4 @@
     </content>
   </binding>
 
-
-  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='FULL' -->
-  <binding id="controlwidget-select1-full"
-           extends="chrome://xforms/content/select.xml#controlwidget-base">
-
-    <content>
-      <xul:radiogroup anonid="control"/>
-    </content>
-
-    <implementation>
-      <method name="removeAllItems">
-        <body>
-          for (var i = this.control.childNodes.length; i > 0; i--) {
-             this.control.removeChild(this.control.childNodes[i-1]);
-          }
-        </body>
-      </method>
-
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <parameter name="aGroup"/>
-        <body>
-          var box = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
-          box.setAttribute("align", "center");
-
-          var radio = this.ownerDocument.createElementNS(this.XUL_NS, "radio");
-          radio.setAttribute("value", aValue);
-          radio.setAttribute("anonid", "wcontrol");
-          if (this.readonly)
-            radio.setAttribute("disabled", "true");
-
-          box.appendChild(radio);
-          if (aLabel) {
-            // since label node can contains textnodes then we use
-            // 'description' element as container for label node.
-            var description = this.ownerDocument.
-              createElementNS(this.XUL_NS, "description");
-            description.setAttribute("anonid", "labelcontainer");
-            description.appendChild(aLabel.cloneNode(true));
-            box.appendChild(description);
-          }
-
-          if (aGroup) {
-            aGroup.appendChild(box);
-          } else {
-            this.control.appendChild(box);
-          }
-
-          return box;
-        </body>
-      </method>
-
-      <method name="appendGroup">
-        <parameter name="aLabel"/>
-        <parameter name="aGroup"/>
-        <body>
-          var mainBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
-
-          var labelBox = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
-          if (aLabel) {
-            labelBox.className = "select-choice-label";
-            labelBox.appendChild(aLabel.cloneNode(true));
-          }
-          mainBox.appendChild(labelBox);
-
-          var contentBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
-          contentBox.className = "select-choice-content";
-          mainBox.appendChild(contentBox);
-
-          if (aGroup) {
-            aGroup.appendChild(mainBox);
-          } else {
-            this.control.appendChild(mainBox);
-          }
-
-          return contentBox;
-        </body>
-      </method>
-
-      <method name="addItemToSelection">
-        <parameter name="aItem"/>
-        <body>
-          // there are a cases when 'radio' binding isn't created yet, therefore
-          // we use setTimeout.
-          window.setTimeout(
-            function(list, item) {
-              list.selectedItem = item;
-            },
-            0,
-            this.control, aItem.firstChild
-          );
-        </body>
-      </method>
-
-      <method name="removeItemFromSelection">
-        <parameter name="aItem"/>
-        <body>
-          if (aItem.firstChild.selected)
-            this.control.selectedItem = null;
-        </body>
-      </method>
-
-      <method name="isItemSelected">
-        <parameter name="aItem"/>
-        <body>
-          return aItem.firstChild.selected;
-        </body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="click">
-        if (event.originalTarget.getAttribute("anonid") == "labelcontainer") {
-          this.control.selectedItem = event.originalTarget.previousSibling;
-          this.updateInstanceData(true);
-        }
-      </handler>
-
-      <handler event="command">
-        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
-          this.updateInstanceData(true);
-      </handler>
-
-      <handler event="blur" phase="capturing">
-        if (event.originalTarget.getAttribute("anonid") == "control")
-          this.updateInstanceData(false);
-      </handler>
-
-      <!--
-        XXX: need to send DOMFocusIn/DOMFocusOut events
-        XXX: when incremental='false' then model data should be updated on
-          'blur' event for xforms:select1 only
-      -->
-    </handlers>
-  </binding>
 </bindings>

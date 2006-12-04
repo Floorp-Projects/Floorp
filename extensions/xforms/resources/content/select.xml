@@ -39,8 +39,12 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!--
+<bindings id="xformsSelectBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
+<!--
   This file implements the "abstract" UI class for XForms select controls. It
   have "pure virtual" functions that it expect to be implemented by concrete
   application and returned in the getElementControl() call. An example is the
@@ -84,11 +88,6 @@
     appendFreeEntryItem(value) - append and select free entry item
       @param value - item value
 -->
-
-<bindings id="xformsSelectBindings"
-          xmlns="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <!-- BASE for select/select1 elements. -->
   <binding id="xformswidget-selectcontrols-base"
@@ -873,15 +872,13 @@
         <parameter name="aElement"/>
         <parameter name="aName"/>
         <body>
-          var ev = document.createEvent("Events");
-          ev.initEvent(aName, true, false);
-          var elm = aElement;
+        <![CDATA[
           // per http://www.w3.org/TR/2005/PER-xforms-20051006/index-all.html#evt-select
           // we send the event to the itemset if it is a parent.
-          if (elm.parentNode.localName == "itemset")
-            elm = elm.parentNode;
-          elm.dispatchEvent(ev);
-          return true;
+          var parent = this.ownerDocument.getBindingParent(aElement);
+          var elm = parent && parent.localName == "itemset" ? parent : aElement;
+          return this.dispatchXFormsNotificationEvent(aName, elm);
+        ]]>
         </body>
       </method>
 
@@ -1222,63 +1219,6 @@
       </constructor>
 
     </implementation>
-  </binding>
-
-
-  <!-- The 'controlwidget-nonativewidget-base' is the base binding for underlying
-    controls which represents the xforms control. This binding is supposed to
-    be used for underlying control that actually haven't native widget. For
-    example, underlying control for select @appearance='full' is represented by
-    checkboxes bundle.
-    This binding implements the 'focus' method to advance focus to the
-    underlying control.
-
-    The widget assumes successors bindings have additional methods:
-
-      advanceFocusToItem(aItem) - makes item focused
-        @param aItem - item element
-
-      isItemElement(aElement) - returns true if element is item
-        @param aElement - DOMElement
-  -->
-  <binding id="controlwidget-nonativewidget-base"
-           extends="#controlwidget-base">
-
-    <implementation>
-      <!-- Advance focus to native widget. -->
-      <method name="focus">
-        <body>
-        <![CDATA[
-          var item = this.currentItem;
-          if (!item) {
-            var options = this.parentControl._controlArray;
-            // If there are selected items then advance focus to first of them
-            for (var i = 0; i < options.length; i++) {
-              item = options[i].option;
-              var selected = this.isItemSelected(item);
-              if (selected)
-                break;
-            }
-            // otherwise we focus first item.
-            if (options.length && i == options.length)
-              item = options[0].option;
-          }
-
-          if (item)
-            this.advanceFocusToItem(item);
-        ]]>
-        </body>
-      </method>
-
-      <field name="currentItem">null</field>
-    </implementation>
-
-    <handlers>
-      <handler event="focus" phase="capturing">
-        if (this.isItemElement(event.originalTarget))
-          this.currentItem = event.originalTarget;
-      </handler>
-    </handlers>
   </binding>
 
 </bindings>

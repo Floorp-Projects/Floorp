@@ -487,6 +487,19 @@ nsXFormsItemElement::SetIsCopyItem(PRBool aIsCopyItem)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsItemElement::CopyNodeEquals(nsIDOMNode *aNode, PRBool *aIsCopyNode)
+{
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG_POINTER(aIsCopyNode);
+
+  nsCOMPtr<nsIDOMNode> selectedNode;
+  nsresult rv = SelectItemByNode(aNode, getter_AddRefs(selectedNode));
+  *aIsCopyNode = !!(selectedNode);
+
+  return rv;
+}
+
 NS_HIDDEN_(nsresult)
 NS_NewXFormsItemElement(nsIXTFElement **aResult)
 {
