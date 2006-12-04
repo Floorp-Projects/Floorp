@@ -1107,9 +1107,11 @@ EmbedPrivate::ContentStateChange(void)
   AttachListeners();
 
 #ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
   if (passwordManager)
     passwordManager->mFormAttachCount = PR_FALSE;
+#endif
 #endif
 }
 
@@ -1144,6 +1146,7 @@ EmbedPrivate::ContentFinishedLoading(void)
   }
   
 #ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
   if (passwordManager && passwordManager->mFormAttachCount) {
 
@@ -1180,6 +1183,7 @@ EmbedPrivate::ContentFinishedLoading(void)
     }
     passwordManager->mFormAttachCount = PR_FALSE;
   }
+#endif
 #endif
 }
 
