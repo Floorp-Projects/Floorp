@@ -107,6 +107,7 @@ sub PutsHeader {
     }
 
     print "<HTML><HEAD>\n<TITLE>" . &html_quote($title) . "</TITLE>\n";
+    print '<link rel="icon" href="bonsai.ico" type="image/x-icon">';
     print $::Setup_String if (defined($::Setup_String) && $::Setup_String);
     print Param("headerhtml") . "\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
