@@ -285,7 +285,7 @@ gtk_moz_embed_common_init(GtkMozEmbedCommon *common)
   // a later data and maintain backwards compatibility.
   common->data = nsnull;
   EmbedCommon *priv = EmbedCommon::GetInstance();
-  priv->mCommon = common;
+  priv->mCommon = GTK_OBJECT(common);
   common->data = priv;
   EmbedGlobalHistory::GetInstance();
 }

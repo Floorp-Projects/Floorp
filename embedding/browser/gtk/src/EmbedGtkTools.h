@@ -36,6 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef __EmbedTools_h
+#define __EmbedTools_h
+
 #include <nsCOMPtr.h>
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
@@ -51,8 +54,6 @@
 #include <nsIDocShell.h>
 #include <nsIInterfaceRequestorUtils.h>
 #include <gtk/gtk.h>
-#ifndef __EmbedTools_h
-#define __EmbedTools_h
 
 GtkWidget*
 GetGtkWidgetForDOMWindow(nsIDOMWindow* aDOMWindow);

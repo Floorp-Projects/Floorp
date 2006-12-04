@@ -1586,6 +1586,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
     return ctx_menu->mEmbedCtxType;
 #endif
   }
+#endif
   return 0;
 }
 

@@ -133,7 +133,7 @@ CPPSRCS		= \
 		$(NULL)
 
 ifdef MOZ_ENABLE_GTK2
-CPPSRCS		= \
+CPPSRCS		+= \
 		gtkmozembed_common.cpp \
 		gtkmozembed_download.cpp \
 		EmbedContextMenuInfo.cpp \
@@ -158,7 +158,6 @@ CSRCS           = \
 		gtkmozembedmarshal.c
 
 CPPSRCS         += \
-		EmbedGtkTools.cpp \
 		GtkPromptService.cpp \
 		$(NULL)
 

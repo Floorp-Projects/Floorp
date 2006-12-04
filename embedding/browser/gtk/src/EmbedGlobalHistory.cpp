@@ -360,11 +360,11 @@ NS_IMETHODIMP EmbedGlobalHistory::Init()
 }
 
 #define BROKEN_RV_HANDLING_CODE(rv) PR_BEGIN_MACRO                        \
-  if (NS_FAILED(rv)) {                                                    \ 
+  if (NS_FAILED(rv)) {                                                    \
     /* OOPS the coder (not timeless) didn't handle this case well at all. \
      * unfortunately the coder will remain anonymous.                     \
      * XXX please fix me.                                                 \
-     */                                                                   \ 
+     */                                                                   \
   }                                                                       \
   PR_END_MACRO
 
