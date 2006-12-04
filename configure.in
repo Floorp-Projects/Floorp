@@ -5157,6 +5157,32 @@ AC_SUBST(MOZ_GNOMEUI_CFLAGS)
 AC_SUBST(MOZ_GNOMEUI_LIBS)
 
 dnl ========================================================
+dnl = dbus support
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    MOZ_ENABLE_DBUS=1
+
+    MOZ_ARG_DISABLE_BOOL(dbus,
+    [  --disable-dbus       Disable dbus support (default: force, optional at runtime) ],
+        MOZ_ENABLE_DBUS=,
+        MOZ_ENABLE_DBUS=force)
+
+    if test "$MOZ_ENABLE_DBUS"
+    then
+        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1)
+    fi
+
+    if test "$MOZ_ENABLE_DBUS"; then
+        AC_DEFINE(MOZ_ENABLE_DBUS)
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_DBUS)
+AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
+AC_SUBST(MOZ_DBUS_GLIB_LIBS)
+
+dnl ========================================================
 dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
 dnl = converters in intl/uconv that are used only by X11 gfx 
 dnl = implementations. By default, it's undefined so that 
