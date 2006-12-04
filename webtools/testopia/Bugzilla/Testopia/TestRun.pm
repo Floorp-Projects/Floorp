@@ -373,14 +373,14 @@ and the build id to use.
 
 sub clone {
     my $self = shift;
-    my ($summary, $build) = @_;
+    my ($summary, $manager, $plan_id, $build) = @_;
     my $dbh = Bugzilla->dbh;
     my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_runs ($columns)
               VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'plan_id'}, $self->{'environment_id'}, 
+              undef, (undef, $plan_id, $self->{'environment_id'}, 
               $self->{'product_version'}, $build, 
-              $self->{'plan_text_version'}, Bugzilla->user->id, 
+              $self->{'plan_text_version'}, $manager, 
               $timestamp, undef, $summary, undef));
     my $key = $dbh->bz_last_key( 'test_runs', 'run_id' );
     return $key;   

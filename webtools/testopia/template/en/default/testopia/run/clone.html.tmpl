@@ -59,6 +59,17 @@
   </tr>
 
   <tr>
+    <td valign="TOP" align="RIGHT">Clone to plan:</td>
+    <td>
+      [% PROCESS select sel = { name => 'plan_id', 
+                                list => product.plans 
+                                accesskey => 'p' 
+                                default => run.plan.id} 
+      %]
+    </td>
+  </tr>
+
+  <tr>
     <td valign="TOP" align="RIGHT">Product version:</td>
     <td>[% PROCESS select sel = { name => 'product_version', 
                                   list => run.plan.get_product_versions
@@ -72,6 +83,12 @@
                                   list => run.plan.product.builds 
                                   accesskey => 'b' 
                                   default => run.build.id } %]</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Maintain Run Manager:</td>
+    <td><input type="radio" name="keepauthor" value="1" checked />Yes <input
+      type="radio" name="keepauthor" value="0" />No, make me the manager of the new run.</td>
   </tr>
 
   <tr>

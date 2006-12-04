@@ -80,6 +80,24 @@ sub categories {
     return $self->{'categories'};
 }
 
+sub plans {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    
+    my $ref = $dbh->selectcol_arrayref(
+                   "SELECT plan_id 
+                    FROM test_plans 
+                    WHERE product_id = ?
+                 ORDER BY name",
+                    undef, $self->{'id'});
+    my @objs;
+    foreach my $id (@{$ref}){
+        push @objs, Bugzilla::Testopia::TestPlan->new($id);
+    }
+    $self->{'plans'} = \@objs;
+    return $self->{'plans'};
+}
+
 sub environment_categories {
     my $self = shift;
     my $dbh = Bugzilla->dbh;

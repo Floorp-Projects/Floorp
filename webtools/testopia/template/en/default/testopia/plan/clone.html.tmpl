@@ -56,7 +56,18 @@
     <td><input size="30" name="plan_name"
       value="Copy of [% plan.name FILTER html %]" /></td>
   </tr>
-
+  
+  <tr>
+    <td valign="TOP" align="RIGHT">Clone to product:</td>
+    <td>
+      [% PROCESS select sel = { name => 'product_id', 
+                                list => user.get_selectable_products 
+                                accesskey => 'p' 
+                                default => plan.product_id} 
+      %]
+    </td>
+  </tr>
+  
   <tr>
     <td valign="TOP" align="RIGHT">Product version:</td>
     <td>[% PROCESS select sel = { name => 'product_version', 
@@ -77,6 +88,12 @@
     <td valign="TOP" align="RIGHT">Copy tags:</td>
     <td><input type="radio" name="copy_tags" value="1" checked />Yes <input
       type="radio" name="copy_tags" value="0" />No</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Maintain Plan and Case Authors:</td>
+    <td><input type="radio" name="keepauthor" value="1" checked />Yes <input
+      type="radio" name="keepauthor" value="0" />No, make me the author of the new cases.</td>
   </tr>
 
   <tr>

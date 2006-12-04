@@ -221,13 +221,13 @@ and a boolean representing whether to copy the plan document as well.
 
 sub clone {
     my $self = shift;
-    my ($name, $store_doc) = @_;
+    my ($name, $author, $product_id, $store_doc) = @_;
     $store_doc = 1 unless defined($store_doc);
     my $dbh = Bugzilla->dbh;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_plans ($columns)
               VALUES (?,?,?,?,?,?,?,?)",
-              undef, (undef, $self->{'product_id'}, Bugzilla->user->id, 
+              undef, (undef, $product_id, $author, 
               $self->{'type_id'}, $self->{'default_product_version'}, $name,
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );

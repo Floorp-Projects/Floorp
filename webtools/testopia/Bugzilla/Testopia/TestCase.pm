@@ -766,12 +766,12 @@ a boolean representing whether to copy the case document as well.
 sub copy {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
-    my ($planid, $copydoc) = @_;
+    my ($planid, $author, $copydoc) = @_;
     my ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     $dbh->do("INSERT INTO test_cases ($columns)
               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
               undef, (undef, $self->{'case_status_id'}, $self->{'category_id'}, 
-              $self->{'priority_id'}, Bugzilla->user->id, $self->{'default_tester_id'}, 
+              $self->{'priority_id'}, $author, $self->{'default_tester_id'}, 
               $timestamp, $self->{'isautomated'}, $self->sortkey, $self->{'script'},
               $self->{'arguments'}, $self->{'summary'}, $self->{'requirement'},
               undef));

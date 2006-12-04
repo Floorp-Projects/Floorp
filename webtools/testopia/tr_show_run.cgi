@@ -33,6 +33,7 @@ use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Environment;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
+use Bugzilla::Testopia::Product;
 
 use vars qw($template $vars);
 my $template = Bugzilla->template;
@@ -108,6 +109,7 @@ elsif ($action =~ /^Clone/){
               WHERE case_run_id IN (" . join(",",@ids) . ")");
     }
     
+    $vars->{'product'} = Bugzilla::Testopia::Product->new($run->plan->product_id);
     $vars->{'run'} = $run;
     $vars->{'case_list'} = join(",", @$ref) if ($action =~/These Cases/ && $ref);
     $vars->{'caserun'} = Bugzilla::Testopia::TestCaseRun->new({'case_run_id' => 0});
@@ -130,9 +132,12 @@ elsif ($action eq 'do_clone'){
     ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->canedit;
     my $summary = $cgi->param('summary');
     my $build = $cgi->param('build');
+    my $plan_id = $cgi->param('plan_id');
     trick_taint($summary);
     detaint_natural($build);
-    my $newrun = Bugzilla::Testopia::TestRun->new($run->clone($summary, $build));
+    validate_test_id($plan_id, 'plan');
+    my $manager = $cgi->param('keepauthor') ? $run->manager->id : Bugzilla->user->id;
+    my $newrun = Bugzilla::Testopia::TestRun->new($run->clone($summary, $manager, $plan_id, $build));
 
     if($cgi->param('copy_tags')){
         foreach my $tag (@{$run->tags}){

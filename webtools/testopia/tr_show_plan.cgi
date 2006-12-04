@@ -118,8 +118,12 @@ elsif ($action eq 'do_clone'){
     my $plan_name = $cgi->param('plan_name');
 
     # All DB actions use place holders so we are OK doing this
+    my $product_id = $cgi->param('product_id');
     trick_taint($plan_name);
-    my $newplanid = $plan->clone($plan_name, $cgi->param('copy_doc'));
+    detaint_natural($product_id);
+    validate_selection($product_id,'id','products');
+    my $author = $cgi->param('keepauthor') ? $plan->author->id : Bugzilla->user->id;
+    my $newplanid = $plan->clone($plan_name, $author, $product_id, $cgi->param('copy_doc'));
     my $newplan = Bugzilla::Testopia::TestPlan->new($newplanid);
     if($cgi->param('copy_tags')){
         foreach my $tag (@{$plan->tags}){
@@ -155,7 +159,7 @@ elsif ($action eq 'do_clone'){
 
             my $case = Bugzilla::Testopia::TestCase->new($id);
             if ($cgi->param('copy_cases') == 2 ){
-                my $caseid = $case->copy($newplan->id, 1);
+                my $caseid = $case->copy($newplan->id, $author, 1);
                 $case->link_plan($newplan->id, $caseid);
             }
             else {
