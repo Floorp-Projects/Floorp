@@ -70,7 +70,7 @@ static EmbedGlobalHistory *sEmbedGlobalHistory = nsnull;
 typedef struct _HistoryEntry {
   PRInt64         mLastVisitTime;     // Millisecs
   PRPackedBool    mWritten;           // TRUE if ever persisted
-  nsAutoString    mTitle;             // The entry title
+  nsCString       mTitle;             // The entry title
   char            *url;               // The url itself
 } HistoryEntry;
 
