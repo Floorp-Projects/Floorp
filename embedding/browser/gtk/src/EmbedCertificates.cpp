@@ -85,23 +85,21 @@ EmbedCertificates::~EmbedCertificates()
 {
 }
 
+NS_IMPL_THREADSAFE_ADDREF(EmbedCertificates)
+NS_IMPL_THREADSAFE_RELEASE(EmbedCertificates)
+NS_INTERFACE_MAP_BEGIN(EmbedCertificates)
+NS_INTERFACE_MAP_ENTRY(nsITokenPasswordDialogs)
+NS_INTERFACE_MAP_ENTRY(nsIBadCertListener)
 #ifdef BAD_CERT_LISTENER2
-NS_IMPL_THREADSAFE_ISUPPORTS9(
-#else
-NS_IMPL_THREADSAFE_ISUPPORTS8(
+NS_INTERFACE_MAP_ENTRY(nsIBadCertListener2)
 #endif
-                              EmbedCertificates,
-                              nsITokenPasswordDialogs,
-                              nsIBadCertListener,
-#ifdef BAD_CERT_LISTENER2
-                              nsIBadCertListener2,
-#endif
-                              nsICertificateDialogs,
-                              nsIClientAuthDialogs,
-                              nsICertPickDialogs,
-                              nsITokenDialogs,
-                              nsIDOMCryptoDialogs,
-                              nsIGeneratingKeypairInfoDialogs)
+NS_INTERFACE_MAP_ENTRY(nsICertificateDialogs)
+NS_INTERFACE_MAP_ENTRY(nsIClientAuthDialogs)
+NS_INTERFACE_MAP_ENTRY(nsICertPickDialogs)
+NS_INTERFACE_MAP_ENTRY(nsITokenDialogs)
+NS_INTERFACE_MAP_ENTRY(nsIGeneratingKeypairInfoDialogs)
+NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCryptoDialogs)
+NS_INTERFACE_MAP_END(EmbedCertificates)
 
 nsresult
 EmbedCertificates::Init(void)
