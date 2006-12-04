@@ -162,6 +162,7 @@ if ($action eq 'Commit'){
                 $case->add_tag($tag_id);
             }
         }
+        # Add to runs
         my @runs;
         foreach my $runid (split(/[\s,]+/, $cgi->param('addruns'))){
             validate_test_id($runid, 'run');
@@ -171,10 +172,37 @@ if ($action eq 'Commit'){
             $run->add_case_run($case->id);
         }
         
+        # Clone
+        my %planseen;
         foreach my $planid (split(",", $cgi->param('linkplans'))){
             validate_test_id($planid, 'plan');
-            $case->link_plan($planid);
+            $planseen{$planid} = 1;
         }
+        if ($cgi->param('copymethod') eq 'copy'){
+            foreach my $planid (keys %planseen){
+                my $author = $cgi->param('newauthor') ? Bugzilla->user->id : $case->author->id;
+                my $newcaseid = $case->copy($planid, $author, 1);
+                $case->link_plan($planid, $newcaseid);
+                my $newcase = Bugzilla::Testopia::TestCase->new($newcaseid);
+                foreach my $tag (@{$case->tags}){
+                    # Doing it this way avoids collisions
+                    my $newtag = Bugzilla::Testopia::TestTag->new({
+                                   tag_name  => $tag->name
+                                 });
+                    my $newtagid = $newtag->store;
+                    $newcase->add_tag($newtagid);
+                }
+                foreach my $comp (@{$case->components}){
+                    $newcase->add_component($comp->{'id'});
+                }
+            }
+        }
+        elsif ($cgi->param('copymethod') eq 'link'){
+            foreach my $planid (keys %planseen){
+                $case->link_plan($planid);
+            }
+        }
+        
     }
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
@@ -214,6 +242,9 @@ if ($action eq 'Commit'){
     exit;
 
 }
+###############
+### Display ###
+###############
 # Take the search from the URL params and convert it to SQL
 $cgi->param('current_tab', 'case');
 my $search = Bugzilla::Testopia::Search->new($cgi);

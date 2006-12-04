@@ -176,9 +176,12 @@ found.
     <td><input name="addruns" value="[% addrun FILTER none %]" /></td>
   </tr>
   <tr>
-    <th colspan="3">Link selected cases to the following plans 
+    <th colspan="3">Clone selected cases to the following plans 
                 (comma-separated list of ids):</th>
-    <td><input name="linkplans" /></td>
+    <td><input name="linkplans" />
+        <input type="radio" name="copymethod" value="copy" checked="checked">Copy
+        <input type="radio" name="copymethod" value="link">Link<br/>
+        <input type="checkbox" name="newauthor">Make me the author of copied cases.</td>
   </tr>
 
 </table>        

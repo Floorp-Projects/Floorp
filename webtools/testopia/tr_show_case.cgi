@@ -97,7 +97,7 @@ elsif ($action eq 'do_clone'){
         }
         if ($cgi->param('existing')){
             foreach my $p (@{$case->plans}){
-		$planseen{$p->id} = 1;
+		        $planseen{$p->id} = 1;
             }
         }
         my $author = $cgi->param('keepauthor') ? $case->author->id : Bugzilla->user->id;
