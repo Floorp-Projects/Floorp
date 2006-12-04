@@ -201,6 +201,7 @@ bin/components/nsUpdateNotifier.js
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/copmonents/imgicon.xpt
+bin/components/txEXSLTRegExFunctions.js
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
