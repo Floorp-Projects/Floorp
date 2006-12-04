@@ -560,12 +560,22 @@ sub init {
                $f = "milestones.value";
          },
          "^bug," => sub {
+             if ($obj eq 'case_run'){
                push(@supptables,
                       "INNER JOIN test_case_bugs AS case_bugs " .
                       "ON test_case_runs.case_run_id = case_bugs.case_run_id");
                push(@supptables,
                       "INNER JOIN bugs ".
                       "ON case_bugs.bug_id = bugs.bug_id");
+             }
+             elsif($obj eq 'case'){
+               push(@supptables,
+                      "INNER JOIN test_case_bugs AS case_bugs " .
+                      "ON test_cases.case_id = case_bugs.case_id");
+               push(@supptables,
+                      "INNER JOIN bugs ".
+                      "ON case_bugs.bug_id = bugs.bug_id");
+             }
                $f = "bugs.bug_id";
          },
          "^case_summary," => sub {
