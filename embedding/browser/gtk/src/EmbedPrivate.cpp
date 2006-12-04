@@ -168,7 +168,7 @@ EmbedCommon::Init (void)
 {
     mCommon = NULL;
     return NS_OK;
-};
+}
 #endif
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
