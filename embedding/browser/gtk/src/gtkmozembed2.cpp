@@ -1568,7 +1568,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
 #ifdef MOZILLA_INTERNAL_API //FIXME replace to using nsStringAPI
     EmbedContextMenuInfo * ctx_menu = embedPrivate->mEventListener->GetContextInfo();
     if (!ctx_menu)
-      return (unsigned gint) 0;
+      return (guint) 0;
     ctx_menu->UpdateContextData(event);
     *x = ctx_menu->mX;
     *y = ctx_menu->mY;
@@ -1584,7 +1584,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
     return ctx_menu->mEmbedCtxType;
 #endif
   }
-  return (unsigned gint) 0;
+  return (guint) 0;
 }
 
 const gchar*

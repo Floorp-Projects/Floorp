@@ -163,7 +163,7 @@ EmbedCommon::Init (void)
     mFormAttachCount = false;
     mCommon = NULL;
     return NS_OK;
-};
+}
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sPath        = nsnull;
