@@ -574,12 +574,20 @@ nsresult EmbedGlobalHistory::InitFile()
   // Get the history file in our profile dir.
   // Notice we are not just getting NS_APP_HISTORY_50_FILE
   // because it is used by the "real" global history component.
+#ifdef MOZ_ENABLE_LIBXUL
   if (EmbedPrivate::sProfileDir) {
-    nsString path;
-    EmbedPrivate::sProfileDir->GetPath(path);
-    mHistoryFile = g_strdup_printf("%s/history.dat", NS_ConvertUTF16toUTF8(path).get());
+    nsCString path;
+    EmbedPrivate::sProfileDir->GetNativePath(path);
+    mHistoryFile = g_strdup_printf("%s/history.dat", path.get());
     BROKEN_STRING_BUILDER(mHistoryFile);
-  } else {
+  } else
+#else
+  if (EmbedPrivate::sProfileDirS) {
+    mHistoryFile = g_strdup_printf("%s/history.dat", EmbedPrivate::sProfileDirS);
+    BROKEN_STRING_BUILDER(mHistoryFile);
+  } else
+#endif
+  {
     mHistoryFile = g_strdup_printf("%s/history.dat", g_get_tmp_dir());
   }
   void *uri = file_handle_uri_new(mHistoryFile);
