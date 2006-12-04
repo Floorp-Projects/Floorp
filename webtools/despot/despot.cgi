@@ -1257,7 +1257,9 @@ sub EmailToId {
     my $EnableDeleteUser = 1;
     for ( defined $F::command ? $F::command : 'MainMenu')
     {
-        /^FindPartition$/ || do { Authenticate(); };
+        # Only allow anonymous users access to the view parameter
+        # of FindPartition() (bug 346660)
+        (/^FindPartition$/ && param("view")) || do { Authenticate(); };
         param("command", "");
         /^AddPartition$/ && do { AddPartition(); last; };
         /^AddUser$/ && do { AddUser(); last; };
