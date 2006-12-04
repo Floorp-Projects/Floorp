@@ -252,9 +252,10 @@ GTKEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 
   if (!strcmp(aKey, NS_APP_USER_PROFILE_50_DIR)) {
 #ifdef MOZ_ENABLE_LIBXUL
-    EmbedPrivate::sProfileDir && !strcmp(aKey, NS_APP_USER_PROFILE_50_DIR)) {
-    *aPersist = PR_TRUE;
-    return EmbedPrivate::sProfileDir->Clone(aResult);
+    if (EmbedPrivate::sProfileDir) {
+      *aPersist = PR_TRUE;
+      return EmbedPrivate::sProfileDir->Clone(aResult);
+    }
 #else
     nsCOMPtr<nsILocalFile> profDir =
       do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
@@ -264,9 +265,11 @@ GTKEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
     if (NS_FAILED(rv))
       return rv;
     NS_ADDREF(*aResult = profDir);
+    return NS_OK;
 #endif
   }
 
+  *aResult = nsnull;
   return NS_ERROR_FAILURE;
 }
 
