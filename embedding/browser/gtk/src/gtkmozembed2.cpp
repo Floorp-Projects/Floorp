@@ -73,10 +73,10 @@
 
 #include <nsStringAPI.h>
 #endif
-#ifdef MOZ_WIDGET_GTK2
 
 #include "gtkmozembedmarshal.h"
 
+#ifdef MOZ_WIDGET_GTK2
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_ConvertUTF16toUTF8(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) G_OBJECT_CLASS_TYPE(x)
 
