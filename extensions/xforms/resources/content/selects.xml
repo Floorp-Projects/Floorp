@@ -1,0 +1,766 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov.alexander@gmail.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="xformsSelectsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+<!--
+  This file implements the "abstract" UI classes for XForms select/select1
+  controls. The approach used here is different from approach that is realized
+  in select.xml file. Here we don't build programmaticaly native widget that
+  will represent select/select1 control. Instead that every item or choices
+  element is visible and represented. An example is the controls for XHTML in
+  select-xhtml.xml.
+-->
+
+  <!-- BASE for select/select1 elements. -->
+  <binding id="selectcontrols-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+
+    <implementation implements="nsIXFormsUIWidget">
+
+    <!-- nsIXFormsUIWidget -->
+      <method name="refresh">
+        <body>
+        <![CDATA[
+          var boundNode = this.accessors.getBoundNode();
+          if (!boundNode)
+            return null;
+
+          // Make sure that 'getNodesArray' method is called before
+          // 'getValuesArray' method because nodes array returned by
+          // 'getNodesArray' is used by 'getValuesArray' method.
+          this.nodes = this.getNodesArray(boundNode);
+          this.values = this.getValuesArray(boundNode);
+
+          this.traverseItems(this, this.selectItemElements);
+
+          var outOfRange = this.isOutOfRange(this.values) ||
+            this.isOutOfRange(this.nodes);
+          if (this.outOfRange == null || this.outOfRange != outOfRange) {
+            this.accessors.setInRange(!outOfRange);
+            this.outOfRange = outOfRange;
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          function focusItem(aItem) {
+            if (!aItem.disabled)
+              aItem.focus();
+            return aItem.disabled;
+          }
+          this.traverseItems(this, focusItem);
+        </body>
+      </method>
+
+      <property name="incremental">
+        <getter>
+          return this.getAttribute("incremental") != "false";
+        </getter>
+        <setter>
+          if (!val)
+            this.setAttribute("incremental", "false");
+          else
+            this.removeAttribute("incremental");
+        </setter>
+      </property>
+
+    <!-- private -->
+      <!-- Run through xforms:item elements and select them if needed. If
+        xforms:item element contains xforms:value element value of which is
+        matched with item of given values array or if it contains xforms:copy
+        element value of which is matched with item of given nodes array then
+        that xforms:item element will be selected.
+        The method is used in conjunction with traverseItems method.
+
+        @param aItem - current traversed item element
+      -->
+      <method name="selectItemElements">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          aItem.disabled = this.accessors.isReadonly();
+
+          if (aItem.isCopyItem) {
+            if (!this.nodes || !aItem.copyNode) {
+              // aNodes is empty only if select controls is bound to non element
+              // node. We just disable item element since it's value can't be
+              // saved in bound node.
+              aItem.disabled = true;
+              return true;
+            }
+
+            for (var i = 0; i < this.nodes.length; i++) {
+              if (aItem.copyNodeEquals(this.nodes[i].node)) {
+                aItem.selected = true;
+                this.nodes[i].isUsed = true;
+                return true;
+              }
+            }
+          } else {
+            for (var i = 0; i < this.values.length; i++) {
+              if (this.values[i].value == aItem.value) {
+                aItem.selected = true;
+                this.values[i].isUsed = true;
+                return true;
+              }
+            }
+          }
+
+          if (aItem.selected)
+            aItem.selected = false;
+
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Return array of values each of them item elemnent should be selected
+        for. -->
+      <method name="getValuesArray">
+        <parameter name="aNode"/>
+        <body>
+        <![CDATA[
+          var nsIDOMNode = Components.interfaces.nsIDOMNode;
+          var whiteSpaceExpr = /\n|\t|\r/g;
+
+          var array = [];
+          if (aNode.nodeType != nsIDOMNode.ELEMENT_NODE) {
+            if (/\S/.test(aNode.nodeValue)) {
+              var values = this.getValuesArrayFor(aNode.nodeValue,
+                                                  whiteSpaceExpr);
+
+              for (var i = 0; i < values.length; i++)
+                array.push({value: values[i], isUsed: false});
+            } else {
+              array.push({value: "", isUsed: false});
+            }
+            return array;
+          }
+
+          if (!aNode.hasChildNodes()) {
+            array.push({value: "", isUsed: false});
+            return array;
+          }
+
+          for (var child = aNode.firstChild; child; child = child.nextSibling) {
+            if ((child.nodeType == nsIDOMNode.TEXT_NODE ||
+                child.nodeType == nsIDOMNode.CDATA_SECTION_NODE) &&
+                child.nodeValue) {
+              if (/\S/.test(child.nodeValue)) {
+                var values = this.getValuesArrayFor(child.nodeValue,
+                                                    whiteSpaceExpr)
+
+                for (var i = 0; i < values.length; i++)
+                  array.push({value: values[i], isUsed: false});
+              } else if (!array.length && !this.nodes) {
+                array.push({value: "", isUsed: false});
+              }
+            }
+          }
+          return array;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Exctact values from given string and return array of values. Should
+        be implemented by successor bindings. -->
+      <method name="getValuesArrayFor">
+        <parameter name="aString"/>
+        <parameter name="aWhiteSpaceExpr"/>
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
+      <!-- Return array of copy nodes each of them item element should be
+        selected for. If bound node is not element node then return null. -->
+      <method name="getNodesArray">
+        <parameter name="aNode"/>
+        <body>
+          var nsIDOMNode = Components.interfaces.nsIDOMNode;
+          if (aNode.nodeType != nsIDOMNode.ELEMENT_NODE)
+            return;
+
+          var array = [];
+          for (var child = aNode.firstChild; child; child = child.nextSibling) {
+            if (child.nodeType == nsIDOMNode.ELEMENT_NODE)
+              array.push({node: child, isUsed: false});
+          }
+
+          return array;
+        </body>
+      </method>
+
+      <!-- Return true if instance data can't be presented by select element.
+        Should be implemented by successors bindings. -->
+      <method name="isOutOfRange">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
+      <!-- Update instance node. This method is called when selection of select
+        element is changed.
+
+        @param aIncremental - specifies if instance node should be updated
+                              incrementally.
+      -->
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
+        <body>
+        <![CDATA[
+          if (aIncremental != this.incremental)
+            return;
+
+          var node = this.accessors.getBoundNode();
+          if (!node)
+            return;
+
+          node = node.cloneNode(false);
+          node.textContent = "";
+
+          var forceRebuild = {value: false};
+          this.traverseItems(this, this.buildInstanceData, node, forceRebuild);
+
+          var nsIDOMNode = Components.interfaces.nsIDOMNode;
+
+          if (node.nodeType != nsIDOMNode.ELEMENT_NODE || !forceRebuild.value) {
+            if (node.firstChild &&
+                (node.firstChild.nodeType == nsIDOMNode.TEXT_NODE ||
+                 node.firstChild.nodeType == nsIDOMNode.CDATA_SECTION_NODE))
+              this.accessors.setValue(node.firstChild.nodeValue);
+            else
+              this.accessors.setValue("");
+          } else {
+            this.accessors.setContent(node, true);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <!-- Run through item elements and build content of instance node for
+        selected item elements.
+
+        @param aItem - currently traversed item element
+        @param aInstanceNode - new generated instance node
+        @param aForceRebuild - object, its 'value' property should have value
+                               'true' if copy item element was been selected or
+                               deselected.
+      -->
+      <method name="buildInstanceData">
+        <parameter name="aItem"/>
+        <parameter name="aInstanceNode"/>
+        <parameter name="aForceRebuild"/>
+        <body>
+        <![CDATA[
+          if (aItem.isCopyItem) {
+            // Per specs we should fire 'xforms-binding-exception' event if
+            // bound node is not element and copy item is selected. We don't do
+            // it because in this case copy items are disabled and can't be
+            // selected.
+            var wasSelected = false;
+            if (this.nodes) {
+              for (var i = 0; i < this.nodes.length; i++) {
+                if (aItem.copyNodeEquals(this.nodes[i].node)) {
+                  wasSelected = true;
+                  break;
+                }
+              }
+            }
+            if (wasSelected != aItem.selected)
+              aForceRebuild.value = true;
+
+            if (aItem.selected) {
+              var importedNode =
+                aInstanceNode.ownerDocument.importNode(aItem.copyNode, true);
+              aInstanceNode.appendChild(importedNode);
+            }
+            return true;
+          }
+
+          if (!aItem.selected)
+            return true;
+
+          var nsIDOMNode = Components.interfaces.nsIDOMNode;
+
+          if (aInstanceNode.nodeType != nsIDOMNode.ELEMENT_NODE) {
+            if (aInstanceNode.textContent)
+              aInstanceNode.textContent += " ";
+            aInstanceNode.textContent += aItem.value;
+            return true;
+          }
+
+          var fchild = aInstanceNode.firstChild;
+          if (fchild && (fchild.nodeType == nsIDOMNode.TEXT_NODE ||
+              fchild.nodeType == nsIDOMNode.CDATA_SECTION_NODE)) {
+            if (fchild.nodeValue)
+              fchild.nodeValue += " ";
+            fchild.nodeValue += aItem.value;
+          } else {
+            var textnode =
+              aInstanceNode.ownerDocument.createTextNode(aItem.value);
+            if (fchild)
+              aInstanceNode.insertBefore(textnode, fchild);
+            else
+              aInstanceNode.appendChild(textnode);
+          }
+
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Run through select child elements and invokes given function for
+        every item element until given function retunrs false.
+
+        @param aContextNode - current select child node
+        @param aFunc - the function that is invoked if current node is item
+                       element, if function returns true then traversing is
+                       stopped
+        @param aFuncArg1 - 1st argument that is passed to function
+        @param aFuncArg2 - 2nd argument that is passed to function
+        @param aUpDirection - specifies direction of items navigation
+      -->
+      <method name="traverseItems">
+        <parameter name="aContextNode"/>
+        <parameter name="aFunc"/>
+        <parameter name="aFuncArg1"/>
+        <parameter name="aFuncArg2"/>
+        <parameter name="aUpDirection"/>
+        <body>
+        <![CDATA[
+          if (aContextNode.namespaceURI != this.XFORMS_NS)
+            return true;
+
+          var container;
+          switch (aContextNode.localName) {
+            case "select":
+            case "select1":
+            case "choices":
+              container = aContextNode;
+              break;
+            case "itemset":
+              container = aContextNode.anonymousItemSetContent;
+              break;
+            case "item":
+              var item = aContextNode.
+                QueryInterface(Components.interfaces.nsIXFormsItemElement);
+              if (!aFunc.call(this, item, aFuncArg1, aFuncArg2))
+                return false;
+          }
+
+          if (container) {
+            var child =
+              aUpDirection ? container.lastChild : container.firstChild;
+            while (child) {
+              var res = this.traverseItems(child, aFunc, aFuncArg1, aFuncArg2,
+                                           aUpDirection);
+              if (!res)
+                return false;
+              child = aUpDirection ? child.previousSibling : child.nextSibling;
+            }
+          }
+
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Cycally traverse item elements for specified direction and invokes
+        given function for every item element.
+
+        @param aItemNode - start item element
+        @param aUpDirection - if true then then item elements are traversed in
+                              up direction
+        @param aFunc, aFuncArg1, aFuncArg2 - invoked function and its arguments
+        @param aCurrNode - current traversed node, used internally
+      -->
+      <method name="cycleTraverseItems">
+        <parameter name="aItemNode"/>
+        <parameter name="aUpDirection"/>
+        <parameter name="aFunc"/>
+        <parameter name="aFuncArg1"/>
+        <parameter name="aFuncArg2"/>
+        <parameter name="aCurrNode"/>
+        <body>
+          if (aCurrNode == aItemNode)
+            return false;
+
+          if (!aCurrNode) {
+            if (aItemNode.namespaceURI != this.XFORMS_NS ||
+                aItemNode.localName != "item")
+              return false;
+            aCurrNode = aItemNode;
+          }
+
+          var next = aUpDirection ? aCurrNode.previousSibling :
+            aCurrNode.nextSibling;
+          if (next) {
+            var res = this.traverseItems(next, aFunc, aFuncArg1, aFuncArg2,
+                                         aUpDirection);
+            if (!res)
+              return false;
+
+            return this.cycleTraverseItems(aItemNode, aUpDirection, aFunc,
+                                           aFuncArg1, aFuncArg2, next);
+          }
+
+          var parent = aCurrNode;
+          while (parent = parent.parentNode) {
+            if (parent.namespaceURI == this.XFORMS_NS) {
+              switch (parent.localName) {
+                case "choices":
+                case "itemset":
+                  next = parent;
+                  break;
+                case "select":
+                case "select1":
+                  next = aUpDirection ? parent.lastChild : parent.firstChild;
+                  break;
+              }
+              if (next)
+                return this.cycleTraverseItems(aItemNode, aUpDirection, aFunc,
+                                               aFuncArg1, aFuncArg2, next);
+            }
+          }
+
+          return true;
+        </body>
+      </method>
+
+      <!-- Storage for previous value of 'in-range' state of select element -->
+      <field name="outOfRange">null</field>
+
+      <!-- Arrays of selected values and nodes that combine to build the content
+        of the bound instance node. -->
+      <field name="values">null</field>
+      <field name="nodes">null</field>
+    </implementation>
+  </binding>
+
+
+  <!-- SELECT: BASE -->
+  <binding id="select-base"
+           extends="#selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelectElement">
+
+    <!-- nsIXFormsNSSelectElement -->
+      <property name="selectedItems" readonly="true">
+        <getter>
+          function _isSelected(aItem, aItemList) {
+            if (aItem.selected)
+              aItemList.push(aItem);
+            return true;
+          }
+          var list = [];
+          this.traverseItems(this, _isSelected, list);
+          return list;
+        </getter>
+      </property>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem)
+            aItem.selected = true;
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem)
+            aItem.selected = false;
+        </body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+          function _clearSelection(aItem) {
+            aItem.selected = false;
+            return true;
+          }
+          this.traverseItems(this, _clearSelection);
+        </body>
+      </method>
+
+      <method name="selectAll">
+        <body>
+          function _selectAll(aItem) {
+            aItem.selected = true;
+            return true;
+          }
+          this.traverseItems(this, _selectAll);
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem ? aItem.selected : false;
+        </body>
+      </method>
+
+    <!-- Private implementation -->
+      <method name="getValuesArrayFor">
+        <parameter name="aString"/>
+        <parameter name="aWhiteSpaceExpr"/>
+        <body>
+          // A limitation of the XML Schema list datatypes is that white space
+          // characters in the storage values (the value element) are always
+          // interpreted as separators between individual data values.
+          // Therefore, authors should avoid using white space characters within
+          // storage values with list simpleContent.
+
+          // Replace new line (\n), tabs (\t) and carriage returns (\r) with
+          // space (" ").
+          var value = aString.replace(aWhiteSpaceExpr, " ");
+          return value.split(/\s/);
+        </body>
+      </method>
+
+      <method name="updateInstanceNodeByItem">
+        <parameter name="aIncremental"/>
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (aIncremental) {
+            // Fire 'select'/'deselect' only if user changed the select value.
+
+            // per http://www.w3.org/TR/xforms/slice4.html#evt-select
+            // we send the event to the itemset if it is a parent.
+            var parent = this.ownerDocument.getBindingParent(aItem);
+            var target = parent && parent.localName == "itemset" ? parent : aItem;
+
+            var eventName = aItem.selected ? "xforms-select" : "xforms-deselect";
+            this.dispatchXFormsNotificationEvent(eventName, target);
+          }
+
+          this.updateInstanceData(aIncremental);
+        ]]>
+        </body>
+      </method>
+
+      <method name="isOutOfRange">
+        <parameter name="aHitArray"/>
+        <body>
+        <![CDATA[
+          if (!aHitArray)
+            return false;
+
+          var i = 0;
+          for (; i < aHitArray.length && aHitArray[i].isUsed; ++i);
+          return i != aHitArray.length;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- SELECT1: BASE -->
+  <binding id="select1-base"
+           extends="#selectcontrols-base">
+
+    <implementation implements="nsIXFormsNSSelect1Element">
+    <!-- nsIXFormsNSSelect1Element -->
+      <property name="selectedItem">
+        <getter>
+          function getSelectedItem(aItem, aSelectedItem) {
+            if (aItem.selected)
+              aSelectedItem.value = aItem;
+            return !aItem.selected;
+          }
+          var selectedItem = {value: null};
+          this.traverseItems(this, getSelectedItem, selectedItem);
+          return selectedItem.value;
+        </getter>
+        <setter>
+          function setSelectedItem(aItem, aSelectedItem) {
+            aItem.selected = aItem == aSelectedItem;
+            return true;
+          }
+          this.traverseItems(this, setSelectedItem, val);
+        </setter>
+      </property>
+
+    <!-- Private implementation -->
+      <method name="getValuesArrayFor">
+        <parameter name="aString"/>
+        <parameter name="aWhiteSpaceExpr"/>
+        <body>
+          return [aString];
+        </body>
+      </method>
+
+      <method name="updateInstanceNodeByItem">
+        <parameter name="aIncremental"/>
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (aIncremental) {
+            // Fire 'select'/'deselect' only if user changed the select1 value.
+
+            // per http://www.w3.org/TR/xforms/slice4.html#evt-select
+            // we send the event to the itemset if it is a parent.
+            var parent = this.ownerDocument.getBindingParent(aItem);
+            var target = parent && parent.localName == "itemset" ? parent : aItem;
+
+            function _unselectItems(aItem, aNewSelectedItem, aTarget) {
+              if (aItem != aNewSelectedItem) {
+                if (aItem.selected) {
+                  aItem.selected = false;
+                  this.dispatchXFormsNotificationEvent("xforms-deselect",
+                                                       aTarget);
+                  return false;
+                }
+              }
+              return true;
+            }
+            this.traverseItems(this, _unselectItems, aItem, target);
+
+            var eventName = aItem.selected ? "xforms-select" : "xforms-deselect";
+            this.dispatchXFormsNotificationEvent(eventName, target);
+          }
+
+          this.updateInstanceData(aIncremental);
+        ]]>
+        </body>
+      </method>
+
+      <method name="isOutOfRange">
+        <parameter name="aHitArray"/>
+        <body>
+        <![CDATA[
+          return aHitArray && (aHitArray.length > 1 || aHitArray.length == 1 &&
+            !aHitArray[0].isUsed);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- ITEMSET -->
+  <binding id="itemset"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:div style="display:none;">
+        <children/>
+      </html:div>
+      <html:div anonid="insertion"/>
+    </content>
+
+    <implementation implements="nsIXFormsItemSetUIElement">
+      <field name="_anonymousItemSetContent">null</field>
+
+      <property name="anonymousItemSetContent" readonly="true">
+        <getter>
+          if (!this._anonymousItemSetContent) {
+            this._anonymousItemSetContent =
+              document.getAnonymousElementByAttribute(this, "anonid", "insertion");
+          }
+          return this._anonymousItemSetContent;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+
+  <!-- ITEM -->
+  <binding id="select-item-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-general">
+
+    <implementation>
+    <!-- interface -->
+      <property name="selected"
+                onget="throw Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);"
+                onset="throw Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);"/>
+
+      <property name="disabled"
+                onget="throw Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);"
+                onset="throw Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);"/>
+
+      <method name="focus">
+        <body>
+          this.control.focus();
+        </body>
+      </method>
+
+    <!-- successor's interface -->
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
+        <body>
+          if (this.selectControl)
+            this.selectControl.updateInstanceNodeByItem(aIncremental, this);
+        </body>
+      </method>
+
+    <!-- private -->
+      <property name="selectControl" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._selectControl) {
+            var node = this;
+            
+            while (node = node.parentNode) {
+              if (node.namespaceURI == this.XFORMS_NS &&
+                  (node.localName == "select" || node.localName == "select1")) {
+                this._selectControl = node;
+                break;
+              }
+            }
+          }
+          return this._selectControl;
+        ]]>
+        </getter>
+      </property>
+      <field name="_selectControl">null</field>
+    </implementation>
+  </binding>
+
+</bindings>
+
