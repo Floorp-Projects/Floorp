@@ -173,7 +173,7 @@
           </hbox>
           <separator flex="1"/>
           <hbox>
-            <button label="&viewPasswords.label;" accesskey="&viewPasswords.accesskey;"
+            <button label="&editPasswords.label;" accesskey="&editPasswords.accesskey;"
                     oncommand="gPrivacyPane.viewPasswords();"
                     preference="pref.privacy.disable_button.view_passwords"/>
           </hbox>

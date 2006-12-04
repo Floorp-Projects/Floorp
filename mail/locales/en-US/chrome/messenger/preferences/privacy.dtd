@@ -4,7 +4,7 @@
 <!ENTITY itemAntiVirus.label     "Anti-Virus">
 
 <!-- Junk Mail Controls -->
-<!ENTITY junkMail.intro "Set your default junk mail settings. Account specific junk mail settings can be configured in Account Settings.">
+<!ENTITY junkMail.intro "Set your default junk mail settings. Account-specific junk mail settings can be configured in Account Settings.">
 <!ENTITY manualMark.label "When I mark messages as junk:">
 <!ENTITY manualMark.accesskey "W">
 <!ENTITY manualMarkModeMove.label "Move them to the account's &quot;Junk&quot; folder">
@@ -36,10 +36,19 @@
 <!ENTITY  setMasterPassword.accesskey "M">
 <!ENTITY  removeMasterPassword.label  "Remove Master Password...">
 <!ENTITY  removeMasterPassword.accesskey "R">
-<!ENTITY  viewPasswords.label         "View Saved Passwords">
-<!ENTITY  viewPasswords.accesskey     "V">
+<!ENTITY  editPasswords.label         "Edit Saved Passwords">
+<!ENTITY  editPasswords.accesskey     "i">
 
 <!-- Anti Virus -->
 <!ENTITY antiVirus.intro      "&brandShortName; can make it easy for anti-virus software to analyze incoming mail messages for viruses before they are stored locally.">
 <!ENTITY antiVirus.label      "Allow anti-virus clients to quarantine individual incoming messages">
 <!ENTITY antiVirus.accesskey  "l">
+
+<!-- Extra strings we might use after the l10n string freeze in the preferences dialog -->
+<!ENTITY antiVirusCaption.label "Anti-Virus">
+<!ENTITY paswords.label         "Passwords">
+<!ENTITY emailScams.label       "Email Scams">
+<!ENTITY junkMail.label         "Junk Mail">
+<!ENTITY itemIntrusions.label   "Intrusions">
+<!ENTITY itemIntrusionsAndPasswords.label  "Intrusions &amp; Passwords">
+<!ENTITY itemJunkMail.label     "Junk Mail">
