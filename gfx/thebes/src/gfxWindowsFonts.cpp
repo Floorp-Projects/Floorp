@@ -1172,7 +1172,7 @@ public:
         for (PRInt32 k = 0; k < mNumGlyphs; k++) {
             cglyphs[k].index = mGlyphs[k];
             cglyphs[k].x = pt.x + offset + (mOffsets[k].du * cairoToPixels);
-            cglyphs[k].y = pt.y + (mOffsets[k].dv * cairoToPixels);
+            cglyphs[k].y = pt.y + (mOffsets[k].dv * cairoToPixels * -1);
 
             if (!mSpacing->IsEmpty() && mSpacing->Length() >= mNumGlyphs) {
                 // XXX We need to convert char index to cluster index.
