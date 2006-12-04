@@ -177,7 +177,10 @@ static int file_handle_file_info_block_size(void *file_handle)
 
 static int64 file_handle_read(void *file_handle, gpointer buffer, guint64 bytes)
 {
-  g_return_val_if_fail(file_handle, false);
+  g_return_val_if_fail(file_handle, -1);
+#ifndef MOZ_ENABLE_GNOMEVFS
+  return -1;
+#else
   GnomeVFSResult vfs_result = GNOME_VFS_OK;
   GnomeVFSFileSize read_bytes;
   vfs_result = gnome_vfs_read((GnomeVFSHandle *)file_handle,
@@ -186,6 +189,7 @@ static int64 file_handle_read(void *file_handle, gpointer buffer, guint64 bytes)
     return -1;
 
   return (int64)read_bytes;
+#endif
 }
 
 static guint64 file_handle_write(void *file_handle, gpointer line)
