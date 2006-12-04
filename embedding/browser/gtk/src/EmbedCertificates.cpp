@@ -99,7 +99,7 @@ NS_INTERFACE_MAP_ENTRY(nsICertPickDialogs)
 NS_INTERFACE_MAP_ENTRY(nsITokenDialogs)
 NS_INTERFACE_MAP_ENTRY(nsIGeneratingKeypairInfoDialogs)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCryptoDialogs)
-NS_INTERFACE_MAP_END(EmbedCertificates)
+NS_INTERFACE_MAP_END
 
 nsresult
 EmbedCertificates::Init(void)
