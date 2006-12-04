@@ -200,7 +200,7 @@ tier_toolkit_dirs        += tools/jprof
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_toolkit_dirs	+= xpfe/bootstrap/appleevents
+tier_toolkit_dirs       += xpfe/bootstrap/appleevents
 endif
 
 tier_toolkit_dirs	+= \
@@ -271,6 +271,10 @@ endif
 
 ifdef MOZ_ENABLE_GNOME_COMPONENT
 tier_toolkit_dirs    += toolkit/system/gnome
+endif
+
+ifdef MOZ_ENABLE_DBUS
+tier_toolkit_dirs    += toolkit/system/dbus
 endif
 
 ifdef MOZ_LEAKY
