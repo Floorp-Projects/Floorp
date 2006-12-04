@@ -770,7 +770,7 @@ sub FindPartition {
             exit;
         }
         PrintHeader();
-        print h1("Searching for partitions matching $file ...");
+        print h1("Searching for partitions matching " . html_quote($file) . " ...");
         foreach my $match (@matches) {
             if (param("view")) {
                 # This should display modules just as they are displayed
@@ -790,7 +790,7 @@ sub FindPartition {
     }
     else {
         PrintHeader();
-        print h1("Searching for partitions matching $file ...");
+        print h1("Searching for partitions matching " . html_quote($file) . " ...");
         print "No partitions found.";
     }
 

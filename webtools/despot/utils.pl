@@ -58,5 +58,21 @@ sub name_to_id_token {
     return $_;
 }
 
-1;
+# Quotify a string, suitable for output as an html document
+sub html_quote {
+    my ($var) = (@_);
+    $var =~ s/\&/\&amp;/g;
+    $var =~ s/</\&lt;/g;
+    $var =~ s/>/\&gt;/g;
+    return $var;
+}
 
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/\000/_NULL_/g;
+    $file =~ s/([ \"\'\`\~\^\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
+
+1;
