@@ -36,7 +36,7 @@
 
 /* Library identity and versioning */
 
-#include "nss.h"
+#include "softkver.h"
 
 #if defined(DEBUG)
 #define _DEBUG_STRING " (debug)"
@@ -50,7 +50,7 @@
  * NOTE: the first component of the concatenated rcsid string
  * must not end in a '$' to prevent rcs keyword substitution.
  */
-const char __nss_softokn_rcsid[] = "$Header: NSS " NSS_VERSION _DEBUG_STRING
+const char __nss_softokn_rcsid[] = "$Header: NSS " SOFTOKEN_VERSION _DEBUG_STRING
         "  " __DATE__ " " __TIME__ " $";
-const char __nss_softokn_sccsid[] = "@(#)NSS " NSS_VERSION _DEBUG_STRING
+const char __nss_softokn_sccsid[] = "@(#)NSS " SOFTOKEN_VERSION _DEBUG_STRING
         "  " __DATE__ " " __TIME__;

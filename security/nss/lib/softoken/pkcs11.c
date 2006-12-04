@@ -63,7 +63,7 @@
 #include "secport.h"
 #include "pcert.h"
 #include "secrng.h"
-#include "nss.h"
+#include "softkver.h"
 
 #include "keydbi.h" 
 
@@ -3158,8 +3158,8 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
     pInfo->cryptokiVersion.major = 2;
     pInfo->cryptokiVersion.minor = 20;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
-    pInfo->libraryVersion.major = NSS_VMAJOR;
-    pInfo->libraryVersion.minor = NSS_VMINOR;
+    pInfo->libraryVersion.major = SOFTOKEN_VMAJOR;
+    pInfo->libraryVersion.minor = SOFTOKEN_VMINOR;
     PORT_Memcpy(pInfo->libraryDescription,libraryDescription,32);
     pInfo->flags = 0;
     return CKR_OK;
@@ -3204,8 +3204,8 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
     }
     /* ok we really should read it out of the keydb file. */
     /* pInfo->hardwareVersion.major = NSSLOWKEY_DB_FILE_VERSION; */
-    pInfo->hardwareVersion.major = NSS_VMAJOR;
-    pInfo->hardwareVersion.minor = NSS_VMINOR;
+    pInfo->hardwareVersion.major = SOFTOKEN_VMAJOR;
+    pInfo->hardwareVersion.minor = SOFTOKEN_VMINOR;
     return CKR_OK;
 }
 
