@@ -16,12 +16,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Oleg Romashin. Portions created by Oleg Romashin are Copyright (C) Oleg Romashin.  All Rights Reserved.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Oleg Romashin <romaxa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include <nsCOMPtr.h>
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+#else
+#include "nsStringAPI.h"
+#endif
+#include <nsIDOMWindow.h>
+#include <nsIWindowWatcher.h>
+#include <nsIWebBrowserChrome.h>
+#include <nsIEmbeddingSiteWindow.h>
+#include <nsIServiceManager.h>
+#include <nsIContentViewer.h>
+#include <nsIDocShell.h>
+#include <nsIInterfaceRequestorUtils.h>
+#include <gtk/gtk.h>
+#ifndef __EmbedTools_h
+#define __EmbedTools_h
 
-#ifndef gtkmozembed_internal_h
-#define gtkmozembed_internal_h
+GtkWidget*
+GetGtkWidgetForDOMWindow(nsIDOMWindow* aDOMWindow);
 
-#include <nsIWebBrowser.h>
-#include <nsXPCOM.h>
-#include <stdlib.h>
+GtkWindow*
+GetGtkWindowForDOMWindow(nsIDOMWindow* aDOMWindow);
 
-struct nsModuleComponentInfo;
+nsresult 
+GetContentViewer (nsIWebBrowser *webBrowser, nsIContentViewer **aViewer);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+PRUnichar*
+LocaleToUnicode (const char *locStr);
 
-GTKMOZEMBED_API(void,
-  gtk_moz_embed_get_nsIWebBrowser, (GtkMozEmbed *embed,
-                                    nsIWebBrowser **retval))
-
-GTKMOZEMBED_API(PRUnichar*,
-  gtk_moz_embed_get_title_unichar, (GtkMozEmbed *embed))
-
-GTKMOZEMBED_API(PRUnichar*,
-  gtk_moz_embed_get_js_status_unichar, (GtkMozEmbed *embed))
-
-GTKMOZEMBED_API(PRUnichar*,
-  gtk_moz_embed_get_link_message_unichar, (GtkMozEmbed *embed))
-
-GTKMOZEMBED_API(void,
-  gtk_moz_embed_set_directory_service_provider, (nsIDirectoryServiceProvider *appFileLocProvider))
-
-GTKMOZEMBED_API(void,
-  gtk_moz_embed_set_app_components, (const nsModuleComponentInfo *aComps,
-                                     int aNumComps))
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* gtkmozembed_internal_h */
+#endif /* __EmbedTools_h */

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,7 +41,11 @@
 #define __EmbedPrivate_h
 
 #include <nsCOMPtr.h>
+#ifdef MOZILLA_INTERNAL_API
 #include <nsString.h>
+#else
+#include <nsStringAPI.h>
+#endif
 #include <nsIWebNavigation.h>
 #include <nsISHistory.h>
 // for our one function that gets the EmbedPrivate via the chrome
@@ -48,12 +54,27 @@
 #include <nsIAppShell.h>
 #include <nsIDOMEventReceiver.h>
 #include <nsVoidArray.h>
+
+#ifdef MOZILLA_1_8_BRANCH
+// for profiles
+#include <nsIPref.h>
+#endif
+
 // app component registration
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
 
+#include <nsIDocCharset.h>
+#include <nsIMarkupDocumentViewer.h>
+#include <nsIInterfaceRequestorUtils.h>
+#include <nsIWebBrowserFind.h>
+// for the focus hacking we need to do
+#include <nsIFocusController.h>
+// for frames
+#include <nsIDOMWindowCollection.h>
 #include "gtkmozembedprivate.h"
 
+#include "EmbedGtkTools.h"
 class EmbedProgress;
 class EmbedWindow;
 class EmbedContentListener;
@@ -61,7 +82,22 @@ class EmbedEventListener;
 
 class nsPIDOMWindow;
 class nsIDirectoryServiceProvider;
+#ifdef MOZILLA_1_8_BRANCH
+class nsProfileDirServiceProvider;
+#endif
 
+class EmbedCommon {
+ public:
+  EmbedCommon() {
+  };
+  ~EmbedCommon() { };
+  static EmbedCommon* GetInstance();
+  static void DeleteInstance();
+  nsresult    Init (void);
+  bool mFormAttachCount;
+  GtkMozEmbedCommon* mCommon;
+  static GtkMozEmbed* GetAnyLiveWidget();
+};
 class EmbedPrivate {
 
  public:
@@ -87,6 +123,12 @@ class EmbedPrivate {
   static void PopStartup      (void);
   static void SetPath         (const char *aPath);
   static void SetCompPath     (const char *aPath);
+
+#ifdef MOZILLA_1_8_BRANCH
+  static nsresult StartupProfile (void);
+  static void     ShutdownProfile(void);
+#endif
+
   static void SetAppComponents (const nsModuleComponentInfo* aComps,
                                 int aNumComponents);
   static void SetProfilePath  (const char *aDir, const char *aName);
@@ -122,6 +164,19 @@ class EmbedPrivate {
   // events
   void        ChildFocusIn (void);
   void        ChildFocusOut(void);
+  PRBool      ClipBoardAction(GtkMozEmbedClipboard type);
+  char*       GetEncoding ();
+  nsresult    SetEncoding (const char *encoding);
+  PRBool      FindText(const char *exp, PRBool  reverse,
+                       PRBool  whole_word, PRBool  case_sensitive,
+                       PRBool  restart);
+  nsresult    ScrollToSelectedNode(nsIDOMNode *aDOMNode);
+  nsresult    InsertTextToNode(nsIDOMNode *aDOMNode, const char *string);
+  nsresult    GetFocusController(nsIFocusController **controller);
+  nsresult    GetZoom (gint *zoomLevel, gint *compareFramesZoomLevel);
+  nsresult    SetZoom (gint zoomLevel);
+  nsresult    HasFrames  (PRUint32 *numberOfFrames);
+  nsresult    GetMIMEInfo (nsString& info);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   void *GetAtkObjectForCurrentDocument();
@@ -147,6 +202,7 @@ class EmbedPrivate {
 
   // the currently loaded uri
   nsString                       mURI;
+  nsCString                      mPrePath;
 
   // the number of widgets that have been created
   static PRUint32                sWidgetCount;
@@ -165,6 +221,15 @@ class EmbedPrivate {
   static nsILocalFile           *sProfileDir;
   static nsISupports            *sProfileLock;
 
+#ifdef MOZILLA_1_8_BRANCH
+  // what is our profile path?
+  static char                   *sProfileDirS;
+  static char                   *sProfileName;
+  // for profiles
+  static nsProfileDirServiceProvider *sProfileDirServiceProvider;
+  static nsIPref                *sPrefs;
+#endif
+
   static nsIDirectoryServiceProvider * sAppFileLocProvider;
 
   // chrome mask
@@ -173,15 +238,24 @@ class EmbedPrivate {
   PRBool                         mIsChrome;
   // has the chrome finished loading?
   PRBool                         mChromeLoaded;
+
+  // has the network finished loading?  
+  PRBool                         mLoadFinished;
+  
   // saved window ID for reparenting later
   GtkWidget                     *mMozWindowWidget;
   // has someone called Destroy() on us?
   PRBool                         mIsDestroyed;
 
+  //Open Blocker for Create Window class //Fixme...
+  //I just tried to block it on earlier moment
+  PRBool                         mOpenBlock;
+  PRBool                         mNeedFav;
  private:
 
   // is the chrome listener attached yet?
   PRBool                         mListenersAttached;
+  PRBool                         mDoResizeEmbed;
 
   void GetListener    (void);
   void AttachListeners(void);

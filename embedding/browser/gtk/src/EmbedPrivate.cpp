@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 tw=80 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -70,6 +72,18 @@
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
 
+#include <nsIFormControl.h>
+// for the clipboard actions we need to do
+#include "nsIClipboardCommands.h"
+
+#ifdef MOZILLA_1_8_BRANCH
+// for profiles
+#include <nsProfileDirServiceProvider.h>
+#include <nsEmbedAPI.h>
+// for NS_APPSHELL_CID
+#include <nsWidgetsCID.h>
+#endif
+
 // app component registration
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
@@ -83,6 +97,7 @@
 #include "EmbedWindowCreator.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
+#include "nsICookiePromptService.h"
 #else
 #include "nsNativeCharsetUtils.h"
 #endif
@@ -92,18 +107,103 @@
 #include "nsIAccessible.h"
 #include "nsIDOMDocument.h"
 #endif
+#include "nsIDocument.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMNSEditableElement.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIEditingSession.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsEditorCID.h"
+#include "EmbedCertificates.h"
+#include "EmbedDownloadMgr.h"
+#ifdef MOZ_GTKPASSWORD_INTERFACE
+#include "EmbedPasswordMgr.h"
+#endif
+#include "EmbedGlobalHistory.h"
+#include "EmbedFilePicker.h"
+static EmbedCommon* sEmbedCommon = nsnull;
+
+/* static */
+EmbedCommon*
+EmbedCommon::GetInstance()
+{
+    if (!sEmbedCommon)
+    {
+        sEmbedCommon = new EmbedCommon();
+        if (!sEmbedCommon)
+            return nsnull;
+        if (NS_FAILED(sEmbedCommon->Init()))
+        {
+            return nsnull;
+        }
+    }
+    return sEmbedCommon;
+}
+
+/* static */
+void
+EmbedCommon::DeleteInstance()
+{
+    if (sEmbedCommon)
+    {
+  delete sEmbedCommon;
+  sEmbedCommon = nsnull;
+  EmbedGlobalHistory::DeleteInstance();
+    }
+}
+
+nsresult
+EmbedCommon::Init (void)
+{
+    mFormAttachCount = false;
+    mCommon = NULL;
+    return NS_OK;
+};
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
-
 char        *EmbedPrivate::sPath        = nsnull;
 char        *EmbedPrivate::sCompPath    = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 nsILocalFile *EmbedPrivate::sProfileDir  = nsnull;
 nsISupports  *EmbedPrivate::sProfileLock = nsnull;
+#ifdef MOZILLA_1_8_BRANCH
+char        *EmbedPrivate::sProfileDirS  = nsnull;
+char        *EmbedPrivate::sProfileName = nsnull;
+nsIPref     *EmbedPrivate::sPrefs       = nsnull;
+nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
+nsProfileDirServiceProvider *EmbedPrivate::sProfileDirServiceProvider = nsnull;
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+#endif
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
 
 nsIDirectoryServiceProvider *EmbedPrivate::sAppFileLocProvider = nsnull;
+
+GtkMozEmbed*
+EmbedCommon::GetAnyLiveWidget()
+{
+  if (!EmbedPrivate::sWidgetCount || !EmbedPrivate::sWindowList)
+    return nsnull;
+
+  // Get the number of browser windows.
+  PRInt32 count = EmbedPrivate::sWindowList->Count();
+  // This function doesn't get called very often at all ( only when
+  // creating a new window ) so it's OK to walk the list of open
+  // windows.
+  //FIXME need to choose right window
+  GtkMozEmbed *ret = nsnull;
+  for (int i = 0; i < count; i++) {
+    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
+                                              EmbedPrivate::sWindowList->ElementAt(i));
+    ret = tmpPrivate->mOwningWidget;
+  }
+  return ret;
+}
 
 class GTKEmbedDirectoryProvider : public nsIDirectoryServiceProvider2
 {
@@ -163,22 +263,121 @@ GTKEmbedDirectoryProvider::GetFiles(const char *aKey,
   return dp2->GetFiles(aKey, aResult);
 }
 
-#define NS_PROMPTSERVICE_CID \
- {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
-
 #ifdef MOZ_WIDGET_GTK2
 NS_GENERIC_FACTORY_CONSTRUCTOR(GtkPromptService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(EmbedCertificates, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(EmbedDownloadMgr)
+#ifdef MOZ_GTKPASSWORD_INTERFACE
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(EmbedPasswordMgr, EmbedPasswordMgr::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(EmbedSignonPrompt)
 #endif
-
-#ifdef MOZ_WIDGET_GTK2
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(EmbedGlobalHistory, EmbedGlobalHistory::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(EmbedFilePicker)
 
 static const nsModuleComponentInfo defaultAppComps[] = {
+#ifdef MOZ_GTKPASSWORD_INTERFACE
+  {
+    EMBED_PASSWORDMANAGER_DESCRIPTION,
+    EMBED_PASSWORDMANAGER_CID,
+    NS_PASSWORDMANAGER_CONTRACTID,
+    EmbedPasswordMgrConstructor,
+    EmbedPasswordMgr::Register,
+    EmbedPasswordMgr::Unregister
+  },
+  {
+    EMBED_PASSWORDMANAGER_DESCRIPTION,
+    NS_SINGLE_SIGNON_PROMPT_CID,
+    "@mozilla.org/wallet/single-sign-on-prompt;1",
+    EmbedSignonPromptConstructor
+  },
+#endif
+  { "Prompt Service",
+    NS_PROMPTSERVICE_CID,
+    NS_COOKIEPROMPTSERVICE_CONTRACTID,
+    GtkPromptServiceConstructor
+  },
   {
     "Prompt Service",
     NS_PROMPTSERVICE_CID,
     "@mozilla.org/embedcomp/prompt-service;1",
     GtkPromptServiceConstructor
-  }
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_TOKENPASSWORDSDIALOG_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_BADCERTLISTENER_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+#ifdef BAD_CERT_LISTENER2
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_BADCERTLISTENER2_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+#endif
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_CERTIFICATEDIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_CLIENTAUTHDIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_CERTPICKDIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_TOKENDIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_DOMCRYPTODIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+  {
+    EMBED_CERTIFICATES_DESCRIPTION,
+    EMBED_CERTIFICATES_CID,
+    NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID,
+    EmbedCertificatesConstructor
+  },
+// content handler component info
+  {
+    EMBED_DOWNLOADMGR_DESCRIPTION,
+    EMBED_DOWNLOADMGR_CID,
+    NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
+    EmbedDownloadMgrConstructor
+  },
+  // global history
+  {
+    "Global History",
+    NS_EMBEDGLOBALHISTORY_CID,
+    NS_GLOBALHISTORY2_CONTRACTID,
+    EmbedGlobalHistoryConstructor
+  },
+  {
+    EMBED_FILEPICKER_CLASSNAME,
+    EMBED_FILEPICKER_CID,
+    EMBED_FILEPICKER_CONTRACTID,
+    EmbedFilePickerConstructor
+  },
 };
 
 const nsModuleComponentInfo *EmbedPrivate::sAppComps = defaultAppComps;
@@ -201,10 +400,14 @@ EmbedPrivate::EmbedPrivate(void)
   mChromeMask       = nsIWebBrowserChrome::CHROME_ALL;
   mIsChrome         = PR_FALSE;
   mChromeLoaded     = PR_FALSE;
+  mLoadFinished     = PR_TRUE;
   mListenersAttached = PR_FALSE;
   mMozWindowWidget  = 0;
   mIsDestroyed      = PR_FALSE;
-
+  mDoResizeEmbed    = PR_TRUE;
+  mOpenBlock        = PR_FALSE;
+  mNeedFav          = PR_FALSE;
+  
   PushStartup();
   if (!sWindowList) {
     sWindowList = new nsVoidArray();
@@ -240,22 +443,21 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
   // will be destroyed when we go out of scope.
   mProgress = new EmbedProgress();
   mProgressGuard = NS_STATIC_CAST(nsIWebProgressListener *,
-				       mProgress);
+               mProgress);
   mProgress->Init(this);
 
   // Create our content listener object, initialize it and attach it.
   // It is assumed that this will be destroyed when we go out of
   // scope.
   mContentListener = new EmbedContentListener();
-  mContentListenerGuard = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIURIContentListener*, mContentListener));
+  mContentListenerGuard = NS_ISUPPORTS_CAST(nsIURIContentListener*, mContentListener);
   mContentListener->Init(this);
 
   // Create our key listener object and initialize it.  It is assumed
   // that this will be destroyed before we go out of scope.
   mEventListener = new EmbedEventListener();
   mEventListenerGuard =
-    NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIDOMKeyListener *,
-						 mEventListener));
+    NS_ISUPPORTS_CAST(nsIDOMKeyListener *, mEventListener);
   mEventListener->Init(this);
 
   // has the window creator service been set up?
@@ -267,7 +469,7 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
     initialized = PR_TRUE;
 
     // create our local object
-    EmbedWindowCreator *creator = new EmbedWindowCreator();
+    EmbedWindowCreator *creator = new EmbedWindowCreator(&mOpenBlock);
     nsCOMPtr<nsIWindowCreator> windowCreator;
     windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
 
@@ -307,7 +509,8 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   // to use it.  We need to do this before we create the web browser
   // window.
   mSessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
-  mNavigation->SetSessionHistory(mSessionHistory);
+  if (mSessionHistory)
+    mNavigation->SetSessionHistory(mSessionHistory);
 
   // create the window
   mWindow->CreateWindow();
@@ -317,8 +520,9 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   supportsWeak = do_QueryInterface(mProgressGuard);
   nsCOMPtr<nsIWeakReference> weakRef;
   supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
-  webBrowser->AddWebBrowserListener(weakRef,
-				    NS_GET_IID(nsIWebProgressListener));
+  webBrowser->AddWebBrowserListener(
+    weakRef,
+    NS_GET_IID(nsIWebProgressListener));
 
   // set ourselves as the parent uri content listener
   nsCOMPtr<nsIURIContentListener> uriListener;
@@ -331,7 +535,7 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   // get the native drawing area
   GdkWindow *tmp_window =
     NS_STATIC_CAST(GdkWindow *,
-		   mozWidget->GetNativeData(NS_NATIVE_WINDOW));
+      mozWidget->GetNativeData(NS_NATIVE_WINDOW));
   // and, thanks to superwin we actually need the parent of that.
   tmp_window = gdk_window_get_parent(tmp_window);
   // save the widget ID - it should be the mozarea of the window.
@@ -376,12 +580,39 @@ EmbedPrivate::Hide(void)
   baseWindow->SetVisibility(PR_FALSE);
 }
 
+#include "nsIDOMScreen.h"
 void
 EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
-  mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
-			 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
-			 0, 0, aWidth, aHeight);
+  if (mDoResizeEmbed) {
+    mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+                           nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+                           0, 0, aWidth, aHeight);
+  } else {
+    PRInt32 X, Y, W, H;
+    mWindow->GetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, &X, &Y, &W, &H);
+    if (Y < 0) {
+      mWindow->SetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, 0, nsnull, nsnull);
+      return;
+    }
+    EmbedContextMenuInfo * ctx_menu = mEventListener->GetContextInfo();
+    gint x, y, width, height, depth;
+    gdk_window_get_geometry(gtk_widget_get_parent_window(GTK_WIDGET(mOwningWidget)),
+                            &x,
+                            &y,
+                            &width,
+                            &height,
+                            &depth);
+    if (ctx_menu) {
+      if (height < ctx_menu->mFormRect.y + ctx_menu->mFormRect.height) {
+        PRInt32 sub = ctx_menu->mFormRect.y - height + ctx_menu->mFormRect.height;
+        PRInt32 diff = ctx_menu->mFormRect.y - sub;
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!height: %i, Form.y: %i, Form.Height: %i, sub: %i, diff: %i\n", height, ctx_menu->mFormRect.y, ctx_menu->mFormRect.height, sub, diff);
+        if (sub > 0 && diff >= 0)  
+          mWindow->SetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, -sub, nsnull, nsnull);
+      }
+    }
+  }
 }
 
 void
@@ -402,8 +633,9 @@ EmbedPrivate::Destroy(void)
   supportsWeak = do_QueryInterface(mProgressGuard);
   nsCOMPtr<nsIWeakReference> weakRef;
   supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
-  webBrowser->RemoveWebBrowserListener(weakRef,
-				       NS_GET_IID(nsIWebProgressListener));
+  webBrowser->RemoveWebBrowserListener(
+    weakRef,
+    NS_GET_IID(nsIWebProgressListener));
   weakRef = nsnull;
   supportsWeak = nsnull;
 
@@ -434,6 +666,7 @@ EmbedPrivate::Destroy(void)
   mOwningWidget = nsnull;
 
   mMozWindowWidget = 0;
+  mNeedFav = PR_FALSE;
 }
 
 void
@@ -446,7 +679,11 @@ EmbedPrivate::SetURI(const char *aURI)
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
+#ifdef MOZILLA_INTERNAL_API
   CopyUTF8toUTF16(aURI, mURI);
+#else
+  mURI.AssignLiteral(aURI);
+#endif
 #endif
 }
 
@@ -512,9 +749,16 @@ EmbedPrivate::ApplyChromeMask()
 void
 EmbedPrivate::SetChromeMask(PRUint32 aChromeMask)
 {
-   mChromeMask = aChromeMask;
+  if (aChromeMask & GTK_MOZ_EMBED_FLAG_WINDOWRESIZEON) {
+    mDoResizeEmbed = PR_TRUE;
+    mChromeMask = aChromeMask;
+  } else {
+    mDoResizeEmbed = PR_FALSE;
+    return;
+  }
+  mChromeMask = aChromeMask;
 
-   ApplyChromeMask();
+  ApplyChromeMask();
 }
 
 
@@ -528,15 +772,27 @@ EmbedPrivate::PushStartup(void)
   // if this is the first widget, fire up xpcom
   if (sWidgetCount == 1) {
     nsresult rv;
-
     nsCOMPtr<nsILocalFile> binDir;
-    if (sCompPath) {
-      rv = NS_NewNativeLocalFile(nsDependentCString(sCompPath), 1, getter_AddRefs(binDir));
+    nsCOMPtr<nsILocalFile> compDir;
+    if (EmbedPrivate::sCompPath) {
+      rv = NS_NewNativeLocalFile(nsDependentCString(EmbedPrivate::sCompPath), 1, getter_AddRefs(binDir));
+      rv = NS_NewNativeLocalFile(nsDependentCString(EmbedPrivate::sCompPath), 1, getter_AddRefs(compDir));
       if (NS_FAILED(rv))
-	return;
-    }
+        return;
+      PRBool exists;
+      rv = compDir->AppendNative(nsDependentCString("components"));
+      compDir->Exists(&exists);
+      if (!exists)
+        rv = compDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      if (NS_FAILED(rv))
+        return;
+    } else
+      NS_ASSERTION(EmbedPrivate::sCompPath, "Warning: Failed to init Component Path.\n");
+
+#ifndef MOZILLA_1_8_BRANCH
 
     const char *grePath = sPath;
+    NS_ASSERTION(grePath, "Warning: Failed to init grePath.\n");
 
     if (!grePath)
       grePath = getenv("MOZILLA_FIVE_HOME");
@@ -557,8 +813,35 @@ EmbedPrivate::PushStartup(void)
     if (NS_FAILED(rv))
       return;
 
-    if (sProfileDir)
+    if (EmbedPrivate::sProfileDir) {
       XRE_NotifyProfile();
+    }
+#else
+
+    rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
+    if (NS_FAILED(rv))
+      return;
+
+    // we no longer need a reference to the DirectoryServiceProvider
+    if (sAppFileLocProvider) {
+      NS_RELEASE(sAppFileLocProvider);
+      sAppFileLocProvider = nsnull;
+    }
+
+    rv = StartupProfile();
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
+
+    nsCOMPtr<nsIAppShell> appShell;
+    appShell = do_CreateInstance(kAppShellCID);
+    if (!appShell) {
+      NS_WARNING("Failed to create appshell in EmbedPrivate::PushStartup!\n");
+      return;
+    }
+    sAppShell = appShell.get();
+    NS_ADDREF(sAppShell);
+    sAppShell->Create(0, nsnull);
+    sAppShell->Spinup();
+#endif
 
     rv = RegisterAppComponents();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
@@ -571,18 +854,33 @@ EmbedPrivate::PopStartup(void)
 {
   sWidgetCount--;
   if (sWidgetCount == 0) {
-
     // destroy the offscreen window
     DestroyOffscreenWindow();
+    
+#ifdef MOZILLA_1_8_BRANCH
+    // shut down the profiles
+    ShutdownProfile();
+    
+    if (sAppShell) {
+      // Shutdown the appshell service.
+      sAppShell->Spindown();
+      NS_RELEASE(sAppShell);
+      sAppShell = 0;
+    }
+
+    // shut down XPCOM/Embedding
+    NS_TermEmbedding();					
+#endif
 
     // we no longer need a reference to the DirectoryServiceProvider
-    if (sAppFileLocProvider) {
-      NS_RELEASE(sAppFileLocProvider);
-      sAppFileLocProvider = nsnull;
+    if (EmbedPrivate::sAppFileLocProvider) {
+      NS_RELEASE(EmbedPrivate::sAppFileLocProvider);
+      EmbedPrivate::sAppFileLocProvider = nsnull;
     }
 
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
+    EmbedGlobalHistory::DeleteInstance();
   }
 }
 
@@ -601,12 +899,12 @@ void EmbedPrivate::SetPath(const char *aPath)
 void
 EmbedPrivate::SetCompPath(const char *aPath)
 {
-  if (sCompPath)
-    free(sCompPath);
+  if (EmbedPrivate::sCompPath)
+    free(EmbedPrivate::sCompPath);
   if (aPath)
-    sCompPath = strdup(aPath);
+    EmbedPrivate::sCompPath = strdup(aPath);
   else
-    sCompPath = nsnull;
+    EmbedPrivate::sCompPath = nsnull;
 }
 
 /* static */
@@ -622,48 +920,71 @@ EmbedPrivate::SetAppComponents(const nsModuleComponentInfo* aComps,
 void
 EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
 {
-  if (sProfileDir) {
+  if (EmbedPrivate::sProfileDir) {
     if (sWidgetCount) {
       NS_ERROR("Cannot change profile directory during run.");
       return;
     }
 
-    NS_RELEASE(sProfileDir);
-    NS_RELEASE(sProfileLock);
+    NS_RELEASE(EmbedPrivate::sProfileDir);
+    NS_RELEASE(EmbedPrivate::sProfileLock);
   }
 
   nsresult rv =
-    NS_NewNativeLocalFile(nsDependentCString(aDir), PR_TRUE, &sProfileDir);
+    NS_NewNativeLocalFile(nsDependentCString(aDir), PR_TRUE, &EmbedPrivate::sProfileDir);
 
   if (NS_SUCCEEDED(rv) && aName)
-    rv = sProfileDir->AppendNative(nsDependentCString(aName));
-
-  if (NS_SUCCEEDED(rv))
-    rv = XRE_LockProfileDirectory(sProfileDir, &sProfileLock);
-
+    rv = EmbedPrivate::sProfileDir->AppendNative(nsDependentCString(aName));
+  if (NS_SUCCEEDED(rv)) {
+    PRBool exists;
+    rv = EmbedPrivate::sProfileDir->Exists(&exists);
+    if (!exists) {
+      rv = EmbedPrivate::sProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    }
+#ifndef MOZILLA_1_8_BRANCH
+    rv = XRE_LockProfileDirectory(EmbedPrivate::sProfileDir, &EmbedPrivate::sProfileLock);
+#endif
+  }
+#ifndef MOZILLA_1_8_BRANCH
   if (NS_SUCCEEDED(rv)) {
     if (sWidgetCount)
       XRE_NotifyProfile();
 
     return;
-  }
-
+  }  
   NS_WARNING("Failed to lock profile.");
 
   // Failed
-  NS_IF_RELEASE(sProfileDir);
-  NS_IF_RELEASE(sProfileLock);
+  NS_IF_RELEASE(EmbedPrivate::sProfileDir);
+  NS_IF_RELEASE(EmbedPrivate::sProfileLock);
+#else
+  if (sProfileDir) {
+    nsMemory::Free(sProfileDirS);
+    sProfileDir = nsnull;
+  }
+
+  if (sProfileName) {
+    nsMemory::Free(sProfileName);
+    sProfileName = nsnull;
+  }
+
+  if (aDir)
+    sProfileDirS = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
+
+  if (aName)
+    sProfileName = (char *)nsMemory::Clone(aName, strlen(aName) + 1);
+#endif
 }
 
 void
 EmbedPrivate::SetDirectoryServiceProvider(nsIDirectoryServiceProvider * appFileLocProvider)
 {
-  if (sAppFileLocProvider)
-    NS_RELEASE(sAppFileLocProvider);
+  if (EmbedPrivate::sAppFileLocProvider)
+    NS_RELEASE(EmbedPrivate::sAppFileLocProvider);
 
   if (appFileLocProvider) {
-    sAppFileLocProvider = appFileLocProvider;
-    NS_ADDREF(sAppFileLocProvider);
+    EmbedPrivate::sAppFileLocProvider = appFileLocProvider;
+    NS_ADDREF(EmbedPrivate::sAppFileLocProvider);
   }
 }
 
@@ -727,10 +1048,12 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
   // windows.
   for (int i = 0; i < count; i++) {
     EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
-					      sWindowList->ElementAt(i));
+                sWindowList->ElementAt(i));
     // get the browser object for that window
-    nsIWebBrowserChrome *chrome = NS_STATIC_CAST(nsIWebBrowserChrome *,
-						 tmpPrivate->mWindow);
+    nsIWebBrowserChrome *chrome =
+      NS_STATIC_CAST(
+        nsIWebBrowserChrome *,
+        tmpPrivate->mWindow);
     if (chrome == aBrowser)
       return tmpPrivate;
   }
@@ -865,11 +1188,11 @@ EmbedPrivate::ChildFocusOut(void)
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
   if (NS_FAILED(rv))
-	  return;
+    return;
 
   nsCOMPtr<nsIWebBrowserFocus> webBrowserFocus(do_QueryInterface(webBrowser));
   if (!webBrowserFocus)
-	  return;
+    return;
   
   webBrowserFocus->Deactivate();
 #endif /* MOZ_WIDGET_GTK2 */
@@ -918,31 +1241,47 @@ EmbedPrivate::AttachListeners(void)
 
   nsIDOMEventListener *eventListener =
     NS_STATIC_CAST(nsIDOMEventListener *,
-		   NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
 
   // add the key listener
   nsresult rv;
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
-					     NS_GET_IID(nsIDOMKeyListener));
+  rv = mEventReceiver->AddEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add key listener\n");
     return;
   }
 
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
-					     NS_GET_IID(nsIDOMMouseListener));
+  rv = mEventReceiver->AddEventListenerByIID(
+        eventListener,
+        NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add mouse listener\n");
     return;
   }
 
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
-                                             NS_GET_IID(nsIDOMUIListener));
+  rv = mEventReceiver->AddEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add UI listener\n");
     return;
   }
 
+  rv = mEventReceiver->AddEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMMouseMotionListener));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to add Mouse Motion listener\n");
+    return;
+  }
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to add Mouse Motion listener\n");
+    return;
+  }
   // ok, all set.
   mListenersAttached = PR_TRUE;
 }
@@ -955,32 +1294,64 @@ EmbedPrivate::DetachListeners(void)
 
   nsIDOMEventListener *eventListener =
     NS_STATIC_CAST(nsIDOMEventListener *,
-		   NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
+       NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
 
   nsresult rv;
-  rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
-						NS_GET_IID(nsIDOMKeyListener));
+  rv = mEventReceiver->RemoveEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove key listener\n");
     return;
   }
 
   rv =
-    mEventReceiver->RemoveEventListenerByIID(eventListener,
-					     NS_GET_IID(nsIDOMMouseListener));
+    mEventReceiver->RemoveEventListenerByIID(
+      eventListener,
+      NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove mouse listener\n");
     return;
   }
 
-  rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
-						NS_GET_IID(nsIDOMUIListener));
+  rv = mEventReceiver->RemoveEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove UI listener\n");
     return;
   }
 
+  rv = mEventReceiver->RemoveEventListenerByIID(
+         eventListener,
+         NS_GET_IID(nsIDOMMouseMotionListener));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to remove Mouse Motion listener\n");
+    return;
+  }
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
   mListenersAttached = PR_FALSE;
+}
+
+nsresult
+EmbedPrivate::GetFocusController(nsIFocusController * *controller)
+{
+  nsresult rv;
+  if (!controller) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  rv = GetPIDOMWindow(getter_AddRefs(piWin));
+  if (!piWin || NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIFocusController *focusController = piWin->GetRootFocusController();
+  if (!focusController)
+    return NS_ERROR_FAILURE;
+
+  *controller = focusController;
+  return NS_OK;
 }
 
 nsresult
@@ -988,19 +1359,24 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
 {
   *aPIWin = nsnull;
 
+  nsresult rv;
   // get the web browser
   nsCOMPtr<nsIWebBrowser> webBrowser;
-  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv) || !webBrowser)
+    return NS_ERROR_FAILURE;
   // get the content DOM window for that web browser
   nsCOMPtr<nsIDOMWindow> domWindow;
-  webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (!domWindow)
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv) || !domWindow)
     return NS_ERROR_FAILURE;
 
   // get the private DOM window
-  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow, &rv);
   // and the root window for that DOM window
+  if (NS_FAILED(rv) || !domWindowPrivate)
+    return NS_ERROR_FAILURE;
   *aPIWin = domWindowPrivate->GetPrivateRoot();
 
   if (*aPIWin) {
@@ -1041,6 +1417,62 @@ EmbedPrivate::GetAtkObjectForCurrentDocument()
   return nsnull;
 }
 #endif /* MOZ_ACCESSIBILITY_ATK */
+
+#ifdef MOZILLA_1_8_BRANCH
+/* static */
+nsresult
+EmbedPrivate::StartupProfile(void)
+{
+  // initialize profiles
+  if (sProfileDirS && sProfileName) {
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> profileDir;
+    NS_NewNativeLocalFile(nsDependentCString(sProfileDirS), PR_TRUE,
+                          getter_AddRefs(profileDir));
+    if (!profileDir)
+      return NS_ERROR_FAILURE;
+    rv = profileDir->AppendNative(nsDependentCString(sProfileName));
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    if (!locProvider)
+      return NS_ERROR_FAILURE;
+    rv = locProvider->Register();
+    if (NS_FAILED(rv))
+      return rv;
+    rv = locProvider->SetProfileDir(profileDir);
+    if (NS_FAILED(rv))
+      return rv;
+    // Keep a ref so we can shut it down.
+    NS_ADDREF(sProfileDirServiceProvider = locProvider);
+    // get prefs
+    nsCOMPtr<nsIPref> pref;
+    pref = do_GetService(NS_PREF_CONTRACTID);
+    if (!pref)
+      return NS_ERROR_FAILURE;
+        sPrefs = pref.get();
+        NS_ADDREF(sPrefs);
+  }
+  return NS_OK;
+}
+
+/* static */
+void
+EmbedPrivate::ShutdownProfile(void)
+{
+  if (sProfileDirServiceProvider) {
+    sProfileDirServiceProvider->Shutdown();
+    NS_RELEASE(sProfileDirServiceProvider);
+    sProfileDirServiceProvider = 0;
+  }
+  if (sPrefs) {
+    NS_RELEASE(sPrefs);
+    sPrefs = 0;
+  }
+}
+#endif
 
 /* static */
 nsresult
@@ -1100,3 +1532,373 @@ EmbedPrivate::DestroyOffscreenWindow(void)
   gtk_widget_destroy(sOffscreenWindow);
   sOffscreenWindow = 0;
 }
+
+/* static */
+PRBool
+EmbedPrivate::ClipBoardAction(GtkMozEmbedClipboard type)
+{
+  nsresult rv = NS_OK;
+  PRBool canDo = PR_TRUE;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+  nsCOMPtr<nsIClipboardCommands> clipboard (do_GetInterface(webBrowser));
+  if (!clipboard)
+    return PR_FALSE;
+  switch (type) {
+    case GTK_MOZ_EMBED_SELECT_ALL:
+    {
+      rv = clipboard->SelectAll();
+      break;
+    }
+    case GTK_MOZ_EMBED_CAN_SELECT:
+    {
+      //FIXME
+      break;
+    }
+    case GTK_MOZ_EMBED_CUT:
+    {
+      rv = clipboard->CutSelection();
+      break;
+    }
+    case GTK_MOZ_EMBED_COPY:
+    {
+      rv = clipboard->CopySelection();
+      break;
+    }
+    case GTK_MOZ_EMBED_PASTE:
+    {
+      rv = clipboard->Paste();
+      break;
+    }
+    case GTK_MOZ_EMBED_CAN_CUT:
+    {
+      rv = clipboard->CanCutSelection (&canDo);
+      break;
+    }
+    case GTK_MOZ_EMBED_CAN_PASTE:
+    {
+      rv = clipboard->CanPaste (&canDo);
+      break;
+    }
+    case GTK_MOZ_EMBED_CAN_COPY:    
+    {
+      rv = clipboard->CanCopySelection (&canDo);
+      break;
+    }
+    default:
+    break;
+  }
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+  return canDo;
+}
+
+char*
+EmbedPrivate::GetEncoding ()
+{
+  char *encoding;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  nsCOMPtr<nsIDocCharset> docCharset = do_GetInterface (webBrowser);
+  docCharset->GetCharset (&encoding);
+  return encoding;
+}
+
+nsresult
+EmbedPrivate::SetEncoding (const char *encoding)
+{
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  GetContentViewer (webBrowser, getter_AddRefs(contentViewer));
+  NS_ENSURE_TRUE (contentViewer, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMarkupDocumentViewer> mDocViewer = do_QueryInterface(contentViewer);
+  NS_ENSURE_TRUE (mDocViewer, NS_ERROR_FAILURE);
+  nsAutoString mCharset;
+#ifdef MOZILLA_INTERNAL_API
+  mCharset.AssignWithConversion (encoding);
+#else
+  mCharset.AssignLiteral (encoding);
+#endif
+  return mDocViewer->SetForceCharacterSet(NS_LossyConvertUTF16toASCII(ToNewUnicode(mCharset)));
+}
+
+PRBool
+EmbedPrivate::FindText(const char *exp, PRBool  reverse,
+                       PRBool  whole_word, PRBool  case_sensitive,
+                       PRBool  restart)
+{
+  PRUnichar *text;
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface (webBrowser));
+  g_return_val_if_fail( finder != NULL, FALSE);
+  text = LocaleToUnicode (exp);
+  finder->SetSearchString (text);
+  finder->SetFindBackwards (reverse);
+  finder->SetWrapFind(TRUE); //DoWrapFind
+  finder->SetEntireWord (whole_word);
+  finder->SetSearchFrames(TRUE); //SearchInFrames
+  finder->SetMatchCase (case_sensitive);
+  rv = finder->FindNext (&restart);
+  NS_Free(text);
+  return ( !rv );
+}
+
+nsresult
+EmbedPrivate::ScrollToSelectedNode(nsIDOMNode *aDOMNode)
+{
+  nsresult rv;
+  if (aDOMNode) {
+    nsCOMPtr <nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(aDOMNode, &rv);
+    if (NS_SUCCEEDED(rv) && nodeElement) {
+      nodeElement->ScrollIntoView(PR_FALSE);
+    }
+  }
+  return rv;
+}
+
+nsresult
+EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
+{
+  nsIDOMNode *targetNode = nsnull;
+  nsresult rv;
+
+  EmbedContextMenuInfo * ctx_menu = mEventListener->GetContextInfo();
+  if (ctx_menu && ctx_menu->mEventNode && (ctx_menu->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT)) {
+    targetNode = ctx_menu->mEventNode;
+  }
+
+  if (!targetNode)
+    return NS_ERROR_FAILURE;
+
+  nsString nodeName;
+  targetNode->GetNodeName(nodeName);
+  PRInt32 selectionStart = 0, selectionEnd = 0, textLength = 0;
+  nsString buffer;
+
+  if (ctx_menu->mCtxFormType == NS_FORM_TEXTAREA) {
+    nsCOMPtr <nsIDOMHTMLTextAreaElement> input;
+    input = do_QueryInterface(targetNode, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool rdonly = PR_FALSE;
+    input->GetReadOnly(&rdonly);
+    if (rdonly)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr <nsIDOMNSHTMLTextAreaElement> nsinput;
+    nsinput = do_QueryInterface(targetNode, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsinput->GetTextLength(&textLength);
+    if (textLength > 0) {  
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = input->GetValue(buffer);
+      nsinput->GetSelectionStart (&selectionStart);
+      nsinput->GetSelectionEnd (&selectionEnd);
+
+      if (selectionStart != selectionEnd) 
+        buffer.Cut(selectionStart, selectionEnd - selectionStart);
+#ifdef MOZILLA_INTERNAL_API
+      buffer.Insert(UTF8ToNewUnicode(nsDependentCString(string)), selectionStart);
+#else
+      nsString nsstr;
+      nsstr.AssignLiteral(string);
+      buffer.Insert(nsstr, selectionStart);
+#endif
+    } else {
+#ifdef MOZILLA_INTERNAL_API
+      CopyUTF8toUTF16(string, buffer);
+#else
+      buffer.AssignLiteral(string);
+#endif
+    }
+
+    input->SetValue(buffer);
+    int len = strlen(string);
+    nsinput->SetSelectionRange(selectionStart + len, selectionStart + len);
+  }
+  else if (ctx_menu->mCtxFormType) {
+    nsCOMPtr <nsIDOMHTMLInputElement> input;
+    input = do_QueryInterface(targetNode, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool rdonly = PR_FALSE;
+    input->GetReadOnly(&rdonly);
+    if (rdonly)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr <nsIDOMNSHTMLInputElement> nsinput;
+    nsinput = do_QueryInterface(targetNode, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsinput->GetTextLength(&textLength);
+
+    if (textLength > 0) {  
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = input->GetValue(buffer);
+      nsinput->GetSelectionStart (&selectionStart);
+      nsinput->GetSelectionEnd (&selectionEnd);
+
+      if (selectionStart != selectionEnd) {    
+        buffer.Cut(selectionStart, selectionEnd - selectionStart);
+      }
+#ifdef MOZILLA_INTERNAL_API
+      buffer.Insert(UTF8ToNewUnicode(nsDependentCString(string)), selectionStart);
+#else
+      nsString nsstr;
+      buffer.Insert(nsstr, selectionStart);
+#endif
+    } else {
+#ifdef MOZILLA_INTERNAL_API
+      CopyUTF8toUTF16(string, buffer);
+#else
+      buffer.AssignLiteral(string);
+#endif
+    }
+
+    input->SetValue(buffer);
+    int len = strlen(string);
+    nsinput->SetSelectionRange(selectionStart + len, selectionStart + len);
+  }
+  else {
+    nsIWebBrowser *retval = nsnull;
+    mWindow->GetWebBrowser(&retval);
+    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(retval);
+    if (!editingSession)
+      return NS_ERROR_FAILURE;
+  
+    nsCOMPtr<nsIEditor> theEditor;
+    nsCOMPtr<nsPIDOMWindow> piWin;
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ctx_menu->mCtxDocument);
+    if (!doc)
+      return NS_OK;
+    piWin = doc->GetWindow();
+    editingSession->GetEditorForWindow(piWin, getter_AddRefs(theEditor));
+    if (!theEditor) {
+      return NS_ERROR_FAILURE;
+    }
+    
+    nsCOMPtr<nsIHTMLEditor> htmlEditor;
+    htmlEditor = do_QueryInterface(theEditor, &rv);
+    if (!htmlEditor)
+      return NS_ERROR_FAILURE;
+
+#ifdef MOZILLA_INTERNAL_API
+    CopyUTF8toUTF16(string, buffer);
+#else
+    buffer.AssignLiteral(string);
+#endif
+    htmlEditor->InsertHTML(buffer);
+  }
+  return NS_OK;
+}
+
+#define GTK_MOZ_EMBED_DIFFERENT_ZOOM_LEVEL 0
+#define GTK_MOZ_EMBED_EQUAL_ZOOM_LEVEL 1
+
+nsresult
+EmbedPrivate::GetZoom (gint *zoomLevel, gint *compareFramesZoomLevel) {
+  // setting default zoom value.
+  *zoomLevel = 100;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  nsresult rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // get main dom window
+  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // get window/document zoom
+  float zoomLevelFloat;
+  rv = DOMWindow->GetTextZoom(&zoomLevelFloat);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  *zoomLevel = (int)round (zoomLevelFloat * 100.);
+  if (compareFramesZoomLevel) { 
+    *compareFramesZoomLevel = GTK_MOZ_EMBED_EQUAL_ZOOM_LEVEL;
+    // get frames.
+    nsCOMPtr <nsIDOMWindowCollection> frameCollection;
+    rv = DOMWindow->GetFrames (getter_AddRefs (frameCollection));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    // comparing frames' zoom level
+    PRUint32 numberOfFrames;
+    frameCollection->GetLength (&numberOfFrames);
+    if (numberOfFrames) {
+      //gint mainFrameCurrentIntZoomLevel = ((float) zoomLevelFloat) * 100.;
+      //gint mainFrameCurrentIntZoomLevel = zoomLevel;
+      nsCOMPtr <nsIDOMWindow> currentFrameDOMWindow;
+      gint currentFrameIntZoomLevel;
+      gfloat currentFrameFloatZoomLevel;
+      for (guint i= 0; i < numberOfFrames; i++) {
+        frameCollection->Item(i, getter_AddRefs (currentFrameDOMWindow));
+        if (!currentFrameDOMWindow) continue;
+        currentFrameDOMWindow->GetTextZoom(&currentFrameFloatZoomLevel);
+        currentFrameIntZoomLevel = (gint)round(currentFrameFloatZoomLevel * 100.);
+        if (currentFrameIntZoomLevel != *zoomLevel) { 
+          *compareFramesZoomLevel = GTK_MOZ_EMBED_DIFFERENT_ZOOM_LEVEL;
+          break ;
+        }
+      } // for
+    } // if frames
+  } // if compareFramesZoomLevel
+  return NS_OK;
+}
+
+nsresult 
+EmbedPrivate::SetZoom (gint zoomLevel)
+{
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // get main dom window
+  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  gfloat zoomLevelFloat; //, relativeScale;
+  zoomLevelFloat = (float) zoomLevel / 100.;
+  // performing text zooming first to get the user a faster visual response. 
+  rv = DOMWindow->SetTextZoom(zoomLevelFloat);
+  return rv;
+}
+
+nsresult
+EmbedPrivate::HasFrames  (PRUint32 *numberOfFrames)
+{
+  // setting default value.
+  *numberOfFrames = 0;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  nsresult rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // get main dom window
+  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // get frames.
+  nsCOMPtr <nsIDOMWindowCollection> frameCollection;
+  rv = DOMWindow->GetFrames (getter_AddRefs (frameCollection));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // comparing frames' zoom level
+  rv = frameCollection->GetLength (numberOfFrames);
+  return rv;
+}
+
+nsresult
+EmbedPrivate::GetMIMEInfo (nsString& info)
+{
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  nsCOMPtr<nsIDOMWindow> DOMWindow;
+  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  rv = DOMWindow->GetDocument (getter_AddRefs(doc));
+
+  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
+  
+  if (nsDoc)
+    rv = nsDoc->GetContentType(info);
+  return rv;
+}
+

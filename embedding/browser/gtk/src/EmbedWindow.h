@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,27 +40,30 @@
 #ifndef __EmbedWindow_h
 #define __EmbedWindow_h
 
-#include <nsString.h>
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+#else
+#include "nsStringAPI.h"
+#endif
 #include <nsIWebBrowserChrome.h>
 #include <nsIWebBrowserChromeFocus.h>
 #include <nsIEmbeddingSiteWindow.h>
-#include <nsITooltipListener.h>
+//#include <nsITooltipListener.h>
 #include <nsISupports.h>
 #include <nsIWebBrowser.h>
 #include <nsIBaseWindow.h>
 #include <nsIInterfaceRequestor.h>
 #include <nsCOMPtr.h>
-#include "nsString.h"
 
 #include <gtk/gtk.h>
 
 class EmbedPrivate;
 
 class EmbedWindow : public nsIWebBrowserChrome,
-		    public nsIWebBrowserChromeFocus,
+        public nsIWebBrowserChromeFocus,
                     public nsIEmbeddingSiteWindow,
-                    public nsITooltipListener,
-		    public nsIInterfaceRequestor
+//                    public nsITooltipListener,
+        public nsIInterfaceRequestor
 {
 
  public:
@@ -78,7 +83,7 @@ class EmbedWindow : public nsIWebBrowserChrome,
 
   NS_DECL_NSIEMBEDDINGSITEWINDOW
 
-  NS_DECL_NSITOOLTIPLISTENER
+//  NS_DECL_NSITOOLTIPLISTENER
 
   NS_DECL_NSIINTERFACEREQUESTOR
 

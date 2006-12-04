@@ -47,23 +47,73 @@ MODULE		= gtkembedmoz
 LIBRARY_NAME	= gtkembedmoz
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
+
+#Define for building GtkmozEmbed with MOZILLA_1_8_BRANCH
+#MOZILLA_1_8_BRANCH = 1
+
+ifdef MOZILLA_1_8_BRANCH
+MOZ_GTKEMBED_DYN = 1
+DEFINES += -DMOZILLA_1_8_BRANCH
+endif
+
+ifdef MOZ_MICROBEMBED_DYN
+MOZ_GTKEMBED_DYN = 1
+endif
+
+ifdef MOZ_GTKEMBED_DYN
+FORCE_SHARED_LIB = 1
+MOZILLA_INTERNAL_API = 1
+DEFINES += -DMOZILLA_INTERNAL_API
+endif
+
 DEFINES += -DIMPL_XREAPI
+
+# New Stuff in GtkMozEmbed
+ifdef MOZ_MICROBEMBED
+DEFINES += -DBAD_CERT_LISTENER2
+#Probably scrolling can be fixed without this hack
+DEFINES += -DMOZ_SCROLL_TOP_LEFT_HACK
+
+MOZ_NO_GECKO_UI_FALLBACK_1_8_COMPAT = 1
+DEFINES += -DMOZ_NO_GECKO_UI_FALLBACK_1_8_COMPAT
+
+MOZ_GTKPASSWORD_INTERFACE = 1
+DEFINES += -DMOZ_GTKPASSWORD_INTERFACE
+endif
 
 REQUIRES	= xpcom \
 		  string \
+		  content \
 		  docshell \
 		  necko \
 		  widget \
 		  dom \
 		  gfx \
+		  intl \
+		  imglib2 \
 		  layout \
+		  locale \
+		  unicharutil \
 		  uriloader \
 		  webbrwsr \
 		  shistory \
+		  composer \
+		  editor \
 		  embed_base \
 		  windowwatcher \
+		  webshell \
+		  pipnss \
+		  history \
 		  profdirserviceprovider \
+		  pref \
+		  nspr \
 		  xulapp \
+		  exthandler \
+		  mimetype \
+		  chardet \
+		  find \
+		  webbrowserpersist \
+	 	  cookie \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
@@ -72,28 +122,74 @@ endif
 
 CPPSRCS		= \
 		gtkmozembed2.cpp \
+		gtkmozembed_common.cpp \
+		gtkmozembed_download.cpp \
 		EmbedPrivate.cpp \
 		EmbedWindow.cpp \
 		EmbedProgress.cpp \
 		EmbedContentListener.cpp \
 		EmbedEventListener.cpp \
+		EmbedContextMenuInfo.cpp \
 		EmbedWindowCreator.cpp \
+		EmbedCertificates.cpp \
+		EmbedDownloadMgr.cpp \
+		EmbedGlobalHistory.cpp \
+		EmbedFilePicker.cpp \
 		$(NULL)
+
+ifdef MOZ_GTKPASSWORD_INTERFACE
+CPPSRCS		+= \
+		EmbedPasswordMgr.cpp \
+		$(NULL)
+
+XPIDLSRCS       += \
+	        nsIPassword.idl \
+		nsIPasswordInternal.idl \
+		$(NULL)
+endif
 
 ifdef MOZ_ENABLE_GTK2
 CSRCS           = \
 		gtkmozembedmarshal.c
+
+CPPSRCS         += \
+		EmbedGtkTools.cpp \
+		GtkPromptService.cpp \
+		$(NULL)
+
+ifndef MOZ_NO_GECKO_UI_FALLBACK_1_8_COMPAT
 CPPSRCS         += \
 		EmbedPrompter.cpp \
-		GtkPromptService.cpp
+		$(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/config.mk
 
+ifdef MOZILLA_1_8_BRANCH
+SHARED_LIBRARY_LIBS += \
+		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
+		$(NULL)
+endif
+
 EXPORTS		= \
 		gtkmozembed.h \
+		gtkmozembed_common.h \
+		gtkmozembed_download.h \
 		gtkmozembed_glue.cpp \
 		gtkmozembed_internal.h
+
+ifdef MOZ_GTKEMBED_DYN
+ifdef MOZ_ENABLE_GTK
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib -lgtksuperwin
+endif
+
+ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) $(MOZ_COMPONENT_LIBS) $(MOZ_GNOMEVFS_LIBS) $(DIST)/lib/libxpcom_core.a
+endif
+
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -108,8 +204,22 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
 
-CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
-CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS) $(MOZ_GNOMEVFS_CFLAGS)
+CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS) $(MOZ_GNOMEVFS_CFLAGS)
 DEFINES         += -D_IMPL_GTKMOZEMBED
+
+
+MARSHAL_FILE = gtkmozembedmarshal
+MARSHAL_PREFIX = gtkmozembed
+
+$(MARSHAL_FILE).h: $(MARSHAL_FILE).list
+	( glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $(srcdir)/$(MARSHAL_FILE).htmp \
+	&& mv $(srcdir)/$(MARSHAL_FILE).htmp $(srcdir)/$(MARSHAL_FILE).h && cp -f $(srcdir)/$(MARSHAL_FILE).h $(MARSHAL_FILE).h ) \
+	|| ( rm -f $(srcdir)/$(MARSHAL_FILE).htmp && exit 1 )
+
+$(MARSHAL_FILE).c: $(MARSHAL_FILE).list $(MARSHAL_FILE).h
+	( glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $(srcdir)/$(MARSHAL_FILE).ctmp \
+	&& mv $(srcdir)/$(MARSHAL_FILE).ctmp $(srcdir)/$(MARSHAL_FILE).c && cp -f $(srcdir)/$(MARSHAL_FILE).c $(MARSHAL_FILE).c ) \
+	|| ( rm -f $(srcdir)/$(MARSHAL_FILE).ctmp && exit 1 )
 
 
