@@ -490,7 +490,43 @@ NS_IMETHODIMP EmbedGlobalHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
   return rv;
 }
 
-NS_IMETHODIMP EmbedGlobalHistory::RemoveAllPages()
+// It is called when Mozilla get real name of a URL
+NS_IMETHODIMP EmbedGlobalHistory::SetPageTitle(nsIURI *aURI,
+                                               const nsAString & aTitle)
+{
+  NS_ENSURE_ARG(aURI);
+  nsresult rv;
+  // skip about: URIs to avoid reading in the db (about:blank, especially)
+  PRBool isAbout;
+  rv = aURI->SchemeIs("about", &isAbout);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isAbout)
+    return NS_OK;
+  nsCAutoString URISpec;
+  aURI->GetSpec(URISpec);
+  const char *aURL = URISpec.get();
+  rv |= LoadData();
+  BROKEN_RV_HANDLING_CODE(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  GList *node = g_list_find_custom(mURLList, aURL,
+                                   (GCompareFunc) history_entry_find_exist);
+  HistoryEntry *entry = NULL;
+  if (node)
+    entry = (HistoryEntry *)(node->data);
+  if (entry) {
+    nsCString title;
+    CopyUTF16toUTF8(aTitle, title);
+    SET_TITLE(entry, title);
+    BROKEN_RV_HANDLING_CODE(rv);
+    if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
+      rv |= FlushData(kFlushModeAppend);
+    BROKEN_RV_HANDLING_CODE(rv);
+  }
+  return rv;
+}
+
+nsresult EmbedGlobalHistory::RemoveAllPages()
 {
   nsresult rv;
   if (mURLList) {
