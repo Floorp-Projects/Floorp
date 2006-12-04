@@ -33,6 +33,7 @@
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2592,7 +2593,9 @@ PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
                                   PRUint32 aAlphaBytesPerRow,
                                   PRUint32 aWidth, PRUint32 aHeight)
 {
-  PRUint32 outBpr = ((aWidth / 8) + 3) & ~3;
+  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
+  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
+  PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
   
   PRUint8* outData = new PRUint8[outBpr * aHeight];
   if (!outData)
@@ -2603,7 +2606,7 @@ PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
 
   for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
     PRUint8 *arow = alphaRow;
-    PRUint8 *orow = outRow;
+    PRUint8 *nextOutRow = outRow + outBpr;
     PRUint8 alphaPixels = 0;
     PRUint8 offset = 7;
 
@@ -2623,7 +2626,8 @@ PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
       *outRow++ = alphaPixels;
 
     alphaRow = arow + aAlphaBytesPerRow;
-    outRow = orow + outBpr;
+    while (outRow != nextOutRow)
+      *outRow++ = 0; // padding
   }
 
   return outData;
@@ -2757,13 +2761,29 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
 // static
 HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
 {
-  // Make up an opaque alpha channel
-  PRUint32 abpr = ((aWidth / 8) + 3) & ~3;
-  PRUint8* opaque = (PRUint8*)malloc(abpr * aHeight);
+  // Make up an opaque alpha channel.
+  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
+  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
+  PRUint32 nonPaddedBytesPerRow = (aWidth + 7) / 8;
+  PRUint32 abpr = (nonPaddedBytesPerRow + 3) & ~3;
+  PRUint32 bufferSize = abpr * aHeight;
+  PRUint8* opaque = (PRUint8*)malloc(bufferSize);
   if (!opaque)
     return NULL;
 
-  memset(opaque, 0xff, abpr * aHeight);
+  memset(opaque, 0xff, bufferSize);
+
+  // If we have row padding, set it to zero.
+  if (nonPaddedBytesPerRow != abpr) {
+    PRUint8* p = opaque;
+    PRUint8* end = opaque + bufferSize;
+    while (p != end) {
+      PRUint8* nextRow = p + abpr;
+      p += nonPaddedBytesPerRow;
+      while (p != nextRow)
+        *p++ = 0; // padding
+    }
+  }
 
   HBITMAP hAlpha = DataToBitmap(opaque, aWidth, aHeight, 1);
   free(opaque);
