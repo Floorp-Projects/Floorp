@@ -72,7 +72,7 @@ if ($type eq 'status-breakdown'){
     $vars->{'chart_title'} = 'Historic Status Breakdown';
     $vars->{'colors'} = (['#858aef', '#56e871', '#ed3f58', '#b8eae1', '#f1d9ab', '#e17a56']);
     print $cgi->header;
-    $template->process("testopia/reports/pie.png.tmpl", $vars)
+    $template->process("testopia/reports/report-pie.png.tmpl", $vars)
        || ThrowTemplateError($template->error());
 }
 else{
