@@ -50,8 +50,7 @@
 <window id="CustomizeToolbarWindow"
         title="&dialog.title;"
         onload="onLoad();"
-        onunload="onUnload();"
-        onclose="onAccept(); return false;"
+        onunload="finishToolbarCustomization();"
         style="&dialog.style;"
         persist="width height"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -62,12 +61,12 @@
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
 <keyset>
-  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="onAccept();" />
-  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="onAccept();" />
-  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="onAccept();" />
+  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="window.close();"/>
+  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="window.close();"/>
+  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="window.close();"/>
 </keyset>
 
-<vbox id="main-box" flex="1" collapsed="true">
+<vbox id="main-box" flex="1">
   <description id="instructions">
   &instructions.description;
   </description>
@@ -96,7 +95,8 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
-    <button label="&saveChanges.label;" oncommand="onAccept();" default="true" icon="close"/>
+    <button label="&saveChanges.label;" oncommand="window.close();"
+            default="true" icon="close"/>
   </hbox>
 </vbox>
 

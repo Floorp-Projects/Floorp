@@ -38,12 +38,5 @@
 var gCustomizeToolbarSheet = {
   init: function() {
     InitWithToolbox(window.parent.document.getElementById("navigator-toolbox"));
-  },
-
-  done: function() {
-    // XXXmano: I'm pretty sure we don't need to do this, but since
-    // the XP dialog does, we will.
-    document.getElementById("main-box").collapsed = true;
-    finishToolbarCustomization();
   }
 };
