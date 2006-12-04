@@ -83,8 +83,7 @@ FILES = CGI.pl			\
 	showcheckins.cgi	\
 	switchtree.cgi		\
 	toplevel.cgi		\
-	viewold.cgi			\
-	trapdoor 	
+	viewold.cgi
 
 all: treeconfig.pl params
 
@@ -106,14 +105,18 @@ install: all
           sed -e s#/usr/bin/perl#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
-	-mkdir -p $(PREFIX)/data && chmod 755 $(PREFIX)/data
 	cp bonsai.gif $(PREFIX)
-	chmod 755 $(PREFIX)/bonsai.gif
+	chmod 644 $(PREFIX)/bonsai.gif
+	cp bonsai.ico $(PREFIX)
+	chmod 644 $(PREFIX)/bonsai.ico
+	-mkdir -p $(PREFIX)/data && chmod 777 $(PREFIX)/data
 	# put trapdoor into data
-	mv $(PREFIX)/trapdoor $(PREFIX)/data
+	cp trapdoor $(PREFIX)/data
+	chmod 755 $(PREFIX)/data/trapdoor
 	@if test ! -r $(PREFIX)/data/treeconfig.pl ; then \
 	echo "Installing treeconfig.pl" && \
-	cp treeconfig.pl $(PREFIX)/data ; \
+	cp treeconfig.pl $(PREFIX)/data \
+	chmod 644 $(PREFIX)/data/treeconfig.pl ; \
 	else \
 	echo ; \
 	echo "Not replacing existing treeconfig.pl" ;  \
@@ -121,14 +124,16 @@ install: all
 	fi
 	@if test ! -r $(PREFIX)/data/params ; then \
 	echo "Installing params" && \
-	cp params $(PREFIX)/data ; \
+	cp params $(PREFIX)/data \
+	chmod 666 $(PREFIX)/data/params ; \
 	else \
 	echo ; \
 	echo "Not replacing existing params" ;  \
 	fi
 	@if test ! -r $(PREFIX)/data/cvsgraph.conf ; then \
 	echo "Installing cvsgraph.conf" && \
-	cp cvsgraph.conf $(PREFIX)/data ; \
+	cp cvsgraph.conf $(PREFIX)/data \
+	chmod 644 $(PREFIX)/data/cvsgraph.conf ; \
 	else \
 	echo ; \
 	echo "Not replacing existing cvsgraph.conf" ; \
