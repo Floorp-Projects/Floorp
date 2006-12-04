@@ -64,6 +64,7 @@ PRIVATE_EXPORTS = \
 	pcertt.h \
 	softoken.h \
 	softoknt.h \
+	softkver.h \
 	$(NULL)
 
 CSRCS = \
