@@ -49,6 +49,9 @@
 #include "txPatternParser.h"
 #include "txStringUtils.h"
 #include "txXSLTFunctions.h"
+#include "nsICategoryManager.h"
+#include "nsServiceManagerUtils.h"
+#include "nsTArray.h"
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
                                            txACompileObserver* aObserver)
@@ -1007,6 +1010,19 @@ static txFunctionFactoryMapping kExtensionFunctions[] = {
       TX_ConstructEXSLTCommonFunction }
 };
 
+extern nsresult
+TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, PRInt32 aNamespaceID,
+                            nsIAtom *aName, nsISupports *aState,
+                            FunctionCall **aFunction);
+
+struct txXPCOMFunctionMapping
+{
+    PRInt32 mNamespaceID;
+    nsCString mContractID;
+};
+
+static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nsnull;
+
 static nsresult
 findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
              txStylesheetCompilerState* aState, FunctionCall** aResult)
@@ -1029,7 +1045,52 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
         }
     }
 
-    return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+    if (!sXPCOMFunctionMappings) {
+        sXPCOMFunctionMappings = new nsTArray<txXPCOMFunctionMapping>;
+        if (!sXPCOMFunctionMappings) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    txXPCOMFunctionMapping *map = nsnull;
+    PRUint32 count = sXPCOMFunctionMappings->Length();
+    for (i = 0; i < count; ++i) {
+        map = &sXPCOMFunctionMappings->ElementAt(i);
+        if (map->mNamespaceID == aNamespaceID) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        nsresult rv;
+        nsCOMPtr<nsICategoryManager> catman =
+            do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsAutoString namespaceURI;
+        rv = txNamespaceManager::getNamespaceURI(aNamespaceID, namespaceURI);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsXPIDLCString contractID;
+        rv = catman->GetCategoryEntry("XSLT extension functions",
+                                      NS_ConvertUTF16toUTF8(namespaceURI).get(),
+                                      getter_Copies(contractID));
+        if (rv == NS_ERROR_NOT_AVAILABLE) {
+            return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        map = sXPCOMFunctionMappings->AppendElement();
+        if (!map) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        map->mNamespaceID = aNamespaceID;
+        map->mContractID = contractID;
+    }
+
+    return TX_ResolveFunctionCallXPCOM(map->mContractID, aNamespaceID, aName,
+                                       nsnull, aResult);
 }
 
 extern PRBool
@@ -1071,6 +1132,14 @@ void
 txStylesheetCompilerState::SetErrorOffset(PRUint32 aOffset)
 {
     // XXX implement me
+}
+
+/* static */
+void
+txStylesheetCompilerState::shutdown()
+{
+    delete sXPCOMFunctionMappings;
+    sXPCOMFunctionMappings = nsnull;
 }
 
 txElementContext::txElementContext(const nsAString& aBaseURI)

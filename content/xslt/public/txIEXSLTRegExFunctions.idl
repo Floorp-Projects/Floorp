@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Peter Van der Beken.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc>
+ *   Peter Van der Beken <peterv@propagandism.org>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,70 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txXSLTProcessor.h"
-#include "txInstructions.h"
-#include "txAtoms.h"
-#include "txLog.h"
-#include "txStylesheetCompileHandlers.h"
-#include "txStylesheetCompiler.h"
-#include "txExecutionState.h"
-#include "txExprResult.h"
-#ifdef TX_EXE
-#include "txHTMLOutput.h"
-#endif
+#include "txIFunctionEvaluationContext.idl"
+#include "txINodeSet.idl"
 
-TX_LG_IMPL
-
-/* static */
-MBool
-txXSLTProcessor::init()
+[scriptable, uuid(c180e993-aced-4839-95a0-ecd5ff138be9)]
+interface txIEXSLTRegExFunctions : nsISupports
 {
-    TX_LG_CREATE;
-
-#ifdef TX_EXE
-    if (!txStandaloneNamespaceManager::init())
-        return MB_FALSE;
-
-    if (NS_FAILED(txHTMLOutput::init())) {
-        return MB_FALSE;
-    }
-
-    txXMLAtoms::init();
-    txXPathAtoms::init();
-    txXSLTAtoms::init();
-    txHTMLAtoms::init();
-#endif
-    
-    if (!txHandlerTable::init())
-        return MB_FALSE;
-
-    return MB_TRUE;
-}
-
-/* static */
-void
-txXSLTProcessor::shutdown()
-{
-#ifdef TX_EXE
-    txStandaloneNamespaceManager::shutdown();
-    txHTMLOutput::shutdown();
-#endif
-
-    txStylesheetCompilerState::shutdown();
-    txHandlerTable::shutdown();
-}
-
-
-/* static */
-nsresult
-txXSLTProcessor::execute(txExecutionState& aEs)
-{
-    nsresult rv = NS_OK;
-    txInstruction* instr;
-    while ((instr = aEs.getNextInstruction())) {
-        rv = instr->execute(aEs);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return NS_OK;
-}
+    txINodeSet match(in txIFunctionEvaluationContext aContext,
+                     in DOMString aString, in DOMString aRegEx,
+                     in DOMString aFlags);
+    DOMString replace(in DOMString aString, in DOMString aRegEx,
+                      in DOMString aFlags, in DOMString aReplace);
+    boolean test(in DOMString aString, in DOMString aRegEx,
+                 in DOMString aFlags);
+};
