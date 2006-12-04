@@ -1,1 +1,3 @@
 Makefile
+gtkmozembedmarshal.c
+gtkmozembedmarshal.h

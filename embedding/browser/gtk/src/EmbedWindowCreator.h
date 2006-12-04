@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,12 +45,14 @@
 class EmbedWindowCreator : public nsIWindowCreator
 {
  public:
-  EmbedWindowCreator();
+  EmbedWindowCreator(PRBool *aOpenBlockPtr);
   virtual ~EmbedWindowCreator();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWCREATOR
   
+ private:
+  PRBool *mOpenBlock; 
 };
 
 #endif /* __EmbedWindowCreator_h */
