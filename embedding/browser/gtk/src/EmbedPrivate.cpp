@@ -76,7 +76,7 @@
 // for the clipboard actions we need to do
 #include "nsIClipboardCommands.h"
 
-#ifdef MOZILLA_1_8_BRANCH
+#ifndef MOZ_ENABLE_LIBXUL
 // for profiles
 #include <nsProfileDirServiceProvider.h>
 #include <nsEmbedAPI.h>
@@ -169,15 +169,16 @@ PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sPath        = nsnull;
 char        *EmbedPrivate::sCompPath    = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
+#ifdef MOZ_ENABLE_LIBXUL
 nsILocalFile *EmbedPrivate::sProfileDir  = nsnull;
 nsISupports  *EmbedPrivate::sProfileLock = nsnull;
-#ifdef MOZILLA_1_8_BRANCH
+#else
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 char        *EmbedPrivate::sProfileDirS  = nsnull;
 char        *EmbedPrivate::sProfileName = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsProfileDirServiceProvider *EmbedPrivate::sProfileDirServiceProvider = nsnull;
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #endif
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
@@ -789,7 +790,7 @@ EmbedPrivate::PushStartup(void)
     } else
       NS_ASSERTION(EmbedPrivate::sCompPath, "Warning: Failed to init Component Path.\n");
 
-#ifndef MOZILLA_1_8_BRANCH
+#ifdef MOZ_ENABLE_LIBXUL
 
     const char *grePath = sPath;
     NS_ASSERTION(grePath, "Warning: Failed to init grePath.\n");
@@ -816,6 +817,7 @@ EmbedPrivate::PushStartup(void)
     if (EmbedPrivate::sProfileDir) {
       XRE_NotifyProfile();
     }
+
 #else
 
     rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
@@ -839,8 +841,10 @@ EmbedPrivate::PushStartup(void)
     }
     sAppShell = appShell.get();
     NS_ADDREF(sAppShell);
+#ifdef MOZILLA_1_8_BRANCH
     sAppShell->Create(0, nsnull);
     sAppShell->Spinup();
+#endif
 #endif
 
     rv = RegisterAppComponents();
@@ -857,20 +861,22 @@ EmbedPrivate::PopStartup(void)
     // destroy the offscreen window
     DestroyOffscreenWindow();
     
-#ifdef MOZILLA_1_8_BRANCH
+#ifndef MOZ_ENABLE_LIBXUL
     // shut down the profiles
     ShutdownProfile();
     
     if (sAppShell) {
+#ifdef MOZILLA_1_8_BRANCH
       // Shutdown the appshell service.
       sAppShell->Spindown();
+#endif
       NS_RELEASE(sAppShell);
       sAppShell = 0;
     }
 
     // shut down XPCOM/Embedding
     NS_TermEmbedding();					
-#endif
+#else
 
     // we no longer need a reference to the DirectoryServiceProvider
     if (EmbedPrivate::sAppFileLocProvider) {
@@ -880,6 +886,7 @@ EmbedPrivate::PopStartup(void)
 
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
+#endif
     EmbedGlobalHistory::DeleteInstance();
   }
 }
@@ -925,11 +932,13 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
       NS_ERROR("Cannot change profile directory during run.");
       return;
     }
-
+#ifdef MOZ_ENABLE_LIBXUL
     NS_RELEASE(EmbedPrivate::sProfileDir);
     NS_RELEASE(EmbedPrivate::sProfileLock);
+#endif
   }
 
+#ifdef MOZ_ENABLE_LIBXUL
   nsresult rv =
     NS_NewNativeLocalFile(nsDependentCString(aDir), PR_TRUE, &EmbedPrivate::sProfileDir);
 
@@ -941,11 +950,8 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
     if (!exists) {
       rv = EmbedPrivate::sProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
     }
-#ifndef MOZILLA_1_8_BRANCH
     rv = XRE_LockProfileDirectory(EmbedPrivate::sProfileDir, &EmbedPrivate::sProfileLock);
-#endif
   }
-#ifndef MOZILLA_1_8_BRANCH
   if (NS_SUCCEEDED(rv)) {
     if (sWidgetCount)
       XRE_NotifyProfile();
@@ -1418,7 +1424,7 @@ EmbedPrivate::GetAtkObjectForCurrentDocument()
 }
 #endif /* MOZ_ACCESSIBILITY_ATK */
 
-#ifdef MOZILLA_1_8_BRANCH
+#ifndef MOZ_ENABLE_LIBXUL
 /* static */
 nsresult
 EmbedPrivate::StartupProfile(void)
