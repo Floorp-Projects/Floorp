@@ -51,30 +51,32 @@
 class nsAbLDAPListenerBase : public nsILDAPMessageListener
 {
 public:
-    nsAbLDAPListenerBase(nsILDAPURL* url,
-			 nsILDAPConnection* connection,
-			 const nsACString &login,
-			 const PRInt32 timeOut = 0);
-    virtual ~nsAbLDAPListenerBase();
+  // Note that the directoryUrl is the details of the ldap directory
+  // without any search params or attributes specified.
+  nsAbLDAPListenerBase(nsILDAPURL* directoryUrl,
+                       nsILDAPConnection* connection,
+                       const nsACString &login,
+                       const PRInt32 timeOut = 0);
+  virtual ~nsAbLDAPListenerBase();
 
-    NS_IMETHOD OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus);
+  NS_IMETHOD OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus);
 
 protected:
-    nsresult OnLDAPMessageBind(nsILDAPMessage *aMessage);
+  nsresult OnLDAPMessageBind(nsILDAPMessage *aMessage);
 
-    nsresult Initiate();
-    virtual nsresult DoTask() = 0;
+  nsresult Initiate();
+  virtual nsresult DoTask() = 0;
 
-    nsCOMPtr<nsILDAPURL> mUrl;
-    nsILDAPConnection* mConnection;
-    nsCAutoString mLogin;
-    PRInt32 mTimeOut;
-    PRBool mBound;
-    PRBool mInitialized;
+  nsCOMPtr<nsILDAPURL> mDirectoryUrl;
+  nsILDAPConnection* mConnection;
+  nsCAutoString mLogin;
+  PRInt32 mTimeOut;
+  PRBool mBound;
+  PRBool mInitialized;
 
-    nsCOMPtr<nsILDAPOperation> mOperation;
+  nsCOMPtr<nsILDAPOperation> mOperation;
 
-    PRLock* mLock;
+  PRLock* mLock;
 };
 
 #endif

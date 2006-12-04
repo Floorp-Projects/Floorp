@@ -63,8 +63,12 @@ class nsAbQueryLDAPMessageListener : public nsAbLDAPListenerBase
 public:
   NS_DECL_ISUPPORTS
 
+  // Note that the directoryUrl is the details of the ldap directory
+  // without any search params or return attributes specified. The searchUrl
+  // therefore has the search params and return attributes specified.
   nsAbQueryLDAPMessageListener(nsAbLDAPDirectoryQuery* directoryQuery,
-                               nsILDAPURL* url,
+                               nsILDAPURL* directoryUrl,
+                               nsILDAPURL* searchUrl,
                                nsILDAPConnection* connection,
                                nsIAbDirectoryQueryArguments* queryArguments,
                                nsIAbDirectoryQueryResultListener* queryListener,
@@ -90,6 +94,7 @@ protected:
   nsresult Cancel();
   nsresult DoTask();
 
+  nsCOMPtr<nsILDAPURL> mSearchUrl;
   nsAbLDAPDirectoryQuery* mDirectoryQuery;
   PRInt32 mContextID;
   nsCOMPtr<nsIAbDirectoryQueryArguments> mQueryArguments;
@@ -108,21 +113,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbQueryLDAPMessageListener, nsILDAPMessageListen
 
 nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener(
         nsAbLDAPDirectoryQuery* directoryQuery,
-        nsILDAPURL* url,
+        nsILDAPURL* directoryUrl,
+        nsILDAPURL* searchUrl,
         nsILDAPConnection* connection,
         nsIAbDirectoryQueryArguments* queryArguments,
         nsIAbDirectoryQueryResultListener* queryListener,
         const nsACString &login,
         const PRInt32 resultLimit,
         const PRInt32 timeOut) :
-    nsAbLDAPListenerBase(url, connection, login, timeOut),
-    mDirectoryQuery(directoryQuery),
-    mQueryArguments(queryArguments),
-    mQueryListener(queryListener),
-    mResultLimit(resultLimit),
-    mFinished(PR_FALSE),
-    mCanceled(PR_FALSE),
-    mWaitingForPrevQueryToFinish(PR_FALSE)
+  nsAbLDAPListenerBase(directoryUrl, connection, login, timeOut),
+  mSearchUrl(searchUrl),
+  mDirectoryQuery(directoryQuery),
+  mQueryArguments(queryArguments),
+  mQueryListener(queryListener),
+  mResultLimit(resultLimit),
+  mFinished(PR_FALSE),
+  mCanceled(PR_FALSE),
+  mWaitingForPrevQueryToFinish(PR_FALSE)
 {
 }
 
@@ -226,58 +233,59 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
 }
 
 nsresult nsAbQueryLDAPMessageListener::DoTask()
- {
-   nsresult rv;
-   mCanceled = mFinished = PR_FALSE;
+{
+  nsresult rv;
+  mCanceled = mFinished = PR_FALSE;
 
-    mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsILDAPMessageListener> proxyListener;
-    rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                               NS_GET_IID(nsILDAPMessageListener),
-                               this, NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                               getter_AddRefs(proxyListener));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILDAPMessageListener> proxyListener;
+  rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                            NS_GET_IID(nsILDAPMessageListener),
+                            this, NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                            getter_AddRefs(proxyListener));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->Init (mConnection, proxyListener, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mSearchOperation->Init (mConnection, proxyListener, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString dn;
-    rv = mUrl->GetDn (dn);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString dn;
+  rv = mSearchUrl->GetDn(dn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 scope;
-    rv = mUrl->GetScope (&scope);
-    NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 scope;
+  rv = mSearchUrl->GetScope(&scope);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString filter;
-    rv = mUrl->GetFilter (filter);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString filter;
+  rv = mSearchUrl->GetFilter(filter);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    CharPtrArrayGuard attributes;
-    rv = mUrl->GetAttributes (attributes.GetSizeAddr (), attributes.GetArrayAddr ());
-    NS_ENSURE_SUCCESS(rv, rv);
+  CharPtrArrayGuard attributes;
+  rv = mSearchUrl->GetAttributes(attributes.GetSizeAddr(),
+                                 attributes.GetArrayAddr());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // I don't _think_ it's ever actually possible to get here without having
-    // an nsAbLDAPDirectory object, but, just in case, I'll do a QI instead
-    // of just static casts...
-    nsCOMPtr<nsIAbLDAPDirectory> nsIAbDir = 
-        do_QueryInterface(mDirectoryQuery, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsAbLDAPDirectory *dir = 
-        NS_STATIC_CAST(nsAbLDAPDirectory *,
-                       NS_STATIC_CAST(nsIAbLDAPDirectory *, nsIAbDir.get()));
+  // I don't _think_ it's ever actually possible to get here without having
+  // an nsAbLDAPDirectory object, but, just in case, I'll do a QI instead
+  // of just static casts...
+  nsCOMPtr<nsIAbLDAPDirectory> nsIAbDir =
+    do_QueryInterface(mDirectoryQuery, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAbLDAPDirectory *dir =
+    NS_STATIC_CAST(nsAbLDAPDirectory *,
+                   NS_STATIC_CAST(nsIAbLDAPDirectory *, nsIAbDir.get()));
 
-    rv = mSearchOperation->SetServerControls(dir->mSearchServerControls.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mSearchOperation->SetServerControls(dir->mSearchServerControls.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->SetClientControls(dir->mSearchClientControls.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mSearchOperation->SetClientControls(dir->mSearchClientControls.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    return mSearchOperation->SearchExt(dn, scope, filter, attributes.GetSize(),
-                                       attributes.GetArray(), mTimeOut,
-                                       mResultLimit);
+  return mSearchOperation->SearchExt(dn, scope, filter, attributes.GetSize(),
+                                     attributes.GetArray(), mTimeOut,
+                                     mResultLimit);
 }
 
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage *aMessage,
@@ -314,7 +322,8 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIAbCard> card;
-        rv = mDirectoryQuery->CreateCard (mUrl, dn.get(), getter_AddRefs (card));
+        rv = mDirectoryQuery->CreateCard(mSearchUrl, dn.get(),
+                                         getter_AddRefs(card));
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = map->SetCardPropertiesFromLDAPMessage(aMessage, card);
@@ -578,7 +587,8 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
         NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
       if (msgListener)
       {
-        msgListener->mUrl = url;
+        msgListener->mDirectoryUrl = mDirectoryUrl;
+        msgListener->mSearchUrl = url;
         return msgListener->DoTask();
       }
     }
@@ -587,9 +597,8 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     nsAbQueryLDAPMessageListener* _messageListener =
         new nsAbQueryLDAPMessageListener (
                 this,
-                // Note we use the directory url as its more generic for
-                // passwords than the search url
                 mDirectoryUrl,
+                url,
                 ldapConnection,
                 arguments,
                 listener,

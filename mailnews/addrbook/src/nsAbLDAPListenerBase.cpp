@@ -52,10 +52,10 @@
 nsAbLDAPListenerBase::nsAbLDAPListenerBase(nsILDAPURL* url,
                                            nsILDAPConnection* connection,
                                            const nsACString &login,
-                                           const PRInt32 timeOut)
-  : mUrl(url), mConnection(connection), mLogin(login),
-    mTimeOut(timeOut), mBound(PR_FALSE), mInitialized(PR_FALSE),
-    mLock(nsnull)
+                                           const PRInt32 timeOut) :
+  mDirectoryUrl(url), mConnection(connection), mLogin(login),
+  mTimeOut(timeOut), mBound(PR_FALSE), mInitialized(PR_FALSE),
+  mLock(nsnull)
 {
 }
 
@@ -132,7 +132,7 @@ NS_IMETHODIMP nsAbLDAPListenerBase::OnLDAPInit(nsILDAPConnection *aConn, nsresul
     // get the host name for the auth prompt
     //
     nsCAutoString host;
-    rv = mUrl->GetAsciiHost(host);
+    rv = mDirectoryUrl->GetAsciiHost(host);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // hostTemp is only necessary to work around a code-generation 
@@ -201,7 +201,7 @@ NS_IMETHODIMP nsAbLDAPListenerBase::OnLDAPInit(nsILDAPConnection *aConn, nsresul
 
     // Get the specification
     nsXPIDLCString spec;
-    rv = mUrl->GetSpec(spec);
+    rv = mDirectoryUrl->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = authPrompter->PromptPassword(authPromptTitle.get(),
@@ -259,7 +259,7 @@ nsresult nsAbLDAPListenerBase::OnLDAPMessageBind(nsILDAPMessage *aMessage)
       // this might not exist yet.
       //
       rv = NS_CreateServicesFromCategory("passwordmanager",
-                                         mUrl,
+                                         mDirectoryUrl,
                                          "login-failed");
       if (NS_FAILED(rv))
       {
