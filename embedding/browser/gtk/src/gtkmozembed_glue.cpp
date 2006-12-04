@@ -42,12 +42,40 @@
 // XPCOMGlueStartup to glue the gtkmozembed functions.
 
 #include "gtkmozembed.h"
+#ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
 #include "gtkmozembed_download.h"
+#endif
 #include "nsXPCOMGlue.h"
 
 #ifndef XPCOM_GLUE
 #error This file only makes sense when XPCOM_GLUE is defined.
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+#define GTKMOZEMBED2_FUNCTIONS \
+  GTKF(gtk_moz_embed_download_get_type) \
+  GTKF(gtk_moz_embed_download_new) \
+  GTKF(gtk_moz_embed_common_get_type) \
+  GTKF(gtk_moz_embed_common_new) \
+  GTKF(gtk_moz_embed_common_set_pref) \
+  GTKF(gtk_moz_embed_common_get_pref) \
+  GTKF(gtk_moz_embed_common_save_prefs) \
+  GTKF(gtk_moz_embed_common_remove_passwords) \
+  GTKF(gtk_moz_embed_common_get_history_list) \
+  GTKF(gtk_moz_embed_get_zoom_level) \
+  GTKF(gtk_moz_embed_set_zoom_level) \
+  GTKF(gtk_moz_embed_load_image) \
+  GTKF(gtk_moz_embed_find_text) \
+  GTKF(gtk_moz_embed_clipboard) \
+  GTKF(gtk_moz_embed_notify_plugins) \
+  GTKF(gtk_moz_embed_get_context_info) \
+  GTKF(gtk_moz_embed_get_selection) \
+  GTKF(gtk_moz_embed_get_doc_info) \
+  GTKF(gtk_moz_embed_insert_text) \
+  GTKF(gtk_moz_embed_common_nsx509_to_raw)
+#else
+#define GTKMOZEMBED2_FUNCTIONS
 #endif
 
 #define GTKMOZEMBED_FUNCTIONS \
@@ -77,26 +105,7 @@
   GTKF(gtk_moz_embed_get_chrome_mask) \
   GTKF(gtk_moz_embed_single_get_type) \
   GTKF(gtk_moz_embed_single_get) \
-  GTKF(gtk_moz_embed_get_zoom_level) \
-  GTKF(gtk_moz_embed_set_zoom_level) \
-  GTKF(gtk_moz_embed_load_image) \
-  GTKF(gtk_moz_embed_find_text) \
-  GTKF(gtk_moz_embed_clipboard) \
-  GTKF(gtk_moz_embed_notify_plugins) \
-  GTKF(gtk_moz_embed_download_get_type) \
-  GTKF(gtk_moz_embed_download_new) \
-  GTKF(gtk_moz_embed_common_get_type) \
-  GTKF(gtk_moz_embed_common_new) \
-  GTKF(gtk_moz_embed_common_set_pref) \
-  GTKF(gtk_moz_embed_common_get_pref) \
-  GTKF(gtk_moz_embed_common_save_prefs) \
-  GTKF(gtk_moz_embed_common_remove_passwords) \
-  GTKF(gtk_moz_embed_common_get_history_list) \
-  GTKF(gtk_moz_embed_get_context_info) \
-  GTKF(gtk_moz_embed_get_selection) \
-  GTKF(gtk_moz_embed_get_doc_info) \
-  GTKF(gtk_moz_embed_insert_text) \
-  GTKF(gtk_moz_embed_common_nsx509_to_raw)
+  GTKMOZEMBED2_FUNCTIONS
 
 #define GTKF(fname) fname##Type fname;
 

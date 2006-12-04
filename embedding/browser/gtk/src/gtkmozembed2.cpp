@@ -482,6 +482,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                    GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_focus_out),
                    gtk_marshal_BOOL__POINTER,
                    GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+#ifdef MOZ_WIDGET_GTK2
   moz_embed_signals[ALERT] =
     gtk_signal_new("alert",
                    GTK_RUN_FIRST,
@@ -626,7 +627,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                    GTK_TYPE_NONE,
                    1,
                    GTK_TYPE_STRING);
-
+#endif
 
 #ifdef MOZ_WIDGET_GTK
   gtk_object_class_add_signals(object_class, moz_embed_signals,
@@ -1560,6 +1561,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
                                gint *x, gint *y, gint *docindex,
                                const gchar **url, const gchar **objurl, const gchar **docurl)
 {
+#ifdef MOZ_WIDGET_GTK2
   EmbedPrivate *embedPrivate;
   g_return_val_if_fail(embed != NULL, GTK_MOZ_EMBED_CTX_NONE);
   g_return_val_if_fail(GTK_IS_MOZ_EMBED(embed), GTK_MOZ_EMBED_CTX_NONE);
@@ -1568,7 +1570,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
 #ifdef MOZILLA_INTERNAL_API //FIXME replace to using nsStringAPI
     EmbedContextMenuInfo * ctx_menu = embedPrivate->mEventListener->GetContextInfo();
     if (!ctx_menu)
-      return (guint) 0;
+      return 0;
     ctx_menu->UpdateContextData(event);
     *x = ctx_menu->mX;
     *y = ctx_menu->mY;
@@ -1584,7 +1586,7 @@ gtk_moz_embed_get_context_info(GtkMozEmbed *embed, gpointer event, gpointer *nod
     return ctx_menu->mEmbedCtxType;
 #endif
   }
-  return (guint) 0;
+  return 0;
 }
 
 const gchar*
@@ -1594,12 +1596,14 @@ gtk_moz_embed_get_selection(GtkMozEmbed *embed)
   g_return_val_if_fail(embed != NULL, NULL);
   g_return_val_if_fail(GTK_IS_MOZ_EMBED(embed), NULL);
   embedPrivate = (EmbedPrivate *)embed->data;
+#ifdef MOZ_WIDGET_GTK2
   if (embedPrivate->mEventListener) {
     EmbedContextMenuInfo * ctx_menu = embedPrivate->mEventListener->GetContextInfo();
     if (!ctx_menu)
       return NULL;
     return ctx_menu->GetSelectedText();
   }
+#endif
   return NULL;
 }
 
@@ -1717,12 +1721,14 @@ gtk_moz_embed_get_image_dimensions (GtkMozEmbed *embed, gint *width, gint *heigh
   if ( !embedPrivate || !embedPrivate->mEventListener)
     return;
 
+#ifdef MOZ_WIDGET_GTK2
   EmbedContextMenuInfo * ctx_menu = embedPrivate->mEventListener->GetContextInfo();
   if (!ctx_menu)
     return;
 
   nsString imgSrc;
   ctx_menu->CheckDomImageElement((nsIDOMNode*)node, imgSrc, width, height);
+#endif
 }
 
 gchar *

@@ -297,8 +297,9 @@ EmbedContextMenuInfo::GetSelectedText()
       rv = NS_OK;
     }
   } else if (mCtxDocument) {
-    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mCtxDocument);
-    htmlDoc->GetSelection(cString);
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mCtxDocument, &rv);
+    if (NS_SUCCEEDED(rv) && htmlDoc)
+	htmlDoc->GetSelection(cString);
     if ( cString.Length() > 0) {
       rv = NS_OK;
     }                      
@@ -556,7 +557,6 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   }
   if (frame) {
     mFormRect = frame->GetScreenRectExternal();
-    printf("Prim frame FormRect1: y:%i, x:%i, h:%i, w:%i\n", mFormRect.y, mFormRect.x, mFormRect.height, mFormRect.width);
   }  
   if (NS_SUCCEEDED(SetFormControlType(mEventTarget))) {
     return NS_OK;

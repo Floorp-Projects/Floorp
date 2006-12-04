@@ -48,6 +48,7 @@
 #include <nsIHttpChannel.h>
 #include <nsIWebProgress.h>
 #include <nsIDOMWindow.h>
+#include "EmbedPasswordMgr.h"
 
 #include "nsIURI.h"
 #include "nsCRT.h"
@@ -95,7 +96,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 {
   // give the widget a chance to attach any listeners
   mOwner->ContentStateChange();
-  EmbedCommon * common = EmbedCommon::GetInstance();
 
   if (sStopSignalTimer && 
       (
@@ -125,8 +125,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
       gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                       moz_embed_signals[NET_START]);
     }
-    if (common)
-      common->mFormAttachCount = false;
   }
   // get the uri for this request
   nsString tmpString;
@@ -186,10 +184,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
       // let our owner know that the load finished
       mOwner->ContentFinishedLoading();
 
-      if (common && common->mFormAttachCount) {
-        gtk_moz_embed_common_login(GTK_WIDGET(mOwner->mOwningWidget));
-        common->mFormAttachCount = false;
-      }    
     } else if (mStopLevel == 3) {
       if (sStopSignalTimer)
         g_source_remove(sStopSignalTimer);
