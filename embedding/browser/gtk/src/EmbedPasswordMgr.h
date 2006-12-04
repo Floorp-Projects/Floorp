@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 tw=80 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,14 +50,18 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefBranch.h"
+#include "nsIPromptFactory.h"
 #include "nsIAuthPromptWrapper.h"
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt2.h"
 #include "EmbedPrivate.h"
+
 #define EMBED_PASSWORDMANAGER_DESCRIPTION "MicroB PSM Dialog Impl"
 /* 360565c4-2ef3-4f6a-bab9-94cca891b2a7 */
 #define EMBED_PASSWORDMANAGER_CID \
 {0x360565c4, 0x2ef3, 0x4f6a, {0xba, 0xb9, 0x94, 0xcc, 0xa8, 0x91, 0xb2, 0xa7}}
+
 class nsIFile;
 class nsIStringBundle;
 class nsIComponentManager;
@@ -64,15 +69,20 @@ class nsIContent;
 class nsIDOMWindowInternal;
 class nsIURI;
 class nsIDOMHTMLInputElement;
+class nsIDOMWindow;
+class nsIPromptService2;
+
 struct nsModuleComponentInfo;
+
 class EmbedPasswordMgr : public nsIPasswordManager,
-                          public nsIPasswordManagerInternal,
-                          public nsIObserver,
-                          public nsIFormSubmitObserver,
-                          public nsIWebProgressListener,
-                          public nsIDOMFocusListener,
-                          public nsIDOMLoadListener,
-        public nsSupportsWeakReference
+                         public nsIPasswordManagerInternal,
+                         public nsIObserver,
+                         public nsIFormSubmitObserver,
+                         public nsIWebProgressListener,
+                         public nsIDOMFocusListener,
+                         public nsIPromptFactory,
+                         public nsIDOMLoadListener,
+                         public nsSupportsWeakReference
 {
 public:
   class SignonDataEntry;
@@ -107,12 +117,12 @@ public:
   nsresult InsertLogin(const char* username, const char* password = nsnull);
   nsresult RemovePasswords(const char *aHostName, const char *aUserName);
   nsresult RemovePasswordsByIndex(PRUint32 aIndex);
-  nsresult GetNumberOfSavedPassword(PRInt32 *aNum);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPASSWORDMANAGER
   NS_DECL_NSIPASSWORDMANAGERINTERNAL
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIPROMPTFACTORY
   // nsIFormSubmitObserver
   NS_IMETHOD Notify(nsIContent* aFormNode,
                     nsIDOMWindowInternal* aWindow,
@@ -171,11 +181,15 @@ protected:
   int lastIndex;
   nsCAutoString mLastHostQuery;
   EmbedCommon* mCommonObject;
-//  nsAString mLastHostQuery;
+public:
+  PRBool mFormAttachCount;
+  //  nsAString mLastHostQuery;
 };
+
 /* 1baf3398-f759-4a72-a21f-0abdc9cc9960 */
 #define NS_SINGLE_SIGNON_PROMPT_CID \
 {0x1baf3398, 0xf759, 0x4a72, {0xa2, 0x1f, 0x0a, 0xbd, 0xc9, 0xcc, 0x99, 0x60}}
+
 // Our wrapper for username/password prompts - this allows us to prefill
 // the password dialog and add a "remember this password" checkbox.
 class EmbedSignonPrompt : public nsIAuthPromptWrapper
@@ -184,10 +198,29 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTHPROMPT
   NS_DECL_NSIAUTHPROMPTWRAPPER
-  EmbedSignonPrompt() { }
-  virtual ~EmbedSignonPrompt() { }
+  EmbedSignonPrompt() {}
+  virtual ~EmbedSignonPrompt() {}
 protected:
   void GetLocalizedString(const nsAString& aKey, nsAString& aResult);
   nsCOMPtr<nsIPrompt> mPrompt;
+};
+
+// A wrapper for the newer nsIAuthPrompt2 interface
+// Its purpose is the same as nsSingleSignonPrompt, but wraps an nsIDOMWindow
+// instead of an nsIPrompt.
+
+class EmbedSignonPrompt2 : public nsIAuthPrompt2
+{
+public:
+  EmbedSignonPrompt2(nsIPromptService2* aService, nsIDOMWindow* aParent);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTHPROMPT2
+
+private:
+  ~EmbedSignonPrompt2();
+
+  nsCOMPtr<nsIPromptService2> mService;
+  nsCOMPtr<nsIDOMWindow> mParent;
 };
 

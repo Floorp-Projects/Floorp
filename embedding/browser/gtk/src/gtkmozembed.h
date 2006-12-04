@@ -86,7 +86,10 @@ extern "C" {
 
 #endif // XPCOM_GLUE
 
+#ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
+#endif
+
 #define GTK_TYPE_MOZ_EMBED             (gtk_moz_embed_get_type())
 #define GTK_MOZ_EMBED(obj)             GTK_CHECK_CAST((obj), GTK_TYPE_MOZ_EMBED, GtkMozEmbed)
 #define GTK_MOZ_EMBED_CLASS(klass)     GTK_CHECK_CLASS_CAST((klass), GTK_TYPE_MOZ_EMBED, GtkMozEmbedClass)
@@ -108,7 +111,7 @@ struct _GtkMozEmbed
 {
   GtkBin            bin;
   void              *data;
-  GtkMozEmbedCommon *common;
+  GtkObject         *common;
   // FIXME: This is a temporary solution for wrong progress values 
   // being passed up. Oleg has mentioned something about a bug in JS.
   gint current_number_of_requests;

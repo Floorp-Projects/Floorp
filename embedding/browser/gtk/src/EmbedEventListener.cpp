@@ -83,7 +83,10 @@ nsresult
 EmbedEventListener::Init(EmbedPrivate *aOwner)
 {
   mOwner = aOwner;
+  mCtxInfo = nsnull;
+#ifdef MOZ_WIDGET_GTK2
   mCtxInfo = new EmbedContextMenuInfo(aOwner);
+#endif
   return NS_OK;
 }
 
@@ -143,9 +146,10 @@ EmbedEventListener::HandleLink (nsIDOMNode* node)
 
   nsCString cName;
   NS_UTF16ToCString(name, NS_CSTRING_ENCODING_UTF8, cName);
-
-  if (!g_ascii_strcasecmp(cName.get(),"SHORTCUT ICON") ||
-      !g_ascii_strcasecmp(cName.get(),"ICON")) {
+  
+  // XXX This does not handle |BLAH ICON POWER" or "iCoN" or "IcOn"
+  if (!cName.EqualsLiteral("SHORTCUT ICON") ||
+      !cName.EqualsLiteral("ICON")) {
 
     mOwner->mNeedFav = PR_FALSE;
     this->GetFaviconFromURI(url.get());
@@ -160,8 +164,8 @@ EmbedEventListener::HandleLink (nsIDOMNode* node)
     if (*navi_type == '\0')
       navi_type = NULL;
 
-    if (!g_ascii_strcasecmp(cName.get(), "ALTERNATE") &&
-        !g_ascii_strcasecmp(cType.get(), "application/rss+xml")) {
+    if (!cName.EqualsLiteral("ALTERNATE") &&
+        !cType.EqualsLiteral("application/rss+xml")) {
     }
     else {
     }
@@ -174,6 +178,7 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
 {
   nsString eventType;
   aDOMEvent->GetType(eventType);
+#ifdef MOZ_WIDGET_GTK2
   if (eventType.EqualsLiteral ("focus"))
     if (mCtxInfo->GetFormControlType(aDOMEvent)) {
       if (mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
@@ -187,6 +192,7 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
         }
       }
     }
+#endif
 
   if (eventType.EqualsLiteral ("DOMLinkAdded") && mOwner->mNeedFav) {
 
@@ -294,7 +300,9 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
     return NS_OK;
 
   // handling event internally, first.
+#ifdef MOZ_WIDGET_GTK2
   HandleSelection(mouseEvent);
+#endif
 
   // Return TRUE from your signal handler to mark the event as consumed.
   sMPressed = PR_TRUE;
@@ -510,8 +518,10 @@ EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
                         (void *)mouseEvent, &return_val);
         if (!return_val) {
           sIsScrolling = PR_TRUE;
+#ifdef MOZ_WIDGET_GTK2
           if (mCtxInfo)
             rv = mCtxInfo->GetElementForScroll(aDOMEvent);
+#endif
         } else {
           sMPressed = PR_FALSE;
           sIsScrolling = PR_FALSE;
@@ -570,7 +580,7 @@ NS_IMETHODIMP
 EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
 {
   nsresult rv;
-
+#ifdef MOZ_WIDGET_GTK2
   /* This function gets called everytime that a mousedown or a mouseup 
    * event occurs.
    */
@@ -655,7 +665,7 @@ EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
         mLastSelCon = mCurSelCon;
     } // mouseup
   }
-
+#endif
   return rv;
 }
 
@@ -701,7 +711,7 @@ EmbedEventListener::GetIOService(nsIIOService **ioService)
   return rv;
 }
 
-
+#ifdef MOZ_WIDGET_GTK2
 void
 EmbedEventListener::GeneratePixBuf()
 {
@@ -735,6 +745,7 @@ EmbedEventListener::GeneratePixBuf()
   //mOwner->mNeedFav = PR_FALSE;
   NS_Free(::gFavLocation);
 }
+#endif
 
 void
 EmbedEventListener::GetFaviconFromURI(const char* aURI)
@@ -825,7 +836,9 @@ EmbedEventListener::GetFaviconFromURI(const char* aURI)
     }
   }
   else {
+#ifdef MOZ_WIDGET_GTK2
     GeneratePixBuf();
+#endif
   }
 
 }
@@ -837,6 +850,7 @@ EmbedEventListener::OnStateChange(nsIWebProgress *aWebProgress,
                                   nsresult aStatus)
 {
   /* if (!(aStateFlags & (STATE_STOP | STATE_IS_NETWORK | STATE_IS_DOCUMENT))){*/
+#ifdef MOZ_WIDGET_GTK2
   if(aStateFlags & STATE_STOP) 
   {
     /* FINISH DOWNLOADING */
@@ -847,7 +861,7 @@ EmbedEventListener::OnStateChange(nsIWebProgress *aWebProgress,
   }
   else {
   }
-
+#endif
   return NS_OK;
 
 }

@@ -94,8 +94,7 @@ class EmbedCommon {
   static EmbedCommon* GetInstance();
   static void DeleteInstance();
   nsresult    Init (void);
-  bool mFormAttachCount;
-  GtkMozEmbedCommon* mCommon;
+  GtkObject   *mCommon;
   static GtkMozEmbed* GetAnyLiveWidget();
 };
 class EmbedPrivate {

@@ -175,15 +175,24 @@ struct _GtkMozPlugin
     const gchar *type;      /** < Plugin type */
     gboolean isDisabled;     /** < is plugin enabled */
 };
+
+typedef struct _GtkMozLogin GtkMozLogin;
+struct _GtkMozLogin
+{
+    const gchar *user;     /** < Plugin title */
+    const gchar *pass; /** < Plugin path */
+    const gchar *host;     /** < Plugin type */
+    guint index;
+};
+
 GTKMOZEMBED_API(GtkType,    gtk_moz_embed_common_get_type,          (void))
 GTKMOZEMBED_API(GtkWidget*, gtk_moz_embed_common_new,               (void))
 GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_set_pref,          (GtkType type, gchar*, gpointer))
 GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_get_pref,          (GtkType type, gchar*, gpointer))
 GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_save_prefs,        (void))
-GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_login,             (GtkWidget *embed))
-GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_remove_passwords,  (const gchar *host, const gchar *user))
-GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_remove_passwords_by_index, (gint index))
-GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_number_of_saved_passwords, (void))
+GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_login,             (GtkWidget *embed, const gchar* username))
+GTKMOZEMBED_API(gboolean,   gtk_moz_embed_common_remove_passwords,  (const gchar *host, const gchar *user, gint index))
+GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_logins,        (const char* uri, GList **list))
 GTKMOZEMBED_API(gint,       gtk_moz_embed_common_get_history_list,  (GtkMozHistoryItem **GtkHI))
 GTKMOZEMBED_API(gint,       gtk_moz_embed_common_clean_all_history, (void))
 GTKMOZEMBED_API(GSList*,    gtk_moz_embed_common_get_cookie_list,   (void))

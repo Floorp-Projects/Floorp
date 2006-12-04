@@ -345,22 +345,21 @@ GtkPromptService::PromptUsernameAndPassword(
     CopyUTF16toUTF8(*aPassword, retPassword);
     gchar * aGUsername = g_strdup(retUsername.get());
     gchar * aGPassword = g_strdup(retPassword.get());
-    // FIXME: it is not working. CheckValue has no effect.
-    if (!aCheckValue)
-      aCheckValue = (PRBool *) malloc (sizeof (PRBool));
+
     gtk_signal_emit(GTK_OBJECT(parentWidget),
-        moz_embed_signals[PROMPT_AUTH],
-        dialogTitle.get(), dialogText.get(), &aGUsername,
-	&aGPassword, checkMsg.get(), aCheckValue, aConfirm);
+                    moz_embed_signals[PROMPT_AUTH],
+                    dialogTitle.get(), dialogText.get(), &aGUsername,
+                    &aGPassword, checkMsg.get(), aCheckValue, aConfirm);
+
     if (*aConfirm) {
-      if (*aUsername)
-        NS_Free(*aUsername);
-      retUsername.Assign(aGUsername);
-      *aUsername = UTF8ToNewUnicode(retUsername);
-      if (*aPassword)
-        NS_Free(*aPassword);
-      retPassword.Assign(aGPassword);
-      *aPassword = UTF8ToNewUnicode(retPassword);
+        if (*aUsername)
+            NS_Free(*aUsername);
+        retUsername.Assign(aGUsername);
+        *aUsername = UTF8ToNewUnicode(retUsername);
+        if (*aPassword)
+            NS_Free(*aPassword);
+        retPassword.Assign(aGPassword);
+        *aPassword = UTF8ToNewUnicode(retPassword);
     }
     g_free(aGUsername);
     g_free(aGPassword);

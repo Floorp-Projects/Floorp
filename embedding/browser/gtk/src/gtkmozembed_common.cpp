@@ -393,11 +393,12 @@ gtk_moz_embed_common_save_prefs()
   return NS_SUCCEEDED (rv) ? TRUE : FALSE;
 }
 
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-static GList *
-gtk_moz_embed_common_get_logins(const char* uri, nsIPasswordManager *passwordManager)
+gint
+gtk_moz_embed_common_get_logins(const char* uri, GList **list)
 {
-  GList *logins = NULL;
+  gint ret = 0;
+#ifdef MOZ_GTKPASSWORD_INTERFACE
+  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
   nsCOMPtr<nsISimpleEnumerator> passwordEnumerator;
   nsresult result = passwordManager->GetEnumerator(getter_AddRefs(passwordEnumerator));
   PRBool enumResult;
@@ -410,69 +411,47 @@ gtk_moz_embed_common_get_logins(const char* uri, nsIPasswordManager *passwordMan
       (getter_AddRefs(nsPassword));
     if (NS_FAILED(result)) {
       /* this almost certainly leaks logins */
-      return NULL;
+      return ret;
     }
     nsCString transfer;
     nsPassword->GetHost (transfer);
-    if (uri && !g_str_has_prefix(uri, transfer.get()))
-      continue;
-    nsString unicodeName;
-    nsPassword->GetUser (unicodeName);
-    logins = g_list_append(logins, ToNewUTF8String(unicodeName));
-  }
-  return logins;
-}
-#endif
+    nsCString nsCURI(uri);
+    if (uri)
+      if (!StringBeginsWith (nsCURI, transfer)
+          // && !StringBeginsWith (transfer, nsCURI)
+          )
+        continue;
 
-gboolean
-gtk_moz_embed_common_login(GtkWidget *embed)
-{
-  gint retval = -1;
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  GList * list = gtk_moz_embed_common_get_logins(gtk_moz_embed_get_location(GTK_MOZ_EMBED(embed)), passwordManager);
-  gtk_signal_emit(
-      GTK_OBJECT(GTK_MOZ_EMBED(embed)->common),
-      moz_embed_common_signals[COMMON_SELECT_LOGIN],
-      list,
-      &retval);
-  if (retval != -1) {
-    passwordManager->InsertLogin((const gchar*)g_list_nth_data(list, retval));
+    if (list) {
+      nsString unicodeName;
+      nsString unicodePassword;
+      nsPassword->GetUser (unicodeName);
+      nsPassword->GetPassword (unicodePassword);
+      GtkMozLogin * login = g_new0(GtkMozLogin, 1);
+      login->user = ToNewUTF8String(unicodeName);
+      login->pass = ToNewUTF8String(unicodePassword);
+      login->host = NS_strdup(transfer.get());
+      login->index = ret;
+      *list = g_list_append(*list, login);
+    }
+    ret++;
   }
-  g_list_free(list);
 #endif
-  return retval != -1;
+  return ret;
 }
 
 gboolean
-gtk_moz_embed_common_remove_passwords(const gchar *host, const gchar *user)
+gtk_moz_embed_common_remove_passwords(const gchar *host, const gchar *user, gint index)
 {
 #ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  passwordManager->RemovePasswords(host, user);
+  if (index >= 0) {
+    passwordManager->RemovePasswordsByIndex(index);
+  } else {
+    passwordManager->RemovePasswords(host, user);
+  }
 #endif
   return TRUE;
-}
-
-gboolean
-gtk_moz_embed_common_remove_passwords_by_index (gint index)
-{
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  passwordManager->RemovePasswordsByIndex(index);
-#endif
-  return TRUE;
-}
-
-gint
-gtk_moz_embed_common_get_number_of_saved_passwords ()
-{
-  gint saved_passwd_num = 0;
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  passwordManager->GetNumberOfSavedPassword ( &saved_passwd_num);
-#endif
-  return saved_passwd_num;
 }
 
 gint

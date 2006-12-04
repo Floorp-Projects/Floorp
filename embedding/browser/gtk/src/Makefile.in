@@ -123,15 +123,20 @@ endif
 
 CPPSRCS		= \
 		gtkmozembed2.cpp \
-		gtkmozembed_common.cpp \
-		gtkmozembed_download.cpp \
 		EmbedPrivate.cpp \
 		EmbedWindow.cpp \
 		EmbedProgress.cpp \
 		EmbedContentListener.cpp \
 		EmbedEventListener.cpp \
-		EmbedContextMenuInfo.cpp \
 		EmbedWindowCreator.cpp \
+		EmbedGtkTools.cpp \
+		$(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+CPPSRCS		= \
+		gtkmozembed_common.cpp \
+		gtkmozembed_download.cpp \
+		EmbedContextMenuInfo.cpp \
 		EmbedCertificates.cpp \
 		EmbedDownloadMgr.cpp \
 		EmbedGlobalHistory.cpp \
@@ -149,7 +154,6 @@ XPIDLSRCS       += \
 		$(NULL)
 endif
 
-ifdef MOZ_ENABLE_GTK2
 CSRCS           = \
 		gtkmozembedmarshal.c
 
@@ -182,10 +186,16 @@ endif
 
 EXPORTS		= \
 		gtkmozembed.h \
+		gtkmozembed_glue.cpp \
+		gtkmozembed_internal.h \
+		$(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+EXPORTS		+= \
 		gtkmozembed_common.h \
 		gtkmozembed_download.h \
-		gtkmozembed_glue.cpp \
-		gtkmozembed_internal.h
+		$(NULL)
+endif
 
 ifdef MOZ_GTKEMBED_DYN
 ifdef MOZ_ENABLE_GTK

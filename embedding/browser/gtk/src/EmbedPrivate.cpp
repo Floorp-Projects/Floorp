@@ -98,6 +98,13 @@
 #ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
 #include "nsICookiePromptService.h"
+#include "EmbedCertificates.h"
+#include "EmbedDownloadMgr.h"
+#ifdef MOZ_GTKPASSWORD_INTERFACE
+#include "EmbedPasswordMgr.h"
+#endif
+#include "EmbedGlobalHistory.h"
+#include "EmbedFilePicker.h"
 #else
 #include "nsNativeCharsetUtils.h"
 #endif
@@ -119,51 +126,50 @@
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
-#include "EmbedCertificates.h"
-#include "EmbedDownloadMgr.h"
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-#include "EmbedPasswordMgr.h"
-#endif
-#include "EmbedGlobalHistory.h"
-#include "EmbedFilePicker.h"
+
+#include "nsEmbedCID.h"
+
+#ifdef MOZ_WIDGET_GTK2
 static EmbedCommon* sEmbedCommon = nsnull;
 
 /* static */
 EmbedCommon*
 EmbedCommon::GetInstance()
 {
+  if (!sEmbedCommon)
+  {
+    sEmbedCommon = new EmbedCommon();
     if (!sEmbedCommon)
+      return nsnull;
+    if (NS_FAILED(sEmbedCommon->Init()))
     {
-        sEmbedCommon = new EmbedCommon();
-        if (!sEmbedCommon)
-            return nsnull;
-        if (NS_FAILED(sEmbedCommon->Init()))
-        {
-            return nsnull;
-        }
+      return nsnull;
     }
-    return sEmbedCommon;
+  }
+  return sEmbedCommon;
 }
 
 /* static */
 void
 EmbedCommon::DeleteInstance()
 {
-    if (sEmbedCommon)
-    {
-  delete sEmbedCommon;
-  sEmbedCommon = nsnull;
-  EmbedGlobalHistory::DeleteInstance();
-    }
+  if (sEmbedCommon)
+  {
+    delete sEmbedCommon;
+    sEmbedCommon = nsnull;
+
+    EmbedGlobalHistory::DeleteInstance();
+
+  }
 }
 
 nsresult
 EmbedCommon::Init (void)
 {
-    mFormAttachCount = false;
     mCommon = NULL;
     return NS_OK;
-}
+};
+#endif
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sPath        = nsnull;
@@ -298,6 +304,13 @@ static const nsModuleComponentInfo defaultAppComps[] = {
     EmbedPasswordMgr::Register,
     EmbedPasswordMgr::Unregister
   },
+  { EMBED_PASSWORDMANAGER_DESCRIPTION,
+    EMBED_PASSWORDMANAGER_CID,
+    NS_PWMGR_AUTHPROMPTFACTORY,
+    EmbedPasswordMgrConstructor,
+    EmbedPasswordMgr::Register,
+    EmbedPasswordMgr::Unregister},
+
   {
     EMBED_PASSWORDMANAGER_DESCRIPTION,
     NS_SINGLE_SIGNON_PROMPT_CID,
@@ -603,6 +616,7 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
                            nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
                            0, 0, aWidth, aHeight);
   } else {
+#ifdef MOZ_WIDGET_GTK2
     PRInt32 X, Y, W, H;
     mWindow->GetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, &X, &Y, &W, &H);
     if (Y < 0) {
@@ -621,11 +635,12 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
       if (height < ctx_menu->mFormRect.y + ctx_menu->mFormRect.height) {
         PRInt32 sub = ctx_menu->mFormRect.y - height + ctx_menu->mFormRect.height;
         PRInt32 diff = ctx_menu->mFormRect.y - sub;
-        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!height: %i, Form.y: %i, Form.Height: %i, sub: %i, diff: %i\n", height, ctx_menu->mFormRect.y, ctx_menu->mFormRect.height, sub, diff);
+//        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!height: %i, Form.y: %i, Form.Height: %i, sub: %i, diff: %i\n", height, ctx_menu->mFormRect.y, ctx_menu->mFormRect.height, sub, diff);
         if (sub > 0 && diff >= 0)  
           mWindow->SetDimensions( nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, -sub, nsnull, nsnull);
       }
     }
+#endif
   }
 }
 
@@ -647,9 +662,8 @@ EmbedPrivate::Destroy(void)
   supportsWeak = do_QueryInterface(mProgressGuard);
   nsCOMPtr<nsIWeakReference> weakRef;
   supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
-  webBrowser->RemoveWebBrowserListener(
-    weakRef,
-    NS_GET_IID(nsIWebProgressListener));
+  webBrowser->RemoveWebBrowserListener(weakRef,
+                                       NS_GET_IID(nsIWebProgressListener));
   weakRef = nsnull;
   supportsWeak = nsnull;
 
@@ -900,7 +914,9 @@ EmbedPrivate::PopStartup(void)
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
 #endif
+#ifdef MOZ_WIDGET_GTK2
     EmbedGlobalHistory::DeleteInstance();
+#endif
   }
 }
 
@@ -1064,13 +1080,10 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
   // creating a new window ) so it's OK to walk the list of open
   // windows.
   for (int i = 0; i < count; i++) {
-    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
-                sWindowList->ElementAt(i));
+    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *, sWindowList->ElementAt(i));
     // get the browser object for that window
     nsIWebBrowserChrome *chrome =
-      NS_STATIC_CAST(
-        nsIWebBrowserChrome *,
-        tmpPrivate->mWindow);
+      NS_STATIC_CAST(nsIWebBrowserChrome *, tmpPrivate->mWindow);
     if (chrome == aBrowser)
       return tmpPrivate;
   }
@@ -1093,6 +1106,11 @@ EmbedPrivate::ContentStateChange(void)
 
   AttachListeners();
 
+#ifdef MOZ_WIDGET_GTK2
+  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
+  if (passwordManager)
+    passwordManager->mFormAttachCount = PR_FALSE;
+#endif
 }
 
 void
@@ -1124,6 +1142,45 @@ EmbedPrivate::ContentFinishedLoading(void)
     if (visibility)
       mWindow->SetVisibility(PR_TRUE);
   }
+  
+#ifdef MOZ_WIDGET_GTK2
+  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
+  if (passwordManager && passwordManager->mFormAttachCount) {
+
+    GList *list_full = NULL, *users_list = NULL;
+    gint retval = -1;
+
+    if (gtk_moz_embed_common_get_logins(NS_ConvertUTF16toUTF8(mURI).get(), &list_full)) {
+
+      GList *ptr = list_full;
+      while(ptr) {
+        GtkMozLogin * login = NS_STATIC_CAST(GtkMozLogin*, ptr->data);
+        if (login && login->user) {
+          users_list = g_list_append(users_list, NS_strdup(login->user));
+          g_free((void*)login->user);
+          if (login->pass)
+            g_free((void*)login->pass);
+          if (login->host)
+            g_free((void*)login->host);
+        }
+        else 
+          break;
+        ptr = ptr->next;
+      }
+      g_list_free(list_full);
+      if (users_list)
+        gtk_signal_emit(GTK_OBJECT(mOwningWidget->common),
+                        moz_embed_common_signals[COMMON_SELECT_LOGIN],
+                        users_list,
+                        &retval);
+      if (retval != -1) {
+        passwordManager->InsertLogin((const gchar*)g_list_nth_data(users_list, retval));
+      }
+      g_list_free(users_list);
+    }
+    passwordManager->mFormAttachCount = PR_FALSE;
+  }
+#endif
 }
 
 #ifdef MOZ_WIDGET_GTK
