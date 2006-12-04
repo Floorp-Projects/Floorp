@@ -344,9 +344,12 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSInt32 minutes = 0;
     JSInt32 hours   = 0;
     JSInt32 isleap  = 0;
+
+    /* Temporaries used for various computations */
     JSInt64 result;
     JSInt64	result1;
     JSInt64	result2;
+    
     JSInt64 base;
 
     /* Some variables for intermediate result storage to make computing isleap
@@ -362,16 +365,16 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSInt64 century;
     JSInt64 fourCenturies;
 
+    JSLL_UI2L(result, PRMJ_DAY_SECONDS);
+
     JSLL_I2L(fourYears, PRMJ_FOUR_YEARS_DAYS);
-    JSLL_MUL(fourYears, fourYears, PRMJ_DAY_SECONDS);
+    JSLL_MUL(fourYears, fourYears, result);
     
     JSLL_I2L(century, PRMJ_CENTURY_DAYS);
-    JSLL_MUL(century, century, PRMJ_DAY_SECONDS);
+    JSLL_MUL(century, century, result);
 
     JSLL_I2L(fourCenturies, PRMJ_FOUR_CENTURIES_DAYS);
-    JSLL_MUL(fourCenturies, fourCenturies, PRMJ_DAY_SECONDS);
-
-    JSLL_UI2L(result,0);
+    JSLL_MUL(fourCenturies, fourCenturies, result);
 
     /* get the base time via UTC */
     base = PRMJ_ToExtendedTime(0);
