@@ -41,8 +41,6 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
-
 <?xul-overlay href="chrome://inspector/content/inspectorOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/toolboxOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/popupOverlay.xul"?>
