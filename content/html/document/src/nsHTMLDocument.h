@@ -107,7 +107,6 @@ public:
 
   virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName);
 
-  virtual nsCompatibility GetCompatibilityMode();
   virtual void SetCompatibilityMode(nsCompatibility aMode);
 
   virtual PRBool IsWriting()
@@ -255,8 +254,6 @@ protected:
   {
     return mDefaultNamespaceID;
   };
-
-  nsCompatibility mCompatMode;
 
   nsCOMArray<nsIDOMHTMLMapElement> mImageMaps;
 

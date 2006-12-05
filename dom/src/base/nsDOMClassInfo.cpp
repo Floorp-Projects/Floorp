@@ -4096,8 +4096,10 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
   }
 
   nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
 
-  if (!doc || doc->GetCompatibilityMode() != eCompatibility_NavQuirks) {
+  if (!document ||
+      document->GetCompatibilityMode() != eCompatibility_NavQuirks) {
     // If we don't have a document, or if the document is not in
     // quirks mode, return early.
 
@@ -8591,7 +8593,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (id == sAll_id && !sDisableDocumentAllSupport &&
         !ObjectIsNativeWrapper(cx, obj)) {
-      nsCOMPtr<nsIHTMLDocument> doc(do_QueryWrappedNative(wrapper));
+      nsCOMPtr<nsIDocument> doc(do_QueryWrappedNative(wrapper));
 
       if (doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
         JSObject *helper =

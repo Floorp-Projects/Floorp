@@ -55,8 +55,8 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x43eec0b4, 0xd867, 0x4972, \
- { 0x8f, 0x64, 0x71, 0x9a, 0xc2, 0x45, 0x19, 0x3d } }
+{ 0xcfe72003, 0xcc90, 0x4624, \
+ { 0xb4, 0x1b, 0xc3, 0x14, 0x1d, 0x31, 0x7a, 0x71 } }
 
 
 /**
@@ -74,9 +74,8 @@ public:
   virtual void RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
   /**
-   * Access compatibility mode for this document
+   * Set compatibility mode for this document
    */
-  virtual nsCompatibility GetCompatibilityMode() = 0;
   virtual void SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   virtual nsresult ResolveName(const nsAString& aName,

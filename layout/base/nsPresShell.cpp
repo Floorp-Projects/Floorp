@@ -1778,9 +1778,10 @@ PresShell::Init(nsIDocument* aDocument,
   // want to delete it in our destructor.
   mStyleSet = aStyleSet;
 
-  // Set the compatibility mode after attaching the pres context and
-  // style set, but before creating any frames.
-  mPresContext->SetCompatibilityMode(aCompatMode);
+  // Notify our prescontext that it now has a compatibility mode.  Note that
+  // this MUST happen after we set up our style set but before we create any
+  // frames.
+  mPresContext->CompatibilityModeChanged();
 
   // setup the preference style rules (no forced reflow), and do it
   // before creating any frames.

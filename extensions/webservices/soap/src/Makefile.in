@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  xmlextras \
 		  content \
+		  layout \
 		  widget \
 		  $(NULL)
 

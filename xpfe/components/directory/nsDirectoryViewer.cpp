@@ -91,6 +91,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
+#include "nsIDocument.h"
 
 static const int FORMAT_HTML = 2;
 static const int FORMAT_XUL = 3;

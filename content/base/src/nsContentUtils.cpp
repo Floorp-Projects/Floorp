@@ -3209,23 +3209,19 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
       parser->SetContentSink(contentsink);
 
       nsDTDMode mode = eDTDMode_autodetect;
-      if (bHTML) {
-        switch (htmlDoc->GetCompatibilityMode()) {
-          case eCompatibility_NavQuirks:
-            mode = eDTDMode_quirks;
-            break;
-          case eCompatibility_AlmostStandards:
-            mode = eDTDMode_almost_standards;
-            break;
-          case eCompatibility_FullStandards:
-            mode = eDTDMode_full_standards;
-            break;
-          default:
-            NS_NOTREACHED("unknown mode");
-            break;
-        }
-      } else {
-        mode = eDTDMode_full_standards;
+      switch (document->GetCompatibilityMode()) {
+        case eCompatibility_NavQuirks:
+          mode = eDTDMode_quirks;
+          break;
+        case eCompatibility_AlmostStandards:
+          mode = eDTDMode_almost_standards;
+          break;
+        case eCompatibility_FullStandards:
+          mode = eDTDMode_full_standards;
+          break;
+        default:
+          NS_NOTREACHED("unknown mode");
+          break;
       }
       rv = parser->ParseFragment(aFragment, nsnull, tagStack,
                                  !bHTML, contentType, mode);

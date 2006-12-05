@@ -324,7 +324,6 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 
 nsHTMLDocument::nsHTMLDocument()
   : nsDocument("text/html"),
-    mCompatMode(eCompatibility_NavQuirks),
     mDefaultNamespaceID(kNameSpaceID_None)
 {
 
@@ -332,6 +331,7 @@ nsHTMLDocument::nsHTMLDocument()
   // bother initializing members to 0.
 
   mDefaultElementType = kNameSpaceID_XHTML;
+  mCompatMode = eCompatibility_NavQuirks;
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -1164,12 +1164,6 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
   return firstMatch;
 }
 
-nsCompatibility
-nsHTMLDocument::GetCompatibilityMode()
-{
-  return mCompatMode;
-}
-
 void
 nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 {
@@ -1182,7 +1176,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
-      pc->SetCompatibilityMode(mCompatMode);
+      pc->CompatibilityModeChanged();
     }
   }
 }

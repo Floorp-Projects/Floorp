@@ -336,12 +336,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
   }
 
   // Pre-grab the compat mode; we may need it later in the loop.
-  nsCompatibility mode = eCompatibility_FullStandards;
-  nsCOMPtr<nsIHTMLDocument> htmlDocument =
-    do_QueryInterface(GetOwnerDoc());
-  if (htmlDocument) {
-    mode = htmlDocument->GetCompatibilityMode();
-  }
+  PRBool isInQuirks = InNavQuirksMode(GetOwnerDoc());
       
   // Parse each comma separated token
 
@@ -398,7 +393,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
       }
 
       // Treat 0* as 1* in quirks mode (bug 40383)
-      if (eCompatibility_NavQuirks == mode) {
+      if (isInQuirks) {
         if ((eFramesetUnit_Relative == specs[i].mUnit) &&
           (0 == specs[i].mValue)) {
           specs[i].mValue = 1;
@@ -409,7 +404,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
       // Nav resized absolute and relative frames to "1" and
       // percent frames to an even percentage of the width
       //
-      //if ((eCompatibility_NavQuirks == aMode) && (specs[i].mValue <= 0)) {
+      //if (isInQuirks && (specs[i].mValue <= 0)) {
       //  if (eFramesetUnit_Percent == specs[i].mUnit) {
       //    specs[i].mValue = 100 / count;
       //  } else {
