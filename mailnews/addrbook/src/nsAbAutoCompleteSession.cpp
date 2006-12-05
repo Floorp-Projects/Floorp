@@ -663,11 +663,11 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     }
 
 
-    // strings with @ signs or commas (commas denote multiple names) should be ignored for 
+    // strings with commas (commas denote multiple names) should be ignored for 
     // autocomplete purposes
     PRInt32 i;
     for (i = nsCRT::strlen(uSearchString) - 1; i >= 0; i --)
-        if (uSearchString[i] == '@' || uSearchString[i] == ',')
+        if (uSearchString[i] == ',')
         {
             listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
             return NS_OK;
