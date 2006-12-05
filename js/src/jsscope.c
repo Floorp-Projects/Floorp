@@ -504,11 +504,13 @@ NewScopeProperty(JSRuntime *rt)
 #define CHUNK_TO_KIDS(chunk)    ((JSScopeProperty *)                          \
                                  ((jsuword)(chunk) | CHUNKY_KIDS_TAG))
 #define MAX_KIDS_PER_CHUNK      10
+#define CHUNK_HASH_THRESHOLD    30
 
 typedef struct PropTreeKidsChunk PropTreeKidsChunk;
 
 struct PropTreeKidsChunk {
     JSScopeProperty     *kids[MAX_KIDS_PER_CHUNK];
+    JSDHashTable        *table;
     PropTreeKidsChunk   *next;
 };
 
@@ -529,6 +531,8 @@ static void
 DestroyPropTreeKidsChunk(JSRuntime *rt, PropTreeKidsChunk *chunk)
 {
     JS_RUNTIME_UNMETER(rt, propTreeKidsChunks);
+    if (chunk->table)
+        JS_DHashTableDestroy(chunk->table);
     free(chunk);
 }
 
@@ -537,6 +541,7 @@ static JSBool
 InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
                         JSScopeProperty *child, PropTreeKidsChunk *sweptChunk)
 {
+    JSDHashTable *table;
     JSPropertyTreeEntry *entry;
     JSScopeProperty **childp, *kids, *sprop;
     PropTreeKidsChunk *chunk, **chunkp;
@@ -545,8 +550,9 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
     JS_ASSERT(!parent || child->parent != parent);
 
     if (!parent) {
+        table = &rt->propertyTreeHash;
         entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_ADD);
+                JS_DHashTableOperate(table, child, JS_DHASH_ADD);
         if (!entry)
             return JS_FALSE;
         childp = &entry->child;
@@ -579,6 +585,28 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
         if (kids) {
             if (KIDS_IS_CHUNKY(kids)) {
                 chunk = KIDS_TO_CHUNK(kids);
+
+                table = chunk->table;
+                if (table) {
+                    entry = (JSPropertyTreeEntry *)
+                            JS_DHashTableOperate(table, child, JS_DHASH_ADD);
+                    if (!entry)
+                        return JS_FALSE;
+                    if (!entry->child) {
+                        entry->child = child;
+                        while (chunk->next)
+                            chunk = chunk->next;
+                        for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
+                            childp = &chunk->kids[i];
+                            sprop = *childp;
+                            if (!sprop)
+                                goto insert;
+                        }
+                        chunkp = &chunk->next;
+                        goto new_chunk;
+                    }
+                }
+
                 do {
                     for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
                         childp = &chunk->kids[i];
@@ -601,6 +629,7 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
                     chunkp = &chunk->next;
                 } while ((chunk = *chunkp) != NULL);
 
+            new_chunk:
                 if (sweptChunk) {
                     chunk = sweptChunk;
                 } else {
@@ -646,6 +675,7 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
 static PropTreeKidsChunk *
 RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
 {
+    JSDHashTable *table;
     JSPropertyTreeEntry *entry;
     JSScopeProperty *parent, *kids, *kid;
     PropTreeKidsChunk *list, *chunk, **chunkp, *lastChunk;
@@ -658,16 +688,13 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
          * matches a root child in the table that has compatible members. See
          * the "Duplicate child" comments in InsertPropertyTreeChild, above.
          */
-        entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_LOOKUP);
-
-        if (entry->child == child)
-            JS_DHashTableRawRemove(&rt->propertyTreeHash, &entry->hdr);
+        table = &rt->propertyTreeHash;
     } else {
         kids = parent->kids;
         if (KIDS_IS_CHUNKY(kids)) {
             list = chunk = KIDS_TO_CHUNK(kids);
             chunkp = &list;
+            table = chunk->table;
 
             do {
                 for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
@@ -703,12 +730,47 @@ RemovePropertyTreeChild(JSRuntime *rt, JSScopeProperty *child)
                 chunkp = &chunk->next;
             } while ((chunk = *chunkp) != NULL);
         } else {
+            table = NULL;
             kid = kids;
             if (kid == child)
                 parent->kids = NULL;
         }
     }
+
+    if (table) {
+        entry = (JSPropertyTreeEntry *)
+                JS_DHashTableOperate(table, child, JS_DHASH_LOOKUP);
+
+        if (entry->child == child)
+            JS_DHashTableRawRemove(table, &entry->hdr);
+    }
     return NULL;
+}
+
+static JSDHashTable *
+HashChunks(PropTreeKidsChunk *chunk, uintN n)
+{
+    JSDHashTable *table;
+    uintN i;
+    JSScopeProperty *sprop;
+    JSPropertyTreeEntry *entry;
+
+    table = JS_NewDHashTable(&PropertyTreeHashOps, NULL,
+                             sizeof(JSPropertyTreeEntry),
+                             JS_DHASH_DEFAULT_CAPACITY(n + 1));
+    if (!table)
+        return NULL;
+    do {
+        for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
+            sprop = chunk->kids[i];
+            if (!sprop)
+                break;
+            entry = (JSPropertyTreeEntry *)
+                    JS_DHashTableOperate(table, sprop, JS_DHASH_ADD);
+            entry->child = sprop;
+        }
+    } while ((chunk = chunk->next) != NULL);
+    return table;
 }
 
 /*
@@ -721,17 +783,19 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
                      JSScopeProperty *child)
 {
     JSRuntime *rt;
+    JSDHashTable *table;
     JSPropertyTreeEntry *entry;
     JSScopeProperty *sprop;
     PropTreeKidsChunk *chunk;
-    uintN i;
+    uintN i, n;
 
     rt = cx->runtime;
     if (!parent) {
         JS_LOCK_RUNTIME(rt);
 
+        table = &rt->propertyTreeHash;
         entry = (JSPropertyTreeEntry *)
-            JS_DHashTableOperate(&rt->propertyTreeHash, child, JS_DHASH_ADD);
+                JS_DHashTableOperate(table, child, JS_DHASH_ADD);
         if (!entry)
             goto out_of_memory;
 
@@ -747,24 +811,57 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
          * has extremely low fan-out below its root in popular embeddings with
          * real-world workloads.
          *
-         * If workload changes so as to increase fan-out significantly below
-         * the property tree root, we'll want to add another tag bit stored in
-         * parent->kids that indicates a JSDHashTable pointer.
+         * Patterns such as defining closures that capture a constructor's
+         * environment as getters or setters on the new object that is passed
+         * in as |this| can significantly increase fan-out below the property
+         * tree root -- see bug 335700 for details.
          */
         entry = NULL;
         sprop = parent->kids;
         if (sprop) {
             if (KIDS_IS_CHUNKY(sprop)) {
                 chunk = KIDS_TO_CHUNK(sprop);
+
+                table = chunk->table;
+                if (table) {
+                    JS_LOCK_RUNTIME(rt);
+                    entry = (JSPropertyTreeEntry *)
+                            JS_DHashTableOperate(table, child, JS_DHASH_LOOKUP);
+                    sprop = entry->child;
+                    if (sprop) {
+                        JS_UNLOCK_RUNTIME(rt);
+                        return sprop;
+                    }
+                    goto locked_not_found;
+                }
+
+                n = 0;
                 do {
                     for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
                         sprop = chunk->kids[i];
-                        if (!sprop)
+                        if (!sprop) {
+                            n += i;
+                            if (n >= CHUNK_HASH_THRESHOLD) {
+                                chunk = KIDS_TO_CHUNK(parent->kids);
+                                if (!chunk->table) {
+                                    table = HashChunks(chunk, n);
+                                    JS_LOCK_RUNTIME(rt);
+                                    if (!table)
+                                        goto out_of_memory;
+                                    if (chunk->table)
+                                        JS_DHashTableDestroy(table);
+                                    else
+                                        chunk->table = table;
+                                    goto locked_not_found;
+                                }
+                            }
                             goto not_found;
+                        }
 
                         if (SPROP_MATCH(sprop, child))
                             return sprop;
                     }
+                    n += MAX_KIDS_PER_CHUNK;
                 } while ((chunk = chunk->next) != NULL);
             } else {
                 if (SPROP_MATCH(sprop, child))
@@ -776,6 +873,7 @@ GetPropertyTreeChild(JSContext *cx, JSScopeProperty *parent,
         JS_LOCK_RUNTIME(rt);
     }
 
+locked_not_found:
     sprop = NewScopeProperty(rt);
     if (!sprop)
         goto out_of_memory;
