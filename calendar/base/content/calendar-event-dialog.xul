@@ -91,7 +91,7 @@
                  control="item-title"/>
           <hbox flex="1" align="center">
             <textbox id="item-title" oninput="updateAccept();" flex="1"/>
-            <menulist id="component-type" crop="none" disabled="true"
+            <menulist id="component-type" crop="none"
                       oncommand="updateComponentType(this.value)">
               <menupopup id="component-menulist-menupopup">
                 <menuitem label="&newevent.itemType.event.label;"

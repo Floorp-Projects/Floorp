@@ -51,6 +51,7 @@ function onLoad()
 
     window.onAcceptCallback = args.onOk;
     window.calendarItem = args.calendarEvent;
+    window.originalItem = args.calendarEvent;
     window.mode = args.mode;
     window.recurrenceInfo = null;
 
@@ -108,7 +109,7 @@ function onAccept()
 
     var calendar = document.getElementById("item-calendar").selectedItem.calendar;
 
-    window.onAcceptCallback(item, calendar, originalItem);
+    window.onAcceptCallback(item, calendar, window.originalItem);
 
     // We already set persist="collapsed" in the xul file, but because
     // of a bug on 1_8_BRANCH we need this to make it really persist.
@@ -459,9 +460,55 @@ function updateTitle()
     }
 }
 
-function updateComponentType() {
-    //XXX We still can't properly convert from event <-> task via QI
-    return;
+function updateComponentType(aValue) {
+    if ((aValue == "event" && isEvent(window.calendarItem)) ||
+        (aValue == "todo" && isToDo(window.calendarItem))) {
+        return;
+    }
+    var oldItem = window.calendarItem.clone();
+    saveDialog(oldItem);
+
+    var newItem;
+    if (aValue == "event") {
+        newItem = createEvent();
+        oldItem.wrappedJSObject.cloneItemBaseInto(newItem.wrappedJSObject);
+        newItem.startDate = oldItem.entryDate || now();
+        newItem.endDate = oldItem.dueDate || now();
+    } else {
+        newItem = createToDo();
+        oldItem.wrappedJSObject.cloneItemBaseInto(newItem.wrappedJSObject);
+        newItem.entryDate = oldItem.startDate;
+        newItem.dueDate = oldItem.endDate;
+    }
+    window.calendarItem = newItem;
+
+    loadDialog(newItem);
+
+    // remove old style rule, so the hidden stuff comes back
+    const kDialogStylesheet = "chrome://calendar/content/calendar-event-dialog.css";
+
+    for each(var stylesheet in document.styleSheets) {
+        if (stylesheet.href != kDialogStylesheet) {
+            continue;
+        }
+        for (var i=0; i < stylesheet.cssRules.length; i++) {
+            if (stylesheet.cssRules[i].selectorText == ".todo-only" ||
+                stylesheet.cssRules[i].selectorText == ".event-only") {
+                stylesheet.deleteRule(i);
+                break;
+            } 
+        }
+        break;
+    }
+
+    updateStyle();
+    updateAccept();
+    updateDueDate();
+    updateEntryDate();
+    updateAllDay();
+    updateRecurrence();
+
+    window.sizeToContent();
 }
 
 function updateStyle()
