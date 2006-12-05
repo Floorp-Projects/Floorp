@@ -1896,14 +1896,16 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   nsresult rv = NS_OK;
 
-  nsPIDOMWindow *win = GetWindow();
-  if (win) {
-    nsCOMPtr<nsIDOMElement> frameElement;
-    rv = win->GetFrameElement(getter_AddRefs(frameElement));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!nsContentUtils::CanCallerAccess(NS_STATIC_CAST(nsIDOMHTMLDocument*, this))) {
+    nsPIDOMWindow *win = GetWindow();
+    if (win) {
+      nsCOMPtr<nsIDOMElement> frameElement;
+      rv = win->GetFrameElement(getter_AddRefs(frameElement));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (frameElement && !nsContentUtils::CanCallerAccess(frameElement)) {
-      return NS_ERROR_DOM_SECURITY_ERR;
+      if (frameElement && !nsContentUtils::CanCallerAccess(frameElement)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
     }
   }
 
