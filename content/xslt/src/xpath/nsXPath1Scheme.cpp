@@ -116,7 +116,7 @@ nsXPath1SchemeNSResolver::LookupNamespaceURI(const nsAString &aPrefix,
     mContext->GetSchemeData(i, scheme, data);
     if (scheme.Equals(xmlns)) {
       PRInt32 sep = data.FindChar('=');
-      if (sep > 0 && aPrefix.Equals(Substring(data, 0, sep))) {
+      if (sep > 0 && aPrefix.Equals(StringHead(data, sep))) {
         aURI.Assign(Substring(data, sep + 1, data.Length() - sep - 1));
         return NS_OK;
       }

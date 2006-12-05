@@ -916,7 +916,7 @@ txExprParser::resolveQName(const nsAString& aQName,
     aNamespace = kNameSpaceID_None;
     PRInt32 idx = aQName.FindChar(':');
     if (idx > 0) {
-        *aPrefix = NS_NewAtom(Substring(aQName, 0, (PRUint32)idx));
+        *aPrefix = NS_NewAtom(StringHead(aQName, (PRUint32)idx));
         if (!*aPrefix) {
             return NS_ERROR_OUT_OF_MEMORY;
         }

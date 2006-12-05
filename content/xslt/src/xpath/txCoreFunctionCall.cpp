@@ -662,10 +662,11 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             nsresult rv = param->evaluateToString(aContext, arg);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool result = arg.Equals(Substring(lang, 0, arg.Length()),
-                                       txCaseInsensitiveStringComparator()) &&
-                            (lang.Length() == arg.Length() ||
-                             lang.CharAt(arg.Length()) == '-');
+            PRBool result =
+                StringBeginsWith(lang, arg,
+                                 txCaseInsensitiveStringComparator()) &&
+                (lang.Length() == arg.Length() ||
+                 lang.CharAt(arg.Length()) == '-');
 
             aContext->recycler()->getBoolResult(result, aResult);
 
