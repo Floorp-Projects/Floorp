@@ -1,0 +1,47 @@
+test:
+	for f in release t/test.pl `find . -name "*.pm"`; do perl -c $$f; done
+	./t/test.pl
+
+stage:
+	# basic environment
+	mkdir -p /builds/tags
+	mkdir -p /builds/updates/
+	mkdir -p /builds/verify/
+	# ftp
+	mkdir -p /home/ftp/pub/firefox/nightly
+	# fake key
+	mkdir -p /home/ftp/pub/firefox/releases/1.5/
+	touch /home/ftp/pub/firefox/releases/1.5/KEY
+	# staging environment
+	mkdir -p /data/cltbld/firefox-1.5.0.7/batch1/stage
+
+cvsmirror: cvsmirror_main cvsmirror_mofo
+
+cvsmirror_main:
+	rsync -a --delete-after cvs-mirror.mozilla.org::mozilla/ /builds/cvsmirror/cvsroot/
+	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror/l10n/
+	chgrp -R cvs /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n /builds/cvsmirror/mofo
+	chmod -R g+rw /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n /builds/cvsmirror/mofo
+
+cvsmirror_mofo:
+	mkdir -p /builds/cvsmirror/tmp/mofo
+	mkdir -p /builds/cvsmirror/mofo
+	cvs -d /builds/cvsmirror/mofo init
+	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_0_BRANCH talkback
+	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r HEAD release
+	rm -rf /builds/cvsmirror/tmp/mofo/release/tinderbox-configs/
+	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_0_BRANCH_release release/tinderbox-configs/
+	cd /builds/cvsmirror/tmp/mofo/release && cvs -d /builds/cvsmirror/mofo import -m "import CVS snapshot" release MOZILLA_1_8_0_BRANCH_release R0_1
+	cd /builds/cvsmirror/tmp//mofo/talkback && cvs -d /builds/cvsmirror/mofo import -m"import CVS snapshot" talkback MOZILLA_1_8_0_BRANCH R0_1
+	rm -rf /builds/cvsmirror/tmp/mofo
+
+clean_stage:
+	rm -rf /builds/tags/*
+	rm -rf /builds/release/logs/*
+	rm -rf /builds/updates/*
+	rm -rf /builds/verify/*
+	rm -rf /data/cltbld/firefox-1.5.0.7/
+	rm -rf /home/ftp/pub/firefox/*
+
+clean_cvsmirror:
+	rm -rf /builds/cvsmirror/*
