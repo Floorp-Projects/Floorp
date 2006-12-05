@@ -206,10 +206,26 @@ sub clone {
     my $self = shift;
     my ($fields) = @_;
     my $dbh = Bugzilla->dbh;
-    my $note = "Build or Environment changed. Resetting to IDLE.";
-    $self->append_note($note);
-    $self->{'build_id'} = $fields->{'build_id'} if $fields->{'build_id'};
-    $self->{'environment_id'} = $fields->{'environment_id'} if $fields->{'environment_id'};
+    if ($fields->{'build_id'} && $self->{'build_id'} != $fields->{'build_id'}){
+        my $build = Bugzilla::Testopia::Build->new($fields->{'build_id'});
+        my $note  = "Build Changed by ". Bugzilla->user->login; 
+           $note .= ". Old build: '". $self->build->name;
+           $note .= "' New build: '". $build->name;
+           $note .= "'. Resetting to IDLE.";
+        $self->{'build_id'} = $fields->{'build_id'};
+        $self->{'build'} = $build;
+        $self->append_note($note);
+    }
+    if ($fields->{'environment_id'} && $self->{'environment_id'} != $fields->{'environment_id'}){
+        my $environment = Bugzilla::Testopia::Environment->new($fields->{'environment_id'});
+        my $note  = "Environment Changed by ". Bugzilla->user->login;
+           $note .= ". Old environment: '". $self->environment->name;
+           $note .= "' New environment: '". $environment->name;
+           $note .= "'. Resetting to IDLE.";
+        $self->{'environment_id'} = $fields->{'environment_id'};
+        $self->{'environment'} = $environment;
+        $self->append_note($note);
+    }
     my $entry = $self->store;
     $self->set_as_current($entry);
     return $entry;

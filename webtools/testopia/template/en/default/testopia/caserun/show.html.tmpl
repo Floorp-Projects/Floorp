@@ -100,6 +100,12 @@
     <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.action FILTER none %]</div></td>
     <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.effect FILTER none %]</div></td>
   </tr>
+[% IF caserun.case.script OR caserun.case.arguments %]
+  <tr>
+    <td colspan="2"><b>Script:</b>[% caserun.case.script FILTER html %]</td>
+    <td colspan="2"><b>Arguments:</b>[% caserun.case.arguments FILTER html %]</td>
+  </tr>
+[% END %]
 </table>
 <h3>Attributes</h3>
 <form action="[% action FILTER none %]" method="POST">

@@ -255,6 +255,8 @@ elsif ($action eq 'update_status'){
         $caserun->set_status($status_id);
         my $newstatus = $caserun->status();
         my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;
+        $note .= " for build: '". $caserun->build->name; 
+        $note .= "' and environment: '". $caserun->environment->name ."'.";
         $caserun->append_note($note);
     }
     print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;

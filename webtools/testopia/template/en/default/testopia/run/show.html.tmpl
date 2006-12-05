@@ -94,7 +94,14 @@
             mimetype: "text/xml"
         });
     }
-    
+    function notesZoom(id, case_id){
+      notes = window.open('','notes', 'status=1,toolbar=0,location=0,menubar=0,directories=0,resizable=1,scrollbars=1,width=800,height=600'); 
+      notes.title = 'Hello';
+      notes.document.write('<html><head><title>Notes for Case ' + case_id + '</title></head><body>');
+      notes.document.write(document.getElementById('old_notes'+id).innerHTML);
+      notes.document.write('</body></html>');
+      notes.document.close();
+    }
 </script>
 <style>
   .number_cell{

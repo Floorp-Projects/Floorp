@@ -39,6 +39,13 @@
         </div>
         </td>
       </tr>
+      [% IF caserun.case.script OR caserun.case.arguments %]
+      <tr>
+        <td><b>Script:</b>[% caserun.case.script FILTER html %]</td>
+        <td style="width:10px";/>
+        <td><b>Arguments:</b>[% caserun.case.arguments FILTER html %]</td>
+      </tr>
+      [% END %]
     </table>
         
     <input id="no[% index %]" type="hidden" value=""/>
@@ -67,11 +74,9 @@
 
     <td rowspan="2">
     [%##### Notes #####%]
-      <div style="float:left;font-weight:bold;">Notes:</div>
+      <div style="float:left;font-weight:bold;">Notes: <a href="#" onclick="notesZoom([% index %],'[% caserun.case.id %]')"><img src="testopia/img/env_lookup.png" alt="Zoom" title="Zoom"/></a></div>
       <div class="cc_i">
-        <div style="height:150px; width:400px; border:1px solid #000; background-color: #f8f8f8; overflow:auto;" id="old_notes[% index %]" >
-          <pre>[% caserun.notes %]</pre>
-        </div>
+        <div style="height:150px; width:400px; border:1px solid #000; background-color: #f8f8f8; overflow:auto;" id="old_notes[% index %]" ><pre>[% caserun.notes %]</pre></div>
       </div>
     </td>
     </tr>
