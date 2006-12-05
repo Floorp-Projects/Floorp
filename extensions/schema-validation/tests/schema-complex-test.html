@@ -32,7 +32,7 @@
 
       if (!gXMLDoc) {
         var xmlHTTP = new XMLHttpRequest();
-        xmlHTTP.open("GET", "file:///home/doron/mozbuilds/trunk/mozilla/extensions/schema-validation/tests/schema-complex-test.xml", false);
+        xmlHTTP.open("GET", document.URL + "/../schema-complex-test.xml", false);
         xmlHTTP.send(null);
         gXMLDoc = xmlHTTP.responseXML;
       }
@@ -135,7 +135,8 @@
       var schemaLoader = Components.classes["@mozilla.org/xmlextras/schemas/schemaloader;1"]
                                    .getService(Components.interfaces.nsISchemaLoader);
       try {
-        schema = schemaLoader.load("file:///home/doron/mozbuilds/trunk/mozilla/extensions/schema-validation/tests/schema.xsd");
+        // SchemaLoader.Load() wants a URI
+        schema = schemaLoader.load(document.URL + "/../schema.xsd");
         //alert(schema.attributeFormDefaultQualified)
         myValidator.loadSchema(schema);
       } catch(e){alert(e)}

@@ -130,8 +130,9 @@
 
       var schemaLoader = Components.classes["@mozilla.org/xmlextras/schemas/schemaloader;1"]
                                    .getService(Components.interfaces.nsISchemaLoader);
-      try { 
-        schema = schemaLoader.load("file:///home/doron/mozbuilds/trunk/mozilla/extensions/schema-validation/tests/schema.xsd");
+      try {
+        // SchemaLoader.Load() wants a URI
+        schema = schemaLoader.load(document.URL + "/../schema.xsd");
         myValidator.loadSchema(schema);
       } catch(e){alert(e)}
 
@@ -700,7 +701,6 @@
 
         validateStringNS("220", "include-integer-test-3", "http://www.mozilla.org/schema/test_imported", false);
         validateStringNS("6", "include-integer-test-3", "http://www.mozilla.org/schema/test_imported", true);
-
       }
 
       end = new Date();
