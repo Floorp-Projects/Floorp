@@ -144,7 +144,7 @@ sub init {
         $columns{'default_tester'}  = "map_default_tester.login_name";
     }
     elsif ($type eq 'run'){
-        $columns{'run_status'}      = "test_runs.close_date";        
+        $columns{'run_status'}      = "test_runs.stop_date";        
         $columns{'product'}         = "map_run_product.name";
         $columns{'build'}           = "map_run_build.name";
         $columns{'milestone'}       = "map_run_milestone.milestone";
