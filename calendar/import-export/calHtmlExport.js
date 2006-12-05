@@ -58,9 +58,11 @@ function getFileTypes(aCount) {
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                         .getService(Components.interfaces.nsIStringBundleService);
     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    var wildmat = '*.html; *.htm';
+    var label = props.formatStringFromName('filterHtml', [wildmat], 1);
     return([{defaultExtension:'html', 
-             extensionFilter:'*.html; *.htm', 
-             description: props.GetStringFromName('htmlDesc')}]);
+             extensionFilter: wildmat, 
+             description: label}]);
 };
 
 // not prototype.export. export is reserved.

@@ -52,16 +52,19 @@ function QueryInterface(aIID) {
     return this;
 };
 
-calOutlookCSVImporter.prototype.getFileTypes =
-function getFileTypes(aCount) {
+function getOutlookCsvFileTypes(aCount) {
     aCount.value = 1;
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                         .getService(Components.interfaces.nsIStringBundleService);
     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    var wildmat = '*.csv';
+    var label = props.formatStringFromName('filterOutlookCsv', [wildmat], 1);
     return([{defaultExtension:'csv', 
-             extensionFilter:'*.csv', 
-             description: props.GetStringFromName('outlookDesc')}]);
-};
+             extensionFilter: wildmat, 
+             description: label}]);
+}
+
+calOutlookCSVImporter.prototype.getFileTypes = getOutlookCsvFileTypes;
 
 const localeEn = {
     headTitle       : "Subject",
@@ -400,16 +403,7 @@ function QueryInterface(aIID) {
     return this;
 };
 
-calOutlookCSVExporter.prototype.getFileTypes =
-function getFileTypes(aCount) {
-    aCount.value = 1;
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-    return([{defaultExtension:'csv', 
-             extensionFilter:'*.csv', 
-             description:props.GetStringFromName('outlookDesc')}]);
-};
+calOutlookCSVExporter.prototype.getFileTypes = getOutlookCsvFileTypes;
 
 // not prototype.export. export is reserved.
 calOutlookCSVExporter.prototype.exportToStream =

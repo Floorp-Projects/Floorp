@@ -51,16 +51,19 @@ function QueryInterface(aIID) {
     return this;
 };
 
-calIcsImporter.prototype.getFileTypes =
-function getFileTypes(aCount) {
+function getIcsFileTypes(aCount) {
     aCount.value = 1;
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                         .getService(Components.interfaces.nsIStringBundleService);
     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    var wildmat = '*.ics';
+    var label = props.formatStringFromName('filterIcs', [wildmat], 1);
     return([{defaultExtension:'ics', 
-             extensionFilter:'*.ics', 
-             description: props.GetStringFromName('icsDesc')}]);
-};
+             extensionFilter: wildmat, 
+             description: label}]);
+}
+
+calIcsImporter.prototype.getFileTypes = getIcsFileTypes;
 
 calIcsImporter.prototype.importFromStream =
 function ics_importFromStream(aStream, aCount) {
@@ -219,16 +222,7 @@ function QueryInterface(aIID) {
     return this;
 };
 
-calIcsExporter.prototype.getFileTypes =
-function getFileTypes(aCount) {
-    aCount.value = 1;
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-    return([{defaultExtension:'ics', 
-             extensionFilter:'*.ics', 
-             description: props.GetStringFromName('icsDesc')}]);
-};
+calIcsExporter.prototype.getFileTypes = getIcsFileTypes;
 
 // not prototype.export. export is reserved.
 calIcsExporter.prototype.exportToStream =

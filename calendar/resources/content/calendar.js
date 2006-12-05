@@ -506,7 +506,9 @@ function openLocalCalendar() {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, gCalendarBundle.getString("Open"), nsIFilePicker.modeOpen);
-    fp.appendFilter(gCalendarBundle.getString("filterCalendar"), "*.ics");
+    var wildmat = "*.ics";
+    var description = gCalendarBundle.getFormattedString("filterIcs", [wildmat]);
+    fp.appendFilter(description, wildmat);
     fp.appendFilters(nsIFilePicker.filterAll);
  
     if (fp.show() != nsIFilePicker.returnOK) {
