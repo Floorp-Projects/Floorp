@@ -784,8 +784,8 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
         } while (rt->gcLevel > 0);
     }
 #endif
-    rhe = (JSGCRootHashEntry *)
-          JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_ADD);
+    rhe = (JSGCRootHashEntry *) JS_DHashTableOperate(&rt->gcRootsHash, rp,
+                                                     JS_DHASH_ADD);
     if (rhe) {
         rhe->root = rp;
         rhe->name = name;
@@ -1667,7 +1667,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
         }
 
         lhe = (JSGCLockHashEntry *)
-              JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
+            JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
         if (!lhe) {
             ok = JS_FALSE;
             goto done;

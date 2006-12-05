@@ -457,30 +457,6 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
      / ((table)->entrySize / sizeof(void *) + (k)))
 
 /*
- * Default max/min alpha, and macros to compute the value for the |capacity|
- * parameter to PL_NewDHashTable and PL_DHashTableInit, given default or any
- * max alpha, such that adding entryCount entries right after initializing the
- * table will not require a reallocation (so PL_DHASH_ADD can't fail for those
- * PL_DHashTableOperate calls).
- *
- * NB: PL_DHASH_CAP is a helper macro meant for use only in PL_DHASH_CAPACITY.
- * Don't use it directly!
- */
-#define PL_DHASH_DEFAULT_MAX_ALPHA 0.75
-#define PL_DHASH_DEFAULT_MIN_ALPHA 0.25
-
-#define PL_DHASH_CAP(entryCount, maxAlpha)                                    \
-    ((PRUint32)((double)(entryCount) / (maxAlpha)))
-
-#define PL_DHASH_CAPACITY(entryCount, maxAlpha)                               \
-    (PL_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((PL_DHASH_CAP(entryCount, maxAlpha) * (uint8)(0x100 * (maxAlpha)))     \
-       >> 8) < (entryCount)))
-
-#define PL_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
-    PL_DHASH_CAPACITY(entryCount, PL_DHASH_DEFAULT_MAX_ALPHA)
-
-/*
  * Finalize table's data, free its entry storage using table->ops->freeTable,
  * and leave its members unchanged from their last live values (which leaves
  * pointers dangling).  If you want to burn cycles clearing table, it's up to

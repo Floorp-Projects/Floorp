@@ -2068,9 +2068,8 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
             data->numvars >= BIG_DESTRUCTURING &&
             pn->pn_count >= BIG_OBJECT_INIT &&
             JS_DHashTableInit(&data->table, &FindPropValOps, pn,
-                              sizeof(FindPropValEntry),
-                              JS_DHASH_DEFAULT_CAPACITY(pn->pn_count)))
-        {
+                              sizeof(FindPropValEntry), pn->pn_count)) {
+
             for (pn = pn->pn_head; pn; pn = pn->pn_next) {
                 ASSERT_VALID_PROPERTY_KEY(pn->pn_left);
                 entry = (FindPropValEntry *)
