@@ -5621,9 +5621,10 @@ var FeedHandler = {
     var etype = event.target.type;
     var etitle = event.target.title;
     const alternateRelRegex = /(^|\s)alternate($|\s)/i;
+    const stylesheetRelRegex = /(^|\s)stylesheet($|\s)/i;
     const rssTitleRegex = /(^|\s)rss($|\s)/i;
 
-    if (!alternateRelRegex.test(erel) ||
+    if (!alternateRelRegex.test(erel) || stylesheetRelRegex.test(erel) ||
         !etype)
       return;
 
