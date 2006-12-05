@@ -76,34 +76,52 @@
   <key keycode="VK_ENTER" oncommand="ModifySelected();"/>
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
 </keyset>
-
-<hbox id="filterRow" align="center">
-  <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
-  <textbox id="textbox" flex="1" type="timed" timeout="500" oncommand="FilterPrefs();"/>
-  <button id="button" label="&showAll.label;" accesskey="&showAll.accesskey;" oncommand="ClearFilter();" disabled="true"/>
-</hbox>
-
-<tree id="configTree" flex="1" seltype="single" enableColumnDrag="true" 
-      context="configContext">
-  <treecols>
-    <treecol id="prefCol" label="&prefColumn.label;" flex="7"
-        class="sortDirectionIndicator"
-        ignoreincolumnpicker="true"
-        persist="hidden width ordinal sortDirection"/>
-    <splitter class="tree-splitter" />
-    <treecol id="lockCol" label="&lockColumn.label;" flex="1"
-        class="sortDirectionIndicator"
-        persist="hidden width ordinal sortDirection"/>
-    <splitter class="tree-splitter" />
-    <treecol id="typeCol" label="&typeColumn.label;" flex="1"
-        class="sortDirectionIndicator"
-        persist="hidden width ordinal sortDirection"/>
-    <splitter class="tree-splitter" />
-    <treecol id="valueCol" label="&valueColumn.label;" flex="10"
-        class="sortDirectionIndicator"
-        persist="hidden width ordinal sortDirection"/>
-  </treecols>
-
-  <treechildren id="configTreeBody" ondblclick="if (event.button == 0) ModifySelected();"/>
-</tree>
+<deck id="configDeck" flex="1">
+  <vbox id="warningScreen" flex="1" align="center">
+    <spacer flex="1"/>
+    <hbox id="warningBox" align="top">
+      <image id="exclam" class="alert-icon"/>
+      <vbox id="warningInnerBox" flex="1">
+        <label id="warningTitle">&scaryWarningTitle.label;</label>
+        <label id="warningText">&scaryWarningText.label;</label>
+        <checkbox id="showWarningNextTime" label="&scaryWarningCheckbox.label;" checked="true"/>
+        <hbox pack="center">
+          <button id="warningButton" oncommand="ShowPrefs();" label="&scaryWarningButton.label;"/>
+        </hbox>
+      </vbox>
+    </hbox>
+    <spacer flex="2"/>
+  </vbox>
+  <vbox flex="1">
+    <hbox id="filterRow" align="center">
+      <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
+      <textbox id="textbox" flex="1" type="timed" timeout="500" oncommand="FilterPrefs();"/>
+      <button id="button" label="&showAll.label;" accesskey="&showAll.accesskey;" oncommand="ClearFilter();" disabled="true"/>
+    </hbox>
+  
+    <tree id="configTree" flex="1" class="plain focusring" seltype="single"
+          enableColumnDrag="true" context="configContext">
+      <treecols>
+        <treecol id="prefCol" label="&prefColumn.label;" flex="7"
+            class="sortDirectionIndicator"
+            ignoreincolumnpicker="true"
+            persist="hidden width ordinal sortDirection"/>
+        <splitter class="tree-splitter" />
+        <treecol id="lockCol" label="&lockColumn.label;" flex="1"
+            class="sortDirectionIndicator"
+            persist="hidden width ordinal sortDirection"/>
+        <splitter class="tree-splitter" />
+        <treecol id="typeCol" label="&typeColumn.label;" flex="1"
+            class="sortDirectionIndicator"
+            persist="hidden width ordinal sortDirection"/>
+        <splitter class="tree-splitter" />
+        <treecol id="valueCol" label="&valueColumn.label;" flex="10"
+            class="sortDirectionIndicator"
+            persist="hidden width ordinal sortDirection"/>
+      </treecols>
+  
+      <treechildren id="configTreeBody" ondblclick="if (event.button == 0) ModifySelected();"/>
+    </tree>
+  </vbox>
+</deck>
 </window>

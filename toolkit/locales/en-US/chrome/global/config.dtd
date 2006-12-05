@@ -36,6 +36,11 @@
 
 <!ENTITY window.title "about:config">
 
+<!ENTITY scaryWarningTitle.label "Be careful, this gun is loaded!">
+<!ENTITY scaryWarningText.label "The about:config page allows you to modify advanced preferences that control this application. It is possible to create harmful side effects by changing the values of these preferences. You should only continue if you know what you are doing or if you are following trusted advice.">
+<!ENTITY scaryWarningButton.label "I'll be careful, I promise!">
+<!ENTITY scaryWarningCheckbox.label "Show this warning next time">
+
 <!ENTITY filterPrefs.label "Filter:">
 <!ENTITY filterPrefs.accesskey "I">
 <!ENTITY showAll.label "Show All">
