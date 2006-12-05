@@ -139,7 +139,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
 - (void)actionButtonWillDisplay:(NSNotification *)notification;
 
-- (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask;
+- (NSDragOperation)preferredDragOperationForInfo:(id <NSDraggingInfo>)info;
 
 - (void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy;
 - (void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder*)dropFolder index:(int)index;
@@ -1088,9 +1088,14 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   return NO;
 }
 
-// Choose a single drag operation to return based on a provided mask and the operations that table view/outline view support.
-- (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask
+// Choose a single drag operation to return based on the dragging info and the operations that table view/outline view support.
+- (NSDragOperation)preferredDragOperationForInfo:(id <NSDraggingInfo>)info
 {
+  // If the drag came from another app, force copies (work around Safari bug)
+  if (![info draggingSource])
+    return NSDragOperationCopy;
+
+  NSDragOperation srcMask = [info draggingSourceOperationMask];
   if (srcMask & NSDragOperationMove)
     return NSDragOperationMove;
   // only copy if the modifier key was held down - the OS will clear any other drag op flags
@@ -1304,7 +1309,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 {
   if (tv == mContainersTableView) {
     NSArray* types = [[info draggingPasteboard] types];
-    NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
+    NSDragOperation dragOp = [self preferredDragOperationForInfo:info];
     // figure out where we want to drop. |dropFolder| will either be a container or
     // the top-level bookmarks root if we're to create a new container.
     BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
@@ -1506,7 +1511,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     return NSDragOperationNone;
 
   NSArray* types = [[info draggingPasteboard] types];
-  NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
+  NSDragOperation dragOp = [self preferredDragOperationForInfo:info];
 
   if ([types containsObject:kCaminoBookmarkListPBoardType]) {
     NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType:kCaminoBookmarkListPBoardType]];
