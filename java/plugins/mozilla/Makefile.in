@@ -82,6 +82,8 @@ INCLUDES += \
 CXXFLAGS += /Zi /Yd
 endif
 
+CXXFLAGS += -DFORCE_PR_LOG
+
 DEFINES += -DMOZILLA_STRICT_API
 
 ifeq ($(OS_ARCH),Linux)
