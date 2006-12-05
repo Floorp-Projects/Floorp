@@ -154,7 +154,7 @@ void URIUtils::getDocumentBase(const nsAFlatString& href, nsAString& dest)
     PRUint32 iter = href.Length();
     while (iter > 0) {
         if (temp[--iter] == HREF_PATH_SEP) {
-            dest.Append(Substring(href, 0, iter));
+            dest.Append(StringHead(href, iter));
             break;
         }
     }

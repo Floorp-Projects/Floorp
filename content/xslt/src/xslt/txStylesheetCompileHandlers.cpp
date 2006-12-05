@@ -1079,7 +1079,7 @@ txFnStartStripSpace(PRInt32 aNamespaceID,
                 if (c[length-2] != ':') {
                     return NS_ERROR_XSLT_PARSE_FAILURE;
                 }
-                rv = XMLUtils::splitQName(Substring(name, 0, length-2), 
+                rv = XMLUtils::splitQName(StringHead(name, length - 2), 
                                           getter_AddRefs(prefix),
                                           getter_AddRefs(localName));
                 if (NS_FAILED(rv) || prefix) {
