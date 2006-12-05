@@ -1,7 +1,8 @@
 package MozBuild::Util;
 use File::Path;
 use base qw(Exporter);
-@EXPORT_OK = qw(RunShellCommand MkdirWithPath);
+
+@EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile);
 
 my $EXEC_TIMEOUT = '600';
 
