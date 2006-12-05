@@ -13,10 +13,10 @@
 # Requires "AllowOverride Indexes" to be enabled for this directory.
 #DirectoryIndex doctor.cgi
 
-# IMPORTANT! Uncomment this to restrict access to doctor.conf.  This prevents
+# Restrict access to doctor.conf and other non-CGI scripts.  This prevents
 # users from accessing the configuration file, which may contain sensitive CVS
 # authentication info (i.e. username, password).
 # Requires "AllowOverride Limit" to be enabled for this directory.
-#<FilesMatch "^doctor\.conf~?$">
-#  Deny from all
-#</FilesMatch>
+<FilesMatch \.(pm|pl|conf~?)$>
+  Deny from all
+</FilesMatch>
