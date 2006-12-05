@@ -1,5 +1,7 @@
 package MozBuild::Util;
 use File::Path;
+use base qw(Exporter);
+@EXPORT_OK = qw(RunShellCommand MkdirWithPath);
 
 my $EXEC_TIMEOUT = '600';
 
@@ -63,6 +65,7 @@ sub RunShellCommand {
         if ($@ eq "alarm\n") {
             $timedOut = 1;
             kill(9, $pid) or die "Could not kill timed-out $pid: $!";
+            warn "Shell command $shellCommand timed out, PID $pid killed: $@\n";
         } else {
             warn "Error running $shellCommand: $@\n";
             $output = $@;
