@@ -107,6 +107,7 @@ nsSAXXMLReader::HandleStartElement(const PRUnichar *aName,
     NS_NAMED_LITERAL_STRING(cdataType, "CDATA");
     // could support xmlns reporting, it's a standard SAX feature
     if (!uri.EqualsLiteral(XMLNS_URI)) {
+      NS_ASSERTION(aAtts[1], "null passed to handler");
       atts->AddAttribute(uri, localName, qName, cdataType,
                          nsDependentString(aAtts[1]));
     }
@@ -131,6 +132,7 @@ nsSAXXMLReader::HandleEndElement(const PRUnichar *aName)
 NS_IMETHODIMP
 nsSAXXMLReader::HandleComment(const PRUnichar *aName)
 {
+  NS_ASSERTION(aName, "null passed to handler");
   if (mLexicalHandler)
     return mLexicalHandler->Comment(nsDependentString(aName));
  
@@ -165,6 +167,14 @@ nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
                                const PRUnichar *aSystemId,
                                const PRUnichar *aPublicId)
 {
+  PRUnichar nullChar = PRUnichar(0);
+  if (!aName)
+    aName = &nullChar;
+  if (!aSystemId)
+    aSystemId = &nullChar;
+  if (!aPublicId)
+    aPublicId = &nullChar;
+
   mSystemId = aSystemId;
   mPublicId = aPublicId;
   if (mLexicalHandler) {
@@ -232,6 +242,7 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleProcessingInstruction(const PRUnichar *aTarget,
                                             const PRUnichar *aData)
 {
+  NS_ASSERTION(aTarget && aData, "null passed to handler");
   if (mContentHandler) {
     return mContentHandler->ProcessingInstruction(nsDependentString(aTarget),
                                                   nsDependentString(aData));
@@ -245,6 +256,7 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
                                    const PRUnichar *aSystemId,
                                    const PRUnichar *aPublicId)
 {
+  NS_ASSERTION(aNotationName, "null passed to handler");
   if (mDTDHandler) {
     PRUnichar nullChar = PRUnichar(0);
     if (!aSystemId)
@@ -266,6 +278,7 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
                                          const PRUnichar *aPublicId,
                                          const PRUnichar *aNotationName)
 {
+  NS_ASSERTION(aEntityName && aNotationName, "null passed to handler");
   if (mDTDHandler) {
     PRUnichar nullChar = PRUnichar(0);
     if (!aSystemId)
@@ -657,6 +670,7 @@ nsSAXXMLReader::SplitExpatName(const PRUnichar *aExpatName,
    *
    */
 
+  NS_ASSERTION(aExpatName, "null passed to handler");
   nsDependentString expatStr(aExpatName);
   PRInt32 break1, break2 = kNotFound;
   break1 = expatStr.FindChar(PRUnichar(0xFFFF));
