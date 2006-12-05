@@ -3,16 +3,19 @@
 #
 package Bootstrap::Step::Build;
 use Bootstrap::Step;
+use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $buildDir = $this->Config('var' => 'buildDir');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $rc = $this->Config('var' => 'rc');
-    my $buildPlatform = $this->Config('var' => 'buildPlatform');
-    my $logDir = $this->Config('var' => 'logDir');
+    my $buildDir = $config->Get('var' => 'buildDir');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $rc = $config->Get('var' => 'rc');
+    my $buildPlatform = $config->Get('var' => 'buildPlatform');
+    my $logDir = $config->Get('var' => 'logDir');
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $lastBuilt = $buildDir . '/' . $buildPlatform . '/last-built';
@@ -33,11 +36,11 @@ sub Execute {
 sub Verify {
     my $this = shift;
 
-    my $buildDir = $this->Config('var' => 'buildDir');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $rc = $this->Config('var' => 'rc');
+    my $buildDir = $config->Get('var' => 'buildDir');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $rc = $config->Get('var' => 'rc');
     my $rcTag = $productTag.'_RC'.$rc;
-    my $logDir = $this->Config('var' => 'logDir');
+    my $logDir = $config->Get('var' => 'logDir');
 
     my $buildLog = $logDir . '/' . $rcTag . '-build.log';
 

@@ -3,25 +3,28 @@
 # 
 package Bootstrap::Step::Tag;
 use Bootstrap::Step;
-use File::Copy;
-use MozBuild::Util;
+use Bootstrap::Config;
+use File::Copy qw(move);
+use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $product = $this->Config('var' => 'product');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $branchTag = $this->Config('var' => 'branchTag');
-    my $pullDate = $this->Config('var' => 'pullDate');
-    my $rc = $this->Config('var' => 'rc');
-    my $version = $this->Config('var' => 'version');
-    my $appName = $this->Config('var' => 'appName');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $mozillaCvsroot = $this->Config('var' => 'mozillaCvsroot');
-    my $l10nCvsroot = $this->Config('var' => 'l10nCvsroot');
-    my $mofoCvsroot = $this->Config('var' => 'mofoCvsroot');
-    my $tagDir = $this->Config('var' => 'tagDir');
+    my $product = $config->Get('var' => 'product');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $branchTag = $config->Get('var' => 'branchTag');
+    my $pullDate = $config->Get('var' => 'pullDate');
+    my $rc = $config->Get('var' => 'rc');
+    my $version = $config->Get('var' => 'version');
+    my $appName = $config->Get('var' => 'appName');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
+    my $l10nCvsroot = $config->Get('var' => 'l10nCvsroot');
+    my $mofoCvsroot = $config->Get('var' => 'mofoCvsroot');
+    my $tagDir = $config->Get('var' => 'tagDir');
 
     my $releaseTag = $productTag.'_RELEASE';
     my $rcTag = $productTag.'_RC'.$rc;
@@ -67,7 +70,7 @@ sub Execute {
     );
   
     # Create the RELEASE tag
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $releaseTag,
       'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
       'timeout' => '3600',
@@ -75,7 +78,7 @@ sub Execute {
     );
 
     # Create the RC tag
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $rcTag,
       'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
       'timeout' => '3600',
@@ -84,10 +87,10 @@ sub Execute {
 
     # Create a minibranch for the pull scripts so we can change them without
     # changing anything on the original branch.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $minibranchTag,
       'branch'  => '1',
-      'files'   => 'client.mk',
+      'files'   => ['client.mk'],
       'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
       'logFile' => $logDir . '/cvsroot_tag-' . $minibranchTag. '.log',
     );
@@ -109,7 +112,7 @@ sub Execute {
     close INFILE;
     close OUTFILE;
 
-    if (not File::Copy::move("$releaseTagDir/cvsroot/mozilla/client.mk.tmp", 
+    if (not move("$releaseTagDir/cvsroot/mozilla/client.mk.tmp", 
                    "$releaseTagDir/cvsroot/mozilla/client.mk")) {
         die "Cannot rename $releaseTagDir/cvsroot/mozilla/client.mk.tmp to $releaseTagDir/cvsroot/mozilla/client.mk";
     }
@@ -129,19 +132,19 @@ sub Execute {
     );
 
     # Move the release tag onto the modified version of the pull scripts.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $releaseTag,
       'force'   => '1',
-      'files'   => 'client.mk',
+      'files'   => ['client.mk'],
       'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
       'logFile' => $logDir . '/cvsroot_clientmk_tag-' . $releaseTag. '.log',
     );
 
     # Move the RC tag onto the modified version of the pull scripts.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $rcTag,
       'force'   => '1',
-      'files'   => 'client.mk',
+      'files'   => ['client.mk'],
       'coDir'   => $releaseTagDir . '/cvsroot/mozilla',
       'logFile' => $logDir . '/cvsroot_clientmk_tag-' . $rcTag. '.log',
     );
@@ -160,7 +163,7 @@ sub Execute {
     );
 
     # Create the talkback RELEASE tag.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $releaseTag,
       'coDir'   => $releaseTagDir . '/mofo/talkback/fullsoft',
       'logFile' => $logDir . '/mofo_tag-' . $releaseTag. '.log',
@@ -196,14 +199,14 @@ sub Execute {
     }
 
     # Create the l10n RELEASE tag.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $releaseTag,
       'coDir'   => $releaseTagDir . '/l10n/l10n',
       'logFile' => $logDir . '/l10n_tag-' . $releaseTag. '.log',
     );
 
     # Create the RC tag.
-    $this->_CvsTag(
+    $this->CvsTag(
       'tagName' => $rcTag,
       'coDir'   => $releaseTagDir . '/l10n/l10n',
       'logFile' => $logDir . '/l10n_tag-' . $rcTag. '.log',
@@ -212,11 +215,11 @@ sub Execute {
 
 sub Verify {
     my $this = shift;
-    # XXX temp disable 
+    # TODO - independently verify that tag was applied
     #$this->Shell('cmd' => 'echo Verify tag');
 }
 
-sub _CvsTag {
+sub CvsTag {
     my $this = shift;
     my %args = @_;
 
@@ -227,30 +230,27 @@ sub _CvsTag {
     my $force = $args{'force'};
     my $logFile = $args{'logFile'};
    
-    my $logDir     = $this->Config('var' => 'logDir');
-
-    my $cmd;
-    my $cvsCommand = 'cvs tag';
-    my $checkForOnly = '^T ';
+    my $logDir = $config->Get('var' => 'logDir');
 
     # only force or branch specific files, not the whole tree
-    if ($branch and $files) {
-        $cmd = $cvsCommand . ' -b ' . $tagName . ' ' . $files;
-        $checkForOnly = '^B ';
-    } elsif ($force and $files) {
-        $cmd = $cvsCommand . ' -F ' . $tagName . ' ' . $files;
-    } else {
-        die("Must specify files if branch or force option is used.");
+    if ($force and scalar(@{$files}) <= 0 ) {
+        die("ASSERT: Cannot specify force without files");
+    } elsif ($branch and scalar(@{$files}) <= 0) {
+        die("ASSERT: Cannot specify branch without files");
+    } elsif ($branch and $force) {
+        die("ASSERT: Cannot specify both branch and force");
+    } elsif (not $tagName) {
+        die("ASSERT: tagName must be specified");
+    } elsif (not $logFile) {
+        die("ASSERT: logFile must be specified");
     }
 
-    # regular tags can be applied to specific files or the whole tree
-    # if no files are specified.
-    if ($files) {
-        $cmd = $cvsCommand . ' ' . $tagName . $files;
-    } else {
-        $cmd = $cvsCommand . ' ' . $tagName;
-    }
-    
+    my $cmd = 'cvs -q tag';
+    $cmd .= ' -F ' if ($force);
+    $cmd .= ' -b ' if ($branch);
+    $cmd .= ' ' . $tagName;
+    $cmd .= ' ' . join(' ', @{$files}) if (defined($files));
+
     $this->Shell(
       'cmd' => $cmd,
       'dir' => $coDir,
@@ -258,10 +258,10 @@ sub _CvsTag {
       'logFile' => $logFile,
     );
 
-#    $this->CheckLog(
-#      'log' => $logFile,
-#      'checkForOnly' => $checkForOnly,
-#    );
+    $this->CheckLog(
+      'log' => $logFile,
+      'checkForOnly' => '^T ',
+    );
 }
 
 1;

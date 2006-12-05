@@ -1,11 +1,14 @@
 package t::Bootstrap::Step::Dummy;
 use Bootstrap::Step;
+use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $productTag = $this->Config('var' => 'productTag');
+    my $productTag = $config->Get('var' => 'productTag');
 
     if (not $productTag) {
         print("testfailed, could not get productTag var from Config: $!\n");

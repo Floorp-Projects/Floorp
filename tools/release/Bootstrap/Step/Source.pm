@@ -4,26 +4,30 @@
 # 
 package Bootstrap::Step::Source;
 use Bootstrap::Step;
-use File::Copy;
-use MozBuild::Util;
+use Bootstrap::Config;
+use File::Copy qw(move);
+use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $product = $this->Config('var' => 'product');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $version = $this->Config('var' => 'version');
-    my $rc = $this->Config('var' => 'rc');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $stageHome = $this->Config('var' => 'stageHome');
+    my $product = $config->Get('var' => 'product');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $version = $config->Get('var' => 'version');
+    my $rc = $config->Get('var' => 'rc');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $stageHome = $config->Get('var' => 'stageHome');
 
     # create staging area
     my $stageDir = 
       $stageHome . '/' . $product . '-' . $version . '/batch-source/rc' . $rc;
 
     if (not -d $stageDir) {
-        MkdirWithPath('dir' => $stageDir) or die "Cannot create $stageDir: $!";
+        MkdirWithPath('dir' => $stageDir) 
+          or die "Cannot create $stageDir: $!";
     }
 
     $this->Shell(
@@ -32,7 +36,7 @@ sub Execute {
       'logFile' => $logDir . '/source.log',
     );
               
-    File::Copy::move("$stageDir/../*.bz2", $stageDir);
+    move("$stageDir/../*.bz2", $stageDir);
     chmod(0644, glob("$stageDir/*.bz2"));
 
 #    $this->Shell(

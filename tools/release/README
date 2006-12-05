@@ -7,7 +7,7 @@ Use "release -h" for help.
 Pre-flight Checklist
 -----------------
 There are a number of manual steps that must be performed, so a default
-end-to-end run will generally not work.
+end-to-end run will not (yet) work.
 
 Before any steps:
 
@@ -20,7 +20,7 @@ After Build and Repack steps:
 
 * rsync builds to candidates dir
 
-After the Update step:
+After Update step:
 
 * edit patcher config
 * edit mozilla/testing/release/updates/updates.cfg
@@ -41,18 +41,10 @@ Steps
 -----------------
 1) Tag 
 2) Build 
-2.1) Push
-2.2) Announce
 3) Source
 4) Repack
-4.1) Push
-4.2) Announce
 5) Updates
-5.1) Push
-5.2) Announce
 6) Stage
-6.1) Merge
-6.2) Announce
 7) Sign
    
 Details

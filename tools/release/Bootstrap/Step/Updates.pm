@@ -4,24 +4,28 @@
 # 
 package Bootstrap::Step::Updates;
 use Bootstrap::Step;
-use File::Find;
-use MozBuild::Util;
+use Bootstrap::Config;
+use File::Find qw(find);
+use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $product = $this->Config('var' => 'product');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $version = $this->Config('var' => 'version');
-    my $mozillaCvsroot = $this->Config('var' => 'mozillaCvsroot');
-    my $mofoCvsroot = $this->Config('var' => 'mofoCvsroot');
-    my $updateDir = $this->Config('var' => 'updateDir');
-    my $patcherConfig = $this->Config('var' => 'patcherConfig');
+    my $product = $config->Get('var' => 'product');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $version = $config->Get('var' => 'version');
+    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
+    my $mofoCvsroot = $config->Get('var' => 'mofoCvsroot');
+    my $updateDir = $config->Get('var' => 'updateDir');
+    my $patcherConfig = $config->Get('var' => 'patcherConfig');
 
     # Create updates area.
     if (not -d $updateDir) {
-        MkdirWithPath('dir' => $updateDir) or die "Cannot mkdir $updateDir: $!";
+        MkdirWithPath('dir' => $updateDir) 
+          or die "Cannot mkdir $updateDir: $!";
     }
 
     $this->Shell(
@@ -86,21 +90,22 @@ sub Execute {
 sub Verify {
     my $this = shift;
 
-    my $logDir = $this->Config('var' => 'logDir');
-    my $version = $this->Config('var' => 'version');
-    my $oldVersion = $this->Config('var' => 'oldVersion');
-    my $mozillaCvsroot = $this->Config('var' => 'mozillaCvsroot');
-    my $updateDir = $this->Config('var' => 'updateDir');
-    my $verifyDir = $this->Config('var' => 'verifyDir');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $version = $config->Get('var' => 'version');
+    my $oldVersion = $config->Get('var' => 'oldVersion');
+    my $mozillaCvsroot = $config->Get('var' => 'mozillaCvsroot');
+    my $updateDir = $config->Get('var' => 'updateDir');
+    my $verifyDir = $config->Get('var' => 'verifyDir');
+    my $product = $config->Get('var' => 'product');
 
     ### quick verification
     # ensure that there are only test channels
-    my $testDir = $verifyDir . '/' . $version . '-updates/patcher/temp/' . $product . $oldVersion . '-' . $version . '/aus2.test';
+    my $testDir = $updateDir . '/patcher/temp/' . $product . '/' . $oldVersion . '-' . $version . '/aus2.test';
 
     File::Find::find(\&TestAusCallback, $testDir);
 
     # Create verification area.
-    my $verifyDirVersion = $verifyDir . $version;
+    my $verifyDirVersion = $verifyDir . '/' . $version;
     MkdirWithPath('dir' => $verifyDirVersion) 
       or die("Could not mkdir $verifyDirVersion: $!");
 
@@ -127,8 +132,10 @@ sub Verify {
 
 sub TestAusCallback { 
     my $dir = $File::Find::name;
-    if ($dir =~ /test/) { 
-        die("Non-test directory found in $testDir/aus2.test: $dir");
+    if (($dir =~ /beta/) or ($dir =~ /release/)) {
+        if (not $dir =~ /test/) { 
+            die("Non-test directory found in $testDir/aus2.test: $dir");
+        }
     }
 }
 

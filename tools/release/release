@@ -10,7 +10,6 @@ use Bootstrap::Step::Repack;
 use Bootstrap::Step::Updates;
 use Bootstrap::Step::Stage;
 use Bootstrap::Step::Sign;
-use Bootstrap::Step::Release;
 
 my @allSteps = (
     'Tag',
@@ -20,7 +19,6 @@ my @allSteps = (
     'Updates',
     'Stage',
     'Sign',
-    'Release',
 );
 
 my %config;

@@ -4,16 +4,19 @@
 #
 package Bootstrap::Step::Repack;
 use Bootstrap::Step;
+use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $buildDir = $this->Config('var' => 'l10n-buildDir');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $rc = $this->Config('var' => 'rc');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $buildPlatform = $this->Config('var' => 'buildPlatform');
+    my $buildDir = $config->Get('var' => 'l10n_buildDir');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $rc = $config->Get('var' => 'rc');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $buildPlatform = $config->Get('var' => 'buildPlatform');
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $buildLog = $logDir . '/' . $rcTag . '-build-l10n.log';
@@ -33,11 +36,11 @@ sub Execute {
 sub Verify {
     my $this = shift;
 
-    my $buildDir = $this->Config('var' => 'buildDir');
-    my $productTag = $this->Config('var' => 'productTag');
-    my $rc = $this->Config('var' => 'rc');
+    my $buildDir = $config->Get('var' => 'buildDir');
+    my $productTag = $config->Get('var' => 'productTag');
+    my $rc = $config->Get('var' => 'rc');
     my $rcTag = $productTag.'_RC'.$rc;
-    my $logDir = $this->Config('var' => 'logDir');
+    my $logDir = $config->Get('var' => 'logDir');
 
     my $buildLog = $logDir . '/' . $rcTag . '-build.log';
 
