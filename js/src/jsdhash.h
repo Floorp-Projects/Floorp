@@ -456,30 +456,6 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
      / ((table)->entrySize / sizeof(void *) + (k)))
 
 /*
- * Default max/min alpha, and macros to compute the value for the |capacity|
- * parameter to JS_NewDHashTable and JS_DHashTableInit, given default or any
- * max alpha, such that adding entryCount entries right after initializing the
- * table will not require a reallocation (so JS_DHASH_ADD can't fail for those
- * JS_DHashTableOperate calls).
- *
- * NB: JS_DHASH_CAP is a helper macro meant for use only in JS_DHASH_CAPACITY.
- * Don't use it directly!
- */
-#define JS_DHASH_DEFAULT_MAX_ALPHA 0.75
-#define JS_DHASH_DEFAULT_MIN_ALPHA 0.25
-
-#define JS_DHASH_CAP(entryCount, maxAlpha)                                    \
-    ((uint32)((double)(entryCount) / (maxAlpha)))
-
-#define JS_DHASH_CAPACITY(entryCount, maxAlpha)                               \
-    (JS_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((JS_DHASH_CAP(entryCount, maxAlpha) * (uint8)(0x100 * (maxAlpha)))     \
-       >> 8) < (entryCount)))
-
-#define JS_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
-    JS_DHASH_CAPACITY(entryCount, JS_DHASH_DEFAULT_MAX_ALPHA)
-
-/*
  * Finalize table's data, free its entry storage using table->ops->freeTable,
  * and leave its members unchanged from their last live values (which leaves
  * pointers dangling).  If you want to burn cycles clearing table, it's up to

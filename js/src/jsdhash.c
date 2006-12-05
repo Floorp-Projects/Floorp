@@ -240,8 +240,8 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
     if (capacity >= JS_DHASH_SIZE_LIMIT)
         return JS_FALSE;
     table->hashShift = JS_DHASH_BITS - log2;
-    table->maxAlphaFrac = (uint8)(0x100 * JS_DHASH_DEFAULT_MAX_ALPHA);
-    table->minAlphaFrac = (uint8)(0x100 * JS_DHASH_DEFAULT_MIN_ALPHA);
+    table->maxAlphaFrac = 0xC0;                 /* .75 */
+    table->minAlphaFrac = 0x40;                 /* .25 */
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     table->generation = 0;

@@ -790,10 +790,9 @@ JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name)
 
         /* Bootstrap reghash from registry on first overpopulated Find. */
         if (!xdr->reghash) {
-            xdr->reghash =
-                JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
-                                 sizeof(JSRegHashEntry),
-                                 JS_DHASH_DEFAULT_CAPACITY(numclasses));
+            xdr->reghash = JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
+                                            sizeof(JSRegHashEntry),
+                                            numclasses);
             if (xdr->reghash) {
                 for (i = 0; i < numclasses; i++) {
                     JSClass *clasp = xdr->registry[i];

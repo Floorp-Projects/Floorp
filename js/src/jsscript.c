@@ -1474,8 +1474,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
                 ++nsrcnotes;
         }
         if (!JS_DHashTableInit(&JS_GSN_CACHE(cx).table, JS_DHashGetStubOps(),
-                               NULL, sizeof(GSNCacheEntry),
-                               JS_DHASH_DEFAULT_CAPACITY(nsrcnotes))) {
+                               NULL, sizeof(GSNCacheEntry), nsrcnotes)) {
             JS_GSN_CACHE(cx).table.ops = NULL;
         } else {
             pc = script->code;
