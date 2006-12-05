@@ -132,6 +132,15 @@ function weekPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
     ASSERT(end, "can't find a good ending date to print");
 
     date = date.startOfWeek;
+    var startOfWeek = getPrefSafe("calendar.week.start", 0);
+    date.day += startOfWeek;
+    date.normalize();
+    // Make sure we didn't go too far ahead
+    if (date.compare(aStart) == 1) {
+        date.day -= 7;
+        date.normalize();
+    }
+
     while(date.compare(end) == -1) {
         var weekno = weekFormatter.getWeekTitle(date);
         var weekTitle = props.formatStringFromName('WeekTitle', [weekno], 1);
@@ -150,7 +159,7 @@ function weekPrint_format(aStream, aStart, aEnd, aCount, aItems, aTitle) {
         for (var i = 0; i < 7 ; i++) {
             date.day += 1;
             date.normalize();
-            dayTds[i] = this.getDayTd(date, sortedList);
+            dayTds[date.weekday] = this.getDayTd(date, sortedList);
         }
 
         var monRow = <tr height="33%"/>;
