@@ -43,7 +43,6 @@
 #include "nsNetUtil.h"
 #include "nsIStreamListener.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
 #ifdef MOZ_RDF
 #include "nsIHTTPIndex.h"
 #include "nsIRDFService.h"

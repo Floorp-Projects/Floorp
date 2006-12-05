@@ -1340,12 +1340,7 @@ nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
 PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {
-  nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDoc));
-  if (!doc) {
-    return PR_FALSE;
-  }
-
-  return doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
+  return aDoc && aDoc->GetCompatibilityMode() == eCompatibility_NavQuirks;
 }
 
 nsresult

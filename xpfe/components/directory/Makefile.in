@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  rdf \
 		  content \
+		  layout \
 		  js \
 		  xpconnect \
 		  docshell \

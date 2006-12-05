@@ -44,7 +44,6 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsAString.h"
-#include "nsCompatibility.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsRect.h"
@@ -199,13 +198,16 @@ public:
 #endif
 
   /**
-   * Access compatibility mode for this context
-   *
-   * All users must explicitly set the compatibility mode rather than
-   * relying on a default.
+   * Access compatibility mode for this context.  This is the same as
+   * our document's compatibility mode.
    */
-  nsCompatibility CompatibilityMode() const { return mCompatibilityMode; }
-  NS_HIDDEN_(void) SetCompatibilityMode(nsCompatibility aMode);
+  nsCompatibility CompatibilityMode() const {
+    return Document()->GetCompatibilityMode();
+  }
+  /**
+   * Notify the context that the document's compatibility mode has changed
+   */
+  NS_HIDDEN_(void) CompatibilityModeChanged();
 
   /**
    * Access the image animation mode for this context
@@ -759,7 +761,6 @@ protected:
   ScrollbarStyles       mViewportStyleOverflow;
   PRUint8               mFocusRingWidth;
 
-  nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
   PRUint16              mImageAnimationModePref;
 

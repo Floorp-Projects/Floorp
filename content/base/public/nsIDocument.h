@@ -49,6 +49,7 @@
 #include "nsCRT.h"
 #include "mozFlushType.h"
 #include "nsIAtom.h"
+#include "nsCompatibility.h"
 
 class nsIContent;
 class nsPresContext;
@@ -91,8 +92,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xb138a9aa, 0x3d0d, 0x4d0b, \
- { 0x98, 0x02, 0x72, 0x15, 0x54, 0x27, 0xe0, 0x2e } }
+{ 0x0b8acf09, 0x7877, 0x4928, \
+ { 0x8b, 0xfb, 0x6d, 0x7c, 0x6d, 0x53, 0xff, 0x32 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -112,6 +113,7 @@ public:
     : nsINode(nsnull),
       mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
       mNodeInfoManager(nsnull),
+      mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
       mPartID(0)
   {
@@ -814,6 +816,13 @@ public:
    */
   virtual void ClearBoxObjectFor(nsIContent *aContent) = 0;
 
+  /**
+   * Get the compatibility mode for this document
+   */
+  nsCompatibility GetCompatibilityMode() const {
+    return mCompatMode;
+  }
+
 protected:
   ~nsIDocument()
   {
@@ -850,6 +859,9 @@ protected:
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;
+
+  // Compatibility mode
+  nsCompatibility mCompatMode;
 
   // True if BIDI is enabled.
   PRPackedBool mBidiEnabled;

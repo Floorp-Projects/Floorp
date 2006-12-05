@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  widget \
 		  content \
+		  layout \
 		  dom \
 		  $(NULL)
 

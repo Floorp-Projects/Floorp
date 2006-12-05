@@ -956,9 +956,7 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   }
 
   // Check if we are in compatibility mode
-  // XXX evil NS_HexToRGB and NS_LooseHexToRGB take nsString as argument!
-  nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDocument));
-  if (doc && doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
+  if (aDocument->GetCompatibilityMode() == eCompatibility_NavQuirks) {
     NS_LooseHexToRGB(colorStr, &color);
   }
   else {

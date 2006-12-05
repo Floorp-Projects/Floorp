@@ -162,7 +162,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mTextZoom(1.0),
     mPageSize(-1, -1),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
-    mCompatibilityMode(eCompatibility_FullStandards),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                          NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
@@ -891,16 +890,14 @@ nsPresContext::RootPresContext()
 }
 
 void
-nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
+nsPresContext::CompatibilityModeChanged()
 {
-  mCompatibilityMode = aMode;
-
   if (!mShell)
     return;
 
   // enable/disable the QuirkSheet
   mShell->StyleSet()->
-    EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
+    EnableQuirkStyleSheet(CompatibilityMode() == eCompatibility_NavQuirks);
 }
 
 // Helper function for setting Anim Mode on image
