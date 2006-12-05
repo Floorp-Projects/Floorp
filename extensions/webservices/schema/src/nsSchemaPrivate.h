@@ -243,6 +243,8 @@ public:
     return mAttributesHash.Init() ? NS_OK : NS_ERROR_FAILURE;
   }
 
+  nsresult ProcessExtension(nsIWebServiceErrorHandler* aErrorHandler);
+
   NS_IMETHOD SetContentModel(PRUint16 aContentModel);
   NS_IMETHOD SetDerivation(PRUint16 aDerivation, nsISchemaType* aBaseType);
   NS_IMETHOD SetSimpleBaseType(nsISchemaSimpleType* aSimpleBaseType);

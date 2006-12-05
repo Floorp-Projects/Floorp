@@ -61,6 +61,156 @@ NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType,
                       nsISchemaType,
                       nsISchemaComplexType)
 
+
+nsresult
+nsSchemaComplexType::ProcessExtension(nsIWebServiceErrorHandler* aErrorHandler)
+{
+  nsresult rv = NS_OK;
+
+  nsAutoString baseStr;
+  mBaseType->GetName(baseStr);
+
+  nsCOMPtr<nsISchemaComplexType> complexBaseType(do_QueryInterface(mBaseType));
+
+  nsCOMPtr<nsISchemaModelGroup> sequence;
+  nsSchemaModelGroup* sequenceInst = nsnull;
+  if (complexBaseType) {
+    // XXX Should really be cloning
+    nsCOMPtr<nsISchemaModelGroup> baseGroup;
+    rv = complexBaseType->GetModelGroup(getter_AddRefs(baseGroup));
+    if (NS_FAILED(rv)) {
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure processing schema, ");
+      errorMsg.AppendLiteral("extension for type \"");
+      errorMsg.Append(baseStr);
+      errorMsg.AppendLiteral("\" does not contains any model group");
+      errorMsg.AppendLiteral("such as <all>, <choice>, <sequence>, or <group>");
+
+      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+      return rv;
+    }
+          
+    if (baseGroup) {
+      // Create a new model group that's going to be the a sequence
+      // of the base model group and the content below
+      sequenceInst = new nsSchemaModelGroup(mSchema, EmptyString());
+      if (!sequenceInst) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      sequence = sequenceInst;
+
+      PRUint16 compositor;
+      baseGroup->GetCompositor(&compositor);
+
+      PRUint32 minOccurs, maxOccurs;
+      baseGroup->GetMinOccurs(&minOccurs);
+      baseGroup->GetMaxOccurs(&maxOccurs);
+
+      // If the base group also a sequence, we can collapse the
+      // two sequences.
+      if ((compositor == nsISchemaModelGroup::COMPOSITOR_SEQUENCE) &&
+          (minOccurs == 1) && (maxOccurs == 1)) {
+        PRUint32 pIndex, pCount;
+        baseGroup->GetParticleCount(&pCount);
+        for (pIndex = 0; pIndex < pCount; pIndex++) {
+          nsCOMPtr<nsISchemaParticle> particle;
+                
+          rv = baseGroup->GetParticle(pIndex, getter_AddRefs(particle));
+          if (NS_FAILED(rv)) {
+            nsAutoString errorMsg;
+            errorMsg.AppendLiteral("Failure processing schema, failure ");
+            errorMsg.AppendLiteral("processing model group for extension ");
+            errorMsg.AppendLiteral("of type \"");
+            errorMsg.Append(baseStr);
+            errorMsg.AppendLiteral("\"");
+
+            NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+            return rv;
+          }
+                
+          rv = sequenceInst->AddParticle(particle);
+          if (NS_FAILED(rv)) {
+            nsAutoString errorMsg;
+            errorMsg.AppendLiteral("Failure processing schema, failure ");
+            errorMsg.AppendLiteral("processing model group for extension ");
+            errorMsg.AppendLiteral("of type \"");
+            errorMsg.Append(baseStr);
+            errorMsg.AppendLiteral("\"");
+
+            NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+            return rv;
+          }
+        }
+      }
+      else {
+        sequenceInst->AddParticle(baseGroup);
+      }
+            
+      // Need to append original contents.
+      if (mModelGroup) {
+        PRUint32 pIndex, pCount;
+        mModelGroup->GetParticleCount(&pCount);
+        for (pIndex = 0; pIndex < pCount; pIndex++) {
+          nsCOMPtr<nsISchemaParticle> particle;
+          rv = mModelGroup->GetParticle(pIndex, getter_AddRefs(particle));
+          rv = sequenceInst->AddParticle(particle);
+        }
+      }
+      this->SetModelGroup(sequence);
+    }
+  }
+        
+  if (complexBaseType) {
+    // Inherit content model from base if currently empty
+    if (mContentModel == nsISchemaComplexType::CONTENT_MODEL_EMPTY) {
+      PRUint16 baseContentModel;
+      complexBaseType->GetContentModel(&baseContentModel);
+      mContentModel = baseContentModel;
+    }
+
+    // Copy over the attributes from the base type
+    // XXX Should really be cloning
+    PRUint32 attrIndex, attrCount;
+    complexBaseType->GetAttributeCount(&attrCount);
+
+    for (attrIndex = 0; attrIndex < attrCount; attrIndex++) {
+      nsCOMPtr<nsISchemaAttributeComponent> attribute;
+
+      rv = complexBaseType->GetAttributeByIndex(attrIndex,
+                                                getter_AddRefs(attribute));
+      if (NS_FAILED(rv)) {
+        nsAutoString errorMsg;
+        errorMsg.AppendLiteral("Failure processing schema, cannot clone ");
+        errorMsg.AppendLiteral("attributes from base type \"");
+        errorMsg.Append(baseStr);
+        errorMsg.AppendLiteral("\"");
+
+        NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+        return rv;
+      }
+
+      rv = this->AddAttribute(attribute);
+      if (NS_FAILED(rv)) {
+        nsAutoString errorMsg;
+        errorMsg.AppendLiteral("Failure processing schema, cannot clone ");
+        errorMsg.AppendLiteral("attributes from base type \"");
+        errorMsg.Append(baseStr);
+        errorMsg.AppendLiteral("\"");
+
+        NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+
+        return rv;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
 /* void resolve (in nsIWebServiceErrorHandler* aErrorHandler); */
 NS_IMETHODIMP
 nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
@@ -103,21 +253,33 @@ nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
-    mBaseType = type;
-    rv = mBaseType->Resolve(aErrorHandler);
-    if (NS_FAILED(rv)) {
-      nsAutoString baseStr;
-      nsresult rv1 = type->GetName(baseStr);
-      NS_ENSURE_SUCCESS(rv1, rv1);
+    // Only process unresolved base types, as resolved base types are
+    // processed when they are encountered during main parsing phase.
+    if (mBaseType != type) {
+      mBaseType = type;
+      rv = mBaseType->Resolve(aErrorHandler);
+      if (NS_FAILED(rv)) {
+        nsAutoString baseStr;
+        nsresult rv1 = type->GetName(baseStr);
+        NS_ENSURE_SUCCESS(rv1, rv1);
 
-      nsAutoString errorMsg;
-      errorMsg.AppendLiteral("Failure resolving schema complex type, ");
-      errorMsg.AppendLiteral("cannot resolve base type \"");
-      errorMsg.Append(baseStr);
-      errorMsg.AppendLiteral("\"");
+        nsAutoString errorMsg;
+        errorMsg.AppendLiteral("Failure resolving schema complex type, ");
+        errorMsg.AppendLiteral("cannot resolve base type \"");
+        errorMsg.Append(baseStr);
+        errorMsg.AppendLiteral("\"");
 
-      NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
-      return NS_ERROR_FAILURE;
+        NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
+        return NS_ERROR_FAILURE;
+      }
+
+      // Only extensions need to be applied
+      if (mDerivation == nsISchemaComplexType::DERIVATION_EXTENSION_COMPLEX) {
+        rv = ProcessExtension(aErrorHandler);
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
     }
   }
     
