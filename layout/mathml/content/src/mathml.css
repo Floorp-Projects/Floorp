@@ -53,6 +53,7 @@ math {
   font-size: inherit;
   font-style: normal;
   font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
+  -moz-float-edge: margin-box;
 }
 math[mode="display"], math[display="block"] {
   display: block;
