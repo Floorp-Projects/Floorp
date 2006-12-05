@@ -61,8 +61,8 @@ REQUIRES        = xpcom     \
 		  dom       \
 		  necko     \
 		  content   \
+		  layout    \
 		  widget    \
-		  xmlextras \
 		  $(NULL)
 
 CPPSRCS         = nsWebDAVService.cpp            \
