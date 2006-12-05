@@ -94,17 +94,6 @@ CG_EXTERN void CGContextResetClip (CGContextRef);
 
 static NSView* sLastViewEntered = nil;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// category of NSView methods to quiet warnings
-
-@interface NSView(ChildViewExtensions)
-- (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
-- (BOOL)needsToDrawRect:(NSRect)aRect;
-- (BOOL)wantsDefaultClipping;
-- (void)setHidden:(BOOL)aHidden;
-@end
-#endif
-
 //#define DEBUG_IME 1
 
 @interface ChildView(Private)
@@ -2673,8 +2662,10 @@ NSEvent* globalDragEvent = nil;
     }
   }
   
+  unsigned int modifierFlags = [theEvent modifierFlags];
+  
   // if the command and alt keys are held down, initiate hand scrolling
-  if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
+  if ([ChildView areHandScrollModifiers:modifierFlags]) {
     [self startHandScroll: theEvent];
     // needed to change the focus, among other things, since we don't
     // get to do that below.
@@ -2690,7 +2681,10 @@ NSEvent* globalDragEvent = nil;
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
-  geckoEvent.button = nsMouseEvent::eLeftButton;
+  if (modifierFlags & NSControlKeyMask)
+    geckoEvent.button = nsMouseEvent::eRightButton;
+  else
+    geckoEvent.button = nsMouseEvent::eLeftButton;
 
   EventRecord macEvent;
   macEvent.what = mouseDown;
