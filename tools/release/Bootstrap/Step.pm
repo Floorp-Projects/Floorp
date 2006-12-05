@@ -3,17 +3,11 @@
 #
 
 package Bootstrap::Step;
-use MozBuild::Util;
-use Config::General;
+use IO::Handle;
+use MozBuild::Util qw(RunShellCommand);
 use POSIX qw(strftime);
 
 my $DEFAULT_TIMEOUT = 3600;
-
-# shared static config
-my $conf = new Config::General("bootstrap.cfg");
-if (not $conf) {
-    die "Config is null!";
-}
 
 sub new {
     my $proto = shift;
@@ -45,13 +39,13 @@ sub Shell {
     print "Timeout: $timeout\n";
 
     if ($timeout) {
-        $rv = MozBuild::Util::RunShellCommand(
+        $rv = RunShellCommand(
            'command' => "$cmd",
            'timeout' => "$timeout",
            'logfile' => "$logFile",
         );
     } else {
-        $rv = MozBuild::Util::RunShellCommand(
+        $rv = RunShellCommand(
            'command' => "$cmd",
            'logfile' => "$logFile",
         );
@@ -96,22 +90,6 @@ sub Log {
     print "log: $msg\n";
 }
 
-sub Config {
-    my $this = shift;
-
-    my %args = @_;
-    use Data::Dumper;
-    my $var = $args{'var'};
-
-    my %config = $conf->getall();
-
-    if ($config{'app'}{$var}) {
-        return $config{'app'}{$var};
-    } else {
-        die("No such config variable: $var\n");
-    }
-}
-
 sub CheckLog {
     my $this = shift;
     my %args = @_;
@@ -153,7 +131,6 @@ sub CheckLog {
 
 sub CurrentTime() {
     my $this = shift;
-    my $args = @_;
 
     return strftime("%T %D", localtime());
 }

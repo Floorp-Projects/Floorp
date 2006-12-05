@@ -4,19 +4,22 @@
 # 
 package Bootstrap::Step::Stage;
 use Bootstrap::Step;
-use File::Copy;
-use File::Find;
-use MozBuild::Util;
+use Bootstrap::Config;
+use File::Copy qw(copy move);
+use File::Find qw(find);
+use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
+
+my $config = new Bootstrap::Config;
 
 sub Execute {
     my $this = shift;
 
-    my $product = $this->Config('var' => 'product');
-    my $version = $this->Config('var' => 'version');
-    my $rc = $this->Config('var' => 'rc');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $stageHome = $this->Config('var' => 'stageHome');
+    my $product = $config->Get('var' => 'product');
+    my $version = $config->Get('var' => 'version');
+    my $rc = $config->Get('var' => 'rc');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $stageHome = $config->Get('var' => 'stageHome');
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -32,7 +35,8 @@ sub Execute {
     # Create skeleton batch directory.
     my $skelDir = "$stageDir/batch-skel/stage";
     if (not -d "$skelDir") {
-        MkdirWithPath('dir' => $skelDir) or die "Cannot create $stageDir: $!";
+        MkdirWithPath('dir' => $skelDir) 
+          or die "Cannot create $stageDir: $!";
     }
 
     # Create the contrib and contrib-localized directories with expected 
@@ -42,18 +46,20 @@ sub Execute {
           or die "Could not mkdir $skelDir/contrib: $!";
     }
 
-    my ($pwname, $pass, $uid) = getpwnam('cltbld') 
-      or die "Could not getpwname for cltbld: $!";
-    my ($grname, $passwd, $gid) = getgrnam($product)
+    my (undef, undef, $gid) = getgrnam($product)
       or die "Could not getgrname for $product: $!";
 
-    my @dir = ("$skelDir/contrib");
-    chmod('2775', @dir)
+    my $dir = "$skelDir/contrib";
+    chmod(oct(2775), $dir)
       or die "Cannot change mode on $skelDir/contrib to 2775: $!";
+    $this->Log('msg' => "Changed mode of $dir to 2775");
+    chown(-1, $gid, $dir)
+      or die "Cannot chgrp $skelDir/contrib to $product: $!";
+    $this->Log('msg' => "Changed group of $dir to $product");
  
     # NOTE - should have a standard "master" copy somewhere else
     # Copy the KEY file from the previous release directory.
-    File::Copy::copy("$product/releases/1.5/KEY", "$skelDir/");
+    copy("$product/releases/1.5/KEY", "$skelDir/");
 
     ## Prepare the merging directory.
     $this->Shell(
@@ -83,7 +89,7 @@ sub Execute {
     );
 
     # Remove unshipped files and set proper mode on dirs
-    File::Find::find(\&TrimCallback, $stageDir . '/batch1/prestage-trimmed/');
+    find(&TrimCallback, $stageDir . '/batch1/prestage-trimmed/');
     
     $this->Shell(
       'cmd' => 'rsync -Lav prestage-trimmed/ stage/',
@@ -96,31 +102,31 @@ sub Execute {
     # TODO should support --long filenames, for e.g. Alpha and Beta
     $this->Shell(
       'cmd' => $stageHome . '/bin/groom-files --short=' . $version . ' .',
-      'logFile' => $logDir . '/groom-files.log',
+      'logFile' => $logDir . '/stage-groom_files.log',
       'dir' => $stageDir . '/batch1/stage',
     );
 
     # fix xpi dir names
-    File::Copy::move("$stageDir/batch1/stage/linux-xpi", 
+    move("$stageDir/batch1/stage/linux-xpi", 
            "$stageDir/batch1/stage/linux-i686/xpi")
-      or die "Cannot rename $stageDir/batch1/stage/linux-xpi $stageDir/batch1/stage/linux-i686/xpi: $!";
-    File::Copy::move("$stageDir/batch1/stage/windows-xpi", 
+      or die('msg' => "Cannot rename $stageDir/batch1/stage/linux-xpi $stageDir/batch1/stage/linux-i686/xpi: $!");
+    move("$stageDir/batch1/stage/windows-xpi", 
            "$stageDir/batch1/stage/win32/xpi")
-      or die "Cannot rename $stageDir/batch1/stage/windows-xpi $stageDir/batch1/stage/win32/xpi: $!";
-    File::Copy::move("$stageDir/batch1/stage/mac-xpi", 
+      or die('msg' => "Cannot rename $stageDir/batch1/stage/windows-xpi $stageDir/batch1/stage/win32/xpi: $!");
+    move("$stageDir/batch1/stage/mac-xpi", 
            "$stageDir/batch1/stage/mac/xpi")
-      or die "Cannot rename $stageDir/batch1/stage/mac-xpi $stageDir/batch1/stage/mac/xpi: $!";
+      or die('msg' => "Cannot rename $stageDir/batch1/stage/mac-xpi $stageDir/batch1/stage/mac/xpi: $!");
 }
 
 sub Verify {
     my $this = shift;
 
-    my $product = $this->Config('var' => 'product');
-    my $appName = $this->Config('var' => 'appName');
-    my $logDir = $this->Config('var' => 'logDir');
-    my $version = $this->Config('var' => 'version');
-    my $rc = $this->Config('var' => 'rc');
-    my $stageHome = $this->Config('var' => 'stageHome');
+    my $product = $config->Get('var' => 'product');
+    my $appName = $config->Get('var' => 'appName');
+    my $logDir = $config->Get('var' => 'logDir');
+    my $version = $config->Get('var' => 'version');
+    my $rc = $config->Get('var' => 'rc');
+    my $stageHome = $config->Get('var' => 'stageHome');
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -135,8 +141,12 @@ sub Verify {
     );
 }
 
-sub TrimCallback { 
+sub TrimCallback {
     my $dirent = $File::Find::name;
+
+    my (undef, undef, $gid) = getgrnam($product)
+      or die "Could not getgrname for $product: $!";
+
     if (-f $dirent) {
         if (($dirent =~ /xforms\.xpi/) || 
         # ja-JP-mac is the JA locale for mac, do not ship ja
@@ -152,11 +162,20 @@ sub TrimCallback {
         ($dirent =~ /en-US\.xpi$/)) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log('msg' => "Unlinked $dirent");
-        }
-    } else { 
-        chmod(0644, $dirent) 
-          || die "Could not chmod $dirent to 0644: $!";
-        $this->Log('msg' => "Changed mode of $dirent to 0644");
+        } else {
+            chmod(0644, $dirent) 
+              || die "Could not chmod $dirent to 0644: $!";
+            $this->Log('msg' => "Changed mode of $dirent to 0644");
+       }
+    } elsif (-d $dirent) { 
+        chown(-1, $gid, $dirent)
+          or die "Cannot chgrp $dirent to $product: $!";
+        $this->Log('msg' => "Changed group of $dirent to $product");
+        chmod(0755, $dirent) 
+          or die "Could not chmod $dirent to 0755: $!";
+        $this->Log('msg' => "Changed mode of $dirent to 0755");
+    } else {
+        die("Unexpected non-file/non-dir directory entry: $dirent");
     }
 }
 
