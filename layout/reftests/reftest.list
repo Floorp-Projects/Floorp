@@ -20,6 +20,8 @@ f== bugs/362594-1c.html bugs/362594-1-standards-ref.html # will be equal once re
 == bugs/362594-2c.html bugs/362594-2-standards-ref.html
 == bugs/359903-1.html bugs/359903-1-ref.html
 == bugs/359903-2.html bugs/359903-2-ref.html
+f== bugs/360757-1a.html bugs/360757-1-ref.html # will be equal once bug 332557 is fixed.
+f== bugs/360757-1b.html bugs/360757-1-ref.html # will be equal once bug 332557 is fixed.
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
