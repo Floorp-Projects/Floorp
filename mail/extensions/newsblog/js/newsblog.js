@@ -245,7 +245,7 @@ var nsFeedCommandLineHandler =
   {
     if (!aIID.equals(Components.interfaces.nsISupports) &&
         !aIID.equals(Components.interfaces.nsICommandLineHandler))
-      throw Components.errors.NS_ERROR_NO_INTERFACE;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
   },
 

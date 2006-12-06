@@ -256,7 +256,7 @@ var nsBrowserContentHandler = {
         !iid.equals(nsIBrowserHandler) &&
         !iid.equals(nsIContentHandler) &&
         !iid.equals(nsIFactory))
-      throw Components.errors.NS_ERROR_NO_INTERFACE;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
   },
@@ -578,7 +578,7 @@ var nsDefaultCommandLineHandler = {
     if (!iid.equals(nsISupports) &&
         !iid.equals(nsICommandLineHandler) &&
         !iid.equals(nsIFactory))
-      throw Components.errors.NS_ERROR_NO_INTERFACE;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
   },
