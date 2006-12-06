@@ -47,11 +47,11 @@
         </tr>
 	<tr>
 	<td class="headerleft">Product:</td>
-	<td>[% INCLUDE productbox onchange="changeProduct();populateBranches(document.getElementById('product'));populateAllSubgroups();" %]</td>
+	<td>[% INCLUDE form_widgets/select_product_id.tmpl name="editform_product" placeholder=1 size=1 onchange="changeProduct();populateBranches(document.getElementById('editform_product'));populateAllSubgroups();" %]</td>
 	</tr>
         <tr>
-	<td class="headerleft">Branch(es):</td>
-	<td>[% INCLUDE form_widgets/select_branch_id.tmpl name="editform_branches" placeholder=1 multiple=1 size=5 onChange="populateAllSubgroups();" %]</td>
+	<td class="headerleft">Branch:</td>
+	<td>[% INCLUDE form_widgets/select_branch_id.tmpl name="editform_branch" placeholder=1 size=1 onchange="populateAllSubgroups();" %]</td>
 	</tr>
         <tr>
           <td class="headerleft">Enabled?</td>

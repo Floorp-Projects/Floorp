@@ -51,24 +51,24 @@ my $status;
 my $rv;
 
 if ($c->param("searchTestcaseList")) {
-	print $c->header('text/plain');
-	my $product_id = $c->param("product");
-	my $testgroup_id = $c->param("testgroup");
-	my $subgroup_id = $c->param("subgroup");
-	
-	my $tests;
-	
-	if ($subgroup_id) {
-		$tests = Litmus::DB::Testcase->search_BySubgroup($subgroup_id);
-	} elsif ($testgroup_id) {
-		$tests = Litmus::DB::Testcase->search_ByTestgroup($testgroup_id);
-	} elsif ($product_id) {
-		$tests = Litmus::DB::Testcase->search(product => $product_id);
-	}
-	while (my $t = $tests->next) {
-		print $t->testcase_id()."\n";
-	}
-	exit;
+  print $c->header('text/plain');
+  my $product_id = $c->param("product");
+  my $testgroup_id = $c->param("testgroup");
+  my $subgroup_id = $c->param("subgroup");
+  
+  my $tests;
+  
+  if ($subgroup_id) {
+    $tests = Litmus::DB::Testcase->search_BySubgroup($subgroup_id);
+  } elsif ($testgroup_id) {
+    $tests = Litmus::DB::Testcase->search_ByTestgroup($testgroup_id);
+  } elsif ($product_id) {
+    $tests = Litmus::DB::Testcase->search(product => $product_id);
+  }
+  while (my $t = $tests->next) {
+    print $t->testcase_id()."\n";
+  }
+  exit;
 }
 
 # anyone can use this script for its searching capabilities, but if we 
@@ -114,7 +114,8 @@ if ($c->param("delete_testcase_button")) {
   }
 } elsif ($c->param("editform_mode")) {
   requireField('summary', $c->param('editform_summary'));
-  requireField('product', $c->param('product'));
+  requireField('product', $c->param('editform_product'));
+  requireField('branch', $c->param('editform_branch'));
   requireField('author', $c->param('editform_author_id'));
   my $enabled = $c->param('editform_enabled') ? 1 : 0;
   my $community_enabled = $c->param('editform_communityenabled') ? 1 : 0;
@@ -124,7 +125,8 @@ if ($c->param("delete_testcase_button")) {
                 summary => $c->param('editform_summary'),
                 steps => $c->param('editform_steps') ? $c->param('editform_steps') : '',
                 expected_results => $c->param('editform_results') ? $c->param('editform_results') : '',
-                product_id => $c->param('product'),
+                product_id => $c->param('editform_product'),
+                branch_id => $c->param('editform_branch'),
                 enabled => $enabled,
                 community_enabled => $community_enabled,
                 regression_bug_id => $c->param('editform_regression_bug_id') ? $c->param('editform_regression_bug_id') : '',
@@ -153,7 +155,8 @@ if ($c->param("delete_testcase_button")) {
       $testcase->summary($c->param('editform_summary'));
       $testcase->steps($c->param('editform_steps') ? $c->param('editform_steps') : '');
       $testcase->expected_results($c->param('editform_results') ? $c->param('editform_results') : '');
-      $testcase->product_id($c->param('product'));
+      $testcase->product_id($c->param('editform_product'));
+      $testcase->branch_id($c->param('editform_branch'));
       $testcase->enabled($enabled);
       $testcase->community_enabled($community_enabled);
       $testcase->regression_bug_id($c->param('editform_regression_bug_id') ? $c->param('editform_regression_bug_id') : '');
@@ -191,7 +194,7 @@ if ($rebuild_cache) {
   Litmus::Cache::rebuildCache();
 }
 
-my $testcases = Litmus::FormWidget->getTestcases(0,1);
+my $testcases = Litmus::FormWidget->getTestcases(0,'name');
 my $products = Litmus::FormWidget->getProducts();
 my $authors = Litmus::FormWidget->getAuthors();
 

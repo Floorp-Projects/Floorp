@@ -77,8 +77,11 @@
 
 	<tr>
 	<td class="headerleft">Product:</td>
-	<td>[% INCLUDE productbox %]</td>
+	<td>[% INCLUDE form_widgets/select_product_id.tmpl name="editform_product" placeholder=1 size=1 onchange="changeProduct();populateBranches(document.getElementById('editform_product'));" %]</td>
 	</tr>
+        <tr>
+        <td class="headerleft">Branch:</td>
+        <td>[% INCLUDE form_widgets/select_branch_id.tmpl name="editform_branch" placeholder=1 size=1 %]</td>
 	<tr>
 	<td class="headerleft">Test Group(s):</td>
 	<td colspan="2">
@@ -99,7 +102,7 @@
                    type="checkbox"
                    id="editform_enabled"
                    value="1" disabled
-		   onChange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
+		   onchange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
           </td>
           <td>&lArr;&nbsp;Uncheck this to completely disable this testcase.</td>
         </tr>
@@ -110,7 +113,7 @@
                    type="checkbox"
                    id="editform_communityenabled"
                    value="1" disabled
-		   onChange="if (this.checked == true) {document.getElementById('editform_enabled').checked =true;}">
+		   onchange="if (this.checked == true) {document.getElementById('editform_enabled').checked =true;}">
           </td>
           <td>&lArr;&nbsp;Uncheck this to disable this testcase for the community-at-large.<br/>Note: trusted testers will still be able to see and run this testcase.</td>
         </tr>

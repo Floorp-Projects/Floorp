@@ -130,11 +130,13 @@ $table{subgroups} =
 	 testrunner_group_id int(11),
          enabled tinyint(1) default "1",
          product_id tinyint(4) not null,
+         branch_id smallint(6) not null,	 
 	 
 	 index(name),
 	 index(testrunner_group_id),
          index(enabled),
-         index(product_id)';
+         index(product_id),
+         index(branch_id)';
 
 $table{test_format_lookup} = 
 	'format_id tinyint(4) not null primary key auto_increment,
@@ -306,7 +308,8 @@ $table{testcases} =
 	 testrunner_case_id int(11),
 	 testrunner_case_version int(11),
          product_id tinyint(4) not null,
-	 
+         branch_id smallint(6) not null,	 
+
 	 index(summary),
 	 index(enabled),
 	 index(community_enabled),
@@ -320,8 +323,8 @@ $table{testcases} =
 	 index(testrunner_case_id),
          index(testrunner_case_version),
          index(product_id),
-
-         fulltext key(summary,steps,expected_results)';
+         index(branch_id),
+         fulltext index text_search (summary,steps,expected_results)';
 
 $table{testdays} = 
         'testday_id smallint(6) not null primary key auto_increment,
@@ -344,23 +347,19 @@ $table{testdays} =
          index(branch_id),
          index(locale_abbrev)';
 
-$table{testgroup_branches} = 
-	'testgroup_id smallint(6) not null,
-         branch_id smallint(6) not null,
- 
-         primary key(testgroup_id, branch_id)';
-
 $table{testgroups} = 
 	'testgroup_id smallint(6) not null primary key auto_increment,
 	 product_id tinyint(4) not null,
 	 name varchar(64) not null,
 	 enabled tinyint(1) default "1",
 	 testrunner_plan_id int(11),
-	 
+         branch_id smallint(6) not null,	 
+
 	 index(product_id),
 	 index(name),
 	 index(enabled),
-	 index(testrunner_plan_id)';
+	 index(testrunner_plan_id),
+         index(branch_id)';
 	 
 $table{users} = 
 	'user_id int(11) not null primary key auto_increment,

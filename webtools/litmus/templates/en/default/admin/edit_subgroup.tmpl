@@ -47,8 +47,12 @@
         </tr>
 	<tr>
 	<td class="headerleft">Product:</td>
-	<td>[% INCLUDE productbox onchange="changeProduct();populateAllTestcases();" %]</td>
+	<td>[% INCLUDE form_widgets/select_product_id.tmpl name="editform_product" placeholder=1 size=1 onchange="changeProduct();populateBranches(document.getElementById('editform_product'));populateAllTestcases();" %]</td>
 	</tr>
+        <tr>
+        <td class="headerleft">Branch:</td>
+        <td>[% INCLUDE form_widgets/select_branch_id.tmpl name="editform_branch" placeholder=1 size=1 onchange="populateAllTestcases();" %]</td>
+        </tr>
 	<tr>
 	<td class="headerleft">Test Group(s):</td>
 	<td colspan="2">
@@ -62,7 +66,7 @@
                    type="checkbox"
                    id="editform_enabled"
                    value="1" disabled
-		   onChange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
+		   onchange="if (this.checked == false) {document.getElementById('editform_communityenabled').checked =false;}">
           </td>
           <td>&lArr;&nbsp;Uncheck this to completely disable this subgroup.</td>
         </tr>
@@ -81,7 +85,7 @@
 	<div class="manage">
           <table border="0" cellspacing="10" cellpadding="0">
             <tr>
-            <td id="editform_testcases_for_product_header" name="editform_testcases_for_product_header" class="headerleft">All Testcases For Product</td>
+            <td id="editform_testcases_for_product_header" name="editform_testcases_for_product_header" class="headerleft">All Testcases For Product/Branch</td>
             <td></td>
             <td class="headerleft">Testcases in Subgroup</td>
             </tr>

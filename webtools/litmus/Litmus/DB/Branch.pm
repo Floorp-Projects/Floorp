@@ -48,8 +48,8 @@ Litmus::DB::Branch->has_a(product => "Litmus::DB::Product");
 
 __PACKAGE__->set_sql(ByTestgroup => qq{
                                        SELECT b.* 
-                                       FROM branches b, testgroup_branches tgb 
-                                       WHERE tgb.testgroup_id=? AND tgb.branch_id=b.branch_id
+                                       FROM branches b, testgroups tg 
+                                       WHERE tg.testgroup_id=? AND tg.branch_id=b.branch_id
                                        ORDER BY b.name ASC
 });
 

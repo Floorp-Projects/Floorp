@@ -262,7 +262,7 @@ well. This will include, but may not be limited to:
  * populating the subgroup_testgroups table;
  * populating the testcase_subgroups table;
  * filling in product_ids for each testcase/subgroup;
- * populating the testgroup_branches table
+ * any appropriate scripts in the migration/ subdir;
 
 EOS
 

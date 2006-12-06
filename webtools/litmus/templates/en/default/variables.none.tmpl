@@ -41,7 +41,7 @@
 %]
 [% BLOCK select %]
     [% IF onchange %]
-        [% onchangereal = "onChange=\"$onchange\"" %]
+        [% onchangereal = "onchange=\"$onchange\"" %]
     [% END %]
       <select name="[% selname %]" id="[% selname %]" [% onchangereal %]>
         [% FOREACH cur=obj %]

@@ -10,14 +10,14 @@
       <table border="0" cellspacing="0" cellpadding="5">
         <tr>
         <td>
-        [% INCLUDE form_widgets/select_platform_id.tmpl name="platform_id" placeholder=1 size=5 show_name=1 onChange="loadPlatform();" %]
+        [% INCLUDE form_widgets/select_platform_id.tmpl name="platform_id" placeholder=1 size=5 show_name=1 onchange="loadPlatform();" %]
         </td>
         </tr>
         <tr>
         <td>
-        <input id="add_platform_button" name="add_platform_button" class="manage" type="button" onClick="switchPlatformFormToAdd();" value="Add new platform">&nbsp;
-        <input id="edit_platform_button" name="edit_platform_button" class="manage" type="button" onClick="switchPlatformFormToEdit();" value="Edit platform" disabled>&nbsp;
-        <input id="delete_platform_button" name="delete_platform_button" class="manage" type="submit" onClick="return confirm('Really delete this platform?')
+        <input id="add_platform_button" name="add_platform_button" class="manage" type="button" onclick="switchPlatformFormToAdd();" value="Add new platform">&nbsp;
+        <input id="edit_platform_button" name="edit_platform_button" class="manage" type="button" onclick="switchPlatformFormToEdit();" value="Edit platform" disabled>&nbsp;
+        <input id="delete_platform_button" name="delete_platform_button" class="manage" type="submit" onclick="return confirm('Really delete this platform?')
 ;" value="Delete platform" disabled>&nbsp;
         </td>
         </tr>
@@ -76,7 +76,7 @@
               </tr>
               <tr>
               <td>[% INCLUDE form_widgets/select_product_id.tmpl name="edit_platform_form_all_products" multiple=1 size=5 placeholder=0 %]</td>
-              <td align="center" valign="middle"><input id="add_product_button" name="add_product_button" type="button" value="&rArr;" onClick="copyToList('edit_platform_form_all_products','edit_platform_form_platform_products');"><br/><br/><input id="remove_product_button" name="remove_product_button" type="button" value="&lArr;" onClick="removeSelectedFromList('edit_platform_form_platform_products',true);"></td>
+              <td align="center" valign="middle"><input id="add_product_button" name="add_product_button" type="button" value="&rArr;" onclick="copyToList('edit_platform_form_all_products','edit_platform_form_platform_products');"><br/><br/><input id="remove_product_button" name="remove_product_button" type="button" value="&lArr;" onclick="removeSelectedFromList('edit_platform_form_platform_products',true);"></td>
               <td><select multiple class="platform-products" id="edit_platform_form_platform_products" name="edit_platform_form_platform_products" size="5">
               <option value="">--No platform selected--</option>
               </select></td>
@@ -86,7 +86,7 @@
           </td>
           </tr>
           <tr>
-          <td colspan="3" align="right"><input id="edit_platform_form_reset" class="button" type="button" value="Reset" disabled onClick="resetPlatform();" />&nbsp;<input class="button" type="submit" id="edit_platform_form_submit" name="edit_platform_form_submit" value="Submit Edits" disabled /></td>
+          <td colspan="3" align="right"><input id="edit_platform_form_reset" class="button" type="button" value="Reset" disabled onclick="resetPlatform();" />&nbsp;<input class="button" type="submit" id="edit_platform_form_submit" name="edit_platform_form_submit" value="Submit Edits" disabled /></td>
           </tr>
         </table>
       </form>

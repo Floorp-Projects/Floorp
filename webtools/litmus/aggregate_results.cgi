@@ -48,8 +48,8 @@ my $title = "Test Results Submitted by Testgroup";
 my $results;
 my $dbh = Litmus::DBI->db_Main();
 my $sql = "SELECT tg.name AS testgroup_name,pr.name AS product_name,b.name AS branch_name,count(tr.testresult_id) AS num_results 
-  FROM testgroups tg, products pr, branches b, testgroup_branches tgb, subgroup_testgroups sgtg, testcase_subgroups tcsg, testcases tc, test_results tr 
-  WHERE tg.testgroup_id=tgb.testgroup_id AND tgb.branch_id=b.branch_id AND tg.product_id=pr.product_id AND tg.enabled=1 AND tg.testgroup_id=sgtg.testgroup_id AND sgtg.subgroup_id=tcsg.subgroup_id AND tcsg.testcase_id=tc.testcase_id AND tc.testcase_id=tr.testcase_id AND tc.enabled=1 AND tr.branch_id=tgb.branch_id AND tc.product_id=tg.product_id 
+  FROM testgroups tg, products pr, branches b, subgroup_testgroups sgtg, testcase_subgroups tcsg, testcases tc, test_results tr 
+  WHERE tg.branch_id=b.branch_id AND tg.product_id=pr.product_id AND tg.enabled=1 AND tg.testgroup_id=sgtg.testgroup_id AND sgtg.subgroup_id=tcsg.subgroup_id AND tcsg.testcase_id=tc.testcase_id AND tc.testcase_id=tr.testcase_id AND tc.enabled=1 AND tr.branch_id=tc.branch_id AND tc.product_id=tg.product_id 
   GROUP BY tg.name,pr.name,b.name 
   ORDER BY pr.name, b.name";
 my $sth = $dbh->prepare($sql);

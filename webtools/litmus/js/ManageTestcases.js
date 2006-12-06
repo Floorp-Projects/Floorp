@@ -33,35 +33,35 @@ var doFilterList = function(req) {
 
 // filter the list by various criteria:
 function filterList() {
-	// they just changed the selection, so cancel any pending filter actions:
-	if (filter_req instanceof Deferred && filter_req.fired == -1)
-	filter_req.cancel();
+  // they just changed the selection, so cancel any pending filter actions:
+  if (filter_req instanceof Deferred && filter_req.fired == -1)
+  filter_req.cancel();
 
-	var productfilter = document.getElementById('product_filter');
-	var testgroupfilter = document.getElementById('testgroup_filter');
-	var subgroupfilter = document.getElementById('subgroup_filter');
+  var productfilter = document.getElementById('product_filter');
+  var testgroupfilter = document.getElementById('testgroup_filter');
+  var subgroupfilter = document.getElementById('subgroup_filter');
+
+  if (productfilter.options[productfilter.selectedIndex].value == '' &&
+      testgroupfilter.options[testgroupfilter.selectedIndex].value == '' &&
+      subgroupfilter.options[subgroupfilter.selectedIndex].value == '') {
+    // nothing to do here
+    showAllTests();
+    return;
+  }
 	
-	if (productfilter.options[productfilter.selectedIndex].value == '' &&
-	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '' &&
-	    subgroupfilter.options[subgroupfilter.selectedIndex].value == '') {
-		// nothing to do here
-		showAllTests();
-		return;
-	}
-	
-	toggleMessage('loading','Filtering testcase list...');
-	filter_req = doSimpleXMLHttpRequest('manage_testcases.cgi', {
-	  searchTestcaseList: 1,
-	  product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
-	  		'' : productfilter.options[productfilter.selectedIndex].value),
-	  testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
-	  		'' : testgroupfilter.options[testgroupfilter.selectedIndex].value),
-	  subgroup: (subgroupfilter.options[subgroupfilter.selectedIndex].value == '---' ? 
-	  		'' : subgroupfilter.options[subgroupfilter.selectedIndex].value),
-	  });
-	// if something went wrong, just show all the tests:
-	filter_req.addErrback(showAllTests);
-	filter_req.addCallback(doFilterList);
+  toggleMessage('loading','Filtering testcase list...');
+  filter_req = doSimpleXMLHttpRequest('manage_testcases.cgi', {
+    searchTestcaseList: 1,
+    product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
+      '' : productfilter.options[productfilter.selectedIndex].value),
+    testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
+      '' : testgroupfilter.options[testgroupfilter.selectedIndex].value),
+    subgroup: (subgroupfilter.options[subgroupfilter.selectedIndex].value == '---' ? 
+      '' : subgroupfilter.options[subgroupfilter.selectedIndex].value),
+  });
+  // if something went wrong, just show all the tests:
+  filter_req.addErrback(showAllTests);
+  filter_req.addCallback(doFilterList);
 }
 
 function setAuthor(user_id) {
@@ -78,6 +78,35 @@ function disableModeButtons() {
   document.getElementById("edit_testcase_button").disabled=true;
   document.getElementById("clone_testcase_button").disabled=true;
   document.getElementById("delete_testcase_button").disabled=true;
+}
+
+function populateBranches(productBox) {
+  var branchBox = document.getElementById('editform_branch');
+  branchBox.options.length = 0;
+
+  var productId = productBox.options[productBox.selectedIndex].value;
+  var product = getProductById(productId);
+  if (!product) {
+    // no product set
+    var option = new Option('-No product selected-','');
+    branchBox.add(option, null);
+    return;
+  }
+  var option = new Option('-Branch-','');
+  branchBox.add(option, null);
+  var branches = product['branches'];
+  for (var i=0; i<branches.length; i++) {
+    var option = new Option(branches[i].name,branches[i].id);
+    option.selected = false;
+    if (testcase &&
+        testcase.product_id && 
+	productId == testcase.product_id.product_id) {
+      if (option.value == testcase.branch_id) {
+        option.selected = true;
+      }
+    }
+    branchBox.add(option, null);
+  }
 }
 
 function loadTestcase(silent) {
@@ -115,8 +144,8 @@ function populateTestcase(data) {
   document.getElementById('steps_text').innerHTML = testcase.steps_formatted;
   document.getElementById('results_text').innerHTML = testcase.expected_results_formatted;
 
-  var product_box = document.getElementById('product');
-  var options = product_box.getElementsByTagName('option');  
+  var productBox = document.getElementById('editform_product');
+  var options = productBox.getElementsByTagName('option');  
   var found_product = 0;
   for (var i=0; i<options.length; i++) {
     if (options[i].value == testcase.product_id.product_id) {
@@ -131,6 +160,23 @@ function populateTestcase(data) {
     options[0].selected = true;
   }
   changeProduct();
+  populateBranches(productBox);
+  var branchBox = document.getElementById('editform_branch');
+  var options = branchBox.getElementsByTagName('option');
+  var found_branch = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == testcase.branch_id.branch_id) {
+      options[i].selected = true;
+      document.getElementById('branch_text').innerHTML = options[i].text;
+      found_branch=1;
+    } else {
+      options[i].selected = false;
+    }
+  }
+  if (found_branch == 0) {
+    document.getElementById('branch_text').innerHTML = '<em>No branch set for this testcase.</em>';
+    options[0].selected = true;
+  }
 
   var testgroups_text = "";
   var testgroups_link_text = "";
@@ -261,7 +307,8 @@ function resetTestcase() {
 function checkFormContents(f) {
   return (
           checkString(f.editform_summary, 'Summary') &&
-          verifySelected(f.product, 'Product') &&
+          verifySelected(f.editform_product, 'Product') &&
+          verifySelected(f.editform_branch, 'Branch') &&
           verifySelected(f.editform_author_id, 'Author')
          );
 }

@@ -52,21 +52,21 @@ my $rv;
 
 
 if ($c->param("searchSubgroupList")) {
-	print $c->header('text/plain');
-	my $product_id = $c->param("product");
-	my $testgroup_id = $c->param("testgroup");
-	
-	my $subgroups;
-	
-	if ($testgroup_id) {
-		$subgroups = Litmus::DB::Subgroup->search_ByTestgroup($testgroup_id);
-	} elsif ($product_id) {
-		$subgroups = Litmus::DB::Subgroup->search(product => $product_id);
-	}
-	while (my $sg = $subgroups->next) {
-		print $sg->subgroup_id()."\n";
-	}
-	exit;
+  print $c->header('text/plain');
+  my $product_id = $c->param("product");
+  my $testgroup_id = $c->param("testgroup");
+  
+  my $subgroups;
+  
+  if ($testgroup_id) {
+    $subgroups = Litmus::DB::Subgroup->search_ByTestgroup($testgroup_id);
+  } elsif ($product_id) {
+    $subgroups = Litmus::DB::Subgroup->search(product => $product_id);
+  }
+  while (my $sg = $subgroups->next) {
+    print $sg->subgroup_id()."\n";
+  }
+  exit;
 }
 
 # anyone can use this script for its searching capabilities, but if we 
@@ -107,12 +107,14 @@ if ($c->param("delete_subgroup_button")) {
     $message = "Failed to clone Subgroup ID# $subgroup_id.";
   }
 } elsif ($c->param("editform_mode")) {
-  requireField('product', $c->param('product'));
+  requireField('product', $c->param('editform_product'));
+  requireField('branch', $c->param('editform_branch'));
   my $enabled = $c->param('editform_enabled') ? 1 : 0;
   if ($c->param("editform_mode") eq "add") {
     my %hash = (
                 name => $c->param('editform_name'),
-                product_id => $c->param('product'),
+                product_id => $c->param('editform_product'),
+                branch_id => $c->param('editform_branch'),
                 enabled => $enabled,
                );
     my $new_subgroup = 
@@ -136,6 +138,7 @@ if ($c->param("delete_subgroup_button")) {
     my $subgroup = Litmus::DB::Subgroup->retrieve($subgroup_id);
     if ($subgroup) {
       $subgroup->product_id($c->param('editform_product'));
+      $subgroup->branch_id($c->param('editform_branch'));
       $subgroup->enabled($enabled);
       $subgroup->name($c->param('editform_name'));
       $rv = $subgroup->update();
@@ -171,9 +174,9 @@ if ($rebuild_cache) {
   Litmus::Cache::rebuildCache();
 }
 
-my $subgroups = Litmus::FormWidget->getSubgroups(0,1);
+my $subgroups = Litmus::FormWidget->getSubgroups(0,'name');
 my $products = Litmus::FormWidget->getProducts();
-my $testcases = Litmus::FormWidget->getTestcases;
+my $testcases = Litmus::FormWidget->getTestcases(0,'name');
 
 my $json = JSON->new(skipinvalid => 1, convblessed => 1);
 my $testcases_js = $json->objToJson($testcases);

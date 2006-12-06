@@ -1,10 +1,10 @@
 <select 
-  [% IF classname %]class="[% classname %]"[% END %]
+  class="[% IF classname %][% classname %][% ELSE %]select_opsys[% END %]"
   id="[% name %]"
   name="[% name %]"
   [% IF size %] size="[% size %]"[% END %]
   [% IF disabled %] disabled[% END %]
-  [% IF onChange %] onChange="[% onChange %]"[% END %]
+  [% IF onchange %] onchange="[% onchange %]"[% END %]
   [% IF multiple %] multiple[% END %]>
     
   [% IF placeholder %]<option value="">-Operating System-</option>[% END %]

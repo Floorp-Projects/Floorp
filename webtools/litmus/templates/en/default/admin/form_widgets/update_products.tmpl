@@ -10,14 +10,14 @@
       <table border="0" cellspacing="0" cellpadding="5">
         <tr>
         <td>
-        [% INCLUDE form_widgets/select_product_id.tmpl name="product_id" placeholder=1 size=5 show_name=1 onChange="loadProduct();" %]
+        [% INCLUDE form_widgets/select_product_id.tmpl name="product_id" placeholder=1 size=5 show_name=1 onchange="loadProduct();" %]
         </td>
         </tr>
         <tr>
         <td>
-        <input id="add_product_button" name="add_product_button" class="manage" type="button" onClick="switchProductFormToAdd();" value="Add new product">&nbsp;
-        <input id="edit_product_button" name="edit_product_button" class="manage" type="button" onClick="switchProductFormToEdit();" value="Edit product" disabled>&nbsp;
-        <input id="delete_product_button" name="delete_product_button" class="manage" type="submit" onClick="return confirm('Really delete this product?')
+        <input id="add_product_button" name="add_product_button" class="manage" type="button" onclick="switchProductFormToAdd();" value="Add new product">&nbsp;
+        <input id="edit_product_button" name="edit_product_button" class="manage" type="button" onclick="switchProductFormToEdit();" value="Edit product" disabled>&nbsp;
+        <input id="delete_product_button" name="delete_product_button" class="manage" type="submit" onclick="return confirm('Really delete this product?')
 ;" value="Delete product" disabled>&nbsp;
         </td>
         </tr>
@@ -63,7 +63,7 @@
           <td>&lArr;&nbsp;Uncheck this to completely disable this product. <b>NOTE</b>: this will have also disable all associated test runs, test groups, subgroups, and testcases.</td>
           </tr>
           <tr>
-          <td colspan="3" align="right"><input id="edit_product_form_reset" class="button" type="button" value="Reset" disabled onClick="resetProduct();" />&nbsp;<input class="button" type="submit" id="edit_product_form_submit" name="edit_product_form_submit" value="Submit Edits" disabled /></div>
+          <td colspan="3" align="right"><input id="edit_product_form_reset" class="button" type="button" value="Reset" disabled onclick="resetProduct();" />&nbsp;<input class="button" type="submit" id="edit_product_form_submit" name="edit_product_form_submit" value="Submit Edits" disabled /></div>
           </td>
           </tr>
         </table>

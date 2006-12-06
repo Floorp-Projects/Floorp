@@ -99,21 +99,20 @@ if ($c->param("delete_testgroup_button")) {
     $message = "Failed to clone Testgroup ID# $testgroup_id.";
   }
 } elsif ($c->param("editform_mode")) {
-  requireField('product', $c->param('product'));
-  requireField('branch', $c->param('editform_branches'));
+  requireField('product', $c->param('editform_product'));
+  requireField('branch', $c->param('editform_branch'));
   my $enabled = $c->param('editform_enabled') ? 1 : 0;
   if ($c->param("editform_mode") eq "add") {
     my %hash = (
                 name => $c->param('editform_name'),
-                product_id => $c->param('product'),
+                product_id => $c->param('editform_product'),
                 enabled => $enabled,
+                branch_id => $c->param('editform_branch'),
                );
     my $new_testgroup = 
       Litmus::DB::Testgroup->create(\%hash);
 
     if ($new_testgroup) {
-      my @selected_branches = $c->param("editform_branches");
-      $new_testgroup->update_branches(\@selected_branches);
       my @selected_subgroups = $c->param("editform_testgroup_subgroups");
       $new_testgroup->update_subgroups(\@selected_subgroups);
       # XXX: Placeholder for updating test runs
@@ -131,12 +130,11 @@ if ($c->param("delete_testgroup_button")) {
     my $testgroup = Litmus::DB::Testgroup->retrieve($testgroup_id);
     if ($testgroup) {
       $testgroup->product_id($c->param('editform_product'));
+      $testgroup->branch_id($c->param('editform_branch'));
       $testgroup->enabled($enabled);
       $testgroup->name($c->param('editform_name'));
       $rv = $testgroup->update();
       if ($rv) {
-        my @selected_branches = $c->param("editform_branches");
-        $testgroup->update_branches(\@selected_branches);
         my @selected_subgroups = $c->param("editform_testgroup_subgroups");
         $testgroup->update_subgroups(\@selected_subgroups);
         # XXX: Placeholder for updating test runs
@@ -171,7 +169,7 @@ if ($rebuild_cache) {
 
 my $testgroups = Litmus::FormWidget->getTestgroups;
 my $products = Litmus::FormWidget->getProducts();
-my $subgroups = Litmus::FormWidget->getSubgroups;
+my $subgroups = Litmus::FormWidget->getSubgroups(0,'name');
 
 my $json = JSON->new(skipinvalid => 1, convblessed => 1);
 my $subgroups_js = $json->objToJson($subgroups);

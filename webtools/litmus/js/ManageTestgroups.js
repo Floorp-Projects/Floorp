@@ -34,7 +34,7 @@ function filterList() {
 
   var productfilter = document.getElementById('product_filter');
 
-  if (productfilter.options[productfilter.selectedIndex].value == '---') {
+  if (productfilter.options[productfilter.selectedIndex].value == '') {
     // nothing to do here
     showAll();
     return;
@@ -43,7 +43,7 @@ function filterList() {
   toggleMessage('loading','Filtering testgroup list...');
   filter_req = doSimpleXMLHttpRequest('manage_testgroups.cgi', {
     searchTestgroupList: 1,
-    product: (productfilter.options[productfilter.selectedIndex].value == '---' ? '' : productfilter.options[productfilter.selectedIndex].value)
+    product: (productfilter.options[productfilter.selectedIndex].value == '' ? '' : productfilter.options[productfilter.selectedIndex].value)
   });
   // if something went wrong, just show all the tests:
   filter_req.addErrback(showAll);
@@ -86,7 +86,7 @@ function loadTestgroup(silent) {
 }
 
 function populateBranches(productBox) {
-  var branchBox = document.getElementById('editform_branches'); 
+  var branchBox = document.getElementById('editform_branch'); 
   branchBox.options.length = 0;
   
   var productId = productBox.options[productBox.selectedIndex].value;
@@ -103,11 +103,11 @@ function populateBranches(productBox) {
   for (var i=0; i<branches.length; i++) {
     var option = new Option(branches[i].name,branches[i].id);
     option.selected = false;
-    if (testgroup.product_id && productId == testgroup.product_id.product_id) {
-      for (var j=0; j<testgroup.branches.length; j++) {
-        if (option.value == testgroup.branches[j].branch_id) {
-          option.selected = true;
-        }
+    if (testgroup &&
+	testgroup.product_id && 
+	productId == testgroup.product_id.product_id) {
+      if (option.value == testgroup.branch_id) {
+        option.selected = true;
       }
     }
     branchBox.add(option, null);
@@ -122,7 +122,7 @@ function populateTestgroup(data) {
   document.getElementById('name_text').innerHTML = testgroup.name;
   document.getElementById('testgroup_id_display').innerHTML = testgroup.testgroup_id;
 
-  var productBox = document.getElementById('product');
+  var productBox = document.getElementById('editform_product');
   var options = productBox.getElementsByTagName('option');  
   var found_product = 0;
   for (var i=0; i<options.length; i++) {
@@ -135,10 +135,28 @@ function populateTestgroup(data) {
     }      
   }
   if (found_product == 0) {
+    document.getElementById('product_text').innerHTML = '<em>No product set for this testgroup.</em>';
     options[0].selected = true;
   }
   changeProduct();
   populateBranches(productBox);
+  var branchBox = document.getElementById('editform_branch');
+  var options = branchBox.getElementsByTagName('option');  
+  var found_branch = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == testgroup.branch_id.branch_id) {
+      options[i].selected = true;
+      document.getElementById('branch_text').innerHTML = options[i].text;
+      found_branch=1;
+    } else {
+      options[i].selected = false;
+    }      
+  }
+  if (found_branch == 0) {
+    document.getElementById('branch_text').innerHTML = '<em>No branch set for this testgroup.</em>';
+    options[0].selected = true;
+  }
+
   var enabled_em = document.getElementById('editform_enabled')
   if (testgroup.enabled == 1) {
     enabled_em.checked = true;
@@ -177,11 +195,13 @@ function blankTestgroupForm(formid) {
   selectBoxTestgroup.selectedIndex=-1;
 
   document.getElementById('editform_testrunner_plan_id').innerHTML = '';
+  document.getElementById('product_text').innerHTML = '';
+  document.getElementById('branch_text').innerHTML = '';
 
   testgroup = new Object();
 
   changeProduct();
-  populateBranches(document.getElementById('product'));
+  populateBranches(document.getElementById('editform_product'));
 }
 
 function switchToAdd() {
@@ -207,8 +227,8 @@ function switchToEdit() {
 function populateAllSubgroups() {
   toggleMessage('loading','Narrowing Subgroup List...');
   try {
-    var productBox = document.getElementById('product');
-    var branchBox = document.getElementById('editform_branches');
+    var productBox = document.getElementById('editform_product');
+    var branchBox = document.getElementById('editform_branch');
     var selectBoxAll = document.getElementById('editform_subgroups_for_product');
     selectBoxAll.options.length = 0; 
     for (var i in subgroups) {
@@ -217,19 +237,10 @@ function populateAllSubgroups() {
       }
       
       if (branchBox.selectedIndex >= 0) {
-        var found_branch = 0;
-        for (var j=0; j<branchBox.options.length; j++) {
-          if (branchBox.options[j].value == '' ||
-              branchBox.options[j].selected == false) {
-            continue;
-          }
-          if (subgroups[i].branch_id == branchBox.options[j].value) {
-            found_branch = 1;
-          } 
-        }
+
         if (branchBox.options[branchBox.selectedIndex].value != '' &&
-            found_branch == 0) {
-          continue;
+            subgroups[i].branch_id != branchBox.options[branchBox.selectedIndex].value) {
+	  continue;
         }
       } 
      
@@ -258,8 +269,8 @@ function resetTestgroup() {
 function checkFormContents(f) {
   return (
           checkString(f.editform_name, 'Name') &&
-          verifySelected(f.product, 'Product') &&
-          verifySelected(f.editform_branches, 'Branch')
+          verifySelected(f.editform_product, 'Product') &&
+          verifySelected(f.editform_branch, 'Branch')
          );
 }
 

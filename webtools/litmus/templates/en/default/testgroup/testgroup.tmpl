@@ -37,14 +37,6 @@
 [% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
-  <td width="20%"><b>Product:</b></td>
-  <td>
-    <div id="product_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.product.name | html %]</div>
-    </td>
-    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testgroups.cgi?testgroup_id=[%testgroup.testgroup_id | html%]"> Edit Testgroup</a></td>[% END %]
-  </tr>
-  <!-- XXX: Placeholder for test runs -->
-  <tr>
     <td><b>Testgroup ID #:</b></td>
     <td id="testgroup_id_display[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.testgroup_id | html %]</td>
   </tr>
@@ -52,6 +44,20 @@
     <td><b>Name:</b></td>
     <td><div id="name_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html%][% END %]">[% testgroup.name | html %]</div></td>
   </tr>
+  <tr>
+  <td width="20%"><b>Product:</b></td>
+  <td>
+    <div id="product_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.product.name | html %]</div>
+    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testgroups.cgi?testgroup_id=[%testgroup.testgroup_id | html%]"> Edit Testgroup</a></td>[% END %]
+  </tr>
+  <tr>
+  <td width="20%"><b>Branch:</b></td>
+  <td>
+    <div id="branch_text[% IF ! show_edit %]_[% testgroup.testgroup_id | html %][% END %]">[% testgroup.branch.name | html %]</div>
+    </td>
+  </tr>
+  <!-- XXX: Placeholder for test runs -->
 </table>
 
 <br clear="all" />

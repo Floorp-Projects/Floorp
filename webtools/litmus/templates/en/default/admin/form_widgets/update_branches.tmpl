@@ -10,14 +10,14 @@
       <table border="0" cellspacing="0" cellpadding="5">
         <tr>
         <td>
-        [% INCLUDE form_widgets/select_branch_id.tmpl name="branch_id" placeholder=1 size=5 show_name=1 onChange="loadBranch();" %]
+        [% INCLUDE form_widgets/select_branch_id.tmpl name="branch_id" placeholder=1 size=5 show_name=1 onchange="loadBranch();" %]
         </td>
         </tr>
         <tr>
         <td>
-        <input id="add_branch_button" name="add_branch_button" class="manage" type="button" onClick="switchBranchFormToAdd();" value="Add new branch">&nbsp;
-        <input id="edit_branch_button" name="edit_branch_button" class="manage" type="button" onClick="switchBranchFormToEdit();" value="Edit branch" disabled>&nbsp;
-        <input id="delete_branch_button" name="delete_branch_button" class="manage" type="submit" onClick="return confirm('Really delete this branch?');" value="Delete branch" disabled>&nbsp;
+        <input id="add_branch_button" name="add_branch_button" class="manage" type="button" onclick="switchBranchFormToAdd();" value="Add new branch">&nbsp;
+        <input id="edit_branch_button" name="edit_branch_button" class="manage" type="button" onclick="switchBranchFormToEdit();" value="Edit branch" disabled>&nbsp;
+        <input id="delete_branch_button" name="delete_branch_button" class="manage" type="submit" onclick="return confirm('Really delete this branch?');" value="Delete branch" disabled>&nbsp;
         </td>
         </tr>
       </table>
@@ -67,7 +67,7 @@
           </tr>
 
 	  <tr>
-          <td colspan="3" align="right"><input id="edit_branch_form_reset" class="button" type="button" value="Reset" disabled onClick="resetBranch();" />&nbsp;<input class="button" type="submit" id="edit_branch_form_submit" name="edit_branch_form_submit" value="Submit Edits" disabled /></div>
+          <td colspan="3" align="right"><input id="edit_branch_form_reset" class="button" type="button" value="Reset" disabled onclick="resetBranch();" />&nbsp;<input class="button" type="submit" id="edit_branch_form_submit" name="edit_branch_form_submit" value="Submit Edits" disabled /></div>
           </td>
           </tr>
         </table>

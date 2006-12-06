@@ -15,9 +15,9 @@
         </tr>
         <tr>
         <td>
-        <input id="add_testday_button" name="add_testday_button" class="manage" type="button" onClick="switchTestdayFormToAdd();" value="Add new testday">&nbsp;
-        <input id="edit_testday_button" name="edit_testday_button" class="manage" type="button" onClick="switchTestdayFormToEdit();" value="Edit testday" disabled>&nbsp;
-        <input id="delete_testday_button" name="delete_testday_button" class="manage" type="submit" onClick="return confirm('Really delete this testday?')
+        <input id="add_testday_button" name="add_testday_button" class="manage" type="button" onclick="switchTestdayFormToAdd();" value="Add new testday">&nbsp;
+        <input id="edit_testday_button" name="edit_testday_button" class="manage" type="button" onclick="switchTestdayFormToEdit();" value="Edit testday" disabled>&nbsp;
+        <input id="delete_testday_button" name="delete_testday_button" class="manage" type="submit" onclick="return confirm('Really delete this testday?')
 ;" value="Delete testday" disabled>&nbsp;
         </td>
         </tr>
@@ -64,11 +64,11 @@
           </tr>
           <tr>
           <td class="headerleft">Product:</td>
-          <td colspan="2">[% INCLUDE form_widgets/select_product_id.tmpl name="testday_product_id" placeholder=1 onChange="changeProduct(this,document.getElementById('testday_branch_id'),document.getElementById('testday_testgroup_id'));" %]</td>
+          <td colspan="2">[% INCLUDE form_widgets/select_product_id.tmpl name="testday_product_id" placeholder=1 onchange="changeProduct(this,document.getElementById('testday_branch_id'),document.getElementById('testday_testgroup_id'));" %]</td>
           </tr>
           <tr>
             <td class="headerleft">Branch:</td>
-            <td>[% INCLUDE form_widgets/select_branch_id.tmpl name="testday_branch_id" placeholder=1 onChange="changeBranch(this,document.getElementById('testday_testgroup_id'));" %]</td>
+            <td>[% INCLUDE form_widgets/select_branch_id.tmpl name="testday_branch_id" placeholder=1 onchange="changeBranch(this,document.getElementById('testday_testgroup_id'));" %]</td>
             <td>&lArr; Select Product first</td>
           </tr>
           <tr>
@@ -86,7 +86,7 @@
           </tr>
 
           <tr>
-          <td colspan="3" align="right"><input id="edit_testday_form_reset" class="button" type="button" value="Reset" disabled onClick="resetTestday();" />&nbsp;<input class="button" type="submit" id="edit_testday_form_submit" name="edit_testday_form_submit" value="Submit Edits" disabled /></div>
+          <td colspan="3" align="right"><input id="edit_testday_form_reset" class="button" type="button" value="Reset" disabled onclick="resetTestday();" />&nbsp;<input class="button" type="submit" id="edit_testday_form_submit" name="edit_testday_form_submit" value="Submit Edits" disabled /></div>
           </td>
           </tr>
         </table>

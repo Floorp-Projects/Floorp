@@ -25,9 +25,6 @@
   # ***** END LICENSE BLOCK *****
 #%]
 
-[% PROCESS global/selects.none.tmpl %]
-
-[% includeselects=1 %]  
 [% INCLUDE global/html_header.tmpl js_files=['js/FormValidation.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/SelectSort.js','js/ManageTestgroups.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
@@ -59,7 +56,7 @@ var current_user_id=[% user.user_id %];
 	    </tr>
 	    <tr>
 	      <td>
-	        [% INCLUDE productbox onchange="changeProduct('filter'); filterList();" nameextra="_filter" %]
+                [% INCLUDE form_widgets/select_product_id.tmpl name="product_filter" placeholder=1 size=1 onchange="changeProduct('filter');filterList();" %]
 	      </td>
 	    </tr>
 	  </table>
@@ -68,7 +65,7 @@ var current_user_id=[% user.user_id %];
 	<table border="0" cellspacing="0" cellpadding="5">
 	<tr>
         <td>
-	[% INCLUDE form_widgets/select_testgroup_id.tmpl name="testgroup_id" placeholder=1 size=10 onChange="loadTestgroup();" %]
+	[% INCLUDE form_widgets/select_testgroup_id.tmpl name="testgroup_id" placeholder=1 size=10 onchange="loadTestgroup();" %]
         </td>
         </tr>
         <tr>        

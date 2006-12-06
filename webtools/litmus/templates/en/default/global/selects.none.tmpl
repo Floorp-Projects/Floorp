@@ -121,7 +121,7 @@
    #                     (can be either a single object or a list)
    # testcase_id (optional) - the current testcase_id. If given, 
    #    the selname will be testgroup_testcase_id
-   # onchange (optional) - optional js code to run for the onChange event
+   # onchange (optional) - optional js code to run for the onchange event
 %]
 [% BLOCK testgroupbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
@@ -144,7 +144,7 @@
    #                     (can be either a single object or a list)
    # testcase_id (optional) - the current testcase_id. If given, 
    #    the selname will be subgroup_testcase_id
-   # onchange (optional) - optional js code to run for the onChange event
+   # onchange (optional) - optional js code to run for the onchange event
 %]
 [% BLOCK subgroupbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
@@ -168,7 +168,7 @@
    #                     (can be either a single object or a list)
    # testcase (optional) - the current testcase object. If given, 
    #    the selname will be product_testcase_id
-   # onchange (optional) - optional js code to run for the onChange event
+   # onchange (optional) - optional js code to run for the onchange event
 %]
 [% BLOCK productbox %]
     [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 

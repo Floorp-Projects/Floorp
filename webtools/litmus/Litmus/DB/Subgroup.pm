@@ -40,13 +40,16 @@ use Time::Piece::MySQL;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroup_id name testrunner_group_id enabled product_id/);
-Litmus::DB::Subgroup->columns(Essential => qw/subgroup_id name testrunner_group_id enabled product_id/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id name testrunner_group_id enabled product_id branch_id/);
+Litmus::DB::Subgroup->columns(Essential => qw/subgroup_id name testrunner_group_id enabled product_id branch_id/);
 Litmus::DB::Subgroup->columns(TEMP => qw /num_testcases/);
 
 Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
+Litmus::DB::Subgroup->column_alias("product_id", "product");
+Litmus::DB::Subgroup->column_alias("branch_id", "branch");
 
 Litmus::DB::Subgroup->has_a(product => "Litmus::DB::Product");
+Litmus::DB::Subgroup->has_a(branch => "Litmus::DB::Branch");
 
 __PACKAGE__->set_sql(EnabledByTestgroup => qq{
 SELECT sg.* 
@@ -219,7 +222,7 @@ sub clone() {
     # What happens when we clone a subgroup that doesn't belong to  
     # any testgroups?
   }  
-
+  
   $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) SELECT testcase_id,?,sort_order FROM testcase_subgroups WHERE subgroup_id=?";
   
   $rows = $dbh->do($sql,
@@ -230,7 +233,7 @@ sub clone() {
   if (! $rows) {
     # XXX: Do we need to throw a warning here?
   }  
-
+  
   return $new_subgroup;
 }
 
@@ -285,9 +288,11 @@ sub update_testgroups() {
   my $self = shift;
   my $new_testgroup_ids = shift;
   
+  # We always want to delete the existing testgroups. 
+  # Failing to delete testgroups is _not_ fatal when adding a new subgroup.
+  my $rv = $self->delete_from_testgroups();
+
   if (scalar @$new_testgroup_ids) {
-    # Failing to delete testgroups is _not_ fatal when adding a new subgroup.
-    my $rv = $self->delete_from_testgroups();
     my $dbh = __PACKAGE__->db_Main();  
     my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) VALUES (?,?,1)";
     foreach my $new_testgroup_id (@$new_testgroup_ids) {
@@ -327,9 +332,11 @@ sub update_testcases() {
   my $self = shift;
   my $new_testcase_ids = shift;
   
+  # We always want to delete the existing testcases. 
+  # Failing to delete testcases is _not_ fatal when adding a new subgroup.
+  my $rv = $self->delete_from_testcases();
+
   if (scalar @$new_testcase_ids) {
-    # Failing to delete testcases is _not_ fatal when adding a new subgroup.
-    my $rv = $self->delete_from_testcases();
     my $dbh = __PACKAGE__->db_Main();  
     my $sql = "INSERT INTO testcase_subgroups (testcase_id,subgroup_id,sort_order) VALUES (?,?,?)";
     my $sort_order = 1;

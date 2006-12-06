@@ -184,16 +184,24 @@ sub getTestcaseIDs()
 #########################################################################
 sub getTestcases()
 {
-    my ($self, $enabled, $by_name) = @_;
-    my $sql = "SELECT testcase_id, summary, product_id FROM testcases";
+    my ($self, $enabled, $sort_by) = @_;
+    my $sql = "SELECT testcase_id, summary, product_id, branch_id FROM testcases";
     if ($enabled) {
       $sql .= " WHERE enabled=1";
     }
-    if ($by_name) {
-      $sql .= " ORDER BY summary ASC, testcase_id DESC";
-    } else {
-      $sql .= " ORDER BY testcase_id DESC";
+    
+    if (!$sort_by) {
+      $sort_by='id';
     }
+
+    if ($sort_by eq 'name') {
+      $sql .= " ORDER BY summary ASC, testcase_id ASC";
+    } elsif ($sort_by eq 'id') {
+      $sql .= " ORDER BY testcase_id ASC";
+    } else {
+      print STDERR "Unknown sort_by type: $sort_by\n";
+    }
+
     return _getValues($sql);
 }
 
@@ -201,27 +209,37 @@ sub getTestcases()
 sub getDistinctSubgroups()
 {
     my ($self, $enabled) = @_;
-    my $sql = "SELECT DISTINCT(sg.subgroup_id), sg.name, sg.product_id, tgb.branch_id, tg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id) WHERE sgtg.testgroup_id=tg.testgroup_id";
+    my $sql = "SELECT DISTINCT(sg.subgroup_id), sg.name, sg.product_id, sg.branch_id, sgtg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id)";
     if ($enabled) {
       $sql .= " AND sg.enabled=1";
     }
-    $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id DESC";
+    $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id ASC";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getSubgroups()
 {
-    my ($self, $enabled, $by_name) = @_;
-    my $sql = "SELECT sg.subgroup_id, sg.name, sg.product_id, tgb.branch_id, tg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id) LEFT JOIN testgroup_branches tgb ON (sgtg.testgroup_id=tgb.testgroup_id), testgroups tg WHERE sgtg.testgroup_id=tg.testgroup_id";
+    my ($self, $enabled, $sort_by) = @_;
+    my $sql = "SELECT sg.subgroup_id, sg.name, sg.product_id, sg.branch_id, sgtg.testgroup_id FROM subgroups sg LEFT JOIN subgroup_testgroups sgtg ON (sg.subgroup_id=sgtg.subgroup_id)";
     if ($enabled) {
       $sql .= " AND sg.enabled=1";
     }
-    if ($by_name) {
-      $sql .= " ORDER BY sg.name ASC, sg.subgroup_id DESC";
-    } else {
-      $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id DESC";
+
+    if (!$sort_by) {
+      $sort_by='id';
     }
+
+    if ($sort_by eq 'name') {
+      $sql .= " ORDER BY sg.name ASC, sg.subgroup_id ASC";
+    } elsif ($sort_by eq 'id') {
+      $sql .= " ORDER BY sg.subgroup_id ASC";
+    } elsif ($sort_by eq 'sort_order') {
+      $sql .= " ORDER BY sgtg.sort_order ASC, sg.name ASC, sg.subgroup_id ASC";
+    } else {
+      print STDERR "Unknown sort_by type: $sort_by\n";
+    }
+
     return _getValues($sql);
 }
 
@@ -229,9 +247,9 @@ sub getSubgroups()
 sub getTestgroups()
 {
     my ($self, $enabled) = @_;
-    my $sql = "SELECT tg.testgroup_id, tg.name, tg.product_id, tgb.branch_id FROM testgroups tg, testgroup_branches tgb WHERE tg.testgroup_id=tgb.testgroup_id";
+    my $sql = "SELECT tg.testgroup_id, tg.name, tg.product_id, tg.branch_id FROM testgroups tg";
     if ($enabled) {
-      $sql .= " AND tg.enabled=1";
+      $sql .= " WHERE tg.enabled=1";
     }
     $sql .= " ORDER BY tg.name, tg.testgroup_id";
     return _getValues($sql);

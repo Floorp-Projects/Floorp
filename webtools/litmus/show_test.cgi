@@ -54,7 +54,7 @@ $vars->{'default_relevance_threshold'} = Litmus::DB::Testcase->getDefaultRelevan
 
 my $products = Litmus::FormWidget->getProducts($show_admin);
 my $testgroups = Litmus::FormWidget->getTestgroups($show_admin);
-my $subgroups = Litmus::FormWidget->getSubgroups($show_admin);
+my $subgroups = Litmus::FormWidget->getSubgroups($show_admin,'sort_order');
 my $json = JSON->new(skipinvalid => 1, convblessed => 1);
 my $products_js = $json->objToJson($products);
 my $testgroups_js = $json->objToJson($testgroups);

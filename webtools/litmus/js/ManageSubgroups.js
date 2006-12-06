@@ -14,47 +14,46 @@ var showAll = function(err) {
 };
 
 var doFilterList = function(req) {
-	var subgroups = req.responseText.split("\n");
-	var subgroupbox = document.getElementById("subgroup_id");
-	for (var i=0; i<subgroupbox.options.length; i++) {
-		var subgroup = subgroupbox.options[i];
-		var hide = 0;
-		var id = subgroup.value;
-		if (subgroups.indexOf(id) == -1) { hide = 1; }
-		hide == 1 ? subgroup.style.display = 'none' : subgroup.style.display = '';
-	}
-	toggleMessage('none');
+var subgroups = req.responseText.split("\n");
+var subgroupbox = document.getElementById("subgroup_id");
+for (var i=0; i<subgroupbox.options.length; i++) {
+  var subgroup = subgroupbox.options[i];
+  var hide = 0;
+  var id = subgroup.value;
+  if (subgroups.indexOf(id) == -1) { hide = 1; }
+    hide == 1 ? subgroup.style.display = 'none' : subgroup.style.display = '';
+  }
+  toggleMessage('none');
 };
 
 // filter the list by various criteria:
 function filterList() {
-	// they just changed the selection, so cancel any pending filter actions:
-	if (filter_req instanceof Deferred && filter_req.fired == -1)
-	filter_req.cancel();
+  // they just changed the selection, so cancel any pending filter actions:
+  if (filter_req instanceof Deferred && filter_req.fired == -1)
+  filter_req.cancel();
 
-	var productfilter = document.getElementById('product_filter');
-	var testgroupfilter = document.getElementById('testgroup_filter');
-	
-	if (productfilter.options[productfilter.selectedIndex].value == '---' &&
-	    testgroupfilter.options[testgroupfilter.selectedIndex].value == '---') {
-		// nothing to do here
-		showAll();
-		return;
-	}
-	
-	toggleMessage('loading','Filtering subgroup list...');
-	filter_req = doSimpleXMLHttpRequest('manage_subgroups.cgi', {
-	  searchSubgroupList: 1,
-	  product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
-	  		'' : productfilter.options[productfilter.selectedIndex].value),
-	  testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
-	  		'' : testgroupfilter.options[testgroupfilter.selectedIndex].value)
-	  });
-	// if something went wrong, just show all the tests:
-	filter_req.addErrback(showAll);
-	filter_req.addCallback(doFilterList);
+  var productfilter = document.getElementById('product_filter');
+  var testgroupfilter = document.getElementById('testgroup_filter');
+
+  if (productfilter.options[productfilter.selectedIndex].value == '---' &&
+      testgroupfilter.options[testgroupfilter.selectedIndex].value == '---') {
+    // nothing to do here
+    showAll();
+    return;
+  }
+
+  toggleMessage('loading','Filtering subgroup list...');
+  filter_req = doSimpleXMLHttpRequest('manage_subgroups.cgi', {
+    searchSubgroupList: 1,
+    product: (productfilter.options[productfilter.selectedIndex].value == '---' ?
+    '' : productfilter.options[productfilter.selectedIndex].value),
+    testgroup: (testgroupfilter.options[testgroupfilter.selectedIndex].value == '---' ? 
+    '' : testgroupfilter.options[testgroupfilter.selectedIndex].value)
+  });
+  // if something went wrong, just show all the tests:
+  filter_req.addErrback(showAll);
+  filter_req.addCallback(doFilterList);
 }
-
 
 function enableModeButtons() {
   document.getElementById("edit_subgroup_button").disabled=false;
@@ -99,7 +98,7 @@ function populateSubgroup(data) {
   document.getElementById('name_text').innerHTML = subgroup.name;
   document.getElementById('subgroup_id_display').innerHTML = subgroup.subgroup_id;
 
-  var productBox = document.getElementById('product');
+  var productBox = document.getElementById('editform_product');
   var options = productBox.getElementsByTagName('option');  
   var found_product = 0;
   for (var i=0; i<options.length; i++) {
@@ -115,7 +114,23 @@ function populateSubgroup(data) {
     options[0].selected = true;
   }
   changeProduct();
-
+  populateBranches(productBox);
+  var branchBox = document.getElementById('editform_branch');
+  var options = branchBox.getElementsByTagName('option');
+  var found_branch = 0;
+  for (var i=0; i<options.length; i++) {
+    if (options[i].value == subgroup.branch_id.branch_id) {
+      options[i].selected = true;
+      document.getElementById('branch_text').innerHTML = options[i].text;
+      found_branch=1;
+    } else {
+      options[i].selected = false;
+    }
+  }
+  if (found_branch == 0) {
+    document.getElementById('branch_text').innerHTML = '<em>No branch set for this subgroup.</em>';
+    options[0].selected = true;
+  }
   var testgroups_text = "";
   var testgroups_link_text = "";
   for (var i in subgroup.testgroups) {
@@ -198,16 +213,59 @@ function switchToEdit() {
   document.getElementById('editform_div').style.display = 'block';
 }
 
+function populateBranches(productBox) {
+  var branchBox = document.getElementById('editform_branch'); 
+  branchBox.options.length = 0;
+  
+  var productId = productBox.options[productBox.selectedIndex].value;
+  var product = getProductById(productId);
+  if (!product) {
+    // no product set
+    var option = new Option('-No product selected-','');
+    branchBox.add(option, null);
+    return;
+  }
+  var option = new Option('-Branch-','');
+  branchBox.add(option, null);
+  var branches = product['branches'];
+  for (var i=0; i<branches.length; i++) {
+    var option = new Option(branches[i].name,branches[i].id);
+    option.selected = false;
+    if (subgroup &&
+	subgroup.product_id && 
+	productId == subgroup.product_id.product_id) {
+      if (option.value == subgroup.branch_id) {
+        option.selected = true;
+      }
+    }
+    branchBox.add(option, null);
+  }
+}
+
 function populateAllTestcases() {
-  var productBox = document.getElementById('product');
+  var productBox = document.getElementById('editform_product');
+  var branchBox = document.getElementById('editform_branch');
   var selectBoxAll = document.getElementById('editform_testcases_for_product');
   selectBoxAll.options.length = 0;
   for (var i in testcases) {
-    if (testcases[i].product_id == productBox.options[productBox.selectedIndex].value) {
-      var optionText = testcases[i].testcase_id + ': ' + testcases[i].summary;
-    selectBoxAll.options[selectBoxAll.length] = new Option(optionText,
-                                                               testcases[i].testcase_id);
+    if (testcases[i].product_id != productBox.options[productBox.selectedIndex].value) {
+      continue;
     }
+
+    if (branchBox.selectedIndex >= 0) {
+      if (branchBox.options[branchBox.selectedIndex].value != '' &&
+          testcases[i].branch_id != branchBox.options[branchBox.selectedIndex].value) {
+        continue;
+      }
+    }  
+
+    var optionText = testcases[i].testcase_id + ': ' + testcases[i].summary;
+    selectBoxAll.options[selectBoxAll.length] = new Option(optionText,
+                                                           testcases[i].testcase_id);
+    
+  }
+  if (selectBoxAll.options.length == 0) {
+    selectBoxAll.options[selectBoxAll.length] = new Option('-No Testcases for this Product/Branch-','');
   }
 }  
 
@@ -223,7 +281,8 @@ function resetSubgroup() {
 function checkFormContents(f) {
   return (
           checkString(f.editform_name, 'Name') &&
-          verifySelected(f.product, 'Product')
+          verifySelected(f.editform_product, 'Product') &&
+          verifySelected(f.editform_branch, 'Branch')
          );
 }
 

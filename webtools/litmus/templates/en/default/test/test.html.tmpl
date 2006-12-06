@@ -37,9 +37,23 @@
 [% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
+    <td><b>Testcase ID #:</b></td>
+    <td id="testcase_id_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.testcase_id | html %]</td>
+  </tr>
+  <tr>
+    <td><b>Summary:</b></td>
+    <td><div id="summary_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.summary | html %]</div></td>
+  </tr>
+  <tr>
   <td width="20%"><b>Product:</b></td>
   <td>
     <div id="product_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.product.name | html %]</div>
+    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
+  </tr>
+  <td width="20%"><b>Branch:</b></td>
+  <td>
+    <div id="branch_text[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.branch.name | html %]</div>
     </td>
     [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_testcases.cgi?testcase_id=[%testcase.testcase_id | html%]&edit=1"> Edit Testcase</a></td>[% END %]
   </tr>
@@ -56,10 +70,6 @@
     </td>
   </tr>
   <tr>
-    <td><b>Testcase ID #:</b></td>
-    <td id="testcase_id_display[% IF ! show_edit %]_[% testcase.testcase_id | html %][% END %]">[% testcase.testcase_id | html %]</td>
-  </tr>
-  <tr>
     <td><b>Regression Bug ID #:</b></td>
     <td id="regression_bug_id_display[% IF ! show_edit %]_[% testcase.regression_bug_id | html %][% END %]">[% IF testcase.regression_bug_id %]<script>document.write('<a href="' + generateBugLink([% testcase.regression_bug_id %]) + '">[% testcase.regression_bug_id | html %]</a>');</script>[% ELSE %]None specified[% END %]</td>
   </tr>
@@ -73,10 +83,6 @@
     <td><input id="community_enabled_display" name="community_enabled_display" type="checkbox" value="1" [% IF testcase.community_enabled %] checked[% END %] disabled></td>
   </tr>
 [% END %]
-  <tr>
-    <td><b>Summary:</b></td>
-    <td><div id="summary_text[% IF ! show_edit %]_[%testcase.testcase_id | html%][% END %]">[% testcase.summary | html %]</div></td>
-  </tr>
 </table>
 
 <br clear="all" />

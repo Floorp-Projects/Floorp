@@ -37,24 +37,26 @@ use base 'Litmus::DBI';
 
 Litmus::DB::Testgroup->table('testgroups');
 
-Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name enabled testrunner_plan_id/);
-Litmus::DB::Testgroup->columns(Essential => qw/testgroup_id product_id name enabled testrunner_plan_id/);
+Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name enabled testrunner_plan_id branch_id/);
+Litmus::DB::Testgroup->columns(Essential => qw/testgroup_id product_id name enabled testrunner_plan_id branch_id/);
 Litmus::DB::Testgroup->columns(TEMP => qw //);
 
 Litmus::DB::Testgroup->column_alias("product_id", "product");
+Litmus::DB::Testgroup->column_alias("branch_id", "branch");
 
 Litmus::DB::Testgroup->has_a(product => "Litmus::DB::Product");
+Litmus::DB::Testgroup->has_a(branch => "Litmus::DB::Branch");
 
 __PACKAGE__->set_sql(EnabledByBranch => qq{
                                            SELECT tg.* 
-                                           FROM testgroups tg, testgroup_branches tgb
-                                           WHERE tgb.branch_id=? AND tgb.testgroup_id=tg.testgroup_id AND tg.enabled=1 ORDER by tg.name ASC
+                                           FROM testgroups tg
+                                           WHERE tg.branch_id=? AND tg.enabled=1 ORDER by tg.name ASC
 });
 
 __PACKAGE__->set_sql(ByBranch => qq{
                                     SELECT tg.* 
-                                    FROM testgroups tg, testgroup_branches tgb
-                                    WHERE tgb.branch_id=? AND tgb.testgroup_id=tg.testgroup_id ORDER by tg.name ASC
+                                    FROM testgroups tg
+                                    WHERE tg.branch_id=? ORDER by tg.name ASC
 });
 
 __PACKAGE__->set_sql(EnabledBySubgroup => qq{
@@ -128,32 +130,20 @@ sub clone() {
   if (!$new_testgroup) {
     return undef;
   }
-
-  # Propagate branch membership;
-  my $dbh = __PACKAGE__->db_Main();
-  my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) SELECT ?,branch_id FROM testgroup_branches WHERE testgroup_id=?";
-
-  my $rows = $dbh->do($sql,
-		      undef,
-		      $new_testgroup->testgroup_id,
-		      $self->testgroup_id
-		     );
-  if (! $rows) {
-    # XXX: Do we need to throw a warning here?
-  }  
-
+  
   # Propagate testgroup membership;
-  $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) SELECT subgroup_id,?,sort_order FROM subgroup_testgroups WHERE testgroup_id=?";
-
-  $rows = $dbh->do($sql,
-		      undef,
-		      $new_testgroup->testgroup_id,
-		      $self->testgroup_id
-		     );
+  my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) SELECT subgroup_id,?,sort_order FROM subgroup_testgroups WHERE testgroup_id=?";
+  
+  my $dbh = __PACKAGE__->db_Main();  
+  my $rows = $dbh->do($sql,
+                   undef,
+                   $new_testgroup->testgroup_id,
+                   $self->testgroup_id
+                  );
   if (! $rows) {
     # XXX: Do we need to throw a warning here?
   }  
-
+  
   return $new_testgroup;
 }
 
@@ -163,18 +153,6 @@ sub delete_from_subgroups() {
 
   my $dbh = __PACKAGE__->db_Main();  
   my $sql = "DELETE from subgroup_testgroups WHERE testgroup_id=?";
-  my $rows = $dbh->do($sql,
-                      undef,
-                      $self->testgroup_id
-                     );
-}
-
-#########################################################################
-sub delete_from_branches() {
-  my $self = shift;
-
-  my $dbh = __PACKAGE__->db_Main();  
-  my $sql = "DELETE from testgroup_branches WHERE testgroup_id=?";
   my $rows = $dbh->do($sql,
                       undef,
                       $self->testgroup_id
@@ -198,7 +176,6 @@ sub delete_from_test_runs() {
 sub delete_with_refs() {
   my $self = shift;
   $self->delete_from_subgroups();
-  $self->delete_from_branches();
   $self->delete_from_test_runs();
   return $self->delete;
 }
@@ -208,9 +185,11 @@ sub update_subgroups() {
   my $self = shift;
   my $new_subgroup_ids = shift;
   
+  # We always want to delete the existing subgroups. 
+  # Failing to delete subgroups is _not_ fatal when adding a new testgroup.
+  my $rv = $self->delete_from_subgroups();
+  
   if (scalar @$new_subgroup_ids) {
-    # Failing to delete subgroups is _not_ fatal when adding a new testgroup.
-    my $rv = $self->delete_from_subgroups();
     my $dbh = __PACKAGE__->db_Main();  
     my $sql = "INSERT INTO subgroup_testgroups (subgroup_id,testgroup_id,sort_order) VALUES (?,?,?)";
     my $sort_order = 1;
@@ -230,55 +209,6 @@ sub update_subgroups() {
       }
       $sort_order++;
     }
-  }
-}
-
-#########################################################################
-sub update_branches() {
-  my $self = shift;
-  my $new_branch_ids = shift;
-  
-  if (scalar @$new_branch_ids) {
-    # Failing to delete branches is _not_ fatal when adding a new testgroup.
-    my $rv = $self->delete_from_branches();
-    my $dbh = __PACKAGE__->db_Main();  
-    my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?)";
-    foreach my $new_branch_id (@$new_branch_ids) {
-      next if (!$new_branch_id);
-      # Log any failures/duplicate keys to STDERR.
-      eval {
-        my $rows = $dbh->do($sql, 
-                            undef,
-                            $self->testgroup_id,
-                            $new_branch_id,
-                           );
-      };
-      if ($@) {
-        print STDERR $@;
-      }
-    }
-  }
-}
-
-#########################################################################
-sub add_branch() {
-  my $self = shift;
-  my $new_branch_id = shift;
-  
-  # Failure to insert isn't fatal in the case of a collision, but we do want
-  # to log it.
-  my $dbh = __PACKAGE__->db_Main();  
-  my $sql = "INSERT INTO testgroup_branches (testgroup_id,branch_id) VALUES (?,?)";
-  # Log any failures/duplicate keys to STDERR.
-  eval {
-    my $rows = $dbh->do($sql, 
-                        undef,
-                        $self->testgroup_id,
-                        $new_branch_id,
-                       );
-  };
-  if ($@) {
-    print STDERR $@;
   }
 }
 

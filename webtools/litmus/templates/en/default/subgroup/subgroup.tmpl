@@ -37,9 +37,24 @@
 [% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
+    <td><b>Subgroup ID #:</b></td>
+    <td id="subgroup_id_display[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.subgroup_id | html %]</td>
+  </tr>
+  <tr>
+    <td><b>Name:</b></td>
+    <td><div id="name_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html%][% END %]">[% subgroup.name | html %]</div></td>
+  </tr>
+  <tr>
   <td width="20%"><b>Product:</b></td>
   <td>
     <div id="product_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.product.name | html %]</div>
+    </td>
+    [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_subgroups.cgi?subgroup_id=[%subgroup.subgroup_id | html%]"> Edit Subgroup</a></td>[% END %]
+  </tr>
+  <tr>
+  <td width="20%"><b>Branch:</b></td>
+  <td>
+    <div id="branch_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.branch.name | html %]</div>
     </td>
     [% IF ! show_edit %]<td align="right" valign="top" colspan="5"><a href="manage_subgroups.cgi?subgroup_id=[%subgroup.subgroup_id | html%]"> Edit Subgroup</a></td>[% END %]
   </tr>
@@ -48,14 +63,6 @@
     <td>
       <div id="testgroups_display[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% IF testgroups.size==0 %]<span class="errorHeading">This subgroup does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
     </td>
-  </tr>
-  <tr>
-    <td><b>Subgroup ID #:</b></td>
-    <td id="subgroup_id_display[% IF ! show_edit %]_[% subgroup.subgroup_id | html %][% END %]">[% subgroup.subgroup_id | html %]</td>
-  </tr>
-  <tr>
-    <td><b>Name:</b></td>
-    <td><div id="name_text[% IF ! show_edit %]_[% subgroup.subgroup_id | html%][% END %]">[% subgroup.name | html %]</div></td>
   </tr>
 </table>
 

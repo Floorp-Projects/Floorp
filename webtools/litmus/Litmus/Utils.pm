@@ -49,13 +49,13 @@ our @ISA = qw(Exporter);
 # requireField - checks that $field contains data (other than ---) and throws
 # an invalidInputError if it does not.
 sub requireField {
-    my ($fieldname, $field) = @_;
+  my ($fieldname, $field) = @_;
     
-    unless($field && $field ne "---") {
-        my $c = Litmus->cgi();
-        print $c->header();
-        invalidInputError("You must make a valid selection for field ".$fieldname.".");
-    }
+  unless($field && $field ne "---" && $field ne "") {
+    my $c = Litmus->cgi();
+    print $c->header();
+    invalidInputError("You must make a valid selection for field ".$fieldname.".");
+  }
 }
 
 1;
