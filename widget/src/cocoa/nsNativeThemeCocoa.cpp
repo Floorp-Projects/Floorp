@@ -427,7 +427,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_TOOLTIP:
-      CGContextSetRGBFillColor (cgContext, 1.0, 1.0, 0.69, 1.0);
+      CGContextSetRGBFillColor (cgContext, 1.0, 1.0, 0.78, 1.0);
       CGContextFillRect (cgContext, macRect);
       break;
 
