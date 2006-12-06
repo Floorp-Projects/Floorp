@@ -65,13 +65,11 @@
   <binding id="xformswidget-select-compact"
            extends="chrome://xforms/content/select.xml#xformswidget-select-base">
     <content>
-      <html:label>
-        <html:span class="label-container">
-           <children includes="label"/>
-        </html:span>
-        <html:span anonid="control" xbl:inherits="style, accesskey"/>
-        <children/>
-      </html:label>
+      <html:span class="label-container">
+         <children includes="label"/>
+      </html:span>
+      <html:span anonid="control" xbl:inherits="style, accesskey"/>
+      <children/>
     </content>
   </binding>
 
