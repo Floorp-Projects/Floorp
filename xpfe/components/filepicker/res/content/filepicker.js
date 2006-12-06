@@ -51,10 +51,10 @@ const NS_FILEVIEW_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsILocalFile = Components.interfaces.nsILocalFile;
 const nsIFile = Components.interfaces.nsIFile;
-const NS_LOCALFILE_CONTRACTID = "@mozilla.org/file/local;1";
+const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const NS_PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
 
-var sfile = Components.classes[NS_LOCALFILE_CONTRACTID].createInstance(nsILocalFile);
+var sfile = Components.classes[NS_LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
 var homeDir;
@@ -596,7 +596,7 @@ function onDirectoryChanged(target)
 {
   var path = target.getAttribute("label");
 
-  var file = Components.classes[NS_LOCALFILE_CONTRACTID].createInstance(nsILocalFile);
+  var file = Components.classes[NS_LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
   file.initWithPath(path);
 
   if (!sfile.equals(file)) {
