@@ -120,6 +120,9 @@ nsAccessibleWrap::GetNativeType ()
     case ROLE_AUTOCOMPLETE:
       return [mozTextAccessible class];
       
+    case ROLE_COMBOBOX:
+      return [mozPopupButtonAccessible class];
+      
     default:
       return [mozAccessible class];
   }

@@ -72,6 +72,13 @@ enum CheckboxValue {
   return attributes;
 }
 
+- (id)accessibilityAttributeValue:(NSString *)attribute
+{
+  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
+    return nil;
+  return [super accessibilityAttributeValue:attribute];
+}
+
 - (BOOL)accessibilityIsIgnored
 {
   return mIsExpired;
@@ -106,11 +113,6 @@ enum CheckboxValue {
   mGeckoAccessible->DoAction(0);
 }
 
-- (NSArray*)children
-{
-  return [NSArray array];
-}
-
 @end
 
 @implementation mozCheckboxAccessible
@@ -143,6 +145,68 @@ enum CheckboxValue {
 - (id)value
 {
   return [NSNumber numberWithInt:[self isChecked]];
+}
+
+@end
+
+@implementation mozPopupButtonAccessible
+
+- (NSArray *)accessibilityAttributeNames
+{
+  static NSArray *attributes = nil;
+  
+  if (!attributes) {
+    attributes = [[NSArray alloc] initWithObjects:NSAccessibilityParentAttribute, // required
+                                                  NSAccessibilityPositionAttribute, // required
+                                                  NSAccessibilityRoleAttribute, // required
+                                                  NSAccessibilitySizeAttribute, // required
+                                                  NSAccessibilityWindowAttribute, // required
+                                                  kTopLevelUIElementAttribute, // required
+                                                  NSAccessibilityHelpAttribute,
+                                                  NSAccessibilityEnabledAttribute, // required
+                                                  NSAccessibilityFocusedAttribute, // required
+                                                  NSAccessibilityTitleAttribute, // required for popupmenus, and for menubuttons with a title
+                                                  NSAccessibilityChildrenAttribute, // required
+                                                  kInstanceDescriptionAttribute, // required if it has no title attr
+                                                  nil];
+  }
+  return attributes;
+}
+
+- (id)accessibilityAttributeValue:(NSString *)attribute
+{
+  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
+    return [super children];
+  }
+  return [super accessibilityAttributeValue:attribute];
+}
+
+- (NSArray *)accessibilityActionNames
+{
+  if ([self isEnabled]) {
+    return [NSArray arrayWithObjects:NSAccessibilityPressAction, 
+                                     NSAccessibilityShowMenuAction, 
+                                     nil];
+  }
+  return nil;
+}
+
+- (NSString *)accessibilityActionDescription:(NSString *)action
+{
+  if ([action isEqualToString:NSAccessibilityShowMenuAction])
+    return @"show menu";
+  return [super accessibilityActionDescription:action];
+}
+
+- (void)accessibilityPerformAction:(NSString *)action
+{
+  // both the ShowMenu and Click action do the same thing.
+  if ([self isEnabled]) {
+    // TODO: this should bring up the menu, but currently doesn't.
+    //       once msaa and atk have merged better, they will implement
+    //       the action needed to show the menu.
+    [super click];
+  }
 }
 
 @end

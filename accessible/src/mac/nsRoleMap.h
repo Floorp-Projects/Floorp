@@ -53,7 +53,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityWindowRole,                    // ROLE_ALERT
   NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
   @"AXWebArea",                                 // ROLE_CLIENT
-  NSAccessibilityPopUpButtonRole,               // ROLE_MENUPOPUP
+  NSAccessibilityMenuRole,                      // ROLE_MENUPOPUP. the parent of menuitems
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
   NSAccessibilityGroupRole,                     // ROLE_APPLICATION. unused on OS X. the system will take care of this.
@@ -88,8 +88,8 @@ static const NSString* AXRoles [] = {
   NSAccessibilityButtonRole,                    // ROLE_PUSHBUTTON
   NSAccessibilityCheckBoxRole,                  // ROLE_CHECKBUTTON
   NSAccessibilityRadioButtonRole,               // ROLE_RADIOBUTTON
-  NSAccessibilityComboBoxRole,                  // ROLE_COMBOBOX
-  NSAccessibilityComboBoxRole,                  // ROLE_DROPLIST
+  NSAccessibilityPopUpButtonRole,               // ROLE_COMBOBOX
+  NSAccessibilityPopUpButtonRole,               // ROLE_DROPLIST.
   NSAccessibilityProgressIndicatorRole,         // ROLE_PROGRESSBAR
   NSAccessibilityUnknownRole,                   // ROLE_DIAL
   NSAccessibilityUnknownRole,                   // ROLE_HOTKEYFIELD
@@ -98,7 +98,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_DIAGRAM
   NSAccessibilityUnknownRole,                   // ROLE_ANIMATION
   NSAccessibilityUnknownRole,                   // ROLE_EQUATION
-  NSAccessibilityPopUpButtonRole,               // ROLE_BUTTONDROPDOWN
+  NSAccessibilityPopUpButtonRole,               // ROLE_BUTTONDROPDOWN.
   NSAccessibilityMenuButtonRole,                // ROLE_BUTTONMENU
   NSAccessibilityGroupRole,                     // ROLE_BUTTONDROPDOWNGRID
   NSAccessibilityUnknownRole,                   // ROLE_WHITESPACE
@@ -125,7 +125,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityGroupRole,                     // ROLE_LAYERED_PANE
   NSAccessibilityGroupRole,                     // ROLE_OPTION_PANE
   NSAccessibilityTextFieldRole,                 // ROLE_PASSWORD_TEXT
-  NSAccessibilityPopUpButtonRole,               // ROLE_POPUP_MENU
+  NSAccessibilityUnknownRole,                   // ROLE_POPUP_MENU. unused
   NSAccessibilityMenuItemRole,                  // ROLE_RADIO_MENU_ITEM
   NSAccessibilityGroupRole,                     // ROLE_ROOT_PANE
   NSAccessibilityScrollAreaRole,                // ROLE_SCROLL_PANE

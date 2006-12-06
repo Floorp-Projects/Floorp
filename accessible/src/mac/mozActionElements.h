@@ -49,3 +49,6 @@
 // returns one of the constants defined in CheckboxValue
 - (int)isChecked;
 @end
+
+@interface mozPopupButtonAccessible : mozButtonAccessible
+@end
