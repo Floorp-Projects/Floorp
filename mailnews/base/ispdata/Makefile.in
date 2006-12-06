@@ -77,9 +77,9 @@ install:: $(EXPORT_RESOURCE_FILES)
 
 ifndef MOZ_XUL_APP
 libs:: $(EXPORT_RESOURCE_FILES)
-        $(INSTALL) $^ $(EXPORT_DIR_L10N)
+	$(INSTALL) $^ $(EXPORT_DIR_L10N)
 
 install:: $(EXPORT_RESOURCE_FILES)
-        $(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
 endif
 endif
