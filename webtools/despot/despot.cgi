@@ -393,6 +393,9 @@ sub EditUser() {
     print table(@list);
     print submit("Save changes");
     print end_form();
+    print MyForm("UserHistory") . hidden(-name=>"email");
+    print submit("View the changes history for this user");
+    print end_form();
     print MyForm("GeneratePassword") . hidden(-name=>"email");
     print submit("Generate a new random password for this user");
     print end_form();
@@ -488,7 +491,12 @@ sub GeneratePassword {
     $::db->do("INSERT INTO syncneeded (needed) VALUES (1)");
 }
     
-
+sub UserHistory {
+    EnsureDespot();
+    PrintHeader();
+    my $wherepart = "email = " . $::db->quote($F::email);
+    ListSomething("changes", "changed_when", "UserHistory", "", "changed_when", "changed_when,field,oldvalue,newvalue,who", "", {}, $wherepart);
+}
 
 
 sub ListPartitions () {
@@ -662,9 +670,13 @@ sub ListSomething {
         }
         my $thisid = shift(@row);
         push(@emaillist, $thisid);
-        push(@list, td(MyForm($editprocname) . hidden($idcolumn, $thisid) .
-                       submit("Edit") . end_form()) .
-             td(\@row));
+        if ($editprocname) {
+            push(@list, td(MyForm($editprocname) . hidden($idcolumn, $thisid) .
+                           submit("Edit") . end_form()) .
+                 td(\@row));
+        } else {
+           push(@list, td() . td(\@row));
+        }
     }
     print table(Tr(\@list));
     if ($idcolumn eq "email") {
@@ -1278,6 +1290,7 @@ sub EmailToId {
         /^ListPartitions$/ && do { ListPartitions(); last; };
         /^ListUsers$/ && do { ListUsers(); last; };
         /^SetNewPassword$/ && do { SetNewPassword(); last; };
+        /^UserHistory$/ && do { UserHistory(); last; };
         /^ViewAccount$/ && do { ViewAccount(); last; };
         /^MainMenu$|/ && do { PrintHeader(), MainMenu(); last; };
     }
