@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.15 2006/07/19 01:40:17 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.16 2006/12/06 21:50:40 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -222,7 +222,7 @@ static const Bits2Curve bits2curve [] = {
 
 typedef struct ECDHEKeyPairStr {
     ssl3KeyPair *  pair;
-    PRInt32        flag;
+    int            error;  /* error code of the call-once function */
     PRCallOnceType once;
 } ECDHEKeyPair;
 
@@ -550,9 +550,12 @@ ssl3_ShutdownECDHECurves(void *appData, void *nssData)
 static PRStatus
 ssl3_ECRegister(void)
 {
-   SECStatus rv;
-   rv = NSS_RegisterShutdown(ssl3_ShutdownECDHECurves, gECDHEKeyPairs);
-   return (PRStatus)rv;
+    SECStatus rv;
+    rv = NSS_RegisterShutdown(ssl3_ShutdownECDHECurves, gECDHEKeyPairs);
+    if (rv != SECSuccess) {
+	gECDHEKeyPairs[ec_noName].error = PORT_GetError();
+    }
+    return (PRStatus)rv;
 }
 
 /* CallOnce function, called once for each named curve. */
@@ -569,6 +572,7 @@ ssl3_CreateECDHEphemeralKeyPair(void * arg)
 
     /* ok, no one has generated a global key for this curve yet, do so */
     if (ecName2params(NULL, ec_curve, &ecParams) != SECSuccess) {
+	gECDHEKeyPairs[ec_curve].error = PORT_GetError();
 	return PR_FAILURE;
     }
 
@@ -583,6 +587,7 @@ ssl3_CreateECDHEphemeralKeyPair(void * arg)
 	    SECKEY_DestroyPublicKey(pubKey);
 	}
 	ssl_MapLowLevelError(SEC_ERROR_KEYGEN_FAIL);
+	gECDHEKeyPairs[ec_curve].error = PORT_GetError();
 	return PR_FAILURE;
     }
 
@@ -610,12 +615,14 @@ ssl3_CreateECDHEphemeralKeys(sslSocket *ss, ECName ec_curve)
 
 	status = PR_CallOnce(&gECDHEKeyPairs[ec_noName].once, ssl3_ECRegister);
         if (status != PR_SUCCESS) {
+	    PORT_SetError(gECDHEKeyPairs[ec_noName].error);
 	    return SECFailure;
     	}
 	status = PR_CallOnceWithArg(&gECDHEKeyPairs[ec_curve].once,
 	                            ssl3_CreateECDHEphemeralKeyPair,
 				    (void *)ec_curve);
         if (status != PR_SUCCESS) {
+	    PORT_SetError(gECDHEKeyPairs[ec_curve].error);
 	    return SECFailure;
     	}
     }
