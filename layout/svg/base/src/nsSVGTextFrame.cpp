@@ -119,7 +119,7 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
              aAttribute == nsGkAtoms::y ||
              aAttribute == nsGkAtoms::dx ||
              aAttribute == nsGkAtoms::dy) {
-    UpdateGlyphPositioning();
+    NotifyGlyphMetricsChange();
   }
 
  return NS_OK;
