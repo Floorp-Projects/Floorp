@@ -264,7 +264,7 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
     NS_ASSERTION(mLength >= mOffset, "bad stream state");
 
     // We may be at end-of-file
-    PRUint32 maxCount = mLength - mOffset;
+    PRUint32 maxCount = LengthRemaining();
     if (maxCount == 0) {
         *result = 0;
         return NS_OK;
