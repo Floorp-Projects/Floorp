@@ -45,10 +45,14 @@
      %]
     </td>
     <td align="left" valign="top" width="80px">
-      <input name="env_[% index %]" id="env_[% index %]" size="5" value="[% caserun.environment_id FILTER none %]">
-      <a href="tr_query.cgi?current_tab=environment" target="blank">
-        <img src="testopia/img/env_lookup.png" align="middle" title="Search for Environments"></a>&nbsp;
-        <img src="testopia/img/confirm.png" align="middle" title="Update Environment" onClick='chEnv([% index %], document.getElementById("env_[% index %]").value, "[% caserun.status %]", [% caserun.id %], [% caserun.environment_id %])' style="cursor:pointer">
+      [% caserun.environment.name FILTER html %]
+          <input dojoType="combobox" 
+                 dataUrl="tr_quicksearch.cgi?action=get&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="false"
+                 id="env_[% index %]"
+                 maxListLength="10"
+                 onValueChanged='chEnv([% index %], this.comboBoxSelectionValue.value, "[% caserun.status %]", [% caserun.id %], [% caserun.environment_id %])'>
     </td>
 
     <td align="left" valign="top"><span id="own[% index %]"><a href="mailto:[% caserun.assignee.login %]">[% caserun.assignee.login %]</a></span></td>

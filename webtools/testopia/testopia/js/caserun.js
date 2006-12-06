@@ -66,7 +66,7 @@ function chBld(idx, bid, sid, cid){
 		load:    function(type, data, evt){ 
 				fillrow(data, idx);
 				var fields = data.split("|~+");
-				document.getElementById('head_caserun_'+idx).innerHTML = fields[0];
+				dojo.widget.manager.getWidgetById('head_caserun_'+idx).setContent(fields[0]);
 				document.getElementById('body_caserun_'+idx).innerHTML = fields[1];
 				document.getElementById('ra'+idx).style.display='block'; 
 				document.getElementById('id'+idx).src='testopia/img/td.gif';
@@ -74,13 +74,13 @@ function chBld(idx, bid, sid, cid){
 	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 				disableAllButtons(false);
 		},
-		error:   function(type, error){ alert("ERROR");},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 }
 //chEnv Updates the caserun environment 
 function chEnv(idx, eid, sid, cid, oldid){
-	if (oldid == eid)
+	if (oldid == eid || !eid)
 		return;
 	disableAllButtons(true);
 	dojo.io.bind({
@@ -89,7 +89,7 @@ function chEnv(idx, eid, sid, cid, oldid){
 		load:    function(type, data, evt){ 
 				fillrow(data, idx);
 				var fields = data.split("|~+");
-				document.getElementById('head_caserun_'+idx).innerHTML = fields[0];
+				dojo.widget.manager.getWidgetById('head_caserun_'+idx).setContent(fields[0]);
 				document.getElementById('body_caserun_'+idx).innerHTML = fields[1];
 				document.getElementById('ra'+idx).style.display='block'; 
 				document.getElementById('id'+idx).src='testopia/img/td.gif';
@@ -97,7 +97,7 @@ function chEnv(idx, eid, sid, cid, oldid){
 	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 				disableAllButtons(false);
 		},
-		error:   function(type, error){ alert("ERROR");},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 }
@@ -131,7 +131,7 @@ function chStat(idx, sid, cid){
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
 		         },
-		error:   function(type, error){ alert("ERROR");},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 
@@ -150,7 +150,7 @@ function chNote(idx, cid, note){
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
 		         },
-		error:   function(type, error){ alert("ERROR");},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 
@@ -172,7 +172,7 @@ function chOwn(idx, cid, owner){
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
 		         },
-		error:   function(type, error){ alert("ERROR");},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 
@@ -190,7 +190,7 @@ function attch(idx, cid, bugs){
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
 		         },
-		error:   function(type, error){ alert(data);},
+		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
 	});
 

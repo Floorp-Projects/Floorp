@@ -56,7 +56,7 @@
 [% FOREACH caserun = table.list %]
   [% index = loop.count %]
   <!-- START HEADER FOR [% index %]: CASE [% caserun.case.id %] -->
-  <tr id="head_caserun_[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+  <tr id="head_caserun_[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" dojoType="ContentPane">
     [% PROCESS "testopia/caserun/short-form-header.html.tmpl" %]
   </tr>
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
