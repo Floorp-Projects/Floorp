@@ -2009,7 +2009,7 @@ static BookmarkManager* gBookmarkManager = nil;
     // 1 is NSAtomicWrite, but we don't have the 10.4 headers. It's temp code, so we'll just hard-code it.
     success = [bookmarkData writeToFile:backupFile options:1 error:&error];
     if (!success)
-      NSLog(@"writePropertyListFile: %@ (%@)", pathToFile,
+      NSLog(@"writePropertyListFile: %@ (%@)",
             [error localizedDescription], [error localizedFailureReason]);
   }
   else {
