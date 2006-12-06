@@ -125,6 +125,15 @@ ifdef MOZ_DEBUG_SYMBOLS
 	-cp `/bin/find . -path "./dist" -prune -o -name "*.dll" | sed "s/\.dll$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
 	-cp `/bin/find . -path "./dist" -prune -o -name "*.exe" | sed "s/\.exe$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
 	-cp `/bin/find . -path "./dist" -prune -o -name "*.EXE" | sed "s/\.EXE$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
+ifdef MOZ_AIRBAG
+	echo building airbag symbol store
+	mkdir -p $(DIST)/airbag-symbols/$(BUILDID)
+	/bin/find $(DIST)/$(BUILDID)/ -name "*.pdb" |                     \
+	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl -c \
+	  $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe           \
+	  $(DIST)/airbag-symbols/$(BUILDID) >                             \
+	  $(DIST)/airbag-symbols/$(BUILDID)/$(BUILDID)-symbols.txt
+endif # MOZ_AIRBAG
 endif # MOZ_DEBUG_SYMBOLS
 ifdef MOZ_PROFILE
 	echo splitting symbols out of binaries
@@ -135,6 +144,13 @@ ifdef MOZ_PROFILE
 	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/$(BUILDID) \;
 endif # MOZ_PROFILE
 endif # MOZILLA_OFFICIAL
+
+uploadsymbols:
+ifdef MOZ_DEBUG_SYMBOLS
+ifdef MOZ_AIRBAG
+	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(DIST)/airbag-symbols/$(BUILDID)
+endif
+endif
 
 ## XXXvlad -- the test and cp should be removed once bug 249782 is
 ## completely fixed
