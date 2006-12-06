@@ -131,9 +131,12 @@ sub Authenticate {
         if ($F::loginname && $F::loginname !~ /@/) {
             print p("Note! You must type in your full e-mail address, including the '\@'.");
         }
+        warn "DESPOT: Authentication failure for " . $F::loginname . "\n";
         PrintLoginForm();
         exit;
     }
+
+    warn "DESPOT: Successfully authenticated " . $F::loginname . "\n";
 
     my $passwd;
     my $disabled;
