@@ -212,7 +212,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "add	sp, sp, r4	\n\t"	/* restore stack pointer		*/
     "mov	%0, r0		\n\t"	/* the result...			*/
     : "=r" (result)
-    : "r" (&my_params)
+    : "r" (&my_params), "m" (my_params)
     : "r0", "r1", "r2", "r3", "r4", "ip", "lr", "sp"
     );
     
