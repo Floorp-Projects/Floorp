@@ -91,7 +91,6 @@ EXPORTS = \
 		$(NULL)
 
 MAC_LCPPSRCS = \
-		nsLookAndFeel.cpp \
 		nsToolkitBase.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
 		nsDeviceContextSpecX.cpp \
@@ -134,6 +133,7 @@ CMMSRCS = \
 		nsScreenCocoa.mm \
 		nsScreenManagerCocoa.mm \
 		nsSound.mm \
+		nsLookAndFeel.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \
