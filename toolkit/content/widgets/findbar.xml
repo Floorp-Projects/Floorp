@@ -694,6 +694,8 @@
               stringsBundle.GetStringFromName("NormalFindLabel");
             this._fastFindStr =
               stringsBundle.GetStringFromName("FastFindLabel");
+            this._fastFindLinksStr =
+              stringsBundle.GetStringFromName("FastFindLinksLabel");
             this._caseSensitiveStr =
               stringsBundle.GetStringFromName("CaseSensitive");
           }
@@ -1046,8 +1048,12 @@
             nodes[i].hidden = showMinimalUI;
           }
 
-          this.getElement("find-label").value = showMinimalUI ?
-            this._fastFindStr : this._normalFindStr;
+          if (this._findMode == this.FIND_TYPEAHEAD)
+            this.getElement("find-label").value = this._fastFindStr;
+          else if (this._findMode == this.FIND_LINKS)
+            this.getElement("find-label").value = this._fastFindLinksStr;
+          else
+            this.getElement("find-label").value = this._normalFindStr;
         ]]></body>
       </method>
 
