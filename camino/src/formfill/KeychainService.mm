@@ -848,10 +848,6 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
           rv = passwordElement->SetValue(pwd);
         }
       }
-
-      // We found the sign-in form so return now. This means we don't
-      // support pages where there's multiple sign-in forms.
-      return;
     }
   } // for each form on page
 
