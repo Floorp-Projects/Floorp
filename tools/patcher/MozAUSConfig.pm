@@ -328,6 +328,7 @@ sub ReadPastUpdates
         if (!exists($this->{'mAppConfig'}->{'release'}->{$u_to}) or
             !defined($this->{'mAppConfig'}->{'release'}->{$u_to})) {
             # Skip to the next update.
+            print STDERR "Warning: a past-update mentions release $u_to which doesn't exist.\n";
             next;
         }
 
@@ -547,7 +548,7 @@ sub GatherCompleteData
     my $filename = SubstitutePath(path => $DEFAULT_MAR_NAME,
                                   platform => $platform,
                                   locale => $locale,
-                                  version => $version,
+                                  version => $release,
                                   app => lc($this->GetApp()));
 
     my $local_filename = "$release/ftp/$filename";

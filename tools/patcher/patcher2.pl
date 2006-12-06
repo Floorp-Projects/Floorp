@@ -235,7 +235,7 @@ sub hash_file {
     $bltest_hash_type = lc($hash_type);
 
     $hash_type = $DEFAULT_HASH_TYPE if !defined($hash_type);
-    my $hash_size = $hash_size_map{$hash_type};
+    $hash_size = $hash_size_map{$hash_type};
 
     ##
     ## TODO - This should be reverted back to what it was once bug 329686
@@ -853,7 +853,7 @@ sub CreatePastReleasePatchinfo {
 
     foreach my $pastUpd (@{$config->GetPastUpdates()}) {
         my $fromRelease = $config->GetAppRelease($pastUpd->{'from'});
-        my $currentReleaseVersion = $config->GetCurrentUpdate()->{'to'};
+        my $currentRelease = $config->GetAppRelease($config->GetCurrentUpdate()->{'to'});
 
         my @pastFromPlatforms = sort(keys(%{$fromRelease->{'platforms'}}));
 
@@ -893,7 +893,7 @@ sub CreatePastReleasePatchinfo {
             foreach my $locale (@{$fromRelease->{'platforms'}->{$fromPlatform}->{'locales'}}) {
                 my $patchLocaleNode = $patchPlatformNode->{'locales'}->{$locale}->{'to'};
                 if ($patchLocaleNode eq undef) {
-                    print STDERR "No known patch for locale $locale, $fromRelease->{'version'} -> $currentReleaseVersion; skipping...\n";
+                    print STDERR "No known patch for locale $locale, $fromRelease->{'version'} -> $currentRelease->{'version'}; skipping...\n";
                     next;
                 }
 
@@ -901,7 +901,7 @@ sub CreatePastReleasePatchinfo {
 
                 # Build patch info
                 my $fromAusApp = ucfirst($config->GetApp());
-                my $fromAusVersion = $pastUpd->{'from'};
+                my $fromAusVersion = $fromRelease->{'version'};
                 my $fromAusPlatform = get_aus_platform_string($fromPlatform);
                 my $fromAusBuildId = $fromRelease->{'platforms'}->{$fromPlatform}->{'build_id'};
 
@@ -925,7 +925,7 @@ sub CreatePastReleasePatchinfo {
                  version => $patchLocaleNode->{'appv'});
 
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
-                    my $ausDir = ($channel =~ /test$/) ? 'aus2.test' : 'aus2';
+                    my $ausDir = ($channel =~ /test(-\w+)?$/) ? 'aus2.test' : 'aus2';
                     my $ausPrefix = "$prefixStr/$ausDir/$fromAusApp/$fromAusVersion/$fromAusPlatform/$fromAusBuildId/$locale/$channel";
 
                     my $completePatch = {};
@@ -950,7 +950,7 @@ sub CreatePastReleasePatchinfo {
                     $completePatch->{'appv'} = $patchLocaleNode->{'appv'};
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
                     $completePatch->{'size'} = (stat($to_path))[$MozAUSLib::ST_SIZE];
-                    $completePatch->{'url'} = ($channel =~ /test$/) ? 
+                    $completePatch->{'url'} = ($channel =~ /test(-\w+)?$/) ? 
                      $genCompleteTestUrl : $genCompleteUrl;
 
                     $completePatch->{'details'} = $detailsUrl;
