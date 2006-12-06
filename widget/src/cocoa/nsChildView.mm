@@ -568,10 +568,10 @@ NS_IMETHODIMP nsChildView::Destroy()
 #pragma mark -
 
 #if 0
-static void PrintViewHierarcy(NSView *view)
+static void PrintViewHierarchy(NSView *view)
 {
   while (view) {
-    NSLog(@"  view is %@, frame %@", view, NSStringFromRect([view frame]));
+    NSLog(@"  view is %x, frame %@", view, NSStringFromRect([view frame]));
     view = [view superview];
   }
 }
@@ -2522,7 +2522,7 @@ NSEvent* globalDragEvent = nil;
 
     /* add to the region */
     if (rgn)
-      rgn->Union(r.origin.x, r.origin.y, r.size.width, r.size.height);
+      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
 
     /* to the context for clipping */
     targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
@@ -3623,6 +3623,25 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+}
+
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  if (mInComposition)
+    return NO;
+
+  if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
+    return YES;
+
+  nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
+  geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
+  [self convertKeyEvent:theEvent message:NS_KEY_PRESS toGeckoEvent:&geckoEvent];
+
+  EventRecord macEvent;
+  ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+  geckoEvent.nativeMsg = &macEvent;
+
+  return (BOOL)mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
 // look for the user's pressing of command and alt so that we can display
