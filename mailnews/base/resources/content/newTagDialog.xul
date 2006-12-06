@@ -42,7 +42,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newTagDialog.title;"
         onload="onLoad();"
-        ondialogaccept="return onOK();">
+        ondialogaccept="return onOKNewTag();">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
