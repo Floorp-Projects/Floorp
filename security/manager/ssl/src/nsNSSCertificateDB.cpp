@@ -595,7 +595,7 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
     CERTCertificateListCleaner chainCleaner(certChain);
 
     if (!alert_and_skip) {
-      CERT_CertChainFromCert(node->cert, certusage, PR_FALSE);
+      certChain = CERT_CertChainFromCert(node->cert, certusage, PR_FALSE);
       if (!certChain) {
         alert_and_skip = true;
       }
