@@ -186,11 +186,16 @@
 <!ENTITY reminder.rename.label                          "Rename">
 
 <!-- Attendees dialog -->
-<!ENTITY event.organizer.label          "Organizer">
-<!ENTITY event.freebusy.next.slot        "Next slot" >
-<!ENTITY event.freebusy.previous.slot    "Previous slot" >
+<!ENTITY event.organizer.label           "Organizer">
+<!ENTITY event.freebusy.suggest.slot     "Suggest time slot:">
+<!ENTITY event.freebusy.next.slot        "Next slot " >
+<!ENTITY event.freebusy.previous.slot    " Previous slot" >
+<!ENTITY event.freebusy.zoom             "Zoom:">
 <!ENTITY event.freebusy.plus             "Next hour" >
 <!ENTITY event.freebusy.minus            "Previous hour" >
+<!ENTITY event.freebusy.legend.free      "Free" >
+<!ENTITY event.freebusy.legend.busy      "Busy" >
+<!ENTITY event.freebusy.legend.unknown   "No information" >
 
 <!ENTITY repeat.units.weeks.both         "Week(s)" >
 <!ENTITY repeat.units.months.both        "Month(s)" >
