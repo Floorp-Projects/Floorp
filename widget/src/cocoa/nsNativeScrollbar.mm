@@ -47,15 +47,6 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIRollupListener.h"
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// category of NSView methods to quiet warnings
-
-@interface NSView(NativeScrollViewExtensions)
-- (BOOL)isHidden;
-- (void)setHidden:(BOOL)aHidden;
-@end
-#endif
-
 // category of NSScroller methods to quiet warnings
 
 @interface NSScroller(NativeScrollViewExtensions)

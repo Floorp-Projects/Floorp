@@ -41,12 +41,6 @@
 #include "nsSize.h"
 #include <ControlDefinitions.h>
 #include <MacWindows.h>
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// This theme brush is available in 10.2 and later, but was not
-// formally documented in the SDK until 10.3.
-#define kThemeBrushAlternatePrimaryHighlightColor -5
-#endif
  
 //-------------------------------------------------------------------------
 //
