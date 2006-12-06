@@ -18,7 +18,8 @@ f== bugs/362594-1c.html bugs/362594-1-standards-ref.html # will be equal once re
 != bugs/362594-2b.html bugs/362594-1-standards-ref.html
 == bugs/362594-2b.html bugs/362594-2-standards-ref.html
 == bugs/362594-2c.html bugs/362594-2-standards-ref.html
-
+== bugs/359903-1.html bugs/359903-1-ref.html
+== bugs/359903-2.html bugs/359903-2-ref.html
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
