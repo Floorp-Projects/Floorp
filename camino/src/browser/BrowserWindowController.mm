@@ -1034,8 +1034,11 @@ enum BWCOpenDest {
 // zoom to fit contents
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame
 {
-  // If the window is empty or the bookmark manager is loaded maximize to screen  
-  if ([[self getBrowserWrapper] isEmpty] || [self bookmarkManagerIsVisible]) {
+  // Maximize to screen
+  if (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) ||
+      [[self getBrowserWrapper] isEmpty] ||
+      [self bookmarkManagerIsVisible])
+  {
     [self setZoomState:defaultFrame defaultFrame:defaultFrame];
     return defaultFrame;
   }
