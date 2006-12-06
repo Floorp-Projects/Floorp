@@ -402,6 +402,7 @@ sub EditUser() {
 }
 
 sub DeleteUser() {
+    EnsureDespot();
     my $id = EmailToId($F::email, 1);
     $::db->do("DELETE FROM members WHERE userid = ?", undef, $id);
     $::db->do("DELETE FROM users WHERE id = ?", undef, $id);
@@ -415,6 +416,7 @@ sub DeleteUser() {
 }
 
 sub ChangeUser() {
+    EnsureDespot();
     foreach my $field ("email") {
         my $value = param($field);
         if ($value ne param("orig_$field")) {
@@ -461,6 +463,7 @@ sub ChangeUser() {
 }
 
 sub GeneratePassword {
+    EnsureDespot();
     my $email = $F::email;
     Punt("Email address is too scary for this web application") unless $email =~ /$emailregexp/;
     my $query = $::db->prepare("SELECT id FROM users WHERE email = ?");
