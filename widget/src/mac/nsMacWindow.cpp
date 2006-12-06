@@ -56,21 +56,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <Carbon/Carbon.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-#define kWindowFadeTransitionEffect 4
-#define kEventWindowTransitionCompleted 89
-
-typedef struct TransitionWindowOptions {
-  UInt32    version;
-  EventTime duration;
-  WindowRef window;
-  void*     userData;
-} TransitionWindowOptions;
-
-#define kEventParamWindowPartCode 'wpar'
-#define typeWindowPartCode        'wpar'
-#endif
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
 // http://developer.apple.com/qa/qa2005/qa1453.html
 // These are not defined in early versions of the 10.4/10.4u SDK (as of Xcode
