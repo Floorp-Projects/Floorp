@@ -1058,13 +1058,17 @@ void nsEudoraMailbox::EmptyAttachments( void)
 static char *eudoraAttachLines[] = {
 	"Attachment Converted:",
 	"Attachment converted:",
-  "Pièce jointe convertie :"
+	"Pièce jointe convertie :",
+	// Japanese text encoded with Shift-JIS.
+	// The meaning is "Restored attached file".
+	"\x95\x9c\x8c\xb3\x82\xb3\x82\xea\x82\xbd\x93\x59\x95\x74\x83\x74\x83\x40\x83\x43\x83\x8b\x81\x46"
 };
 
 static PRInt32 eudoraAttachLen[] = {
 	21,
 	21,
-  24,
+	24,
+	24,
 	0
 };
 
