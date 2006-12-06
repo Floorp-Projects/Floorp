@@ -40,22 +40,24 @@
 #ifndef _SOFTKVER_H_
 #define _SOFTKVER_H_
 
+#ifdef NSS_ENABLE_ECC
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#define SOFTOKEN_ECC_STRING " Extended ECC"
+#else
+#define SOFTOKEN_ECC_STRING " Basic ECC"
+#endif
+#else
+#define SOFTOKEN_ECC_STRING ""
+#endif
+
 /*
  * Softoken's major version, minor version, patch level, and whether
  * this is a beta release.
  *
  * The format of the version string should be
- *     "<major version>.<minor version>[.<patch level>] [<Beta>]"
+ *     "<major version>.<minor version>[.<patch level>][ <ECC>][ <Beta>]"
  */
-#ifdef NSS_ENABLE_ECC
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-#define SOFTOKEN_VERSION  "3.12 Extended ECC Beta"
-#else
-#define SOFTOKEN_VERSION  "3.12 Basic ECC Beta"
-#endif
-#else
-#define SOFTOKEN_VERSION  "3.12 Beta"
-#endif
+#define SOFTOKEN_VERSION  "3.12" SOFTOKEN_ECC_STRING " Beta"
 #define SOFTOKEN_VMAJOR   3
 #define SOFTOKEN_VMINOR   12
 #define SOFTOKEN_VPATCH   0

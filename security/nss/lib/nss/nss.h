@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.49 2006/09/15 01:04:40 wtchang%redhat.com Exp $ */
+/* $Id: nss.h,v 1.50 2006/12/06 19:51:30 wtchang%redhat.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -45,22 +45,25 @@
 
 SEC_BEGIN_PROTOS
 
+/* The private macro _NSS_ECC_STRING is for NSS internal use only. */
+#ifdef NSS_ENABLE_ECC
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#define _NSS_ECC_STRING " Extended ECC"
+#else
+#define _NSS_ECC_STRING " Basic ECC"
+#endif
+#else
+#define _NSS_ECC_STRING ""
+#endif
+
 /*
  * NSS's major version, minor version, patch level, and whether
  * this is a beta release.
  *
  * The format of the version string should be
- *     "<major version>.<minor version>[.<patch level>] [<Beta>]"
+ *     "<major version>.<minor version>[.<patch level>][ <ECC>][ <Beta>]"
  */
-#ifdef NSS_ENABLE_ECC
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-#define NSS_VERSION  "3.12 Extended ECC Beta"
-#else
-#define NSS_VERSION  "3.12 Basic ECC Beta"
-#endif
-#else
-#define NSS_VERSION  "3.12 Beta"
-#endif
+#define NSS_VERSION  "3.12" _NSS_ECC_STRING " Beta"
 #define NSS_VMAJOR   3
 #define NSS_VMINOR   12
 #define NSS_VPATCH   0
