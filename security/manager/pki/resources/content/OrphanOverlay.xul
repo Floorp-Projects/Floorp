@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Bob Lord <lord@netscape.com>
    -   Ian McGreer <mcgreer@netscape.com>
+   -   Kai Engert <kengert@redhat.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,49 +40,40 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://pippki/content/MineOverlay.xul"?>
-<?xul-overlay href="chrome://pippki/content/OthersOverlay.xul"?>
-<?xul-overlay href="chrome://pippki/content/WebSitesOverlay.xul"?>
-<?xul-overlay href="chrome://pippki/content/CAOverlay.xul"?>
-<?xul-overlay href="chrome://pippki/content/OrphanOverlay.xul"?>
+<!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
+<overlay id="OrphanOverlay" 
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+         xmlns:cert="http://netscape.com/rdf-cert#" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<dialog id="certmanager" 
-	windowtype="mozilla:certmanager"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        title="&certmgr.title;"
-        onload="LoadCerts();"
-        buttons="accept"
-        style="width: 48em; height: 32em;"
-        persist="screenX screenY width height">
+  <vbox id="OrphanCerts">
+    <description>&certmgr.orphans;</description>
+    <separator class="thin"/>
+    <tree id="orphan-tree" flex="1" enableColumnDrag="true"
+              onselect="orphan_enableButtons()">
+      <treecols>
+        <treecol id="certcol" label="&certmgr.certname;" primary="true" 
+                     persist="hidden width ordinal" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="tokencol" label="&certmgr.tokenname;"
+                     persist="hidden width ordinal" flex="1"/>
+<!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
+      </treecols>
+      <treechildren ondblclick="viewCerts();"/>
+    </tree>
+    
+    <separator class="thin"/>
 
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/certManager.js"/>
-
-  <vbox flex="1">
-    <tabbox flex="1" style="margin:5px">
-      <tabs id="certMgrTabbox">
-        <tab id="mine_tab" label="&certmgr.tab.mine;"/>
-        <tab id="others_tab" label="&certmgr.tab.others;"/>
-        <tab id="websites_tab" label="&certmgr.tab.websites;"/>
-        <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
-        <tab id="orphan_tab" label="&certmgr.tab.orphan;"/>
-      </tabs>
-      <tabpanels flex="1">
-        <vbox id="myCerts" flex="1"/>
-        <vbox id="othersCerts" flex="1"/>
-        <vbox id="webCerts" flex="1"/>
-        <vbox id="CACerts" flex="1"/>
-        <vbox id="OrphanCerts" flex="1"/>
-      </tabpanels>
-    </tabbox>
-
-    <hbox align="center">
-      <description id="ocsp_info" hidden="true">&certmgr.ocsp_info;</description>
+    <hbox>
+       <button id="orphan_viewButton" class="normal" 
+               label="&certmgr.view.label;"
+               accesskey="&certmgr.view.accesskey;"
+               disabled="true" oncommand="viewCerts();"/>
+       <button id="orphan_deleteButton" class="normal" 
+               label="&certmgr.delete.label;"
+               accesskey="&certmgr.delete.accesskey;"
+               disabled="true" oncommand="deleteCerts();"/>
     </hbox>
-
   </vbox>
-
-</dialog>
+</overlay>

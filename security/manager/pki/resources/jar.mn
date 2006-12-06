@@ -25,6 +25,7 @@ pippki.jar:
     content/pippki/WebSitesOverlay.xul       (content/WebSitesOverlay.xul)
     content/pippki/OthersOverlay.xul         (content/OthersOverlay.xul)
     content/pippki/MineOverlay.xul           (content/MineOverlay.xul)
+    content/pippki/OrphanOverlay.xul         (content/OrphanOverlay.xul)
     content/pippki/viewCertDetails.xul       (content/viewCertDetails.xul)
     content/pippki/editcacert.xul            (content/editcacert.xul)
     content/pippki/editemailcert.xul         (content/editemailcert.xul)
