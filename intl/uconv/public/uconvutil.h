@@ -125,7 +125,7 @@ typedef struct {
 /*=====================================*/
 
 typedef PRUint16* uMappingTableMutable; 
-typedef const PRUint16* uMappingTable; 
+typedef const PRUint16 uMappingTable; 
  
 #endif
 
