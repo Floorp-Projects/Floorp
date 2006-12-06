@@ -2051,7 +2051,7 @@ nsSVGFEMorphologyElement::Init()
   {
     nsCOMPtr<nsISVGEnum> operators;
     rv = NS_NewSVGEnum(getter_AddRefs(operators),
-                       nsSVGFEMorphologyElement::SVG_OPERATOR_DILATE,
+                       nsSVGFEMorphologyElement::SVG_OPERATOR_ERODE,
                        gOperatorTypes);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mOperator), operators);
