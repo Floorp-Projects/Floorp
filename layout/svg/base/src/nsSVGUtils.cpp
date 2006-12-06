@@ -963,6 +963,10 @@ nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
   if (aMatrix) {
     cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aMatrix);
     cairo_t *ctx = cairo_create(GetCairoComputationalSurface());
+    if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS) {
+      cairo_destroy(ctx);
+      return PR_FALSE;
+    }
     cairo_set_tolerance(ctx, 1.0);
 
     cairo_set_matrix(ctx, &matrix);
