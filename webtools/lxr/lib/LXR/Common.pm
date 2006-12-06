@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.30 2005/12/27 18:03:03 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.31 2006/12/06 10:22:03 reed%reedloden.com Exp $
 
 package LXR::Common;
 
@@ -404,12 +404,12 @@ sub fixpaths {
 
 sub glimpse_init {
 
-    $HTTP->{'this_url'} = join('', 'http://',
+    $HTTP->{'this_url'} = &http_wash(join('', 'http://',
 					  $ENV{'SERVER_NAME'},
 					  ':', $ENV{'SERVER_PORT'},
 					  $ENV{'SCRIPT_NAME'},
 					  $ENV{'PATH_INFO'},
-					  '?', $ENV{'QUERY_STRING'});
+					  '?', $ENV{'QUERY_STRING'}));
     my @a;
     if ($ENV{'QUERY_STRING'} =~ s/&regexp=on//) {
         $Conf->{'regexp'} = 'on';
@@ -418,7 +418,7 @@ sub glimpse_init {
         $Conf->{'regexp'} = 'off';
     }
     foreach ($ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g) {
-	push(@a, $_);
+	push(@a, &http_wash($_));
         }
     $HTTP->{'param'} = {@a};
     init_all();
