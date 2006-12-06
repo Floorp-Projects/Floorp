@@ -15,7 +15,6 @@ ac_add_options --disable-shared
 ac_add_options --disable-installer
 ac_add_options --disable-tests
 ac_add_options --enable-prebinding
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
 # Use Carbon widgets, regardless of what trunk's default is
 ac_add_options --enable-default-toolkit=mac
 # SVG now requires Cairo, so disable it for now.
