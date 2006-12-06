@@ -926,8 +926,19 @@
             return false;
 
           var win = document.commandDispatcher.focusedWindow;
-          if (win && win.document.designMode == "on")
-            return false;
+          if (win) {
+            try {
+              var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIWebNavigation)
+                                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIEditingSession);
+              if (editingSession.windowIsEditable(win))
+                return false;
+            }
+            catch (e) {
+              // If someone built with composer disabled, we can't get an editing session.
+            }
+          }  
 
           return true;
         ]]></body>
