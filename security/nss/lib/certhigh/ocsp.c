@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.30 2006/11/13 18:16:58 wtchang%redhat.com Exp $
+ * $Id: ocsp.c,v 1.31 2006/12/06 02:25:52 wtchang%redhat.com Exp $
  */
 
 #include "prerror.h"
@@ -2832,8 +2832,14 @@ ocsp_CertIDsMatch(CERTCertDBHandle *handle,
 	goto done;
     }
 
-    if (SECOID_CompareAlgorithmID(&certID1->hashAlgorithm,
-				  &certID2->hashAlgorithm) == SECEqual) {
+    /*
+     * For all the supported hash algorithms, 'parameters' is NULL (two
+     * bytes 0x05 0x00), but we allow it to be missing (zero length).
+     */
+    if ((SECITEM_CompareItem(&certID1->hashAlgorithm.algorithm,
+			     &certID2->hashAlgorithm.algorithm) == SECEqual)
+      && (certID1->hashAlgorithm.parameters.len <= 2)
+      && (certID2->hashAlgorithm.parameters.len <= 2)) {
 	/*
 	 * If the hash algorithms match then we can do a simple compare
 	 * of the hash values themselves.
