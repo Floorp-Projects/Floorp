@@ -260,8 +260,22 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
       [mCurrentPaneIdentifier autorelease];
       mCurrentPaneIdentifier = [identifier copy];
 
-      [mWindow setInitialFirstResponder:[pane initialKeyView]];
-      [mWindow makeFirstResponder:[pane initialKeyView]];
+      // What we want here is the first focusable element focused, respecting the full keyboard access
+      // preference (so FKA users see the first control focused, and non-FKA users see the first textfield
+      // focused if there is one, and nothing if there isn't).
+      //
+      // To accomplish this, ideally we'd hook up the view's |nextKeyView| to the first element in the pane
+      // and set focus to |nextValidKeyView|, but we can't, since that view is in a different nib from
+      // the prefpanes.  So to validate, we call |previousValidKeyView| on the second element.
+      //
+      // This has the limitation that it will not focus the first element (even with FKA on) if there
+      // is only one control in the prefpane.  If we ever have a one-element prefpane, this approach
+      // should be reconsidered to prevent breakage for FKA users.
+      NSView* initialKeyView = [pane initialKeyView];
+      NSView* firstValidKeyView = [[initialKeyView nextKeyView] previousValidKeyView];
+      if ([firstValidKeyView isEqual:initialKeyView])
+        [mWindow makeFirstResponder:firstValidKeyView];
+
       [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
     }
     else
