@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,20 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Mail Directory Provider.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation <http://www.mozilla.org>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alec Flett <alecf@netscape.com>
+ * Scott MacGregor <mscott@mozilla.org> (Original Code)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,33 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsMsgServiceProvider_h
-#define __nsMsgServiceProvider_h
+#ifndef nsMailDirProvider_h__
+#define nsMailDirProvider_h__
 
-#include "nsIRDFDataSource.h"
-#include "nsIRDFRemoteDataSource.h"
-#include "nsIRDFCompositeDataSource.h"
-#include "nsCOMPtr.h"
+#include "nsIDirectoryService.h"
+#include "nsIGenericFactory.h"
+#include "nsISimpleEnumerator.h"
 
-class nsMsgServiceProviderService : public nsIRDFDataSource
+class nsMailDirProvider : public nsIDirectoryServiceProvider2
 {
-
- public:
-  nsMsgServiceProviderService();
-  virtual ~nsMsgServiceProviderService();
-
-  nsresult Init();
-  
+public:
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIRDFDATASOURCE(mInnerDataSource->)
-  
- private:
-  nsCOMPtr<nsIRDFCompositeDataSource> mInnerDataSource;
-  nsresult LoadDataSource(const char *aURL);
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
-#ifdef MOZ_XUL_APP
-  void LoadISPFilesFromDir(nsIFile* aDir);
-  void LoadISPFiles();
-#endif
+  static NS_METHOD Register(nsIComponentManager* aCompMgr,
+			    nsIFile* aPath, const char *aLoaderStr,
+			    const char *aType,
+			    const nsModuleComponentInfo *aInfo);
+
+  static NS_METHOD Unregister(nsIComponentManager* aCompMgr,
+			      nsIFile* aPath, const char *aLoaderStr,
+			      const nsModuleComponentInfo *aInfo);
+
+private:
+  class AppendingEnumerator : public nsISimpleEnumerator
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    AppendingEnumerator(nsISimpleEnumerator* aBase);
+
+  private:
+    nsCOMPtr<nsISimpleEnumerator> mBase;
+    nsCOMPtr<nsIFile>             mNext;
+  };
 };
-#endif
+
+#endif // nsMailDirProvider_h__

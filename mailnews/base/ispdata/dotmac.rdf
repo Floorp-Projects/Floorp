@@ -46,7 +46,6 @@
         <NC:sampleEmail>steve@mac.com</NC:sampleEmail>
         <NC:sampleUserName>steve</NC:sampleUserName>
         <NC:emailIDDescription>.Mac username:</NC:emailIDDescription>
-        <NC:emailIDFieldTitle>username</NC:emailIDFieldTitle>
         <NC:showServerDetailsOnWizardSummary>true</NC:showServerDetailsOnWizardSummary>
       </NC:nsIMsgAccount>
     </NC:providers>

@@ -45,21 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= newsblog
 
-EXPORT_DIR	= $(DIST)/bin/defaults/isp
-EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
+EXPORT_DIR	= $(DIST)/bin/isp
 
-GARBAGE += $(EXPORT_DIR)/rss.rdf \
-		$(EXPORT_DIR_L10N)/rss.rdf
+GARBAGE += $(EXPORT_DIR)/rss.rdf 
 
 libs:: rss.rdf
 	$(INSTALL) $^ $(EXPORT_DIR)
-	$(INSTALL) $^ $(EXPORT_DIR_L10N)
 
 install:: rss.rdf
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
 
 EXTRA_COMPONENTS = js/newsblog.js
 
 include $(topsrcdir)/config/rules.mk
-

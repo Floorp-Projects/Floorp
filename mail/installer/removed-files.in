@@ -180,6 +180,15 @@ defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/
 defaults/profile/extensions/Extensions.rdf
 defaults/profile/extensions/installed-extensions.txt
 defaults/profile/extensions/
+defaults/isp/rss.rdf
+defaults/isp/movemail.rdf
+defaults/isp/dotmac.rdf
+defaults/isp/en-US/rss.rdf
+defaults/isp/en-US/movemail.rdf
+defaults/isp/en-US/dotmac.rdf
+defaults/isp/en-US/
+defaults/isp/
+
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 #Remove Talkback files from old location (in case user updates from 1.0.x)
 components/BrandRes.dll

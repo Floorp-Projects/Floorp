@@ -104,6 +104,7 @@
 #include "nsRssIncomingServer.h"
 #include "nsRssService.h"
 #include "nsMsgTagService.h"
+#include "nsMailDirProvider.h"
 
 #ifdef XP_WIN
 #include "nsMessengerWinIntegration.h"
@@ -338,6 +339,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgTagService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailDirProvider)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init)
 #endif
@@ -844,6 +846,14 @@ static const nsModuleComponentInfo gComponents[] = {
     { "cid protocol", NS_CIDPROTOCOL_CID,
       NS_CIDPROTOCOLHANDLER_CONTRACTID,
       nsCidProtocolHandlerConstructor,
+    },
+    {
+      "mail director provider",
+      MAILDIRPROVIDER_CID,
+      NS_MAILDIRPROVIDER_CONTRACTID,
+      nsMailDirProviderConstructor,
+      nsMailDirProvider::Register,
+      nsMailDirProvider::Unregister
     },
 #ifdef XP_WIN
     { "Windows OS Integration", NS_MESSENGERWININTEGRATION_CID,

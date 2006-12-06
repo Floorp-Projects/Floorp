@@ -51,19 +51,24 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 
+#ifdef MOZ_XUL_APP
+#include "nsIChromeRegistry.h"
+#include "nsMailDirServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
+#endif
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 nsMsgServiceProviderService::nsMsgServiceProviderService()
-{
-}
+{}
 
 nsMsgServiceProviderService::~nsMsgServiceProviderService()
-{
-
-
-}
+{}
 
 NS_IMPL_ISUPPORTS1(nsMsgServiceProviderService, nsIRDFDataSource)
 
@@ -77,6 +82,9 @@ nsMsgServiceProviderService::Init()
   mInnerDataSource = do_CreateInstance(kRDFCompositeDataSourceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef MOZ_XUL_APP
+  LoadISPFiles();
+#else
   nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -110,46 +118,131 @@ nsMsgServiceProviderService::Init()
       NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
     }
   }
-  
+#endif
   return NS_OK;
 }
 
+#ifdef MOZ_XUL_APP
+/**
+ * Looks for ISP configuration files in <.exe>\isp and any sub directories called isp
+ * located in the user's extensions directory.
+ */
+void nsMsgServiceProviderService::LoadISPFiles()
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+
+  // get the current locale, we'll need this later on...don't bail out in the case of an error
+  nsCOMPtr<nsIXULChromeRegistry> packageRegistry = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+  nsCAutoString localeName;
+  if (packageRegistry)
+    packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), localeName);
+
+  // First, process any isp files shipped by default in <location of exe>\isp
+  nsCOMPtr<nsIFile> ispDirectory;
+  rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                   NS_GET_IID(nsIFile), getter_AddRefs(ispDirectory));
+  if (NS_SUCCEEDED(rv))
+  {
+    ispDirectory->AppendNative(NS_LITERAL_CSTRING("isp"));
+    LoadISPFilesFromDir(ispDirectory);
+    // also look in <location of exe>\isp\AB-CD
+    if (!localeName.IsEmpty())
+    {
+      ispDirectory->AppendNative(localeName);
+      LoadISPFilesFromDir(ispDirectory);
+    }
+  }
+
+  // Now walk through the extension directories
+  nsCOMPtr<nsISimpleEnumerator> ispDirectories;
+  rv = dirSvc->Get(ISP_SEARCH_DIRECTORY_LIST,
+                   NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(ispDirectories));
+  if (NS_FAILED(rv))
+    return;
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(ispDirectories->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    ispDirectories->GetNext(getter_AddRefs(elem));
+
+    ispDirectory = do_QueryInterface(elem);
+    if (ispDirectory)
+    {
+      LoadISPFilesFromDir(ispDirectory);
+
+      // If we have a current locale, look in isp\ab-cd in case there are locale specific isp files.
+      nsCOMPtr<nsIFile> localeISPDir;
+      ispDirectory->Clone(getter_AddRefs(localeISPDir));
+      if (localeISPDir && !localeName.IsEmpty())
+      {
+        localeISPDir->AppendNative(localeName);
+        LoadISPFilesFromDir(localeISPDir);
+      }
+    }
+  }
+}
+
+void nsMsgServiceProviderService::LoadISPFilesFromDir(nsIFile* aDir)
+{
+  nsresult rv;
+
+  PRBool check = PR_FALSE;
+  rv = aDir->Exists(&check);
+  if (NS_FAILED(rv) || !check)
+    return;
+
+  rv = aDir->IsDirectory(&check);
+  if (NS_FAILED(rv) || !check)
+    return;
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  rv = aDir->GetDirectoryEntries(getter_AddRefs(e));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
+  if (!files)
+    return;
+
+  // we only care about the .rdf files in this directory
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
+    nsAutoString leafName;
+    file->GetLeafName(leafName);
+    if (!StringEndsWith(leafName, NS_LITERAL_STRING(".rdf")))
+      continue;
+
+    nsCAutoString urlSpec;
+    rv = NS_GetURLSpecFromFile(file, urlSpec);
+    if (NS_SUCCEEDED(rv))
+      LoadDataSource(urlSpec.get());
+  }
+}
+#endif
 
 nsresult
 nsMsgServiceProviderService::LoadDataSource(const char *aURI)
 {
-    nsresult rv;
+  nsresult rv;
 
-    nsCOMPtr<nsIRDFDataSource> ds =
-        do_CreateInstance(kRDFXMLDataSourceCID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIRDFDataSource> ds =
+      do_CreateInstance(kRDFXMLDataSourceCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIRDFRemoteDataSource> remote =
-        do_QueryInterface(ds, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = remote->Init(aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRDFRemoteDataSource> remote =
+      do_QueryInterface(ds, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = remote->Init(aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // for now load synchronously (async seems to be busted)
+  rv = remote->Refresh(PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed refresh?\n");
 
-#ifdef DEBUG_alecf
-    PRBool loaded;
-    rv = remote->GetLoaded(&loaded);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
+  rv = mInnerDataSource->AddDataSource(ds);
 
-    printf("Before refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
-#endif
-
-    // for now load synchronously (async seems to be busted)
-    rv = remote->Refresh(PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed refresh?\n");
-
-#ifdef DEBUG_alecf
-    rv = remote->GetLoaded(&loaded);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
-    printf("After refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
-#endif
-
-    rv = mInnerDataSource->AddDataSource(ds);
-
-    return rv;
+  return rv;
 }

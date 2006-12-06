@@ -42,8 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_XUL_APP
+EXPORT_DIR      = $(DIST)/bin/isp
+else
 EXPORT_DIR	= $(DIST)/bin/defaults/isp
 EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
+endif
 
 EXPORT_RESOURCE_FILES = \
 		$(NULL)
@@ -58,16 +62,24 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
-				$(addprefix $(EXPORT_DIR_L10N)/, $(EXPORT_RESOURCE_FILES))
+GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) 
+
+ifndef MOZ_XUL_APP
+GARBAGE         += $(addprefix $(EXPORT_DIR_L10N)/, $(EXPORT_RESOURCE_FILES))
+endif
 
 ifneq ($(EXPORT_RESOURCE_FILES),$(NULL))
 libs:: $(EXPORT_RESOURCE_FILES)
 	$(INSTALL) $^ $(EXPORT_DIR)
-	$(INSTALL) $^ $(EXPORT_DIR_L10N)
 
 install:: $(EXPORT_RESOURCE_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
-endif
 
+ifndef MOZ_XUL_APP
+libs:: $(EXPORT_RESOURCE_FILES)
+        $(INSTALL) $^ $(EXPORT_DIR_L10N)
+
+install:: $(EXPORT_RESOURCE_FILES)
+        $(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
+endif
+endif
