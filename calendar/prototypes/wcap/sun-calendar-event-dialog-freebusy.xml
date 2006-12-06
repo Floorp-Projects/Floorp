@@ -1247,6 +1247,11 @@
       </constructor>
 
       <property name="startDate">
+        <getter>
+          <![CDATA[
+            return this.mStartDate;
+          ]]>
+        </getter>
         <setter>
           <![CDATA[
           this.mStartDate = val.clone();
@@ -1260,6 +1265,11 @@
       </property>
 
       <property name="endDate">
+        <getter>
+          <![CDATA[
+            return this.mEndDate;
+          ]]>
+        </getter>
         <setter>
           <![CDATA[
           this.mEndDate = val.clone();

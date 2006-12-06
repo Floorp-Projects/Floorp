@@ -2191,8 +2191,12 @@
             
             // tell the freebusy grid about the new start/enddate
             var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            var refresh = (grid.startDate.compare(this.mStartDate) != 0) ||
+                          (grid.endDate.compare(this.mEndDate) != 0);
             grid.startDate = this.mStartDate;
             grid.endDate = this.mEndDate;
+            if(refresh)
+              grid.forceRefresh();
 
             // expand to 24hrs if the new range is outside of the default range.
             var kDefaultTimezone = calendarDefaultTimezone();
@@ -2968,11 +2972,16 @@
           timebar.startDate = this.mStartDate;
           timebar.endDate = this.mEndDate;
           timebar.refresh();
-          
+
           // tell the freebusy grid about the new start/enddate
           var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+          
+          var refresh = (grid.startDate.compare(this.mStartDate) != 0) ||
+                        (grid.endDate.compare(this.mEndDate) != 0);
           grid.startDate = this.mStartDate;
           grid.endDate = this.mEndDate;
+          if(refresh)
+            grid.forceRefresh();
         ]]>
       </handler>
 
