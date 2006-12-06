@@ -531,7 +531,7 @@ namespace avmplus
 				    // That means we can't invert the exponent when the base ten value exponent is < 307.  
 				    //  We could first check if powerOfTwo(base)*exp > 1074, but that would
 				    //  slow down all powInts calls.  This limits the xtra work to just very small numbers.
-					if (value == 0 && base != 0) // double check by calling the real thing
+					if (value == 0 && base != 0 && !MathUtils::isInfinite(base)) // double check by calling the real thing
 						return MathUtils::powInternal(original_base,(double)original_exponent);
 				}
 				exponent >>= 1;

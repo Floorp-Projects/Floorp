@@ -792,6 +792,13 @@ return the result of the comparison ToPrimitive(x) == y.
                 return atomToDouble(lhs) == atomToDouble(rhs) ? trueAtom : falseAtom;
             }
         }
+		// Sometimes ints can hide in double atoms (neg zero for one)
+		else if ((ltype == kIntegerType) && (rtype == kDoubleType) || 
+			(rtype == kIntegerType) && (ltype == kDoubleType))
+		{
+			return number(lhs) == number(rhs) ? trueAtom : falseAtom;
+		}
+
         return falseAtom;
     }
 

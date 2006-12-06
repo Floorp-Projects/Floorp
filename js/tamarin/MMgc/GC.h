@@ -248,18 +248,26 @@ namespace MMgc
 		GCCallback *prevCB;
 	};
 
+	#ifdef MMGC_64BIT
+	#define HIDDENPTRSHIFT 32
+	#define HIDDENPTRMASK 0xFFFFFFFF
+	#else
+	#define HIDDENPTRSHIFT 16
+	#define HIDDENPTRMASK 0x0000FFFF
+	#endif
+
 	template <class T>
 	class GCHiddenPointer
 	{
 	public:
 		GCHiddenPointer(T obj) { set(obj); }
-		operator T() const { return (T) (low16|high16<<16);	 }
+		operator T() const { return (T) (low|high<<HIDDENPTRSHIFT);	 }
 		T operator=(T tNew) 
 		{ 
 			set(tNew); 
 			return (T)this; 
 		}
-		T operator->() const { return (T) (low16|high16<<16); }
+		T operator->() const { return (T) (low|high<<HIDDENPTRSHIFT); }
 
 	private:
 		// private to prevent its use and someone adding it, GCC creates
@@ -268,12 +276,12 @@ namespace MMgc
 		
 		void set(T obj) 
 		{
-			uint32 p = (uint32)obj;
-			high16 = p >> 16;
-			low16 = p & 0x0000ffff;
+			uintptr_t p = (uintptr_t)obj;
+			high = p >> HIDDENPTRSHIFT;
+			low = p & HIDDENPTRMASK;
 		}
-		uint32 high16;
-		uint32 low16;
+		uintptr_t high;
+		uintptr_t low;
 	};
 
 	/**

@@ -2500,11 +2500,19 @@ namespace avmplus
 					markDead(orig);
 				}
 				else if (ins != NULL && ins->code == MIR_fsub &&
-					ins->oprnd1->code == MIR_i2d &&
-					ins->oprnd2->code == MIR_i2d)
+					(ins->oprnd1->code == MIR_u2d || ins->oprnd1->code == MIR_i2d) &&
+					(ins->oprnd2->code == MIR_u2d || ins->oprnd2->code == MIR_i2d))
 				{
 					OP* orig = value.ins;
 					localSet(loc, binaryIns(MIR_sub, ins->oprnd1->oprnd1, ins->oprnd2->oprnd1));
+					markDead(orig);
+				}
+				else if (ins != NULL && ins->code == MIR_fmul &&
+					(ins->oprnd1->code == MIR_u2d || ins->oprnd1->code == MIR_i2d) &&
+					(ins->oprnd2->code == MIR_u2d || ins->oprnd2->code == MIR_i2d))
+				{
+					OP* orig = value.ins;
+					localSet(loc, binaryIns(MIR_imul, ins->oprnd1->oprnd1, ins->oprnd2->oprnd1));
 					markDead(orig);
 				}
 				else if (ins != NULL && ((ins->code == MIR_i2d) || (ins->code == MIR_u2d)))
@@ -2548,6 +2556,22 @@ namespace avmplus
 					// new: iadd(int,int)
 					OP* orig = value.ins;
 					localSet(loc, binaryIns(MIR_add, ins->oprnd1->oprnd1, ins->oprnd2->oprnd1));
+					markDead(orig);
+				}
+				else if (ins != NULL && ins->code == MIR_fsub &&
+					(ins->oprnd1->code == MIR_u2d || ins->oprnd1->code == MIR_i2d) &&
+					(ins->oprnd2->code == MIR_u2d || ins->oprnd2->code == MIR_i2d))
+				{
+					OP* orig = value.ins;
+					localSet(loc, binaryIns(MIR_sub, ins->oprnd1->oprnd1, ins->oprnd2->oprnd1));
+					markDead(orig);
+				}
+				else if (ins != NULL && ins->code == MIR_fmul &&
+					(ins->oprnd1->code == MIR_u2d || ins->oprnd1->code == MIR_i2d) &&
+					(ins->oprnd2->code == MIR_u2d || ins->oprnd2->code == MIR_i2d))
+				{
+					OP* orig = value.ins;
+					localSet(loc, binaryIns(MIR_imul, ins->oprnd1->oprnd1, ins->oprnd2->oprnd1));
 					markDead(orig);
 				}
 				else if (ins != NULL && ((ins->code == MIR_i2d) || (ins->code == MIR_u2d)))
