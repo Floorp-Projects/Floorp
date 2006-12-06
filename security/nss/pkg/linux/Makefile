@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.15 2005/11/18 21:51:42 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.16 2006/12/06 21:14:54 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -48,7 +48,8 @@ ifndef RPM_RELEASE
 RPM_RELEASE = 1
 endif
 VERSION     = `grep NSS_VERSION $(CORE_DEPTH)/../dist/public/nss/nss.h \
-		| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
+		| head -1 \
+		| sed -e 's/[^"]*"//' -e 's/".*//' -e 's/ .*//'`
 PWD         = `pwd`
 BUILDROOT   = $(PWD)\/$(NAME)-root
 
