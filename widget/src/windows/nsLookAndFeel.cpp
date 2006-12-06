@@ -469,8 +469,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                   break;
                 case ABE_TOP:
                   aMetric = NS_ALERT_TOP;
-                  break;
+                  // fall through for the right-to-left handling.
                 case ABE_BOTTOM:
+                  // If the task bar is right-to-left,
+                  // move the origin to the left
+                  if (::GetWindowLong(shellWindow, GWL_EXSTYLE) &
+                        WS_EX_LAYOUTRTL)
+                    aMetric |= NS_ALERT_LEFT;
                   break;
               }
             }
