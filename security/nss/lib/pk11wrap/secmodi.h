@@ -80,7 +80,6 @@ extern SECMODModuleList *SECMOD_NewModuleListElement(void);
 extern SECMODModuleList *SECMOD_DestroyModuleListElement(SECMODModuleList *);
 extern void SECMOD_DestroyModuleList(SECMODModuleList *);
 extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
-SECStatus SECMOD_DeleteModuleEx(const char * name, SECMODModule *mod, int *type, PRBool permdb);
 
 extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);

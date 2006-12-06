@@ -120,6 +120,10 @@ extern void SECMOD_ReleaseReadLock(SECMODListLock *);
 /* Operate on modules by name */
 extern SECMODModule *SECMOD_FindModule(const char *name);
 extern SECStatus SECMOD_DeleteModule(const char *name, int *type);
+extern SECStatus SECMOD_DeleteModuleEx(const char * name, 
+                                       SECMODModule *mod, 
+                                       int *type, 
+                                       PRBool permdb);
 extern SECStatus SECMOD_DeleteInternalModule(const char *name);
 extern PRBool SECMOD_CanDeleteInternalModule(void);
 extern SECStatus SECMOD_AddNewModule(const char* moduleName, 

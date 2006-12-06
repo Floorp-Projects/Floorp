@@ -892,6 +892,7 @@ SECKEY_SignatureLen;
 PK11_GetAllSlotsForCert;
 SECKEY_ECParamsToKeySize;
 SECKEY_ECParamsToBasePointOrderLen;
+SECMOD_DeleteModuleEx;
 VFY_CreateContextDirect;
 VFY_CreateContextWithAlgorithmID;
 VFY_VerifyDataDirect;
