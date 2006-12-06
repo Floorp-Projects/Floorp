@@ -67,6 +67,7 @@ REQUIRES	= gfx \
 		  content \
 		  imglib2 \
 		  unicharutil \
+		  layout \
 		  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
