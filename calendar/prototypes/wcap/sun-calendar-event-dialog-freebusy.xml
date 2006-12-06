@@ -938,9 +938,8 @@
                       
                       var duration = rangeEnd.subtractDate(rangeStart);
                       var start_in_minutes = Math.floor(offset.inSeconds / 60);
-                      var end_in_minutes = start_in_minutes +
-                        Math.ceil((duration.inSeconds / 60) +
-                        (offset.inSeconds / 60 % start_in_minutes));
+                      var end_in_minutes = Math.ceil((duration.inSeconds / 60) +
+                                                     (offset.inSeconds / 60));
                         
                       var minute2offset = function(value,fNumHours,numHours,start_hour,zoomfactor) {
                       
