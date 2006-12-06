@@ -1249,9 +1249,11 @@ nsLocalFile::GetParent(nsIFile **aParent)
  */
 
 
-#ifdef XP_BEOS
+#if defined(XP_BEOS) || defined(SOLARIS)
 // access() is buggy in BeOS POSIX implementation, at least for BFS, using stat() instead
 // see bug 169506, https://bugzilla.mozilla.org/show_bug.cgi?id=169506
+// access() problem also exists in Solaris POSIX implementation
+// see bug 351595, https://bugzilla.mozilla.org/show_bug.cgi?id=351595
 NS_IMETHODIMP
 nsLocalFile::Exists(PRBool *_retval)
 {
