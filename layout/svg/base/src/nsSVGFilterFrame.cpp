@@ -441,8 +441,10 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   ctm->Multiply(scale, getter_AddRefs(fini));
 
+  gfxUnknownSurface resultSurface(filterResult);
+
   nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
-                                     filterResult, fini, 1.0);
+                                     &resultSurface, fini, 1.0);
 
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
