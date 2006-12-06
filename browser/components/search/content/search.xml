@@ -498,7 +498,7 @@
           }
 
           var where = "current";      
-          if (aEvent.originalTarget.getAttribute("anonid") == "search-go-button")
+          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button")
             where = whereToOpenLink(aEvent, false, true);
           else {
             var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
