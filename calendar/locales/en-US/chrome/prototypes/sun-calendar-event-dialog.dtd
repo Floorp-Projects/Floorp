@@ -184,6 +184,8 @@
 <!ENTITY reminder.new.label                             "New">
 <!ENTITY reminder.delete.label                          "Delete">
 <!ENTITY reminder.rename.label                          "Rename">
+<!ENTITY reminder.relation.start.label                  "the event starts">
+<!ENTITY reminder.relation.end.label                    "the event ends">
 
 <!-- Attendees dialog -->
 <!ENTITY event.organizer.label           "Organizer">

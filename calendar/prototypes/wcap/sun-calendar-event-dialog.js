@@ -838,21 +838,30 @@ function loadReminder(item)
   for(var i=0; i<numItems; i++) {
     var menuitem = menuItems[i];
     if(menuitem.hasAttribute("length")) {
-      var relation = "START";
+      var origin = "1";
       if(item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_END)
+        origin = "-1";
+      var duration = item.alarmOffset.clone();
+      var relation = "START";
+      if(duration.isNegative) {
+        duration.isNegative = false;
+        duration.normalize();
         relation = "END";
-      if(menuitem.getAttribute("relation") == relation) {
-        var unit = menuitem.getAttribute("unit");
-        var length = menuitem.getAttribute("length");
-        if(unit == "minutes" && item.alarmOffset.minutes == length) {
-          matchingItem = menuitem;
-          break;
-        } else if(unit == "hours" && item.alarmOffset.hours == length) {
-          matchingItem = menuitem;
-          break;
-        } else if(unit == "days" && item.alarmOffset.days == length) {
-          matchingItem = menuitem;
-          break;
+      }
+      if(menuitem.getAttribute("origin") == origin) {
+        if(menuitem.getAttribute("relation") == relation) {
+          var unit = menuitem.getAttribute("unit");
+          var length = menuitem.getAttribute("length");
+          if(unit == "minutes" && item.alarmOffset.minutes == length) {
+            matchingItem = menuitem;
+            break;
+          } else if(unit == "hours" && item.alarmOffset.hours == length) {
+            matchingItem = menuitem;
+            break;
+          } else if(unit == "days" && item.alarmOffset.days == length) {
+            matchingItem = menuitem;
+            break;
+          }
         }
       }
     }
@@ -875,11 +884,18 @@ function loadReminder(item)
     var customReminder = document.getElementById("reminder-custom-menuitem");
     var reminder = {};
     if(item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
-      reminder.relation = "START";
+      reminder.origin = "1";
     } else {
-      reminder.relation = "END";
+      reminder.origin = "-1";
     }
-    var offset = item.alarmOffset;
+    var offset = item.alarmOffset.clone();
+    var relation = "START";
+    if(offset.isNegative) {
+      offset.isNegative = false;
+      offset.normalize();
+      relation = "END";
+    }
+    reminder.relation = relation;
     if (offset.minutes) {
       var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
       reminder.unit = 'minutes';
@@ -926,23 +942,23 @@ function saveReminder(item) {
       reminder.length = menuitem.getAttribute('length');
       reminder.unit = menuitem.getAttribute('unit');
       reminder.relation = menuitem.getAttribute('relation');
-    }
-  
-    if (reminder.relation == "START") {
-        item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
-    } else {
-        item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_END;
+      reminder.origin = menuitem.getAttribute('origin');
     }
 
     var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                              .createInstance(Components.interfaces.calIDuration);
-    if (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
-        duration.isNegative = true;
-    }
     duration[reminder.unit] = Number(reminder.length);
+    if (reminder.relation != "START") {
+      duration.isNegative = true;
+    }
     duration.normalize();
-
     item.alarmOffset = duration;
+
+    if (Number(reminder.origin) >= 0) {
+        item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
+    } else {
+        item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_END;
+    }
   }
 }
 
@@ -1059,11 +1075,19 @@ function updateReminderDetails()
           break;
       }
 
+      var originString;
+      if(reminder.origin && reminder.origin < 0) {
+        originString = props.GetStringFromName('reminderCustomOriginEnd');
+      } else {
+        originString = props.GetStringFromName('reminderCustomOriginBegin');
+      }
+
       var detailsString = props.formatStringFromName(
         'reminderCustomTitle',
         [ reminder.length,
           unitString,
-          relationString ], 3);
+          relationString,
+          originString], 4);
 
       var lines = detailsString.split("\n");
       reminderDetails.removeAttribute("collapsed");

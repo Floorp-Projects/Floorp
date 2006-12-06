@@ -96,24 +96,32 @@
           <column flex="1"/>
         </columns>
         <rows>
-          <row align="center">
+          <row align="top">
             <radio selected="true"/>
-            <hbox>
-              <textbox id="reminder-length" size="1" oninput="updateReminderLength(event)"/>
-              <menulist id="reminder-unit" oncommand="updateReminder()">
+            <vbox>
+              <hbox>
+                <textbox id="reminder-length" size="1" oninput="updateReminderLength(event)"/>
+                <menulist id="reminder-unit" oncommand="updateReminder()" flex="1">
+                  <menupopup>
+                    <menuitem label="&alarm.units.minutes;" value="minutes" selected="true"/>
+                    <menuitem label="&alarm.units.hours;" value="hours"/>
+                    <menuitem label="&alarm.units.days;" value="days"/>
+                  </menupopup>
+                </menulist>
+                <menulist id="reminder-relation" oncommand="updateReminder()" flex="1">
+                  <menupopup>
+                    <menuitem label="&newevent.before.label;" value="START" selected="true"/>
+                    <menuitem label="&newevent.after.label;" value="END"/>
+                  </menupopup>
+                </menulist>
+              </hbox>
+              <menulist id="reminder-origin" oncommand="updateReminder()">
                 <menupopup>
-                  <menuitem label="&alarm.units.minutes;" value="minutes" selected="true"/>
-                  <menuitem label="&alarm.units.hours;" value="hours"/>
-                  <menuitem label="&alarm.units.days;" value="days"/>
+                  <menuitem label="&reminder.relation.start.label;" value="1" selected="true"/>
+                  <menuitem label="&reminder.relation.end.label;" value="-1"/>
                 </menupopup>
               </menulist>
-              <menulist id="reminder-relation" oncommand="updateReminder()">
-                <menupopup>
-                  <menuitem label="&newevent.before.label;" value="START" selected="true"/>
-                  <menuitem label="&newevent.after.label;" value="END"/>
-                </menupopup>
-              </menulist>
-            </hbox>
+            </vbox>
           </row>
           <row>
             <radio disabled="true"/>

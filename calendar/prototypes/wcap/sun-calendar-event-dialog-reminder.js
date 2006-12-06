@@ -91,8 +91,9 @@ function onLoad()
     node.reminder = reminder;
   }
 
-  if(selectedIndex >= 0)
-    listbox.selectedIndex = selectedIndex;
+  if(selectedIndex < 0)
+    selectedIndex = 0;
+  listbox.selectedIndex = selectedIndex;
 
   opener.setCursor("auto");
 }
@@ -136,11 +137,19 @@ function stringFromReminderObject(reminder) {
       break;
   }
 
+  var originString;
+  if(reminder.origin && reminder.origin < 0) {
+    originString = props.GetStringFromName('reminderCustomOriginEnd');
+  } else {
+    originString = props.GetStringFromName('reminderCustomOriginBegin');
+  }
+
   var result = props.formatStringFromName(
     'reminderCustomTitle',
     [ reminder.length,
       unitString,
-      relationString ], 3);
+      relationString,
+      originString], 4);
 
   return result;
 }
@@ -155,7 +164,7 @@ function loadReminders()
                               .getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch("calendar.reminder.");
 
-  var pref = "length=15;unit=minutes;relation=START,length=3;unit=hours;relation=START";
+  var pref = "length=15;unit=minutes;relation=START;origin=1,length=3;unit=hours;relation=START;origin=1";
   try {
     var newPref = prefBranch.getCharPref("custom");
     if(newPref && newPref != "")
@@ -217,7 +226,8 @@ function onReminderSelected()
   var length = document.getElementById("reminder-length");
   var unit = document.getElementById("reminder-unit");
   var relation = document.getElementById("reminder-relation");
-  
+  var origin = document.getElementById("reminder-origin");
+
   var listbox = document.getElementById("reminder-listbox");
   var listitem = listbox.selectedItem;
 
@@ -227,8 +237,7 @@ function onReminderSelected()
     length.value = reminder.length;
     unit.value = reminder.unit;
     relation.value = reminder.relation;
-  }
-  else {
+    origin.value = reminder.origin;
   }
 }
 
@@ -251,6 +260,7 @@ function updateReminder() {
   var length = document.getElementById("reminder-length");
   var unit = document.getElementById("reminder-unit");
   var relation = document.getElementById("reminder-relation");
+  var origin = document.getElementById("reminder-origin");
 
   var listbox = document.getElementById("reminder-listbox");
   var listitem = listbox.selectedItem;
@@ -259,6 +269,7 @@ function updateReminder() {
   reminder.length = length.value;
   reminder.unit = unit.value;
   reminder.relation = relation.value;
+  reminder.origin = origin.value;
 
   var details = stringFromReminderObject(reminder);
   listitem.setAttribute('label',details);
@@ -279,6 +290,7 @@ function onNewReminder() {
   newReminder.length = reminder.length;
   newReminder.unit = reminder.unit;
   newReminder.relation = reminder.relation;
+  newReminder.origin = reminder.origin;
   newNode.reminder = newReminder;
   listbox.appendChild(newNode);
   listbox.selectItem(newNode);

@@ -508,20 +508,20 @@
           <menulist id="item-alarm" oncommand="updateReminder()" disable-on-readonly="true">
             <menupopup>
               <menuitem label="&event.reminder.none.label;" value="none" selected="true"/>
-              <menuitem label="&event.reminder.5minutes.before.label;" length="5" unit="minutes" relation="START"/>
-              <menuitem label="&event.reminder.10minutes.before.label;" length="10" unit="minutes" relation="START"/>
-              <menuitem label="&event.reminder.15minutes.before.label;" length="15" unit="minutes" relation="START"/>
-              <menuitem label="&event.reminder.30minutes.before.label;" length="30" unit="minutes" relation="START"/>
-              <menuitem label="&event.reminder.45minutes.before.label;" length="45" unit="minutes" relation="START"/>
+              <menuitem label="&event.reminder.5minutes.before.label;" length="5" unit="minutes" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.10minutes.before.label;" length="10" unit="minutes" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.15minutes.before.label;" length="15" unit="minutes" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.30minutes.before.label;" length="30" unit="minutes" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.45minutes.before.label;" length="45" unit="minutes" relation="START" origin="1"/>
               <menuseparator/>
-              <menuitem label="&event.reminder.1hour.before.label;" length="1" unit="hours" relation="START"/>
-              <menuitem label="&event.reminder.2hours.before.label;" length="2" unit="hours" relation="START"/>
-              <menuitem label="&event.reminder.5hours.before.label;" length="5" unit="hours" relation="START"/>
-              <menuitem label="&event.reminder.15hours.before.label;" length="15" unit="hours" relation="START"/>
+              <menuitem label="&event.reminder.1hour.before.label;" length="1" unit="hours" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.2hours.before.label;" length="2" unit="hours" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.5hours.before.label;" length="5" unit="hours" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.15hours.before.label;" length="15" unit="hours" relation="START" origin="1"/>
               <menuseparator/>
-              <menuitem label="&event.reminder.1day.before.label;" length="1" unit="days" relation="START"/>
-              <menuitem label="&event.reminder.2days.before.label;" length="2" unit="days" relation="START"/>
-              <menuitem label="&event.reminder.1week.before.label;" length="7" unit="days" relation="START"/>
+              <menuitem label="&event.reminder.1day.before.label;" length="1" unit="days" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.2days.before.label;" length="2" unit="days" relation="START" origin="1"/>
+              <menuitem label="&event.reminder.1week.before.label;" length="7" unit="days" relation="START" origin="1"/>
               <menuseparator/>
               <menuitem id="reminder-custom-menuitem" label="&event.reminder.custom.label;" value="custom"/>
             </menupopup>
