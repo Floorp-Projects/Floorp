@@ -149,5 +149,19 @@ public:
   NS_IMETHOD GetCurrentValue(double *aCurrentValue);
 };
 
+
+/**
+ * Accessible object for xforms:select and xforms:select1 that are implemented
+ * using host document's native widget.
+ */
+
+class nsXFormsSelectAccessible : public nsXFormsContainerAccessible
+{
+public:
+  nsXFormsSelectAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetState(PRUint32 *aState);
+};
+
 #endif
 

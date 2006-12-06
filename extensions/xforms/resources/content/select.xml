@@ -93,10 +93,20 @@
   <binding id="xformswidget-selectcontrols-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
 
-    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSEditableElement">
+    <implementation implements="nsIXFormsNSEditableElement, nsIAccessibleProvider">
 
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+       <getter>
+         return Components.interfaces.nsIAccessibleProvider.XFormsSelect;
+       </getter>
+      </property>
+
+     <!-- nsIXFormsNSEditableElement -->
       <property name="editor" readonly="true"
                 onget="return this.control.editor;"/>
+
+     <!-- nsIXFormsUIWidget -->
 
       <!-- Make sure we don't refresh while we are refreshing (race condition).
            This happens when we are inside a repeat for example. We use the

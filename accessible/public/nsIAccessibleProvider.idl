@@ -124,9 +124,12 @@ interface nsIAccessibleProvider : nsISupports
    const long XFormsSliderRange = 0x00002007;
    /** Used for xforms elements that provide accessible object for itself as
     * well for anonymous content. This property are used for upload,
-    * input[type="xsd:gDay"] and input[type="xsd:gMonth"].
-    */
+    * input[type="xsd:gDay"] and input[type="xsd:gMonth"] */
    const long XFormsContainer = 0x00002008;
+   /** Used for select and select1 that are implemented using host document's
+    * native widget. For example, a select1 in a xhtml document may be
+    * represented by the native html control html:select */
+   const long XFormsSelect = 0x00002009;
 
   /**
    * Return one of constants declared above.
