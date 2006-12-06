@@ -944,7 +944,7 @@ public:
                   SCRIPT_ITEM *aItem,
                   gfxWindowsFontGroup *aGroup) :
         mContext(aContext), mDC(aDC), mString(aString),
-        mLength(aLength), mScriptItem(aItem),
+        mLength(aLength), mAlternativeString(nsnull), mScriptItem(aItem),
         mScript(aItem->a.eScript), mGroup(aGroup),
         mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
         mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
@@ -970,6 +970,7 @@ public:
         free(mAttr);
         free(mOffsets);
         free(mAdvances);
+        free(mAlternativeString);
     }
 
     const PRUnichar *GetString() const { return mString; }
@@ -1037,8 +1038,10 @@ public:
         HDC shapeDC = nsnull;
 
         while (PR_TRUE) {
+            const PRUnichar *str =
+                mAlternativeString ? mAlternativeString : mString;
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
-                             mString, mLength,
+                             str, mLength,
                              mMaxGlyphs, &mScriptItem->a,
                              mGlyphs, mClusters,
                              mAttr, &mNumGlyphs);
@@ -1070,6 +1073,11 @@ public:
     }
     void DisableShaping() {
         mScriptItem->a.eScript = SCRIPT_UNDEFINED;
+        // Note: If we disable the shaping by using SCRIPT_UNDEFINED and
+        // the string has the surrogate pair, ScriptShape API is
+        // *sometimes* crashed. Therefore, we should replace the surrogate
+        // pair to U+FFFD. See bug 341500.
+        GenerateAlternativeString();
     }
 
     PRBool IsMissingGlyphs() {
@@ -1380,6 +1388,17 @@ private:
        AppendPrefFonts(CJK_LANG_ZH_TW);
     }
 
+    void GenerateAlternativeString() {
+        if (mAlternativeString)
+            free(mAlternativeString);
+        mAlternativeString = (PRUnichar *)malloc(mLength * sizeof(PRUnichar));
+        memcpy((void *)mAlternativeString, (const void *)mString,
+               mLength * sizeof(PRUnichar));
+        for (PRUint32 i = 0; i < mLength; i++) {
+            if (IS_HIGH_SURROGATE(mString[i]) || IS_LOW_SURROGATE(mString[i]))
+                mAlternativeString[i] = PRUnichar(0xFFFD);
+        }
+    }
 private:
     nsRefPtr<gfxContext> mContext;
     HDC mDC;
@@ -1389,6 +1408,8 @@ private:
 
     const PRUnichar *mString;
     const PRUint32 mLength;
+
+    PRUnichar *mAlternativeString;
 
     gfxWindowsFontGroup *mGroup;
 
