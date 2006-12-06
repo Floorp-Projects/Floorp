@@ -60,16 +60,12 @@
 
       <xul:listbox anonid="listbox" seltype="multiple" rows="-1" flex="1">
         <xul:listcols>
-          <xul:listcol id="role-column"/>
-          <xul:listcol id="statuscol-column"/>
-          <xul:listcol id="name-column" flex="1"/>
+          <xul:listcol/>
+          <xul:listcol flex="1"/>
         </xul:listcols>
         <xul:listitem anonid="item" class="addressingWidgetItem" allowevents="true">
-          <xul:listcell class="addressingWidgetCell" align="center">
-            <xul:image id="attendeeCol1#1" anonid="role" class="role-icon" role="REQ-PARTICIPANT"/>
-          </xul:listcell>
-          <xul:listcell class="addressingWidgetCell" align="center">
-            <xul:image id="attendeeCol3#1" anonid="status" class="status-icon" status="NEEDS-ACTION"/>
+          <xul:listcell class="addressingWidgetCell" align="center" pack="center">
+            <xul:image id="attendeeCol1#1" anonid="icon"/>
           </xul:listcell>
           <xul:listcell class="addressingWidgetCell">
             <xul:textbox id="attendeeCol2#1" anonid="input" class="plain textbox-addressingWidget uri-element"
@@ -228,10 +224,19 @@
             // should be based on the organizer contained in the appropriate field of calIItemBase.
             // This is currently not supported, since we're still missing calendar identities.
             if(this.mOrganizerID && this.mOrganizerID != "") {
-              var organizer = this.createAttendee();
-              organizer.id = this.mOrganizerID;
-              organizer.role = "CHAIR";
-              organizer.participationStatus = "ACCEPTED";
+              if(!organizer) {
+                organizer = this.createAttendee();
+                organizer.id = this.mOrganizerID;
+                organizer.role = "CHAIR";
+                organizer.participationStatus = "ACCEPTED";
+              } else {
+                if(!organizer.id)
+                  organizer.id = this.mOrganizerID;
+                if(!organizer.role)
+                  organizer.role = "CHAIR";
+                if(!organizer.participationStatus)
+                  organizer.participationStatus = "ACCEPTED";
+              }
               try {
                 var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
                 var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
@@ -292,21 +297,16 @@
           aParentNode.appendChild(newNode);
 
           var input = document.getAnonymousElementByAttribute(newNode, "anonid", "input");
-          var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
-          var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
+          var icon = document.getAnonymousElementByAttribute(newNode, "anonid", "icon");
 
           // the template could have its fields disabled,
           // that's why we need to reset their status.
           input.removeAttribute("disabled");
-          role.removeAttribute("disabled");
-
-          // always disable the 'status' menulist, since
-          // this can only be set by each individual attendee.
-          status.setAttribute("disabled","true");
+          icon.removeAttribute("disabled");
 
           if(this.mIsReadOnly || !this.mIsOrganizer) {
             input.setAttribute("disabled","true");
-            role.setAttribute("disabled","true");
+            icon.setAttribute("disabled","true");
           }
 
           // disable the input-field [name <email>] if this attendee
@@ -325,9 +325,8 @@
           var rowNumber = this.mMaxAttendees;
           if (rowNumber >= 0)
           {
-              role.setAttribute("id", "attendeeCol1#" + rowNumber);
+              icon.setAttribute("id", "attendeeCol1#" + rowNumber);
               input.setAttribute("id", "attendeeCol2#" + rowNumber);
-              status.setAttribute("id", "attendeeCol3#" + rowNumber);
           }
           
           if(!aAttendee) {
@@ -361,31 +360,21 @@
           input.attendee = aAttendee;
           input.setAttribute("dirty","true");
 
-          // set role and participation status
-          status.setAttribute("status",aAttendee.participationStatus);
-          role.setAttribute("role",aAttendee.role);
-
-          if(!this.mIsReadOnly) {
-            if(this.mUserID && this.mUserID != "") {
-                if(this.mUserID == email) {
-                    status.setAttribute("enable-on-readonly","true");
-                    status.removeAttribute("disabled");
-                }
-            }
-          }
-  
-          // always disable 'role' & 'status' for the organizer
-          if (aDisableIfOrganizer) {
-            if (aAttendee) {
-              if (this.mOrganizerID && this.mOrganizerID != "") {
-                if (aAttendee.id == this.mOrganizerID) {
-                  role.setAttribute("disabled","true");
-                  status.setAttribute("disabled","true");
-                }
+          if (aAttendee) {
+            if (this.mOrganizerID && this.mOrganizerID != "") {
+              if (aAttendee.id == this.mOrganizerID) {
+              
+                icon.setAttribute("class","status-icon");
+                icon.setAttribute("status",aAttendee.participationStatus);
+              
+                return true;
               }
             }
           }
-  
+
+          icon.setAttribute("class","role-icon");
+          icon.setAttribute("role",aAttendee.role);
+
           return true;
           ]]>
         </body>
@@ -406,30 +395,24 @@
               var newNode = listitem1.cloneNode(true);
 
               var input = document.getAnonymousElementByAttribute(newNode, "anonid", "input");
-              var role = document.getAnonymousElementByAttribute(newNode, "anonid", "role");
-              var status = document.getAnonymousElementByAttribute(newNode, "anonid", "status");
+              var icon = document.getAnonymousElementByAttribute(newNode, "anonid", "icon");
 
               // the template could have its fields disabled,
               // that's why we need to reset their status.
               input.removeAttribute("disabled");
-              role.removeAttribute("disabled");
-
-              // always disable the 'status' menulist, since
-              // this can only be set by each individual attendee.
-              status.setAttribute("disabled","true");
+              icon.removeAttribute("disabled");
 
               if(this.mIsReadOnly || !this.mIsOrganizer) {
                 input.setAttribute("disabled","true");
-                role.setAttribute("disabled","true");
+                icon.setAttribute("disabled","true");
               }
 
               this.mMaxAttendees++;
               var rowNumber = this.mMaxAttendees;
               if (rowNumber >= 0)
               {
+                icon.setAttribute("id", "attendeeCol1#" + rowNumber);
                 input.setAttribute("id", "attendeeCol2#" + rowNumber);
-                role.setAttribute("id", "attendeeCol1#" + rowNumber);
-                status.setAttribute("id", "attendeeCol3#" + rowNumber);
               }
 
               input.value = null;
@@ -442,8 +425,10 @@
               }
 
               // set role and participation status
-              status.setAttribute("status",newAttendee.participationStatus);
-              role.setAttribute("role",newAttendee.role);
+              //status.setAttribute("status",newAttendee.participationStatus);
+              //role.setAttribute("role",newAttendee.role);
+              icon.setAttribute("class","role-icon");
+              icon.setAttribute("role","REQ-PARTICIPANT");
 
               // We always clone the first row.  The problem is that the first row
               // could be focused.  When we clone that row, we end up with a cloned
@@ -486,15 +471,11 @@
               if (fieldValue != "") {
               
                 // the inputfield already has a reference to the attendee
-                // object, we just need to fill in the name. we need to make sure
-                // to pay attention to the case where the attendee object is immutable.
-                var attendee = inputField.attendee;
-                if(!attendee.isMutable) {
-                  attendee = attendee.clone();
-                }
+                // object, we just need to fill in the name.
+                var attendee = inputField.attendee.clone();
 
                 attendee.role = this.getRoleElement(i).getAttribute("role");
-                attendee.participationStatus = this.getStatusElement(i).getAttribute("status");
+                //attendee.participationStatus = this.getStatusElement(i).getAttribute("status");
                 
                 // break the list of potentially many attendees back into individual names
                 var emailAddresses = {};
@@ -552,14 +533,10 @@
               if (fieldValue != "") {
               
                 // the inputfield already has a reference to the attendee
-                // object, we just need to fill in the name. we need to make sure
-                // to pay attention to the case where the attendee object is immutable.
-                var attendee = inputField.attendee;
-                if(!attendee.isMutable) {
-                  attendee = attendee.clone();
-                }
+                // object, we just need to fill in the name.
+                var attendee = inputField.attendee.clone();
 
-                attendee.role = this.getRoleElement(i).getAttribute("role");
+                //attendee.role = this.getRoleElement(i).getAttribute("role");
                 attendee.participationStatus = this.getStatusElement(i).getAttribute("status");
                 
                 // break the list of potentially many attendees back into individual names
@@ -806,7 +783,7 @@
         <parameter name="aRow"/>
         <body>
           <![CDATA[
-            return document.getElementById("attendeeCol3#" + aRow);
+            return document.getElementById("attendeeCol1#" + aRow);
           ]]>
         </body>
       </method>
@@ -1869,7 +1846,32 @@
     <content>
 
       <xul:box orient="vertical" flex="1">
-        
+
+        <xul:box orient="horizontal" align="center" pack="end">
+
+          <xul:spacer flex="1"/>
+          
+          <xul:label value="&event.freebusy.suggest.slot;"/>
+          <xul:button label="&event.freebusy.previous.slot;" dir="normal" class="left-icon" anonid="previous-slot" oncommand="onPreviousSlot();"/>
+          <xul:button label="&event.freebusy.next.slot;" dir="reverse" class="right-icon" anonid="next-slot" oncommand="onNextSlot();"/>
+
+          <xul:spacer style="width: 10em"/>
+          
+          <xul:label value="&event.freebusy.zoom;"/>
+          <xul:image class="zoom-out-icon"/>
+          <xul:menulist anonid="zoom-menulist" oncommand="onZoomFactor(this.value);">
+            <xul:menupopup>
+              <xul:menuitem label="400%" value="25"/>
+              <xul:menuitem label="200%" value="50"/>
+              <xul:menuitem label="100%" value="100"/>
+              <xul:menuitem label="50%" value="200"/>
+              <xul:menuitem label="25%" value="400"/>
+            </xul:menupopup>
+          </xul:menulist>
+          <xul:image class="zoom-in-icon"/>
+
+        </xul:box>
+
         <xul:box orient="horizontal" flex="1">
           <xul:box orient="vertical" flex="1">
             <xul:box class="attendee-spacer-top"/>
@@ -1897,112 +1899,66 @@
           </xul:box>
         </xul:box>
 
-        <xul:separator class="groove"/>
-        <xul:grid>
-          <xul:columns>
-            <xul:column flex="1"/>
-            <xul:column flex="1"/>
-          </xul:columns>
-          <xul:rows>
-            <xul:row align="center">
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="role-icon" role="REQ-PARTICIPANT"/>
-                <xul:label value="Required participant"/>
-              </xul:box>
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="status-icon" status="NEEDS-ACTION"/>
-                <xul:label value="Needs action"/>
-              </xul:box>
-            </xul:row>
-            <xul:row align="center">
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="role-icon" role="OPT-PARTICIPANT"/>
-                <xul:label value="Optional participant"/>
-              </xul:box>
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="status-icon" status="ACCEPTED"/>
-                <xul:label value="Accepted"/>
-              </xul:box>
-            </xul:row>
-            <xul:row align="center">
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="role-icon" role="CHAIR"/>
-                <xul:label value="Chair"/>
-              </xul:box>
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="status-icon" status="DECLINED"/>
-                <xul:label value="Declined"/>
-              </xul:box>
-            </xul:row>
-            <xul:row align="center">
-              <xul:box orient="horizontal" align="center">
-              </xul:box>
-              <xul:box orient="horizontal" align="center">
-                <xul:image class="status-icon" status="TENTATIVE"/>
-                <xul:label value="Tentative"/>
-              </xul:box>
-            </xul:row>
-          </xul:rows>
-        </xul:grid>
-
-        <xul:separator class="groove"/>
-        <xul:grid>
-          <xul:columns>
-            <xul:column/>
-            <xul:column/>
-            <xul:column flex="1"/>
-            <xul:column/>
-            <xul:column/>
-          </xul:columns>
-          <xul:rows>
-            <xul:row align="center">
-              <xul:checkbox anonid="all-day" oncommand="changeAllDay();" label="&event.alldayevent.label;"/>
-            </xul:row>
-            <xul:row align="center">
-              <xul:menulist anonid="zoom-menulist" oncommand="onZoomFactor(this.value);">
-                <xul:menupopup>
-                  <xul:menuitem label="400%" value="25"/>
-                  <xul:menuitem label="200%" value="50"/>
-                  <xul:menuitem label="100%" value="100"/>
-                  <xul:menuitem label="50%" value="200"/>
-                  <xul:menuitem label="25%" value="400"/>
-                </xul:menupopup>
-              </xul:menulist>
-            </xul:row>
-            <xul:row align="center">
-              <xul:button label="&event.freebusy.previous.slot;" anonid="previous-slot" oncommand="onPreviousSlot();"/>
-              <xul:button label="&event.freebusy.next.slot;" anonid="next-slot" oncommand="onNextSlot();"/>
-              <xul:spacer/>
-              <xul:label value="&newevent.from.label;"/>
-              <xul:datetimepicker anonid="event-starttime" onchange="updateStartTime();"/>
-              <xul:label anonid="timezone-starttime"
-                         crop="right"
-                         class="text-link"
-                         flex="1"
-                         collapsed="true"
-                         hyperlink="true"
-                         onclick="editStartTimezone()"/>
-            </xul:row>
-            <xul:row align="center">
-              <xul:button label="&event.freebusy.minus;" flex="1" oncommand="onMinus();"/>
-              <xul:button label="&event.freebusy.plus;" flex="1" oncommand="onPlus();"/>
-              <xul:spacer/>
-              <xul:label value="&newevent.to.label;"/>
-              <xul:datetimepicker anonid="event-endtime" onchange="updateEndTime();"/>
-              <xul:label anonid="timezone-endtime"
-                         crop="right"
-                         class="text-link"
-                         flex="1"
-                         collapsed="true"
-                         hyperlink="true"
-                         onclick="editEndTimezone()"/>
-            </xul:row>
-            <xul:row align="center" collapsed="true" anonid="event-organizer-row" >
+        <xul:box orient="horizontal">
+          <xul:box orient="vertical" flex="1">
+            <xul:box orient="horizontal" align="center">
+              <xul:box class="legend" status="FREE"/>
+              <xul:label value="&event.freebusy.legend.free;"/>
+            </xul:box>
+            <xul:box orient="horizontal" align="center">
+              <xul:box class="legend" status="BUSY"/>
+              <xul:label value="&event.freebusy.legend.busy;"/>
+            </xul:box>
+            <xul:box orient="horizontal" align="center">
+              <xul:box class="legend" status="UNKNOWN"/>
+              <xul:label value="&event.freebusy.legend.unknown;"/>
+            </xul:box>
+            <xul:box orient="horizontal">
+              <xul:button label="&event.freebusy.minus;" oncommand="onMinus();"/>
+              <xul:button label="&event.freebusy.plus;" oncommand="onPlus();"/>
+            </xul:box>
+            <xul:box orient="horizontal" collapsed="true">
               <xul:label value="&event.organizer.label;" disabled="true"/>
               <xul:textbox anonid="event-organizer" disabled="true" flex="true"/>
-            </xul:row>
-          </xul:rows>
-        </xul:grid>
+            </xul:box>
+          </xul:box>
+          <xul:grid>
+            <xul:columns>
+              <xul:column/>
+              <xul:column flex="1"/>
+            </xul:columns>
+            <xul:rows>
+              <xul:row align="center">
+                <xul:spacer/>
+                <xul:checkbox anonid="all-day" oncommand="changeAllDay();" label="&event.alldayevent.label;"/>
+              </xul:row>
+              <xul:row align="center">
+                <xul:label value="&newevent.from.label;"/>
+                <xul:datetimepicker anonid="event-starttime" onchange="updateStartTime();"/>
+                <xul:label anonid="timezone-starttime"
+                           crop="right"
+                           class="text-link"
+                           flex="1"
+                           collapsed="true"
+                           hyperlink="true"
+                           onclick="editStartTimezone()"/>
+              </xul:row>
+              <xul:row align="center">
+                <xul:label value="&newevent.to.label;"/>
+                <xul:datetimepicker anonid="event-endtime" onchange="updateEndTime();"/>
+                <xul:label anonid="timezone-endtime"
+                           crop="right"
+                           class="text-link"
+                           flex="1"
+                           collapsed="true"
+                           hyperlink="true"
+                           onclick="editEndTimezone()"/>
+              </xul:row>
+            </xul:rows>
+          </xul:grid>
+        </xul:box>
+        
+        <xul:separator class="groove"/>
 
       </xul:box>
 
@@ -2770,8 +2726,8 @@
             // does not support the concept of identities].
             this.mIsOrganizer = true;
 
-            var organizerRow = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer-row");
-            organizerRow.setAttribute("collapsed","true");
+            //var organizerRow = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer-row");
+            //organizerRow.setAttribute("collapsed","true");
 
             try {
               this.mUserID = "";
@@ -2791,7 +2747,7 @@
                 this.mIsOrganizer = true;
 
               // display the organizer [try to get the common name from the calid]
-              organizerRow.removeAttribute("collapsed");
+              //TODO: either remove this row or enable this again -> organizerRow.removeAttribute("collapsed");
               var organizer = document.getAnonymousElementByAttribute(this, "anonid", "event-organizer");
               organizer.value = this.mOrganizerID;
               var organizerCalendar = provider.session.getCalendarByCalId(this.mOrganizerID);
