@@ -380,3 +380,28 @@ nsXFormsRangeAccessible::GetCurrentValue(double *aCurrentValue)
   return error;
 }
 
+
+// nsXFormsSelectAccessible
+
+nsXFormsSelectAccessible::
+  nsXFormsSelectAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsContainerAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsSelectAccessible::GetState(PRUint32 *aState)
+{
+  nsresult rv = nsXFormsContainerAccessible::GetState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
+  rv = sXFormsService->IsInRange(mDOMNode, &isInRange);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isInRange == nsIXFormsUtilityService::STATE_OUT_OF_RANGE)
+    *aState |= STATE_INVALID;
+
+  return NS_OK;
+}
+
