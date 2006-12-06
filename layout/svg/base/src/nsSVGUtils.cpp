@@ -1007,7 +1007,7 @@ nsSVGUtils::UserToDeviceBBox(cairo_t *ctx,
 
 void
 nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
-                                   cairo_surface_t *aSurface,
+                                   gfxASurface *aSurface,
                                    nsIDOMSVGMatrix *aCTM, float aOpacity)
 {
   cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aCTM);
@@ -1018,8 +1018,8 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
 
   aContext->Multiply(gfxMatrix(matrix));
 
-  cairo_set_source_surface(aContext->GetCairo(), aSurface, 0.0, 0.0);
-  cairo_paint_with_alpha(aContext->GetCairo(), aOpacity);
+  aContext->SetSource(aSurface);
+  aContext->Paint(aOpacity);
 
   aContext->Restore();
 }

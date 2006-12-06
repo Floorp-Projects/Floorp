@@ -316,7 +316,7 @@ public:
                    double *xmax, double *ymax);
 
   static void CompositeSurfaceMatrix(gfxContext *aContext,
-                                     cairo_surface_t *aSurface,
+                                     gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
