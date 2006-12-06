@@ -242,13 +242,9 @@ MARSHAL_FILE = gtkmozembedmarshal
 MARSHAL_PREFIX = gtkmozembed
 
 $(MARSHAL_FILE).h: $(MARSHAL_FILE).list
-	( glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $(srcdir)/$(MARSHAL_FILE).htmp \
-	&& mv $(srcdir)/$(MARSHAL_FILE).htmp $(srcdir)/$(MARSHAL_FILE).h && cp -f $(srcdir)/$(MARSHAL_FILE).h $(MARSHAL_FILE).h ) \
-	|| ( rm -f $(srcdir)/$(MARSHAL_FILE).htmp && exit 1 )
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $(objdir)/$(MARSHAL_FILE).h
 
 $(MARSHAL_FILE).c: $(MARSHAL_FILE).list $(MARSHAL_FILE).h
-	( glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $(srcdir)/$(MARSHAL_FILE).ctmp \
-	&& mv $(srcdir)/$(MARSHAL_FILE).ctmp $(srcdir)/$(MARSHAL_FILE).c && cp -f $(srcdir)/$(MARSHAL_FILE).c $(MARSHAL_FILE).c ) \
-	|| ( rm -f $(srcdir)/$(MARSHAL_FILE).ctmp && exit 1 )
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $(objdir)/$(MARSHAL_FILE).c
 
 
