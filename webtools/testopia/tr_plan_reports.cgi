@@ -29,6 +29,8 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Report;
 
+require "globals.pl";
+
 use vars qw($template $vars);
 my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
@@ -42,6 +44,8 @@ if ($type eq 'build_coverage'){
     
     unless ($plan_id){
       $vars->{'form_action'} = 'tr_plan_reports.cgi';
+      $vars->{'type'} = 'build_coverage';
+      print $cgi->header;
       $template->process("testopia/plan/choose.html.tmpl", $vars) 
           || ThrowTemplateError($template->error());
       exit;
@@ -51,6 +55,7 @@ if ($type eq 'build_coverage'){
     
     my $action = $cgi->param('action') || '';
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
     my $report = {};
     my %buildseen;
     foreach my $case (@{$plan->test_cases}){
@@ -85,6 +90,37 @@ if ($type eq 'build_coverage'){
     $template->process("testopia/reports/build-coverage.html.tmpl", $vars)
        || ThrowTemplateError($template->error());
     
+}
+elsif ($type eq 'bugcounts'){
+    my $plan_id = trim(Bugzilla->cgi->param('plan_id') || '');
+    
+    unless ($plan_id){
+      $vars->{'form_action'} = 'tr_plan_reports.cgi';
+      $vars->{'type'} = 'bugcounts';
+      print $cgi->header;
+      $template->process("testopia/plan/choose.html.tmpl", $vars) 
+          || ThrowTemplateError($template->error());
+      exit;
+    }
+    validate_test_id($plan_id, 'plan');
+    my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
+    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    
+    my $dbh = Bugzilla->dbh;
+    my $ref = $dbh->selectall_arrayref(
+        "SELECT COUNT(bug_id) AS casecount, bug_id  FROM test_case_bugs
+          INNER JOIN test_cases ON test_cases.case_id = test_case_bugs.case_id
+          INNER JOIN test_case_plans ON test_case_plans.case_id = test_cases.case_id
+          INNER JOIN test_plans ON test_case_plans.plan_id = test_plans.plan_id
+          WHERE test_plans.plan_id = ?
+          GROUP BY test_cases.case_id", {'Slice'=>{}}, $plan->id);
+
+    $vars->{'bug_table'} = $ref;
+    $vars->{'plan'} = $plan;
+
+    print $cgi->header;
+    $template->process("testopia/reports/bug-count.html.tmpl", $vars)
+       || ThrowTemplateError($template->error());
 }
 else{
     $cgi->param('current_tab', 'plan');

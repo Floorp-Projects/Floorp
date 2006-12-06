@@ -34,6 +34,9 @@
     [% IF form_action == 'tr_new_run.cgi' %]
       <input type="hidden" name="case_status_id" value="2" />
     [% END %]
+    [% IF type %]
+      <input type="hidden" name="type" value="[% type FILTER none %]" />
+    [% END %]
   </p>
 </form>
 
