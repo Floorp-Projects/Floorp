@@ -223,7 +223,7 @@ sub CreatePartialMarFile
     printf("Decompressing $toCompleteMar with $extractCommand... \n");
     chdir($toDir) or die "chdir() $toDir failed: $ERRNO";;
 
-    my $rv = RunShellCommand(command => $extractCommand);
+    $rv = RunShellCommand(command => $extractCommand);
     if ($rv->{'exit_value'} != 0) {
         die "FAILED: $extractCommand: $rv->{'exit_value'}, output: $rv->{'output'}\n";
     }
@@ -243,7 +243,7 @@ sub CreatePartialMarFile
          . " $fromDir $toDir";
 
     printf("Building partial update with: $cmd...\n");
-    my $rv = RunShellCommand(command => $cmd, output => 1);
+    $rv = RunShellCommand(command => $cmd, output => 1);
     if ($rv->{'exit_value'} != 0) {
         die "FAILED: $cmd: $rv->{'exit_value'}, output: $rv->{'output'}\n";
     }
