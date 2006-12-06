@@ -22,7 +22,7 @@ if (verifyDiskSpace(getFolder("Program"), srDest))
                  getFolder("Chrome", "icons"), // target folder
                  "");                 // target subdir
 
-    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
     registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
 
