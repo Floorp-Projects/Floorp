@@ -623,6 +623,13 @@ nsNSSComponent::InstallLoadableRoots()
   nsNSSShutDownPreventionLock locker;
   SECMODModule *RootsModule = nsnull;
 
+  // In the past we used SECMOD_AddNewModule to load our module containing
+  // root CA certificates. This caused problems, refer to bug 176501.
+  // On startup, we fix our database and clean any stored module reference,
+  // and will use SECMOD_LoadUserModule to temporarily load it
+  // for the session. (This approach requires to clean up 
+  // using SECMOD_UnloadUserModule at the end of the session.)
+
   {
     // Find module containing root certs
 
@@ -649,92 +656,96 @@ nsNSSComponent::InstallLoadableRoots()
   }
 
   if (RootsModule) {
-    // Check version, and unload module if it is too old
-
-    CK_INFO info;
-    if (SECSuccess != PK11_GetModInfo(RootsModule, &info)) {
-      // Do not use this module
-      SECMOD_DestroyModule(RootsModule);
-      RootsModule = nsnull;
-    }
-    else {
-      // NSS_BUILTINS_LIBRARY_VERSION_MAJOR and NSS_BUILTINS_LIBRARY_VERSION_MINOR
-      // define the version we expect to have.
-      // Later version are fine.
-      // Older versions are not ok, and we will replace with our own version.
-
-      if (
-            (info.libraryVersion.major < NSS_BUILTINS_LIBRARY_VERSION_MAJOR)
-          || 
-            (info.libraryVersion.major == NSS_BUILTINS_LIBRARY_VERSION_MAJOR
-             && info.libraryVersion.minor < NSS_BUILTINS_LIBRARY_VERSION_MINOR)
-         ) {
-        PRInt32 modType;
-        SECMOD_DeleteModule(RootsModule->commonName, &modType);
-        SECMOD_DestroyModule(RootsModule);
-
-        RootsModule = nsnull;
-      }
-    }
+    PRInt32 modType;
+    SECMOD_DeleteModule(RootsModule->commonName, &modType);
+    SECMOD_DestroyModule(RootsModule);
+    RootsModule = nsnull;
   }
 
-  if (RootsModule) {
-    SECMOD_DestroyModule(RootsModule);
-  } else { /* !RootsModule */
-    // Load roots module from our installation path
-  
-    nsresult rv;
-    nsAutoString modName;
-    rv = GetPIPNSSBundleString("RootCertModuleName", modName);
-    if (NS_FAILED(rv)) return;
+  // Find the best Roots module for our purposes.
+  // Prefer the application's installation directory,
+  // but also ensure the library is at least the version we expect.
 
-    nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
-    if (!directoryService)
-      return;
+  nsresult rv;
+  nsAutoString modName;
+  rv = GetPIPNSSBundleString("RootCertModuleName", modName);
+  if (NS_FAILED(rv)) return;
 
-    const char *possible_ckbi_locations[] = {
-      NS_GRE_DIR,
-      NS_XPCOM_CURRENT_PROCESS_DIR,
-      0 // This special value means: 
-        //   search for ckbi in the directories on the shared
-        //   library/DLL search path
-    };
+  nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  if (!directoryService)
+    return;
 
-    for (size_t il = 0; il < sizeof(possible_ckbi_locations)/sizeof(const char*); ++il) {
-      nsCOMPtr<nsILocalFile> mozFile;
-      char *fullModuleName = nsnull;
+  const char *possible_ckbi_locations[] = {
+    NS_XPCOM_CURRENT_PROCESS_DIR,
+    NS_GRE_DIR,
+    0 // This special value means: 
+      //   search for ckbi in the directories on the shared
+      //   library/DLL search path
+  };
 
-      if (!possible_ckbi_locations[il])
-      {
-        fullModuleName = PR_GetLibraryName(nsnull, "nssckbi");
-      }
-      else
-      {
-        directoryService->Get( possible_ckbi_locations[il],
-                               NS_GET_IID(nsILocalFile), 
-                               getter_AddRefs(mozFile));
-    
-        if (!mozFile) {
-          continue;
-        }
+  for (size_t il = 0; il < sizeof(possible_ckbi_locations)/sizeof(const char*); ++il) {
+    nsCOMPtr<nsILocalFile> mozFile;
+    char *fullLibraryPath = nsnull;
 
-        nsCAutoString processDir;
-        mozFile->GetNativePath(processDir);
-        fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
-      }
-
-      /* If a module exists with the same name, delete it. */
-      NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-      int modType;
-      SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
-      SECStatus rv_add = 
-        SECMOD_AddNewModule(NS_CONST_CAST(char*, modNameUTF8.get()), fullModuleName, 0, 0);
-      PR_FreeLibraryName(fullModuleName); // allocated by NSPR
-      if (SECSuccess == rv_add) {
-        // found a module, no need to try other directories
-        break;
-      }
+    if (!possible_ckbi_locations[il])
+    {
+      fullLibraryPath = PR_GetLibraryName(nsnull, "nssckbi");
     }
+    else
+    {
+      directoryService->Get( possible_ckbi_locations[il],
+                             NS_GET_IID(nsILocalFile), 
+                             getter_AddRefs(mozFile));
+  
+      if (!mozFile) {
+        continue;
+      }
+
+      nsCAutoString processDir;
+      mozFile->GetNativePath(processDir);
+      fullLibraryPath = PR_GetLibraryName(processDir.get(), "nssckbi");
+    }
+
+    /* If a module exists with the same name, delete it. */
+    NS_ConvertUTF16toUTF8 modNameUTF8(modName);
+    int modType;
+    SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
+
+    nsCString pkcs11moduleSpec;
+    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("name=\""));
+    pkcs11moduleSpec.Append(modNameUTF8.get());
+    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\" library=\""));
+    pkcs11moduleSpec.Append(fullLibraryPath);
+    pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\""));
+
+    PR_FreeLibraryName(fullLibraryPath); // allocated by NSPR
+
+    RootsModule =
+      SECMOD_LoadUserModule(NS_CONST_CAST(char*, pkcs11moduleSpec.get()), 
+                            nsnull, // no parent 
+                            PR_FALSE); // do not recurse
+
+    if (RootsModule) {
+      // found a module, no need to try other directories
+      break;
+    }
+  }
+}
+
+void 
+nsNSSComponent::UnloadLoadableRoots()
+{
+  nsresult rv;
+  nsAutoString modName;
+  rv = GetPIPNSSBundleString("RootCertModuleName", modName);
+  if (NS_FAILED(rv)) return;
+
+  NS_ConvertUTF16toUTF8 modNameUTF8(modName);
+  SECMODModule *RootsModule = SECMOD_FindModule(modNameUTF8.get());
+
+  if (RootsModule) {
+    SECMOD_UnloadUserModule(RootsModule);
+    SECMOD_DestroyModule(RootsModule);
   }
 }
 
@@ -1545,6 +1556,7 @@ nsNSSComponent::ShutdownNSS()
 
     ShutdownSmartCardThreads();
     SSL_ClearSessionCache();
+    UnloadLoadableRoots();
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("evaporating psm resources\n"));
     mShutdownObjectList->evaporateAllNSSResources();
     if (SECSuccess != ::NSS_Shutdown()) {
