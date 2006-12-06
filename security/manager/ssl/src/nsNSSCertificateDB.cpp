@@ -826,6 +826,10 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
   nsPSMUITracker tracker;
   if (!tracker.isUIForbidden()) {
 
+    nsCOMPtr<nsIInterfaceRequestor> my_cxt = ctx;
+    if (!my_cxt)
+      my_cxt = new PipUIContext();
+
     // This shall be replaced by embedding ovverridable prompts
     // as discussed in bug 310446, and should make use of certToShow.
 
@@ -841,7 +845,7 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
       nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
       NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                            NS_GET_IID(nsIInterfaceRequestor),
-                           ctx,
+                           my_cxt,
                            NS_PROXY_SYNC,
                            getter_AddRefs(proxiedCallbacks));
     
