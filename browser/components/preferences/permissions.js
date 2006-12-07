@@ -157,8 +157,8 @@ var gPermissionManager = {
   
   onHostKeyPress: function (aEvent)
   {
-    if (aEvent.keyCode == 13)
-      gPermissionManager.addPermission(nsIPermissionManager.ALLOW_ACTION);
+    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+      document.getElementById("btnAllow").click();
   },
   
   onLoad: function ()
