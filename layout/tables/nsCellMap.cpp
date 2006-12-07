@@ -2044,8 +2044,10 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   // remove the deleted cell and cellData entries for it
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     CellDataArray& row = mRows[rowX];
-    for (colX = endColIndex; colX >= PRUint32(aColIndex); colX--) {
-      DestroyCellData(row[colX]);
+    // Shift things by 1 so the aColIndex == 0 case works right with
+    // our unsigned int colX.
+    for (colX = endColIndex + 1; colX > PRUint32(aColIndex); colX--) {
+      DestroyCellData(row[colX-1]);
     }
     row.RemoveElementsAt(aColIndex, endColIndex - aColIndex + 1);
   }
