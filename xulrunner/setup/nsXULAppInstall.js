@@ -178,7 +178,7 @@ zipExtractor.prototype = {
     var file = aDestination.clone();
 
     var dirs = aZipEntry.split(/\//);
-    var isDirectory = path.match(/\/$/) != null;
+    var isDirectory = /\/$/.test(aZipEntry);
 
     var end = dirs.length;
     if (!isDirectory)
@@ -193,7 +193,7 @@ zipExtractor.prototype = {
 
     if (!isDirectory) {
       file.append(dirs[end]);
-      aZipReader.extract(path, file);
+      aZipReader.extract(aZipEntry, file);
     }
   }
 };
