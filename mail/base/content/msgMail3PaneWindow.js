@@ -220,8 +220,6 @@ var folderListener = {
                  gDBView.suppressCommandUpdating = false;
                }
 
-               gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS, true);
-
                gCurrentLoadingFolderSortType = 0;
                gCurrentLoadingFolderSortOrder = 0;
                gCurrentLoadingFolderViewType = 0;
