@@ -44,16 +44,6 @@ DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
 #
-# To use the true pthread (kernel thread) library on 10.30 and
-# 11.x, we should define _POSIX_C_SOURCE to be 199506L.
-# The _REENTRANT macro is deprecated.
-#
-
-ifdef USE_PTHREADS
-	OS_CFLAGS	+= -D_POSIX_C_SOURCE=199506L
-endif
-
-#
 # Config stuff for HP-UXB.11.x.
 #
 include $(CORE_DEPTH)/coreconf/HP-UXB.11.mk
