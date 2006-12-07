@@ -250,6 +250,44 @@ verify_type_fits_version(IDL_tree in_tree, IDL_tree error_tree)
     return TRUE;
 }
 
+static gboolean
+IsNot_AlphaUpper(char letter)
+{
+    return letter < 'A' || letter > 'Z';
+}
+
+static gboolean
+IsNot_AlphaLower(char letter)
+{
+    return letter < 'a' || letter > 'z';
+}
+
+static gboolean
+matches_IFoo(const char* substring)
+{
+    if (substring[0] != 'I')
+        return FALSE;
+    if (IsNot_AlphaUpper(substring[1]))
+        return FALSE;
+    if (IsNot_AlphaLower(substring[2]))
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
+matches_nsIFoo(const char* attribute_name)
+{
+    if (IsNot_AlphaLower(attribute_name[0]))
+        return FALSE;
+    if (IsNot_AlphaLower(attribute_name[1]))
+        return FALSE;
+    if (matches_IFoo(attribute_name + 2))
+        return TRUE;
+    if (IsNot_AlphaLower(attribute_name[2]))
+        return FALSE;
+    return matches_IFoo(attribute_name + 3);
+}
+
 gboolean
 verify_attribute_declaration(IDL_tree attr_tree)
 {
@@ -342,6 +380,18 @@ verify_attribute_declaration(IDL_tree attr_tree)
                            "else must be marked [notxpcom] "
                            "and must be read-only\n");
             return FALSE;
+        }
+
+        /*
+         * canIGoHomeNow is a bad name for an attribute.
+         * /^[a-z]{2,3}I[A-Z][a-z]/ => bad, reserved for
+         * interface flattening.
+         */
+        if (matches_nsIFoo(IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(attr_tree).
+                simple_declarations).data).str)) {
+            XPIDL_WARNING((attr_tree, IDL_WARNING1,
+                 "Naming an attribute nsIFoo causes "
+                 "problems for interface flattening"));
         }
 
         /* 
