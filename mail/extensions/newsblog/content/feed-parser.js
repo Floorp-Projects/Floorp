@@ -136,6 +136,7 @@ FeedParser.prototype =
         isPermaLink = guidNode.getAttribute('isPermaLink') == 'false' ? false : true;
       }
 
+      item.isStoredWithId = true;
       item.url = link ? link : (guid && isPermaLink) ? guid : null;
       item.id = guid;
       item.description = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "description")[0]);
