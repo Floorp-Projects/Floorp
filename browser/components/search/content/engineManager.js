@@ -146,6 +146,7 @@ var gEngineManagerDialog = {
     gEngineView.invalidate();
     gEngineView.selection.select(newIndex);
     gEngineView.ensureRowIsVisible(newIndex);
+    this.showRestoreDefaults(true);
     document.getElementById("engineList").focus();
   },
 
@@ -455,6 +456,7 @@ EngineView.prototype = {
     }
 
     this._engineStore.moveEngine(sourceEngine, dropIndex);
+    gEngineManagerDialog.showRestoreDefaults(true);
 
     // Redraw, and adjust selection
     this.invalidate();
