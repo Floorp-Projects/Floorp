@@ -78,15 +78,15 @@ Select:
     </td>
 
     <td align="right" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.id FILTER none %]</a></td>
-    <td align="left" valign="top">[% case.alias %]</td>
-    <td align="left" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.summary %]</a></td>
-    <td align="left" valign="top">[% case.requirement %]</td>
-    <td align="left" valign="top"><a href="mailto:[% case.author.login %]">[% case.author.login %]</a></td> 
-    <td align="left" valign="top"><a href="mailto:[% case.default_tester.login %]">[% case.default_tester.login %]</a></td> 
+    <td align="left" valign="top">[% case.alias FILTER html %]</td>
+    <td align="left" valign="top"><a onclick="_disable_sr=true;" href="tr_show_case.cgi?case_id=[% case.case_id FILTER none %]">[% case.summary FILTER html %]</a></td>
+    <td align="left" valign="top">[% case.requirement FILTER html %]</td>
+    <td align="left" valign="top"><a href="mailto:[% case.author.login %]">[% case.author.login FILTER html %]</a></td> 
+    <td align="left" valign="top"><a href="mailto:[% case.default_tester.login %]">[% case.default_tester.login FILTER html %]</a></td> 
     <td align="left" valign="top">[% case.creation_date FILTER time %]</td>
     <td align="left" valign="top">[% case.category.name FILTER html %]</td>
     <td align="left" valign="top">[% case.priority FILTER html %]</td>
-    <td align="left" valign="top"><span id="sta[% case.status %]">[% case.status %]</span></td>
+    <td align="left" valign="top"><span id="sta[% case.status %]">[% case.status FILTER html %]</span></td>
   </tr>
   [% IF loop.size < MAX_LIMIT %]
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
