@@ -4925,10 +4925,10 @@ BCMapCellIterator::SetNewRow(nsTableRowFrame* aRow)
     mRowIndex = mRow->GetRowIndex();
     // get to the first entry with an originating cell
     PRInt32 rgRowIndex = mRowIndex - mRowGroupStart;
-    nsVoidArray* row = (nsVoidArray*)mCellMap->mRows.ElementAt(rgRowIndex); if (!row) ABORT1(PR_FALSE);
-    PRInt32 rowSize = row->Count();
+    const nsCellMap::CellDataArray& row = mCellMap->mRows[rgRowIndex];
+
     for (mColIndex = mAreaStart.x; mColIndex <= mAreaEnd.x; mColIndex++) {
-      CellData* cellData = (mColIndex < rowSize) ? (CellData*)row->ElementAt(mColIndex) : nsnull;
+      CellData* cellData = row.SafeElementAt(mColIndex);
       if (!cellData) { // add a dead cell data
         nsRect damageArea;
         cellData = mCellMap->AppendCell(*mTableCellMap, nsnull, rgRowIndex, PR_FALSE, damageArea); if (!cellData) ABORT1(PR_FALSE);
@@ -5706,18 +5706,20 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       nsCellMap* cellMap = tableCellMap->GetMapFor(*rgFrame); if (!cellMap) ABORT0();
       // check for spanners from above and below
       if ((dStartY > 0) && (dStartY >= rgStartY) && (dStartY <= rgEndY)) {
-        nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(dStartY - rgStartY); if (!row) ABORT0();
+        const nsCellMap::CellDataArray& row =
+          cellMap->mRows[dStartY - rgStartY];
         for (PRInt32 x = dStartX; x <= dEndX; x++) {
-          CellData* cellData = (row->Count() > x) ? (CellData*)row->ElementAt(x) : nsnull;
+          CellData* cellData = row.SafeElementAt(x);
           if (cellData && (cellData->IsRowSpan())) {
              haveSpanner = PR_TRUE;
              break;
           }
         }
         if (dEndY < rgEndY) {
-          row = (nsVoidArray*)cellMap->mRows.ElementAt(dEndY + 1 - rgStartY); if (!row) ABORT0();
+          const nsCellMap::CellDataArray& row2 =
+            cellMap->mRows[dEndY + 1 - rgStartY];
           for (PRInt32 x = dStartX; x <= dEndX; x++) {
-            CellData* cellData = (CellData*)row->SafeElementAt(x);
+            CellData* cellData = row2.SafeElementAt(x);
             if (cellData && (cellData->IsRowSpan())) {
               haveSpanner = PR_TRUE;
               break;
@@ -5745,14 +5747,15 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       }
       if ((iterStartY >= 0) && (iterEndY >= 0)) {
         for (PRInt32 y = iterStartY; y <= iterEndY; y++) {
-          nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(y - rgStartY); if (!row) ABORT0();
-          CellData* cellData = (CellData*)row->SafeElementAt(dStartX);
+          const nsCellMap::CellDataArray& row =
+            cellMap->mRows[y - rgStartY];
+          CellData* cellData = row.SafeElementAt(dStartX);
           if (cellData && (cellData->IsColSpan())) {
             haveSpanner = PR_TRUE;
             break;
           }
           if (dEndX < (numCols - 1)) {
-            cellData = (CellData*)row->SafeElementAt(dEndX + 1);
+            cellData = row.SafeElementAt(dEndX + 1);
             if (cellData && (cellData->IsColSpan())) {
               haveSpanner = PR_TRUE;
               break;
@@ -6523,29 +6526,25 @@ BCMapBorderIterator::SetNewData(PRInt32 aY,
   }
   else {
     bcData = nsnull;
-    nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(y - fifRowGroupStart);
-    if (row) {
-      cellData = (row->Count() > x) ? (BCCellData*)row->ElementAt(x) : nsnull;
-      if (cellData) {
-        bcData = &cellData->mData;
-        if (!cellData->IsOrig()) {
-          if (cellData->IsRowSpan()) {
-            aY -= cellData->GetRowSpanOffset();
-          }
-          if (cellData->IsColSpan()) {
-            aX -= cellData->GetColSpanOffset();
-          }
-          if ((aX >= 0) && (aY >= 0)) {
-            row = (nsVoidArray*)cellMap->mRows.ElementAt(aY - fifRowGroupStart);
-            if (row) {
-              cellData = (BCCellData*)row->ElementAt(aX);
-            }
-          }
+
+    cellData =
+      (BCCellData*)cellMap->mRows[y - fifRowGroupStart].SafeElementAt(x);
+    if (cellData) {
+      bcData = &cellData->mData;
+      if (!cellData->IsOrig()) {
+        if (cellData->IsRowSpan()) {
+          aY -= cellData->GetRowSpanOffset();
         }
-        if (cellData->IsOrig()) {
-          prevCell = cell;
-          cell = cellData->GetCellFrame();
+        if (cellData->IsColSpan()) {
+          aX -= cellData->GetColSpanOffset();
         }
+        if ((aX >= 0) && (aY >= 0)) {
+          cellData = (BCCellData*)cellMap->mRows[aY - fifRowGroupStart][aX];
+        }
+      }
+      if (cellData->IsOrig()) {
+        prevCell = cell;
+        cell = cellData->GetCellFrame();
       }
     }
   }
