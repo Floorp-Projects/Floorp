@@ -46,20 +46,8 @@ character string, the second defines it to be four characters long.
 The conditionals (#ifdef, #ifndef, #if, #else, #elifdef, #elifndef,
 #elif, #endif) can be nested to arbitrary depth.
 
-An #else section can be followed by an #else section, as in:
-
-   #if 1
-      used
-   #else
-      not used
-   #else
-      used again
-   #endif
-
-Whether this is wise or not is left up to the reader to decide.
-
 The #elifdef, #elifndef, and #elif instructions are equivalent to
-#else instructions combined with the relevant conditional. For
+#else instructions combined with the relevant conditional.  For
 example,
 
    #ifdef foo
@@ -78,32 +66,36 @@ example,
    #endif
    #endif
 
-#else blocks need not come last, which can lead to some odd
-constructs.
+An #else block is included if all previous conditions were false, and
+is equivalent to #elif 1, i.e.:
 
    #ifdef foo
-      included if foo is defined
+      foo is defined
    #else
-      included if foo is not defined
-   #elifdef bar
-      included if foo is defined and bar is defined
-   #else
-      included if either foo or bar are not defined
+      foo is not defined
    #endif
 
-Note in particular the following holds:
-
-   #if 1
-      always included
+...is equivalent to:
+   
+   #ifdef foo
+      foo is defined
    #elif 1
+      foo is not defined
+   #endif
+
+#else is not required to be the last condition in an if/el*/endif
+series.  In particular, along with #else's equivalence to #elif 1
+this means that the following holds:
+
+   #if 0
       never included
    #else
       always included
+   #else
+      never included
+   #elif 1
+      never included
    #endif
-
-That is to say, #else is relative to whether the previous conditional
-was included _only_. It isn't an "and" relationship with previous
-conditionals. This is arguably a bug.
 
 The #error instruction stops execution at this point with a fatal
 error. The error message will include the given STRING.
