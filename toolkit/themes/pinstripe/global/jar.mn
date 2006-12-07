@@ -163,6 +163,7 @@ classic.jar:
 +  skin/classic/global/tabDragDrop/tabDragIndicator.png               (tabDragDrop/tabDragIndicator.png)
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
++  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
 +  skin/classic/global/toolbar/toolbar-pinstripe-overlay.png          (toolbar/toolbar-pinstripe-overlay.png)
 +  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
 +  skin/classic/global/toolbar/toolbarbutton-customhover-left.png     (toolbar/toolbarbutton-customhover-left.png)
