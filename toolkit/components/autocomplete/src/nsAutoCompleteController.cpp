@@ -61,6 +61,7 @@
 #include "nsITreeColumns.h"
 #include "nsIGenericFactory.h"
 #include "nsIObserverService.h"
+#include "nsIDOMKeyEvent.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -362,7 +363,7 @@ nsAutoCompleteController::HandleEndComposition()
     HandleText(PR_TRUE);
   } else if (forceOpenPopup) {
     PRBool cancel;
-    HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
+    HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
   }
   // On here, |value| and |mSearchString| are same. Therefore, next HandleText should be
   // ignored. Because there are no reason to research.
@@ -379,7 +380,7 @@ nsAutoCompleteController::HandleTab()
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
+nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
 {
   // By default, don't cancel the event
   *_retval = PR_FALSE;
@@ -400,10 +401,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
   mInput->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
-  if (aKey == nsIAutoCompleteController::KEY_UP ||
-      aKey == nsIAutoCompleteController::KEY_DOWN || 
-      aKey == nsIAutoCompleteController::KEY_PAGE_UP || 
-      aKey == nsIAutoCompleteController::KEY_PAGE_DOWN)
+  if (aKey == nsIDOMKeyEvent::DOM_VK_UP ||
+      aKey == nsIDOMKeyEvent::DOM_VK_DOWN || 
+      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP || 
+      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_DOWN)
   {
     // Prevent the input from handling up/down events, as it may move
     // the cursor to home/end on some systems
@@ -412,10 +413,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
     PRBool isOpen;
     mInput->GetPopupOpen(&isOpen);
     if (isOpen) {
-      PRBool reverse = aKey == nsIAutoCompleteController::KEY_UP ||
-                      aKey == nsIAutoCompleteController::KEY_PAGE_UP ? PR_TRUE : PR_FALSE;
-      PRBool page = aKey == nsIAutoCompleteController::KEY_PAGE_UP ||
-                    aKey == nsIAutoCompleteController::KEY_PAGE_DOWN ? PR_TRUE : PR_FALSE;
+      PRBool reverse = aKey == nsIDOMKeyEvent::DOM_VK_UP ||
+                      aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ? PR_TRUE : PR_FALSE;
+      PRBool page = aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ||
+                    aKey == nsIDOMKeyEvent::DOM_VK_PAGE_DOWN ? PR_TRUE : PR_FALSE;
       
       // Fill in the value of the textbox with whatever is selected in the popup
       // if the completeSelectedIndex attribute is set.  We check this before
@@ -454,10 +455,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
       } else
         StartSearchTimer();
     }    
-  } else if (   aKey == nsIAutoCompleteController::KEY_LEFT 
-             || aKey == nsIAutoCompleteController::KEY_RIGHT 
+  } else if (   aKey == nsIDOMKeyEvent::DOM_VK_LEFT 
+             || aKey == nsIDOMKeyEvent::DOM_VK_RIGHT 
 #ifndef XP_MACOSX
-             || aKey == nsIAutoCompleteController::KEY_HOME
+             || aKey == nsIDOMKeyEvent::DOM_VK_HOME
 #endif
             )
   {

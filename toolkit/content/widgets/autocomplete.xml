@@ -393,7 +393,6 @@
             return false;
 
           var cancel = false;
-          const IController = Components.interfaces.nsIAutoCompleteController;
 
           // Catch any keys that could potentially move the caret. Ctrl can be
           // used in combination with these keys, so only make sure that Alt
@@ -401,13 +400,9 @@
           if (!this.disableKeyNavigation && !aEvent.altKey) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_LEFT:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_LEFT);
-                break;
               case KeyEvent.DOM_VK_RIGHT:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_RIGHT);
-                break;
               case KeyEvent.DOM_VK_HOME:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_HOME);
+                cancel = this.mController.handleKeyNavigation(aEvent.keyCode);
                 break;
             }
           }
@@ -418,20 +413,14 @@
               case KeyEvent.DOM_VK_TAB:
                 if (this.tabScrolling && this.popup.mPopupOpen)
                   cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ?
-                                                                IController.KEY_UP :
-                                                                IController.KEY_DOWN);
+                                                                KeyEvent.DOM_VK_UP :
+                                                                KeyEvent.DOM_VK_DOWN);
                 break;
               case KeyEvent.DOM_VK_UP:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_UP);
-                break;
               case KeyEvent.DOM_VK_DOWN:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
-                break;
               case KeyEvent.DOM_VK_PAGE_UP:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_UP);
-                break;
               case KeyEvent.DOM_VK_PAGE_DOWN:
-                cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_DOWN);
+                cancel = this.mController.handleKeyNavigation(aEvent.keyCode);
                 break;
             }
           }
