@@ -39,7 +39,6 @@
 #include "nsDragService.h"
 #include "nsITransferable.h"
 #include "nsString.h"
-#include "nsMimeMapper.h"
 #include "nsClipboard.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
