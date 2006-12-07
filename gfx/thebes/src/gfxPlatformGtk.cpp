@@ -485,6 +485,8 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
                                 void *aClosure,
                                 PRBool& aAborted)
 {
+    aAborted = PR_FALSE;
+
     nsresult rv = UpdateFontListInternal();
     if (NS_FAILED(rv))
         return rv;
@@ -520,9 +522,9 @@ gfxPlatformGtk::IsExistingFont(const nsACString &aFontName)
     // We should check negative cache at first.
     if (mNonExistingFonts.IndexOf(aFontName) >= 0)
         return 0;
-    else if (mAliasForSingleFont.IndexOf(aFontName) >= 0)
+    if (mAliasForSingleFont.IndexOf(aFontName) >= 0)
         return 1;
-    else if (mFonts.IndexOf(aFontName) >= 0)
+    if (mFonts.IndexOf(aFontName) >= 0)
         return 1;
 
     // XXX Sometimes, the font has two or more names (e.g., "Sazanami Gothic"
