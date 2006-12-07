@@ -617,6 +617,36 @@ nsNSSComponent::ShutdownSmartCardThreads()
   mThreadList = nsnull;
 }
 
+static char *
+nss_addEscape(const char *string, char quote)
+{
+    char *newString = 0;
+    int escapes = 0, size = 0;
+    const char *src;
+    char *dest;
+
+    for (src=string; *src ; src++) {
+        if ((*src == quote) || (*src == '\\')) {
+          escapes++;
+        }
+        size++;
+    }
+
+    newString = (char*)PORT_ZAlloc(escapes+size+1);
+    if (newString == NULL) {
+        return NULL;
+    }
+
+    for (src=string, dest=newString; *src; src++,dest++) {
+        if ((*src == quote) || (*src == '\\')) {
+            *dest++ = '\\';
+        }
+        *dest = *src;
+    }
+
+    return newString;
+}
+
 void
 nsNSSComponent::InstallLoadableRoots()
 {
@@ -706,6 +736,16 @@ nsNSSComponent::InstallLoadableRoots()
       fullLibraryPath = PR_GetLibraryName(processDir.get(), "nssckbi");
     }
 
+    if (!fullLibraryPath) {
+      continue;
+    }
+
+    char *escaped_fullLibraryPath = nss_addEscape(fullLibraryPath, '\"');
+    if (!escaped_fullLibraryPath) {
+      PR_FreeLibraryName(fullLibraryPath); // allocated by NSPR
+      continue;
+    }
+
     /* If a module exists with the same name, delete it. */
     NS_ConvertUTF16toUTF8 modNameUTF8(modName);
     int modType;
@@ -715,10 +755,11 @@ nsNSSComponent::InstallLoadableRoots()
     pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("name=\""));
     pkcs11moduleSpec.Append(modNameUTF8.get());
     pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\" library=\""));
-    pkcs11moduleSpec.Append(fullLibraryPath);
+    pkcs11moduleSpec.Append(escaped_fullLibraryPath);
     pkcs11moduleSpec.Append(NS_LITERAL_CSTRING("\""));
 
     PR_FreeLibraryName(fullLibraryPath); // allocated by NSPR
+    PORT_Free(escaped_fullLibraryPath);
 
     RootsModule =
       SECMOD_LoadUserModule(NS_CONST_CAST(char*, pkcs11moduleSpec.get()), 
