@@ -37,6 +37,12 @@
   
 [% tag_variants = [
   { id => "anyexact", name => "is tagged with" },
+  { id => "allwordssubstr", name => "contains all of the words/strings" },
+  { id => "anywordssubstr", name => "contains any of the words/strings" },
+  { id => "substring", name => "contains the string" },
+  { id => "casesubstring", name => "contains the string (exact case)" },
+  { id => "regexp", name => "matches the regexp" },
+  { id => "notregexp", name => "doesn't match the regexp" },
   { id => "allwords", name => "contains all of the words" },
   { id => "anywords", name => "contains any of the words" },
   { id => "nowords",  name => "contains none of the words" } ] %]
