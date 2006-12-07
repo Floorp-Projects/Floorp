@@ -571,7 +571,7 @@ endif  # FREEBL_CHILD_BUILD
 ifdef XP_OS2_VACPP
 $(OBJDIR)/alg2268.obj: alg2268.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
+	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call core_abspath,$<)
 endif
 
 # Bugzilla Bug 333917: the non-x86 code in desblapi.c seems to violate
@@ -581,7 +581,7 @@ ifneq ($(CPU_ARCH),x86)
 $(OBJDIR)/$(PROG_PREFIX)desblapi$(OBJ_SUFFIX): desblapi.c
 	@$(MAKE_OBJDIR)
 ifdef NEED_ABSOLUTE_PATH
-	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $(call abspath,$<)
+	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $(call core_abspath,$<)
 else
 	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $<
 endif

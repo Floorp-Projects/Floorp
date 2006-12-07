@@ -96,8 +96,8 @@ endif
 ifdef XP_OS2_VACPP
 $(OBJDIR)/pk11skey.obj: pk11skey.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
+	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call core_abspath,$<)
 $(OBJDIR)/pk11slot.obj: pk11slot.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
+	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call core_abspath,$<)
 endif
