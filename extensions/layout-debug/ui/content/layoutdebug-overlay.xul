@@ -52,12 +52,19 @@
 <overlay id="layoutdebugTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!--
-  This is the id that the menuitem will be appended to.  see tasksOverlay.xul
--->
+<!-- SeaMonkey -->
 <menupopup id="taskPopup">
   <menuitem label="&ldbCmd.label;"
             accesskey="&ldbCmd.accesskey;"
+            oncommand="toOpenWindowByType('mozapp:layoutdebug',
+                                          'chrome://layoutdebug/content/');"/>
+</menupopup>
+
+<!-- Firefox -->
+<menupopup id="menu_ToolsPopup">
+  <menuitem label="&ldbCmd.label;"
+            accesskey="&ldbCmd.accesskey;"
+            insertafter="javascriptConsole"
             oncommand="toOpenWindowByType('mozapp:layoutdebug',
                                           'chrome://layoutdebug/content/');"/>
 </menupopup>
