@@ -1233,7 +1233,7 @@ PRBool nsCellMap::Grow(nsTableCellMap& aMap,
   }
   PRInt32 startRowIndex = (aRowIndex >= 0) ? aRowIndex : mRows.Length();
 
-  return mRows.InsertSlots(startRowIndex, aNumRows, numCols);
+  return mRows.InsertElementsAt(startRowIndex, aNumRows, numCols) != nsnull;
 }
 
 void nsCellMap::GrowRow(CellDataArray& aRow,
@@ -1241,7 +1241,7 @@ void nsCellMap::GrowRow(CellDataArray& aRow,
                      
 {
   // Have to have the cast to get the template to do the right thing.
-  aRow.InsertSlots(aRow.Length(), aNumCols, (CellData*)nsnull);
+  aRow.InsertElementsAt(aRow.Length(), aNumCols, (CellData*)nsnull);
 }
 
 void
@@ -1756,8 +1756,8 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
       // Pre-allocate all the cells we'll need in this array, setting
       // them to null.
       // Have to have the cast to get the template to do the right thing.
-      if (!row.InsertSlots(aColIndex, endColIndex - aColIndex + 1,
-                           (CellData*)nsnull) &&
+      if (!row.InsertElementsAt(aColIndex, endColIndex - aColIndex + 1,
+                                (CellData*)nsnull) &&
           rowX == aRowIndex) {
         // Failed to insert the slots, and this is the very first row.  That
         // means that we need to clean up |origData| before returning, since
