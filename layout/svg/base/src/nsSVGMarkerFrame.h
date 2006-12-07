@@ -96,12 +96,12 @@ public:
 
   // nsSVGMarkerFrame methods:
   nsresult PaintMark(nsSVGRenderState *aContext,
-                     nsSVGPathGeometryFrame *aParent,
+                     nsSVGPathGeometryFrame *aMarkedFrame,
                      nsSVGMark *aMark,
                      float aStrokeWidth);
 
-  nsRect RegionMark(nsSVGPathGeometryFrame *aParent,
-                    nsSVGMark *aMark, float aStrokeWidth);
+  nsRect RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
+                    const nsSVGMark *aMark, float aStrokeWidth);
 
 private:
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
@@ -110,11 +110,34 @@ private:
   nsCOMPtr<nsIDOMSVGRect>                mViewBox;
 
   // stuff needed for callback
-  nsSVGPathGeometryFrame *mMarkerParent;
+  nsSVGPathGeometryFrame *mMarkedFrame;
   float mStrokeWidth, mX, mY, mAngle;
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  // VC6 does not allow the inner class to access protected members
+  // of the outer class
+  class AutoMarkerReferencer;
+  friend class AutoMarkerReferencer;
+
+  // A helper class to allow us to paint markers safely. The helper
+  // automatically sets and clears the mInUse flag on the marker frame (to
+  // prevent nasty reference loops) as well as the reference to the marked
+  // frame and its coordinate context. It's easy to mess this up
+  // and break things, so this helper makes the code far more robust.
+  class AutoMarkerReferencer
+  {
+  public:
+    AutoMarkerReferencer(nsSVGMarkerFrame *aFrame,
+                         nsSVGPathGeometryFrame *aMarkedFrame);
+    ~AutoMarkerReferencer();
+  private:
+    nsSVGMarkerFrame *mFrame;
+  };
+
+  // nsSVGMarkerFrame methods:
+  void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext);
 
   // recursion prevention flag
   PRPackedBool mInUse;
