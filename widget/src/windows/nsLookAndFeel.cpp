@@ -54,6 +54,9 @@
 #ifndef SPI_GETMENUSHOWDELAY
 #define SPI_GETMENUSHOWDELAY      106
 #endif //SPI_GETMENUSHOWDELAY
+#ifndef WS_EX_LAYOUTRTL 
+#define WS_EX_LAYOUTRTL         0x00400000L // Right to left mirroring
+#endif
 
 #ifndef WINCE
 typedef UINT (CALLBACK *SHAppBarMessagePtr)(DWORD, PAPPBARDATA);
