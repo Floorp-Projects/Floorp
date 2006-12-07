@@ -1291,7 +1291,7 @@
 
             // remove overflow from the undo stack
             if (this.savedBrowsers.length > maxUndoDepth) {
-              var deadBrowser = this.savedBrowsers.shift().browser;
+              var deadBrowser = this.savedBrowsers.pop().browser;
               deadBrowser.destroy();
 
               // The pagehide event that this removal triggers is safe
