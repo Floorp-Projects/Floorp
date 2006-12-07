@@ -40,6 +40,7 @@
 #include "nscore.h"
 #include "celldata.h"
 #include "nsVoidArray.h"
+#include "nsTPtrArray.h"
 #include "nsRect.h"
 
 #undef DEBUG_TABLE_CELLMAP
@@ -49,6 +50,7 @@ class nsTableCellFrame;
 class nsTableRowGroupFrame;
 class nsTableFrame;
 class nsCellMap;
+class nsPresContext;
 
 struct nsColInfo
 {
@@ -171,12 +173,23 @@ public:
                                PRInt32         aColIndex,
                                PRBool          aInsert,
                                nsRect&         aDamageArea);
+
+protected:
+  /**
+   * Rebuild due to rows being inserted or deleted with cells spanning
+   * into or out of the rows.  This function can only handle insertion
+   * or deletion but NOT both.  So either aRowsToInsert must be null
+   * or aNumRowsToRemove must be 0.
+   * 
+   * // XXXbz are both allowed to happen?  That'd be a no-op...
+   */
   void RebuildConsideringRows(nsCellMap*      aCellMap,
                               PRInt32         aStartRowIndex,
                               nsVoidArray*    aRowsToInsert,
-                              PRBool          aNumRowsToRemove,
+                              PRInt32         aNumRowsToRemove,
                               nsRect&         aDamageArea);
 
+public:
   PRBool ColIsSpannedInto(PRInt32 aColIndex) const;
   PRBool ColHasSpanningCells(PRInt32 aColIndex) const;
 
@@ -245,8 +258,8 @@ protected:
   * @see nsTableFrame::GrowCellMap
   * @see nsTableFrame::BuildCellIntoMap
   *
-  * mRows is an array of rows.  a row cannot be null.
-  * each row is an array of cells.  a cell can be null.
+  * mRows is an array of rows.  Each row is an array of cells.  a cell
+  * can be null.
   */
 class nsCellMap
 {
@@ -373,6 +386,8 @@ public:
                               PRInt32     aColIndex,
                               PRBool&     aIsZeroColSpan) const;
 
+  typedef nsTPtrArray<CellData> CellDataArray;
+
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG
   void Dump(PRBool aIsBorderCollapse) const;
@@ -384,12 +399,16 @@ protected:
   friend class BCMapBorderIterator;
   friend class nsTableFrame;
 
+  /**
+   * Increase the number of rows in this cellmap by aNumRows.  Put the
+   * new rows at aRowIndex.  If aRowIndex is -1, put them at the end.
+   */
   PRBool Grow(nsTableCellMap& aMap,
               PRInt32         aNumRows,
               PRInt32         aRowIndex = -1); 
 
-  void GrowRow(nsVoidArray& aRow,
-               PRInt32      aNumCols);
+  void GrowRow(CellDataArray& aRow,
+               PRInt32        aNumCols);
 
   /** assign aCellData to the cell at (aRow,aColumn) */
   void SetDataAt(nsTableCellMap& aMap,
@@ -426,6 +445,14 @@ protected:
                          PRInt32           aColIndex,
                          nsRect&           aDamageArea);
 
+  /**
+   * Rebuild due to rows being inserted or deleted with cells spanning
+   * into or out of the rows.  This function can only handle insertion
+   * or deletion but NOT both.  So either aRowsToInsert must be null
+   * or aNumRowsToRemove must be 0.
+   *
+   * // XXXbz are both allowed to happen?  That'd be a no-op...
+   */
   void RebuildConsideringRows(nsTableCellMap& aMap,
                               PRInt32         aStartRowIndex,
                               nsVoidArray*    aRowsToInsert,
@@ -482,9 +509,11 @@ protected:
   // @param aOrigCell the originating cell to pass to the celldata constructor
   CellData* AllocCellData(nsTableCellFrame* aOrigCell);
 
-  /** an array containing col array. It can be larger than mRowCount due to
-    * row spans extending beyond the table */
-  nsAutoVoidArray mRows; 
+  /** an array containing, for each row, the CellDatas for the cells
+    * in that row.  It can be larger than mRowCount due to row spans
+    * extending beyond the table */
+  // XXXbz once we have auto TArrays, we should probably use them here.
+  nsTArray<CellDataArray> mRows; 
 
   /** the number of rows in the table (content) which is not indentical to the
     * number of rows in the cell map due to row spans extending beyond the end
@@ -500,6 +529,9 @@ protected:
 
   // Whether this is a BC cellmap or not
   PRBool mIsBC;
+
+  // Prescontext to deallocate and allocate celldata
+  nsCOMPtr<nsPresContext> mPresContext;
 };
 
 /* ----- inline methods ----- */
@@ -525,7 +557,7 @@ inline nsTableRowGroupFrame* nsCellMap::GetRowGroup() const
 
 inline PRInt32 nsCellMap::GetRowCount(PRBool aConsiderDeadRowSpanRows) const
 { 
-  PRInt32 rowCount = (aConsiderDeadRowSpanRows) ? mRows.Count() : mRowCount;
+  PRInt32 rowCount = (aConsiderDeadRowSpanRows) ? mRows.Length() : mRowCount;
   return rowCount; 
 }
 
