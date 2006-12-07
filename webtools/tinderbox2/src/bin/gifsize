@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bin/perl --
 #
 # gifsize: adds HEIGHT= and WIDTH= to images referenced in specified HTML
 # file.

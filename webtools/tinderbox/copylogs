@@ -1,4 +1,4 @@
-#! /usr/bonsaitools/bin/perl
+#! /usr/bin/perl
 
 $tree = 'SeaMonkey';
 

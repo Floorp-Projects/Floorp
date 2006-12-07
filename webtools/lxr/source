@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.17 2006/02/02 12:14:33 timeless%mozdev.org Exp $
+#!/usr/bin/perl
+# $Id: source,v 1.18 2006/12/07 04:59:38 reed%reedloden.com Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>

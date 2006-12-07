@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/perl
-# $Id: find,v 1.8 2004/03/08 07:54:16 timeless%mozdev.org Exp $
+#!/usr/bin/perl
+# $Id: find,v 1.9 2006/12/07 04:59:38 reed%reedloden.com Exp $
 
 # find   --	Find files
 #

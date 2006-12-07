@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.8 2005/11/13 22:43:36 timeless%mozdev.org Exp $
+#!/usr/bin/perl
+# $Id: Local.pm,v 1.9 2006/12/07 04:59:38 reed%reedloden.com Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <endico@mozilla.org>

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bin/perl
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -22,7 +22,7 @@
 # 
 
 #
-# $Id: genstats-bz.cgi,v 1.3 2006/02/13 21:05:57 timeless%mozdev.org Exp $ 
+# $Id: genstats-bz.cgi,v 1.4 2006/12/07 04:59:38 reed%reedloden.com Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
