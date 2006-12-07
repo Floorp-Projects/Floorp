@@ -5620,26 +5620,34 @@ var FeedHandler = {
     var erel = event.target.rel;
     var etype = event.target.type;
     var etitle = event.target.title;
-    const alternateRelRegex = /(^|\s)alternate($|\s)/i;
-    const stylesheetRelRegex = /(^|\s)stylesheet($|\s)/i;
     const rssTitleRegex = /(^|\s)rss($|\s)/i;
-
-    if (!alternateRelRegex.test(erel) || stylesheetRelRegex.test(erel) ||
-        !etype)
+    var rels = {}
+    for each (var relValue in erel.split(/\s/)) {
+      rels[relValue] = true;
+    }
+    var isFeed = rels["feed"];
+    
+    if (!isFeed &&
+        (!rels["alternate"] || rels["stylesheet"] || !etype))
       return;
 
-    etype = etype.replace(/^\s+/, "");
-    etype = etype.replace(/\s+$/, "");
-    etype = etype.replace(/\s*;.*/, "");
-    etype = etype.toLowerCase();
-
-    if (etype == "application/rss+xml" ||
-        etype == "application/atom+xml" ||
-        (etype == "text/xml" ||
-         etype == "application/xml" ||
-         etype == "application/rdf+xml") &&
-        rssTitleRegex.test(etitle))
-    {
+    if (!isFeed) {
+      // Use type value
+      etype = etype.replace(/^\s+/, "");
+      etype = etype.replace(/\s+$/, "");
+      etype = etype.replace(/\s*;.*/, "");
+      etype = etype.toLowerCase();
+      isFeed = (etype == "application/rss+xml" ||
+                etype == "application/atom+xml");
+    }
+    
+    if (!isFeed) {
+      // really slimy: general XML types with magic letters in the title
+      isFeed = ((etype == "text/xml" || etype == "application/xml" ||
+                 etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
+    }
+    
+    if (isFeed) {
       const targetDoc = event.target.ownerDocument;
 
       // find which tab this is for, and set the attribute on the browser
