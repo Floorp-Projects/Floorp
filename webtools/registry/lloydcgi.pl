@@ -48,7 +48,9 @@ sub split_cgi_args {
 sub url_encode {
   my ($s) = @_;
 
+  # First change all percent signs since later encodings use them as escapes.
   $s =~ s/\%/\%25/g;
+
   $s =~ s/\=/\%3d/g;
   $s =~ s/\?/\%3f/g;
   $s =~ s/ /\%20/g;
