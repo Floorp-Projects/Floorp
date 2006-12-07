@@ -184,19 +184,21 @@ sub fatal {
 package stack;
 
 # enumeration of possible values in conditional stack
-use constant {
-    # condition evaluated just prior to this context was false
-    COND_FALSE     => 0,
+# XXX want to use |use constant| here, but at least one tinderbox doesn't
+#     like it for some reason
 
-    # condition evaluated just prior to this context was true
-    COND_TRUE      => 1,
+# condition evaluated just prior to this context was false
+my $COND_FALSE = 0;
 
-    # some prior condition at this level already evaluated to true (or a
-    # parent condition evaluated to false or must be ignored), so we're
-    # ignoring all remaining conditions at current level (and nested
-    # conditions, too)
-    COND_COMPLETED => 2,
-};
+# condition evaluated just prior to this context was true
+my $COND_TRUE = 1;
+
+# some prior condition at this level already evaluated to true (or a
+# parent condition evaluated to false or must be ignored), so we're
+# ignoring all remaining conditions at current level (and nested
+# conditions, too)
+my $COND_COMPLETED = 2;
+
 
 sub new {
     return bless {
