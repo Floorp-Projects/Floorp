@@ -474,7 +474,8 @@ function encodeChar(ch)
 
 function escapeFileName(fileName)
 {
-    return fileName.replace(/[^\w\d.,#\-_%]/g, encodeChar);
+    // Escape / \ : * ? " < > | so they don't cause trouble.
+    return fileName.replace(/[\/\\\:\*\?"<>\|]/g, encodeChar);
 }
 
 function getCommonPfx (list, lcFn)
