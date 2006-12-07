@@ -53,7 +53,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css" ?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
 <!--
@@ -101,15 +100,6 @@
           <menupopup id="menu_FilePopup">
             <menuitem id="menu_open" label="&ldb.Open.label;" accesskey="&ldb.Open.accesskey;" key="openFileKb" oncommand="openFile()"/>
             <menuitem id="menu_close" label="Close" accesskey="C" oncommand="window.close();"/>
-          </menupopup>
-        </menu>
-        <menu id="menu_edit">
-          <menupopup>
-            <menuitem id="menu_cut" />
-            <menuitem id="menu_copy" />
-            <menuitem id="menu_paste" />
-            <menuitem id="menu_delete" />
-            <menuitem id="menu_selectAll" />
           </menupopup>
         </menu>
         <menu label="&ldb.RegressionTestMenu.label;"
