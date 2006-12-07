@@ -1000,6 +1000,12 @@ NS_IMETHODIMP nsMsgDBFolder::GetSupportsOffline(PRBool *aSupportsOffline)
 {  
    NS_ENSURE_ARG_POINTER(aSupportsOffline);
 
+   if (mFlags & MSG_FOLDER_FLAG_VIRTUAL)
+   {
+      *aSupportsOffline = PR_FALSE;
+      return NS_OK;
+   }
+
    nsCOMPtr<nsIMsgIncomingServer> server;
    nsresult rv = GetServer(getter_AddRefs(server));
    NS_ENSURE_SUCCESS(rv,rv);
