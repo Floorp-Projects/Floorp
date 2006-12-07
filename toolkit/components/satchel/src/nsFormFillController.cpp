@@ -641,22 +641,12 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     }
 #endif
   case nsIDOMKeyEvent::DOM_VK_UP:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_UP, &cancel);
-    break;
   case nsIDOMKeyEvent::DOM_VK_DOWN:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
-    break;
   case nsIDOMKeyEvent::DOM_VK_LEFT:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_LEFT, &cancel);
-    break;
   case nsIDOMKeyEvent::DOM_VK_RIGHT:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_RIGHT, &cancel);
-    break;
   case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_UP, &cancel);
-    break;
   case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_DOWN, &cancel);
+    mController->HandleKeyNavigation(k, &cancel);
     break;
   case nsIDOMKeyEvent::DOM_VK_ESCAPE:
     mController->HandleEscape(&cancel);
@@ -828,7 +818,7 @@ nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
     // Show the popup with the complete result set.  Can't use HandleText()
     // because it doesn't display the popup if the input is blank.
     PRBool cancel = PR_FALSE;
-    mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
+    mController->HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
   }
 
   return NS_OK;
