@@ -498,8 +498,11 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * NOTE: this constructor is declared public _only_ for convenience
          * inside the string implementation.
          */
-      NS_COM nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags );
-
+#ifdef XP_OS2 /* Workaround for GCC 3.3.x bug. */
+       nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags ) NS_COM;
+#else
+       NS_COM nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags );
+#endif
     protected:
 
       friend class nsTObsoleteAStringThunk_CharT;
