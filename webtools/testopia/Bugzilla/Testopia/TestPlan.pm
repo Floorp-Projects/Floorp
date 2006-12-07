@@ -231,9 +231,8 @@ sub clone {
               $self->{'type_id'}, $self->{'default_product_version'}, $name,
               $timestamp, 1));
     my $key = $dbh->bz_last_key( 'test_plans', 'plan_id' );
-    if ($store_doc){
-        $self->store_text($key, $self->{'author_id'}, $self->text, $timestamp);
-    }
+    my $text = $store_doc ? $self->text : ''; 
+    $self->store_text($key, $self->{'author_id'}, $text, $timestamp);
     return $key;
     
 }
