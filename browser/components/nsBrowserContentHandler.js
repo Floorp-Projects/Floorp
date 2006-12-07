@@ -425,6 +425,9 @@ var nsBrowserContentHandler = {
     catch (e) {
     }
 
+    if (pagesToLoad == "about:blank")
+      pagesToLoad = "";
+
     var startpage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
