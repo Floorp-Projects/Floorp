@@ -117,5 +117,8 @@
       <li>Try using the pagesize and page URL paramaters to limit your results.</li>
       <li>Use the XML-RPC Interface.</li>
     </ol>
+  [% ELSIF error == "missing-plans-list" %]
+    [% title = "No plans selected" %]
+    You did not select any plans to copy this case to.
   [% END %]
   

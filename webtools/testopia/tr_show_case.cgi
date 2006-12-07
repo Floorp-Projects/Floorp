@@ -88,7 +88,7 @@ elsif ($action eq 'do_clone'){
     my $count = 0;
     my $method;
     if ($cgi->param('copymethod') eq 'copy'){
-        ThowUserError('missing-plans-list') if (!$cgi->param('existing') && !$cgi->param('newplans'));
+        ThrowUserError('missing-plans-list') if (!$cgi->param('existing') && !$cgi->param('newplans'));
         my @planids;
         my %planseen;
         foreach my $p (split('[\s,]+', $cgi->param('newplans'))){
