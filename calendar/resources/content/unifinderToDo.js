@@ -626,7 +626,7 @@ function contextChangePriority( event, Priority )
 function modifyTaskFromContext() {
    var task = document.getElementById( ToDoUnifinderTreeName ).taskView.contextTask;
    if(task)
-       createTodoWithDialog(task);
+       modifyEventWithDialog(task);
 }
 
 function changeContextMenuForToDo(event)
