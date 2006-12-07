@@ -154,7 +154,7 @@
 <!ENTITY calendar.onlyworkday.checkbox.label    "Workweek days only" >
 <!ENTITY calendar.onlyworkday.checkbox.accesskey  "r" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "k" >
 
 <!ENTITY calendar.menu.options.close.key        "W">
 

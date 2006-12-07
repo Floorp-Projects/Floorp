@@ -79,34 +79,41 @@
 
   <menubar id="mail-menubar">
     <menu id="ltnCalendarMenu" label="&lightning.calendar.label;" 
+          accesskey="&lightning.calendar.accesskey;"
           insertbefore="tasksMenu">
       <menupopup id="ltncalendarMenuPopup">
         <menuitem id="ltnChangeViewDay" 
                   label="&lightning.toolbar.dayview.label;" 
+                  accesskey="&lightning.toolbar.dayview.accesskey;" 
                   oncommand="showCalendarView('day')"/>
         <menuitem id="ltnChangeViewWeek" 
                   label="&lightning.toolbar.weekview.label;" 
+                  accesskey="&lightning.toolbar.weekview.accesskey;"
                   oncommand="showCalendarView('week')"/>
         <menuitem id="ltnChangeViewMonth" 
                   label="&lightning.toolbar.monthview.label;" 
+                  accesskey="&lightning.toolbar.monthview.accesskey;"
                   oncommand="showCalendarView('month')"/>
         <menuseparator/>
-         <menu label="&viewMenu.label;">
+        <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
             <menupopup>
                <menuitem type="checkbox"
                          id="ltn-workdays-only"
                          persist="checked"
                          label="&calendar.onlyworkday.checkbox.label;"
+                         accesskey="&calendar.onlyworkday.checkbox.accesskey;"
                          oncommand="toggleWorkdaysOnly()"/>
                <menuitem type="checkbox"
                          id="ltn-tasks-in-view"
                          persist="checked"
                          label="&calendar.displaytodos.checkbox.label;"
+                         accesskey="&calendar.displaytodos.checkbox.accesskey;"
                          oncommand="toggleTasksInView()"/>
            </menupopup>
         </menu>
         <menuitem id="ltnGoToToday" 
                   label="&calendar.context.gototoday.label;" 
+                  accesskey="&calendar.context.gototoday.accesskey;"
                   oncommand="goToToday()"/>
         <menuseparator/>
         <menuitem id="calendar-import-menu"
@@ -115,9 +122,11 @@
                   observes="import_command"/>
         <menuitem id="calendar-export-menu"
                   label="&calendar.export.calendar;"
+                  accesskey="&calendar.export.calendar.accesskey;"
                   observes="export_command"/>
         <menuitem id="calendar-print-menu"
                   label="&lightning.toolbar.print.label;"
+                  accesskey="&lightning.toolbar.print.accesskey;"
                   observes="print_command"/>
       </menupopup>
     </menu>
