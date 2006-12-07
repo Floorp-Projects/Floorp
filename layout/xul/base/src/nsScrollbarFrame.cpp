@@ -48,7 +48,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-
+#include "nsIScrollbarMediator.h"
 
 //
 // NS_NewToolbarFrame
@@ -176,3 +176,22 @@ nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+void
+nsScrollbarFrame::SetScrollbarMediatorContent(nsIContent* aMediator)
+{
+  mScrollbarMediator = aMediator;
+}
+
+nsIScrollbarMediator*
+nsScrollbarFrame::GetScrollbarMediator()
+{
+  if (!mScrollbarMediator)
+    return nsnull;
+  nsIFrame* f =
+    GetPresContext()->PresShell()->GetPrimaryFrameFor(mScrollbarMediator);
+  if (!f)
+    return nsnull;
+  nsIScrollbarMediator* sbm;
+  CallQueryInterface(f, &sbm);
+  return sbm;
+}

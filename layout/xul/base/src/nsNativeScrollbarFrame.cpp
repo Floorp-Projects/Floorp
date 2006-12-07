@@ -64,18 +64,18 @@ NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 //
 // QueryInterface
 //
-NS_INTERFACE_MAP_BEGIN(nsNativeScrollbarFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
-
-nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
+NS_IMETHODIMP
+nsNativeScrollbarFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  // frame is going away, unhook the native scrollbar from
-  // the content node just to be safe about lifetime issues
-  nsCOMPtr<nsINativeScrollbar> scrollbar ( do_QueryInterface(mScrollbar) );
-  if ( scrollbar )
-    scrollbar->SetContent(nsnull, nsnull, nsnull);
+  if (!aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIScrollbarMediator))) {
+    *aInstancePtr = (void*) ((nsIScrollbarMediator*) this);
+    return NS_OK;
+  }
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
 }
-
 
 //
 // Init
@@ -119,37 +119,41 @@ nsNativeScrollbarFrame::Init(nsIContent*     aContent,
   return rv;
 }
 
+void
+nsNativeScrollbarFrame::Destroy()
+{
+  nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
+  if (scrollbar) {
+    // frame is going away, unhook the native scrollbar from
+    // the content node just to be safe about lifetime issues
+    scrollbar->SetContent(nsnull, nsnull, nsnull);
+  }
+}
 
 //
-// FindScrollbar
+// FindParts
 //
 // Walk up the parent frame tree and find the content node of the frame
 // with the tag "scrollbar". This is the content node that the GFX Scroll Frame
-// is watching for attribute changes.
+// is watching for attribute changes. We return the associated frame and
+// any mediator.
 //
-nsresult
-nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame,
-                                      nsIContent** outContent)
+nsNativeScrollbarFrame::Parts
+nsNativeScrollbarFrame::FindParts()
 {
-  *outContent = nsnull;
-  *outFrame = nsnull;
-  
-  while ( start ) {
-    start = start->GetParent();
-    if ( start ) {
-      // get the content node
-      nsIContent* currContent = start->GetContent();
+  nsIFrame* f;
+  for (f = GetParent(); f; f = f->GetParent()) {
+    nsIContent* currContent = f->GetContent();
 
-      if (currContent && currContent->Tag() == nsXULAtoms::scrollbar) {
-        *outContent = currContent;
-        *outFrame = start;
-        NS_ADDREF(*outContent);
-        return NS_OK;
-      }
+    if (currContent && currContent->Tag() == nsXULAtoms::scrollbar) {
+      nsIScrollbarFrame* sb;
+      CallQueryInterface(f, &sb);
+      if (sb)
+        return Parts(f, sb, sb->GetScrollbarMediator());
     }
   }
 
-  return NS_OK;
+  return Parts(nsnull, nsnull, nsnull);
 }
 
 NS_IMETHODIMP
@@ -213,20 +217,15 @@ nsNativeScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
           PRInt32 oldPosition = (PRInt32)current;
           PRInt32 curPosition = maxValue;
         
-          nsCOMPtr<nsIContent> scrollbarContent;
-          nsIFrame* sbFrame = nsnull;
-          FindScrollbar(this, &sbFrame, getter_AddRefs(scrollbarContent));
-          nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(sbFrame));
-          if (scrollbarFrame) {
-            nsCOMPtr<nsIScrollbarMediator> mediator;
-            scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
-            if (mediator)
-              mediator->PositionChanged(scrollbarFrame, oldPosition, /* inout */ curPosition);
+          Parts parts = FindParts();
+          if (parts.mMediator) {
+            parts.mMediator->PositionChanged(parts.mIScrollbarFrame, oldPosition, /* inout */ curPosition);
           }
 
           nsAutoString currentStr;
           currentStr.AppendInt(curPosition);
-          scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
+          parts.mScrollbarFrame->GetContent()->
+            SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
         }
       }
       
@@ -290,25 +289,18 @@ nsNativeScrollbarFrame::Hookup()
   if (!mScrollbarNeedsContent)
     return;
 
-  nsCOMPtr<nsIContent> scrollbarContent;
-  nsIFrame* scrollbarFrame = nsnull;
-  FindScrollbar(this, &scrollbarFrame, getter_AddRefs(scrollbarContent));
-
-  nsCOMPtr<nsIScrollbarMediator> mediator;
-  nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbarFrame));
-  if (!sb) {
-    NS_WARNING("ScrollbarFrame doesn't implement nsIScrollbarFrame");
-    return;
-  }
-
-  sb->GetScrollbarMediator(getter_AddRefs(mediator));
   nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
-  if (!mScrollbar) {
+  if (!scrollbar) {
     NS_WARNING("Native scrollbar widget doesn't implement nsINativeScrollbar");
     return;
   }
 
-  scrollbar->SetContent(scrollbarContent, sb, mediator);
+  Parts parts = FindParts();
+  // We can't just pass 'mediator' to the widget, because 'mediator' might go away.
+  // So pass a pointer to us. When we go away, we can tell the widget.
+  nsIContent* scrollbarContent = parts.mScrollbarFrame->GetContent();
+  scrollbar->SetContent(scrollbarContent,
+                        parts.mIScrollbarFrame, parts.mMediator ? this : nsnull);
   mScrollbarNeedsContent = PR_FALSE;
 
   if (!scrollbarContent)
@@ -328,3 +320,29 @@ nsNativeScrollbarFrame::Hookup()
   scrollbar->SetPosition(curpos);
 }
 
+NS_IMETHODIMP
+nsNativeScrollbarFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
+{
+  Parts parts = FindParts();
+  if (!parts.mMediator)
+    return NS_OK;
+  return parts.mMediator->PositionChanged(aScrollbar, aOldIndex, aNewIndex);
+}
+
+NS_IMETHODIMP
+nsNativeScrollbarFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
+{
+  Parts parts = FindParts();
+  if (!parts.mMediator)
+    return NS_OK;
+  return parts.mMediator->ScrollbarButtonPressed(aScrollbar, aOldIndex, aNewIndex);
+}
+
+NS_IMETHODIMP
+nsNativeScrollbarFrame::VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible)
+{
+  Parts parts = FindParts();
+  if (!parts.mMediator)
+    return NS_OK;
+  return parts.mMediator->VisibilityChanged(aScrollbar, aVisible);
+}

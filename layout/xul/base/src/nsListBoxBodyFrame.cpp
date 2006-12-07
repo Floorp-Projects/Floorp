@@ -257,7 +257,7 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   }
 
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(verticalScrollbar));
-  scrollbarFrame->SetScrollbarMediator(this);
+  scrollbarFrame->SetScrollbarMediatorContent(GetContent());
 
   nsBoxLayoutState boxLayoutState(presContext);
 
