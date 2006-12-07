@@ -263,7 +263,7 @@ sub display {
 sub get_products{
     my ($class_id) = (@_);
     my $class = Bugzilla::Testopia::Classification->new($class_id);
-    print $class->products_to_json;
+    print $class->products_to_json(1);
 }
 
 sub get_categories{
