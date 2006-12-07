@@ -3494,6 +3494,10 @@ function updateTimestampFor(view, displayRow)
 client.updateMenus =
 function c_updatemenus(menus)
 {
+    // Don't bother if the menus aren't even created yet.
+    if (!client.initialized)
+        return null;
+
     return this.menuManager.updateMenus(document, menus);
 }
 
