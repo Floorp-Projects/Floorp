@@ -1,0 +1,301 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Sun Microsystems code.
+   -
+   - The Initial Developer of the Original Code is Sun Microsystems.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Thomas Benisch <thomas.benisch@sun.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE dialog
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar-invitations-dialog.dtd" >  %dtd1;
+]>
+
+<bindings id="calendar-invitations-list-bindings"
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="calendar-invitations-richlistbox"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistbox"
+           xbl:inherits="flex">
+
+    <implementation>
+
+      <!-- methods -->
+
+      <method name="addCalendarItem">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          function createXULElement(el) {
+            return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+          var newNode = createXULElement("calendar-invitations-richlistitem");
+          this.appendChild(newNode);
+          newNode.setAttribute("anonid", "invitations-listitem");
+          newNode.calendarItem = aItem;
+        ]]></body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="calendar-invitations-richlistitem"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:hbox align="start" flex="1">
+        <xul:image anonid="icon" class="calendar-invitations-richlistitem-icon"/>
+        <xul:vbox flex="1">
+          <xul:label anonid="title" class="calendar-invitations-richlistitem-title"
+                     crop="end"/>
+          <xul:label anonid="date" crop="end"/>
+          <xul:label anonid="recurrence" crop="end"/>
+          <xul:label anonid="location" crop="end"/>
+          <xul:label anonid="organizer" crop="end"/>
+          <xul:label anonid="spacer" value="" hidden="true"/>
+        </xul:vbox>
+        <xul:vbox>
+          <xul:button anonid="accept" 
+            class="calendar-invitations-richlistitem-accept-button
+            calendar-invitations-richlistitem-button"
+            label="&calendar.invitations.list.accept.button.label;"
+            hidden="true" oncommand="accept();"/>
+          <xul:button anonid="decline"
+            class="calendar-invitations-richlistitem-decline-button
+            calendar-invitations-richlistitem-button"
+            label="&calendar.invitations.list.decline.button.label;"
+            hidden="true" oncommand="decline();"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation>
+
+      <!-- fields -->
+
+      <field name="mDateFormatter">null</field>
+      <field name="mCalendarItem">null</field>
+      <field name="mInitialParticipationStatus">null</field>
+      <field name="mParticipationStatus">null</field>
+
+      <!-- properties -->
+
+      <property name="calendarItem">
+        <getter><![CDATA[
+          return this.mCalendarItem;
+        ]]></getter>
+        <setter><![CDATA[
+          this.setCalendarItem(val);
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="initialParticipationStatus">
+        <getter><![CDATA[
+          return this.mInitialParticipationStatus;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mInitialParticipationStatus = val;
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="participationStatus">
+        <getter><![CDATA[
+          return this.mParticipationStatus;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mParticipationStatus = val;
+          var icon = document.getAnonymousElementByAttribute(
+              this, "anonid", "icon");
+          icon.setAttribute("status", val);
+          return val;
+        ]]></setter>
+      </property>
+
+      <!-- constructor -->
+
+      <constructor><![CDATA[
+        this.mDateFormatter = 
+            Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                      .getService(Components.interfaces.calIDateTimeFormatter);
+      ]]></constructor>
+
+      <!-- methods -->
+
+      <method name="setCalendarItem">
+        <parameter name="aItem"/>
+        <body>
+          var alldayEventText = "&calendar.invitations.list.alldayevent.text;";
+          var recurrentEventText = "&calendar.invitations.list.recurrentevent.text;";
+          var locationText = "&calendar.invitations.list.location.text;";
+          var organizerText = "&calendar.invitations.list.organizer.text;";
+          var noneText = "&calendar.invitations.list.none.text;";
+          <![CDATA[
+            this.mCalendarItem = aItem;
+            this.mInitialParticipationStatus =
+                this.getCalendarItemParticipationStatus(aItem);
+            this.participationStatus = this.mInitialParticipationStatus;
+
+            var titleLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "title");
+            titleLabel.setAttribute("value", aItem.title);
+
+            var dateLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "date");
+            var kDefaultTimezone = calendarDefaultTimezone();
+            var startDate = aItem.startDate.getInTimezone(kDefaultTimezone);
+            var endDate = aItem.endDate.getInTimezone(kDefaultTimezone);
+            var startString = new Object();
+            var endString = new Object();
+            this.mDateFormatter.formatInterval(
+                startDate, endDate, startString, endString);
+            var dateString = startString.value;
+            if (endString.value != null && endString.value.length > 0) {
+              dateString += " - " + endString.value;
+            }
+            if (startDate.isDate) {
+              dateString += ", " + alldayEventText;
+            }
+            dateLabel.setAttribute("value", dateString);
+
+            var recurrenceLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "recurrence");
+            if (aItem.recurrenceInfo) {
+              recurrenceLabel.setAttribute("value", recurrentEventText);
+            } else {
+              recurrenceLabel.setAttribute("hidden", "true");
+              var spacer = document.getAnonymousElementByAttribute(
+                  this, "anonid", "spacer");
+              spacer.removeAttribute("hidden");
+            }
+
+            var locationLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "location");
+            var locationString = locationText;
+            var locationProperty = aItem.getProperty("LOCATION");
+            if (locationProperty && locationProperty.length > 0) {
+              locationString += locationProperty;
+            } else {
+              locationString += noneText;
+            }
+            locationLabel.setAttribute("value", locationString);
+
+            var organizerLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "organizer");
+            var organizerString = organizerText;
+            var commonName = aItem.organizer.commonName;
+            if (commonName && commonName.length > 0) {
+                organizerString += commonName;
+            }
+            organizerLabel.setAttribute("value", organizerString);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getCalendarItemParticipationStatus">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          try {
+            var wcapCalendar = aItem.calendar.QueryInterface(
+                Components.interfaces.calIWcapCalendar);
+            var attendees = aItem.getAttendees({});
+            for each(var attendee in attendees) {
+              if (attendee.id == wcapCalendar.ownerId) {
+                return attendee.participationStatus;
+              }
+            }
+          } catch(e) {}
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="setCalendarItemParticipationStatus">
+        <parameter name="aItem"/>
+        <parameter name="aStatus"/>
+        <body><![CDATA[
+          try {
+            var wcapCalendar = aItem.calendar.QueryInterface(
+                Components.interfaces.calIWcapCalendar);
+            var attendees = aItem.getAttendees({});
+            for each(var attendee in attendees) {
+              if (attendee.id == wcapCalendar.ownerId) {
+                attendee.participationStatus = aStatus;
+                return true;
+              }
+            }
+          } catch(e) {}
+          return false;
+        ]]></body>
+      </method>
+
+      <method name="accept">
+        <body><![CDATA[
+          this.participationStatus = "ACCEPTED";
+        ]]></body>
+      </method>
+
+      <method name="decline">
+        <body><![CDATA[
+          this.participationStatus = "DECLINED";
+        ]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="DOMAttrModified"><![CDATA[
+        if (event.attrName != "selected" ||
+            event.originalTarget.getAttribute("anonid") !=
+            "invitations-listitem") {
+          return;
+        }
+        var acceptButton = document.getAnonymousElementByAttribute(
+            this, "anonid", "accept");
+        var declineButton = document.getAnonymousElementByAttribute(
+            this, "anonid", "decline");
+        if (event.newValue == "true") {
+          acceptButton.removeAttribute("hidden");
+          declineButton.removeAttribute("hidden");
+        } else if (event.newValue == "false") {
+          acceptButton.setAttribute("hidden", "true");
+          declineButton.setAttribute("hidden", "true");
+        }
+      ]]></handler>
+    </handlers>
+
+  </binding>
+
+</bindings>
+
+<!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->

@@ -1,0 +1,104 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Sun Microsystems code.
+ *
+ * The Initial Developer of the Original Code is Sun Microsystems.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Thomas Benisch <thomas.benisch@sun.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#calendar-invitations-dialog {
+  min-width: 500px;
+  min-height: 273px;
+}
+
+.calendar-invitations-updating-icon {
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  opacity: 0.5;
+}
+
+calendar-invitations-richlistbox {
+  background-color: white;
+  border: 1px solid #7F9DB9;
+}
+
+calendar-invitations-richlistitem {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+calendar-invitations-richlistitem[selected="true"] {
+  background-image: url("chrome://mozapps/skin/downloads/downloadSelected.png") !important;
+  border-bottom: 1px dotted #7F9DB9;
+}
+
+.calendar-invitations-richlistitem-title {
+  font-weight: bold;
+}
+
+.calendar-invitations-richlistitem-icon[status="NEEDS-ACTION"] {
+  list-style-image: url("chrome://calendar/skin/calendar-invitations-dialog-list-images.png");
+  -moz-image-region: rect(0px 32px 32px 0px);
+}
+
+.calendar-invitations-richlistitem-icon[status="ACCEPTED"] {
+  list-style-image: url("chrome://calendar/skin/calendar-invitations-dialog-list-images.png");
+  -moz-image-region: rect(0px 64px 32px 32px);
+}
+
+.calendar-invitations-richlistitem-icon[status="DECLINED"] {
+  list-style-image: url("chrome://calendar/skin/calendar-invitations-dialog-list-images.png");
+  -moz-image-region: rect(0px 96px 32px 64px);
+}
+
+.calendar-invitations-richlistitem-button {
+  margin-bottom: 10px;
+}
+
+.calendar-invitations-richlistitem-button .button-icon {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
+}
+
+.calendar-invitations-richlistitem-accept-button {
+  list-style-image: url("chrome://calendar/skin/calendar-invitations-dialog-button-images.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.calendar-invitations-richlistitem-decline-button {
+  list-style-image: url("chrome://calendar/skin/calendar-invitations-dialog-button-images.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
