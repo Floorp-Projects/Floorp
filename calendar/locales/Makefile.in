@@ -58,10 +58,10 @@ endif
 
 AB = $(firstword $(subst -, ,$(AB_CD)))
 
-#ifdef MOZ_SUNBIRD
+ifdef MOZ_SUNBIRD
 APP_VERSION = $(SUNBIRD_VERSION)
 DEFINES += -DAPP_VERSION="$(APP_VERSION)"
-#endif
+endif
 
 DEFINES += \
     -DAB_CD=$(AB_CD) \
@@ -214,7 +214,7 @@ ifeq (WINNT,$(OS_ARCH))
 endif
 	@$(MAKE) repackage-zip-$*
 
-#ifdef MOZ_UPDATER
+ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
 ifeq ($(OS_ARCH),WINNT)
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
@@ -223,6 +223,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	$(INSTALL) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
 else
 	$(INSTALL) $^ $(FINAL_TARGET)
-#endif
-#endif
-#endif
+endif
+endif
+endif
