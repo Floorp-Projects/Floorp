@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const kExistingWindow = Components.interfaces.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW;
+const kNewWindow = Components.interfaces.nsIBrowserDOMWindow.OPEN_NEWWINDOW;
+const kNewTab = Components.interfaces.nsIBrowserDOMWindow.OPEN_NEWTAB;
+
 /**
  * Determine whether or not a given focused DOMWindow is in the content
  * area.
@@ -88,97 +92,74 @@ function getReferrer(doc)
   }
 }
 
-function openNewWindowWith(url, sendReferrer)
+function openAsExternal(aURL)
 {
-  urlSecurityCheck(url, document);
-
-  // if and only if the current window is a browser window and it has a document with a character
-  // set, then extract the current charset menu setting from the current document and use it to
-  // initialize the new browser window...
-  var charsetArg = null;
-  var wintype = document.documentElement.getAttribute('windowtype');
-  if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window.content.document.characterSet;
-
-  var referrer = sendReferrer ? getReferrer(document) : null;
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, referrer);
+  openNewTabWindowOrExistingWith(pref.getIntPref("browser.link.open_external"),
+                                 aURL, false, false);
 }
 
-function openTopBrowserWith(url)
+function openNewWindowWith(aURL, aSendReferrer)
 {
-  urlSecurityCheck(url, document);
-
-  var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-  var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
-
-  // if there's an existing browser window, open this url in one
-  if (browserWin) {
-    browserWin.getBrowser().loadURI(url); // Just do a normal load.
-    browserWin.content.focus();
-  }
-  else
-    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
+  openNewTabWindowOrExistingWith(kNewWindow, aURL, aSendReferrer, false);
 }
 
-function openNewTabWith(url, sendReferrer, reverseBackgroundPref)
+function openNewTabWith(aURL, aSendReferrer, aReverseBackgroundPref)
 {
+  openNewTabWindowOrExistingWith(kNewTab, aURL, aSendReferrer, aReverseBackgroundPref);
+}
+
+function openNewTabWindowOrExistingWith(aType, aURL, aSendReferrer, aReverseBackgroundPref)
+{
+  // Make sure we are allowed to open this url
+  urlSecurityCheck(aURL, document);
+
+  // get referrer, if as external should be null
+  var referrer = aSendReferrer ? getReferrer(document) : null;
+
   var browser;
-  try {
-    // if we're running in a browser window, this should work
-    //
-    browser = getBrowser();
+  var browserWin;
 
-  } catch (ex if ex instanceof ReferenceError) {
+  // if we're not opening a new window, try and find existing window
+  if (aType != kNewWindow)
+    browserWin = getTopWin();
 
-    // must be running somewhere else (eg mailnews message pane); need to
-    // find a browser window first
-    //
-    var windowMediator =
-      Components.classes["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Components.interfaces.nsIWindowMediator);
-
-    var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
-
-    // if there's no existing browser window, then, as long as
-    // we are allowed to, open this url in one and return
-    //
-    if (!browserWin) {
-      urlSecurityCheck(url, document);
-      window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                        url, null, referrer);
-      return;
-    }
-
-    // otherwise, get the existing browser object
-    //
-    browser = browserWin.getBrowser();
+  // Where appropiate we want to pass the charset of the 
+  // current document over to a new tab / window.
+  var originCharset = null;
+  if (aType != kExistingWindow) {
+    var wintype = document.documentElement.getAttribute('windowtype');
+    if (wintype == "navigator:browser")
+      originCharset = window.content.document.characterSet;
   }
 
-  // Get the XUL document that the browser is actually contained in.
-  // This is needed if we are trying to load a URL from a non-navigator
-  // window such as the JS Console.
-  var browserDocument = browser.ownerDocument;
+  // We want to open in a new window or no existing window can be found.
+  if (!browserWin) {
+    var charsetArg = null;
+    if (originCharset)
+      charsetArg = "charset=" + originCharset;
+    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
+                      aURL, charsetArg, referrer);
+    return;
+  }
 
-  urlSecurityCheck(url, browserDocument);
+  // Get the existing browser object
+  browser = browserWin.getBrowser();
 
-  var referrer = sendReferrer ? getReferrer(browserDocument) : null;
-
-  // As in openNewWindowWith(), we want to pass the charset of the
-  // current document over to a new tab.
-  var wintype = browserDocument.documentElement.getAttribute('windowtype');
-  var originCharset;
-  if (wintype == "navigator:browser") {
-    originCharset = window.content.document.characterSet;
+  // Open link in an existing window.
+  if (aType == kExistingWindow) {
+    browser.loadURI(aURL);
+    browserWin.content.focus();
+    return;
   }
 
   // open link in new tab
   var loadInBackground = false;
   if (pref) {
     loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
-    if (reverseBackgroundPref)
+    if (aReverseBackgroundPref)
       loadInBackground = !loadInBackground;
   }
-  browser.addTab(url, referrer, originCharset, !loadInBackground);
+  browser.addTab(aURL, referrer, originCharset, !loadInBackground);
 }
 
 // Clientelle: (Make sure you don't break any of these)

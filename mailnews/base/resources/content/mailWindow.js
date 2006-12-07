@@ -265,7 +265,7 @@ function messagePaneOnClick(event)
   if (isPhishingURL(ceParams.linkNode, false, href))
     return false;
 
-  openTopBrowserWith(href);
+  openAsExternal(href);
   return true;
 }
 
