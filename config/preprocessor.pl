@@ -214,7 +214,7 @@ sub new {
         },
         'values' => [], # the value of the last condition evaluated at the nth level
         'lastConditionState' => [], # whether the condition in the nth-level context was true, false, or not applicable
-        'conditionState' => COND_TRUE,
+        'conditionState' => $COND_TRUE,
         'dependencies' => 0, # whether we are showing dependencies
         'lineEndings' => "\n", # default to platform conventions
     };
@@ -264,9 +264,9 @@ sub replace {
     my ($value) = @_;
 
     ${$self->{'values'}}[-1] = $value;
-    $self->{'conditionState'} = $self->{'conditionState'} != COND_FALSE
-                              ? COND_COMPLETED
-                              : $value ? COND_TRUE : COND_FALSE;
+    $self->{'conditionState'} = $self->{'conditionState'} != $COND_FALSE
+                              ? $COND_COMPLETED
+                              : $value ? $COND_TRUE : $COND_FALSE;
 }
 
 sub push {
@@ -276,9 +276,9 @@ sub push {
     push(@{$self->{'values'}}, $value);
     my $lastCondition = $self->{'conditionState'};
     push(@{$self->{'lastConditionState'}}, $lastCondition);
-    $self->{'conditionState'} = $lastCondition != COND_TRUE
-                              ? COND_COMPLETED
-                              : $value ? COND_TRUE : COND_FALSE;
+    $self->{'conditionState'} = $lastCondition != $COND_TRUE
+                              ? $COND_COMPLETED
+                              : $value ? $COND_TRUE : $COND_FALSE;
 }
 
 sub pop {
@@ -289,12 +289,12 @@ sub pop {
 
 sub enabled {
     my $self = shift;
-    return $self->{'conditionState'} == COND_TRUE;
+    return $self->{'conditionState'} == $COND_TRUE;
 }
 
 sub disabled {
     my $self = shift;
-    return $self->{'conditionState'} != COND_TRUE;
+    return $self->{'conditionState'} != $COND_TRUE;
 }
 
 sub filter {
