@@ -418,6 +418,9 @@ CVS = cvs
 comma := ,
 
 CWD := $(shell pwd)
+ifneq (1,$(words $(CWD)))
+$(error The mozilla directory cannot be located in a path with spaces.)
+endif
 
 ifeq "$(CWD)" "/"
 CWD   := /.
