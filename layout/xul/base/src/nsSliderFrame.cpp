@@ -252,10 +252,10 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
             current = max;
 
         // set the new position and notify observers
-        nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
+        nsIScrollbarFrame* scrollbarFrame;
+        CallQueryInterface(scrollbarBox, &scrollbarFrame);
         if (scrollbarFrame) {
-          nsCOMPtr<nsIScrollbarMediator> mediator;
-          scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
+          nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator();
           if (mediator) {
             mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), current);
           }
@@ -738,14 +738,15 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
       newpos = maxpos;
 
   nsIBox* scrollbarBox = GetScrollbar();
-  nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
+  nsIScrollbarFrame* scrollbarFrame;
+  CallQueryInterface(scrollbarBox, &scrollbarFrame);
 
   if (scrollbarFrame) {
     // See if we have a mediator.
-    nsCOMPtr<nsIScrollbarMediator> mediator;
-    scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
+    nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator();
     if (mediator) {
       mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), newpos);
+      // 'mediator' might be dangling now...
       UpdateAttribute(scrollbar, newpos, PR_FALSE, aIsSmooth);
       CurrentPositionChanged(GetPresContext());
       return;

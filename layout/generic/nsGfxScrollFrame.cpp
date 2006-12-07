@@ -2584,11 +2584,11 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
   if (!aScrollbar)
     return;
 
-  nsCOMPtr<nsIScrollbarFrame> scrollbar(do_QueryInterface(aScrollbar));
+  nsIScrollbarFrame* scrollbar;
+  CallQueryInterface(aScrollbar, &scrollbar);
   if (scrollbar) {
     // See if we have a mediator.
-    nsCOMPtr<nsIScrollbarMediator> mediator;
-    scrollbar->GetScrollbarMediator(getter_AddRefs(mediator));
+    nsIScrollbarMediator* mediator = scrollbar->GetScrollbarMediator();
     if (mediator) {
       // Inform the mediator of the visibility change.
       mediator->VisibilityChanged(scrollbar, aVisible);
@@ -2688,12 +2688,14 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
   if (mIsRoot && aStateID == nsIStatefulFrame::eNoID) {
     return nsnull;
   }
-  
+
+  // XXX can this actually get hit? I don't think so  
   nsCOMPtr<nsIScrollbarMediator> mediator;
   nsIFrame* first = GetScrolledFrame();
   mediator = do_QueryInterface(first);
   if (mediator) {
     // Child manages its own scrolling. Bail.
+    NS_ERROR("This code shouldn't be hit; alert robert@ocallahan.org");
     return nsnull;
   }
 

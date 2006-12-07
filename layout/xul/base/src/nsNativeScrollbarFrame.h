@@ -49,6 +49,7 @@
 
 #include "nsScrollbarFrame.h"
 #include "nsIWidget.h"
+#include "nsIScrollbarMediator.h"
 
 class nsISupportsArray;
 class nsIPresShell;
@@ -58,12 +59,11 @@ class nsStyleContext;
 
 nsIFrame* NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsNativeScrollbarFrame : public nsBoxFrame
+class nsNativeScrollbarFrame : public nsBoxFrame, public nsIScrollbarMediator
 {
 public:
   nsNativeScrollbarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     nsBoxFrame(aShell, aContext), mScrollbarNeedsContent(PR_TRUE) {}
-  virtual ~nsNativeScrollbarFrame ( ) ;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
@@ -88,15 +88,30 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
-                        
+
+  virtual void Destroy();
+
+  // nsIScrollbarMediator forwarding
+  NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible);
+
 protected:
   
   void Hookup();
 
-  nsresult FindScrollbar(nsIFrame* start, nsIFrame** outFrame, nsIContent** outContent);
-  
+  struct Parts {
+    nsIFrame*             mScrollbarFrame;
+    nsIScrollbarFrame*    mIScrollbarFrame;
+    nsIScrollbarMediator* mMediator;
+    
+    Parts(nsIFrame* aFrame, nsIScrollbarFrame* aIScrollbarFrame, nsIScrollbarMediator* aMediator) :
+      mScrollbarFrame(aFrame), mIScrollbarFrame(aIScrollbarFrame), mMediator(aMediator) {}
+  };
+  Parts FindParts();
+
   PRBool IsVertical() const { return mIsVertical; }
-                  
+
 private:
 
   PRPackedBool mIsVertical;

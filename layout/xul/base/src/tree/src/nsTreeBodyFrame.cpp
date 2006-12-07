@@ -779,13 +779,13 @@ nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
     // dumb! We should know where these frames are.
     FindScrollParts(treeFrame, &result);
     if (result.mHScrollbar) {
-      result.mHScrollbar->SetScrollbarMediator(this);
+      result.mHScrollbar->SetScrollbarMediatorContent(GetContent());
       nsIFrame* f;
       CallQueryInterface(result.mHScrollbar, &f);
       result.mHScrollbarContent = f->GetContent();
     }
     if (result.mVScrollbar) {
-      result.mVScrollbar->SetScrollbarMediator(this);
+      result.mVScrollbar->SetScrollbarMediatorContent(GetContent());
       nsIFrame* f;
       CallQueryInterface(result.mVScrollbar, &f);
       result.mVScrollbarContent = f->GetContent();

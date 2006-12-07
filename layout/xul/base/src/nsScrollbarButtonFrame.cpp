@@ -253,10 +253,10 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
   else if (curpos > maxpos)
     curpos = maxpos;
 
-  nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbar));
+  nsIScrollbarFrame* sb;
+  CallQueryInterface(scrollbar, &sb);
   if (sb) {
-    nsCOMPtr<nsIScrollbarMediator> m;
-    sb->GetScrollbarMediator(getter_AddRefs(m));
+    nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     if (m) {
       m->ScrollbarButtonPressed(sb, oldpos, curpos);
       return;
