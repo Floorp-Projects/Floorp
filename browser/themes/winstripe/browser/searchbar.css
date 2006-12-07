@@ -68,29 +68,29 @@
   -moz-image-region: rect(12px, 128px, 22px, 96px);
 }
 
-.searchbar-engine-button:hover .searchbar-engine-button-top {
+.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-top {
   -moz-image-region: rect(0px, 64px, 10px, 32px);
 }
 
-.searchbar-engine-button:hover .searchbar-engine-button-mid-top,
-.searchbar-engine-button:hover .searchbar-engine-button-mid-bottom {
+.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-mid-top,
+.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-mid-bottom {
   background-position: -32px 0px;
 }
 
-.searchbar-engine-button:hover .searchbar-engine-button-bottom {
+.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-bottom {
   -moz-image-region: rect(12px, 64px, 22px, 32px);
 }
 
-.searchbar-engine-button[open="true"] .searchbar-engine-button-top {
+.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-top {
   -moz-image-region: rect(0px, 96px, 10px, 64px);
 }
 
-.searchbar-engine-button[open="true"] .searchbar-engine-button-mid-top,
-.searchbar-engine-button[open="true"] .searchbar-engine-button-mid-bottom {
+.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-mid-top,
+.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-mid-bottom {
   background-position: -64px 0px;
 }
 
-.searchbar-engine-button[open="true"] .searchbar-engine-button-bottom {
+.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-bottom {
   -moz-image-region: rect(12px, 96px, 22px, 64px);
 }
 
