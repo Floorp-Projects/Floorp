@@ -19,12 +19,16 @@ lightning.jar:
   content/lightning/calendar-todo-list.xml		(content/calendar-todo-list.xml)
   content/lightning/toolkit-overlay-custombar.xul       (content/toolkit-overlay-custombar.xul)
   content/lightning/imip-bar.js                         (content/imip-bar.js)
+  content/lightning/sun-messenger-overlay-sidebar.xul	(/calendar/prototypes/wcap/sun-messenger-overlay-sidebar.xul)
+  content/lightning/sun-messenger-overlay-sidebar.js	(/calendar/prototypes/wcap/sun-messenger-overlay-sidebar.js)
 #expand    skin/classic/lightning/imip.css       (themes/__THEME__/imip.css)
 #expand    skin/classic/lightning/lightning.css  (themes/__THEME__/lightning.css)
+#expand    skin/classic/lightning/sun-messenger-overlay-sidebar.css	(/calendar/prototypes/themes/__THEME__/sun-messenger-overlay-sidebar.css)
 
 lightning-en-US.jar:
     locale/en-US/lightning/lightning.dtd         (/calendar/locales/en-US/chrome/lightning/lightning.dtd)
     locale/en-US/lightning/lightning.properties  (/calendar/locales/en-US/chrome/lightning/lightning.properties)
+    locale/en-US/lightning/sun-lightning.dtd     (/calendar/locales/en-US/chrome/prototypes/sun-lightning.dtd)
 
 calendar.jar:
 *  content/calendar/applicationUtil.js		(/calendar/resources/content/applicationUtil.js) 
@@ -63,6 +67,11 @@ calendar.jar:
   content/calendar/sun-calendar-event-dialog-attendees.js  (/calendar/prototypes/wcap/sun-calendar-event-dialog-attendees.js)
   content/calendar/sun-calendar-customize-toolbar.xul  (/calendar/prototypes/wcap/sun-calendar-customize-toolbar.xul)
   content/calendar/sun-calendar-customize-toolbar.js  (/calendar/prototypes/wcap/sun-calendar-customize-toolbar.js)
+  content/calendar/calendar-invitations-manager.js	(/calendar/prototypes/wcap/calendar-invitations-manager.js)
+  content/calendar/calendar-invitations-dialog.css	(/calendar/prototypes/wcap/calendar-invitations-dialog.css)
+  content/calendar/calendar-invitations-dialog.js	(/calendar/prototypes/wcap/calendar-invitations-dialog.js)
+  content/calendar/calendar-invitations-dialog.xul	(/calendar/prototypes/wcap/calendar-invitations-dialog.xul)
+  content/calendar/calendar-invitations-list.xml	(/calendar/prototypes/wcap/calendar-invitations-list.xml)
 #expand    skin/classic/calendar/all_day_event.png  (/calendar/resources/skin/classic/all_day_event.png)
 #expand    skin/classic/calendar/all_day_event_down.png  (/calendar/resources/skin/classic/all_day_event_down.png)
 #expand    skin/classic/calendar/all_day_event_hover.png  (/calendar/resources/skin/classic/all_day_event_hover.png)
@@ -123,6 +132,9 @@ calendar.jar:
 #expand    skin/classic/calendar/timezone_-12h45.png  (/calendar/prototypes/themes/__THEME__/timezone_-12h45.png)
 #expand    skin/classic/calendar/timezone_-12h.png  (/calendar/prototypes/themes/__THEME__/timezone_-12h.png)
 #expand    skin/classic/calendar/timezone_map.png  (/calendar/prototypes/themes/__THEME__/timezone_map.png)
+#expand    skin/classic/calendar/calendar-invitations-dialog.css  (/calendar/prototypes/themes/__THEME__/calendar-invitations-dialog.css)
+#expand    skin/classic/calendar/calendar-invitations-dialog-button-images.png  (/calendar/prototypes/themes/__THEME__/calendar-invitations-dialog-button-images.png)
+#expand    skin/classic/calendar/calendar-invitations-dialog-list-images.png  (/calendar/prototypes/themes/__THEME__/calendar-invitations-dialog-list-images.png)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd             (/calendar/locales/en-US/chrome/calendar/global.dtd)
@@ -144,3 +156,4 @@ calendar-en-US.jar:
   locale/en-US/calendar/preferences/views.dtd  (/calendar/locales/en-US/chrome/calendar/preferences/views.dtd)
   locale/en-US/calendar/sun-calendar-event-dialog.dtd	(/calendar/locales/en-US/chrome/prototypes/sun-calendar-event-dialog.dtd)
   locale/en-US/calendar/sun-calendar-event-dialog.properties  (/calendar/locales/en-US/chrome/prototypes/sun-calendar-event-dialog.properties)
+  locale/en-US/calendar/calendar-invitations-dialog.dtd	(/calendar/locales/en-US/chrome/prototypes/calendar-invitations-dialog.dtd)

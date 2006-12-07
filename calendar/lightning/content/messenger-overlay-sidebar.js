@@ -190,6 +190,12 @@ function ltnOnLoad(event)
     // Make sure we update ourselves if the program stays open over midnight
     scheduleMidnightUpdate(refreshUIBits);
 
+    if (getPrefSafe("calendar.prototypes.wcap", false)) {
+        document.loadOverlay(
+            "chrome://lightning/content/sun-messenger-overlay-sidebar.xul",
+            null);
+    }
+
     return;
 }
 
