@@ -559,7 +559,7 @@ calICSCalendar.prototype = {
     // nsIInterfaceRequestor impl
     getInterface: function(iid, instance) {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
-            // use the window watcher service to get a nsIAuthPrompt impl
+            return new calAuthPrompt();
             return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Components.interfaces.nsIWindowWatcher)
                              .getNewAuthPrompter(null);
@@ -865,6 +865,90 @@ calICSObserver.prototype = {
         this.mObservers = newObservers;
     }
 };
+
+/**
+ * Auth prompt impl
+ */
+function calAuthPrompt() {
+    // use the window watcher service to get a nsIAuthPrompt impl
+    this.mPrompter = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher)
+                               .getNewAuthPrompter(null);
+    this.mTriedStoredPassword = false;
+}
+
+calAuthPrompt.prototype = {
+    prompt: function(aDialogTitle, aText, aPasswordRealm, aSavePassword, 
+                     aDefaultText, aResult) {
+        return this.mPrompter.prompt(aDialogTitle, aText, aPasswordRealm,
+                                     aSavePassword, aDefaultText, aResult);
+    },
+    
+    getPasswordInfo: function(aPasswordRealm) {
+        var username;
+        var password;
+        var found = false;
+        var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+                                        .getService(Components.interfaces.nsIPasswordManager);
+        var pwenum = passwordManager.enumerator;
+        // step through each password in the password manager until we find the one we want:
+        while (pwenum.hasMoreElements()) {
+            try {
+                var pass = pwenum.getNext().QueryInterface(Components.interfaces.nsIPassword);
+                if (pass.host == aPasswordRealm) {
+                     // found it!
+                     username = pass.user;
+                     password = pass.password;
+                     found = true;
+                     break;
+                }
+            } catch (ex) {
+                // don't do anything here, ignore the password that could not
+                // be read
+            }
+        }
+        return {found: found, username: username, password: password};
+    },
+
+    promptUsernameAndPassword: function(aDialogTitle, aText, aPasswordRealm,
+                                        aSavePassword, aUser, aPwd) {
+        var pw;
+        if (!this.mTriedStoredPassword) {
+            pw = this.getPasswordInfo(aPasswordRealm);
+        }
+
+        if (pw && pw.found) {
+            this.mTriedStoredPassword = true;
+            aUser.value = pw.username;
+            aPwd.value = pw.password;
+            return true;
+        } else {
+            return this.mPrompter.promptUsernameAndPassword(aDialogTitle, aText, 
+                                                            aPasswordRealm,
+                                                            aSavePassword, aUser,
+                                                            aPwd);
+        }
+    },
+
+    promptPassword: function(aDialogTitle, aText, aPasswordRealm, 
+                             aSavePassword, aPwd) { 
+        var found = false;
+        var pw;
+        if (!this.mTriedStoredPassword) {
+            pw = this.getPasswordInfo(aPasswordRealm);
+        }
+
+        if (pw && pw.found) {
+            this.mTriedStoredPassword = true;
+            aPwd.value = pw.password;
+            return true;
+        } else {
+            return this.mPrompter.promptPassword(aDialogTitle, aText,
+                                                 aPasswordRealm, aSavePassword,
+                                                 aPwd);
+        }
+    }
+}
 
 /***************************
  * Transport Abstraction Hooks
