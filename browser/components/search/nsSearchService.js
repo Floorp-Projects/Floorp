@@ -164,7 +164,7 @@ const OS_PARAM_START_INDEX_DEF  = "1";  // start at 1st result
 const OS_PARAM_START_PAGE_DEF   = "1";  // 1st page
 
 // Optional parameter
-const OS_PARAM_OPTIONAL     = /\{\w+\?\}/g;
+const OS_PARAM_OPTIONAL     = /\{(?:\w+:)?\w+\?\}/g;
 
 // A array of arrays containing parameters that we don't fully support, and
 // their default values. We will only send values for these parameters if
