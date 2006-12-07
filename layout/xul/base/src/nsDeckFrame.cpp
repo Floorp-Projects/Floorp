@@ -157,12 +157,12 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
   Redraw(state);
 
   // hide the currently showing box
-  nsIBox* currentBox = GetBoxAt(mIndex);
+  nsIBox* currentBox = (mIndex >= 0) ? GetBoxAt(mIndex) : nsnull;
   if (currentBox) // only hide if it exists
      HideBox(aPresContext, currentBox);
 
   // show the new box
-  nsIBox* newBox = GetBoxAt(index);
+  nsIBox* newBox = (index >= 0) ? GetBoxAt(index) : nsnull;
   if (newBox) // only show if it exists
      ShowBox(aPresContext, newBox);
 
@@ -195,7 +195,7 @@ nsDeckFrame::GetSelectedBox()
   PRInt32 index = GetSelectedIndex();
  
   // get the child at that index. 
-  return GetBoxAt(index); 
+  return (index >= 0) ? GetBoxAt(index) : nsnull; 
 }
 
 NS_IMETHODIMP
