@@ -48,6 +48,10 @@ LIBRARY_NAME	= gtkembedmoz
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 
+LOCAL_INCLUDES += \
+                  -I. \
+                  $(NULL)
+
 #Define for building GtkmozEmbed with MOZILLA_1_8_BRANCH
 #MOZILLA_1_8_BRANCH = 1
 
@@ -242,9 +246,9 @@ MARSHAL_FILE = gtkmozembedmarshal
 MARSHAL_PREFIX = gtkmozembed
 
 $(MARSHAL_FILE).h: $(MARSHAL_FILE).list
-	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $(objdir)/$(MARSHAL_FILE).h
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $(MARSHAL_FILE).h
 
 $(MARSHAL_FILE).c: $(MARSHAL_FILE).list $(MARSHAL_FILE).h
-	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $(objdir)/$(MARSHAL_FILE).c
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $(MARSHAL_FILE).c
 
 
