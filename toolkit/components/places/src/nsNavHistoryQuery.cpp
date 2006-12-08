@@ -156,6 +156,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
+#define QUERYKEY_SHOW_SESSIONS "showSessions"
 #define QUERYKEY_MAX_RESULTS "maxResults"
 
 inline void AppendAmpersandIfNonempty(nsACString& aString)
@@ -441,6 +442,12 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     aQueryString += NS_LITERAL_CSTRING(QUERYKEY_INCLUDE_HIDDEN "=1");
   }
 
+  // show sessions
+  if (options->ShowSessions()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SHOW_SESSIONS "=1");
+  }
+
   // max results
   if (options->MaxResults()) {
     AppendAmpersandIfNonempty(aQueryString);
@@ -653,6 +660,11 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_INCLUDE_HIDDEN)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetIncludeHidden);
+
+    // show sessions
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_SHOW_SESSIONS)) {
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetShowSessions);
 
     // max results
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
@@ -1126,6 +1138,20 @@ nsNavHistoryQueryOptions::SetIncludeHidden(PRBool aIncludeHidden)
   return NS_OK;
 }
 
+// showSessions
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetShowSessions(PRBool* aShowSessions)
+{
+  *aShowSessions = mShowSessions;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetShowSessions(PRBool aShowSessions)
+{
+  mShowSessions = aShowSessions;
+  return NS_OK;
+}
+
 // maxResults
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetMaxResults(PRUint32* aMaxResults)
@@ -1173,6 +1199,7 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   }
   result->mExcludeItems = mExcludeItems;
   result->mExcludeQueries = mExcludeQueries;
+  result->mShowSessions = mShowSessions;
   result->mExpandQueries = mExpandQueries;
 
   resultHolder.swap(*aResult);
