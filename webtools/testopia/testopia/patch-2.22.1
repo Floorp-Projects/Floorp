@@ -576,6 +576,25 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
  
  };
  #--------------------------------------------------------------------------
+Index: /bmo-2.22/Bugzilla/Template.pm
+===================================================================
+--- /bmo-2.22/Bugzilla/Template.pm	22 Jan 2006 21:37:37 -0000	1.41
++++ /bmo-2.22-testopia/Bugzilla/Template.pm	8 Dec 2006 18:20:56 -0000
+@@ -498,6 +498,14 @@
+                 }
+                 return $var;
+             },
++                        
++            # Prevent XSS attacks in WYSIWYG fields. 
++            xss => sub{
++                my ($var) = @_;
++                $var =~ s/(&lt;|<)script/_script/ig;
++                $var =~ s/(&lt;|<)\/script(>|&gt;)/script_/gi;
++                return $var;
++            },
+             
+             # iCalendar contentline filter
+             ics => [ sub {
 Index: /bmo-2.22/Bugzilla/DB/Schema/Mysql.pm
 ===================================================================
 --- /bmo-2.22/Bugzilla/DB/Schema/Mysql.pm	2005-12-18 11:53:00.000000000 -0700

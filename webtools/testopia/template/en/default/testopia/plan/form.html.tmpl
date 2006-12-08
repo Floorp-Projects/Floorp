@@ -75,7 +75,7 @@
 <h3>Plan Document</h3>
 <textarea cols="122" rows="15" id="plandoc" name="plandoc" style="border: 1px solid #000000;" 
 dojoType="Editor2" focusOnLoad="false" height="500px">
-[% plan.text %]</textarea>
+[% plan.text FILTER xss %]</textarea>
 <p>
   <input type="submit" name="action" value="[% action FILTER html %]">
 </p>
