@@ -23,14 +23,14 @@
 				</dict>
 			</dict>
 			<key>Superclass</key>
-			<string>NSCoreSuite.NSWindow</string>
+			<string>ASKApplicationSuite.NSWindow</string>
 		</dict>
 		<key>NSApplication</key>
 		<dict>
 			<key>AppleEventCode</key>
 			<string>capp</string>
 			<key>Superclass</key>
-			<string>NSCoreSuite.NSApplication</string>
+			<string>ASKApplicationSuite.NSApplication</string>
 			<key>ToManyRelationships</key>
 			<dict>
 				<key>orderedDocuments</key>
