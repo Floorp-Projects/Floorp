@@ -1179,7 +1179,7 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
     *aClientHeight = NSTwipsToIntPixels(r.height, t2p);
   } else if (frame &&
              (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-              (frame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))) {
+              (frame->IsFrameOfType(nsIFrame::eReplaced)))) {
     // Special case code to make clientHeight work even when there isn't
     // a scroll view, see bug 180552 and bug 227567.
 
@@ -1207,7 +1207,7 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
     *aClientWidth = NSTwipsToIntPixels(r.width, t2p);
   } else if (frame &&
              (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-              (frame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))) {
+              (frame->IsFrameOfType(nsIFrame::eReplaced)))) {
     // Special case code to make clientWidth work even when there isn't
     // a scroll view, see bug 180552 and bug 227567.
 

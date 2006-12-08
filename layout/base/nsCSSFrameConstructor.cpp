@@ -5103,6 +5103,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
 
   return NS_OK;  
 }
+
 nsresult
 nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                                             nsIContent*              aContent,
@@ -5487,10 +5488,6 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   if (NS_UNLIKELY(!newFrame))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Set the frame state bit for text frames to mark them as replaced.
-  // XXX kipp: temporary
-  newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
-
   nsresult rv = InitAndRestoreFrame(aState, aContent, aParentFrame,
                                     nsnull, newFrame);
 
@@ -5532,7 +5529,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
-  PRBool    isReplaced = PR_FALSE;
   PRBool    addToHashTable = PR_TRUE;
   PRBool    isFloatContainer = PR_FALSE;
   PRBool    addedToFrameList = PR_FALSE;
@@ -5546,7 +5542,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   // Create a frame based on the tag
   if (nsHTMLAtoms::img == aTag) {
     // Make sure to keep IsSpecialContent in synch with this code
-    isReplaced = PR_TRUE;
     rv = CreateHTMLImageFrame(aContent, aStyleContext, NS_NewImageFrame,
                               &newFrame);
     if (newFrame) {
@@ -5562,7 +5557,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewBRFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
 
-    isReplaced = PR_TRUE;
     // BR frames don't go in the content->frame hash table: typically
     // there are many BR content objects and this would increase the size
     // of the hash table, and it's doubtful we need the mapping anyway
@@ -5584,13 +5578,11 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                           aTag, aStyleContext, &newFrame,
                           display, frameHasBeenInitialized,
                           addedToFrameList, aFrameItems);  
-    isReplaced = PR_TRUE;
   }
   else if (nsHTMLAtoms::textarea == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    isReplaced = PR_TRUE;
     newFrame = NS_NewTextControlFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
@@ -5599,15 +5591,16 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aState, aFrameItems); 
       }
-      isReplaced = PR_TRUE;
       rv = ConstructSelectFrame(aState, aContent, aParentFrame,
                                 aTag, aStyleContext, newFrame,
                                 display, frameHasBeenInitialized,
                                 aFrameItems);
-      NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
-                   newFrame,
-                   "Frame didn't get added to aFrameItems?");
-      addedToFrameList = PR_TRUE;
+      if (newFrame) {
+        NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
+                     newFrame,
+                     "Frame didn't get added to aFrameItems?");
+        addedToFrameList = PR_TRUE;
+      }
     }
   }
   else if (nsHTMLAtoms::object == aTag ||
@@ -5620,7 +5613,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aState, aFrameItems); 
       }
-      isReplaced = PR_TRUE;
 
       nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(aContent));
       NS_ASSERTION(objContent,
@@ -5634,6 +5626,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       objContent->GetDisplayedType(&type);
       if (type == nsIObjectLoadingContent::TYPE_LOADING) {
         // Ideally, this should show the standby attribute
+        // XXX Should we return something that is replaced, or make
+        // nsFrame replaced but not its subclasses?
         newFrame = NS_NewEmptyFrame(mPresShell, aStyleContext);
       }
       else if (type == nsIObjectLoadingContent::TYPE_PLUGIN)
@@ -5691,7 +5685,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     
-    isReplaced = PR_TRUE;
     newFrame = NS_NewSubDocumentFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
 
@@ -5727,7 +5720,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // so it must be replaced or html outside it will
     // draw into its borders. -EDV
     frameHasBeenInitialized = PR_TRUE;
-    isReplaced = PR_TRUE;
     addedToFrameList = PR_TRUE;
     isFloatContainer = PR_TRUE;
   }
@@ -5735,7 +5727,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems);
     }
-    isReplaced = PR_FALSE;
     newFrame = NS_NewIsIndexFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
@@ -5743,7 +5734,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    isReplaced = PR_TRUE;
     newFrame = NS_NewHTMLCanvasFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
@@ -5757,11 +5747,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-
-  // If the frame is a replaced element, then set the frame state bit
-  if (isReplaced) {
-    newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
-  }
 
   // Note: at this point we should construct kids for newFrame only if
   // it's not a leaf and hasn't been initialized yet.
@@ -6030,7 +6015,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   PRBool    primaryFrameSet = PR_FALSE;
   nsresult  rv = NS_OK;
   PRBool    isPopup = PR_FALSE;
-  PRBool    isReplaced = PR_FALSE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
 
   // XXXbz somewhere here we should process pseudo frames if !aHasPseudoParent
@@ -6073,7 +6057,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 #ifdef MOZ_XUL
       // BUTTON CONSTRUCTION
       if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewButtonBoxFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6081,7 +6064,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       } // End of BUTTON CONSTRUCTION logic
       // AUTOREPEATBUTTON CONSTRUCTION
       else if (aTag == nsXULAtoms::autorepeatbutton) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewAutoRepeatBoxFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6090,7 +6072,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
       // TITLEBAR CONSTRUCTION
       else if (aTag == nsXULAtoms::titlebar) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewTitleBarFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6099,7 +6080,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
       // RESIZER CONSTRUCTION
       else if (aTag == nsXULAtoms::resizer) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewResizerFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
@@ -6107,20 +6087,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       } // End of RESIZER CONSTRUCTION logic
 
       else if (aTag == nsXULAtoms::image) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewImageBoxFrame(mPresShell, aStyleContext);
       }
       else if (aTag == nsXULAtoms::spring ||
                aTag == nsHTMLAtoms::spacer) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewLeafBoxFrame(mPresShell, aStyleContext);
       }
        else if (aTag == nsXULAtoms::treechildren) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewTreeBodyFrame(mPresShell, aStyleContext);
       }
       else if (aTag == nsXULAtoms::treecol) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewTreeColFrame(mPresShell, aStyleContext);
       }
       // TEXT CONSTRUCTION
@@ -6132,7 +6108,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
             NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
         }
         else {
-          isReplaced = PR_TRUE;
           newFrame = NS_NewTextBoxFrame(mPresShell, aStyleContext);
         }
       }
@@ -6145,7 +6120,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         // A derived class box frame
         // that has custom reflow to prevent menu children
         // from becoming part of the flow.
-        isReplaced = PR_TRUE;
         newFrame = NS_NewMenuFrame(mPresShell, aStyleContext,
           (aTag != nsXULAtoms::menuitem));
       }
@@ -6179,17 +6153,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       }
       else if (aTag == nsXULAtoms::popupgroup) {
         // This frame contains child popups
-        isReplaced = PR_TRUE;
         newFrame = NS_NewPopupSetFrame(mPresShell, aStyleContext);
       }
       else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
                aTag == nsXULAtoms::browser) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewSubDocumentFrame(mPresShell, aStyleContext);
       }
       // PROGRESS METER CONSTRUCTION
       else if (aTag == nsXULAtoms::progressmeter) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewProgressMeterFrame(mPresShell, aStyleContext);
       }
       // End of PROGRESS METER CONSTRUCTION logic
@@ -6197,25 +6168,21 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 #endif
       // SLIDER CONSTRUCTION
       if (aTag == nsXULAtoms::slider) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewSliderFrame(mPresShell, aStyleContext);
       }
       // End of SLIDER CONSTRUCTION logic
 
       // SCROLLBAR CONSTRUCTION
       else if (aTag == nsXULAtoms::scrollbar) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewScrollbarFrame(mPresShell, aStyleContext);
       }
       else if (aTag == nsXULAtoms::nativescrollbar) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewNativeScrollbarFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBAR CONSTRUCTION logic
 
       // SCROLLBUTTON CONSTRUCTION
       else if (aTag == nsXULAtoms::scrollbarbutton) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewScrollbarButtonFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBUTTON CONSTRUCTION logic
@@ -6223,7 +6190,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 #ifdef MOZ_XUL
       // SPLITTER CONSTRUCTION
       else if (aTag == nsXULAtoms::splitter) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewSplitterFrame(mPresShell, aStyleContext);
       }
       // End of SPLITTER CONSTRUCTION logic
@@ -6242,8 +6208,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   
       if (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
                display->mDisplay == NS_STYLE_DISPLAY_BOX) {
-        isReplaced = PR_TRUE;
-
         newFrame = NS_NewBoxFrame(mPresShell, aStyleContext, PR_FALSE, nsnull);
 
         // Boxes can scroll.
@@ -6253,7 +6217,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // ------- Begin Grid ---------
       else if (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
                display->mDisplay == NS_STYLE_DISPLAY_GRID) {
-        isReplaced = PR_TRUE;
         nsCOMPtr<nsIBoxLayout> layout;
         NS_NewGridLayout2(mPresShell, getter_AddRefs(layout));
         newFrame = NS_NewBoxFrame(mPresShell, aStyleContext, PR_FALSE, layout);
@@ -6264,8 +6227,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
       // ------- Begin Rows/Columns ---------
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) {
-        isReplaced = PR_TRUE;
-
         nsCOMPtr<nsIBoxLayout> layout;
       
         if (aTag == nsXULAtoms::listboxbody) {
@@ -6295,8 +6256,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
       // ------- Begin Row/Column ---------
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_LINE) {
-        isReplaced = PR_TRUE;
-      
         nsCOMPtr<nsIBoxLayout> layout;
 
 
@@ -6313,13 +6272,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // End of STACK CONSTRUCTION logic
        // DECK CONSTRUCTION
       else if (display->mDisplay == NS_STYLE_DISPLAY_DECK) {
-        isReplaced = PR_TRUE;
         newFrame = NS_NewDeckFrame(mPresShell, aStyleContext);
       }
       // End of DECK CONSTRUCTION logic
       else if (display->mDisplay == NS_STYLE_DISPLAY_GROUPBOX) {
         newFrame = NS_NewGroupBoxFrame(mPresShell, aStyleContext);
-        isReplaced = PR_TRUE;
 
         // Boxes can scroll.
         mayBeScrollable = PR_TRUE;
@@ -6327,8 +6284,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // STACK CONSTRUCTION
       else if (display->mDisplay == NS_STYLE_DISPLAY_STACK ||
                display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK) {
-        isReplaced = PR_TRUE;
-
         newFrame = NS_NewStackFrame(mPresShell, aStyleContext);
 
         mayBeScrollable = PR_TRUE;
@@ -6359,7 +6314,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         }
 
         // This is its own frame that derives from box.
-        isReplaced = PR_TRUE;
         newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
 
         if (aTag == nsXULAtoms::tooltip) {
@@ -6405,11 +6359,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     // if no top frame was created then the top is the new frame
     if (topFrame == nsnull)
         topFrame = newFrame;
-
-    // If the frame is a replaced element, then set the frame state bit
-    if (isReplaced) {
-      newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
-    }
 
     // xul does not support absolute positioning
     nsIFrame* geometricParent;
@@ -7074,7 +7023,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     return NS_OK;
 
   nsresult  rv = NS_OK;
-  PRBool    isReplaced = PR_FALSE;
   PRBool    ignoreInterTagWhitespace = PR_TRUE;
 
   NS_ASSERTION(aTag != nsnull, "null MathML tag");
@@ -7226,10 +7174,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (newFrame) {
-    // If the frame is a replaced element, then set the frame state bit
-    if (isReplaced) {
-      newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
-    }
     // record that children that are ignorable whitespace should be excluded
     if (ignoreInterTagWhitespace) {
       newFrame->AddStateBits(NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE);
@@ -10158,22 +10102,15 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIFrame* aFrame,
   }
 #endif
 
-  // Is it a box? If so we can coelesce.
-  if (aFrame->IsBoxFrame()) {
-    nsBoxLayoutState state(mPresShell->GetPresContext());
-    aFrame->MarkStyleChange(state);
-  }
-  else {
-    // If the frame is part of a split block-in-inline hierarchy, then
-    // target the style-change reflow at the first ``normal'' ancestor
-    // so we're sure that the style change will propagate to any
-    // anonymously created siblings.
-    if (IsFrameSpecial(aFrame))
-      aFrame = GetIBContainingBlockFor(aFrame);
+  // If the frame is part of a split block-in-inline hierarchy, then
+  // target the style-change reflow at the first ``normal'' ancestor
+  // so we're sure that the style change will propagate to any
+  // anonymously created siblings.
+  if (IsFrameSpecial(aFrame))
+    aFrame = GetIBContainingBlockFor(aFrame);
 
-    // Target a style-change reflow at the frame.
-    mPresShell->AppendReflowCommand(aFrame, eReflowType_StyleChanged, nsnull);
-  }
+  aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange);
 
   return NS_OK;
 }

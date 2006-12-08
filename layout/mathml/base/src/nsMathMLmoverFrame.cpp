@@ -267,8 +267,8 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
   // Get the children's desired sizes
 
   nsBoundingMetrics bmBase, bmOver;
-  nsHTMLReflowMetrics baseSize(nsnull);
-  nsHTMLReflowMetrics overSize(nsnull);
+  nsHTMLReflowMetrics baseSize;
+  nsHTMLReflowMetrics overSize;
   nsIFrame* overFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)

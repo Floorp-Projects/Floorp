@@ -301,9 +301,9 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
   // Get the children's desired sizes
 
   nsBoundingMetrics bmBase, bmUnder, bmOver;
-  nsHTMLReflowMetrics baseSize (nsnull);
-  nsHTMLReflowMetrics underSize (nsnull);
-  nsHTMLReflowMetrics overSize (nsnull);
+  nsHTMLReflowMetrics baseSize;
+  nsHTMLReflowMetrics underSize;
+  nsHTMLReflowMetrics overSize;
   nsIFrame* overFrame = nsnull;
   nsIFrame* underFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();

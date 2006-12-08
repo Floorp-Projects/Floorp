@@ -58,6 +58,8 @@ class nsGrid;
  * for a grid row or column) and nsGridRowGroupLayout (the nsIBoxLayout
  * object for a grid row group or column group).
  */
+// XXXldb This needs a name that indicates that it's a base class for
+// both row and rows (row-group).
 class nsGridRowLayout : public nsSprocketLayout,
                         public nsIGridPart
 {

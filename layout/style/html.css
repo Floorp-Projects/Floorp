@@ -168,6 +168,7 @@ table {
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
+  /* XXXldb do we want this if we're border-collapse:collapse ? */
   -moz-box-sizing: border-box;
   text-indent: 0;
 }

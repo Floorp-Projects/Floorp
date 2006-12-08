@@ -43,7 +43,6 @@
 #undef NOISY_FIRST_LETTER         // enables debug output for first-letter specific layout
 #undef NOISY_MAX_ELEMENT_SIZE     // enables debug output for max element size computation
 #undef NOISY_MAXIMUM_WIDTH        // enables debug output for max width computation
-#undef NOISY_KIDXMOST             // enables debug output for aState.mKidXMost computation
 #undef NOISY_FLOAT                // enables debug output for float reflow (the in/out metrics for the floated block)
 #undef NOISY_FLOAT_CLEARING
 #undef NOISY_FINAL_SIZE           // enables debug output for desired width/height computation, once all children have been reflowed

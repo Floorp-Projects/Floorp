@@ -84,11 +84,8 @@ public:
   // nsIFormControlFrame
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Reflow(nsPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  
   virtual PRBool IsLeaf() const;
 
 #ifdef NS_DEBUG

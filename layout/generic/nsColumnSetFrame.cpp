@@ -48,7 +48,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
-#include "nsReflowPath.h"
 
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
@@ -128,7 +127,6 @@ protected:
    */
   PRBool ReflowChildren(nsHTMLReflowMetrics& aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
-                        nsReflowReason aReason,
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,
                         PRBool aLastColumnUnbounded,
@@ -327,14 +325,13 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
 PRBool
 nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
                                  const nsHTMLReflowState& aReflowState,
-                                 nsReflowReason           aKidReason,
                                  nsReflowStatus&          aStatus,
                                  const ReflowConfig&      aConfig,
                                  PRBool                   aUnboundedLastColumn,
                                  nsCollapsingMargin*      aBottomMarginCarriedOut) {
   PRBool allFit = PR_TRUE;
   PRBool RTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
-  PRBool shrinkingHeightOnly = aKidReason == eReflowReason_Resize &&
+  PRBool shrinkingHeightOnly = !(GetStateBits() & (NS_FRAME_IS_DIRTY|NS_FRAME_HAS_DIRTY_CHILDREN)) &&
     mLastBalanceHeight > aConfig.mColMaxHeight;
   
 #ifdef DEBUG_roc
@@ -352,15 +349,14 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // We need a way to do an incremental reflow and be sure availableHeight
     // changes are taken account of! Right now I think block frames with absolute
     // children might exit early.
-    NS_ASSERTION(aKidReason != eReflowReason_Incremental,
-                 "incremental reflow should not have changed the balance height");
+    //NS_ASSERTION(aKidReason != eReflowReason_Incremental,
+    //             "incremental reflow should not have changed the balance height");
   }
 
   // get our border and padding
   const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
   
   nsRect contentRect(0, 0, 0, 0);
-  aDesiredSize.mMaxElementWidth = 0;
   nsRect overflowRect(0, 0, 0, 0);
   
   nsIFrame* child = mFrames.FirstChild();
@@ -391,11 +387,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // skip if the next column is dirty, because the next column's first line(s)
     // might be pullable back to this column. We can't skip if it's the last child
     // because we need to obtain the bottom margin.
-    PRBool skipIncremental = aKidReason == eReflowReason_Incremental
+    PRBool skipIncremental = !(GetStateBits() & NS_FRAME_IS_DIRTY)
       && !(child->GetStateBits() & NS_FRAME_IS_DIRTY)
       && child->GetNextSibling()
-      && !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)
-      && !aDesiredSize.mComputeMEW;
+      && !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY);
     // If we need to pull up content from the prev-in-flow then this is not just
     // a height shrink. The prev in flow will have set the dirty bit.
     // Check the overflow rect YMost instead of just the child's content height. The child
@@ -426,23 +421,12 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         availSize.height = GetAvailableContentHeight(aReflowState);
       }
   
-      nsReflowReason tmpReason = aKidReason;
-      if (reflowNext && aKidReason == eReflowReason_Incremental
-          && !(child->GetStateBits() & NS_FRAME_IS_DIRTY)) {
-        // If this frame was not being incrementally reflowed but was
-        // just reflowed because the previous frame wants us to
-        // reflow, then force this child to reflow its dirty lines!
-        // XXX what we should really do here is add the child block to
-        // the incremental reflow path! Currently I think if there's an
-        // incremental reflow targeted only at the absolute frames of a
-        // column, then the column will be dirty BUT reflowing it will
-        // not reflow any lines affected by the prev-in-flow!
-        tmpReason = eReflowReason_Dirty;
-      }
+      if (reflowNext)
+        child->AddStateBits(NS_FRAME_IS_DIRTY);
 
       nsHTMLReflowState kidReflowState(GetPresContext(), aReflowState, child,
                                        availSize, availSize.width,
-                                       aReflowState.mComputedHeight, tmpReason);
+                                       aReflowState.mComputedHeight);
       kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
           
 #ifdef DEBUG_roc
@@ -452,12 +436,13 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       // Note if the column's next in flow is not being changed by this incremental reflow.
       // This may allow the current column to avoid trying to pull lines from the next column.
-      if (child->GetNextSibling() && aKidReason == eReflowReason_Incremental &&
+      if (child->GetNextSibling() &&
+          !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
         !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)) {
         kidReflowState.mFlags.mNextInFlowUntouched = PR_TRUE;
       }
     
-      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mComputeMEW, aDesiredSize.mFlags);
+      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
 
       // XXX it would be cool to consult the space manager for the
       // previous block to figure out the region of floats from the
@@ -489,11 +474,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       
       FinishReflowChild(child, GetPresContext(), &kidReflowState, 
                         kidDesiredSize, childOrigin.x, childOrigin.y, 0);
-
-      if (aDesiredSize.mComputeMEW) {
-        aDesiredSize.mMaxElementWidth = PR_MAX(aDesiredSize.mMaxElementWidth,
-                                               kidDesiredSize.mMaxElementWidth);
-      }
     }
 
     contentRect.UnionRect(contentRect, child->GetRect());
@@ -525,9 +505,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         }
         
         kidNextInFlow->AddStateBits(NS_BLOCK_SPACE_MGR);
-
-        // Do an initial reflow if we're going to reflow this thing.
-        aKidReason = eReflowReason_Initial;
       }
         
       if (columnCount >= aConfig.mBalanceColCount) {
@@ -611,11 +588,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   aDesiredSize.width = contentSize.width + borderPadding.left + borderPadding.right;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
-  aDesiredSize.mMaximumWidth = aDesiredSize.width;
-  if (aDesiredSize.mComputeMEW) {
-    // add in padding.
-    aDesiredSize.mMaxElementWidth += borderPadding.left + borderPadding.right;
-  }
   overflowRect.UnionRect(overflowRect, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
   aDesiredSize.mOverflowArea = overflowRect;
   
@@ -680,44 +652,13 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
   //------------ Handle Incremental Reflow -----------------
-  nsReflowReason kidReason = aReflowState.reason;
-
-  if ( aReflowState.reason == eReflowReason_Incremental ) {
-    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
-    
-    // Dirty any frames on the incremental reflow path
-    nsReflowPath *path = aReflowState.path;
-    nsReflowPath::iterator iter = path->FirstChild();
-    nsReflowPath::iterator end = path->EndChildren();
-    for ( ; iter != end; ++iter) {
-      (*iter)->AddStateBits(NS_FRAME_IS_DIRTY);
-    }
-
-    // See if it's targeted at us
-    if (command) {
-      switch (command->Type()) {
-        
-      case eReflowType_StyleChanged:
-        kidReason = eReflowReason_StyleChange;
-        break;
-        
-        // if it's a dirty type then reflow us with a dirty reflow
-      case eReflowType_ReflowDirty:
-        kidReason = eReflowReason_Dirty;
-        break;
-
-      default:
-        NS_ERROR("Unexpected Reflow Type");
-      }
-    }
-  }
 
   ReflowConfig config = ChooseColumnStrategy(aReflowState);
   PRBool isBalancing = config.mBalanceColCount < PR_INT32_MAX;
@@ -731,22 +672,10 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* nextInFlow = GetNextInFlow();
   PRBool unboundedLastColumn = isBalancing && nextInFlow;
   nsCollapsingMargin carriedOutBottomMargin;
-  PRBool feasible = ReflowChildren(aDesiredSize, aReflowState, kidReason,
+  PRBool feasible = ReflowChildren(aDesiredSize, aReflowState,
     aStatus, config, unboundedLastColumn, &carriedOutBottomMargin);
 
   if (isBalancing) {
-    if (feasible ||
-      // All children were reflowed as necessary, so we can go ahead
-      // and do resize reflows from now on
-        kidReason != eReflowReason_StyleChange) {
-      // Any non-stylechange reflow can be followed by resize
-      // reflows. But a stylechange reflow demands that all children
-      // be reflowed, which may not have happened yet; some of them
-      // might just have been pushed to an overflow list. So we have to
-      // keep doing stylechange reflows.
-      kidReason = eReflowReason_Resize;
-    }
-
     nscoord availableContentHeight = GetAvailableContentHeight(aReflowState);
   
     // Termination of the algorithm below is guaranteed because
@@ -848,8 +777,9 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
       config.mColMaxHeight = nextGuess;
       
       unboundedLastColumn = PR_FALSE;
+      AddStateBits(NS_FRAME_IS_DIRTY);
       feasible = ReflowChildren(aDesiredSize, aReflowState,
-                                kidReason, aStatus, config, PR_FALSE, 
+                                aStatus, config, PR_FALSE, 
                                 &carriedOutBottomMargin);
     }
 
@@ -866,7 +796,8 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
         config.mColMaxHeight = knownFeasibleHeight;
       }
       if (!skip) {
-        ReflowChildren(aDesiredSize, aReflowState, eReflowReason_Resize,
+        AddStateBits(NS_FRAME_IS_DIRTY);
+        ReflowChildren(aDesiredSize, aReflowState,
                        aStatus, config, PR_FALSE, &carriedOutBottomMargin);
       }
     }

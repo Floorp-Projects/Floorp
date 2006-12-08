@@ -142,9 +142,8 @@ class nsPageBreakFrame : public nsLeafFrame {
 
 protected:
 
-    virtual void GetDesiredSize(nsPresContext*        aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics&     aDesiredSize);
+  virtual nscoord GetIntrinsicWidth();
+
     PRBool mHaveReflowed;
 
     friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

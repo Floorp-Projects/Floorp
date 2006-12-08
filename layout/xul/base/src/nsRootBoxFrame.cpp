@@ -132,6 +132,7 @@ public:
    * @see nsLayoutAtoms::rootFrame
    */
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -233,7 +234,7 @@ nsRootBoxFrame::Reflow(nsPresContext*          aPresContext,
                        const nsHTMLReflowState& aReflowState,
                        nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame");
 
 #ifdef DEBUG_REFLOW
   gReflows++;
@@ -279,6 +280,13 @@ nsIAtom*
 nsRootBoxFrame::GetType() const
 {
   return nsLayoutAtoms::rootFrame;
+}
+
+PRBool
+nsRootBoxFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  // Override the bogus thing nsBoxFrame does.
+  return !aFlags;
 }
 
 nsIFrame*

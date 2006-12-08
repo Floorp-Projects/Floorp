@@ -48,7 +48,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsPresContext.h"
-#include "nsReflowPath.h"
 #include "nsIPresShell.h"
 #include "nsDisplayList.h"
 
@@ -56,6 +55,14 @@ nsIFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) ViewportFrame(aContext);
+}
+
+NS_IMETHODIMP
+ViewportFrame::Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow)
+{
+  return Super::Init(aContent, aParent, aPrevInFlow);
 }
 
 void
@@ -185,6 +192,36 @@ ViewportFrame::GetFirstChild(nsIAtom* aListName) const
   return nsContainerFrame::GetFirstChild(aListName);
 }
 
+/* virtual */ nscoord
+ViewportFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+  if (mFrames.IsEmpty())
+    result = 0;
+  else
+    result = mFrames.FirstChild()->GetMinWidth(aRenderingContext);
+    
+  // XXXldb Deal with mFixedContainer (matters for SizeToContent)!
+
+  return result;
+}
+
+/* virtual */ nscoord
+ViewportFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+  if (mFrames.IsEmpty())
+    result = 0;
+  else
+    result = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
+    
+  // XXXldb Deal with mFixedContainer (matters for SizeToContent)!
+
+  return result;
+}
+
 nsPoint
  ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const
 {
@@ -213,14 +250,17 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("ViewportFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("ViewportFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("ViewportFrame::Reflow");
-  NS_PRECONDITION(!aDesiredSize.mComputeMEW, "unexpected request");
 
   // Initialize OUT parameters
   aStatus = NS_FRAME_COMPLETE;
 
+  // Because |Reflow| sets mComputedHeight on the child to
+  // availableHeight.
+  AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+  
   // Reflow the main content first so that the placeholders of the
   // fixed-position frames will be in the right places on an initial
   // reflow.
@@ -231,11 +271,13 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
-    if (eReflowReason_Incremental != aReflowState.reason ||
-        aReflowState.path->HasChild(mFrames.FirstChild())) {
+    if (aReflowState.ShouldReflowAllKids() ||
+        aReflowState.mFlags.mVResize ||
+        (mFrames.FirstChild()->GetStateBits() &
+         (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();
-      nsHTMLReflowMetrics kidDesiredSize(nsnull);
+      nsHTMLReflowMetrics kidDesiredSize;
       nsSize              availableSpace(aReflowState.availableWidth,
                                          aReflowState.availableHeight);
       nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
@@ -252,24 +294,18 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  // If we were flowed initially at both an unconstrained width and height, 
-  // this is a hint that we should return our child's intrinsic size.
-  if ((eReflowReason_Initial == aReflowState.reason ||
-       eReflowReason_Resize == aReflowState.reason) &&
-      aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE &&
-      aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.width = kidRect.width;
-    aDesiredSize.height = kidRect.height;
-    aDesiredSize.ascent = kidRect.height;
-    aDesiredSize.descent = 0;
-  }
-  else {
-    // Return the max size as our desired size
-    aDesiredSize.width = aReflowState.availableWidth;
-    aDesiredSize.height = aReflowState.availableHeight;
-    aDesiredSize.ascent = aReflowState.availableHeight;
-    aDesiredSize.descent = 0;
-  }
+  NS_ASSERTION(aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE,
+               "shouldn't happen anymore");
+
+  // Return the max size as our desired size
+  aDesiredSize.width = aReflowState.availableWidth;
+  // Being flowed initially at an unconstrained height means we should
+  // return our child's intrinsic size.
+  aDesiredSize.height = aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE
+                          ? aReflowState.availableHeight
+                          : kidRect.height;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items
@@ -284,34 +320,14 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
                "scrollbars in odd positions");
 #endif
 
-  nsReflowType reflowType = eReflowType_ContentChanged;
-  if (aReflowState.path) {
-    // XXXwaterson this is more restrictive than the previous code
-    // was: it insists that the UserDefined reflow be targeted at
-    // _this_ frame.
-    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
-    if (command)
-      command->GetType(reflowType);
-  }
-
-  if (reflowType != eReflowType_UserDefined &&
-      aReflowState.reason == eReflowReason_Incremental) {
-    // Incremental reflow
-     mFixedContainer.IncrementalReflow(this, aPresContext, reflowState,
-                                       reflowState.mComputedWidth,
-                                       reflowState.mComputedHeight);
-  }
-
   // Just reflow all the fixed-pos frames.
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
                               reflowState.mComputedWidth, 
-                              reflowState.mComputedHeight);
+                              reflowState.mComputedHeight,
+                              PR_TRUE, PR_TRUE); // XXX could be optimized
 
-  // If this is an initial reflow, resize reflow, or style change reflow
-  // then do a repaint
-  if ((eReflowReason_Initial == aReflowState.reason) ||
-      (eReflowReason_Resize == aReflowState.reason) ||
-      (eReflowReason_StyleChange == aReflowState.reason)) {
+  // If we were dirty then do a repaint
+  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
     nsRect damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
     Invalidate(damageRect, PR_FALSE);
   }

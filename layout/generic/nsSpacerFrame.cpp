@@ -56,6 +56,8 @@ public:
   friend nsIFrame* NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIHTMLReflow
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -66,6 +68,7 @@ public:
 protected:
   SpacerFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~SpacerFrame();
+  void GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase);
 };
 
 nsIFrame*
@@ -78,16 +81,52 @@ SpacerFrame::~SpacerFrame()
 {
 }
 
+/* virtual */ nscoord
+SpacerFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nsHTMLReflowMetrics metrics;
+  DISPLAY_MIN_WIDTH(this, metrics.width);
+  GetDesiredSize(metrics, nsSize(0, 0));
+  return metrics.width;
+}
+
+/* virtual */ nscoord
+SpacerFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nsHTMLReflowMetrics metrics;
+  DISPLAY_PREF_WIDTH(this, metrics.width);
+  GetDesiredSize(metrics, nsSize(0, 0));
+  return metrics.width;
+}
+
 NS_IMETHODIMP
 SpacerFrame::Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("SpacerFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("SpacerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   aStatus = NS_FRAME_COMPLETE;
 
+  nsSize percentBase(aReflowState.availableWidth, aReflowState.availableHeight);
+  if (percentBase.width == NS_UNCONSTRAINEDSIZE)
+    percentBase.width = 0;
+  if (percentBase.height == NS_UNCONSTRAINEDSIZE)
+    percentBase.height = 0;
+
+  if (GetType() == TYPE_LINE)
+    aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
+
+  GetDesiredSize(aMetrics, percentBase);
+
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  return NS_OK;
+}
+
+void
+SpacerFrame::GetDesiredSize(nsHTMLReflowMetrics& aMetrics, nsSize aPercentBase)
+{
   // By default, we have no area
   aMetrics.width = 0;
   aMetrics.height = 0;
@@ -102,9 +141,8 @@ SpacerFrame::Reflow(nsPresContext*          aPresContext,
     break;
 
   case TYPE_LINE:
-    aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
     if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
-      aMetrics.width = position->mHeight.GetCoordValue();
+      aMetrics.height = position->mHeight.GetCoordValue();
     }
     aMetrics.ascent = aMetrics.height;
     break;
@@ -117,11 +155,8 @@ SpacerFrame::Reflow(nsPresContext*          aPresContext,
     }
     else if (eStyleUnit_Percent == unit) 
     {
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)
-      {
-        float factor = position->mWidth.GetPercentValue();
-        aMetrics.width = NSToCoordRound (factor * aReflowState.availableWidth);
-      }
+      float factor = position->mWidth.GetPercentValue();
+      aMetrics.width = NSToCoordRound(factor * aPercentBase.width);
     }
 
     // height
@@ -131,11 +166,8 @@ SpacerFrame::Reflow(nsPresContext*          aPresContext,
     }
     else if (eStyleUnit_Percent == unit) 
     {
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
-      {
-        float factor = position->mHeight.GetPercentValue();
-        aMetrics.width = NSToCoordRound (factor * aReflowState.availableHeight);
-      }
+      float factor = position->mHeight.GetPercentValue();
+      aMetrics.width = NSToCoordRound(factor * aPercentBase.height);
     }
     // accent
     aMetrics.ascent = aMetrics.height;
@@ -147,13 +179,6 @@ SpacerFrame::Reflow(nsPresContext*          aPresContext,
     if (!aMetrics.width) aMetrics.width = 1;
     if (!aMetrics.height) aMetrics.height = 1;
   }
-
-  if (aMetrics.mComputeMEW) {
-    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
-  return NS_OK;
 }
 
 PRUint8

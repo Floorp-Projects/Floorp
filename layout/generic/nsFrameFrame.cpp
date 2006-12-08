@@ -118,12 +118,16 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
   virtual void Destroy();
+
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -159,9 +163,9 @@ protected:
   nsresult ShowDocShell();
   nsresult CreateViewAndWidget(nsContentType aContentType);
 
-  virtual void GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+  virtual nscoord GetIntrinsicWidth();
+  virtual nscoord GetIntrinsicHeight();
+
   virtual PRIntn GetSkipSides() const;
 
   nsCOMPtr<nsIFrameLoader> mFrameLoader;
@@ -312,36 +316,35 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return rv;
 }
 
-void
-nsSubDocumentFrame::GetDesiredSize(nsPresContext* aPresContext,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsHTMLReflowMetrics& aDesiredSize)
+nscoord
+nsSubDocumentFrame::GetIntrinsicWidth()
+{
+  if (!IsInline()) {
+    return 0;  // <frame> has no useful intrinsic width
+  }
+
+  if (!mContent->IsNodeOfType(nsINode::eXUL)) {
+    return 0;  // <xul:iframe> also has no useful intrinsic width
+  }
+
+  // We must be an HTML <iframe>.  Default to a width of 300, for IE
+  // compat (and per CSS2.1 draft).
+  return NSIntPixelsToTwips(300, GetPresContext()->ScaledPixelsToTwips());
+}
+
+nscoord
+nsSubDocumentFrame::GetIntrinsicHeight()
 {
   // <frame> processing does not use this routine, only <iframe>
-  float p2t = 0;
-  if (!mContent->IsNodeOfType(nsINode::eXUL))
-    // If no width/height was specified, use 300/150.
-    // This is for compatibility with IE.
-    p2t = aPresContext->ScaledPixelsToTwips();
+  NS_ASSERTION(IsInline(), "Shouldn't have been called");
 
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-    aDesiredSize.width = aReflowState.mComputedWidth;
+  if (mContent->IsNodeOfType(nsINode::eXUL)) {
+    return 0;
   }
-  else {
-    aDesiredSize.width = PR_MAX(PR_MIN(NSIntPixelsToTwips(300, p2t),
-                                       aReflowState.mComputedMaxWidth), 
-                                aReflowState.mComputedMinWidth);
-  }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-    aDesiredSize.height = aReflowState.mComputedHeight;
-  }
-  else {
-    aDesiredSize.height = PR_MAX(PR_MIN(NSIntPixelsToTwips(150, p2t),
-                                        aReflowState.mComputedMaxHeight),
-                                 aReflowState.mComputedMinHeight);
-  }
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+
+  // Use 150px, for compatibility with IE, and per CSS2.1 draft.
+  return NSIntPixelsToTwips(150,
+                            GetPresContext()->ScaledPixelsToTwips());
 }
 
 #ifdef DEBUG
@@ -357,68 +360,72 @@ nsSubDocumentFrame::GetType() const
   return nsLayoutAtoms::subDocumentFrame;
 }
 
+PRBool
+nsSubDocumentFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
+}
+
+/* virtual */ nscoord
+nsSubDocumentFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  return nsSubDocumentFrame::GetPrefWidth(aRenderingContext);
+}
+
+/* virtual */ nscoord
+nsSubDocumentFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+      // XUL frames don't have a default 300px width
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+  if (mContent->IsNodeOfType(nsINode::eXUL))
+    result = 0;
+  else
+    result = NSIntPixelsToTwips(300, GetPresContext()->ScaledPixelsToTwips());
+  return result;
+}
+
 NS_IMETHODIMP
 nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsSubDocumentFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsSubDocumentFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   // printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d reason=%d",
-      aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
+     ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d",
+      aReflowState.availableWidth, aReflowState.availableHeight));
 
   aStatus = NS_FRAME_COMPLETE;
 
+  // "offset" is the offset of our content area from our frame's
+  // top-left corner.
+  nsPoint offset(0, 0);
+  
   if (IsInline()) {
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize); // IFRAME
+    // IFRAME
+    nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                      aStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    offset = nsPoint(aReflowState.mComputedBorderPadding.left,
+                     aReflowState.mComputedBorderPadding.top);
   } else {
-    aDesiredSize.width  = aReflowState.availableWidth; // FRAME
-    aDesiredSize.height = aReflowState.availableHeight;
+    // FRAME
+    SizeToAvailSize(aReflowState, aDesiredSize);
   }
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
-  nsPoint offset(0, 0);
-  nsMargin border = aReflowState.mComputedBorderPadding;
-
   if (IsInline()) {
-    offset = nsPoint(border.left, border.top);
-    aDesiredSize.width += border.left + border.right;
-    aDesiredSize.height += border.top + border.bottom;
+    innerSize.width  -= aReflowState.mComputedBorderPadding.LeftRight();
+    innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
   }
 
   nsIViewManager* vm = mInnerView->GetViewManager();
   vm->MoveViewTo(mInnerView, offset.x, offset.y);
   vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), innerSize), PR_TRUE);
-
-  if (aDesiredSize.mComputeMEW) {   
-    nscoord defaultAutoWidth = NSIntPixelsToTwips(300, aPresContext->ScaledPixelsToTwips());
-    if (mContent->IsNodeOfType(nsINode::eXUL)) {
-        // XUL frames don't have a default 300px width
-        defaultAutoWidth = 0;
-    }
-    nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
-    switch (widthUnit) {
-    case eStyleUnit_Percent:
-      // if our width is percentage, then we can shrink until
-      // there's nothing left but our borders
-      aDesiredSize.mMaxElementWidth = border.left + border.right;
-      break;
-    case eStyleUnit_Auto:
-      aDesiredSize.mMaxElementWidth = PR_MAX(PR_MIN(defaultAutoWidth,
-                                                    aReflowState.mComputedMaxWidth),
-                                             aReflowState.mComputedMinWidth) +
-                                      border.left + border.right;
-      break;
-    default:
-      // If our width is set by style to some fixed length,
-      // then our actual width is our minimum width
-      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-      break;
-    }
-  }
 
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
@@ -447,9 +454,8 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  // printf("OuterFrame::Reflow DONE %X (%d,%d), MEW=%d(%d)\n", this,
-  //        aDesiredSize.width, aDesiredSize.height, aDesiredSize.mMaxElementWidth,
-  //        aDesiredSize.mComputeMEW);
+  // printf("OuterFrame::Reflow DONE %X (%d,%d)\n", this,
+  //        aDesiredSize.width, aDesiredSize.height);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsSubDocumentFrame::Reflow: size=%d,%d status=%x",

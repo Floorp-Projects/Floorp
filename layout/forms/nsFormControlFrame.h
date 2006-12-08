@@ -41,7 +41,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsLeafFrame.h"
 
-#define CSS_NOTSET -1
 #define ATTR_NOTSET -1
 
 #ifdef DEBUG_rods
@@ -114,36 +113,11 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
-   /**
-    * Get the width and height of this control based on CSS 
-    * @param aPresContext the presentation context
-    * @param aSize the size that this frame wants, set by this method. values of -1 
-    * for aSize.width or aSize.height indicate unset values.
-    */
-  static void GetStyleSize(nsPresContext* aContext,
-                            const nsHTMLReflowState& aReflowState,
-                            nsSize& aSize);
-
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
 
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
   
-  // Resize Reflow Optimization Methods
-  static void SetupCachedSizes(nsSize& aCacheSize,
-                               nscoord& aCachedAscent,
-                               nscoord& aCachedMaxElementWidth,
-                               nsHTMLReflowMetrics& aDesiredSize);
-
-  static void SkipResizeReflow(nsSize& aCacheSize,
-                               nscoord& aCachedAscent,
-                               nscoord& aCachedMaxElementWidth,
-                               nsSize& aCachedAvailableSize,
-                               nsHTMLReflowMetrics& aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus& aStatus,
-                               PRBool& aBailOnWidth,
-                               PRBool& aBailOnHeight);
   // AccessKey Helper function
   static nsresult RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg);
 
@@ -165,15 +139,8 @@ protected:
 
   virtual ~nsFormControlFrame();
 
-  /** 
-    * Get the size that this frame would occupy without any constraints
-    * @param aPresContext the presentation context
-    * @param aDesiredSize the size desired by this frame, to be set by this method
-    * @param aMaxSize the maximum size available for this frame
-    */
-  virtual void GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+  virtual nscoord GetIntrinsicWidth();
+  virtual nscoord GetIntrinsicHeight();
 
 //
 //-------------------------------------------------------------------------------------

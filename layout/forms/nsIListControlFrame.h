@@ -46,8 +46,8 @@ class nsIContent;
 
 // IID for the nsIListControlFrame class
 #define NS_ILISTCONTROLFRAME_IID    \
-  { 0xa28ca6f, 0x6850, 0x11da, \
-      { 0x95, 0x2c, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
+{ 0x4de9ab73, 0x31b5, 0x4d92, \
+ { 0xb7, 0xe4, 0x73, 0xb4, 0x4d, 0xcb, 0xfc, 0xda } }
 
 /** 
   * nsIListControlFrame is the interface for frame-based listboxes.
@@ -81,10 +81,10 @@ public:
   virtual void CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
 
   /**
-   * Returns the maximum width and height of an item in the listbox
+   * Returns the height of a single row in the list.  This is the
+   * maximum of the heights of all the options/optgroups.
    */
-
-  virtual nsSize GetMaximumSize() = 0;
+  virtual nscoord GetHeightOfARow() = 0;
 
   /**
    * Returns the number of options in the listbox
@@ -111,11 +111,6 @@ public:
    * Fire on change (used by combobox)
    */
   virtual void FireOnChange() = 0;
-
-  /**
-   *
-   */
-  virtual void SetOverrideReflowOptimization(PRBool aValue) = 0;
 
   /**
    * Tell the selected list to roll up and ensure that the proper index is

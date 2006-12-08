@@ -448,7 +448,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // align - just need to issue a dirty (resize) reflow command
   if (aAttribute == nsMathMLAtoms::align) {
     GetPresContext()->PresShell()->
-      AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
+      FrameNeedsReflow(this, nsIPresShell::eResize);
     return NS_OK;
   }
 
@@ -459,7 +459,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
     nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
     GetPresContext()->PresShell()->
-      AppendReflowCommand(mParent, eReflowType_StyleChanged, nsnull);
+      FrameNeedsReflow(mParent, nsIPresShell::eStyleChange);
     return NS_OK;
   }
 
@@ -511,33 +511,35 @@ nsIFrame*
 nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
                                         PRInt32         aRowIndex)
 {
-  // To find the row at the given index, we will iterate downwards or
-  // upwards depending on the sign of the index
-  nsTableIteration dir = eTableLTR;
-  if (aRowIndex < 0) {
-    aRowIndex = -aRowIndex;
-    dir = eTableRTL;
-  }
-  // if our inner table says that the index is valid, find the row now
   PRInt32 rowCount, colCount;
   GetTableSize(rowCount, colCount);
-  if (aRowIndex <= rowCount) {
+
+  // Negative indices mean to find upwards from the end.
+  if (aRowIndex < 0) {
+    aRowIndex = rowCount + aRowIndex;
+  }
+  // aRowIndex is 1-based, so convert it to a 0-based index
+  --aRowIndex;
+
+  // if our inner table says that the index is valid, find the row now
+  if (0 <= aRowIndex && aRowIndex <= rowCount) {
     nsIFrame* tableFrame = mFrames.FirstChild();
     if (!tableFrame || tableFrame->GetType() != nsGkAtoms::tableFrame)
       return nsnull;
     nsIFrame* rgFrame = tableFrame->GetFirstChild(nsnull);
     if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
       return nsnull;
-    nsTableIterator rowIter(*rgFrame, dir);
+    nsTableIterator rowIter(*rgFrame);
     nsIFrame* rowFrame = rowIter.First();
     for ( ; rowFrame; rowFrame = rowIter.Next()) {
-      if (--aRowIndex == 0) {
+      if (aRowIndex == 0) {
         DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
         if (rowFrame->GetType() != nsGkAtoms::tableRowFrame)
           return nsnull;
 
         return rowFrame;
       }
+      --aRowIndex;
     }
   }
   return nsnull;
@@ -553,32 +555,8 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
 
-  nsHTMLReflowState reflowState(aReflowState);
-  if ((NS_FRAME_FIRST_REFLOW & mState) &&
-      (NS_UNCONSTRAINEDSIZE == reflowState.availableWidth)) {
-    // We are going to reflow twice because the table frame code is
-    // skipping the Pass 2 reflow when, at the Pass 1 reflow, the available
-    // size is unconstrained. Skipping the Pass2 messes the MathML vertical
-    // alignments that are resolved during the reflow of cell frames.
-
-    nscoord oldComputedWidth = reflowState.mComputedWidth;
-    reflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-    reflowState.reason = eReflowReason_Initial;
-
-    rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-
-    // The second reflow will just be a reflow with a constrained width
-    reflowState.availableWidth = aDesiredSize.width;
-    reflowState.mComputedWidth = oldComputedWidth;
-    reflowState.reason = eReflowReason_StyleChange;
-
-    mState &= ~NS_FRAME_FIRST_REFLOW;
-  }
-  else if (mRect.width) {
-    reflowState.availableWidth = mRect.width;
-  }
-
-  rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+  rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                 aStatus);
   NS_ASSERTION(aDesiredSize.height >= 0, "illegal height for mtable");
   NS_ASSERTION(aDesiredSize.width >= 0, "illegal width for mtable");
 
@@ -715,9 +693,6 @@ nsMathMLmtableFrame::SetInitialChildList(nsIAtom*  aListName,
 void
 nsMathMLmtableFrame::RestyleTable()
 {
-  // Cancel any reflow command that may be pending for this table
-  GetPresContext()->PresShell()->CancelReflowCommand(this, nsnull);
-
   // re-sync MathML specific style data that may have changed
   MapAllAttributesIntoCSS(this);
 

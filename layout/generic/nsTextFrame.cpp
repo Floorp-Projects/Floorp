@@ -320,6 +320,8 @@ public:
    * @see nsLayoutAtoms::textFrame
    */
   virtual nsIAtom* GetType() const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
   
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -382,11 +384,22 @@ public:
 #endif
   
   // nsIHTMLReflow
+  virtual void MarkIntrinsicWidthsDirty();
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                 InlineMinWidthData *aData);
+  virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                  InlinePrefWidthData *aData);
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+  virtual PRBool CanContinueTextRun() const;
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
@@ -395,7 +408,6 @@ public:
   struct TextReflowData {
     PRInt32             mX;                   // OUT
     PRInt32             mOffset;              // IN/OUT How far along we are in the content
-    nscoord             mMaxWordWidth;        // OUT
     nscoord             mAscent;              // OUT
     nscoord             mDescent;             // OUT
     PRPackedBool        mWrapping;            // IN
@@ -404,7 +416,6 @@ public:
     PRPackedBool        mInWord;              // IN
     PRPackedBool        mFirstLetterOK;       // IN
     PRPackedBool        mCanBreakBefore;         // IN
-    PRPackedBool        mComputeMaxWordWidth; // IN
     PRPackedBool        mTrailingSpaceTrimmed; // IN/OUT
     
     TextReflowData(PRInt32 aStartingOffset,
@@ -414,11 +425,9 @@ public:
                    PRBool  aInWord,
                    PRBool  aFirstLetterOK,
                    PRBool  aCanBreakBefore,
-                   PRBool  aComputeMaxWordWidth,
                    PRBool  aTrailingSpaceTrimmed)
       : mX(0),
       mOffset(aStartingOffset),
-      mMaxWordWidth(0),
       mAscent(0),
       mDescent(0),
       mWrapping(aWrapping),
@@ -427,7 +436,6 @@ public:
       mInWord(aInWord),
       mFirstLetterOK(aFirstLetterOK),
       mCanBreakBefore(aCanBreakBefore),
-      mComputeMaxWordWidth(aComputeMaxWordWidth),
       mTrailingSpaceTrimmed(aTrailingSpaceTrimmed)
     {}
   };
@@ -483,7 +491,7 @@ public:
                     nscoord aWidth,
                     SelectionDetails *aDetails = nsnull);
   
-  void MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+  void MeasureSmallCapsText(nsIRenderingContext* aRenderingContext,
                             nsTextStyle& aStyle,
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
@@ -1406,6 +1414,11 @@ public:
   }
   virtual nsIFrame* GetFirstInFlow() const;
   virtual nsIFrame* GetFirstContinuation() const;
+
+  virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                 InlineMinWidthData *aData);
+  virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                  InlinePrefWidthData *aData);
   
 protected:
   nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
@@ -1489,6 +1502,46 @@ nsContinuingTextFrame::GetFirstContinuation() const
     previous = firstContinuation->GetPrevContinuation();
   } while (previous);
   return firstContinuation;
+}
+
+// XXX Do we want to do all the work for the first-in-flow or do the
+// work for each part?  (Be careful of first-letter / first-line, though,
+// especially first-line!)  Doing all the work on the first-in-flow has
+// the advantage of avoiding the potential for incremental reflow bugs,
+// but depends on our maintining the frame tree in reasonable ways even
+// for edge cases (block-within-inline splits, nextBidi, etc.)
+
+// XXX We really need to make :first-letter happen during frame
+// construction.
+
+// Needed for text frames in XUL.
+/* virtual */ nscoord
+nsTextFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  return nsLayoutUtils::MinWidthFromInline(this, aRenderingContext);
+}
+
+// Needed for text frames in XUL.
+/* virtual */ nscoord
+nsTextFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  return nsLayoutUtils::PrefWidthFromInline(this, aRenderingContext);
+}
+
+/* virtual */ void
+nsContinuingTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                         InlineMinWidthData *aData)
+{
+  // Do nothing, since the first-in-flow accounts for everything.
+  return;
+}
+
+/* virtual */ void
+nsContinuingTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                          InlinePrefWidthData *aData)
+{
+  // Do nothing, since the first-in-flow accounts for everything.
+  return;
 }
 
 //DRAW SELECTION ITERATOR USED FOR TEXTFRAMES ONLY
@@ -1911,11 +1964,8 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   }
 
   // Ask the parent frame to reflow me.  
-  nsIPresShell *shell = aPresContext->GetPresShell();
-  if (shell && mParent) {
-    mParent->ReflowDirtyChild(shell, targetTextFrame);
-  }
-  
+  aPresContext->GetPresShell()->FrameNeedsReflow(targetTextFrame,
+                                                 nsIPresShell::eStyleChange);
 
   return NS_OK;
 }
@@ -3382,18 +3432,18 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 }
 
 inline void
-nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+nsTextFrame::MeasureSmallCapsText(nsIRenderingContext* aRenderingContext,
                                   nsTextStyle& aTextStyle,
                                   PRUnichar* aWord,
                                   PRInt32 aWordLength,
                                   PRBool aIsEndOfFrame,
                                   nsTextDimensions* aDimensionsResult)
 {
-  nsIRenderingContext& rc = *aReflowState.rendContext;
   aDimensionsResult->Clear();
-  GetTextDimensions(rc, aTextStyle, aWord, aWordLength, aIsEndOfFrame, aDimensionsResult);
+  GetTextDimensions(*aRenderingContext, aTextStyle, aWord, aWordLength,
+                    aIsEndOfFrame, aDimensionsResult);
   if (aTextStyle.mLastFont != aTextStyle.mNormalFont) {
-    rc.SetFont(aTextStyle.mNormalFont);
+    aRenderingContext->SetFont(aTextStyle.mNormalFont);
     aTextStyle.mLastFont = aTextStyle.mNormalFont;
   }
 }
@@ -4974,7 +5024,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   PRInt32 contentLength = aTx.GetContentLength();
   PRInt32 startingOffset = aTextData.mOffset;
   PRInt32 column = mColumn;
-  nscoord prevMaxWordWidth = 0, prevAscent = 0, prevDescent = 0;
+  nscoord prevAscent = 0, prevDescent = 0;
   PRInt32 lastWordLen = 0;
   PRUnichar* lastWordPtr = nsnull;
   PRBool  endsInWhitespace = PR_FALSE;
@@ -5009,7 +5059,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   PRUint32 hints = 0;
   aReflowState.rendContext->GetHints(hints);
   if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
-    measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
+    measureTextRuns = !aTs.mPreformatted &&
                       !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing &&
                       aTextData.mWrapping;
   }
@@ -5100,7 +5150,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       if (firstWordDone) {
         // The first word has been processed, and 2nd word is seen 
         // we can set it be breakable here after.
-         aTextData.mCanBreakBefore = PR_TRUE;
+        aTextData.mCanBreakBefore = PR_TRUE;
       }
     } else {
       if (textRun.IsBuffering()) {
@@ -5138,7 +5188,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       }
       if (aTextData.mSkipWhitespace) {
         aTextData.mOffset += contentLen;
-        aTextData.mSkipWhitespace = PR_FALSE;
+        aTextData.mSkipWhitespace = PR_FALSE; // XXXldb Eh?
 
         if (wasTransformed) {
           // As long as there were no discarded characters, then don't consider
@@ -5213,11 +5263,12 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       } //(aTextData.mMeasureText)
     }
     else {
-      PRBool currentWordIsFirstThing = firstThing;
       firstThing = PR_FALSE;
 
       aTextData.mSkipWhitespace = PR_FALSE;
 
+      // XXX :first-letter should be handled during frame construction
+      // (and it has a good bit in common with nextBidi)
       if (aTextData.mFirstLetterOK) {
         if (IsPunctuationMark(firstChar)) {
           if (contentLen > 1)
@@ -5246,7 +5297,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
         }
         else {
           if (aTs.mSmallCaps) {
-            MeasureSmallCapsText(aReflowState, aTs, bp2, wordLen, PR_FALSE, &dimensions);
+            MeasureSmallCapsText(aReflowState.rendContext, aTs, bp2, wordLen, PR_FALSE, &dimensions);
           }
           else {
             // Measure just the one word
@@ -5315,24 +5366,10 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
               break;
             }
           }
-
-          prevMaxWordWidth = aTextData.mMaxWordWidth;
           prevAscent = aTextData.mAscent;
           prevDescent =  aTextData.mDescent;
 
           aTextData.mX += dimensions.width;
-          if (aTextData.mComputeMaxWordWidth) {
-            lastWordWidth = dimensions.width;
-            if (currentWordIsFirstThing) {
-              nscoord incomingWordWidth;
-              if (lineLayout.InWord(&incomingWordWidth)) {
-                lastWordWidth += incomingWordWidth;
-              }
-            }
-            if (lastWordWidth > aTextData.mMaxWordWidth) {
-              aTextData.mMaxWordWidth = lastWordWidth;
-            }
-          }
           if (aTextData.mAscent < dimensions.ascent) {
             aTextData.mAscent = dimensions.ascent;
           }
@@ -5599,13 +5636,262 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   return rs;
 }
 
+/* virtual */ void
+nsTextFrame::MarkIntrinsicWidthsDirty()
+{
+  // Clear the TEXT_OPTIMIZE_RESIZE for the next time around.  It'll get
+  // reset late in Reflow.
+  RemoveStateBits(TEXT_OPTIMIZE_RESIZE);
+
+  nsFrame::MarkIntrinsicWidthsDirty();
+}
+
+// XXX This should really share more code with the first half of MeasureText.
+/* virtual */ void
+nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                               nsIFrame::InlineMinWidthData *aData)
+{
+  nsresult rv;
+
+  nsPresContext *presContext = GetPresContext();
+  nsTextStyle ts(presContext, *aRenderingContext, mStyleContext);
+  if (!ts.mFont->mSize)
+    // XXX If font size is zero, we still need to figure out whether we've
+    // got non-whitespace text and whether we end in whitespace.
+    return;
+
+  const nsStyleText *styleText = GetStyleText();
+  PRBool wrapping = styleText->WhiteSpaceCanWrap();
+  PRBool wsSignificant = styleText->WhiteSpaceIsSignificant();
+  PRBool atStart = PR_TRUE;
+  PRBool forceArabicShaping = (ts.mSmallCaps ||
+                               (0 != ts.mWordSpacing) ||
+                               (0 != ts.mLetterSpacing) ||
+                               ts.mJustifying);
+  nsTextTransformer tx(presContext);
+  // Keep the text in ascii if possible. Note that if we're measuring small
+  // caps text then transform to Unicode because the helper function only
+  // accepts Unicode text
+  rv = tx.Init(this, mContent, mContentOffset, forceArabicShaping,
+               !ts.mSmallCaps);
+  if (NS_FAILED(rv)) {
+    NS_NOTREACHED("failure initializing text transformer");
+    return;
+  }
+
+  if (aData->trailingTextFrame &&
+      CanBreakBetween(NS_STATIC_CAST(nsTextFrame*, aData->trailingTextFrame),
+                      aData->trailingTextFrame->
+                        GetStyleText()->WhiteSpaceCanWrap(),
+                      this, wrapping,
+                      aData->skipWhitespace, // XXX ???
+                      nsnull)) // XXX Better to pass real frame
+  {
+    aData->Break(aRenderingContext);
+  }
+
+  for (;;) {
+    union {
+      char*       bp1;
+      PRUnichar*  bp2;
+    };
+    PRInt32 wordLen, contentLen;
+#ifdef IBMBIDI
+    // Is this right for this purpose?
+    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
+    PRBool isWhitespace, wasTransformed;
+    // XXX Is !aData->skipWhitespace the right criterion for when the
+    // text transformer should capitalize the first letter?
+    bp2 = tx.GetNextWord(!aData->skipWhitespace, &wordLen, &contentLen,
+                         &isWhitespace, &wasTransformed);
+    if (!bp2)
+      break;
+    // XXX Watch mContentLength!
+
+    if (isWhitespace) {
+      PRUnichar firstChar;
+      if (tx.TransformedTextIsAscii()) {
+        firstChar = *bp1;
+      } else {
+        firstChar = *bp2;
+      }
+      if ('\n' == firstChar) {
+        aData->Break(aRenderingContext);
+        aData->skipWhitespace = PR_TRUE;
+        aData->trailingWhitespace = 0;
+      } else if (!aData->skipWhitespace || wsSignificant) {
+        atStart = PR_FALSE;
+        nscoord width;
+        if ('\t' == firstChar) {
+          // XXX Need to track column!
+          wordLen = 8;
+          // Apply word spacing to every space derived from a tab
+          width =
+            (ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing)*wordLen;
+        } else {
+          // Apply word spacing to every space, if there's more than one
+          width =
+            wordLen*(ts.mWordSpacing + ts.mLetterSpacing + ts.mSpaceWidth);// XXX simplistic
+        }
+        aData->currentLine += width;
+        if (wsSignificant) {
+          aData->trailingWhitespace = 0;
+          aData->skipWhitespace = PR_FALSE;
+        } else {
+          aData->trailingWhitespace += width;
+          aData->skipWhitespace = PR_TRUE;
+        }
+
+        if (wrapping) {
+          aData->Break(aRenderingContext);
+        }
+      }
+    } else {
+      if (!atStart && wrapping) {
+        aData->Break(aRenderingContext);
+      }
+
+      atStart = PR_FALSE;
+
+      nsTextDimensions dimensions;
+      if (ts.mSmallCaps) {
+        MeasureSmallCapsText(aRenderingContext, ts, bp2, wordLen, PR_FALSE,
+                             &dimensions);
+      } else {
+        if (tx.TransformedTextIsAscii()) {
+          aRenderingContext->GetTextDimensions(bp1, wordLen, dimensions);
+        } else {
+          aRenderingContext->GetTextDimensions(bp2, wordLen, dimensions);
+        }
+        dimensions.width += ts.mLetterSpacing * wordLen;
+      }
+
+      aData->currentLine += dimensions.width;
+      aData->skipWhitespace = PR_FALSE;
+      aData->trailingWhitespace = 0;
+    }
+  }
+
+  aData->trailingTextFrame = this;
+}
+
+/* virtual */ void
+nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                nsIFrame::InlinePrefWidthData *aData)
+{
+  nsresult rv;
+
+  nsPresContext *presContext = GetPresContext();
+  nsTextStyle ts(presContext, *aRenderingContext, mStyleContext);
+  if (!ts.mFont->mSize)
+    // XXX If font size is zero, we still need to figure out whether we've
+    // got non-whitespace text and whether we end in whitespace.
+    return;
+
+  PRBool forceArabicShaping = (ts.mSmallCaps ||
+                               (0 != ts.mWordSpacing) ||
+                               (0 != ts.mLetterSpacing) ||
+                               ts.mJustifying);
+  nsTextTransformer tx(presContext);
+  // Keep the text in ascii if possible. Note that if we're measuring small
+  // caps text then transform to Unicode because the helper function only
+  // accepts Unicode text
+  rv = tx.Init(this, mContent, mContentOffset, forceArabicShaping,
+               !ts.mSmallCaps);
+  if (NS_FAILED(rv)) {
+    NS_NOTREACHED("failure initializing text transformer");
+    return;
+  }
+
+  for (;;) {
+    union {
+      char*       bp1;
+      PRUnichar*  bp2;
+    };
+    PRInt32 wordLen = -1, contentLen;
+#ifdef IBMBIDI
+    // Is this right for this purpose?
+    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
+    PRBool isWhitespace, wasTransformed;
+    // XXX Should fix this to use something better than GetNextWord!
+    // XXX Is !aData->skipWhitespace the right criterion for when the
+    // text transformer should capitalize the first letter?
+    bp2 = tx.GetNextWord(!aData->skipWhitespace, &wordLen, &contentLen,
+                         &isWhitespace, &wasTransformed);
+    if (!bp2)
+      break;
+    // XXX Watch mContentLength!
+
+    if (isWhitespace) {
+      PRUnichar firstChar;
+      if (tx.TransformedTextIsAscii()) {
+        firstChar = *bp1;
+      } else {
+        firstChar = *bp2;
+      }
+      if ('\n' == firstChar) {
+        aData->Break(aRenderingContext);
+      } else if (!aData->skipWhitespace) {
+        nscoord width;
+        if ('\t' == firstChar) {
+          // XXX Need to track column!
+          wordLen = 8;
+          // Apply word spacing to every space derived from a tab
+          width =
+            (ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing)*wordLen;
+        } else {
+          // Apply word spacing to every space, if there's more than one
+          width =
+            wordLen*(ts.mWordSpacing + ts.mLetterSpacing + ts.mSpaceWidth);// XXX simplistic
+        }
+        aData->currentLine += width;
+        if (GetStyleText()->WhiteSpaceIsSignificant())
+          // XXX Should we also subtract the old value of
+          // trailingWhitespace from currentLine?
+          aData->trailingWhitespace = 0;
+        else
+          aData->trailingWhitespace += width;
+      }
+    } else {
+      nsTextDimensions dimensions;
+      if (ts.mSmallCaps) {
+        MeasureSmallCapsText(aRenderingContext, ts, bp2, wordLen, PR_FALSE,
+                             &dimensions);
+      } else {
+        if (tx.TransformedTextIsAscii()) {
+          aRenderingContext->GetTextDimensions(bp1, wordLen, dimensions);
+        } else {
+          aRenderingContext->GetTextDimensions(bp2, wordLen, dimensions);
+        }
+        dimensions.width += ts.mLetterSpacing * wordLen;
+      }
+
+      aData->currentLine += dimensions.width;
+      aData->skipWhitespace = PR_FALSE;
+      aData->trailingWhitespace = 0;
+    }
+  }
+}
+
+/* virtual */ nsSize
+nsTextFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                         nsSize aCBSize, nscoord aAvailableWidth,
+                         nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                         PRBool aShrinkWrap)
+{
+  // Inlines and text don't compute size before reflow.
+  return nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
 NS_IMETHODIMP
 nsTextFrame::Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTextFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTextFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 #ifdef NOISY_REFLOW
   ListTag(stdout);
@@ -5624,9 +5910,6 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
-    if (aMetrics.mComputeMEW) {
-      aMetrics.mMaxElementWidth = 0;
-    }
 #ifdef MOZ_MATHML
     if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags)
       aMetrics.mBoundingMetrics.Clear();
@@ -5664,6 +5947,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
         (hints & NS_RENDERING_HINT_ARABIC_SHAPING) == NS_RENDERING_HINT_ARABIC_SHAPING) ||
         (eCharType_RightToLeft == charType &&
         (hints & NS_RENDERING_HINT_BIDI_REORDERING) == NS_RENDERING_HINT_BIDI_REORDERING)) {
+      // XXXldb This needs to happen before |Reflow|.
       aPresContext->SetIsBidiSystem(PR_TRUE);
     }
   }
@@ -5732,8 +6016,8 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   PRBool measureText = PR_TRUE;
   
   // We can avoid actually measuring the text if:
-  // - this is a resize reflow
-  // - we're not dirty (see CharacterDataChanged() function)
+  // - intrinsic widths haven't been marked dirty (which clears
+  //    TEXT_OPTIMIZE_RESIZE)
   // - we don't have a next in flow
   // - the previous reflow successfully reflowed all text in the
   //   available space
@@ -5745,44 +6029,38 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   //   we're not wrapping text and we're at the same column as before (this is
   //   an issue for preformatted tabbed text only)
   // - AND we aren't justified (in which case the frame width has already been tweaked and can't be used)
-  if ((eReflowReason_Resize == aReflowState.reason) &&
-      (0 == (mState & NS_FRAME_IS_DIRTY))) {
-
-    nscoord realWidth = mRect.width;
-    if (mState & TEXT_TRIMMED_WS) {
-      // NOTE: Trailing whitespace includes word and letter spacing!
-      realWidth += ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing;
-    }
-    if (!GetNextInFlow() &&
-        (mState & TEXT_OPTIMIZE_RESIZE) &&
-        !aMetrics.mComputeMEW &&
-        lineLayout.GetForcedBreakPosition(GetContent()) == -1 &&
-        (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
-        ((wrapping && (maxWidth >= realWidth)) ||
-         (!wrapping && (prevColumn == column))) &&
+  nscoord realWidth = mRect.width;
+  if (mState & TEXT_TRIMMED_WS) {
+    // NOTE: Trailing whitespace includes word and letter spacing!
+    realWidth += ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing;
+  }
+  if (!GetNextInFlow() &&
+      (mState & TEXT_OPTIMIZE_RESIZE) &&
+      lineLayout.GetForcedBreakPosition(GetContent()) == -1 &&
+      (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
+      ((wrapping && (maxWidth >= realWidth)) ||
+       (!wrapping && (prevColumn == column))) &&
 #ifdef IBMBIDI
-        (0 == (mState & NS_FRAME_IS_BIDI) ) &&
+      (0 == (mState & NS_FRAME_IS_BIDI) ) &&
 #endif // IBMBIDI
-        !ts.mJustifying) {
-      // We can skip measuring of text and use the value from our
-      // previous reflow
-      measureText = PR_FALSE;
+      !ts.mJustifying) {
+    // We can skip measuring of text and use the value from our
+    // previous reflow
+    measureText = PR_FALSE;
 #ifdef NOISY_REFLOW
-      printf("  => measureText=%s wrapping=%s skipWhitespace=%s",
-             measureText ? "yes" : "no",
-             wrapping ? "yes" : "no",
-             skipWhitespace ? "yes" : "no");
-      printf(" realWidth=%d maxWidth=%d\n",
-             realWidth, maxWidth);
+    printf("  => measureText=%s wrapping=%s skipWhitespace=%s",
+           measureText ? "yes" : "no",
+           wrapping ? "yes" : "no",
+           skipWhitespace ? "yes" : "no");
+    printf(" realWidth=%d maxWidth=%d\n",
+           realWidth, maxWidth);
 #endif
-    }
   }
 
   // Local state passed to the routines that do the actual text measurement
   TextReflowData  textData(startingOffset, wrapping, skipWhitespace, 
                            measureText, inWord, lineLayout.GetFirstLetterStyleOK(),
-                           lineLayout.LineIsBreakable(), aMetrics.mComputeMEW, 
-                           PR_FALSE);
+                           lineLayout.LineIsBreakable(), PR_FALSE);
   
   // Measure the text
   // MeasureText may set TEXT_TRIMMED_WS flag, so don't clear after the call
@@ -5816,12 +6094,6 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.height = aMetrics.ascent + aMetrics.descent;
   }
   mAscent = aMetrics.ascent;
-  if (!wrapping) {
-    textData.mMaxWordWidth = textData.mX;
-  }
-  if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = textData.mMaxWordWidth;
-  }
 
   // Set content offset and length
   mContentOffset = startingOffset;
@@ -5922,12 +6194,11 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+/* virtual */ PRBool
+nsTextFrame::CanContinueTextRun() const
 {
   // We can continue a text run through a text frame
-  aContinueTextRun = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -6038,6 +6309,14 @@ nsIAtom*
 nsTextFrame::GetType() const
 {
   return nsLayoutAtoms::textFrame;
+}
+
+PRBool
+nsTextFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  // Set the frame state bit for text frames to mark them as replaced.
+  // XXX kipp: temporary
+  return !(aFlags & ~(eReplaced));
 }
 
 /* virtual */ PRBool

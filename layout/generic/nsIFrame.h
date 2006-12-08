@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// {0a099557-d85a-4bb1-8932-65717f245564}
+// a72e0b78-db39-401a-bafd-85daa7c0504a
 #define NS_IFRAME_IID \
-{ 0x0a099557, 0xd85a, 0x4bb1, \
-  { 0x89, 0x32, 0x65, 0x71, 0x7f, 0x24, 0x55, 0x64 } }
+{ 0xa72e0b78, 0xdb39, 0x401a, \
+  { 0xba, 0xfd, 0x85, 0xda, 0xa7, 0xc0, 0x50, 0x4a } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -129,6 +129,8 @@ typedef PRUint32 nsSplittableType;
 
 #define NS_FRAME_IS_NOT_SPLITTABLE(type)\
   (0 == ((type) & NS_FRAME_SPLITTABLE))
+
+#define NS_INTRINSIC_WIDTH_UNKNOWN nscoord_MIN
 
 //----------------------------------------------------------------------
 
@@ -164,9 +166,11 @@ typedef PRUint32 nsFrameState;
 // destroyed to allow these references to be cleared.
 #define NS_FRAME_EXTERNAL_REFERENCE                   0x00000010
 
-// If this bit is set, then the frame is a replaced element. For example,
-// a frame displaying an image
-#define NS_FRAME_REPLACED_ELEMENT                     0x00000020
+// If this bit is set, this frame or one of its descendants has a
+// percentage height that depends on an ancestor of this frame.
+// (Or it did at one point in the past, since we don't necessarily clear
+// the bit when it's no longer needed; it's an optimization.)
+#define NS_FRAME_CONTAINS_RELATIVE_HEIGHT             0x00000020
 
 // If this bit is set, then the frame corresponds to generated content
 #define NS_FRAME_GENERATED_CONTENT                    0x00000040
@@ -183,13 +187,22 @@ typedef PRUint32 nsFrameState;
 #define NS_FRAME_SELECTED_CONTENT                     0x00000200
 
 // If this bit is set, then the frame is dirty and needs to be reflowed.
-// This bit is set when the frame is first created
+// This bit is set when the frame is first created.
+// This bit is cleared by DidReflow after the required call to Reflow has
+// finished.
 #define NS_FRAME_IS_DIRTY                             0x00000400
 
 // If this bit is set then the frame is unflowable.
 #define NS_FRAME_IS_UNFLOWABLE                        0x00000800
 
-// If this bit is set, the frame has dirty children.
+// If this bit is set, either:
+//  1. the frame has children that have either NS_FRAME_IS_DIRTY or
+//     NS_FRAME_HAS_DIRTY_CHILDREN, or
+//  2. the frame has had descendants removed.
+// It means that Reflow needs to be called, but that Reflow will not
+// do as much work as it would if NS_FRAME_IS_DIRTY were set.
+// This bit is cleared by DidReflow after the required call to Reflow has
+// finished.
 #define NS_FRAME_HAS_DIRTY_CHILDREN                   0x00001000
 
 // If this bit is set, the frame has an associated view
@@ -970,6 +983,190 @@ public:
     return NS_CONST_CAST(nsIFrame*, this);
   }
 
+
+  /**
+   * Mark any stored intrinsic width information as dirty (requiring
+   * re-calculation).  Note that this should generally not be called
+   * directly; nsPresShell::FrameNeedsReflow will call it instead.
+   */
+  virtual void MarkIntrinsicWidthsDirty() = 0;
+
+  /**
+   * Get the intrinsic minimum width of the frame.  This must be less
+   * than or equal to the intrinsic width.
+   *
+   * This is *not* affected by the CSS 'min-width', 'width', and
+   * 'max-width' properties on this frame, but it is affected by the
+   * values of those properties on this frame's descendants.  (It may be
+   * called during computation of the values of those properties, so it
+   * cannot depend on any values in the nsStylePosition for this frame.)
+   *
+   * The value returned should **NOT** include the space required for
+   * padding and border.
+   *
+   * Note that many frames will cache the result of this function call
+   * unless MarkIntrinsicWidthsDirty is called.
+   *
+   * It is not acceptable for a frame to mark itself dirty when this
+   * method is called.
+   */
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext) = 0;
+
+  /**
+   * Get the intrinsic width of the frame.  This must be greater than or
+   * equal to the intrinsic minimum width.
+   *
+   * Otherwise, all the comments for |GetMinWidth| above apply.
+   */
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext) = 0;
+
+  /**
+   * |InlineIntrinsicWidth| represents the intrinsic width information
+   * in inline layout.  Code that determines the intrinsic width of a
+   * region of inline layout accumulates the result into this structure.
+   * This pattern is needed because we need to maintain state
+   * information about whitespace (for both collapsing and trimming).
+   */
+  struct InlineIntrinsicWidthData {
+    InlineIntrinsicWidthData()
+      : prevLines(0)
+      , currentLine(0)
+      , skipWhitespace(PR_TRUE)
+      , trailingWhitespace(0)
+    {}
+
+    // The maximum intrinsic width for all previous lines.
+    nscoord prevLines;
+
+    // The maximum intrinsic width for the current line.  At a line
+    // break (mandatory for preferred width; allowed for minimum width),
+    // the caller should call |Break()|.
+    nscoord currentLine;
+
+    // True if initial collapsable whitespace should be skipped.  This
+    // should be true at the beginning of a block and when the last text
+    // ended with whitespace.
+    PRBool skipWhitespace;
+
+    // This contains the width of the trimmable whitespace at the end of
+    // |currentLine|; it is zero if there is no such whitespace.
+    nscoord trailingWhitespace;
+
+    // Floats encountered in the lines.
+    nsVoidArray floats; // of nsIFrame*
+  };
+
+  struct InlineMinWidthData : public InlineIntrinsicWidthData {
+    InlineMinWidthData()
+      : trailingTextFrame(nsnull)
+    {}
+
+    void Break(nsIRenderingContext *aRenderingContext);
+
+    // The last text frame processed so far in the current line, when
+    // the last characters in that text frame are relevant for line
+    // break opportunities.
+    nsIFrame *trailingTextFrame;
+  };
+
+  struct InlinePrefWidthData : public InlineIntrinsicWidthData {
+    void Break(nsIRenderingContext *aRenderingContext);
+  };
+
+  /**
+   * Add the intrinsic minimum width of a frame in a way suitable for
+   * use in inline layout to an |InlineIntrinsicWidthData| object that
+   * represents the intrinsic width information of all the previous
+   * frames in the inline layout region.
+   *
+   * All *allowed* breakpoints within the frame determine what counts as
+   * a line for the |InlineIntrinsicWidthData|.  This means that
+   * |aData->trailingWhitespace| will always be zero (unlike for
+   * AddInlinePrefWidth).
+   *
+   * All the comments for |GetMinWidth| apply, except that this function
+   * is responsible for adding padding, border, and margin and for
+   * considering the effects of 'width', 'min-width', and 'max-width'.
+   *
+   * This may be called on any frame.  For frames that do not
+   * participate in line breaking, the result will simply append the
+   * result of |GetMinWidth| to the current line.
+   */
+  virtual void
+  AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                    InlineMinWidthData *aData) = 0;
+
+  /**
+   * Get the intrinsic width of a frame in a way suitable for
+   * use in inline layout.
+   *
+   * All the comments for |GetInlinePrefWidth| apply, except that this
+   * fills in an |InlineIntrinsicWidthData| structure based on using all
+   * *mandatory* breakpoints within the frame.
+   */
+  virtual void
+  AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                     InlinePrefWidthData *aData) = 0;
+
+  /**
+   * Return the horizontal components of padding, border, and margin
+   * that contribute to the intrinsic width that applies to the parent.
+   */
+  struct IntrinsicWidthOffsetData {
+    nscoord hPadding, hBorder, hMargin;
+    float hPctPadding, hPctMargin;
+
+    IntrinsicWidthOffsetData()
+      : hPadding(0), hBorder(0), hMargin(0)
+      , hPctPadding(0.0f), hPctMargin(0.0f)
+    {}
+  };
+  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets() = 0;
+
+  /**
+   * Compute the size that a frame will occupy.  Called while
+   * constructing the nsHTMLReflowState to be used to Reflow the frame,
+   * in order to fill its mComputedWidth and mComputedHeight member
+   * variables.
+   *
+   * The |height| member of the return value may be
+   * NS_UNCONSTRAINEDSIZE, but the |width| member must not be.
+   *
+   * Note that the reason that border and padding need to be passed
+   * separately is so that the 'box-sizing' property can be handled.
+   * Thus aMargin includes absolute positioning offsets as well.
+   *
+   * @param aCBSize  The size of the element's containing block.  (Well,
+   *                 the |height| component isn't really.)
+   * @param aAvailableWidth  The available width for 'auto' widths.
+   *                         This is usually the same as aCBSize.width,
+   *                         but differs in cases such as block
+   *                         formatting context roots next to floats, or
+   *                         in some cases of float reflow in quirks
+   *                         mode.
+   * @param aMargin  The sum of the vertical / horizontal margins
+   *                 ***AND*** absolute positioning offsets (top, right,
+   *                 bottom, left) of the frame, including actual values
+   *                 resulting from percentages and from the
+   *                 "hypothetical box" for absolute positioning, but
+   *                 not including actual values resulting from 'auto'
+   *                 margins or ignored 'auto' values in absolute
+   *                 positioning.
+   * @param aBorder  The sum of the vertical / horizontal border widths
+   *                 of the frame.
+   * @param aPadding  The sum of the vertical / horizontal margins of
+   *                  the frame, including actual values resulting from
+   *                  percentages.
+   * @param aShrinkWrap  Whether the frame is in a context where
+   *                     non-replaced blocks should shrink-wrap (e.g.,
+   *                     it's floating, absolutely positioned, or
+   *                     inline-block).
+   */
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap) = 0;
+
   /**
    * Pre-reflow hook. Before a frame is reflowed this method will be called.
    * This call will always be invoked at least once before a subsequent Reflow
@@ -982,22 +1179,28 @@ public:
   NS_IMETHOD  WillReflow(nsPresContext* aPresContext) = 0;
 
   /**
-   * The frame is given a maximum size and asked for its desired size.
-   * This is the frame's opportunity to reflow its children.
+   * The frame is given an available size and asked for its desired
+   * size.  This is the frame's opportunity to reflow its children.
+   *
+   * If the frame has the NS_FRAME_IS_DIRTY bit set then it is
+   * responsible for completely reflowing itself and all of its
+   * descendants.
+   *
+   * Otherwise, if the frame has the NS_FRAME_HAS_DIRTY_CHILDREN bit
+   * set, then it is responsible for reflowing at least those
+   * children that have NS_FRAME_HAS_DIRTY_CHILDREN or NS_FRAME_IS_DIRTY
+   * set.
+   *
+   * If a difference in available size from the previous reflow causes
+   * the frame's size to change, it should reflow descendants as needed.
    *
    * @param aReflowMetrics <i>out</i> parameter where you should return the
    *          desired size and ascent/descent info. You should include any
    *          space you want for border/padding in the desired size you return.
    *
-   *          It's okay to return a desired size that exceeds the max
+   *          It's okay to return a desired size that exceeds the avail
    *          size if that's the smallest you can be, i.e. it's your
    *          minimum size.
-   *
-   *          maxElementSize is an optional parameter for returning your
-   *          maximum element size. If may be null in which case you
-   *          don't have to compute a maximum element size. The
-   *          maximum element size must be less than or equal to your
-   *          desired size.
    *
    *          For an incremental reflow you are responsible for invalidating
    *          any area within your frame that needs repainting (including
@@ -1008,10 +1211,7 @@ public:
    * @param aReflowState information about your reflow including the reason
    *          for the reflow and the available space in which to lay out. Each
    *          dimension of the available space can either be constrained or
-   *          unconstrained (a value of NS_UNCONSTRAINEDSIZE). If constrained
-   *          you should choose a value that's less than or equal to the
-   *          constrained size. If unconstrained you can choose as
-   *          large a value as you like.
+   *          unconstrained (a value of NS_UNCONSTRAINEDSIZE).
    *
    *          Note that the available space can be negative. In this case you
    *          still must return an accurate desired size. If you're a container
@@ -1051,14 +1251,12 @@ public:
    * Helper method used by block reflow to identify runs of text so
    * that proper word-breaking can be done.
    *
-   * @param aContinueTextRun A frame should set aContinueTextRun to
+   * @return 
    *    PR_TRUE if we can continue a "text run" through the frame. A
    *    text run is text that should be treated contiguously for line
    *    and word breaking.
-   *
-   * @return The return value is irrelevant.
    */
-  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const = 0;
+  virtual PRBool CanContinueTextRun() const = 0;
 
   // Justification helper method that is used to remove trailing
   // whitespace before justification.
@@ -1165,10 +1363,15 @@ public:
    * Bit-flags to pass to IsFrameOfType()
    */
   enum {
-    eMathML =              1 << 0,
-    eSVG =                 1 << 1,
-    eSVGForeignObject =    1 << 2,
-    eBidiInlineContainer = 1 << 3
+    eMathML =                           1 << 0,
+    eSVG =                              1 << 1,
+    eSVGForeignObject =                 1 << 2,
+    eBidiInlineContainer =              1 << 3,
+    // the frame is for a replaced element, such as an image
+    eReplaced =                         1 << 4,
+    // Frame that contains a block but looks like a replaced element
+    // from the outside
+    eReplacedContainsBlock =            1 << 5
   };
 
   /**
@@ -1357,12 +1560,12 @@ public:
   NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)=0;
 
   /**
-   *  Called by a child frame on a parent frame to tell the parent frame that the child needs
-   *  to be reflowed.  The parent should either propagate the request to its parent frame or 
-   *  handle the request by generating a eReflowType_ReflowDirtyChildren reflow command.
+   * Called to tell a frame that one of its child frames is dirty (i.e.,
+   * has the NS_FRAME_IS_DIRTY *or* NS_FRAME_HAS_DIRTY_CHILDREN bit
+   * set).  This should always set the NS_FRAME_HAS_DIRTY_CHILDREN on
+   * the frame, and may do other work.
    */
-
-  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild) = 0;
+  virtual void ChildIsDirty(nsIFrame* aChild) = 0;
 
   /**
    * Called to retrieve this frame's accessible.
@@ -1583,10 +1786,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                        PRBool aRemoveOverflowArea = PR_FALSE)=0;
   NS_HIDDEN_(nsresult) Layout(nsBoxLayoutState& aBoxLayoutState);
-  nsresult IsDirty(PRBool& aIsDirty) { aIsDirty = (mState & NS_FRAME_IS_DIRTY) != 0; return NS_OK; }
-  nsresult HasDirtyChildren(PRBool& aIsDirty) { aIsDirty = (mState & NS_FRAME_HAS_DIRTY_CHILDREN) != 0; return NS_OK; }
-  NS_IMETHOD MarkDirty(nsBoxLayoutState& aState)=0;
-  NS_HIDDEN_(nsresult) MarkDirtyChildren(nsBoxLayoutState& aState);
   nsresult GetChildBox(nsIBox** aBox)
   {
     // box layout ends at box-wrapped frames, so don't allow these frames
@@ -1627,12 +1826,8 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   { aIsNormal = IsNormalDirection(); return NS_OK; }
 
   NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
-  NS_IMETHOD NeedsRecalc()=0;
-  NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
-  NS_IMETHOD MarkChildrenStyleChange()=0;
-  NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
   NS_IMETHOD SetIncludeOverflow(PRBool aInclude) = 0;
   NS_IMETHOD GetOverflow(nsSize& aOverflow) = 0;
 

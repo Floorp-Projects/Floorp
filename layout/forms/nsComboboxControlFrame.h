@@ -72,6 +72,7 @@ class nsIView;
 class nsStyleContext;
 class nsIListControlFrame;
 class nsIScrollableView;
+class nsComboboxDisplayFrame;
 
 /**
  * Child list name indices
@@ -90,6 +91,7 @@ class nsComboboxControlFrame : public nsAreaFrame,
 {
 public:
   friend nsIFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
+  friend class nsComboboxDisplayFrame;
 
   nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
@@ -108,6 +110,10 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -122,6 +128,13 @@ public:
                               const nsDisplayListSet& aLists);
 
   void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+
+  // XXXbz this is only needed to prevent the quirk percent height stuff from
+  // leaking out of the combobox.  We may be able to get rid of this as more
+  // things move to IsFrameOfType.
+  virtual nsIAtom* GetType() const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -186,20 +199,9 @@ public:
 
 protected:
 
-#ifdef DO_NEW_REFLOW
-  NS_IMETHOD ReflowItems(nsPresContext* aPresContext,
-                         const nsHTMLReflowState& aReflowState,
-                         nsHTMLReflowMetrics& aDesiredSize);
-#endif
-
-   // Utilities
-  nsresult ReflowComboChildFrame(nsIFrame*           aFrame, 
-                            nsPresContext*          aPresContext, 
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState, 
-                            nsReflowStatus&          aStatus,
-                            nscoord                  aAvailableWidth,
-                            nscoord                  aAvailableHeight);
+  // Utilities
+  nsresult ReflowDropdown(nsPresContext*          aPresContext, 
+                          const nsHTMLReflowState& aReflowState);
 
 public:
   nsresult PositionDropdown(nsPresContext* aPresContext,
@@ -221,25 +223,12 @@ protected:
   
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsPresContext* aPresContext, PRBool aShowList);
-  void SetButtonFrameSize(const nsSize& aSize);
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
   void HandleRedisplayTextEvent();
   void ActuallyDisplayText(PRBool aNotify);
-  nsresult GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsPresContext* aPresContext);
-
-  void ReflowCombobox(nsPresContext *         aPresContext,
-                      const nsHTMLReflowState& aReflowState,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      nsReflowStatus&          aStatus,
-                      nsIFrame *               aDisplayFrame,
-                      nscoord&                 aDisplayWidth,
-                      nscoord                  aBtnWidth,
-                      const nsMargin&          aBorderPadding,
-                      nscoord                  aFallBackHgt = -1,
-                      PRBool                   aCheckHeight = PR_FALSE);
 
   nsFrameList              mPopupFrames;             // additional named child list
   nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
@@ -249,18 +238,10 @@ protected:
   nsIFrame*                mTextFrame;               // display area frame
   nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
 
-  // Resize Reflow Optimization
-  nsSize                mCacheSize;
-  nsSize                mCachedAvailableSize;
-  nscoord               mCachedMaxElementWidth;
-  nscoord               mCachedAscent;
-
-  nsSize                mCachedUncDropdownSize;
-  nsSize                mCachedUncComboSize;
-
-  nscoord               mItemDisplayWidth;
-  //nscoord               mItemDisplayHeight;
-
+  // The width of our display area.  Used by that frame's reflow to
+  // size to the full width except the drop-marker.
+  nscoord mDisplayWidth;
+  
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mInRedisplayText;
 

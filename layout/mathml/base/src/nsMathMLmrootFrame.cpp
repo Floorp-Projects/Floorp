@@ -160,7 +160,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
   // ask our children to compute their bounding metrics 
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW,
+  nsHTMLReflowMetrics childDesiredSize(
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   nsReflowStatus childStatus;
@@ -177,14 +177,12 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   PRInt32 count = 0;
   nsIFrame* baseFrame = nsnull;
   nsIFrame* indexFrame = nsnull;
-  nsHTMLReflowMetrics baseSize(nsnull);
-  nsHTMLReflowMetrics indexSize(nsnull);
+  nsHTMLReflowMetrics baseSize;
+  nsHTMLReflowMetrics indexSize;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsReflowReason reason = (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
-      ? eReflowReason_Initial : aReflowState.reason;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize, reason);
+                                       childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext,
                      childDesiredSize, childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
@@ -203,9 +201,6 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     }
     count++;
     childFrame = childFrame->GetNextSibling();
-  }
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
   if (2 != count) {
     // report an error, encourage people to get their markups in order
@@ -367,9 +362,6 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-  }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

@@ -1292,23 +1292,78 @@ nsTextControlFrame::GetRows()
 
 
 nsresult
-nsTextControlFrame::ReflowStandard(nsPresContext*          aPresContext,
-                                   nsSize&                  aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsReflowStatus&          aStatus)
+nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
+                                      nsSize&              aIntrinsicSize)
 {
-  // get the css size and let the frame use or override it
-  nsSize minSize;
-  nsresult rv = CalculateSizeStandard(aPresContext, aReflowState,
-                                      aDesiredSize, minSize);
+  // Get leading and the Average/MaxAdvance char width 
+  nscoord lineHeight  = 0;
+  nscoord charWidth   = 0;
+  nscoord charMaxAdvance  = 0;
+
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsresult rv =
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, rv);
+  aRenderingContext->SetFont(fontMet);
+
+  nsPresContext* presContext = GetPresContext();
+  lineHeight = nsHTMLReflowState::CalcLineHeight(presContext,
+                                                 aRenderingContext,
+                                                 this);
+  fontMet->GetAveCharWidth(charWidth);
+  fontMet->GetMaxAdvance(charMaxAdvance);
+
+  // Set the width equal to the width in characters
+  PRInt32 cols = GetCols();
+  aIntrinsicSize.width = cols * charWidth;
+
+  // To better match IE, take the maximum character width(in twips) and remove
+  // 4 pixels add this on as additional padding(internalPadding). But only do
+  // this if charMaxAdvance != charWidth; if they are equal, this is almost
+  // certainly a fixed-width font.
+  if (charWidth != charMaxAdvance) {
+    float p2t;
+    p2t = presContext->PixelsToTwips();
+    nscoord internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
+    // round to a multiple of p2t
+    nscoord t = NSToCoordRound(p2t); 
+    nscoord rest = internalPadding % t; 
+    if (rest < t - rest) {
+      internalPadding -= rest;
+    } else {
+      internalPadding += t - rest;
+    }
+    // Now add the extra padding on (so that small input sizes work well)
+    aIntrinsicSize.width += internalPadding;
+  } else {
+    // This is to account for the anonymous <br> having a 1 twip width
+    // in Full Standards mode, see BRFrame::Reflow and bug 228752.
+    if (presContext->CompatibilityMode() == eCompatibility_FullStandards) {
+      aIntrinsicSize.width += 1;
+    }
+  }
+
+  // Increment width with cols * letter-spacing.
+  {
+    const nsStyleCoord& lsCoord = GetStyleText()->mLetterSpacing;
+    if (eStyleUnit_Coord == lsCoord.GetUnit()) {
+      nscoord letterSpacing = lsCoord.GetCoordValue();
+      if (letterSpacing != 0) {
+        aIntrinsicSize.width += cols * letterSpacing;
+      }
+    }
+  }
+
+  // Set the height equal to total number of rows (times the height of each
+  // line, of course)
+  aIntrinsicSize.height = lineHeight * GetRows();
 
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
     float p2t;
-    p2t = aPresContext->PixelsToTwips();
+    p2t = presContext->PixelsToTwips();
 
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = presContext->DeviceContext();
 
     float   scale;
     dx->GetCanonicalPixelScale(scale);
@@ -1320,96 +1375,10 @@ nsTextControlFrame::ReflowStandard(nsPresContext*          aPresContext,
     nscoord scrollbarWidth  = PRInt32(sbWidth * scale);
     nscoord scrollbarHeight = PRInt32(sbHeight * scale);
 
-    aDesiredSize.height += scrollbarHeight;
-    minSize.height      += scrollbarHeight;
+    aIntrinsicSize.height += scrollbarHeight;
 
-    aDesiredSize.width  += scrollbarWidth;
-    minSize.width       += scrollbarWidth;
+    aIntrinsicSize.width  += scrollbarWidth;
   }
-  aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-
-  return NS_OK;
-}
-
-
-
-nsresult
-nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
-                                          const nsHTMLReflowState& aReflowState,
-                                          nsSize&               aDesiredSize,
-                                          nsSize&               aMinSize)
-{
-  aDesiredSize.width  = CSS_NOTSET;
-  aDesiredSize.height = CSS_NOTSET;
-
-  // Get leading and the Average/MaxAdvance char width 
-  nscoord lineHeight  = 0;
-  nscoord charWidth   = 0;
-  nscoord charMaxAdvance  = 0;
-
-  nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult rv =
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIRenderingContext* rendContext = aReflowState.rendContext;
-  rendContext->SetFont(fontMet);
-  lineHeight = aReflowState.CalcLineHeight(aPresContext, rendContext, this);
-  fontMet->GetAveCharWidth(charWidth);
-  fontMet->GetMaxAdvance(charMaxAdvance);
-
-  // Set the width equal to the width in characters
-  PRInt32 cols = GetCols();
-  aDesiredSize.width = cols * charWidth;
-
-  // To better match IE, take the maximum character width(in twips) and remove
-  // 4 pixels add this on as additional padding(internalPadding). But only do
-  // this if charMaxAdvance != charWidth; if they are equal, this is almost
-  // certainly a fixed-width font.
-  if (charWidth != charMaxAdvance) {
-    float p2t;
-    p2t = aPresContext->PixelsToTwips();
-    nscoord internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
-    // round to a multiple of p2t
-    nscoord t = NSToCoordRound(p2t); 
-    nscoord rest = internalPadding % t; 
-    if (rest < t - rest) {
-      internalPadding -= rest;
-    } else {
-      internalPadding += t - rest;
-    }
-    // Now add the extra padding on (so that small input sizes work well)
-    aDesiredSize.width += internalPadding;
-  } else {
-    // This is to account for the anonymous <br> having a 1 twip width
-    // in Full Standards mode, see BRFrame::Reflow and bug 228752.
-    if (aPresContext->CompatibilityMode() == eCompatibility_FullStandards) {
-      aDesiredSize.width += 1;
-    }
-  }
-
-  // Increment width with cols * letter-spacing.
-  {
-    const nsStyleCoord& lsCoord = GetStyleText()->mLetterSpacing;
-    if (eStyleUnit_Coord == lsCoord.GetUnit()) {
-      nscoord letterSpacing = lsCoord.GetCoordValue();
-      if (letterSpacing != 0) {
-        aDesiredSize.width += cols * letterSpacing;
-      }
-    }
-  }
-
-  // Set the height equal to total number of rows (times the height of each
-  // line, of course)
-  aDesiredSize.height = lineHeight * GetRows();
-
-  // Set minimum size equal to desired size.  We are form controls.  We are Gods
-  // among elements.  We do not yield for anybody, not even a table cell.  None
-  // shall pass.
-  aMinSize.width  = aDesiredSize.width;
-  aMinSize.height = aDesiredSize.height;
 
   return NS_OK;
 }
@@ -1783,13 +1752,33 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   return aChildList.AppendElement(divContent);
 }
 
+nscoord
+nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
+{
+  // Note: to fix bug 40596 while still working correctly in general, we want
+  // to return our preferred width as our min width if our style width is auto.
+  // Otherwise, we're ok with shrinking as small as needed.
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    result = GetPrefWidth(aRenderingContext);
+  } else {
+    result = 0;
+  }
+
+  return result;
+}
+
+// We inherit our GetPrefWidth from nsBoxFrame
+
 NS_IMETHODIMP
 nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // make sure the the form registers itself on the initial/first reflow
@@ -1797,19 +1786,8 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, PR_TRUE);
   }
 
-  nsresult rv = nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  if (NS_SUCCEEDED(rv))
-  { // fix for bug 40596, width:auto means the control sets it's mMaxElementWidth to it's default width
-    if (aDesiredSize.mComputeMEW)
-    {
-      const nsStylePosition* stylePosition = GetStylePosition();
-      nsStyleUnit widthUnit = stylePosition->mWidth.GetUnit();
-      if (eStyleUnit_Auto == widthUnit) {
-        aDesiredSize.mMaxElementWidth = aDesiredSize.width;
-      }
-    }
-  }
-  return rv;
+  return nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                              aStatus);
 }
 
 NS_IMETHODIMP
@@ -1827,24 +1805,15 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.width = 0;
   aSize.height = 0;
 
+  // XXXbz this is almost certainly wrong.
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed)
     return NS_OK;
 
-  nsPresContext* presContext = aState.PresContext();
-  const nsHTMLReflowState* reflowState = aState.GetReflowState();
-  // XXXldb Is there a good reason to think this is both non-null and the
-  // correct reflow state?
-  if (!reflowState)
-    return NS_OK;
-
-  nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
-  nsFormControlFrame::GetStyleSize(presContext, *reflowState, styleSize);
-
-  nsReflowStatus status;
-  nsresult rv = ReflowStandard(presContext, aSize, *reflowState, status);
+  nsresult rv = CalcIntrinsicSize(aState.GetRenderingContext(), aSize);
   NS_ENSURE_SUCCESS(rv, rv);
+  AddBorderAndPadding(aSize);
   AddInset(aSize);
 
   mPrefSize = aSize;
@@ -1869,18 +1838,14 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsTextControlFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-#define FIX_FOR_BUG_40596
-#ifdef FIX_FOR_BUG_40596
-  aSize = mMinSize;
-  return NS_OK;
-#else
+  // XXXbz why?  Why not the nsBoxFrame sizes?
   return nsBox::GetMinSize(aState, aSize);
-#endif
 }
 
 NS_IMETHODIMP
 nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  // XXXbz why?  Why not the nsBoxFrame sizes?
   return nsBox::GetMaxSize(aState, aSize);
 }
 
@@ -1892,7 +1857,9 @@ nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   NS_ENSURE_SUCCESS(rv, rv);
     
   // Now adjust the ascent for our borders and padding
-  aAscent += aState.GetReflowState()->mComputedBorderPadding.top;
+  nsMargin borderPadding;
+  GetBorderAndPadding(borderPadding);
+  aAscent += borderPadding.top;
   
   return NS_OK;
 }
@@ -1903,7 +1870,11 @@ nsTextControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-
+PRBool
+nsTextControlFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
+}
 
 static PRBool
 IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)

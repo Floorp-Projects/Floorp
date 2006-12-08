@@ -65,6 +65,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
 
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup);
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid);

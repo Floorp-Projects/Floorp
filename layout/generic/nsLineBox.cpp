@@ -59,8 +59,6 @@ PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
     mBounds(0, 0, 0, 0),
-    mMaxElementWidth(0),
-    mMaximumWidth(-1),
     mData(nsnull)
 {
   MOZ_COUNT_CTOR(nsLineBox);
@@ -215,9 +213,6 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
           StateToString(cbuf, sizeof(cbuf)));
   if (IsBlock() && !GetCarriedOutBottomMargin().IsZero()) {
     fprintf(out, "bm=%d ", GetCarriedOutBottomMargin().get());
-  }
-  if (0 != mMaxElementWidth) {
-    fprintf(out, "mew=%d ", mMaxElementWidth);
   }
   fprintf(out, "{%d,%d,%d,%d} ",
           mBounds.x, mBounds.y, mBounds.width, mBounds.height);

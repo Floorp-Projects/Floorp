@@ -535,8 +535,9 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
     NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
     NS_ASSERTION(presShell, "No PresShell.");
     if (mParent && presShell) { 
-      mState |= NS_FRAME_IS_DIRTY;
-      mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
+      AddStateBits(NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(NS_STATIC_CAST(nsIFrame*, this),
+                                  nsIPresShell::eStyleChange);
     }
   }
 
@@ -638,8 +639,9 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
         NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
         if (mParent && presShell) { 
-          mState |= NS_FRAME_IS_DIRTY;
-          mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
+          AddStateBits(NS_FRAME_IS_DIRTY);
+          presShell->FrameNeedsReflow(NS_STATIC_CAST(nsIFrame*, this),
+                                      nsIPresShell::eStyleChange);
         }
       } else {
         nsSize s = GetSize();
@@ -674,18 +676,8 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
   return NS_OK;
 }
 
-
-#define MINMAX(_value,_min,_max) \
-    ((_value) < (_min)           \
-     ? (_min)                    \
-     : ((_value) > (_max)        \
-        ? (_max)                 \
-        : (_value)))
-
 void
-nsImageFrame::GetDesiredSize(nsPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
+nsImageFrame::EnsureIntrinsicSize(nsPresContext* aPresContext)
 {
   // if mIntrinsicSize.width and height are 0, then we should
   // check to see if the size is already known by the image container.
@@ -720,154 +712,29 @@ nsImageFrame::GetDesiredSize(nsPresContext* aPresContext,
       RecalculateTransform(nsnull);
     }
   }
+}
 
-  // Handle intrinsic sizes and their interaction with
-  // {min-,max-,}{width,height} according to the rules in
-  // http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
-
-  // Note: throughout the following section of the function, I avoid
-  // a * (b / c) because of its reduced accuracy relative to a * b / c
-  // or (a * b) / c (which are equivalent).
+/* virtual */ nsSize
+nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                          nsSize aCBSize, nscoord aAvailableWidth,
+                          nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                          PRBool aShrinkWrap)
+{
+  nsPresContext *presContext = GetPresContext();
+  EnsureIntrinsicSize(presContext);
 
   // convert from normal twips to scaled twips (printing...)
-  float t2st = aPresContext->TwipsToPixels() *
-    aPresContext->ScaledPixelsToTwips(); // twips to scaled twips
+  float t2st = presContext->TwipsToPixels() *
+    presContext->ScaledPixelsToTwips(); // twips to scaled twips
   nscoord intrinsicWidth =
       NSToCoordRound(float(mIntrinsicSize.width) * t2st);
   nscoord intrinsicHeight =
       NSToCoordRound(float(mIntrinsicSize.height) * t2st);
 
-  // Determine whether the image has fixed content width
-  nscoord width = aReflowState.mComputedWidth;
-  nscoord minWidth = aReflowState.mComputedMinWidth;
-  nscoord maxWidth = aReflowState.mComputedMaxWidth;
-
-  // Determine whether the image has fixed content height
-  nscoord height = aReflowState.mComputedHeight;
-  nscoord minHeight = aReflowState.mComputedMinHeight;
-  nscoord maxHeight = aReflowState.mComputedMaxHeight;
-
-  PRBool isAutoWidth = width == NS_INTRINSICSIZE;
-  PRBool isAutoHeight = height == NS_UNCONSTRAINEDSIZE;
-  if (isAutoWidth) {
-    if (isAutoHeight) {
-
-      // 'auto' width, 'auto' height
-      // XXX nsHTMLReflowState should already ensure this
-      if (minWidth > maxWidth)
-        maxWidth = minWidth;
-      if (minHeight > maxHeight)
-        maxHeight = minHeight;
-
-      nscoord heightAtMaxWidth, heightAtMinWidth,
-              widthAtMaxHeight, widthAtMinHeight;
-      if (intrinsicWidth > 0) {
-        heightAtMaxWidth = maxWidth * intrinsicHeight / intrinsicWidth;
-        if (heightAtMaxWidth < minHeight)
-          heightAtMaxWidth = minHeight;
-        heightAtMinWidth = minWidth * intrinsicHeight / intrinsicWidth;
-        if (heightAtMinWidth > maxHeight)
-          heightAtMinWidth = maxHeight;
-      } else {
-        heightAtMaxWidth = intrinsicHeight;
-        heightAtMinWidth = intrinsicHeight;
-      }
-
-      if (intrinsicHeight > 0) {
-        widthAtMaxHeight = maxHeight * intrinsicWidth / intrinsicHeight;
-        if (widthAtMaxHeight < minWidth)
-          widthAtMaxHeight = minWidth;
-        widthAtMinHeight = minHeight * intrinsicWidth / intrinsicHeight;
-        if (widthAtMinHeight > maxWidth)
-          widthAtMinHeight = maxWidth;
-      } else {
-        widthAtMaxHeight = intrinsicWidth;
-        widthAtMinHeight = intrinsicWidth;
-      }
-
-      if (intrinsicWidth > maxWidth) {
-        if (intrinsicHeight > maxHeight) {
-          if (maxWidth * intrinsicHeight <= maxHeight * intrinsicWidth) {
-            width = maxWidth;
-            height = heightAtMaxWidth;
-          } else {
-            height = maxHeight;
-            width = widthAtMaxHeight;
-          }
-        } else {
-          width = maxWidth;
-          height = heightAtMaxWidth;
-        }
-      } else if (intrinsicWidth < minWidth) {
-        if (intrinsicHeight < minHeight) {
-          if (minWidth * intrinsicHeight <= minHeight * intrinsicWidth) {
-            height = minHeight;
-            width = widthAtMinHeight;
-          } else {
-            width = minWidth;
-            height = heightAtMinWidth;
-          }
-        } else {
-          width = minWidth;
-          height = heightAtMinWidth;
-        }
-      } else {
-        if (intrinsicHeight > maxHeight) {
-          height = maxHeight;
-          width = widthAtMaxHeight;
-        } else if (intrinsicHeight < minHeight) {
-          height = minHeight;
-          width = widthAtMinHeight;
-        } else {
-          width = intrinsicWidth;
-          height = intrinsicHeight;
-        }
-      }
-
-    } else {
-
-      // 'auto' width, non-'auto' height
-      // XXX nsHTMLReflowState should already ensure this
-      height = MINMAX(height, minHeight, maxHeight);
-      if (intrinsicHeight != 0) {
-        width = intrinsicWidth * height / intrinsicHeight;
-      } else {
-        width = intrinsicWidth;
-      }
-      width = MINMAX(width, minWidth, maxWidth);
-
-    }
-  } else {
-    if (isAutoHeight) {
-
-      // non-'auto' width, 'auto' height
-      // XXX nsHTMLReflowState should already ensure this
-      width = MINMAX(width, minWidth, maxWidth);
-      if (intrinsicWidth != 0) {
-        height = intrinsicHeight * width / intrinsicWidth;
-      } else {
-        height = intrinsicHeight;
-      }
-      height = MINMAX(height, minHeight, maxHeight);
-
-    } else {
-
-      // non-'auto' width, non-'auto' height
-      // XXX nsHTMLReflowState should already ensure this
-      height = MINMAX(height, minHeight, maxHeight);
-      // XXX nsHTMLReflowState should already ensure this
-      width = MINMAX(width, minWidth, maxWidth);
-
-    }
-  }
-
-  if (mComputedSize.width != width || mComputedSize.height != height) {
-    mComputedSize.SizeTo(width, height);
-    RecalculateTransform(nsnull);
-  }
-
-  aDesiredSize.width = mComputedSize.width;
-  aDesiredSize.height = mComputedSize.height;
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+                            aRenderingContext, this,
+                            nsSize(intrinsicWidth, intrinsicHeight),
+                            aCBSize, aBorder, aPadding);
 }
 
 nsRect 
@@ -906,13 +773,45 @@ nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
   return offset;
 }
 
+/* virtual */ nscoord
+nsImageFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  // XXX The caller doesn't account for constraints of the height,
+  // min-height, and max-height properties.
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+  nsPresContext *presContext = GetPresContext();
+  EnsureIntrinsicSize(presContext);
+  // convert from normal twips to scaled twips (printing...)
+  float t2st = presContext->TwipsToPixels() *
+               presContext->ScaledPixelsToTwips();
+  result = NSToCoordRound(float(mIntrinsicSize.width) * t2st);
+  return result;
+}
+
+/* virtual */ nscoord
+nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  // XXX The caller doesn't account for constraints of the height,
+  // min-height, and max-height properties.
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+  nsPresContext *presContext = GetPresContext();
+  EnsureIntrinsicSize(presContext);
+  // convert from normal twips to scaled twips (printing...)
+  float t2st = presContext->TwipsToPixels() *
+               presContext->ScaledPixelsToTwips();
+  result = NSToCoordRound(float(mIntrinsicSize.width) * t2st);
+  return result;
+}
+
 NS_IMETHODIMP
 nsImageFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsImageFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsImageFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("enter nsImageFrame::Reflow: availSize=%d,%d",
@@ -929,7 +828,9 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     mState &= ~IMAGE_SIZECONSTRAINED;
   }
 
-  if (aReflowState.reason == eReflowReason_Initial) {
+  // XXXldb These two bits are almost exact opposites (except in the
+  // middle of the initial reflow); remove IMAGE_GOTINITIALREFLOW.
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     mState |= IMAGE_GOTINITIALREFLOW;
   }
 
@@ -937,8 +838,14 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   // transform it can.
   mBorderPadding   = aReflowState.mComputedBorderPadding;
 
-  // get the desired size of the complete image
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
+  nsSize newSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+  if (mComputedSize != newSize) {
+    mComputedSize = newSize;
+    RecalculateTransform(nsnull);
+  }
+
+  aMetrics.width = mComputedSize.width;
+  aMetrics.height = mComputedSize.height;
 
   // add borders and padding
   aMetrics.width  += mBorderPadding.left + mBorderPadding.right;
@@ -978,13 +885,6 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.ascent  = aMetrics.height;
   aMetrics.descent = 0;
 
-  if (aMetrics.mComputeMEW) {
-    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
-  
-  if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    aMetrics.mMaximumWidth = aMetrics.width;
-  }
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
   FinishAndStoreOverflow(&aMetrics);
 
@@ -1764,8 +1664,10 @@ nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   if (nsHTMLAtoms::alt == aAttribute)
   {
-    mState |= NS_FRAME_IS_DIRTY;
-    mParent->ReflowDirtyChild(GetPresContext()->PresShell(), (nsIFrame*) this);
+    AddStateBits(NS_FRAME_IS_DIRTY);
+    GetPresContext()->PresShell()->FrameNeedsReflow(
+                                       NS_STATIC_CAST(nsIFrame*, this),
+                                       nsIPresShell::eStyleChange);
   }
 
   return NS_OK;
@@ -1775,6 +1677,12 @@ nsIAtom*
 nsImageFrame::GetType() const
 {
   return nsLayoutAtoms::imageFrame;
+}
+
+PRBool
+nsImageFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced));
 }
 
 #ifdef DEBUG

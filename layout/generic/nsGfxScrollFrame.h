@@ -239,6 +239,10 @@ public:
                           const nsHTMLReflowMetrics& aDesiredSize);
   void PlaceScrollArea(const ScrollReflowState& aState);
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  NS_IMETHOD GetPadding(nsMargin& aPadding);
+
    NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
@@ -355,6 +359,12 @@ protected:
   }
   PRBool GuessVScrollbarNeeded(const ScrollReflowState& aState);
 
+#ifdef DEBUG
+  PRBool IsScrollbarUpdateSuppressed() const {
+    return mInner.mSupppressScrollbarUpdate;
+  }
+#endif
+  
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner mInner;
@@ -387,10 +397,10 @@ public:
     return mInner.BuildDisplayList(aBuilder, aDirtyRect, aLists);
   }
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                  nsHTMLReflowMetrics&     aDesiredSize,
-                  const nsHTMLReflowState& aReflowState,
-                  nsReflowStatus&          aStatus);
+  // XXXldb Is this actually used?
+#if 0
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+#endif
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
@@ -517,6 +527,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -530,7 +541,6 @@ protected:
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner mInner;
-  nscoord mMaxElementWidth;
 };
 
 #endif /* nsGfxScrollFrame_h___ */

@@ -87,6 +87,7 @@ public:
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -152,6 +153,13 @@ nsDocElementBoxFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsDocElementBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+
+PRBool
+nsDocElementBoxFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  // Override nsBoxFrame.
+  return !aFlags;
+}
 
 #ifdef DEBUG
 NS_IMETHODIMP

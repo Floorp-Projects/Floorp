@@ -38,7 +38,6 @@
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsReflowPath.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -271,11 +270,9 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32         aColIndex,
   if (!tableFrame)
     return;
 
-  // XXX this could be optimized with much effort
-  tableFrame->SetNeedStrategyInit(PR_TRUE);
-
-  // Generate a reflow command so we reflow the table
-  nsTableFrame::AppendDirtyReflowCommand(tableFrame);
+  tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  GetPresContext()->PresShell()->FrameNeedsReflow(tableFrame,
+                                                  nsIPresShell::eTreeChange);
 }
 
 void
@@ -305,10 +302,9 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
   if (!tableFrame)
     return;
 
-  // XXX this could be optimized with much effort
-  tableFrame->SetNeedStrategyInit(PR_TRUE);
-  // Generate a reflow command so we reflow the table
-  nsTableFrame::AppendDirtyReflowCommand(tableFrame);
+  tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  GetPresContext()->PresShell()->FrameNeedsReflow(tableFrame,
+                                                  nsIPresShell::eTreeChange);
 }
 
 NS_IMETHODIMP
@@ -330,10 +326,9 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
     tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
 
-    // XXX This could probably be optimized with much effort
-    tableFrame->SetNeedStrategyInit(PR_TRUE);
-    // Generate a reflow command so we reflow the table
-    nsTableFrame::AppendDirtyReflowCommand(tableFrame);
+    tableFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    GetPresContext()->PresShell()->FrameNeedsReflow(tableFrame,
+                                                    nsIPresShell::eTreeChange);
   }
   else {
     mFrames.DestroyFrame(aOldFrame);
@@ -360,7 +355,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTableColGroupFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTableColGroupFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
   nsresult rv=NS_OK;
@@ -375,20 +370,13 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   }
   // for every content child that (is a column thingy and does not already have a frame)
   // create a frame and adjust it's style
-  nsIFrame* kidFrame = nsnull;
   
-  
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    rv = IncrementalReflow(aDesiredSize, aReflowState, aStatus);
-  }
-
-  for (kidFrame = mFrames.FirstChild(); kidFrame;
+  for (nsIFrame *kidFrame = mFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
-    nsHTMLReflowMetrics kidSize(nsnull);
-    // XXX Use a valid reason...
+    nsHTMLReflowMetrics kidSize;
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
-                                     nsSize(0,0), eReflowReason_Initial);
+                                     nsSize(0,0));
 
     nsReflowStatus status;
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, status);
@@ -399,103 +387,15 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.height=0;
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
-  if (aDesiredSize.mComputeMEW)
-  {
-    aDesiredSize.mMaxElementWidth=0;
-  }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsHTMLReflowMetrics&     aDesiredSize,
-                                                  const nsHTMLReflowState& aReflowState,
-                                                  nsReflowStatus&          aStatus)
+/* virtual */ PRBool
+nsTableColGroupFrame::IsContainingBlock() const
 {
-
-  // the col group is a target if its path has a reflow command
-  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
-  if (command)
-    IR_TargetIsMe(aDesiredSize, aReflowState, aStatus);
-
-  // see if the chidren are targets as well
-  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
-  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
-  for (; iter != end; ++iter)
-    IR_TargetIsChild(aDesiredSize, aReflowState, aStatus, *iter);
-
-  return NS_OK;
-}
-
-NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsHTMLReflowMetrics&     aDesiredSize,
-                                              const nsHTMLReflowState& aReflowState,
-                                              nsReflowStatus&          aStatus)
-{
-  nsresult rv = NS_OK;
-  aStatus = NS_FRAME_COMPLETE;
-  switch (aReflowState.path->mReflowCommand->Type())
-  {
-  case eReflowType_StyleChanged :
-    rv = IR_StyleChanged(aDesiredSize, aReflowState, aStatus);
-    break;
-
-  case eReflowType_ContentChanged :
-    NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
-    rv = NS_ERROR_ILLEGAL_VALUE;
-    break;
-  
-  default:
-    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    break;
-  }
-
-  return rv;
-}
-
-NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsHTMLReflowMetrics&     aDesiredSize,
-                                                const nsHTMLReflowState& aReflowState,
-                                                nsReflowStatus&          aStatus)
-{
-  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
-  // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_NULL_POINTER;
-  
-  tableFrame->SetNeedStrategyInit(PR_TRUE);
-  return NS_OK;
-  
-}
-
-NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsHTMLReflowMetrics&     aDesiredSize,
-                                                 const nsHTMLReflowState& aReflowState,
-                                                 nsReflowStatus&          aStatus,
-                                                 nsIFrame *               aNextFrame)
-{
-  nsresult rv;
- 
-  // Pass along the reflow command
-  nsHTMLReflowMetrics desiredSize(nsnull);
-  nsPresContext* presContext = GetPresContext();
-  nsHTMLReflowState kidReflowState(presContext, aReflowState, aNextFrame,
-                                   nsSize(aReflowState.availableWidth,
-                                          aReflowState.availableHeight));
-  rv = ReflowChild(aNextFrame, presContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
-  aNextFrame->DidReflow(presContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_NULL_POINTER;
-  
-  // compare the new col count to the old col count.
-  // If they are the same, we just need to rebalance column widths
-  // If they differ, we need to fix up other column groups and the column cache
-  // XXX for now assume the worse
-  tableFrame->SetNeedStrategyInit(PR_TRUE);
-  return NS_OK;
+  return PR_TRUE;
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()

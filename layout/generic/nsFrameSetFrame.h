@@ -148,6 +148,9 @@ public:
                     nsReflowStatus&          aStatus);
 
   virtual nsIAtom* GetType() const;
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+#endif
 
   virtual PRBool IsLeaf() const;
   

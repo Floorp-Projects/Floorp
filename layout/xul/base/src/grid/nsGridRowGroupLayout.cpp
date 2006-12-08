@@ -195,7 +195,10 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   if (aBox) {
     // mark us dirty
-    aBox->MarkDirty(aState);
+    aBox->AddStateBits(NS_FRAME_IS_DIRTY);
+    // XXXldb We probably don't want to walk up the ancestor chain
+    // calling MarkIntrinsicWidthsDirty for every row group.
+    aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange);
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
 

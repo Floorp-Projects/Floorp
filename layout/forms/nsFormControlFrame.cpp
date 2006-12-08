@@ -80,157 +80,22 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-void nsFormControlFrame::SetupCachedSizes(nsSize& aCacheSize,
-                                          nscoord& aCachedAscent,
-                                          nscoord& aCachedMaxElementWidth,
-                                          nsHTMLReflowMetrics& aDesiredSize)
+nscoord
+nsFormControlFrame::GetIntrinsicWidth()
 {
-  aCacheSize.width  = aDesiredSize.width;
-  aCacheSize.height = aDesiredSize.height;
-  aCachedAscent = aDesiredSize.ascent;
-  if (aDesiredSize.mComputeMEW) {
-    aCachedMaxElementWidth  = aDesiredSize.mMaxElementWidth;
-  }
+  // Intrinsic width is 144 twips.  Why?  I have no idea; that's what
+  // it was before I touched this code, and the original checkin
+  // comment is not so helpful.
+  return 144;
 }
 
-//------------------------------------------------------------
-void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
-                                          nscoord& aCachedAscent,
-                                          nscoord& aCachedMaxElementWidth,
-                                          nsSize& aCachedAvailableSize,
-                                          nsHTMLReflowMetrics& aDesiredSize,
-                                          const nsHTMLReflowState& aReflowState,
-                                          nsReflowStatus& aStatus,
-                                          PRBool& aBailOnWidth,
-                                          PRBool& aBailOnHeight)
+nscoord
+nsFormControlFrame::GetIntrinsicHeight()
 {
-
-  if (aReflowState.reason == eReflowReason_Incremental ||
-#ifdef IBMBIDI
-      aReflowState.reason == eReflowReason_StyleChange ||
-#endif
-      aReflowState.reason == eReflowReason_Dirty) {
-    aBailOnHeight = PR_FALSE;
-    aBailOnWidth  = PR_FALSE;
-
-  } else if (eReflowReason_Initial == aReflowState.reason) {
-    aBailOnHeight = PR_FALSE;
-    aBailOnWidth  = PR_FALSE;
-
-  } else {
-
-    nscoord width;
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
-      if (aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE) {
-        width = NS_UNCONSTRAINEDSIZE;
-        aBailOnWidth = aCacheSize.width != kSizeNotSet;
-#ifdef FCF_NOISY
-        if (aBailOnWidth) {
-          printf("-------------- #1 Bailing on aCachedAvailableSize.width %d != kSizeNotSet\n", aCachedAvailableSize.width);
-        }
-#endif
-      } else {
-        width = aReflowState.availableWidth - aReflowState.mComputedBorderPadding.left -
-                aReflowState.mComputedBorderPadding.right;
-        aBailOnWidth = aCachedAvailableSize.width <= width && aCachedAvailableSize.width != kSizeNotSet;
-#ifdef FCF_NOISY
-        if (aBailOnWidth) {
-          printf("-------------- #2 Bailing on aCachedAvailableSize.width %d <= width %d\n", aCachedAvailableSize.width, width );
-        } else {
-          aBailOnWidth = width <= (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
-                         aCachedAvailableSize.width == kSizeNotSet;
-          if (aBailOnWidth) {
-            printf("-------------- #2.2 Bailing on width %d <= aCachedAvailableSize.width %d\n",(aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), width );
-          }        
-        }
-#endif
-      }
-    } else {
-      width = aReflowState.mComputedWidth;
-      //if (aCachedAvailableSize.width == kSizeNotSet) {
-      //  //aBailOnWidth = aCachedAvailableSize.width == aCacheSize.width;
-        aBailOnWidth = PR_FALSE;
-      //} else {
-        aBailOnWidth = width == (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
-      //}
-#ifdef FCF_NOISY
-      if (aBailOnWidth) {
-        printf("-------------- #3 Bailing on aCachedAvailableSize.width %d == aReflowState.mComputedWidth %d\n", aCachedAvailableSize.width, width );
-      }
-#endif
-    }
-    
-    nscoord height;
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
-      if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
-        height = NS_UNCONSTRAINEDSIZE;
-        aBailOnHeight = aCacheSize.height != kSizeNotSet;
-#ifdef FCF_NOISY
-        if (aBailOnHeight) {
-          printf("-------------- #1 Bailing on aCachedAvailableSize.height %d != kSizeNotSet\n", aCachedAvailableSize.height);
-        }
-#endif
-      } else {
-        height = aReflowState.availableHeight - aReflowState.mComputedBorderPadding.left -
-                aReflowState.mComputedBorderPadding.right;
-        aBailOnHeight = aCachedAvailableSize.height <= height && aCachedAvailableSize.height != kSizeNotSet;
-#ifdef FCF_NOISY
-        if (aBailOnHeight) {
-          printf("-------------- #2 Bailing on aCachedAvailableSize.height %d <= height %d\n", aCachedAvailableSize.height, height );
-        } else {
-          aBailOnHeight = height <= (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
-                         aCachedAvailableSize.height == kSizeNotSet;
-          if (aBailOnHeight) {
-            printf("-------------- #2.2 Bailing on height %d <= aCachedAvailableSize.height %d\n",(aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), height );
-          }        
-        }
-#endif
-      }
-    } else {
-      height = aReflowState.mComputedHeight;
-      //if (aCachedAvailableSize.height == kSizeNotSet) {
-      //  //aBailOnHeight = aCachedAvailableSize.height == aCacheSize.height;
-        aBailOnHeight = PR_FALSE;
-      //} else {
-        aBailOnHeight = height == (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
-      //}
-#ifdef FCF_NOISY
-      if (aBailOnHeight) {
-        printf("-------------- #3 Bailing on aCachedAvailableSize.height %d == aReflowState.mComputedHeight %d\n", aCachedAvailableSize.height, height );
-      }
-#endif
-    }
-
-    if (aBailOnWidth || aBailOnHeight) {
-      aDesiredSize.width  = aCacheSize.width;
-      aDesiredSize.height = aCacheSize.height;
-      aDesiredSize.ascent = aCachedAscent;
-      aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
-
-      if (aDesiredSize.mComputeMEW) {
-        aDesiredSize.mMaxElementWidth = aCachedMaxElementWidth;
-      }
-    }
-  }
-}
-
-void 
-nsFormControlFrame::GetDesiredSize(nsPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
-{
-  // get the css size and let the frame use or override it
-  nsSize styleSize;
-  GetStyleSize(aPresContext, aReflowState, styleSize);
-
-  // subclasses should always override this method, but if not and no css, make it small
-  aDesiredSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
-  aDesiredSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 144;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
+  // Intrinsic height is 144 twips.  Why?  I have no idea; that's what
+  // it was before I touched this code, and the original checkin
+  // comment is not so helpful.
+  return 144;
 }
 
 NS_IMETHODIMP
@@ -275,21 +140,15 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsFormControlFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsFormControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  if (!mDidInit) {
+  if (mState & NS_FRAME_FIRST_REFLOW) {
     RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    mDidInit = PR_TRUE;
   }
 
-  nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-
-  aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  FinishAndStoreOverflow(&aDesiredSize);
-  return rv;
+  return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                             aStatus);
 }
 
 nsresult
@@ -333,25 +192,6 @@ nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
   return NS_OK;
-}
-
-void 
-nsFormControlFrame::GetStyleSize(nsPresContext* aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsSize& aSize)
-{
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) {
-    aSize.width = aReflowState.mComputedWidth;
-  }
-  else {
-    aSize.width = CSS_NOTSET;
-  }
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-    aSize.height = aReflowState.mComputedHeight;
-  }
-  else {
-    aSize.height = CSS_NOTSET;
-  }
 }
 
 void

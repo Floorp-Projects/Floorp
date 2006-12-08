@@ -57,7 +57,6 @@ struct nsFrameItems;
 struct nsAbsoluteItems;
 struct nsTableCreator;
 class nsStyleContext;
-struct nsTableList;
 struct nsStyleContent;
 struct nsStyleDisplay;
 class nsIPresShell;

@@ -3136,9 +3136,20 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    // Flush out all content and style updates. We can't use a resize reflow
    // because it won't change some sizes that a style change reflow will.
    mDocument->FlushPendingNotifications(Flush_Layout);
-                                        
-   NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
-      NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
+
+  nsIFrame *root = presShell->GetRootFrame();
+  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
+
+  nscoord prefWidth;
+  {
+    nsCOMPtr<nsIRenderingContext> rcx;
+    presShell->CreateRenderingContext(root, getter_AddRefs(rcx));
+    NS_ENSURE_TRUE(rcx, NS_ERROR_FAILURE);
+    prefWidth = root->GetPrefWidth(rcx);
+  }
+
+  nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
    nsCOMPtr<nsPresContext> presContext;
    GetPresContext(getter_AddRefs(presContext));

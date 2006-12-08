@@ -48,7 +48,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsLayoutAtoms.h"
-#include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsContentUtils.h"
@@ -63,8 +62,7 @@
 const nscoord kSuggestedNotSet = -1;
 
 nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext):
-  nsHTMLButtonControlFrame(aContext),
-  mSuggestedSize(kSuggestedNotSet, kSuggestedNotSet)
+  nsHTMLButtonControlFrame(aContext)
 {
 }
 
@@ -306,44 +304,6 @@ PRBool
 nsGfxButtonControlFrame::IsLeaf() const
 {
   return PR_TRUE;
-}
-
-NS_IMETHODIMP 
-nsGfxButtonControlFrame::Reflow(nsPresContext*          aPresContext, 
-                                nsHTMLReflowMetrics&     aDesiredSize,
-                                const nsHTMLReflowState& aReflowState, 
-                                nsReflowStatus&          aStatus)
-{
-  DO_GLOBAL_REFLOW_COUNT("nsGfxButtonControlFrame", aReflowState.reason);
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-
-  if ((kSuggestedNotSet != mSuggestedSize.width) || 
-      (kSuggestedNotSet != mSuggestedSize.height)) {
-    nsHTMLReflowState suggestedReflowState(aReflowState);
-
-      // Honor the suggested width and/or height.
-    if (kSuggestedNotSet != mSuggestedSize.width) {
-      suggestedReflowState.mComputedWidth = mSuggestedSize.width;
-    }
-
-    if (kSuggestedNotSet != mSuggestedSize.height) {
-      suggestedReflowState.mComputedHeight = mSuggestedSize.height;
-    }
-
-    return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
-
-  }
-  
-  // Normal reflow.
-
-  return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-}
-
-void
-nsGfxButtonControlFrame::SetSuggestedSize(const nsSize& aSize)
-{
-  mSuggestedSize = aSize;
-  //mState |= NS_FRAME_IS_DIRTY;
 }
 
 NS_IMETHODIMP

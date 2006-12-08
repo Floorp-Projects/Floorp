@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
-#include "nsReflowPath.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
@@ -91,10 +90,11 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.AppendFrames(nsnull, aFrameList);
 
-  // Generate a reflow command to reflow the dirty frames
+  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  // no damage to intrinsic widths, since absolutely positioned frames can't
+  // change them
   return aDelegatingFrame->GetPresContext()->PresShell()->
-          AppendReflowCommand(aDelegatingFrame, eReflowType_ReflowDirty,
-                              GetChildListName());
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
 }
 
 nsresult
@@ -112,10 +112,11 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  // Generate a reflow command to reflow the dirty frames
+  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  // no damage to intrinsic widths, since absolutely positioned frames can't
+  // change them
   return aDelegatingFrame->GetPresContext()->PresShell()->
-          AppendReflowCommand(aDelegatingFrame, eReflowType_ReflowDirty,
-                              GetChildListName());
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
 }
 
 nsresult
@@ -158,102 +159,31 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   const nsHTMLReflowState& aReflowState,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
-                                  nsRect*                  aChildBounds,
-                                  PRBool                   aForceReflow,
                                   PRBool                   aCBWidthChanged,
-                                  PRBool                   aCBHeightChanged)
+                                  PRBool                   aCBHeightChanged,
+                                  nsRect*                  aChildBounds)
 {
   // Initialize OUT parameter
   if (aChildBounds)
     aChildBounds->SetRect(0, 0, 0, 0);
 
-  // Make a copy of the reflow state.  If the reason is
-  // eReflowReason_Incremental (which should mean either that the target
-  // is the frame for which this is the absolute container or that the
-  // container changed size due to incremental reflow of its children),
-  // then change it to eReflowReason_Resize.
-  // XXXldb If the target is this frame, shouldn't we be setting it
-  // appropriately (which might mean to StyleChanged)?
-  nsHTMLReflowState reflowState(aReflowState);
-  if (eReflowReason_Incremental == reflowState.reason) {
-    reflowState.reason = eReflowReason_Resize;
-  }
+  PRBool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-    if (!aForceReflow &&
-        !FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
-      // Skip this frame, but add it in to the child bounds as needed
-      AddFrameToChildBounds(kidFrame, aChildBounds);
-      continue;
+    if (reflowAll ||
+        (kidFrame->GetStateBits() &
+           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+        FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
+      // Reflow the frame
+      nsReflowStatus  kidStatus;
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, aContainingBlockWidth,
+                          aContainingBlockHeight, kidFrame, kidStatus);
+
     }
-    nsReflowReason  reason = reflowState.reason;
-
-    nsFrameState kidState = kidFrame->GetStateBits();
-    if (NS_FRAME_FIRST_REFLOW & kidState) {
-      // The frame has never had a reflow, so change the reason to eReflowReason_Initial
-      reason = eReflowReason_Initial;
-
-    } else if (NS_FRAME_IS_DIRTY & kidState) {
-      // The frame is dirty so give it the correct reflow reason
-      reason = eReflowReason_Dirty;
-    }
-
-    // Reflow the frame
-    nsReflowStatus  kidStatus;
-    ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, aContainingBlockWidth,
-                        aContainingBlockHeight, kidFrame, reason, kidStatus);
-
     AddFrameToChildBounds(kidFrame, aChildBounds);
   }
   return NS_OK;
-}
-
-void
-nsAbsoluteContainingBlock::CalculateChildBounds(nsPresContext* aPresContext,
-                                                nsRect&         aChildBounds)
-{
-  // Initialize the OUT parameters
-  aChildBounds.SetRect(0, 0, 0, 0);
-
-  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
-    AddFrameToChildBounds(f, &aChildBounds);
-  }
-}
-
-PRBool
-nsAbsoluteContainingBlock::ReflowingAbsolutesOnly(nsIFrame* aDelegatingFrame,
-                                                  const nsHTMLReflowState& aReflowState)
-{
-  // See if the reflow command is targeted at us.
-  nsReflowPath *path = aReflowState.path;
-  nsHTMLReflowCommand *command = path->mReflowCommand;
-
-  if (command) {
-    // It's targeted at us. See if it's for the positioned child frames
-    if (GetChildListName() != command->GetChildListName()) {
-      // A reflow command is targeted directly at this block.
-      // The block will have to do a proper reflow.
-      return PR_FALSE;
-    }
-  }
-
-  nsReflowPath::iterator iter = path->FirstChild();
-  nsReflowPath::iterator end = path->EndChildren();
-
-  if (iter != end && mAbsoluteFrames.NotEmpty()) {
-    for ( ; iter != end; ++iter) {
-      // See if it's one of our absolutely positioned child frames
-      if (!mAbsoluteFrames.ContainsFrame(*iter)) {
-        // At least one of the frames along the reflow path wasn't
-        // absolutely positioned, so we'll need to deal with it in
-        // normal block reflow.
-        return PR_FALSE;
-      }
-    }
-  }
-
-  return PR_TRUE;
 }
 
 static PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
@@ -364,64 +294,6 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
 }
 
 void
-nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                                             nsPresContext*           aPresContext,
-                                             const nsHTMLReflowState& aReflowState,
-                                             nscoord                  aContainingBlockWidth,
-                                             nscoord                  aContainingBlockHeight)
-{
-  // See if the reflow command is targeted at us.
-  nsReflowPath *path = aReflowState.path;
-  nsHTMLReflowCommand *command = path->mReflowCommand;
-
-  if (command) {
-    // It's targeted at us. See if it's for the positioned child frames
-    if (GetChildListName() == command->GetChildListName()) {
-      // The only type of reflow command we expect is that we have dirty
-      // child frames to reflow
-      NS_ASSERTION(command->Type() == eReflowType_ReflowDirty,
-                   "unexpected reflow type");
-
-      // Walk the positioned frames and reflow the dirty frames
-      for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
-        nsFrameState  frameState = f->GetStateBits();
-
-        if (frameState & NS_FRAME_IS_DIRTY) {
-          nsReflowStatus  status;
-          nsReflowReason  reason;
-
-          reason = (frameState & NS_FRAME_FIRST_REFLOW)
-            ? eReflowReason_Initial
-            : eReflowReason_Dirty;
-
-          ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                              aContainingBlockWidth, aContainingBlockHeight, f,
-                              reason, status);
-        }
-      }
-    }
-  }
-
-  nsReflowPath::iterator iter = path->FirstChild();
-  nsReflowPath::iterator end = path->EndChildren();
-
-  if (iter != end && mAbsoluteFrames.NotEmpty()) {
-    for ( ; iter != end; ++iter) {
-      // See if it's one of our absolutely positioned child frames
-      if (mAbsoluteFrames.ContainsFrame(*iter)) {
-        // Remove the next frame from the reflow path
-        nsReflowStatus kidStatus;
-        ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                            aContainingBlockWidth, aContainingBlockHeight, *iter,
-                            aReflowState.reason, kidStatus);
-
-        aReflowState.path->Remove(iter);
-      }
-    }
-  }
-}
-
-void
 nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
 {
   mAbsoluteFrames.DestroyFrames();
@@ -442,7 +314,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
                                                nsIFrame*                aKidFrame,
-                                               nsReflowReason           aReason,
                                                nsReflowStatus&          aStatus)
 {
 #ifdef DEBUG
@@ -457,16 +328,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
         printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
       }
     }
-    printf("r=%d",aReflowState.reason);
 
-    if (aReflowState.reason == eReflowReason_Incremental) {
-      nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
-
-      if (command) {
-        // We're the target.
-        printf("(%d)", command->Type());      
-      }
-    }
     char width[16];
     char height[16];
     PrettyUC(aReflowState.availableWidth, width);
@@ -483,207 +345,137 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // Get the border values
   const nsMargin& border = aReflowState.mStyleBorder->GetBorder();
 
-  nscoord availWidth = aReflowState.mComputedWidth;
-  enum { NOT_SHRINK_TO_FIT, SHRINK_TO_FIT_AVAILWIDTH, SHRINK_TO_FIT_MEW };
-  PRUint32 situation = NOT_SHRINK_TO_FIT;
-  while (1) {
-    nsHTMLReflowMetrics kidDesiredSize(nsnull);
-    if (situation == NOT_SHRINK_TO_FIT &&
-        !(aKidFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)) {
-      // CSS2.1 10.3.7 width:auto and at least one of left/right is auto...
-      const nsStylePosition* stylePosition = aKidFrame->GetStylePosition();
-      if (eStyleUnit_Auto == stylePosition->mWidth.GetUnit() &&
-          (eStyleUnit_Auto == stylePosition->mOffset.GetLeftUnit() ||
-           eStyleUnit_Auto == stylePosition->mOffset.GetRightUnit())) {
-        situation = SHRINK_TO_FIT_AVAILWIDTH;
-        if (aContainingBlockWidth != -1) {
-          availWidth = aContainingBlockWidth;
-        } else {
-          availWidth = aReflowState.mComputedWidth;
-        }
-        kidDesiredSize.mComputeMEW = PR_TRUE;
-      }
+  nscoord availWidth = aContainingBlockWidth;
+  if (availWidth == -1) {
+    NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE,
+                 "Must have a useful width _somewhere_");
+    availWidth =
+      aReflowState.mComputedWidth + aReflowState.mComputedPadding.LeftRight();
+  }
+    
+  nsHTMLReflowMetrics kidDesiredSize;
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
+                                   nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
+                                   aContainingBlockWidth,
+                                   aContainingBlockHeight);
+
+  // Send the WillReflow() notification and position the frame
+  aKidFrame->WillReflow(aPresContext);
+
+  // XXXldb We can simplify this if we come up with a better way to
+  // position views.
+  nscoord x;
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
+    // Just use the current x-offset
+    x = aKidFrame->GetPosition().x;
+  } else {
+    x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
+  }
+  aKidFrame->SetPosition(nsPoint(x, border.top +
+                                    kidReflowState.mComputedOffsets.top +
+                                    kidReflowState.mComputedMargin.top));
+
+  // Position its view, but don't bother it doing it now if we haven't
+  // yet determined the left offset
+  if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
+    nsContainerFrame::PositionFrameView(aKidFrame);
+  }
+
+  // Do the reflow
+  rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+
+  // If we're solving for 'left' or 'top', then compute it now that we know the
+  // width/height
+  if ((NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) ||
+      (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)) {
+    if (-1 == aContainingBlockWidth) {
+      // Get the containing block width/height
+      kidReflowState.ComputeContainingBlockRectangle(aPresContext,
+                                                     &aReflowState,
+                                                     aContainingBlockWidth,
+                                                     aContainingBlockHeight);
     }
 
-    nsSize            availSize(availWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                     availSize, aContainingBlockWidth,
-                                     aContainingBlockHeight,
-                                     aReason);
-
-    if (situation == SHRINK_TO_FIT_MEW) {
-      situation = NOT_SHRINK_TO_FIT; // This is the last reflow
-      kidReflowState.mComputedWidth = PR_MIN(availWidth, kidReflowState.mComputedMaxWidth);
-      if (kidReflowState.mComputedWidth < kidReflowState.mComputedMinWidth) {
-        kidReflowState.mComputedWidth = kidReflowState.mComputedMinWidth;
-      }
-    } else if (situation == SHRINK_TO_FIT_AVAILWIDTH) {
-      NS_ASSERTION(availWidth != NS_UNCONSTRAINEDSIZE,
-                   "shrink-to-fit: expected a constrained available width");
-      PRInt32 maxWidth = availWidth -
-        (kidReflowState.mComputedMargin.left + kidReflowState.mComputedBorderPadding.left +
-         kidReflowState.mComputedBorderPadding.right + kidReflowState.mComputedMargin.right);
-      if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.right) {
-        maxWidth -= kidReflowState.mComputedOffsets.right;
-      }
-      if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
-        maxWidth -= kidReflowState.mComputedOffsets.left;
-      }
-      // The following also takes care of maxWidth<0
-      if (kidReflowState.mComputedMaxWidth > maxWidth) {
-        kidReflowState.mComputedMaxWidth = PR_MAX(maxWidth, kidReflowState.mComputedMinWidth);
-      }
-    }
-
-    // Send the WillReflow() notification and position the frame
-    aKidFrame->WillReflow(aPresContext);
-
-    // XXXldb We can simplify this if we come up with a better way to
-    // position views.
-    nscoord x;
     if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
-      // Just use the current x-offset
-      x = aKidFrame->GetPosition().x;
-    } else {
-      x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
+      NS_ASSERTION(NS_AUTOOFFSET != kidReflowState.mComputedOffsets.right,
+                   "Can't solve for both left and right");
+      kidReflowState.mComputedOffsets.left = aContainingBlockWidth -
+                                             kidReflowState.mComputedOffsets.right -
+                                             kidReflowState.mComputedMargin.right -
+                                             kidDesiredSize.width -
+                                             kidReflowState.mComputedMargin.left;
     }
-    aKidFrame->SetPosition(nsPoint(x, border.top +
-                                      kidReflowState.mComputedOffsets.top +
-                                      kidReflowState.mComputedMargin.top));
-
-    // Position its view, but don't bother it doing it now if we haven't
-    // yet determined the left offset
-    if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
-      nsContainerFrame::PositionFrameView(aKidFrame);
+    if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top) {
+      kidReflowState.mComputedOffsets.top = aContainingBlockHeight -
+                                            kidReflowState.mComputedOffsets.bottom -
+                                            kidReflowState.mComputedMargin.bottom -
+                                            kidDesiredSize.height -
+                                            kidReflowState.mComputedMargin.top;
     }
+  }
 
-    // Do the reflow
-    rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+  // Position the child relative to our padding edge
+  nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
+               border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
+               kidDesiredSize.width, kidDesiredSize.height);
+  nsRect oldRect = aKidFrame->GetRect();
+  aKidFrame->SetRect(rect);
 
-    if (situation == SHRINK_TO_FIT_AVAILWIDTH) {
-      // ...continued CSS2.1 10.3.7 width:auto and at least one of left/right is auto
-      availWidth -= kidReflowState.mComputedMargin.left + kidReflowState.mComputedMargin.right;
+  // Size and position the view and set its opacity, visibility, content
+  // transparency, and clip
+  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
+                                             aKidFrame->GetView(),
+                                             &kidDesiredSize.mOverflowArea);
+  // if the frame moved, then the view would have invalidated everything so
+  // we don't need to do any invalidation here.
+  if (oldRect.TopLeft() == rect.TopLeft() &&
+      !(aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+      oldRect.Size() != rect.Size()) {
+    // Invalidate the area where the frame changed size. We can't
+    // rely on the view to do this ... the view size might not change even
+    // though the frame size changed (and besides, views will go away).
+    // Invalidate the vertical strip
+    nscoord innerWidth = PR_MIN(oldRect.width, rect.width);
+    nscoord innerHeight = PR_MIN(oldRect.height, rect.height);
+    nscoord outerWidth = PR_MAX(oldRect.width, rect.width);
+    nscoord outerHeight = PR_MAX(oldRect.height, rect.height);
+    aKidFrame->GetParent()->Invalidate(
+        nsRect(rect.x + innerWidth, rect.y, outerWidth - innerWidth, outerHeight));
+    // Invalidate the horizontal strip
+    aKidFrame->GetParent()->Invalidate(
+        nsRect(rect.x, rect.y + innerHeight, outerWidth, outerHeight - innerHeight));
+  }
+  aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
-      if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.right) {
-        NS_ASSERTION(NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left,
-                     "Can't solve for both left and right");
-        availWidth -= kidReflowState.mComputedOffsets.left;
-      } else {
-        NS_ASSERTION(NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left,
-                     "Expected to solve for left");
-        availWidth -= kidReflowState.mComputedOffsets.right;
-      }
-      if (availWidth < 0) {
-        availWidth = 0;
-      }
+  // If the frame has visible overflow, then store it as a property on the
+  // frame. This allows us to be able to recover it without having to reflow
+  // the frame
+  if (aKidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    // Get the property (creating a rect struct if necessary)
+    nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(PR_TRUE);
 
-      // Shrink-to-fit: min(max(preferred minimum width, available width), preferred width).
-      // XXX this is not completely correct - see bug 201897 comment 56/58 and bug 268499.
-      if (kidDesiredSize.mMaxElementWidth > availWidth) {
-        aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
-        availWidth = PR_MAX(0, kidDesiredSize.mMaxElementWidth -
-                               kidReflowState.mComputedBorderPadding.left -
-                               kidReflowState.mComputedBorderPadding.right);
-        situation = SHRINK_TO_FIT_MEW;
-        aReason = eReflowReason_Resize;
-        continue; // Do a second reflow constrained to MEW.
-      }
+    NS_ASSERTION(overflowArea, "should have created rect");
+    if (overflowArea) {
+      *overflowArea = kidDesiredSize.mOverflowArea;
     }
-
-    // If we're solving for 'left' or 'top', then compute it now that we know the
-    // width/height
-    if ((NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) ||
-        (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)) {
-      if (-1 == aContainingBlockWidth) {
-        // Get the containing block width/height
-        kidReflowState.ComputeContainingBlockRectangle(aPresContext,
-                                                       &aReflowState,
-                                                       aContainingBlockWidth,
-                                                       aContainingBlockHeight);
-      }
-
-      if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
-        NS_ASSERTION(NS_AUTOOFFSET != kidReflowState.mComputedOffsets.right,
-                     "Can't solve for both left and right");
-        kidReflowState.mComputedOffsets.left = aContainingBlockWidth -
-                                               kidReflowState.mComputedOffsets.right -
-                                               kidReflowState.mComputedMargin.right -
-                                               kidDesiredSize.width -
-                                               kidReflowState.mComputedMargin.left;
-      }
-      if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top) {
-        kidReflowState.mComputedOffsets.top = aContainingBlockHeight -
-                                              kidReflowState.mComputedOffsets.bottom -
-                                              kidReflowState.mComputedMargin.bottom -
-                                              kidDesiredSize.height -
-                                              kidReflowState.mComputedMargin.top;
-      }
-    }
-
-    // Position the child relative to our padding edge
-    nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
-                 border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
-                 kidDesiredSize.width, kidDesiredSize.height);
-    nsRect oldRect = aKidFrame->GetRect();
-    aKidFrame->SetRect(rect);
-
-    // Size and position the view and set its opacity, visibility, content
-    // transparency, and clip
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
-                                               aKidFrame->GetView(),
-                                               &kidDesiredSize.mOverflowArea);
-    // if the frame moved, then the view would have invalidated everything so
-    // we don't need to do any invalidation here.
-    if (oldRect.TopLeft() == rect.TopLeft() &&
-        aReason != eReflowReason_Initial &&
-        oldRect.Size() != rect.Size()) {
-      // Invalidate the area where the frame changed size. We can't
-      // rely on the view to do this ... the view size might not change even
-      // though the frame size changed (and besides, views will go away).
-      // Invalidate the vertical strip
-      nscoord innerWidth = PR_MIN(oldRect.width, rect.width);
-      nscoord innerHeight = PR_MIN(oldRect.height, rect.height);
-      nscoord outerWidth = PR_MAX(oldRect.width, rect.width);
-      nscoord outerHeight = PR_MAX(oldRect.height, rect.height);
-      aKidFrame->GetParent()->Invalidate(
-          nsRect(rect.x + innerWidth, rect.y, outerWidth - innerWidth, outerHeight));
-      // Invalidate the horizontal strip
-      aKidFrame->GetParent()->Invalidate(
-          nsRect(rect.x, rect.y + innerHeight, outerWidth, outerHeight - innerHeight));
-    }
-    aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
-
-    // If the frame has visible overflow, then store it as a property on the
-    // frame. This allows us to be able to recover it without having to reflow
-    // the frame
-    if (aKidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-      // Get the property (creating a rect struct if necessary)
-      nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(PR_TRUE);
-
-      NS_ASSERTION(overflowArea, "should have created rect");
-      if (overflowArea) {
-        *overflowArea = kidDesiredSize.mOverflowArea;
-      }
-    }
+  }
 #ifdef DEBUG
-    if (nsBlockFrame::gNoisyReflow) {
-      nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);
-      printf("abs pos ");
-      if (nsnull != aKidFrame) {
-        nsIFrameDebug*  frameDebug;
-        if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
-          nsAutoString name;
-          frameDebug->GetFrameName(name);
-          printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
-        }
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);
+    printf("abs pos ");
+    if (nsnull != aKidFrame) {
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
+        nsAutoString name;
+        frameDebug->GetFrameName(name);
+        printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
       }
-      printf("%p rect=%d,%d,%d,%d", aKidFrame, rect.x, rect.y, rect.width, rect.height);
-      printf("\n");
     }
+    printf("%p rect=%d,%d,%d,%d", aKidFrame, rect.x, rect.y, rect.width, rect.height);
+    printf("\n");
+  }
 #endif
 
-    break;
-  }
   return rv;
 }
 

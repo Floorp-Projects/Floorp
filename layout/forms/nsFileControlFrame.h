@@ -72,6 +72,8 @@ public:
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const;
   virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -127,6 +129,8 @@ protected:
   };
   
   nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
   virtual PRIntn GetSkipSides() const;
 

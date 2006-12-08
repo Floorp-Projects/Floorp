@@ -355,18 +355,28 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 }
 
+nscoord
+nsFileControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  // Our min width is our pref width
+  result = GetPrefWidth(aRenderingContext);
+  return result;
+}
 
 NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsFileControlFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsFileControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   aStatus = NS_FRAME_COMPLETE;
 
-  if (eReflowReason_Initial == aReflowState.reason) {
+  if (mState & NS_FRAME_FIRST_REFLOW) {
     mTextFrame = GetTextControlFrame(aPresContext, this);
     NS_ENSURE_TRUE(mTextFrame, NS_ERROR_UNEXPECTED);
     if (mCachedState) {
@@ -378,7 +388,10 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // The Areaframe takes care of all our reflow 
   // except for when style is used to change its size.
-  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  // XXXbz do we care?  This setup just needs to die....  Leaving it
+  // in for now just because I don't want to regress things, but....
+  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                    aStatus);
   if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
     nsIFrame* child = GetFirstChild(nsnull);
     if (child == mTextFrame) {
@@ -394,12 +407,11 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
       // messes up the button's rect
       if (txtRect.width + buttonRect.width != aDesiredSize.width ||
           txtRect.height != aDesiredSize.height) {
-        nsHTMLReflowMetrics txtKidSize(PR_TRUE);
+        nsHTMLReflowMetrics txtKidSize;
         nsSize txtAvailSize(aReflowState.availableWidth, aDesiredSize.height);
         nsHTMLReflowState   txtKidReflowState(aPresContext,
                                               *aReflowState.parentReflowState,
-                                              this, txtAvailSize,
-                                              eReflowReason_Resize);
+                                              this, txtAvailSize);
         txtKidReflowState.mComputedHeight = aDesiredSize.height;
         rv = nsAreaFrame::WillReflow(aPresContext);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
@@ -408,14 +420,11 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
         rv = nsAreaFrame::DidReflow(aPresContext, &txtKidReflowState, aStatus);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
 
-        // Re-calc and set the correct rect
+        // And now manually resize the frame...
+        txtRect        = mTextFrame->GetRect();
         txtRect.y      = aReflowState.mComputedBorderPadding.top;
         txtRect.height = aDesiredSize.height;
         mTextFrame->SetRect(txtRect);
-
-        if (aDesiredSize.mComputeMEW) {
-           aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-        }
       }
     }
   }
@@ -611,4 +620,8 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-
+PRBool
+nsFileControlFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
+}

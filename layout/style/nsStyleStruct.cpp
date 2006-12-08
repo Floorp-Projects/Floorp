@@ -606,8 +606,9 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 
 nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
-  if (mListStylePosition == aOther.mListStylePosition &&
-      EqualImages(mListStyleImage, aOther.mListStyleImage) &&
+  if (mListStylePosition != aOther.mListStylePosition)
+    return NS_STYLE_HINT_FRAMECHANGE;
+  if (EqualImages(mListStyleImage, aOther.mListStyleImage) &&
       mListStyleType == aOther.mListStyleType) {
     if (mImageRegion == aOther.mImageRegion)
       return NS_STYLE_HINT_NONE;
@@ -622,7 +623,7 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 /* static */
 nsChangeHint nsStyleList::MaxDifference()
 {
-  return NS_STYLE_HINT_REFLOW;
+  return NS_STYLE_HINT_FRAMECHANGE;
 }
 #endif
 

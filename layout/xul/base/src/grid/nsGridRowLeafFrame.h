@@ -53,6 +53,8 @@
  * elements are the children of row group (or column group) elements,
  * and their children are placed one to a cell.
  */
+// XXXldb This needs a better name that indicates that it's for any grid
+// row.
 class nsGridRowLeafFrame : public nsBoxFrame
 {
 public:

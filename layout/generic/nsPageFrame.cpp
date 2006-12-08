@@ -85,7 +85,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsPageFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsPageFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
@@ -98,8 +98,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
                "This frame isn't a pageContentFrame");
 
   if (contentPage && GetPrevInFlow() &&
-      eReflowReason_Incremental != aReflowState.reason &&
-      eReflowReason_Dirty != aReflowState.reason) {
+      (GetStateBits() & NS_FRAME_IS_DIRTY)) {
 
     nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, GetPrevInFlow());
     nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
@@ -623,30 +622,10 @@ nsPageBreakFrame::~nsPageBreakFrame()
 {
 }
 
-void 
-nsPageBreakFrame::GetDesiredSize(nsPresContext*          aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsHTMLReflowMetrics&     aDesiredSize)
+nscoord
+nsPageBreakFrame::GetIntrinsicWidth()
 {
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
-
-  aDesiredSize.width  = onePixel;
-  if (mHaveReflowed) {
-    // If blocks reflow us a 2nd time trying to put us on a new page, then return
-    // a desired height of 0 to avoid an extra page break. 
-    aDesiredSize.height = 0;
-  }
-  else {
-    aDesiredSize.height = aReflowState.availableHeight;
-    // round the height down to the nearest pixel
-    aDesiredSize.height -= aDesiredSize.height % onePixel;
-  }
-
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth  = onePixel;
-  }
-  aDesiredSize.ascent  = 0;
-  aDesiredSize.descent = 0;
+  return GetPresContext()->IntScaledPixelsToTwips(1);
 }
 
 nsresult 
@@ -655,13 +634,22 @@ nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  aStatus = NS_FRAME_COMPLETE; 
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-  mHaveReflowed = PR_TRUE;
+  // Override reflow, since we don't want to deal with what our
+  // computed values are.
+  aDesiredSize.width = GetIntrinsicWidth();
+  aDesiredSize.height = aReflowState.availableHeight;
+  // round the height down to the nearest pixel
+  aDesiredSize.height -=
+    aDesiredSize.height % GetPresContext()->IntScaledPixelsToTwips(1);
+  aDesiredSize.ascent = aDesiredSize.descent = 0;
 
+  // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
+  // DidReflow will always get called before the next Reflow() call.
+  mHaveReflowed = PR_TRUE;
+  aStatus = NS_FRAME_COMPLETE; 
   return NS_OK;
 }
 

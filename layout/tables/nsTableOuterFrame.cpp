@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
-#include "nsHTMLReflowCommand.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -54,6 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsDisplayList.h"
+#include "nsLayoutUtils.h"
 
 /* ----------- nsTableCaptionFrame ---------- */
 
@@ -78,6 +78,26 @@ nsTableCaptionFrame::GetType() const
   return nsLayoutAtoms::tableCaptionFrame;
 }
 
+inline PRBool IsSideCaption(nsIFrame* aCaptionFrame)
+{
+  PRUint8 captionSide = aCaptionFrame->GetStyleTableBorder()->mCaptionSide;
+  return captionSide == NS_SIDE_LEFT || captionSide == NS_SIDE_RIGHT;
+}
+
+/* virtual */ nsSize
+nsTableCaptionFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                     nsSize aCBSize, nscoord aAvailableWidth,
+                                     nsSize aMargin, nsSize aBorder,
+                                     nsSize aPadding, PRBool aShrinkWrap)
+{
+  nsSize result = nsBlockFrame::ComputeAutoSize(aRenderingContext, aCBSize,
+                    aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
+  if (IsSideCaption(this)) {
+    result.width = GetMinWidth(aRenderingContext);
+  }
+  return result;
+}
+
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsTableCaptionFrame::GetFrameName(nsAString& aResult) const
@@ -100,17 +120,10 @@ NS_IMPL_RELEASE_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
 nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
   nsHTMLContainerFrame(aContext)
 {
-  mPriorAvailWidth = 0;
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-  mTimer = new nsReflowTimer(this);
-#endif
 }
 
 nsTableOuterFrame::~nsTableOuterFrame()
 {
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-  nsTableFrame::DebugReflowDone(this);
-#endif
 }
 
 nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -231,12 +244,13 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
                  "appending non-caption frame to captionList");
     mCaptionFrames.AppendFrames(this, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
+    rv = NS_OK;
 
-    // Reflow the new caption frame. It's already marked dirty, so generate a reflow
-    // command that tells us to reflow our dirty child frames
-    rv = GetPresContext()->
-        PresShell()->AppendReflowCommand(this, eReflowType_ReflowDirty,
-                                           nsnull);
+    // Reflow the new caption frame. It's already marked dirty, so
+    // just tell the pres shell.
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(mCaptionFrame, nsIPresShell::eTreeChange);
     
   }
   else {
@@ -278,10 +292,7 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
 
   PRUint8 captionSide = GetCaptionSide();
 
-  // See if the (top/bottom) caption's minimum width impacted the inner table or there
-  // is a left/right caption (that likely impacts the inner table)
-  if ((mMinCaptionWidth == mRect.width) || 
-      (NS_SIDE_LEFT == captionSide) || (NS_SIDE_RIGHT == captionSide)) {
+  if (NS_SIDE_LEFT == captionSide || NS_SIDE_RIGHT == captionSide) {
     // The old caption width had an effect on the inner table width so
     // we're going to need to reflow it. Mark it dirty
     mInnerTableFrame->AddStateBits(NS_FRAME_IS_DIRTY);
@@ -291,12 +302,9 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   mCaptionFrames.DestroyFrame(aOldFrame);
   mCaptionFrame = mCaptionFrames.FirstChild();
   
-  mMinCaptionWidth = 0;
-
-  // Generate a reflow command so we get reflowed
-  GetPresContext()->PresShell()->AppendReflowCommand(this,
-                                                     eReflowType_ReflowDirty,
-                                                     nsnull);
+  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // also means child removed
+  GetPresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange);
 
   return NS_OK;
 }
@@ -387,35 +395,6 @@ nsTableOuterFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
 
 void
-nsTableOuterFrame::ZeroAutoMargin(nsHTMLReflowState& aReflowState,
-                                  nsMargin&          aMargin)
-{
-  if (eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetLeftUnit()) {
-    aMargin.left = 0;
-  }
-  if (eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetRightUnit()) {
-    aMargin.right = 0;
-  }
-}
-
-static void 
-FixAutoMargins(nscoord            aAvailWidth,
-               nscoord            aChildWidth,
-               nsHTMLReflowState& aReflowState)
-{
-  // see if there are auto margins. they may have been set to 0 in mComputedMargin
-  PRBool hasAutoMargin = eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetLeftUnit() ||
-                         eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetRightUnit();
-  if (hasAutoMargin) {
-    nscoord width = aChildWidth;
-    if (NS_UNCONSTRAINEDSIZE == width) {
-      width = 0;
-    }
-    aReflowState.CalculateBlockSideMargins(aAvailWidth, width);
-  }
-}
-
-void
 nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,                     
                                         nsHTMLReflowState& aReflowState)
                                     
@@ -425,10 +404,7 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
   nsMargin* pCollapseBorder  = nsnull;
   nsMargin* pCollapsePadding = nsnull;
   if ((aReflowState.frame == mInnerTableFrame) && (mInnerTableFrame->IsBorderCollapse())) {
-    if (mInnerTableFrame->NeedToCalcBCBorders()) {
-      mInnerTableFrame->CalcBCBorders();
-    }
-    collapseBorder  = mInnerTableFrame->GetBCBorder();
+    collapseBorder  = mInnerTableFrame->GetIncludedOuterBCBorder();
     pCollapseBorder = &collapseBorder;
     pCollapsePadding = &collapsePadding;
   }
@@ -438,29 +414,23 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
 // get the margin and padding data. nsHTMLReflowState doesn't handle the
 // case of auto margins
 void
-nsTableOuterFrame::GetMarginPadding(nsPresContext*          aPresContext,                     
-                                    const nsHTMLReflowState& aOuterRS,
-                                    nsIFrame*                aChildFrame,
-                                    nscoord                  aAvailWidth, 
-                                    nsMargin&                aMargin,
-                                    nsMargin&                aMarginNoAuto,
-                                    nsMargin&                aPadding)
+nsTableOuterFrame::GetMargin(nsPresContext*           aPresContext,
+                             const nsHTMLReflowState& aOuterRS,
+                             nsIFrame*                aChildFrame,
+                             nscoord                  aAvailWidth,
+                             nsMargin&                aMargin)
 {
   // construct a reflow state to compute margin and padding. Auto margins
   // will not be computed at this time.
 
   // create and init the child reflow state
-  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame, 
-                            nsSize(aAvailWidth, aOuterRS.availableHeight), 
-                            eReflowReason_Resize, PR_FALSE);
+  // XXX We really shouldn't construct a reflow state to do this.
+  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
+                            nsSize(aAvailWidth, aOuterRS.availableHeight),
+                            -1, -1, PR_FALSE);
   InitChildReflowState(*aPresContext, childRS);
 
-  FixAutoMargins(aAvailWidth, aChildFrame->GetSize().width, childRS); 
   aMargin = childRS.mComputedMargin;
-  aMarginNoAuto = aMargin;
-  nsTableOuterFrame::ZeroAutoMargin(childRS, aMarginNoAuto);
-
-  aPadding = childRS.mComputedPadding;
 }
 
 static
@@ -477,18 +447,6 @@ nscoord CalcAutoMargin(nscoord aAutoMargin,
     margin = aContainBlockSize - aFrameSize - aOppositeMargin;
   }
   return PR_MAX(0, margin);
-}
-
-static void
-MoveFrameTo(nsIFrame* aFrame, 
-            nscoord   aX,
-            nscoord   aY)
-{
-  nsPoint pt = aFrame->GetPosition();
-  if ((pt.x != aX) || (pt.y != aY)) {
-    aFrame->SetPosition(nsPoint(aX, aY));
-    nsTableFrame::RePositionViews(aFrame);
-  }
 }
 
 static nsSize
@@ -598,130 +556,20 @@ nsTableOuterFrame::InvalidateDamage(PRUint8         aCaptionSide,
   Invalidate(damage);
 }
 
-nscoord
-nsTableOuterFrame::GetCaptionAvailWidth(nsPresContext*          aPresContext,
-                                        nsIFrame*                aCaptionFrame,
-                                        const nsHTMLReflowState& aOuterRS,
-                                        nsMargin&                aCaptionMargin,
-                                        nsMargin&                aCaptionPad,
-                                        nscoord*                 aInnerWidth,
-                                        const nsMargin*          aInnerMarginNoAuto,
-                                        const nsMargin*          aInnerMargin)
+/* virtual */ nscoord
+nsTableOuterFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  nscoord availWidth;
-  if (aInnerWidth) {
-    nscoord innerWidth = *aInnerWidth;
-    if (NS_UNCONSTRAINEDSIZE == innerWidth) {
-      availWidth = innerWidth;
-    }
-    else {
-      nsMargin innerMarginNoAuto(0,0,0,0);
-      if (aInnerMarginNoAuto) {
-        innerMarginNoAuto = *aInnerMarginNoAuto;
-      }
-      nsMargin innerMargin(0,0,0,0);
-      if (aInnerMargin) {
-        innerMargin = *aInnerMargin;
-      }
-      PRUint8 captionSide = GetCaptionSide();
-      switch (captionSide) {
-        case NS_SIDE_LEFT: 
-        case NS_SIDE_RIGHT:
-          availWidth = (NS_SIDE_LEFT == captionSide) ? innerMargin.left : innerMargin.right;
-          break;
-        default: // NS_SIDE_TOP, NS_SIDE_BOTTOM
-          availWidth = innerWidth + innerMarginNoAuto.left + innerMarginNoAuto.right;
-          break;
-      }
-    }
-  }
-  else {
-    availWidth = GetSize().width;
-  }
-
-  if (NS_UNCONSTRAINEDSIZE == availWidth) {
-    return availWidth;
-  }
-  else {
-    nsMargin marginIgnore;
-    GetMarginPadding(aPresContext, aOuterRS, aCaptionFrame, availWidth, 
-                     marginIgnore, aCaptionMargin, aCaptionPad);
-    availWidth -= aCaptionMargin.left + aCaptionMargin.right;
-    return (PR_MAX(availWidth, mMinCaptionWidth));
-  }
-}
-
-nscoord
-nsTableOuterFrame::GetInnerTableAvailWidth(nsPresContext*          aPresContext,
-                                           nsIFrame*                aInnerTable,
-                                           const nsHTMLReflowState& aOuterRS,
-                                           nscoord*                 aCaptionWidth,
-                                           nsMargin&                aInnerMargin,
-                                           nsMargin&                aInnerPadding)
-{
-  nscoord availWidth;
-  nscoord captionWidth = 0;
-  if (aCaptionWidth) {
-    captionWidth = *aCaptionWidth;
-    if (NS_UNCONSTRAINEDSIZE == captionWidth) {
-      availWidth = captionWidth;
-    }
-    else {
-      availWidth = aOuterRS.availableWidth;
-    }
-  }
-  else {
-    availWidth = GetSize().width;
-  }
-
-  if (NS_UNCONSTRAINEDSIZE == availWidth) {
-    return availWidth;
-  }
-  else {
-    nsMargin marginIgnore;
-    GetMarginPadding(aPresContext, aOuterRS, aInnerTable, availWidth, marginIgnore, aInnerMargin, aInnerPadding);
-    availWidth -= aInnerMargin.left + aInnerMargin.right;
-    PRUint8 captionSide = GetCaptionSide();
-    switch (captionSide) {
-      case NS_SIDE_LEFT:
-        if (captionWidth > marginIgnore.left) {
-          availWidth -= captionWidth - aInnerMargin.left;
-        }
-        break;
-      case NS_SIDE_RIGHT:
-        if (captionWidth > marginIgnore.right) {
-          availWidth -= captionWidth - aInnerMargin.right;
-        }
-        break;
-      default:
-        availWidth = PR_MAX(availWidth, mMinCaptionWidth);
-        break;
-    }
-    return(availWidth);
-  }
-}
-
-nscoord
-nsTableOuterFrame::GetMaxElementWidth(PRUint8         aCaptionSide,
-                                      const nsMargin& aInnerMargin,
-                                      const nsMargin& aInnerPadding,
-                                      const nsMargin& aCaptionMargin)
-{
-  nscoord width = aInnerMargin.left + 
-                  ((nsTableFrame *)mInnerTableFrame)->GetMinWidth() + 
-                  aInnerMargin.right;
-  if (mCaptionFrame) { 
-    nscoord capWidth = mMinCaptionWidth + aCaptionMargin.left + aCaptionMargin.right;
-    switch(aCaptionSide) {
+  nscoord width = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    mInnerTableFrame, nsLayoutUtils::MIN_WIDTH);
+  DISPLAY_MIN_WIDTH(this, width);
+  if (mCaptionFrame) {
+    nscoord capWidth =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mCaptionFrame,
+                                           nsLayoutUtils::MIN_WIDTH);
+    switch(GetCaptionSide()) {
     case NS_SIDE_LEFT:
-      if (capWidth > aInnerMargin.left) {
-        width += capWidth - aInnerMargin.left;
-      }
-      break;
     case NS_SIDE_RIGHT:
-      if (capWidth > aInnerMargin.right) {
-        width += capWidth - aInnerMargin.right;
-      }
+      width += capWidth;
       break;
     default:
       if (capWidth > width) {
@@ -732,33 +580,99 @@ nsTableOuterFrame::GetMaxElementWidth(PRUint8         aCaptionSide,
   return width;
 }
 
-nscoord
-nsTableOuterFrame::GetMaxWidth(PRUint8         aCaptionSide,
-                               const nsMargin& aInnerMargin,
-                               const nsMargin& aCaptionMargin)
+/* virtual */ nscoord
+nsTableOuterFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord maxWidth;
+  DISPLAY_PREF_WIDTH(this, maxWidth);
 
-  maxWidth = ((nsTableFrame *)mInnerTableFrame)->GetPreferredWidth() + 
-               aInnerMargin.left + aInnerMargin.right;
+  maxWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+               mInnerTableFrame, nsLayoutUtils::PREF_WIDTH);
   if (mCaptionFrame) {
-    switch(aCaptionSide) {
+    PRUint8 captionSide = GetCaptionSide();
+    switch(captionSide) {
     case NS_SIDE_LEFT:
     case NS_SIDE_RIGHT:
-      maxWidth += mCaptionFrame->GetSize().width + aCaptionMargin.left + aCaptionMargin.right;
-      // the caption plus it margins should cover the corresponding inner table side
-      // margin - don't count it twice.
-      maxWidth -= (NS_SIDE_LEFT == aCaptionSide) ? aInnerMargin.left : aInnerMargin.right;
+      {
+        nscoord capMin =
+          nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mCaptionFrame,
+                                               nsLayoutUtils::MIN_WIDTH);
+        maxWidth += capMin;
+      }
       break;
     case NS_SIDE_TOP:
     case NS_SIDE_BOTTOM:
     default:  // no caption 
-      maxWidth = PR_MAX(maxWidth, mMinCaptionWidth + aCaptionMargin.left + aCaptionMargin.right);
+      {
+        nscoord capPref =
+          nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mCaptionFrame,
+                                               nsLayoutUtils::PREF_WIDTH);
+        maxWidth = PR_MAX(maxWidth, capPref);
+      }
     }
   }
   return maxWidth;
 }
 
+/* virtual */ nsSize
+nsTableOuterFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                   nsSize aCBSize, nscoord aAvailableWidth,
+                                   nsSize aMargin, nsSize aBorder,
+                                   nsSize aPadding, PRBool aShrinkWrap)
+{
+  if (!aShrinkWrap)
+    return nsHTMLContainerFrame::ComputeAutoSize(aRenderingContext, aCBSize,
+               aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
+
+  // When we're shrink-wrapping, our auto size needs to wrap around the
+  // actual size of the table, which (if it is specified as a percent)
+  // could be something that is not reflected in our GetMinWidth and
+  // GetPrefWidth.  See bug 349457 for an example.
+
+  // The outer table's children do not use it as a containing block.
+  nsCSSOffsetState innerOffsets(mInnerTableFrame, aRenderingContext,
+                                aCBSize.width);
+  nsSize tableSize = mInnerTableFrame->ComputeSize(aRenderingContext, aCBSize,
+                       aAvailableWidth,
+                       nsSize(innerOffsets.mComputedMargin.LeftRight(),
+                              innerOffsets.mComputedMargin.TopBottom()),
+                       nsSize(innerOffsets.mComputedBorderPadding.LeftRight() -
+                                innerOffsets.mComputedPadding.LeftRight(),
+                              innerOffsets.mComputedBorderPadding.TopBottom() -
+                                innerOffsets.mComputedPadding.TopBottom()),
+                       nsSize(innerOffsets.mComputedPadding.LeftRight(),
+                              innerOffsets.mComputedPadding.TopBottom()),
+                       aShrinkWrap);
+  nscoord width = tableSize.width + innerOffsets.mComputedMargin.LeftRight() +
+                  innerOffsets.mComputedBorderPadding.LeftRight();
+
+  if (mCaptionFrame) {
+    nsCSSOffsetState capOffsets(mCaptionFrame, aRenderingContext,
+                                aCBSize.width);
+    nsSize capSize = mCaptionFrame->ComputeSize(aRenderingContext, aCBSize,
+                       aAvailableWidth,
+                       nsSize(capOffsets.mComputedMargin.LeftRight(),
+                              capOffsets.mComputedMargin.TopBottom()),
+                       nsSize(capOffsets.mComputedBorderPadding.LeftRight() -
+                                capOffsets.mComputedPadding.LeftRight(),
+                              capOffsets.mComputedBorderPadding.TopBottom() -
+                                capOffsets.mComputedPadding.TopBottom()),
+                       nsSize(capOffsets.mComputedPadding.LeftRight(),
+                              capOffsets.mComputedPadding.TopBottom()),
+                       aShrinkWrap);
+    PRUint8 captionSide = GetCaptionSide();
+    nscoord capWidth = capSize.width + capOffsets.mComputedMargin.LeftRight() +
+                       capOffsets.mComputedBorderPadding.LeftRight();
+    if (captionSide == NS_SIDE_LEFT || captionSide == NS_SIDE_RIGHT) {
+      width += capWidth;
+    } else {
+      if (capWidth > width)
+        width = capWidth;
+    }
+  }
+
+  return nsSize(width, NS_UNCONSTRAINEDSIZE);
+}
 
 PRUint8
 nsTableOuterFrame::GetCaptionSide()
@@ -784,7 +698,6 @@ void
 nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
                                   const nsMargin& aInnerMargin,
                                   const nsMargin& aCaptionMargin,
-                                  nscoord         aAvailableWidth,
                                   nscoord&        aWidth,
                                   nscoord&        aHeight)
 {
@@ -798,11 +711,6 @@ nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
   if (mCaptionFrame) {
     captionRect = mCaptionFrame->GetRect();
     captionWidth = captionRect.width;
-    if ((NS_UNCONSTRAINEDSIZE == aAvailableWidth) &&
-        ((NS_SIDE_LEFT == aCaptionSide) || (NS_SIDE_RIGHT == aCaptionSide))) {
-      BalanceLeftRightCaption(aCaptionSide, aInnerMargin, aCaptionMargin, 
-                              innerWidth, captionWidth);
-    }
   }
   switch(aCaptionSide) {
     case NS_SIDE_LEFT:
@@ -822,28 +730,7 @@ nsTableOuterFrame::SetDesiredSize(PRUint8         aCaptionSide,
 
 }
 
-void 
-nsTableOuterFrame::PctAdjustMinCaptionWidth(nsPresContext*           aPresContext,
-                                            const nsHTMLReflowState&  aOuterRS,
-                                            PRUint8                   aCaptionSide,
-                                            nscoord&                  capMin)
-{
-  if (NS_SIDE_LEFT == aCaptionSide || NS_SIDE_RIGHT == aCaptionSide) {
-    if (mCaptionFrame) {
-      nsMargin capMarginIgnore;
-      nsMargin capMarginNoAuto;
-      nsMargin captionPaddingIgnore;
-      GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.availableWidth, capMarginIgnore, 
-                       capMarginNoAuto, captionPaddingIgnore);
-      PRBool isPctWidth;
-      IsAutoWidth(*mCaptionFrame,&isPctWidth);
-      if (isPctWidth) {
-        capMin = mCaptionFrame->GetSize().width;
-      }
-      capMin += capMarginNoAuto.left + capMarginNoAuto.right;
-    }
-  }
-}
+// XXX This is now unused, but it probably should be used!
 void
 nsTableOuterFrame::BalanceLeftRightCaption(PRUint8         aCaptionSide,
                                            const nsMargin& aInnerMargin,
@@ -1161,71 +1048,25 @@ nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
   return PR_FALSE;
 }
 
-PRBool 
-nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
-                               PRBool*   aIsPctWidth)
-{
-  PRBool isAuto = PR_TRUE;  // the default
-  if (aIsPctWidth) {
-    *aIsPctWidth = PR_FALSE;
-  }
-
-  const nsStylePosition* position = aTableOrCaption.GetStylePosition();
-
-#ifdef __SUNPRO_CC
-  // Bug 239962, this is a workaround to avoid incorrect code generation by Sun Forte compiler.
-  float percent = position->mWidth.GetPercentValue();
-#endif
-
-  switch (position->mWidth.GetUnit()) {
-    case eStyleUnit_Auto:         // specified auto width
-    case eStyleUnit_Proportional: // illegal for table, so ignored
-      break;
-    case eStyleUnit_Coord:
-      isAuto = PR_FALSE;
-      break;
-    case eStyleUnit_Percent:
-#ifdef __SUNPRO_CC
-      if (percent > 0.0f) {
-#else
-      if (position->mWidth.GetPercentValue() > 0.0f) {
-#endif
-        isAuto = PR_FALSE;
-        if (aIsPctWidth) {
-          *aIsPctWidth = PR_TRUE;
-        }
-      }
-      break;
-    default:
-      break;
-  }
-
-  return isAuto; 
-}
-// eReflowReason_Resize was being used for incremental cases
-
 nsresult
-nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
+nsTableOuterFrame::OuterReflowChild(nsPresContext*             aPresContext,
                                     nsIFrame*                  aChildFrame,
                                     const nsHTMLReflowState&   aOuterRS,
+                                    void*                      aChildRSSpace,
                                     nsHTMLReflowMetrics&       aMetrics,
                                     nscoord                    aAvailWidth, 
                                     nsSize&                    aDesiredSize,
                                     nsMargin&                  aMargin,
-                                    nsMargin&                  aMarginNoAuto,
-                                    nsMargin&                  aPadding,
-                                    nsReflowReason             aReflowReason,
-                                    nsReflowStatus&            aStatus,
-                                    PRBool*                    aNeedToReflowCaption)
+                                    nsReflowStatus&            aStatus)
 { 
-  aMargin = aPadding = nsMargin(0,0,0,0);
+  aMargin = nsMargin(0,0,0,0);
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aOuterRS.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
-    nsMargin margin, marginNoAuto, padding;
-    GetMarginPadding(aPresContext, aOuterRS, aChildFrame, aOuterRS.availableWidth, margin, 
-                     marginNoAuto, padding);
+    nsMargin margin;
+    GetMargin(aPresContext, aOuterRS, aChildFrame, aOuterRS.availableWidth,
+              margin);
     
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.top, "No unconstrainedsize arithmetic, please");
     availHeight -= margin.top;
@@ -1238,41 +1079,13 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
                                              eAlwaysRoundDown);
   }
   nsSize availSize(aAvailWidth, availHeight);
-  if (mCaptionFrame == aChildFrame) {
-    PRUint8 captionSide = GetCaptionSide();
-    if ((NS_SIDE_LEFT  == captionSide) || (NS_SIDE_RIGHT != captionSide)) {
-      PRBool isPctWidth;
-      IsAutoWidth(*aChildFrame, &isPctWidth);
-      if (isPctWidth) {
-        availSize.width = aOuterRS.availableWidth;
-      }
-    }
-  }
-  // create and init the child reflow state
-  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame, availSize, 
-                            aReflowReason);
+  // create and init the child reflow state, using placement new on
+  // stack space allocated by the caller, so that the caller can destroy
+  // it
+  nsHTMLReflowState &childRS = * new (aChildRSSpace)
+    nsHTMLReflowState(aPresContext, aOuterRS, aChildFrame, availSize,
+                      -1, -1, PR_FALSE);
   InitChildReflowState(*aPresContext, childRS);
-  childRS.mPercentHeightObserver = nsnull; // the observer is for non table related frames inside cells
-
-
-  // If mComputedWidth > availWidth and availWidth >= minWidth for a nested percent table 
-  // then adjust mComputedWidth based on availableWidth if this isn't the initial reflow   
-  if ((NS_UNCONSTRAINEDSIZE != childRS.mComputedWidth)  &&
-      (eReflowReason_Initial != aReflowReason)          &&
-      (childRS.mComputedWidth + childRS.mComputedBorderPadding.left +
-       childRS.mComputedBorderPadding.right > childRS.availableWidth) &&
-      IsNested(aOuterRS)) {
-    PRBool isPctWidth;
-    IsAutoWidth(*aChildFrame, &isPctWidth);
-    if (isPctWidth) {
-      if ( ((aChildFrame == mInnerTableFrame) && 
-            ((nsTableFrame*)aChildFrame)->GetMinWidth() <= childRS.availableWidth) ||
-           (aChildFrame != mInnerTableFrame)) {
-        childRS.mComputedWidth = childRS.availableWidth - childRS.mComputedBorderPadding.left -
-                                                          childRS.mComputedBorderPadding.right;
-      }
-    }
-  }
 
   // see if we need to reset top of page due to a caption
   if (mCaptionFrame) {
@@ -1286,14 +1099,6 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
       aAvailWidth = aOuterRS.availableWidth;
     }
   }
-  // see if we need to reflow the caption in addition
-  if (aNeedToReflowCaption && !*aNeedToReflowCaption &&
-      mInnerTableFrame == aChildFrame && childRS.reason == eReflowReason_Incremental) {
-    nsHTMLReflowCommand* command = childRS.path->mReflowCommand;
-    if (command) {
-      *aNeedToReflowCaption = eReflowType_StyleChanged == command->Type();
-    }
-  }
 
   // use the current position as a best guess for placement
   nsPoint childPt = aChildFrame->GetPosition();
@@ -1301,10 +1106,7 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
                             childPt.x, childPt.y, NS_FRAME_NO_MOVE_FRAME, aStatus);
   if (NS_FAILED(rv)) return rv;
   
-  FixAutoMargins(aAvailWidth, aMetrics.width, childRS);
   aMargin = childRS.mComputedMargin;
-  aMarginNoAuto = childRS.mComputedMargin;
-  ZeroAutoMargin(childRS, aMarginNoAuto);
 
   aDesiredSize.width  = aMetrics.width;
   aDesiredSize.height = aMetrics.height;
@@ -1316,23 +1118,11 @@ void
 nsTableOuterFrame::UpdateReflowMetrics(PRUint8              aCaptionSide,
                                        nsHTMLReflowMetrics& aMet,
                                        const nsMargin&      aInnerMargin,
-                                       const nsMargin&      aInnerMarginNoAuto,
-                                       const nsMargin&      aInnerPadding,
-                                       const nsMargin&      aCaptionMargin,
-                                       const nsMargin&      aCaptionMarginNoAuto,
-                                       const nscoord        aAvailableWidth)
+                                       const nsMargin&      aCaptionMargin)
 {
-  SetDesiredSize(aCaptionSide, aInnerMargin, aCaptionMargin, aAvailableWidth, aMet.width, aMet.height);
+  SetDesiredSize(aCaptionSide, aInnerMargin, aCaptionMargin,
+                 aMet.width, aMet.height);
 
-  // set maxElementSize width if requested
-  if (aMet.mComputeMEW) {
-    aMet.mMaxElementWidth = GetMaxElementWidth(aCaptionSide, aInnerMarginNoAuto, aInnerPadding, aCaptionMarginNoAuto);
-  }
-  // set maximum width if requested
-  if (aMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    aMet.mMaximumWidth = GetMaxWidth(aCaptionSide, aInnerMarginNoAuto, aCaptionMarginNoAuto);
-  }
- 
   aMet.mOverflowArea = nsRect(0, 0, aMet.width, aMet.height);
   ConsiderChildOverflow(aMet.mOverflowArea, mInnerTableFrame);
   if (mCaptionFrame) {
@@ -1341,535 +1131,15 @@ nsTableOuterFrame::UpdateReflowMetrics(PRUint8              aCaptionSide,
   FinishAndStoreOverflow(&aMet);
 }
 
-nsresult 
-nsTableOuterFrame::IncrementalReflow(nsPresContext*          aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nsReflowStatus&          aStatus)
-{
-  // the outer table is a target if its path has a reflow command
-  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
-  if (command)
-    IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
-
-  // see if the chidren are targets as well
-  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
-  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
-  for (; iter != end; ++iter)
-    IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, *iter);
-
-  return NS_OK;
-}
-
-nsresult 
-nsTableOuterFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
-                                    nsHTMLReflowMetrics&     aDesiredSize,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsReflowStatus&          aStatus,
-                                    nsIFrame*                aNextFrame)
-{
-  nsresult rv;
-  if (!aNextFrame) {
-    // this will force Reflow to return the height of the last reflow rather than 0
-    aDesiredSize.height = mRect.height; 
-    return NS_OK;
-  }
-
-  if (aNextFrame == mInnerTableFrame) {
-    rv = IR_TargetIsInnerTableFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
-  }
-  else if (aNextFrame == mCaptionFrame) {
-    rv = IR_TargetIsCaptionFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
-  }
-  else {
-    const nsStyleDisplay* nextDisplay = aNextFrame->GetStyleDisplay();
-    if (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP==nextDisplay->mDisplay ||
-        NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP==nextDisplay->mDisplay ||
-        NS_STYLE_DISPLAY_TABLE_ROW_GROUP   ==nextDisplay->mDisplay ||
-        NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP==nextDisplay->mDisplay) {
-      rv = IR_TargetIsInnerTableFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
-    else {
-      NS_ASSERTION(PR_FALSE, "illegal next frame in incremental reflow.");
-      rv = NS_ERROR_ILLEGAL_VALUE;
-    }
-  }
-  return rv;
-}
-
-nsresult 
-nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsPresContext*           aPresContext,
-                                              nsHTMLReflowMetrics&      aDesiredSize,
-                                              const nsHTMLReflowState&  aReflowState,
-                                              nsReflowStatus&           aStatus)
-{
-  nsresult rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  return rv;
-}
-
-nsresult 
-nsTableOuterFrame::IR_TargetIsCaptionFrame(nsPresContext*           aPresContext,
-                                           nsHTMLReflowMetrics&      aDesiredSize,
-                                           const nsHTMLReflowState&  aOuterRS,
-                                           nsReflowStatus&           aStatus)
-{
-  nsresult rv = NS_OK;
-  aStatus = NS_FRAME_COMPLETE;
-  PRUint8 captionSide = GetCaptionSide();
-
-  nsSize captionSize;
-  nsMargin captionMargin, captionMarginNoAuto, captionPadding;
-  // reflow the caption frame, getting it's MES
-  nsRect prevInnerRect = mInnerTableFrame->GetRect();
-  nsMargin prevInnerMargin(prevInnerRect.x, 0, mRect.width - prevInnerRect.x - prevInnerRect.width, 0);
-  nscoord availCaptionWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin, 
-                                                   captionPadding, &prevInnerRect.width, nsnull, &prevInnerMargin);
-  nsHTMLReflowMetrics captionMet(PR_TRUE);
-  nsReflowStatus capStatus; // don't let the caption cause incomplete
-  // for now just reflow the table if a style changed. This should be improved
-  PRBool needInnerReflow = PR_FALSE;
-  nsReflowReason reflowReason = eReflowReason_Incremental;
-  nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
-  if (command) {
-    switch(command->Type()) {
-      case eReflowType_StyleChanged:
-        needInnerReflow = PR_TRUE;
-        break;
-      default:
-        break;
-    }
-  }
-  
-  OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, availCaptionWidth, captionSize, 
-                   captionMargin, captionMarginNoAuto, captionPadding, reflowReason, capStatus);
-
-  nsMargin innerMargin, innerMarginNoAuto, innerPadding;
-  nsPoint  innerOrigin;
-  nsSize   containSize = GetContainingBlockSize(aOuterRS);
-  nscoord  capMin = mMinCaptionWidth + captionMarginNoAuto.left + captionMarginNoAuto.right;
-  
-
-  if (mMinCaptionWidth != captionMet.mMaxElementWidth) {  
-    // set the new caption min width, and set state to reflow the inner table if necessary
-    mMinCaptionWidth = captionMet.mMaxElementWidth;
-    // see if the captions min width could cause the table to be wider
-    // XXX this really only affects an auto width table
-    if ((capMin) > mRect.width) {
-      needInnerReflow = PR_TRUE;
-    }
-  }
-  if (NS_SIDE_LEFT == captionSide || NS_SIDE_RIGHT == captionSide) {
-    if (mCaptionFrame) {
-      PRBool isPctWidth;
-      IsAutoWidth( *mCaptionFrame,&isPctWidth);
-      if (isPctWidth) {
-        capMin = captionSize.width + captionMarginNoAuto.left + captionMarginNoAuto.right;
-      }
-    }
-  }
-
-  nsPoint captionOrigin;
-  if (needInnerReflow) {
-    nsSize innerSize;
-    nsHTMLReflowMetrics innerMet(PR_FALSE);
-    nscoord availTableWidth = GetInnerTableAvailWidth(aPresContext, mInnerTableFrame, aOuterRS, 
-                                                      &capMin, innerMargin, innerPadding);
-    OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet, availTableWidth, innerSize, 
-                     innerMargin, innerMarginNoAuto, innerPadding, eReflowReason_Resize, aStatus);
-
-    GetInnerOrigin(captionSide, containSize, captionSize,
-                   captionMargin, innerSize, innerMargin, innerOrigin);
-    rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
-                           innerOrigin.x, innerOrigin.y, 0);
-    if (NS_FAILED(rv)) return rv;
-    
-    GetCaptionOrigin(captionSide, containSize, innerSize, 
-                     innerMargin, captionSize, captionMargin, captionOrigin);
-  }
-  else {
-    // reposition the inner frame if necessary and set the caption's origin
-    nsSize innerSize = mInnerTableFrame->GetSize();
-    GetMarginPadding(aPresContext, aOuterRS, mInnerTableFrame, aOuterRS.availableWidth, innerMargin, 
-                     innerMarginNoAuto, innerPadding);
-    GetInnerOrigin(captionSide, containSize, captionSize, 
-                   captionMargin, innerSize, innerMargin, innerOrigin);
-    GetCaptionOrigin(captionSide, containSize, innerSize, 
-                     innerMargin, captionSize, captionMargin, captionOrigin);
-    MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
-  }
-
-  rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
-                         captionOrigin.x, captionOrigin.y, 0);
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
-  nsRect* overflowStorage = nsnull;
-  nsRect  overflow;
-  if (oldOverflowArea) {
-    overflow = *oldOverflowArea;
-    overflowStorage = &overflow;
-  }
-
-  UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
-                      innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
-  nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-  PRBool innerMoved = (innerOrigin.x != prevInnerRect.x) || (innerOrigin.y != prevInnerRect.y);
-  InvalidateDamage(captionSide, desSize, innerMoved, PR_TRUE, overflowStorage);
-  return rv;
-}
-
-nsresult
-nsTableOuterFrame::IR_ReflowDirty(nsPresContext*           aPresContext,
-                                  nsHTMLReflowMetrics&      aDesiredSize,
-                                  const nsHTMLReflowState&  aReflowState,
-                                  nsReflowStatus&           aStatus)
-{
-  nsresult      rv = NS_OK;
-  PRBool sizeSet = PR_FALSE;
-  // See if the caption frame is dirty. This would be because of a newly
-  // inserted caption
-  if (mCaptionFrame) {
-    if (mCaptionFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
-      rv = IR_CaptionInserted(aPresContext, aDesiredSize, aReflowState, aStatus);
-      sizeSet = PR_TRUE;
-    }
-  }
-
-  // See if the inner table frame is dirty
-  if (mInnerTableFrame->GetStateBits() & NS_FRAME_IS_DIRTY) {
-    rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    sizeSet = PR_TRUE;
-  } 
-  else if (!mCaptionFrame) {
-    // The inner table isn't dirty so we don't need to reflow it, but make
-    // sure it's placed correctly. It could be that we're dirty because the
-    // caption was removed
-    nsRect   innerRect = mInnerTableFrame->GetRect();
-    nsSize   innerSize(innerRect.width, innerRect.height);
-    nsPoint  innerOrigin;
-    nsMargin innerMargin, innerMarginNoAuto, innerPadding;
-    GetMarginPadding(aPresContext, aReflowState, mInnerTableFrame, aReflowState.availableWidth, innerMargin, 
-                     innerMarginNoAuto, innerPadding);
-    nsSize containSize = GetContainingBlockSize(aReflowState);
-    GetInnerOrigin(NO_SIDE, containSize, nsSize(0,0),
-                   nsMargin(0,0,0,0), innerSize, innerMargin, innerOrigin);
-    MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
-
-    aDesiredSize.width  = innerRect.XMost() + innerMargin.right;
-    aDesiredSize.height = innerRect.YMost() + innerMargin.bottom; 
-    sizeSet = PR_TRUE;
-    // Repaint the inner's entire bounds if it moved
-    nsRect* oldOverflowArea = GetOverflowAreaProperty();
-    PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
-                         (innerRect.y != innerOrigin.y);
-    nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-    InvalidateDamage((PRUint8) NO_SIDE, desSize, innerMoved, PR_FALSE, oldOverflowArea);
-  }
-  if (!sizeSet) {
-    // set our desired size to what it was before
-    nsSize size = GetSize();
-    aDesiredSize.width  = size.width;
-    aDesiredSize.height = size.height;
-  }
-
-  return rv;
-}
-
-// IR_TargetIsMe is free to foward the request to the inner table frame 
-nsresult nsTableOuterFrame::IR_TargetIsMe(nsPresContext*           aPresContext,
-                                          nsHTMLReflowMetrics&      aDesiredSize,
-                                          const nsHTMLReflowState&  aReflowState,
-                                          nsReflowStatus&           aStatus)
-{
-  nsresult rv = NS_OK;
-  switch (aReflowState.path->mReflowCommand->Type()) {
-  case eReflowType_ReflowDirty:
-     rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
-    break;
-
-  case eReflowType_StyleChanged :    
-    rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    break;
-
-  case eReflowType_ContentChanged :
-    NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
-    rv = NS_ERROR_ILLEGAL_VALUE;
-    break;
-  
-  default:
-    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    break;
-  }
-
-  return rv;
-}
-
-nsresult 
-nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
-                                       nsHTMLReflowMetrics&      aOuterMet,
-                                       const nsHTMLReflowState&  aOuterRS,
-                                       nsReflowStatus&           aStatus)
-{
-  aStatus = NS_FRAME_COMPLETE;
-  PRUint8 captionSide = GetCaptionSide();
-
-  nsSize priorInnerSize = mInnerTableFrame->GetSize();
-
-  nsSize   innerSize;
-  nsMargin innerMargin, innerMarginNoAuto, innerPadding;
-
-  // pass along the reflow command to the inner table, requesting the same info in our flags
-  nsHTMLReflowMetrics innerMet(aOuterMet.mComputeMEW, aOuterMet.mFlags);
-
-  // If the incremental reflow command is a StyleChanged reflow and
-  // it's target is the current frame, then make sure we send
-  // StyleChange reflow reasons down to the children so that they
-  // don't over-optimize their reflow.  Also make sure we reflow the caption.
-  PRBool reflowCaption = PR_FALSE;
-  nsReflowReason reflowReason = eReflowReason_Incremental;
-  nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
-  if (command) {
-    if (eReflowType_StyleChanged == command->Type()) {
-      reflowReason = eReflowReason_StyleChange;
-      reflowCaption = PR_TRUE;
-    }
-  }
-  nscoord capMin = mMinCaptionWidth;
-  PctAdjustMinCaptionWidth(aPresContext, aOuterRS, captionSide, capMin);
-  nscoord availTableWidth = GetInnerTableAvailWidth(aPresContext, mInnerTableFrame, aOuterRS, 
-                                                    &capMin, innerMargin, innerPadding);
-  nsresult rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
-                                 availTableWidth, innerSize, innerMargin, innerMarginNoAuto,
-                                 innerPadding, reflowReason, aStatus, &reflowCaption);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (eReflowReason_StyleChange != reflowReason && reflowCaption) {
-    // inner table frame was target for a style change reflow issue a style 
-    // change reflow for the caption too.
-    reflowReason = eReflowReason_StyleChange;
-  }
-  nsPoint  innerOrigin(0,0);
-  nsMargin captionMargin(0,0,0,0);
-  nsMargin captionMarginNoAuto(0,0,0,0);
-  nsSize   captionSize(0,0);
-  nsSize   containSize = GetContainingBlockSize(aOuterRS);
-  PRBool   captionMoved = PR_FALSE;
-  // if there is a caption and the width or height of the inner table changed 
-  // from a reflow, then reflow or move the caption as needed
-  if (mCaptionFrame) {
-    nsPoint captionOrigin;
-    nsRect prevCaptionRect = mCaptionFrame->GetRect();
-
-    reflowCaption = reflowCaption ||
-                    priorInnerSize.width != innerMet.width;
-
-    if (reflowCaption) {
-      nsMargin ignorePadding;
-      nsHTMLReflowMetrics captionMet(eReflowReason_StyleChange == reflowReason);
-      nscoord availCaptionWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin,
-                                                       ignorePadding, &innerSize.width, &innerMarginNoAuto);
-      nsReflowStatus capStatus; // don't let the caption cause incomplete
-      if (reflowReason == eReflowReason_Incremental) {
-         reflowReason = eReflowReason_Resize;
-      }
-      rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, availCaptionWidth,
-                            captionSize, captionMargin, captionMarginNoAuto, 
-                            ignorePadding, reflowReason, capStatus);
-      if (NS_FAILED(rv)) return rv;
-
-      GetCaptionOrigin(captionSide, containSize, innerSize, 
-                       innerMargin, captionSize, captionMargin, captionOrigin);
-      FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
-                        captionOrigin.x, captionOrigin.y, 0);
-
-      GetInnerOrigin(captionSide, containSize, captionSize, 
-                     captionMargin, innerSize, innerMargin, innerOrigin);
-    }
-    else {
-      // reposition the caption frame if necessary and set the inner's origin
-      captionSize = mCaptionFrame->GetSize();
-      nsMargin captionPadding;
-      GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.availableWidth, captionMargin, 
-                       captionMarginNoAuto, captionPadding);
-      GetCaptionOrigin(captionSide, containSize, innerSize, 
-                       innerMargin, captionSize, captionMargin, captionOrigin);
-      GetInnerOrigin(captionSide, containSize, captionSize, 
-                     captionMargin, innerSize, innerMargin, innerOrigin);
-      MoveFrameTo(mCaptionFrame, captionOrigin.x, captionOrigin.y); 
-    }
-    if ((captionOrigin.x != prevCaptionRect.x) || (captionOrigin.y != prevCaptionRect.y)) {
-      captionMoved = PR_TRUE;
-    }
-    if ((captionSize.width != prevCaptionRect.width) || (captionSize.height != prevCaptionRect.height)) {
-      captionMoved = PR_TRUE;
-    }
-  }
-  else {
-    GetInnerOrigin(captionSide, containSize, captionSize, 
-                   captionMargin, innerSize, innerMargin, innerOrigin);
-  }
-
-  FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
-                    innerOrigin.x, innerOrigin.y, 0);
-  if (aOuterMet.mComputeMEW) {
-    aOuterMet.mMaxElementWidth = innerMet.mMaxElementWidth;
-  }
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
-  nsRect* overflowStorage = nsnull;
-  nsRect  overflow;
-  if (oldOverflowArea) {
-    overflow = *oldOverflowArea;
-    overflowStorage = &overflow;
-  }
-  
-  UpdateReflowMetrics(captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
-                      innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
-  nsSize desSize(aOuterMet.width, aOuterMet.height);
-  InvalidateDamage(captionSide, desSize, (innerSize.width != priorInnerSize.width),
-                   captionMoved, overflowStorage);
-
-  return rv;
-}
-
-/* the only difference between an insert and a replace is a replace 
-   checks the old maxElementWidth and reflows the table only if it
-   has changed
-*/
-nsresult 
-nsTableOuterFrame::IR_CaptionInserted(nsPresContext*           aPresContext,
-                                      nsHTMLReflowMetrics&      aDesiredSize,
-                                      const nsHTMLReflowState&  aOuterRS,
-                                      nsReflowStatus&           aStatus)
-{
-  PRUint8 captionSide = GetCaptionSide();
-  aStatus = NS_FRAME_COMPLETE;
-
-  // reflow the caption frame, getting it's MES
-  nsSize   captionSize;
-  nsMargin captionMargin, captionMarginNoAuto, captionPadding;
-  nsHTMLReflowMetrics captionMet(PR_TRUE);
-  // reflow the caption
-  nscoord availCaptionWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin, captionPadding);
-  nsReflowStatus capStatus; // don't let the caption cause incomplete
-  nsresult rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet,
-                                 availCaptionWidth, captionSize, captionMargin, captionMarginNoAuto,
-                                 captionPadding, eReflowReason_Initial, capStatus);
-
-  if (NS_FAILED(rv)) return rv;
-
-  mMinCaptionWidth = captionMet.mMaxElementWidth;
-
-  nsPoint  captionOrigin(0,0); 
-
-  nsMargin innerMargin, innerMarginNoAuto, innerPadding;
-  nsPoint innerOrigin;
-  nsSize containSize = GetContainingBlockSize(aOuterRS);
-  nsPoint prevInnerOrigin = mInnerTableFrame->GetPosition();
-  nscoord capMin = mMinCaptionWidth + captionMarginNoAuto.left + captionMarginNoAuto.right;
-
-  // if the caption's MES + margins > outer width, reflow the inner table
-  if (capMin > mRect.width) {
-    nsHTMLReflowMetrics innerMet(aDesiredSize.mComputeMEW); 
-    nsSize innerSize;
-    nscoord availTableWidth = GetInnerTableAvailWidth(aPresContext, mInnerTableFrame, aOuterRS, 
-                                                      &capMin, innerMargin, innerPadding);
-    rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
-                          availTableWidth, innerSize, innerMargin, innerMarginNoAuto,
-                          innerPadding, eReflowReason_Resize, aStatus);
-    if (NS_FAILED(rv)) return rv;
-
-    GetInnerOrigin(captionSide, containSize, captionSize, 
-                   captionMargin, innerSize, innerMargin, innerOrigin);
-    rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
-                           innerOrigin.x, innerOrigin.y, 0);
-    if (aDesiredSize.mComputeMEW) {
-      aDesiredSize.mMaxElementWidth = innerMet.mMaxElementWidth;
-    }
-    if (NS_FAILED(rv)) return rv;
-    GetCaptionOrigin(captionSide, containSize, innerSize, 
-                     innerMargin, captionSize, captionMargin, captionOrigin);
-  }
-  else {
-    // reposition the inner frame if necessary and set the caption's origin
-    nsSize innerSize = mInnerTableFrame->GetSize();
-    GetMarginPadding(aPresContext, aOuterRS, mInnerTableFrame, aOuterRS.availableWidth, innerMargin, 
-                     innerMarginNoAuto, innerPadding);
-    GetInnerOrigin(captionSide, containSize, captionSize, 
-                   captionMargin, innerSize, innerMargin, innerOrigin);
-    GetCaptionOrigin(captionSide, containSize, innerSize, 
-                     innerMargin, captionSize, captionMargin, captionOrigin);
-    MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
-  }
-
-  rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
-                         captionOrigin.x, captionOrigin.y, 0);
-
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
-  nsRect* overflowStorage = nsnull;
-  nsRect  overflow;
-  if (oldOverflowArea) {
-    overflow = *oldOverflowArea;
-    overflowStorage = &overflow;
-  }
-  UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
-                      innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
-  nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-  PRBool innerMoved = innerOrigin != prevInnerOrigin;
-  InvalidateDamage(captionSide, desSize, innerMoved, PR_TRUE, overflowStorage);
-
-  return rv;
-}
-
-PRBool nsTableOuterFrame::IR_CaptionChangedAxis(const nsStyleTable* aOldStyle, 
-                                                const nsStyleTable* aNewStyle) const
-{
-  PRBool result = PR_FALSE;
-  //XXX: write me to support left|right captions!
-  return result;
-}
-
-
-static PRBool
-IsPctHeight(nsIFrame* aFrame)
-{
-  if (aFrame) {
-    const nsStylePosition* position = aFrame->GetStylePosition();
-    if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
-      float percent = position->mHeight.GetPercentValue();
-      if (percent > 0.0f) {
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_FALSE;
-}
-
-/**
-  * Reflow is a multi-step process.
-  * 1. First we reflow the caption frame and get its maximum element size. We
-  *    do this once during our initial reflow and whenever the caption changes
-  *    incrementally
-  * 2. Next we reflow the inner table. This gives us the actual table width.
-  *    The table must be at least as wide as the caption maximum element size
-  * 3. Now that we have the table width we reflow the caption and gets its
-  *    desired height
-  * 4. Then we place the caption and the inner table
-  *
-  * If the table height is constrained, e.g. page mode, then it's possible the
-  * inner table no longer fits and has to be reflowed again this time with s
-  * smaller available height
-  */
-NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
+NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aOuterRS,
                                     nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame", aOuterRS.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame");
   DISPLAY_REFLOW(aPresContext, this, aOuterRS, aDesiredSize, aStatus);
-#if defined DEBUG_TABLE_REFLOW_TIMING
-  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS);
-#endif
 
-  // We desperately need an inner table frame, 
+  // We desperately need an inner table frame,
   // if this fails fix the frame constructor
   if (mFrames.IsEmpty() || !mInnerTableFrame) {
     NS_ERROR("incomplete children");
@@ -1880,181 +1150,128 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
 
   // Initialize out parameters
   aDesiredSize.width = aDesiredSize.height = 0;
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth =  0;
-  }
   aStatus = NS_FRAME_COMPLETE;
 
-  PRBool needUpdateMetrics = PR_TRUE;
-  PRBool isPctWidth;
-  IsAutoWidth(*mInnerTableFrame, &isPctWidth);
-  if ((eReflowReason_Resize    == aOuterRS.reason)  &&
-      (aOuterRS.availableWidth == mPriorAvailWidth) &&
-      !aPresContext->IsPaginated()                  &&
-      !::IsPctHeight(mInnerTableFrame)              &&
-      !isPctWidth) {
-    // don't do much if we are resize reflowed exactly like last time
-    aDesiredSize.width  = mRect.width;
-    aDesiredSize.height = mRect.height;
+  PRBool reflowAllKids = aOuterRS.ShouldReflowAllKids();
 
-    // for floats, our view has not been positioned yet as we have not been placed
-    //  - the block code will position our views after the float is placed
-    if (aOuterRS.mStyleDisplay &&
-        !aOuterRS.mStyleDisplay->IsFloating()) {
-      // We know our view (if we have one) has been positioned
-      // correctly, but it's up to us to make sure that our child views
-      // are correctly positioned, too.
-      nsContainerFrame::PositionChildViews(this);
-    }
+  if (captionSide == NS_SIDE_LEFT || captionSide == NS_SIDE_RIGHT)
+    reflowAllKids = PR_TRUE;
+
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // Set up our kids.  They're already present, on an overflow list, 
+    // or there are none so we'll create them now
+    MoveOverflowToChildList(aPresContext);
   }
-  else if (eReflowReason_Incremental == aOuterRS.reason) {
-    rv = IncrementalReflow(aPresContext, aDesiredSize, aOuterRS, aStatus);
-  } 
-  else {
-    if (eReflowReason_Initial == aOuterRS.reason) {
-      // Set up our kids.  They're already present, on an overflow list, 
-      // or there are none so we'll create them now
-      MoveOverflowToChildList(aPresContext);
 
-      // Lay out the caption and get its maximum element size
-      if (nsnull != mCaptionFrame) {
-        nsHTMLReflowMetrics captionMet(PR_TRUE);
-        nsHTMLReflowState captionReflowState(aPresContext, aOuterRS, mCaptionFrame,
-                                             nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-                                             eReflowReason_Initial);
+  PRBool reflowCaption = mCaptionFrame && (reflowAllKids || (mCaptionFrame->
+    GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)));
+  PRBool reflowInner = reflowAllKids || (mInnerTableFrame->
+    GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN));
 
-        mCaptionFrame->WillReflow(aPresContext);
-        rv = mCaptionFrame->Reflow(aPresContext, captionMet, captionReflowState, aStatus);
-        mCaptionFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-        mMinCaptionWidth = captionMet.mMaxElementWidth;
-      }
-    }
-    
-    nsSize   innerSize;
-    nsMargin innerMargin, innerMarginNoAuto, innerPadding;
-
-    // First reflow the inner table
-    nsHTMLReflowMetrics innerMet(aDesiredSize.mComputeMEW);
-    
-    nscoord capMin = mMinCaptionWidth;
-    PctAdjustMinCaptionWidth(aPresContext, aOuterRS, captionSide, capMin);
-
-    nscoord availTableWidth = GetInnerTableAvailWidth(aPresContext, mInnerTableFrame, aOuterRS, 
-                                                 &capMin, innerMargin, innerPadding);
-    rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
-                          availTableWidth, innerSize, innerMargin, innerMarginNoAuto,
-                          innerPadding, aOuterRS.reason, aStatus);
+  // First reflow the caption.  nsHTMLReflowState takes care of making
+  // side captions small.
+  nsHTMLReflowMetrics captionMet;
+  nsSize captionSize;
+  nsMargin captionMargin;
+  // Use longs to get more-aligned space.
+  #define LONGS_IN_HTMLRS \
+    ((sizeof(nsHTMLReflowState) + sizeof(long) - 1) / sizeof(long))
+  long captionRSSpace[LONGS_IN_HTMLRS];
+  if (reflowCaption) {
+    nsReflowStatus capStatus; // don't let the caption cause incomplete
+    rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS,
+                          captionRSSpace, captionMet,
+                          aOuterRS.mComputedWidth, captionSize,
+                          captionMargin, capStatus);
     if (NS_FAILED(rv)) return rv;
-
-    nsPoint  innerOrigin(0,0);
-    nsMargin captionMargin(0,0,0,0), captionMarginNoAuto(0,0,0,0), ignorePadding;
-    nsSize   captionSize(0,0);
-    nsSize   containSize = GetContainingBlockSize(aOuterRS);
-
-    // Now that we know the table width we can reflow the caption, and
-    // place the caption and the inner table
-    if (mCaptionFrame) {
-      // reflow the caption
-      nscoord availCaptionWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin,
-                                                       ignorePadding, &innerSize.width, &innerMarginNoAuto, &innerMargin);
-      nsHTMLReflowMetrics captionMet(PR_FALSE);
-      nsReflowReason reason = aOuterRS.reason;
-      if (eReflowReason_Initial == aOuterRS.reason) {
-        reason = eReflowReason_Resize; // we have already done the initial reflow
-      }
-      nsReflowStatus capStatus; // don't let the caption cause incomplete
-      rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, 
-                            availCaptionWidth, captionSize, captionMargin, captionMarginNoAuto,
-                            ignorePadding, reason, capStatus);
-      if (NS_FAILED(rv)) return rv;
-
-      nsPoint captionOrigin;
-
-      GetCaptionOrigin(captionSide, containSize, innerSize, 
-                       innerMargin, captionSize, captionMargin, captionOrigin);
-      FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
-                        captionOrigin.x, captionOrigin.y, 0);
-
-      GetInnerOrigin(captionSide, containSize, captionSize, 
-                     captionMargin, innerSize, innerMargin, innerOrigin);
-
-      // XXX If the height is constrained then we need to check whether the inner table still fits...
-    } 
-    else {
-      GetInnerOrigin(captionSide, containSize, captionSize, 
-                     captionMargin, innerSize, innerMargin, innerOrigin);
-    }
-
-    FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
-                      innerOrigin.x, innerOrigin.y, 0);
-    if (aDesiredSize.mComputeMEW) {
-      aDesiredSize.mMaxElementWidth = innerMet.mMaxElementWidth;
-    }
-
-    UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
-                        innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
-    needUpdateMetrics = PR_FALSE;
+  } else if (mCaptionFrame) {
+    captionSize = mCaptionFrame->GetSize();
+    GetMargin(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.mComputedWidth,
+              captionMargin);
+  } else {
+    captionSize.SizeTo(0,0);
+    captionMargin.SizeTo(0,0,0,0);
   }
+
+  nscoord innerAvailWidth = aOuterRS.mComputedWidth;
+  if (captionSide == NS_SIDE_LEFT || captionSide == NS_SIDE_RIGHT)
+    // If side is left/right then we know we have a caption and we
+    // reflowed it.
+    innerAvailWidth -= captionMet.width + captionMargin.LeftRight();
+
+  // Then, now that we know how much to reduce the width of the inner
+  // table to account for side captions, reflow the inner table.
+  nsHTMLReflowMetrics innerMet;
+  nsSize innerSize;
+  nsMargin innerMargin;
+  long innerRSSpace[LONGS_IN_HTMLRS];
+  if (reflowInner) {
+    rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS,
+                          innerRSSpace, innerMet, innerAvailWidth,
+                          innerSize, innerMargin, aStatus);
+    if (NS_FAILED(rv)) return rv;
+  } else {
+    innerSize = mInnerTableFrame->GetSize();
+    GetMargin(aPresContext, aOuterRS, mInnerTableFrame,
+              aOuterRS.mComputedWidth, innerMargin);
+  }
+
+  nsSize   containSize = GetContainingBlockSize(aOuterRS);
+
+  // Now that we've reflowed both we can place them.
+  // XXXldb Most of the input variables here are now uninitialized!
+
+  // XXX Need to recompute inner table's auto margins for the case of side
+  // captions.  (Caption's are broken too, but that should be fixed earlier.)
+
+  if (mCaptionFrame) {
+    nsPoint captionOrigin;
+    GetCaptionOrigin(captionSide, containSize, innerSize, 
+                     innerMargin, captionSize, captionMargin, captionOrigin);
+    if (reflowCaption) {
+      nsHTMLReflowState *captionRS =
+        NS_STATIC_CAST(nsHTMLReflowState*, (void*)captionRSSpace);
+      FinishReflowChild(mCaptionFrame, aPresContext, captionRS, captionMet,
+                        captionOrigin.x, captionOrigin.y, 0);
+      captionRS->~nsHTMLReflowState();
+    } else {
+      mCaptionFrame->SetPosition(captionOrigin);
+      nsTableFrame::RePositionViews(mCaptionFrame);
+    }
+  }
+  // XXX If the height is constrained then we need to check whether
+  // everything still fits...
+
+  nsPoint innerOrigin;
+  GetInnerOrigin(captionSide, containSize, captionSize, 
+                 captionMargin, innerSize, innerMargin, innerOrigin);
+  if (reflowInner) {
+    nsHTMLReflowState *innerRS =
+      NS_STATIC_CAST(nsHTMLReflowState*, (void*) innerRSSpace);
+    FinishReflowChild(mInnerTableFrame, aPresContext, innerRS, innerMet,
+                      innerOrigin.x, innerOrigin.y, 0);
+    innerRS->~nsHTMLReflowState();
+  } else {
+    mInnerTableFrame->SetPosition(innerOrigin);
+    nsTableFrame::RePositionViews(mInnerTableFrame);
+  }
+
+  UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
   
   // Return our desired rect
-  if (mInnerTableFrame) {
-    aDesiredSize.ascent  = mInnerTableFrame->GetAscent();
-    aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
-  }
-  else {
-    aDesiredSize.ascent  = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-  }
+  aDesiredSize.ascent  = mInnerTableFrame->GetAscent();
+  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
-  // compute max element size and maximum width if it hasn't already been 
-  if (needUpdateMetrics) {
-    nsMargin innerMargin, innerMarginNoAuto, capMargin(0,0,0,0), 
-             capMarginNoAuto(0,0,0,0), innerPadding, capPadding(0,0,0,0);
-    GetMarginPadding(aPresContext, aOuterRS, mInnerTableFrame, aOuterRS.availableWidth, 
-                     innerMargin, innerMarginNoAuto, innerPadding);
-    if (mCaptionFrame) {
-      nscoord outerWidth;
-      switch (captionSide) {
-        case NS_SIDE_LEFT: 
-          outerWidth = innerMargin.left;
-          break;
-        case NS_SIDE_RIGHT:
-          outerWidth = innerMargin.right;
-          break;
-        default:
-          outerWidth = aOuterRS.availableWidth;
-          break;
-      }
-      GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, outerWidth,
-                       capMargin, capMarginNoAuto, capPadding);
-    }
-    UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
-                        innerPadding, capMargin, capMarginNoAuto, aOuterRS.availableWidth);
-  }
-#ifdef CHECK_THIS_AND_REMOVE
-  // See if we are supposed to compute our maximum width
-  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    // XXX this needs to consider the possibility of a caption being wider 
-    // than the inner table, but this is the safest way to fix bug 55545
-    if (mInnerTableFrame) {
-      aDesiredSize.mMaximumWidth = ((nsTableFrame*)mInnerTableFrame)->GetPreferredWidth();
-    }
-  }
-#endif
-
-  mPriorAvailWidth = aOuterRS.availableWidth;
-
-#if defined DEBUG_TABLE_REFLOW_TIMING
-  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS, &aDesiredSize, aStatus);
-#endif
   NS_FRAME_SET_TRUNCATION(aStatus, aOuterRS, aDesiredSize);
   return rv;
 }
 
+#ifdef NS_DEBUG
 NS_METHOD nsTableOuterFrame::VerifyTree() const
 {
   return NS_OK;
 }
+#endif
 
 /**
  * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow

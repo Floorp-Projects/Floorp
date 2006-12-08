@@ -199,13 +199,13 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 {
   NS_PRECONDITION(aPresContext->IsRootPaginatedDocument(),
                   "A Page Sequence is only for real pages");
-  DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
-  if (eReflowReason_Resize == aReflowState.reason) {
+  if (!(GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
     // Return our desired size
     aDesiredSize.height  = mSize.height;
     aDesiredSize.width   = mSize.width;
@@ -284,102 +284,92 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                    pageSize.height + shadowSize.height +
                    extraMargin.TopBottom());
 
-  // See if it's an incremental reflow command
-  if (!aPresContext->IsDynamic() &&
-      eReflowReason_Incremental == aReflowState.reason) {
-    // XXX Skip Incremental reflow, 
-    // in fact, all we want is the initial reflow
-    y = mRect.height;
-  } else {
-    nsReflowReason  reflowReason = aReflowState.reason;
+  // Tile the pages vertically
+  nsHTMLReflowMetrics kidSize;
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
+    // Reflow the page
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+                                     availSize);
+    nsReflowStatus  status;
 
-    // Tile the pages vertically
-    nsHTMLReflowMetrics kidSize(nsnull);
-    for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
-      // Reflow the page
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
-                                       availSize, reflowReason);
-      nsReflowStatus  status;
+    kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
+    //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
+    PR_PL(("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight));
 
-      kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
-      //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
-      PR_PL(("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight));
+    // Set the shared data into the page frame before reflow
+    nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, kidFrame);
+    pf->SetSharedPageData(mPageData);
 
-      // Set the shared data into the page frame before reflow
-      nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, kidFrame);
-      pf->SetSharedPageData(mPageData);
+    // Place and size the page. If the page is narrower than our
+    // max width then center it horizontally
+    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
 
-      // Place and size the page. If the page is narrower than our
-      // max width then center it horizontally
-      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
+    reflowPageSize.SizeTo(kidSize.width, kidSize.height);
 
-      reflowPageSize.SizeTo(kidSize.width, kidSize.height);
+    FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
+    y += kidSize.height;
 
-      FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
-      y += kidSize.height;
+    // Leave a slight gap between the pages
+    y += deadSpaceGap;
 
-      // Leave a slight gap between the pages
-      y += deadSpaceGap;
+    // Is the page complete?
+    nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
 
-      // Is the page complete?
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
-
-      if (NS_FRAME_IS_COMPLETE(status)) {
-        NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
-      } else if (nsnull == kidNextInFlow) {
-        // The page isn't complete and it doesn't have a next-in-flow, so
-        // create a continuing page
-        nsIFrame* continuingPage;
-        nsresult rv = CreateContinuingPageFrame(aPresContext, kidFrame,
-                                                &continuingPage);
-        if (NS_FAILED(rv)) {
-          break;
-        }
-        // Add it to our child list
-        kidFrame->SetNextSibling(continuingPage);
-        reflowReason = eReflowReason_Initial;
+    if (NS_FRAME_IS_COMPLETE(status)) {
+      NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
+    } else if (nsnull == kidNextInFlow) {
+      // The page isn't complete and it doesn't have a next-in-flow, so
+      // create a continuing page
+      nsIFrame* continuingPage;
+      nsresult rv = CreateContinuingPageFrame(aPresContext, kidFrame,
+                                              &continuingPage);
+      if (NS_FAILED(rv)) {
+        break;
       }
 
-      // Get the next page
-      kidFrame = kidFrame->GetNextSibling();
+      // Add it to our child list
+      kidFrame->SetNextSibling(continuingPage);
     }
 
-    // Get Total Page Count
-    nsIFrame* page;
-    PRInt32 pageTot = 0;
-    for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
-      pageTot++;
-    }
-
-    // Set Page Number Info
-    PRInt32 pageNum = 1;
-    for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
-      nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, page);
-      if (pf != nsnull) {
-        pf->SetPageNumInfo(pageNum, pageTot);
-      }
-      pageNum++;
-    }
-
-    // Create current Date/Time String
-    if (!mDateFormatter)
-      mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
-#ifndef WINCE
-    NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
-
-    nsAutoString formattedDateString;
-    time_t ltime;
-    time( &ltime );
-    if (NS_SUCCEEDED(mDateFormatter->FormatTime(nsnull /* nsILocale* locale */,
-                                                kDateFormatShort,
-                                                kTimeFormatNoSeconds,
-                                                ltime,
-                                                formattedDateString))) {
-      PRUnichar * uStr = ToNewUnicode(formattedDateString);
-      SetDateTimeStr(uStr); // memory will be freed
-    }
-#endif
+    // Get the next page
+    kidFrame = kidFrame->GetNextSibling();
   }
+
+  // Get Total Page Count
+  nsIFrame* page;
+  PRInt32 pageTot = 0;
+  for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
+    pageTot++;
+  }
+
+  // Set Page Number Info
+  PRInt32 pageNum = 1;
+  for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
+    nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, page);
+    if (pf != nsnull) {
+      pf->SetPageNumInfo(pageNum, pageTot);
+    }
+    pageNum++;
+  }
+
+  // Create current Date/Time String
+  if (!mDateFormatter)
+    mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
+#ifndef WINCE
+  NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
+
+  nsAutoString formattedDateString;
+  time_t ltime;
+  time( &ltime );
+  if (NS_SUCCEEDED(mDateFormatter->FormatTime(nsnull /* nsILocale* locale */,
+                                              kDateFormatShort,
+                                              kTimeFormatNoSeconds,
+                                              ltime,
+                                              formattedDateString))) {
+    PRUnichar * uStr = ToNewUnicode(formattedDateString);
+    SetDateTimeStr(uStr); // memory will be freed
+  }
+#endif
 
   // Return our desired size
   aDesiredSize.height  = y; // includes page heights and dead space

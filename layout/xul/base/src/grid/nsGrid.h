@@ -78,8 +78,6 @@ public:
   nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
   void GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsHorizontal = PR_TRUE);
 
-  void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsHorizontal = PR_TRUE);
-  void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
   void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
   void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
   void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
@@ -132,9 +130,11 @@ private:
   nsGridRow* mColumns;
 
   // the first in the <grid> that implements the <rows> tag.
+  // XXXldb This should be called mRowsBox
   nsIBox* mRowBox;
 
   // the first in the <grid> that implements the <columns> tag.
+  // XXXldb This should be called mColumnsBox
   nsIBox* mColumnBox;
 
   // a flag that is false tells us to rebuild the who grid

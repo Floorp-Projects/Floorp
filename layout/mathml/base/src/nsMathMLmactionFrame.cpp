@@ -101,7 +101,6 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
 
   // Init our local attributes
 
-  mWasRestyled = PR_FALSE;
   mChildCount = -1; // these will be updated in GetSelectedFrame()
   mSelection = 0;
   mSelectedFrame = nsnull;
@@ -284,24 +283,9 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   mBoundingMetrics.Clear();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
-    nsReflowReason reason = aReflowState.reason;
-    if (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
-      reason = eReflowReason_Initial;
-    else if (mWasRestyled) {
-      mWasRestyled = PR_FALSE;
-      // If we have just been restyled, make sure to reflow our
-      // selected child with a StyleChange reflow reason so that
-      // it doesn't over-optimize its reflow. In principle we shouldn't
-      // need to do this because we posted a style changed reflow (see
-      // MouseClick() below). But that reason can be (and usually, it is)
-      // changed in the reflow chain and we don't have much control other
-      // than making sure that the right value is reset here.
-      reason = eReflowReason_StyleChange;
-    }
-
     nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize, reason);
+                                       childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext, aDesiredSize,
                      childReflowState, aStatus);
     childFrame->SetRect(nsRect(aDesiredSize.descent,aDesiredSize.ascent,
@@ -404,7 +388,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      ReflowDirtyChild(GetPresContext()->PresShell(), mSelectedFrame);
+      mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+      GetPresContext()->PresShell()->
+        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
@@ -417,17 +403,10 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
         else
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);
 
-        // At this stage, our style sub-tree has been re-resolved
-        mWasRestyled = PR_TRUE;
-
-        // Cancel the reflow command that the change of attribute has
-        // caused, and post a style changed reflow request that is instead
-        // targeted at our selected frame
-        nsIPresShell *presShell = GetPresContext()->PresShell();
-        presShell->CancelReflowCommand(this, nsnull);
-        presShell->AppendReflowCommand(mSelectedFrame,
-				       eReflowType_StyleChanged,
-				       nsnull);
+        // Trigger a style change reflow
+        mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        GetPresContext()->PresShell()->
+          FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange);
       }
     }
   }

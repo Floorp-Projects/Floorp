@@ -58,12 +58,6 @@ class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
 public:
   nsGfxButtonControlFrame(nsStyleContext* aContext);
 
-     //nsIFrame
-  NS_IMETHOD Reflow(nsPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
@@ -94,14 +88,6 @@ public:
 
   virtual PRBool IsLeaf() const;
 
-  /**
-   * Set the suggested size of the button.
-   * @note This is NOT a virtual function, it will be called 
-   * directly on an instance of this class.
-   * @param aSize The suggested size.
-   */
-  void SetSuggestedSize(const nsSize& aSize);
-  
 protected:
   nsresult GetDefaultLabel(nsXPIDLString& aLabel);
 

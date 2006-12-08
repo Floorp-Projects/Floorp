@@ -74,6 +74,7 @@ nsListItemFrame::~nsListItemFrame()
 nsresult
 nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_PREF_SIZE(this, aSize);
   nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
   if (NS_FAILED(rv)) return rv;
 

@@ -83,6 +83,17 @@ nsGridLayout2::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 NS_IMETHODIMP
+nsGridLayout2::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
+{
+  nsresult rv = nsStackLayout::IntrinsicWidthsDirty(aBox, aBoxLayoutState);
+  // XXXldb We really don't need to do all the work that NeedsRebuild
+  // does; we just need to mark intrinsic widths dirty on the
+  // (row/column)(s/-groups).
+  mGrid.NeedsRebuild(aBoxLayoutState);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsGridLayout2::GetGrid(nsIBox* aBox, nsGrid** aGrid, PRInt32* aIndex, nsGridRowLayout* aRequestor)
 {
   // XXX This should be set a better way!

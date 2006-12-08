@@ -1387,11 +1387,10 @@ nsPresContext::EnsureVisible(PRBool aUnsuppressFocus)
 
 #ifdef MOZ_REFLOW_PERF
 void
-nsPresContext::CountReflows(const char * aName,
-                             PRUint32 aType, nsIFrame * aFrame)
+nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 {
   if (mShell) {
-    mShell->CountReflows(aName, aType, aFrame);
+    mShell->CountReflows(aName, aFrame);
   }
 }
 #endif

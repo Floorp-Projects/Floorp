@@ -110,7 +110,6 @@ private:
   PRInt32         mSelection;
   nsIFrame*       mSelectedFrame;
   nsString        mRestyle;
-  PRBool          mWasRestyled;
 
   // helper to return the frame for the attribute selection="number"
   nsIFrame* 

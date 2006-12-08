@@ -69,7 +69,6 @@
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
-#include "nsHTMLReflowCommand.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
@@ -90,7 +89,6 @@
 #include "nsContentUtils.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsReflowPath.h"
 #include "nsLayoutCID.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMRange.h"
@@ -259,7 +257,6 @@ ShowVerifyReflowFlags()
 class ReflowCountMgr;
 
 static const char kGrandTotalsStr[] = "Grand Totals";
-#define NUM_REFLOW_TYPES 5
 
 // Counting Class
 class ReflowCounter {
@@ -272,22 +269,22 @@ public:
   void DisplayDiffTotals(const char * aStr);
   void DisplayHTMLTotals(const char * aStr);
 
-  void Add(nsReflowReason aType)                  { mTotals[aType]++;         }
-  void Add(nsReflowReason aType, PRUint32 aTotal) { mTotals[aType] += aTotal; }
+  void Add()                { mTotal++;         }
+  void Add(PRUint32 aTotal) { mTotal += aTotal; }
 
   void CalcDiffInTotals();
   void SetTotalsCache();
 
   void SetMgr(ReflowCountMgr * aMgr) { mMgr = aMgr; }
 
-  PRUint32 GetTotalByType(nsReflowReason aType) { if (aType >= eReflowReason_Initial && aType <= eReflowReason_Dirty) return mTotals[aType]; else return 0; }
+  PRUint32 GetTotal() { return mTotal; }
   
 protected:
-  void DisplayTotals(PRUint32 * aArray, const char * aTitle);
-  void DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle);
+  void DisplayTotals(PRUint32 aTotal, const char * aTitle);
+  void DisplayHTMLTotals(PRUint32 aTotal, const char * aTitle);
 
-  PRUint32 mTotals[NUM_REFLOW_TYPES];
-  PRUint32 mCacheTotals[NUM_REFLOW_TYPES];
+  PRUint32 mTotal;
+  PRUint32 mCacheTotal;
 
   ReflowCountMgr * mMgr; // weak reference (don't delete)
 };
@@ -329,7 +326,7 @@ public:
   void DisplayHTMLTotals(const char * aStr);
   void DisplayDiffsInTotals(const char * aStr);
 
-  void Add(const char * aName, nsReflowReason aType, nsIFrame * aFrame);
+  void Add(const char * aName, nsIFrame * aFrame);
   ReflowCounter * LookUp(const char * aName);
 
   void PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
@@ -346,8 +343,8 @@ public:
   void SetPaintFrameCounts(PRBool aVal)        { mPaintFrameByFrameCounts = aVal; }
 
 protected:
-  void DisplayTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
-  void DisplayHTMLTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
+  void DisplayTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
+  void DisplayHTMLTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
 
   PR_STATIC_CALLBACK(PRIntn) RemoveItems(PLHashEntry *he, PRIntn i, void *arg);
   PR_STATIC_CALLBACK(PRIntn) RemoveIndiItems(PLHashEntry *he, PRIntn i, void *arg);
@@ -779,249 +776,6 @@ struct nsCallbackEventRequest
   nsCallbackEventRequest* next;
 };
 
-
-// ----------------------------------------------------------------------------
-
-/**
- * Used to build and maintain the incremental reflow tree, and
- * dispatch incremental reflows to individual reflow roots.
- */
-class IncrementalReflow
-{
-public:
-  ~IncrementalReflow();
-
-  /**
-   * Add a reflow command to the set of commands that are to be
-   * dispatched in the incremental reflow.
-   */
-  enum AddCommandResult {
-    eEnqueued, // the command was successfully added
-    eTryLater, // the command could not be added; try again
-    eCancel,   // the command was not added; delete it
-    eOOM       // Out of memory.
-  };
-  AddCommandResult
-  AddCommand(nsPresContext      *aPresContext,
-             nsHTMLReflowCommand *aCommand);
-
-  /**
-   * Dispatch the incremental reflow.
-   */
-  void
-  Dispatch(nsPresContext      *aPresContext,
-           nsHTMLReflowMetrics &aDesiredSize,
-           const nsSize        &aMaxSize,
-           nsIRenderingContext &aRendContext);
-
-#ifdef NS_DEBUG
-  /**
-   * Dump the incremental reflow state.
-   */
-  void
-  Dump(nsPresContext *aPresContext) const;
-#endif
-
-protected:
-  /**
-   * The set of incremental reflow roots.
-   */
-  nsAutoVoidArray mRoots;
-};
-
-IncrementalReflow::~IncrementalReflow()
-{
-  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i)
-    delete NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
-}
-
-void
-IncrementalReflow::Dispatch(nsPresContext      *aPresContext,
-                            nsHTMLReflowMetrics &aDesiredSize,
-                            const nsSize        &aMaxSize,
-                            nsIRenderingContext &aRendContext)
-{
-  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-    // Send an incremental reflow notification to the first frame in the
-    // path.
-    nsReflowPath *path = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
-    nsIFrame *first = path->mFrame;
-
-    nsIFrame* root = aPresContext->PresShell()->FrameManager()->GetRootFrame();
-
-    first->WillReflow(aPresContext);
-    nsContainerFrame::PositionFrameView(first);
-
-    // If the first frame in the path is the root of the frame
-    // hierarchy, then use all the available space. If it's simply a
-    // `reflow root', then use the first frame's size as the available
-    // space.
-    nsSize size;
-    if (first == root)
-      size = aMaxSize;
-    else
-      size = first->GetSize();
-
-    nsHTMLReflowState reflowState(aPresContext, first, path,
-                                  &aRendContext, size);
-
-    nsReflowStatus status;
-    first->Reflow(aPresContext, aDesiredSize, reflowState, status);
-
-    // If an incremental reflow is initiated at a frame other than the
-    // root frame, then its desired size had better not change!
-    NS_ASSERTION(first == root ||
-                 (aDesiredSize.width == size.width && aDesiredSize.height == size.height),
-                 "non-root frame's desired size changed during an incremental reflow");
-
-    first->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
-
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, first->GetView(),
-                                               &aDesiredSize.mOverflowArea);
-
-    first->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-  }
-}
-
-IncrementalReflow::AddCommandResult
-IncrementalReflow::AddCommand(nsPresContext      *aPresContext,
-                              nsHTMLReflowCommand *aCommand)
-{
-  nsIFrame *frame;
-  aCommand->GetTarget(frame);
-  NS_ASSERTION(frame != nsnull, "reflow command with no target");
-
-  // Construct the reflow path by walking up the through the frames'
-  // parent chain until we reach either a `reflow root' or the root
-  // frame in the frame hierarchy.
-  nsAutoVoidArray path;
-  do {
-    path.AppendElement(frame);
-  } while (!(frame->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&
-           (frame = frame->GetParent()) != nsnull);
-
-  // Pop off the root, add it to the set if it's not there already.
-  PRInt32 lastIndex = path.Count() - 1;
-  nsIFrame *rootFrame = NS_STATIC_CAST(nsIFrame *, path[lastIndex]);
-  path.RemoveElementAt(lastIndex);
-
-  // Prevent an incremental reflow from being posted inside a reflow
-  // root if the reflow root's container has not yet been reflowed.
-  // This can cause problems like bug 228156.
-  if (rootFrame->GetParent() &&
-      (rootFrame->GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    return eCancel;
-  }
-
-  nsReflowPath *root = nsnull;
-
-  PRInt32 i;
-  for (i = mRoots.Count() - 1; i >= 0; --i) {
-    nsReflowPath *r = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
-    if (r->mFrame == rootFrame) {
-      root = r;
-      break;
-    }
-  }
-
-  if (! root) {
-    root = new nsReflowPath(rootFrame);
-    if (! root)
-      return eOOM;
-
-    root->mReflowCommand = nsnull;
-    mRoots.AppendElement(root);
-  }
-
-  // Now walk the path from the root to the leaf, adding to the reflow
-  // tree as necessary.
-  nsReflowPath *target = root;
-  for (i = path.Count() - 1; i >= 0; --i) {
-    nsIFrame *f = NS_STATIC_CAST(nsIFrame *, path[i]);
-    target = target->EnsureSubtreeFor(f);
-
-    // Out of memory. Ugh.
-    if (! target)
-      return eOOM;
-  }
-
-  // Place the reflow command in the leaf, if one isn't there already.
-  if (target->mReflowCommand) {
-    // XXXwaterson it's probably possible to have some notion of
-    // `promotion' here that would avoid any re-queuing; for example,
-    // promote a dirty reflow to a style changed. For now, let's punt
-    // and not worry about it.
-#ifdef NS_DEBUG
-    if (gVerifyReflowFlags & VERIFY_REFLOW_NOISY_RC)
-      printf("requeuing command %p because %p was already scheduled "
-             "for the same frame",
-             (void*)aCommand, (void*)target->mReflowCommand);
-#endif
-
-    return eTryLater;
-  }
-
-  target->mReflowCommand = aCommand;
-  return eEnqueued;
-}
-
-
-#ifdef NS_DEBUG
-void
-IncrementalReflow::Dump(nsPresContext *aPresContext) const
-{
-  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i)
-    NS_STATIC_CAST(nsReflowPath *, mRoots[i])->Dump(aPresContext, stdout, 0);
-}
-#endif
-
-// ----------------------------------------------------------------------------
-
-struct ReflowCommandEntry : public PLDHashEntryHdr
-{
-  nsHTMLReflowCommand* mCommand;
-};
-
-PR_STATIC_CALLBACK(const void *)
-ReflowCommandHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  ReflowCommandEntry *e = NS_STATIC_CAST(ReflowCommandEntry *, entry);
-  
-  return e->mCommand;
-}
-
-PR_STATIC_CALLBACK(PLDHashNumber)
-ReflowCommandHashHashKey(PLDHashTable *table, const void *key)
-{
-  const nsHTMLReflowCommand* command =
-    NS_STATIC_CAST(const nsHTMLReflowCommand*, key);
-  
-  // The target is going to be reasonably unique, if we shift out the
-  // always-zero low-order bits, the type comes from an enum and we just don't
-  // have that many types, and the child list name is either null or has the
-  // same high-order bits as all the other child list names.
-  return
-    (NS_PTR_TO_INT32(command->GetTarget()) >> 2) ^
-    (command->Type() << 17) ^
-    (NS_PTR_TO_INT32(command->GetChildListName()) << 20);
-}
-
-PR_STATIC_CALLBACK(PRBool)
-ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                            const void *key)
-{
-   const ReflowCommandEntry *e =
-     NS_STATIC_CAST(const ReflowCommandEntry *, entry);
-   const nsHTMLReflowCommand *command = e->mCommand;
-   const nsHTMLReflowCommand *command2 =
-     NS_STATIC_CAST(const nsHTMLReflowCommand *, key);
-
-   return
-     command->GetTarget() == command2->GetTarget() &&
-     command->Type() == command2->Type() &&
-     command->GetChildListName() == command2->GetChildListName();
-}
-
 // ----------------------------------------------------------------------------
 class nsPresShellEventCB;
 
@@ -1080,14 +834,8 @@ public:
                                 nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
-  NS_IMETHOD AppendReflowCommand(nsIFrame*    aTargetFrame,
-                                 nsReflowType aReflowType,
-                                 nsIAtom*     aChildListName);
-  NS_IMETHOD CancelReflowCommand(nsIFrame*     aTargetFrame, 
-                                 nsReflowType* aCmdType);  
-  void CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
-                                   nsReflowType* aCmdType);
-  NS_IMETHOD CancelAllReflowCommands();
+  NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty);
+  NS_IMETHOD CancelAllPendingReflows();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType);
 
@@ -1274,7 +1022,7 @@ public:
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows();
-  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
+  NS_IMETHOD CountReflows(const char * aName, nsIFrame * aFrame);
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
 
   NS_IMETHOD SetPaintFrameCount(PRBool aOn);
@@ -1302,15 +1050,12 @@ protected:
 
   void UnsuppressAndInvalidate();
 
-  nsresult ReflowCommandAdded(nsHTMLReflowCommand* aRC);
-  nsresult ReflowCommandRemoved(nsHTMLReflowCommand* aRC);
-
-  // This method should be called after reflow commands have been
-  // removed from the queue, but after the state in the presshell is
-  // such that it's safe to flush (i.e. mIsReflowing == PR_FALSE)
-  // If there are no load-created reflow commands and we blocked
-  // onload on the document, we'll unblock it.
-  void DoneRemovingReflowCommands();
+  // This method should be called after mDirtyRoots has been emptied,
+  // but after the state in the presshell is such that it's safe to
+  // flush (i.e. mIsReflowing == PR_FALSE) If there are no load-created
+  // reflow commands and we blocked onload on the document, we'll
+  // unblock it.
+  void DoneRemovingDirtyRoots();
 
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
@@ -1320,11 +1065,6 @@ protected:
   void     ClearReflowEventStatus();
   void     PostReflowEvent();
 
-  // Note: when PR_FALSE is returned, AlreadyInQueue assumes the command will
-  // in fact be added to the queue.  If it's not, it needs to be removed from
-  // mReflowCommandTable (AlreadyInQueue will insert it in that table).
-  PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand);
-  
   friend class nsPresShellEventCB;
 
   class ReflowEvent;
@@ -1379,9 +1119,8 @@ protected:
 #ifdef DEBUG
   PRUint32                  mUpdateCount;
 #endif
-  // normal reflow commands
-  nsVoidArray               mReflowCommands;
-  PLDHashTable              mReflowCommandTable;
+  // reflow roots that need to be reflowed, as both a queue and a hashtable
+  nsVoidArray mDirtyRoots;
 
   PRPackedBool mDocumentLoading;
   PRPackedBool mDocumentOnloadBlocked;
@@ -1414,7 +1153,6 @@ protected:
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
-  PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
 
@@ -1749,25 +1487,6 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(mPresContext);
   aPresContext->SetShell(this);
 
-  // Create our reflow command hashtable
-  static PLDHashTableOps reflowCommandOps =
-    {
-      PL_DHashAllocTable,
-      PL_DHashFreeTable,
-      ReflowCommandHashGetKey,
-      ReflowCommandHashHashKey,
-      ReflowCommandHashMatchEntry,
-      PL_DHashMoveEntryStub,
-      PL_DHashClearEntryStub,
-      PL_DHashFinalizeStub
-    };
-
-  if (!PL_DHashTableInit(&mReflowCommandTable, &reflowCommandOps,
-                         nsnull, sizeof(ReflowCommandEntry), 16)) {
-    mReflowCommandTable.ops = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
   // Now we can initialize the style set.
   nsresult result = aStyleSet->Init(aPresContext);
   NS_ENSURE_SUCCESS(result, result);
@@ -1989,18 +1708,13 @@ PresShell::Destroy()
   // Revoke any pending reflow event
   mReflowEvent.Revoke();
 
-  CancelAllReflowCommands();
+  CancelAllPendingReflows();
 
   NS_ASSERTION(!mDocumentOnloadBlocked,
-               "CancelAllReflowCommands() didn't unblock onload?");
+               "CancelAllPendingReflows() didn't unblock onload?");
 
   KillResizeEventTimer();
 
-  // Now that mReflowCommandTable won't be accessed anymore, finish it
-  if (mReflowCommandTable.ops) {
-    PL_DHashTableFinish(&mReflowCommandTable);
-  }
-  
   mHaveShutDown = PR_TRUE;
 
   return NS_OK;
@@ -2859,6 +2573,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   // start batching widget changes
   mViewManager->BeginUpdateViewBatch();
 
+  // XXX Do a full invalidate at the beginning so that invalidates along
+  // the way don't have region accumulation issues?
+
   WillCauseReflow();
   WillDoReflow();
 
@@ -2922,7 +2639,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 #endif
     nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
-    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsHTMLReflowMetrics   desiredSize;
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
@@ -2932,8 +2649,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     mIsReflowing = PR_TRUE;
 
-    nsHTMLReflowState reflowState(mPresContext, rootFrame,
-                                  eReflowReason_Initial, rcx, maxSize);
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
@@ -3028,6 +2744,9 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   NS_ASSERTION(mViewManager, "Must have view manager");
   mViewManager->BeginUpdateViewBatch();
 
+  // XXX Do a full invalidate at the beginning so that invalidates along
+  // the way don't have region accumulation issues?
+
   WillCauseReflow();
   WillDoReflow();
 
@@ -3065,7 +2784,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
     nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
-    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsHTMLReflowMetrics   desiredSize;
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
@@ -3075,8 +2794,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     // XXXldb Set mIsReflowing (and unset it later)?
 
-    nsHTMLReflowState reflowState(mPresContext, rootFrame,
-                                  eReflowReason_Resize, rcx, maxSize);
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
 
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(rootFrame);
@@ -3195,8 +2913,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   if (!mIgnoreFrameDestruction) {
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
-    // Cancel any pending reflow commands targeted at this frame
-    CancelReflowCommandInternal(aFrame, nsnull);
+    mDirtyRoots.RemoveElement(aFrame);
 
     // Notify the frame manager
     FrameManager()->NotifyDestroyingFrame(aFrame);
@@ -3509,6 +3226,10 @@ PresShell::StyleChangeReflow()
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
+    // Mark everything dirty
+    rootFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+    FrameNeedsReflow(rootFrame, eStyleChange);
+
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::StyleChangeReflow"));
@@ -3524,7 +3245,7 @@ PresShell::StyleChangeReflow()
 #endif
     nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
-    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsHTMLReflowMetrics   desiredSize;
     nsReflowStatus        status;
     nsIRenderingContext*  rcx = nsnull;
 
@@ -3534,8 +3255,7 @@ PresShell::StyleChangeReflow()
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     // XXXldb Set mIsReflowing (and unset it later)?
 
-    nsHTMLReflowState reflowState(mPresContext, rootFrame,
-                                  eReflowReason_StyleChange, rcx, maxSize);
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
 
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(rootFrame);
@@ -3696,48 +3416,16 @@ PresShell::EndLoad(nsIDocument *aDocument)
   mDocumentLoading = PR_FALSE;
 }
 
-// aReflowCommand is considered to be already in the queue if the
-// frame it targets is targeted by a pre-existing reflow command in
-// the queue.
-PRBool
-PresShell::AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand)
-{
-  if (!mReflowCommandTable.ops) {
-    // We're already destroyed
-    NS_ERROR("We really shouldn't be posting reflow commands here");
-  }
-
-  ReflowCommandEntry* e =
-    NS_STATIC_CAST(ReflowCommandEntry*,
-                   PL_DHashTableOperate(&mReflowCommandTable, aReflowCommand,
-                                        PL_DHASH_ADD));
-
-  if (!e) {
-    // We lie no matter what we say here
-    return PR_FALSE;
-  }
-
-  // We're using the stub ClearEntry, which zeros out entries, so a
-  // non-null mCommand means we're in the queue already.
-  if (e->mCommand) {
-#ifdef DEBUG
-    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", (void*)this);
-      aReflowCommand->List(stdout);
-    }
-#endif
-    return PR_TRUE;
-  }
-
-  e->mCommand = aReflowCommand;
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
-PresShell::AppendReflowCommand(nsIFrame*    aTargetFrame,
-                               nsReflowType aReflowType,
-                               nsIAtom*     aChildListName)
+PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
 {
+  NS_PRECONDITION(aFrame->GetStateBits() &
+                    (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN),
+                  "frame not dirty");
+
+  // XXX Add this assertion at some point!?  nsSliderFrame triggers it a lot.
+  //NS_ASSERTION(!mIsReflowing, "can't mark frame dirty during reflow");
+
   // If we've not yet done the initial reflow, then don't bother
   // enqueuing a reflow command yet.
   if (! mDidInitialReflow)
@@ -3752,19 +3440,8 @@ PresShell::AppendReflowCommand(nsIFrame*    aTargetFrame,
   if (mInVerifyReflow) {
     return NS_OK;
   }
-#endif
-
-  nsHTMLReflowCommand* command = new nsHTMLReflowCommand(aTargetFrame,
-                                                         aReflowType,
-                                                         aChildListName);
-  if (!command) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-#ifdef DEBUG
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-    printf("\nPresShell@%p: adding reflow command\n", (void*)this);
-    command->List(stdout);
+    printf("\nPresShell@%p: frame %p needs reflow\n", (void*)this, (void*)aFrame);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
       printf("Current content model:\n");
       nsIContent *rootContent = mDocument->GetRootContent();
@@ -3775,22 +3452,68 @@ PresShell::AppendReflowCommand(nsIFrame*    aTargetFrame,
   }  
 #endif
 
-  // Add the reflow command to the queue
-  nsresult rv = NS_OK;
-  if (!AlreadyInQueue(command)) {
-    if (mReflowCommands.AppendElement(command)) {
-      ReflowCommandAdded(command);
-    } else {
-      // Drop this command.... we're out of memory
-      PL_DHashTableOperate(&mReflowCommandTable, command,
-                           PL_DHASH_REMOVE);
-      delete command;
-      rv = NS_ERROR_OUT_OF_MEMORY;
+  // Mark the intrinsic widths as dirty on the frame, all of its ancestors,
+  // and all of its descendants, if needed:
+
+  if (aIntrinsicDirty != eResize) {
+    // Mark argument and all ancestors dirty (unless we hit a reflow root
+    // other than aFrame)
+    for (nsIFrame *a = aFrame;
+         a && (!(a->GetStateBits() & NS_FRAME_REFLOW_ROOT) || a == aFrame);
+         a = a->GetParent())
+      a->MarkIntrinsicWidthsDirty();
+  }
+
+  if (aIntrinsicDirty == eStyleChange) {
+    // Mark all descendants dirty (using an nsVoidArray stack rather than
+    // recursion).
+    nsVoidArray stack;
+    stack.AppendElement(aFrame);
+
+    while (stack.Count() != 0) {
+      nsIFrame *f =
+        NS_STATIC_CAST(nsIFrame*, stack.FastElementAt(stack.Count() - 1));
+      stack.RemoveElementAt(stack.Count() - 1);
+
+      PRInt32 childListIndex = 0;
+      nsIAtom *childListName;
+      do {
+        childListName = f->GetAdditionalChildListName(childListIndex++);
+        for (nsIFrame *kid = f->GetFirstChild(childListName); kid;
+             kid = kid->GetNextSibling()) {
+          kid->MarkIntrinsicWidthsDirty();
+          stack.AppendElement(kid);
+        }
+      } while (childListName);
     }
   }
-  else {
-    // We're not going to process this reflow command.
-    delete command;
+
+  // Set NS_FRAME_HAS_DIRTY_CHILDREN bits (via nsIFrame::ChildIsDirty) up the
+  // tree until we reach either a frame that's already dirty or a reflow root.
+  nsIFrame *f = aFrame;
+  PRBool wasDirty = PR_TRUE;
+  for (;;) {
+    if (((f->GetStateBits() & NS_FRAME_REFLOW_ROOT) && f != aFrame) ||
+        !f->GetParent()) {
+      // we've hit a reflow root or the root frame
+      if (!wasDirty) {
+        NS_ASSERTION(mDirtyRoots.IndexOf(f) == -1, "wasDirty lied");
+        mDirtyRoots.AppendElement(f);
+      }
+      break;
+    }
+
+    nsIFrame *child = f;
+    f = f->GetParent();
+    wasDirty = ((f->GetStateBits() & 
+                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0);
+    f->ChildIsDirty(child);
+    NS_ASSERTION(f->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN,
+                 "ChildIsDirty didn't do its job");
+    if (wasDirty) {
+      // This frame was already marked dirty.
+      break;
+    }
   }
 
   // Post a reflow event if we are not batching reflow commands.
@@ -3803,7 +3526,7 @@ PresShell::AppendReflowCommand(nsIFrame*    aTargetFrame,
       PostReflowEvent();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -3867,57 +3590,12 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   return scrollView;
 }
 
-void
-PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
-                                       nsReflowType* aCmdType)
-{
-  PRInt32 i, n = mReflowCommands.Count();
-  for (i = 0; i < n; i++) {
-    nsHTMLReflowCommand* rc = (nsHTMLReflowCommand*) mReflowCommands.ElementAt(i);
-    if (rc && rc->GetTarget() == aTargetFrame &&
-        (!aCmdType || rc->Type() == *aCmdType)) {
-#ifdef DEBUG
-      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-        printf("PresShell: removing rc=%p for frame ", (void*)rc);
-        nsFrame::ListTag(stdout, aTargetFrame);
-        printf("\n");
-      }
-#endif
-      mReflowCommands.RemoveElementAt(i);
-      ReflowCommandRemoved(rc);
-      delete rc;
-      n--;
-      i--;
-    }
-  }
-
-  DoneRemovingReflowCommands();
-}
-
 NS_IMETHODIMP
-PresShell::CancelReflowCommand(nsIFrame*     aTargetFrame, 
-                               nsReflowType* aCmdType)
+PresShell::CancelAllPendingReflows()
 {
-  CancelReflowCommandInternal(aTargetFrame, aCmdType);
-  return NS_OK;
-}
+  mDirtyRoots.Clear();
 
-
-NS_IMETHODIMP
-PresShell::CancelAllReflowCommands()
-{
-  PRInt32 n = mReflowCommands.Count();
-  nsHTMLReflowCommand* rc;
-  PRInt32 i;
-  for (i = 0; i < n; i++) {
-    rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mReflowCommands.ElementAt(i));
-    ReflowCommandRemoved(rc);
-    delete rc;
-  }
-  NS_ASSERTION(n == mReflowCommands.Count(),"reflow command list changed during cancel!");
-  mReflowCommands.Clear();
-
-  DoneRemovingReflowCommands();
+  DoneRemovingDirtyRoots();
 
   return NS_OK;
 }
@@ -4908,7 +4586,7 @@ PresShell::UnsuppressPainting()
   // the reflows and get all the frames where we want them
   // before actually unlocking the painting.  Otherwise
   // go ahead and unlock now.
-  if (mReflowCommands.Count() > 0)
+  if (mDirtyRoots.Count() > 0)
     mShouldUnsuppressPainting = PR_TRUE;
   else
     UnsuppressAndInvalidate();
@@ -6444,9 +6122,15 @@ void
 PresShell::PostReflowEvent()
 {
   if (mReflowEvent.IsPending() || mIsDestroying || mIsReflowing ||
-      mReflowCommands.Count() == 0)
+      mDirtyRoots.Count() == 0)
     return;
 
+  // Block onload if needed until the event fires
+  if (mDocumentLoading && !mDocumentOnloadBlocked) {
+    mDocument->BlockOnload();
+    mDocumentOnloadBlocked = PR_TRUE;
+  }
+  
   nsRefPtr<ReflowEvent> ev = new ReflowEvent(this);
   if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
     NS_WARNING("failed to dispatch reflow event");
@@ -6507,8 +6191,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_DEBUGLOG(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_START(mReflowWatch);  
 
-  if (0 != mReflowCommands.Count()) {
-    nsHTMLReflowMetrics   desiredSize(nsnull);
+  if (0 != mDirtyRoots.Count()) {
+    nsHTMLReflowMetrics   desiredSize;
     nsIRenderingContext*  rcx;
     nsIFrame*             rootFrame = FrameManager()->GetRootFrame();
     nsSize          maxSize = rootFrame->GetSize();
@@ -6520,15 +6204,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     if (GetVerifyReflowEnable()) {
       if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
         printf("ProcessReflowCommands: begin incremental reflow\n");
-      }
-    }
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {   
-      PRInt32 i, n = mReflowCommands.Count();
-      printf("\nPresShell::ProcessReflowCommands: this=%p, count=%d\n", (void*)this, n);
-      for (i = 0; i < n; i++) {
-        nsHTMLReflowCommand* rc = (nsHTMLReflowCommand*)
-          mReflowCommands.ElementAt(i);
-        rc->List(stdout);
       }
     }
 #endif
@@ -6550,44 +6225,57 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       mIsReflowing = PR_TRUE;
 
       do {
-        // Coalesce the reflow commands into a tree.
-        IncrementalReflow reflow;
-        for (PRInt32 i = mReflowCommands.Count() - 1; i >= 0; --i) {
-          nsHTMLReflowCommand *command =
-            NS_STATIC_CAST(nsHTMLReflowCommand *, mReflowCommands[i]);
+        // Send an incremental reflow notification to the target frame.
+        PRInt32 idx = mDirtyRoots.Count() - 1;
+        nsIFrame *target = NS_STATIC_CAST(nsIFrame*, mDirtyRoots[idx]);
+        mDirtyRoots.RemoveElementAt(idx);
 
-          IncrementalReflow::AddCommandResult res =
-            reflow.AddCommand(mPresContext, command);
-          if (res == IncrementalReflow::eEnqueued ||
-              res == IncrementalReflow::eCancel) {
-            // Remove the command from the queue.
-            mReflowCommands.RemoveElementAt(i);
-            ReflowCommandRemoved(command);
-            if (res == IncrementalReflow::eCancel)
-              delete command;
-          }
-          else {
-            // The reflow command couldn't be added to the tree; leave
-            // it in the queue, and we'll handle it next time.
-#ifdef DEBUG
-            printf("WARNING: Couldn't add reflow command, so splitting.\n");
-#endif
-          }
+        if (!(target->GetStateBits() &
+              (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+          // It's not dirty anymore, which probably means the notification
+          // was posted in the middle of a reflow (perhaps with a reflow
+          // root in the middle).  Don't do anything.
+          continue;
         }
 
-#ifdef DEBUG
-        if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-          printf("Incremental reflow tree:\n");
-          reflow.Dump(mPresContext);
-        }
-#endif
+        nsIFrame* root = mPresContext->FrameManager()->GetRootFrame();
 
-        // Dispatch an incremental reflow.
-        reflow.Dispatch(mPresContext, desiredSize, maxSize, *rcx);
+        target->WillReflow(mPresContext);
+        nsContainerFrame::PositionFrameView(target);
+
+        // If the target frame is the root of the frame hierarchy, then
+        // use all the available space. If it's simply a `reflow root',
+        // then use the target frame's size as the available space.
+        nsSize size;
+        if (target == root)
+          size = maxSize;
+        else
+          size = target->GetSize();
+
+        nsHTMLReflowState reflowState(mPresContext, target, rcx, size);
+
+        nsReflowStatus status;
+        target->Reflow(mPresContext, desiredSize, reflowState, status);
+
+        // If an incremental reflow is initiated at a frame other than the
+        // root frame, then its desired size had better not change!
+        NS_ASSERTION(target == root ||
+                     (desiredSize.width == size.width &&
+                      desiredSize.height == size.height),
+                     "non-root frame's desired size changed during an "
+                     "incremental reflow");
+
+        target->SetSize(nsSize(desiredSize.width, desiredSize.height));
+
+        nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, target,
+                                                   target->GetView(),
+                                                   &desiredSize.mOverflowArea);
+
+        target->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
         // Keep going until we're out of reflow commands, or we've run
         // past our deadline.
-      } while (mReflowCommands.Count() &&
+      } while (mDirtyRoots.Count() &&
                (!aInterruptible || PR_IntervalNow() < deadline));
 
       // XXXwaterson for interruptible reflow, examine the tree and
@@ -6600,7 +6288,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
     // If any new reflow commands were enqueued during the reflow,
     // schedule another reflow event to process them.
-    if (mReflowCommands.Count())
+    if (mDirtyRoots.Count())
       PostReflowEvent();
     
 #ifdef DEBUG
@@ -6631,7 +6319,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
                ok ? "ok" : "failed");
       }
 
-      if (0 != mReflowCommands.Count()) {
+      if (0 != mDirtyRoots.Count()) {
         printf("XXX yikes! reflow commands queued during verify-reflow\n");
       }
     }
@@ -6639,7 +6327,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
     // If there are no more reflow commands in the queue, we'll want
     // to unblock onload.
-    DoneRemovingReflowCommands();
+    DoneRemovingDirtyRoots();
 
     DidDoReflow();
   }
@@ -6647,7 +6335,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_STOP(mReflowWatch);  
 
-  if (mShouldUnsuppressPainting && mReflowCommands.Count() == 0) {
+  if (mShouldUnsuppressPainting && mDirtyRoots.Count() == 0) {
     // We only unlock if we're out of reflows.  It's pointless
     // to unlock if reflows are still pending, since reflows
     // are just going to thrash the frames around some more.  By
@@ -6665,66 +6353,14 @@ PresShell::ClearReflowEventStatus()
   mReflowEvent.Forget();
 }
 
-nsresult
-PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
-{
-
-  NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");
-  if (mDocumentLoading) {
-    aRC->AddFlagBits(NS_RC_CREATED_DURING_DOCUMENT_LOAD);
-    mRCCreatedDuringLoad++;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-      nsIFrame* target;
-      aRC->GetTarget(target);
-
-      nsIAtom* type = target->GetType();
-      NS_ASSERTION(type, "frame didn't override GetType()");
-
-      nsAutoString typeStr(NS_LITERAL_STRING("unknown"));
-      if (type)
-        type->ToString(typeStr);
-
-      PR_LOG(gLog, PR_LOG_DEBUG,
-             ("presshell=%p, ReflowCommandAdded(%p) target=%p[%s] mRCCreatedDuringLoad=%d\n",
-              this, aRC, target, NS_ConvertUTF16toUTF8(typeStr).get(), mRCCreatedDuringLoad));
-    }
-#endif
-
-    if (!mDocumentOnloadBlocked) {
-      mDocument->BlockOnload();
-      mDocumentOnloadBlocked = PR_TRUE;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-PresShell::ReflowCommandRemoved(nsHTMLReflowCommand* aRC)
-{
-  NS_PRECONDITION(mReflowCommandTable.ops, "How did that happen?");
-  
-  PL_DHashTableOperate(&mReflowCommandTable, aRC, PL_DHASH_REMOVE);
-  
-  NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");  
-  if (aRC->GetFlagBits() & NS_RC_CREATED_DURING_DOCUMENT_LOAD) {
-    mRCCreatedDuringLoad--;
-
-    PR_LOG(gLog, PR_LOG_DEBUG,
-           ("presshell=%p, ReflowCommandRemoved(%p) mRCCreatedDuringLoad=%d\n",
-            this, aRC, mRCCreatedDuringLoad));
-  }
-  return NS_OK;
-}
-
 void
-PresShell::DoneRemovingReflowCommands()
+PresShell::DoneRemovingDirtyRoots()
 {
   // We want to unblock here even if we're destroying, since onload
   // can well fire with no presentation in sight.  So just check
   // whether we actually blocked onload.
-  if (mRCCreatedDuringLoad == 0 && mDocumentOnloadBlocked) {
+  // XXXldb Do we want to readd the mIsReflowing check?
+  if (mDocumentOnloadBlocked && mDirtyRoots.Count() == 0 && !mIsReflowing) {
     mDocument->UnblockOnload(PR_FALSE);
     mDocumentOnloadBlocked = PR_FALSE;
   }
@@ -7552,10 +7188,10 @@ PresShell::DumpReflows()
 
 //-------------------------------------------------------------
 NS_IMETHODIMP
-PresShell::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)
+PresShell::CountReflows(const char * aName, nsIFrame * aFrame)
 {
   if (mReflowCountMgr) {
-    mReflowCountMgr->Add(aName, (nsReflowReason)aType, aFrame);
+    mReflowCountMgr->Add(aName, aFrame);
   }
 
   return NS_OK;
@@ -7602,81 +7238,59 @@ ReflowCounter::~ReflowCounter()
 //------------------------------------------------------------------
 void ReflowCounter::ClearTotals()
 {
-  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
-    mTotals[i] = 0;
-  }
+  mTotal = 0;
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::SetTotalsCache()
 {
-  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
-    mCacheTotals[i] = mTotals[i];
-  }
+  mCacheTotal = mTotal;
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::CalcDiffInTotals()
 {
-  for (PRUint32 i=0;i<NUM_REFLOW_TYPES;i++) {
-    mCacheTotals[i] = mTotals[i] - mCacheTotals[i];
-  }
+  mCacheTotal = mTotal - mCacheTotal;
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::DisplayTotals(const char * aStr)
 {
-  DisplayTotals(mTotals, aStr?aStr:"Totals");
+  DisplayTotals(mTotal, aStr?aStr:"Totals");
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::DisplayDiffTotals(const char * aStr)
 {
-  DisplayTotals(mCacheTotals, aStr?aStr:"Diff Totals");
+  DisplayTotals(mCacheTotal, aStr?aStr:"Diff Totals");
 }
 
 //------------------------------------------------------------------
 void ReflowCounter::DisplayHTMLTotals(const char * aStr)
 {
-  DisplayHTMLTotals(mTotals, aStr?aStr:"Totals");
+  DisplayHTMLTotals(mTotal, aStr?aStr:"Totals");
 }
 
 //------------------------------------------------------------------
-void ReflowCounter::DisplayTotals(PRUint32 * aArray, const char * aTitle)
+void ReflowCounter::DisplayTotals(PRUint32 aTotal, const char * aTitle)
 {
   // figure total
-  PRUint32 total = 0;
-  PRUint32 i;
-  for (i=0;i<NUM_REFLOW_TYPES;i++) {
-    total += aArray[i];
-  }
-
-  if (total == 0) {
+  if (aTotal == 0) {
     return;
   }
   ReflowCounter * gTots = (ReflowCounter *)mMgr->LookUp(kGrandTotalsStr);
 
   printf("%25s\t", aTitle);
-  for (i=0;i<NUM_REFLOW_TYPES;i++) {
-    printf("%d\t", aArray[i]);
-    if (gTots != this &&  aArray[i] > 0) {
-      gTots->Add((nsReflowReason)i, aArray[i]);
-    }
+  printf("%d\t", aTotal);
+  if (gTots != this && aTotal > 0) {
+    gTots->Add(aTotal);
   }
-  printf("%d\n", total);
 }
 
 //------------------------------------------------------------------
-void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
+void ReflowCounter::DisplayHTMLTotals(PRUint32 aTotal, const char * aTitle)
 {
-  // figure total
-  PRUint32 total = 0;
-  PRUint32 i;
-  for (i=0;i<NUM_REFLOW_TYPES;i++) {
-    total += aArray[i];
-  }
-
-  if (total == 0) {
+  if (aTotal == 0) {
     return;
   }
 
@@ -7687,19 +7301,11 @@ void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
   }
 
   fprintf(fd, "<tr><td><center>%s</center></td>", aTitle);
-  for (i=0;i<NUM_REFLOW_TYPES;i++) {
-    fprintf(fd, "<td><center>");
-    if (aArray[i]) {
-      fprintf(fd, "%d", aArray[i]);
-    } else {
-      fprintf(fd, "&nbsp;");
-    }
-    fprintf(fd, "</center></td>");
-    if (gTots != this &&  aArray[i] > 0) {
-      gTots->Add((nsReflowReason)i, aArray[i]);
-    }
+  fprintf(fd, "<td><center>%d</center></td></tr>\n", aTotal);
+
+  if (gTots != this && aTotal > 0) {
+    gTots->Add(aTotal);
   }
-  fprintf(fd, "<td><center>%d</center></td></tr>\n", total);
 }
 
 //------------------------------------------------------------------
@@ -7735,7 +7341,7 @@ ReflowCounter * ReflowCountMgr::LookUp(const char * aName)
 }
 
 //------------------------------------------------------------------
-void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aFrame)
+void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
 {
   NS_ASSERTION(aName != nsnull, "Name shouldn't be null!");
 
@@ -7748,7 +7354,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
       NS_ASSERTION(name != nsnull, "null ptr");
       PL_HashTableAdd(mCounts, name, counter);
     }
-    counter->Add(aType);
+    counter->Add();
   }
 
   if ((mDumpFrameByFrameCounts || mPaintFrameByFrameCounts) && 
@@ -7767,7 +7373,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
     // this eliminates extra counts from super classes
     if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       counter->mCount++;
-      counter->mCounter.Add(aType, 1);
+      counter->mCounter.Add(1);
     }
   }
 }
@@ -7893,14 +7499,8 @@ void ReflowCountMgr::DoGrandTotals()
       gTots->ClearTotals();
     }
 
-    static const char * title[] = {"Init", "Incrm", "Resze", "Style", "Dirty", "Total"};
-    printf("\t\t\t");
-    PRUint32 i;
-    for (i=0;i<NUM_REFLOW_TYPES+1;i++) {
-      printf("\t%s", title[i]);
-    }
-    printf("\n");
-    for (i=0;i<78;i++) {
+    printf("\t\t\t\tTotal\n");
+    for (PRUint32 i=0;i<78;i++) {
       printf("-");
     }
     printf("\n");
@@ -7925,10 +7525,7 @@ static void RecurseIndiTotals(nsPresContext* aPresContext,
     char * name = ToNewCString(counter->mName);
     for (PRInt32 i=0;i<aLevel;i++) printf(" ");
     printf("%s - %p   [%d][", name, (void*)aParentFrame, counter->mCount);
-    for (PRInt32 inx=0;inx<5;inx++) {
-      if (inx != 0) printf(",");
-      printf("%d", counter->mCounter.GetTotalByType(nsReflowReason(inx)));
-    }
+    printf("%d", counter->mCounter.GetTotal());
     printf("]\n");
     nsMemory::Free(name);
   }
@@ -7948,10 +7545,7 @@ PRIntn ReflowCountMgr::DoSingleIndi(PLHashEntry *he, PRIntn i, void *arg)
   if (counter && !counter->mHasBeenOutput) {
     char * name = ToNewCString(counter->mName);
     printf("%s - %p   [%d][", name, (void*)counter->mFrame, counter->mCount);
-    for (PRInt32 inx=0;inx<5;inx++) {
-      if (inx != 0) printf(",");
-      printf("%d", counter->mCounter.GetTotalByType(nsReflowReason(inx)));
-    }
+    printf("%d", counter->mCounter.GetTotal());
     printf("]\n");
     nsMemory::Free(name);
   }
@@ -8000,10 +7594,9 @@ void ReflowCountMgr::DoGrandHTMLTotals()
       gTots->ClearTotals();
     }
 
-    static const char * title[] = {"Class", "Init", "Incrm", "Resze", "Style", "Dirty", "Total"};
+    static const char * title[] = {"Class", "Reflows"};
     fprintf(mFD, "<tr>");
-    PRUint32 i;
-    for (i=0;i<NUM_REFLOW_TYPES+2;i++) {
+    for (PRUint32 i=0; i < NS_ARRAY_LENGTH(title); i++) {
       fprintf(mFD, "<td><center><b>%s<b></center></td>", title[i]);
     }
     fprintf(mFD, "</tr>\n");

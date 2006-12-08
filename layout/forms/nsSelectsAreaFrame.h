@@ -62,11 +62,27 @@ public:
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists);
 
+  NS_IMETHOD Reflow(nsPresContext*          aCX,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
   static PRBool IsOptionElement(nsIContent* aContent);
   static PRBool IsOptionElementFrame(nsIFrame *aFrame);
   
+  nscoord HeightOfARow() const { return mHeightOfARow; }
+  
 protected:
-  nsSelectsAreaFrame(nsStyleContext* aContext) : nsAreaFrame(aContext) {}
+  nsSelectsAreaFrame(nsStyleContext* aContext) :
+    nsAreaFrame(aContext),
+    mHeightOfARow(0)
+  {}
+
+  // We cache the height of a single row so that changes to the "size"
+  // attribute, padding, etc. can all be handled with only one reflow.  We'll
+  // have to reflow twice if someone changes our font size or something like
+  // that, so that the heights of our options will change.
+  nscoord mHeightOfARow;
 };
 
 #endif /* nsSelectsAreaFrame_h___ */
