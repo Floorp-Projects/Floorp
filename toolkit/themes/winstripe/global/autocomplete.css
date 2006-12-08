@@ -84,6 +84,10 @@ textbox.padded {
   -moz-image-region: rect(0px, 16px, 20px, 0px) !important;
 }
 
+.autocomplete-history-dropmarker[enablehistory="true"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#history-dropmarker")
+}
+
 textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
   border-left: none !important;
   border-right: 1px solid !important;
