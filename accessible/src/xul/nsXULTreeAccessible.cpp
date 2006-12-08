@@ -51,7 +51,35 @@
 
 #define kMaxTreeColumns 100
 
-inline already_AddRefed<nsITreeColumn> GetFirstColumn(nsITreeBoxObject *aTree)
+/* static */
+PRBool nsXULTreeAccessible::IsColumnHidden(nsITreeColumn *aColumn)
+{
+  nsCOMPtr<nsIDOMElement> element;
+  aColumn->GetElement(getter_AddRefs(element));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  return content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::hidden,
+                              nsAccessibilityAtoms::_true, eCaseMatters);
+}
+
+/* static */
+already_AddRefed<nsITreeColumn> nsXULTreeAccessible::GetNextVisibleColumn(nsITreeColumn *aColumn)
+{
+  // Skip hidden columns.
+  nsCOMPtr<nsITreeColumn> nextColumn;
+  aColumn->GetNext(getter_AddRefs(nextColumn));
+  while (nextColumn && IsColumnHidden(nextColumn)) {
+    nsCOMPtr<nsITreeColumn> tempColumn;
+    nextColumn->GetNext(getter_AddRefs(tempColumn));
+    nextColumn.swap(tempColumn);
+  }
+
+  nsITreeColumn *retCol = nsnull;
+  nextColumn.swap(retCol);
+  return retCol;
+}
+
+/* static */
+already_AddRefed<nsITreeColumn> nsXULTreeAccessible::GetFirstVisibleColumn(nsITreeBoxObject *aTree)
 {
   nsCOMPtr<nsITreeColumns> cols;
   nsCOMPtr<nsITreeColumn> column;
@@ -59,12 +87,19 @@ inline already_AddRefed<nsITreeColumn> GetFirstColumn(nsITreeBoxObject *aTree)
   if (cols) {
     cols->GetFirstColumn(getter_AddRefs(column));
   }
+
+  if (column && IsColumnHidden(column)) {
+    column = GetNextVisibleColumn(column);
+  }
+  NS_ENSURE_TRUE(column, nsnull);
+
   nsITreeColumn *retCol = nsnull;
   column.swap(retCol);
   return retCol;
 }
 
-inline already_AddRefed<nsITreeColumn> GetLastColumn(nsITreeBoxObject *aTree)
+/* static */
+already_AddRefed<nsITreeColumn> nsXULTreeAccessible::GetLastVisibleColumn(nsITreeBoxObject *aTree)
 {
   nsCOMPtr<nsITreeColumns> cols;
   nsCOMPtr<nsITreeColumn> column;
@@ -72,6 +107,15 @@ inline already_AddRefed<nsITreeColumn> GetLastColumn(nsITreeBoxObject *aTree)
   if (cols) {
     cols->GetLastColumn(getter_AddRefs(column));
   }
+
+  // Skip hidden columns.
+  while (column && IsColumnHidden(column)) {
+    nsCOMPtr<nsITreeColumn> tempColumn;
+    column->GetPrevious(getter_AddRefs(tempColumn));
+    column.swap(tempColumn);
+  }
+  NS_ENSURE_TRUE(column, nsnull);
+
   nsITreeColumn *retCol = nsnull;
   column.swap(retCol);
   return retCol;
@@ -211,7 +255,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetFirstChild(nsIAccessible **aFirstChild)
     PRInt32 rowCount;
     mTreeView->GetRowCount(&rowCount);
     if (rowCount > 0) {
-      nsCOMPtr<nsITreeColumn> column = GetFirstColumn(mTree);
+      nsCOMPtr<nsITreeColumn> column = GetFirstVisibleColumn(mTree);
       return GetCachedTreeitemAccessible(0, column, aFirstChild);
     }
   }
@@ -226,7 +270,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetLastChild(nsIAccessible **aLastChild)
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
   if (rowCount > 0) {
-    nsCOMPtr<nsITreeColumn> column = GetLastColumn(mTree);
+    nsCOMPtr<nsITreeColumn> column = GetLastVisibleColumn(mTree);
     return GetCachedTreeitemAccessible(rowCount - 1, column, aLastChild);
   }
   else // if there is not any rows, use treecols as tree's last child
@@ -647,13 +691,12 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   PRInt32 row = mRow;
   nsCOMPtr<nsITreeColumn> column;
 #ifdef MOZ_ACCESSIBILITY_ATK
-  rv = mColumn->GetNext(getter_AddRefs(column));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  column = nsXULTreeAccessible::GetNextVisibleColumn(mColumn);
+
   if (!column) {
     if (mRow < rowCount -1) {
       row++;
-      column = GetFirstColumn(mTree);
+      column = nsXULTreeAccessible::GetFirstVisibleColumn(mTree);
     } else {
       // the next sibling of the last treeitem is null
       return NS_OK;
@@ -695,7 +738,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
   
   if (!column && mRow > 0) {
     row--;
-    column = GetLastColumn(mTree);
+    column = nsXULTreeAccessible::GetLastVisibleColumn(mTree);
   }
 #else
   if (--row < 0) {
@@ -893,7 +936,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSi
         PRInt32 rowCount;
         treeView->GetRowCount(&rowCount);
         if (rowCount > 0) {
-          nsCOMPtr<nsITreeColumn> column = GetFirstColumn(tree);
+          nsCOMPtr<nsITreeColumn> column = nsXULTreeAccessible::GetFirstVisibleColumn(tree);
           nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
           NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
           ret = treeCache->GetCachedTreeitemAccessible(0, column, aNextSibling);

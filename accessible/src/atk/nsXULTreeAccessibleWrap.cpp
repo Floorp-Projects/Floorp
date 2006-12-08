@@ -68,7 +68,8 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetChildCount(PRInt32 *aAccChildCount)
   // created and appended by XUL tree accessible implementation
   PRInt32 rowCount, colCount = 1;
   mTreeView->GetRowCount(&rowCount);
-  GetColumnCount(mTree, &colCount);
+  mFirstChild->GetChildCount(&colCount);
+
   *aAccChildCount += rowCount * colCount;
 
   return NS_OK;

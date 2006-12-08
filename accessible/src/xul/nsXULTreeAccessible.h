@@ -76,6 +76,11 @@ public:
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
   static nsresult GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32 *aCount);
 
+  static PRBool IsColumnHidden(nsITreeColumn *aColumn);
+  static already_AddRefed<nsITreeColumn> GetNextVisibleColumn(nsITreeColumn *aColumn);
+  static already_AddRefed<nsITreeColumn> GetFirstVisibleColumn(nsITreeBoxObject *aTree);
+  static already_AddRefed<nsITreeColumn> GetLastVisibleColumn(nsITreeBoxObject *aTree);
+
 protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
