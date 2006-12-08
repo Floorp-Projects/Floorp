@@ -90,9 +90,10 @@ enum
 
 /* This is how focus works in the history and bookmarks view:
 
-   1. when someone invokes the history or bookmarks view in setActiveOutlineView:, we make sure
-     that the controls before know about it (setting the right nextKeyView, etc).
-   2. The initial focus is set to the search textfield in contentView:usedForURL:
+   1. When someone invokes the history or bookmarks view in setActiveOutlineView:, we make sure
+      that the controls before know about it (setting the right nextKeyView, etc).
+   2. The initial focus is set by contentView:usedForURL: and is normally set to the Search
+      field unless setItemToRevealOnLoad: is used.
    3. Other than that, the whole responder chain is set up in the nib.
 */
 
@@ -172,7 +173,7 @@ enum
 - (IBAction)openBookmarksInTabsInNewWindow:(id)aSender;
 - (IBAction)deleteBookmarks:(id)aSender;
 - (IBAction)showBookmarkInfo:(id)aSender;
-- (IBAction)locateBookmark:(id)aSender;
+- (IBAction)revealBookmark:(id)aSender;
 - (IBAction)cut:(id)aSender;
 - (IBAction)copy:(id)aSender;
 - (IBAction)paste:(id)aSender;

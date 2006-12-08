@@ -199,6 +199,11 @@
   [bic showWindow:self];
 }
 
+- (IBAction)revealBookmark:(id)aSender
+{
+  [[[self window] windowController] revealBookmark:[self bookmarkItem]];
+}
+
 - (IBAction)deleteBookmarks:(id)aSender
 {
   BookmarkItem *item = [self bookmarkItem];

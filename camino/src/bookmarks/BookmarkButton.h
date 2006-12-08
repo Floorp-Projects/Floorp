@@ -58,6 +58,7 @@
 - (IBAction)openBookmarkInNewTab:(id)aSender;
 - (IBAction)openBookmarkInNewWindow:(id)aSender;
 - (IBAction)showBookmarkInfo:(id)aSender;
+- (IBAction)revealBookmark:(id)aSender;
 - (IBAction)deleteBookmarks:(id)aSender;
 - (IBAction)addFolder:(id)aSender;
 

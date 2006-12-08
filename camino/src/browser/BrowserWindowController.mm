@@ -4593,6 +4593,24 @@ enum BWCOpenDest {
 }
 
 //
+// -revealBookmark:
+//
+// Reveals a bookmark in the manager
+//
+- (void)revealBookmark:(BookmarkItem*)anItem
+{
+  BookmarkViewController* bvc = [self bookmarkViewControllerForCurrentTab];
+
+  if (![self bookmarkManagerIsVisible]) {
+    [bvc setItemToRevealOnLoad:anItem];
+    [self manageBookmarks:nil];
+  }
+  else {
+    [bvc revealItem:anItem scrollIntoView:YES selecting:YES byExtendingSelection:NO];
+  }
+}
+
+//
 // - handleCommandReturn:
 //
 // handle command-return in location or search field, opening a new tab or window as appropriate

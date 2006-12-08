@@ -381,4 +381,7 @@ typedef enum
 // Load the item in the bookmark bar given by |inIndex| using the given behavior.
 - (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior;
 
+// Reveal the bookmarkItem in the manager
+- (void)revealBookmark:(BookmarkItem*)anItem;
+
 @end

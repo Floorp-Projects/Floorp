@@ -77,6 +77,7 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
   BOOL                            mBookmarksLoaded;
   BOOL                            mShowSiteIcons;
+  BOOL                            mSearchActive;
 
   int                             mNotificationsSuppressedCount;
   NSRecursiveLock*                mNotificationsSuppressedLock;    // make mNotificationsSuppressedCount threadsafe
@@ -108,6 +109,9 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 - (BookmarkFolder *)historyFolder;
 
 - (BOOL)isUserCollection:(BookmarkFolder *)inFolder;
+
+- (BOOL)searchActive;
+- (void)setSearchActive:(BOOL)inSearching;
 
 // returns NSNotFound if the folder is not a child of the root
 - (unsigned)indexOfContainer:(BookmarkFolder*)inFolder;

@@ -626,13 +626,9 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   [bic showWindow:bic];
 }
 
-// XXX unused
-- (IBAction)locateBookmark:(id)aSender
+- (IBAction)revealBookmark:(id)aSender
 {
-#if 0
-  BookmarkItem* item = [aSender representedObject]; // XXX ???
-  [self revealItem:item scrollIntoView:YES selecting:YES byExtendingSelection:NO];
-#endif
+  [self revealItem:[self selectedBookmarkItem] scrollIntoView:YES selecting:YES byExtendingSelection:NO];
 }
 
 - (IBAction)cut:(id)aSender
@@ -766,6 +762,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 {
   [self setSearchFilterTag:kSearchAllTag];
   [[mSearchField cell] setStringValue:@""];
+  [[BookmarkManager sharedBookmarkManager] setSearchActive:NO]; // ensure the manager knows we aren't searching any more
 }
 
 - (void)setBrowserWindowController:(BrowserWindowController*)bwController
@@ -1648,49 +1645,6 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   return YES;
 }
 
-
-#if 0
-- (BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
-{
-  int  index = [mBookmarksOutlineView selectedRow];
-  BOOL haveSelection = (index != -1);
-  BOOL multiSelection = ([mBookmarksOutlineView numberOfSelectedRows] > 1);
-  BOOL isBookmark = NO;
-  BOOL isToolbar = NO;
-  BOOL isGroup = NO;
-
-  id item = nil;
-
-  if (haveSelection)
-    item = [mBookmarksOutlineView itemAtRow:index];
-  if ([item isKindOfClass:[Bookmark class]])
-    isBookmark = YES;
-  else if ([item isKindOfClass:[BookmarkFolder class]]) {
-    isGroup = [item isGroup];
-    isToolbar = [item isToolbar];
-  }
-
-  // Bookmarks and Bookmark Groups can be opened in a new window
-  if ([aMenuItem action] == @selector(openBookmarkInNewWindow:))
-    return (isBookmark || isGroup);
-
-  // Only Bookmarks can be opened in new tabs
-  if ([aMenuItem action] == @selector(openBookmarkInNewTab:))
-    return isBookmark && [mBrowserWindowController newTabsAllowed];
-
-  if ([aMenuItem action] == @selector(showBookmarkInfo:))
-    return haveSelection;
-
-  if ([aMenuItem action] == @selector(deleteBookmarks:))
-    return (multiSelection || (haveSelection && !isToolbar));
-
-  if ([aMenuItem action] == @selector(addFolder:))
-    return YES;
-
-  return YES;
-}
-#endif
-
 - (void)outlineViewItemDidExpand:(NSNotification *)notification
 {
   id item = [[notification userInfo] objectForKey:@"NSObject"];
@@ -1711,10 +1665,12 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if ([searchString length] == 0) {
     [self clearSearchResults];
     [[self activeOutlineView] reloadData];
+    [[BookmarkManager sharedBookmarkManager] setSearchActive:NO];
   }
   else {
     [self searchFor:searchString inFieldWithTag:mSearchTag];
     [[self activeOutlineView] reloadData];
+    [[BookmarkManager sharedBookmarkManager] setSearchActive:YES];
   }
 }
 
@@ -2064,9 +2020,13 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if (inView == mBookmarksEditingView) {
     [self restoreSplitters];
 
-    // set the initial focus to the search textfield.
-    // for more info about focus, see the header.
-    [[mBookmarksEditingView window] makeFirstResponder:mSearchField];
+    // Set the initial focus to the Search field unless a row is already selected;
+    // e.g., if setItemToRevealOnLoad: is used.
+    // For more info about focus, see the header.
+    if ([mBookmarksOutlineView selectedRow] == -1)
+      [[mBookmarksEditingView window] makeFirstResponder:mSearchField];
+    else
+      [[mBookmarksEditingView window] makeFirstResponder:mBookmarksOutlineView];
   }
 }
 

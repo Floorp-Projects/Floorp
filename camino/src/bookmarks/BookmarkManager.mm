@@ -563,6 +563,16 @@ static BookmarkManager* gBookmarkManager = nil;
          ([[inFolder identifier] length] == 0);   // all our special folders have identifiers
 }
 
+- (BOOL)searchActive
+{
+  return mSearchActive;
+}
+
+- (void)setSearchActive:(BOOL)inSearching
+{
+  mSearchActive = inSearching;
+}
+
 - (unsigned)indexOfContainer:(BookmarkFolder*)inFolder
 {
   return [mRootBookmarks indexOfObject:inFolder];
@@ -771,14 +781,28 @@ static BookmarkManager* gBookmarkManager = nil;
   shiftMenuItem = [NSMenuItem alternateMenuItemWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) target:target modifiers:NSShiftKeyMask];
   [contextMenu addItem:shiftMenuItem];
 
+  BookmarkFolder* collection = [target isKindOfClass:[BookmarkViewController class]] ? [target activeCollection] : nil;
+  // We only want a "Reveal" menu item if the CM is on a BookmarkButton,
+  // if the user is searching somewhere other than the History folder,
+  // or if the Top 10 is the active collection.
+  if ((!outlineView) ||
+      (([items count] == 1) && (([self searchActive] && !(collection == [self historyFolder])) ||
+                                (collection == [self top10Folder]))))
+  {
+    menuTitle = NSLocalizedString(@"Reveal in Bookmark Manager", nil);
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(revealBookmark:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+
+  [contextMenu addItem:[NSMenuItem separatorItem]];
+
   if (!outlineView || ([items count] == 1)) {
     menuTitle = NSLocalizedString(@"Bookmark Info", nil);
     menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
-
-  [contextMenu addItem:[NSMenuItem separatorItem]];
 
   // copy URL(s) to clipboard
   if (itemsContainsFolder || multipleItems)
