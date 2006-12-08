@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.17 2006/12/06 23:00:17 wtchang%redhat.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.18 2006/12/08 22:37:29 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -346,6 +346,10 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     isTLS = (PRBool)(ss->ssl3.pwSpec->version > SSL_LIBRARY_VERSION_3_0);
 
     /* Generate ephemeral EC keypair */
+    if (svrPubKey->keyType != ecKey) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	goto loser;
+    }
     /* XXX SHOULD CALL ssl3_CreateECDHEphemeralKeys here, instead! */
     privKey = SECKEY_CreateECPrivateKey(&svrPubKey->u.ec.DEREncodedParams, 
 	                                &pubKey, NULL);
