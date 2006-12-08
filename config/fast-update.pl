@@ -144,6 +144,7 @@ while (<CHECKINS>) {
   if (/js_file_menu\((.*),\s*\'(.*)\'\s*,\s*(.*),\s*(.*),\s*(.*),\s*(.*)\)/) {
     my ($repos, $dir, $file, $rev, $branch, $event) =
       ($1, $2, $3, $4, $5, $6);
+    $dir =~ s/\/Attic$//;
     push @dirlist, $dir;
   }
 }
