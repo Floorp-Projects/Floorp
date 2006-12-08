@@ -51,8 +51,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsThebesImage.h"
 
-#define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
-
 class nsSVGImageFrame;
 
 class nsSVGImageListener : public nsStubImageDecoderObserver
