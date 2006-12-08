@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TOOLKIT_H      
-#define TOOLKIT_H
+#include "nsIToolkit.h"
+#include "nsIObserver.h"
 
-#include "nsToolkitBase.h"
+#include <IOKit/IOKitLib.h>
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -63,28 +64,40 @@
  * per nsToolkit.
  */
 
-struct PRThread;
-
-#define MAC_OS_X_VERSION_10_0_HEX 0x00001000
-#define MAC_OS_X_VERSION_10_1_HEX 0x00001010
 #define MAC_OS_X_VERSION_10_2_HEX 0x00001020
 #define MAC_OS_X_VERSION_10_3_HEX 0x00001030
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
 
-class nsToolkit : public nsToolkitBase
+class nsToolkit : public nsIToolkit, public nsIObserver
 {
 public:
-                nsToolkit();
-  virtual				~nsToolkit();
+                     nsToolkit();
+  virtual            ~nsToolkit();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITOOLKIT
+  NS_DECL_NSIOBSERVER
+
+  // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
+  static long        OSXVersion();
   
-  // Returns the OS X version as returned from
-  // Gestalt(gestaltSystemVersion, ...)
-  static long OSXVersion();
+  static void        PostSleepWakeNotification(const char* aNotification);
 
-protected:    
+protected:
 
-  virtual nsresult  InitEventQueue(PRThread * aThread);
+  nsresult           RegisterForSleepWakeNotifcations();
+  void               RemoveSleepWakeNotifcations();
 
+protected:
+
+  static void        SetupQuartzRendering();
+
+protected:
+
+  bool               mInited;
+
+  CFRunLoopSourceRef mSleepWakeNotificationRLS;
+  io_object_t        mPowerNotifier;
 };
 
-#endif  // TOOLKIT_H
+extern nsToolkit* NS_CreateToolkitInstance();

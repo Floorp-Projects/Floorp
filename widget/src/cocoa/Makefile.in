@@ -91,7 +91,6 @@ EXPORTS = \
 		$(NULL)
 
 MAC_LCPPSRCS = \
-		nsToolkitBase.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
 		nsDeviceContextSpecX.cpp \
 		nsPrintOptionsX.cpp \
