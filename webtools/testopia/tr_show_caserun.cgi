@@ -123,17 +123,20 @@ if ($action eq 'Commit'){
     if ($notes){
         $caserun->append_note($notes);
     }
+
+    foreach my $bug (@buglist){
+        $caserun->attach_bug($bug);
+    }
     
     my $oldstatus_id = $caserun->status_id; 
     if ($status != $oldstatus_id){
         my $newstatus = $caserun->lookup_status($status);
         my $oldstatus = $caserun->status();
+        $caserun->update_bugs('REOPENED') if ($newstatus eq 'FAILED');
+        $caserun->update_bugs('VERIFIED') if ($newstatus eq 'PASSED');
+        
         my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;
         $caserun->append_note($note);
-    }
-
-    foreach my $bug (@buglist){
-        $caserun->attach_bug($bug);
     }
     
     $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun->update(\%newfields));

@@ -50,7 +50,10 @@ use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Constants;
+use Bugzilla::Bug;
+
 use Date::Format;
+
 
 ###############################
 ####    Initialization     ####
@@ -422,10 +425,43 @@ sub set_status {
         $self->_update_fields({'testedby' => Bugzilla->user->id});
         $self->{'close_date'} = $timestamp;
         $self->{'testedby'} = Bugzilla->user->id;
+        $self->update_bugs('REOPENED') if ($status_id == FAILED);
+        $self->update_bugs('VERIFIED') if ($status_id == PASSED);
     }
 
     $self->{'case_run_status_id'} = $status_id;
     $self->{'status'} = undef;
+}
+
+sub update_bugs {
+    my $self = shift;
+    my ($status) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
+    foreach my $bug (@{$self->bugs}){
+        my $oldstatus = $bug->bug_status;
+        
+        return if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
+        return if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
+        
+        my $comment  = "Status updated by Testopia:  ". Param('urlbase');
+           $comment .= "tr_show_caserun.cgi?caserun_id=" . $self->id;
+            
+        $dbh->bz_lock_tables("bugs WRITE, fielddefs READ, longdescs WRITE, bugs_activity WRITE");
+        $dbh->do("UPDATE bugs 
+                     SET bug_status = ?,
+                         delta_ts = ?
+                     WHERE bug_id = ?", 
+                     undef,($status, $timestamp, $bug->bug_id));
+        LogActivityEntry($bug->bug_id, 'bug_status', $oldstatus, 
+                         $status, Bugzilla->user->id, $timestamp);
+        LogActivityEntry($bug->bug_id, 'resolution', $bug->resolution, '', 
+                         Bugzilla->user->id, $timestamp) if ($status eq 'REOPENED');
+        AppendComment($bug->bug_id, Bugzilla->user->id, $comment, 
+                      !Bugzilla->user->in_group(Param('insidergroup')), $timestamp);
+        
+        $dbh->bz_unlock_tables();
+    }
 }
 
 =head2 set_assignee

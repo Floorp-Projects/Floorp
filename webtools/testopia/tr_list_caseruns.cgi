@@ -31,6 +31,7 @@ use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::TestCaseRun;
 use Bugzilla::Testopia::Table;
+use Bugzilla::Testopia::Constants;
 
 use vars qw($vars $template);
 require 'globals.pl';
@@ -97,10 +98,7 @@ if ($action eq 'Commit'){
             $template->process("testopia/progress.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
         }
-        unless ($caserun->canedit){
-            print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
-        }
+
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
         my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));
@@ -114,6 +112,16 @@ if ($action eq 'Commit'){
         detaint_natural($build);
         detaint_natural($status);
         trick_taint($notes);
+        
+        # If there is already a caserun with the selected build and environment,
+        # switch to it.
+        my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build, $env);
+        $caserun = Bugzilla::Testopia::TestCaseRun->new($is) if $is;
+
+        unless ($caserun->canedit){
+            print $cgi->multipart_end if $serverpush;
+            ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
+        }
     
         foreach my $bug (@buglist){
             $caserun->attach_bug($bug);
@@ -124,6 +132,8 @@ if ($action eq 'Commit'){
         if ($caserun->is_closed_status($status)){
             $testedby = Bugzilla->user->id;
             $close_date = get_time_stamp();
+            $caserun->update_bugs('REOPENED') if ($status == FAILED);
+            $caserun->update_bugs('VERIFIED') if ($status == PASSED);
         }
         my %newfields = (
             'assignee' => $assignee,
