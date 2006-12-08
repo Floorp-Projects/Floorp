@@ -51,8 +51,6 @@
 class nsDocAccessibleWrap: public nsDocAccessible
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
   NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,

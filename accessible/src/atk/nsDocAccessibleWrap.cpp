@@ -75,8 +75,6 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
 
 static  AtkStateType TranslateAState(PRUint32 aState, PRUint32 aExtState);
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDocAccessibleWrap, nsDocAccessible, nsIAccessibleText)
-
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
   nsDocAccessible(aDOMNode, aShell), mActivated(PR_FALSE)
