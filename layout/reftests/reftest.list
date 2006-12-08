@@ -10,9 +10,9 @@
 == bugs/351641-1b.html bugs/351641-1-ref.html
 == bugs/351641-2a.html bugs/351641-2-ref.html
 f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
-f== bugs/362594-1a.html bugs/362594-1-quirks-ref.html # will be equal once reflow branch lands
-f== bugs/362594-1b.html bugs/362594-1-quirks-ref.html # will be equal once reflow branch lands
-f== bugs/362594-1c.html bugs/362594-1-standards-ref.html # will be equal once reflow branch lands
+== bugs/362594-1a.html bugs/362594-1-quirks-ref.html
+== bugs/362594-1b.html bugs/362594-1-quirks-ref.html
+== bugs/362594-1c.html bugs/362594-1-standards-ref.html
 != bugs/362594-2a.html bugs/362594-1-quirks-ref.html
 == bugs/362594-2a.html bugs/362594-2-quirks-ref.html
 != bugs/362594-2b.html bugs/362594-1-standards-ref.html
