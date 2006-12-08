@@ -51,8 +51,12 @@
 <window id="CustomizeToolbarWindow"
         title="&dialog.title;"
         onload="onLoad();"
+#ifdef MOZILLA_1_8_BRANCH
         onunload="onUnload();"
         onclose="onAccept(); return false;"
+#else
+        onunload="finishToolbarCustomization();"
+#endif
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript">
@@ -73,7 +77,11 @@
 
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
+#ifdef MOZILLA_1_8_BRANCH
 <vbox id="main-box" flex="1" collapsed="true">
+#else
+<vbox id="main-box" flex="1">
+#endif
   <description id="instructions">
   &instructions.description;
   </description>
@@ -102,7 +110,12 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
+#ifdef MOZILLA_1_8_BRANCH
     <button label="&saveChanges.label;" oncommand="onAccept();" default="true"/>
+#else
+    <button label="&saveChanges.label;" oncommand="window.close();"
+            default="true"/>
+#endif
   </hbox>
 </vbox>
 
