@@ -150,4 +150,24 @@
       </xul:stack>
     </content>
   </binding>
+
+  <binding id="history-dropmarker"
+           extends="chrome://global/content/bindings/autocomplete.xml#history-dropmarker">
+    <content>
+      <xul:stack class="history-dropmarker-stack">
+        <xul:vbox class="autocomplete-dropmarker-bkgnd-box">
+          <xul:image class="autocomplete-dropmarker-bkgnd-top autocomplete-dropmarker-bkgnd"/>
+          <xul:vbox flex="1" class="autocomplete-dropmarker-inner-box">
+            <xul:image flex="1" class="autocomplete-dropmarker-bkgnd-mid-top autocomplete-dropmarker-bkgnd"/>
+            <xul:image flex="1" class="autocomplete-dropmarker-bkgnd-mid-bottom autocomplete-dropmarker-bkgnd"/>
+          </xul:vbox>
+          <xul:image class="autocomplete-dropmarker-bkgnd-bottom autocomplete-dropmarker-bkgnd"/>
+        </xul:vbox>
+
+        <xul:hbox align="center" class="dropmarker-image-container">
+          <xul:image class="dropmarker-image"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+  </binding>
 </bindings>
