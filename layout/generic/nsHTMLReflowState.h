@@ -42,10 +42,9 @@
 
 #include "nsMargin.h"
 #include "nsStyleCoord.h"
+#include "nsIFrame.h"
 
-class nsIFrame;
 class nsPresContext;
-class nsReflowPath;
 class nsIRenderingContext;
 class nsSpaceManager;
 class nsLineLayout;
@@ -60,29 +59,19 @@ struct nsStylePadding;
 struct nsStyleText;
 struct nsHypotheticalBox;
 
+#define NS_CSS_MINMAX(_value,_min,_max) \
+    ((_value) < (_min)           \
+     ? (_min)                    \
+     : ((_value) > (_max)        \
+        ? (_max)                 \
+        : (_value)))
+
 /**
  * Constant used to indicate an unconstrained size.
  *
  * @see #Reflow()
  */
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
-
-/**
- * The reason the frame is being reflowed.
- *
- * XXX Should probably be a #define so it can be extended for specialized
- * reflow interfaces...
- *
- * @see nsHTMLReflowState
- */
-enum nsReflowReason {
-  eReflowReason_Initial = 0,       // initial reflow of a newly created frame
-  eReflowReason_Incremental = 1,   // an incremental change has occurred. see the reflow command for details
-  eReflowReason_Resize = 2,        // general request to determine a desired size
-  eReflowReason_StyleChange = 3,   // request to reflow because of a style change. Note: you must reflow
-                                   // all your child frames
-  eReflowReason_Dirty = 4          // request to reflow because you and/or your children are dirty
-};
 
 /**
  * CSS Frame type. Included as part of the reflow state.
@@ -100,25 +89,44 @@ typedef PRUint32  nsCSSFrameType;
  * Bit-flag that indicates whether the element is replaced. Applies to inline,
  * block-level, floating, and absolutely positioned elements
  */
-#define NS_CSS_FRAME_TYPE_REPLACED        0x8000
+#define NS_CSS_FRAME_TYPE_REPLACED                0x08000
+
+/**
+ * Bit-flag that indicates that the element is replaced and contains a block
+ * (eg some form controls).  Applies to inline, block-level, floating, and
+ * absolutely positioned elements.  Mutually exclusive with
+ * NS_CSS_FRAME_TYPE_REPLACED.
+ */
+#define NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK 0x10000
 
 /**
  * Helper macros for telling whether items are replaced
  */
-#define NS_FRAME_IS_REPLACED(_ft) \
+#define NS_FRAME_IS_REPLACED_NOBLOCK(_ft) \
   (NS_CSS_FRAME_TYPE_REPLACED == ((_ft) & NS_CSS_FRAME_TYPE_REPLACED))
+
+#define NS_FRAME_IS_REPLACED(_ft)            \
+  (NS_FRAME_IS_REPLACED_NOBLOCK(_ft) ||      \
+   NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(_ft))
 
 #define NS_FRAME_REPLACED(_ft) \
   (NS_CSS_FRAME_TYPE_REPLACED | (_ft))
 
+#define NS_FRAME_IS_REPLACED_CONTAINS_BLOCK(_ft)         \
+  (NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK ==         \
+   ((_ft) & NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
+
+#define NS_FRAME_REPLACED_CONTAINS_BLOCK(_ft) \
+  (NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK | (_ft))
+
 /**
  * A macro to extract the type. Masks off the 'replaced' bit-flag
  */
-#define NS_FRAME_GET_TYPE(_ft) \
-  ((_ft) & ~NS_CSS_FRAME_TYPE_REPLACED)
+#define NS_FRAME_GET_TYPE(_ft)                           \
+  ((_ft) & ~(NS_CSS_FRAME_TYPE_REPLACED |                \
+             NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
 
 #define NS_INTRINSICSIZE    NS_UNCONSTRAINEDSIZE
-#define NS_SHRINKWRAPWIDTH  NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
 #define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
 #define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
@@ -126,29 +134,75 @@ typedef PRUint32  nsCSSFrameType;
 //       if any are changed to be a value other than NS_UNCONSTRAINEDSIZE
 //       at least update AdjustComputedHeight/Width and test ad nauseum
 
-/**
- * Reflow state passed to a frame during reflow.
- *
- * @see nsIFrame#Reflow()
- */
-struct nsHTMLReflowState {
-  // the reflow states are linked together. this is the pointer to the
-  // parent's reflow state
-  const nsHTMLReflowState* parentReflowState;
-
+// A base class of nsHTMLReflowState that computes only the padding,
+// border, and margin, since those values are needed more often.
+struct nsCSSOffsetState {
+public:
   // the frame being reflowed
   nsIFrame*           frame;
 
-  // the reason for the reflow
-  nsReflowReason      reason;
+  // rendering context to use for measurement
+  nsIRenderingContext* rendContext;
 
-  // the incremental reflow path, when the reflow reason is
-  // eReflowReason_Incremental. Specifically, this corresponds to the
-  // portion of the incremental reflow path from `frame' down. Note
-  // that it is safe to assume that this is non-null: we maintain the
-  // invariant that it contains a valid nsReflowPath pointer when
-  // reason == eReflowReason_Incremental.
-  nsReflowPath        *path;
+  // Computed margin values
+  nsMargin         mComputedMargin;
+
+  // Cached copy of the border + padding values
+  nsMargin         mComputedBorderPadding;
+
+  // Computed padding values
+  nsMargin         mComputedPadding;
+
+  // Callers using this constructor must call InitOffsets on their own.
+  nsCSSOffsetState(nsIFrame *aFrame, nsIRenderingContext *aRenderingContext)
+    : frame(aFrame)
+    , rendContext(aRenderingContext)
+  {
+  }
+
+  nsCSSOffsetState(nsIFrame *aFrame, nsIRenderingContext *aRenderingContext,
+                   nscoord aContainingBlockWidth)
+    : frame(aFrame)
+    , rendContext(aRenderingContext)
+  {
+    InitOffsets(aContainingBlockWidth);
+  }
+
+  void InitOffsets(nscoord aContainingBlockWidth,
+                   nsMargin *aBorder = nsnull, nsMargin *aPadding = nsnull);
+
+private:
+  // Computes margin values from the specified margin style information, and
+  // fills in the mComputedMargin member
+  void ComputeMargin(nscoord aContainingBlockWidth);
+  
+  // Computes padding values from the specified padding style information, and
+  // fills in the mComputedPadding member
+  void ComputePadding(nscoord aContainingBlockWidth);
+
+protected:
+  inline void ComputeHorizontalValue(nscoord aContainingBlockWidth,
+                                     nsStyleUnit aUnit,
+                                     const nsStyleCoord& aCoord,
+                                     nscoord& aResult);
+  inline void ComputeVerticalValue(nscoord aContainingBlockHeight,
+                                   nsStyleUnit aUnit,
+                                   const nsStyleCoord& aCoord,
+                                   nscoord& aResult);
+};
+
+/**
+ * State passed to a frame during reflow or intrinsic size calculation.
+ *
+ * XXX Refactor so only a base class (nsSizingState?) is used for intrinsic
+ * size calculation.
+ *
+ * @see nsIFrame#Reflow()
+ */
+struct nsHTMLReflowState : public nsCSSOffsetState {
+  // the reflow states are linked together. this is the pointer to the
+  // parent's reflow state
+  const nsHTMLReflowState* parentReflowState;
 
   // the available width in which to reflow the frame. The space
   // represents the amount of room for the frame's border, padding,
@@ -160,15 +214,12 @@ struct nsHTMLReflowState {
   // A value of NS_UNCONSTRAINEDSIZE for the available height means
   // you can choose whatever size you want. In galley mode the
   // available height is always NS_UNCONSTRAINEDSIZE, and only page
-  // mode involves a constrained height. The element's the top border
-  // and padding, and content, must fit. If the element is complete
-  // after reflow then its bottom border, padding and margin (and
-  // similar for its complete ancestors) will need to fit in this
-  // height.
+  // mode or multi-column layout involves a constrained height. The
+  // element's the top border and padding, and content, must fit. If the
+  // element is complete after reflow then its bottom border, padding
+  // and margin (and similar for its complete ancestors) will need to
+  // fit in this height.
   nscoord              availableHeight;
-
-  // rendering context to use for measurement
-  nsIRenderingContext* rendContext;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
@@ -192,9 +243,6 @@ struct nsHTMLReflowState {
   //
   // For block-level frames, the computed width is based on the width of the
   // containing block, the margin/border/padding areas, and the min/max width.
-  // A value of NS_SHRINKWRAPWIDTH means that you should choose a width based
-  // on your content. The width may be as large as the specified maximum width
-  // (see mComputedMaxWidth).
   nscoord          mComputedWidth; 
 
   // The computed height specifies the frame's content height, and it does
@@ -212,20 +260,13 @@ struct nsHTMLReflowState {
   // means you use your intrinsic height as the computed height
   nscoord          mComputedHeight;
 
-  // Computed margin values
-  nsMargin         mComputedMargin;
-
-  // Cached copy of the border values
-  nsMargin         mComputedBorderPadding;
-
-  // Computed padding values
-  nsMargin         mComputedPadding;
-
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
   nsMargin         mComputedOffsets;
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
+  // XXXldb The width ones here should go; they should be needed only
+  // internally.
   nscoord          mComputedMinWidth, mComputedMaxWidth;
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
@@ -269,17 +310,19 @@ struct nsHTMLReflowState {
                                      // is assuming a horizontal scrollbar
     PRUint16 mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
+
+    PRUint16 mHResize:1;             // Is frame (a) not dirty and (b) a
+                                     // different width than before?
+
+    PRUint16 mVResize:1;             // Is frame (a) not dirty and (b) a
+                                     // different height than before or
+                                     // (potentially) in a context where
+                                     // percent heights have a different
+                                     // basis?
   } mFlags;
 
 #ifdef IBMBIDI
   nscoord mRightEdge;
-#endif
-
-#ifdef DEBUG
-  // hook for attaching debug info (e.g. tables may attach a timer during reflow)
-  void* mDebugHook;
-
-  static const char* ReasonToString(nsReflowReason aReason);
 #endif
 
   // Note: The copy constructor is written by the compiler automatically. You
@@ -288,46 +331,23 @@ struct nsHTMLReflowState {
 
   // Initialize a <b>root</b> reflow state with a rendering context to
   // use for measuring things.
-  nsHTMLReflowState(nsPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*           aPresContext,
                     nsIFrame*                aFrame,
-                    nsReflowReason           aReason,
-                    nsIRenderingContext*     aRenderingContext,
-                    const nsSize&            aAvailableSpace);
-
-  // Initialize a <b>root</b> reflow state for an <b>incremental</b>
-  // reflow.
-  nsHTMLReflowState(nsPresContext*          aPresContext,
-                    nsIFrame*                aFrame,
-                    nsReflowPath*            aReflowPath,
                     nsIRenderingContext*     aRenderingContext,
                     const nsSize&            aAvailableSpace);
 
   // Initialize a reflow state for a child frames reflow. Some state
   // is copied from the parent reflow state; the remaining state is
   // computed. 
-  nsHTMLReflowState(nsPresContext*          aPresContext,
+  nsHTMLReflowState(nsPresContext*           aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
-                    nsReflowReason           aReason, 
+                    // These two are used by absolute positioning code
+                    // to override default containing block w & h:
+                    nscoord                  aContainingBlockWidth = -1,
+                    nscoord                  aContainingBlockHeight = -1,
                     PRBool                   aInit = PR_TRUE);
-
-  // Same as the previous except that the reason is taken from the
-  // parent's reflow state.
-  nsHTMLReflowState(nsPresContext*          aPresContext,
-                    const nsHTMLReflowState& aParentReflowState,
-                    nsIFrame*                aFrame,
-                    const nsSize&            aAvailableSpace);
-
-  // Used when you want to override the default containing block
-  // width and height. Used by absolute positioning code
-  nsHTMLReflowState(nsPresContext*          aPresContext,
-                    const nsHTMLReflowState& aParentReflowState,
-                    nsIFrame*                aFrame,
-                    const nsSize&            aAvailableSpace,
-                    nscoord                  aContainingBlockWidth,
-                    nscoord                  aContainingBlockHeight,
-                    nsReflowReason           aReason);
 
   // This method initializes various data members. It is automatically
   // called by the various constructors
@@ -343,42 +363,11 @@ struct nsHTMLReflowState {
     GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
 
   /**
-   * Adjust content MEW take into account the settings of the CSS
-   * 'width', 'min-width' and 'max-width' properties.
-   */
-  nscoord AdjustIntrinsicMinContentWidthForStyle(nscoord aWidth) const;
-  /**
-   * Adjust content maximum-width take into account the settings of
-   * the CSS 'width', 'min-width' and 'max-width' properties.
-   */
-  nscoord AdjustIntrinsicContentWidthForStyle(nscoord aWidth) const;
-
-  /**
    * Find the containing block of aFrame.  This may return null if
    * there isn't one (but that should really only happen for root
    * frames).
    */
   static nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
-
-  /**
-   * Get the page box reflow state, starting from a frames
-   * <B>parent</B> reflow state (the parent reflow state may or may not end
-   * up being the containing block reflow state)
-   */
-  static const nsHTMLReflowState*
-    GetPageBoxReflowState(const nsHTMLReflowState* aParentRS);
-
-  /**
-   * Compute the border plus padding for <TT>aFrame</TT>. If a
-   * percentage needs to be computed it will be computed by finding
-   * the containing block, use GetContainingBlockReflowState.
-   * aParentReflowState is aFrame's
-   * parent's reflow state. The resulting computed border plus padding
-   * is returned in aResult.
-   */
-  static void ComputeBorderPaddingFor(nsIFrame* aFrame,
-                                      const nsHTMLReflowState* aParentRS,
-                                      nsMargin& aResult);
 
   /**
    * Calculate the raw line-height property for the given frame. The return
@@ -406,9 +395,23 @@ struct nsHTMLReflowState {
    */
   void ApplyMinMaxConstraints(nscoord* aContentWidth, nscoord* aContentHeight) const;
 
+  PRBool ShouldReflowAllKids() const {
+    // Note that we could make a stronger optimization for mVResize if
+    // we use it in a ShouldReflowChild test that replaces the current
+    // checks of NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN, if it
+    // were tested there along with NS_FRAME_CONTAINS_RELATIVE_HEIGHT.
+    // This would need to be combined with a slight change in which
+    // frames NS_FRAME_CONTAINS_RELATIVE_HEIGHT is marked on.
+    return (frame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
+           mFlags.mHResize ||
+           (mFlags.mVResize && 
+            (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
+  }
+
 protected:
 
   void InitCBReflowState();
+  void InitResizeFlags(nsPresContext* aPresContext);
 
   void InitConstraints(nsPresContext* aPresContext,
                        nscoord         aContainingBlockWidth,
@@ -432,33 +435,6 @@ protected:
                               nscoord aContainingBlockWidth,
                               nscoord aContainingBlockHeight);
 
-  void ComputeBlockBoxData(nsPresContext* aPresContext,
-                           const nsHTMLReflowState* cbrs,
-                           nsStyleUnit aWidthUnit,
-                           nsStyleUnit aHeightUnit,
-                           nscoord aContainingBlockWidth,
-                           nscoord aContainingBlockHeight);
-
-  void ComputeHorizontalValue(nscoord aContainingBlockWidth,
-                                     nsStyleUnit aUnit,
-                                     const nsStyleCoord& aCoord,
-                                     nscoord& aResult);
-
-  void ComputeVerticalValue(nscoord aContainingBlockHeight,
-                                   nsStyleUnit aUnit,
-                                   const nsStyleCoord& aCoord,
-                                   nscoord& aResult);
-
-  // Computes margin values from the specified margin style information, and
-  // fills in the mComputedMargin member
-  void ComputeMargin(nscoord aContainingBlockWidth,
-                     const nsHTMLReflowState* aContainingBlockRS);
-  
-  // Computes padding values from the specified padding style information, and
-  // fills in the mComputedPadding member
-  void ComputePadding(nscoord aContainingBlockWidth,
-                      const nsHTMLReflowState* aContainingBlockRS);
-
   // Calculates the computed values for the 'min-Width', 'max-Width',
   // 'min-Height', and 'max-Height' properties, and stores them in the assorted
   // data members
@@ -467,14 +443,6 @@ protected:
                            const nsHTMLReflowState* aContainingBlockRS);
 
   nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
-
-  // Adjust Computed sizes for Min/Max Width and box-Sizing (if
-  // aAdjustForBoxSizing is true)  
-  // - guarantees that the computed height/width will be non-negative
-  //   If the value goes negative (because the padding or border is greater than
-  //   the width/height and it is removed due to box sizing) then it is driven to 0
-  void AdjustComputedHeight(PRBool aAdjustForBoxSizing);
-  void AdjustComputedWidth(PRBool aAdjustForBoxSizing);
 
 #ifdef IBMBIDI
   /**

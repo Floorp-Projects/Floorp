@@ -102,32 +102,18 @@ public:
   //        placeholders for positioning and on whether the containing block
   //        width or height changed.
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
-                  nsPresContext*          aPresContext,
+                  nsPresContext*           aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
-                  nsRect*                  aChildBounds = nsnull,
-                  PRBool                   aForceReflow = PR_TRUE,
-                  PRBool                   aCBWidthChanged = PR_TRUE,
-                  PRBool                   aCBHeightChanged = PR_TRUE);
+                  PRBool                   aCBWidthChanged,
+                  PRBool                   aCBHeightChanged,
+                  nsRect*                  aChildBounds = nsnull);
 
-  // Called by the delegating frame to determine whether the
-  // incremental reflow is entirely targeted at absolute children
-  PRBool ReflowingAbsolutesOnly(nsIFrame* aDelegatingFrame,
-                                const nsHTMLReflowState& aReflowState);
-
-  // Called only for a reflow reason of eReflowReason_Incremental.
-  void IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                         nsPresContext*           aPresContext,
-                         const nsHTMLReflowState& aReflowState,
-                         nscoord                  aContainingBlockWidth,
-                         nscoord                  aContainingBlockHeight);
 
   void DestroyFrames(nsIFrame* aDelegatingFrame);
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
-
-  void CalculateChildBounds(nsPresContext* aPresContext, nsRect& aChildBounds);
 
 protected:
   // Returns PR_TRUE if the position of f depends on the position of
@@ -142,7 +128,6 @@ protected:
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
                                nsIFrame*                aKidFrame,
-                               nsReflowReason           aReason,
                                nsReflowStatus&          aStatus);
 
 protected:

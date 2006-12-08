@@ -42,6 +42,7 @@
 
 #include "nsSplittableFrame.h"
 #include "nsFrameList.h"
+#include "nsLayoutUtils.h"
 
 // Option flags for ReflowChild() and FinishReflowChild()
 // member functions
@@ -65,7 +66,7 @@ public:
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
-  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+  virtual void ChildIsDirty(nsIFrame* aChild);
 
   virtual PRBool IsLeaf() const;
   
@@ -124,6 +125,20 @@ public:
   // Returns PR_TRUE if the frame requires a view
   static PRBool FrameNeedsView(nsIFrame* aFrame);
   
+  // Used by both nsInlineFrame and nsFirstLetterFrame.
+  void DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
+                              InlineIntrinsicWidthData *aData,
+                              nsLayoutUtils::IntrinsicWidthType aType);
+
+  /**
+   * This is the CSS block concept of computing 'auto' widths, which most
+   * classes derived from nsContainerFrame want.
+   */
+  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                 nsSize aCBSize, nscoord aAvailableWidth,
+                                 nsSize aMargin, nsSize aBorder,
+                                 nsSize aPadding, PRBool aShrinkWrap);
+
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if
    * requested), and then calls Reflow(). If the reflow succeeds and the child

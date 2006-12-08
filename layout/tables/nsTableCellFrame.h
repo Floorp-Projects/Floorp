@@ -44,6 +44,7 @@
 #include "nsStyleContext.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsLayoutAtoms.h"
+#include "nsLayoutUtils.h"
 
 class nsTableFrame;
 
@@ -51,10 +52,7 @@ class nsTableFrame;
  * Additional frame-state bits
  */
 #define NS_TABLE_CELL_CONTENT_EMPTY       0x80000000
-#define NS_TABLE_CELL_NEED_SPECIAL_REFLOW 0x40000000
-#define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  0x20000000
 #define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT 0x10000000
-#define NS_TABLE_CELL_NEED_PASS2_REFLOW   0x08000000
 
 /**
  * nsTableCellFrame
@@ -132,6 +130,10 @@ public:
                          PRBool aSelected,
                          nsSpread aSpread);
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets();
+
   NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -148,8 +150,8 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual void VerticallyAlignChild(const nsHTMLReflowState& aReflowState,
-                                    nscoord                  aMaxAscent);
+  void VerticallyAlignChild(const nsHTMLReflowState& aReflowState,
+                            nscoord                  aMaxAscent);
 
   PRBool HasVerticalAlignBaseline();
 
@@ -212,41 +214,11 @@ public:
   /** set the desired size returned by this frame during its last reflow */
   virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
-  /** return the maximum width of the cell */
-  virtual nscoord GetMaximumWidth() const;
-
-  /** set the maximum width of the cell */
-  virtual void SetMaximumWidth(nscoord aMaximumWidth);
-
-  /** return the MaxElement size returned by this frame during its last reflow 
-    * not counting reflows where MaxElementSize is not requested.  
-    * That is, the cell frame will always remember the last non-null MaxElementSize
-    */
-  virtual nscoord GetPass1MaxElementWidth() const;
-
-  /** set the MaxElement size returned by this frame during its last reflow.
-    * should never be called with a null MaxElementSize
-    */
-  virtual void SetPass1MaxElementWidth(nscoord aMaxWidth,
-                                       nscoord aMaxElementWidth);
-
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
 
-  PRBool NeedSpecialReflow();
-  void SetNeedSpecialReflow(PRBool aContentEmpty);
-
-  PRBool HadSpecialReflow();
-  void SetHadSpecialReflow(PRBool aValue);
-
   PRBool HasPctOverHeight();
   void SetHasPctOverHeight(PRBool aValue);
-
-  PRBool NeedPass2Reflow() const;
-  void SetNeedPass2Reflow(PRBool aValue);
-
-  nscoord GetLastBlockHeight();
-  void    SetLastBlockHeight(nscoord aValue);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -285,26 +257,11 @@ protected:
 
   friend class nsTableRowFrame;
 
-  struct Bits {
-    PRUint32 mColIndex:15;     
-    PRUint32 mLastBlockHeight:17;
-  } mBits;
-  PRInt32      mColIndex;             // the starting column for this cell 
-
-  // XXX these could be stored as pixels for a savings of 6 x 2 bytes
+  PRUint32     mColIndex;             // the starting column for this cell 
 
   nscoord      mPriorAvailWidth;      // the avail width during the last reflow
   nsSize       mDesiredSize;          // the last desired width & height
   nscoord      mDesiredAscent;        // the last desired ascent
-  nscoord      mMaximumWidth;         // the last preferred width
-  nscoord      mPass1MaxElementWidth; // the last max element width
-
-public:
-
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-  nsReflowTimer* mTimer;
-  nsReflowTimer* mBlockTimer;
-#endif
 };
 
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
@@ -326,17 +283,6 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
   mDesiredAscent = aDesiredSize.ascent;
 }
 
-inline nscoord nsTableCellFrame::GetMaximumWidth() const
-{ return mMaximumWidth; }
-
-inline void nsTableCellFrame::SetMaximumWidth(nscoord aMaximumWidth)
-{ 
-  mMaximumWidth = aMaximumWidth;
-}
-
-inline nscoord nsTableCellFrame::GetPass1MaxElementWidth() const
-{ return mPass1MaxElementWidth; }
-
 inline PRBool nsTableCellFrame::GetContentEmpty()
 {
   return (mState & NS_TABLE_CELL_CONTENT_EMPTY) ==
@@ -349,36 +295,6 @@ inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
     mState |= NS_TABLE_CELL_CONTENT_EMPTY;
   } else {
     mState &= ~NS_TABLE_CELL_CONTENT_EMPTY;
-  }
-}
-
-inline PRBool nsTableCellFrame::NeedSpecialReflow()
-{
-  return (mState & NS_TABLE_CELL_NEED_SPECIAL_REFLOW) ==
-         NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
-}
-
-inline void nsTableCellFrame::SetNeedSpecialReflow(PRBool aValue)
-{
-  if (aValue) {
-    mState |= NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
-  } else {
-    mState &= ~NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
-  }
-}
-
-inline PRBool nsTableCellFrame::HadSpecialReflow()
-{
-  return (mState & NS_TABLE_CELL_HAD_SPECIAL_REFLOW) ==
-         NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
-}
-
-inline void nsTableCellFrame::SetHadSpecialReflow(PRBool aValue)
-{
-  if (aValue) {
-    mState |= NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
-  } else {
-    mState &= ~NS_TABLE_CELL_HAD_SPECIAL_REFLOW;
   }
 }
 
@@ -395,31 +311,6 @@ inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
   } else {
     mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
   }
-}
-
-inline PRBool nsTableCellFrame::NeedPass2Reflow() const
-{
-  return (mState & NS_TABLE_CELL_NEED_PASS2_REFLOW) ==
-         NS_TABLE_CELL_NEED_PASS2_REFLOW;
-}
-
-inline void nsTableCellFrame::SetNeedPass2Reflow(PRBool aValue)
-{
-  if (aValue) {
-    mState |= NS_TABLE_CELL_NEED_PASS2_REFLOW;
-  } else {
-    mState &= ~NS_TABLE_CELL_NEED_PASS2_REFLOW;
-  }
-}
-
-inline nscoord nsTableCellFrame::GetLastBlockHeight()
-{
-  return (nscoord)mBits.mLastBlockHeight;
-}
-
-inline void nsTableCellFrame::SetLastBlockHeight(nscoord aValue)
-{
-  mBits.mLastBlockHeight = aValue;
 }
 
 // nsBCTableCellFrame

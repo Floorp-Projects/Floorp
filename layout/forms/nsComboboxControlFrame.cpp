@@ -90,14 +90,6 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 
-#ifdef MOZ_XUL
-#include "nsIXULDocument.h" // Temporary fix for Bug 36558
-#endif
-
-#ifdef DO_NEW_REFLOW
-#include "nsIFontMetrics.h"
-#endif
-
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run()
 {
@@ -285,25 +277,14 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 //------------------------------------------------------
 
 nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
-  : nsAreaFrame(aContext) 
+  : nsAreaFrame(aContext),
+    mDisplayWidth(0)
 {
   mListControlFrame            = nsnull;
   mDroppedDown                 = PR_FALSE;
   mDisplayFrame                = nsnull;
   mButtonFrame                 = nsnull;
   mDropdownFrame               = nsnull;
-
-  mCacheSize.width             = kSizeNotSet;
-  mCacheSize.height            = kSizeNotSet;
-  mCachedAscent                = kSizeNotSet;
-  mCachedMaxElementWidth       = kSizeNotSet;
-  mCachedAvailableSize.width   = kSizeNotSet;
-  mCachedAvailableSize.height  = kSizeNotSet;
-  mCachedUncDropdownSize.width  = kSizeNotSet;
-  mCachedUncDropdownSize.height = kSizeNotSet;
-  mCachedUncComboSize.width    = kSizeNotSet;
-  mCachedUncComboSize.height   = kSizeNotSet;
-  mItemDisplayWidth             = 0;
 
   mInRedisplayText = PR_FALSE;
 
@@ -476,23 +457,33 @@ nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
 }
 
 nsresult
-nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame, 
-                                             nsPresContext*  aPresContext, 
-                                             nsHTMLReflowMetrics&     aDesiredSize,
-                                             const nsHTMLReflowState& aReflowState, 
-                                             nsReflowStatus&          aStatus,
-                                             nscoord                  aAvailableWidth,
-                                             nscoord                  aAvailableHeight)
+nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext, 
+                                       const nsHTMLReflowState& aReflowState)
 {
-   // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-  nsSize availSize(aAvailableWidth, aAvailableHeight);
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aFrame,
+  // All we want out of it later on, really, is the height of a row, so we
+  // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
+  // need to reflow it, just bail out here.
+  if (!aReflowState.ShouldReflowAllKids() &&
+      !(mDropdownFrame->GetStateBits() & (NS_FRAME_IS_DIRTY |
+                                          NS_FRAME_HAS_DIRTY_CHILDREN))) {
+    return NS_OK;
+  }
+
+  // XXXbz this will, for small-height dropdowns, have extra space on the right
+  // edge for the scrollbar we don't show... but that's the best we can do here
+  // for now.
+  nsSize availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDropdownFrame,
                                    availSize);
-  kidReflowState.mComputedWidth = aAvailableWidth;
-  kidReflowState.mComputedHeight = aAvailableHeight;
+
+  // If the dropdown's intrinsic width is narrower than our specified width,
+  // then expand it out.  We want our border-box width to end up the same as
+  // the dropdown's so account for both sets of mComputedBorderPadding.
+  kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth,
+                                         aReflowState.mComputedWidth);
 
   // ensure we start off hidden
-  if (aReflowState.reason == eReflowReason_Initial) {
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     nsIView* view = mDropdownFrame->GetView();
     nsIViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -506,38 +497,17 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
   if (mDroppedDown) {
     flags = 0;
   }
-  nsRect rect = aFrame->GetRect();
-  nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState,
-                            rect.x, rect.y, flags, aStatus);
+  nsRect rect = mDropdownFrame->GetRect();
+  nsHTMLReflowMetrics desiredSize;
+  nsReflowStatus ignoredStatus;
+  nsresult rv = ReflowChild(mDropdownFrame, aPresContext, desiredSize,
+                            kidReflowState, rect.x, rect.y, flags,
+                            ignoredStatus);
  
    // Set the child's width and height to it's desired size
-  FinishReflowChild(aFrame, aPresContext, &kidReflowState, aDesiredSize, 
-                    rect.x, rect.y, flags);
+  FinishReflowChild(mDropdownFrame, aPresContext, &kidReflowState,
+                    desiredSize, rect.x, rect.y, flags);
   return rv;
-}
-
-// Resize the child button frame to the specified size.
-void 
-nsComboboxControlFrame::SetButtonFrameSize(const nsSize& aSize) 
-{
-  // Check that the child frame being resized is an nsGfxButtonControlFrame.
-  if (mButtonFrame->GetType() == nsLayoutAtoms::gfxButtonControlFrame) {
-    NS_STATIC_CAST(nsGfxButtonControlFrame*, mButtonFrame)->SetSuggestedSize(aSize);
-  } else {
-    // This function should never be called with another frame type.
-    NS_NOTREACHED("Wrong type in SetButtonFrameSize");
-  }
-}
-
-nsresult 
-nsComboboxControlFrame::GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame)
-{
-   // Get the primary frame from the presentation shell.
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (presShell) {
-    *aFrame = presShell->GetPrimaryFrameFor(aContent);
-  }
-  return NS_OK;
 }
 
 nsresult 
@@ -591,346 +561,6 @@ nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext,
   return rv;
 }
 
-
-////////////////////////////////////////////////////////////////
-// Experimental Reflow
-////////////////////////////////////////////////////////////////
-#if defined(DO_NEW_REFLOW) || defined(DO_REFLOW_COUNTER)
-//---------------------------------------------------------
-// Returns the nsIDOMHTMLOptionElement for a given index 
-// in the select's collection
-//---------------------------------------------------------
-static already_AddRefed<nsIDOMHTMLOptionElement>
-GetOption(nsIDOMHTMLOptionsCollection* aCollection, PRInt32 aIndex)
-{
-  nsIDOMHTMLOptionElement* option = nsnull;
-
-  nsCOMPtr<nsIDOMNode> node;
-  if (NS_SUCCEEDED(aCollection->Item(aIndex, getter_AddRefs(node))) && node) {
-    CallQueryInterface(node, &option);
-  }
-
-  return option;
-}
-//---------------------------------------------------------
-//---------------------------------------------------------
-// This returns the collection for nsIDOMHTMLSelectElement or
-// the nsIContent object is the select is null  (AddRefs)
-//---------------------------------------------------------
-static already_AddRefed<nsIDOMHTMLOptionsCollection>
-GetOptions(nsIContent * aContent)
-{
-  nsIDOMHTMLOptionsCollection* options = nsnull;
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContent);
-  if (selectElement) {
-    selectElement->GetOptions(&options);  // AddRefs (1)
-  }
-  return options;
-}
-
-#ifdef DO_NEW_REFLOW
-NS_IMETHODIMP 
-nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsHTMLReflowMetrics& aDesiredSize) 
-{
-  //printf("*****************\n");
-  nscoord visibleHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult res =
-    nsLayoutUtils::GetFontMetricsForFrame(mDisplayFrame,
-                                          getter_AddRefs(fontMet));
-  if (fontMet) {
-    fontMet->GetHeight(visibleHeight);
-  }
- 
-  nsAutoString maxStr;
-  nscoord maxWidth = 0;
-  //nsIRenderingContext * rc = aReflowState.rendContext;
-  nsresult rv = NS_ERROR_FAILURE; 
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
-  if (options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-    //printf("--- Num of Items %d ---\n", numOptions);
-    for (PRUint32 i=0;i<numOptions;i++) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(options, i);
-      if (optionElement) {
-        nsAutoString text;
-        optionElement->GetLabel(text);
-        if (text.IsEmpty() &&
-            NS_SUCCEEDED(optionElement->GetText(text))) {
-          nscoord width;
-          aReflowState.rendContext->GetWidth(text, width);
-          if (width > maxWidth) {
-            maxStr = text;
-            maxWidth = width;
-          }
-          //maxWidth = PR_MAX(width, maxWidth);
-          //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUTF16toASCII(text).get());
-        }
-      }
-    }
-  }
-  if (maxWidth == 0) {
-    maxWidth = 11 * 15;
-  }
-  char * str = ToNewCString(maxStr);
-  printf("id: %d maxWidth %d [%s]\n", mReflowId, maxWidth, str);
-  delete [] str;
-
-  // get the borderPadding for the display area
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
-
-  nscoord frmWidth  = maxWidth+dspBorderPadding.left+dspBorderPadding.right+
-                      aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  nscoord frmHeight = visibleHeight+dspBorderPadding.top+dspBorderPadding.bottom+
-                      aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-
-#if 0
-  aDesiredSize.width  = frmWidth;
-  aDesiredSize.height = frmHeight;
-#else
-  printf("Size frm:%d,%d   DS:%d,%d   DIF:%d,%d(tp)  %d,%d(px)\n", 
-         frmWidth, frmHeight, 
-         aDesiredSize.width, aDesiredSize.height,
-         frmWidth-aDesiredSize.width, frmHeight-aDesiredSize.height,
-         (frmWidth-aDesiredSize.width)/15, (frmHeight-aDesiredSize.height)/15);
-#endif
-  return NS_OK;
-}
-#endif
-
-#endif
-
-//------------------------------------------------------------------
-// This Method reflow just the contents of the ComboBox
-// The contents are a Block frame containing a Text Frame - This is the display area
-// and then the GfxButton - The dropdown button
-//--------------------------------------------------------------------------
-void 
-nsComboboxControlFrame::ReflowCombobox(nsPresContext *         aPresContext,
-                                           const nsHTMLReflowState& aReflowState,
-                                           nsHTMLReflowMetrics&     aDesiredSize,
-                                           nsReflowStatus&          aStatus,
-                                           nsIFrame *               aDisplayFrame,
-                                           nscoord&                 aDisplayWidth,
-                                           nscoord                  aBtnWidth,
-                                           const nsMargin&          aBorderPadding,
-                                           nscoord                  aFallBackHgt,
-                                           PRBool                   aCheckHeight)
-{
-  // start out by using the cached height
-  // XXX later this will change when we better handle constrained height 
-  nscoord dispHeight = mCacheSize.height - aBorderPadding.top - aBorderPadding.bottom;
-  nscoord dispWidth  = aDisplayWidth;
-
-  REFLOW_NOISY_MSG3("+++1 AdjustCombo DW:%d DH:%d  ", PX(dispWidth), PX(dispHeight));
-  REFLOW_NOISY_MSG3("BW:%d  BH:%d  ", PX(aBtnWidth), PX(dispHeight));
-  REFLOW_NOISY_MSG3("mCacheSize.height:%d - %d\n", PX(mCacheSize.height), PX((aBorderPadding.top + aBorderPadding.bottom)));
-
-  // get the border and padding for the DisplayArea (block frame & textframe)
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
-
-  // adjust the height
-  if (mCacheSize.height == kSizeNotSet) {
-    if (aFallBackHgt == kSizeNotSet) {
-      NS_ASSERTION(aFallBackHgt != kSizeNotSet, "Fallback can't be kSizeNotSet when mCacheSize.height == kSizeNotSet");
-    } else {
-      dispHeight = aFallBackHgt;
-      REFLOW_NOISY_MSG2("+++3 Adding (dspBorderPadding.top + dspBorderPadding.bottom): %d\n", (dspBorderPadding.top + dspBorderPadding.bottom));
-      dispHeight += (dspBorderPadding.top + dspBorderPadding.bottom);
-    }
-  }
-
-  // Fix for Bug 58220 (part of it)
-  // make sure we size correctly if the CSS width is set to something really small like 0, 1, or 2 pixels
-  nscoord computedWidth = aReflowState.mComputedWidth + aBorderPadding.left + aBorderPadding.right;
-  if ((aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && computedWidth <= 0) || aReflowState.mComputedWidth == 0) {
-    nsRect buttonRect(0,0,0,0);
-    nsRect displayRect(0,0,0,0);
-    aBtnWidth = 0;
-    aDisplayFrame->SetRect(displayRect);
-    mButtonFrame->SetRect(buttonRect);
-    SetButtonFrameSize(nsSize(aBtnWidth, aDesiredSize.height));
-    aDesiredSize.width = 0;
-    aDesiredSize.height = dispHeight + aBorderPadding.top + aBorderPadding.bottom;
-    // XXX What about ascent and descent?
-    return;
-  }
-
-  REFLOW_NOISY_MSG3("+++2 AdjustCombo DW:%d DH:%d  ", PX(dispWidth), PX(dispHeight));
-  REFLOW_NOISY_MSG3(" BW:%d  BH:%d\n", PX(aBtnWidth), PX(dispHeight));
-
-  // This sets the button to be a specific size
-  // so no matter what it reflows at these values
-  SetButtonFrameSize(nsSize(aBtnWidth, dispHeight));
-
-#ifdef FIX_FOR_BUG_53259
-  // Make sure we obey min/max-width and min/max-height
-  if (dispWidth > aReflowState.mComputedMaxWidth) {
-    dispWidth = aReflowState.mComputedMaxWidth - aBorderPadding.left - aBorderPadding.right;
-  }
-  if (dispWidth < aReflowState.mComputedMinWidth) {
-    dispWidth = aReflowState.mComputedMinWidth - aBorderPadding.left - aBorderPadding.right;
-  }
-
-  if (dispHeight > aReflowState.mComputedMaxHeight) {
-    dispHeight = aReflowState.mComputedMaxHeight - aBorderPadding.top - aBorderPadding.bottom;
-  }
-  if (dispHeight < aReflowState.mComputedMinHeight) {
-    dispHeight = aReflowState.mComputedMinHeight - aBorderPadding.top - aBorderPadding.bottom;
-  }
-#endif
-
-  // Make sure we get the reflow reason right. If an incremental
-  // reflow arrives that's targeted directly at the top-level combobox
-  // frame, then we can't pass it down to the children ``as is'':
-  // we're the last frame in the reflow command's chain. So, convert
-  // it to a resize reflow.
-  nsReflowReason reason = aReflowState.reason;
-  if (reason == eReflowReason_Incremental) {
-    if (aReflowState.path->mReflowCommand)
-      reason = eReflowReason_Resize;
-  }
-
-  // now that we know what the overall display width & height will be
-  // set up a new reflow state and reflow the area frame at that size
-  nsSize availSize(dispWidth + aBorderPadding.left + aBorderPadding.right, 
-                   dispHeight + aBorderPadding.top + aBorderPadding.bottom);
-  nsHTMLReflowState kidReflowState(aReflowState);
-  kidReflowState.availableWidth  = availSize.width;
-  kidReflowState.availableHeight = availSize.height;
-  kidReflowState.mComputedWidth  = dispWidth;
-  kidReflowState.mComputedHeight = dispHeight;
-  kidReflowState.reason          = reason;
-
-#ifdef IBMBIDI
-  const nsStyleVisibility* vis = GetStyleVisibility();
-
-  // M14 didn't calculate the RightEdge in the reflow
-  // Unless we set the width to some thing other than unrestricted
-  // the code changed this may not be the best place to put it
-  // in this->Reflow like this :
-  //
-  // Reflow display + button
-  // nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
-
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-  {
-    kidReflowState.mComputedWidth = 0;
-  }
-#endif // IBMBIDI
-
-  // do reflow
-  nsAreaFrame::Reflow(aPresContext, aDesiredSize, kidReflowState, aStatus);
-
-  /////////////////////////////////////////////////////////
-  // The DisplayFrame is a Block frame containing a TextFrame
-  // and it is completely anonymous, so we must manually reflow it
-  nsHTMLReflowMetrics txtKidSize(PR_TRUE);
-  nsSize txtAvailSize(dispWidth - aBtnWidth, dispHeight);
-  nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, aDisplayFrame, txtAvailSize, reason);
-
-  aDisplayFrame->WillReflow(aPresContext);
-  //aDisplayFrame->SetPosition(nsPoint(dspBorderPadding.left + aBorderPadding.left, dspBorderPadding.top + aBorderPadding.top));
-  aDisplayFrame->SetPosition(nsPoint(aBorderPadding.left, aBorderPadding.top));
-  nsAreaFrame::PositionFrameView(aDisplayFrame);
-  nsReflowStatus status;
-  nsresult rv = aDisplayFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
-  if (NS_FAILED(rv)) return;
-
-  /////////////////////////////////////////////////////////
-  // If we are Constrained then the AreaFrame Reflow is the correct size
-  // if we are unconstrained then 
-  //if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE) {
-  //  aDesiredSize.width += txtKidSize.width;
-  //}
-
-  // Apparently, XUL lays out differently than HTML 
-  // (the code above works for HTML and not XUL), 
-  // so instead of using the above calculation
-  // I just set it to what it should be.
-  aDesiredSize.width = availSize.width;
-  //aDesiredSize.height = availSize.height;
-
-  // now we need to adjust layout, because the AreaFrame
-  // doesn't position things exactly where we want them
-  nscoord insideHeight = aDesiredSize.height - aBorderPadding.top - aBorderPadding.bottom;
-
-  // If the css width has been set to something very small
-  //i.e. smaller than the dropdown button, set the button's width to zero
-  if (aBtnWidth > dispWidth) {
-    aBtnWidth = 0;
-  }
-  // set the display rect to be left justifed and 
-  // fills the entire area except the button
-  nscoord x = aBorderPadding.left;
-  nsRect displayRect(x, aBorderPadding.top, PR_MAX(dispWidth - aBtnWidth, 0), insideHeight);
-  aDisplayFrame->SetRect(displayRect);
-  x += displayRect.width;
-
-  // right justify the button
-  nsRect buttonRect(x, aBorderPadding.top, aBtnWidth, insideHeight);
-#ifdef IBMBIDI
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-  {
-    if (buttonRect.x > displayRect.x)
-    {
-      buttonRect.x = displayRect.x;
-      displayRect.x += buttonRect.width;
-      aDisplayFrame->SetRect(displayRect);
-    }
-  }
-#endif // IBMBIDI
-  mButtonFrame->SetRect(buttonRect);
-
-  // since we have changed the height of the button 
-  // make sure it has these new values
-  SetButtonFrameSize(nsSize(aBtnWidth, aDesiredSize.height));
-  
-  // This is a last minute adjustment, if the CSS width was set and 
-  // we calculated it to be a little big, then make sure we are no bigger the computed size
-  // this only comes into play when the css width has been set to something smaller than
-  // the dropdown arrow
-  if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE && aDesiredSize.width > computedWidth) {
-    aDesiredSize.width = computedWidth;
-  }
-
-  REFLOW_NOISY_MSG3("**AdjustCombobox - Reflow: WW: %d  HH: %d\n", aDesiredSize.width, aDesiredSize.height);
-
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
-
-  aDesiredSize.ascent =
-    txtKidSize.ascent + aReflowState.mComputedBorderPadding.top;
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
-  
-  // Now cache the available height as our height without border and padding
-  // This sets up the optimization for if a new available width comes in and we are equal or
-  // less than it we can bail
-  if (aDesiredSize.width != mCacheSize.width || aDesiredSize.height != mCacheSize.height) {
-    if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-      mCachedAvailableSize.width  = aDesiredSize.width - (aBorderPadding.left + aBorderPadding.right);
-    }
-    if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-      mCachedAvailableSize.height = aDesiredSize.height - (aBorderPadding.top + aBorderPadding.bottom);
-    }
-    nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
-                                         mCachedMaxElementWidth, aDesiredSize);
-  }
-
-  ///////////////////////////////////////////////////////////////////
-  // This is an experimental reflow that is turned off in the build
-#ifdef DO_NEW_REFLOW
-  ReflowItems(aPresContext, aReflowState, aDesiredSize);
-#endif
-  ///////////////////////////////////////////////////////////////////
-}
-
 //----------------------------------------------------------
 // 
 //----------------------------------------------------------
@@ -951,109 +581,61 @@ static void printSize(char * aDesc, nscoord aSize)
 //-------------------------------------------------------------------
 //-- Main Reflow for the Combobox
 //-------------------------------------------------------------------
+
+nscoord
+nsComboboxControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  // Note: to fix the combobox equivalent of bug 40596 while still working
+  // correctly in general, we want to return our preferred width as our min
+  // width if our style width is auto.  Otherwise, we're ok with shrinking as
+  // small as needed.
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    result = GetPrefWidth(aRenderingContext);
+  } else {
+    result = 0;
+  }
+
+  return result;
+}
+
+nscoord
+nsComboboxControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  if (NS_LIKELY(mDropdownFrame != nsnull)) {
+    result = mDropdownFrame->GetPrefWidth(aRenderingContext);
+  } else {
+    result = 0;
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP 
 nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsComboboxControlFrame", aReflowState.reason);
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  // Constraints we try to satisfy:
 
-  aStatus = NS_FRAME_COMPLETE;
+  // 1) Default width of button is the vertical scrollbar size
+  // 2) If the width of button is bigger than our width, set width of
+  //    button to 0.
+  // 3) Default height of button is height of display area
+  // 4) Width of display area is whatever is left over from our width after
+  //    allocating width for the button.
+  // 5) Height of display area is GetHeightOfARow() on the
+  //    mListControlFrame.
 
-  REFLOW_COUNTER_REQUEST();
-
-#ifdef DO_REFLOW_DEBUG
-  printf("-------------Starting Combobox Reflow ----------------------------\n");
-  printf("%p ** Id: %d nsCCF::Reflow %d R: ", this, mReflowId, myCounter++);
-  switch (aReflowState.reason) {
-    case eReflowReason_Initial:
-      printf("Ini");break;
-    case eReflowReason_Incremental:
-      printf("Inc");break;
-    case eReflowReason_Resize:
-      printf("Rsz");break;
-    case eReflowReason_StyleChange:
-      printf("Sty");break;
-    case eReflowReason_Dirty:
-      printf("Drt ");
-      break;
-    default:printf("<unknown>%d", aReflowState.reason);break;
-  }
-  
-  printSize("AW", aReflowState.availableWidth);
-  printSize("AH", aReflowState.availableHeight);
-  printSize("CW", aReflowState.mComputedWidth);
-  printSize("CH", aReflowState.mComputedHeight);
-
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> optionsTemp = GetOptions(mContent);
-  PRUint32 numOptions;
-  optionsTemp->GetLength(&numOptions);
-  printSize("NO", (nscoord)numOptions);
-
-  printf(" *\n");
-
-#endif
-
-
-  PRBool bailOnWidth;
-  PRBool bailOnHeight;
-
-  // Do initial check to see if we can bail out
-  // If it is an Initial or Incremental Reflow we never bail out here
-  // XXX right now we only bail if the width meets the criteria
-  //
-  // We bail:
-  //   if mComputedWidth == NS_UNCONSTRAINEDSIZE and
-  //      availableWidth == NS_UNCONSTRAINEDSIZE and 
-  //      we have cached an available size
-  //
-  // We bail:
-  //   if mComputedWidth == NS_UNCONSTRAINEDSIZE and
-  //      availableWidth != NS_UNCONSTRAINEDSIZE and 
-  //      availableWidth minus its border equals our cached available size
-  //
-  // We bail:
-  //   if mComputedWidth != NS_UNCONSTRAINEDSIZE and
-  //      cached availableSize.width == aReflowState.mComputedWidth and 
-  //      cached AvailableSize.width == aCacheSize.width
-  //
-  // NOTE: this returns whether we are doing an Incremental reflow
-  nsFormControlFrame::SkipResizeReflow(mCacheSize,
-                                       mCachedAscent,
-                                       mCachedMaxElementWidth,
-                                       mCachedAvailableSize, 
-                                       aDesiredSize, aReflowState, 
-                                       aStatus, 
-                                       bailOnWidth, bailOnHeight);
-  if (bailOnWidth) {
-#ifdef DO_REFLOW_DEBUG // check or size
-    nsMargin borderPadding(0, 0, 0, 0);
-    CalcBorderPadding(borderPadding);
-    UNCONSTRAINED_CHECK();
-#endif
-    REFLOW_DEBUG_MSG3("^** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-    NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-    NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-    aDesiredSize.mOverflowArea.x      = 0;
-    aDesiredSize.mOverflowArea.y      = 0;
-    aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-    aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-    FinishAndStoreOverflow(&aDesiredSize);
-    return NS_OK;
-  }
-
-  // Go get all of the important frame
-  nsresult rv = NS_OK;
-  // Don't try to do any special sizing and positioning unless all of the frames
-  // have been created.
-  if ((nsnull == mDisplayFrame) ||
-     (nsnull == mButtonFrame) ||
-     (nsnull == mDropdownFrame)) 
-  {
-     // Since combobox frames are missing just do a normal area frame reflow
-    return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  if (!mDisplayFrame || !mButtonFrame || !mDropdownFrame) {
+    NS_ERROR("Why did the frame constructor allow this to happen?  Fix it!!");
+    return NS_ERROR_UNEXPECTED;
   }
 
   // Make sure the displayed text is the same as the selected option, bug 297389.
@@ -1074,411 +656,72 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     RedisplayText(selectedIndex);
   }
 
-  // We should cache this instead getting it everytime
-  // the default size of the of scrollbar
-  // that will be the default width of the dropdown button
-  // the height will be the height of the text
+  // First reflow our dropdown so that we know how tall we should be.
+  ReflowDropdown(aPresContext, aReflowState);
+  
+  // Get the default size of the scrollbar.
+  // That will be the default width of the dropdown button.
+  // The height will be the height of the text
+  // Can we cache this in a meaningful way?
   float w, h;
   // Get the width in Device pixels times p2t
   aPresContext->DeviceContext()->GetScrollBarDimensions(w, h);
-  nscoord scrollbarWidth = NSToCoordRound(w);
-  
-  // set up a new reflow state for use throughout
-  nsHTMLReflowState firstPassState(aReflowState);
-  nsHTMLReflowMetrics dropdownDesiredSize(nsnull);
 
-  // Check to see if this a fully unconstrained reflow
-  PRBool fullyUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE;
+  nscoord buttonWidth = NSToCoordRound(w);
 
-  PRBool forceReflow = PR_FALSE;
-
-  // Only reflow the display and button 
-  // if they are the target of the incremental reflow, unless they change size. 
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsHTMLReflowCommand *command = firstPassState.path->mReflowCommand;
-
-    // Check to see if we are the target of the Incremental Reflow
-    if (command) {
-      // We need to check here to see if we can get away with just reflowing
-      // the combobox and not the dropdown
-      REFLOW_DEBUG_MSG("-----------------Target is Combobox------------\n");
-
-      // If the mComputedWidth matches our cached display width 
-      // then we get away with bailing out
-      PRBool doFullReflow = firstPassState.mComputedWidth != NS_UNCONSTRAINEDSIZE &&
-                            firstPassState.mComputedWidth != mItemDisplayWidth;
-      if (!doFullReflow) {
-        // OK, so we got lucky and the size didn't change
-        // so do a simple reflow and bail out
-        REFLOW_DEBUG_MSG("------------Reflowing AreaFrame and bailing----\n\n");
-        ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                           mDisplayFrame, mItemDisplayWidth, 
-                           scrollbarWidth, aReflowState.mComputedBorderPadding);
-        REFLOW_COUNTER();
-        UNCONSTRAINED_CHECK();
-        REFLOW_DEBUG_MSG3("&** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-        aDesiredSize.mOverflowArea.x      = 0;
-        aDesiredSize.mOverflowArea.y      = 0;
-        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-      }
-      else {
-        // Nope, something changed that affected our size 
-        // so we need to do a full reflow and resize ourself
-        REFLOW_DEBUG_MSG("------------Do Full Reflow----\n\n");
-        firstPassState.reason = eReflowReason_StyleChange;
-        firstPassState.path = nsnull;
-        forceReflow = PR_TRUE;
-      }
-    }
-
-    // See if any of the children are targets, as well.
-    nsReflowPath::iterator iter = aReflowState.path->FirstChild();
-    nsReflowPath::iterator end = aReflowState.path->EndChildren();
-    for ( ; iter != end; ++iter) {
-      // Now, see if our target is the dropdown
-      // If so, maybe an items was added or some style changed etc.
-      //               OR
-      // We get an Incremental reflow on the dropdown when it is being 
-      // shown or hidden.
-      if (*iter == mDropdownFrame) {
-        REFLOW_DEBUG_MSG("---------Target is Dropdown (Clearing Unc DD Size)---\n");
-        // Nope, we were unlucky so now we do a full reflow
-        mCachedUncDropdownSize.width  = kSizeNotSet;
-        mCachedUncDropdownSize.height = kSizeNotSet;       
-        REFLOW_DEBUG_MSG("---- Doing Full Reflow\n");
-        // This is an incremental reflow targeted at the dropdown list
-        // and it didn't have anything to do with being show or hidden.
-        // 
-        // The incremental reflow will not get to the dropdown list 
-        // because it is in the "popup" list 
-        // when this flow of control drops out of this if it will do a reflow
-        // on the AreaFrame which SHOULD make it get tothe drop down 
-        // except that it is in the popup list, so we have it reflowed as
-        // a StyleChange, this is not as efficient as doing an Incremental
-        //
-        // At this point we want to by pass the reflow optimization in the dropdown
-        // because we aren't why it is getting an incremental reflow, but we do
-        // know that it needs to be resized or restyled
-        //mListControlFrame->SetOverrideReflowOptimization(PR_TRUE);
-
-      } else if (*iter == mDisplayFrame || *iter == mButtonFrame) {
-        REFLOW_DEBUG_MSG2("-----------------Target is %s------------\n", (*iter == mDisplayFrame?"DisplayItem Frame":"DropDown Btn Frame"));
-        // The incremental reflow is targeted at either the block or the button
-        REFLOW_DEBUG_MSG("---- Doing AreaFrame Reflow and then bailing out\n");
-        // Do simple reflow and bail out
-        ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                       mDisplayFrame, mItemDisplayWidth, scrollbarWidth,
-                       aReflowState.mComputedBorderPadding,
-                       kSizeNotSet, PR_TRUE);
-        REFLOW_DEBUG_MSG3("+** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-        REFLOW_COUNTER();
-        UNCONSTRAINED_CHECK();
-        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-        aDesiredSize.mOverflowArea.x      = 0;
-        aDesiredSize.mOverflowArea.y      = 0;
-        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-        continue;
-      } else {
-        nsIFrame * plainLstFrame;
-        if (NS_SUCCEEDED(mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&plainLstFrame))) {
-          nsIFrame * frame = plainLstFrame->GetFirstChild(nsnull);
-          nsIScrollableFrame * scrollFrame;
-          if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollFrame))) {
-            plainLstFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-
-            aDesiredSize.width  = mCacheSize.width;
-            aDesiredSize.height = mCacheSize.height;
-            aDesiredSize.ascent = mCachedAscent;
-            aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
-
-            if (aDesiredSize.mComputeMEW) {
-              aDesiredSize.mMaxElementWidth = mCachedMaxElementWidth;
-            }
-            NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-            NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-            aDesiredSize.mOverflowArea.x      = 0;
-            aDesiredSize.mOverflowArea.y      = 0;
-            aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-            aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-            continue;
-          }
-        }
-
-        // Here the target of the reflow was a child of the dropdown list
-        // so we must do a full reflow
-        REFLOW_DEBUG_MSG("-----------------Target is Dropdown's Child (Option Item)------------\n");
-        REFLOW_DEBUG_MSG("---- Doing Reflow as StyleChange\n");
-      }
-      firstPassState.reason = eReflowReason_StyleChange;
-      firstPassState.path = nsnull;
-      mListControlFrame->SetOverrideReflowOptimization(PR_TRUE);
-      forceReflow = PR_TRUE;
-    }
+  if (buttonWidth > aReflowState.mComputedWidth) {
+    buttonWidth = 0;
   }
 
-#ifdef IBMBIDI
-  else if (eReflowReason_StyleChange == aReflowState.reason) {
-    forceReflow = PR_TRUE;
+  mDisplayWidth = aReflowState.mComputedWidth - buttonWidth;
+
+  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                    aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now set the correct width and height on our button.  The width we need to
+  // set always, the height only if we had an auto height.
+  nsRect buttonRect = mButtonFrame->GetRect();
+  // If we have a non-intrinsic computed height, our kids should have sized
+  // themselves properly on their own.
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+    // The display frame is going to be the right height and width at this
+    // point. Use its height as the button height.
+    nsRect displayRect = mDisplayFrame->GetRect();
+    buttonRect.height = displayRect.height;
+    buttonRect.y = displayRect.y;
   }
-#endif // IBMBIDI
-
-  // Here is another special optimization
-  // Only reflow the dropdown if it has never been reflowed unconstrained
-  //
-  // Or someone up above here may want to force it to be reflowed 
-  // by setting one or both of these to kSizeNotSet
-  if ((mCachedUncDropdownSize.width == kSizeNotSet && 
-       mCachedUncDropdownSize.height == kSizeNotSet) || forceReflow) {
-    REFLOW_DEBUG_MSG3("---Re %d,%d\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
-
-    // Tell it we are doing the first pass, which means it will
-    // do the unconstained reflow and skip the second reflow this time around
-    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
-    lcf->SetPassId(1);
-    // A width has not been specified for the select so size the display area
-    // to match the width of the longest item in the drop-down list. The dropdown
-    // list has already been reflowed and sized to shrink around its contents above.
-    ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, 
-                          aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
-    lcf->SetPassId(0); // reset it back
-
-    if (forceReflow) {
-      mCachedUncDropdownSize.width  = dropdownDesiredSize.width;
-      mCachedUncDropdownSize.height = dropdownDesiredSize.height;
-    }
-  } else {
-    // Here we pretended we did an unconstrained reflow
-    // so we set the cached values and continue on
-    REFLOW_DEBUG_MSG3("--- Using Cached ListBox Size %d,%d\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
-    dropdownDesiredSize.width  = mCachedUncDropdownSize.width;
-    dropdownDesiredSize.height = mCachedUncDropdownSize.height;
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(mButtonFrame->GetSize().height ==
+                 mDisplayFrame->GetSize().height,
+                 "Different heights?");
   }
-
-  /////////////////////////////////////////////////////////////////////////
-  // XXX - I need to clean this nect part up a little it is very redundant
-
-  // Check here to if this is a mComputed unconstrained reflow
-  PRBool computedUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE;
-  if (computedUnconstrained && !forceReflow) {
-    // Because Incremental reflows aren't actually getting to the dropdown
-    // we cache the size from when it did a fully unconstrained reflow
-    // we then check to see if the size changed at all, 
-    // if not then bail out we don't need to worry
-    if (mCachedUncDropdownSize.width == kSizeNotSet && mCachedUncDropdownSize.height == kSizeNotSet) {
-      mCachedUncDropdownSize.width  = dropdownDesiredSize.width;
-      mCachedUncDropdownSize.height = dropdownDesiredSize.height;
-      REFLOW_DEBUG_MSG3("---1 Caching mCachedUncDropdownSize %d,%d\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
-
-    } else if (mCachedUncDropdownSize.width == dropdownDesiredSize.width &&
-               mCachedUncDropdownSize.height == dropdownDesiredSize.height) {
-
-      if (mCachedUncComboSize.width != kSizeNotSet && mCachedUncComboSize.height != kSizeNotSet) {
-        REFLOW_DEBUG_MSG3("--- Bailing because of mCachedUncDropdownSize %d,%d\n\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
-        aDesiredSize.width  = mCachedUncComboSize.width;
-        aDesiredSize.height = mCachedUncComboSize.height;
-        aDesiredSize.ascent = mCachedAscent;
-        aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
-
-        if (aDesiredSize.mComputeMEW) {
-          aDesiredSize.mMaxElementWidth = mCachedMaxElementWidth;
-        }
-        UNCONSTRAINED_CHECK();
-        REFLOW_DEBUG_MSG3("#** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-        NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-        NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-        aDesiredSize.mOverflowArea.x      = 0;
-        aDesiredSize.mOverflowArea.y      = 0;
-        aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-        aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-        FinishAndStoreOverflow(&aDesiredSize);
-        return NS_OK;
-      }
-    } else {
-      mCachedUncDropdownSize.width  = dropdownDesiredSize.width;
-      mCachedUncDropdownSize.height = dropdownDesiredSize.height;
-    }
-  }
-  // clean up stops here
-  /////////////////////////////////////////////////////////////////////////
-
-  // So this point we know we flowed the dropdown unconstrained
-  // now we get to figure out how big we need to be and 
-  // 
-  // We don't reflow the combobox here at the new size
-  // we cache its new size and reflow it on the dropdown
-  nsSize size;
-
-  // dropdownRect will hold the content size (minus border padding) 
-  // for the display area
-  nsRect dropdownRect = mDropdownFrame->GetRect();
-  if (eReflowReason_Resize == aReflowState.reason) {
-    dropdownRect.Deflate(aReflowState.mComputedBorderPadding);
-  }
-
-  // Get maximum size of the largest item in the dropdown
-  // The height of the display frame will be that height
-  // the width will be the same as 
-  // the dropdown width (minus its borderPadding) OR
-  // a caculation off the mComputedWidth from reflow
-  size = mListControlFrame->GetMaximumSize();
-
-  // the variable "size" will now be 
-  // the default size of the dropdown btn
-  if (scrollbarWidth > 0) {
-    size.width = scrollbarWidth;
-  }
-
-  // Get the border and padding for the dropdown
-  nsMargin dropBorderPadding(0, 0, 0, 0);
-  mDropdownFrame->CalcBorderPadding(dropBorderPadding);
-
-  // get the borderPadding for the display area
-  nsMargin dspBorderPadding(0, 0, 0, 0);
-  mDisplayFrame->CalcBorderPadding(dspBorderPadding);
-
-  // Subtract dropdown's borderPadding from the width of the dropdown rect
-  // to get the size of the content area
-  //
-  // the height will come from the mDisplayFrame's height
-  // declare a size for the item display frame
-
-  //Set the desired size for the button and display frame
-  if (NS_UNCONSTRAINEDSIZE == firstPassState.mComputedWidth) {
-    REFLOW_DEBUG_MSG("Unconstrained.....\n");
-    REFLOW_DEBUG_MSG4("*B mItemDisplayWidth %d  dropdownRect.width:%d dropdownRect.w+h %d\n", PX(mItemDisplayWidth), PX(dropdownRect.width), PX((dropBorderPadding.left + dropBorderPadding.right)));
-
-    // Start with the dropdown rect's width (at this stage, it's the
-    // natural width of the content in the list, i.e., the width of
-    // the widest content, i.e. the preferred width for the display
-    // frame) and add room for the button, which is assumed to match
-    // the width of the scrollbar (note that the scrollbarWidth is
-    // passed as aBtnWidth to ReflowCombobox).  (When the dropdown was
-    // an nsScrollFrame the scrollbar width seems to have already been
-    // added to its unconstrained width.)
-    mItemDisplayWidth = dropdownRect.width + scrollbarWidth;
-
-    REFLOW_DEBUG_MSG2("*  mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
-
-    // mItemDisplayWidth must be the size of the "display" frame including it's 
-    // border and padding, but NOT including the comboboxes border and padding
-    mItemDisplayWidth += dspBorderPadding.left + dspBorderPadding.right;
-    mItemDisplayWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-
-    REFLOW_DEBUG_MSG2("*A mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
-
-  } else {
-    REFLOW_DEBUG_MSG("Constrained.....\n");
-    if (firstPassState.mComputedWidth > 0) {
-      // Compute the display item's width from reflow's mComputedWidth
-      // mComputedWidth has already excluded border and padding
-      // so subtract off the button's size
-      REFLOW_DEBUG_MSG3("B mItemDisplayWidth %d    %d\n", PX(mItemDisplayWidth), PX(dspBorderPadding.right));
-      // Display Frame's width comes from the mComputedWidth and therefore implies that it
-      // includes the "display" frame's border and padding.
-      mItemDisplayWidth = firstPassState.mComputedWidth;
-      REFLOW_DEBUG_MSG2("A mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
-      REFLOW_DEBUG_MSG4("firstPassState.mComputedWidth %d -  size.width %d dspBorderPadding.right %d\n", PX(firstPassState.mComputedWidth), PX(size.width), PX(dspBorderPadding.right));
-    }
-  }
-
-  // Fix for Bug 44788 (remove this comment later)
-  if (firstPassState.mComputedHeight > 0 && NS_UNCONSTRAINEDSIZE != firstPassState.mComputedHeight) {
-    size.height = firstPassState.mComputedHeight;
-  }
-
-  if (mCacheSize.height != size.height) {
-    // if the cached height is not equal to the current height,
-    // the cached height is reset.
-    mCacheSize.height = kSizeNotSet;
-  }
-
-  // this reflows and makes and last minute adjustments
-  ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                     mDisplayFrame, mItemDisplayWidth, scrollbarWidth, 
-                     aReflowState.mComputedBorderPadding, size.height);
-
-  // The dropdown was reflowed UNCONSTRAINED before, now we need to reflow it
-  // so that all children match the desired width.
-  // The dropdown MUST always be either the same size as the combo or larger
-  // if necessary. Note that individual children can be narrower in case they
-  // are constrained by 'width', 'max-width' etc.
-  if (eReflowReason_Initial == firstPassState.reason) {
-    firstPassState.reason = eReflowReason_Resize;
-  }
-  REFLOW_DEBUG_MSG3("*** Reflowing ListBox to width: %d it was %d\n", PX(aDesiredSize.width), PX(dropdownDesiredSize.width));
-
-  // Tell it we are doing the second pass, which means we will skip
-  // doing the unconstained reflow, we already know that size
-  nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
-  lcf->SetPassId(2);
-  // Reflow the dropdown list to be
-  // MAX(width of the display + button, width of the widest option). bug 305705.
-  const nscoord availableWidth =
-    PR_MAX(aDesiredSize.width, dropdownDesiredSize.width -
-                               aReflowState.mComputedBorderPadding.left -
-                               aReflowState.mComputedBorderPadding.right);
-  ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize,
-                        firstPassState, aStatus,
-                        availableWidth, NS_UNCONSTRAINEDSIZE);
-  lcf->SetPassId(0);
-
-  // Set the max element size to be the same as the desired element size.
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
-
-#if 0
-  COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 127, 22) 
 #endif
-
-  // cache the availabe size to be our desired size minus the borders
-  // this is so if our cached available size is ever equal to or less 
-  // than the real available size we can bail out
-  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.width  = aDesiredSize.width -
-      (aReflowState.mComputedBorderPadding.left +
-       aReflowState.mComputedBorderPadding.right);
+  
+  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    // Make sure the right edge of the button frame stays where it is now
+    buttonRect.x -= buttonWidth - buttonRect.width;
   }
-  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.height = aDesiredSize.height -
-      (aReflowState.mComputedBorderPadding.top +
-       aReflowState.mComputedBorderPadding.bottom);
-  }
-
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent, mCachedMaxElementWidth, aDesiredSize);
-
-  REFLOW_DEBUG_MSG3("** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
-  REFLOW_COUNTER();
-  UNCONSTRAINED_CHECK();
-
-  // If this was a fully unconstrained reflow we cache 
-  // the combobox's unconstrained size
-  if (fullyUnconstrained) {
-    mCachedUncComboSize.width = aDesiredSize.width;
-    mCachedUncComboSize.height = aDesiredSize.height;
-  }
-
-  NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-  NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-  aDesiredSize.mOverflowArea.x      = 0;
-  aDesiredSize.mOverflowArea.y      = 0;
-  aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-  aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-
-  FinishAndStoreOverflow(&aDesiredSize);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  buttonRect.width = buttonWidth;
+  mButtonFrame->SetRect(buttonRect);
+  
   return rv;
-
 }
 
 //--------------------------------------------------------------
 
-//--------------------------------------------------------------
+nsIAtom*
+nsComboboxControlFrame::GetType() const
+{
+  return nsLayoutAtoms::comboboxControlFrame; 
+}
+
+PRBool
+nsComboboxControlFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced | eReplacedContainsBlock));
+}
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
@@ -1606,7 +849,9 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
 
   ActuallyDisplayText(PR_TRUE);
   mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-  ReflowDirtyChild(GetPresContext()->PresShell(), mDisplayFrame);
+  // XXXbz This should perhaps be eResize.  Check.
+  GetPresContext()->PresShell()->FrameNeedsReflow(mDisplayFrame,
+                                                  nsIPresShell::eStyleChange);
 
   mInRedisplayText = PR_FALSE;
 }
@@ -1775,8 +1020,6 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   //
   // Note: The value attribute of the display content is set when an item is selected in the dropdown list.
   // If the content specified below does not honor the value attribute than nothing will be displayed.
-  // In addition, if the frame created by content below for the button is not an nsGfxScrollFrame
-  // things will go wrong ... see SetButtonFrameSize.
 
   // For now the content that is created corresponds to two input buttons. It would be better to create the
   // tag as something other than input, but then there isn't any way to create a button frame since it
@@ -1831,6 +1074,79 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+// XXXbz this is a for-now hack until display:inline-block works.
+class nsComboboxDisplayFrame;
+
+static nsComboboxDisplayFrame*
+NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                           nsComboboxControlFrame* aComboBox);
+
+class nsComboboxDisplayFrame : public nsBlockFrame {
+public:
+  friend nsComboboxDisplayFrame*
+  NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell,
+                             nsStyleContext* aContext,
+                             nsComboboxControlFrame* aComboBox);
+  
+  nsComboboxDisplayFrame (nsStyleContext* aContext,
+                          nsComboboxControlFrame* aComboBox)
+    : nsBlockFrame(aContext),
+      mComboBox(aComboBox)
+  {}
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  NS_IMETHOD Reflow(nsPresContext*           aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
+protected:
+  nsComboboxControlFrame* mComboBox;
+};
+
+PRBool
+nsComboboxDisplayFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplacedContainsBlock));
+}
+
+NS_IMETHODIMP
+nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus&          aStatus)
+{
+  nsHTMLReflowState state(aReflowState);
+  if (state.mComputedHeight == NS_INTRINSICSIZE) {
+    // Note that the only way we can have a computed height here is if the
+    // combobox had a specified height.  If it didn't, size based on what our
+    // rows look like, for lack of anything better.
+    state.mComputedHeight = mComboBox->mListControlFrame->GetHeightOfARow();
+  }
+  state.mComputedWidth = mComboBox->mDisplayWidth -
+    state.mComputedBorderPadding.LeftRight();
+  if (state.mComputedWidth < 0) {
+    state.mComputedWidth = 0;
+  }
+
+  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+}
+
+static nsComboboxDisplayFrame*
+NS_NewComboboxDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                           nsComboboxControlFrame* aComboBox)
+{
+  nsComboboxDisplayFrame* it =
+    new (aPresShell) nsComboboxDisplayFrame(aContext, aComboBox);
+
+  if (it) {
+    it->SetFlags(NS_BLOCK_SPACE_MGR);
+  }
+    
+  return it;
+}
+
 NS_IMETHODIMP 
 nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
                                        nsIContent *      aContent,
@@ -1869,7 +1185,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   }
 
   // Start by by creating our anonymous block frame
-  mDisplayFrame = NS_NewBlockFrame(shell, styleContext, NS_BLOCK_SPACE_MGR);
+  mDisplayFrame = NS_NewComboboxDisplayFrame(shell, styleContext, this);
   if (NS_UNLIKELY(!mDisplayFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

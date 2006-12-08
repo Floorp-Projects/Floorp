@@ -105,6 +105,8 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -127,6 +129,7 @@ public:
 #endif
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -167,9 +170,12 @@ protected:
 
   virtual ~nsImageFrame();
 
-  virtual void GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+  void EnsureIntrinsicSize(nsPresContext* aPresContext);
+
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
 
   void TriggerLink(nsPresContext* aPresContext,
                    nsIURI* aURI,

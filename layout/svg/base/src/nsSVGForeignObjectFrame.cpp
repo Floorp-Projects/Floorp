@@ -123,7 +123,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
-      PostReflowCommand();
+      PostChildDirty();
       UpdateCoveredRegion();
       UpdateGraphic();
     } else if (aAttribute == nsGkAtoms::x ||
@@ -307,7 +307,14 @@ nsSVGForeignObjectFrame::InitialUpdate()
 {
   UpdateCoveredRegion();
   DoReflow();
-  mState &= ~(NS_FRAME_FIRST_REFLOW);
+
+  NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
+               "We don't actually participate in reflow");
+  
+  // Do unset the various reflow bits, though.
+  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+              NS_FRAME_HAS_DIRTY_CHILDREN);
+
   return NS_OK;
 }
 
@@ -429,13 +436,13 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void nsSVGForeignObjectFrame::PostReflowCommand()
+void nsSVGForeignObjectFrame::PostChildDirty()
 {
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
     return;
   GetPresContext()->PresShell()->
-    AppendReflowCommand(kid, eReflowType_StyleChanged, nsnull);
+    FrameNeedsReflow(kid, nsIPresShell::eStyleChange);
 }
 
 void nsSVGForeignObjectFrame::UpdateGraphic()
@@ -494,14 +501,9 @@ nsSVGForeignObjectFrame::DoReflow()
   mInReflow = PR_TRUE;
 
   // create a new reflow state, setting our max size to (width,height):
-  // Make up a potentially reasonable but perhaps too destructive reflow
-  // reason.
-  nsReflowReason reason = (kid->GetStateBits() & NS_FRAME_FIRST_REFLOW)
-                            ? eReflowReason_Initial
-                            : eReflowReason_StyleChange;
-  nsHTMLReflowState reflowState(presContext, kid, reason,
+  nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext, size);
-  nsHTMLReflowMetrics desiredSize(nsnull);
+  nsHTMLReflowMetrics desiredSize;
   nsReflowStatus status;
   
   ReflowChild(kid, presContext, desiredSize, reflowState, 0, 0,

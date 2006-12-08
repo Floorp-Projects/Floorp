@@ -47,7 +47,6 @@
 #include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
-#include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
@@ -68,19 +67,14 @@
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
-                                           const nsHTMLReflowState& aParentRS,
-                                           PRBool aComputeMaxElementWidth,
-                                           PRBool aComputeMaximumWidth)
+                                           const nsHTMLReflowState& aParentRS)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
-    mMetrics(aComputeMaxElementWidth),
-    mComputeMaximumWidth(aComputeMaximumWidth)
+    mMetrics()
 {
   mStyleBorder = nsnull;
   mStyleMargin = nsnull;
   mStylePadding = nsnull;
-  if (mComputeMaximumWidth)
-    mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
 }
 
 static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
@@ -171,9 +165,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             // generational collapse is required we need to compute the
             // child blocks margin and so in so that we can look into
             // it. For its margins to be computed we need to have a reflow
-            // state for it. Since the reflow reason is irrelevant, we'll
-            // arbitrarily make it a `resize' to avoid the path-plucking
-            // behavior if we're in an incremental reflow.
+            // state for it.
             
             // We may have to construct an extra reflow state here if
             // we drilled down through a block wrapper. At the moment
@@ -185,8 +177,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                            "Can only drill through one level of block wrapper");
               nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
               outerReflowState = new nsHTMLReflowState(prescontext,
-                                                     aRS, frame,
-                                                     availSpace, eReflowReason_Resize);
+                                                       aRS, frame, availSpace);
               if (!outerReflowState)
                 goto done;
             }
@@ -195,7 +186,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                                 outerReflowState->mComputedHeight);
               nsHTMLReflowState innerReflowState(prescontext,
                                                  *outerReflowState, kid,
-                                                 availSpace, eReflowReason_Resize);
+                                                 availSpace);
               // Record that we're being optimistic by assuming the kid
               // has no clearance
               if (kid->GetStyleDisplay()->mBreakType != NS_STYLE_CLEAR_NONE) {
@@ -245,179 +236,6 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   return dirtiedLine;
 }
 
-struct nsBlockHorizontalAlign {
-  nscoord mXOffset;  // left edge
-  nscoord mLeftMargin;
-  nscoord mRightMargin;
-};
-
-// Given the width of the block frame and a suggested x-offset calculate
-// the actual x-offset taking into account horizontal alignment. Also returns
-// the actual left and right margin
-void
-nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
-                                             nsBlockHorizontalAlign &aAlign)
-{
-  // Initialize OUT parameters
-  aAlign.mLeftMargin = mMargin.left;
-  aAlign.mRightMargin = mMargin.right;
-
-  // Get style unit associated with the left and right margins
-  PRBool leftIsAuto = mStyleMargin->mMargin.GetLeftUnit() == eStyleUnit_Auto;
-  PRBool rightIsAuto = mStyleMargin->mMargin.GetRightUnit() == eStyleUnit_Auto;
-
-  // Apply post-reflow horizontal alignment. When a block element
-  // doesn't use it all of the available width then we need to
-  // align it using the text-align property.
-  if (NS_UNCONSTRAINEDSIZE != mSpace.width &&
-      NS_UNCONSTRAINEDSIZE != mOuterReflowState.mComputedWidth) {
-    // It is possible that the object reflowed was given a
-    // constrained width and ended up picking a different width
-    // (e.g. a table width a set width that ended up larger
-    // because its contents required it). When this happens we
-    // need to recompute auto margins because the reflow state's
-    // computations are no longer valid.
-    if (aWidth != mComputedWidth) {
-      if (leftIsAuto) {
-        aAlign.mXOffset = mSpace.x;
-        aAlign.mLeftMargin = 0;
-      }
-      if (rightIsAuto) {
-        aAlign.mRightMargin = 0;
-      }
-    }
-
-    // Compute how much remaining space there is, and in special
-    // cases apply it (normally we should get zero here because of
-    // the logic in nsHTMLReflowState).
-    nscoord remainingSpace = mSpace.XMost() - (aAlign.mXOffset + aWidth +
-                             aAlign.mRightMargin);
-    if (remainingSpace != 0) {
-      if (remainingSpace < 0) {
-        // CSS2.1, 10.3.3 says:
-        // If 'width' is not 'auto' and 'border-left-width' +
-        // 'padding-left' + 'width' + 'padding-right' +
-        // 'border-right-width' (plus any of 'margin-left' or
-        // 'margin-right' that are not 'auto') is larger than the width
-        // of the containing block, then any 'auto' values for
-        // 'margin-left' or 'margin-right' are, for the following rules,
-        // treated as zero.
-        leftIsAuto = rightIsAuto = PR_FALSE;
-      }
-
-      // The block/table frame didn't use all of the available
-      // space. Synthesize margins for its horizontal placement.
-      if (leftIsAuto) {
-        if (rightIsAuto) {
-          // When both margins are auto, we center the block
-          aAlign.mXOffset += remainingSpace / 2;
-        }
-        else {
-          // When the left margin is auto we right align the block
-          aAlign.mXOffset += remainingSpace;
-        }
-      }
-      else if (!rightIsAuto) {
-        // The block/table doesn't have auto margins.
-
-        // For normal (non-table) blocks we don't get here because
-        // nsHTMLReflowState::CalculateBlockSideMargins handles this.
-        // (I think there may be an exception to that, though...)
-
-        // We use a special value of the text-align property for
-        // HTML alignment (the CENTER element and DIV ALIGN=...)
-        // since it acts on blocks and tables rather than just
-        // being a text-align.
-        // So, check the text-align value from the parent to see if
-        // it has one of these special values.
-        // But only use this value when the content is narrower than the
-        // container, not when it is too wide.
-        PRUint8 textAlign;
-        if (remainingSpace > 0)
-          textAlign = mOuterReflowState.mStyleText->mTextAlign;
-        else
-          textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
-
-        if (textAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
-          aAlign.mXOffset += remainingSpace;
-        } else if (textAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
-          aAlign.mXOffset += remainingSpace / 2;
-        } else if (textAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT) {
-          // If we don't have a special text-align value indicating
-          // HTML alignment, then use the CSS rules.
-
-          // When neither margin is auto then the block is said to
-          // be over constrained, Depending on the direction, choose
-          // which margin to treat as auto.
-          PRUint8 direction = mOuterReflowState.mStyleVisibility->mDirection;
-          if (NS_STYLE_DIRECTION_RTL == direction) {
-            // The left margin becomes auto
-            aAlign.mXOffset += remainingSpace;
-          }
-          //else {
-            // The right margin becomes auto which is a no-op
-          //}
-        }
-      }
-    }
-  }
-}
-
-static void
-ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth,
-                         nsMargin& aMargin, nscoord& aXToUpdate)
-{
-  nscoord boxWidth = aWidth;
-  float leftPct = 0.0, rightPct = 0.0;
-  const nsStyleSides& margin = aStyleMargin->mMargin;
-  
-  if (eStyleUnit_Percent == margin.GetLeftUnit()) {
-    nsStyleCoord coord;
-    leftPct = margin.GetLeft(coord).GetPercentValue();
-  } else {
-    boxWidth += aMargin.left;
-  }
-  
-  if (eStyleUnit_Percent == margin.GetRightUnit()) {
-    nsStyleCoord coord;
-    rightPct = margin.GetRight(coord).GetPercentValue();
-  } else {
-    boxWidth += aMargin.right;
-  }
-  
-  // The total shrink wrap width "sww" (i.e., the width that the
-  // containing block needs to be to shrink-wrap this block) is
-  // calculated by the expression:
-  //   sww = bw + (mp * sww)
-  // where "bw" is the box width (frame width plus margins that aren't
-  // percentage based) and "mp" are the total margin percentages (i.e.,
-  // the left percentage value plus the right percentage value).
-  // Solving for "sww" gives:
-  //  sww = bw / (1 - mp)
-  // Note that this is only well defined for "mp" less than 100% and 
-  // greater than -100% (XXXldb but we only accept 0 to 100%).
-
-  float marginPct = leftPct + rightPct;
-  if (marginPct >= 1.0) {
-    // Ignore the right percentage and just use the left percentage
-    // XXX Pay attention to direction property...
-    marginPct = leftPct;
-    rightPct = 0.0;
-  }
-  
-  if ((marginPct > 0.0) && (marginPct < 1.0)) {
-    double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
-    
-    if (eStyleUnit_Percent == margin.GetLeftUnit()) {
-      aMargin.left = NSToCoordFloor((float)(shrinkWrapWidth * leftPct));
-      aXToUpdate += aMargin.left;
-    }
-    if (eStyleUnit_Percent == margin.GetRightUnit()) {
-      aMargin.right = NSToCoordFloor((float)(shrinkWrapWidth * rightPct));
-    }
-  }
-}
-
 static void
 nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
             void *aPropertyValue, void *aDtorData)
@@ -439,48 +257,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   nsresult rv = NS_OK;
   mFrame = aFrameRS.frame;
   mSpace = aSpace;
-
-  // Get reflow reason set correctly. It's possible that a child was
-  // created and then it was decided that it could not be reflowed
-  // (for example, a block frame that isn't at the start of a
-  // line). In this case the reason will be wrong so we need to check
-  // the frame state.
-  aFrameRS.reason = eReflowReason_Resize;
-  if (NS_FRAME_FIRST_REFLOW & mFrame->GetStateBits()) {
-    aFrameRS.reason = eReflowReason_Initial;
-  }
-  else if (mOuterReflowState.reason == eReflowReason_Incremental) {
-    // If the frame we're about to reflow is on the reflow path, then
-    // propagate the reflow as `incremental' so it unwinds correctly
-    // to the target frames below us.
-    PRBool frameIsOnReflowPath = mOuterReflowState.path->HasChild(mFrame);
-    if (frameIsOnReflowPath)
-      aFrameRS.reason = eReflowReason_Incremental;
-
-    // But...if the incremental reflow command is a StyleChanged
-    // reflow and its target is the current block, change the reason
-    // to `style change', so that it propagates through the entire
-    // subtree.
-    nsHTMLReflowCommand* rc = mOuterReflowState.path->mReflowCommand;
-    if (rc) {
-      nsReflowType type;
-      rc->GetType(type);
-      if (type == eReflowType_StyleChanged)
-        aFrameRS.reason = eReflowReason_StyleChange;
-      else if (type == eReflowType_ReflowDirty &&
-               (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
-               !frameIsOnReflowPath) {
-        aFrameRS.reason = eReflowReason_Dirty;
-      }
-    }
-  }
-  else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
-    aFrameRS.reason = eReflowReason_StyleChange;
-  }
-  else if (mOuterReflowState.reason == eReflowReason_Dirty) {
-    if (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
-      aFrameRS.reason = eReflowReason_Dirty;
-  }
 
   const nsStyleDisplay* display = mFrame->GetStyleDisplay();
 
@@ -560,23 +336,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mX = x;
   mY = y;
 
-  // If it's an auto-width table, then it doesn't behave like other blocks
-  // XXX why not for a floating table too?
-  if (aFrameRS.mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE &&
-      !aFrameRS.mStyleDisplay->IsFloating()) {
-    // If this isn't the table's initial reflow, then use its existing
-    // width to determine where it will be placed horizontally
-    if (aFrameRS.reason != eReflowReason_Initial) {
-      nsBlockHorizontalAlign  align;
-
-      align.mXOffset = x;
-      AlignBlockHorizontally(mFrame->GetSize().width, align);
-      // Don't reset "mX". because PlaceBlock() will recompute the
-      // x-offset and expects "mX" to be at the left margin edge
-      x = align.mXOffset;
-    }
-  }
-
    // Compute the translation to be used for adjusting the spacemanagager
    // coordinate system for the frame.  The spacemanager coordinates are
    // <b>inside</b> the callers border+padding, but the x/y coordinates
@@ -608,44 +367,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mMetrics.height = nscoord(0xdeadbeef);
   mMetrics.ascent = nscoord(0xdeadbeef);
   mMetrics.descent = nscoord(0xdeadbeef);
-  if (mMetrics.mComputeMEW) {
-    mMetrics.mMaxElementWidth = nscoord(0xdeadbeef);
-  }
 #endif
 
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
-
-  // See if this is the child's initial reflow and we are supposed to
-  // compute our maximum width
-  if (mComputeMaximumWidth && (eReflowReason_Initial == aFrameRS.reason)) {
-    nsSpaceManager::SavedState spaceManagerState;
-    mOuterReflowState.mSpaceManager->PushState(&spaceManagerState);
-
-    nscoord oldAvailableWidth = aFrameRS.availableWidth;
-    nscoord oldComputedWidth = aFrameRS.mComputedWidth;
-
-    aFrameRS.availableWidth = NS_UNCONSTRAINEDSIZE;
-    // XXX Is this really correct? This means we don't compute the
-    // correct maximum width if the element's width is determined by
-    // its 'width' style
-    aFrameRS.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-    rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
-
-    // Update the reflow metrics with the maximum width
-    mMetrics.mMaximumWidth = mMetrics.width;
-#ifdef NOISY_REFLOW
-    printf("*** nsBlockReflowContext::ReflowBlock block %p returning max width %d\n", 
-           mFrame, mMetrics.mMaximumWidth);
-#endif
-    // The second reflow is just as a resize reflow with the constrained
-    // width
-    aFrameRS.availableWidth = oldAvailableWidth;
-    aFrameRS.mComputedWidth = oldComputedWidth;
-    aFrameRS.reason         = eReflowReason_Resize;
-
-    mOuterReflowState.mSpaceManager->PopState(&spaceManagerState);
-  }
-
   rv = mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
@@ -656,24 +380,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       nsFrame::ListTag(stdout, mFrame);
       printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
     }
-    if (mMetrics.mComputeMEW &&
-        (nscoord(0xdeadbeef) == mMetrics.mMaxElementWidth)) {
-      printf("nsBlockReflowContext: ");
-      nsFrame::ListTag(stdout, mFrame);
-      printf(" didn't set max-element-size!\n");
-    }
-#ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
-    // Note: there are common reflow situations where this *correctly*
-    // occurs; so only enable this debug noise when you really need to
-    // analyze in detail.
-    if (mMetrics.mComputeMEW &&
-        (mMetrics.mMaxElementWidth > mMetrics.width)) {
-      printf("nsBlockReflowContext: ");
-      nsFrame::ListTag(stdout, mFrame);
-      printf(": WARNING: maxElementWidth=%d > metrics=%d\n",
-             mMetrics.mMaxElementWidth, mMetrics.width);
-    }
-#endif
     if ((mMetrics.width == nscoord(0xdeadbeef)) ||
         (mMetrics.height == nscoord(0xdeadbeef)) ||
         (mMetrics.ascent == nscoord(0xdeadbeef)) ||
@@ -686,20 +392,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     }
   }
 #endif
-#ifdef DEBUG
-  if (nsBlockFrame::gNoisyMaxElementWidth) {
-    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
-      if (mMetrics.mComputeMEW) {
-        printf("  ");
-        nsFrame::ListTag(stdout, mFrame);
-        printf(": maxElementSize=%d wh=%d,%d\n",
-               mMetrics.mMaxElementWidth,
-               mMetrics.width, mMetrics.height);
-      }
-    }
-  }
-#endif
 
   if (!(NS_FRAME_OUTSIDE_CHILDREN & mFrame->GetStateBits())) {
     // Provide overflow area for child that doesn't have any
@@ -707,13 +399,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     mMetrics.mOverflowArea.y = 0;
     mMetrics.mOverflowArea.width = mMetrics.width;
     mMetrics.mOverflowArea.height = mMetrics.height;
-  }
-
-  // Now that frame has been reflowed at least one time make sure that
-  // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
-  // initial reflow reason again.
-  if (eReflowReason_Initial == aFrameRS.reason) {
-    mFrame->RemoveStateBits(NS_FRAME_FIRST_REFLOW);
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||
@@ -735,13 +420,6 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
           ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
-  }
-
-  // If the block is shrink wrapping its width, then see if we have percentage
-  // based margins. If so, we can calculate them now that we know the shrink
-  // wrap width
-  if (NS_SHRINKWRAPWIDTH == aFrameRS.mComputedWidth) {
-    ComputeShrinkwrapMargins(aFrameRS.mStyleMargin, mMetrics.width, mMargin, mX);
   }
 
   return rv;
@@ -831,64 +509,6 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     }
   }
 
-  if (!empty)
-  {
-    // Adjust the max-element-size in the metrics to take into
-    // account the margins around the block element.
-    // Do not allow auto margins to impact the max-element size
-    // since they are springy and don't really count!
-    if (mMetrics.mComputeMEW) {
-      nsMargin maxElemMargin;
-      const nsStyleSides &styleMargin = mStyleMargin->mMargin;
-      nsStyleCoord coord;
-      if (styleMargin.GetLeftUnit() == eStyleUnit_Coord)
-        maxElemMargin.left = styleMargin.GetLeft(coord).GetCoordValue();
-      else
-        maxElemMargin.left = 0;
-      if (styleMargin.GetRightUnit() == eStyleUnit_Coord)
-        maxElemMargin.right = styleMargin.GetRight(coord).GetCoordValue();
-      else
-        maxElemMargin.right = 0;
-      
-      nscoord dummyXOffset;
-      // Base the margins on the max-element size
-      ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaxElementWidth,
-                               maxElemMargin, dummyXOffset);
-      
-      mMetrics.mMaxElementWidth += maxElemMargin.left + maxElemMargin.right;
-    }
-    
-    // do the same for the maximum width
-    if (mComputeMaximumWidth) {
-      nsMargin maxWidthMargin;
-      const nsStyleSides &styleMargin = mStyleMargin->mMargin;
-      nsStyleCoord coord;
-      if (styleMargin.GetLeftUnit() == eStyleUnit_Coord)
-        maxWidthMargin.left = styleMargin.GetLeft(coord).GetCoordValue();
-      else
-        maxWidthMargin.left = 0;
-      if (styleMargin.GetRightUnit() == eStyleUnit_Coord)
-        maxWidthMargin.right = styleMargin.GetRight(coord).GetCoordValue();
-      else
-        maxWidthMargin.right = 0;
-      
-      nscoord dummyXOffset;
-      // Base the margins on the maximum width
-      ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaximumWidth,
-                               maxWidthMargin, dummyXOffset);
-      
-      mMetrics.mMaximumWidth += maxWidthMargin.left + maxWidthMargin.right;
-    }
-  }
-
-  // Calculate the actual x-offset and left and right margin
-  nsBlockHorizontalAlign  align;
-  align.mXOffset = x;
-  AlignBlockHorizontally(mMetrics.width, align);
-  x = align.mXOffset;
-  mMargin.left = align.mLeftMargin;
-  mMargin.right = align.mRightMargin;
-  
   aInFlowBounds = nsRect(x, y - backupContainingBlockAdvance,
                          mMetrics.width, mMetrics.height);
   

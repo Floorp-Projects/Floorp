@@ -84,6 +84,7 @@ public:
                          nsEventStatus* aEventStatus);
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -193,15 +194,21 @@ nsImageControlFrame::GetType() const
   return nsLayoutAtoms::imageControlFrame; 
 }
 
+PRBool
+nsImageControlFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced));
+}
+
 NS_METHOD
 nsImageControlFrame::Reflow(nsPresContext*         aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  if (aReflowState.reason == eReflowReason_Initial) {
+  if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   }
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);

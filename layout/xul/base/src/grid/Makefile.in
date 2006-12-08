@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  view \
 		  necko \
 		  dom \
+		  webshell \
 		  $(NULL)
 
 CPPSRCS	= \

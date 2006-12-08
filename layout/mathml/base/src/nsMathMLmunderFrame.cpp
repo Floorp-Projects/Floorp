@@ -264,8 +264,8 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   // Get the children's desired sizes
 
   nsBoundingMetrics bmBase, bmUnder;
-  nsHTMLReflowMetrics baseSize (nsnull);
-  nsHTMLReflowMetrics underSize (nsnull);
+  nsHTMLReflowMetrics baseSize;
+  nsHTMLReflowMetrics underSize;
   nsIFrame* underFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)

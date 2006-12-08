@@ -701,6 +701,12 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
                             nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
+  // In case the reflow doesn't invalidate anything since it just leaves
+  // a gap where the old frame was, we invalidate it here.  (This is
+  // reasonably likely to happen when removing a last child in a way
+  // that doesn't change the size of the parent.)
+  aOldFrame->Invalidate(nsRect(nsPoint(0, 0), aOldFrame->GetSize()));
+
   return aParentFrame->RemoveFrame(aListName, aOldFrame);
 }
 

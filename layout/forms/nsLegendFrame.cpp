@@ -99,11 +99,11 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsLegendFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsLegendFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  if (eReflowReason_Initial == aReflowState.reason) {
+  if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-  } 
+  }
   return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 

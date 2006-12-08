@@ -47,16 +47,11 @@
 class nsTableFrame;
 class nsTableRowFrame;
 class nsTableCellFrame;
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-class nsReflowTimer;
-#endif
 
 struct nsRowGroupReflowState {
   const nsHTMLReflowState& reflowState;  // Our reflow state
 
   nsTableFrame* tableFrame;
-
-  nsReflowReason reason;
 
   // The available size (computed from the parent)
   nsSize availSize;
@@ -70,7 +65,6 @@ struct nsRowGroupReflowState {
   {
     availSize.width  = reflowState.availableWidth;
     availSize.height = reflowState.availableHeight;
-    reason = reflowState.reason;
     y = 0;  
   }
 
@@ -86,8 +80,6 @@ struct nsRowGroupReflowState {
 // thead or tfoot should be repeated on every printed page
 #define NS_ROWGROUP_REPEATABLE           0x80000000
 #define NS_ROWGROUP_HAS_STYLE_HEIGHT     0x40000000
-// we need a 3rd pass reflow to deal with pct height nested tables 
-#define NS_ROWGROUP_NEED_SPECIAL_REFLOW  0x20000000
 // the next is also used on rows (see nsTableRowGroupFrame::InitRepeatedFrame)
 #define NS_REPEATED_ROW_OR_ROWGROUP      0x10000000
 #define NS_ROWGROUP_HAS_ROW_CURSOR       0x08000000
@@ -195,7 +187,6 @@ public:
   /**
    * Get the total height of all the row rects
    */
-  nscoord GetHeightOfRows();
   nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
   
   nsMargin* GetBCBorderWidth(float     aPixelsToTwips,
@@ -325,48 +316,14 @@ protected:
 
   void CalculateRowHeights(nsPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
-                           nsTableRowFrame*         aStartRowFrameIn = nsnull);
+                           const nsHTMLReflowState& aReflowState);
 
   void DidResizeRows(const nsHTMLReflowState& aReflowState,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     nsTableRowFrame*         aStartRowFrameIn = nsnull);
+                     nsHTMLReflowMetrics&     aDesiredSize);
 
-  /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
-    * commands to child elements.  This is done by processing the reflow command,
-    * rebalancing column widths (if necessary), then comparing the resulting column widths
-    * to the prior column widths and reflowing only those cells that require a reflow.
-    *
-    * @see Reflow
-    */
-  NS_IMETHOD IncrementalReflow(nsPresContext*        aPresContext,
-                               nsHTMLReflowMetrics&   aDesiredSize,
-                               nsRowGroupReflowState& aReflowState,
-                               nsReflowStatus&        aStatus);
-
-  NS_IMETHOD IR_TargetIsChild(nsPresContext*        aPresContext,
-                              nsHTMLReflowMetrics&   aDesiredSize,
-                              nsRowGroupReflowState& aReflowState,
-                              nsReflowStatus&        aStatus,
-                              nsIFrame*              aNextFrame);
-
-  NS_IMETHOD IR_TargetIsMe(nsPresContext*        aPresContext,
-                           nsHTMLReflowMetrics&   aDesiredSize,
-                           nsRowGroupReflowState& aReflowState,
-                           nsReflowStatus&        aStatus);
-
-  NS_IMETHOD IR_StyleChanged(nsPresContext*        aPresContext,
-                             nsHTMLReflowMetrics&   aDesiredSize,
-                             nsRowGroupReflowState& aReflowState,
-                             nsReflowStatus&        aStatus);
-
-  nsresult AdjustSiblingsAfterReflow(nsRowGroupReflowState& aReflowState,
-                                     nsIFrame*              aKidFrame,
-                                     nscoord                aDeltaY);
+  void SlideChild(nsRowGroupReflowState& aReflowState,
+                  nsIFrame*              aKidFrame);
   
-  nsresult RecoverState(nsRowGroupReflowState& aReflowState,
-                        nsIFrame*              aKidFrame);
-
   /**
    * Reflow the frames we've already created
    *
@@ -379,9 +336,6 @@ protected:
                            nsHTMLReflowMetrics&   aDesiredSize,
                            nsRowGroupReflowState& aReflowState,
                            nsReflowStatus&        aStatus,
-                           nsTableRowFrame*       aStartFrame,
-                           PRBool                 aDirtyOnly,
-                           nsTableRowFrame**      aFirstRowReflowed   = nsnull,
                            PRBool*                aPageBreakBeforeEnd = nsnull);
 
   nsresult SplitRowGroup(nsPresContext*          aPresContext,
@@ -428,13 +382,6 @@ public:
   void   SetRepeatable(PRBool aRepeatable);
   PRBool HasStyleHeight() const;
   void   SetHasStyleHeight(PRBool aValue);
-  PRBool NeedSpecialReflow() const;
-  void   SetNeedSpecialReflow(PRBool aValue);
-
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-public:
-  nsReflowTimer* mTimer;
-#endif
 };
 
 
@@ -449,20 +396,6 @@ inline void nsTableRowGroupFrame::SetRepeatable(PRBool aRepeatable)
     mState |= NS_ROWGROUP_REPEATABLE;
   } else {
     mState &= ~NS_ROWGROUP_REPEATABLE;
-  }
-}
-
-inline PRBool nsTableRowGroupFrame::NeedSpecialReflow() const
-{
-  return (mState & NS_ROWGROUP_NEED_SPECIAL_REFLOW) == NS_ROWGROUP_NEED_SPECIAL_REFLOW;
-}
-
-inline void nsTableRowGroupFrame::SetNeedSpecialReflow(PRBool aValue)
-{
-  if (aValue) {
-    mState |= NS_ROWGROUP_NEED_SPECIAL_REFLOW;
-  } else {
-    mState &= ~NS_ROWGROUP_NEED_SPECIAL_REFLOW;
   }
 }
 

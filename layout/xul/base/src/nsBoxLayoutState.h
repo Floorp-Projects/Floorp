@@ -49,9 +49,8 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsHTMLReflowState.h"
 
-class nsReflowState;
+class nsIRenderingContext;
 class nsCalculatedBoxInfo;
 struct nsHTMLReflowMetrics;
 class nsString;
@@ -60,24 +59,11 @@ class nsHTMLReflowCommand;
 class nsBoxLayoutState
 {
 public:
-  enum eBoxLayoutReason {
-    Dirty,
-    Resize,
-    Initial
-  };
-
-  nsBoxLayoutState(nsPresContext* aPresContext,
-                   const nsHTMLReflowState& aReflowState,
-                   nsHTMLReflowMetrics& aDesiredSize) NS_HIDDEN;
-  nsBoxLayoutState(nsPresContext* aPresContext) NS_HIDDEN;
-  nsBoxLayoutState(nsIPresShell* aShell) NS_HIDDEN;
+  nsBoxLayoutState(nsPresContext* aPresContext, nsIRenderingContext* aRenderingContext = nsnull) NS_HIDDEN;
   nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
 
-  NS_HIDDEN_(void) HandleReflow(nsIBox* aRootBox);
-
-  nsPresContext* PresContext() { return mPresContext; }
-  nsIPresShell*   PresShell() { return mPresContext->PresShell(); }
-  nscoord* GetMaxElementWidth() { return mReflowState ? mMaxElementWidth : nsnull; }
+  nsPresContext* PresContext() const { return mPresContext; }
+  nsIPresShell* PresShell() const { return mPresContext->PresShell(); }
 
   PRUint32 LayoutFlags() const { return mLayoutFlags; }
   void SetLayoutFlags(PRUint32 aFlags) { mLayoutFlags = aFlags; }
@@ -86,14 +72,11 @@ public:
   void SetPaintingDisabled(PRBool aDisable) { mPaintingDisabled = aDisable; }
   PRBool PaintingDisabled() const { return mPaintingDisabled; }
 
-  eBoxLayoutReason LayoutReason() { return mType; }
-  void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
-  const nsHTMLReflowState* GetReflowState() { return mReflowState; }
-
-  static NS_HIDDEN_(void*) Allocate(size_t sz, nsIPresShell* aPresShell);
-  static NS_HIDDEN_(void) Free(void* aPtr, size_t sz);
-  static NS_HIDDEN_(void) RecycleFreedMemory(nsIPresShell* aPresShell,
-                                             void* mem);
+  // The rendering context may be null for specialized uses of
+  // nsBoxLayoutState and should be null-checked before it is used.
+  // However, passing a null rendering context to the constructor when
+  // doing box layout or intrinsic size calculation will cause bugs.
+  nsIRenderingContext* GetRenderingContext() const { return mRenderingContext; }
 
   nsresult PushStackMemory() { return PresShell()->PushStackMemory(); }
   nsresult PopStackMemory()  { return PresShell()->PopStackMemory(); }
@@ -101,14 +84,8 @@ public:
   { return PresShell()->AllocateStackMemory(aSize, aResult); }
 
 private:
-  //void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
-  NS_HIDDEN_(void) Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox);
-  NS_HIDDEN_(nsIBox*) GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
-
   nsCOMPtr<nsPresContext> mPresContext;
-  const nsHTMLReflowState* mReflowState;
-  nscoord* mMaxElementWidth;
-  eBoxLayoutReason mType;
+  nsIRenderingContext *mRenderingContext;
   PRUint32 mLayoutFlags;
   PRBool mPaintingDisabled;
 };

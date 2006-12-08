@@ -941,9 +941,6 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.height = 0;
     aDesiredSize.ascent = 0;
     aDesiredSize.descent = 0;
-    if (aDesiredSize.mComputeMEW) {
-      aDesiredSize.mMaxElementWidth = 0;
-    }
     aDesiredSize.mBoundingMetrics.Clear();
     aStatus = NS_FRAME_COMPLETE;
 
@@ -955,14 +952,13 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
                                     aReflowState, aStatus);
 }
 
-NS_IMETHODIMP
-nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
-                                  nsIFrame*     aChild)
+/* virtual */ void
+nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
 {
-  // if we get this, it means it was called by the nsTextFrame beneath us, and 
-  // this means something changed in the text content. So blow away everything
-  // an re-build the automatic data from the parent of our outermost embellished
-  // container (we ensure that we are the core, not just a sibling of the core)
+  // if we get this, it may mean that something changed in the text
+  // content. So blow away everything an re-build the automatic data
+  // from the parent of our outermost embellished container (we ensure
+  // that we are the core, not just a sibling of the core)
 
   ProcessTextData(PR_FALSE);
 
@@ -974,7 +970,11 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   } while (embellishData.coreFrame == this);
 
   // we have automatic data to update in the children of the target frame
-  return ReLayoutChildren(target);
+  // XXXldb This should really be marking dirty rather than rebuilding
+  // so that we don't rebuild multiple times for the same change.
+  RebuildAutomaticDataForChildren(target);
+
+  nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
 NS_IMETHODIMP

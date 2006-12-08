@@ -49,13 +49,32 @@ nsLeafFrame::~nsLeafFrame()
 {
 }
 
+/* virtual */ nscoord
+nsLeafFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  result = GetIntrinsicWidth();
+  return result;
+}
+
+/* virtual */ nscoord
+nsLeafFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+  result = GetIntrinsicWidth();
+  return result;
+}
+
 NS_IMETHODIMP
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsLeafFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsLeafFrame");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));
@@ -65,33 +84,70 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
+  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE,
+               "Shouldn't have unconstrained stuff here");
 
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  nsMargin borderPadding;
-  AddBordersAndPadding(aPresContext, aReflowState, aMetrics, borderPadding);
-  if (aMetrics.mComputeMEW) {
-    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
+  aMetrics.width = aReflowState.mComputedWidth;
+  if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) {
+    aMetrics.height = aReflowState.mComputedHeight;
+  } else {
+    aMetrics.height = GetIntrinsicHeight();
+    // XXXbz using NS_CSS_MINMAX like this presupposes content-box sizing.
+    aMetrics.height = NS_CSS_MINMAX(aMetrics.height,
+                                    aReflowState.mComputedMinHeight,
+                                    aReflowState.mComputedMaxHeight);
   }
+  
+  AddBordersAndPadding(aReflowState, aMetrics);
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsLeafFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+
+  aMetrics.mOverflowArea =
+    nsRect(0, 0, aMetrics.width, aMetrics.height);
+  FinishAndStoreOverflow(&aMetrics);
   return NS_OK;
+}
+
+PRBool
+nsLeafFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  // We don't actually contain a block, but we do always want a
+  // computed width, so tell a little white lie here.
+  return !(aFlags & ~nsIFrame::eReplacedContainsBlock);
+}
+
+nscoord
+nsLeafFrame::GetIntrinsicHeight()
+{
+  NS_NOTREACHED("Someone didn't override Reflow");
+  return 0;
 }
 
 // XXX how should border&padding effect baseline alignment?
 // => descent = borderPadding.bottom for example
 void
-nsLeafFrame::AddBordersAndPadding(nsPresContext* aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics& aMetrics,
-                                  nsMargin& aBorderPadding)
+nsLeafFrame::AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
+                                  nsHTMLReflowMetrics& aMetrics)
 {
-  aBorderPadding = aReflowState.mComputedBorderPadding;
-  aMetrics.width += aBorderPadding.left + aBorderPadding.right;
-  aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
+  aMetrics.width += aReflowState.mComputedBorderPadding.LeftRight();
+  aMetrics.height += aReflowState.mComputedBorderPadding.TopBottom();
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
+}
+
+void
+nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
+                             nsHTMLReflowMetrics& aDesiredSize)
+{
+  aDesiredSize.width  = aReflowState.availableWidth; // FRAME
+  aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+  aDesiredSize.mOverflowArea =
+    nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  FinishAndStoreOverflow(&aDesiredSize);  
 }

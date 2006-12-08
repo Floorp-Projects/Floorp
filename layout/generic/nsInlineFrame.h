@@ -98,7 +98,6 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
 #ifdef ACCESSIBILITY
   NS_IMETHODIMP GetAccessible(nsIAccessible** aAccessible);
@@ -116,12 +115,20 @@ public:
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   
   // nsIHTMLReflow overrides
+  virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                 InlineMinWidthData *aData);
+  virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                  InlinePrefWidthData *aData);
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+  virtual PRBool CanContinueTextRun() const;
 
   // Take all of the frames away from this frame. The caller is
   // presumed to keep them alive.

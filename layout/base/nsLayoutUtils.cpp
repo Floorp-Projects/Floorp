@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1084,4 +1085,454 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
   nsIFrame* rootScrolledFrame = rootScrollableFrame->GetScrolledFrame();
   return !(rootScrolledFrame == aFrame ||
            IsProperAncestorFrame(rootScrolledFrame, aFrame));
+}
+
+static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
+                           nscoord aCurrent, float aPercent)
+{
+  nscoord result = aCurrent;
+  if (aPercent > 0.0f && aType == nsLayoutUtils::PREF_WIDTH) {
+    // XXX Should we also consider percentages for min widths, up to a
+    // limit?
+    if (aPercent >= 1.0f)
+      result = nscoord_MAX;
+    else
+      result = NSToCoordRound(float(result) / (1.0f - aPercent));
+  }
+  return result;
+}
+ 
+#undef  DEBUG_INTRINSIC_WIDTH
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+static PRInt32 gNoiseIndent = 0;
+#endif
+
+/* static */ nscoord
+nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
+                                     nsIFrame *aFrame,
+                                     IntrinsicWidthType aType)
+{
+  NS_PRECONDITION(aFrame, "null frame");
+  NS_PRECONDITION(aType == MIN_WIDTH || aType == PREF_WIDTH, "bad type");
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stdout, gNoiseIndent);
+  NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+  printf(" %s intrinsic width for container:\n",
+         aType == MIN_WIDTH ? "min" : "pref");
+#endif
+
+  nsIFrame::IntrinsicWidthOffsetData offsets = aFrame->IntrinsicWidthOffsets();
+
+  const nsStylePosition *stylePos = aFrame->GetStylePosition();
+  const PRUint8 boxSizing = stylePos->mBoxSizing;
+  const nsStyleCoord &styleWidth = stylePos->mWidth;
+  const nsStyleCoord &styleMinWidth = stylePos->mMinWidth;
+  const nsStyleCoord &styleMaxWidth = stylePos->mMaxWidth;
+
+  // We build up two values starting with the content box, and then
+  // adding padding, border and margin.  The result is normally
+  // |result|.  Then, when we handle 'width', 'min-width', and
+  // 'max-width', we use the results we've been building in |min| as a
+  // minimum, overriding 'min-width'.  This ensures two things:
+  //   * that we don't let a value of 'box-sizing' specifying a width
+  //     smaller than the padding/border inside the box-sizing box give
+  //     a content width less than zero
+  //   * that we prevent tables from becoming smaller than their
+  //     intrinsic minimum width
+  nscoord result = 0, min = 0;
+
+  // If we have a specified width (or a specified 'min-width' greater
+  // than the specified 'max-width', which works out to the same thing),
+  // don't even bother getting the frame's intrinsic width.
+  if (styleWidth.GetUnit() != eStyleUnit_Coord &&
+      (styleMinWidth.GetUnit() != eStyleUnit_Coord ||
+       styleMaxWidth.GetUnit() != eStyleUnit_Coord ||
+       styleMaxWidth.GetCoordValue() > styleMinWidth.GetCoordValue())) {
+#ifdef DEBUG_INTRINSIC_WIDTH
+    ++gNoiseIndent;
+#endif
+    if (aType == MIN_WIDTH)
+      result = aFrame->GetMinWidth(aRenderingContext);
+    else
+      result = aFrame->GetPrefWidth(aRenderingContext);
+#ifdef DEBUG_INTRINSIC_WIDTH
+    --gNoiseIndent;
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+    printf(" %s intrinsic width from frame is %d.\n",
+           aType == MIN_WIDTH ? "min" : "pref", result);
+#endif
+  }
+      
+  if (aFrame->GetType() == nsLayoutAtoms::tableFrame) {
+    // Tables can't shrink smaller than their intrinsic minimum width,
+    // no matter what.
+    min = aFrame->GetMinWidth(aRenderingContext);
+  }
+
+  // We also need to track what has been added on outside of the box
+  // (controlled by 'box-sizing') where 'width', 'min-width' and
+  // 'max-width' are applied.  We have to account for these properties
+  // after getting all the offsets (margin, border, padding) because
+  // percentages do not operate linearly.
+  // Doing this is ok because although percentages aren't handled
+  // linearly, they are handled monotonically.
+  nscoord coordOutsideWidth = offsets.hPadding;
+  float pctOutsideWidth = offsets.hPctPadding;
+
+  float pctTotal = 0.0f;
+
+  if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+    min += coordOutsideWidth;
+    result += coordOutsideWidth;
+    pctTotal += pctOutsideWidth;
+
+    coordOutsideWidth = 0;
+    pctOutsideWidth = 0.0f;
+  }
+
+  coordOutsideWidth += offsets.hBorder;
+
+  if (boxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+    min += coordOutsideWidth;
+    result += coordOutsideWidth;
+    pctTotal += pctOutsideWidth;
+
+    coordOutsideWidth = 0;
+    pctOutsideWidth = 0.0f;
+  }
+
+  coordOutsideWidth += offsets.hMargin;
+  pctOutsideWidth += offsets.hPctMargin;
+
+  min += coordOutsideWidth;
+  result += coordOutsideWidth;
+  pctTotal += pctOutsideWidth;
+
+  result = AddPercents(aType, result, pctTotal);
+
+  switch (styleWidth.GetUnit()) {
+    case eStyleUnit_Coord:
+      result = AddPercents(aType,
+                           styleWidth.GetCoordValue() + coordOutsideWidth,
+                           pctOutsideWidth);
+      break;
+    case eStyleUnit_Percent:
+      if (aType == MIN_WIDTH && aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
+        // A percentage width on replaced elements means they can shrink to 0.
+        result = 0; // let |min| handle padding/border/margin
+      }
+      break;
+  }
+
+  if (styleMaxWidth.GetUnit() == eStyleUnit_Coord) {
+    nscoord maxw = AddPercents(aType,
+      styleMaxWidth.GetCoordValue() + coordOutsideWidth, pctOutsideWidth);
+    if (result > maxw)
+      result = maxw;
+  }
+
+  if (styleMinWidth.GetUnit() == eStyleUnit_Coord) {
+    nscoord minw = AddPercents(aType,
+      styleMinWidth.GetCoordValue() + coordOutsideWidth, pctOutsideWidth);
+    if (result < minw)
+      result = minw;
+  }
+
+  min = AddPercents(aType, min, pctTotal);
+  if (result < min)
+    result = min;
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stdout, gNoiseIndent);
+  NS_STATIC_CAST(nsFrame*, aFrame)->ListTag(stdout);
+  printf(" %s intrinsic width for container is %d twips.\n",
+         aType == MIN_WIDTH ? "min" : "pref", result);
+#endif
+
+  return result;
+}
+
+/* static */ nscoord
+nsLayoutUtils::ComputeHorizontalValue(nsIRenderingContext* aRenderingContext,
+                                      nsIFrame* aFrame,
+                                      nscoord aContainingBlockWidth,
+                                      const nsStyleCoord& aCoord)
+{
+  NS_PRECONDITION(aFrame, "non-null frame expected");
+  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
+  NS_PRECONDITION(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
+                  "unconstrained widths no longer supported");
+
+  nscoord result = 0;
+  nsStyleUnit unit = aCoord.GetUnit();
+  if (eStyleUnit_Percent == unit) {
+    result = NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue());
+  } else if (eStyleUnit_Coord == unit) {
+    result = aCoord.GetCoordValue();
+  }
+  else if (eStyleUnit_Chars == unit) {
+    SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
+    nscoord fontWidth;
+    aRenderingContext->GetWidth('M', fontWidth);
+    result = aCoord.GetIntValue() * fontWidth;
+  }
+  return result;
+}
+
+/* static */ nscoord
+nsLayoutUtils::ComputeVerticalValue(nsIRenderingContext* aRenderingContext,
+                                    nsIFrame* aFrame,
+                                    nscoord aContainingBlockHeight,
+                                    const nsStyleCoord& aCoord)
+{
+  NS_PRECONDITION(aFrame, "non-null frame expected");
+  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
+  nscoord result = 0;
+  nsStyleUnit unit = aCoord.GetUnit();
+  if (eStyleUnit_Percent == unit) {
+    // XXXldb Some callers explicitly check aContainingBlockHeight
+    // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent
+    // before calling this function, so this assertion probably needs to
+    // be inside the percentage case.  However, it would be much more
+    // likely to catch problems if it were at the start of the function.
+    // XXXldb Many callers pass a non-'auto' containing block height when
+    // according to CSS2.1 they should be passing 'auto'.
+    NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight,
+                    "unexpected 'containing block height'");
+
+    if (NS_AUTOHEIGHT != aContainingBlockHeight) {
+      result =
+        NSToCoordFloor(aContainingBlockHeight * aCoord.GetPercentValue());
+    }
+  } else if (eStyleUnit_Coord == unit) {
+    result = aCoord.GetCoordValue();
+  }
+  return result;
+}
+
+inline PRBool
+IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
+{
+  nsStyleUnit unit = aCoord.GetUnit();
+  return unit == eStyleUnit_Auto ||  // only for 'height'
+         unit == eStyleUnit_Null ||  // only for 'max-height'
+         (unit == eStyleUnit_Percent && 
+          aCBHeight == NS_AUTOHEIGHT);
+}
+
+
+/* static */ nsSize
+nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+                   nsIRenderingContext* aRenderingContext,
+                   nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
+                   nsSize aBorder, nsSize aPadding)
+{
+  const nsStylePosition *stylePos = aFrame->GetStylePosition();
+  // Handle intrinsic sizes and their interaction with
+  // {min-,max-,}{width,height} according to the rules in
+  // http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+
+  // Note: throughout the following section of the function, I avoid
+  // a * (b / c) because of its reduced accuracy relative to a * b / c
+  // or (a * b) / c (which are equivalent).
+
+  PRBool isAutoWidth = stylePos->mWidth.GetUnit() == eStyleUnit_Auto;
+  PRBool isAutoHeight = IsAutoHeight(stylePos->mHeight, aCBSize.height);
+
+  nsSize boxSizingAdjust(0,0);
+  switch (stylePos->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      boxSizingAdjust += aBorder;
+      // fall through
+    case NS_STYLE_BOX_SIZING_PADDING:
+      boxSizingAdjust += aPadding;
+  }
+
+  nscoord width, minWidth, maxWidth, height, minHeight, maxHeight;
+
+  if (!isAutoWidth) {
+    width = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+              aFrame, aCBSize.width, stylePos->mWidth) -
+            boxSizingAdjust.width;
+    if (width < 0)
+      width = 0;
+  }
+
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
+    maxWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+                 aFrame, aCBSize.width, stylePos->mMaxWidth) -
+               boxSizingAdjust.width;
+    if (maxWidth < 0)
+      maxWidth = 0;
+  } else {
+    maxWidth = nscoord_MAX;
+  }
+
+  minWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+               aFrame, aCBSize.width, stylePos->mMinWidth) -
+             boxSizingAdjust.width;
+  if (minWidth < 0)
+    minWidth = 0;
+
+  if (!isAutoHeight) {
+    height = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+               aFrame, aCBSize.height, stylePos->mHeight) -
+             boxSizingAdjust.height;
+    if (height < 0)
+      height = 0;
+  }
+
+  if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+    maxHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+                  aFrame, aCBSize.height, stylePos->mMaxHeight) -
+                boxSizingAdjust.height;
+    if (maxHeight < 0)
+      maxHeight = 0;
+  } else {
+    maxHeight = nscoord_MAX;
+  }
+
+  if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+    minHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+                  aFrame, aCBSize.height, stylePos->mMinHeight) -
+                boxSizingAdjust.height;
+    if (minHeight < 0)
+      minHeight = 0;
+  } else {
+    minHeight = 0;
+  }
+
+  if (isAutoWidth) {
+    if (isAutoHeight) {
+
+      // 'auto' width, 'auto' height
+      if (minWidth > maxWidth)
+        maxWidth = minWidth;
+      if (minHeight > maxHeight)
+        maxHeight = minHeight;
+
+      nscoord heightAtMaxWidth, heightAtMinWidth,
+              widthAtMaxHeight, widthAtMinHeight;
+      if (aIntrinsicSize.width > 0) {
+        heightAtMaxWidth = maxWidth * aIntrinsicSize.height / aIntrinsicSize.width;
+        if (heightAtMaxWidth < minHeight)
+          heightAtMaxWidth = minHeight;
+        heightAtMinWidth = minWidth * aIntrinsicSize.height / aIntrinsicSize.width;
+        if (heightAtMinWidth > maxHeight)
+          heightAtMinWidth = maxHeight;
+      } else {
+        heightAtMaxWidth = aIntrinsicSize.height;
+        heightAtMinWidth = aIntrinsicSize.height;
+      }
+
+      if (aIntrinsicSize.height > 0) {
+        widthAtMaxHeight = maxHeight * aIntrinsicSize.width / aIntrinsicSize.height;
+        if (widthAtMaxHeight < minWidth)
+          widthAtMaxHeight = minWidth;
+        widthAtMinHeight = minHeight * aIntrinsicSize.width / aIntrinsicSize.height;
+        if (widthAtMinHeight > maxWidth)
+          widthAtMinHeight = maxWidth;
+      } else {
+        widthAtMaxHeight = aIntrinsicSize.width;
+        widthAtMinHeight = aIntrinsicSize.width;
+      }
+
+      if (aIntrinsicSize.width > maxWidth) {
+        if (aIntrinsicSize.height > maxHeight) {
+          if (maxWidth * aIntrinsicSize.height <= maxHeight * aIntrinsicSize.width) {
+            width = maxWidth;
+            height = heightAtMaxWidth;
+          } else {
+            height = maxHeight;
+            width = widthAtMaxHeight;
+          }
+        } else {
+          width = maxWidth;
+          height = heightAtMaxWidth;
+        }
+      } else if (aIntrinsicSize.width < minWidth) {
+        if (aIntrinsicSize.height < minHeight) {
+          if (minWidth * aIntrinsicSize.height <= minHeight * aIntrinsicSize.width) {
+            height = minHeight;
+            width = widthAtMinHeight;
+          } else {
+            width = minWidth;
+            height = heightAtMinWidth;
+          }
+        } else {
+          width = minWidth;
+          height = heightAtMinWidth;
+        }
+      } else {
+        if (aIntrinsicSize.height > maxHeight) {
+          height = maxHeight;
+          width = widthAtMaxHeight;
+        } else if (aIntrinsicSize.height < minHeight) {
+          height = minHeight;
+          width = widthAtMinHeight;
+        } else {
+          width = aIntrinsicSize.width;
+          height = aIntrinsicSize.height;
+        }
+      }
+
+    } else {
+
+      // 'auto' width, non-'auto' height
+      height = NS_CSS_MINMAX(height, minHeight, maxHeight);
+      if (aIntrinsicSize.height != 0) {
+        width = aIntrinsicSize.width * height / aIntrinsicSize.height;
+      } else {
+        width = aIntrinsicSize.width;
+      }
+      width = NS_CSS_MINMAX(width, minWidth, maxWidth);
+
+    }
+  } else {
+    if (isAutoHeight) {
+
+      // non-'auto' width, 'auto' height
+      width = NS_CSS_MINMAX(width, minWidth, maxWidth);
+      if (aIntrinsicSize.width != 0) {
+        height = aIntrinsicSize.height * width / aIntrinsicSize.width;
+      } else {
+        height = aIntrinsicSize.height;
+      }
+      height = NS_CSS_MINMAX(height, minHeight, maxHeight);
+
+    } else {
+
+      // non-'auto' width, non-'auto' height
+      height = NS_CSS_MINMAX(height, minHeight, maxHeight);
+      width = NS_CSS_MINMAX(width, minWidth, maxWidth);
+
+    }
+  }
+
+  return nsSize(width, height);
+}
+
+/* static */ nscoord
+nsLayoutUtils::MinWidthFromInline(nsIFrame *aFrame,
+                                  nsIRenderingContext *aRenderingContext)
+{
+  nsIFrame::InlineMinWidthData data;
+  DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
+  aFrame->AddInlineMinWidth(aRenderingContext, &data);
+  data.Break(aRenderingContext);
+  return data.prevLines;
+}
+
+/* static */ nscoord
+nsLayoutUtils::PrefWidthFromInline(nsIFrame *aFrame,
+                                   nsIRenderingContext *aRenderingContext)
+{
+  nsIFrame::InlinePrefWidthData data;
+  DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
+  aFrame->AddInlinePrefWidth(aRenderingContext, &data);
+  data.Break(aRenderingContext);
+  return data.prevLines;
 }

@@ -177,8 +177,9 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
   if (aAttribute == nsHTMLAtoms::src) {
     UpdateImage();
-    nsBoxLayoutState state(GetPresContext());
-    MarkDirty(state);
+    AddStateBits(NS_FRAME_IS_DIRTY);
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
   else if (aAttribute == nsXULAtoms::validate)
     UpdateLoadFlags();
@@ -193,7 +194,7 @@ nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
   mIntrinsicSize(0,0),
   mLoadFlags(nsIRequest::LOAD_NORMAL)
 {
-  NeedsRecalc();
+  MarkIntrinsicWidthsDirty();
 }
 
 nsImageBoxFrame::~nsImageBoxFrame()
@@ -201,11 +202,11 @@ nsImageBoxFrame::~nsImageBoxFrame()
 }
 
 
-NS_IMETHODIMP
-nsImageBoxFrame::NeedsRecalc()
+/* virtual */ void
+nsImageBoxFrame::MarkIntrinsicWidthsDirty()
 {
   SizeNeedsRecalc(mImageSize);
-  return NS_OK;
+  nsLeafBoxFrame::MarkIntrinsicWidthsDirty();
 }
 
 void
@@ -466,6 +467,7 @@ nsImageBoxFrame::GetImageSize()
 NS_IMETHODIMP
 nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_PREF_SIZE(this, aSize);
   if (DoesNeedRecalc(mImageSize)) {
      GetImageSize();
   }
@@ -491,6 +493,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_MIN_SIZE(this, aSize);
   // An image can always scale down to (0,0).
   aSize.width = aSize.height = 0;
   AddBorderAndPadding(aSize);
@@ -540,8 +543,9 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
 
   mIntrinsicSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
-  nsBoxLayoutState state(presContext);
-  this->MarkDirty(state);
+  AddStateBits(NS_FRAME_IS_DIRTY);
+  GetPresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
 
   return NS_OK;
 }
@@ -565,8 +569,9 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
   else {
     // Fire an onerror DOM event.
     mIntrinsicSize.SizeTo(0, 0);
-    nsBoxLayoutState state(GetPresContext());
-    MarkDirty(state);
+    AddStateBits(NS_FRAME_IS_DIRTY);
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
     FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
 

@@ -282,13 +282,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       PRBool sizeChanged = (oldRect != childRect);
 
       // only lay out dirty children or children whose sizes have changed
-      PRBool isDirty = PR_FALSE;
-      PRBool hasDirtyChildren = PR_FALSE;
-
-      child->IsDirty(isDirty);
-      child->HasDirtyChildren(hasDirtyChildren);
-
-      if (sizeChanged || isDirty || hasDirtyChildren) {
+      if (sizeChanged || (child->GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           // add in the child's margin
           nsMargin margin;
           child->GetMargin(margin);

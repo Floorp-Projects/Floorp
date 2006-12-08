@@ -70,8 +70,6 @@ public:
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                        PRBool aRemoveOverflowArea = PR_FALSE);
 
-  NS_IMETHOD MarkDirty(nsBoxLayoutState& aState);
-
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetMargin(nsMargin& aMargin);
@@ -83,14 +81,10 @@ public:
   NS_IMETHOD GetHAlign(Halignment& aAlign);
 
 
-  NS_IMETHOD NeedsRecalc();
-  NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  NS_IMETHOD MarkChildrenStyleChange();
-  NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
@@ -145,9 +139,6 @@ protected:
   virtual void ListBox(nsAutoString& aResult);
 #endif
   
-  virtual PRBool HasStyleChange();
-  virtual void SetStyleChangeFlag(PRBool aDirty);
-
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
   virtual PRBool GetDefaultFlex(PRInt32& aFlex);

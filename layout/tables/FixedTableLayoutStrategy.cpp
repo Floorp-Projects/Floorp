@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:cindent:ts=4:et:sw=4:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +13,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla's table layout code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,277 +36,284 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Algorithms that determine column and table widths used for CSS2's
+ * 'table-layout: fixed'.
+ */
+
 #include "FixedTableLayoutStrategy.h"
 #include "nsTableFrame.h"
+#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsStyleConsts.h"
 
-FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame)
-  : BasicTableLayoutStrategy(aFrame)
+FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
+  : mTableFrame(aTableFrame)
 {
+    MarkIntrinsicWidthsDirty();
 }
 
+/* virtual */
 FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 {
 }
 
-PRBool FixedTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowState)
+/* virtual */ nscoord
+FixedTableLayoutStrategy::GetMinWidth(nsIRenderingContext* aRenderingContext)
 {
-  return PR_TRUE;
+    DISPLAY_MIN_WIDTH(mTableFrame, mMinWidth);
+    if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
+        return mMinWidth;
+
+    // It's theoretically possible to do something much better here that
+    // depends only on the columns and the first row, but it wouldn't be
+    // compatible with other browsers, or with the use of GetMinWidth by
+    // nsHTMLReflowState to determine the width of a fixed-layout table,
+    // since CSS2.1 says:
+    //   The width of the table is then the greater of the value of the
+    //   'width' property for the table element and the sum of the
+    //   column widths (plus cell spacing or borders).
+
+    // XXX Should we really ignore 'min-width' and 'max-width'?
+
+    nsTableCellMap *cellMap = mTableFrame->GetCellMap();
+    PRInt32 colCount = cellMap->GetColCount();
+    nscoord spacing = mTableFrame->GetCellSpacingX();
+
+    // XXX Should this code do any pixel rounding?
+
+    nscoord result = 0;
+
+    // XXX Consider widths on columns or column groups?
+
+    if (colCount > 0) {
+        // XXX Should only add columns that have cells originating in them!
+        result += spacing * (colCount + 1);
+    }
+
+    for (PRInt32 col = 0; col < colCount; ++col) {
+        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        if (!colFrame) {
+            NS_ERROR("column frames out of sync with cell map");
+            continue;
+        }
+        const nsStyleCoord *styleWidth =
+            &colFrame->GetStylePosition()->mWidth;
+        if (styleWidth->GetUnit() == eStyleUnit_Coord) {
+            result += styleWidth->GetCoordValue();
+        } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
+            // do nothing
+        } else {
+            NS_ASSERTION(styleWidth->GetUnit() == eStyleUnit_Auto, "bad width");
+
+            // The 'table-layout: fixed' algorithm considers only cells
+            // in the first row.
+            PRBool originates;
+            PRInt32 colSpan;
+            nsTableCellFrame *cellFrame =
+                cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
+            if (cellFrame) {
+                styleWidth = &cellFrame->GetStylePosition()->mWidth;
+                if (styleWidth->GetUnit() == eStyleUnit_Coord) {
+                    nscoord cellWidth = nsLayoutUtils::IntrinsicForContainer(
+                        aRenderingContext, cellFrame, nsLayoutUtils::MIN_WIDTH);
+                    if (colSpan > 1) {
+                        // If a column-spanning cell is in the first
+                        // row, split up the space evenly.  (XXX This
+                        // isn't quite right if some of the columns it's
+                        // in have specified widths.  Should we care?)
+                        cellWidth = ((cellWidth + spacing) / colSpan) - spacing;
+                    }
+                    result += cellWidth;
+                } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
+                    if (colSpan > 1) {
+                        // XXX Can this force columns to negative
+                        // widths?
+                        result -= spacing * (colSpan - 1);
+                    }
+                }
+            }
+        }
+    }
+
+    return (mMinWidth = result);
 }
 
-/*
- * assign the width of all columns
- * if there is a colframe with a width attribute, use it as the column width
- * otherwise if there is a cell in the first row and it has a width attribute, use it
- *  if this cell includes a colspan, width is divided equally among spanned columns
- * otherwise the cell get a proportion of the remaining space 
- *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
- */
-PRBool 
-FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aComputedWidth,
-                                                   const nsHTMLReflowState& aReflowState)
+/* virtual */ nscoord
+FixedTableLayoutStrategy::GetPrefWidth(nsIRenderingContext* aRenderingContext,
+                                       PRBool aComputingSize)
 {
-  // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
-  const nsStylePosition* tablePosition = mTableFrame->GetStylePosition();
-  PRBool tableIsFixedWidth = eStyleUnit_Coord   == tablePosition->mWidth.GetUnit() ||
-                             eStyleUnit_Percent == tablePosition->mWidth.GetUnit();
-
-  PRInt32 numCols = mTableFrame->GetColCount();
-  PRInt32 colX;
-  float pixelToTwips = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
-  // availWidth is used as the basis for percentage width columns. It is aComputedWidth
-  // minus table border, padding, & cellspacing
-  nscoord spacingX = mTableFrame->GetCellSpacingX();
-  mCellSpacingTotal = spacingX;
-  for (colX = 0; colX < numCols; colX++){
-    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
-      mCellSpacingTotal += spacingX;
-    }
-  }
-  nscoord availWidth = (NS_UNCONSTRAINEDSIZE == aComputedWidth) 
-    ? NS_UNCONSTRAINEDSIZE
-    : aComputedWidth - aReflowState.mComputedBorderPadding.left - 
-      aReflowState.mComputedBorderPadding.right - 
-      mCellSpacingTotal;
-  
-  PRInt32 specifiedCols = 0;  // the number of columns whose width is given
-  nscoord totalColWidth = 0;  // the sum of the widths of the columns 
-
-  nsAutoArrayPtr<nscoord> colWidths(new nscoord[numCols]);
-  if (!colWidths) {
-    return PR_FALSE;
-  }
-  memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
-
-  nsAutoArrayPtr<nscoord> propInfo(new nscoord[numCols]);
-  if (!propInfo) {
-    return PR_FALSE;
-  }
-
-  memset(propInfo, 0, numCols*sizeof(nscoord));
-  nscoord propTotal = 0;
-  nscoord percTotal = 0;
-  // for every column, determine its specified width
-  for (colX = 0; colX < numCols; colX++) { 
-    // Get column information
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (!colFrame) {
-      NS_ASSERTION(PR_FALSE, "bad col frame");
-      return PR_FALSE;
-    }
-
-    // Get the columns's style
-    const nsStylePosition* colPosition = colFrame->GetStylePosition();
-
-    // get the fixed width if available
-    if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) { 
-      colWidths[colX] = colPosition->mWidth.GetCoordValue();
-      colFrame->SetWidth(MIN_CON, colWidths[colX]);
-    } // get the percentage width
-    else if ((eStyleUnit_Percent == colPosition->mWidth.GetUnit()) &&
-             (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
-      // Only apply percentages if we're constrained.
-      float percent = colPosition->mWidth.GetPercentValue();
-      colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth), pixelToTwips); 
-      colFrame->SetWidth(PCT, colWidths[colX]);
-      percTotal+=colWidths[colX];
-    }
-    else if (eStyleUnit_Proportional == colPosition->mWidth.GetUnit() &&
-      colPosition->mWidth.GetIntValue() > 0) {
-      propInfo[colX] = colPosition->mWidth.GetIntValue();
-      propTotal += propInfo[colX];
-    }
-    else { // get width from the cell
-
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
-      if (nsnull != cellFrame) {
-        // Get the cell's style
-        const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
-
-        nscoord cellWidth = 0;
-        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
-        // Get fixed cell width if available
-        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-          // need to add border and padding into fixed width
-          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
-                                                                  pixelToTwips, cellFrame);
-          cellWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
-          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
-                                                                      pixelToTwips);
-          colFrame->SetWidth(MIN_CON, colWidths[colX]);
-        }
-        else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
-                 (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
-          float percent = cellPosition->mWidth.GetPercentValue();
-          // need to add border and padding into percent width
-          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
-                                                                  pixelToTwips, cellFrame);
-          cellWidth = NSToCoordRound(percent * (float) availWidth) + borderPadding.left + borderPadding.right;
-          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
-                                                                      pixelToTwips); 
-          colFrame->SetWidth(PCT, colWidths[colX]);
-          percTotal += colWidths[colX];
-        }
-      }
-    }
-    if (colWidths[colX] >= 0) {
-      totalColWidth += colWidths[colX];
-      specifiedCols++;
-    }
-  }
- 
-  nscoord lastColAllocated = -1;
-  nscoord remainingWidth = availWidth - totalColWidth;
-  if(availWidth == NS_UNCONSTRAINEDSIZE)
-    remainingWidth = 0; 
-  if (remainingWidth >= 500000) {
-    // let's put a cap on the width so that it doesn't become insane.
-    remainingWidth = 100;
-  }
-
-  if (0 < remainingWidth) {
-    if (propTotal > 0) {
-      nscoord amountToAllocate = 0;
-      for (colX = 0; colX < numCols; colX++) {
-        if (propInfo[colX] > 0) {
-          // We're proportional
-          float percent = ((float)propInfo[colX])/((float)propTotal);
-          amountToAllocate += NSToCoordRound(percent * (float)remainingWidth);
-          colWidths[colX] = (amountToAllocate > 0) ?
-            nsTableFrame::RoundToPixel(amountToAllocate, pixelToTwips,
-                                       eRoundUpIfHalfOrMore) : 0;
-          totalColWidth += colWidths[colX];
-          amountToAllocate -= colWidths[colX];
-          lastColAllocated = colX;
-        }
-      }  
-    }
-    else if (tableIsFixedWidth) {
-      if (numCols > specifiedCols) {
-        // allocate the extra space to the columns which have no width specified
-        nscoord colAlloc =
-          NSToCoordRound(((float)remainingWidth) /
-                         (((float)numCols) - ((float)specifiedCols)));
-        nscoord amountToAllocate = 0;
-        for (colX = 0; colX < numCols; colX++) {
-          if (-1 == colWidths[colX]) {
-            amountToAllocate += colAlloc;
-            colWidths[colX] = (amountToAllocate > 0) ?
-              nsTableFrame::RoundToPixel(amountToAllocate,
-                                         pixelToTwips,
-                                         eRoundUpIfHalfOrMore) : 0;
-            totalColWidth += colWidths[colX];
-            amountToAllocate -= colWidths[colX];
-            lastColAllocated = colX;
-          }
-        }
-      }
-      else { // allocate the extra space to the columns which have width specified
-        float divisor = (float)totalColWidth;
-        nscoord amountToAllocate = 0;
-        for (colX = 0; colX < numCols; colX++) {
-          if (colWidths[colX] > 0) {
-            amountToAllocate += NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
-            nscoord colAlloc = (amountToAllocate > 0) ?
-              nsTableFrame::RoundToPixel(amountToAllocate, pixelToTwips,
-                                         eRoundUpIfHalfOrMore) : 0;
-            colWidths[colX] += colAlloc;
-            totalColWidth += colAlloc;
-            amountToAllocate -= colAlloc;
-            lastColAllocated = colX;
-          }
-        }
-      }  
-    }
-  }
-
-  nscoord overAllocation = ((availWidth >= 0) && (availWidth != NS_UNCONSTRAINEDSIZE))  
-    ? totalColWidth - availWidth : 0;
-  // set the column widths
-  for (colX = 0; colX < numCols; colX++) {
-    if (colWidths[colX] < 0) {
-      colWidths[colX] = 0;
-      // make sure there is at least space for the border and padding of the first cell
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
-      if (nsnull != cellFrame) {
-        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
-        PRInt32 colIndex;
-        cellFrame->GetColIndex(colIndex);
-        nscoord minWidth = 0;
-        nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
-                                                                  pixelToTwips, cellFrame);
-        if (colX == colIndex )
-          minWidth += borderPadding.left;
-        if (colX == colIndex + (colSpan - 1))
-          minWidth += borderPadding.right;
-        colWidths[colX] = minWidth;
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-        colFrame->SetWidth(MIN_CON, minWidth);
-        totalColWidth += minWidth;
-        if (overAllocation > 0) {
-          overAllocation = PR_MAX(0, overAllocation - minWidth);
-        }
-      }
-    }
-    // if there was too much allocated due to rounding, remove it from the last col
-    if ((colX == lastColAllocated) && (overAllocation != 0)) {
-      nscoord thisRemoval = nsTableFrame::RoundToPixel(overAllocation, pixelToTwips);
-      colWidths[colX] -= thisRemoval;
-      totalColWidth -= thisRemoval;
-      
-      totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
-      colWidths[colX] = PR_MAX(0, colWidths[colX]);
-    }
-  }
-  overAllocation = ((availWidth >= 0) && (availWidth != NS_UNCONSTRAINEDSIZE))  
-    ? totalColWidth - availWidth : 0;
-  if(overAllocation > 0){
-    // reduce over specified percent col
-    nscoord amountToRemove = 0;
-    for (colX = 0; colX < numCols; colX++) {
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-      if(( colFrame->GetWidth(PCT) > 0) && ( percTotal > 0)){
-        amountToRemove += NSToCoordRound(overAllocation* colWidths[colX] / (float) percTotal);
-        nscoord thisRemoval = (amountToRemove > 0) ?
-          nsTableFrame::RoundToPixel(amountToRemove, pixelToTwips,
-                                     eRoundUpIfHalfOrMore) : 0;
-        colWidths[colX] -= thisRemoval;
-        amountToRemove -= thisRemoval;
-        totalColWidth -= thisRemoval;
-        
-        totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
-        colWidths[colX] = PR_MAX(0, colWidths[colX]);
-        colFrame->SetWidth(PCT, colWidths[colX]);
-      }
-    }
-  }
-  for (colX = 0; colX < numCols; colX++) {
-    mTableFrame->SetColumnWidth(colX, colWidths[colX]);
-  }
-  return PR_TRUE;
+    // It's theoretically possible to do something much better here that
+    // depends only on the columns and the first row, but it wouldn't be
+    // compatible with other browsers.
+    nscoord result = nscoord_MAX;
+    DISPLAY_PREF_WIDTH(mTableFrame, result);
+    return result;
 }
 
+/* virtual */ void
+FixedTableLayoutStrategy::MarkIntrinsicWidthsDirty()
+{
+    mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mLastCalcWidth = nscoord_MIN;
+}
 
+/* virtual */ void
+FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowState)
+{
+    nscoord tableWidth = aReflowState.mComputedWidth;
 
+    if (mLastCalcWidth == tableWidth)
+        return;
+    mLastCalcWidth = tableWidth;
 
+    nsTableCellMap *cellMap = mTableFrame->GetCellMap();
+    PRInt32 colCount = cellMap->GetColCount();
+    nscoord spacing = mTableFrame->GetCellSpacingX();
+
+    // XXX Should this code do any pixel rounding?
+
+    // border-spacing isn't part of the basis for percentages.
+    if (colCount > 0) {
+        // XXX Should only add columns that have cells originating in them!
+        nscoord subtract = spacing * (colCount + 1);
+        tableWidth -= subtract;
+    } else {
+        // No Columns - nothing to compute
+	return;
+    }
+
+    // XXX This ignores the 'min-width' and 'max-width' properties
+    // throughout.  Then again, that's what the CSS spec says to do.
+
+    // XXX Consider widths on columns or column groups?
+
+    PRUint32 unassignedCount = 0;
+    nscoord unassignedSpace = tableWidth;
+    const nscoord unassignedMarker = nscoord_MIN;
+
+    // We use the PrefPercent on the columns to store the percentages
+    // used to compute column widths in case we need to reduce their
+    // basis.
+    float pctTotal = 0.0f;
+
+    for (PRInt32 col = 0; col < colCount; ++col) {
+        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        if (!colFrame) {
+            NS_ERROR("column frames out of sync with cell map");
+            continue;
+        }
+        colFrame->ResetPrefPercent();
+        const nsStyleCoord *styleWidth =
+            &colFrame->GetStylePosition()->mWidth;
+        nscoord colWidth;
+        if (styleWidth->GetUnit() == eStyleUnit_Coord) {
+            colWidth = styleWidth->GetCoordValue();
+        } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
+            float pct = styleWidth->GetPercentValue();
+            colWidth = NSToCoordFloor(pct * float(tableWidth));
+            colFrame->AddPrefPercent(pct);
+            pctTotal += pct;
+        } else {
+            NS_ASSERTION(styleWidth->GetUnit() == eStyleUnit_Auto, "bad width");
+
+            // The 'table-layout: fixed' algorithm considers only cells
+            // in the first row.
+            PRBool originates;
+            PRInt32 colSpan;
+            nsTableCellFrame *cellFrame =
+                cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
+            if (cellFrame) {
+                styleWidth = &cellFrame->GetStylePosition()->mWidth;
+                if (styleWidth->GetUnit() == eStyleUnit_Coord) {
+                    colWidth = styleWidth->GetCoordValue();
+                } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
+                    float pct = styleWidth->GetPercentValue();
+                    colWidth = NSToCoordFloor(pct * float(tableWidth));
+                    pct /= float(colSpan);
+                    colFrame->AddPrefPercent(pct);
+                    pctTotal += pct;
+                } else {
+                    colWidth = unassignedMarker;
+                }
+                if (colWidth != unassignedMarker) {
+                    // Add in cell's padding and border.
+                    // XXX This should use real percentage padding
+                    nsIFrame::IntrinsicWidthOffsetData offsets =
+                        cellFrame->IntrinsicWidthOffsets();
+                    colWidth += offsets.hPadding + offsets.hBorder;
+
+                    if (colSpan > 1) {
+                        // If a column-spanning cell is in the first
+                        // row, split up the space evenly.  (XXX This
+                        // isn't quite right if some of the columns it's
+                        // in have specified widths.  Should we care?)
+                        colWidth = ((colWidth + spacing) / colSpan) - spacing;
+                        if (colWidth < 0)
+                            colWidth = 0;
+                    }
+                }
+            } else {
+                colWidth = unassignedMarker;
+            }
+        }
+
+        colFrame->SetFinalWidth(colWidth);
+
+        if (colWidth == unassignedMarker) {
+            ++unassignedCount;
+        } else {
+            unassignedSpace -= colWidth;
+        }
+    }
+
+    if (unassignedSpace < 0) {
+        if (pctTotal > 0) {
+            // If the columns took up too much space, reduce those that
+            // had percentage widths.  The spec doesn't say to do this,
+            // but we've always done it in the past, and so does WinIE6.
+            nscoord pctUsed = NSToCoordFloor(pctTotal * float(tableWidth));
+            nscoord reduce = PR_MIN(pctUsed, -unassignedSpace);
+            float reduceRatio = float(reduce) / pctTotal;
+            for (PRInt32 col = 0; col < colCount; ++col) {
+                nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+                if (!colFrame) {
+                    NS_ERROR("column frames out of sync with cell map");
+                    continue;
+                }
+                nscoord colWidth = colFrame->GetFinalWidth();
+                colWidth -= NSToCoordFloor(colFrame->GetPrefPercent() *
+                                           reduceRatio);
+                if (colWidth < 0)
+                    colWidth = 0;
+                colFrame->SetFinalWidth(colWidth);
+            }
+        }
+        unassignedSpace = 0;
+    }
+
+    if (unassignedCount > 0) {
+        nscoord toAssign = unassignedSpace / unassignedCount;
+        for (PRInt32 col = 0; col < colCount; ++col) {
+            nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+            if (!colFrame) {
+                NS_ERROR("column frames out of sync with cell map");
+                continue;
+            }
+            if (colFrame->GetFinalWidth() == unassignedMarker)
+                colFrame->SetFinalWidth(toAssign);
+        }
+    } else if (unassignedSpace > 0) {
+        // The spec says to distribute extra space evenly.  (That's not
+        // what WinIE6 does, though.  It treats percentages and
+        // nonpercentages differently.)
+        nscoord toAdd = unassignedSpace / colCount;
+        for (PRInt32 col = 0; col < colCount; ++col) {
+            nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+            if (!colFrame) {
+                NS_ERROR("column frames out of sync with cell map");
+                continue;
+            }
+            colFrame->SetFinalWidth(colFrame->GetFinalWidth() + toAdd);
+        }
+    }
+}

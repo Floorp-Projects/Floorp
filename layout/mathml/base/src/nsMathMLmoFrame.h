@@ -75,9 +75,7 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
-  NS_IMETHOD
-  ReflowDirtyChild(nsIPresShell* aPresShell,
-                   nsIFrame*     aChild);
+  virtual void MarkIntrinsicWidthsDirty();
 
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,

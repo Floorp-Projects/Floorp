@@ -245,9 +245,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
   nscoord maxSubScriptShift = subScriptShift;
   nscoord maxSupScriptShift = supScriptShift;
   PRInt32 count = 0;
-  nsHTMLReflowMetrics baseSize (nsnull);
-  nsHTMLReflowMetrics subScriptSize (nsnull);
-  nsHTMLReflowMetrics supScriptSize (nsnull);
+  nsHTMLReflowMetrics baseSize;
+  nsHTMLReflowMetrics subScriptSize;
+  nsHTMLReflowMetrics supScriptSize;
   nsIFrame* baseFrame = nsnull;
   nsIFrame* subScriptFrame = nsnull;
   nsIFrame* supScriptFrame = nsnull;

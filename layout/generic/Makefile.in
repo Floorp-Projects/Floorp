@@ -105,7 +105,6 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIScrollableViewProvider.h \
 		nsIStatefulFrame.h \
-		nsReflowType.h \
 		nsFrameSelection.h \
 		$(NULL)
 
@@ -138,7 +137,6 @@ CPPSRCS		= \
 		nsHTMLCanvasFrame.cpp \
 		nsHTMLContainerFrame.cpp \
 		nsHTMLFrame.cpp \
-		nsHTMLReflowCommand.cpp \
 		nsHTMLReflowState.cpp \
 		nsImageFrame.cpp \
 		nsImageMap.cpp \
@@ -151,7 +149,6 @@ CPPSRCS		= \
 		nsPageContentFrame.cpp \
 		nsPageFrame.cpp \
 		nsPlaceholderFrame.cpp \
-		nsReflowPath.cpp \
 		nsSelection.cpp \
 		nsSimplePageSequence.cpp \
 		nsSpaceManager.cpp \

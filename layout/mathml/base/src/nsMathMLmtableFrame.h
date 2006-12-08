@@ -220,8 +220,6 @@ public:
   {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame && tableFrame->IsFrameOfType(nsIFrame::eMathML)) {
-      // cancel any reflow command that may be pending for the row
-      GetPresContext()->PresShell()->CancelReflowCommand(this, nsnull);
       // relayout the table
       ((nsMathMLmtableFrame*)tableFrame)->RestyleTable();
     }

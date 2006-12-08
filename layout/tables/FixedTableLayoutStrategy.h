@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:cindent:ts=4:et:sw=4:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +13,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla's table layout code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,72 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef FixedTableLayoutStrategy_h__
-#define FixedTableLayoutStrategy_h__
+/*
+ * Algorithms that determine column and table widths used for CSS2's
+ * 'table-layout: fixed'.
+ */
 
-#include "nscore.h"
-#include "BasicTableLayoutStrategy.h"
-#include "nsCoord.h"
+#ifndef FixedTableLayoutStrategy_h_
+#define FixedTableLayoutStrategy_h_
 
-class nsVoidArray;
+#include "nsITableLayoutStrategy.h"
+
 class nsTableFrame;
-struct nsStylePosition;
 
-
-/* ---------- FixedTableLayoutStrategy ---------- */
-
-/** Implementation of HTML4 "table-layout=fixed" table layout.
-  * The input to this class is the resolved styles for both the
-  * table columns and the cells in row0.
-  * The output from this class is to set the column widths in
-  * mTableFrame.
-  */
-class FixedTableLayoutStrategy : public BasicTableLayoutStrategy
+class FixedTableLayoutStrategy : public nsITableLayoutStrategy
 {
 public:
+    FixedTableLayoutStrategy(nsTableFrame *aTableFrame);
+    virtual ~FixedTableLayoutStrategy();
 
-  /** Public constructor.
-    * @param aFrame           the table frame for which this delegate will do layout   
-    */
-  FixedTableLayoutStrategy(nsTableFrame *aFrame);
+    // nsITableLayoutStrategy implementation
+    virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
+    virtual nscoord GetPrefWidth(nsIRenderingContext* aRenderingContext,
+                                 PRBool aComputingSize);
+    virtual void MarkIntrinsicWidthsDirty();
+    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
 
-  /** destructor */
-  virtual ~FixedTableLayoutStrategy();
-
-  /** Called during resize reflow to determine the new column widths
-   * @param aReflowState - the reflow state for mTableFrame
-   */
-  virtual PRBool  BalanceColumnWidths(const nsHTMLReflowState& aReflowState);
-  
-  /**
-    * Calculate the basis for percent width calculations of the table elements
-    * @param aReflowState   - the reflow state of the table
-    * @param aAvailWidth    - the available width for the table
-    * @return               - the basis for percent calculations
-    */
-  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
-                                       nscoord                  aAvailWidth) {return 0;};
-
-protected:
-   /* assign the width of all columns
-    * if there is a colframe with a width attribute, use it as the column width.
-    * otherwise if there is a cell in the first row and it has a width attribute, use it.
-    *  if this cell includes a colspan, width is divided equally among spanned columns
-    * otherwise the cell get a proportion of the remaining space. 
-    *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
-    * Computes the minimum and maximum table widths.
-    *
-    * Set column width information in each column frame and in the table frame.
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    */
-  virtual PRBool AssignNonPctColumnWidths(nscoord                  aComputedWidth,
-                                          const nsHTMLReflowState& aReflowState);
-
-
+private:
+    nsTableFrame *mTableFrame;
+    nscoord mMinWidth;
+    nscoord mLastCalcWidth;
 };
 
-
-#endif
-
+#endif /* !defined(FixedTableLayoutStrategy_h_) */

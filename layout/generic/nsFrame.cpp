@@ -51,7 +51,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStyleContext.h"
-#include "nsReflowPath.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
@@ -151,7 +150,6 @@ struct nsBoxLayoutMetrics
 
   PRPackedBool mIncludeOverflow;
   PRPackedBool mWasCollapsed;
-  PRPackedBool mStyleChange;
 };
 
 struct nsContentAndOffset
@@ -572,8 +570,7 @@ nsFrame::Init(nsIContent*      aContent,
     nsFrameState state = aPrevInFlow->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_REPLACED_ELEMENT |
-                       NS_FRAME_SELECTED_CONTENT |
+    mState |= state & (NS_FRAME_SELECTED_CONTENT |
                        NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_IS_SPECIAL);
   }
@@ -1169,8 +1166,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   // Replaced elements have their visibility handled here, because
   // they're visually atomic
-  if ((GetStateBits() & NS_FRAME_REPLACED_ELEMENT) &&
-      !IsVisibleForPainting(aBuilder))
+  if (IsFrameOfType(eReplaced) && !IsVisibleForPainting(aBuilder))
     return NS_OK;
 
   nsRect absPosClip;
@@ -1269,13 +1265,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   return rv;
 }
 
-static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager, nsIFrame* aFrame) {
-  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    return aFrameManager->GetPlaceholderFrameFor(aFrame);
-  }
-  return aFrame->GetParent();
-}
-
 #ifdef NS_DEBUG
 static void PaintDebugBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
@@ -1311,7 +1300,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
       (disp->mDisplay != NS_STYLE_DISPLAY_INLINE ||
        aChild->IsContainingBlock() ||
-       (aChild->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))) {
+       (aChild->IsFrameOfType(eReplaced)))) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
     // pseudo-stacking-context.
@@ -2755,7 +2744,310 @@ nsFrame::GetCursor(const nsPoint& aPoint,
 
 // Resize and incremental reflow
 
-// nsIHTMLReflow member functions
+/* virtual */ void
+nsFrame::MarkIntrinsicWidthsDirty()
+{
+  // This version is meant only for what used to be box-to-block adaptors.
+  // It should not be called by other derived classes.
+  if (IsBoxWrapped()) {
+    nsBoxLayoutMetrics *metrics = BoxMetrics();
+
+    SizeNeedsRecalc(metrics->mPrefSize);
+    SizeNeedsRecalc(metrics->mMinSize);
+    SizeNeedsRecalc(metrics->mMaxSize);
+    SizeNeedsRecalc(metrics->mBlockPrefSize);
+    SizeNeedsRecalc(metrics->mBlockMinSize);
+    CoordNeedsRecalc(metrics->mFlex);
+    CoordNeedsRecalc(metrics->mAscent);
+  }
+}
+
+/* virtual */ nscoord
+nsFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+#ifdef DEBUG
+  nsAutoString frameName;
+  GetFrameName(frameName);
+  NS_WARNING(nsCAutoString(NS_ConvertUTF16toUTF8(frameName) +
+    nsDependentCString(" frame didn't implement GetMinWidth")).get());
+#endif
+  nscoord result = 0;
+  DISPLAY_MIN_WIDTH(this, result);
+  return result;
+}
+
+/* virtual */ nscoord
+nsFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+#ifdef DEBUG
+  nsAutoString frameName;
+  GetFrameName(frameName);
+  NS_WARNING(nsCAutoString(NS_ConvertUTF16toUTF8(frameName) +
+    nsDependentCString(" frame didn't implement GetPrefWidth")).get());
+#endif
+  nscoord result = 0;
+  DISPLAY_PREF_WIDTH(this, result);
+  return result;
+}
+
+/* virtual */ void
+nsFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                           nsIFrame::InlineMinWidthData *aData)
+{
+  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
+  PRBool canBreak = !CanContinueTextRun() &&
+    GetParent()->GetStyleText()->WhiteSpaceCanWrap();
+  
+  if (canBreak)
+    aData->Break(aRenderingContext);
+  aData->trailingWhitespace = 0;
+  aData->skipWhitespace = PR_FALSE;
+  aData->trailingTextFrame = nsnull;
+  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                            this, nsLayoutUtils::MIN_WIDTH);
+  if (canBreak)
+    aData->Break(aRenderingContext);
+}
+
+/* virtual */ void
+nsFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                            nsIFrame::InlinePrefWidthData *aData)
+{
+  aData->trailingWhitespace = 0;
+  aData->skipWhitespace = PR_FALSE;
+  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                            this, nsLayoutUtils::PREF_WIDTH);
+}
+
+void
+nsIFrame::InlineMinWidthData::Break(nsIRenderingContext *aRenderingContext)
+{
+  currentLine -= trailingWhitespace;
+  prevLines = PR_MAX(prevLines, currentLine);
+  currentLine = trailingWhitespace = 0;
+
+  for (PRInt32 i = 0, i_end = floats.Count(); i != i_end; ++i) {
+    nsIFrame *floatFrame = NS_STATIC_CAST(nsIFrame*, floats[i]);
+    nscoord float_min =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, floatFrame,
+                                           nsLayoutUtils::MIN_WIDTH);
+    if (float_min > prevLines)
+      prevLines = float_min;
+  }
+  floats.Clear();
+  trailingTextFrame = nsnull;
+}
+
+void
+nsIFrame::InlinePrefWidthData::Break(nsIRenderingContext *aRenderingContext)
+{
+  if (floats.Count() != 0) {
+            // preferred widths accumulated for floats that have already
+            // been cleared past
+    nscoord floats_done = 0,
+            // preferred widths accumulated for floats that have not yet
+            // been cleared past
+            floats_cur_left = 0,
+            floats_cur_right = 0;
+
+    for (PRInt32 i = 0, i_end = floats.Count(); i != i_end; ++i) {
+      nsIFrame *floatFrame = NS_STATIC_CAST(nsIFrame*, floats[i]);
+      const nsStyleDisplay *floatDisp = floatFrame->GetStyleDisplay();
+      if (floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT ||
+          floatDisp->mBreakType == NS_STYLE_CLEAR_RIGHT ||
+          floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT) {
+        nscoord floats_cur = floats_cur_left + floats_cur_right;
+        if (floats_cur > floats_done)
+          floats_done = floats_cur;
+        if (floatDisp->mBreakType != NS_STYLE_CLEAR_RIGHT)
+          floats_cur_left = 0;
+        if (floatDisp->mBreakType != NS_STYLE_CLEAR_LEFT)
+          floats_cur_right = 0;
+      }
+
+      nscoord &floats_cur = floatDisp->mFloats == NS_STYLE_FLOAT_LEFT
+                              ? floats_cur_left : floats_cur_right;
+      floats_cur +=
+        nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                      floatFrame, nsLayoutUtils::PREF_WIDTH);
+    }
+
+    nscoord floats_cur = floats_cur_left + floats_cur_right;
+    if (floats_cur > floats_done)
+      floats_done = floats_cur;
+
+    currentLine += floats_done;
+
+    floats.Clear();
+  }
+
+  currentLine -= trailingWhitespace;
+  prevLines = PR_MAX(prevLines, currentLine);
+  currentLine = trailingWhitespace = 0;
+}
+
+static void
+AddCoord(const nsStyleCoord& aStyle, nscoord* aCoord, float* aPercent)
+{
+  switch (aStyle.GetUnit()) {
+    case eStyleUnit_Coord:
+      *aCoord += aStyle.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      *aPercent += aStyle.GetPercentValue();
+      break;
+    default:
+      break;
+  }
+}
+
+/* virtual */ nsIFrame::IntrinsicWidthOffsetData
+nsFrame::IntrinsicWidthOffsets()
+{
+  IntrinsicWidthOffsetData result;
+  nsStyleCoord tmp;
+
+  const nsStyleMargin *styleMargin = GetStyleMargin();
+  AddCoord(styleMargin->mMargin.GetLeft(tmp),
+           &result.hMargin, &result.hPctMargin);
+  AddCoord(styleMargin->mMargin.GetRight(tmp),
+           &result.hMargin, &result.hPctMargin);
+
+  const nsStylePadding *stylePadding = GetStylePadding();
+  AddCoord(stylePadding->mPadding.GetLeft(tmp),
+           &result.hPadding, &result.hPctPadding);
+  AddCoord(stylePadding->mPadding.GetRight(tmp),
+           &result.hPadding, &result.hPctPadding);
+
+  const nsStyleBorder *styleBorder = GetStyleBorder();
+  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
+  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
+
+  return result;
+}
+
+inline PRBool
+IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
+{
+  nsStyleUnit unit = aCoord.GetUnit();
+  return unit == eStyleUnit_Auto ||  // only for 'height'
+         unit == eStyleUnit_Null ||  // only for 'max-height'
+         (unit == eStyleUnit_Percent && 
+          aCBHeight == NS_AUTOHEIGHT);
+}
+
+/* virtual */ nsSize
+nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                     nsSize aCBSize, nscoord aAvailableWidth,
+                     nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                     PRBool aShrinkWrap)
+{
+  nsSize result = ComputeAutoSize(aRenderingContext, aCBSize, aAvailableWidth,
+                                  aMargin, aBorder, aPadding, aShrinkWrap);
+  nsSize boxSizingAdjust(0,0);
+  const nsStylePosition *stylePos = GetStylePosition();
+
+  switch (stylePos->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      boxSizingAdjust += aBorder;
+      // fall through
+    case NS_STYLE_BOX_SIZING_PADDING:
+      boxSizingAdjust += aPadding;
+  }
+
+  // Compute width
+
+  if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
+    result.width = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+                     this, aCBSize.width, stylePos->mWidth) -
+                   boxSizingAdjust.width;
+  }
+
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
+    nscoord maxWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+                         this, aCBSize.width, stylePos->mMaxWidth) -
+                       boxSizingAdjust.width;
+    if (maxWidth < result.width)
+      result.width = maxWidth;
+  }
+
+  nscoord minWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+                       this, aCBSize.width, stylePos->mMinWidth) -
+                     boxSizingAdjust.width;
+  if (minWidth > result.width)
+    result.width = minWidth;
+
+  if (result.width < 0)
+    result.width = 0;
+
+  // Compute height
+
+  if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
+    result.height = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+                      this, aCBSize.height, stylePos->mHeight) -
+                    boxSizingAdjust.height;
+  }
+
+  if (result.height != NS_UNCONSTRAINEDSIZE) {
+    if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
+      nscoord maxHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+                            this, aCBSize.height, stylePos->mMaxHeight) -
+                          boxSizingAdjust.height;
+      if (maxHeight < result.height)
+        result.height = maxHeight;
+    }
+
+    if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
+      nscoord minHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+                            this, aCBSize.height, stylePos->mMinHeight) -
+                          boxSizingAdjust.height;
+      if (minHeight > result.height)
+        result.height = minHeight;
+    }
+  }
+
+  if (result.height < 0)
+    result.height = 0;
+
+  return result;
+}
+
+/* virtual */ nsSize
+nsFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                         nsSize aCBSize, nscoord aAvailableWidth,
+                         nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                         PRBool aShrinkWrap)
+{
+  // Use basic shrink-wrapping as a default implementation.
+  nsSize result(0xdeadbeef, NS_UNCONSTRAINEDSIZE);
+
+  // don't bother setting it if the result won't be used
+  if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    nscoord availBased = aAvailableWidth - aMargin.width - aBorder.width -
+                         aPadding.width;
+    result.width = ShrinkWidthToFit(aRenderingContext, availBased);
+  }
+  return result;
+}
+
+nscoord
+nsFrame::ShrinkWidthToFit(nsIRenderingContext *aRenderingContext,
+                          nscoord aWidthInCB)
+{
+  nscoord result;
+  nscoord minWidth = GetMinWidth(aRenderingContext);
+  if (minWidth > aWidthInCB) {
+    result = minWidth;
+  } else {
+    nscoord prefWidth = GetPrefWidth(aRenderingContext);
+    if (prefWidth > aWidthInCB) {
+      result = aWidthInCB;
+    } else {
+      result = prefWidth;
+    }
+  }
+  return result;
+}
 
 NS_IMETHODIMP
 nsFrame::WillReflow(nsPresContext* aPresContext)
@@ -2784,17 +3076,14 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
-  // Notify the percent height observer if this is an initial or resize reflow (XXX
-  // it should probably be any type of reflow, but this would need further testing)
-  // and there is a percent height but no computed height. The observer may be able to
-  // initiate another reflow with a computed height. This happens in the case where a table
-  // cell has no computed height but can fabricate one when the cell height is known.
-  if (aReflowState && (aReflowState->mPercentHeightObserver)           && // an observer
-      ((eReflowReason_Initial == aReflowState->reason) ||                 // initial or resize reflow
-       (eReflowReason_Resize  == aReflowState->reason))                &&
+  // Notify the percent height observer if there is a percent height
+  // but no computed height. The observer may be able to initiate
+  // another reflow with a computed height. This happens in the case
+  // where a table cell has no computed height but can fabricate one
+  // when the cell height is known.
+  if (aReflowState && aReflowState->mPercentHeightObserver &&
       ((NS_UNCONSTRAINEDSIZE == aReflowState->mComputedHeight) ||         // no computed height 
        (0                    == aReflowState->mComputedHeight))        && 
-      aReflowState->mStylePosition                                     && // percent height
       (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
 
     nsIFrame* prevInFlow = GetPrevInFlow();
@@ -2806,13 +3095,12 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+/* virtual */ PRBool
+nsFrame::CanContinueTextRun() const
 {
   // By default, a frame will *not* allow a text run to be continued
   // through it.
-  aContinueTextRun = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -2821,14 +3109,11 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsFrame");
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = 0;
-  }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -3331,9 +3616,6 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.mOverflowArea.y = 0;
     aMetrics.mOverflowArea.width = 0;
     aMetrics.mOverflowArea.height = 0;
-    if (aMetrics.mComputeMEW) {
-      aMetrics.mMaxElementWidth = 0;
-    }
     return PR_TRUE;
   }
   mState &= ~NS_FRAME_IS_UNFLOWABLE;
@@ -4778,11 +5060,11 @@ nsIView* nsIFrame::GetClosestView(nsPoint* aOffset) const
 }
 
 
-NS_IMETHODIMP
-nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+/* virtual */ void
+nsFrame::ChildIsDirty(nsIFrame* aChild)
 {
-  NS_ASSERTION(0, "nsFrame::ReflowDirtyChild() should never be called.");  
-  return NS_ERROR_NOT_IMPLEMENTED;    
+  NS_NOTREACHED("should never be called on a frame that doesn't inherit from "
+                "nsContainerFrame");
 }
 
 
@@ -5278,34 +5560,6 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
   }
 }
 
-PRBool
-nsFrame::HasStyleChange()
-{
-  return BoxMetrics()->mStyleChange;
-}
-
-void
-nsFrame::SetStyleChangeFlag(PRBool aDirty)
-{
-  nsBox::SetStyleChangeFlag(aDirty);
-  BoxMetrics()->mStyleChange = PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsFrame::NeedsRecalc()
-{
-  nsBoxLayoutMetrics *metrics = BoxMetrics();
-
-  SizeNeedsRecalc(metrics->mPrefSize);
-  SizeNeedsRecalc(metrics->mMinSize);
-  SizeNeedsRecalc(metrics->mMaxSize);
-  SizeNeedsRecalc(metrics->mBlockPrefSize);
-  SizeNeedsRecalc(metrics->mBlockMinSize);
-  CoordNeedsRecalc(metrics->mFlex);
-  CoordNeedsRecalc(metrics->mAscent);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsFrame::GetOverflow(nsSize& aOverflow)
 {
@@ -5338,28 +5592,16 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
   //    The min height on the other hand is fairly easy we need to get the largest
   //    line height. This can be done with the line iterator.
 
-  // if we do have a reflow state
+  // if we do have a rendering context
   nsresult rv = NS_OK;
-  const nsHTMLReflowState* reflowState = aState.GetReflowState();
-  if (reflowState) {
+  nsIRenderingContext* rendContext = aState.GetRenderingContext();
+  if (rendContext) {
     nsPresContext* presContext = aState.PresContext();
-    nsReflowStatus status = NS_FRAME_COMPLETE;
-    nsHTMLReflowMetrics desiredSize(PR_FALSE);
-    nsReflowReason reason;
-
-    // See if we an set the max element size and return the reflow states new reason. Sometimes reflow states need to 
-    // be changed. Incremental dirty reflows targeted at us can be converted to Resize if we are not dirty. So make sure
-    // we look at the reason returned.
-    nsReflowPath *path = nsnull;
-    PRBool canSetMaxElementWidth = CanSetMaxElementWidth(aState, reason, &path);
-
-    NS_ASSERTION(reason != eReflowReason_Incremental || path,
-                 "HandleIncrementalReflow should have changed the reason to dirty.");
 
     // If we don't have any HTML constraints and it's a resize, then nothing in the block
     // could have changed, so no refresh is necessary.
     nsBoxLayoutMetrics* metrics = BoxMetrics();
-    if (!DoesNeedRecalc(metrics->mBlockPrefSize) && reason == eReflowReason_Resize)
+    if (!DoesNeedRecalc(metrics->mBlockPrefSize))
       return NS_OK;
 
     // get the old rect.
@@ -5367,95 +5609,52 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 
     // the rect we plan to size to.
     nsRect rect(oldRect);
-    
-    // if we can set the maxElementSize then 
-    // tell the metrics we want it. And also tell it we want
-    // to compute the max width. This will allow us to get the min width and the pref width.
-    if (canSetMaxElementWidth) {
-       desiredSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
-       desiredSize.mComputeMEW = PR_TRUE;
-    } else {
-      // if we can't set the maxElementSize. Then we must reflow
-      // uncontrained.
-      rect.width = NS_UNCONSTRAINEDSIZE;
-      rect.height = NS_UNCONSTRAINEDSIZE;
-    }
 
-    // Create a child reflow state, fix-up the reason and the
-    // incremental reflow path.
-    nsHTMLReflowState childReflowState(*reflowState);
-    childReflowState.reason = reason;
-    childReflowState.path   = path;
+    nsMargin bp(0,0,0,0);
+    GetBorderAndPadding(bp);
 
-    // a line layout from outside the box shouldn't be used for inline
-    // frames inside the box
-    childReflowState.mLineLayout = nsnull;
+    metrics->mBlockPrefSize.width = GetPrefWidth(rendContext) + bp.LeftRight();
+    metrics->mBlockMinSize.width = GetMinWidth(rendContext) + bp.LeftRight();
 
     // do the nasty.
-    rv = BoxReflow(aState,
-                   presContext, 
-                   desiredSize, 
-                   childReflowState, 
-                   status,
-                   rect.x,
-                   rect.y,
-                   rect.width,
-                   rect.height);
+    nsHTMLReflowMetrics desiredSize;
+    rv = BoxReflow(aState, presContext, desiredSize, rendContext,
+                   rect.x, rect.y,
+                   metrics->mBlockPrefSize.width, NS_UNCONSTRAINEDSIZE);
 
     nsRect newRect = GetRect();
 
     // make sure we draw any size change
-    if (reason == eReflowReason_Incremental && (oldRect.width != newRect.width || oldRect.height != newRect.height)) {
-     newRect.x = 0;
-     newRect.y = 0;
-     Redraw(aState, &newRect);
+    if (oldRect.width != newRect.width || oldRect.height != newRect.height) {
+      newRect.x = 0;
+      newRect.y = 0;
+      Redraw(aState, &newRect);
     }
 
-    // if someone asked the nsBoxLayoutState to get the max size lets handle that.
-    nscoord* stateMaxElementWidth = aState.GetMaxElementWidth();
-
-    // the max element size is the largest height and width
-    if (stateMaxElementWidth) {
-      if (metrics->mBlockMinSize.width > *stateMaxElementWidth)
-        *stateMaxElementWidth = metrics->mBlockMinSize.width;
-    }
- 
     metrics->mBlockMinSize.height = 0;
-    // if we can use the maxElmementSize then lets use it
-    // if not then just use the desired.
-    if (canSetMaxElementWidth) {
-      metrics->mBlockPrefSize.width  = desiredSize.mMaximumWidth;
-      metrics->mBlockMinSize.width   = desiredSize.mMaxElementWidth; 
-      // ok we need the max ascent of the items on the line. So to do this
-      // ask the block for its line iterator. Get the max ascent.
-      nsCOMPtr<nsILineIterator> lines = do_QueryInterface(NS_STATIC_CAST(nsIFrame*, this));
-      if (lines) 
-      {
-        metrics->mBlockMinSize.height = 0;
-        int count = 0;
-        nsIFrame* firstFrame = nsnull;
-        PRInt32 framesOnLine;
-        nsRect lineBounds;
-        PRUint32 lineFlags;
+    // ok we need the max ascent of the items on the line. So to do this
+    // ask the block for its line iterator. Get the max ascent.
+    nsCOMPtr<nsILineIterator> lines = do_QueryInterface(NS_STATIC_CAST(nsIFrame*, this));
+    if (lines) 
+    {
+      metrics->mBlockMinSize.height = 0;
+      int count = 0;
+      nsIFrame* firstFrame = nsnull;
+      PRInt32 framesOnLine;
+      nsRect lineBounds;
+      PRUint32 lineFlags;
 
-        do {
-           lines->GetLine(count, &firstFrame, &framesOnLine, lineBounds, &lineFlags);
- 
-           if (lineBounds.height > metrics->mBlockMinSize.height)
-             metrics->mBlockMinSize.height = lineBounds.height;
+      do {
+         lines->GetLine(count, &firstFrame, &framesOnLine, lineBounds, &lineFlags);
 
-           count++;
-        } while(firstFrame);
-      }
+         if (lineBounds.height > metrics->mBlockMinSize.height)
+           metrics->mBlockMinSize.height = lineBounds.height;
 
-      metrics->mBlockPrefSize.height  = metrics->mBlockMinSize.height;
-    } else {
-      metrics->mBlockPrefSize.width = desiredSize.width;
-      metrics->mBlockPrefSize.height = desiredSize.height;
-      // this sucks. We could not get the width.
-      metrics->mBlockMinSize.width = 0;
-      metrics->mBlockMinSize.height = desiredSize.height;
+         count++;
+      } while(firstFrame);
     }
+
+    metrics->mBlockPrefSize.height = metrics->mBlockMinSize.height;
 
     metrics->mBlockAscent = desiredSize.ascent;
 
@@ -5474,6 +5673,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_PREF_SIZE(this, aSize);
   // If the size is cached, and there are no HTML constraints that we might
   // be depending on, then we just return the cached size.
   nsBoxLayoutMetrics *metrics = BoxMetrics();
@@ -5514,6 +5714,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_MIN_SIZE(this, aSize);
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mMinSize)) {
@@ -5549,6 +5750,7 @@ nsFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+  DISPLAY_MAX_SIZE(this, aSize);
   // Don't use the cache if we have HTMLReflowState constraints --- they might have changed
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mMaxSize)) {
@@ -5623,26 +5825,15 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 {
   nsRect ourRect(mRect);
 
-  const nsHTMLReflowState* reflowState = aState.GetReflowState();
+  nsIRenderingContext* rendContext = aState.GetRenderingContext();
   nsPresContext* presContext = aState.PresContext();
-  nsReflowStatus status = NS_FRAME_COMPLETE;
-  nsHTMLReflowMetrics desiredSize(PR_FALSE);
+  nsHTMLReflowMetrics desiredSize;
   nsresult rv = NS_OK;
  
-  if (reflowState) {
+  if (rendContext) {
 
-    nscoord* currentMEW = aState.GetMaxElementWidth();
-
-    if (currentMEW) {
-      desiredSize.mComputeMEW = PR_TRUE;
-    }
-
-    rv = BoxReflow(aState, presContext, desiredSize, *reflowState, status,
+    rv = BoxReflow(aState, presContext, desiredSize, rendContext,
                    ourRect.x, ourRect.y, ourRect.width, ourRect.height);
-
-    if (currentMEW && desiredSize.mMaxElementWidth > *currentMEW) {
-      *currentMEW = desiredSize.mMaxElementWidth;
-    }
 
     PRBool collapsed = PR_FALSE;
     IsCollapsed(aState, collapsed);
@@ -5681,38 +5872,18 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
   return rv;
 }
 
-// Truncate the reflow path by pruning the subtree containing the
-// specified frame. This ensures that we don't accidentally
-// incrementally reflow a frame twice.
-// XXXwaterson We could be more efficient by remembering the parent in
-// FindReflowPathFor.
-static void
-PruneReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
-{
-  nsReflowPath::iterator iter, end = aReflowPath->EndChildren();
-  for (iter = aReflowPath->FirstChild(); iter != end; ++iter) {
-    if (*iter == aFrame) {
-      aReflowPath->Remove(iter);
-      break;
-    }
-
-    PruneReflowPathFor(aFrame, iter.get());
-  }
-}
-
 nsresult
-nsFrame::BoxReflow(nsBoxLayoutState& aState,
+nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                    nsPresContext*           aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
-                   const nsHTMLReflowState& aReflowState,
-                   nsReflowStatus&          aStatus,
+                   nsIRenderingContext*     aRenderingContext,
                    nscoord                  aX,
                    nscoord                  aY,
                    nscoord                  aWidth,
                    nscoord                  aHeight,
                    PRBool                   aMoveFrame)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor");
 
 #ifdef DEBUG_REFLOW
   nsAdaptorAddIndents();
@@ -5732,27 +5903,13 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
   */
 
   nsBoxLayoutMetrics *metrics = BoxMetrics();
-  aStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus status = NS_FRAME_COMPLETE;
 
   PRBool redrawAfterReflow = PR_FALSE;
-  PRBool needsReflow = PR_FALSE;
   PRBool redrawNow = PR_FALSE;
-  nsReflowReason reason;
-  nsReflowPath *path = nsnull;
 
-  HandleIncrementalReflow(aState, 
-                          aReflowState, 
-                          reason,
-                          &path,
-                          redrawNow,
-                          needsReflow, 
-                          redrawAfterReflow, 
-                          aMoveFrame);
-
-  // If the NS_REFLOW_CALC_MAX_WIDTH flag is set on the nsHTMLReflowMetrics,
-  // then we need to do a reflow so that aDesiredSize.mMaximumWidth will be set
-  // correctly.
-  needsReflow = needsReflow || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH);
+  PRBool needsReflow =
+    (GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
 
   if (redrawNow)
      Redraw(aState);
@@ -5774,10 +5931,8 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
             aDesiredSize.height = metrics->mLastSize.height;
 
             // remove the margin. The rect of our child does not include it but our calculated size does.
-            nscoord calcWidth = aWidth; 
-            nscoord calcHeight = aHeight; 
             // don't reflow if we are already the right size
-            if (metrics->mLastSize.width == calcWidth && metrics->mLastSize.height == calcHeight)
+            if (metrics->mLastSize.width == aWidth && metrics->mLastSize.height == aHeight)
                   needsReflow = PR_FALSE;
             else
                   needsReflow = PR_TRUE;
@@ -5815,75 +5970,63 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
           size.width = 0;
     }
 
-    // Create with a reason of resize, and then change the `reason'
-    // and `path' appropriately (since for incremental reflow, we'll
-    // be mangling it so completely).
-    nsHTMLReflowState reflowState(aPresContext, aReflowState, this,
-                                  nsSize(size.width, NS_INTRINSICSIZE),
-                                  eReflowReason_Resize);
-    reflowState.reason = reason;
-    reflowState.path   = path;
+    // Construct a bogus parent reflow state so that there's a usable
+    // containing block reflow state.
+    nsMargin margin(0,0,0,0);
+    GetMargin(margin);
 
-    // a line layout from outside the box shouldn't be used for inline
-    // frames inside the box
-    reflowState.mLineLayout = nsnull;
+    nsSize parentSize(aWidth, aHeight);
+    if (parentSize.height != NS_INTRINSICSIZE)
+      parentSize.height += margin.TopBottom();
+    if (parentSize.width != NS_INTRINSICSIZE)
+      parentSize.width += margin.LeftRight();
 
-    // XXX this needs to subtract out the border and padding of mFrame since it is content size
-    reflowState.mComputedWidth = size.width;
-    reflowState.mComputedHeight = size.height;
+    nsIFrame *parentFrame = GetParent();
+    nsFrameState savedState = parentFrame->GetStateBits();
+    nsHTMLReflowState parentReflowState(aPresContext, parentFrame,
+                                        aRenderingContext,
+                                        parentSize);
+    parentFrame->RemoveStateBits(0xffffffff);
+    parentFrame->AddStateBits(savedState);
 
-    // if we were marked for style change.
-    // 1) see if we are just supposed to do a resize if so convert to a style change. Kill 2 birds
-    //    with 1 stone.
-    // 2) If the command is incremental. See if its style change. If it is everything is ok if not
-    //    we need to do a second reflow with the style change.
-    // XXXwaterson This logic seems _very_ squirrely.
-    if (metrics->mStyleChange) {
-      if (reflowState.reason == eReflowReason_Resize) {
-         // maxElementSize does not work on style change reflows.
-         // so remove it if set.
-         // XXXwaterson why doesn't MES computation work with a style change reflow?
-         aDesiredSize.mComputeMEW = PR_FALSE;
+    // This may not do very much useful, but it's probably worth trying.
+    if (parentSize.width != NS_INTRINSICSIZE)
+      parentReflowState.mComputedWidth = parentSize.width;
+    if (parentSize.height != NS_INTRINSICSIZE)
+      parentReflowState.mComputedHeight = parentSize.height;
+    parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
+    parentFrame->GetPadding(parentReflowState.mComputedPadding);
+    parentFrame->GetBorder(parentReflowState.mComputedBorderPadding);
+    parentReflowState.mComputedBorderPadding +=
+      parentReflowState.mComputedPadding;
 
-         reflowState.reason = eReflowReason_StyleChange;
-      }
-      else if (reason == eReflowReason_Incremental) {
-        PRBool reflowChild = PR_TRUE;
+    // XXX Is it OK that this reflow state has no parent reflow state?
+    // (It used to have a bogus parent, skipping all the boxes).
+    nsHTMLReflowState reflowState(aPresContext, this, aRenderingContext,
+                                  nsSize(aWidth, NS_INTRINSICSIZE));
 
-        if (path->mReflowCommand &&
-            path->FirstChild() == path->EndChildren() &&
-            path->mReflowCommand->Type() == eReflowType_StyleChanged) {
-          // There's an incremental reflow targeted directly at our
-          // frame, and our frame only (i.e., none of our descendants
-          // are targets).
-          reflowChild = PR_FALSE;
-        }
+    // Construct the parent chain manually since constructing it normally
+    // messes up dimensions.
+    reflowState.parentReflowState = &parentReflowState;
+    reflowState.mCBReflowState = &parentReflowState;
 
-        if (reflowChild) {
-#ifdef DEBUG_waterson
-          printf("*** nsBoxToBlockAdaptor::Reflow: performing extra reflow on child frame\n");
-#endif
+    // mComputedWidth and mComputedHeight are content-box, not
+    // border-box
+    if (size.width != NS_INTRINSICSIZE)
+      reflowState.mComputedWidth = size.width;
+    if (size.height != NS_INTRINSICSIZE)
+      reflowState.mComputedHeight = size.height;
 
-#ifdef DEBUG_REFLOW
-          nsAdaptorAddIndents();
-          printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
-          nsAdaptorAddIndents();
-          nsAdaptorPrintReason(reflowState);
-          printf("\n");
-#endif
-
-          WillReflow(aPresContext);
-          Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-          DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
-          reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
-          reflowState.availableWidth = reflowState.mComputedWidth;
-          reflowState.reason = eReflowReason_StyleChange;
-          reflowState.path = nsnull;
-        }
-      }
-
-      metrics->mStyleChange = PR_FALSE;
-    }
+    // Box layout calls SetRect before Layout, whereas non-box layout
+    // calls SetRect after Reflow.
+    // XXX Perhaps we should be doing this by twiddling the rect back to
+    // mLastSize before calling Reflow and then switching it back, but
+    // However, mLastSize can also be the size passed to BoxReflow by
+    // RefreshSizeCache, so that doesn't really make sense.
+    if (metrics->mLastSize.width != aWidth)
+      reflowState.mFlags.mHResize = PR_TRUE;
+    if (metrics->mLastSize.height != aHeight)
+      reflowState.mFlags.mVResize = PR_TRUE;
 
     #ifdef DEBUG_REFLOW
       nsAdaptorAddIndents();
@@ -5896,9 +6039,9 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
        // place the child and reflow
     WillReflow(aPresContext);
 
-    Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+    Reflow(aPresContext, aDesiredSize, reflowState, status);
 
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 
     // Save the ascent.  (bug 103925)
     PRBool isCollapsed = PR_FALSE;
@@ -5933,16 +6076,15 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
               {
                  reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
                  reflowState.availableWidth = reflowState.mComputedWidth;
-                 reflowState.reason = eReflowReason_Resize;
-                 reflowState.path = nsnull;
                  DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
                  #ifdef DEBUG_REFLOW
                   nsAdaptorAddIndents();
                   nsAdaptorPrintReason(reflowState);
                   printf("\n");
                  #endif
+                 AddStateBits(NS_FRAME_IS_DIRTY);
                  WillReflow(aPresContext);
-                 Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+                 Reflow(aPresContext, aDesiredSize, reflowState, status);
                  if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
                     aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
 
@@ -5973,12 +6115,6 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
     aDesiredSize.ascent = metrics->mBlockAscent;
   }
 
-  // Clip the path we just reflowed, so that we don't incrementally
-  // reflow it again: subsequent reflows will be treated as resize
-  // reflows.
-  if (path)
-    PruneReflowPathFor(path->mFrame, aReflowState.path);
-  
 #ifdef DEBUG_REFLOW
   if (aHeight != NS_INTRINSICSIZE && aDesiredSize.height != aHeight)
   {
@@ -6007,122 +6143,7 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
   gIndent2--;
 #endif
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
-}
-
-// Look for aFrame in the specified reflow path's tree, returning the
-// reflow path node corresponding to the frame if we find it.
-static nsReflowPath *
-FindReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
-{
-  nsReflowPath::iterator iter, end = aReflowPath->EndChildren();
-  for (iter = aReflowPath->FirstChild(); iter != end; ++iter) {
-    if (*iter == aFrame)
-      return iter.get();
-
-    nsReflowPath *subtree = FindReflowPathFor(aFrame, iter.get());
-    if (subtree)
-      return subtree;
-  }
-
-  return nsnull;
-}
-
-void
-nsFrame::HandleIncrementalReflow(nsBoxLayoutState& aState, 
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsReflowReason& aReason,
-                                 nsReflowPath** aReflowPath,
-                                 PRBool& aRedrawNow,
-                                 PRBool& aNeedsReflow,
-                                 PRBool& aRedrawAfterReflow,
-                                 PRBool& aMoveFrame)
-{
-  nsFrameState childState = GetStateBits();
-
-  aReason = aReflowState.reason;
-
-    // handle or different types of reflow
-  switch(aReason)
-  {
-   // if the child we are reflowing is the child we popped off the incremental 
-   // reflow chain then we need to reflow it no matter what.
-   // if it's not the child we got from the reflow chain then this child needs reflow
-   // because as a side effect of the incremental child changing size it needs to be resized.
-   // This will happen a lot when a box that contains 2 children with different flexibilities
-   // if on child gets bigger the other is affected because it is proprotional to the first.
-   // so it might need to be resized. But we don't need to reflow it. If it is already the
-   // needed size then we will do nothing. 
-   case eReflowReason_Incremental: {
-
-      // Grovel through the reflow path's children to find the path
-      // that corresponds to the current frame. If we can't find a
-      // child, then we'll convert the reflow to a dirty reflow,
-      // below.
-      nsReflowPath *path = FindReflowPathFor(this, aReflowState.path);
-      if (path) {
-          aNeedsReflow = PR_TRUE;
-
-          // Return the path that we've found so that HTML incremental
-          // reflow can proceed normally.
-          if (aReflowPath)
-            *aReflowPath = path;
-
-          // if we hit the target then we have used up the chain.
-          // next time a layout 
-          break;
-      } 
-
-      // fall into dirty if the incremental child was use. It should be treated as a 
-   }
-
-   // if its dirty then see if the child we want to reflow is dirty. If it is then
-   // mark it as needing to be reflowed.
-   case eReflowReason_Dirty: {
-        // XXX nsBlockFrames don't seem to be able to handle a reason of Dirty. So we  
-        // send down a resize instead. If we did send down the dirty we would have wrapping problems. If you 
-        // look at the main page it will initially come up ok but will have a unneeded horizontal 
-        // scrollbar if you resize it will fix it self. The real fix is to fix block frame but
-        // this will fix it for beta3.
-        if (childState & NS_FRAME_FIRST_REFLOW) 
-           aReason = eReflowReason_Initial;
-        else
-           aReason = eReflowReason_Resize;
-
-        // get the frame state to see if it needs reflow
-        aNeedsReflow = BoxMetrics()->mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
-
-        // but of course by definition dirty reflows are supposed to redraw so
-        // lets signal that we need to do that. We want to do it after as well because
-        // the object may have changed size.
-        if (aNeedsReflow) {
-           aRedrawNow = PR_TRUE;
-           aRedrawAfterReflow = PR_TRUE;
-           //printf("Redrawing!!!/n");
-        }
-
-   } break;
-
-   // if the a resize reflow then it doesn't need to be reflowed. Only if the size is different
-   // from the new size would we actually do a reflow
-   case eReflowReason_Resize:
-       // blocks sometimes send resizes even when its children are dirty! We need to make sure we
-       // repair in these cases. So check the flags here.
-       aNeedsReflow = BoxMetrics()->mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
-   break;
-
-   // if it's an initial reflow we must place the child.
-   // otherwise we might think it was already placed when it wasn't
-   case eReflowReason_Initial:
-       aMoveFrame = PR_TRUE;
-       aNeedsReflow = PR_TRUE;
-   break;
-
-   default:
-       aNeedsReflow = PR_TRUE;
- 
-  }
 }
 
 PRBool
@@ -6135,40 +6156,6 @@ void
 nsFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed)
 {
   BoxMetrics()->mWasCollapsed = aCollapsed;
-}
-
-PRBool 
-nsFrame::CanSetMaxElementWidth(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath)
-{
-      PRBool redrawAfterReflow = PR_FALSE;
-      PRBool needsReflow = PR_FALSE;
-      PRBool redrawNow = PR_FALSE;
-      PRBool move = PR_TRUE;
-      const nsHTMLReflowState* reflowState = aState.GetReflowState();
-
-      HandleIncrementalReflow(aState, 
-                              *reflowState, 
-                              aReason,
-                              aReflowPath,
-                              redrawNow,
-                              needsReflow, 
-                              redrawAfterReflow, 
-                              move);
-
-      // only  incremental reflows can handle maxelementsize being set.
-      if (reflowState->reason == eReflowReason_Incremental) {
-        nsReflowPath *path = *aReflowPath;
-        if (path && path->mReflowCommand &&
-            path->mReflowCommand->Type() == eReflowType_StyleChanged) {
-          // MaxElement doesn't work on style change reflows.. :-(
-          // XXXwaterson why?
-          return PR_FALSE;
-        }
-
-        return PR_TRUE;
-      }
-
-      return PR_FALSE;
 }
 
 nsBoxLayoutMetrics*
@@ -6222,13 +6209,12 @@ nsFrame::InitBoxMetrics(PRBool aClear)
   nsBoxLayoutMetrics *metrics = new nsBoxLayoutMetrics();
   SetProperty(nsLayoutAtoms::boxMetricsProperty, metrics, DeleteBoxMetrics);
 
-  NeedsRecalc();
+  nsFrame::MarkIntrinsicWidthsDirty();
   metrics->mBlockAscent = 0;
   metrics->mLastSize.SizeTo(0, 0);
   metrics->mOverflow.SizeTo(0, 0);
   metrics->mIncludeOverflow = PR_TRUE;
   metrics->mWasCollapsed = PR_FALSE;
-  metrics->mStyleChange = PR_FALSE;
 }
 
 // Box layout debugging
@@ -6381,6 +6367,61 @@ DR_cookie::~DR_cookie()
   nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
+MOZ_DECL_CTOR_COUNTER(DR_layout_cookie)
+
+DR_layout_cookie::DR_layout_cookie(nsIFrame* aFrame)
+  : mFrame(aFrame)
+{
+  MOZ_COUNT_CTOR(DR_layout_cookie);
+  mValue = nsFrame::DisplayLayoutEnter(mFrame);
+}
+
+DR_layout_cookie::~DR_layout_cookie()
+{
+  MOZ_COUNT_DTOR(DR_layout_cookie);
+  nsFrame::DisplayLayoutExit(mFrame, mValue);
+}
+
+MOZ_DECL_CTOR_COUNTER(DR_intrinsic_width_cookie)
+
+DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
+                     nsIFrame*                aFrame, 
+                     const char*              aType,
+                     nscoord&                 aResult)
+  : mFrame(aFrame)
+  , mType(aType)
+  , mResult(aResult)
+{
+  MOZ_COUNT_CTOR(DR_intrinsic_width_cookie);
+  mValue = nsFrame::DisplayIntrinsicWidthEnter(mFrame, mType);
+}
+
+DR_intrinsic_width_cookie::~DR_intrinsic_width_cookie()
+{
+  MOZ_COUNT_DTOR(DR_intrinsic_width_cookie);
+  nsFrame::DisplayIntrinsicWidthExit(mFrame, mType, mResult, mValue);
+}
+
+MOZ_DECL_CTOR_COUNTER(DR_intrinsic_size_cookie)
+
+DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(
+                     nsIFrame*                aFrame, 
+                     const char*              aType,
+                     nsSize&                  aResult)
+  : mFrame(aFrame)
+  , mType(aType)
+  , mResult(aResult)
+{
+  MOZ_COUNT_CTOR(DR_intrinsic_size_cookie);
+  mValue = nsFrame::DisplayIntrinsicSizeEnter(mFrame, mType);
+}
+
+DR_intrinsic_size_cookie::~DR_intrinsic_size_cookie()
+{
+  MOZ_COUNT_DTOR(DR_intrinsic_size_cookie);
+  nsFrame::DisplayIntrinsicSizeExit(mFrame, mType, mResult, mValue);
+}
+
 struct DR_FrameTypeInfo;
 struct DR_FrameTreeNode;
 struct DR_Rule;
@@ -6397,7 +6438,7 @@ struct DR_State
   DR_FrameTypeInfo* GetFrameTypeInfo(char* aFrameName);
   void InitFrameTypeTable();
   DR_FrameTreeNode* CreateTreeNode(nsIFrame*                aFrame,
-                                   const nsHTMLReflowState& aReflowState);
+                                   const nsHTMLReflowState* aReflowState);
   void FindMatchingRule(DR_FrameTreeNode& aNode);
   PRBool RuleMatches(DR_Rule&          aRule,
                      DR_FrameTreeNode& aNode);
@@ -6421,7 +6462,7 @@ struct DR_State
   PRInt32     mCount;
   nsVoidArray mWildRules;
   PRInt32     mAssert;
-  PRInt32     mIndentStart;
+  PRInt32     mIndent;
   PRBool      mIndentUndisplayedFrames;
   nsVoidArray mFrameTypeTable;
   PRBool      mDisplayPixelErrors;
@@ -6522,7 +6563,7 @@ struct DR_FrameTreeNode
 // DR_State implementation
 
 DR_State::DR_State() 
-: mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), 
+: mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndent(0), 
   mIndentUndisplayedFrames(PR_FALSE), mDisplayPixelErrors(PR_FALSE)
 {
   MOZ_COUNT_CTOR(DR_State);
@@ -6542,7 +6583,7 @@ void DR_State::Init()
   env = PR_GetEnv("GECKO_DISPLAY_REFLOW_INDENT_START");
   if (env) {
     if (GetNumber(env, num)) 
-      mIndentStart = num;
+      mIndent = num;
     else 
       printf("GECKO_DISPLAY_REFLOW_INDENT_START - invalid value = %s", env);
   }
@@ -6859,21 +6900,19 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
       }
     }
   }
-
-  if (aNode.mParent) {
-    aNode.mIndent = aNode.mParent->mIndent;
-    if (aNode.mDisplay || mIndentUndisplayedFrames) {
-      aNode.mIndent++;
-    }
-  }
 }
     
 DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
-                                           const nsHTMLReflowState& aReflowState)
+                                           const nsHTMLReflowState* aReflowState)
 {
   // find the frame of the parent reflow state (usually just the parent of aFrame)
-  const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
-  nsIFrame* parentFrame = (parentRS) ? parentRS->frame : nsnull;
+  nsIFrame* parentFrame;
+  if (aReflowState) {
+    const nsHTMLReflowState* parentRS = aReflowState->parentReflowState;
+    parentFrame = (parentRS) ? parentRS->frame : nsnull;
+  } else {
+    parentFrame = aFrame->GetParent();
+  }
 
   // find the parent tree node leaf
   DR_FrameTreeNode* parentNode = nsnull;
@@ -6887,6 +6926,12 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   }
   DR_FrameTreeNode* newNode = new DR_FrameTreeNode(aFrame, parentNode);
   FindMatchingRule(*newNode);
+
+  newNode->mIndent = mIndent;
+  if (newNode->mDisplay || mIndentUndisplayedFrames) {
+    ++mIndent;
+  }
+
   if (lastLeaf && (lastLeaf == parentNode)) {
     mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Count() - 1);
   }
@@ -6920,6 +6965,10 @@ void DR_State::DeleteTreeNode(DR_FrameTreeNode& aNode)
   if ((0 == numLeaves) || (aNode.mParent != (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(numLeaves - 1))) {
     mFrameTreeLeaves.AppendElement(aNode.mParent);
   }
+
+  if (aNode.mDisplay || mIndentUndisplayedFrames) {
+    --mIndent;
+  }
   // delete the tree node 
   delete &aNode;
 }
@@ -6949,30 +6998,26 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
 
     DR_state->PrettyUC(aReflowState.availableWidth, width);
     DR_state->PrettyUC(aReflowState.availableHeight, height);
-    if (aReflowState.path && aReflowState.path->mReflowCommand) {
-      const char *incr_reason;
-      switch(aReflowState.path->mReflowCommand->Type()) {
-        case eReflowType_ContentChanged:
-          incr_reason = "incr. (Content)";
-          break;
-        case eReflowType_StyleChanged:
-          incr_reason = "incr. (Style)";
-          break;
-        case eReflowType_ReflowDirty:
-          incr_reason = "incr. (Dirty)";
-          break;
-        default:
-          incr_reason = "incr. (Unknown)";
-      }
-      printf("r=%d %s a=%s,%s ", aReflowState.reason, incr_reason, width, height);
-    }
-    else {
-      printf("r=%d a=%s,%s ", aReflowState.reason, width, height);
-    }
+    printf("Reflow a=%s,%s ", width, height);
 
     DR_state->PrettyUC(aReflowState.mComputedWidth, width);
     DR_state->PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s ", width, height);
+
+    if (aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
+      printf("dirty ");
+
+    if (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)
+      printf("dirty-children ");
+
+    if (aReflowState.mFlags.mSpecialHeightReflow)
+      printf("special-height ");
+
+    if (aReflowState.mFlags.mHResize)
+      printf("h-resize ");
+
+    if (aReflowState.mFlags.mVResize)
+      printf("v-resize ");
 
     nsIFrame* inFlow = aFrame->GetPrevInFlow();
     if (inFlow) {
@@ -7005,9 +7050,56 @@ void* nsFrame::DisplayReflowEnter(nsPresContext*          aPresContext,
 
   NS_ASSERTION(aFrame, "invalid call");
 
-  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, aReflowState);
+  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, &aReflowState);
   if (treeNode) {
     DisplayReflowEnterPrint(aPresContext, aFrame, aReflowState, *treeNode, PR_FALSE);
+  }
+  return treeNode;
+}
+
+void* nsFrame::DisplayLayoutEnter(nsIFrame* aFrame)
+{
+  if (!DR_state->mInited) DR_state->Init();
+  if (!DR_state->mActive) return nsnull;
+
+  NS_ASSERTION(aFrame, "invalid call");
+
+  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nsnull);
+  if (treeNode && treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    printf("Layout\n");
+  }
+  return treeNode;
+}
+
+void* nsFrame::DisplayIntrinsicWidthEnter(nsIFrame* aFrame,
+                                          const char* aType)
+{
+  if (!DR_state->mInited) DR_state->Init();
+  if (!DR_state->mActive) return nsnull;
+
+  NS_ASSERTION(aFrame, "invalid call");
+
+  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nsnull);
+  if (treeNode && treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    printf("Get%sWidth\n", aType);
+  }
+  return treeNode;
+}
+
+void* nsFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
+                                         const char* aType)
+{
+  if (!DR_state->mInited) DR_state->Init();
+  if (!DR_state->mActive) return nsnull;
+
+  NS_ASSERTION(aFrame, "invalid call");
+
+  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nsnull);
+  if (treeNode && treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    printf("Get%sSize\n", aType);
   }
   return treeNode;
 }
@@ -7033,16 +7125,8 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     char y[16];
     DR_state->PrettyUC(aMetrics.width, width);
     DR_state->PrettyUC(aMetrics.height, height);
-    printf("d=%s,%s ", width, height);
+    printf("Reflow d=%s,%s ", width, height);
 
-    if (aMetrics.mComputeMEW) {
-      DR_state->PrettyUC(aMetrics.mMaxElementWidth, width);
-      printf("me=%s ", width);
-    }
-    if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      DR_state->PrettyUC(aMetrics.mMaximumWidth, width);
-      printf("m=%s ", width);
-    }
     if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
       printf("status=0x%x", aStatus);
     }
@@ -7068,11 +7152,65 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
       float p2t = aPresContext->ScaledPixelsToTwips();
       CheckPixelError(aMetrics.width, p2t);
       CheckPixelError(aMetrics.height, p2t);
-      if (aMetrics.mComputeMEW) 
-        CheckPixelError(aMetrics.mMaxElementWidth, p2t);
-      if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) 
-        CheckPixelError(aMetrics.mMaximumWidth, p2t);
     }
+  }
+  DR_state->DeleteTreeNode(*treeNode);
+}
+
+void nsFrame::DisplayLayoutExit(nsIFrame*            aFrame,
+                                void*                aFrameTreeNode)
+{
+  if (!DR_state->mActive) return;
+
+  NS_ASSERTION(aFrame, "non-null frame required");
+  if (!aFrameTreeNode) return;
+
+  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
+  if (treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    nsRect rect = aFrame->GetRect();
+    printf("Layout=%d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height);
+  }
+  DR_state->DeleteTreeNode(*treeNode);
+}
+
+void nsFrame::DisplayIntrinsicWidthExit(nsIFrame*            aFrame,
+                                        const char*          aType,
+                                        nscoord              aResult,
+                                        void*                aFrameTreeNode)
+{
+  if (!DR_state->mActive) return;
+
+  NS_ASSERTION(aFrame, "non-null frame required");
+  if (!aFrameTreeNode) return;
+
+  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
+  if (treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    printf("Get%sWidth=%d\n", aType, aResult);
+  }
+  DR_state->DeleteTreeNode(*treeNode);
+}
+
+void nsFrame::DisplayIntrinsicSizeExit(nsIFrame*            aFrame,
+                                       const char*          aType,
+                                       nsSize               aResult,
+                                       void*                aFrameTreeNode)
+{
+  if (!DR_state->mActive) return;
+
+  NS_ASSERTION(aFrame, "non-null frame required");
+  if (!aFrameTreeNode) return;
+
+  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
+  if (treeNode->mDisplay) {
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+
+    char width[16];
+    char height[16];
+    DR_state->PrettyUC(aResult.width, width);
+    DR_state->PrettyUC(aResult.height, height);
+    printf("Get%sSize=%s,%s\n", aType, width, height);
   }
   DR_state->DeleteTreeNode(*treeNode);
 }

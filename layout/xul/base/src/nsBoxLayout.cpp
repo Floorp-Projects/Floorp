@@ -200,13 +200,7 @@ nsBoxLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildL
 }
 
 NS_IMETHODIMP
-nsBoxLayout::ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxLayout::BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)
+nsBoxLayout::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   return NS_OK;
 }

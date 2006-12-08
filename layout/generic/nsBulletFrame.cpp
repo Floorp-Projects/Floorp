@@ -47,7 +47,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsReflowPath.h"
 #include "nsIRenderingContext.h"
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
@@ -1408,17 +1407,9 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
 #define MIN_BULLET_SIZE 1
 
 
-#define MINMAX(_value,_min,_max) \
-    ((_value) < (_min)           \
-     ? (_min)                    \
-     : ((_value) > (_max)        \
-        ? (_max)                 \
-        : (_value)))
-
-
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
-                              const nsHTMLReflowState& aReflowState,
+                              nsIRenderingContext *aRenderingContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // Reset our padding.  If we need it, we'll set it below.
@@ -1432,73 +1423,9 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
         !(status & imgIRequest::STATUS_ERROR)) {
-      nscoord widthConstraint = NS_INTRINSICSIZE;
-      nscoord heightConstraint = NS_INTRINSICSIZE;
-      PRBool fixedContentWidth = PR_FALSE;
-      PRBool fixedContentHeight = PR_FALSE;
-
-      nscoord minWidth, maxWidth, minHeight, maxHeight;
-      
-      // Determine whether the image has fixed content width
-      widthConstraint = aReflowState.mComputedWidth;
-      minWidth = aReflowState.mComputedMinWidth;
-      maxWidth = aReflowState.mComputedMaxWidth;
-      if (widthConstraint != NS_INTRINSICSIZE) {
-        fixedContentWidth = PR_TRUE;
-      }
-
-      // Determine whether the image has fixed content height
-      heightConstraint = aReflowState.mComputedHeight;
-      minHeight = aReflowState.mComputedMinHeight;
-      maxHeight = aReflowState.mComputedMaxHeight;
-      if (heightConstraint != NS_UNCONSTRAINEDSIZE) {
-        fixedContentHeight = PR_TRUE;
-      }
-
-      PRBool haveComputedSize = PR_FALSE;
-      PRBool needIntrinsicImageSize = PR_FALSE;
-
-      nscoord newWidth=0, newHeight=0;
-      if (fixedContentWidth) {
-        newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
-        if (fixedContentHeight) {
-          newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-          haveComputedSize = PR_TRUE;
-        } else {
-          // We have a width, and an auto height. Compute height from
-          // width once we have the intrinsic image size.
-          if (mIntrinsicSize.height != 0) {
-            newHeight = (mIntrinsicSize.height * newWidth) / mIntrinsicSize.width;
-            haveComputedSize = PR_TRUE;
-          } else {
-            newHeight = 0;
-            needIntrinsicImageSize = PR_TRUE;
-          }
-        }
-      } else if (fixedContentHeight) {
-        // We have a height, and an auto width. Compute width from height
-        // once we have the intrinsic image size.
-        newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-        if (mIntrinsicSize.width != 0) {
-          newWidth = (mIntrinsicSize.width * newHeight) / mIntrinsicSize.height;
-          haveComputedSize = PR_TRUE;
-        } else {
-          newWidth = 0;
-          needIntrinsicImageSize = PR_TRUE;
-        }
-      } else {
-        // auto size the image
-        if (mIntrinsicSize.width == 0 && mIntrinsicSize.height == 0)
-          needIntrinsicImageSize = PR_TRUE;
-        else
-          haveComputedSize = PR_TRUE;
-
-        newWidth = mIntrinsicSize.width;
-        newHeight = mIntrinsicSize.height;
-      }
-
-      mComputedSize.width = newWidth;
-      mComputedSize.height = newHeight;
+      // auto size the image
+      mComputedSize.width = mIntrinsicSize.width;
+      mComputedSize.height = mIntrinsicSize.height;
 
 #if 0 // don't do scaled images in bullets
       if (mComputedSize == mIntrinsicSize) {
@@ -1617,8 +1544,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(*myList, text);
       fm->GetHeight(aMetrics.height);
-      aReflowState.rendContext->SetFont(fm);
-      aReflowState.rendContext->GetWidth(text, aMetrics.width);
+      aRenderingContext->SetFont(fm);
+      aRenderingContext->GetWidth(text, aMetrics.width);
       aMetrics.width += mPadding.right;
       fm->GetMaxAscent(aMetrics.ascent);
       fm->GetMaxDescent(aMetrics.descent);
@@ -1632,11 +1559,11 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsBulletFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsBulletFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
@@ -1646,12 +1573,27 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   aMetrics.ascent += borderPadding.top;
   aMetrics.descent += borderPadding.bottom;
 
-  if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = aMetrics.width;
-  }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
+}
+
+/* virtual */ nscoord
+nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nsHTMLReflowMetrics metrics;
+  DISPLAY_MIN_WIDTH(this, metrics.width);
+  GetDesiredSize(GetPresContext(), aRenderingContext, metrics);
+  return metrics.width;
+}
+
+/* virtual */ nscoord
+nsBulletFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nsHTMLReflowMetrics metrics;
+  DISPLAY_PREF_WIDTH(this, metrics.width);
+  GetDesiredSize(GetPresContext(), aRenderingContext, metrics);
+  return metrics.width;
 }
 
 
@@ -1687,7 +1629,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       if (mParent) {
         mState |= NS_FRAME_IS_DIRTY;
-        mParent->ReflowDirtyChild(shell, this);
+        shell->FrameNeedsReflow(this, nsIPresShell::eStyleChange);
       }
     }
   }

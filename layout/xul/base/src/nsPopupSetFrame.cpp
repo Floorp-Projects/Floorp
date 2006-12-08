@@ -584,8 +584,8 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
   }
 
   if (weakFrame.IsAlive()) {
-    nsBoxLayoutState state(GetPresContext());
-    MarkDirtyChildren(state); // Mark ourselves dirty.
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    GetPresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
 }
 

@@ -149,6 +149,7 @@ select {
   border-width: 2px;
   border-style: inset;
   text-indent: 0;
+  overflow: -moz-hidden-unscrollable;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
@@ -180,6 +181,17 @@ select > input[type="button"] {
   background-repeat: no-repeat !important;
   background-position: center !important;
   -moz-appearance: menulist-button;
+
+  /* Make sure to size correctly if the combobox has a non-auto height. */
+  height: 100% ! important;
+  -moz-box-sizing: border-box ! important;
+
+  /*
+    Make sure to align properly with the display frame.  Note that we
+    want the baseline of the combobox to match the baseline of the
+    display frame, so the dropmarker is what gets the vertical-align.
+  */
+  vertical-align: top !important;
 }
 
 select > input[type="button"]:active {
@@ -203,6 +215,13 @@ select:empty {
   white-space: nowrap;
   text-align: inherit;
   -moz-user-select: none;
+  /* Make sure to size correctly if the combobox has a non-auto height. */
+  height: 100% ! important;
+  -moz-box-sizing: border-box ! important;
+}
+
+select::-moz-scrolled-content {
+  display: block !important;
 }
 
 option {
@@ -258,7 +277,15 @@ optgroup:before {
   position: static !important;
   float: none !important;
 
+  /*
+   * We can't change the padding here, because that would affect our
+   * intrinsic width, since we scroll.  But at the same time, we want
+   * to make sure that our left border+padding matches the left
+   * border+padding of a combobox so that our scrollbar will line up
+   * with the dropmarker.  So set our left border to 2px.
+   */
   border: 1px outset black !important;
+  border-left-width: 2px ! important;
 } 
 
 input[disabled],
@@ -597,7 +624,6 @@ select[size],
 select[multiple],
 select[size][multiple] {
   -moz-appearance: none; /* we'll draw by hand, thanks */
-  border-width: 0;
   background-color: -moz-Field !important;
   border-style: solid;
   border-color: #737373 #999999 #999999 #999999;

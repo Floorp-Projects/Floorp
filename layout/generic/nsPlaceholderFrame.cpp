@@ -59,21 +59,64 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
+/* virtual */ nscoord
+nsPlaceholderFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result = 0;
+  DISPLAY_MIN_WIDTH(this, result);
+  return result;
+}
+
+/* virtual */ nscoord
+nsPlaceholderFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result = 0;
+  DISPLAY_PREF_WIDTH(this, result);
+  return result;
+}
+
+/* virtual */ void
+nsPlaceholderFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                      nsIFrame::InlineMinWidthData *aData)
+{
+  // Override AddInlineMinWith so that *nothing* happens.  In
+  // particular, we don't want to zero out |aData->trailingWhitespace|,
+  // since nsLineLayout skips placeholders when trimming trailing
+  // whitespace, and we don't want to set aData->skipWhitespace to
+  // false.
+
+  // ...but push floats onto the list
+  if (mOutOfFlowFrame->GetStyleDisplay()->mFloats != NS_STYLE_FLOAT_NONE)
+    aData->floats.AppendElement(mOutOfFlowFrame);
+}
+
+/* virtual */ void
+nsPlaceholderFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                       nsIFrame::InlinePrefWidthData *aData)
+{
+  // Override AddInlinePrefWith so that *nothing* happens.  In
+  // particular, we don't want to zero out |aData->trailingWhitespace|,
+  // since nsLineLayout skips placeholders when trimming trailing
+  // whitespace, and we don't want to set aData->skipWhitespace to
+  // false.
+
+  // ...but push floats onto the list
+  if (mOutOfFlowFrame->GetStyleDisplay()->mFloats != NS_STYLE_FLOAT_NONE)
+    aData->floats.AppendElement(mOutOfFlowFrame);
+}
+
 NS_IMETHODIMP
 nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsPlaceholderFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsPlaceholderFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = 0;
-  }
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -106,16 +149,15 @@ nsPlaceholderFrame::GetType() const
   return nsLayoutAtoms::placeholderFrame; 
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+/* virtual */ PRBool
+nsPlaceholderFrame::CanContinueTextRun() const
 {
   if (!mOutOfFlowFrame) {
-    aContinueTextRun = PR_FALSE;
-    return NS_OK;
+    return PR_FALSE;
   }
   // first-letter frames can continue text runs, and placeholders for floated
   // first-letter frames can too
-  return mOutOfFlowFrame->CanContinueTextRun(aContinueTextRun);
+  return mOutOfFlowFrame->CanContinueTextRun();
 }
 
 #ifdef DEBUG

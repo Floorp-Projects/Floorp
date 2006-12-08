@@ -1363,68 +1363,6 @@ nsGrid::GetColumnCount(PRInt32 aIsHorizontal)
   return GetRowCount(!aIsHorizontal);
 }
 
-/**
- * This is called if a child in a row became dirty. This happens if the child gets bigger or smaller
- * in some way.
- */
-void 
-nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsHorizontal)
-{ 
-  // if we are already dirty do nothing.
-  if (mNeedsRebuild || mMarkingDirty)
-    return;
-
-  NeedsRebuild(aState);
-
-  // This code does not work with trees when rows are
-  // dynamically inserted, the cache values are invalid.
-  /*
-  mMarkingDirty = PR_TRUE;
-
-  // index out of range. Rebuild it all
-  if (aRowIndex >= GetRowCount(aIsHorizontal) || aColumnIndex >= GetColumnCount(aIsHorizontal))
-  {
-    NeedsRebuild(aState);
-    return;
-  }
-
-  // dirty our 2 outer nsGridRows. (one for columns and one for rows)
-  // we need to do this because the rows and column we are given may be Extra ones
-  // and may not have any Box associated with them. If you dirtied them then
-  // corresponding nsGridRowGroup around them would never get dirty. So lets just
-  // do it manually here.
-
-  if (mRowBox)
-    mRowBox->MarkDirty(aState);
-
-  if (mColumnBox)
-    mColumnBox->MarkDirty(aState);
-
-  // dirty just our row and column that we were given
-  nsGridRow* row = GetRowAt(aRowIndex, aIsHorizontal);
-  row->MarkDirty(aState);
-
-  nsGridRow* column = GetColumnAt(aColumnIndex, aIsHorizontal);
-  column->MarkDirty(aState);
-
-
-  mMarkingDirty = PR_FALSE;
-  */
-}
-
-/**
- * The row became dirty. This happens if the row's borders change or children inside it
- * force it to change size
- */
-void 
-nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHorizontal)
-{
-  if (mMarkingDirty)
-    return;
-
-  NeedsRebuild(aState);
-}
-
 /*
  * A cell in the given row or columns at the given index has had a child added or removed
  */

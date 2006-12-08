@@ -46,7 +46,6 @@
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsPresContext.h"
-#include "nsReflowPath.h"
 #include "nsIPresShell.h"
 #include "nsAbsoluteContainingBlock.h"
 
@@ -67,10 +66,16 @@ public:
   */
 class ViewportFrame : public nsContainerFrame {
 public:
+  typedef nsContainerFrame Super;
+
   ViewportFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
   virtual ~ViewportFrame() { } // useful for debugging
 
   virtual void Destroy();
+
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -93,6 +98,8 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,

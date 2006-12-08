@@ -267,23 +267,16 @@ nsIsIndexFrame::ScrollIntoView(nsPresContext* aPresContext)
   }
 }
 
-
-NS_IMETHODIMP nsIsIndexFrame::Reflow(nsPresContext*          aPresContext, 
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState, 
-                                     nsReflowStatus&          aStatus)
+nscoord
+nsIsIndexFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsIsIndexFrame", aReflowState.reason);
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
 
-  // The Areaframe takes care of all our reflow 
-  // (except for when style is used to change its size?)
-  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return rv;
+  // Our min width is our pref width; the rest of our reflow is
+  // happily handled by nsAreaFrame
+  result = GetPrefWidth(aRenderingContext);
+  return result;
 }
 
 PRBool

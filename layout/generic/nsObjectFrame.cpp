@@ -505,6 +505,12 @@ nsObjectFrame::GetType() const
   return nsLayoutAtoms::objectFrame; 
 }
 
+PRBool
+nsObjectFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eReplaced));
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsObjectFrame::GetFrameName(nsAString& aResult) const
@@ -591,6 +597,29 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 #define EMBED_DEF_WIDTH 240
 #define EMBED_DEF_HEIGHT 200
 
+/* virtual */ nscoord
+nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result = 0;
+
+  if (!IsHidden(PR_FALSE)) {
+    nsIAtom *atom = mContent->Tag();
+    if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
+      float p2t = GetPresContext()->ScaledPixelsToTwips();
+      result = NSIntPixelsToTwips(EMBED_DEF_WIDTH, p2t);
+    }
+  }
+
+  DISPLAY_MIN_WIDTH(this, result);
+  return result;
+}
+
+/* virtual */ nscoord
+nsObjectFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  return nsObjectFrame::GetMinWidth(aRenderingContext);
+}
+
 void
 nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -603,9 +632,6 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   aMetrics.descent = 0;
 
   if (IsHidden(PR_FALSE)) {
-    if (aMetrics.mComputeMEW) {
-      aMetrics.mMaxElementWidth = 0;
-    }      
     return;
   }
   
@@ -664,10 +690,6 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   
   // ascent
   aMetrics.ascent = aMetrics.height;
-
-  if (aMetrics.mComputeMEW) {
-    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
-  }
 }
 
 NS_IMETHODIMP
@@ -676,7 +698,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsObjectFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsObjectFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 
   // Get our desired size
@@ -738,8 +760,9 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
 
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow or something.
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
-  shell->AppendReflowCommand(this, eReflowType_StyleChanged, nsnull);
+  AddStateBits(NS_FRAME_IS_DIRTY);
+  GetPresContext()->GetPresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   return rv;
 }
 
@@ -1306,8 +1329,8 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow.
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
-  shell->AppendReflowCommand(this, eReflowType_StyleChanged, nsnull);
+  GetPresContext()->GetPresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   return rv;
 }
 

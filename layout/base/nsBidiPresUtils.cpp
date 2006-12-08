@@ -463,10 +463,11 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 PRBool IsBidiLeaf(nsIFrame* aFrame) {
   nsIAtom* frameType = aFrame->GetType();
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  // Need the IsBlockLevel() check because nsFirstLetterFrame is
+  // always of type eBidiInlineContainer, even if it's floating.
   return !kid
-    || aFrame->GetStyleDisplay()->IsBlockLevel()
-    || !(aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
-         || nsLayoutAtoms::blockFrame == frameType);
+    || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
+    || aFrame->GetStyleDisplay()->IsBlockLevel();
 }
 
 nsresult

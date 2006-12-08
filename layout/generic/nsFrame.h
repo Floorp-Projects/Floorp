@@ -50,7 +50,6 @@
 #endif
 
 #include "nsIPresShell.h"
-#include "nsHTMLReflowCommand.h"
 #include "nsFrameSelection.h"
 #include "nsHTMLReflowState.h"
 #include "nsHTMLReflowMetrics.h"
@@ -115,6 +114,7 @@
 #endif
 
 // handy utilities
+// XXXldb Move to nsLayoutUtils!
 void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
 //----------------------------------------------------------------------
@@ -259,7 +259,7 @@ public:
   NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
-  NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+  virtual void ChildIsDirty(nsIFrame* aChild);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
@@ -272,7 +272,47 @@ public:
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
 
-  // nsIHTMLReflow
+  virtual void MarkIntrinsicWidthsDirty();
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                 InlineMinWidthData *aData);
+  virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+                                  InlinePrefWidthData *aData);
+  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets();
+
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
+
+  /**
+   * A helper, used by |nsFrame::ComputeSize| (for frames that need to
+   * override only this part of ComputeSize), that computes the size
+   * that should be returned when 'width', 'height', and
+   * min/max-width/height are all 'auto' or equivalent.
+   *
+   * In general, frames that can accept any computed width/height should
+   * override only ComputeAutoSize, and frames that cannot do so need to
+   * override ComputeSize to enforce their width/height invariants.
+   *
+   * Implementations may optimize by returning a garbage width if
+   * GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto, and
+   * likewise for height, since in such cases the result is guaranteed
+   * to be unused.
+   */
+  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                 nsSize aCBSize, nscoord aAvailableWidth,
+                                 nsSize aMargin, nsSize aBorder,
+                                 nsSize aPadding, PRBool aShrinkWrap);
+
+  /**
+   * Utility function for ComputeAutoSize implementations.  Return
+   * max(GetMinWidth(), min(aWidthInCB, GetPrefWidth()))
+   */
+  nscoord ShrinkWidthToFit(nsIRenderingContext *aRenderingContext,
+                           nscoord aWidthInCB);
+
   NS_IMETHOD  WillReflow(nsPresContext* aPresContext);
   NS_IMETHOD  Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -281,7 +321,7 @@ public:
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
-  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+  virtual PRBool CanContinueTextRun() const;
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
@@ -326,7 +366,6 @@ public:
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD SetIncludeOverflow(PRBool aInclude);
   NS_IMETHOD GetOverflow(nsSize& aOverflow);
-  NS_IMETHOD NeedsRecalc();
 
   //--------------------------------------------------
   // Additional methods
@@ -431,11 +470,26 @@ public:
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState);
+  static void* DisplayLayoutEnter(nsIFrame* aFrame);
+  static void* DisplayIntrinsicWidthEnter(nsIFrame* aFrame,
+                                          const char* aType);
+  static void* DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
+                                         const char* aType);
   static void  DisplayReflowExit(nsPresContext*      aPresContext,
                                  nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aMetrics,
                                  PRUint32             aStatus,
                                  void*                aFrameTreeNode);
+  static void  DisplayLayoutExit(nsIFrame* aFrame,
+                                 void* aFrameTreeNode);
+  static void  DisplayIntrinsicWidthExit(nsIFrame* aFrame,
+                                         const char* aType,
+                                         nscoord aResult,
+                                         void* aFrameTreeNode);
+  static void  DisplayIntrinsicSizeExit(nsIFrame* aFrame,
+                                        const char* aType,
+                                        nsSize aResult,
+                                        void* aFrameTreeNode);
 
   static void DisplayReflowStartup();
   static void DisplayReflowShutdown();
@@ -523,8 +577,6 @@ protected:
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
 #endif
-  virtual PRBool HasStyleChange();
-  virtual void SetStyleChangeFlag(PRBool aDirty);
 
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
@@ -539,26 +591,12 @@ private:
   nsresult BoxReflow(nsBoxLayoutState& aState,
                      nsPresContext*    aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
+                     nsIRenderingContext* aRenderingContext,
                      nscoord aX,
                      nscoord aY,
                      nscoord aWidth,
                      nscoord aHeight,
                      PRBool aMoveFrame = PR_TRUE);
-
-  void HandleIncrementalReflow(nsBoxLayoutState& aState, 
-                               const nsHTMLReflowState& aReflowState, 
-                               nsReflowReason& aReason,
-                               nsReflowPath** aReflowPath,
-                               PRBool& aRedrawNow,
-                               PRBool& aNeedReflow,
-                               PRBool& aRedrawAfterReflow,
-                               PRBool& aMoveFrame);
-
-  PRBool CanSetMaxElementWidth(nsBoxLayoutState& aState,
-                               nsReflowReason& aReason,
-                               nsReflowPath **aReflowPath);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
@@ -586,16 +624,64 @@ protected:
     nsReflowStatus&          mStatus;    
     void*                    mValue;
   };
+
+  struct DR_layout_cookie {
+    DR_layout_cookie(nsIFrame* aFrame);
+    ~DR_layout_cookie();
+
+    nsIFrame* mFrame;
+    void* mValue;
+  };
+  
+  struct DR_intrinsic_width_cookie {
+    DR_intrinsic_width_cookie(nsIFrame* aFrame, const char* aType,
+                              nscoord& aResult);
+    ~DR_intrinsic_width_cookie();
+
+    nsIFrame* mFrame;
+    const char* mType;
+    nscoord& mResult;
+    void* mValue;
+  };
+  
+  struct DR_intrinsic_size_cookie {
+    DR_intrinsic_size_cookie(nsIFrame* aFrame, const char* aType,
+                             nsSize& aResult);
+    ~DR_intrinsic_size_cookie();
+
+    nsIFrame* mFrame;
+    const char* mType;
+    nsSize& mResult;
+    void* mValue;
+  };
   
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
   DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
 #define DISPLAY_REFLOW_CHANGE() \
   dr_cookie.Change();
+#define DISPLAY_LAYOUT(dr_frame) \
+  DR_layout_cookie dr_cookie(dr_frame); 
+#define DISPLAY_MIN_WIDTH(dr_frame, dr_result) \
+  DR_intrinsic_width_cookie dr_cookie(dr_frame, "Min", dr_result)
+#define DISPLAY_PREF_WIDTH(dr_frame, dr_result) \
+  DR_intrinsic_width_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
+  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
+  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#define DISPLAY_MAX_SIZE(dr_frame, dr_result) \
+  DR_intrinsic_size_cookie dr_cookie(dr_frame, "Max", dr_result)
 
 #else
 
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
 #define DISPLAY_REFLOW_CHANGE() 
+#define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_MIN_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_PREF_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
   
 #endif
 // End Display Reflow Debugging

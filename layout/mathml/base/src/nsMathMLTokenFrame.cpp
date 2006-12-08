@@ -125,31 +125,20 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
 
-  // See if this is an incremental reflow
-  if (aReflowState.reason == eReflowReason_Incremental) {
-#ifdef MATHML_NOISY_INCREMENTAL_REFLOW
-printf("nsMathMLContainerFrame::ReflowTokenFor:IncrementalReflow received by: ");
-nsFrame::ListTag(stdout, aFrame);
-printf("\n");
-#endif
-  }
-
   // initializations needed for empty markup like <mtag></mtag>
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
 
   // ask our children to compute their bounding metrics
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW,
+  nsHTMLReflowMetrics childDesiredSize(
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   PRInt32 count = 0;
   nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
-    nsReflowReason reason = (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
-      ? eReflowReason_Initial : aReflowState.reason;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize, reason);
+                                       childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                      childReflowState, aStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
@@ -166,10 +155,6 @@ printf("\n");
 
     count++;
     childFrame = childFrame->GetNextSibling();
-  }
-
-  if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
 
   // cache the frame's mBoundingMetrics
@@ -213,7 +198,7 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
     nsIFrame* childFrame = GetFirstChild(nsnull);
     while (childFrame) {
       nsRect rect = childFrame->GetRect();
-      nsHTMLReflowMetrics childSize(nsnull);
+      nsHTMLReflowMetrics childSize;
       childSize.width = rect.width;
       childSize.height = aDesiredSize.height; //rect.height;
 
@@ -230,17 +215,14 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
-                                     nsIFrame*     aChild)
+/* virtual */ void
+nsMathMLTokenFrame::MarkIntrinsicWidthsDirty()
 {
-  // if we get this, it means it was called by the nsTextFrame beneath us, and
-  // this means something changed in the text content. So re-process our text
-
+  // this could be called due to changes in the nsTextFrame beneath us
+  // when something changed in the text content. So re-process our text
   ProcessTextData(PR_TRUE);
 
-  mState |= NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN;
-  return mParent->ReflowDirtyChild(aPresShell, this);
+  nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
 NS_IMETHODIMP

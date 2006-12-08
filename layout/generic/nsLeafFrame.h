@@ -59,32 +59,57 @@ public:
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
     return DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
-  NS_IMETHOD Reflow(nsPresContext*      aPresContext,
+
+  /**
+   * Both GetMinWidth and GetPrefWidth will return whatever GetIntrinsicWidth
+   * returns.
+   */
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+
+  /**
+   * Reflow our frame.  This will use the computed width plus borderpadding for
+   * the desired width, and use the return value of GetIntrinsicHeight plus
+   * borderpadding for the desired height.  Ascent will be set to the height,
+   * and descent will be set to 0.
+   */
+NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
   nsLeafFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~nsLeafFrame();
 
   /**
-   * Return the desired size of the frame's content area. Note that this
-   * method doesn't need to deal with padding or borders (the caller will
-   * deal with it). In addition, the ascent will be set to the height
-   * and the descent will be set to zero.
+   * Return the intrinsic width of the frame's content area. Note that this
+   * should not include borders or padding and should not depend on the applied
+   * styles.
    */
-  virtual void GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize) = 0;
+  virtual nscoord GetIntrinsicWidth() = 0;
+
+  /**
+   * Return the intrinsic height of the frame's content area.  This should not
+   * include border or padding.  This will only be called if there is no
+   * computed height.  Note that subclasses must either implement this or
+   * override Reflow; the default Reflow impl calls this method.
+   */
+  virtual nscoord GetIntrinsicHeight();
 
   /**
    * Subroutine to add in borders and padding
    */
-  void AddBordersAndPadding(nsPresContext* aPresContext,
-                            const nsHTMLReflowState& aReflowState,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            nsMargin& aBorderPadding);
+  void AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
+                            nsHTMLReflowMetrics& aDesiredSize);
+
+  /**
+   * Set aDesiredSize to be the available size
+   */
+  void SizeToAvailSize(const nsHTMLReflowState& aReflowState,
+                       nsHTMLReflowMetrics& aDesiredSize);
 };
 
 #endif /* nsLeafFrame_h___ */

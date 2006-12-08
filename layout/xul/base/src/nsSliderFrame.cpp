@@ -54,7 +54,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
-#include "nsStyleChangeList.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDOMEventReceiver.h"
@@ -272,8 +271,9 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
       aAttribute == nsXULAtoms::pageincrement ||
       aAttribute == nsXULAtoms::increment) {
 
-      nsBoxLayoutState state(GetPresContext());
-      MarkDirtyChildren(state);
+      AddStateBits(NS_FRAME_IS_DIRTY);
+      GetPresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
 
   return rv;

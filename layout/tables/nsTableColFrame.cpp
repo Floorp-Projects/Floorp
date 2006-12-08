@@ -56,7 +56,13 @@
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) : nsFrame(aContext)
 {
   SetColType(eColContent);
-  ResetSizingInfo();
+  ResetMinCoord();
+  ResetPrefCoord();
+  ResetPrefPercent();
+  ResetSpanMinCoord();
+  ResetSpanPrefCoord();
+  ResetSpanPrefPercent();
+  ResetFinalWidth();
 }
 
 nsTableColFrame::~nsTableColFrame()
@@ -74,33 +80,6 @@ nsTableColFrame::SetColType(nsTableColType aType)
 {
   PRUint32 type = aType - eColContent;
   mState |= (type << COL_TYPE_OFFSET);
-}
-
-nsColConstraint 
-nsTableColFrame::GetConstraint() const
-{ 
-  return (nsColConstraint)((mState & COL_CONSTRAINT_BITS) >> COL_CONSTRAINT_OFFSET);
-}
-
-void 
-nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
-{ 
-  PRUint32 con = aConstraint - eNoConstraint;
-  mState |= (con << COL_CONSTRAINT_OFFSET);
-}
-
-// XXX what about other style besides width
-nsStyleCoord nsTableColFrame::GetStyleWidth() const
-{
-  nsStyleCoord styleWidth = GetStylePosition()->mWidth;
-  if (eStyleUnit_Auto == styleWidth.GetUnit()) {
-    styleWidth = GetParent()->GetStylePosition()->mWidth;
-  }
-
-  nsStyleCoord returnWidth;
-  returnWidth.mUnit  = styleWidth.mUnit;
-  returnWidth.mValue = styleWidth.mValue;
-  return returnWidth;
 }
 
 void nsTableColFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
@@ -121,18 +100,12 @@ void nsTableColFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
   }
 }
 
-void nsTableColFrame::ResetSizingInfo()
-{
-  memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
-  SetConstraint(eNoConstraint);
-}
-
 NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTableColFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTableColFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width=0;
   aDesiredSize.height=0;
@@ -144,10 +117,6 @@ NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
       tableFrame->SetNeedToCollapse(PR_TRUE);
     }    
   }
-  if (aDesiredSize.mComputeMEW)
-  {
-    aDesiredSize.mMaxElementWidth=0;
-  }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -156,47 +125,6 @@ NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
 PRInt32 nsTableColFrame::GetSpan()
 {
   return GetStyleTable()->mSpan;
-}
-
-nscoord nsTableColFrame::GetWidth(PRUint32 aWidthType)
-{
-  NS_ASSERTION(aWidthType < NUM_WIDTHS, "GetWidth: bad width type");
-  return mWidths[aWidthType];
-}
-
-void nsTableColFrame::SetWidth(PRUint32 aWidthType,
-                               nscoord  aWidth)
-{
-  NS_ASSERTION(aWidthType < NUM_WIDTHS, "SetWidth: bad width type");
-  mWidths[aWidthType] = aWidth;
-#ifdef MY_DEBUG
-  if (aWidth > 0) {
-    nscoord minWidth = GetMinWidth();
-    if ((MIN_CON != aWidthType) && (aWidth < minWidth)) {
-      printf("non min width set to lower than min \n");
-    }
-  }
-#endif
-}
-
-nscoord nsTableColFrame::GetMinWidth()
-{
-  return PR_MAX(mWidths[MIN_CON], mWidths[MIN_ADJ]);
-}
-
-nscoord nsTableColFrame::GetDesWidth()
-{
-  return PR_MAX(mWidths[DES_CON], mWidths[DES_ADJ]);
-}
-
-nscoord nsTableColFrame::GetFixWidth()
-{
-  return PR_MAX(mWidths[FIX], mWidths[FIX_ADJ]);
-}
-
-nscoord nsTableColFrame::GetPctWidth()
-{
-  return PR_MAX(mWidths[PCT], mWidths[PCT_ADJ]);
 }
 
 #ifdef DEBUG
@@ -209,8 +137,8 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   }
   indent[aIndent] = 0;
 
-  printf("%s**START COL DUMP**\n%s colIndex=%d constraint=%d coltype=",
-    indent, indent, mColIndex, GetConstraint());
+  printf("%s**START COL DUMP**\n%s colIndex=%d coltype=",
+    indent, indent, mColIndex);
   nsTableColType colType = GetColType();
   switch (colType) {
   case eColContent:
@@ -225,10 +153,6 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   case eColAnonymousCell: 
     printf(" anonymous-cell ");
     break;
-  }
-  printf("\n%s widths=", indent);
-  for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
-    printf("%d ", mWidths[widthX]);
   }
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;

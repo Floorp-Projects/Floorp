@@ -2728,7 +2728,7 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData,
                  aFrame);
     if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE
-        && !(aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)) {
+        && !(aFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcHeight = PR_FALSE;
     }
   }
@@ -2789,7 +2789,7 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData,
                  aFrame);
     if (displayData && displayData->mDisplay == NS_STYLE_DISPLAY_INLINE
-        && !(aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)) {
+        && !(aFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcWidth = PR_FALSE;
     }
   }
