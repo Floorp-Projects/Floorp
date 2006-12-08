@@ -2316,6 +2316,9 @@ BadParameter:
 
 /*****************************************************************************/
 
+// This function exists in Mac OS X 10.5, we cannot re-define it here.
+// We don't use this function, so just don't compile it.
+#if 0
 OSErr
 FSVolumeMount(
 	const void *volMountInfo,
@@ -2339,6 +2342,7 @@ BadParameter:
 
 	return ( result );
 }
+#endif
 
 /*****************************************************************************/
 
