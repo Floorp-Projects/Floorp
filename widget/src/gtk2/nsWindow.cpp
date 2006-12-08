@@ -2126,7 +2126,8 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
            // Keep the characters unshifted for shortcuts and accesskeys and
            // make sure that numbers are always passed as such (among others:
            // bugs 50255 and 351310)
-           if (event.isShift && (event.charCode < GDK_0 || event.charCode > GDK_9)) {
+           if (!event.isControl && event.isShift &&
+               (event.charCode < GDK_0 || event.charCode > GDK_9)) {
                GdkKeymapKey k = { aEvent->hardware_keycode, aEvent->group, 0 };
                guint savedKeyval = aEvent->keyval;
                aEvent->keyval = gdk_keymap_lookup_key(gdk_keymap_get_default(), &k);
