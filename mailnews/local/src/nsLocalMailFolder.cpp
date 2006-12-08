@@ -2535,7 +2535,7 @@ void nsMsgLocalMailFolder::CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDB
   srcHdr->GetStringProperty("junkscoreorigin", getter_Copies(sourceString));
   destHdr->SetStringProperty("junkscoreorigin", sourceString);
   srcHdr->GetStringProperty("keywords", getter_Copies(sourceString));
-  destHdr->SetStringProperty("junkscoreorigin", sourceString);
+  destHdr->SetStringProperty("keywords", sourceString);
   
   nsMsgLabelValue label = 0;
   srcHdr->GetLabel(&label);
