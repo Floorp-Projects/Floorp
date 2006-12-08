@@ -121,6 +121,7 @@ public:
                                mExpandQueries(PR_FALSE),
                                mForceOriginalTitle(PR_FALSE),
                                mIncludeHidden(PR_FALSE),
+                               mShowSessions(PR_FALSE),
                                mMaxResults(0)
   { }
 
@@ -144,6 +145,7 @@ public:
   PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
+  PRBool ShowSessions() const { return mShowSessions; }
   PRUint32 MaxResults() const { return mMaxResults; }
 
   nsresult Clone(nsNavHistoryQueryOptions **aResult);
@@ -155,8 +157,8 @@ private:
 
   // IF YOU ADD MORE ITEMS:
   //  * Add a new getter for C++ above if it makes sense
-  //  * Add to the serialization code
-  //  * Add to the deserialization code
+  //  * Add to the serialization code (see nsNavHistory::QueriesToQueryString())
+  //  * Add to the deserialization code (see nsNavHistory::QueryStringToQueries)
   //  * Add to the nsNavHistoryQueryOptions::Clone() function
   //  * Add to the nsNavHistory.cpp:IsSimpleBookmarksQuery function if applicable
   PRUint32 mSort;
@@ -169,6 +171,7 @@ private:
   PRBool mExpandQueries;
   PRBool mForceOriginalTitle;
   PRBool mIncludeHidden;
+  PRBool mShowSessions;
   PRUint32 mMaxResults;
 };
 

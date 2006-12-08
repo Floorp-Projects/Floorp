@@ -3871,6 +3871,10 @@ nsNavHistoryResultTreeViewer::ComputeShowSessions()
 
   nsNavHistoryQueryOptions* options = mResult->mOptions;
   NS_ASSERTION(options, "navHistoryResults must have valid options");
+
+  if (!options->ShowSessions())
+    return; // sessions are off
+
   if (options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_VISIT &&
       options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_FULL_VISIT)
     return; // not visits

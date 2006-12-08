@@ -1089,6 +1089,12 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean includeHidden;
 
   /**
+   * Separate/group history items based on session information.  Only
+   * matters when sorting by date.
+   */
+  attribute boolean showSessions;
+
+  /**
    * This is the maximum number of results that you want. The query is exeucted,
    * the results are sorted, and then the top 'maxResults' results are taken
    * and returned. Set to 0 (the default) to get all results.

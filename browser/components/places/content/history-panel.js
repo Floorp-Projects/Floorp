@@ -97,6 +97,12 @@ function SetPlace(aSearchString)
 {
   var placeURI = ORGANIZER_ROOT_HISTORY_UNSORTED;
 
+  var prefService = 
+    Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Ci.nsIPrefBranch);
+  if (prefService.getBoolPref("browser.history.showSessions"))
+      placeURI += "&showSessions=1";
+
   // if there is a search string, root the places tree into
   // the history root (sorted by SORT_BY_TITLE_ASCENDING)
   // otherwise, root the tree based on gHistoryGrouping
