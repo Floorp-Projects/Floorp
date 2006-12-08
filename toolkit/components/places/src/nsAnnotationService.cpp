@@ -102,63 +102,63 @@ nsAnnotationService::Init()
 
   // mDBSetAnnotation
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_anno "
+      "UPDATE moz_annos "
       "SET mime_type = ?4, content = ?5, flags = ?6, expiration = ?7 "
-      "WHERE anno_id = ?1"),
+      "WHERE id = ?1"),
     getter_AddRefs(mDBSetAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetAnnotation
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT * "
-      "FROM moz_anno "
-      "WHERE page = ?1 AND name_id = "
-      "(SELECT name_id FROM moz_anno_name WHERE name = ?2)"),
+      "FROM moz_annos "
+      "WHERE place_id = ?1 AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
     getter_AddRefs(mDBGetAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetAnnotationNames
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT n.name "
-      "FROM moz_anno a LEFT JOIN moz_anno_name n ON a.name_id = n.name_id "
-      "WHERE a.page = ?1"),
+      "FROM moz_annos a LEFT JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+      "WHERE a.place_id = ?1"),
     getter_AddRefs(mDBGetAnnotationNames));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetAnnotationFromURI
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.anno_id, a.page, ?2, a.mime_type, a.content, a.flags, a.expiration "
-      "FROM moz_history h JOIN moz_anno a ON h.id = a.page "
-      "WHERE h.url = ?1 AND a.name_id = "
-      "(SELECT name_id FROM moz_anno_name WHERE name = ?2)"),
+      "SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags, a.expiration "
+      "FROM moz_places h JOIN moz_annos a ON h.id = a.place_id "
+      "WHERE h.url = ?1 AND a.anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
     getter_AddRefs(mDBGetAnnotationFromURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetAnnotationNameID
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name_id FROM moz_anno_name WHERE name = ?1"),
+      "SELECT id FROM moz_anno_attributes WHERE name = ?1"),
     getter_AddRefs(mDBGetAnnotationNameID));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBAddAnnotationName
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_anno_name (name) VALUES (?1)"),
+      "INSERT INTO moz_anno_attributes (name) VALUES (?1)"),
     getter_AddRefs(mDBAddAnnotationName));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBAddAnnotation
   //   Note: kAnnoIndex_Name here is a name ID and not a string like the getters
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_anno "
-      "(page, name_id, mime_type, content, flags, expiration) "
+      "INSERT INTO moz_annos "
+      "(place_id, anno_attribute_id, mime_type, content, flags, expiration) "
       "VALUES (?2, ?3, ?4, ?5, ?6, ?7)"),
     getter_AddRefs(mDBAddAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBRemoveAnnotation
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_anno WHERE page = ?1 AND name_id = "
-      "(SELECT name_id FROM moz_anno_name WHERE name = ?2)"),
+      "DELETE FROM moz_annos WHERE place_id = ?1 AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
     getter_AddRefs(mDBRemoveAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -180,49 +180,38 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
 {
   nsresult rv;
   PRBool exists;
-  PRBool migrateFromAlpha1 = PR_FALSE;
-  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno"), &exists);
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_annos"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_anno ("
-        "anno_id INTEGER PRIMARY KEY,"
-        "page INTEGER NOT NULL,"
-        "name_id INTEGER,"
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_annos ("
+        "id INTEGER PRIMARY KEY,"
+        "place_id INTEGER NOT NULL,"
+        "anno_attribute_id INTEGER,"
         "mime_type VARCHAR(32) DEFAULT NULL,"
         "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
         "expiration INTEGER DEFAULT 0)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_anno_pageindex ON moz_anno (page)"));
+        "CREATE INDEX moz_annos_place_idindex ON moz_annos (place_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_anno_nameindex ON moz_anno (name_id)"));
+        "CREATE INDEX moz_annos_attributesindex ON moz_annos (anno_attribute_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno_name"), &exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (! exists)
-      migrateFromAlpha1 = PR_TRUE;
   }
 
-  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno_name"), &exists);
+  rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno_attributes"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE moz_anno_name ("
-        "name_id INTEGER PRIMARY KEY,"
+        "CREATE TABLE moz_anno_attributes ("
+        "id INTEGER PRIMARY KEY,"
         "name VARCHAR(32) UNIQUE NOT NULL)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_anno_name_nameindex ON moz_anno_name (name)"));
+        "CREATE INDEX moz_anno_attributes_nameindex ON moz_anno_attributes (name)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // this needs to happen after moz_anno_name gets created
-  if (migrateFromAlpha1) {
-    rv = MigrateFromAlpha1(aDBConn);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -541,9 +530,9 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(
   // statement. Perhaps this should change.
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT h.url FROM moz_anno_name n "
-    "LEFT JOIN moz_anno a ON n.name_id = a.name_id "
-    "LEFT JOIN moz_history h ON a.page = h.id "
+    "SELECT h.url FROM moz_anno_attributes n "
+    "LEFT JOIN moz_annos a ON n.id = a.anno_attribute_id "
+    "LEFT JOIN moz_places h ON a.place_id = h.id "
     "WHERE n.name = ?1"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -663,7 +652,7 @@ nsAnnotationService::HasAnnotation(nsIURI* aURI,
 
 // nsAnnotationService::RemoveAnnotation
 //
-//    We don't remove anything from the moz_anno_name table. If we delete the
+//    We don't remove anything from the moz_anno_attributes table. If we delete the
 //    last item of a given name, that item really should go away. It will get
 //    cleaned up on the next shutdown.
 
@@ -723,7 +712,7 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
 
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_anno WHERE page = ?1"),
+      "DELETE FROM moz_annos WHERE place_id = ?1"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(0, uriID);
@@ -801,10 +790,10 @@ nsAnnotationService::CopyAnnotations(nsIURI* aSourceURI, nsIURI* aDestURI,
   // source with the same values of the annotation on dest.
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_anno (page, name_id, mime_type, content, flags, expiration) "
-      "SELECT ?1, name_id, mime_type, content, flags, expiration "
-      "FROM moz_anno WHERE page = ?2 AND name_id = "
-      "(SELECT name_id FROM moz_anno_name WHERE name = ?3)"),
+      "INSERT INTO moz_annos (place_id, anno_attribute_id, mime_type, content, flags, expiration) "
+      "SELECT ?1, anno_attribute_id, mime_type, content, flags, expiration "
+      "FROM moz_annos WHERE place_id = ?2 AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?3)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1036,110 +1025,4 @@ nsAnnotationService::CallSetObservers(nsIURI* aURI, const nsACString& aName)
 {
   for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnAnnotationSet(aURI, aName);
-}
-
-
-// nsAnnotationService::MigrateFromAlpha1
-//
-//    The alpha 1 release had a column called "name" with the names of the
-//    annotations. We need to delete that and move the strings to a
-//    moz_anno_name table. Since sqlite can not change columns, we rename the
-//    table, copy the data, and delete the renamed version.
-
-nsresult // static
-nsAnnotationService::MigrateFromAlpha1(mozIStorageConnection* aDBConn)
-{
-  // rename current annotation table
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_anno RENAME TO moz_anno_old"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // create the new annotation table: should be the same as InitTables
-  // (this migration code is temporary, so we don't worry about maintenance
-  // too much). Note we create the indices later because we need to delete
-  // the old ones first.
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_anno ("
-      "anno_id INTEGER PRIMARY KEY,"
-      "page INTEGER NOT NULL,"
-      "name_id INTEGER,"
-      "mime_type VARCHAR(32) DEFAULT NULL,"
-      "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
-      "expiration INTEGER DEFAULT 0)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add an ID column to the old table. We can then set this and copy all
-  // values to the new table at once.
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_anno_old ADD COLUMN name_id"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get the unique column names
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT DISTINCT name FROM moz_anno_old"), getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool hasMore;
-  nsCStringArray uniqueNames;
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
-    nsCAutoString curName;
-    rv = statement->GetUTF8String(0, curName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    uniqueNames.AppendCString(curName);
-  }
-
-  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_anno_name (name) VALUES (?1)"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // add the proper name_id values into the old table
-  nsCOMPtr<mozIStorageStatement> updateAnno;
-  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_anno_old SET name_id = ?1 WHERE name = ?2"),
-    getter_AddRefs(updateAnno));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (PRInt32 i = 0; i < uniqueNames.Count(); i ++) {
-    // insert the name into the moz_anno_name table
-    rv = statement->BindUTF8StringParameter(0, *uniqueNames[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt64 nameID;
-    rv = aDBConn->GetLastInsertRowID(&nameID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // update the corresponding entries in the moz_anno table to reference it
-    rv = updateAnno->BindInt64Parameter(0, nameID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = updateAnno->BindUTF8StringParameter(1, *uniqueNames[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = updateAnno->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // copy values to the new table
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_anno "
-      "(anno_id, page, name_id, mime_type, content, flags, expiration) "
-      "SELECT anno_id, page, name_id, mime_type, content, flags, expiration "
-      "FROM moz_anno_old"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // delete old table & indices (which will be automatically dropped when their
-  // table is deleted)
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TABLE moz_anno_old"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // create indices on the new table
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX moz_anno_pageindex ON moz_anno (page)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX moz_anno_nameindex ON moz_anno (name_id)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
 }

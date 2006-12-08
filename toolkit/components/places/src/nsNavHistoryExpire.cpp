@@ -344,9 +344,9 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
   nsCOMPtr<mozIStorageStatement> selectStatement;
   nsCString sql;
   sql.AssignLiteral("SELECT "
-      "v.visit_id, v.page_id, v.visit_date, h.url, h.favicon, h.hidden, b.item_child "
-      "FROM moz_historyvisit v LEFT JOIN moz_history h ON v.page_id = h.id "
-      "LEFT OUTER JOIN moz_bookmarks b on v.page_id = b.item_child");
+      "v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.item_child "
+      "FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id "
+      "LEFT OUTER JOIN moz_bookmarks b on v.place_id = b.item_child");
   if (aExpireThreshold != 0)
     sql.AppendLiteral(" WHERE visit_date < ?1");
   rv = aConnection->CreateStatement(sql, getter_AddRefs(selectStatement));
@@ -374,7 +374,7 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
 {
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisit WHERE visit_id = ?1"),
+      "DELETE FROM moz_historyvisits WHERE id = ?1"),
     getter_AddRefs(deleteStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 i;
@@ -389,7 +389,7 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
 
 // nsNavHistoryExpire::EraseHistory
 //
-//    This erases records in moz_history when there are no more visits.
+//    This erases records in moz_places when there are no more visits.
 //    We need to be careful not to delete bookmarks and place:URIs.
 //
 //    This will modify the input by setting the erased flag on each of the
@@ -401,13 +401,13 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
 {
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history WHERE id = ?1"),
+      "DELETE FROM moz_places WHERE id = ?1"),
     getter_AddRefs(deleteStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> selectStatement;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT page_id FROM moz_historyvisit WHERE page_id = ?1"),
+      "SELECT place_id FROM moz_historyvisits WHERE place_id = ?1"),
     getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -442,14 +442,14 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
   // see if this favicon still has an entry
   nsCOMPtr<mozIStorageStatement> selectStatement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_history where favicon = ?1"),
+      "SELECT id FROM moz_places where favicon_id = ?1"),
     getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // delete a favicon
   nsCOMPtr<mozIStorageStatement> deleteStatement;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_favicon WHERE id = ?1"),
+      "DELETE FROM moz_favicons WHERE id = ?1"),
     getter_AddRefs(deleteStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -499,10 +499,10 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
   // delete history entries with no visits that are not bookmarked
   // also never delete any "place:" URIs (see function header comment)
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history WHERE id IN (SELECT id FROM moz_history h "
-      "LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
+      "DELETE FROM moz_places WHERE id IN (SELECT id FROM moz_places h "
+      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
       "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child "
-      "WHERE v.visit_id IS NULL "
+      "WHERE v.id IS NULL "
       "AND b.item_child IS NULL "
       "AND SUBSTR(url,0,6) <> 'place:')"));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -518,10 +518,10 @@ nsresult
 nsNavHistoryExpire::ExpireFaviconsParanoid(mozIStorageConnection* aConnection)
 {
   return aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_favicon WHERE id IN "
-    "(SELECT f.id FROM moz_favicon f "
-     "LEFT OUTER JOIN moz_history h ON f.id = h.favicon "
-     "WHERE h.favicon IS NULL)"));
+    "DELETE FROM moz_favicons WHERE id IN "
+    "(SELECT f.id FROM moz_favicons f "
+     "LEFT OUTER JOIN moz_places h ON f.id = h.favicon_id "
+     "WHERE h.favicon_id IS NULL)"));
 }
 
 
@@ -531,7 +531,7 @@ nsresult
 nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection)
 {
   // FIXME bug 319455 expire annotations
-  // Also remember to expire unused names in moz_anno_name
+  // Also remember to expire unused names in moz_anno_attributes
   return NS_OK;
 }
 
@@ -579,7 +579,7 @@ nsNavHistoryExpire::ComputeNextExpirationTime(
 
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT MIN(visit_date) FROM moz_historyvisit"),
+      "SELECT MIN(visit_date) FROM moz_historyvisits"),
     getter_AddRefs(statement));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Could not create statement");
   if (NS_FAILED(rv)) return;

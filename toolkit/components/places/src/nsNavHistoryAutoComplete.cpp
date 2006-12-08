@@ -279,7 +279,7 @@ nsNavHistory::CreateAutoCompleteQuery()
     sql = NS_LITERAL_CSTRING(
         "SELECT url, title, visit_count, typed, "
          "(SELECT item_child FROM moz_bookmarks WHERE item_child = id) "
-        "FROM moz_history "
+        "FROM moz_places "
         "WHERE url >= ?1 AND url < ?2 "
         "AND typed = 1 "
         "ORDER BY visit_count DESC "
@@ -288,7 +288,7 @@ nsNavHistory::CreateAutoCompleteQuery()
     sql = NS_LITERAL_CSTRING(
         "SELECT url, title, visit_count, typed, "
           "(SELECT item_child FROM moz_bookmarks WHERE item_child = id) "
-        "FROM moz_history "
+        "FROM moz_places "
         "WHERE url >= ?1 AND url < ?2 "
         "AND (hidden <> 1 OR typed = 1) "
         "ORDER BY visit_count DESC "
@@ -377,7 +377,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch(
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsCString sql = NS_LITERAL_CSTRING(
       "SELECT url, title "
-      "FROM moz_historyvisit v JOIN moz_history h ON v.page_id = h.id "
+      "FROM moz_historyvisits v JOIN moz_places h ON v.place_id = h.id "
       "WHERE h.typed = 1 ORDER BY visit_date DESC LIMIT ");
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_TYPED * 3);
   nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(dbSelectStatement));
