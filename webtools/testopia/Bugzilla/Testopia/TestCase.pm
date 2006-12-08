@@ -654,7 +654,7 @@ sub store {
     my $key = $dbh->bz_last_key( 'test_cases', 'case_id' );
 
     $self->store_text($key, $self->{'author_id'}, $self->{'action'}, $self->{'effect'},  
-                      $self->{'setup'}, $self->{'breakdown'}, $timestamp);
+                      $self->{'setup'}, $self->{'breakdown'},0 ,$timestamp);
     $self->update_deps($self->{'dependson'}, $self->{'blocks'}, $key);    
     foreach my $p (@{$self->{'plans'}}){
         $self->link_plan($p->id, $key);
@@ -673,11 +673,11 @@ author id, action text, effect text, and an optional timestamp.
 sub store_text {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
-    my ($key, $author, $action, $effect, $setup, $breakdown, $timestamp) = @_;
+    my ($key, $author, $action, $effect, $setup, $breakdown, $reset_version, $timestamp) = @_;
     if (!defined $timestamp){
         ($timestamp) = Bugzilla::Testopia::Util::get_time_stamp();
     }
-    my $version = $self->version || 0;
+    my $version = $reset_version ? 0 : $self->version || 0;
     $dbh->do("INSERT INTO test_case_texts 
               (case_id, case_text_version, who, creation_ts, action, effect, setup, breakdown) 
               VALUES(?,?,?,?,?,?,?,?)",
@@ -781,7 +781,7 @@ sub copy {
     if ($copydoc){
         $self->store_text($key, Bugzilla->user->id, $self->text->{'action'}, 
                           $self->text->{'effect'}, $self->text->{'setup'}, 
-                          $self->text->{'breakdown'}, $timestamp);
+                          $self->text->{'breakdown'},'VRESET' , $timestamp);
     }
     return $key;
     
