@@ -86,7 +86,7 @@ enum {
 - (void)setIsToolbar:(BOOL)aFlag;
 - (void)setIsSmartFolder:(BOOL)aFlag;
 - (void)setIsDockMenu:(BOOL)aFlag;
-- (void)makeDockMenu:(id)sender;
+- (void)toggleIsDockMenu:(id)sender;
 
 // Things added to make it work sort of like an array
 - (unsigned)count;

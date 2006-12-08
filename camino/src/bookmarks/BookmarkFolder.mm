@@ -454,9 +454,9 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [self setSpecialFlag:curVal];
 }
 
-- (void)makeDockMenu:(id)sender
+- (void)toggleIsDockMenu:(id)sender
 {
-  [self setIsDockMenu:YES];
+  [self setIsDockMenu:![self isDockMenu]];
 }
 
 - (void)setIsDockMenu:(BOOL)aBool

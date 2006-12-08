@@ -376,10 +376,10 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 // IBActions
 //
 
-- (IBAction)setAsDockMenuFolder:(id)aSender
+- (IBAction)toggleIsDockMenuFolder:(id)aSender
 {
   BookmarkFolder* aFolder = [self selectedContainerFolder];
-  [aFolder setIsDockMenu:YES];
+  [aFolder toggleIsDockMenu:aSender];
 }
 
 - (IBAction)addCollection:(id)aSender
@@ -1381,7 +1381,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
       [contextMenu addItem:[NSMenuItem separatorItem]];
       NSMenuItem* useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", nil)
-                                                             action:@selector(setAsDockMenuFolder:)
+                                                             action:@selector(toggleIsDockMenuFolder:)
                                                       keyEquivalent:@""];
       [useAsDockItem setTarget:self];
       if ([aFolder isDockMenu])

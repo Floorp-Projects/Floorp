@@ -162,7 +162,7 @@ enum
 //
 // IBActions
 //
-- (IBAction)setAsDockMenuFolder:(id)aSender;
+- (IBAction)toggleIsDockMenuFolder:(id)aSender;
 - (IBAction)addCollection:(id)aSender;
 - (IBAction)addBookmarkSeparator:(id)aSender;
 - (IBAction)addBookmarkFolder:(id)aSender;
