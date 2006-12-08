@@ -125,7 +125,7 @@ nsNavBookmarks::Init()
   // mDBFindURIBookmarks
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT a.* "
-      "FROM moz_bookmarks a, moz_history h "
+      "FROM moz_bookmarks a, moz_places h "
       "WHERE h.url = ?1 AND a.item_child = h.id"),
     getter_AddRefs(mDBFindURIBookmarks));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -133,15 +133,15 @@ nsNavBookmarks::Init()
   // Construct a result where the first columns exactly match those returned by
   // mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.  This selects only
-  // _item_ children which are in moz_history.
+  // _item_ children which are in moz_places.
   // Results are kGetInfoIndex_*
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
     "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-      "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+      "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
       "f.url, null, a.position, a.item_child, a.folder_child, null "
     "FROM moz_bookmarks a "
-    "JOIN moz_history h ON a.item_child = h.id "
-    "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+    "JOIN moz_places h ON a.item_child = h.id "
+    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 ");
 
   // Construct a result where the first columns are padded out to the width
@@ -199,13 +199,13 @@ nsNavBookmarks::Init()
   // mDBGetRedirectDestinations
   // input = page ID, time threshold; output = unique ID input has redirected to
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT dest_v.page_id "
-      "FROM moz_historyvisit source_v "
-      "LEFT JOIN moz_historyvisit dest_v ON dest_v.from_visit = source_v.visit_id "
-      "WHERE source_v.page_id = ?1 "
+      "SELECT dest_v.place_id "
+      "FROM moz_historyvisits source_v "
+      "LEFT JOIN moz_historyvisits dest_v ON dest_v.from_visit = source_v.id "
+      "WHERE source_v.place_id = ?1 "
       "AND source_v.visit_date >= ?2 "
       "AND (dest_v.visit_type = 5 OR dest_v.visit_type = 6) "
-      "GROUP BY dest_v.page_id"),
+      "GROUP BY dest_v.place_id"),
     getter_AddRefs(mDBGetRedirectDestinations));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -215,14 +215,14 @@ nsNavBookmarks::Init()
   // most of the bookmark system
   // keywords
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT k.keyword FROM moz_history h "
-      "JOIN moz_keywords k ON h.id = k.page_id "
+      "SELECT k.keyword FROM moz_places h "
+      "JOIN moz_keywords k ON h.id = k.place_id "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBGetKeywordForURI));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT url FROM moz_keywords k "
-      "JOIN moz_history h ON k.page_id = h.id "
+      "JOIN moz_places h ON k.place_id = h.id "
       "WHERE k.keyword = ?1"),
     getter_AddRefs(mDBGetURIForKeyword));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -313,7 +313,7 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE TABLE moz_keywords ("
         "keyword VARCHAR(32) UNIQUE,"
-        "page_id INTEGER)"));
+        "place_id INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // it should be fast to go url->ID and ID->url
@@ -321,7 +321,7 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
         "CREATE INDEX moz_keywords_keywordindex ON moz_keywords (keyword)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_keywords_pageindex ON moz_keywords (page_id)"));
+        "CREATE INDEX moz_keywords_pageindex ON moz_keywords (place_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -502,7 +502,7 @@ nsNavBookmarks::FillBookmarksHash()
   rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id "
       "FROM moz_bookmarks b "
-      "LEFT JOIN moz_history h ON b.item_child = h.id where b.item_child IS NOT NULL"),
+      "LEFT JOIN moz_places h ON b.item_child = h.id where b.item_child IS NOT NULL"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
@@ -519,13 +519,13 @@ nsNavBookmarks::FillBookmarksHash()
   // This should catch most redirects, which are only one level. More levels of
   // redirection will be handled separately.
   rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT v1.page_id, v2.page_id "
+      "SELECT v1.place_id, v2.place_id "
       "FROM moz_bookmarks b "
-      "LEFT JOIN moz_historyvisit v1 on b.item_child = v1.page_id "
-      "LEFT JOIN moz_historyvisit v2 on v2.from_visit = v1.visit_id "
+      "LEFT JOIN moz_historyvisits v1 on b.item_child = v1.place_id "
+      "LEFT JOIN moz_historyvisits v2 on v2.from_visit = v1.id "
       "WHERE b.item_child IS NOT NULL "
       "AND v2.visit_type = 5 OR v2.visit_type = 6 " // perm. or temp. RDRs
-      "GROUP BY v2.page_id"),
+      "GROUP BY v2.place_id"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
@@ -2118,7 +2118,7 @@ nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
   if (aURI) {
     // delete any existing keyword for the given URI, only create the ID if
     rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_keywords WHERE page_id = ?1"),
+        "DELETE FROM moz_keywords WHERE place_id = ?1"),
       getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = statement->BindInt64Parameter(0, pageId);
@@ -2148,7 +2148,7 @@ nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
   // this statement will overwrite any old keyword with that value since the
   // keyword column is unique and we use "OR REPLACE" conflict resolution
   rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR REPLACE INTO moz_keywords (keyword, page_id) VALUES (?1, ?2)"),
+      "INSERT OR REPLACE INTO moz_keywords (keyword, place_id) VALUES (?1, ?2)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, kwd);

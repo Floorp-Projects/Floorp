@@ -142,22 +142,22 @@ nsFaviconService::Init()
 
   // creation of history service will have called InitTables before now
 
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, length(data), expiration FROM moz_favicon WHERE url = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, length(data), expiration FROM moz_favicons WHERE url = ?1"),
                                 getter_AddRefs(mDBGetIconInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT f.id, f.url, length(f.data), f.expiration FROM moz_history h JOIN moz_favicon f ON h.favicon = f.id WHERE h.url = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT f.id, f.url, length(f.data), f.expiration FROM moz_places h JOIN moz_favicons f ON h.favicon_id = f.id WHERE h.url = ?1"),
                                 getter_AddRefs(mDBGetURL));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT f.data, f.mime_type FROM moz_favicon f WHERE url = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT f.data, f.mime_type FROM moz_favicons f WHERE url = ?1"),
                                 getter_AddRefs(mDBGetData));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_favicon (url, data, mime_type, expiration) VALUES (?1, ?2, ?3, ?4)"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_favicons (url, data, mime_type, expiration) VALUES (?1, ?2, ?3, ?4)"),
                                 getter_AddRefs(mDBInsertIcon));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_favicon SET data = ?2, mime_type = ?3, expiration = ?4 where id = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_favicons SET data = ?2, mime_type = ?3, expiration = ?4 where id = ?1"),
                                 getter_AddRefs(mDBUpdateIcon));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_history SET favicon = ?2 WHERE id = ?1"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_places SET favicon_id = ?2 WHERE id = ?1"),
                                 getter_AddRefs(mDBSetPageFavicon));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -180,11 +180,11 @@ nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
 {
   nsresult rv;
   PRBool exists = PR_FALSE;
-  aDBConn->TableExists(NS_LITERAL_CSTRING("moz_favicon"), &exists);
+  aDBConn->TableExists(NS_LITERAL_CSTRING("moz_favicons"), &exists);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_favicon (id INTEGER PRIMARY KEY, url LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG)"));
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_favicons (id INTEGER PRIMARY KEY, url LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG)"));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_favicon_url ON moz_favicon (url)"));
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_favicons_url ON moz_favicons (url)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

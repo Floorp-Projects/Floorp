@@ -298,7 +298,7 @@ nsNavHistory::Init()
 
   // extract the last session ID so we know where to pick up. There is no index
   // over sessions so the naive statement "SELECT MAX(session) FROM
-  // moz_historyvisit" won't have good performance. Instead we select the
+  // moz_historyvisits" won't have good performance. Instead we select the
   // session of the last visited page because we do have indices over dates.
   // We still do MAX(session) in case there are duplicate sessions for the same
   // date, but there will generally be very few (1) of these.
@@ -306,8 +306,8 @@ nsNavHistory::Init()
     nsCOMPtr<mozIStorageStatement> selectSession;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT MAX(session) FROM "
-        "(SELECT MAX(visit_date) AS visit_date FROM moz_historyvisit) maxvd "
-        "JOIN moz_historyvisit v ON maxvd.visit_date = v.visit_date"),
+        "(SELECT MAX(visit_date) AS visit_date FROM moz_historyvisits) maxvd "
+        "JOIN moz_historyvisits v ON maxvd.visit_date = v.visit_date"),
       getter_AddRefs(selectSession));
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasSession;
@@ -410,7 +410,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                               getter_AddRefs(dbFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbFile->Append(NS_LITERAL_STRING("bookmarks_history.sqlite"));
+  rv = dbFile->Append(NS_LITERAL_STRING("places.sqlite"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
@@ -487,12 +487,12 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // moz_history
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
+  // moz_places
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_places"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
     *aDoImport = PR_TRUE;
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_history ("
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
         "title LONGVARCHAR, "
@@ -501,38 +501,38 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         "visit_count INTEGER DEFAULT 0, "
         "hidden INTEGER DEFAULT 0 NOT NULL, "
         "typed INTEGER DEFAULT 0 NOT NULL, "
-        "favicon INTEGER)"));
+        "favicon_id INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_history_urlindex ON moz_history (url)"));
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_urlindex ON moz_places (url)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // FIXME: this should be moved inside the moz_history table creation block.
+  // FIXME: this should be moved inside the moz_places table creation block.
   // It is left outside and the return value is ignored because alpha 1 did not
   // have this index. When it is likely that all alpha users have run a more
   // recent build, we can move this to only happen on init so that startup time
   // is faster. This index is used for favicon expiration, see
   // nsNavHistoryExpire::ExpireItems
   mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX moz_history_faviconindex ON moz_history (favicon)"));
+      "CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
 
-  // moz_historyvisit
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisit"), &tableExists);
+  // moz_historyvisits
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisits"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisit ("
-        "visit_id INTEGER PRIMARY KEY, "
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisits ("
+        "id INTEGER PRIMARY KEY, "
         "from_visit INTEGER, "
-        "page_id INTEGER, "
+        "place_id INTEGER, "
         "visit_date INTEGER, "
         "visit_type INTEGER, "
         "session INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_pageindex ON moz_historyvisit (page_id)"));
+        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisits_pageindex ON moz_historyvisits (place_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -541,9 +541,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   // large profiles because of finding bookmark redirects using the referring
   // page. For final release, if we think everybody running alpha1 has run
   // alpha2 or later, we can put it in the if statement above for faster
-  // startup time (same as above for the moz_history_faviconindex)
+  // startup time (same as above for the moz_places_faviconindex)
   mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
+      "CREATE INDEX moz_historyvisits_fromindex ON moz_historyvisits (from_visit)"));
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -581,7 +581,7 @@ nsNavHistory::InitStatements()
   // mDBGetURLPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count "
-      "FROM moz_history h "
+      "FROM moz_places h "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBGetURLPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -589,10 +589,10 @@ nsNavHistory::InitStatements()
   // mDBGetURLPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
-      "FROM moz_history h "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE h.url = ?1 "),
     getter_AddRefs(mDBGetURLPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -600,17 +600,17 @@ nsNavHistory::InitStatements()
   // mDBGetIdPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count "
-      "FROM moz_history h WHERE h.id = ?1"),
+      "FROM moz_places h WHERE h.id = ?1"),
                                 getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetIdPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
-      "FROM moz_history h "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE h.id = ?1"),
     getter_AddRefs(mDBGetIdPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -618,8 +618,8 @@ nsNavHistory::InitStatements()
   // mDBFullAutoComplete
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, h.visit_count, h.typed "
-      "FROM moz_history h "
-      "JOIN moz_historyvisit v ON h.id = v.page_id "
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
       "WHERE h.hidden <> 1 "
       "GROUP BY h.id "
       "ORDER BY h.visit_count "
@@ -629,8 +629,8 @@ nsNavHistory::InitStatements()
 
   // mDBRecentVisitOfURL
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT v.visit_id, v.session "
-      "FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id "
+      "SELECT v.id, v.session "
+      "FROM moz_places h JOIN moz_historyvisits v ON h.id = v.place_id "
       "WHERE h.url = ?1 "
       "ORDER BY v.visit_date DESC "
       "LIMIT 1"),
@@ -639,8 +639,8 @@ nsNavHistory::InitStatements()
 
   // mDBInsertVisit
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_historyvisit "
-      "(from_visit, page_id, visit_date, visit_type, session) "
+      "INSERT INTO moz_historyvisits "
+      "(from_visit, place_id, visit_date, visit_type, session) "
       "VALUES (?1, ?2, ?3, ?4, ?5)"),
     getter_AddRefs(mDBInsertVisit));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -648,14 +648,14 @@ nsNavHistory::InitStatements()
   // mDBGetPageVisitStats (see InternalAdd)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT id, visit_count, typed, hidden "
-      "FROM moz_history "
+      "FROM moz_places "
       "WHERE url = ?1"),
     getter_AddRefs(mDBGetPageVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBUpdatePageVisitStats (see InternalAdd)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_history "
+      "UPDATE moz_places "
       "SET visit_count = ?2, hidden = ?3, typed = ?4 "
       "WHERE id = ?1"),
     getter_AddRefs(mDBUpdatePageVisitStats));
@@ -663,7 +663,7 @@ nsNavHistory::InitStatements()
 
   // mDBAddNewPage (see InternalAddNewPage)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_history "
+      "INSERT INTO moz_places "
       "(url, title, rev_host, hidden, typed, visit_count) "
       "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
     getter_AddRefs(mDBAddNewPage));
@@ -672,12 +672,12 @@ nsNavHistory::InitStatements()
   // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
-      "FROM moz_history h "
-      "JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
-      "WHERE v.visit_id = ?1"),
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE v.id = ?1"),
     getter_AddRefs(mDBVisitToURLResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -685,20 +685,20 @@ nsNavHistory::InitStatements()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
              "v.visit_date, f.url, v.session "
-      "FROM moz_history h "
-      "JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
-      "WHERE v.visit_id = ?1"),
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE v.id = ?1"),
     getter_AddRefs(mDBVisitToVisitResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBUrlToURLResult, should match kGetInfoIndex_*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
-      "FROM moz_history h "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBUrlToUrlResult));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -737,7 +737,7 @@ nsNavHistory::InitMemDB()
   // and index. We can therefor not spend time sorting the whole thing another
   // time by inserting in order.
   nsCOMPtr<mozIStorageStatement> selectStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT url FROM moz_history WHERE visit_count > 0 ORDER BY url"),
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT url FROM moz_places WHERE visit_count > 0 ORDER BY url"),
                                 getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1445,7 +1445,7 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 {
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT visit_id FROM moz_historyvisit LIMIT 1"),
+      NS_LITERAL_CSTRING("SELECT id FROM moz_historyvisits LIMIT 1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   return dbSelectStatement->ExecuteStep(aHasEntries);
@@ -1547,7 +1547,7 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
 
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_history "
+      "UPDATE moz_places "
       "SET title = ?2, "
           "user_title = ?3, "
           "visit_count = ?4, "
@@ -1898,9 +1898,9 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
              "v.visit_date, f.url, v.session "
-      "FROM moz_history h "
-      "JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE ");
   } else {
     // For URLs, it is more complicated, because we want each URL once. The
@@ -1910,11 +1910,11 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     // FIXME(brettw) add nulls for full visit info
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
-      "FROM moz_history h "
-      "LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
-      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE ");
     groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
   }
@@ -2148,10 +2148,10 @@ nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.url "
-      "FROM moz_history h LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
+      "FROM moz_places h LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
       "WHERE v.visit_date IN "
       "(SELECT MAX(visit_date) "
-       "FROM moz_historyvisit v2 LEFT JOIN moz_history h2 ON v2.page_id = h2.id "
+       "FROM moz_historyvisits v2 LEFT JOIN moz_places h2 ON v2.place_id = h2.id "
         "WHERE h2.hidden != 1)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2199,7 +2199,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 
   // delete all visits for this page
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history WHERE url = ?1)"),
+      "DELETE FROM moz_historyvisits WHERE place_id IN (SELECT id FROM moz_places WHERE url = ?1)"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = BindStatementURI(statement, 0, aURI);
@@ -2222,7 +2222,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 
     // delete main history entries
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_history WHERE url = ?1"),
+        "DELETE FROM moz_places WHERE url = ?1"),
         getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = BindStatementURI(statement, 0, aURI);
@@ -2309,7 +2309,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 
   // create statement depending on delete type
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url FROM moz_history h ") + conditionString,
+      "SELECT url FROM moz_places h ") + conditionString,
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
@@ -2331,7 +2331,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 
   // first, delete all the visits
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history h ") + conditionString + NS_LITERAL_CSTRING(")"),
+      "DELETE FROM moz_historyvisits WHERE place_id IN (SELECT id FROM moz_places h ") + conditionString + NS_LITERAL_CSTRING(")"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
@@ -2347,8 +2347,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 
   // now, delete the actual history entries that are not bookmarked
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history WHERE id IN "
-      "(SELECT id from moz_history h "
+      "DELETE FROM moz_places WHERE id IN "
+      "(SELECT id from moz_places h "
       " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child ")
       + conditionString +
       NS_LITERAL_CSTRING("AND b.item_child IS NULL)"),
@@ -2429,7 +2429,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
   // Might as well ask for the hidden column to save updates in some cases.
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id,hidden FROM moz_history WHERE url = ?1"),
+      NS_LITERAL_CSTRING("SELECT id,hidden FROM moz_places WHERE url = ?1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = BindStatementURI(dbSelectStatement, 0, aURI);
@@ -2461,7 +2461,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
   nsCOMPtr<mozIStorageStatement> dbModStatement;
   rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_history SET hidden = 1 WHERE id = ?1"),
+      NS_LITERAL_CSTRING("UPDATE moz_places SET hidden = 1 WHERE id = ?1"),
       getter_AddRefs(dbModStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3119,7 +3119,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
     if (aQuery->AnnotationIsNot())
       aClause->AppendLiteral("NOT ");
-    aClause->AppendLiteral("EXISTS (SELECT anno_id FROM moz_anno anno JOIN moz_anno_name annoname ON anno.name_id = annoname.name_id WHERE anno.page = h.id AND annoname.name = ");
+    aClause->AppendLiteral("EXISTS (SELECT id FROM moz_annos anno JOIN moz_anno_attributes annoname ON anno.anno_attribute_id = annoname.id WHERE anno.place_id = h.id AND annoname.name = ");
     aClause->Append(paramString);
     aClause->AppendLiteral(") ");
     // annotation-based queries don't get the common conditions, so you get
@@ -3950,12 +3950,12 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
   if (aIsUserTitle) {
     userTitle = aTitle;
     rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_history SET user_title = ?1 WHERE url = ?2"),
+        NS_LITERAL_CSTRING("UPDATE moz_places SET user_title = ?1 WHERE url = ?2"),
         getter_AddRefs(dbModStatement));
   } else {
     title = aTitle;
     rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_history SET title = ?1 WHERE url = ?2"),
+        NS_LITERAL_CSTRING("UPDATE moz_places SET title = ?1 WHERE url = ?2"),
         getter_AddRefs(dbModStatement));
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4001,18 +4001,18 @@ nsNavHistory::CreateLookupIndexes()
 
   // History table indexes
   rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
+      NS_LITERAL_CSTRING("CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
   //NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
+      NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
   //NS_ENSURE_SUCCESS(rv, rv);
 
   // Visit table indexes
   rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
+      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisits_fromindex ON moz_historyvisits (from_visit)"));
   //NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
+      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisits_dateindex ON moz_historyvisits (visit_date)"));
   //NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef IN_MEMORY_LINKS
@@ -4060,7 +4060,7 @@ nsNavHistory::RemoveDuplicateURIs()
 {
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT id, url FROM moz_history ORDER BY url"),
+      NS_LITERAL_CSTRING("SELECT id, url FROM moz_places ORDER BY url"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4079,13 +4079,13 @@ nsNavHistory::RemoveDuplicateURIs()
 
   // Now remove all of the duplicates from the history and visit tables.
   rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("DELETE FROM moz_history WHERE id = ?1"),
+      NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id = ?1"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> visitDelete;
   rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("DELETE FROM moz_historyvisit WHERE page_id = ?1"),
+      NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE place_id = ?1"),
       getter_AddRefs(visitDelete));
   NS_ENSURE_SUCCESS(rv, rv);
 
