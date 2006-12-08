@@ -813,6 +813,15 @@
         </body>
       </method>
 
+      <property name="firstVisibleRow">
+        <getter>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            return listbox.getIndexOfFirstVisibleRow();
+          ]]>
+        </getter>
+      </property>
+
       <method name="createAttendee">
         <body>
           <![CDATA[
@@ -2916,6 +2925,14 @@
     </implementation>
 
     <handlers>
+
+      <handler event="DOMMouseScroll" phase="capturing">
+        <![CDATA[
+          // ignore mouse scrolling for now...
+          event.stopPropagation();
+        ]]>
+      </handler>
+
       <handler event="DOMAttrModified">
         <![CDATA[
           if(event.attrName == "width") {
@@ -2923,26 +2940,45 @@
             selectionbar.setWidth(selectionbar.boxObject.width);
             return;
           }
-        
-          if(event.attrName != "curpos")
-            return;
+
+          // synchronize grid and attendee list
+          var target = event.originalTarget;
+          if(target.hasAttribute("anonid")) {
+            if(target.getAttribute("anonid") == "input") {
+              if(event.attrName == "focused") {
+                if(event.newValue == "true") {
+                  var attendees = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
+                  var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+                  if(grid.firstVisibleRow != attendees.firstVisibleRow)
+                    grid.firstVisibleRow = attendees.firstVisibleRow;
+                }
+              }
+            }
+          }
+
           var scrollbar = event.originalTarget.parentNode;
           if (!scrollbar.hasAttribute("maxpos"))
             return;
           if(scrollbar.getAttribute("anonid") == "vertical-scrollbar") {
-            var maxpos = scrollbar.getAttribute("maxpos");
             var attendees = document.getAnonymousElementByAttribute(this, "anonid", "attendees-list");
-            attendees.ratio = event.newValue/maxpos;
+            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+            if(event.attrName == "curpos") {
+              var maxpos = scrollbar.getAttribute("maxpos");
+              attendees.ratio = event.newValue/maxpos;
+            }
+            grid.firstVisibleRow = attendees.firstVisibleRow;
           }
           else if(scrollbar.getAttribute("anonid") == "horizontal-scrollbar") {
-            var maxpos = scrollbar.getAttribute("maxpos");
-            var ratio = event.newValue/maxpos;
-            var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
-            var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
-            var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
-            timebar.scroll = ratio;
-            grid.scroll = ratio;
-            selectionbar.ratio = ratio;
+            if(event.attrName == "curpos") {
+              var maxpos = scrollbar.getAttribute("maxpos");
+              var ratio = event.newValue/maxpos;
+              var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+              var grid = document.getAnonymousElementByAttribute(this, "anonid", "freebusy-grid");
+              var selectionbar = document.getAnonymousElementByAttribute(this, "anonid", "selection-bar");
+              timebar.scroll = ratio;
+              grid.scroll = ratio;
+              selectionbar.ratio = ratio;
+            }
           }
       ]]>
       </handler>

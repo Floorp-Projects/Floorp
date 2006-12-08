@@ -767,6 +767,8 @@
           <![CDATA[
           // how much pixels spans a single day
           var oneday = this.contentWidth;
+          if(oneday <= 0)
+            return val;
                     
           // the difference in pixels between the content and the container.
           var shift = (oneday*this.mRange)-(this.containerWidth);
@@ -1199,6 +1201,33 @@
           
           return val;
         ]]>
+        </setter>
+      </property>
+
+      <property name="firstVisibleRow">
+        <getter>
+          <![CDATA[
+            var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+            return listbox.getIndexOfFirstVisibleRow();
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+          listbox.scrollToIndex(val);
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="ratio">
+        <setter>
+          <![CDATA[
+          var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+          var rowcount = listbox.getRowCount();
+          listbox.scrollToIndex(Math.floor(rowcount*val));
+          return val;
+          ]]>
         </setter>
       </property>
 
