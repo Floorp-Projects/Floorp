@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.98 2006/10/09 22:26:44 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3con.c,v 1.99 2006/12/08 22:37:29 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -4195,6 +4195,10 @@ sendDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
 
     /* Copy DH parameters from server key */
 
+    if (svrPubKey->keyType != dhKey) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	goto loser;
+    }
     dhParam.prime.data = svrPubKey->u.dh.prime.data;
     dhParam.prime.len = svrPubKey->u.dh.prime.len;
     dhParam.base.data = svrPubKey->u.dh.base.data;
