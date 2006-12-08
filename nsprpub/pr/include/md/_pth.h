@@ -208,13 +208,6 @@
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
-/*
- * These platforms don't have pthread_kill()
- */
-#if defined(DARWIN)
-#define pthread_kill(thread, sig) ENOSYS
-#endif
-
 #if defined(OSF1) || defined(VMS)
 #define PT_PRIO_MIN            PRI_OTHER_MIN
 #define PT_PRIO_MAX            PRI_OTHER_MAX
