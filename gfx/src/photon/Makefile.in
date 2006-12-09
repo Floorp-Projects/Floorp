@@ -67,7 +67,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsDeviceContextPh.cpp \
-		nsDeviceContextSpecFactoryP.cpp \
 		nsDeviceContextSpecPh.cpp \
 		nsDrawingSurfacePh.cpp \
 		nsFontMetricsPh.cpp \

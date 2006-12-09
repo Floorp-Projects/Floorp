@@ -89,7 +89,6 @@ CPPSRCS		= \
 		nsScreenOS2.cpp	\
 		nsScreenManagerOS2.cpp \
 		nsDeviceContextSpecOS2.cpp \
-		nsDeviceContextSpecFactoryO.cpp \
 		nsPrintOptionsOS2.cpp \
 		$(NULL)
 

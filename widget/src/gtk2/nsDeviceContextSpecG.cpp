@@ -469,8 +469,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS,
-        PRBool aIsPrintPreview)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
+                                           nsIPrintSettings* aPS,
+                                           PRBool aIsPrintPreview)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS));
   nsresult rv = NS_ERROR_FAILURE;

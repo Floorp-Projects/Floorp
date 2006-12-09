@@ -87,7 +87,7 @@ public:
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
 #endif
 
-  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
   NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();

@@ -87,6 +87,13 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContex
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
  */
+NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
+                                         nsIPrintSettings* aPS,
+                                         PRBool aIsPrintPreview)
+{
+  return Init(aPS, aIsPrintPreview);
+}
+
 NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aIsPrintPreview)
 {
   nsresult rv;

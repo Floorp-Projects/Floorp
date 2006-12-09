@@ -59,8 +59,6 @@
 // Printing:
 // aka    nsDeviceContextSpecBeOS.h 
 #include "nsDeviceContextSpecB.h"
-// aka    nsDeviceContextSpecFactoryBeOS.h
-#include "nsDeviceContextSpecFactoryB.h" 
 #include "nsPrintOptionsBeOS.h"
 #include "nsPrintSession.h"
 
@@ -88,7 +86,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS)
  
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecBeOS) 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryBeOS) 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsBeOS, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorBeOS)
@@ -160,11 +157,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec/beos;1", 
     "@mozilla.org/gfx/devicecontextspec;1", 
     nsDeviceContextSpecBeOSConstructor }, 
-  { "BeOS Device Context Spec Factory", 
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID, 
-    //    "@mozilla.org/gfx/device_context_spec_factory/beos;1", 
-    "@mozilla.org/gfx/devicecontextspecfactory;1", 
-    nsDeviceContextSpecFactoryBeOSConstructor }, 
   { "BeOS Printer Enumerator",
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/beos;1",

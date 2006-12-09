@@ -426,8 +426,9 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecXlib,
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings *aPS,
-        PRBool aIsPrintPreview)
+NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIWidget *aWidget,
+                                            nsIPrintSettings* aPS,
+                                            PRBool aIsPrintPreview)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecXlib::Init(aPS=%p)\n", aPS));
   nsresult rv = NS_ERROR_FAILURE;

@@ -85,7 +85,6 @@ X11SHARED_LCPPSRCS = \
 
 CPPSRCS		= \
 		$(X11SHARED_LCPPSRCS) \
-		nsDeviceContextSpecFactoryX.cpp \
 		nsDeviceContextSpecXlib.cpp \
 		nsDeviceContextXlib.cpp \
 		nsDrawingSurfaceXlib.cpp \

@@ -281,7 +281,9 @@ NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview)
+NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
+                                           nsIPrintSettings* aPS,
+                                           PRBool aIsPrintPreview)
 {
   nsresult rv = NS_ERROR_FAILURE;
 

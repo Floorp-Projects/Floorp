@@ -56,7 +56,6 @@
 #include "nsPrintOptionsGTK.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextSpecG.h"
-#include "nsDeviceContextSpecFactoryG.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsImageToPixbuf.h"
@@ -89,7 +88,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 #ifdef NATIVE_THEME_SUPPORT
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
@@ -266,11 +264,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec/gtk;1",
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecGTKConstructor },
-  { "Gtk Device Context Spec Factory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryGTKConstructor },
   { "Image to gdk-pixbuf converter",
     NS_IMAGE_TO_PIXBUF_CID,
     "@mozilla.org/widget/image-to-gdk-pixbuf;1",

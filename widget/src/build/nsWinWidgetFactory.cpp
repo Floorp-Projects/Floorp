@@ -65,7 +65,6 @@
 
 // printing
 #include "nsDeviceContextSpecWin.h"
-#include "nsDeviceContextSpecFactoryW.h"
 #include "nsPrintOptionsWin.h"
 #include "nsPrintSession.h"
 
@@ -93,7 +92,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsWin, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -176,10 +174,6 @@ static const nsModuleComponentInfo components[] =
     NS_DEVICE_CONTEXT_SPEC_CID,
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecWinConstructor },
-  { "nsDeviceContextSpecFactoryWin",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryWinConstructor },
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetModule, components,

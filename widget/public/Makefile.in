@@ -64,7 +64,6 @@ EXPORTS		= \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
-		nsIDeviceContextSpecFactory.h \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
