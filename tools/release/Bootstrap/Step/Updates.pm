@@ -103,31 +103,6 @@ sub Verify {
     my $testDir = $updateDir . '/patcher/temp/' . $product . '/' . $oldVersion . '-' . $version . '/aus2.test';
 
     File::Find::find(\&TestAusCallback, $testDir);
-
-    # Create verification area.
-    my $verifyDirVersion = $verifyDir . '/' . $version;
-    MkdirWithPath('dir' => $verifyDirVersion) 
-      or die("Could not mkdir $verifyDirVersion: $!");
-
-    $this->Shell(
-      'cmd' => 'cvs -d ' . $mozillaCvsroot . ' co -d updates mozilla/testing/release/updates/',
-      'logFile' => $logDir . '/verify-updates_checkout.log',
-      'dir' => $verifyDirVersion,
-    );
-    $this->Shell(
-      'cmd' => 'cvs -d ' . $mozillaCvsroot . ' co -d common mozilla/testing/release/common/',
-      'logFile' => $logDir . '/verify-updates_checkout.log',
-      'dir' => $verifyDirVersion,
-    );
-    
-    # Customize updates.cfg to contain the channels you are interested in 
-    # testing.
-    $this->Shell(
-      'cmd' => './verify.sh -t',
-      'logFile' => $logDir . '/verify_updates.log',
-      'dir' => $verifyDirVersion . '/updates',
-      'timeout' => 3600,
-    );
 }
 
 sub TestAusCallback { 
