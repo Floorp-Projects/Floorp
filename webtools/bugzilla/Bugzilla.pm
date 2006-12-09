@@ -327,6 +327,28 @@ sub usage_mode {
         || Bugzilla::Constants::USAGE_MODE_BROWSER;
 }
 
+sub installation_mode {
+    my ($class, $newval) = @_;
+    ($class->request_cache->{installation_mode} = $newval) if defined $newval;
+    return $class->request_cache->{installation_mode}
+        || INSTALLATION_MODE_INTERACTIVE;
+}
+
+sub installation_answers {
+    my ($class, $filename) = @_;
+    if ($filename) {
+        my $s = new Safe;
+        $s->rdo($filename);
+
+        die "Error reading $filename: $!" if $!;
+        die "Error evaluating $filename: $@" if $@;
+
+        # Now read the param back out from the sandbox
+        $class->request_cache->{installation_answers} = $s->varglob('answer');
+    }
+    return $class->request_cache->{installation_answers} || {};
+}
+
 sub switch_to_shadow_db {
     my $class = shift;
 
@@ -569,6 +591,16 @@ calls C<Bugzilla->error_mode> to set an error mode which makes sense for the
 usage mode.
 
 C<Bugzilla->usage_mode> will return the current state of this flag.
+
+=item C<installation_mode>
+
+Determines whether or not installation should be silent. See 
+L<Bugzilla::Constants> for the C<INSTALLATION_MODE> constants.
+
+=item C<installation_answers>
+
+Returns a hashref representing any "answers" file passed to F<checksetup.pl>,
+used to automatically answer or skip prompts.
 
 =item C<dbh>
 

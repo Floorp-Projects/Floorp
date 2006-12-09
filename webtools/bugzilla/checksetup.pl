@@ -58,25 +58,6 @@ use Bugzilla::Install::Requirements;
 require 5.008001 if ON_WINDOWS; # for CGI 2.93 or higher
 
 ######################################################################
-# Subroutines
-######################################################################
-
-sub read_answers_file {
-    my %hash;
-    if ($ARGV[0]) {
-        my $s = new Safe;
-        $s->rdo($ARGV[0]);
-
-        die "Error reading $ARGV[0]: $!" if $!;
-        die "Error evaluating $ARGV[0]: $@" if $@;
-
-        # Now read the param back out from the sandbox
-        %hash = %{$s->varglob('answer')};
-    }
-    return \%hash;
-}
-
-######################################################################
 # Live Code
 ######################################################################
 
@@ -89,9 +70,8 @@ pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 
 # Read in the "answers" file if it exists, for running in 
 # non-interactive mode.
-our %answer = %{read_answers_file()};
-
-my $silent = scalar(keys %answer) && !$switch{'verbose'};
+my $answers_file = $ARGV[0];
+my $silent = $answers_file && !$switch{'verbose'};
 
 display_version_and_os() unless $silent;
 # Check required --MODULES--
@@ -132,6 +112,8 @@ require Bugzilla::Field;
 require Bugzilla::Install;
 
 Bugzilla->usage_mode(USAGE_MODE_CMDLINE);
+Bugzilla->installation_mode(INSTALLATION_MODE_NON_INTERACTIVE) if $answers_file;
+Bugzilla->installation_answers($answers_file);
 
 # When we're running at the command line, we need to pick the right
 # language before ever creating a template object.
@@ -142,7 +124,7 @@ $ENV{'HTTP_ACCEPT_LANGUAGE'} ||= setlocale(LC_CTYPE);
 ###########################################################################
 
 print "Reading " .  bz_locations()->{'localconfig'} . "...\n" unless $silent;
-update_localconfig({ output => !$silent, answer => \%answer });
+update_localconfig({ output => !$silent });
 my $lc_hash = Bugzilla->localconfig;
 
 ###########################################################################
@@ -172,7 +154,7 @@ create_htaccess() if $lc_hash->{'create_htaccess'};
 
 # Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
-update_params({ answer => \%answer});
+update_params();
 
 ###########################################################################
 # Pre-compile --TEMPLATE-- code
@@ -229,7 +211,7 @@ Bugzilla::Install::update_settings();
 ###########################################################################
 
 Bugzilla::Install::make_admin($switch{'make-admin'}) if $switch{'make-admin'};
-Bugzilla::Install::create_admin({ answer => \%answer });
+Bugzilla::Install::create_admin();
 
 ###########################################################################
 # Create default Product and Classification
@@ -470,6 +452,12 @@ The format of that file is as follows:
  $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
 
  $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
+
+ $answer{'NO_PAUSE'} = 1
+
+C<NO_PAUSE> means "never stop and prompt the user to hit Enter to continue,
+just go ahead and do things, even if they are potentially dangerous." 
+Don't set this to 1 unless you know what you are doing.
 
 =head1 SEE ALSO
 

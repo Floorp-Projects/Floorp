@@ -275,7 +275,7 @@ sub update_localconfig {
     my ($params) = @_;
 
     my $output      = $params->{output} || 0;
-    my $answer      = $params->{answer} || {};
+    my $answer      = Bugzilla->installation_answers;
     my $localconfig = read_localconfig('include deprecated');
 
     my @new_vars;
@@ -401,7 +401,7 @@ Bugzilla::Install::Localconfig - Functions and variables dealing
 =head1 SYNOPSIS
 
  use Bugzilla::Install::Requirements qw(update_localconfig);
- update_localconfig({ output => 1, answer => \%answer });
+ update_localconfig({ output => 1 });
 
 =head1 DESCRIPTION
 
@@ -453,7 +453,7 @@ Returns:     A hashref of the localconfig variables. If an array
              (and C<OLD_LOCALCONFIG_VARS> if C<$include_deprecated> is
              specified).
 
-=item C<update_localconfig({ output =E<gt> 1, answer =E<gt> \%answer })>
+=item C<update_localconfig({ output =E<gt> 1 })>
 
 Description: Adds any new variables to localconfig that aren't
              currently defined there. Also optionally prints out

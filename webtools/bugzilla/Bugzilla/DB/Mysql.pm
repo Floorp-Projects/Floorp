@@ -43,6 +43,7 @@ package Bugzilla::DB::Mysql;
 
 use strict;
 
+use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
@@ -349,7 +350,7 @@ sub bz_setup_database {
                   . "If you would like to cancel, press Ctrl-C now..."
                   . " (Waiting 45 seconds...)\n\n";
             # Wait 45 seconds for them to respond.
-            sleep(45);
+            sleep(45) unless Bugzilla->installation_answers->{NO_PAUSE};
         }
         print "Renaming indexes...\n";
 
@@ -566,9 +567,23 @@ WARNING: We are about to convert your table storage format to UTF8. This
          If you ever used a version of Bugzilla before 2.22, we STRONGLY
          recommend that you stop checksetup.pl NOW and run contrib/recode.pl.
 
-         Continuing in 60 seconds...
 EOT
-        sleep 60;
+
+        if (!Bugzilla->installation_answers->{NO_PAUSE}) {
+            if (Bugzilla->installation_mode == 
+                INSTALLATION_MODE_NON_INTERACTIVE) 
+            {
+                print <<EOT;
+         Re-run checksetup.pl in interactive mode (without an 'answers' file)
+         to continue.
+EOT
+                exit;
+            }
+            else {
+                print "         Press Enter to continue or Ctrl-C to exit...";
+                getc;
+            }
+        }
 
         print "Converting table storage format to UTF-8. This may take a",
               " while.\n";

@@ -100,7 +100,7 @@ sub SetParam {
 
 sub update_params {
     my ($params) = @_;
-    my $answer = $params->{answer} || {};
+    my $answer = Bugzilla->installation_answers;
 
     my $param = read_param_file();
 

@@ -274,7 +274,7 @@ sub create_admin {
 
     return if $admin_count;
 
-    my %answer    = %{$params->{answer} || {}};
+    my %answer    = %{Bugzilla->installation_answers};
     my $login     = $answer{'ADMIN_EMAIL'};
     my $password  = $answer{'ADMIN_PASSWORD'};
     my $full_name = $answer{'ADMIN_REALNAME'};

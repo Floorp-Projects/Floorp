@@ -127,6 +127,9 @@ use File::Basename;
     ERROR_MODE_DIE
     ERROR_MODE_DIE_SOAP_FAULT
 
+    INSTALLATION_MODE_INTERACTIVE
+    INSTALLATION_MODE_NON_INTERACTIVE
+
     DB_MODULE
     ROOT_USER
     ON_WINDOWS
@@ -348,6 +351,10 @@ use constant USAGE_MODE_EMAIL      => 3;
 use constant ERROR_MODE_WEBPAGE        => 0;
 use constant ERROR_MODE_DIE            => 1;
 use constant ERROR_MODE_DIE_SOAP_FAULT => 2;
+
+# The various modes that checksetup.pl can run in.
+use constant INSTALLATION_MODE_INTERACTIVE => 0;
+use constant INSTALLATION_MODE_NON_INTERACTIVE => 1;
 
 # Data about what we require for different databases.
 use constant DB_MODULE => {
