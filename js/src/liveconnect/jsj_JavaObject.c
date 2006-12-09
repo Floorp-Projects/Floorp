@@ -1016,20 +1016,20 @@ jsval JS_DLL_CALLBACK
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->slots);
+    JS_ASSERT(STOBJ_HAS_SLOTS(obj));
     JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
-    return obj->slots[slot];
+    return STOBJ_GET_SLOT(obj, slot);
 }
 
 JSBool JS_DLL_CALLBACK
 jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
-    JS_ASSERT(obj->slots);
+    JS_ASSERT(STOBJ_HAS_SLOTS(obj));
     JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
-    obj->slots[slot] = v;
+    STOBJ_SET_SLOT(obj, slot, v);
     return JS_TRUE;
 }
 

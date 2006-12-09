@@ -422,11 +422,9 @@ static void PrintObjectBasics(JSObject* obj)
 {
     if(OBJ_IS_NATIVE(obj))
         printf("%p 'native' <%s>",
-               (void *)obj,
-               ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);
+               (void *)obj, STOBJ_GET_CLASS(obj)->name);
     else
         printf("%p 'host'", (void *)obj);
-
 }
 
 static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
@@ -449,8 +447,8 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
     if(!OBJ_IS_NATIVE(obj))
         return;
 
-    JSObject* parent = (JSObject*)(obj->slots[JSSLOT_PARENT]);
-    JSObject* proto  = (JSObject*)(obj->slots[JSSLOT_PROTO]);
+    JSObject* parent = STOBJ_GET_PARENT(obj);
+    JSObject* proto  = STOBJ_GET_PROTO(obj);
 
     printf("%*sparent: ", INDENT(depth+1));
     if(parent)

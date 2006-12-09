@@ -532,7 +532,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
              * Avoid OBJ_SET_PARENT overhead as clonedChild cannot escape to
              * other threads.
              */
-            clonedChild->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(cursor);
+            STOBJ_SET_PARENT(clonedChild, cursor);
             if (!parent) {
                 JS_ASSERT(tvr.u.value == OBJECT_TO_JSVAL(obj));
                 JS_POP_TEMP_ROOT(cx, &tvr);
@@ -601,6 +601,7 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
             jsid id;
             jsval v;
             uintN attrs;
+            JSObject *parent;
 
             /* Walk up the parent chain. */
             thisp = JSVAL_TO_OBJECT(argv[-2]);
@@ -608,11 +609,12 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
             for (;;) {
                 if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
                     return NULL;
-                if (JSVAL_IS_VOID(v))
-                    v = OBJ_GET_SLOT(cx, thisp, JSSLOT_PARENT);
-                if (JSVAL_IS_NULL(v))
+                parent = JSVAL_IS_VOID(v)
+                         ? OBJ_GET_PARENT(cx, thisp)
+                         : JSVAL_TO_OBJECT(v);
+                if (!parent)
                     break;
-                thisp = JSVAL_TO_OBJECT(v);
+                thisp = parent;
             }
         }
     }
@@ -4680,7 +4682,7 @@ interrupt:
                 STORE_OPND(-1, rval);
             } else {
                 slot = JSVAL_TO_INT(lval);
-                GC_POKE(cx, obj->slots[slot]);
+                GC_POKE(cx, STOBJ_GET_SLOT(obj, slot));
                 OBJ_SET_SLOT(cx, obj, slot, rval);
             }
             obj = NULL;

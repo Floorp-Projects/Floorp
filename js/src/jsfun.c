@@ -274,7 +274,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     global = fp->scopeChain;
     while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
         global = parent;
-    argsobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(global);
+    STOBJ_SET_PARENT(argsobj, global);
     fp->argsobj = argsobj;
     return argsobj;
 }
