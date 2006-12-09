@@ -47,7 +47,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider, nsIDOMEventListener">
       <constructor>
         this.setInitialSelection()
       </constructor>
@@ -184,8 +184,10 @@
             if (val && !this.contains(val))
               return val;
 
-            if (oldval)
+            if (oldval) {
               oldval.removeAttribute('selected');
+              oldval.removeEventListener("DOMAttrModified", this, false);
+            }
 
             this.mSelectedInternal = val;
             if (val) {
@@ -194,6 +196,7 @@
               this.setAttribute('image', val.getAttribute('image'));
               this.setAttribute('label', val.getAttribute('label'));
               this.setAttribute('description', val.getAttribute('description'));
+              val.addEventListener("DOMAttrModified", this, false);
             }
             else {
               this.removeAttribute('value');
@@ -214,6 +217,25 @@
           ]]>
         </setter>
       </property>
+
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body>
+        <![CDATA[
+          if (event.type == "DOMAttrModified" &&
+              event.target == this.mSelectedInternal) {
+            var attrName = event.attrName;
+            switch (attrName) {
+              case "value":
+              case "label":
+              case "image":
+              case "description":
+                this.setAttribute(attrName, event.newValue);
+            }
+          }
+        ]]>
+        </body>
+      </method>
 
       <method name="appendItem">
         <parameter name="label"/>
@@ -294,6 +316,13 @@
           ]]>
         </getter>
       </property>
+
+      <destructor>
+        <![CDATA[
+           if (this.mSelectedInternal)
+             this.mSelectedInternal.removeEventListener("DOMAttrModified", this, false);
+        ]]>
+      </destructor>
     </implementation>
   </binding>
 
