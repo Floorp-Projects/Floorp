@@ -56,31 +56,21 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
 
     if (!startDate) {
         startDate = currentView().selectedDay.clone();
-        startDate.second = 0;
-        startDate.normalize();
-    } else if (startDate.isDate) {
-        startDate = startDate.clone();
-        startDate.isDate = false;
-
-        event.startDate.isDate = false;
-        /* set the hour/minute of startDate to "right now"
-           if the day is the same */
-        var now = jsDateToDateTime(new Date()).getInTimezone(kDefaultTimezone).clone();
-        var nowDate = now.clone();
-        nowDate.isDate = true;
-        nowDate.normalize();
-
-        if (startDate.compare(nowDate) == 0) {
-            /* they're the same, so set now's seconds to 0,
-               normalize and change startDate to be now. */
-            now.second = 0;
-            now.normalize();
-            startDate = now;
-        }
+        startDate.isDate = true;
     }
 
+    if (startDate.isDate) {
+        if (!startDate.isMutable) {
+            startDate = startDate.clone();
+        }
+        startDate.isDate = false;
+        startDate.hour = now().hour;
+        startDate.minute = 0;
+        startDate.second = 0;
+        startDate.normalize();
+   }
+
     event.startDate = startDate.clone();
-    event.startDate.isDate = false;
 
     if (!endDate) {
         endDate = startDate.clone();

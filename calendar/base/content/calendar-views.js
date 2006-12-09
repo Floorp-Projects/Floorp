@@ -78,15 +78,7 @@ var calendarViewController = {
             setDefaultAlarmValues(event);
             doTransaction('add', event, aCalendar, null, null);
         } else {
-            // default pop up the dialog
-            var date;
-            if (aStartTime) {
-                date = aStartTime;
-            } else {
-                date = currentView().selectedDay.clone();
-                date.isDate = false;
-            }
-            createEventWithDialog(aCalendar, date, null);
+            createEventWithDialog(aCalendar, aStartTime, null);
         }
     },
 
