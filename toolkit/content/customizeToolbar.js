@@ -80,10 +80,9 @@ function initDialog()
   document.getElementById("modelist").value = mode;
   gToolboxIconSize = gToolbox.getAttribute("iconsize");
   var smallIconsCheckbox = document.getElementById("smallicons");
+  smallIconsCheckbox.checked = gToolboxIconSize == "small";
   if (mode == "text")
     smallIconsCheckbox.disabled = true;
-  else
-    smallIconsCheckbox.checked = gToolboxIconSize == "small"; 
 
   // Build up the palette of other items.
   buildPalette();
@@ -576,11 +575,14 @@ function restoreDefaultSet()
     toolbar = toolbar.nextSibling;
   }
 
-  // Restore the default icon size (large) and mode (icons only).
-  updateIconSize(false);
-  document.getElementById("smallicons").checked = false;
-  updateToolbarMode("icons");
-  document.getElementById("modelist").value = "icons";
+  // Restore the default icon size and mode.
+  var defaultMode = gToolbox.getAttribute("defaultmode");
+  var defaultIconsSmall = gToolbox.getAttribute("defaulticonsize") == "small";
+
+  updateIconSize(defaultIconsSmall);
+  document.getElementById("smallicons").checked = defaultIconsSmall;
+  updateToolbarMode(defaultMode);
+  document.getElementById("modelist").value = defaultMode;
   
   // Remove all of the customized toolbars.
   var child = gToolbox.lastChild;
