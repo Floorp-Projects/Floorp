@@ -275,7 +275,8 @@
 
 <commandset id="commands"/>
 
-<toolbox id="calendar-toolbox" class="toolbox-top">
+<toolbox id="calendar-toolbox" class="toolbox-top" mode="full"
+         defaultmode="full">
   <!-- Menu -->
   <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
            defaultset="menubar-items"
@@ -417,7 +418,7 @@
       </toolbaritem>
   </toolbarpalette>
   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
-           iconsize="big"
+           iconsize="large"
            defaultset="calendar-new-event-button,calendar-new-task-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-go-to-today-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
            customizable="true" mode="full"
            toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
