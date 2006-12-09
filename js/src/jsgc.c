@@ -1008,7 +1008,7 @@ CanScheduleCloseHook(JSGenerator *gen)
     JSBool canSchedule;
 
     /* Avoid OBJ_GET_PARENT overhead as we are in GC. */
-    parent = JSVAL_TO_OBJECT(gen->obj->slots[JSSLOT_PARENT]);
+    parent = STOBJ_GET_PARENT(gen->obj);
     canSchedule = *js_GetGCThingFlags(parent) & GCF_MARK;
 #ifdef DEBUG_igor
     if (!canSchedule) {
@@ -1814,11 +1814,11 @@ gc_object_class_name(void* thing)
     switch (*flagp & GCF_TYPEMASK) {
       case GCX_OBJECT: {
         JSObject  *obj = (JSObject *)thing;
-        JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+        JSClass   *clasp = STOBJ_GET_CLASS(obj);
         className = clasp->name;
 #ifdef HAVE_XPCONNECT
         if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-            jsval privateValue = obj->slots[JSSLOT_PRIVATE];
+            jsval privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
 
             JS_ASSERT(clasp->flags & JSCLASS_HAS_PRIVATE);
             if (!JSVAL_IS_VOID(privateValue)) {
@@ -1887,7 +1887,7 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
       case GCX_OBJECT:
       {
         JSObject  *obj = (JSObject *)thing;
-        jsval     privateValue = obj->slots[JSSLOT_PRIVATE];
+        jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
         void      *privateThing = JSVAL_IS_VOID(privateValue)
                                   ? NULL
                                   : JSVAL_TO_PRIVATE(privateValue);
@@ -2009,7 +2009,8 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
 {
     JSRuntime *rt;
     JSObject *obj;
-    jsval v, *vp, *end;
+    jsval v;
+    uint32 i, end;
     void *next_thing;
     uint8 *next_flagp;
     JSString *str;
@@ -2055,27 +2056,27 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
       case GCX_OBJECT:
         if (RECURSION_TOO_DEEP())
             goto add_to_unscanned_bag;
-        /* If obj->slots is null, obj must be a newborn. */
+
+        /* If obj has no slots, it must be a newborn. */
         obj = (JSObject *) thing;
-        vp = obj->slots;
-        if (!vp)
+        if (!STOBJ_HAS_SLOTS(obj))
             break;
 
         /* Mark slots if they are small enough to be GC-allocated. */
-        if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
-            GC_MARK(cx, vp - 1, "slots");
+        if ((STOBJ_NSLOTS(obj) + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
+            GC_MARK(cx, obj->slots - 1, "slots");
 
         /* Set up local variables to loop over unmarked things. */
-        end = vp + ((obj->map->ops->mark)
-                    ? obj->map->ops->mark(cx, obj, NULL)
-                    : JS_MIN(obj->map->freeslot, obj->map->nslots));
+        end = (obj->map->ops->mark)
+              ? obj->map->ops->mark(cx, obj, NULL)
+              : JS_MIN(obj->map->freeslot, obj->map->nslots);
         thing = NULL;
         flagp = NULL;
 #ifdef GC_MARK_DEBUG
         scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 #endif
-        for (; vp != end; ++vp) {
-            v = *vp;
+        for (i = 0; i != end; ++i) {
+            v = STOBJ_GET_SLOT(obj, i);
             if (!JSVAL_IS_GCTHING(v) || v == JSVAL_NULL)
                 continue;
             next_thing = JSVAL_TO_GCTHING(v);
@@ -2102,7 +2103,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
                 }
             }
 #ifdef GC_MARK_DEBUG
-            GetObjSlotName(scope, obj, vp - obj->slots, name, sizeof name);
+            GetObjSlotName(scope, obj, i, name, sizeof name);
 #endif
             thing = next_thing;
             flagp = next_flagp;

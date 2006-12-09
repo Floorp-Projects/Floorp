@@ -1259,7 +1259,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *blockAtom,
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
     blockObj = ATOM_TO_OBJECT(blockAtom);
-    blockObj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
+    STOBJ_SET_PARENT(blockObj, tc->blockChain);
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChain = blockObj;
@@ -1461,7 +1461,7 @@ js_PopStatement(JSTreeContext *tc)
         tc->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE) {
             blockObj = ATOM_TO_OBJECT(stmt->atom);
-            tc->blockChain = JSVAL_TO_OBJECT(blockObj->slots[JSSLOT_PARENT]);
+            tc->blockChain = STOBJ_GET_PARENT(blockObj);
         }
     }
 }

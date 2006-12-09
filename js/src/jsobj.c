@@ -348,7 +348,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         /* Check to see whether obj shares its prototype's scope. */
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
-        oldproto = JSVAL_TO_OBJECT(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO));
+        oldproto = LOCKED_OBJ_GET_PROTO(obj);
         if (oldproto && OBJ_SCOPE(oldproto) == scope) {
             /* Either obj needs a new empty scope, or it should share pobj's. */
             if (!pobj ||
@@ -398,7 +398,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 #endif
             }
         }
-        LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(pobj));
+        LOCKED_OBJ_SET_PROTO(obj, pobj);
         JS_UNLOCK_SCOPE(cx, scope);
     } else {
         OBJ_SET_SLOT(cx, obj, slot, OBJECT_TO_JSVAL(pobj));
@@ -1902,7 +1902,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj = js_NewObject(cx, &js_WithClass, proto, parent);
     if (!obj)
         return NULL;
-    obj->slots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(cx->fp);
+    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(cx->fp));
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
     return obj;
 }
@@ -1933,9 +1933,9 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
     clone = js_NewObject(cx, &js_BlockClass, proto, parent);
     if (!clone)
         return NULL;
-    clone->slots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fp);
-    clone->slots[JSSLOT_BLOCK_DEPTH] =
-        OBJ_GET_SLOT(cx, proto, JSSLOT_BLOCK_DEPTH);
+    STOBJ_SET_SLOT(clone, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(fp));
+    STOBJ_SET_SLOT(clone, JSSLOT_BLOCK_DEPTH,
+                   OBJ_GET_SLOT(cx, proto, JSSLOT_BLOCK_DEPTH));
     return clone;
 }
 
@@ -2083,7 +2083,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
             JS_ASSERT(ATOM_IS_OBJECT(atom));
             parent = ATOM_TO_OBJECT(atom);
         }
-        obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
+        STOBJ_SET_PARENT(obj, parent);
     }
 
     JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
@@ -2096,7 +2096,7 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(tmp >> 16);
         count = (uint16)tmp;
-        obj->slots[JSSLOT_BLOCK_DEPTH] = INT_TO_JSVAL(depth);
+        STOBJ_SET_SLOT(obj, JSSLOT_BLOCK_DEPTH, INT_TO_JSVAL(depth));
     }
 
     /*
@@ -2681,7 +2681,7 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     map = obj->map;
     if (!map)
         return;
-    JS_ASSERT(obj->slots);
+    JS_ASSERT(STOBJ_HAS_SLOTS(obj));
 
     if (cx->runtime->objectHook)
         cx->runtime->objectHook(cx, obj, JS_FALSE, cx->runtime->objectHookData);
@@ -2738,7 +2738,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     }
 
 #ifdef TOO_MUCH_GC
-    obj->slots[map->freeslot] = JSVAL_VOID;
+    STOBJ_SET_SLOT(obj, map->freeslot, JSVAL_VOID);
 #endif
     *slotp = map->freeslot++;
     return JS_TRUE;
@@ -2751,8 +2751,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     uint32 nslots;
     jsval *newslots;
 
-    OBJ_CHECK_SLOT(obj, slot);
-    obj->slots[slot] = JSVAL_VOID;
+    LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_VOID);
     map = obj->map;
     JS_ASSERT(!MAP_IS_NATIVE(map) || ((JSScope *)map)->object == obj);
     if (map->freeslot == slot + 1)
@@ -3662,7 +3661,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /* Avoid deadlock by unlocking obj's scope while calling sprop's setter. */
     JS_UNLOCK_SCOPE(cx, scope);
 
-    /* Let the setter modify vp before copying from it to obj->slots[slot]. */
+    /* Let the setter modify vp before STOBJ_SET_SLOT(obj, slot, *vp). */
     if (!SPROP_SET(cx, sprop, obj, obj, vp))
         return JS_FALSE;
 
@@ -4102,14 +4101,14 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
       case JSACC_PROTO:
         pobj = obj;
         if (!writing)
-            *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PROTO);
+            *vp = OBJECT_TO_JSVAL(OBJ_GET_PROTO(cx, obj));
         *attrsp = JSPROP_PERMANENT;
         break;
 
       case JSACC_PARENT:
         JS_ASSERT(!writing);
         pobj = obj;
-        *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PARENT);
+        *vp = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, obj));
         *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
         break;
 
@@ -4781,9 +4780,9 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
         /*
          * An unmutated object that shares a prototype's scope.  We can't tell
          * how many slots are allocated and in use at obj->slots by looking at
-         * scope, so we get obj->slots' length from its -1'st element.
+         * scope, so we use STOBJ_NSLOTS(obj).
          */
-        return (uint32) obj->slots[-1];
+        return STOBJ_NSLOTS(obj);
     }
     return JS_MIN(scope->map.freeslot, scope->map.nslots);
 }
@@ -4821,7 +4820,7 @@ js_Clear(JSContext *cx, JSObject *obj)
         i = scope->map.nslots;
         n = JSSLOT_FREE(LOCKED_OBJ_GET_CLASS(obj));
         while (--i >= n)
-            obj->slots[i] = JSVAL_VOID;
+            STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
         scope->map.freeslot = n;
     }
     JS_UNLOCK_OBJ(cx, obj);
@@ -4833,7 +4832,7 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
     jsval v;
 
     JS_LOCK_OBJ(cx, obj);
-    v = (slot < (uint32) obj->slots[-1]) ? obj->slots[slot] : JSVAL_VOID;
+    v = (slot < STOBJ_NSLOTS(obj)) ? STOBJ_GET_SLOT(obj, slot) : JSVAL_VOID;
     JS_UNLOCK_OBJ(cx, obj);
     return v;
 }
@@ -4848,14 +4847,14 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    nslots = (uint32) obj->slots[-1];
+    nslots = STOBJ_NSLOTS(obj);
     if (slot >= nslots) {
         /*
          * At this point, obj may or may not own scope.  If some path calls
          * js_GetMutableScope but does not add a slot-owning property, then
          * scope->object == obj but nslots will be nominal.  If obj shares a
          * prototype's scope, then we cannot update scope->map here, but we
-         * must update obj->slots[-1] when we grow obj->slots.
+         * must update STOBJ_NSLOTS(obj) when we grow obj->slots.
          *
          * See js_Mark, before the last return, where we make a special case
          * for unmutated (scope->object != obj) objects.
@@ -4881,7 +4880,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (scope->object == obj && slot >= scope->map.freeslot)
         scope->map.freeslot = slot + 1;
 
-    obj->slots[slot] = v;
+    STOBJ_SET_SLOT(obj, slot, v);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
@@ -4921,7 +4920,7 @@ void printObj(JSContext *cx, JSObject *jsobj) {
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
     for (i=0; i < jsobj->map->nslots; i++) {
         fprintf(stderr, "slot %3d ", i);
-        val = jsobj->slots[i];
+        val = STOBJ_GET_SLOT(jsobj, i);
         if (JSVAL_IS_OBJECT(val))
             fprintf(stderr, "object %p\n", (void *)JSVAL_TO_OBJECT(val));
         else

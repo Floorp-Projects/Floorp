@@ -3372,7 +3372,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 JS_ASSERT(stmt->downScope);
             }
 
-            obj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(tc->blockChain);
+            STOBJ_SET_PARENT(obj, tc->blockChain);
             tc->blockChain = obj;
             stmt->atom = atom;
 

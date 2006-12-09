@@ -2325,7 +2325,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     CHECK_REQUEST(cx);
-    proto = JSVAL_TO_OBJECT(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PROTO));
+    proto = GC_AWARE_GET_PROTO(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return proto && proto->map ? proto : NULL;
@@ -2337,7 +2337,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
     CHECK_REQUEST(cx);
     if (obj->map->ops->setProto)
         return obj->map->ops->setProto(cx, obj, JSSLOT_PROTO, proto);
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto));
+    OBJ_SET_PROTO(cx, obj, proto);
     return JS_TRUE;
 }
 
@@ -2346,7 +2346,7 @@ JS_GetParent(JSContext *cx, JSObject *obj)
 {
     JSObject *parent;
 
-    parent = JSVAL_TO_OBJECT(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PARENT));
+    parent = GC_AWARE_GET_PARENT(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return parent && parent->map ? parent : NULL;
@@ -2358,7 +2358,7 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
     CHECK_REQUEST(cx);
     if (obj->map->ops->setParent)
         return obj->map->ops->setParent(cx, obj, JSSLOT_PARENT, parent);
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent));
+    OBJ_SET_PARENT(cx, obj, parent);
     return JS_TRUE;
 }
 
@@ -2403,8 +2403,8 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
 {
     JSScope *scope;
     JSIdArray *ida;
-    uint32 nslots;
-    jsval v, *vp, *end;
+    uint32 nslots, i;
+    jsval v;
 
     if (!OBJ_IS_NATIVE(obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2450,8 +2450,8 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
 
     /* Walk obj->slots and if any value is a non-null object, seal it. */
     nslots = JS_MIN(scope->map.freeslot, scope->map.nslots);
-    for (vp = obj->slots, end = vp + nslots; vp < end; vp++) {
-        v = *vp;
+    for (i = 0; i != nslots; ++i) {
+        v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_PRIMITIVE(v))
             continue;
         if (!JS_SealObject(cx, JSVAL_TO_OBJECT(v), deep))
@@ -3388,8 +3388,8 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     }
 
     /* iterobj can not escape to other threads here. */
-    iterobj->slots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(pdata);
-    iterobj->slots[JSSLOT_ITER_INDEX] = INT_TO_JSVAL(index);
+    STOBJ_SET_SLOT(iterobj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(pdata));
+    STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(index));
     return iterobj;
 
 bad:

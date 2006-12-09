@@ -145,28 +145,63 @@ struct JSObject {
 
 #define JS_INITIAL_NSLOTS   5
 
+/*
+ * STOBJ prefix means Single Threaded Object. Use the following fast macros to
+ * directly manipulate slots in obj when only one thread can access obj and
+ * when obj->map->freeslot, obj->map->nslots can be inconsistent with slots.
+ */
+#define STOBJ_NSLOTS(obj)               ((uint32) (obj)->slots[-1])
+#define STOBJ_HAS_SLOTS(obj)            ((obj)->slots != NULL)
+
+#define STOBJ_GET_SLOT(obj,slot)        ((obj)->slots[slot])
+#define STOBJ_SET_SLOT(obj,slot,value)  ((obj)->slots[slot] = (value))
+
+#define STOBJ_GET_PROTO(obj) \
+    JSVAL_TO_OBJECT(STOBJ_GET_SLOT(obj, JSSLOT_PROTO))
+#define STOBJ_SET_PROTO(obj,proto) \
+    STOBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto))
+
+#define STOBJ_GET_PARENT(obj) \
+    JSVAL_TO_OBJECT(STOBJ_GET_SLOT(obj, JSSLOT_PARENT))
+#define STOBJ_SET_PARENT(obj,parent) \
+    STOBJ_SET_SLOT(obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
+
+#define STOBJ_GET_CLASS(obj) \
+    ((JSClass *)JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_CLASS)))
+
 #ifdef DEBUG
-#define MAP_CHECK_SLOT(map,slot) \
-    JS_ASSERT((uint32)slot < JS_MIN((map)->freeslot, (map)->nslots))
-#define OBJ_CHECK_SLOT(obj,slot) \
-    MAP_CHECK_SLOT((obj)->map, slot)
+#define OBJ_CHECK_SLOT(obj,slot)                                              \
+    (JS_ASSERT((uint32)slot < (uint32)(obj)->map->freeslot),                  \
+     JS_ASSERT((uint32)slot < (uint32)(obj)->map->nslots))
 #else
 #define OBJ_CHECK_SLOT(obj,slot) ((void)0)
 #endif
 
-/* Fast macros for accessing obj->slots while obj is locked (if thread-safe). */
+/*
+ * Macros for accessing slots in obj while obj is locked (if thread-safe) and
+ * when slot must stay within min(obj->map->freeslot, obj->map->nslots).
+ */
 #define LOCKED_OBJ_GET_SLOT(obj,slot) \
-    (OBJ_CHECK_SLOT(obj, slot), (obj)->slots[slot])
+    (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
 #define LOCKED_OBJ_SET_SLOT(obj,slot,value) \
-    (OBJ_CHECK_SLOT(obj, slot), (obj)->slots[slot] = (value))
+    (OBJ_CHECK_SLOT(obj, slot), STOBJ_SET_SLOT(obj, slot, value))
+
 #define LOCKED_OBJ_GET_PROTO(obj) \
-    JSVAL_TO_OBJECT(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO))
+    (OBJ_CHECK_SLOT(obj, JSSLOT_PROTO), STOBJ_GET_PROTO(obj))
+#define LOCKED_OBJ_SET_PROTO(obj,proto) \
+    (OBJ_CHECK_SLOT(obj, JSSLOT_PROTO), STOBJ_SET_PROTO(obj, proto))
+
+#define LOCKED_OBJ_GET_PARENT(obj) \
+    (LOCKED_OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_GET_PARENT(obj))
+#define LOCKED_OBJ_SET_PARENT(obj,parent) \
+    (LOCKED_OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_SET_PARENT(obj, parent))
+
 #define LOCKED_OBJ_GET_CLASS(obj) \
-    ((JSClass *)JSVAL_TO_PRIVATE(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_CLASS)))
+    (OBJ_CHECK_SLOT(obj, JSSLOT_CLASS), STOBJ_GET_CLASS(obj))
 
 #ifdef JS_THREADSAFE
 
-/* Thread-safe functions and wrapper macros for accessing obj->slots. */
+/* Thread-safe functions and wrapper macros for accessing slots in obj. */
 #define OBJ_GET_SLOT(cx,obj,slot)                                             \
     (OBJ_CHECK_SLOT(obj, slot),                                               \
      (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->ownercx == cx)                    \
@@ -188,9 +223,8 @@ struct JSObject {
  * a finalizer.
  *
  * The GC runs only when all threads except the one on which the GC is active
- * are suspended at GC-safe points, so there is no hazard in directly accessing
- * obj->slots[slot] from the GC's thread, once rt->gcRunning has been set.  See
- * jsgc.c for details.
+ * are suspended at GC-safe points, so calling STOBJ_GET_SLOT from the GC's
+ * thread is safe when rt->gcRunning is set. See jsgc.c for details.
  */
 #define THREAD_IS_RUNNING_GC(rt, thread)                                      \
     ((rt)->gcRunning && (rt)->gcThread == (thread))
@@ -200,16 +234,25 @@ struct JSObject {
 
 #define GC_AWARE_GET_SLOT(cx, obj, slot)                                      \
     ((OBJ_IS_NATIVE(obj) && CX_THREAD_IS_RUNNING_GC(cx))                      \
-     ? (obj)->slots[slot]                                                     \
+     ? STOBJ_GET_SLOT(obj, slot)                                              \
      : OBJ_GET_SLOT(cx, obj, slot))
 
 #else   /* !JS_THREADSAFE */
 
 #define OBJ_GET_SLOT(cx,obj,slot)       LOCKED_OBJ_GET_SLOT(obj,slot)
 #define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_SET_SLOT(obj,slot,value)
-#define GC_AWARE_GET_SLOT(cx,obj,slot)  LOCKED_OBJ_GET_SLOT(obj,slot)
+#define GC_AWARE_GET_SLOT(cx,obj,slot)  STOBJ_GET_SLOT(obj,slot)
 
 #endif /* !JS_THREADSAFE */
+
+#define GC_AWARE_GET_PROTO(cx, obj)                                           \
+    JSVAL_TO_OBJECT(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PROTO))
+
+#define GC_AWARE_GET_PARENT(cx, obj)                                          \
+    JSVAL_TO_OBJECT(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PARENT))
+
+#define GC_AWARE_GET_CLASS(cx, obj)                                           \
+    ((JSClass *)JSVAL_TO_PRIVATE(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_CLASS)))
 
 /* Thread-safe proto, parent, and class access macros. */
 #define OBJ_GET_PROTO(cx,obj) \
