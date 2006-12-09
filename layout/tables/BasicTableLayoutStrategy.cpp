@@ -285,6 +285,14 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
     }
 
     // Loop over the columns to consider cells *with* a colspan.
+    // We consider these cells by seeing if they require adding to the
+    // widths as they were when we considered only non-spanning cells.
+    // We then accumulate the *additions* to the non-spanning values in
+    // the column frame's Span* members.  Considering things only
+    // relative to the widths resulting from the non-spanning cells
+    // (rather than incrementally including the results from spanning
+    // cells, or doing spanning and non-spanning cells in a single pass)
+    // means that layout remains row-order-invariant.
     for (col = 0, col_end = cellMap->GetColCount(); col < col_end; ++col) {
         for (PRInt32 row = 0, row_end = cellMap->GetRowCount();
              row < row_end; ++row) {
@@ -392,9 +400,17 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             continue;
         }
 
+        // Since PrefCoord is really a shorthand for two values (XXX
+        // this isn't really a space savings since we have to store
+        // mHasSpecifiedCoord; we should probably just store the values
+        // since it's less confusing) and calling AddMinCoord can
+        // influence the result of GetPrefCoord, save the value as it
+        // was during the loop over spanning cells before messing with
+        // anything.
+        nscoord prefCoord = colFrame->GetPrefCoord();
         colFrame->AddMinCoord(colFrame->GetMinCoord() +
                               colFrame->GetSpanMinCoord());
-        colFrame->AddPrefCoord(colFrame->GetPrefCoord() +
+        colFrame->AddPrefCoord(prefCoord +
                                PR_MAX(colFrame->GetSpanMinCoord(),
                                       colFrame->GetSpanPrefCoord()),
                                colFrame->GetHasSpecifiedCoord());
