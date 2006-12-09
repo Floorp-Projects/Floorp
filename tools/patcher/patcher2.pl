@@ -194,6 +194,9 @@ sub BuildTools {
 
         $mozconfig = "mk_add_options MOZ_CO_PROJECT=tools/update-packaging\n";
         $mozconfig .= "ac_add_options --enable-application=tools/update-packaging\n";
+        # these aren't required and introduce more dependencies
+        $mozconfig .= "ac_add_options --disable-dbus\n";
+        $mozconfig .= "ac_add_options --disable-svg\n";
         # This is necessary because PANGO'S NOW A DEPENDANCY! WHEEEEEE.
         # (but update packaging doesn't need it)
         $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2\n";
