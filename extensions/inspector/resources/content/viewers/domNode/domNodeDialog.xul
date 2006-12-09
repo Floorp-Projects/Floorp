@@ -54,15 +54,15 @@
     </columns>
     <rows>
       <row align="center">
-        <label value="&nodeName.label;" control="nodeName"/>
+        <label value="&nodeName.label;" control="tx_nodeName"/>
         <textbox id="tx_nodeName" oninput="dialog.toggleAccept();"/>
       </row>
       <row align="center">
-        <label value="&nodeValue.label;" control="nodeValue"/>
+        <label value="&nodeValue.label;" control="tx_nodeValue"/>
         <textbox id="tx_nodeValue"/>
       </row>
       <row align="center">
-        <label value="&namespaceURI.label;" control="namespaceURI"/>
+        <label value="&namespaceURI.label;" control="ml_namespaceURI"/>
         <menulist id="ml_namespace" oncommand="dialog.toggleNamespace();">
           <menupopup id="mp_namespaces">
             <!-- This must be first, and must have a the value attribute set to
