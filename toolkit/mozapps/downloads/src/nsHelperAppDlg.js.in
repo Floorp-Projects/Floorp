@@ -422,13 +422,11 @@ nsUnknownContentTypeDialog.prototype = {
 
       // if always-save and is-executable and no-handler
       // then set up simple ui
-      var defaultApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
-      var noDefaultApp = (!defaultApp || !defaultApp.path);
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
       var shouldntRememberChoice = (mimeType == "application/octet-stream" || 
                                     mimeType == "application/x-msdownload" ||
                                     this.mLauncher.targetFile.isExecutable());
-      if (shouldntRememberChoice && noDefaultApp) {
+      if (shouldntRememberChoice && !this.openWithDefaultOK()) {
         // hide featured choice 
         this.mDialog.document.getElementById("normalBox").collapsed = "true";
         // show basic choice 
