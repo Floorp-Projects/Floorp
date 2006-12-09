@@ -89,7 +89,6 @@ CPPSRCS		= \
 		nsChildView.cpp \
 		nsScreenBeOS.cpp \
 		nsScreenManagerBeOS.cpp \
-		nsDeviceContextSpecFactoryB.cpp \
 		nsDeviceContextSpecB.cpp \
 		nsPrintOptionsBeOS.cpp \
 		$(NULL)

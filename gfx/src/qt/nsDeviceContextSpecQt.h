@@ -81,7 +81,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIPrintSettings* aPS);
+  NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager();
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter);

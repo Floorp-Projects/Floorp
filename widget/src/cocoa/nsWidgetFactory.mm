@@ -66,7 +66,6 @@
 #include "nsNativeScrollbar.h"
 #include "nsScreenManagerCocoa.h"
 #include "nsDeviceContextSpecX.h"
-#include "nsDeviceContextSpecFactoryM.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintSessionX.h"
 
@@ -87,7 +86,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerCocoa)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 
@@ -195,10 +193,6 @@ static const nsModuleComponentInfo gComponents[] =
      NS_DEVICE_CONTEXT_SPEC_CID,
      "@mozilla.org/gfx/devicecontextspec;1",
      nsDeviceContextSpecXConstructor },
-  { "nsDeviceContextSpecFactory",
-     NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-     "@mozilla.org/gfx/devicecontextspecfactory;1",
-     nsDeviceContextSpecFactoryMacConstructor },
   { "PrintSettings Service",
      NS_PRINTSETTINGSSERVICE_CID,
      "@mozilla.org/gfx/printsettings-service;1",

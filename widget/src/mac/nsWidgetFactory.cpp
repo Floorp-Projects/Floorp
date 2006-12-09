@@ -70,7 +70,6 @@
 #include "nsPrintOptionsX.h"
 #include "nsPrintSessionX.h"
 #include "nsDeviceContextSpecX.h"
-#include "nsDeviceContextSpecFactoryM.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
@@ -94,7 +93,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 
 static const nsModuleComponentInfo gComponents[] =
 {
@@ -186,10 +184,6 @@ static const nsModuleComponentInfo gComponents[] =
     NS_DEVICE_CONTEXT_SPEC_CID,
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecXConstructor },
-  { "nsDeviceContextSpecFactory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryMacConstructor },
   { "PrintSettings Service",
     NS_PRINTSETTINGSSERVICE_CID,
     "@mozilla.org/gfx/printsettings-service;1",

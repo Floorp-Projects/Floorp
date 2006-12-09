@@ -70,9 +70,15 @@ public:
     /**
      * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
      * @update   dc 12/02/98
+     * @param aWidget           Unused
+     * @param aPS               Settings for this print job
      * @param aIsPrintPreview   TRUE if doing print preview, FALSE if normal printing.
      * @return error status
+     *
+     * The three-argument form of this function is defined by
+     * nsIDeviceContextSpec. The two-argument form is from nsIPrintingContext.
      */
+    NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
     NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
 
     /**

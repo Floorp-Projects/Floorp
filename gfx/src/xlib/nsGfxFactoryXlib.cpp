@@ -48,8 +48,6 @@
 #include "nsRenderingContextXlib.h"
 // aka    nsDeviceContextSpecXlib.h
 #include "nsDeviceContextSpecXlib.h"
-// aka    nsDeviceContextSpecFactoryXlib.h
-#include "nsDeviceContextSpecFactoryX.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextXlib.h"
 #include "nsImageXlib.h"
@@ -67,7 +65,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecXlib)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsXlib, Init)
@@ -155,11 +152,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec/xlib;1",
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecXlibConstructor },
-  { "Xlib Device Context Spec Factory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    //    "@mozilla.org/gfx/device_context_spec_factory/xlib;1",
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryXlibConstructor },
   { "PrintSettings Service",
      NS_PRINTSETTINGSSERVICE_CID,
      //    "@mozilla.org/gfx/printsettings-service;1",

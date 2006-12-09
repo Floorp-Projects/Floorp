@@ -70,7 +70,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsDeviceContextQt.cpp \
-		nsDeviceContextSpecFactoryQt.cpp \
 		nsDeviceContextSpecQt.cpp \
 		nsDrawingSurfaceQt.cpp \
 		nsFontMetricsQt.cpp \

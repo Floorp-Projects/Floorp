@@ -46,7 +46,6 @@
 #include "nsFontMetricsQt.h"
 #include "nsRenderingContextQt.h"
 #include "nsDeviceContextSpecQt.h"
-#include "nsDeviceContextSpecFactoryQt.h"
 #include "nsScreenManagerQt.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextQt.h"
@@ -69,7 +68,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecQt)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
@@ -144,10 +142,6 @@ static const nsModuleComponentInfo components[] =
       NS_DEVICE_CONTEXT_SPEC_CID,
       "@mozilla.org/gfx/devicecontextspec;1",
       nsDeviceContextSpecQtConstructor },
-    { "Qt Device Context Spec Factory",
-      NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-      "@mozilla.org/gfx/devicecontextspecfactory;1",
-      nsDeviceContextSpecFactoryQtConstructor },
     { "Qt Font Enumerator",
       NS_FONT_ENUMERATOR_CID,
       "@mozilla.org/gfx/fontenumerator;1",

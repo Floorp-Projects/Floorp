@@ -81,10 +81,12 @@ public:
 /**
  * Initialize the nsDeviceContextSpecOS2 for use.  This will allocate a printrecord for use
  * @update   dc 2/16/98
-   * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
+ * @param aWidget         Unused
+ * @param aPS             Settings for this print job
+ * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
  * @return error status
  */
-  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool	aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   
   NS_IMETHOD ClosePrintManager();
 

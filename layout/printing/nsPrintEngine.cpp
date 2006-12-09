@@ -131,7 +131,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsIDeviceContextSpecFactory.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
@@ -222,8 +221,6 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aD
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
-
-static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 NS_IMPL_ISUPPORTS1(nsPrintEngine, nsIObserver)
 
@@ -642,15 +639,11 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   }
 #endif
 
-  /* create factory (incl. create print dialog) */
-  nsCOMPtr<nsIDeviceContextSpecFactory> factory =
-          do_CreateInstance(kDeviceContextSpecFactoryCID, &rv);
+  // create a DeviceSpec to confirm that a printing subsystem is
+  // available. It will be initialized after getting print settings.
+  nsCOMPtr<nsIDeviceContextSpec> devspec =
+    do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
   if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_dcone
-    printf("PRINT JOB STARTING\n");
-#endif
-
-    nsCOMPtr<nsIDeviceContextSpec> devspec;
     mPrt->mPrintDC = nsnull; // XXX why?
 
 #ifdef NS_DEBUG
@@ -703,8 +696,9 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
       return CleanupOnFailure(rv, PR_TRUE);
     }
 
-    // Create DeviceSpec for Printing
-    rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, *getter_AddRefs(devspec), PR_FALSE);
+    // Initialize the DevSpec created earlier, now that we have
+    // print settings.
+    rv = devspec->Init(mWindow, mPrt->mPrintSettings, PR_FALSE);
 
     // If the page was intended to be destroyed while we were in the print dialog 
     // then we need to clean up and abort the printing.
@@ -1019,12 +1013,10 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
 #endif
 
   nsCOMPtr<nsIDeviceContext> ppDC;
-  nsCOMPtr<nsIDeviceContextSpecFactory> factory = do_CreateInstance(kDeviceContextSpecFactoryCID);
-  if (factory) {
-    nsCOMPtr<nsIDeviceContextSpec> devspec;
-    nsCOMPtr<nsIDeviceContext> dx;
-    rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings,
-                                          *getter_AddRefs(devspec), PR_TRUE);
+  nsCOMPtr<nsIDeviceContextSpec> devspec =
+    do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1");
+  if (devspec) {
+    rv = devspec->Init(mWindow, mPrt->mPrintSettings, PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC));
       if (NS_SUCCEEDED(rv)) {
