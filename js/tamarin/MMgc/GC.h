@@ -276,12 +276,12 @@ namespace MMgc
 		
 		void set(T obj) 
 		{
-			uintptr_t p = (uintptr_t)obj;
+			uintptr p = (uintptr)obj;
 			high = p >> HIDDENPTRSHIFT;
 			low = p & HIDDENPTRMASK;
 		}
-		uintptr_t high;
-		uintptr_t low;
+		uintptr high;
+		uintptr low;
 	};
 
 	/**

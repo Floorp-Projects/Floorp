@@ -532,7 +532,8 @@ namespace avmplus
 				}
 				// !!@ Don't intern these namespaces since the intern table ignores
 				// the prefix value of the namespace.
-				this->_addInScopeNamespace (core, ns);
+				if (ns) // ns can be null if prefix is defined and attributeValue = ""
+					this->_addInScopeNamespace (core, ns);
 			}
 			else
 			{
