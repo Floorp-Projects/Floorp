@@ -882,7 +882,16 @@ toolbar[iconsize="small"] #paste-button:hover:active {
 }
 
 #urlbar[level="broken"] #lock-icon {
-  list-style-image: url("chrome://browser/skin/Secure-urlbar-broken.png");
+  list-style-image: url("chrome://browser/skin/Security-broken.png");
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+}
+
+#urlbar[level="broken"] #lock-icon:hover {
+  -moz-image-region: rect(18px, 18px, 36px, 0px);
+}
+
+#urlbar[level="broken"] #lock-icon:active {
+  -moz-image-region: rect(36px, 18px, 54px, 0px);
 }
 
 #urlbar-container {
@@ -1036,20 +1045,17 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 }
 
 #security-button[level="high"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
   display: -moz-box;
 }
 
 #security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
   display: -moz-box;
 }
 
 #security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure-statusbar-broken.png");
   display: -moz-box;
 }
 
