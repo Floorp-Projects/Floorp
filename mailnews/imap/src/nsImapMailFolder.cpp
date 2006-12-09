@@ -772,7 +772,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     return rv;
   }
   PRBool canOpenThisFolder = PR_TRUE;
-  GetCanIOpenThisFolder(&canOpenThisFolder);
+  GetCanOpenFolder(&canOpenThisFolder);
   
   PRBool hasOfflineEvents = PR_FALSE;
   GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
@@ -5722,7 +5722,7 @@ nsresult nsImapMailFolder::GetSupportedUserFlags(PRUint32 *userFlags)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetCanIOpenThisFolder(PRBool *aBool)
+NS_IMETHODIMP nsImapMailFolder::GetCanOpenFolder(PRBool *aBool)
 {
   NS_ENSURE_ARG_POINTER(aBool);
   PRBool noSelect;

@@ -46,7 +46,7 @@ interface nsIMsgParseMailMsgState;
 // this is a simple interface which allows the imap folder to update some values
 // that the folder props js code will use to update the sharing and quota tabs in the folder props.
 
-[scriptable, uuid(239472a2-6e8f-46f0-9507-887998da49e5)] 
+[scriptable, uuid(C3011608-84C2-11DB-959B-000A95CC2952)] 
 interface nsIMsgImapFolderProps : nsISupports {
 
     void setFolderType(in wstring folderType);
@@ -121,7 +121,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   attribute long boxFlags;
   attribute string onlineName;
   attribute boolean isNamespace;
-  readonly attribute boolean canIOpenThisFolder;
+  readonly attribute boolean canOpenFolder;
   attribute string adminUrl;
   readonly attribute boolean hasAdminUrl;
   attribute boolean performingBiff;

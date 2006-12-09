@@ -217,7 +217,7 @@ nsImapService::SelectFolder(nsIEventTarget * aClientEventTarget,
   PRBool canOpenThisFolder = PR_TRUE;
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aImapMailFolder);
   if (imapFolder)
-    imapFolder->GetCanIOpenThisFolder(&canOpenThisFolder);
+    imapFolder->GetCanOpenFolder(&canOpenThisFolder);
   
   if (!canOpenThisFolder) 
     return NS_OK;
