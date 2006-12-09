@@ -93,7 +93,8 @@ var unifinderToDoDataSourceObserver =
         }
     },
     onModifyItem: function(aNewItem, aOldItem) {
-        if (aNewItem instanceof Components.interfaces.calITodo &&
+        if ((aNewItem instanceof Components.interfaces.calITodo ||
+            aOldItem instanceof Components.interfaces.calITodo) &&
             !this.mInBatch)
         {
             toDoUnifinderRefresh();

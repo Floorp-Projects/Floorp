@@ -1762,13 +1762,13 @@
                 }
 
                 if (aNewItem instanceof Components.interfaces.calITodo &&
+                    aOldItem instanceof Components.interfaces.calITodo &&
                     !this.calView.mTasksInView)
                     return;
 
                 var occs;
 
-
-                if (!aOldItem instanceof Components.interfaces.calITodo ||
+                if (!(aOldItem instanceof Components.interfaces.calITodo) ||
                     (aOldItem.entryDate && aOldItem.dueDate)) {
                     occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                           this.calView.queryEndDate,
@@ -1778,7 +1778,7 @@
                     }
                 }
                 if (aNewItem instanceof Components.interfaces.calITodo && 
-                    (!aNewItem.entryDate || !aNewItem.dueDate))
+                    (!aNewItem.entryDate || !aNewItem.dueDate || !this.mTasksInView))
                     return;
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                       this.calView.queryEndDate,
