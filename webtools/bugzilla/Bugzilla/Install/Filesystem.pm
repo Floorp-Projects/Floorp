@@ -13,6 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Bill Barry <after.fallout@gmail.com>
 
 package Bugzilla::Install::Filesystem;
 
@@ -108,7 +109,7 @@ sub FILESYSTEM {
         'testserver.pl'   => { perms => $ws_executable },
         'whine.pl'        => { perms => $ws_executable },
         'customfield.pl'  => { perms => $owner_executable },
-        'email_in.pl'     => { perms => $owner_executable },
+        'email_in.pl'     => { perms => $ws_executable },
 
         'docs/makedocs.pl'   => { perms => $owner_executable },
         'docs/rel_notes.txt' => { perms => $ws_readable },
