@@ -100,7 +100,7 @@ Refresh Icons=FALSE
 ;
 ; If this key is set to 'Local', make
 ; sure to provide a GRE Private Key= below!
-GRE Type=Shared
+GRE Type=Local
 GRE ID=$GreUniqueID$
 
 ; Private key that overrides the default shared key
