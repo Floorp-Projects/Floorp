@@ -228,19 +228,29 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DO_GLOBAL_REFLOW_COUNT_DSP("nsFieldSetFrame");
   }
 
+  nsDisplayListCollection contentDisplayItems;
+  if (mContentFrame) {
+    // Collect mContentFrame's display items into their own collection. We need
+    // to be calling BuildDisplayList on mContentFrame before mLegendFrame in
+    // case it contains out-of-flow frames whose placeholders are under
+    // mLegendFrame. However, we want mContentFrame's display items to be
+    // after mLegendFrame's display items in z-order, so we need to save them
+    // and append them later.
+    nsresult rv = BuildDisplayListForChild(aBuilder, mContentFrame, aDirtyRect,
+                                           contentDisplayItems);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   if (mLegendFrame) {
     nsDisplayListSet set(aLists, aLists.Content());
     nsresult rv = BuildDisplayListForChild(aBuilder, mLegendFrame, aDirtyRect, set);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (!mContentFrame)
-    return NS_OK;
-  // Allow mContentFrame's background to go onto our BorderBackground() list,
-  // this is OK since it won't have a real background except for event
-  // handling.
-  return BuildDisplayListForChild(aBuilder, mContentFrame, aDirtyRect, aLists);
-  // REVIEW: debug borders are always painted by nsFrame::BuildDisplayListForChild
-  // (or by the PresShell for the top level painted frame)
+  // Put mContentFrame's display items on the master list. Note that
+  // this moves mContentFrame's border/background display items to our
+  // BorderBackground() list, which isn't really correct, but it's OK because
+  // mContentFrame is anonymous and can't have its own border and background.
+  contentDisplayItems.MoveTo(aLists);
+  return NS_OK;
 }
 
 void
