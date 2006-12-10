@@ -65,7 +65,8 @@ enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
  * @see #GetAdditionalChildListName()
  */
 #define NS_TABLE_FRAME_COLGROUP_LIST_INDEX 0
-#define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_COLGROUP_LIST_INDEX
+#define NS_TABLE_FRAME_OVERFLOW_LIST_INDEX 1
+#define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_OVERFLOW_LIST_INDEX
 
 /* ============================================================================ */
 
