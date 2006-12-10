@@ -83,7 +83,6 @@
 
 // Printing
 #include "nsDeviceContextSpecOS2.h"
-#include "nsDeviceContextSpecFactoryO.h"
 #include "nsPrintOptionsOS2.h"
 #include "nsPrintSession.h"
 
@@ -104,7 +103,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
