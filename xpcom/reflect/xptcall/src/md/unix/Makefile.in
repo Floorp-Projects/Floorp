@@ -51,7 +51,7 @@ REQUIRES = string
 #
 # The default is this buildable, but non-functioning code.
 #
-CPPSRCS := $(error XPTCall not implemented on this platform!)
+CPPSRCS		:= xptcinvoke_unsupported.cpp xptcstubs_unsupported.cpp
 
 # Force use of PIC
 FORCE_USE_PIC	= 1
