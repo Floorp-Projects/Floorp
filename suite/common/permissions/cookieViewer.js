@@ -353,7 +353,11 @@ function DeleteCookie() {
 function DeleteAllCookies() {
   var title = cookieBundle.getString("deleteAllCookiesTitle");
   var msg = cookieBundle.getString("deleteAllCookies");
-  if (!promptservice.confirm(window, title, msg ))
+  var flags = ((promptservice.BUTTON_TITLE_IS_STRING * promptservice.BUTTON_POS_0) +
+               (promptservice.BUTTON_TITLE_CANCEL * promptservice.BUTTON_POS_1) +
+               promptservice.BUTTON_POS_1_DEFAULT)
+  var yes = cookieBundle.getString("deleteAllCookiesYes");
+  if (promptservice.confirmEx(window, title, msg, flags, yes, null, null, {value:0}) == 1)
     return;
 
   ClearCookieProperties();
@@ -544,7 +548,11 @@ function buttonEnabling(textfield) {
 function DeleteAllPermissions() {
   var title = cookieBundle.getString("deleteAllSitesTitle");
   var msg = cookieBundle.getString("deleteAllCookiesSites");
-  if (!promptservice.confirm(window, title, msg ))
+  var flags = ((promptservice.BUTTON_TITLE_IS_STRING * promptservice.BUTTON_POS_0) +
+               (promptservice.BUTTON_TITLE_CANCEL * promptservice.BUTTON_POS_1) +
+               promptservice.BUTTON_POS_1_DEFAULT)
+  var yes = cookieBundle.getString("deleteAllSitesYes");
+  if (promptservice.confirmEx(window, title, msg, flags, yes, null, null, null, {value:0}) == 1)
     return;
     
   DeleteAllFromTree(permissionsTree, permissionsTreeView,

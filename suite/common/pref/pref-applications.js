@@ -63,9 +63,13 @@ function removeType()
     var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
     var dialogMsg = gPrefApplicationsBundle.getString("removeHandler");
     dialogMsg = dialogMsg.replace(/%n/g, "\n");
+    var replaceMsg = gPrefApplicationsBundle.getString("removeHandlerYes");
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-    var remove = promptService.confirm(window, titleMsg, dialogMsg);
-    if (!remove) {
+    var flags = ((promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+                 (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
+                 promptService.BUTTON_POS_1_DEFAULT);
+    var btn = promptService.confirmEx(window, titleMsg, dialogMsg, flags, replaceMsg, null, null, null, {value:0});
+    if (btn == 1) {
       return;
     }
   }

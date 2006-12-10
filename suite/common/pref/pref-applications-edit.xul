@@ -347,8 +347,12 @@
           var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
           var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
           dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-          var replace = promptService.confirm(window, titleMsg, dialogMsg);
-          if (!replace)
+          var replaceMsg = gPrefApplicationsBundle.getString("handlerExistsReplace");
+          var flags = ((promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+                       (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
+                       promptService.BUTTON_POS_1_DEFAULT);
+          var btn = promptService.confirmEx(window, titleMsg, dialogMsg, flags, replaceMsg, null, null, null, {value: 0});
+          if (btn == 1)
             return true;
           
           // delete mimetype we're overwriting

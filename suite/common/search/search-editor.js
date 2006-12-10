@@ -551,8 +551,14 @@ function RemoveCategory()
   if (!categoryPopup) return(false);
   if (categoryPopup.childNodes.length < 1)  return(false);
 
+  var titleStr = bundle.GetStringFromName("RemoveCategoryTitle");
   var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
-  if (!confirm(promptStr))  return(false);
+  var yesStr = bundle.GetStringFromName("RemoveCategoryYes");
+  var flags = ((promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+               (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) + 
+               promptService.BUTTON_POS_1_DEFAULT);
+  if (promptService.confirmEx(window, titleStr, promptStr, flags, yesStr, null, null, null, {value:0}) == 1)
+    return false;
 
   var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
   if (!categoryRes) return(false);
