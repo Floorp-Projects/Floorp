@@ -430,8 +430,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
           
 #ifdef DEBUG_roc
-      printf("*** Reflowing child #%d %p: reason = %d, availHeight=%d\n",
-             columnCount, (void*)child, tmpReason, availSize.height);
+      printf("*** Reflowing child #%d %p: availHeight=%d\n",
+             columnCount, (void*)child,availSize.height);
 #endif
 
       // Note if the column's next in flow is not being changed by this incremental reflow.
