@@ -2712,7 +2712,7 @@ public:
   nsCOMPtr<nsIMessenger> mMessenger;                // our messenger instance
   nsCOMPtr<nsIMsgWindow> mMsgWindow;                // our UI window
   PRUint32 mNewMessageKey;                          // new message key
-
+  PRUint32 mOrigMsgFlags;
   // temp
   PRBool mWrittenExtra;
   PRBool mDetaching;
@@ -2764,12 +2764,13 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
   PRUint32 origMsgFlags;
   mOriginalMessage->GetFlags(&origMsgFlags);
-  if (copyService) {
+  if (copyService) 
+  {
     nsCOMPtr<nsIFileSpec> fileSpec;
     rv = NS_NewFileSpecFromIFile(mMsgFile, getter_AddRefs(fileSpec));
     if (NS_SUCCEEDED(rv))
       rv = copyService->CopyFileMessage(fileSpec, mMessageFolder, nsnull, PR_FALSE,
-                                        origMsgFlags, listenerCopyService, mMsgWindow);
+                                        mOrigMsgFlags, listenerCopyService, mMsgWindow);
   }
   return rv;
 }
@@ -2968,6 +2969,7 @@ nsDelAttachListener::StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aM
   NS_ENSURE_SUCCESS(rv,rv);
   rv = mOriginalMessage->GetFolder(getter_AddRefs(mMessageFolder));
   NS_ENSURE_SUCCESS(rv,rv);
+  mOriginalMessage->GetFlags(&mOrigMsgFlags);
 
   // ensure that we can store and delete messages in this folder, if we 
   // can't then we can't do attachment deleting
