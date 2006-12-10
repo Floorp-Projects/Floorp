@@ -99,7 +99,7 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                              aModType);
 
 
-   // if the index changed hide the old element and make the now element visible
+   // if the index changed hide the old element and make the new element visible
   if (aAttribute == nsXULAtoms::selectedIndex) {
     IndexChanged(GetPresContext());
   }
@@ -157,16 +157,16 @@ nsDeckFrame::IndexChanged(nsPresContext* aPresContext)
   Redraw(state);
 
   // hide the currently showing box
-  nsIBox* currentBox = (mIndex >= 0) ? GetBoxAt(mIndex) : nsnull;
+  nsIBox* currentBox = GetSelectedBox();
   if (currentBox) // only hide if it exists
      HideBox(aPresContext, currentBox);
 
+  mIndex = index;
+
   // show the new box
-  nsIBox* newBox = (index >= 0) ? GetBoxAt(index) : nsnull;
+  nsIBox* newBox = GetSelectedBox();
   if (newBox) // only show if it exists
      ShowBox(aPresContext, newBox);
-
-  mIndex = index;
 }
 
 PRInt32
@@ -191,11 +191,7 @@ nsDeckFrame::GetSelectedIndex()
 nsIBox* 
 nsDeckFrame::GetSelectedBox()
 {
- // ok we want to paint only the child that as at the given index
-  PRInt32 index = GetSelectedIndex();
- 
-  // get the child at that index. 
-  return (index >= 0) ? GetBoxAt(index) : nsnull; 
+  return (mIndex >= 0) ? GetBoxAt(mIndex) : nsnull; 
 }
 
 NS_IMETHODIMP
