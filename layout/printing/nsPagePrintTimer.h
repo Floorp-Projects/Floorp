@@ -41,14 +41,8 @@
 #include "nsITimer.h"
 #include "nsITimelineService.h"
 
-// Interfaces
 #include "nsIDocumentViewerPrint.h"
-#include "nsPresContext.h"
-#include "nsIPrintSettings.h"
-
-// Other Includes
 #include "nsPrintObject.h"
-#include "nsRect.h"
 
 class nsPrintEngine;
 
@@ -62,34 +56,23 @@ public:
   NS_DECL_ISUPPORTS
 
   nsPagePrintTimer();
-  virtual ~nsPagePrintTimer();
+  ~nsPagePrintTimer();
 
-  // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
-
-  // Other Methods
-  nsresult StartTimer(PRBool aUseDelay = PR_TRUE);
 
   void Init(nsPrintEngine*          aPrintEngine,
             nsIDocumentViewerPrint* aDocViewerPrint,
-            nsPresContext*         aPresContext,
-            nsIPrintSettings*       aPrintSettings,
-            nsPrintObject*          aPO,
             PRUint32                aDelay);
 
-  nsresult Start(nsPrintEngine*          aPrintEngine,
-                 nsIDocumentViewerPrint* aDocViewerPrint,
-                 nsPresContext*     aPresContext,
-                 nsIPrintSettings*   aPrintSettings,
-                 nsPrintObject*      aPO,
-                 PRUint32            aDelay);
+  nsresult Start(nsPrintObject* aPO);
 
   void Stop();
+
 private:
+  nsresult StartTimer(PRBool aUseDelay);
+
   nsPrintEngine*             mPrintEngine;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
-  nsPresContext*            mPresContext;
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsITimer>         mTimer;
   PRUint32                   mDelay;
   nsPrintObject *            mPrintObj;

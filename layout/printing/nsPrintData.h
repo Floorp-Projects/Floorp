@@ -37,52 +37,18 @@
 #ifndef nsPrintData_h___
 #define nsPrintData_h___
 
-#include "nsPrintObject.h"
-
 // Interfaces
-#include "nsIDeviceContext.h"
-#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIObserver.h"
-#include "nsIPrintProgress.h"
+#include "nsIDeviceContext.h"
 #include "nsIPrintProgressParams.h"
 #include "nsIPrintOptions.h"
-#include "nsIPrintSettings.h"
-#include "nsIWebProgressListener.h"
-#include "nsIPrintSession.h"
-
-// Other Includes
-#include "nsPrintPreviewListener.h"
-#include "nsIDocShellTreeNode.h"
+#include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 // Classes
-class nsIPageSequenceFrame;
-class nsPagePrintTimer;
-
-// Special Interfaces
-#include "nsIDocumentViewer.h"
-#include "nsIDocumentViewerPrint.h"
-
-//---------------------------------------------------
-//-- Object for Caching the Presentation
-//---------------------------------------------------
-class CachedPresentationObj
-{
-public:
-  CachedPresentationObj(nsIPresShell* aShell, nsPresContext* aPC,
-                        nsIViewManager* aVM, nsIWidget* aW):
-    mWindow(aW), mViewManager(aVM), mPresShell(aShell), mPresContext(aPC)
-  {
-  }
-
-  // The order here is important because the order of destruction is the
-  // reverse of the order listed here, and the view manager must outlive
-  // the pres shell.
-  nsCOMPtr<nsIWidget>      mWindow;
-  nsCOMPtr<nsIViewManager> mViewManager;
-  nsCOMPtr<nsIPresShell>   mPresShell;
-  nsCOMPtr<nsPresContext> mPresContext;
-};
+class nsPrintObject;
+class nsPrintPreviewListener;
+class nsIWebProgressListener;
 
 //------------------------------------------------------------------------
 // nsPrintData Class
@@ -118,11 +84,10 @@ public:
   // Listener Helper Methods
   void OnEndPrinting();
   void OnStartPrinting();
-  static void DoOnProgressChange(nsVoidArray& aListeners,
-                                 PRInt32      aProgess,
-                                 PRInt32      aMaxProgress,
-                                 PRBool       aDoStartStop = PR_FALSE,
-                                 PRInt32      aFlag = 0);
+  void DoOnProgressChange(PRInt32      aProgess,
+                          PRInt32      aMaxProgress,
+                          PRBool       aDoStartStop,
+                          PRInt32      aFlag);
 
 
   ePrintDataType               mType;            // the type of data this is (Printing or Print Preview)
@@ -132,28 +97,21 @@ public:
   nsPrintObject *                mPrintObject;
   nsPrintObject *                mSelectedPO;
 
-  nsVoidArray                      mPrintProgressListeners;
-  nsCOMPtr<nsIWebProgressListener> mPrintProgressListener;
-  nsCOMPtr<nsIPrintProgress>       mPrintProgress;
+  nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
-  PRBool                           mShowProgressDialog;    // means we should try to show it
-  PRPackedBool                     mProgressDialogIsShown; // means it is already being shown
 
   nsCOMPtr<nsIDOMWindow> mCurrentFocusWin; // cache a pointer to the currently focused window
 
   nsVoidArray*                mPrintDocList;
-  nsCOMPtr<nsIDeviceContext>  mPrintDocDC;
-  nsCOMPtr<nsIDOMWindow>      mPrintDocDW;
   PRPackedBool                mIsIFrameSelected;
   PRPackedBool                mIsParentAFrameSet;
   PRPackedBool                mOnStartSent;
   PRPackedBool                mIsAborted;           // tells us the document is being aborted
   PRPackedBool                mPreparingForPrint;   // see comments above
   PRPackedBool                mDocWasToBeDestroyed; // see comments above
+  PRPackedBool                mProgressDialogIsShown; // it is being shown
   PRBool                      mShrinkToFit;
   PRInt16                     mPrintFrameType;
-  PRInt32                     mNumPrintableDocs;
-  PRInt32                     mNumDocsPrinted;
   PRInt32                     mNumPrintablePages;
   PRInt32                     mNumPagesPrinted;
   float                       mShrinkRatio;
@@ -166,7 +124,7 @@ public:
   PRUnichar*            mBrandName; //  needed as a substitute name for a document
 
 private:
-  nsPrintData() {}
+  nsPrintData(); //not implemented
   nsPrintData& operator=(const nsPrintData& aOther); // not implemented
 
 };
