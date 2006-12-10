@@ -832,19 +832,15 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
       unread -= deltaInDB;
   }
   
-  mNumUnreadMessages = unread;
-  mNumTotalMessages = total;
+  PRInt32 pendingUnreadDelta = unread - mNumUnreadMessages - mNumPendingUnreadMessages;
+  PRInt32 pendingTotalDelta = total - mNumTotalMessages - mNumPendingTotalMessages;
+  ChangeNumPendingUnread(pendingUnreadDelta);
+  ChangeNumPendingTotalMessages(pendingTotalDelta);
+
 #if 0
   m_nntpHighwater = youngest;
   m_nntpTotalArticles = total;
 #endif
-  
-  //Need to notify listeners that total count changed.
-  if(oldTotalMessages != mNumTotalMessages)
-    NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
-  
-  if(oldUnreadMessages != mNumUnreadMessages) 
-    NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
   
   return rv;
 }
@@ -989,6 +985,8 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
 
 NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
 {
+  ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
+  ChangeNumPendingUnread(-GetNumPendingUnread());
   return GetNewsMessages(aMsgWindow, PR_FALSE, aListener);
 }
 
