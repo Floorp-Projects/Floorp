@@ -1472,8 +1472,22 @@ nsresult RenderToDTShare( PDRAGITEM pditem, HWND hwnd)
   nsresult rv;
   void *   pMem;
 
+#ifdef MOZ_OS2_HIGH_MEMORY
+  APIRET rc = DosAllocSharedMem( &pMem, DTSHARE_NAME, 0x100000,
+                                 PAG_WRITE | PAG_READ | OBJ_ANY);
+  if (rc != NO_ERROR &&
+      rc != ERROR_ALREADY_EXISTS) { // Did the kernel handle OBJ_ANY?
+    // Try again without OBJ_ANY and if the first failure was not caused
+    // by OBJ_ANY then we will get the same failure, else we have taken
+    // care of pre-FP13 systems where the kernel couldn't handle it.
+    rc = DosAllocSharedMem( &pMem, DTSHARE_NAME, 0x100000,
+                            PAG_WRITE | PAG_READ);
+  }
+#else
   APIRET rc = DosAllocSharedMem( &pMem, DTSHARE_NAME, 0x100000,
                                  PAG_WRITE | PAG_READ);
+#endif
+
   if (rc == ERROR_ALREADY_EXISTS)
     rc = DosGetNamedSharedMem( &pMem, DTSHARE_NAME,
                                PAG_WRITE | PAG_READ);

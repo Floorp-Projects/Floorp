@@ -56,8 +56,20 @@ nsMessengerOS2Integration::nsMessengerOS2Integration()
                                    PAG_READ | PAG_WRITE);
 
   if (rc != NO_ERROR) {
+#ifdef MOZ_OS2_HIGH_MEMORY
+    rc = DosAllocSharedMem(&pvObject, WARPCENTER_SHAREDMEM, sizeof(ULONG),
+                           PAG_COMMIT | PAG_WRITE | OBJ_ANY);
+    if (rc != NO_ERROR) { // Did the kernel handle OBJ_ANY?
+      // Try again without OBJ_ANY and if the first failure was not caused
+      // by OBJ_ANY then we will get the same failure, else we have taken
+      // care of pre-FP13 systems where the kernel couldn't handle it.
+      rc = DosAllocSharedMem(&pvObject, WARPCENTER_SHAREDMEM, sizeof(ULONG),
+                             PAG_COMMIT | PAG_WRITE);
+    }
+#else
     rc = DosAllocSharedMem(&pvObject, WARPCENTER_SHAREDMEM, sizeof(ULONG),
                            PAG_COMMIT | PAG_WRITE);
+#endif
     pUnreadState = (PULONG)pvObject;
   }
   *pUnreadState = 0;

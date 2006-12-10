@@ -2113,7 +2113,14 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         return NS_OK;
 
     // upper-case the extension, then see if it claims to be an executable
+#ifdef MOZ_OS2_HIGH_MEMORY
+    // WinUpper() cannot be used because it crashes with high memory.
+    // strupr() does not take into account non-ASCII characters but this is
+    // irrelevant for the possible extensions below
+    strupr(ext);
+#else
     WinUpper(0, 0, 0, ext);
+#endif
     if (strcmp(ext, ".EXE") == 0 ||
         strcmp(ext, ".CMD") == 0 ||
         strcmp(ext, ".COM") == 0 ||

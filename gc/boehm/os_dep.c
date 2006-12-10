@@ -1110,11 +1110,27 @@ void * os2_alloc(size_t bytes)
 {
     void * result;
 
+#ifdef MOZ_OS2_HIGH_MEMORY
+    APIRET rc = DosAllocMem(&result, bytes, PAG_EXECUTE | PAG_READ |
+                                            PAG_WRITE | PAG_COMMIT | OBJ_ANY);
+    if (rc != NO_ERROR) { /* Did the kernel handle OBJ_ANY? */
+        /* Try again without OBJ_ANY and if the first failure was not caused
+         * by OBJ_ANY then we will get the same failure, else we have taken
+         * care of pre-FP13 systems where the kernel couldn't handle it.
+         */
+        rc = DosAllocMem(&result, bytes, PAG_EXECUTE | PAG_READ |
+                                         PAG_WRITE | PAG_COMMIT);
+        if (rc != NO_ERROR) {
+            return(0);
+        }
+    }
+#else
     if (DosAllocMem(&result, bytes, PAG_EXECUTE | PAG_READ |
     				    PAG_WRITE | PAG_COMMIT)
 		    != NO_ERROR) {
 	return(0);
     }
+#endif
     if (result == 0) return(os2_alloc(bytes));
     return(result);
 }
