@@ -39,7 +39,6 @@
 
 // Interfaces
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -48,9 +47,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIWidget.h"
-
-// Other Includes
-#include "nsRect.h"
 
 // nsPrintObject Document Type
 enum PrintObjectType  {eDoc = 0, eFrame = 1, eIFrame = 2, eFrameSet = 3};
@@ -73,14 +69,12 @@ public:
 
   // Data Members
   nsCOMPtr<nsIDocShell>    mDocShell;
-  nsCOMPtr<nsIPresShell>   mDisplayPresShell;
   nsCOMPtr<nsIDocument>    mDocument;
 
   nsCOMPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;
-  nsIView*                 mRootView;
 
   nsIContent*      mContent;
   PrintObjectType  mFrameType;
@@ -93,8 +87,6 @@ public:
   PRPackedBool     mSharedPresShell;
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
 
-  PRUnichar*       mDocTitle;
-  PRUnichar*       mDocURL;
   float            mShrinkRatio;
 
 private:

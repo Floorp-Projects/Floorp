@@ -39,23 +39,16 @@
 
 #include "nsISupports.h"
 
-class nsPresContext;
-class nsIPrintSettings;
-class nsPrintObject;
-class nsISelection;
-class nsIPresShell;
 class nsIDocument;
 class nsStyleSet;
-class nsIContent;
 
 // {D0B7F354-D575-43fd-903D-5AA35A193EDA}
 #define NS_IDOCUMENT_VIEWER_PRINT_IID \
  { 0xd0b7f354, 0xd575, 0x43fd, { 0x90, 0x3d, 0x5a, 0xa3, 0x5a, 0x19, 0x3e, 0xda } }
 
 /**
- * A DocumentViewerPrint is an INTERNAL Interface mainly used for interaction
- * between the DocumentViewer and the PrintEngine, although other objects may 
- * use to find out if printing or print preview is currently underway
+ * A DocumentViewerPrint is an INTERNAL Interface used for interaction
+ * between the DocumentViewer and the PrintEngine
  */
 class nsIDocumentViewerPrint : public nsISupports
 {
@@ -68,21 +61,14 @@ public:
   virtual void SetIsPrintPreview(PRBool aIsPrintPreview) = 0;
   virtual PRBool GetIsPrintPreview() = 0;
 
-  virtual PRBool GetIsCreatingPrintPreview() = 0;
-
   // The style set returned by CreateStyleSet is in the middle of an
   // update batch so that the caller can add sheets to it if needed.
   // Callers should call EndUpdate() on it when ready to use.
   virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet) = 0;
 
-  virtual nsresult GetDocumentSelection(nsISelection **aSelection,
-                                        nsIPresShell * aPresShell = nsnull) = 0;
-
   virtual void IncrementDestroyRefCount() = 0;
 
   virtual void ReturnToGalleyPresentation() = 0;
-
-  virtual void InstallNewPresentation() = 0;
 
   virtual void OnDonePrinting() = 0;
 
@@ -97,12 +83,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   virtual PRBool   GetIsPrinting(); \
   virtual void     SetIsPrintPreview(PRBool aIsPrintPreview); \
   virtual PRBool   GetIsPrintPreview(); \
-  virtual PRBool   GetIsCreatingPrintPreview(); \
   virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet); \
-  virtual nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull); \
   virtual void     IncrementDestroyRefCount(); \
   virtual void     ReturnToGalleyPresentation(); \
-  virtual void     InstallNewPresentation(); \
   virtual void     OnDonePrinting();
 
 #endif /* nsIDocumentViewerPrint_h___ */

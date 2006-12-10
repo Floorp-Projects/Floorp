@@ -36,15 +36,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintObject.h"
+#include "nsIContentViewer.h"
+#include "nsIDOMDocument.h"
 
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mFrameType(eFrame), mRootView(nsnull), mContent(nsnull), mParent(nsnull),
+  mFrameType(eFrame), mContent(nsnull), mParent(nsnull),
   mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
   mSharedPresShell(PR_FALSE), mInvisible(PR_FALSE),
-  mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0)
+  mShrinkRatio(1.0)
 {
 }
 
@@ -56,14 +58,7 @@ nsPrintObject::~nsPrintObject()
     delete po;
   }
 
-  if (mPresShell && !mSharedPresShell) {
-    mPresShell->EndObservingDocument();
-    mPresShell->Destroy();
-  }
-
-  if (mDocTitle) nsMemory::Free(mDocTitle);
-  if (mDocURL) nsMemory::Free(mDocURL);
-
+  DestroyPresentation();
 }
 
 //------------------------------------------------------------------
@@ -73,11 +68,17 @@ nsPrintObject::Init(nsIDocShell* aDocShell)
 {
   mDocShell = aDocShell;
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  mDocShell->GetPresShell(getter_AddRefs(mDisplayPresShell));
-  NS_ENSURE_TRUE(mDisplayPresShell, NS_ERROR_FAILURE);
-
-  mDocument = mDisplayPresShell->GetDocument();
+  
+  nsresult rv;
+  nsCOMPtr<nsIContentViewer> viewer;
+  rv = mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMDocument> doc;
+  viewer->GetDOMDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  mDocument = do_QueryInterface(doc);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -90,7 +91,10 @@ nsPrintObject::DestroyPresentation()
 {
   mWindow      = nsnull;
   mPresContext = nsnull;
-  if (mPresShell) mPresShell->Destroy();
+  if (mPresShell) {
+    mPresShell->EndObservingDocument();
+    mPresShell->Destroy();
+  }
   mPresShell   = nsnull;
   mViewManager = nsnull;
 }

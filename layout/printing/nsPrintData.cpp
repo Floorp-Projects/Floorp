@@ -39,12 +39,9 @@
 
 #include "nsIStringBundle.h"
 #include "nsIServiceManager.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-
-#include "nsISelection.h"
-#include "nsIDocShell.h"
-#include "nsIURI.h"
+#include "nsPrintObject.h"
+#include "nsPrintPreviewListener.h"
+#include "nsIWebProgressListener.h"
 
 //-----------------------------------------------------
 // PR LOGGING
@@ -55,13 +52,6 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-
-#ifdef NS_DEBUG
-// PR_LOGGING is force to always be on (even in release builds)
-// but we only want some of it on,
-//#define EXTENDED_DEBUG_PRINTING 
-#endif
-
 #define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
 static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 #define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1);
@@ -75,11 +65,11 @@ static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
   mType(aType), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
-  mShowProgressDialog(PR_TRUE), mProgressDialogIsShown(PR_FALSE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
+  mProgressDialogIsShown(PR_FALSE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
   mIsParentAFrameSet(PR_FALSE), mOnStartSent(PR_FALSE),
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
-  mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
+  mNumPrintablePages(0), mNumPagesPrinted(0),
   mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
   mBrandName(nsnull)
 {
@@ -141,50 +131,35 @@ nsPrintData::~nsPrintData()
   if (mBrandName) {
     NS_Free(mBrandName);
   }
-
-  for (PRInt32 i=0;i<mPrintProgressListeners.Count();i++) {
-    nsIWebProgressListener* wpl = NS_STATIC_CAST(nsIWebProgressListener*, mPrintProgressListeners.ElementAt(i));
-    NS_ASSERTION(wpl, "nsIWebProgressListener is NULL!");
-    NS_RELEASE(wpl);
-  }
-
 }
 
 void nsPrintData::OnStartPrinting()
 {
   if (!mOnStartSent) {
-    DoOnProgressChange(mPrintProgressListeners, 0, 0, PR_TRUE, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT);
+    DoOnProgressChange(0, 0, PR_TRUE, nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT);
     mOnStartSent = PR_TRUE;
   }
 }
 
 void nsPrintData::OnEndPrinting()
 {
-  DoOnProgressChange(mPrintProgressListeners, 100, 100, PR_TRUE, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT);
-  if (mPrintProgress && mShowProgressDialog) {
-    mPrintProgress->CloseProgressDialog(PR_TRUE);
-  }
+  DoOnProgressChange(100, 100, PR_TRUE, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT);
 }
 
 void
-nsPrintData::DoOnProgressChange(nsVoidArray& aListeners,
-                              PRInt32      aProgess,
-                              PRInt32      aMaxProgress,
-                              PRBool       aDoStartStop,
-                              PRInt32      aFlag)
+nsPrintData::DoOnProgressChange(PRInt32      aProgess,
+                                PRInt32      aMaxProgress,
+                                PRBool       aDoStartStop,
+                                PRInt32      aFlag)
 {
   if (aProgess == 0) return;
 
-  for (PRInt32 i=0;i<aListeners.Count();i++) {
-    nsIWebProgressListener* wpl = NS_STATIC_CAST(nsIWebProgressListener*, aListeners.ElementAt(i));
-    NS_ASSERTION(wpl, "nsIWebProgressListener is NULL!");
+  for (PRInt32 i=0;i<mPrintProgressListeners.Count();i++) {
+    nsIWebProgressListener* wpl = mPrintProgressListeners.ObjectAt(i);
     wpl->OnProgressChange(nsnull, nsnull, aProgess, aMaxProgress, aProgess, aMaxProgress);
     if (aDoStartStop) {
       wpl->OnStateChange(nsnull, nsnull, aFlag, 0);
     }
   }
 }
-
-
-
 
