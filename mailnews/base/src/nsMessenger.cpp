@@ -2762,8 +2762,6 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   mMsgFileStream = nsnull;
   mNewMessageKey = PR_UINT32_MAX;
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
-  PRUint32 origMsgFlags;
-  mOriginalMessage->GetFlags(&origMsgFlags);
   if (copyService) 
   {
     nsCOMPtr<nsIFileSpec> fileSpec;
