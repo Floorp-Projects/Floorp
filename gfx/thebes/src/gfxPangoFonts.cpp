@@ -838,13 +838,27 @@ DrawCairoGlyphs(gfxContext* ctx,
 }
 #endif
 
+struct TextSegment {
+    nsRefPtr<gfxPangoFont> mFont;
+    PRUint32               mOffset;
+    PRUint32               mLength;
+    int                    mWidth;
+    PangoGlyphString      *mGlyphString;
+};
+
 gfxPangoTextRun::gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
     : mString(aString), mGroup(aGroup), mWidth(-1)
 {
+    mUTF8String = NS_ConvertUTF16toUTF8(aString);
 }
 
 gfxPangoTextRun::~gfxPangoTextRun()
 {
+    for (PRUint32 i = 0; i < mSegments.Length(); ++i) {
+        if (mSegments[i].mGlyphString)
+            pango_glyph_string_free(mSegments[i].mGlyphString);
+    }
+    mSegments.Clear();
 }
 
 void
@@ -871,7 +885,6 @@ gfxPangoTextRun::MeasureOrDraw(gfxContext *aContext,
 {
     gfxMatrix mat;
     nsRefPtr<gfxPangoFont> pf = mGroup->GetFontAt(0);
-    NS_ConvertUTF16toUTF8 u8str(mString);
     PRBool isRTL = IsRightToLeft();
     pango_context_set_base_dir(pf->GetPangoContext(),
                                isRTL ? PANGO_DIRECTION_RTL :
@@ -896,17 +909,46 @@ gfxPangoTextRun::MeasureOrDraw(gfxContext *aContext,
 
     int result;
 
+    if (mSegments.IsEmpty()) {
 #ifdef DISABLE_PANGO_FAST
-    result = MeasureOrDrawItemizing(aContext, aDraw, aPt, u8str, isRTL, pf);
+        result = MeasureOrDrawItemizing(aContext, aDraw, aPt, isRTL, pf);
 #else
-    result = MeasureOrDrawFast(aContext, aDraw, aPt, u8str, isRTL, pf);
-    if (result < 0)
-        result = MeasureOrDrawItemizing(aContext, aDraw, aPt, u8str, isRTL, pf);
+        result = MeasureOrDrawFast(aContext, aDraw, aPt, isRTL, pf);
+        if (result < 0)
+            result = MeasureOrDrawItemizing(aContext, aDraw, aPt, isRTL, pf);
 #endif
+    } else {
+        result = DrawFromCache(aContext, aPt);
+    }
 
     if (aDraw)
         aContext->SetMatrix(mat);
 
+    return result;
+}
+
+int
+gfxPangoTextRun::DrawFromCache(gfxContext *aContext, gfxPoint aPt)
+{
+    int result = 0;
+    int drawingOffset = 0;
+    for (PRUint32 i = 0; i < mSegments.Length(); i++) {
+        PangoGlyphString *glyphString = mSegments[i].mGlyphString;
+        if (glyphString->num_glyphs > 0) {
+#ifndef THEBES_USE_PANGO_CAIRO
+            DrawCairoGlyphs(aContext, mSegments[i].mFont->GetPangoFont(),
+                            gfxPoint(drawingOffset/FLOAT_PANGO_SCALE, 0.0),
+                            glyphString);
+#else
+            aContext->MoveTo(aPt); // XXX Do we need?
+            pango_cairo_show_glyph_string(aContext->GetCairo(),
+                                          mSegments[i].mFont->GetPangoFont(),
+                                          glyphString);
+#endif
+            drawingOffset += mSegments[i].mWidth;
+        }
+        result += mSegments[i].mWidth;
+    }
     return result;
 }
 
@@ -916,7 +958,6 @@ int
 gfxPangoTextRun::MeasureOrDrawFast(gfxContext     *aContext,
                                    PRBool         aDraw,
                                    gfxPoint       aPt,
-                                   nsAFlatCString &aUTF8Str,
                                    PRBool         aIsRTL,
                                    gfxPangoFont   *aFont)
 {
@@ -964,7 +1005,8 @@ gfxPangoTextRun::MeasureOrDrawFast(gfxContext     *aContext,
                                                    ch);
 
     PangoGlyphString* glyphString = pango_glyph_string_new();
-    pango_shape(aUTF8Str.get(), aUTF8Str.Length(), &analysis, glyphString);
+    pango_shape(mUTF8String.get(), mUTF8String.Length(),
+                &analysis, glyphString);
 
     gint num_glyphs = glyphString->num_glyphs;
     gint *clusters = glyphString->log_clusters;
@@ -986,7 +1028,7 @@ gfxPangoTextRun::MeasureOrDrawFast(gfxContext     *aContext,
             geometry->x_offset = spacingOffset;
             spacingOffset += mUTF8Spacing[j] - geometry->width;
         }
-        if (aUTF8Str[j] == ' ')
+        if (mUTF8String[j] == ' ')
             geometry->width = spaceWidth;
         width += geometry->width;
     }
@@ -1004,16 +1046,16 @@ gfxPangoTextRun::MeasureOrDrawFast(gfxContext     *aContext,
 #endif
     }
 
-    pango_glyph_string_free(glyphString);
+    TextSegment segment;
+    segment.mFont = aFont;
+    segment.mOffset = 0;
+    segment.mLength = mUTF8String.Length();
+    segment.mWidth = width;
+    segment.mGlyphString = glyphString;
+    mSegments.AppendElement(segment);
+
     return width;
 }
-
-struct TextSegment {
-    PangoFont        *mFont;
-    PRUint32          mOffset;
-    PRUint32          mLength;
-    PangoGlyphString *mGlyphString;
-};
 
 class FontSelector
 {
@@ -1032,11 +1074,6 @@ public:
         InitSegments(0, mLength, mFontIndex);
     }
     ~FontSelector() {
-        for (PRUint32 i = 0; i < mSegmentStack.Length(); ++i) {
-            SegmentData segment = mSegmentStack[i];
-            if (segment.mGlyphString)
-                pango_glyph_string_free(segment.mGlyphString);
-        }
         mSegmentStack.Clear();
         mFonts.Clear();
     }
@@ -1082,6 +1119,7 @@ public:
         aTextSegment->mFont        = segment.mFont;
         aTextSegment->mOffset      = mSegmentOffset;
         aTextSegment->mLength      = segment.mLength;
+        aTextSegment->mWidth       = 0;
         aTextSegment->mGlyphString = segment.mGlyphString;
         mSegmentOffset += segment.mLength;
         if (aTextSegment->mGlyphString)
@@ -1089,7 +1127,7 @@ public:
 
         aTextSegment->mGlyphString = pango_glyph_string_new();
         PangoFont *tmpFont = mItem->analysis.font;
-        mItem->analysis.font = segment.mFont;
+        mItem->analysis.font = segment.mFont->GetPangoFont();
         pango_shape(mString + aTextSegment->mOffset, aTextSegment->mLength,
                     &mItem->analysis, aTextSegment->mGlyphString);
         mItem->analysis.font = tmpFont;
@@ -1108,9 +1146,9 @@ private:
     PRInt32     mLength;
 
     struct SegmentData {
-        PRUint32          mLength;
-        PangoFont        *mFont;
-        PangoGlyphString *mGlyphString;
+        PRUint32                mLength;
+        nsRefPtr<gfxPangoFont>  mFont;
+        PangoGlyphString       *mGlyphString;
     };
     PRUint32              mSegmentOffset;
     PRUint32              mSegmentIndex;
@@ -1134,19 +1172,19 @@ private:
         PRUint32 foundGlyphs      = 0;
 
 RetryNextFont:
-        PangoFont *font = GetNextFont();
+        nsRefPtr<gfxPangoFont> font = GetNextFont();
 
         // If we cannot found the font that has the current character glyph,
         // we should return default font's missing data.
         if (!font) {
-            font = mFonts[betterFontIndex]->GetPangoFont();
+            font = mFonts[betterFontIndex];
             checkMissingGlyph = PR_FALSE;
         }
 
         // Shaping
         PangoGlyphString *glyphString = pango_glyph_string_new();
         PangoFont *tmpFont = mItem->analysis.font;
-        mItem->analysis.font = font;
+        mItem->analysis.font = font->GetPangoFont();
         pango_shape(current, aLength, &mItem->analysis, glyphString);
         mItem->analysis.font = tmpFont;
 
@@ -1235,11 +1273,10 @@ RetryNextFont:
         mSegmentStack.AppendElement(segment);
     }
 
-    PangoFont *GetNextFont() {
+    gfxPangoFont *GetNextFont() {
 TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         if (mFontIndex < mFonts.Length()) {
-            nsRefPtr<gfxPangoFont> font = mFonts[mFontIndex++];
-            return font->GetPangoFont();
+            return mFonts[mFontIndex++];
         } else if (!mTriedPrefFonts) {
             mTriedPrefFonts = PR_TRUE;
             nsCAutoString mozLang;
@@ -1346,12 +1383,11 @@ int
 gfxPangoTextRun::MeasureOrDrawItemizing(gfxContext     *aContext,
                                         PRBool         aDraw,
                                         gfxPoint       aPt,
-                                        nsAFlatCString &aUTF8Str,
                                         PRBool         aIsRTL,
                                         gfxPangoFont   *aFont)
 {
-    GList *items = pango_itemize(aFont->GetPangoContext(), aUTF8Str.get(), 0,
-                                 aUTF8Str.Length(), NULL, NULL);
+    GList *items = pango_itemize(aFont->GetPangoContext(), mUTF8String.get(), 0,
+                                 mUTF8String.Length(), NULL, NULL);
     if (items) {
         GList *tmp = items;
         items = pango_reorder_items(tmp);
@@ -1373,7 +1409,7 @@ gfxPangoTextRun::MeasureOrDrawItemizing(gfxContext     *aContext,
                                        isRTL ? PANGO_DIRECTION_RTL :
                                                PANGO_DIRECTION_LTR);
         }
-        FontSelector fs(aContext, aUTF8Str.get() + item->offset,
+        FontSelector fs(aContext, mUTF8String.get() + item->offset,
                         item->length, mGroup, item, isRTL);
         TextSegment segment;
         while (fs.GetNextSegment(&segment)) {
@@ -1388,28 +1424,34 @@ gfxPangoTextRun::MeasureOrDrawItemizing(gfxContext     *aContext,
                     geometry->x_offset = spacingOffset;
                     spacingOffset += mUTF8Spacing[j] - geometry->width;
                 }
-                if (aUTF8Str[j] == ' ')
+                if (mUTF8String[j] == ' ')
                     geometry->width = spaceWidth;
                 currentWidth += geometry->width;
             }
 
+#ifdef THEBES_USE_PANGO_CAIRO
+            // XXX Do we need?
+            glyphString->glyphs[0].geometry.x_offset += drawingOffset;
+#endif
+
             // drawing
             if (aDraw && glyphString->num_glyphs > 0) {
 #ifndef THEBES_USE_PANGO_CAIRO
-                DrawCairoGlyphs(aContext, segment.mFont,
+                DrawCairoGlyphs(aContext, segment.mFont->GetPangoFont(),
                                 gfxPoint(drawingOffset/FLOAT_PANGO_SCALE, 0.0),
                                 glyphString);
 #else
                 aContext->MoveTo(aPt); // XXX Do we need?
-                glyphString->glyphs[0].geometry.x_offset += drawingOffset;
                 pango_cairo_show_glyph_string(aContext->GetCairo(),
-                                              segment.mFont,
+                                              segment.mFont->GetPangoFont(),
                                               glyphString);
 #endif
                 drawingOffset += currentWidth;
             }
 
             width += currentWidth;
+            segment.mWidth = currentWidth;
+            mSegments.AppendElement(segment);
         }
 
         pango_item_free(item);

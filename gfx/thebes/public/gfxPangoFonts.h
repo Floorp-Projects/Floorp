@@ -137,6 +137,8 @@ private:
     nsTArray<PRInt32>  mUTF8Spacing;
 };
 
+struct TextSegment;
+
 class THEBES_API gfxPangoTextRun : public gfxTextRun {
 public:
     gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
@@ -149,7 +151,8 @@ public:
     virtual const nsTArray<gfxFloat> *const GetSpacing() const;
 
 private:
-    nsString mString;
+    nsString  mString;
+    nsCString mUTF8String;
 
     gfxPangoFontGroup *mGroup;
 
@@ -158,14 +161,15 @@ private:
 
     int MeasureOrDraw(gfxContext *aContext, PRBool aDraw, gfxPoint aPt);
     int MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw,
-                          gfxPoint aPt, nsAFlatCString &aUTF8Str,
-                          PRBool aIsRTL, gfxPangoFont *aFont);
+                          gfxPoint aPt, PRBool aIsRTL, gfxPangoFont *aFont);
     int MeasureOrDrawItemizing(gfxContext *aContext, PRBool aDraw,
-                               gfxPoint aPt, nsAFlatCString &aUTF8Str,
-                               PRBool aIsRTL, gfxPangoFont *aFont);
+                               gfxPoint aPt, PRBool aIsRTL,
+                               gfxPangoFont *aFont);
+    int DrawFromCache(gfxContext *aContext, gfxPoint aPt);
 
-    nsTArray<gfxFloat> mSpacing;
-    nsTArray<PRInt32>  mUTF8Spacing;
+    nsTArray<gfxFloat>    mSpacing;
+    nsTArray<PRInt32>     mUTF8Spacing;
+    nsTArray<TextSegment> mSegments;
 };
 
 #endif /* GFX_PANGOFONTS_H */
