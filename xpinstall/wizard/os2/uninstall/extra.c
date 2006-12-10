@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_OS2_HIGH_MEMORY
+/* os2safe.h has to be included before os2.h, needed for high mem */
+#include <os2safe.h>
+#endif
+
 #include "extern.h"
 #include "extra.h"
 #include "parser.h"
