@@ -1026,4 +1026,13 @@ public class Mozilla implements IMozilla, IGRE, IXPCOM, IXPCOMError {
     return iid;
   }
 
+  public long getNativeHandleFromAWT(Object widget) {
+    try {
+      return mozilla.getNativeHandleFromAWT(widget);
+    } catch (NullPointerException e) {
+      throw new XPCOMInitializationException("Must call " +
+          "Mozilla.getInstance().initialize() before using this method", e);
+    }
+  }
+
 }

@@ -48,6 +48,10 @@
 #include "nsXULAppAPI.h"
 #include "nsILocalFile.h"
 
+#ifdef XP_MACOSX
+#include "jawt.h"
+#endif
+
 
 extern "C" NS_EXPORT void
 MOZILLA_NATIVE(initialize) (JNIEnv* env, jobject)
@@ -314,3 +318,41 @@ GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject)
   XRE_NotifyProfile();
 }
 
+#ifdef XP_MACOSX
+extern PRUint64 GetPlatformHandle(JAWT_DrawingSurfaceInfo* dsi);
+#endif
+
+extern "C" NS_EXPORT jlong
+MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject clazz,
+                                        jobject widget)
+{
+  PRUint64 handle = 0;
+
+#ifdef XP_MACOSX
+  JAWT awt;
+  awt.version = JAWT_VERSION_1_4;
+  jboolean result = JAWT_GetAWT(env, &awt);
+  if (result == JNI_FALSE)
+    return 0;
+    
+  JAWT_DrawingSurface* ds = awt.GetDrawingSurface(env, widget);
+  if (ds != nsnull) {
+    jint lock = ds->Lock(ds);
+    if (!(lock & JAWT_LOCK_ERROR)) {
+      JAWT_DrawingSurfaceInfo* dsi = ds->GetDrawingSurfaceInfo(ds);
+      if (dsi) {
+        handle = GetPlatformHandle(dsi);
+        ds->FreeDrawingSurfaceInfo(dsi);
+      }
+
+      ds->Unlock(ds);
+    }
+
+    awt.FreeDrawingSurface(ds);
+  }
+#else
+  NS_WARNING("getNativeHandleFromAWT JNI method not implemented");
+#endif
+
+  return handle;
+}

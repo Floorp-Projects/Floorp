@@ -104,4 +104,7 @@ JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that, jobject aProxy1,
 extern "C" NS_EXPORT void
 LOCKPROXY_NATIVE(release) (JNIEnv *env, jclass that, jlong aLockObject);
 
+extern "C" NS_EXPORT jlong
+MOZILLA_NATIVE(getNativeHandleFromAWT) (JNIEnv* env, jobject, jobject widget);
+
 #endif // _nsJavaInterfaces_h_
