@@ -275,33 +275,46 @@ function ENSURE_ARG(assertion, message) {
 function b64(aBytes) {
   const B64_CHARS =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  var out = "", bits, i, j;
 
-  while (aBytes.length >= 3) {
-    bits = 0;
-    for (i = 0; i < 3; i++) {
-      bits <<= 8;
-      bits |= aBytes[i];
-    }
-    for (j = 18; j >= 0; j -= 6)
-      out += B64_CHARS[(bits>>j) & 0x3F];
+  var index = 0;
+  function get3Bytes() {
+    if (aBytes.length - index < 3)
+      return null; // Less than three bytes remaining
 
-    aBytes.splice(0, 3);
+    // Return the next three bytes in the array, and increment index for our
+    // next invocation
+    return aBytes.slice(index, index += 3);
   }
 
-  switch (aBytes.length) {
+  var out = "";
+  var bytes = null;
+  while ((bytes = get3Bytes())) {
+    var bits = 0;
+    for (var i = 0; i < 3; i++) {
+      bits <<= 8;
+      bits |= bytes[i];
+    }
+    for (var j = 18; j >= 0; j -= 6)
+      out += B64_CHARS[(bits>>j) & 0x3F];
+  }
+
+  // Get the remaining bytes
+  bytes = aBytes.slice(index);
+
+  switch (bytes.length) {
     case 2:
-      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
-      out += B64_CHARS[((aBytes[0] & 0x03) << 4) | ((aBytes[1] >> 4) & 0x0F)];
-      out += B64_CHARS[((aBytes[1] & 0x0F) << 2)];
-      out += "=";
+      out += B64_CHARS[(bytes[0]>>2) & 0x3F] +
+             B64_CHARS[((bytes[0] & 0x03) << 4) | ((bytes[1] >> 4) & 0x0F)] +
+             B64_CHARS[((bytes[1] & 0x0F) << 2)] +
+             "=";
       break;
     case 1:
-      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
-      out += B64_CHARS[(aBytes[0] & 0x03) << 4];
-      out += "==";
+      out += B64_CHARS[(bytes[0]>>2) & 0x3F] +
+             B64_CHARS[(bytes[0] & 0x03) << 4] +
+             "==";
       break;
   }
+
   return out;
 }
 

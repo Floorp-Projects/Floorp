@@ -981,40 +981,6 @@ FeedWriter.prototype = {
   }
 };
 
-// copied over from nsSearchService.js
-function b64(aBytes) {
-  const B64_CHARS =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  var out = "", bits, i, j;
-
-  while (aBytes.length >= 3) {
-    bits = 0;
-    for (i = 0; i < 3; i++) {
-      bits <<= 8;
-      bits |= aBytes[i];
-    }
-    for (j = 18; j >= 0; j -= 6)
-      out += B64_CHARS[(bits>>j) & 0x3F];
-
-    aBytes.splice(0, 3);
-  }
-
-  switch (aBytes.length) {
-    case 2:
-      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
-      out += B64_CHARS[((aBytes[0] & 0x03) << 4) | ((aBytes[1] >> 4) & 0x0F)];
-      out += B64_CHARS[((aBytes[1] & 0x0F) << 2)];
-      out += "=";
-      break;
-    case 1:
-      out += B64_CHARS[(aBytes[0]>>2) & 0x3F];
-      out += B64_CHARS[(aBytes[0] & 0x03) << 4];
-      out += "==";
-      break;
-  }
-  return out;
-}
-
 function iconDataURIGenerator(aURISpec, aElement) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
@@ -1061,11 +1027,13 @@ iconDataURIGenerator.prototype = {
       requestFailed = !aRequest.requestSucceeded;
 
     if (!requestFailed && this._countRead != 0) {
+      var str = String.fromCharCode.apply(null, this._bytes);
       try {
-        var dataURI = ICON_DATAURL_PREFIX + b64(this._bytes);
+        var dataURI = ICON_DATAURL_PREFIX +
+                      this._element.ownerDocument.defaultView.btoa(str);
         this._element.setAttribute("image", dataURI);
       }
-      catch(ex) { }
+      catch(ex) {}
     }
     this._channel = null;
     this._element  = null;
