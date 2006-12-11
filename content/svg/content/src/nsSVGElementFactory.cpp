@@ -105,9 +105,11 @@ NS_NewSVGTextPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFilterElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
-NS_NewSVGFEGaussianBlurElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEBlendElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEComponentTransferElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFECompositeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEFuncRElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -116,6 +118,8 @@ nsresult
 NS_NewSVGFEFuncBElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEFuncAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEGaussianBlurElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEMergeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -204,10 +208,12 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGTextPathElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::filter)
     return NS_NewSVGFilterElement(aResult, aNodeInfo);
-  if (name == nsSVGAtoms::feGaussianBlur)
-    return NS_NewSVGFEGaussianBlurElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feBlend)
+    return NS_NewSVGFEBlendElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feComponentTransfer)
     return NS_NewSVGFEComponentTransferElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feComposite)
+    return NS_NewSVGFECompositeElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feFuncR)
     return NS_NewSVGFEFuncRElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feFuncG)
@@ -216,6 +222,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEFuncBElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feFuncA)
     return NS_NewSVGFEFuncAElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feGaussianBlur)
+    return NS_NewSVGFEGaussianBlurElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feMerge)
     return NS_NewSVGFEMergeElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feMergeNode)
@@ -224,9 +232,7 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEMorphologyElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::feOffset)
     return NS_NewSVGFEOffsetElement(aResult, aNodeInfo);
-  if (name == nsSVGAtoms::feBlend            ||
-      name == nsSVGAtoms::feColorMatrix      ||
-      name == nsSVGAtoms::feComposite        ||
+  if (name == nsSVGAtoms::feColorMatrix      ||
       name == nsSVGAtoms::feConvolveMatrix   ||
       name == nsSVGAtoms::feDiffuseLighting  ||
       name == nsSVGAtoms::feDisplacementMap  ||

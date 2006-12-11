@@ -53,14 +53,19 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(43ff8d42-3380-4dbd-a916-7c2daa3ed7f4)]
-interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{ 
-    readonly attribute nsIDOMSVGAnimatedString in1;
-    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX;
-    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationY;
+[scriptable, uuid(8F4DAF4C-DE2D-450f-A373-449AD62E3800)]
+interface nsIDOMSVGFEBlendElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+    const unsigned short SVG_MODE_UNKNOWN   = 0;
+    const unsigned short SVG_MODE_NORMAL    = 1;
+    const unsigned short SVG_MODE_MULTIPLY  = 2;
+    const unsigned short SVG_MODE_SCREEN    = 3;
+    const unsigned short SVG_MODE_DARKEN    = 4;
+    const unsigned short SVG_MODE_LIGHTEN   = 5;
 
-    void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
+    readonly attribute nsIDOMSVGAnimatedString        in1;
+    readonly attribute nsIDOMSVGAnimatedString        in2;
+    readonly attribute nsIDOMSVGAnimatedEnumeration   mode;
 };
 
 [scriptable, uuid(4de6b44a-f909-4948-bc43-5ee2ca6de55b)]
@@ -68,7 +73,6 @@ interface nsIDOMSVGFEComponentTransferElement : nsIDOMSVGFilterPrimitiveStandard
 {
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
-
 
 [scriptable, uuid(dfdb8833-0e7d-407d-acac-18e563ea94e8)]
 interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
@@ -92,6 +96,30 @@ interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
     [noscript] void GenerateLookupTable(out PRUint8 aTable);
 };
 
+[scriptable, uuid(6FF3C539-1A3B-4a3f-8ACD-354D349EB7FC)]
+interface nsIDOMSVGFECompositeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+    // Operator Types
+    const unsigned short SVG_OPERATOR_UNKNOWN    = 0;
+    const unsigned short SVG_OPERATOR_OVER       = 1;
+    const unsigned short SVG_OPERATOR_IN         = 2;
+    const unsigned short SVG_OPERATOR_OUT        = 3;
+    const unsigned short SVG_OPERATOR_ATOP       = 4;
+    const unsigned short SVG_OPERATOR_XOR        = 5;
+    const unsigned short SVG_OPERATOR_ARITHMETIC = 6;
+
+    readonly attribute nsIDOMSVGAnimatedString  in1;
+    readonly attribute nsIDOMSVGAnimatedString  in2;
+    readonly attribute nsIDOMSVGAnimatedNumber  k1;
+    readonly attribute nsIDOMSVGAnimatedNumber  k2;
+    readonly attribute nsIDOMSVGAnimatedNumber  k3;
+    readonly attribute nsIDOMSVGAnimatedNumber  k4;
+    readonly attribute nsIDOMSVGAnimatedEnumeration operator;
+    
+    void setK ( in float k1, in float k2, in float k3, in float k4 );
+
+};
+
 [scriptable, uuid(85719a5d-9688-4c5f-bad5-c21847515200)]
 interface nsIDOMSVGFEFuncRElement : nsIDOMSVGComponentTransferFunctionElement
 {
@@ -110,6 +138,16 @@ interface nsIDOMSVGFEFuncBElement : nsIDOMSVGComponentTransferFunctionElement
 [scriptable, uuid(fa48511c-283a-437f-9507-c309ac6f0f57)]
 interface nsIDOMSVGFEFuncAElement : nsIDOMSVGComponentTransferFunctionElement
 {
+};
+
+[scriptable, uuid(43ff8d42-3380-4dbd-a916-7c2daa3ed7f4)]
+interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+    readonly attribute nsIDOMSVGAnimatedString in1;
+    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX;
+    readonly attribute nsIDOMSVGAnimatedNumber stdDeviationY;
+
+    void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
 };
 
 [scriptable, uuid(b860512c-2547-4d1f-bb43-b57b54d39014)]

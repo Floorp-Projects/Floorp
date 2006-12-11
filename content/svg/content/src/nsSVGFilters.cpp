@@ -810,6 +810,533 @@ nsSVGFEGaussianBlurElement::GetNumberInfo()
                               NS_ARRAY_LENGTH(sNumberInfo));
 }
 
+//---------------------Blend------------------------
+
+typedef nsSVGFE nsSVGFEBlendElementBase;
+
+class nsSVGFEBlendElement : public nsSVGFEBlendElementBase,
+                            public nsIDOMSVGFEBlendElement,
+                            public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFEBlendElement(nsIContent **aResult,
+                                          nsINodeInfo *aNodeInfo);
+  nsSVGFEBlendElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEBlendElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Blend
+  NS_DECL_NSIDOMSVGFEBLENDELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEBlendElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFEBlendElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEBlendElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMode;
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEBlendElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEBlendElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEBlendElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBlendElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFEBlendElement::nsSVGFEBlendElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFEBlendElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFEBlendElement::Init()
+{
+  nsresult rv = nsSVGFEBlendElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  static struct nsSVGEnumMapping gModeTypes[] = {
+    {&nsSVGAtoms::normal, nsSVGFEBlendElement::SVG_MODE_NORMAL},
+    {&nsSVGAtoms::multiply, nsSVGFEBlendElement::SVG_MODE_MULTIPLY},
+    {&nsSVGAtoms::screen, nsSVGFEBlendElement::SVG_MODE_SCREEN},
+    {&nsSVGAtoms::darken, nsSVGFEBlendElement::SVG_MODE_DARKEN},
+    {&nsSVGAtoms::lighten, nsSVGFEBlendElement::SVG_MODE_LIGHTEN},
+    {nsnull, 0}
+  };
+
+  // Create mapped properties:
+  // DOM property: mode, #IMPLIED attrib: mode
+  {
+    nsCOMPtr<nsISVGEnum> modes;
+    rv = NS_NewSVGEnum(getter_AddRefs(modes),
+                       nsSVGFEBlendElement::SVG_MODE_NORMAL,
+                       gModeTypes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMode), modes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::mode, mMode);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  // DOM property: in2 , #IMPLIED attrib: in2
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::in2, mIn2);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEBlendElement)
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFEBlendElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedString in2; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn2;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration mode; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetMode(nsIDOMSVGAnimatedEnumeration * *aMode)
+{
+  *aMode = mMode;
+  NS_IF_ADDREF(*aMode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsSVGFilterResource fr(instance);
+
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetRect();
+  PRInt32 stride = fr.GetDataStride();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER BLEND rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  memcpy(targetData, sourceData, rect.height * stride);
+
+  rv = fr.AcquireSourceImage(mIn2, this, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rect = fr.GetRect();
+
+  PRUint16 mode;
+  mMode->GetAnimVal(&mode);
+
+  for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
+    for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
+      PRUint32 targIndex = y * stride + 4 * x;
+      PRUint32 qa = targetData[targIndex + 3];
+      PRUint32 qb = sourceData[targIndex + 3];
+      for (PRInt32 i = 0; i < 3; i++) {
+        PRUint32 ca = targetData[targIndex + i];
+        PRUint32 cb = sourceData[targIndex + i];
+        PRUint32 val;
+        switch (mode) {
+          case nsSVGFEBlendElement::SVG_MODE_NORMAL:
+            val = (255 - qa) * cb + 255 * ca;
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_MULTIPLY:
+            val = ((255 - qa) * cb + (255 - qb + cb) * ca);
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_SCREEN:
+            val = 255 * (cb + ca) - ca * cb;
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_DARKEN:
+            val = PR_MIN((255 - qa) * cb + 255 * ca,
+                         (255 - qb) * ca + 255 * cb);
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_LIGHTEN:
+            val = PR_MAX((255 - qa) * cb + 255 * ca,
+                         (255 - qb) * ca + 255 * cb);
+            break;
+          default:
+            return NS_ERROR_FAILURE;
+            break;
+        }
+        val = PR_MIN(val / 255, 255);
+        targetData[targIndex + i] =  NS_STATIC_CAST(PRUint8, val);
+      }
+      PRUint32 alpha = 255 * 255 - (255 - qa) * (255 - qb);
+      FAST_DIVIDE_BY_255(targetData[targIndex + 3], alpha);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEBlendElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1);
+  return NS_OK;
+}
+
+//---------------------Composite------------------------
+
+typedef nsSVGFE nsSVGFECompositeElementBase;
+
+class nsSVGFECompositeElement : public nsSVGFECompositeElementBase,
+                                public nsIDOMSVGFECompositeElement,
+                                public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFECompositeElement(nsIContent **aResult,
+                                              nsINodeInfo *aNodeInfo);
+  nsSVGFECompositeElement(nsINodeInfo* aNodeInfo);
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFECompositeElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // Composite
+  NS_DECL_NSIDOMSVGFECOMPOSITEELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFECompositeElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFECompositeElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFECompositeElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual NumberAttributesInfo GetNumberInfo();
+
+  enum { K1, K2, K3, K4 };
+  nsSVGNumber2 mNumberAttributes[4];
+  static NumberInfo sNumberInfo[4];
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOperator;
+};
+
+nsSVGElement::NumberInfo nsSVGFECompositeElement::sNumberInfo[4] =
+{
+  { &nsGkAtoms::k1, 0 },
+  { &nsGkAtoms::k2, 0 },
+  { &nsGkAtoms::k3, 0 },
+  { &nsGkAtoms::k4, 0 }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEComposite)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFECompositeElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFECompositeElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFECompositeElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFECompositeElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFECompositeElement::nsSVGFECompositeElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFECompositeElementBase(aNodeInfo)
+{
+}
+
+nsresult
+nsSVGFECompositeElement::Init()
+{
+  nsresult rv = nsSVGFECompositeElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  static struct nsSVGEnumMapping gOperatorTypes[] = {
+    {&nsSVGAtoms::over, nsSVGFECompositeElement::SVG_OPERATOR_OVER},
+    {&nsSVGAtoms::in, nsSVGFECompositeElement::SVG_OPERATOR_IN},
+    {&nsSVGAtoms::out, nsSVGFECompositeElement::SVG_OPERATOR_OUT},
+    {&nsSVGAtoms::atop, nsSVGFECompositeElement::SVG_OPERATOR_ATOP},
+    {&nsSVGAtoms::xor_, nsSVGFECompositeElement::SVG_OPERATOR_XOR},
+    {&nsSVGAtoms::arithmetic, nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC},
+    {nsnull, 0}
+  };
+  
+  // Create mapped properties:
+  // DOM property: operator, #IMPLIED attrib: operator
+  {
+    nsCOMPtr<nsISVGEnum> operators;
+    rv = NS_NewSVGEnum(getter_AddRefs(operators),
+                       nsIDOMSVGFECompositeElement::SVG_OPERATOR_OVER,
+                       gOperatorTypes);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mOperator), operators);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::_operator, mOperator);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+    
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: in2 , #IMPLIED attrib: in2
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::in2, mIn2);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFECompositeElement)
+
+//----------------------------------------------------------------------
+// nsSVGFECompositeElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedString in2; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn2;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration operator; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetOperator(nsIDOMSVGAnimatedEnumeration * *aOperator)
+{
+  *aOperator = mOperator;
+  NS_IF_ADDREF(*aOperator);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber K1; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetK1(nsIDOMSVGAnimatedNumber * *aK1)
+{
+  return mNumberAttributes[K1].ToDOMAnimatedNumber(aK1, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber K2; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetK2(nsIDOMSVGAnimatedNumber * *aK2)
+{
+  return mNumberAttributes[K2].ToDOMAnimatedNumber(aK2, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber K3; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetK3(nsIDOMSVGAnimatedNumber * *aK3)
+{
+  return mNumberAttributes[K3].ToDOMAnimatedNumber(aK3, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber K4; */
+NS_IMETHODIMP nsSVGFECompositeElement::GetK4(nsIDOMSVGAnimatedNumber * *aK4)
+{
+  return mNumberAttributes[K4].ToDOMAnimatedNumber(aK4, this);
+}
+
+NS_IMETHODIMP
+nsSVGFECompositeElement::SetK(float k1, float k2, float k3, float k4)
+{
+  mNumberAttributes[K1].SetBaseValue(k1, this, PR_TRUE);
+  mNumberAttributes[K2].SetBaseValue(k2, this, PR_TRUE);
+  mNumberAttributes[K3].SetBaseValue(k3, this, PR_TRUE);
+  mNumberAttributes[K4].SetBaseValue(k4, this, PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  cairo_surface_t *sourceSurface, *targetSurface;
+
+  nsSVGFilterResource fr(instance);
+  rv = fr.AcquireSourceImage(mIn2, this, &sourceData, &sourceSurface);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData, &targetSurface);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint16 op;
+  mOperator->GetAnimVal(&op);
+
+  // Cairo does not support arithmetic operator
+  if (op == nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC) {
+    float k1, k2, k3, k4;
+    nsSVGLength2 val;
+    GetAnimatedNumberValues(&k1, &k2, &k3, &k4, nsnull);
+    val.Init(nsSVGUtils::XY, 0xff, k1, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    k1 = instance->GetPrimitiveLength(&val);
+    val.Init(nsSVGUtils::XY, 0xff, k2, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    k2 = instance->GetPrimitiveLength(&val);
+    val.Init(nsSVGUtils::XY, 0xff, k3, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    k3 = instance->GetPrimitiveLength(&val);
+    val.Init(nsSVGUtils::XY, 0xff, k4, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+    k4 = instance->GetPrimitiveLength(&val);
+
+    nsRect rect = fr.GetRect();
+    PRInt32 stride = fr.GetDataStride();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER COMPOSITE rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+    // Copy the first source image
+    memcpy(targetData, sourceData, rect.height * stride);
+
+    // Blend in the second source image
+    rv = fr.AcquireSourceImage(mIn1, this, &sourceData);
+    NS_ENSURE_SUCCESS(rv, rv);
+    float scalar = 1 / 255.0f;
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
+      for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
+        PRUint32 targIndex = y * stride + 4 * x;
+        for (PRInt32 i = 0; i < 4; i++) {
+          PRUint8 i2 = targetData[targIndex + i];
+          PRUint8 i1 = sourceData[targIndex + i];
+          float result = k1*i1*i2*scalar + k2*i1 + k3*i2 + k4*scalar;
+          targetData[targIndex + i] =
+                       NS_STATIC_CAST(PRUint8, PR_MIN(PR_MAX(0, result), 255));
+        }
+      }
+    }
+    return NS_OK;
+  }
+
+  // Cairo supports the operation we are trying to perform
+  cairo_t *cr = cairo_create(targetSurface);
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
+    cairo_destroy(cr);
+    return NS_ERROR_FAILURE;
+  }
+
+  cairo_set_source_surface(cr, sourceSurface, 0, 0);
+  cairo_paint(cr);
+
+  if (op < SVG_OPERATOR_OVER || op > SVG_OPERATOR_XOR) {
+    cairo_destroy(cr);
+    return NS_ERROR_FAILURE;
+  }
+  cairo_operator_t opMap[] = { CAIRO_OPERATOR_DEST, CAIRO_OPERATOR_OVER,
+                               CAIRO_OPERATOR_IN, CAIRO_OPERATOR_OUT,
+                               CAIRO_OPERATOR_ATOP, CAIRO_OPERATOR_XOR };
+  cairo_set_operator(cr, opMap[op]);
+
+  rv = fr.AcquireSourceImage(mIn1, this, &sourceData, &sourceSurface);
+  NS_ENSURE_SUCCESS(rv, rv);
+  cairo_set_source_surface(cr, sourceSurface, 0, 0);
+  cairo_paint(cr);
+  cairo_destroy(cr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFECompositeElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFECompositeElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+
 //---------------------Component Transfer------------------------
 
 typedef nsSVGFE nsSVGFEComponentTransferElementBase;
@@ -1499,7 +2026,7 @@ public:
   NS_IMETHOD Filter(nsSVGFilterInstance *instance);
   NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
 
-  // Gaussian
+  // Merge
   NS_DECL_NSIDOMSVGFEMERGEELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeElementBase::)
