@@ -177,6 +177,10 @@ nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     if (NS_SUCCEEDED(GetSafariUserStyleSheet(getter_AddRefs(safariUserStylesheetFile))))
       *aResult |= nsIBrowserProfileMigrator::OTHERDATA;
   }
+  
+  // Don't offer to import that Safari form data if there isn't any
+  if (HasFormDataToImport())
+    *aResult |= nsIBrowserProfileMigrator::FORMDATA;
 
   return NS_OK;
 }
@@ -1088,6 +1092,30 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
   return rv;
 }
 
+// nsSafariProfileMigrator::HasFormDataToImport()
+// if we add support for "~/Library/Safari/Form Values",
+// keep in sync with CopyFormData()
+// see bug #344284
+PRBool
+nsSafariProfileMigrator::HasFormDataToImport()
+{
+  PRBool hasFormData = PR_FALSE;
+
+  // Safari stores this data in an array under the "RecentSearchStrings" key
+  // in its Preferences file.
+  CFDictionaryRef safariPrefs = CopySafariPrefs();
+  if (safariPrefs) {
+    if (::CFDictionaryContainsKey(safariPrefs, CFSTR("RecentSearchStrings")))
+      hasFormData = PR_TRUE;
+    ::CFRelease(safariPrefs);
+  }
+  return hasFormData;
+}
+
+// nsSafariProfileMigrator::CopyFormData()
+// if we add support for "~/Library/Safari/Form Values",
+// keep in sync with HasFormDataToImport()
+// see bug #344284
 nsresult
 nsSafariProfileMigrator::CopyFormData(PRBool aReplace)
 {
