@@ -257,33 +257,43 @@
           <legend>People</legend>
           [% PROCESS section_people %]
         </fieldset>
+
         [%# *** Flags *** %]
-        <fieldset>
-          <legend>Flags</legend>
-          <table cellspacing="1" cellpadding="1">
-            <tr>
-              <td colspan="2" valign="top">
-                [% IF user.id %]
-                  [% IF bug.flag_types.size > 0 %]
-                    [% PROCESS "flag/list.html.tmpl" flag_no_header = 1
-                                                     flag_types = bug.flag_types
-                                                     any_flags_requesteeble = bug.any_flags_requesteeble %]
-                  [% END %]
-                [% ELSE %]
-                  [% FOREACH type = bug.flag_types %]
-                    [% FOREACH flag = type.flags %]
-                        [% flag.setter.nick FILTER html %]:
-                        [%+ type.name FILTER html FILTER no_break %][% flag.status %]
-                        [%+ IF flag.requestee %]
-                          ([% flag.requestee.nick FILTER html %])
-                        [% END %]<br>
+        [% show_bug_flags = 0 %]
+        [% FOREACH type = bug.flag_types %]
+          [% IF (type.flags && type.flags.size > 0) || (user.id && type.is_active) %]
+            [% show_bug_flags = 1 %]
+            [% LAST %]
+          [% END %]
+        [% END %]
+        [% IF show_bug_flags %]
+          <fieldset>
+            <legend>Flags</legend>
+            <table cellspacing="1" cellpadding="1">
+              <tr>
+                <td colspan="2" valign="top">
+                  [% IF user.id %]
+                    [% IF bug.flag_types.size > 0 %]
+                      [% PROCESS "flag/list.html.tmpl" flag_no_header = 1
+                                                       flag_types = bug.flag_types
+                                                       any_flags_requesteeble = bug.any_flags_requesteeble %]
+                    [% END %]
+                  [% ELSE %]
+                    [% FOREACH type = bug.flag_types %]
+                      [% FOREACH flag = type.flags %]
+                          [% flag.setter.nick FILTER html %]:
+                          [%+ type.name FILTER html FILTER no_break %][% flag.status %]
+                          [%+ IF flag.requestee %]
+                            ([% flag.requestee.nick FILTER html %])
+                          [% END %]<br>
+                      [% END %]
                     [% END %]
                   [% END %]
-                [% END %]
-              </td>
-            </tr>
-          </table>
-        </fieldset>
+                </td>
+              </tr>
+            </table>
+          </fieldset>
+        [% END %]
       </td>
     </tr>
   </table>
