@@ -208,7 +208,7 @@ nsFormControlAccessible(aNode, aShell)
 }
 
 /**
-  * Only one actions available
+  * Only one action available
   */
 NS_IMETHODIMP nsXULDropmarkerAccessible::GetNumActions(PRUint8 *aResult)
 {

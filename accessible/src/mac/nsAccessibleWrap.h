@@ -95,6 +95,12 @@ class nsAccessibleWrap : public nsAccessible
     
     PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
     
+    PRBool HasPopup () {
+      PRUint32 state = 0;
+      GetState(&state);
+      return (state & nsIAccessible::STATE_HASPOPUP);
+    }
+    
     // return this accessible's all children, adhering to "flat" accessibles by not returning their children.
     void GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aChildrenArray);
     virtual already_AddRefed<nsIAccessible> GetUnignoredParent();
