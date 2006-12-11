@@ -72,5 +72,7 @@ void XXXNeverCalled_javaxpcom()
   JAVAPROXY_NATIVE(isSameXPCOMObject) (nsnull, nsnull, nsnull, nsnull);
 
   LOCKPROXY_NATIVE(release) (nsnull, nsnull, nsnull);
+
+  MOZILLA_NATIVE(getNativeHandleFromAWT) (nsnull, nsnull, nsnull);
 }
 

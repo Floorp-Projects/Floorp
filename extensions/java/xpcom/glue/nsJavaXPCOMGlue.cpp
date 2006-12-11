@@ -84,10 +84,11 @@ enum {
   kFunc_CallXPCOMMethod,
   kFunc_FinalizeProxy,
   kFunc_IsSameXPCOMObject,
-  kFunc_ReleaseProfileLock
+  kFunc_ReleaseProfileLock,
+  kFunc_GetNativeHandleFromAWT
 };
 
-#define JX_NUM_FUNCS 15
+#define JX_NUM_FUNCS 16
 
 
 // Get path string from java.io.File object.
@@ -161,6 +162,8 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
             (NSFuncPtr*) &aFunctions[kFunc_IsSameXPCOMObject] },
     { "Java_org_mozilla_xpcom_ProfileLock_release",
             (NSFuncPtr*) &aFunctions[kFunc_ReleaseProfileLock] },
+    { "Java_org_mozilla_xpcom_internal_MozillaImpl_getNativeHandleFromAWT",
+            (NSFuncPtr*) &aFunctions[kFunc_GetNativeHandleFromAWT] },
     { nsnull, nsnull }
   };
 
@@ -219,6 +222,8 @@ RegisterNativeMethods(JNIEnv* env, void** aFunctions)
   JNINativeMethod mozilla_methods[] = {
     { "initializeNative", "()V",
       (void*) aFunctions[kFunc_Initialize] },
+    { "getNativeHandleFromAWT", "(Ljava/lang/Object;)J",
+      (void*) aFunctions[kFunc_GetNativeHandleFromAWT] }
   };
 
   JNINativeMethod gre_methods[] = {

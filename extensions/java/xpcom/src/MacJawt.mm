@@ -34,23 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom.internal;
+#include <jni.h>
+#import <JavaVM/jawt_md.h>
+#include "prtypes.h"
 
-import java.io.File;
 
-import org.mozilla.xpcom.IMozilla;
-import org.mozilla.xpcom.XPCOMInitializationException;
-
-public class MozillaImpl implements IMozilla {
-
-	public void initialize(File aLibXULDirectory)
-	throws XPCOMInitializationException {
-		JavaXPCOMMethods.registerJavaXPCOMMethods(aLibXULDirectory);
-		initializeNative();
-	}
-
-	private native void initializeNative();
-
-	public native long getNativeHandleFromAWT(Object widget);
-
+PRUint64 GetPlatformHandle(JAWT_DrawingSurfaceInfo* dsi)
+{
+	JAWT_MacOSXDrawingSurfaceInfo* dsi_mac =
+	    static_cast<JAWT_MacOSXDrawingSurfaceInfo*> (dsi->platformInfo);
+	return reinterpret_cast<PRUint64> (dsi_mac->cocoaViewRef);
 }

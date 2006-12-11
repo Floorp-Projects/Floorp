@@ -40,16 +40,24 @@ import java.io.File;
 
 public interface IMozilla {
 
-  /**
-   * Initialize the Mozilla object with the given XULRunner path.  All
-   * subsequent Mozilla method invocations be done against the given XULRunner
-   * version.
-   *
-   * @param aLibXULDirectory  path of XULRunner build to use
-   *
-   * @throws XPCOMInitializationException if failure occurred during
-   *         initialization
-   */
-  void initialize(File aLibXULDirectory) throws XPCOMInitializationException;
+	/**
+	 * Initialize the Mozilla object with the given XULRunner path.  All
+	 * subsequent Mozilla method invocations be done against the given XULRunner
+	 * version.
+	 *
+	 * @param aLibXULDirectory  path of XULRunner build to use
+	 *
+	 * @throws XPCOMInitializationException if failure occurred during
+	 *         initialization
+	 */
+	void initialize(File aLibXULDirectory) throws XPCOMInitializationException;
 
+	/**
+	 * Return the native window handle for an AWT component.
+	 * 
+	 * @param widget  An AWT component (such as Canvas, Frame) that is backed by
+	 * 				  a real native window.
+	 * @return  the pointer to the native window (platform specific)
+	 */
+	long getNativeHandleFromAWT(Object widget);
 }

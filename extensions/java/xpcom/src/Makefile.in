@@ -64,6 +64,10 @@ CPPSRCS		= \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 
+ifeq ($(OS_ARCH),Darwin)
+CMMSRCS = MacJawt.mm
+endif
+
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -72,7 +76,11 @@ else
 ifeq ($(OS_ARCH),OS2)
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/OS2
 else
+ifeq ($(OS_ARCH),Darwin)
+LOCAL_INCLUDES += -I/System/Library/Frameworks/CoreFoundation.framework/Headers
+else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
+endif
 endif
 endif
 
