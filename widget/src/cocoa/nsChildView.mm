@@ -3627,15 +3627,20 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
-  // Don't bother if we're in composition. Also do not handle anything
-  // that isn't a key down event. Some keys like arrow keys send command
-  // events for up and down, and we only care about down. See bug 363002.
-  if (mInComposition || ([theEvent type] != NSKeyDown))
+  // don't bother if we're in composition
+  if (mInComposition)
     return NO;
 
   // see if the menu system will handle the event
   if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
     return YES;
+
+  // don't handle this if certain modifiers are down - those should
+  // be sent as normal key up/down events and cocoa will do so automatically
+  // if we reject here
+  unsigned int modifierFlags = [theEvent modifierFlags];
+  if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
+    return NO;
 
   // handle the event ourselves
   nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
