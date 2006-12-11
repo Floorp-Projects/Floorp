@@ -842,15 +842,12 @@ nsXFormsModelElement::InitializeInstances()
             // document has finished loading.
             mPendingInlineSchemas.AppendString(id);
           } else {
-            if (!IsDuplicateSchema(el)) {
-              nsCOMPtr<nsISchema> schema;
-              // no need to observe errors via the callback.  instead, rely on
-              // this method returning a failure code when it encounters errors.
-              rv = mSchemas->ProcessSchemaElement(el, nsnull,
-                                                  getter_AddRefs(schema));
-              if (NS_SUCCEEDED(rv))
-                mSchemaCount++;
-            }
+            // We have an inline schema in the model element that was
+            // referenced by the schema attribute. It will be processed
+            // in FinishConstruction so we skip it now to avoid processing
+            // it twice and giving invalid 'duplicate schema' errors.
+            mSchemaTotal--;
+            i--;
           }
         } else {
           nsCAutoString uriSpec;
