@@ -105,7 +105,14 @@ nsAccessibleWrap::GetNativeType ()
     case ROLE_PUSHBUTTON:
     case ROLE_SPLITBUTTON:
     case ROLE_TOGGLE_BUTTON:
+    {
+      // if this button may show a popup, let's make it of the popupbutton type.
+      if (HasPopup())
+        return [mozPopupButtonAccessible class];
+        
+      // regular button
       return [mozButtonAccessible class];
+    }
     
     case ROLE_CHECKBUTTON:
       return [mozCheckboxAccessible class];
