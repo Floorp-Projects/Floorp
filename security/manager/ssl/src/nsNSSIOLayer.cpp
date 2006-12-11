@@ -1317,16 +1317,14 @@ static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
     return -1;
   }
 
-  if (flags != PR_MSG_PEEK)
-  {
-    PR_SetError(PR_UNKNOWN_ERROR, 0);
-    return -1;
-  }
-
   nsNSSSocketInfo *socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
 
-  return nsSSLThread::requestRecvMsgPeek(socketInfo, buf, amount, flags, timeout);
+  if (flags == PR_MSG_PEEK) {
+    return nsSSLThread::requestRecvMsgPeek(socketInfo, buf, amount, flags, timeout);
+  }
+
+  return fd->lower->methods->recv(fd->lower, buf, amount, flags, timeout);
 }
 
 static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
@@ -1338,8 +1336,7 @@ static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amou
     return -1;
   }
 
-  PR_SetError(PR_UNKNOWN_ERROR, 0);
-  return -1;
+  return fd->lower->methods->send(fd->lower, buf, amount, flags, timeout);
 }
 
 static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, PRInt16 out_flags)
