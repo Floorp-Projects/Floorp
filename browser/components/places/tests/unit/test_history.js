@@ -37,53 +37,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get livemark service
+// Get history service
 try {
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].getService(Ci.nsILivemarkService);
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
 } catch(ex) {
-  do_throw("Could not get livemark-service\n");
+  do_throw("Could not get history service\n");
 } 
-
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
-
-// get bookmarks root index
-var root = bmsvc.bookmarksRoot;
 
 // main
 function run_test() {
-  var livemarkId = lmsvc.createLivemark(root, "foo", uri("http://example.com/"), 
-                                        uri("http://example.com/rss.xml"), -1);
+  // test URI
+  var testURI = uri("http://mozilla.com/");
 
-  do_check_true(lmsvc.isLivemark(livemarkId));
-  do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://example.com/");
-  do_check_true(lmsvc.getFeedURI(livemarkId).spec == "http://example.com/rss.xml");
+  // add a visit
+  var placeID = histsvc.addVisit(testURI,
+                                 Date.now(),
+                                 0, // no referrer
+                                 histsvc.TRANSITION_TYPED, // user typed in URL bar
+                                 false, // not redirect
+                                 0);
+  // test for valid place ID
+  do_check_true(placeID > 0);
 
-  lmsvc.setSiteURI(livemarkId, uri("http://foo.example.com/"));
-  do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://foo.example.com/");
-  
-  lmsvc.setFeedURI(livemarkId, uri("http://foo.example.com/rss.xml"));
-  do_check_true(lmsvc.getFeedURI(livemarkId).spec == "http://foo.example.com/rss.xml");
-
-  // Make sure we can't add a livemark to a livemark
-  var livemarkId2 = null;
-  try {
-    var livemarkId2 = lmsvc.createLivemark(livemarkId, "foo", uri("http://example.com/"), 
-                                           uri("http://example.com/rss.xml"), -1);
-  } catch (ex) {
-    livemarkId2 = null;
+  // query for the visit
+  var options = histsvc.getNewQueryOptions();
+  // set sorting and limit such that we should retrieve only the visit we just added
+  options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+  options.maxResults = 1;
+  // TODO: using full visit crashes in xpcshell test
+  //options.resultType = options.RESULTS_AS_FULL_VISIT;
+  options.resultType = options.RESULTS_AS_VISIT;
+  var query = histsvc.getNewQuery();
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  var cc = root.childCount;
+  for (var i=0; i < cc; ++i) {
+    var node = root.getChild(i);
+    // test node properties in RESULTS_AS_VISIT
+    do_check_eq(node.uri, testURI.spec);
+    do_check_eq(node.type, options.RESULTS_AS_VISIT);
+    // TODO: change query type to RESULTS_AS_FULL_VISIT and test this
+    //do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }
-  do_check_true(livemarkId2 == null);
-  
-  // make sure it didn't screw up the first one
-  do_check_true(lmsvc.isLivemark(livemarkId));
-  
-  // make sure folders don't get counted as bookmarks
-  // create folder
-  var randomFolder = bmsvc.createFolder(root, "Random", -1);
-  do_check_true(!lmsvc.isLivemark(randomFolder))
+  root.containerOpen = false;
 }

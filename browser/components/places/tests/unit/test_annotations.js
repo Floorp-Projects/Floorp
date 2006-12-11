@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
  *  Dietrich Ayala <dietrich@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,11 +37,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// put cleanup of the bookmarks test here.
-
-// remove bookmarks file
+// Get history service
 try {
-  var file = dirSvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  file.remove(false);
-} catch(ex) { dump(ex); }
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+} catch(ex) {
+  do_throw("Could not get history service\n");
+} 
+
+// Get annotation service
+try {
+  var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
+} catch(ex) {
+  do_throw("Could not get annotation service\n");
+} 
+
+// main
+function run_test() {
+  // test URI
+  var testURI = uri("http://mozilla.com/");
+  var testAnnoName = "moz-test-places/annotations";
+  var testAnnoVal = "test";
+
+  // create new annotation
+  try {
+    annosvc.setAnnotationString(testURI, testAnnoName, testAnnoVal, 0, 0);
+  } catch(ex) {
+    do_throw("unable to add annotation");
+  }
+
+  // get annotation
+  var storedAnnoVal = annosvc.getAnnotationString(testURI, testAnnoName);
+  do_check_eq(testAnnoVal, storedAnnoVal);
+
+  // get annotation that doesn't exist
+  try {
+    annosvc.getAnnotationString(testURI, "blah");
+    do_throw("fetching annotation that doesn't exist, should've thrown");
+  } catch(ex) {}
+}
