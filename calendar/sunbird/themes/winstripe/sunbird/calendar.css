@@ -927,6 +927,10 @@ calendar-navigation-buttons {
 
 .title-label-box button {
   background-color: transparent;
+  /* Override button min-width so views can be narrow on narrow screen. */
+  min-width: 1px;
+  /* Allow overflow, so long localized month names don't prevent narrow view */
+  overflow-x: hidden;
 }
 
 .nav-buttons{

@@ -355,11 +355,17 @@ calendar-month-view-column-header {
   border-left: 1px solid #3F7D91;
   border-right: 1px solid #3F7D91;
   border-top: 1px solid #3F7D91;
+  /* Allow overflow so long localized weekday names don't prevent narrow view */
+  overflow-x: hidden;
 }
 
 .calendar-month-view-column-header-label {
   font-weight: bold;
-  padding: 3px 3px 3px 3px;
+  /* Override label margins to use full box width,
+     for long localized weekday names or narrow screen. */
+  margin-left: 0px !important;
+  margin-right: 0px !important;
+  padding: 3px 1px;
 }
 
 calendar-editable-item[selected="true"] .calendar-event-box-container { 

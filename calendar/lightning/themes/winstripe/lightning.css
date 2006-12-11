@@ -139,6 +139,13 @@ treechildren::-moz-tree-cell-text(agenda-header) {
     -moz-box-pack: end;
 }
 
+.title-label-box button {
+    /* Override button min-width so views can be narrow on narrow screen */
+    min-width: 1px;
+    /* Allow overflow, so long localized month names don't prevent narrow view */
+    overflow-x: hidden;
+}
+
 radio[pane=paneLightning] {
     list-style-image: url("chrome://calendar/skin/cal-icon32.png");
 }
