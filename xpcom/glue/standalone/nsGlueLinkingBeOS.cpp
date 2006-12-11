@@ -16,12 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  * Benjamin Smedberg <benjamin@smedbergs.us>
- *
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Sergei Dolgov <sergei_d@fi.tartu.ee>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org LDAP SDK autoconf glue.
 # 
 # The Initial Developer of the Original Code is
-# Netscape Commmunications Corp.
+# Netscape Communications Corp.
 # Portions created by the Initial Developer are Copyright (C) 2000
 # the Initial Developer. All Rights Reserved.
 # 

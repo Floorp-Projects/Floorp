@@ -13,6 +13,8 @@ License.
 
 The Original Code is readme.txt by Brian Bober
 
+The Initial Developer of the Original Code is
+Brian Bober.
 Portions created by the Initial Developer are Copyright (C) 2003
 the Initial Developer. All Rights Reserved.
 
