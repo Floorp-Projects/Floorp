@@ -2268,7 +2268,7 @@
                   "style", "overflow-x: hidden; overflow-y: auto;");
           }
 
-          var boxes = ["daybox", "headerdaybox", "labeldaybox"];
+          var boxes = ["daybox", "headerdaybox"];
           for each (var boxname in boxes) {
               var box = document.getAnonymousElementByAttribute(this, "anonid", boxname);
               var child = box.firstChild;
@@ -2446,7 +2446,7 @@
                   labelbox.firstChild.setAttribute("value", df.formatDateWithoutYear(d));
                   labelbox.childNodes[1].setAttribute("value", calGetString("dateFormat", "day."+ (d.weekday+1)+ ".Mmm"));
               } else {
-                  labelbox = createXULElement("box");
+                  labelbox = createXULElement("vbox");
                   labelbox.setAttribute("flex", "1");
                   labelbox.setAttribute("class", "calendar-day-label-box");
 
@@ -2463,7 +2463,6 @@
               
                   labeldaybox.appendChild(labelbox);
               }
-              labelbox.setAttribute("orient", orient);
             
               // We don't want to actually mess with our original dates, plus
               // they're likely to be immutable.

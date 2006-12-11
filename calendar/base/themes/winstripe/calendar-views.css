@@ -214,7 +214,7 @@ box[anonid="labelbox"][orient="vertical"] {
   width: 30px;
 }
 box[anonid="headerbox"][orient="vertical"] {
-  width: 30px;
+  width: 60px;
 }
 box[anonid="labelbox"][orient="vertical"] > box[anonid="labeltimespacer"],
 box[anonid="headertimespacer"][orient="vertical"],
