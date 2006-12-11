@@ -47,13 +47,12 @@
 
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOM3Node.h"
-#include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIDOMDocumentXBL.h"
+#include "nsIContent.h"
+#include "nsIBindingManager.h"
 
 #include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
@@ -239,10 +238,14 @@ protected:
   PRPackedBool mIsAttributeBased;
 
   /**
-   * A clone of the parent node (used when mIsAttributeBased), that is used by
-   * InsertTemplateContent().
+   * If this repeat is attribute based that means it is contained by certain
+   * element that have repeat related attributes (see
+   * http://www.w3.org/TR/xforms/slice9.html#ui.repeat.via.attrs) then
+   * this property is a clone of that element exepting it doens't have any
+   * repeat related attributes. Otherwise value of this property is null. Used
+   * in InsertTemplateContent() method.
    */
-  nsCOMPtr<nsIDOMNode> mParentClone;
+  nsCOMPtr<nsIDOMNode> mAttrBasedRepeatNode;
 
   /**
    * The currently selected repeat (nested repeats)
@@ -325,15 +328,6 @@ protected:
    * @param aNode             The node to insert content into.
    */
   nsresult InsertTemplateContent(nsIDOMNode *aNode);
-
-
-  /**
-   * Get the XBL binding parent for a node.
-   *
-   * @param aNode              The node to get binding parent for
-   * @param aParent            The returned binding parent
-   */
-  nsresult GetBindingParent(nsIDOMNode *aNode, nsIDOMNode **aParent);
 
   // nsXFormsControlStub override
   virtual void AfterSetAttribute(nsIAtom *aName);
@@ -754,81 +748,61 @@ nsXFormsRepeatElement::Bind(PRBool *aContextChanged)
 }
 
 nsresult
-nsXFormsRepeatElement::GetBindingParent(nsIDOMNode *aNode,
-                                        nsIDOMNode **aParent)
-{
-  NS_ENSURE_ARG_POINTER(aNode);
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDOMDocumentXBL> docXBL(do_QueryInterface(domDoc));
-  NS_ENSURE_STATE(docXBL);
-  
-  nsCOMPtr<nsIDOMElement> parent;
-  docXBL->GetBindingParent(aNode, getter_AddRefs(parent));
-  NS_IF_ADDREF(*aParent = parent);
-  return NS_OK;
-}
-
-nsresult
 nsXFormsRepeatElement::InsertTemplateContent(nsIDOMNode *aNode)
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
   nsresult rv;
-  nsCOMPtr<nsIDOMNode> insertionPoint;
 
   // If we are attribute based we need to clone our parent (the element with
   // the repeat-* attributes), and insert that as the first child.
   if (mIsAttributeBased) {
-    NS_ENSURE_STATE(mParentClone);
-    nsCOMPtr<nsIDOMNode> parentClone;
-    rv = mParentClone->CloneNode(PR_FALSE, getter_AddRefs(parentClone));
+    nsCOMPtr<nsIDOMNode> clonedNode;
+    rv = mAttrBasedRepeatNode->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aNode->AppendChild(parentClone, getter_AddRefs(insertionPoint));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    insertionPoint = aNode;
+    nsCOMPtr<nsIDOMNode> stubNode;
+    return aNode->AppendChild(clonedNode, getter_AddRefs(stubNode));
   }
 
-  // Get template content
-  nsCOMPtr<nsIDOMNode> child;
-  if (mIsAttributeBased) {
-    // If we are attribute based, we need to get our binding parent and get
-    // its first child or we will be looking at the binding document.
-    nsCOMPtr<nsIDOMNode> parent;
-    rv = GetBindingParent(mElement, getter_AddRefs(parent));
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  mElement->GetOwnerDocument(getter_AddRefs(domDocument));
+  NS_ENSURE_STATE(domDocument);
+
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
+  nsCOMPtr<nsIBindingManager> bindingMgr(document->BindingManager());
+  NS_ENSURE_STATE(bindingMgr);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  NS_ENSURE_STATE(content);
+
+  // Get a list of all explicit children, including any children that may have
+  // been inserted via XBL insertion points.
+  nsCOMPtr<nsIDOMNodeList> children;
+  bindingMgr->GetContentListFor(content, getter_AddRefs(children));
+
+  PRUint32 length = 0;
+  children->GetLength(&length);
+
+  for (PRUint32 i = 0; i < length; i++) {
+    nsCOMPtr<nsIDOMNode> node;
+    rv = children->Item(i, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = parent->GetFirstChild(getter_AddRefs(child));
+    nsCOMPtr<nsIDOMNode> clonedNode;
+    rv = CloneNode(node, getter_AddRefs(clonedNode));
     NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = mElement->GetFirstChild(getter_AddRefs(child));
+
+    nsCOMPtr<nsIDOMNode> stubNode;
+    rv = aNode->AppendChild(clonedNode, getter_AddRefs(stubNode));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Clone template
-  while (child) {
-    nsCOMPtr<nsIDOMNode> childClone;
-    rv = CloneNode(child, getter_AddRefs(childClone));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIDOMNode> newNode;
-    rv = insertionPoint->AppendChild(childClone, getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-  
-    rv = child->GetNextSibling(getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-    child = newNode;
-  }
-  
   return NS_OK;
 }
 
 // XXX: If repeat is moved to a new position, we need to clear the unrolled
-// content and clear mParentClone
+// content and clear mAttrBasedRepeatNode.
 nsresult
 nsXFormsRepeatElement::UnrollRows(nsIDOMXPathResult *aNodeset)
 {
@@ -930,32 +904,33 @@ nsXFormsRepeatElement::UnrollRows(nsIDOMXPathResult *aNodeset)
   // STEP 4: Insert template content into newly created rows
 
   // If we are attribute based, prepare a clone of our parent
-  if (mIsAttributeBased && !mParentClone) {
-    nsCOMPtr<nsIDOMNode> parent;
-    rv = mElement->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIDOMNode> parentClone;
-    rv = parent->CloneNode(PR_FALSE, getter_AddRefs(parentClone));
+  if (mIsAttributeBased && !mAttrBasedRepeatNode) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+    NS_ENSURE_STATE(content);
+
+    nsCOMPtr<nsIContent> templateContent = content->GetBindingParent();
+    NS_ENSURE_STATE(templateContent);
+
+    nsCOMPtr<nsIDOMNode> templateNode(do_QueryInterface(templateContent));
+    NS_ENSURE_STATE(templateNode);
+
+    rv = CloneNode(templateNode, getter_AddRefs(mAttrBasedRepeatNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMElement> parentCloneEl(do_QueryInterface(parentClone));
-    NS_ENSURE_STATE(parentCloneEl);
+    nsCOMPtr<nsIDOMElement> clonedElm(do_QueryInterface(mAttrBasedRepeatNode));
+    NS_ENSURE_STATE(clonedElm);
 
     // Remove all possible repeat-* attributes
-    parentCloneEl->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("repeat-model"));
-    parentCloneEl->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("repeat-bind"));
-    parentCloneEl->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("repeat-nodeset"));
-    parentCloneEl->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("repeat-startindex"));
-    parentCloneEl->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("repeat-number"));
-
-    // Save parent clone
-    mParentClone = parentCloneEl;
+    clonedElm->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("repeat-model"));
+    clonedElm->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("repeat-bind"));
+    clonedElm->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("repeat-nodeset"));
+    clonedElm->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("repeat-startindex"));
+    clonedElm->RemoveAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("repeat-number"));
   }
 
   nsCOMPtr<nsIDOMNodeList> containerList;
