@@ -741,8 +741,11 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // xxx before we release our reference to mChannel, lets
   // save the last status that we saw so that the
   // imgRequestProxy will have access to it.
-  mRequest->GetStatus(&mNetworkStatus);
-  mRequest = nsnull;  // we no longer need the request
+  if (mRequest)
+  {
+    mRequest->GetStatus(&mNetworkStatus);
+    mRequest = nsnull;  // we no longer need the request
+  }
 
   // If mImage is still null, we didn't properly load the image.
   if (NS_FAILED(status) || !mImage) {
