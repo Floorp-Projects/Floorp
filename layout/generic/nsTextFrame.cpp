@@ -5425,8 +5425,10 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       PRInt32 measureChars = textRun.mTotalNumChars;
       if (forcedOffset == -1) {
         forcedOffset -= aTextData.mOffset;
+#ifdef MOZ_CAIRO_GFX
         NS_ASSERTION(forcedOffset >= 0,
                      "Overshot forced offset, we should have already exited");
+#endif
         if (forcedOffset >= 0 && forcedOffset < textRun.mTotalNumChars) {
           // Only measure up to forcedOffset characters. We still need to measure
           // to make sure we get the right text dimensions, even though we know
