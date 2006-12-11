@@ -43,6 +43,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXPathEvaluator.h"
@@ -312,16 +313,13 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
     *aContextPosition = 1;
 
   // Find correct model element
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-
   nsAutoString bindId;
   NS_NAMED_LITERAL_STRING(bindStr, "bind");
   aElement->GetAttribute(bindStr, bindId);
   if (!bindId.IsEmpty()) {
     // CASE 1: Use @bind
-    domDoc->GetElementById(bindId, aBindElement);
+    GetElementByContextId(aElement, bindId, aBindElement);
+
     if (!IsXFormsElement(*aBindElement, bindStr)) {
       const PRUnichar *strings[] = { bindId.get(), bindStr.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
@@ -342,9 +340,9 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
       
       if (!modelId.IsEmpty()) {
         nsCOMPtr<nsIDOMElement> modelElement;
-        domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
+        GetElementByContextId(aElement, modelId, getter_AddRefs(modelElement));
         nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelElement);
-        
+
         // No element found, or element not a \<model\> element
         if (!model) {
           const PRUnichar *strings[] = { modelId.get(), modelStr.get() };
@@ -1798,19 +1796,17 @@ FindRepeatContext(nsIDOMElement *aElement, PRBool aFindContainer)
 
 /* static */
 nsresult
-nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
-                              const nsAString  &aId,
+nsXFormsUtils::GetElementById(const nsAString  &aId,
                               const PRBool      aOnlyXForms,
                               nsIDOMElement    *aCaller,
                               nsIDOMElement   **aElement)
 {
   NS_ENSURE_TRUE(!aId.IsEmpty(), NS_ERROR_INVALID_ARG);
-  NS_ENSURE_ARG_POINTER(aDoc);
   NS_ENSURE_ARG_POINTER(aElement);
   *aElement = nsnull;
 
   nsCOMPtr<nsIDOMElement> element;
-  aDoc->GetElementById(aId, getter_AddRefs(element));
+  GetElementByContextId(aCaller, aId, getter_AddRefs(element));
   if (!element)
     return NS_OK;
 
@@ -1894,6 +1890,53 @@ nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
   return NS_OK;
 }
 
+/* static */
+nsresult
+nsXFormsUtils::GetElementByContextId(nsIDOMElement   *aRefNode,
+                                     const nsAString &aId,
+                                     nsIDOMElement   **aElement)
+{
+  NS_ENSURE_ARG(aRefNode);
+  NS_ENSURE_ARG_POINTER(aElement);
+
+  *aElement = nsnull;
+
+  nsCOMPtr<nsIDOMDocument> document;
+  aRefNode->GetOwnerDocument(getter_AddRefs(document));
+
+  // Even if given element is anonymous node then search element by ID attribute
+  // of document because anonymous node can inherit attribute from bound node
+  // that is refID of document.
+
+  nsresult rv = document->GetElementById(aId, aElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (*aElement)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(document));
+  if (!xblDoc)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aRefNode));
+  if (!content)
+    return NS_OK;
+
+  // Search for the element with the given value in its 'anonid' attribute
+  // throughout the complete bindings chain. We must ensure that the binding
+  // parent of currently traversed element is not element itself to avoid an
+  // infinite loop.
+  nsIContent *boundContent;
+  for (boundContent = content->GetBindingParent(); boundContent != nsnull &&
+         boundContent != boundContent->GetBindingParent() && !*aElement;
+         boundContent = boundContent->GetBindingParent()) {
+    nsCOMPtr<nsIDOMElement> boundElm(do_QueryInterface(boundContent));
+    xblDoc->GetAnonymousElementByAttribute(boundElm, NS_LITERAL_STRING("anonid"),
+                                           aId, aElement);
+  }
+
+  return NS_OK;
+}
 
 /* static */
 PRBool

@@ -65,14 +65,8 @@ nsXFormsSetFocusElement::HandleAction(nsIDOMEvent* aEvent,
   if (control.IsEmpty())
     return NS_OK;
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  mElement->GetOwnerDocument(getter_AddRefs(doc));
-  if (!doc)
-    return NS_OK;
-
   nsCOMPtr<nsIDOMElement> el;
-  nsXFormsUtils::GetElementById(doc, control, PR_TRUE, mElement,
-                                getter_AddRefs(el));
+  nsXFormsUtils::GetElementById(control, PR_TRUE, mElement, getter_AddRefs(el));
   if (!el)
     return NS_OK;
   

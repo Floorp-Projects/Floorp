@@ -111,18 +111,17 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 indexInt = indexDoub < 1 ? 0 : (PRUint32) floor(indexDoub);
 
-  // Find the \<repeat\> with @id == |id|
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef DEBUG_XF_SETINDEX
   printf("<setindex>: Setting index '%s' to '%d'\n",
          NS_ConvertUTF16toUTF8(id).get(),
          indexInt);
-#endif  
+#endif
+
+  // Find the \<repeat\> with @id == |id|
   nsCOMPtr<nsIDOMElement> repeatElem;
-  rv = domDoc->GetElementById(id, getter_AddRefs(repeatElem));
+  nsXFormsUtils::GetElementByContextId(mElement, id,
+                                       getter_AddRefs(repeatElem));
+
   nsCOMPtr<nsIXFormsRepeatElement> repeat = do_QueryInterface(repeatElem);
   if (!repeat) {
     const PRUnichar *strings[] = { id.get(), repeatStr.get() };

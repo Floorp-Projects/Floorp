@@ -113,14 +113,12 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   nsAutoString submissionID;
   mElement->GetAttribute(submission, submissionID);
 
-  nsCOMPtr<nsIDOMDocument> ownerDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
-  NS_ENSURE_STATE(ownerDoc);
-
   nsCOMPtr<nsIDOMElement> submissionElement;
-  ownerDoc->GetElementById(submissionID, getter_AddRefs(submissionElement));
+  nsXFormsUtils::GetElementByContextId(mElement, submissionID,
+                                       getter_AddRefs(submissionElement));
+
   nsCOMPtr<nsIXFormsSubmissionElement> xfSubmission(do_QueryInterface(submissionElement));
-  
+
   if (!xfSubmission) {
     const PRUnichar *strings[] = { submissionID.get(), submission.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),

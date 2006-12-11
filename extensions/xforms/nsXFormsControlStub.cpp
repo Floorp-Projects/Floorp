@@ -363,35 +363,30 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
 
   if (aModel)
     NS_ADDREF(*aModel = mModel);
+
   mUsesModelBinding = usesModelBinding;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-  NS_ENSURE_STATE(content);
-  nsCOMPtr<nsIDocument> doc = content->GetCurrentDoc();
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-  NS_ENSURE_STATE(domDoc);
-
-  if (NS_SUCCEEDED(rv) && indexesUsed.Count()) {
+  if (indexesUsed.Count()) {
     // add index listeners on repeat elements
 
     for (PRInt32 i = 0; i < indexesUsed.Count(); ++i) {
       // Find the repeat element and add |this| as a listener
       nsCOMPtr<nsIDOMElement> repElem;
-      domDoc->GetElementById(*(indexesUsed[i]), getter_AddRefs(repElem));
+      nsXFormsUtils::GetElementByContextId(mElement, *(indexesUsed[i]),
+                                           getter_AddRefs(repElem));
       nsCOMPtr<nsIXFormsRepeatElement> rep(do_QueryInterface(repElem));
       if (!rep)
         continue;
 
       rv = rep->AddIndexUser(this);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
+
       rv = mIndexesUsed.AppendObject(rep);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

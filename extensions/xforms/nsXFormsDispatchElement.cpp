@@ -95,18 +95,17 @@ nsXFormsDispatchElement::HandleAction(nsIDOMEvent* aEvent,
       nsXFormsUtils::GetEventDefaults(name, tmp, bubbles);
   }
 
-  nsCOMPtr<nsIDOMDocument> doc;
-  mElement->GetOwnerDocument(getter_AddRefs(doc));
-  if (!doc)
-    return NS_OK;
-
   nsCOMPtr<nsIDOMElement> el;
-  nsXFormsUtils::GetElementById(doc, target, PR_FALSE, mElement,
-                                getter_AddRefs(el));
+  nsXFormsUtils::GetElementById(target, PR_FALSE, mElement, getter_AddRefs(el));
   if (!el)
     return NS_OK;
-  
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  mElement->GetOwnerDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(doc);
+  if (!docEvent)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMEvent> event;
   docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   event->InitEvent(name, bubbles, cancelable);

@@ -166,7 +166,10 @@ nsXFormsXPathFunctions::Index(txIFunctionEvaluationContext *aContext,
 
     // aID should be the id of a nsIXFormsRepeatElement
     nsCOMPtr<nsIDOMElement> repeatEle;
-    nsresult rv = document->GetElementById(aID, getter_AddRefs(repeatEle));
+    nsCOMPtr<nsIDOMElement> resolverEle(do_QueryInterface(resolverNode));
+    nsresult rv =
+      nsXFormsUtils::GetElementByContextId(resolverEle, aID,
+                                           getter_AddRefs(repeatEle));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // now get the index value from the xforms:repeat.
