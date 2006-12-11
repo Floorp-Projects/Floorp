@@ -78,6 +78,9 @@ const SEARCH_DATA_TEXT           = Ci.nsISearchEngine.DATA_TEXT;
 const XML_FILE_EXT      = "xml";
 const SHERLOCK_FILE_EXT = "src";
 
+// Delay for lazy serialization (ms)
+const LAZY_SERIALIZE_DELAY = 100;
+
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
 // Supported extensions for Sherlock plugin icons
@@ -1018,6 +1021,8 @@ Engine.prototype = {
   _updateURL: null,
   // The url to check for a new icon
   _iconUpdateURL: null,
+  // A reference to the timer used for lazily serializing the engine to file
+  _serializeTimer: null,
 
   /**
    * Retrieves the data from the engine's file. If the engine's dataType is
@@ -1932,6 +1937,30 @@ Engine.prototype = {
     return doc;
   },
 
+  _lazySerializeToFile: function SRCH_ENG_serializeToFile() {
+    if (this._serializeTimer) {
+      // Reset the timer
+      this._serializeTimer.delay = LAZY_SERIALIZE_DELAY;
+    } else {
+      this._serializeTimer = Cc["@mozilla.org/timer;1"].
+                             createInstance(Ci.nsITimer);
+      var timerCallback = {
+        self: this,
+        notify: function SRCH_ENG_notify(aTimer) {
+          try {
+            this.self._serializeToFile();
+          } catch (ex) {
+            LOG("Serialization from timer callback failed:\n" + ex);
+          }
+          this.self._serializeTimer = null;
+        }
+      };
+      this._serializeTimer.initWithCallback(timerCallback,
+                                            LAZY_SERIALIZE_DELAY,
+                                            Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  },
+
   /**
    * Serializes the engine object to file.
    */
@@ -2103,6 +2132,9 @@ Engine.prototype = {
            Cr.NS_ERROR_FAILURE);
 
     url.addParam(aName, aValue);
+
+    // Serialize the changes to file lazily
+    this._lazySerializeToFile();
   },
 
   // from nsISearchEngine
