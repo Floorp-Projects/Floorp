@@ -644,8 +644,8 @@
 
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
-        <html:div style="display:table; border-spacing:0; margin: 0 100%;">
-          <html:div class="innerDiv" style="white-space: nowrap;">
+        <html:div style="display: -moz-box; margin: 0 100%;"> 
+          <html:div class="innerDiv">
             <children/>
           </html:div>
         </html:div>
