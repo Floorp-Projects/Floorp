@@ -1660,7 +1660,9 @@ function my_whoisreply (e)
                 this.primServ.whowas(nick, 1);
                 return;
             }
-            delete this.whoisList[lowerNick];
+            if (this.whoisList)
+                delete this.whoisList[lowerNick];
+
             text = getMsg(MSG_WHOIS_END, nick);
             if (user)
                 user.updateHeader();
