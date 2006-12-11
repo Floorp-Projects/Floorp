@@ -153,5 +153,6 @@ nsSVGCircleElement::ConstructPath(cairo_t *aCtx)
 
   GetAnimatedLengthValues(&x, &y, &r, nsnull);
 
-  cairo_arc(aCtx, x, y, r, 0, 2*M_PI);
+  if (r > 0.0f)
+    cairo_arc(aCtx, x, y, r, 0, 2*M_PI);
 }

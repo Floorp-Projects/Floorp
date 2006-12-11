@@ -161,9 +161,11 @@ nsSVGEllipseElement::ConstructPath(cairo_t *aCtx)
 
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
 
-  cairo_save(aCtx);
-  cairo_translate(aCtx, x, y);
-  cairo_scale(aCtx, rx, ry);
-  cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
-  cairo_restore(aCtx);
+  if (rx > 0.0f && ry > 0.0f) {
+    cairo_save(aCtx);
+    cairo_translate(aCtx, x, y);
+    cairo_scale(aCtx, rx, ry);
+    cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
+    cairo_restore(aCtx);
+  }
 }
