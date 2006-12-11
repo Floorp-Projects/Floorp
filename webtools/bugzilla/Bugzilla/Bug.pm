@@ -1405,7 +1405,7 @@ sub ValidateTime {
 }
 
 sub GetComments {
-    my ($id, $comment_sort_order, $start, $end) = @_;
+    my ($id, $comment_sort_order, $start, $end, $raw) = @_;
     my $dbh = Bugzilla->dbh;
 
     $comment_sort_order = $comment_sort_order ||
@@ -1438,21 +1438,9 @@ sub GetComments {
 
         $comment{'email'} .= Bugzilla->params->{'emailsuffix'};
         $comment{'name'} = $comment{'name'} || $comment{'email'};
-        if ($comment{'type'} == CMT_DUPE_OF) {
-            $comment{'body'} .= "\n\n" . get_text('bug_duplicate_of',
-                                                  { dupe_of => $comment{'extra_data'} });
-        }
-        elsif ($comment{'type'} == CMT_HAS_DUPE) {
-            $comment{'body'} = get_text('bug_has_duplicate',
-                                        { dupe => $comment{'extra_data'} });
-        }
-        elsif ($comment{'type'} == CMT_POPULAR_VOTES) {
-            $comment{'body'} = get_text('bug_confirmed_by_votes');
-        }
-        elsif ($comment{'type'} == CMT_MOVED_TO) {
-            $comment{'body'} .= "\n\n" . get_text('bug_moved_to',
-                                                  { login => $comment{'extra_data'} });
-        }
+
+        # If raw data is requested, do not format 'special' comments.
+        $comment{'body'} = format_comment(\%comment) unless $raw;
 
         push (@comments, \%comment);
     }
@@ -1462,6 +1450,32 @@ sub GetComments {
     }
 
     return \@comments;
+}
+
+# Format language specific comments. This routine must not update
+# $comment{'body'} itself, see BugMail::prepare_comments().
+sub format_comment {
+    my $comment = shift;
+    my $body;
+
+    if ($comment->{'type'} == CMT_DUPE_OF) {
+        $body = $comment->{'body'} . "\n\n" .
+                get_text('bug_duplicate_of', { dupe_of => $comment->{'extra_data'} });
+    }
+    elsif ($comment->{'type'} == CMT_HAS_DUPE) {
+        $body = get_text('bug_has_duplicate', { dupe => $comment->{'extra_data'} });
+    }
+    elsif ($comment->{'type'} == CMT_POPULAR_VOTES) {
+        $body = get_text('bug_confirmed_by_votes');
+    }
+    elsif ($comment->{'type'} == CMT_MOVED_TO) {
+        $body = $comment->{'body'} . "\n\n" .
+                get_text('bug_moved_to', { login => $comment->{'extra_data'} });
+    }
+    else {
+        $body = $comment->{'body'};
+    }
+    return $body;
 }
 
 # Get the activity of a bug, starting from $starttime (if given).

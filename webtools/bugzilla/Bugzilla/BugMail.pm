@@ -313,7 +313,7 @@ sub Send {
     }
 
 
-    my ($newcomments, $anyprivate) = get_comments_by_bug($id, $start, $end);
+    my ($raw_comments, $anyprivate, $count) = get_comments_by_bug($id, $start, $end);
 
     ###########################################################################
     # Start of email filtering code
@@ -408,6 +408,9 @@ sub Send {
     my @sent;
     my @excluded;
 
+    # Some comments are language specific. We cache them here.
+    my %comments;
+
     foreach my $user_id (keys %recipients) {
         my %rels_which_want;
         my $sent_mail = 0;
@@ -416,15 +419,24 @@ sub Send {
         # Deleted users must be excluded.
         next unless $user;
 
-        if ($user->can_see_bug($id))
-        {
+        # What's the language chosen by this user for email?
+        my $lang = $user->settings->{'lang'}->{'value'};
+
+        if ($user->can_see_bug($id)) {
+            # It's time to format language specific comments.
+            unless (exists $comments{$lang}) {
+                Bugzilla->template_inner($lang);
+                $comments{$lang} = prepare_comments($raw_comments, $count);
+                Bugzilla->template_inner("");
+            }
+
             # Go through each role the user has and see if they want mail in
             # that role.
             foreach my $relationship (keys %{$recipients{$user_id}}) {
                 if ($user->wants_bug_mail($id,
                                           $relationship, 
                                           $diffs, 
-                                          $newcomments, 
+                                          $comments{$lang},
                                           $changer,
                                           !$start))
                 {
@@ -471,7 +483,7 @@ sub Send {
                                       \%defmailhead, 
                                       \%fielddescription, 
                                       \@diffparts,
-                                      $newcomments, 
+                                      $comments{$lang},
                                       $anyprivate, 
                                       $start, 
                                       $id,
@@ -634,16 +646,17 @@ sub sendMail {
     };
 
     my $msg;
-    my $template = Bugzilla->template_inner;
+    my $template = Bugzilla->template_inner($user->settings->{'lang'}->{'value'});
     $template->process("email/newchangedmail.txt.tmpl", $vars, \$msg)
       || ThrowTemplateError($template->error());
+    Bugzilla->template_inner("");
 
     MessageToMTA($msg);
 
     return 1;
 }
 
-# Get bug comments for the given period and format them to be used in emails.
+# Get bug comments for the given period.
 sub get_comments_by_bug {
     my ($id, $start, $end) = @_;
     my $dbh = Bugzilla->dbh;
@@ -661,22 +674,35 @@ sub get_comments_by_bug {
                                         undef, ($id, $start));
     }
 
-    my $comments = Bugzilla::Bug::GetComments($id, "oldest_to_newest", $start, $end);
+    my $raw = 1; # Do not format comments which are not of type CMT_NORMAL.
+    my $comments = Bugzilla::Bug::GetComments($id, "oldest_to_newest", $start, $end, $raw);
 
-    foreach my $comment (@$comments) {
+    if (Bugzilla->params->{'insidergroup'}) {
+        $anyprivate = 1 if scalar(grep {$_->{'isprivate'} > 0} @$comments);
+    }
+
+    return ($comments, $anyprivate, $count);
+}
+
+# Prepare comments for the given language.
+sub prepare_comments {
+    my ($raw_comments, $count) = @_;
+
+    my $result = "";
+    foreach my $comment (@$raw_comments) {
         if ($count) {
             $result .= "\n\n--- Comment #$count from " . $comment->{'name'} . " <" .
                        $comment->{'email'} . Bugzilla->params->{'emailsuffix'} . ">  " .
                        format_time($comment->{'time'}) . " ---\n";
         }
-        if ($comment->{'isprivate'} > 0 && Bugzilla->params->{'insidergroup'}) {
-            $anyprivate = 1;
-        }
-        $result .= ($comment->{'already_wrapped'} ? $comment->{'body'}
-                                                  : wrap_comment($comment->{'body'}));
+        # Format language specific comments. We don't update $comment->{'body'}
+        # directly, otherwise it would grow everytime you call format_comment()
+        # with a different language as some text may be appended to the existing one.
+        my $body = Bugzilla::Bug::format_comment($comment);
+        $result .= ($comment->{'already_wrapped'} ? $body : wrap_comment($body));
         $count++;
     }
-    return ($result, $anyprivate);
+    return $result;
 }
 
 1;

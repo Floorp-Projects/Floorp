@@ -146,14 +146,17 @@ init_page() if !$ENV{MOD_PERL};
 
 sub template {
     my $class = shift;
+    request_cache()->{language} = "";
     request_cache()->{template} ||= Bugzilla::Template->create();
     return request_cache()->{template};
 }
 
 sub template_inner {
-    my $class = shift;
-    $class->request_cache->{template_inner} ||= Bugzilla::Template->create();
-    return $class->request_cache->{template_inner};
+    my ($class, $lang) = @_;
+    $lang = defined($lang) ? $lang : (request_cache()->{language} || "");
+    request_cache()->{language} = $lang;
+    request_cache()->{"template_inner_$lang"} ||= Bugzilla::Template->create();
+    return request_cache()->{"template_inner_$lang"};
 }
 
 sub cgi {
@@ -497,7 +500,10 @@ The current C<Template> object, to be used for output
 =item C<template_inner>
 
 If you ever need a L<Bugzilla::Template> object while you're already
-processing a template, use this.
+processing a template, use this. Also use it if you want to specify
+the language to use. If no argument is passed, it uses the last
+language set. If the argument is "" (empty string), the language is
+reset to the current one (the one used by Bugzilla->template).
 
 =item C<cgi>
 

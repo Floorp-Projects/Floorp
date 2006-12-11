@@ -108,9 +108,10 @@ sub sortAcceptLanguage {
 # If no Accept-Language is present it uses the defined default
 # Templates may also be found in the extensions/ tree
 sub getTemplateIncludePath {
+    my $lang = Bugzilla->request_cache->{'language'} || "";
     # Return cached value if available
 
-    my $include_path = Bugzilla->request_cache->{template_include_path};
+    my $include_path = Bugzilla->request_cache->{"template_include_path_$lang"};
     return $include_path if $include_path;
 
     my $templatedir = bz_locations()->{'templatedir'};
@@ -132,15 +133,16 @@ sub getTemplateIncludePath {
        }
     }
     my @languages       = sortAcceptLanguage($languages);
-    my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "" );
+    # If $lang is specified, only consider this language.
+    my @accept_language = ($lang) || sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "");
     my @usedlanguages;
-    foreach my $lang (@accept_language) {
+    foreach my $language (@accept_language) {
         # Per RFC 1766 and RFC 2616 any language tag matches also its 
         # primary tag. That is 'en' (accept language)  matches 'en-us',
         # 'en-uk' etc. but not the otherway round. (This is unfortunately
         # not very clearly stated in those RFC; see comment just over 14.5
         # in http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4)
-        if(my @found = grep /^\Q$lang\E(-.+)?$/i, @languages) {
+        if(my @found = grep /^\Q$language\E(-.+)?$/i, @languages) {
             push (@usedlanguages, @found);
         }
     }
@@ -180,9 +182,9 @@ sub getTemplateIncludePath {
     foreach my $dir (@$include_path) {
         push(@dirs, $dir) unless grep ($dir eq $_, @dirs);
     }
-    Bugzilla->request_cache->{template_include_path} = \@dirs;
+    Bugzilla->request_cache->{"template_include_path_$lang"} = \@dirs;
     
-    return Bugzilla->request_cache->{template_include_path};
+    return Bugzilla->request_cache->{"template_include_path_$lang"};
 }
 
 sub put_header {
@@ -527,7 +529,7 @@ sub create {
     # We need a possibility to reset the cache, so that no files from
     # the previous language pollute the action.
     if ($opts{'clean_cache'}) {
-        delete Bugzilla->request_cache->{template_include_path};
+        delete Bugzilla->request_cache->{template_include_path_};
     }
 
     # IMPORTANT - If you make any configuration changes here, make sure to

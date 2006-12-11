@@ -15,7 +15,7 @@
 # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Marc Schumann <wurblzap@gmail.com>
-#
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 
 package Bugzilla::User::Setting;
@@ -128,15 +128,28 @@ sub new {
 ###############################
 
 sub add_setting {
-    my ($name, $values, $default_value, $subclass) = @_;
+    my ($name, $values, $default_value, $subclass, $force_check) = @_;
     my $dbh = Bugzilla->dbh;
 
-    return if _setting_exists($name);
+    my $exists = _setting_exists($name);
+    return if ($exists && !$force_check);
 
     ($name && $default_value)
       ||  ThrowCodeError("setting_info_invalid");
 
-    print get_text('install_setting_new', { name => $name }) . "\n";
+    if ($exists) {
+        # If this setting exists, we delete it and regenerate it.
+        $dbh->do('DELETE FROM setting_value WHERE name = ?', undef, $name);
+        $dbh->do('DELETE FROM setting WHERE name = ?', undef, $name);
+        # Remove obsolete user preferences for this setting.
+        my $list = join(', ', map {$dbh->quote($_)} @$values);
+        $dbh->do("DELETE FROM profile_setting
+                  WHERE setting_name = ? AND setting_value NOT IN ($list)",
+                  undef, $name);
+    }
+    else {
+        print get_text('install_setting_new', { name => $name }) . "\n";
+    }
     $dbh->do(q{INSERT INTO setting (name, default_value, is_enabled, subclass)
                     VALUES (?, ?, 1, ?)},
              undef, ($name, $default_value, $subclass));
