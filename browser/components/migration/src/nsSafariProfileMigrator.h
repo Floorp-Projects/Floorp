@@ -108,6 +108,7 @@ protected:
   nsresult GetSafariUserStyleSheet(nsILocalFile** aResult);
 
 private:
+  PRBool HasFormDataToImport();
   nsCOMPtr<nsIObserverService> mObserverService;
 };
  
