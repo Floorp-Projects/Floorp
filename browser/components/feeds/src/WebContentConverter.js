@@ -62,6 +62,9 @@ const PREF_SELECTED_READER = "browser.feeds.handler.default";
 
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
+const NS_ERROR_MODULE_DOM = 2152923136;
+const NS_ERROR_DOM_SYNTAX_ERR = NS_ERROR_MODULE_DOM + 12;
+
 function WebContentConverter() {
 }
 WebContentConverter.prototype = {
@@ -341,20 +344,27 @@ var WebContentConverterRegistrar = {
     LOG("registerContentHandler(" + aContentType + "," + aURIString + "," + aTitle + ")");
 
     // We only support feed types at present.
+    // XXX this should be a "security exception" according to spec, but that
+    // isn't defined yet.
     var contentType = this._resolveContentType(aContentType);
     if (contentType != TYPE_MAYBE_FEED)
       return;
 
     try {
       var uri = this._makeURI(aURIString);
+    } catch (ex) {
+      // not supposed to throw according to spec
+      return; 
     }
-    catch(ex) {
-      // XXX: Bug 350273
-      return;
-    }
-
+    
+    // If the uri doesn't contain '%s', it won't be a good content handler
+    if (uri.spec.indexOf("%s") < 0)
+      throw NS_ERROR_DOM_SYNTAX_ERR; 
+            
     // For security reasons we reject non-http(s) urls (see bug Bug 354316),
     // we may need to revise this once we support more content types
+    // XXX this should be a "security exception" according to spec, but that
+    // isn't defined yet.
     if (uri.scheme != "http" &&  uri.scheme != "https")
       throw("Permission denied to add " + uri.spec + "as a content handler");
 
