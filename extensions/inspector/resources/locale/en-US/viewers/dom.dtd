@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,9 @@
 
   <!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
   <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
+  <!ENTITY cmdToggleProcessingInstructions.label "Show Processing Instructions">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "P">
 
   <!ENTITY cmdFlashSelected.label "Blink Selected Element">
 

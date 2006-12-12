@@ -48,6 +48,13 @@
         accesskey="&cmdToggleWhitespaceNodes.accesskey;"
         observes="cmd:toggleWhitespaceNodes"/>
 
+      <menuitem id="item:toggleProcessingInstructions"
+                class="menuitem-iconic"
+                type="checkbox"
+                label="&cmdToggleProcessingInstructions.label;"
+                accesskey="&cmdToggleProcessingInstructions.accesskey;"
+                observes="cmd:toggleProcessingInstructions"/>
+
     </menupopup>
   </popupset>
 
@@ -99,6 +106,13 @@
               label="&cmdToggleWhitespaceNodes.label;"
               accesskey="&cmdToggleWhitespaceNodes.accesskey;"
               observes="cmd:toggleWhitespaceNodes"/>
+      
+    <menuitem id="item:toggleProcessingInstructions"
+              class="menuitem-iconic"
+              type="checkbox"
+              label="&cmdToggleProcessingInstructions.label;"
+              accesskey="&cmdToggleProcessingInstructions.accesskey;"
+              observes="cmd:toggleProcessingInstructions"/>
   </menupopup>
 
 </overlay>
