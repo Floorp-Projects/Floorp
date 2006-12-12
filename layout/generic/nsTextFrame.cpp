@@ -4496,16 +4496,7 @@ PRBool
 nsTextFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
 {
   NS_ASSERTION (aOffset && *aOffset <= mContentLength, "aOffset out of range");
-  nsAutoTextBuffer paintBuffer;
-  nsAutoIndexBuffer indexBuffer;
-  nsresult rv = indexBuffer.GrowTo(mContentLength + 1);
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }  
-  PRInt32 textLength;  
-  nsTextTransformer tx(GetPresContext());
-  PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
-  return (textLength > 0);
+  return (!IsEmpty());
 }
 
 PRBool
