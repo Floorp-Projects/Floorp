@@ -77,12 +77,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   const nsMargin& borderPadding = BorderPadding();
 
-  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    mBlock->SetProperty(nsLayoutAtoms::overflowPlaceholdersProperty,
-                        &mOverflowPlaceholders, nsnull);
-    mBlock->AddStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
-  }
-
   if (aTopMarginRoot || 0 != aReflowState.mComputedBorderPadding.top) {
     SetFlag(BRS_ISTOPMARGINROOT, PR_TRUE);
   }
@@ -144,8 +138,22 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                                      aReflowState.frame);
 }
 
+void
+nsBlockReflowState::SetupOverflowPlaceholdersProperty()
+{
+  if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE ||
+      !mOverflowPlaceholders.IsEmpty()) {
+    mBlock->SetProperty(nsLayoutAtoms::overflowPlaceholdersProperty,
+                        &mOverflowPlaceholders, nsnull);
+    mBlock->AddStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
+  }
+}
+
 nsBlockReflowState::~nsBlockReflowState()
 {
+  NS_ASSERTION(mOverflowPlaceholders.IsEmpty(),
+               "Leaking overflow placeholder frames");
+
   // Restore the coordinate system, unless the space manager is null,
   // which means it was just destroyed.
   if (mSpaceManager) {
@@ -153,7 +161,7 @@ nsBlockReflowState::~nsBlockReflowState()
     mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
   }
 
-  if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+  if (mBlock->GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS) {
     mBlock->UnsetProperty(nsLayoutAtoms::overflowPlaceholdersProperty);
     mBlock->RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
   }
@@ -560,11 +568,15 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     // This float will be placed after the line is done (it is a
     // below-current-line float).
     mBelowCurrentLineFloats.Append(fc);
-    if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+    if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE ||
+        aPlaceholder->GetNextInFlow()) {
       // If the float might not be complete, mark it incomplete now to
       // prevent the placeholders being torn down. We will destroy any
       // placeholders later if PlaceBelowCurrentLineFloats finds the
       // float is complete.
+      // Note that we could have unconstrained height and yet have
+      // a next-in-flow placeholder --- for example columns can switch
+      // from constrained height to unconstrained height.
       nsSplittableType splitType;
       aPlaceholder->IsSplittable(splitType);
       if (splitType == NS_FRAME_NOT_SPLITTABLE) {

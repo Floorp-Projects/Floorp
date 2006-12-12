@@ -69,6 +69,13 @@ public:
 
   ~nsBlockReflowState();
 
+  // Set up a property on the block that points to our temporary mOverflowPlaceholders
+  // list, if that list is or could become non-empty during this reflow. Must be
+  // called after the block has done DrainOverflowLines because DrainOverflowLines
+  // can setup mOverflowPlaceholders even if the block is in unconstrained height
+  // reflow (it may have previously been reflowed with constrained height).
+  void SetupOverflowPlaceholdersProperty();
+
   /**
    * Get the available reflow space for the current y coordinate. The
    * available space is relative to our coordinate system (0,0) is our
