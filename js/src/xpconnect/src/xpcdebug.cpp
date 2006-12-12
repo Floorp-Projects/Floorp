@@ -468,9 +468,9 @@ xpc_DumpJSObject(JSObject* obj)
     ObjectPile pile;
 
     puts("Debugging reminders...");
-    puts("  class:  (JSClass*)(obj->slots[2]-1)");
-    puts("  parent: (JSObject*)(obj->slots[1])");
-    puts("  proto:  (JSObject*)(obj->slots[0])");
+    puts("  class:  (JSClass*)(obj->fslots[2]-1)");
+    puts("  parent: (JSObject*)(obj->fslots[1])");
+    puts("  proto:  (JSObject*)(obj->fslots[0])");
     puts("");
 
     if(obj)

@@ -4813,7 +4813,7 @@ interrupt:
             /*
              * Load function flags that are also property attributes.  Getters
              * and setters do not need a slot, their value is stored elsewhere
-             * in the property itself, not in obj->slots.
+             * in the property itself, not in obj slots.
              */
             flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {

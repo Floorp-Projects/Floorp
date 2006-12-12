@@ -257,7 +257,7 @@ struct JSScopeProperty {
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
     JSPropertyOp    getter;             /* getter and setter hooks or objects */
     JSPropertyOp    setter;
-    uint32          slot;               /* index in obj->slots vector */
+    uint32          slot;               /* abstract index in object slots */
     uint8           attrs;              /* attributes, see jsapi.h JSPROP_* */
     uint8           flags;              /* flags, see below for defines */
     int16           shortid;            /* tinyid, or local arg/var index */

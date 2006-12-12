@@ -2242,68 +2242,54 @@ js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj)
     return map;
 }
 
-static jsval *
-AllocSlots(JSContext *cx, jsval *slots, uint32 nslots)
+static void
+FreeSlots(JSContext *cx, JSObject *obj)
 {
-    size_t nbytes, obytes, minbytes;
-    uint32 i, oslots;
-    jsval *newslots;
-
-    nbytes = (nslots + 1) * sizeof(jsval);
-    if (slots) {
-        oslots = slots[-1];
-        obytes = (oslots + 1) * sizeof(jsval);
-    } else {
-        oslots = 0;
-        obytes = 0;
+    if (obj->dslots) {
+        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
+        JS_free(cx, obj->dslots - 1);
+        obj->dslots = NULL;
     }
-
-    if (nbytes <= GC_NBYTES_MAX) {
-        newslots = (jsval *) js_NewGCThing(cx, GCX_PRIVATE, nbytes);
-    } else {
-        newslots = (jsval *)
-                   JS_realloc(cx,
-                              (obytes <= GC_NBYTES_MAX) ? NULL : slots - 1,
-                              nbytes);
-    }
-    if (!newslots)
-        return NULL;
-
-    if (obytes != 0) {
-        /* If either nbytes or obytes fit in a GC-thing, we must copy. */
-        minbytes = JS_MIN(nbytes, obytes);
-        if (minbytes <= GC_NBYTES_MAX)
-            memcpy(newslots + 1, slots, minbytes - sizeof(jsval));
-
-        /* If nbytes are in a GC-thing but obytes aren't, free obytes. */
-        if (nbytes <= GC_NBYTES_MAX && obytes > GC_NBYTES_MAX)
-            JS_free(cx, slots - 1);
-
-        /* If we're extending an allocation, initialize free slots. */
-        if (nslots > oslots) {
-            for (i = 1 + oslots; i <= nslots; i++)
-                newslots[i] = JSVAL_VOID;
-        }
-    }
-
-    newslots[0] = nslots;
-    return ++newslots;
 }
 
-static void
-FreeSlots(JSContext *cx, jsval *slots)
+static JSBool
+ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots)
 {
-    size_t nbytes;
+    uint32 oslots, i;
+    jsval *slots;
 
-    /*
-     * NB: We count on smaller GC-things being finalized before larger things
-     * that become garbage during the same GC.  Without this assumption, we
-     * couldn't load slots[-1] here without possibly loading a gcFreeList link
-     * (see struct JSGCThing in jsgc.h).
-     */
-    nbytes = (slots[-1] + 1) * sizeof(jsval);
-    if (nbytes > GC_NBYTES_MAX)
-        JS_free(cx, slots - 1);
+    if (nslots <= JS_INITIAL_NSLOTS) {
+        FreeSlots(cx, obj);
+        return JS_TRUE;
+    }
+
+    if (obj->dslots) {
+        slots = obj->dslots - 1;
+        oslots = (uint32)slots[-1];
+        JS_ASSERT(oslots > JS_INITIAL_NSLOTS);
+    } else {
+        slots = NULL;
+        oslots = JS_INITIAL_NSLOTS;
+    }
+
+    slots = (jsval *)
+        JS_realloc(cx, slots, (1 + nslots - JS_INITIAL_NSLOTS) * sizeof(jsval));
+    if (!slots) {
+        if (nslots > oslots)
+            return JS_FALSE;
+
+        /* Ignore failed shrinking */
+        slots = obj->dslots - 1;
+    }
+
+    obj->dslots = slots + 1;
+    slots[0] = nslots;
+
+    /* If we're extending an allocation, initialize free slots. */
+    for (i = oslots; i < nslots; i++)
+        slots[1 + i - JS_INITIAL_NSLOTS] = JSVAL_VOID;
+
+    return JS_TRUE;
 }
 
 extern JSBool
@@ -2335,7 +2321,6 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     JSObjectMap *map;
     JSClass *protoclasp;
     uint32 nslots, i;
-    jsval *newslots;
     JSTempValueRooter tvr;
 
     /* Bootstrap the ur-object, and make it the default prototype object. */
@@ -2365,13 +2350,23 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     if (!obj)
         return NULL;
 
+    obj->dslots = NULL;
+
     /*
-     * Root obj to prevent it from being collected out from under this call.
-     * to js_NewObject.  AllocSlots can trigger a finalizer from a last-ditch
-     * GC calling JS_ClearNewbornRoots. There's also the possibilty of things
-     * happening under the objectHook call-out further below.
+     * Root obj to prevent it from being collected out from under this call to
+     * js_NewObject. There's a possibilty of GC under the objectHook call-out
+     * further below.
      */
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
+
+    /* Set the proto, parent, and class properties. */
+    STOBJ_SET_PROTO(obj, proto);
+    STOBJ_SET_PARENT(obj, parent);
+    STOBJ_SET_SLOT(obj, JSSLOT_CLASS, PRIVATE_TO_JSVAL(clasp));
+
+    /* Initialize the remaining fixed slots. */
+    for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
 
     /*
      * Share proto's map only if it has the same JSObjectOps, and only if
@@ -2394,13 +2389,10 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
          * the parent of the prototype's constructor.
          */
         if (!parent)
-            parent = OBJ_GET_PARENT(cx, proto);
+            STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
 
         /* Share the given prototype's map. */
         obj->map = js_HoldObjectMap(cx, map);
-
-        /* Ensure that obj starts with the minimum slots for clasp. */
-        nslots = JS_INITIAL_NSLOTS;
     } else {
         /* Leave parent alone.  Allocate a new map for obj. */
         map = ops->newObjectMap(cx, 1, ops, clasp, obj);
@@ -2410,27 +2402,13 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 
         /* Let ops->newObjectMap set nslots so as to reserve slots. */
         nslots = map->nslots;
+        JS_ASSERT(nslots >= JSSLOT_PRIVATE);
+        if (nslots > JS_INITIAL_NSLOTS && !ReallocSlots(cx, obj, nslots)) {
+            js_DropObjectMap(cx, map, obj);
+            obj->map = NULL;
+            goto bad;
+        }
     }
-
-    /* Allocate a slots vector, with a -1'st element telling its length. */
-    newslots = AllocSlots(cx, NULL, nslots);
-    if (!newslots) {
-        js_DropObjectMap(cx, obj->map, obj);
-        obj->map = NULL;
-        goto bad;
-    }
-
-    /* Set the proto, parent, and class properties. */
-    newslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    newslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    newslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
-
-    /* Clear above JSSLOT_CLASS so the GC doesn't load uninitialized memory. */
-    for (i = JSSLOT_CLASS + 1; i < nslots; i++)
-        newslots[i] = JSVAL_VOID;
-
-    /* Store newslots after initializing all of 'em, just in case. */
-    obj->slots = newslots;
 
     if (cx->runtime->objectHook) {
         JS_KEEP_ATOMS(cx->runtime);
@@ -2681,7 +2659,6 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     map = obj->map;
     if (!map)
         return;
-    JS_ASSERT(STOBJ_HAS_SLOTS(obj));
 
     if (cx->runtime->objectHook)
         cx->runtime->objectHook(cx, obj, JS_FALSE, cx->runtime->objectHookData);
@@ -2689,21 +2666,13 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     /* Remove all watchpoints with weak links to obj. */
     JS_ClearWatchPointsForObject(cx, obj);
 
-    /*
-     * Finalize obj first, in case it needs map and slots.  Optimized to use
-     * LOCKED_OBJ_GET_CLASS instead of OBJ_GET_CLASS, so we avoid "promoting"
-     * obj's scope from lock-free to lock-full (see jslock.c:ClaimScope) when
-     * we're called from the GC.  Only the GC should call js_FinalizeObject,
-     * and no other threads run JS (and possibly racing to update obj->slots)
-     * while the GC is running.
-     */
-    LOCKED_OBJ_GET_CLASS(obj)->finalize(cx, obj);
+    /* Finalize obj first, in case it needs map and slots. */
+    GC_AWARE_GET_CLASS(cx, obj)->finalize(cx, obj);
 
     /* Drop map and free slots. */
     js_DropObjectMap(cx, map, obj);
     obj->map = NULL;
-    FreeSlots(cx, obj->slots);
-    obj->slots = NULL;
+    FreeSlots(cx, obj);
 }
 
 /* XXXbe if one adds props, deletes earlier props, adds more, the last added
@@ -2714,7 +2683,6 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     JSObjectMap *map;
     JSClass *clasp;
     uint32 nslots;
-    jsval *newslots;
 
     map = obj->map;
     JS_ASSERT(!MAP_IS_NATIVE(map) || ((JSScope *)map)->object == obj);
@@ -2724,17 +2692,16 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         if (clasp->reserveSlots)
             map->freeslot += clasp->reserveSlots(cx, obj);
     }
-    nslots = map->nslots;
-    if (map->freeslot >= nslots) {
-        nslots = map->freeslot;
-        JS_ASSERT(nslots >= JS_INITIAL_NSLOTS);
-        nslots += (nslots + 1) / 2;
-
-        newslots = AllocSlots(cx, obj->slots, nslots);
-        if (!newslots)
-            return JS_FALSE;
-        map->nslots = nslots;
-        obj->slots = newslots;
+    if (map->freeslot >= map->nslots) {
+        if (map->freeslot < JS_INITIAL_NSLOTS) {
+            map->nslots = JS_INITIAL_NSLOTS;
+        } else {
+            nslots = map->freeslot;
+            nslots += (nslots + 1) / 2;
+            if (!ReallocSlots(cx, obj, nslots))
+                return JS_FALSE;
+            map->nslots = nslots;
+        }
     }
 
 #ifdef TOO_MUCH_GC
@@ -2749,7 +2716,6 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JSObjectMap *map;
     uint32 nslots;
-    jsval *newslots;
 
     LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_VOID);
     map = obj->map;
@@ -2763,11 +2729,9 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (nslots < JS_INITIAL_NSLOTS)
             nslots = JS_INITIAL_NSLOTS;
 
-        newslots = AllocSlots(cx, obj->slots, nslots);
-        if (!newslots)
-            return;
+        /* Ignore return code of ReallocSlots as shrinking always succeeds. */
+        ReallocSlots(cx, obj, nslots);
         map->nslots = nslots;
-        obj->slots = newslots;
     }
 }
 
@@ -4779,8 +4743,8 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
     if (scope->object != obj) {
         /*
          * An unmutated object that shares a prototype's scope.  We can't tell
-         * how many slots are allocated and in use at obj->slots by looking at
-         * scope, so we use STOBJ_NSLOTS(obj).
+         * how many slots are allocated and in use in obj by looking at scope,
+         * so we use STOBJ_NSLOTS(obj).
          */
         return STOBJ_NSLOTS(obj);
     }
@@ -4843,7 +4807,6 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JSScope *scope;
     uint32 nslots;
     JSClass *clasp;
-    jsval *newslots;
 
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
@@ -4853,27 +4816,24 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
          * At this point, obj may or may not own scope.  If some path calls
          * js_GetMutableScope but does not add a slot-owning property, then
          * scope->object == obj but nslots will be nominal.  If obj shares a
-         * prototype's scope, then we cannot update scope->map here, but we
-         * must update STOBJ_NSLOTS(obj) when we grow obj->slots.
+         * prototype's scope, then we cannot update scope->map here. Instead
+         * we rely on STOBJ_NSLOTS(obj) to get the number of allocated slots
+         * after we increase the number of slots in obj.
          *
          * See js_Mark, before the last return, where we make a special case
          * for unmutated (scope->object != obj) objects.
          */
-        JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
         clasp = LOCKED_OBJ_GET_CLASS(obj);
         nslots = JSSLOT_FREE(clasp);
         if (clasp->reserveSlots)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
-
-        newslots = AllocSlots(cx, obj->slots, nslots);
-        if (!newslots) {
+        if (!ReallocSlots(cx, obj, nslots)) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
         if (scope->object == obj)
             scope->map.nslots = nslots;
-        obj->slots = newslots;
     }
 
     /* Whether or not we grew nslots, we may need to advance freeslot. */

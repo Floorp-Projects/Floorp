@@ -1263,7 +1263,11 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
     size_t nbytes;
     JSScope *scope;
 
-    nbytes = sizeof *obj + obj->map->nslots * sizeof obj->slots[0];
+    nbytes = sizeof *obj;
+    if (obj->dslots) {
+        nbytes += ((uint32)obj->dslots[-1] - JS_INITIAL_NSLOTS + 1)
+                  * sizeof obj->dslots[0];
+    }
     if (OBJ_IS_NATIVE(obj)) {
         scope = OBJ_SCOPE(obj);
         if (scope->object == obj) {

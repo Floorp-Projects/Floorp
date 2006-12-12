@@ -205,19 +205,6 @@ struct JSRuntime {
 #endif
 
     /*
-     * API compatibility requires keeping GCX_PRIVATE bytes separate from the
-     * original GC types' byte tally.  Otherwise embeddings that configure a
-     * good limit for pre-GCX_PRIVATE versions of the engine will see memory
-     * over-pressure too often, possibly leading to failed last-ditch GCs.
-     *
-     * The new XML GC-thing types do add to gcBytes, and they're larger than
-     * the original GC-thing type size (8 bytes on most architectures).  So a
-     * user who enables E4X may want to increase the maxbytes value passed to
-     * JS_NewRuntime.  TODO: Note this in the API docs.
-     */
-    uint32              gcPrivateBytes;
-
-    /*
      * Table for tracking iterators to ensure that we close iterator's state
      * before finalizing the iterable object.
      */

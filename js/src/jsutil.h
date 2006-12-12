@@ -53,12 +53,16 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 #define JS_ASSERT(_expr) \
     ((_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))
 
+#define JS_ASSERT_IF(_cond, _expr) \
+    (!(_cond) || (_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))
+
 #define JS_NOT_REACHED(_reasonStr) \
     JS_Assert(_reasonStr,__FILE__,__LINE__)
 
 #else
 
 #define JS_ASSERT(expr) ((void) 0)
+#define JS_ASSERT_IF(cond,expr) ((void) 0)
 #define JS_NOT_REACHED(reasonStr)
 
 #endif /* defined(DEBUG) */

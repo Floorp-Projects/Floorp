@@ -100,7 +100,7 @@ typedef struct RENode RENode;
 struct JSRegExp {
     jsrefcount   nrefs;         /* reference count */
     uint16       flags;         /* flags, see jsapi.h's JSREG_* defines */
-    uint16       cloneIndex;    /* index in fp->vars or funobj->slots of
+    uint16       cloneIndex;    /* index in fp->vars or funobj slots of
                                    cloned regexp object */
     size_t       parenCount;    /* number of parenthesized submatches */
     size_t       classCount;    /* count [...] bitmaps */
