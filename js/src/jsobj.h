@@ -57,8 +57,8 @@ JS_BEGIN_EXTERN_C
 struct JSObjectMap {
     jsrefcount  nrefs;          /* count of all referencing objects */
     JSObjectOps *ops;           /* high level object operation vtable */
-    uint32      nslots;         /* length of obj->slots vector */
-    uint32      freeslot;       /* index of next free obj->slots element */
+    uint32      nslots;         /* number of slots in object */
+    uint32      freeslot;       /* index of next free slot in object */
 };
 
 /* Shorthand macros for frequently-made calls. */
@@ -111,25 +111,26 @@ struct JSObjectMap {
         }                                                                     \
     JS_END_MACRO
 
+#define JS_INITIAL_NSLOTS   6
+
 /*
- * In the original JS engine design, obj->slots pointed to a vector of length
- * JS_INITIAL_NSLOTS words if obj->map was shared with a prototype object,
- * else of length obj->map->nslots.  With the advent of JS_GetReservedSlot,
- * JS_SetReservedSlot, and JSCLASS_HAS_RESERVED_SLOTS (see jsapi.h), the size
- * of the minimum length slots vector in the case where map is shared cannot
- * be constant.  This length starts at JS_INITIAL_NSLOTS, but may advance to
- * include all the reserved slots.
+ * When JSObject.dslots is not null, JSObject.dslots[-1] records the number of
+ * available slots as we can not use obj->map->nslots for that. obj->map may
+ * be a prototype object's map, shared by obj, where the prototype has many
+ * slots allocated but the unmutated proto-child has no dynamic slots of its
+ * own. With the advent of JS_GetReservedSlot, JS_SetReservedSlot and
+ * JSCLASS_HAS_RESERVED_SLOTS (see jsapi.h), the size of the minimum length
+ * slots cannot be constant.
  *
- * Therefore slots must be self-describing.  Rather than tag its low order bit
- * (a bit is all we need) to distinguish initial length from reserved length,
- * we do "the BSTR thing": over-allocate slots by one jsval, and store the
- * *net* length (counting usable slots, which have non-negative obj->slots[]
- * indices) in obj->slots[-1].  All code that sets obj->slots must be aware of
- * this hack -- you have been warned, and jsobj.c has been updated!
+ * Thus when the number of slots exceeds JS_INITIAL_NSLOTS, the extra slots
+ * goes to JSObject.dslots with the total number of slots recorded in
+ * JSObject.dslots[-1] to avoid expensive recalculations of the number of
+ * reserved slots.
  */
 struct JSObject {
     JSObjectMap *map;
-    jsval       *slots;
+    jsval       fslots[JS_INITIAL_NSLOTS];
+    jsval       *dslots;        /* dynamically allocated slots */
 };
 
 #define JSSLOT_PROTO        0
@@ -143,31 +144,39 @@ struct JSObject {
 #define JSSLOT_FREE(clasp)  (JSSLOT_START(clasp)                              \
                              + JSCLASS_RESERVED_SLOTS(clasp))
 
-#define JS_INITIAL_NSLOTS   5
-
 /*
  * STOBJ prefix means Single Threaded Object. Use the following fast macros to
  * directly manipulate slots in obj when only one thread can access obj and
  * when obj->map->freeslot, obj->map->nslots can be inconsistent with slots.
  */
-#define STOBJ_NSLOTS(obj)               ((uint32) (obj)->slots[-1])
-#define STOBJ_HAS_SLOTS(obj)            ((obj)->slots != NULL)
 
-#define STOBJ_GET_SLOT(obj,slot)        ((obj)->slots[slot])
-#define STOBJ_SET_SLOT(obj,slot,value)  ((obj)->slots[slot] = (value))
+#define STOBJ_NSLOTS(obj)                                                     \
+    ((obj)->dslots ? (uint32)(obj)->dslots[-1] : JS_INITIAL_NSLOTS)
+
+#define STOBJ_GET_SLOT(obj,slot)                                              \
+    ((slot) < JS_INITIAL_NSLOTS                                               \
+     ? (obj)->fslots[(slot)]                                                  \
+     : (JS_ASSERT((slot) < (uint32)(obj)->dslots[-1]),                        \
+        (obj)->dslots[(slot) - JS_INITIAL_NSLOTS]))
+
+#define STOBJ_SET_SLOT(obj,slot,value)                                        \
+    ((slot) < JS_INITIAL_NSLOTS                                               \
+     ? (obj)->fslots[(slot)] = (value)                                        \
+     : (JS_ASSERT((slot) < (uint32)(obj)->dslots[-1]),                        \
+        (obj)->dslots[(slot) - JS_INITIAL_NSLOTS] = (value)))
 
 #define STOBJ_GET_PROTO(obj) \
-    JSVAL_TO_OBJECT(STOBJ_GET_SLOT(obj, JSSLOT_PROTO))
+    JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
 #define STOBJ_SET_PROTO(obj,proto) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto))
+    ((obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
 
 #define STOBJ_GET_PARENT(obj) \
-    JSVAL_TO_OBJECT(STOBJ_GET_SLOT(obj, JSSLOT_PARENT))
+    JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
 #define STOBJ_SET_PARENT(obj,parent) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
+    ((obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
 
 #define STOBJ_GET_CLASS(obj) \
-    ((JSClass *)JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_CLASS)))
+    ((JSClass *)JSVAL_TO_PRIVATE((obj)->fslots[JSSLOT_CLASS]))
 
 #ifdef DEBUG
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
@@ -251,9 +260,6 @@ struct JSObject {
 #define GC_AWARE_GET_PARENT(cx, obj)                                          \
     JSVAL_TO_OBJECT(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PARENT))
 
-#define GC_AWARE_GET_CLASS(cx, obj)                                           \
-    ((JSClass *)JSVAL_TO_PRIVATE(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_CLASS)))
-
 /* Thread-safe proto, parent, and class access macros. */
 #define OBJ_GET_PROTO(cx,obj) \
     JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj, JSSLOT_PROTO))
@@ -265,8 +271,12 @@ struct JSObject {
 #define OBJ_SET_PARENT(cx,obj,parent) \
     OBJ_SET_SLOT(cx, obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
 
-#define OBJ_GET_CLASS(cx,obj) \
-    ((JSClass *)JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_CLASS)))
+/*
+ * Class is invariant and comes from the fixed slot. Thus no locking is
+ * necessary to read it.
+ */
+#define GC_AWARE_GET_CLASS(cx, obj)     STOBJ_GET_CLASS(obj)
+#define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
 
 /* Test whether a map or object is native. */
 #define MAP_IS_NATIVE(map)                                                    \

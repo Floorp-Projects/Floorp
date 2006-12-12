@@ -233,11 +233,22 @@ struct JSGCArena {
 #endif
 
 JS_STATIC_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
-JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSObject));
-JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
-JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
 JS_STATIC_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
 JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
+
+JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
+JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
+
+/* We want to use all the available GC thing space for object's slots. */
+JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
+
+/*
+ * Ensure that GC-allocated JSFunction and JSObject would go to different
+ * lists so we can easily finalize JSObject before JSFunction. See comments
+ * in js_GC.
+ */
+JS_STATIC_ASSERT(GC_FREELIST_INDEX(sizeof(JSFunction)) !=
+                 GC_FREELIST_INDEX(sizeof(JSObject)));
 
 /*
  * JSPtrTable capacity growth descriptor. The table grows by powers of two
@@ -387,7 +398,6 @@ NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList)
     JSGCArena *a;
     jsuword offset;
     JSGCPageInfo *pi;
-    uint32 *bytesptr;
 
     /* Check if we are allowed and can allocate a new arena. */
     if (rt->gcBytes >= rt->gcMaxBytes)
@@ -416,12 +426,7 @@ NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList)
     a->unscannedPages = 0;
     arenaList->last = a;
     arenaList->lastLimit = 0;
-
-    bytesptr = (arenaList == &rt->gcArenaList[0])
-               ? &rt->gcBytes
-               : &rt->gcPrivateBytes;
-    *bytesptr += GC_ARENA_SIZE;
-
+    rt->gcBytes += GC_ARENA_SIZE;
     return JS_TRUE;
 }
 
@@ -429,15 +434,11 @@ static void
 DestroyGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSGCArena **ap)
 {
     JSGCArena *a;
-    uint32 *bytesptr;
 
     a = *ap;
     JS_ASSERT(a);
-    bytesptr = (arenaList == &rt->gcArenaList[0])
-               ? &rt->gcBytes
-               : &rt->gcPrivateBytes;
-    JS_ASSERT(*bytesptr >= GC_ARENA_SIZE);
-    *bytesptr -= GC_ARENA_SIZE;
+    JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
+    rt->gcBytes -= GC_ARENA_SIZE;
     METER(rt->gcStats.afree++);
     METER(--arenaList->stats.narenas);
     if (a == arenaList->last)
@@ -628,6 +629,8 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 {
     uintN i;
     size_t totalThings, totalMaxThings, totalBytes;
+    size_t sumArenas, sumTotalArenas;
+    size_t sumFreeSize, sumTotalFreeSize;
 
     fprintf(fp, "\nGC allocation statistics:\n");
 
@@ -636,6 +639,10 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     totalThings = 0;
     totalMaxThings = 0;
     totalBytes = 0;
+    sumArenas = 0;
+    sumTotalArenas = 0;
+    sumFreeSize = 0;
+    sumTotalFreeSize = 0;
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         JSGCArenaList *list = &rt->gcArenaList[i];
         JSGCArenaStats *stats = &list->stats;
@@ -668,10 +675,13 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
         totalThings += stats->nthings;
         totalMaxThings += stats->maxthings;
         totalBytes += GC_FREELIST_NBYTES(i) * stats->nthings;
+        sumArenas += stats->narenas;
+        sumTotalArenas += stats->totalarenas;
+        sumFreeSize += list->thingSize * stats->freelen;
+        sumTotalFreeSize += list->thingSize * stats->totalfreelen;
     }
     fprintf(fp, "TOTAL STATS:\n");
-    fprintf(fp, "     public bytes allocated: %lu\n", UL(rt->gcBytes));
-    fprintf(fp, "    private bytes allocated: %lu\n", UL(rt->gcPrivateBytes));
+    fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
     fprintf(fp, "             alloc attempts: %lu\n", ULSTAT(alloc));
 #ifdef JS_THREADSAFE
     fprintf(fp, "        alloc without locks: %1u\n", ULSTAT(localalloc));
@@ -679,6 +689,15 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "            total GC things: %lu\n", UL(totalThings));
     fprintf(fp, "        max total GC things: %lu\n", UL(totalMaxThings));
     fprintf(fp, "             GC things size: %lu\n", UL(totalBytes));
+    fprintf(fp, "            total GC arenas: %lu\n", UL(sumArenas));
+    fprintf(fp, "    total free list density: %.1f%%\n",
+            sumArenas == 0
+            ? 0.0
+            : 100.0 * sumFreeSize / (GC_THINGS_SIZE * (jsdouble)sumArenas));
+    fprintf(fp, "  average free list density: %.1f%%\n",
+            sumTotalFreeSize == 0
+            ? 0.0
+            : 100.0 * sumTotalFreeSize / (GC_THINGS_SIZE * sumTotalArenas));
     fprintf(fp, "allocation retries after GC: %lu\n", ULSTAT(retry));
     fprintf(fp, "        allocation failures: %lu\n", ULSTAT(fail));
     fprintf(fp, "         things born locked: %lu\n", ULSTAT(lockborn));
@@ -1476,10 +1495,6 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             flagp = a->base + offset / sizeof(JSGCThing);
             if (flagp >= firstPage)
                 flagp += GC_THINGS_SIZE;
-            METER(++arenaList->stats.nthings);
-            METER(arenaList->stats.maxthings =
-                  JS_MAX(arenaList->stats.nthings,
-                         arenaList->stats.maxthings));
 
 #ifdef JS_THREADSAFE
             /*
@@ -1556,7 +1571,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         cx->newborn[flags & GCF_TYPEMASK] = thing;
     }
 
-    /* We can't fail now, so update flags and rt->gc{,Private}Bytes. */
+    /* We can't fail now, so update flags. */
     *flagp = (uint8)flags;
 
     /*
@@ -1571,8 +1586,19 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     if (++gchpos == NGCHIST)
         gchpos = 0;
 #endif
-    METER(if (flags & GCF_LOCK) rt->gcStats.lockborn++);
-    METER(++rt->gcArenaList[flindex].stats.totalnew);
+#ifdef JS_GCMETER
+    {
+        JSGCArenaStats *stats = &rt->gcArenaList[flindex].stats;
+
+        /* This is not thread-safe for thread-local allocations. */
+        if (flags & GCF_LOCK)
+            rt->gcStats.lockborn++;
+        stats->totalnew++;
+        stats->nthings++;
+        if (stats->nthings > stats->maxthings)
+            stats->maxthings = stats->nthings;
+    }
+#endif
 #ifdef JS_THREADSAFE
     if (gcLocked)
         JS_UNLOCK_GC(rt);
@@ -2057,14 +2083,10 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         if (RECURSION_TOO_DEEP())
             goto add_to_unscanned_bag;
 
-        /* If obj has no slots, it must be a newborn. */
+        /* If obj has no map, it must be a newborn. */
         obj = (JSObject *) thing;
-        if (!STOBJ_HAS_SLOTS(obj))
+        if (!obj->map)
             break;
-
-        /* Mark slots if they are small enough to be GC-allocated. */
-        if ((STOBJ_NSLOTS(obj) + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
-            GC_MARK(cx, obj->slots - 1, "slots");
 
         /* Set up local variables to loop over unmarked things. */
         end = (obj->map->ops->mark)
@@ -2979,12 +3001,20 @@ restart:
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * Finalize smaller objects before larger, to guarantee finalization of
-     * GC-allocated obj->slots after obj.  See FreeSlots in jsobj.c.
+     * Here we need to ensure that JSObject instances are finalized before GC-
+     * allocated JSFunction instances so fun_finalize from jsfun.c can get the
+     * proper result from the call to js_IsAboutToBeFinalized. For that we
+     * simply finalize the list containing JSObject first since the static
+     * assert at the beginning of the file guarantees that JSFunction instances
+     * are allocated from a different list.
      */
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
-        arenaList = &rt->gcArenaList[i];
-        nbytes = GC_FREELIST_NBYTES(i);
+        arenaList = &rt->gcArenaList[i == 0
+                                     ? GC_FREELIST_INDEX(sizeof(JSObject))
+                                     : i == GC_FREELIST_INDEX(sizeof(JSObject))
+                                     ? 0
+                                     : i];
+        nbytes = arenaList->thingSize;
         limit = arenaList->lastLimit;
         for (a = arenaList->last; a; a = a->prev) {
             JS_ASSERT(!a->prevUnscanned);
@@ -3104,8 +3134,7 @@ restart:
 #ifdef DEBUG_srcnotesize
   { extern void DumpSrcNoteSizeHist();
     DumpSrcNoteSizeHist();
-    printf("GC HEAP SIZE %lu (%lu)\n",
-           (unsigned long)rt->gcBytes, (unsigned long)rt->gcPrivateBytes);
+    printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
 

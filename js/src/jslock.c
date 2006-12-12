@@ -599,7 +599,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      */
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
-    JS_ASSERT(STOBJ_HAS_SLOTS(obj) && slot < obj->map->freeslot);
+    JS_ASSERT(slot < obj->map->freeslot);
 
     /*
      * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
@@ -692,7 +692,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      */
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
-    JS_ASSERT(STOBJ_HAS_SLOTS(obj) && slot < obj->map->freeslot);
+    JS_ASSERT(slot < obj->map->freeslot);
 
     /*
      * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
