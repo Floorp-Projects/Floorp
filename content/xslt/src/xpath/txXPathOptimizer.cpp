@@ -298,18 +298,21 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
             
             // Create a txUnionNodeTest if needed
             if (!unionTest) {
-                unionTest = new txUnionNodeTest;
+                nsAutoPtr<txNodeTest> owner(unionTest = new txUnionNodeTest);
                 NS_ENSURE_TRUE(unionTest, NS_ERROR_OUT_OF_MEMORY);
                 
                 rv = unionTest->addNodeTest(currentStep->getNodeTest());
-                currentStep->setNodeTest(unionTest);
                 NS_ENSURE_SUCCESS(rv, rv);
+
+                currentStep->setNodeTest(unionTest);
+                owner.forget();
             }
 
             // Merge the nodetest into the union
             rv = unionTest->addNodeTest(step->getNodeTest());
-            step->setNodeTest(nsnull);
             NS_ENSURE_SUCCESS(rv, rv);
+
+            step->setNodeTest(nsnull);
 
             // Remove the step from the UnionExpr
             uni->deleteExprAt(i);

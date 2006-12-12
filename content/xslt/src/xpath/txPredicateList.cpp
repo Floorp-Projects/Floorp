@@ -45,36 +45,6 @@
  * for use with Step and Filter Expressions
  */
 
-PredicateList::PredicateList()
-{
-} // PredicateList
-
-/*
- * Destructor, will delete all Expressions in the list
- */
-PredicateList::~PredicateList()
-{
-    txListIterator iter(&predicates);
-    while (iter.hasNext()) {
-        delete (Expr*)iter.next();
-    }
-} // ~PredicateList
-
-/*
- * Adds the given Expr to the list
- * @param expr the Expr to add to the list
- */
-nsresult
-PredicateList::add(Expr* aExpr)
-{
-    NS_ASSERTION(aExpr, "missing expression");
-    nsresult rv = predicates.add(aExpr);
-    if (NS_FAILED(rv)) {
-        delete aExpr;
-    }
-    return rv;
-} // add
-
 nsresult
 PredicateList::evaluatePredicates(txNodeSet* nodes,
                                   txIMatchContext* aContext)
@@ -82,9 +52,8 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
     NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
     nsresult rv = NS_OK;
 
-    txListIterator iter(&predicates);
-    while (iter.hasNext() && !nodes->isEmpty()) {
-        Expr* expr = (Expr*)iter.next();
+    PRUint32 i, len = mPredicates.Length();
+    for (i = 0; i < len && !nodes->isEmpty(); ++i) {
         txNodeSetContext predContext(nodes, aContext);
         /*
          * add nodes to newNodes that match the expression
@@ -95,7 +64,8 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
         while (predContext.hasNext()) {
             predContext.next();
             nsRefPtr<txAExprResult> exprResult;
-            rv = expr->evaluate(&predContext, getter_AddRefs(exprResult));
+            rv = mPredicates[i]->evaluate(&predContext,
+                                          getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
             // handle default, [position() == numberValue()]
@@ -116,34 +86,6 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
     return NS_OK;
 }
 
-void
-PredicateList::dropFirst()
-{
-    predicates.remove(predicates.get(0));
-}
-
-/*
- * returns true if this predicate list is empty
- */
-MBool PredicateList::isEmpty()
-{
-    return (MBool)(predicates.getLength() == 0);
-} // isEmpty
-
-Expr*
-PredicateList::getSubExprAt(PRUint32 aPos)
-{
-    return NS_STATIC_CAST(Expr*, predicates.get(aPos));
-}
-
-void
-PredicateList::setSubExprAt(PRUint32 aPos, Expr* aExpr)
-{
-    NS_ASSERTION(aPos < (PRUint32)predicates.getLength(),
-                 "setting bad subexpression index");
-    predicates.replace(aPos, aExpr);
-}
-
 PRBool
 PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
@@ -154,9 +96,9 @@ PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
         return PR_FALSE;
     }
 
-    txListIterator iter(&predicates);
-    while (iter.hasNext()) {
-        if (NS_STATIC_CAST(Expr*, iter.next())->isSensitiveTo(context)) {
+    PRUint32 i, len = mPredicates.Length();
+    for (i = 0; i < len; ++i) {
+        if (mPredicates[i]->isSensitiveTo(context)) {
             return PR_TRUE;
         }
     }
@@ -167,11 +109,9 @@ PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
 #ifdef TX_TO_STRING
 void PredicateList::toString(nsAString& dest)
 {
-    txListIterator iter(&predicates);
-    while (iter.hasNext()) {
-        Expr* expr = (Expr*) iter.next();
+    for (PRUint32 i = 0; i < mPredicates.Length(); ++i) {
         dest.Append(PRUnichar('['));
-        expr->toString(dest);
+        mPredicates[i]->toString(dest);
         dest.Append(PRUnichar(']'));
     }
 }

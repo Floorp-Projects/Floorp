@@ -1457,6 +1457,8 @@ txFnStartApplyTemplates(PRInt32 aNamespaceID,
 
         select = new LocationStep(nt, LocationStep::CHILD_AXIS);
         NS_ENSURE_TRUE(select, NS_ERROR_OUT_OF_MEMORY);
+
+        nt.forget();
     }
 
     nsAutoPtr<txPushNewContext> pushcontext(new txPushNewContext(select));
@@ -2336,6 +2338,8 @@ txFnStartSort(PRInt32 aNamespaceID,
 
         select = new LocationStep(nt, LocationStep::SELF_AXIS);
         NS_ENSURE_TRUE(select, NS_ERROR_OUT_OF_MEMORY);
+
+        nt.forget();
     }
 
     nsAutoPtr<Expr> lang;

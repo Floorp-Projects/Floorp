@@ -45,35 +45,9 @@
  * This class represents a FunctionCall as defined by the XSL Working Draft
 **/
 
-/**
- * Destructor
-**/
-FunctionCall::~FunctionCall()
-{
-    txListIterator iter(&params);
-    while (iter.hasNext()) {
-        delete (Expr*)iter.next();
-    }
-} //-- ~FunctionCall
-
   //------------------/
  //- Public Methods -/
 //------------------/
-
-/**
- * Adds the given parameter to this FunctionCall's parameter list
- * @param expr the Expr to add to this FunctionCall's parameter list
- */
-nsresult
-FunctionCall::addParam(Expr* aExpr)
-{
-    NS_ASSERTION(aExpr, "missing expression");
-    nsresult rv = params.add(aExpr);
-    if (NS_FAILED(rv)) {
-        delete aExpr;
-    }
-    return rv;
-} //-- addParam
 
 /*
  * Evaluates the given Expression and converts its result to a number.
@@ -120,7 +94,7 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
                                    PRInt32 aParamCountMax,
                                    txIEvalContext* aContext)
 {
-    PRInt32 argc = params.getLength();
+    PRInt32 argc = mParams.Length();
     if (argc < aParamCountMin ||
         (aParamCountMax > -1 && argc > aParamCountMax)) {
         nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function"));
@@ -139,23 +113,23 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
 Expr*
 FunctionCall::getSubExprAt(PRUint32 aPos)
 {
-    return NS_STATIC_CAST(Expr*, params.get(aPos));
+    return mParams.SafeElementAt(aPos);
 }
 
 void
 FunctionCall::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 {
-    NS_ASSERTION(aPos < (PRUint32)params.getLength(),
+    NS_ASSERTION(aPos < mParams.Length(),
                  "setting bad subexpression index");
-    params.replace(aPos, aExpr);
+    mParams[aPos] = aExpr;
 }
 
 PRBool
 FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
 {
-    txListIterator iter(&params);
-    while (iter.hasNext()) {
-        if (NS_STATIC_CAST(Expr*, iter.next())->isSensitiveTo(aContext)) {
+    PRUint32 i, len = mParams.Length();
+    for (i = 0; i < len; ++i) {
+        if (mParams[i]->isSensitiveTo(aContext)) {
             return PR_TRUE;
         }
     }
@@ -177,15 +151,11 @@ FunctionCall::toString(nsAString& aDest)
 
     aDest.Append(functionName);
     aDest.Append(PRUnichar('('));
-    txListIterator iter(&params);
-    MBool addComma = MB_FALSE;
-    while (iter.hasNext()) {
-        if (addComma) {
+    for (PRUint32 i = 0; i < mParams.Length(); ++i) {
+        if (i != 0) {
             aDest.Append(PRUnichar(','));
         }
-        addComma = MB_TRUE;
-        Expr* expr = (Expr*)iter.next();
-        expr->toString(aDest);
+        mParams[i]->toString(aDest);
     }
     aDest.Append(PRUnichar(')'));
 }

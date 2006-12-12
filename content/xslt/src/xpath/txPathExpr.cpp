@@ -58,22 +58,12 @@ PathExpr::addExpr(Expr* aExpr, PathOperator aPathOp)
                  "First step has to be relative in PathExpr");
     PathExprItem* pxi = mItems.AppendElement();
     if (!pxi) {
-        delete aExpr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
     pxi->expr = aExpr;
     pxi->pathOp = aPathOp;
 
     return NS_OK;
-}
-
-void
-PathExpr::deleteExprAt(PRUint32 aPos)
-{
-    NS_ASSERTION(aPos < mItems.Length(),
-                 "killing bad expression index");
-
-    mItems.RemoveElementAt(aPos);
 }
 
     //-----------------------------/

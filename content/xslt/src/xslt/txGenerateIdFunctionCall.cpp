@@ -69,7 +69,7 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     nsresult rv = NS_OK;
-    if (params.getLength() != 1) {
+    if (mParams.IsEmpty()) {
         StringResult* strRes;
         rv = aContext->recycler()->getStringResult(&strRes);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -82,9 +82,8 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_OK;
     }
 
-    txListIterator iter(&params);
     nsRefPtr<txNodeSet> nodes;
-    rv = evaluateToNodeSet(NS_STATIC_CAST(Expr*, iter.next()), aContext,
+    rv = evaluateToNodeSet(mParams[0], aContext,
                            getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -114,7 +113,7 @@ GenerateIdFunctionCall::getReturnType()
 PRBool
 GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
-    if (params.isEmpty()) {
+    if (mParams.IsEmpty()) {
         return !!(aContext & NODE_CONTEXT);
     }
 

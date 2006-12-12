@@ -81,22 +81,18 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     // Get number and format
-    txListIterator iter(&params);
-
     double value;
     txExpandedName formatName;
 
-    value = evaluateToNumber((Expr*)iter.next(), aContext);
+    value = evaluateToNumber(mParams[0], aContext);
 
     nsAutoString formatStr;
-    Expr* param = NS_STATIC_CAST(Expr*, iter.next());
-    nsresult rv = param->evaluateToString(aContext, formatStr);
+    nsresult rv = mParams[1]->evaluateToString(aContext, formatStr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (iter.hasNext()) {
+    if (mParams.Length() == 3) {
         nsAutoString formatQName;
-        param = NS_STATIC_CAST(Expr*, iter.next());
-        rv = param->evaluateToString(aContext, formatQName);
+        rv = mParams[2]->evaluateToString(aContext, formatQName);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = formatName.init(formatQName, mMappings, MB_FALSE);

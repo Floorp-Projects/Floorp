@@ -41,19 +41,6 @@
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
 
-/*
- * Creates a new txNodeTypeTest of the given type
- */
-txNodeTypeTest::txNodeTypeTest(NodeType aNodeType)
-    : mNodeType(aNodeType)
-{
-}
-
-void txNodeTypeTest::setNodeName(const nsAString& aName)
-{
-    mNodeName = do_GetAtom(aName);
-}
-
 PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
                                txIMatchContext* aContext)
 {

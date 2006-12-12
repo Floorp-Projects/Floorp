@@ -36,55 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txExpr.h"
-#include "txExprResult.h"
-#include "txSingleNodeContext.h"
+#ifndef txOwningArray_h__
+#define txOwningArray_h__
 
-PRBool
-txUnionNodeTest::matches(const txXPathNode& aNode,
-                         txIMatchContext* aContext)
+#include "nsTPtrArray.h"
+
+// Class acting like a nsTPtrArray except that it deletes its objects
+// on destruction. It does not however delete its objects on operations
+// like RemoveElementsAt or on |array[i] = bar|.
+
+template<class E>
+class txOwningArray : public nsTPtrArray<E>
 {
-    PRUint32 i, len = mNodeTests.Length();
-    for (i = 0; i < len; ++i) {
-        if (mNodeTests[i]->matches(aNode, aContext)) {
-            return PR_TRUE;
+public:
+    typedef nsTPtrArray<E> base_type;
+    typedef typename base_type::elem_type elem_type;
+
+    ~txOwningArray()
+    {
+        elem_type* iter = base_type::Elements();
+        elem_type* end = iter + base_type::Length();
+        for (; iter < end; ++iter) {
+            delete *iter;
         }
     }
+  
+};
 
-    return PR_FALSE;
-}
-
-double
-txUnionNodeTest::getDefaultPriority()
-{
-    NS_ERROR("Don't call getDefaultPriority on txUnionPattern");
-    return Double::NaN;
-}
-
-PRBool
-txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
-{
-    PRUint32 i, len = mNodeTests.Length();
-    for (i = 0; i < len; ++i) {
-        if (mNodeTests[i]->isSensitiveTo(aContext)) {
-            return PR_TRUE;
-        }
-    }
-
-    return PR_FALSE;
-}
-
-#ifdef TX_TO_STRING
-void
-txUnionNodeTest::toString(nsAString& aDest)
-{
-    aDest.AppendLiteral("(");
-    for (PRUint32 i = 0; i < mNodeTests.Length(); ++i) {
-        if (i != 0) {
-            aDest.AppendLiteral(" | ");
-        }
-        mNodeTests[i]->toString(aDest);
-    }
-    aDest.AppendLiteral(")");
-}
-#endif
+#endif // txOwningArray_h__

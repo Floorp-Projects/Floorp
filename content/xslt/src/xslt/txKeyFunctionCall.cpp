@@ -75,11 +75,8 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     txExecutionState* es =
         NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
 
-    txListIterator iter(&params);
-
     nsAutoString keyQName;
-    Expr* param = NS_STATIC_CAST(Expr*, iter.next());
-    nsresult rv = param->evaluateToString(aContext, keyQName);
+    nsresult rv = mParams[0]->evaluateToString(aContext, keyQName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName keyName;
@@ -87,7 +84,7 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<txAExprResult> exprResult;
-    rv = ((Expr*)iter.next())->evaluate(aContext, getter_AddRefs(exprResult));
+    rv = mParams[1]->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
     txXPathTreeWalker walker(aContext->getContextNode());
