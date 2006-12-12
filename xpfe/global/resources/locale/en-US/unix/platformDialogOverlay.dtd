@@ -4,9 +4,3 @@
 <!ENTITY okButton.label         "OK"> 
 <!ENTITY cancelButton.label     "Cancel"> 
 <!ENTITY helpButton.label       "Help">
-
-<!-- Key labels, for mousewheel prefs -->
-<!ENTITY ctrlKey.label          "Ctrl">
-<!ENTITY altKey.label           "Alt">
-<!ENTITY shiftKey.label         "Shift">
-
