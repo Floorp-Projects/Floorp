@@ -384,6 +384,8 @@ nsresult nsMsgQuickSearchDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThrea
               break;
             level++;
           }
+          else // if we can't find the parent, don't loop forever.
+            break;
         }
         if (level < minLevel)
         {
