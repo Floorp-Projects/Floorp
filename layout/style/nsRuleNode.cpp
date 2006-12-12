@@ -4329,6 +4329,30 @@ nsRuleNode::GetParentData(const nsStyleStructID aSID)
   return ruleNode->mStyleData.GetStyleData(aSID);
 }
 
+#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+inline const nsStyle##name_ *                                               \
+nsRuleNode::GetParent##name_()                                              \
+{                                                                           \
+  NS_PRECONDITION(mDependentBits &                                          \
+                  nsCachedStyleData::GetBitForSID(eStyleStruct_##name_),    \
+                  "should be called when node depends on parent data");     \
+  NS_ASSERTION(mStyleData.GetStyle##name_() == nsnull,                      \
+               "both struct and dependent bits present");                   \
+  /* Walk up the rule tree from this rule node (towards less specific */    \
+  /* rules). */                                                             \
+  PRUint32 bit = nsCachedStyleData::GetBitForSID(eStyleStruct_##name_);     \
+  nsRuleNode *ruleNode = mParent;                                           \
+  while (ruleNode->mDependentBits & bit) {                                  \
+    NS_ASSERTION(ruleNode->mStyleData.GetStyle##name_() == nsnull,          \
+                 "both struct and dependent bits present");                 \
+    ruleNode = ruleNode->mParent;                                           \
+  }                                                                         \
+                                                                            \
+  return ruleNode->mStyleData.GetStyle##name_();                            \
+}
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
 const nsStyleStruct* 
 nsRuleNode::GetStyleData(nsStyleStructID aSID, 
                          nsStyleContext* aContext,
@@ -4372,6 +4396,42 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   return mPresContext->PresShell()->StyleSet()->
     DefaultStyleData()->GetStyleData(aSID);
 }
+
+// See comments above in GetStyleData for an explanation of what the
+// code below does.
+#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                        \
+const nsStyle##name_*                                                         \
+nsRuleNode::GetStyle##name_(nsStyleContext* aContext, PRBool aComputeData)    \
+{                                                                             \
+  const nsStyle##name_ *data;                                                 \
+  if (mDependentBits &                                                        \
+      nsCachedStyleData::GetBitForSID(eStyleStruct_##name_)) {                \
+    data = GetParent##name_();                                                \
+    NS_ASSERTION(data, "dependent bits set but no cached struct present");    \
+    return data;                                                              \
+  }                                                                           \
+                                                                              \
+  data = mStyleData.GetStyle##name_();                                        \
+  if (NS_LIKELY(data != nsnull))                                              \
+    return data;                                                              \
+                                                                              \
+  if (NS_UNLIKELY(!aComputeData))                                             \
+    return nsnull;                                                            \
+                                                                              \
+  data =                                                                      \
+    NS_STATIC_CAST(const nsStyle##name_ *, Get##name_##Data(aContext));       \
+                                                                              \
+  if (NS_LIKELY(data != nsnull))                                              \
+    return data;                                                              \
+                                                                              \
+  NS_NOTREACHED("could not create style struct");                             \
+  return                                                                      \
+    NS_STATIC_CAST(const nsStyle##name_ *,                                    \
+                   mPresContext->PresShell()->StyleSet()->                    \
+                     DefaultStyleData()->GetStyleData(eStyleStruct_##name_)); \
+}
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
 void
 nsRuleNode::Mark()

@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// a72e0b78-db39-401a-bafd-85daa7c0504a
+// {7e8dfd8c-3892-411e-81d6-8cb645169aa1}
 #define NS_IFRAME_IID \
-{ 0xa72e0b78, 0xdb39, 0x401a, \
-  { 0xba, 0xfd, 0x85, 0xda, 0xa7, 0xc0, 0x50, 0x4a } }
+{ 0x7e8dfd8c, 0x3892, 0x411e, \
+ { 0x81, 0xd6, 0x8c, 0xb6, 0x45, 0x16, 0x9a, 0xa1 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -606,11 +606,19 @@ public:
    *   const nsStyleColor* GetStyleColor();
    */
 
+#ifdef _IMPL_NS_LAYOUT
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-    const nsStyle##name_ * GetStyle##name_() const {                          \
-      return NS_STATIC_CAST(const nsStyle##name_*,                            \
-                            GetStyleData(eStyleStruct_##name_));              \
+    const nsStyle##name_ * GetStyle##name_ () const {                         \
+      NS_ASSERTION(mStyleContext, "No style context found!");                 \
+      return mStyleContext->GetStyle##name_ ();                               \
     }
+#else
+  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+    const nsStyle##name_ * GetStyle##name_ () const {                         \
+      return NS_STATIC_CAST(const nsStyle##name_*,                            \
+                            GetStyleDataExternal(eStyleStruct_##name_));      \
+    }
+#endif
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
