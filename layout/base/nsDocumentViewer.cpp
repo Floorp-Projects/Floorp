@@ -1871,10 +1871,12 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
   if (mPreviousViewer)
     mPreviousViewer->SetBounds(aBounds);
 
+#if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (GetIsPrintPreview()) {
     mPrintEngine->GetPrintPreviewWindow()->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
                     PR_FALSE);
   }
+#endif
   return NS_OK;
 }
 
