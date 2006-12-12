@@ -345,7 +345,7 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefBranch->GetIntPref("mailnews.tcptimeout", &gResponseTimeout);
     nsXPIDLCString customDBHeaders;
     prefBranch->GetCharPref("mailnews.customDBHeaders", getter_Copies(customDBHeaders));
-    gCustomDBHeaders.ParseString(customDBHeaders, ", ");
+    gCustomDBHeaders.ParseString(customDBHeaders, " ");
     return NS_OK;
 }
 

@@ -478,7 +478,7 @@ nsParseMailMessageState::nsParseMailMessageState()
 
   // setup handling of custom db headers, headers that are added to .msf files
   // as properties of the nsMsgHdr objects, controlled by the 
-  // pref mailnews.customDBHeaders.
+  // pref mailnews.customDBHeaders, a space-delimited list of headers.
   // E.g., if mailnews.customDBHeaders is "X-Spam-Score", and we're parsing
   // a mail message with the X-Spam-Score header, we'll set the 
   // "x-spam-score" property of nsMsgHdr to the value of the header.
@@ -489,7 +489,7 @@ nsParseMailMessageState::nsParseMailMessageState()
   {
      pPrefBranch->GetCharPref("mailnews.customDBHeaders",  getter_Copies(customDBHeaders));
      ToLowerCase(customDBHeaders);
-     m_customDBHeaders.ParseString(customDBHeaders, ", ");
+     m_customDBHeaders.ParseString(customDBHeaders, " ");
      if (m_customDBHeaders.Count())
      {
        m_customDBHeaderValues = new struct message_header [m_customDBHeaders.Count()];

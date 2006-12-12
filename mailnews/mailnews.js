@@ -380,6 +380,7 @@ pref("ldap_2.prefs_migrated",      false);
 
 pref("mailnews.confirm.moveFoldersToTrash", true);
 
+// space-delimited list of extra headers to add to .msf file
 pref("mailnews.customDBHeaders", "");
 
 pref("mailnews.reuse_message_window", true);
