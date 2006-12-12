@@ -2646,22 +2646,27 @@ nsresult
 nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
                                 nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
   const nsStyleDisplay* display = nsnull;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  if (display && display->mOverflowX == display->mOverflowY) {
-    if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
-      const nsAFlatCString& overflow =
-        nsCSSProps::ValueToKeyword(display->mOverflowX,
-                                   nsCSSProps::kOverflowKTable);
-      val->SetIdent(overflow);
-    } else {
-      val->SetIdent(nsLayoutAtoms::_auto);
-    }
-  } // XXX else what?
+  if (!display || display->mOverflowX != display->mOverflowY) {
+    // No value to return.  We can't express this combination of
+    // values as a shorthand.
+    *aValue = nsnull;
+    return NS_OK;
+  }
+  
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  if (display->mOverflowX != NS_STYLE_OVERFLOW_AUTO) {
+    const nsAFlatCString& overflow =
+      nsCSSProps::ValueToKeyword(display->mOverflowX,
+                                 nsCSSProps::kOverflowKTable);
+    val->SetIdent(overflow);
+  } else {
+    val->SetIdent(nsLayoutAtoms::_auto);
+  }
 
   return CallQueryInterface(val, aValue);
 }
