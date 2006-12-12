@@ -2516,6 +2516,28 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     nscoord dx = 0;
 #endif
     switch (mTextAlign) {
+      case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+        // If this is not the last line then go ahead and justify the
+        // frames in the line.
+        if (aAllowJustify) {
+          PRInt32 numSpaces;
+          PRInt32 numLetters;
+            
+          ComputeJustificationWeights(psd, &numSpaces, &numLetters);
+
+          if (numSpaces > 0) {
+            FrameJustificationState state =
+              { numSpaces, numLetters, remainingWidth, 0, 0, 0, 0, 0 };
+
+            // Apply the justification, and make sure to update our linebox
+            // width to account for it.
+            aLineBounds.width += ApplyFrameJustification(psd, &state);
+            break;
+          }
+        }
+        // Fall through to the default case if we were told not to
+        // justify anything or could not justify to fill the space.
+
       case NS_STYLE_TEXT_ALIGN_DEFAULT:
         if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {
           // default alignment for left-to-right is left so do nothing
@@ -2531,30 +2553,6 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
       case NS_STYLE_TEXT_ALIGN_LEFT:
       case NS_STYLE_TEXT_ALIGN_MOZ_LEFT:
-        break;
-
-      case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-        // If this is not the last line then go ahead and justify the
-        // frames in the line. If it is the last line then if the
-        // direction is right-to-left then we right-align the frames.
-        if (aAllowJustify) {
-          PRInt32 numSpaces;
-          PRInt32 numLetters;
-            
-          ComputeJustificationWeights(psd, &numSpaces, &numLetters);
-
-          if (numSpaces > 0) {
-            FrameJustificationState state = { numSpaces, numLetters, remainingWidth, 0, 0, 0, 0, 0 };
-
-            // Apply the justification, and make sure to update our linebox
-            // width to account for it.
-            aLineBounds.width += ApplyFrameJustification(psd, &state);
-          }
-        }
-        else if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
-          // right align the frames
-          dx = remainingWidth;
-        }
         break;
 
       case NS_STYLE_TEXT_ALIGN_CENTER:
