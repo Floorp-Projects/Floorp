@@ -29,6 +29,9 @@
     <command id="cmd:toggleWhitespaceNodes" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleWhitespaceNodes()"/>
 
+    <command id="cmd:toggleProcessingInstructions" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleProcessingInstructions()"/>
+
     <command id="cmd:flashSelected" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleFlashSelected()"/>
       

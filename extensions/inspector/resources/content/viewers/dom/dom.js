@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
  *   Jason Barnabe <jason_barnabe@fastmail.fm>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -126,17 +127,24 @@ DOMViewer.prototype =
 
   //// methods
 
-  initialize: function(aPane)
+  /**
+   * Properly sets up the DOM Viewer
+   *
+   * @param aPane The panel this references.
+   */
+  initialize: function initialize(aPane)
   {
     //this.initColumns();
 
     this.mPanel = aPane;
-    aPane.notifyViewerReady(this);
 
     this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), false);
     this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"), false);
     this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
+    this.setProcessingInstructions(PrefUtils.getPref("inspector.dom.showProcessingInstructions"), false);
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
+
+    aPane.notifyViewerReady(this);
   },
 
   destroy: function()
@@ -287,6 +295,40 @@ DOMViewer.prototype =
     var val = !this.mDOMView.showSubDocuments;
     this.mDOMView.showSubDocuments = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val);
+  },
+
+  /**
+   * Toggles the visibility of Processing Instructions.
+   */
+  toggleProcessingInstructions: function toggleProcessingInstructions()
+  {
+    var value = !(this.mDOMView.whatToShow &
+                  NodeFilter.SHOW_PROCESSING_INSTRUCTION);
+    this.setProcessingInstructions(value, true);
+  },
+
+  /**
+   * Sets the visibility of Processing Instructions.
+   *
+   * @param aValue The visibility of the instructions.
+   * @param aRebuild Indicates if the tree should be rebuilt or not.
+   */
+  setProcessingInstructions: function setProcessingInstructions(aValue,
+                                                                aRebuild)
+  {
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleProcessingInstructions",
+                                             "checked", aValue);
+    if (aValue) {
+      this.mDOMView.whatToShow |= NodeFilter.SHOW_PROCESSING_INSTRUCTION;
+    } else {
+      this.mDOMView.whatToShow &= ~NodeFilter.SHOW_PROCESSING_INSTRUCTION;
+    }
+    
+    PrefUtils.setPref("inspector.dom.showProcessingInstructions", aValue);
+
+    if (aRebuild) {
+      this.rebuild();
+    }
   },
 
   /**
@@ -872,7 +914,12 @@ DOMViewer.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// Prefs
 
-  onPrefChanged: function(aName)
+  /**
+   * Called by PrefChangeObserver.
+   *
+   * @param aName The name of the preference that has been changed.
+   */
+  onPrefChanged: function onPrefChanged(aName)
   {
     if (aName == "inspector.dom.showAnon")
       this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), true);
@@ -883,6 +930,9 @@ DOMViewer.prototype =
     if (aName == "inspector.dom.showAccessibleNodes")
       this.setAccessibleNodes(PrefUtils.getPref("inspector.dom.showAccessibleNodes"), true);
 
+    if (aName == "inspector.dom.showProcessingInstructions")
+      this.setProcessingInstructions(PrefUtils.getPref("inspector.dom.showProcessingInstructions"), true);
+    
     if (aName == "inspector.blink.on")
       this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
 
