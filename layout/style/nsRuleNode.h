@@ -224,6 +224,19 @@ struct nsCachedStyleData
     return data;
   };
 
+  // Typesafe and faster versions of the above
+  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
+    NS_HIDDEN_(nsStyle##name_ *) NS_FASTCALL GetStyle##name_ () {        \
+      return mInheritedData ? mInheritedData->m##name_##Data : nsnull;   \
+    }
+  #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)           \
+    NS_HIDDEN_(nsStyle##name_ *) NS_FASTCALL GetStyle##name_ () {        \
+      return mResetData ? mResetData->m##name_##Data : nsnull;           \
+    }
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT_RESET
+  #undef STYLE_STRUCT_INHERITED
+
   NS_HIDDEN_(void) ClearInheritedData(PRUint32 aBits) {
     if (mResetData)
       mResetData->ClearInheritedData(aBits);
@@ -582,6 +595,11 @@ protected:
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsRuleDataStruct& aRuleDataStruct);
 
   NS_HIDDEN_(const nsStyleStruct*) GetParentData(const nsStyleStructID aSID);
+  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
+    NS_HIDDEN_(const nsStyle##name_*) GetParent##name_();
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT  
+
   NS_HIDDEN_(const nsStyleStruct*) GetDisplayData(nsStyleContext* aContext);
   NS_HIDDEN_(const nsStyleStruct*) GetVisibilityData(nsStyleContext* aContext);
   NS_HIDDEN_(const nsStyleStruct*) GetFontData(nsStyleContext* aContext);
@@ -633,6 +651,13 @@ public:
   NS_HIDDEN_(const nsStyleStruct*) GetStyleData(nsStyleStructID aSID, 
                                                 nsStyleContext* aContext,
                                                 PRBool aComputeData);
+
+  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+    NS_HIDDEN_(const nsStyle##name_*)                                         \
+      GetStyle##name_(nsStyleContext* aContext,                               \
+                      PRBool aComputeData);
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT  
 
   /*
    * Garbage collection.  Mark walks up the tree, marking any unmarked

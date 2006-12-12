@@ -224,6 +224,19 @@ const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
   return mRuleNode->GetStyleData(aSID, this, PR_TRUE); // Our rule node will take care of it for us.
 }
 
+#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
+  const nsStyle##name_ * nsStyleContext::GetStyle##name_ ()                 \
+  {                                                                         \
+    const nsStyle##name_ * cachedData = mCachedStyleData.GetStyle##name_(); \
+    if (cachedData)                                                         \
+      return cachedData; /* We have computed data stored on this node */    \
+                         /* in the context tree. */                         \
+    /* Else our rule node will take care of it for us. */                   \
+    return mRuleNode->GetStyle##name_(this, PR_TRUE);                       \
+  }
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
 inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
   const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
@@ -436,11 +449,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
                  "Struct placed in the wrong maxHint section");               \
     const nsStyle##struct_* this##struct_ =                                   \
         NS_STATIC_CAST(const nsStyle##struct_*,                               \
-                      PeekStyleData(NS_GET_STYLESTRUCTID(nsStyle##struct_))); \
+                       PeekStyleData(eStyleStruct_##struct_));                \
     if (this##struct_) {                                                      \
-      const nsStyle##struct_* other##struct_ =                                \
-          NS_STATIC_CAST(const nsStyle##struct_*,                             \
-               aOther->GetStyleData(NS_GET_STYLESTRUCTID(nsStyle##struct_))); \
+      const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
       if (compare &&                                                          \
           !NS_IsHintSubset(maxHint, hint) &&                                  \
           this##struct_ != other##struct_) {                                  \

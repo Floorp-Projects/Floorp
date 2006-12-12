@@ -151,10 +151,7 @@ public:
    */
 
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-    const nsStyle##name_ * GetStyle##name_() {                                \
-      return NS_STATIC_CAST(const nsStyle##name_*,                            \
-                            GetStyleData(eStyleStruct_##name_));              \
-    }
+    NS_HIDDEN_(const nsStyle##name_ *) NS_FASTCALL GetStyle##name_();
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
