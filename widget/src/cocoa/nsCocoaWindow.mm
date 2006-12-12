@@ -131,6 +131,12 @@ nsCocoaWindow::nsCocoaWindow()
 //
 nsCocoaWindow::~nsCocoaWindow()
 {
+  // notify the children that we're gone
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    nsCocoaWindow* childWindow = NS_STATIC_CAST(nsCocoaWindow*, kid);
+    childWindow->mParent = nsnull;
+  }
+
   if (mWindow && mWindowMadeHere) {
     // we want to unhook the delegate here because we don't want events
     // sent to it after this object has been destroyed
