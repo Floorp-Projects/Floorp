@@ -211,8 +211,8 @@ void
 nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
                         nscoord         aContainingBlockHeight,
-                        nsMargin*       aBorder,
-                        nsMargin*       aPadding)
+                        const nsMargin* aBorder,
+                        const nsMargin* aPadding)
 {
   NS_ASSERTION(availableWidth != NS_UNCONSTRAINEDSIZE,
                "shouldn't use unconstrained widths anymore");
@@ -1454,8 +1454,8 @@ void
 nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                    nscoord         aContainingBlockWidth,
                                    nscoord         aContainingBlockHeight,
-                                   nsMargin*       aBorder,
-                                   nsMargin*       aPadding)
+                                   const nsMargin* aBorder,
+                                   const nsMargin* aPadding)
 {
   // If this is the root frame, then set the computed width and
   // height equal to the available space
@@ -1664,7 +1664,8 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
 
 void
 nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
-                              nsMargin *aBorder, nsMargin *aPadding)
+                              const nsMargin *aBorder,
+                              const nsMargin *aPadding)
 {
   // Compute margins from the specified margin style information. These
   // become the default computed values, and may be adjusted below

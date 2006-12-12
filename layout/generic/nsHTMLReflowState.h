@@ -169,7 +169,8 @@ public:
   }
 
   void InitOffsets(nscoord aContainingBlockWidth,
-                   nsMargin *aBorder = nsnull, nsMargin *aPadding = nsnull);
+                   const nsMargin *aBorder = nsnull,
+                   const nsMargin *aPadding = nsnull);
 
 private:
   // Computes margin values from the specified margin style information, and
@@ -354,8 +355,8 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   void Init(nsPresContext* aPresContext,
             nscoord         aContainingBlockWidth = -1,
             nscoord         aContainingBlockHeight = -1,
-            nsMargin*       aBorder = nsnull,
-            nsMargin*       aPadding = nsnull);
+            const nsMargin* aBorder = nsnull,
+            const nsMargin* aPadding = nsnull);
   /**
    * Find the content width of the containing block of aReflowState
    */
@@ -416,8 +417,8 @@ protected:
   void InitConstraints(nsPresContext* aPresContext,
                        nscoord         aContainingBlockWidth,
                        nscoord         aContainingBlockHeight,
-                       nsMargin*       aBorder,
-                       nsMargin*       aPadding);
+                       const nsMargin* aBorder,
+                       const nsMargin* aPadding);
 
   void CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                 nsIFrame*          aPlaceholderFrame,

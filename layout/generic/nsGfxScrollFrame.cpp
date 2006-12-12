@@ -437,20 +437,25 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
     availWidth = PR_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
   // pixel align the content
-  nscoord twp = GetPresContext()->IntScaledPixelsToTwips(1);
+  nsPresContext* presContext = GetPresContext();
+  nscoord twp = presContext->IntScaledPixelsToTwips(1);
   availWidth -=  availWidth % twp;
 
   if (!aFirstPass)
     mInner.mScrolledFrame->AddStateBits(NS_FRAME_IS_DIRTY);
 
-  nsHTMLReflowState kidReflowState(GetPresContext(), aState.mReflowState,
+  // Pass PR_FALSE for aInit so we can pass in the correct padding
+  nsHTMLReflowState kidReflowState(presContext, aState.mReflowState,
                                    mInner.mScrolledFrame,
-                                   nsSize(availWidth, NS_UNCONSTRAINEDSIZE));
+                                   nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
+                                   -1, -1, PR_FALSE);
+  kidReflowState.Init(presContext, -1, -1, nsnull,
+                      &aState.mReflowState.mComputedPadding);
   kidReflowState.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowState.mFlags.mAssumingVScrollbar = aAssumeVScroll;
 
   nsReflowStatus status;
-  nsresult rv = ReflowChild(mInner.mScrolledFrame, GetPresContext(), *aMetrics,
+  nsresult rv = ReflowChild(mInner.mScrolledFrame, presContext, *aMetrics,
                             kidReflowState, 0, 0,
                             NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW, status);
   // Don't resize or position the view because we're going to resize
@@ -458,7 +463,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   // resize here would size it to the natural height of the frame,
   // which will usually be different from the scrollport height;
   // invalidating the difference will cause unnecessary repainting.
-  FinishReflowChild(mInner.mScrolledFrame, GetPresContext(),
+  FinishReflowChild(mInner.mScrolledFrame, presContext,
                     &kidReflowState, *aMetrics, 0, 0,
                     NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_SIZE_VIEW);
 
