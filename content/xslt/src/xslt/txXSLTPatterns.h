@@ -224,7 +224,11 @@ class txKeyPattern : public txPattern
 public:
     txKeyPattern(nsIAtom* aPrefix, nsIAtom* aLocalName,
                  PRInt32 aNSID, const nsAString& aValue)
-        : mName(aNSID, aLocalName), mPrefix(aPrefix), mValue(aValue)
+        : mName(aNSID, aLocalName),
+#ifdef TX_TO_STRING
+          mPrefix(aPrefix),
+#endif
+          mValue(aValue)
     {
     }
 
