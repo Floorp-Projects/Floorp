@@ -830,7 +830,7 @@ sub AddPartition {
     if ($partition eq "") {
         Punt("You must enter a partition name.");
     }
-    Punt("Partition may only contain letters, numbers, spaces, dashes, ampersands, and colons") unless $partition =~ /$partregexp/;
+    Punt("Partition names may only contain letters, numbers, spaces, dashes, ampersands, and colons") unless $partition =~ /$partregexp/;
     my $repid = $F::repid;
     my $query;
     my @row;
@@ -883,6 +883,12 @@ sub EditPartition() {
     }
 
     my @list;
+
+    push(@list, Tr(th("Name:"),
+                   td(textfield(-name=>'partition',
+                                -default=>$partname,
+                                -size=>30,
+                                -override=>1))));
 
     push(@list, Tr(th("Repository:") . td($repname)));
 
@@ -1013,7 +1019,10 @@ sub ChangePartition {
         }
     }
 
-                
+    if ($F::partition eq "") {
+        Punt("You must enter a partition name.");
+    }
+    Punt("Partition names may only contain letters, numbers, spaces, dashes, ampersands, and colons") unless $F::partition =~ /$partregexp/;
 
 
 
@@ -1029,13 +1038,14 @@ sub ChangePartition {
         @row = $query->fetchrow_array();
     }
     my $branchid = $row[0];
-    $::db->do("UPDATE partitions SET description = ?, " .
+    $::db->do("UPDATE partitions SET name = ?, " .
+                                    "description = ?, " .
                                     "branchid = ?, " .
                                     "state = ?, " .
                                     "newsgroups = ?, " .
                                     "doclinks = ? " .
               "WHERE id = ?",
-        undef, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::partitionid);
+        undef, $F::partition, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::partitionid);
 
     $::db->do("DELETE FROM files WHERE partitionid = ?", undef, $F::partitionid);
     foreach my $f2 (@files) {
