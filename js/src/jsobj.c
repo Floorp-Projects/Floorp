@@ -2265,7 +2265,7 @@ ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots)
 
     if (obj->dslots) {
         slots = obj->dslots - 1;
-        oslots = (uint32)slots[-1];
+        oslots = (uint32)slots[0];
         JS_ASSERT(oslots > JS_INITIAL_NSLOTS);
     } else {
         slots = NULL;
