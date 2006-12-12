@@ -2835,9 +2835,18 @@ IsJProfAction(struct sigaction *action)
             action->sa_flags == SA_RESTART | SA_SIGINFO);
 }
 
+void NS_JProfStartProfiling();
+void NS_JProfStopProfiling();
+
 static JSBool
-JProfStartProfiling(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *rval)
+JProfStartProfilingJS(JSContext *cx, JSObject *obj,
+                      uintN argc, jsval *argv, jsval *rval)
+{
+  NS_JProfStartProfiling();
+  return JS_TRUE;
+}
+
+void NS_JProfStartProfiling()
 {
     // Figure out whether we're dealing with SIGPROF, SIGALRM, or
     // SIGPOLL profiling (SIGALRM for JP_REALTIME, SIGPOLL for
@@ -2848,39 +2857,44 @@ JProfStartProfiling(JSContext *cx, JSObject *obj,
     if (IsJProfAction(&action)) {
         printf("Beginning real-time jprof profiling.\n");
         raise(SIGALRM);
-        return JS_TRUE;
+        return;
     }
 
     sigaction(SIGPROF, nsnull, &action);
     if (IsJProfAction(&action)) {
         printf("Beginning process-time jprof profiling.\n");
         raise(SIGPROF);
-        return JS_TRUE;
+        return;
     }
 
     sigaction(SIGPOLL, nsnull, &action);
     if (IsJProfAction(&action)) {
         printf("Beginning rtc-based jprof profiling.\n");
         raise(SIGPOLL);
-        return JS_TRUE;
+        return;
     }
 
     printf("Could not start jprof-profiling since JPROF_FLAGS was not set.\n");
-    return JS_TRUE;
 }
 
 static JSBool
-JProfStopProfiling(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval)
+JProfStopProfilingJS(JSContext *cx, JSObject *obj,
+                     uintN argc, jsval *argv, jsval *rval)
+{
+  NS_JProfStopProfiling();
+  return JS_TRUE;
+}
+
+void
+NS_JProfStopProfiling()
 {
     raise(SIGUSR1);
     printf("Stopped jprof profiling.\n");
-    return JS_TRUE;
 }
 
 static JSFunctionSpec JProfFunctions[] = {
-    {"JProfStartProfiling",        JProfStartProfiling,        0, 0, 0},
-    {"JProfStopProfiling",         JProfStopProfiling,         0, 0, 0},
+    {"JProfStartProfiling",        JProfStartProfilingJS,      0, 0, 0},
+    {"JProfStopProfiling",         JProfStopProfilingJS,       0, 0, 0},
     {nsnull,                       nsnull,                     0, 0, 0}
 };
 
