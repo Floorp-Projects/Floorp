@@ -161,14 +161,25 @@ nsresult nsMimeHtmlDisplayEmitter::BroadcastHeaders(nsIMsgHeaderSink * aHeaderSi
   // CStringArrays which we can pass into the enumerators
   nsCStringArray headerNameArray;
   nsCStringArray headerValueArray;
-
+  nsXPIDLCString extraExpandedHeaders;
+  nsCStringArray extraExpandedHeadersArray;
   nsCAutoString convertedDateString;
 
   PRBool displayOriginalDate = PR_FALSE;
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (pPrefBranch)
+  {
     pPrefBranch->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
+    pPrefBranch->GetCharPref("mailnews.headers.extraExpandedHeaders", getter_Copies(extraExpandedHeaders));
+    // todo - should make this upper case
+    if (!extraExpandedHeaders.IsEmpty())
+    {
+      ToLowerCase(extraExpandedHeaders);
+      extraExpandedHeadersArray.ParseString(extraExpandedHeaders, " ");
+    }
+
+  }
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
@@ -182,6 +193,7 @@ nsresult nsMimeHtmlDisplayEmitter::BroadcastHeaders(nsIMsgHeaderSink * aHeaderSi
     // don't waste time sending those out to the UI since the UI is going to ignore them anyway. 
     if (aHeaderMode != VIEW_ALL_HEADERS && (mFormat != nsMimeOutput::nsMimeMessageFilterSniffer)) 
     {
+      nsDependentCString headerStr(headerInfo->name);
       if (nsCRT::strcasecmp("to", headerInfo->name) && nsCRT::strcasecmp("from", headerInfo->name) &&
           nsCRT::strcasecmp("cc", headerInfo->name) && nsCRT::strcasecmp("newsgroups", headerInfo->name) &&
           nsCRT::strcasecmp("bcc", headerInfo->name) && nsCRT::strcasecmp("followup-to", headerInfo->name) &&
@@ -190,7 +202,10 @@ nsresult nsMimeHtmlDisplayEmitter::BroadcastHeaders(nsIMsgHeaderSink * aHeaderSi
           nsCRT::strcasecmp("content-base", headerInfo->name) && nsCRT::strcasecmp("sender", headerInfo->name) &&
           nsCRT::strcasecmp("date", headerInfo->name) && nsCRT::strcasecmp("x-mailer", headerInfo->name) &&
           nsCRT::strcasecmp("content-type", headerInfo->name) && nsCRT::strcasecmp("message-id", headerInfo->name) &&
-          nsCRT::strcasecmp("x-newsreader", headerInfo->name) && nsCRT::strcasecmp("x-mimeole", headerInfo->name))
+          nsCRT::strcasecmp("x-newsreader", headerInfo->name) && nsCRT::strcasecmp("x-mimeole", headerInfo->name) &&
+          // make headerStr lower case because IndexOf is case-sensitive
+         (!extraExpandedHeadersArray.Count() || (ToLowerCase(headerStr),
+            extraExpandedHeadersArray.IndexOf(headerStr) == kNotFound)))
             continue;
     }
 

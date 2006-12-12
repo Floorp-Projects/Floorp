@@ -62,6 +62,7 @@ var gViewAllHeaders = false;
 var gShowOrganization = false;
 var gShowLargeAttachmentView = false;
 var gShowUserAgent = false;
+var gExtraExpandedHeaders;
 var gMinNumberOfHeaders = 0;
 var gDummyHeaderIdIndex = 0;
 var gCollapsedHeaderViewMode = false;
@@ -214,6 +215,12 @@ function initializeHeaderViewTables()
       gExpandedHeaderView[headerName] = new createHeaderEntry('expanded', gExpandedHeaderList[index]);
     }
     
+    var extraHeaders = gExtraExpandedHeaders.split(' ');
+    for (index = 0; index < extraHeaders.length; index++)
+    {
+      var extraHeader = extraHeaders[index];
+      gExpandedHeaderView[extraHeader.toLowerCase()] = new createNewHeaderView(extraHeader, extraHeader + ':');
+    }
     if (gShowOrganization)
     {
       var organizationEntry = {name:"organization", outputFunction:updateHeaderValue};
@@ -240,6 +247,7 @@ function OnLoadMsgHeaderPane()
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
   gShowLargeAttachmentView = pref.getBoolPref("mailnews.attachments.display.largeView");
   gShowCondensedEmailAddresses = pref.getBoolPref("mail.showCondensedAddresses");
+  gExtraExpandedHeaders = pref.getCharPref("mailnews.headers.extraExpandedHeaders");
 
   // listen to the 
   pref.addObserver("mail.showCondensedAddresses", MsgHdrViewObserver, false);
@@ -684,7 +692,7 @@ function EnsureMinimumNumberOfHeaders (headerTable)
     while (numEmptyHeaders)
     {
       var dummyHeaderId = "Dummy-Header" + gDummyHeaderIdIndex;
-      gExpandedHeaderView[dummyHeaderId] = new createNewHeaderView(dummyHeaderId);
+      gExpandedHeaderView[dummyHeaderId] = new createNewHeaderView(dummyHeaderId, "");
       gExpandedHeaderView[dummyHeaderId].valid = true;
 
       gDummyHeaderIdIndex++;
@@ -738,17 +746,13 @@ function updateHeaderValueInTextNode(headerEntry, headerValue)
   headerEntry.textNode.value = headerValue;
 }
 
-function createNewHeaderView(headerName)
+function createNewHeaderView(headerName, label)
 {
   var idName = 'expanded' + headerName + 'Box';
   var newHeader = document.createElement("mail-headerfield");
-  newHeader.setAttribute('id', idName);
-
-  if (headerName.indexOf("Dummy-Header") == 0) // -1 means not found, 0 means starts at the beginning
-    newHeader.setAttribute('label', "");
-  else
-    newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
   
+  newHeader.setAttribute('id', idName);
+  newHeader.setAttribute('label', label);
   newHeader.collapsed = true;
 
   // this new element needs to be inserted into the view...
@@ -803,7 +807,7 @@ function UpdateMessageHeaders()
       {
         // for view all headers, if we don't have a header field for this value....cheat and create one....then
         // fill in a headerEntry
-        gExpandedHeaderView[headerName] = new createNewHeaderView(headerName);
+        gExpandedHeaderView[headerName] = new createNewHeaderView(headerName, currentHeaderData[headerName].headerName + ':');
         headerEntry = gExpandedHeaderView[headerName];
       }
     } // if we are in expanded view....

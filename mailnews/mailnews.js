@@ -72,6 +72,9 @@ pref("mailnews.headers.showUserAgent",       false);
 // is displayed in the message pane or not...
 pref("mailnews.headers.showOrganization",    false);
 
+// space-delimited list of extra headers to show in msg header display area.
+pref("mailnews.headers.extraExpandedHeaders", "");
+
 // default sort order settings (when creating new folder views)
 // sort_order is an int value reflecting nsMsgViewSortOrder values
 //   as defined in nsIMsgDBView.idl (ascending = 1, descending = 2)
