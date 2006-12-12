@@ -40,6 +40,12 @@
  * os2misc.c
  *
  */
+
+#ifdef MOZ_OS2_HIGH_MEMORY
+/* os2safe.h has to be included before os2.h, needed for high mem */
+#include <os2safe.h>
+#endif
+
 #include <string.h>
 #include "primpl.h"
 
@@ -282,6 +288,19 @@ PRProcess * _PR_CreateOS2Process(
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         goto errorExit;
     }
+
+#ifdef MOZ_OS2_HIGH_MEMORY
+    /*
+     * DosQueryAppType() fails if path (the char* in the first argument) is in
+     * high memory. If that is the case, the following moves it to low memory.
+     */ 
+    if ((ULONG)path >= 0x20000000) {
+        size_t len = strlen(path) + 1;
+        char *copy = (char *)alloca(len);
+        memcpy(copy, path, len);
+        path = copy;
+    }
+#endif
    
     if (envp == NULL) {
         newEnvp = NULL;

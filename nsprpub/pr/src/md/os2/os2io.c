@@ -200,6 +200,21 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
     APIRET rc = 0;
     PRUword actionTaken;
 
+#ifdef MOZ_OS2_HIGH_MEMORY
+    /*
+     * All the pointer arguments (&file, &actionTaken and name) have to be in
+     * low memory for DosOpen to use them.
+     * The following moves name to low memory.
+     */ 
+    if ((ULONG)name >= 0x20000000)
+    {
+        size_t len = strlen(name) + 1;
+        char *copy = (char *)alloca(len);
+        memcpy(copy, name, len);
+        name = copy;
+    }
+#endif
+
     if (osflags & PR_SYNC) access |= OPEN_FLAGS_WRITE_THROUGH;
 
     if (osflags & PR_RDONLY)
