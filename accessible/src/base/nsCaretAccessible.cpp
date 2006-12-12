@@ -179,7 +179,8 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 
   // Get first nnsIAccessibleText in parent chain and fire caret-move, selection-change event for it
   nsCOMPtr<nsIAccessible> accessible;
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  nsIAccessibilityService *accService = GetAccService();
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
   // Get accessible from selection's focus node or its parent
   nsCOMPtr<nsIDOMNode> focusNode;
   domSel->GetFocusNode(getter_AddRefs(focusNode));
@@ -188,9 +189,14 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   }
   nsCOMPtr<nsIAccessibleText> textAcc;
   while (focusNode) {
+    // Make sure to get the correct starting node for selection events inside XBL content trees
+    nsCOMPtr<nsIDOMNode> relevantNode;
+    if (NS_SUCCEEDED(accService->GetRelevantContentNodeFor(focusNode, getter_AddRefs(relevantNode))) && relevantNode) {
+      focusNode  = relevantNode;
+    }
+
     nsCOMPtr<nsIContent> content = do_QueryInterface(focusNode);
-    if (!content || (PR_FALSE == content->IsNodeOfType(nsINode::eTEXT) && 
-        PR_FALSE == content->IsNativeAnonymous())) { // Don't want anonymous nodes inside a form control
+    if (!content || !content->IsNodeOfType(nsINode::eTEXT)) {
       accService->GetAccessibleInShell(focusNode, presShell,  getter_AddRefs(accessible));
       textAcc = do_QueryInterface(accessible);
       if (textAcc) {
