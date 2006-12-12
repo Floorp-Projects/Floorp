@@ -123,13 +123,12 @@ DECL_DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry,
  * Class holding all <xsl:key>s of a particular expanded name in the
  * stylesheet.
  */
-class txXSLKey : public TxObject {
+class txXSLKey {
     
 public:
     txXSLKey(const txExpandedName& aName) : mName(aName)
     {
     }
-    ~txXSLKey();
     
     /**
      * Adds a match/use pair.
@@ -183,7 +182,7 @@ private:
     /**
      * List of all match/use pairs. The items as |Key|s
      */
-    List mKeys;
+    nsTArray<Key> mKeys;
     
     /**
      * Name of this key
@@ -195,7 +194,7 @@ private:
 class txKeyHash
 {
 public:
-    txKeyHash(const txExpandedNameMap& aKeys)
+    txKeyHash(const txOwningExpandedNameMap<txXSLKey>& aKeys)
         : mKeys(aKeys)
     {
     }
@@ -217,7 +216,7 @@ private:
     txIndexedKeyHash mIndexedKeys;
     
     // Map of txXSLKeys
-    const txExpandedNameMap& mKeys;
+    const txOwningExpandedNameMap<txXSLKey>& mKeys;
     
     // Empty nodeset returned if no key is found
     nsRefPtr<txNodeSet> mEmptyNodeSet;

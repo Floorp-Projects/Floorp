@@ -133,13 +133,13 @@ txExecutionState::~txExecutionState()
 
     txStackIterator paramIter(&mParamStack);
     while (paramIter.hasNext()) {
-        delete (txExpandedNameMap*)paramIter.next();
+        delete (txVariableMap*)paramIter.next();
     }
 }
 
 nsresult
 txExecutionState::init(const txXPathNode& aNode,
-                       txExpandedNameMap* aGlobalParams)
+                       txOwningExpandedNameMap<txIGlobalParameter>* aGlobalParams)
 {
     nsresult rv = NS_OK;
 
@@ -246,8 +246,7 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
 
     // Is this a stylesheet parameter that has a value?
     if (var->mIsParam && mGlobalParams) {
-        txIGlobalParameter* param =
-            (txIGlobalParameter*)mGlobalParams->get(name);
+        txIGlobalParameter* param = mGlobalParams->get(name);
         if (param) {
             rv = param->getValue(&aResult);
             NS_ENSURE_SUCCESS(rv, rv);

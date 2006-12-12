@@ -54,7 +54,7 @@
  * Note: for NodeSet, see NodeSet.h
 */
 
-class txAExprResult : public TxObject
+class txAExprResult
 {
 public:
     friend class txResultRecycler;

@@ -54,6 +54,7 @@ class nsIURI;
 class nsIXMLContentSink;
 class txStylesheet;
 class txResultRecycler;
+class txIGlobalParameter;
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
@@ -144,7 +145,7 @@ private:
     nsresult mCompileResult;
     nsString mErrorText, mSourceText;
     nsCOMPtr<nsITransformObserver> mObserver;
-    txExpandedNameMap mVariables;
+    txOwningExpandedNameMap<txIGlobalParameter> mVariables;
     txNamespaceMap mParamNamespaceMap;
     nsRefPtr<txResultRecycler> mRecycler;
 

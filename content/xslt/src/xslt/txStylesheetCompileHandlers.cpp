@@ -2980,8 +2980,7 @@ txHandlerTable::txHandlerTable(const HandleTextFn aTextHandler,
                                const txElementHandler* aOtherHandler)
   : mTextHandler(aTextHandler),
     mLREHandler(aLREHandler),
-    mOtherHandler(aOtherHandler),
-    mHandlers(PR_FALSE)
+    mOtherHandler(aOtherHandler)
 {
 }
 
@@ -2994,8 +2993,7 @@ txHandlerTable::init(const txElementHandler* aHandlers, PRUint32 aCount)
     for (i = 0; i < aCount; ++i) {
         nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aHandlers->mLocalName);
         txExpandedName name(aHandlers->mNamespaceID, nameAtom);
-        // XXX this cast is a reinterpret_cast, which is sad
-        rv = mHandlers.add(name, (TxObject*)aHandlers);
+        rv = mHandlers.add(name, aHandlers);
         NS_ENSURE_SUCCESS(rv, rv);
 
         ++aHandlers;
@@ -3007,9 +3005,7 @@ const txElementHandler*
 txHandlerTable::find(PRInt32 aNamespaceID, nsIAtom* aLocalName)
 {
     txExpandedName name(aNamespaceID, aLocalName);
-    // XXX this cast is a reinterpret_cast, same sad story as in ::init
-    const txElementHandler* handler =
-        (const txElementHandler*)mHandlers.get(name);
+    const txElementHandler* handler = mHandlers.get(name);
     if (!handler) {
         handler = mOtherHandler;
     }

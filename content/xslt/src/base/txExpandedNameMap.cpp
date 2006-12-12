@@ -38,19 +38,16 @@
 
 #include "txExpandedNameMap.h"
 #include "txCore.h"
-#include <string.h>
 
-const int kTxExpandedNameMapAllocSize = 16;
-
-txExpandedNameMap::txExpandedNameMap(MBool aOwnsValues) :
-    mItems(0), mItemCount(0), mBufferCount(0), mOwnsValues(aOwnsValues)
+class txMapItemComparator
 {
-}
-
-txExpandedNameMap::~txExpandedNameMap()
-{
-    clear();
-}
+  public:
+    PRBool Equals(const txExpandedNameMap_base::MapItem& aItem,
+                  const txExpandedName& aKey) const {
+      return aItem.mNamespaceID == aKey.mNamespaceID &&
+             aItem.mLocalName == aKey.mLocalName;
+    }
+};
 
 /**
  * Adds an item, if an item with this key already exists an error is
@@ -59,37 +56,21 @@ txExpandedNameMap::~txExpandedNameMap()
  * @param  aValue value of item to add
  * @return errorcode
  */
-nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
+nsresult txExpandedNameMap_base::addItem(const txExpandedName& aKey,
+                                         void* aValue)
 {
-    int i;
-    // Check if there already is an item with this key
-    for (i = 0; i < mItemCount; ++i) {
-        if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            return NS_ERROR_XSLT_ALREADY_SET;
-        }
+    PRUint32 pos = mItems.IndexOf(aKey, 0, txMapItemComparator());
+    if (pos != mItems.NoIndex) {
+        return NS_ERROR_XSLT_ALREADY_SET;
     }
-    
-    // Allocate a new array if needed
-    if (mBufferCount == mItemCount) {
-        MapItem* newItems = new MapItem[mItemCount +
-                                        kTxExpandedNameMapAllocSize];
-        if (!newItems) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
 
-        mBufferCount += kTxExpandedNameMapAllocSize;
-        memcpy(newItems, mItems, mItemCount * sizeof(MapItem));
-        delete [] mItems;
-        mItems = newItems;
-    }
-    
-    mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
-    mItems[mItemCount].mLocalName = aKey.mLocalName;
-    NS_IF_ADDREF(mItems[mItemCount].mLocalName);
-    mItems[mItemCount].mValue = aValue;
-    ++mItemCount;
-    
+    MapItem* item = mItems.AppendElement();
+    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
+
+    item->mNamespaceID = aKey.mNamespaceID;
+    item->mLocalName = aKey.mLocalName;
+    item->mValue = aValue;
+
     return NS_OK;
 }
 
@@ -100,41 +81,26 @@ nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
  * @param  aValue value of item to set
  * @return errorcode
  */
-nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
+nsresult txExpandedNameMap_base::setItem(const txExpandedName& aKey,
+                                         void* aValue,
+                                         void** aOldValue)
 {
-    int i;
-    // Check if there already is an item with this key
-    for (i = 0; i < mItemCount; ++i) {
-        if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            if (mOwnsValues) {
-                delete mItems[i].mValue;
-            }
-            mItems[i].mValue = aValue;
-            return NS_OK;
-        }
+    *aOldValue = nsnull;
+    PRUint32 pos = mItems.IndexOf(aKey, 0, txMapItemComparator());
+    if (pos != mItems.NoIndex) {
+        *aOldValue = mItems[pos].mValue;
+        mItems[pos].mValue = aValue;
+        
+        return NS_OK;
     }
-    
-    // Allocate a new array if needed
-    if (mBufferCount == mItemCount) {
-        MapItem* newItems = new MapItem[mItemCount +
-                                        kTxExpandedNameMapAllocSize];
-        if (!newItems) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
 
-        mBufferCount += kTxExpandedNameMapAllocSize;
-        memcpy(newItems, mItems, mItemCount * sizeof(MapItem));
-        delete [] mItems;
-        mItems = newItems;
-    }
-    
-    mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
-    mItems[mItemCount].mLocalName = aKey.mLocalName;
-    NS_IF_ADDREF(mItems[mItemCount].mLocalName);
-    mItems[mItemCount].mValue = aValue;
-    ++mItemCount;
-    
+    MapItem* item = mItems.AppendElement();
+    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
+
+    item->mNamespaceID = aKey.mNamespaceID;
+    item->mLocalName = aKey.mLocalName;
+    item->mValue = aValue;
+
     return NS_OK;
 }
 
@@ -143,16 +109,14 @@ nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
  * @param  aKey  key for item to get
  * @return item with specified key, or null if no such item exists
  */
-TxObject* txExpandedNameMap::get(const txExpandedName& aKey) const
+void* txExpandedNameMap_base::getItem(const txExpandedName& aKey) const
 {
-    int i;
-    for (i = 0; i < mItemCount; ++i) {
-        if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            return mItems[i].mValue;
-        }
+    PRUint32 pos = mItems.IndexOf(aKey, 0, txMapItemComparator());
+    if (pos != mItems.NoIndex) {
+        return mItems[pos].mValue;
     }
-    return 0;
+
+    return nsnull;
 }
 
 /**
@@ -161,43 +125,14 @@ TxObject* txExpandedNameMap::get(const txExpandedName& aKey) const
  * @return item with specified key, or null if it has been deleted
  *         or no such item exists
  */
-TxObject* txExpandedNameMap::remove(const txExpandedName& aKey)
+void* txExpandedNameMap_base::removeItem(const txExpandedName& aKey)
 {
-    TxObject* value = 0;
-    int i;
-    for (i = 0; i < mItemCount; ++i) {
-        if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            NS_IF_RELEASE(mItems[i].mLocalName);
-            if (mOwnsValues) {
-                delete mItems[i].mValue;
-            }
-            else {
-                value = mItems[i].mValue;
-            }
-            --mItemCount;
-            if (i != mItemCount) {
-                memcpy(&mItems[i], &mItems[mItemCount], sizeof(MapItem));
-            }
-        }
+    void* value = nsnull;
+    PRUint32 pos = mItems.IndexOf(aKey, 0, txMapItemComparator());
+    if (pos != mItems.NoIndex) {
+        value = mItems[pos].mValue;
+        mItems.RemoveElementAt(pos);
     }
-    return value;
-}
 
-/**
- * Clears the items
- */
-void txExpandedNameMap::clear()
-{
-    int i;
-    for (i = 0; i < mItemCount; ++i) {
-        NS_IF_RELEASE(mItems[i].mLocalName);
-        if (mOwnsValues) {
-            delete mItems[i].mValue;
-        }
-    }
-    delete [] mItems;
-    mItems = nsnull;
-    mItemCount = 0;
-    mBufferCount = 0;
+    return value;
 }

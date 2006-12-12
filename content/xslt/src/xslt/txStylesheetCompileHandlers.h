@@ -80,7 +80,7 @@ public:
 
 private:
     const txElementHandler* const mOtherHandler;
-    txExpandedNameMap mHandlers;
+    txExpandedNameMap<const txElementHandler> mHandlers;
 };
 
 extern txHandlerTable* gTxRootHandler;

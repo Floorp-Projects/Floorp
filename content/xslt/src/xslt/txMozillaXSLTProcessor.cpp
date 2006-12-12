@@ -309,7 +309,6 @@ NS_INTERFACE_MAP_END
 txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mStylesheetDocument(nsnull),
                                                    mTransformResult(NS_OK),
                                                    mCompileResult(NS_OK),
-                                                   mVariables(PR_TRUE),
                                                    mFlags(0)
 {
 }
@@ -515,7 +514,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName varName(nsId, name);
-    txVariable* var = (txVariable*)mVariables.get(varName);
+    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
     if (var) {
         var->setValue(value);
         
@@ -953,7 +952,7 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
-    txVariable* var = (txVariable*)mVariables.get(varName);
+    txVariable* var = NS_STATIC_CAST(txVariable*, mVariables.get(varName));
     if (var) {
         return var->getValue(aResult);
     }
