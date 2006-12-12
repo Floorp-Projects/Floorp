@@ -41,12 +41,12 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "txList.h"
 #include "nsAutoPtr.h"
 #include "txExprResult.h"
 #include "txCore.h"
 #include "nsString.h"
-#include "nsTPtrArray.h"
+#include "txOwningArray.h"
+#include "nsIAtom.h"
 
 #ifdef DEBUG
 #define TX_TO_STRING
@@ -70,14 +70,6 @@ class txXPathNode;
 class Expr
 {
 public:
-
-    /**
-     * Virtual destructor, important for subclasses
-    **/
-    virtual ~Expr()
-    {
-    }
-
     /**
      * Evaluates this Expr based on the given context node and processor state
      * @param context the context node for evaluation of this Expr
@@ -272,14 +264,14 @@ TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                  \
 Expr*                                                         \
 _class::getSubExprAt(PRUint32 aPos)                           \
 {                                                             \
-    return NS_STATIC_CAST(Expr*, _ExprList.get(aPos));        \
+    return _ExprList.SafeElementAt(aPos);                     \
 }                                                             \
 void                                                          \
 _class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
 {                                                             \
-    NS_ASSERTION(aPos < (PRUint32)_ExprList.getLength(),      \
+    NS_ASSERTION(aPos < _ExprList.Length(),                   \
                  "setting bad subexpression index");          \
-    _ExprList.replace(aPos, aExpr);                           \
+    _ExprList[aPos] = aExpr;                                  \
 }
 
 
@@ -290,8 +282,6 @@ _class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
 class FunctionCall : public Expr
 {
 public:
-    virtual ~FunctionCall();
-
     /**
      * Adds the given parameter to this FunctionCall's parameter list.
      * The ownership of the given Expr is passed over to the FunctionCall,
@@ -299,7 +289,11 @@ public:
      * @param aExpr the Expr to add to this FunctionCall's parameter list
      * @return nsresult indicating out of memory
      */
-    nsresult addParam(Expr* aExpr);
+    nsresult addParam(Expr* aExpr)
+    {
+        return mParams.AppendElement(aExpr) ?
+            NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
 
     /**
      * Check if the number of parameters falls within a range.
@@ -322,7 +316,7 @@ public:
 
 protected:
 
-    txList params;
+    txOwningArray<Expr> mParams;
 
     /*
      * Evaluates the given Expression and converts its result to a number.
@@ -492,12 +486,18 @@ public:
     /*
      * Creates a new txNodeTypeTest of the given type
      */
-    txNodeTypeTest(NodeType aNodeType);
+    txNodeTypeTest(NodeType aNodeType)
+        : mNodeType(aNodeType)
+    {
+    }
 
     /*
      * Sets the name of the node to match. Only availible for pi nodes
      */
-    void setNodeName(const nsAString& aName);
+    void setNodeName(const nsAString& aName)
+    {
+        mNodeName = do_GetAtom(aName);
+    }
 
     NodeType getNodeTestType()
     {
@@ -533,19 +533,7 @@ private:
  * for use with Step and Filter Expressions
 **/
 class PredicateList  {
-
 public:
-
-    /**
-     * Creates a new PredicateList
-    **/
-    PredicateList();
-    /**
-     * Destructor, will delete all Expressions in the list, so remove
-     * any you may need
-    **/
-    virtual ~PredicateList();
-
     /**
      * Adds the given Expr to the list.
      * The ownership of the given Expr is passed over the PredicateList,
@@ -553,19 +541,30 @@ public:
      * @param aExpr the Expr to add to the list
      * @return nsresult indicating out of memory
      */
-    nsresult add(Expr* aExpr);
+    nsresult add(Expr* aExpr)
+    {
+        NS_ASSERTION(aExpr, "missing expression");
+        return mPredicates.AppendElement(aExpr) ?
+            NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);
 
     /**
      * Drops the first predicate without deleting it.
      */
-    void dropFirst();
+    void dropFirst()
+    {
+        mPredicates.RemoveElementAt(0);
+    }
 
     /**
      * returns true if this predicate list is empty
     **/
-    MBool isEmpty();
+    PRBool isEmpty()
+    {
+        return mPredicates.IsEmpty();
+    }
 
 #ifdef TX_TO_STRING
     /**
@@ -576,20 +575,28 @@ public:
      * other #toString() methods for Expressions.
      * @return the String representation of this PredicateList.
     **/
-    virtual void toString(nsAString& dest);
+    void toString(nsAString& dest);
 #endif
 
 protected:
     PRBool isSensitiveTo(Expr::ContextSensitivity aContext);
-    Expr* getSubExprAt(PRUint32 aPos);
-    void setSubExprAt(PRUint32 aPos, Expr* aExpr);
+    Expr* getSubExprAt(PRUint32 aPos)
+    {
+        return mPredicates.SafeElementAt(aPos);
+    }
+    void setSubExprAt(PRUint32 aPos, Expr* aExpr)
+    {
+        NS_ASSERTION(aPos < mPredicates.Length(),
+                     "setting bad subexpression index");
+        mPredicates[aPos] = aExpr;
+    }
 
     //-- list of predicates
-    List predicates;
+    txOwningArray<Expr> mPredicates;
 }; //-- PredicateList
 
-class LocationStep : public PredicateList,
-                     public Expr
+class LocationStep : public Expr,
+                     public PredicateList
 {
 public:
     enum LocationStepType {
@@ -613,7 +620,7 @@ public:
      * @param nodeExpr the NodeExpr to use when matching Nodes
      * @param axisIdentifier the Axis Identifier in which to search for nodes
     **/
-    LocationStep(nsAutoPtr<txNodeTest>& aNodeTest,
+    LocationStep(txNodeTest* aNodeTest,
                  LocationStepType aAxisIdentifier)
         : mNodeTest(aNodeTest),
           mAxisIdentifier(aAxisIdentifier)
@@ -650,15 +657,16 @@ private:
     LocationStepType mAxisIdentifier;
 };
 
-class FilterExpr : public PredicateList, public Expr {
-
+class FilterExpr : public Expr,
+                   public PredicateList
+{
 public:
 
     /**
      * Creates a new FilterExpr using the given Expr
      * @param expr the Expr to use for evaluation
      */
-    FilterExpr(nsAutoPtr<Expr>& aExpr)
+    FilterExpr(Expr* aExpr)
         : expr(aExpr)
     {
     }
@@ -673,10 +681,16 @@ private:
 
 class txLiteralExpr : public Expr {
 public:
-    txLiteralExpr(double aDbl);
-    txLiteralExpr(const nsAString& aStr);
+    txLiteralExpr(double aDbl)
+        : mValue(new NumberResult(aDbl, nsnull))
+    {
+    }
+    txLiteralExpr(const nsAString& aStr)
+        : mValue(new StringResult(aStr, nsnull))
+    {
+    }
     txLiteralExpr(txAExprResult* aValue)
-      : mValue(aValue)
+        : mValue(aValue)
     {
     }
 
@@ -687,42 +701,13 @@ private:
 };
 
 /**
- * Represents an AdditiveExpr, a binary expression that
- * performs an additive operation between it's lvalue and rvalue:
- *  +   : add
- *  -   : subtract
-**/
-class AdditiveExpr : public Expr {
-
-public:
-
-    //-- AdditiveExpr Types
-    //-- LF, changed from static const short to enum
-    enum _AdditiveExprType { ADDITION = 1, SUBTRACTION };
-
-     AdditiveExpr(nsAutoPtr<Expr>& aLeftExpr, nsAutoPtr<Expr>& aRightExpr,
-                  short aOp)
-         : op(aOp),
-           leftExpr(aLeftExpr),
-           rightExpr(aRightExpr)
-    {
-    }
-
-    TX_DECL_EXPR
-
-private:
-    short op;
-    nsAutoPtr<Expr> leftExpr, rightExpr;
-}; //-- AdditiveExpr
-
-/**
  * Represents an UnaryExpr. Returns the negative value of it's expr.
 **/
 class UnaryExpr : public Expr {
 
 public:
 
-    UnaryExpr(nsAutoPtr<Expr>& aExpr)
+    UnaryExpr(Expr* aExpr)
         : expr(aExpr)
     {
     }
@@ -737,15 +722,14 @@ private:
  * Represents a BooleanExpr, a binary expression that
  * performs a boolean operation between it's lvalue and rvalue.
 **/
-class BooleanExpr : public Expr {
-
+class BooleanExpr : public Expr
+{
 public:
 
     //-- BooleanExpr Types
     enum _BooleanExprType { AND = 1, OR };
 
-     BooleanExpr(nsAutoPtr<Expr>& aLeftExpr, nsAutoPtr<Expr>& aRightExpr,
-                 short aOp)
+     BooleanExpr(Expr* aLeftExpr, Expr* aRightExpr, short aOp)
          : leftExpr(aLeftExpr),
            rightExpr(aRightExpr),
            op(aOp)
@@ -767,15 +751,13 @@ private:
  * div  : divide
  *
 **/
-class txNumberExpr : public Expr {
-
+class txNumberExpr : public Expr
+{
 public:
 
     enum eOp { ADD, SUBTRACT, DIVIDE, MULTIPLY, MODULUS };
 
-    txNumberExpr(nsAutoPtr<Expr>& aLeftExpr,
-               nsAutoPtr<Expr>& aRightExpr,
-               eOp aOp)
+    txNumberExpr(Expr* aLeftExpr, Expr* aRightExpr, eOp aOp)
         : mLeftExpr(aLeftExpr),
           mRightExpr(aRightExpr),
           mOp(aOp)
@@ -799,8 +781,8 @@ private:
  * >= : greater than or equal to
  *
 **/
-class RelationalExpr : public Expr {
-
+class RelationalExpr : public Expr
+{
 public:
     enum RelationalExprType {
         EQUAL,
@@ -811,8 +793,7 @@ public:
         GREATER_OR_EQUAL
     };
 
-    RelationalExpr(nsAutoPtr<Expr>& aLeftExpr, nsAutoPtr<Expr>& aRightExpr,
-                   RelationalExprType aOp)
+    RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr, RelationalExprType aOp)
         : mLeftExpr(aLeftExpr),
           mRightExpr(aRightExpr),
           mOp(aOp)
@@ -873,7 +854,12 @@ public:
     /**
      * Removes and deletes the expression at the given index.
      */
-    void deleteExprAt(PRUint32 aPos);
+    void deleteExprAt(PRUint32 aPos)
+    {
+        NS_ASSERTION(aPos < mItems.Length(),
+                     "killing bad expression index");
+        mItems.RemoveElementAt(aPos);
+    }
 
     TX_DECL_OPTIMIZABLE_EXPR
 
@@ -940,19 +926,7 @@ private:
  *  Represents a UnionExpr
 **/
 class UnionExpr : public Expr {
-
 public:
-
-    /**
-     * Creates a new UnionExpr
-    **/
-    UnionExpr();
-
-    /**
-     * Destructor, will delete all Path Expressions
-    **/
-    virtual ~UnionExpr();
-
     /**
      * Adds the PathExpr to this UnionExpr
      * The ownership of the given Expr is passed over the UnionExpr,
@@ -960,18 +934,29 @@ public:
      * @param aExpr the Expr to add to this UnionExpr
      * @return nsresult indicating out of memory
      */
-    nsresult addExpr(Expr* aExpr);
+    nsresult addExpr(Expr* aExpr)
+    {
+        return mExpressions.AppendElement(aExpr) ?
+            NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
 
     /**
      * Removes and deletes the expression at the given index.
      */
-    void deleteExprAt(PRUint32 aPos);
+    void deleteExprAt(PRUint32 aPos)
+    {
+        NS_ASSERTION(aPos < mExpressions.Length(),
+                     "killing bad expression index");
+
+        delete mExpressions[aPos];
+        mExpressions.RemoveElementAt(aPos);
+    }
 
     TX_DECL_OPTIMIZABLE_EXPR
 
 private:
 
-   List expressions;
+   txOwningArray<Expr> mExpressions;
 
 }; //-- UnionExpr
 
@@ -999,14 +984,16 @@ private:
 class txUnionNodeTest : public txNodeTest
 {
 public:
-    ~txUnionNodeTest();
-
-    nsresult addNodeTest(txNodeTest* aNodeTest);
+    nsresult addNodeTest(txNodeTest* aNodeTest)
+    {
+        return mNodeTests.AppendElement(aNodeTest) ?
+            NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
 
     TX_DECL_NODE_TEST
 
 private:
-    nsTPtrArray<txNodeTest> mNodeTests;
+    txOwningArray<txNodeTest> mNodeTests;
 };
 
 /**

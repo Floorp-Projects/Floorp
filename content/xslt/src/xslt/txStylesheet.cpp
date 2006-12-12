@@ -68,6 +68,8 @@ txStylesheet::init()
     nsAutoPtr<Expr> nodeExpr(new LocationStep(nt, LocationStep::CHILD_AXIS));
     NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
 
+    nt.forget();
+
     txPushNewContext* pushContext = new txPushNewContext(nodeExpr);
     mContainerTemplate->mNext = pushContext;
     NS_ENSURE_TRUE(pushContext, NS_ERROR_OUT_OF_MEMORY);
@@ -94,6 +96,8 @@ txStylesheet::init()
 
     nodeExpr = new LocationStep(nt, LocationStep::SELF_AXIS);
     NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
+
+    nt.forget();
 
     mCharactersTemplate = new txValueOf(nodeExpr, PR_FALSE);
     NS_ENSURE_TRUE(mCharactersTemplate, NS_ERROR_OUT_OF_MEMORY);
@@ -427,16 +431,16 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
 
     // Add the simple patterns to the list of matchable templates, according
     // to default priority
-    txList simpleMatches;
-    rv = aTemplate->mMatch->getSimplePatterns(simpleMatches);
-    if (simpleMatches.get(0) == aTemplate->mMatch) {
-        aTemplate->mMatch.forget();
+    nsAutoPtr<txPattern> simple = aTemplate->mMatch;
+    nsAutoPtr<txPattern> unionPattern;
+    if (simple->getType() == txPattern::UNION_PATTERN) {
+        unionPattern = simple;
+        simple = unionPattern->getSubPatternAt(0);
+        unionPattern->setSubPatternAt(0, nsnull);
     }
-    
-    txListIterator simples(&simpleMatches);
-    while (simples.hasNext()) {
-        // XXX if we fail in this loop, we leak the remaining simple patterns
-        nsAutoPtr<txPattern> simple(NS_STATIC_CAST(txPattern*, simples.next()));
+
+    PRUint32 unionPos = 1; // only used when unionPattern is set
+    while (simple) {
         double priority = aTemplate->mPrio;
         if (Double::isNaN(priority)) {
             priority = simple->getDefaultPriority();
@@ -457,6 +461,14 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
         nt->mFirstInstruction = instr;
         nt->mMatch = simple;
         nt->mPriority = priority;
+
+        if (unionPattern) {
+            simple = unionPattern->getSubPatternAt(unionPos);
+            if (simple) {
+                unionPattern->setSubPatternAt(unionPos, nsnull);
+            }
+            ++unionPos;
+        }
     }
 
     return NS_OK;

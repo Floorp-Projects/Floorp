@@ -289,6 +289,9 @@ txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left, nsAutoPtr<Expr>& right,
     }
     NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
+    left.forget();
+    right.forget();
+
     *aResult = expr;
     return NS_OK;
 }
@@ -322,11 +325,14 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
         }
 
         if (unary) {
-            expr = new UnaryExpr(expr);
-            if (!expr) {
+            Expr* unaryExpr = new UnaryExpr(expr);
+            if (!unaryExpr) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
                 break;
             }
+            
+            expr.forget();
+            expr = unaryExpr;
         }
 
         Token* tok = lexer.nextToken();
@@ -425,6 +431,8 @@ txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
     if (lexer.peek()->mType == Token::L_BRACKET) {
         nsAutoPtr<FilterExpr> filterExpr(new FilterExpr(expr));
         NS_ENSURE_TRUE(filterExpr, NS_ERROR_OUT_OF_MEMORY);
+
+        expr.forget();
 
         //-- handle predicates
         rv = parsePredicates(filterExpr, lexer, aContext);
@@ -608,6 +616,8 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
     nsAutoPtr<LocationStep> lstep(new LocationStep(nodeTest, axisIdentifier));
     NS_ENSURE_TRUE(lstep, NS_ERROR_OUT_OF_MEMORY);
 
+    nodeTest.forget();
+
     //-- handle predicates
     rv = parsePredicates(lstep, lexer, aContext);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -714,8 +724,10 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
     nsAutoPtr<PathExpr> pathExpr(new PathExpr());
     NS_ENSURE_TRUE(pathExpr, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = pathExpr->addExpr(expr.forget(), PathExpr::RELATIVE_OP);
+    rv = pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    expr.forget();
 
     // this is ugly
     while (1) {
@@ -737,8 +749,10 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
         rv = createLocationStep(lexer, aContext, getter_Transfers(expr));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = pathExpr->addExpr(expr.forget(), pathOp);
+        rv = pathExpr->addExpr(expr, pathOp);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        expr.forget();
     }
     NS_NOTREACHED("internal xpath parser error");
     return NS_ERROR_UNEXPECTED;
@@ -766,8 +780,10 @@ txExprParser::createUnionExpr(txExprLexer& lexer, txIParseContext* aContext,
     nsAutoPtr<UnionExpr> unionExpr(new UnionExpr());
     NS_ENSURE_TRUE(unionExpr, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = unionExpr->addExpr(expr.forget());
+    rv = unionExpr->addExpr(expr);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    expr.forget();
 
     while (lexer.peek()->mType == Token::UNION_OP) {
         lexer.nextToken(); //-- eat token
@@ -819,8 +835,10 @@ txExprParser::parsePredicates(PredicateList* aPredicateList,
         rv = createExpr(lexer, aContext, getter_Transfers(expr));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = aPredicateList->add(expr.forget());
+        rv = aPredicateList->add(expr);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        expr.forget();
 
         if (lexer.nextToken()->mType != Token::R_BRACKET) {
             lexer.pushBack();

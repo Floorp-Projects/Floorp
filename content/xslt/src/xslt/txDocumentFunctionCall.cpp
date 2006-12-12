@@ -116,20 +116,18 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    txListIterator iter(&params);
-    Expr* param1 = (Expr*)iter.next();
     nsRefPtr<txAExprResult> exprResult1;
-    rv = param1->evaluate(aContext, getter_AddRefs(exprResult1));
+    rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult1));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString baseURI;
     MBool baseURISet = MB_FALSE;
 
-    if (iter.hasNext()) {
+    if (mParams.Length() == 2) {
         // We have 2 arguments, get baseURI from the first node
         // in the resulting nodeset
         nsRefPtr<txNodeSet> nodeSet2;
-        rv = evaluateToNodeSet(NS_STATIC_CAST(Expr*, iter.next()),
+        rv = evaluateToNodeSet(mParams[1],
                                aContext, getter_AddRefs(nodeSet2));
         NS_ENSURE_SUCCESS(rv, rv);
 

@@ -38,16 +38,6 @@
 
 #include "txExpr.h"
 
-txLiteralExpr::txLiteralExpr(double aDbl)
-    : mValue(new NumberResult(aDbl, nsnull))
-{
-}
-
-txLiteralExpr::txLiteralExpr(const nsAString& aStr)
-    : mValue(new StringResult(aStr, nsnull))
-{
-}
-
 nsresult
 txLiteralExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {

@@ -48,8 +48,6 @@ class ProcessorState;
 class txPattern
 {
 public:
-    virtual ~txPattern();
-
     /*
      * Determines whether this Pattern matches the given node.
      */
@@ -64,21 +62,12 @@ public:
      */
     virtual double getDefaultPriority() = 0;
 
-    /*
-     * Adds the simple Patterns to the List.
-     * For union patterns, add all sub patterns,
-     * all other (simple) patterns just add themselves.
-     * This cuts the ownership of the union pattern and it's
-     * simple patterns, leaving union patterns empty after a call
-     * to this function.
-     */
-    virtual nsresult getSimplePatterns(txList &aList);
-
     /**
      * Returns the type of this pattern.
      */
     enum Type {
         STEP_PATTERN,
+        UNION_PATTERN,
         OTHER_PATTERN
     };
     virtual Type getType()
@@ -137,10 +126,6 @@ public:
     void toString(nsAString& aDest)
 #endif
 
-#define TX_DECL_PATTERN2 \
-    TX_DECL_PATTERN; \
-    nsresult getSimplePatterns(txList &aList)
-
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)             \
 Expr*                                                         \
 _class::getSubExprAt(PRUint32 aPos)                           \
@@ -168,59 +153,45 @@ _class::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)   \
 class txUnionPattern : public txPattern
 {
 public:
-    txUnionPattern()
+    nsresult addPattern(txPattern* aPattern)
     {
+        return mLocPathPatterns.AppendElement(aPattern) ? 
+            NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
 
-    ~txUnionPattern();
-
-    nsresult addPattern(txPattern* aPattern);
-
-    TX_DECL_PATTERN2;
+    TX_DECL_PATTERN;
+    Type getType();
 
 private:
-    txList mLocPathPatterns;
+    txOwningArray<txPattern> mLocPathPatterns;
 };
 
 class txLocPathPattern : public txPattern
 {
 public:
-    txLocPathPattern()
-    {
-    }
-
-    ~txLocPathPattern();
-
-    nsresult addStep(txPattern* aPattern, MBool isChild);
+    nsresult addStep(txPattern* aPattern, PRBool isChild);
 
     TX_DECL_PATTERN;
 
 private:
     class Step {
     public:
-        Step(txPattern* aPattern, MBool aIsChild)
-            : pattern(aPattern), isChild(aIsChild)
-        {
-        }
-
         nsAutoPtr<txPattern> pattern;
-        MBool isChild;
+        PRBool isChild;
     };
 
-    txList mSteps;
+    nsTArray<Step> mSteps;
 };
 
 class txRootPattern : public txPattern
 {
 public:
-    txRootPattern()
 #ifdef TX_TO_STRING
+    txRootPattern()
         : mSerialize(PR_TRUE)
-#endif
     {
     }
-
-    ~txRootPattern();
+#endif
 
     TX_DECL_PATTERN;
 
@@ -242,8 +213,6 @@ class txIdPattern : public txPattern
 public:
     txIdPattern(const nsSubstring& aString);
 
-    ~txIdPattern();
-
     TX_DECL_PATTERN;
 
 private:
@@ -259,21 +228,22 @@ public:
     {
     }
 
-    ~txKeyPattern();
-
     TX_DECL_PATTERN;
 
 private:
     txExpandedName mName;
-    nsIAtom* mPrefix;
+#ifdef TX_TO_STRING
+    nsCOMPtr<nsIAtom> mPrefix;
+#endif
     nsString mValue;
 };
 
-class txStepPattern : public PredicateList, public txPattern
+class txStepPattern : public txPattern,
+                      public PredicateList
 {
 public:
-    txStepPattern(txNodeTest* aNodeTest, MBool isAttr)
-        :mNodeTest(aNodeTest), mIsAttr(isAttr)
+    txStepPattern(txNodeTest* aNodeTest, PRBool isAttr)
+        : mNodeTest(aNodeTest), mIsAttr(isAttr)
     {
     }
 
@@ -292,7 +262,7 @@ public:
 
 private:
     nsAutoPtr<txNodeTest> mNodeTest;
-    MBool mIsAttr;
+    PRBool mIsAttr;
 };
 
 #endif // TX_XSLT_PATTERNS_H

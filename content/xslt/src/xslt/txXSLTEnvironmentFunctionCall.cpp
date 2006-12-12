@@ -54,11 +54,8 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    txListIterator iter(&params);
-    Expr* param = (Expr*)iter.next();
-
     nsAutoString property;
-    nsresult rv = param->evaluateToString(aContext, property);
+    nsresult rv = mParams[0]->evaluateToString(aContext, property);
     NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName qname;

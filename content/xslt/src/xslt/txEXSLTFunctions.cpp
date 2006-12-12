@@ -149,11 +149,8 @@ txEXSLTNodeSetFunctionCall::evaluate(txIEvalContext *aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    txListIterator iter(&params);
-    Expr* param1 = NS_STATIC_CAST(Expr*, iter.next());
-
     nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = param1->evaluate(aContext, getter_AddRefs(exprResult));
+    nsresult rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (exprResult->getResultType() == txAExprResult::NODESET) {
@@ -244,11 +241,8 @@ txEXSLTObjectTypeFunctionCall::evaluate(txIEvalContext *aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    txListIterator iter(&params);
-    Expr* param1 = NS_STATIC_CAST(Expr*, iter.next());
-
     nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = param1->evaluate(aContext, getter_AddRefs(exprResult));
+    nsresult rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<StringResult> strRes;

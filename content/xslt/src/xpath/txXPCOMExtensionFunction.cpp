@@ -395,7 +395,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
     }
 
     txFunctionEvaluationContext *context;
-    PRUint8 i = 0;
+    PRUint32 paramStart = 0;
     if (type == CONTEXT) {
         if (paramInfo.IsOut()) {
             // We don't support out values.
@@ -414,20 +414,20 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         NS_ADDREF((txIFunctionEvaluationContext*&)invokeParam.val.p = context);
 
         // Skip first argument, since it's the context.
-        ++i;
+        paramStart = 1;
     }
     else {
         context = nsnull;
     }
 
     // XXX varargs
-    if (!requireParams(inArgs - i, inArgs - i, aContext)) {
+    if (!requireParams(inArgs - paramStart, inArgs - paramStart, aContext)) {
         return NS_ERROR_FAILURE;
     }
 
-    txListIterator iter(&params);
-    for (; i < inArgs; ++i) {
-        Expr* expr = NS_STATIC_CAST(Expr*, iter.next());
+    PRUint32 i;
+    for (i = paramStart; i < inArgs; ++i) {
+        Expr* expr = mParams[i - paramStart];
 
         const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
         txArgumentType type = GetParamType(paramInfo, info);
