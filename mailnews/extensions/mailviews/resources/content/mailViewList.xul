@@ -22,6 +22,14 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+    Scott MacGregor <mscott@netscape.com>
+    Seth Spitzer <sspitzer@netscape.com>
+    Neil Rashbrook <neil@parkwaycc.co.uk>
+    <riceman+bmo@mail.rit.edu>
+    Gervase Markham <gerv@gerv.net>
+    Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
+    Paul Tomlin <paul@wavebreaks.com>
+    Karsten Düsterloh <mnyromyr@tprac.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,7 +57,6 @@
 <dialog id="mailViewListDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="mailViewListOnLoad();"
-        onunload="mailViewListOnUnload()"
         windowtype="mailnews:mailviewlist"
         title="&mailViewListTitle.label;"
         width="400" height="340"
@@ -64,7 +71,6 @@
         <listcols>
           <listcol flex="1" width="0"/>
         </listcols>
-    
         <listhead>
           <listheader label="&viewName.label;"/>
         </listhead>
@@ -78,7 +84,3 @@
     </hbox>
   </vbox>
 </dialog>
-
-
-
-
