@@ -872,7 +872,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // overflow lines hanging around; block reflow depends on the
   // overflow line lists being cleared out between reflow passes.
   DrainOverflowLines(state);
-
+  state.SetupOverflowPlaceholdersProperty();
+ 
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our width has changed, mark the lines dirty that we need to
   // mark dirty for a resize reflow.
@@ -891,9 +892,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   // allows subsequent lines on the page to be impacted by floats. If the 
   // block is incomplete or there is no ancestor using the same space manager, 
   // put continued floats at the beginning of the first overflow line.
-  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
-      state.mOverflowPlaceholders.NotEmpty()) {
-    PRBool gaveToAncestor = PR_FALSE;
+  if (state.mOverflowPlaceholders.NotEmpty()) {
+    NS_ASSERTION(aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
+                 "Somehow we failed to fit all content, even though we have unlimited space!");
     if (NS_FRAME_IS_COMPLETE(state.mReflowStatus)) {
       // find the nearest block ancestor that uses the same space manager
       for (const nsHTMLReflowState* ancestorRS = aReflowState.parentReflowState; 
@@ -924,13 +925,13 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
               // don't keep their out of flows in a child frame list.
             }
             ancestorPlace->AppendFrames(nsnull, state.mOverflowPlaceholders.FirstChild());
-            gaveToAncestor = PR_TRUE;
+            state.mOverflowPlaceholders.SetFrames(nsnull);
             break;
           }
         }
       }
     }
-    if (!gaveToAncestor) {
+    if (!state.mOverflowPlaceholders.IsEmpty()) {
       state.mOverflowPlaceholders.SortByContentOrder();
       PRInt32 numOverflowPlace = state.mOverflowPlaceholders.GetLength();
       nsLineBox* newLine =
@@ -971,6 +972,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
           nsLineList::iterator nextToLastLine = ----end_lines();
           PushLines(state, nextToLastLine);
         }
+        state.mOverflowPlaceholders.SetFrames(nsnull);
       }
       state.mReflowStatus |= NS_FRAME_NOT_COMPLETE | NS_FRAME_REFLOW_NEXTINFLOW;
     }
