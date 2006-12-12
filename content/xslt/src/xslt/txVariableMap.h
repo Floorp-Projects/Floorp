@@ -46,7 +46,6 @@
 
 class txVariableMap {
 public:
-    txVariableMap();
     ~txVariableMap();
     
     nsresult bindVariable(const txExpandedName& aName, txAExprResult* aValue);
@@ -56,22 +55,16 @@ public:
     void removeVariable(const txExpandedName& aName);
 
 private:
-    txExpandedNameMap mMap;
+    txExpandedNameMap<txAExprResult> mMap;
 };
 
 
 inline
-txVariableMap::txVariableMap()
-    : mMap(MB_FALSE)
-{
-}
-
-inline
 txVariableMap::~txVariableMap()
 {
-    txExpandedNameMap::iterator iter(mMap);
+    txExpandedNameMap<txAExprResult>::iterator iter(mMap);
     while (iter.next()) {
-        txAExprResult* res = NS_STATIC_CAST(txAExprResult*, iter.value());
+        txAExprResult* res = iter.value();
         NS_RELEASE(res);
     }
 }
@@ -90,7 +83,7 @@ txVariableMap::bindVariable(const txExpandedName& aName, txAExprResult* aValue)
 inline void
 txVariableMap::getVariable(const txExpandedName& aName, txAExprResult** aResult)
 {
-    *aResult = NS_STATIC_CAST(txAExprResult*, mMap.get(aName));
+    *aResult = mMap.get(aName);
     if (*aResult) {
         NS_ADDREF(*aResult);
     }
@@ -99,7 +92,7 @@ txVariableMap::getVariable(const txExpandedName& aName, txAExprResult** aResult)
 inline void
 txVariableMap::removeVariable(const txExpandedName& aName)
 {
-    txAExprResult* var = NS_STATIC_CAST(txAExprResult*, mMap.remove(aName));
+    txAExprResult* var = mMap.remove(aName);
     NS_IF_RELEASE(var);
 }
 

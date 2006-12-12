@@ -56,7 +56,6 @@ class txAOutputHandlerFactory;
 class txAXMLEventHandler;
 class txInstruction;
 class txIOutputHandlerFactory;
-class txExpandedNameMap;
 
 class txLoadedDocumentEntry : public nsStringHashKey
 {
@@ -96,7 +95,8 @@ class txExecutionState : public txIMatchContext
 public:
     txExecutionState(txStylesheet* aStylesheet, PRBool aDisableLoads);
     ~txExecutionState();
-    nsresult init(const txXPathNode& aNode, txExpandedNameMap* aGlobalParams);
+    nsresult init(const txXPathNode& aNode,
+                  txOwningExpandedNameMap<txIGlobalParameter>* aGlobalParams);
     nsresult end(nsresult aResult);
 
     TX_DECL_MATCH_CONTEXT;
@@ -127,7 +127,6 @@ public:
 
     // state-getting functions
     txIEvalContext* getEvalContext();
-    txExpandedNameMap* getParamMap();
     const txXPathNode* retrieveDocument(const nsAString& aUri);
     nsresult getKeyNodes(const txExpandedName& aKeyName,
                          const txXPathNode& aRoot,
@@ -181,7 +180,7 @@ private:
     txIEvalContext* mEvalContext;
     txIEvalContext* mInitialEvalContext;
     //Document* mRTFDocument;
-    txExpandedNameMap* mGlobalParams;
+    txOwningExpandedNameMap<txIGlobalParameter>* mGlobalParams;
 
     txLoadedDocumentsHash mLoadedDocuments;
     txKeyHash mKeyHash;

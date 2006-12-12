@@ -45,7 +45,7 @@
 
 class ProcessorState;
 
-class txPattern : public TxObject
+class txPattern
 {
 public:
     virtual ~txPattern();

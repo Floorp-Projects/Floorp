@@ -41,15 +41,10 @@
 
 #include "txError.h"
 #include "txXMLUtils.h"
+#include "nsTArray.h"
 
-class TxObject;
-
-class txExpandedNameMap {
-public:
-    txExpandedNameMap(MBool aOwnsValues);
-    
-    ~txExpandedNameMap();
-    
+class txExpandedNameMap_base {
+protected:
     /**
      * Adds an item, if an item with this key already exists an error is
      * returned
@@ -57,7 +52,7 @@ public:
      * @param  aValue value of item to add
      * @return errorcode
      */
-    nsresult add(const txExpandedName& aKey, TxObject* aValue);
+    nsresult addItem(const txExpandedName& aKey, void* aValue);
 
     /**
      * Sets an item, if an item with this key already exists it is overwritten
@@ -66,14 +61,15 @@ public:
      * @param  aValue value of item to set
      * @return errorcode
      */
-    nsresult set(const txExpandedName& aKey, TxObject* aValue);
+    nsresult setItem(const txExpandedName& aKey, void* aValue,
+                     void** aOldValue);
 
     /**
      * Gets an item
      * @param  aKey  key for item to get
      * @return item with specified key, or null if no such item exists
      */
-    TxObject* get(const txExpandedName& aKey) const;
+    void* getItem(const txExpandedName& aKey) const;
 
     /**
      * Removes an item, deleting it if the map owns the values
@@ -81,57 +77,161 @@ public:
      * @return item with specified key, or null if it has been deleted
      *         or no such item exists
      */
-    TxObject* remove(const txExpandedName& aKey);
+    void* removeItem(const txExpandedName& aKey);
 
     /**
      * Clears the items
      */
-    void clear();
+    void clearItems()
+    {
+        mItems.Clear();
+    }
 
-    class iterator {
+    class iterator_base {
     public:
-        iterator(txExpandedNameMap& aMap) : mMap(aMap),
-                                            mCurrentPos(-1)
+        iterator_base(txExpandedNameMap_base& aMap)
+            : mMap(aMap),
+              mCurrentPos(PRUint32(-1))
         {
         }
 
         MBool next()
         {
-            return ++mCurrentPos < mMap.mItemCount;
+            return ++mCurrentPos < mMap.mItems.Length();
         }
 
         const txExpandedName key()
         {
-            NS_ASSERTION(mCurrentPos >= 0 && mCurrentPos < mMap.mItemCount,
+            NS_ASSERTION(mCurrentPos >= 0 &&
+                         mCurrentPos < mMap.mItems.Length(),
                          "invalid position in txExpandedNameMap::iterator");
             return txExpandedName(mMap.mItems[mCurrentPos].mNamespaceID,
                                   mMap.mItems[mCurrentPos].mLocalName);
         }
 
-        TxObject* value()
+    protected:
+        void* itemValue()
         {
-            NS_ASSERTION(mCurrentPos >= 0 && mCurrentPos < mMap.mItemCount,
+            NS_ASSERTION(mCurrentPos >= 0 &&
+                         mCurrentPos < mMap.mItems.Length(),
                          "invalid position in txExpandedNameMap::iterator");
             return mMap.mItems[mCurrentPos].mValue;
         }
 
     private:
-        txExpandedNameMap& mMap;
-        int mCurrentPos;
+        txExpandedNameMap_base& mMap;
+        PRUint32 mCurrentPos;
     };
     
-    friend class iterator;
+    friend class iterator_base;
 
-private:
+    friend class txMapItemComparator;
     struct MapItem {
         PRInt32 mNamespaceID;
-        nsIAtom* mLocalName;
-        TxObject* mValue;
+        nsCOMPtr<nsIAtom> mLocalName;
+        void* mValue;
     };
     
-    MapItem* mItems;
-    int mItemCount, mBufferCount;
-    MBool mOwnsValues;
+    nsTArray<MapItem> mItems;
+};
+
+template<class E>
+class txExpandedNameMap : public txExpandedNameMap_base
+{
+public:
+    nsresult add(const txExpandedName& aKey, E* aValue)
+    {
+        return addItem(aKey, (void*)aValue);
+    }
+
+    nsresult set(const txExpandedName& aKey, E* aValue)
+    {
+        void* oldValue;
+        return setItem(aKey, (void*)aValue, &oldValue);
+    }
+
+    E* get(const txExpandedName& aKey) const
+    {
+        return (E*)getItem(aKey);
+    }
+
+    E* remove(const txExpandedName& aKey)
+    {
+        return (E*)removeItem(aKey);
+    }
+
+    void clear()
+    {
+        clearItems();
+    }
+
+    class iterator : public iterator_base
+    {
+    public:
+        iterator(txExpandedNameMap& aMap)
+            : iterator_base(aMap)
+        {
+        }
+
+        E* value()
+        {
+            return (E*)itemValue();
+        }
+    };
+};
+
+template<class E>
+class txOwningExpandedNameMap : public txExpandedNameMap_base
+{
+public:
+    ~txOwningExpandedNameMap()
+    {
+        clear();
+    }
+
+    nsresult add(const txExpandedName& aKey, E* aValue)
+    {
+        return addItem(aKey, (void*)aValue);
+    }
+
+    nsresult set(const txExpandedName& aKey, E* aValue)
+    {
+        nsAutoPtr<E> oldValue;
+        return setItem(aKey, (void*)aValue, getter_Transfers(oldValue));
+    }
+
+    E* get(const txExpandedName& aKey) const
+    {
+        return (E*)getItem(aKey);
+    }
+
+    void remove(const txExpandedName& aKey)
+    {
+        delete (E*)removeItem(aKey);
+    }
+
+    void clear()
+    {
+        PRUint32 i, len = mItems.Length();
+        for (i = 0; i < len; ++i) {
+            delete (E*)mItems[i].mValue;
+        }
+        clearItems();
+    }
+
+    class iterator : public iterator_base
+    {
+    public:
+        iterator(txOwningExpandedNameMap& aMap)
+            : iterator_base(aMap)
+        {
+        }
+
+        E* value()
+        {
+            return (E*)itemValue();
+        }
+    };
 };
 
 #endif //TRANSFRMX_EXPANDEDNAMEMAP_H

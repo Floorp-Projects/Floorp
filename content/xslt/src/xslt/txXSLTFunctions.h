@@ -119,7 +119,7 @@ private:
  * DecimalFormat
  * A representation of the XSLT element <xsl:decimal-format>
  */
-class txDecimalFormat : public TxObject {
+class txDecimalFormat {
 
 public:
     /*

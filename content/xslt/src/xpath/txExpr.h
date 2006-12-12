@@ -67,8 +67,8 @@ class txXPathNode;
 /**
  * A Base Class for all XSL Expressions
 **/
-class Expr : public TxObject {
-
+class Expr
+{
 public:
 
     /**
