@@ -3565,6 +3565,39 @@ PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
   return PR_FALSE;
 }
 
+
+struct UnitInfo {
+  const char name[5];  // needs to be long enough for the longest unit, with
+                       // terminating null.
+  PRUint32 length;
+  nsCSSUnit unit;
+  PRInt32 type;
+};
+
+#define STR_WITH_LEN(_str) \
+  _str, sizeof(_str) - 1
+
+const UnitInfo UnitData[] = {
+  { STR_WITH_LEN("px"), eCSSUnit_Pixel, VARIANT_LENGTH },
+  { STR_WITH_LEN("em"), eCSSUnit_EM, VARIANT_LENGTH },
+  { STR_WITH_LEN("ex"), eCSSUnit_XHeight, VARIANT_LENGTH },
+  { STR_WITH_LEN("pt"), eCSSUnit_Point, VARIANT_LENGTH },
+  { STR_WITH_LEN("in"), eCSSUnit_Inch, VARIANT_LENGTH },
+  { STR_WITH_LEN("cm"), eCSSUnit_Centimeter, VARIANT_LENGTH },
+  { STR_WITH_LEN("ch"), eCSSUnit_Char, VARIANT_LENGTH },
+  { STR_WITH_LEN("mm"), eCSSUnit_Millimeter, VARIANT_LENGTH },
+  { STR_WITH_LEN("pc"), eCSSUnit_Pica, VARIANT_LENGTH },
+  { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
+  { STR_WITH_LEN("grad"), eCSSUnit_Grad, VARIANT_ANGLE },
+  { STR_WITH_LEN("rad"), eCSSUnit_Radian, VARIANT_ANGLE },
+  { STR_WITH_LEN("hz"), eCSSUnit_Hertz, VARIANT_FREQUENCY },
+  { STR_WITH_LEN("khz"), eCSSUnit_Kilohertz, VARIANT_FREQUENCY },
+  { STR_WITH_LEN("s"), eCSSUnit_Seconds, VARIANT_TIME },
+  { STR_WITH_LEN("ms"), eCSSUnit_Milliseconds, VARIANT_TIME }
+};
+
+#undef STR_WITH_LEN
+
 PRBool CSSParserImpl::TranslateDimension(nsresult& aErrorCode,
                                          nsCSSValue& aValue,
                                          PRInt32 aVariantMask,
@@ -3574,30 +3607,19 @@ PRBool CSSParserImpl::TranslateDimension(nsresult& aErrorCode,
   nsCSSUnit units;
   PRInt32   type = 0;
   if (!aUnit.IsEmpty()) {
-    nsCSSKeyword id = nsCSSKeywords::LookupKeyword(aUnit);
-    switch (id) {
-      case eCSSKeyword_em:    units = eCSSUnit_EM;          type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_ex:    units = eCSSUnit_XHeight;     type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_ch:    units = eCSSUnit_Char;        type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_px:    units = eCSSUnit_Pixel;       type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_in:    units = eCSSUnit_Inch;        type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_cm:    units = eCSSUnit_Centimeter;  type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_mm:    units = eCSSUnit_Millimeter;  type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_pt:    units = eCSSUnit_Point;       type = VARIANT_LENGTH;  break;
-      case eCSSKeyword_pc:    units = eCSSUnit_Pica;        type = VARIANT_LENGTH;  break;
+    PRInt32 i;
+    for (i = 0; i < NS_ARRAY_LENGTH(UnitData); ++i) {
+      if (aUnit.LowerCaseEqualsASCII(UnitData[i].name,
+                                     UnitData[i].length)) {
+        units = UnitData[i].unit;
+        type = UnitData[i].type;
+        break;
+      }
+    }
 
-      case eCSSKeyword_deg:   units = eCSSUnit_Degree;      type = VARIANT_ANGLE;   break;
-      case eCSSKeyword_grad:  units = eCSSUnit_Grad;        type = VARIANT_ANGLE;   break;
-      case eCSSKeyword_rad:   units = eCSSUnit_Radian;      type = VARIANT_ANGLE;   break;
-
-      case eCSSKeyword_hz:    units = eCSSUnit_Hertz;       type = VARIANT_FREQUENCY; break;
-      case eCSSKeyword_khz:   units = eCSSUnit_Kilohertz;   type = VARIANT_FREQUENCY; break;
-
-      case eCSSKeyword_s:     units = eCSSUnit_Seconds;       type = VARIANT_TIME;  break;
-      case eCSSKeyword_ms:    units = eCSSUnit_Milliseconds;  type = VARIANT_TIME;  break;
-      default:
-        // unknown unit
-        return PR_FALSE;
+    if (i == NS_ARRAY_LENGTH(UnitData)) {
+      // Unknown unit
+      return PR_FALSE;
     }
   } else {
     // Must be a zero number...
