@@ -292,7 +292,7 @@ var folderListener = {
                  // if our new view is the same as the old view and we already have the list of search terms built up
                  // for the old view, just re-use it
                  var result = GetMailViewForFolder(msgFolder);
-                 if (gCurrentViewValue == result && gDefaultSearchViewTerms)
+                 if (GetSearchInput() && gCurrentViewValue == result && gDefaultSearchViewTerms)
                  {
                    viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
                    Search("");

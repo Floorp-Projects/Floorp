@@ -76,10 +76,6 @@ function ViewChange(aValue, aLabel)
     return;
   }
 
-  // bail out early if the user picked the same view
-  if (gCurrentViewValue == aValue)
-    return;
-
   // persist the view
   gCurrentViewValue = aValue;
   gCurrentViewLabel = aLabel;
