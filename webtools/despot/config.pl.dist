@@ -5,10 +5,15 @@
 # Copy this file to config.pl, then make changes to it.
 #
 
-$::db_host = 'localhost';   # database host
-$::db_name = 'mozusers';    # database name
-$::db_user = 'despot';      # database username
-$::db_pass = '';            # database password
+$::sitename = 'mozilla.org';				# site name
+$::ownersurl = 'http://www.mozilla.org/owners.html';	# owners page URL
+$::adminname = 'sysadmins';				# owner name
+$::adminmail = 'sysadmins@mozilla.org';			# owner e-mail address
+
+$::db_host = 'localhost';				# database host
+$::db_name = 'mozusers';				# database name
+$::db_user = 'despot';					# database username
+$::db_pass = '';					# database password
 
 1;
 

@@ -28,10 +28,10 @@ use diagnostics;
 
 use lib qw(.);
 
-# a few configurables
+# load our configuration file
 #
-my $despotOwnerMailTo = "mailto:sysadmins\@mozilla.org";
-my $despotOwner = "sysadmins";
+use vars qw( $sitename $ownersurl $adminname $adminmail $db_host $db_name $db_user $db_pass );
+do "config.pl" || die "Couldn't load config file";
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -77,7 +77,7 @@ $::disabled = "";
 #$::disabled = "Despot is temporarily disabled.  Please try again later.";
 if ($::disabled) {
     PrintHeader();
-    print h1("Despot -- access control for mozilla.org.");
+    print h1("Despot -- access control for $sitename.");
     print p($::disabled);
     exit;
 }
@@ -86,18 +86,18 @@ if ($::disabled) {
 my $server_name = defined $ENV{'SERVER_NAME'} ? $ENV{'SERVER_NAME'} : 'localhost';
 my $script_name = defined $ENV{'SCRIPT_NAME'} ? $ENV{'SCRIPT_NAME'} : 'despot.cgi';
 my $is_https = (exists $ENV{"HTTPS"} && (lc($ENV{"HTTPS"}) eq "on")) ? 1 : 0;
+my $secure_url = "https://$server_name$script_name";
 if (!param()) {
     PrintHeader();
-    print h1("Despot -- access control for mozilla.org.");
+    print h1("Despot -- access control for $sitename.");
     unless ($is_https) {
-        my $fixedurl = "https://$server_name$script_name";
         print b("<font color=red>If possible, please use the " .
-                a({href=>$fixedurl}, "secure version of this form") .
+                a({href=>$secure_url}, "secure version of this form") .
                 ".</font>");
     }
     print h2("Login, please.");
     print img({-align=>"right",-width=>72,-height=>84,-src=>"handcuff.gif"});
-    print p("To manage mozilla users, or to change your mozilla.org " .
+    print p("To manage $sitename users, or to change your $sitename " .
             "password, you must first log in.");
     PrintLoginForm();
     exit;
@@ -107,8 +107,6 @@ import_names("F");              # Makes all form values available as F::.
 
 use DBI;
 
-use vars qw( $db_host $db_name $db_user $db_pass );
-do "config.pl" || die "Couldn't load config file";
 my $dsn = "DBI:mysql:host=$db_host;database=$db_name";
 $::db = DBI->connect($dsn, $db_user, $db_pass)
     || die "Can't connect to database server";
@@ -173,7 +171,7 @@ sub PrintHeader {
         $extra = " (Wonder-twin powers -- activate!)";
     }
 
-    print start_html(-Title=>"Despot -- configure mozilla users$extra",
+    print start_html(-Title=>"Despot -- configure $sitename users$extra",
                      -BGCOLOR=>$bg);
 
     $::header_done = 1;
@@ -202,8 +200,8 @@ sub PrintLoginForm {
 
     print hr();
     print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
-            a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
-#     print p("If you do not yet have a mozilla.org account, or you have one " .
+            a({href=>"mailto:$adminmail"}, $adminname) . ".");
+#     print p("If you do not yet have a $sitename account, or you have one " .
 #             "but have forgotten your password, please fill in your e-mail " .
 #             "address above, and click <nobr>here: " .
 #             submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
@@ -338,7 +336,13 @@ sub AddUser() {
         PrintHeader();
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
-                a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your new mozilla.org account has been created.  It initially has a%0apassword $mailwords.  Please go to https://despot.mozilla.org/despot.cgi%0aand change your password as soon as possible.  You won't actually be%0aable to use it for anything until you do."},
+                a({href=>"mailto:$email?subject=Change your " .
+                   "$sitename password&body=Your new " .
+                   "$sitename account has been created.  It " .
+                   "initially has a%0apassword $mailwords.  Please go to " .
+                   "$secure_url%0aand change your password as " .
+                   "soon as possible.  You won't actually be%0aable to use " .
+                   "it for anything until you do."},
                   "send mail") .
                 " and have the user change the password!");
         print hr();
@@ -488,9 +492,14 @@ sub GeneratePassword {
     print h1("OK, new password generated.");
     print "$email now has a new password of '" . tt($plain) . "'.  ";
     print "Please " .
-        a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your mozilla.org account now has a password of '$plain'.  Please go to%0ahttps://despot.mozilla.org/despot.cgi and change your password as soon as%0apossible.  You won't actually be able to use your mozilla.org account%0afor anything until you do."},
-          "send mail") .
-              " to have the user change the password!";
+      a({href=>"mailto:$email?subject=Change your $sitename " .
+         "password&body=Your $sitename account now has a password " .
+         "of '$plain'.  Please go to%0a $secure_url and change " .
+         "your password as soon as%0apossible.  You won't actually be able " .
+         "to use your $sitename account%0afor anything until you ".
+         "do."},
+        "send mail") .
+          " to have the user change the password!";
     $::db->do("INSERT INTO syncneeded (needed) VALUES (1)");
 }
     
@@ -784,7 +793,7 @@ sub FindPartition {
         # form on the owners page, so we should redirect the user to the anchor on that
         # page for a single match.
         if (scalar(@matches) == 1 && param("view")) {
-            print "Location: http://www.mozilla.org/owners.html#" . name_to_id_token($matches[0]->{name}) . "\n\n";
+            print "Location: $ownersurl#" . name_to_id_token($matches[0]->{name}) . "\n\n";
             exit;
         }
         PrintHeader();
@@ -793,7 +802,7 @@ sub FindPartition {
             if (param("view")) {
                 # This should display modules just as they are displayed
                 # on owners.html, but that code is embedded into syncit.pl.
-                print qq|Module: <a href="http://www.mozilla.org/owners.html#| .
+                print qq|Module: <a href="$ownersurl#| .
                                  name_to_id_token($match->{name}) . qq|">$match->{name}</a>
                                  (matches pattern $match->{pattern})<br>\n|;
             }
@@ -1133,7 +1142,7 @@ sub CreateListRow {
 
 sub ChangePassword {
     PrintHeader();
-    print h1("Change your mozilla.org password.");
+    print h1("Change your $sitename password.");
     $F::loginpassword = "";
     # CGI seems to be misbehaving; creating the form tag manually as a workaround.
     print qq|<form method="$::POSTTYPE" enctype="application/x-www-form-urlencoded">\n|;
@@ -1324,7 +1333,7 @@ if ($row[0]) {
     print "<PRE>";
     if (!open(DOSYNC, "./syncit.pl -user $F::loginname|")) {
         print p("Can't do sync (error $?).  Please send mail to " .
-                a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
+                a({href=>"mailto:$adminmail"}, $adminname) . ".");
     } else {
         while (<DOSYNC>) {
             if ($::despot) {
