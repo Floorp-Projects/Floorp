@@ -385,8 +385,8 @@
   <br>
   <table cellpadding="1" cellspacing="1">
     <tr>
-      [% IF user.id %]
-        <td>
+      <td>
+        [% IF user.id %]
           <label for="comment" accesskey="c"><b>Additional <u>C</u>omments</b></label>:
           [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
             <input type="checkbox" name="commentprivacy" value="1"
@@ -419,8 +419,17 @@
                           && user.settings.state_addselfcc.value == 'cc_unless_role') %]>
             <label for="addselfcc">Add [% user.identity FILTER html %] to CC list</label>
           [% END %]
-        </td>
-      [% END %]
+        [% ELSE %]
+          <fieldset>
+            <legend>Note</legend>
+            <p>
+              You need to
+              <a href="show_bug.cgi?id=[% bug.bug_id %]&amp;GoAheadAndLogIn=1">log in</a>
+              before you can comment on or make changes to this [% terms.bug %].
+            </p>
+          </fieldset>
+        [% END %]
+      </td>
 
       <td valign="top">
         <fieldset>
