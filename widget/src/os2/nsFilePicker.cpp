@@ -162,7 +162,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
     DosError(FERR_ENABLEHARDERR);
     char* tempptr = strstr(filedlg.szFullFile, "^");
-    *tempptr = '\0';
+    if (tempptr)
+      *tempptr = '\0';
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
       if (!mDisplayDirectory)
