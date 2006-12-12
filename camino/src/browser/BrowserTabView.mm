@@ -63,7 +63,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 @interface BrowserTabView (Private)
 - (void)showOrHideTabsAsAppropriate;
-- (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
+- (void)handleDropOnTab:(NSTabViewItem*)targetTab withURLs:(NSArray*)urls;
 - (BrowserTabViewItem*)getTabViewItemFromWindowPoint:(NSPoint)point;
 - (void)showDragDestinationIndicator;
 - (void)hideDragDestinationIndicator;
@@ -325,28 +325,6 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     [self showOrHideTabsAsAppropriate];
 }
 
-- (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
-{
-  if (overTabViewItem) {
-    [[overTabViewItem view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
-
-    if (![BrowserWindowController shouldLoadInBackground:nil])
-      [self selectTabViewItem:overTabViewItem];
-
-    return YES;
-  }
-  else if (overContentArea) {
-    [[[self selectedTabViewItem] view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
-    return YES;
-  }
-  else {
-    [self addTabForURL:url referrer:nil inBackground:[BrowserWindowController shouldLoadInBackground:nil]];
-    return YES;
-  }
-  
-  return NO;  
-}
-
 - (BrowserTabViewItem*)getTabViewItemFromWindowPoint:(NSPoint)point
 {
   NSPoint         localPoint      = [self convertPoint: point fromView: nil];
@@ -416,58 +394,68 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  // determine if we are over a tab or the content area
-  NSPoint         localPoint      = [self convertPoint: [sender draggingLocation] fromView: nil];
-  NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
-  BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
-  NSArray*        pasteBoardTypes = [[sender draggingPasteboard] types];
-
   [self hideDragDestinationIndicator];
-  if (!overTabViewItem)
-    // if there's no tabviewitem at the point within our view, check the tabbar as well.
-    overTabViewItem = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
-    
+
+  NSArray* urls;
+  NSArray* pasteBoardTypes = [[sender draggingPasteboard] types];
   if ([pasteBoardTypes containsObject:kCaminoBookmarkListPBoardType]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
-    if (draggedItems) {
-      id aBookmark;
-      if ([draggedItems count] == 1) {
-        aBookmark = [draggedItems objectAtIndex:0];
-        if ([aBookmark isKindOfClass:[Bookmark class]])
-          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
-        else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
-          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:((overTabViewItem || overContentArea) ? eReplaceTabs : eAppendTabs) allowPopups:NO];
-          return YES;
-        }
-      } else if ([draggedItems count] > 1) {
-        NSMutableArray *urlArray = [NSMutableArray arrayWithCapacity:[draggedItems count]];
-        NSEnumerator *enumerator = [draggedItems objectEnumerator];
-        while ((aBookmark = [enumerator nextObject])) {
-          if ([aBookmark isKindOfClass:[Bookmark class]])
-            [urlArray addObject:[aBookmark url]];
-          else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
-            [urlArray addObjectsFromArray:[aBookmark childURLs]];
-        }
-        [[[self window] windowController] openURLArray:urlArray tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
-        return YES;
-      }
+    NSArray* bookmarkUUIDs = [[sender draggingPasteboard] propertyListForType:kCaminoBookmarkListPBoardType];
+    NSArray* draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:bookmarkUUIDs];
+    
+    NSMutableArray* bookmarkURLs = [NSMutableArray arrayWithCapacity:[draggedItems count]];
+    BookmarkItem* aBookmark;
+    NSEnumerator* enumerator = [draggedItems objectEnumerator];
+    while ((aBookmark = [enumerator nextObject])) {
+      if ([aBookmark isKindOfClass:[Bookmark class]] && ![aBookmark isSeparator])
+        [bookmarkURLs addObject:[(Bookmark*)aBookmark url]];
+      else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
+        [bookmarkURLs addObjectsFromArray:[(BookmarkFolder*)aBookmark childURLs]];
     }
+    urls = bookmarkURLs;
   }
   else if ([[sender draggingPasteboard] containsURLData]) {
-    // Pasteboard contains a collection of URLs, handle in the same way we handle a collection of files
-    NSArray* urls;
-    NSArray* titles;
+    NSArray* titles; // discarded
     [[sender draggingPasteboard] getURLs:&urls andTitles:&titles];
-    // if we're over the content area, just load the first one
-    if (overContentArea)
-      return [self handleDropOnTab:overTabViewItem overContent:YES withURL:[urls objectAtIndex:1]];
-    // otherwise load the first in the tab, and keep going
-    else
-      [[[self window] windowController] openURLArray:urls tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
-    return YES;
   }
 
-  return NO;    
+  if (!urls || [urls count] == 0)
+    return NO;
+
+  // determine if we are over a tab or the content area
+  NSPoint localPoint = [self convertPoint:[sender draggingLocation] fromView: nil];
+  NSTabViewItem* targetTab;
+  if (NSPointInRect(localPoint, [self contentRect])) // drop is on content area
+    targetTab = [self selectedTabViewItem];
+  else
+    targetTab = [self tabViewItemAtPoint:localPoint];
+  // if there's no tabviewitem at the point within our view, check the tab bar.
+  if (!targetTab)
+    targetTab = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
+  
+  [self handleDropOnTab:targetTab withURLs:urls];
+  
+  return YES;    
+}
+
+// Private method to handle drag and drop of one or more URLs. If |targetTab| is nil,
+// then the drop is on the tab bar background, as opposed to a tab or its content area.
+- (void)handleDropOnTab:(NSTabViewItem*)targetTab withURLs:(NSArray*)urls
+{
+  if ([urls count] == 1) {
+    NSString* url = [urls objectAtIndex:0];
+    if (targetTab) {
+      [[targetTab view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
+      
+      if (![BrowserWindowController shouldLoadInBackground:nil])
+        [self selectTabViewItem:targetTab];
+    }
+    else {
+      [self addTabForURL:url referrer:nil inBackground:[BrowserWindowController shouldLoadInBackground:nil]];
+    }
+  }
+  else {
+    [[[self window] windowController] openURLArray:urls tabOpenPolicy:(targetTab ? eReplaceTabs : eAppendTabs) allowPopups:NO];
+  }
 }
 
 #pragma mark -
