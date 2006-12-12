@@ -63,8 +63,8 @@
       <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
     </resources>
 
-    <content>
-      <html:table>
+    <content xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
+      <html:table role="wairole:grid">
         <html:tbody anonid="dayContainer"/>
       </html:table>
     </content>
@@ -121,6 +121,7 @@
           var header;
           for (var i = 0; i < 7; i++) {
             header = this.ownerDocument.createElementNS(this.XHTML_NS, "th");
+            header.setAttribute("role", "wairole:columnheader");
             header.textContent = dayOfWeekNames[i];
             row.appendChild(header);
           }
@@ -133,6 +134,7 @@
 
             for (var y = 0; y < 7; y++) {
               cell = this.ownerDocument.createElementNS(this.XHTML_NS, "td");
+              cell.setAttribute("role", "wairole:gridcell");
               cell.setAttribute("tabindex", "-1");
               this._dayElements.push(cell);
               row.appendChild(cell);
@@ -175,8 +177,8 @@
 
   <!-- FULL CALENDAR -->
   <binding id="calendar-full" extends="#calendar-compact">
-    <content>
-      <html:table>
+    <content xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
+      <html:table role="wairole:grid">
         <html:tbody anonid="dayContainer">
         <html:tr>
           <html:td colspan="1">
@@ -737,4 +739,21 @@
     </handlers>
   </binding>
 
+
+  <!-- DROPMARKER -->
+  <binding id="dropmarker">
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
+    </resources>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsDropmarkerWidget;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
 </bindings>
+

@@ -45,13 +45,11 @@
 #include "nsIXFormsUtilityService.h"
 #include "nsIPlaintextEditor.h"
 
-// nsXFormsAccessible
+// nsXFormsAccessibleBase
 
-nsIXFormsUtilityService *nsXFormsAccessible::sXFormsService = nsnull;
+nsIXFormsUtilityService *nsXFormsAccessibleBase::sXFormsService = nsnull;
 
-nsXFormsAccessible::
-nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  nsHyperTextAccessible(aNode, aShell)
+nsXFormsAccessibleBase::nsXFormsAccessibleBase()
 {
   if (!sXFormsService) {
     nsresult rv = CallGetService("@mozilla.org/xforms-utility-service;1",
@@ -59,6 +57,14 @@ nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
     if (NS_FAILED(rv))
       NS_WARNING("No XForms utility service.");
   }
+}
+
+// nsXFormsAccessible
+
+nsXFormsAccessible::
+nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+  nsHyperTextAccessible(aNode, aShell)
+{
 }
 
 nsresult

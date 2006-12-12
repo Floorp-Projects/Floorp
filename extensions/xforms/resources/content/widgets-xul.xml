@@ -62,8 +62,9 @@
       <stylesheet src="chrome://xforms/skin/widgets-xul.css"/>
     </resources>
 
-    <content>
-      <xul:grid>
+    <content xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml">
+      <xul:grid xhtml:role="wairole:grid">
         <xul:columns>
           <xul:column flex="1"/>
           <xul:column flex="1"/>
@@ -135,6 +136,8 @@
                                                              "description");
             description.setAttribute("value", dayOfWeekNames[i]);
             description.setAttribute("class", "header");
+            description.setAttributeNS(this.XHTML_NS, "role",
+                                       "wairole:columnheader");
             row.appendChild(description);
           }
           this.dayContainer.appendChild(row);
@@ -148,6 +151,7 @@
               var button  = this.ownerDocument.createElementNS(this.XUL_NS,
                                                                "toolbarbutton");
               button.setAttribute("tabindex", "-1");
+              button.setAttributeNS(this.XHTML_NS, "role", "wairole:gridcell");
               this._dayElements.push(button);
               row.appendChild(button);
             }
@@ -162,6 +166,9 @@
           this.buildUIInternal();
         </body>
       </method>
+
+      <property name="XHTML_NS" readonly="true"
+                onget="return 'http://www.w3.org/1999/xhtml';"/>
 
       <property name="XUL_NS" readonly="true"
                 onget="return 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';"/>
@@ -204,7 +211,9 @@
 
   <!-- FULL CALENDAR -->
   <binding id="calendar-full" extends="#calendar-compact">
-    <content orient="vertical">
+    <content orient="vertical"
+             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml">
       <xul:hbox>
         <!-- month selection section -->
         <xul:hbox class="list" flex="1">
@@ -229,7 +238,7 @@
       </xul:hbox>
 
       <!-- calendar days container-->
-      <xul:grid>
+      <xul:grid xhtml:role="wairole:grid">
         <xul:columns>
           <xul:column flex="1"/>
           <xul:column flex="1"/>
@@ -353,4 +362,20 @@
       </handler>
     </handlers>
   </binding>
+
+
+  <!-- DROPMARKER -->
+  <binding id="dropmarker"
+           extends="chrome://global/content/bindings/general.xml#dropmarker">
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsDropmarkerWidget;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
 </bindings>
+

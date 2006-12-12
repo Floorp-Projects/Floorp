@@ -208,16 +208,39 @@
            extends="#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <html:input anonid="control" xbl:inherits="accesskey" size="10"
-                  class="xf-value"/>
-      <html:input type="button" anonid="dropmarker"
-                  title="&xforms.datepicker.title;"/>
+      <html:span class="-moz-date-container">
+        <html:input anonid="control" xbl:inherits="accesskey" size="10"
+                    class="-moz-xforms-date-input xf-value"/>
+        <html:input mozType:dropmarker="true"
+                    type="button" anonid="dropmarker"
+                    title="&xforms.datepicker.title;"/>
+      </html:span>
       <html:span mozType:calendar="true" anonid="picker"
                  style="position:absolute; display:none;"/>
       <children/>
     </content>
 
-    <implementation>
+    <implementation implements="nsIXFormsComboboxUIWidget, nsIAccessibleProvider">
+      <!-- nsIXFormsComboboxUIWidget -->
+      <property name="open">
+        <getter>
+          return this._isPickerVisible;
+        </getter>
+        <setter>
+          if (val)
+            this.showPicker();
+          else
+            this.hidePicker();
+        </setter>
+      </property>
+
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsInputDate;
+        </getter>
+      </property>
+
       <method name="getControlElement">
         <body>
           return {
@@ -534,7 +557,7 @@
 
   <!-- INPUT: <DATE, APPEARANCE='FULL' -->
   <binding id="xformswidget-input-date-full"
-           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+           extends="chrome://xforms/content/input.xml#xformswidget-input-date-calendar-base">
     <content>
       <children includes="label"/>
       <html:span mozType:calendar="true" anonid="control"/>

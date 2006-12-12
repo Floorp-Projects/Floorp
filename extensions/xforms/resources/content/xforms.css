@@ -277,20 +277,6 @@ html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date');
 }
 
-html|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="dropmarker"] {
-  min-width:27px;
-  min-height: 1.3em;
-  background-image: url(chrome://xforms/content/calendar.png) !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-}
-
-xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] xul|toolbarbutton[anonid="dropmarker"] {
-  min-width:27px;
-  min-height: 1.3em;
-  list-style-image: url('chrome://xforms/content/calendar.png');
-}
-
 xul|*:root input[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] {
   -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-date');
 }
@@ -569,33 +555,8 @@ xul|*:root select1[appearance="full"] item xul|radio {
 /* select1[appearance='minimal'] for xhtml styles (most of the select1 specific
 CSS is copied from forms.css) */
 
-html|*:root html|input.-moz-xforms-date-dropdown,
-html|*:root html|input.-moz-xforms-select1-dropdown {
-  width: 12px;
-  height: 1.3em;
-  white-space: nowrap;
-  position: static !important;
-  background-image: url("data:image/gif;base64,R0lGODlhBwAEAIAAAAAAAP%2F%2F%2FyH5BAEAAAEALAAAAAAHAAQAAAIIhA%2BBGWoNWSgAOw%3D%3D") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  -moz-appearance: menulist-button;
-  -moz-user-select: none !important;
-  -moz-user-focus: ignore !important;
-  -moz-binding: none;
-  vertical-align: text-top;
-  margin: 0px !important;
-  margin-top: -1px !important;
-}
-
-html|*:root html|input.-moz-xforms-select1-dropdown::-moz-focus-inner {
-  border: 0 !important;
-}
-
-html|*:root html|input.-moz-xforms-select1-dropdown:active:hover {
-  border-style: outset;
-}
-
-html|*:root html|input.-moz-xforms-select1-input {
+html|*:root html|input.-moz-xforms-select1-input,
+html|*:root html|input.-moz-xforms-date-input {
   border: 1px dotted transparent;
   margin-right: 0px;
   padding: 0px;
@@ -781,5 +742,14 @@ xul|*:root repeat[appearance="compact"] *|*[anonid="insertion"] {
 }
 xul|*:root repeat .xf-repeat-item {
   -moz-box-flex: 1;
+}
+
+/* native widgets */
+html|*:root html|input[mozType|dropmarker] {
+  -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#dropmarker');
+}
+
+xul|*:root xul|dropmarker[mozType|dropmarker] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#dropmarker');
 }
 

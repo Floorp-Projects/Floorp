@@ -116,6 +116,18 @@ public:
 };
 
 /**
+ * Accessible object for xforms:input[type="xsd:date"].
+ */
+
+class nsXFormsInputDateAccessible : public nsXFormsContainerAccessible
+{
+public:
+  nsXFormsInputDateAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+};
+
+/**
  * Accessible object for xforms:secret.
  */
 

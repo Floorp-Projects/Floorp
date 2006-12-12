@@ -172,5 +172,7 @@ PRUint32 msaaRoleMap[] = {
     USE_ROLE_STRING,                 // nsIAccessible::ROLE_IME
     ROLE_SYSTEM_APPLICATION,         // nsIAccessible::ROLE_APP_ROOT
     ROLE_SYSTEM_MENUITEM,            // nsIAccessible::ROLE_PARENT_MENUITEM
+    ROLE_SYSTEM_CLIENT,              // nsIAccessible::ROLE_CALENDAR
     ROLE_MSAA_LAST_ENTRY             // nsIAccessible::ROLE_LAST_ENTRY
 };
+

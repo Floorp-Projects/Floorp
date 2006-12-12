@@ -207,6 +207,19 @@
   </binding>
 
 
+  <!-- INPUT: Calendar -->
+  <binding id="xformswidget-input-date-calendar-base"
+           extends="#xformswidget-input-base">
+    <implementation>
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsContainer;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+
   <!-- INPUT: Month
     The input[type="xsd:gMonth"] widget assumes successors bindings implement
     getElementControl() method what returns the object:

@@ -48,7 +48,8 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type"
+          xmlns:html="http://www.w3.org/1999/xhtml">
 
 
   <!-- INPUT: base widget for input: <default>, textarea: <default> and
@@ -184,17 +185,53 @@
   <binding id="xformswidget-input-date"
            extends="#xformswidget-input-base">
 
+    <resources>
+      <stylesheet src="chrome://xforms/skin/input-xul.css"/>
+    </resources>
+
     <content>
       <children includes="label"/>
-      <xul:textbox anonid="control" xbl:inherits="accesskey" flex="1"/>
-      <xul:toolbarbutton anonid="dropmarker"/>
+      <xul:hbox class="-moz-menulist-container" flex="1">
+        <html:input anonid="control" xbl:inherits="accesskey" flex="1"
+                    class="-moz-menulist-textfield"
+                    allowevents="true"/>
+        <xul:dropmarker mozType:dropmarker="true" anonid="dropmarker"
+                        xbl:inherits="disabled"/>
+      </xul:hbox>
       <xul:popup anonid="popup" ignorekeys="true">
         <xul:box mozType:calendar="true" anonid="picker"/>
       </xul:popup>
       <children/>
     </content>
 
-    <implementation>
+    <implementation implements="nsIXFormsComboboxUIWidget, nsIAccessibleProvider">
+    <!-- nsIXFormsComboboxUIWidget -->
+      <property name="open">
+        <getter>
+          return this._isPickerVisible;
+        </getter>
+        <setter>
+          if (val)
+            this.showPicker();
+          else
+            this.hidePicker();
+        </setter>
+      </property>
+
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsInputDate;
+        </getter>
+      </property>
+
+      <method name="getControlElement">
+        <body>
+          return this.ownerDocument.
+            getAnonymousElementByAttribute(this, 'anonid', 'control');
+        </body>
+      </method>
+
       <constructor>
         var pickerChangeHandler = {
           inputControl: this,
@@ -287,9 +324,10 @@
     </handlers>
   </binding>
 
+
   <!-- INPUT: <DATE, APPEARANCE='FULL'> -->
   <binding id="xformswidget-input-date-full"
-           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+           extends="chrome://xforms/content/input.xml#xformswidget-input-date-calendar-base">
     <content>
       <children includes="label"/>
       <xul:box mozType:calendar="true" anonid="control"/>

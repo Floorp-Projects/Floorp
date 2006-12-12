@@ -38,4 +38,5 @@ xforms.jar:
 * skin/xforms/contents.rdf                     (resources/skin/contents.rdf)
   skin/xforms/widgets-xhtml.css                (resources/skin/widgets-xhtml.css)
   skin/xforms/widgets-xul.css                  (resources/skin/widgets-xul.css)
+  skin/xforms/input-xul.css                    (resources/skin/input-xul.css)
 

@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(1a57d854-12df-4b7b-8552-a3cd1fa90618)]
+[scriptable, uuid(18797ea7-44cc-469e-8923-bd5d1c144461)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -108,6 +108,11 @@ interface nsIAccessibleProvider : nsISupports
    * Constants set is used by XForms elements.
    */
 
+   /** Used for xforms elements that provide accessible object for itself as
+    * well for anonymous content. This property are used for upload,
+    * input[type="xsd:gDay"] and input[type="xsd:gMonth"] */
+   const long XFormsContainer = 0x00002000;
+
    /** Used for label element */
    const long XFormsLabel = 0x00002001;
    /** Used for output element */
@@ -118,18 +123,21 @@ interface nsIAccessibleProvider : nsISupports
    const long XFormsInput = 0x00002004;
    /** Used for input[xsd:boolean] element */
    const long XFormsInputBoolean = 0x00002005;
+   /** Used for input[xsd:date] element */
+   const long XFormsInputDate = 0x00002006;
    /** Used for secret element */
-   const long XFormsSecret = 0x00002006;
+   const long XFormsSecret = 0x00002007;
    /** Used for range element represented by slider */
-   const long XFormsSliderRange = 0x00002007;
-   /** Used for xforms elements that provide accessible object for itself as
-    * well for anonymous content. This property are used for upload,
-    * input[type="xsd:gDay"] and input[type="xsd:gMonth"] */
-   const long XFormsContainer = 0x00002008;
+   const long XFormsSliderRange = 0x00002008;
    /** Used for select and select1 that are implemented using host document's
     * native widget. For example, a select1 in a xhtml document may be
     * represented by the native html control html:select */
    const long XFormsSelect = 0x00002009;
+
+   /** Used for dropmarker widget that is used by xforms elements */
+   const long XFormsDropmarkerWidget = 0x00002101;
+   /** Used for calendar widget that is used by xforms elements */
+   const long XFormsCalendarWidget = 0x00002102;
 
   /**
    * Return one of constants declared above.

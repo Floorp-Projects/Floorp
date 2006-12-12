@@ -55,9 +55,15 @@
       currentDay - return day of current date.
   -->
   <binding id="calendar-base">
-    <implementation>
-    <!-- interface -->
+    <implementation implements="nsIAccessibleProvider">
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XFormsCalendarWidget;
+        </getter>
+      </property>
 
+    <!-- interface -->
       <!-- Set/get readonly state -->
       <property name="readonly">
         <getter>
@@ -487,4 +493,5 @@
       </handler>
     </handlers>
   </binding>
+
 </bindings>

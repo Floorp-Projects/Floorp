@@ -104,6 +104,7 @@
 
 #ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
+#include "nsXFormsWidgetsAccessible.h"
 #endif
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
@@ -1238,28 +1239,21 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return NS_ERROR_FAILURE;
   }
 
-  if (!content->IsNodeOfType(nsINode::eHTML)) {
-    // --- Try creating accessible non-HTML (XUL, etc.) ---
-    // XUL elements may implement nsIAccessibleProvider via XBL
-    // This allows them to say what kind of accessible to create
-    // Non-HTML elements must have an nsIAccessibleProvider, tabindex
-    // or role attribute or they're not in the accessible tree.
+  // Elements may implement nsIAccessibleProvider via XBL. This allows them to
+  // say what kind of accessible to create.
+  nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!newAcc) {
-      if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-               content->Tag() == nsAccessibilityAtoms::svg) {
-        newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
-      }
-      else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-               content->Tag() == nsAccessibilityAtoms::math) {
-        newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
-      }
+  if (!newAcc && !content->IsNodeOfType(nsINode::eHTML)) {
+    if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+             content->Tag() == nsAccessibilityAtoms::svg) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
     }
-  }
-  else {  // HTML accessibles
+    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
+             content->Tag() == nsAccessibilityAtoms::math) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
+    }
+  } else if (!newAcc) {  // HTML accessibles
     // Prefer to use markup (mostly tag name, perhaps attributes) to
     // decide if and what kind of accessible to create.
     CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
@@ -1550,6 +1544,10 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
 
 #ifndef DISABLE_XFORMS_HOOKS
     // XForms elements
+    case nsIAccessibleProvider::XFormsContainer:
+      *aAccessible = new nsXFormsContainerAccessible(aNode, weakShell);
+      break;
+
     case nsIAccessibleProvider::XFormsLabel:
       *aAccessible = new nsXFormsLabelAccessible(aNode, weakShell);
       break;
@@ -1565,17 +1563,24 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsInputBoolean:
       *aAccessible = new nsXFormsInputBooleanAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XFormsInputDate:
+      *aAccessible = new nsXFormsInputDateAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XFormsSecret:
       *aAccessible = new nsXFormsSecretAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XFormsSliderRange:
       *aAccessible = new nsXFormsRangeAccessible(aNode, weakShell);
       break;
-    case nsIAccessibleProvider::XFormsContainer:
-      *aAccessible = new nsXFormsContainerAccessible(aNode, weakShell);
-      break;
     case nsIAccessibleProvider::XFormsSelect:
       *aAccessible = new nsXFormsSelectAccessible(aNode, weakShell);
+      break;
+
+    case nsIAccessibleProvider::XFormsDropmarkerWidget:
+      *aAccessible = new nsXFormsDropmarkerWidgetAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XFormsCalendarWidget:
+      *aAccessible = new nsXFormsCalendarWidgetAccessible(aNode, weakShell);
       break;
 #endif
 

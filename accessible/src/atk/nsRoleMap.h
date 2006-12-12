@@ -93,7 +93,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_CHECK_BOX,           // nsIAccessible::ROLE_CHECKBUTTON       44
     ATK_ROLE_RADIO_BUTTON,        // nsIAccessible::ROLE_RADIOBUTTON       45
     ATK_ROLE_COMBO_BOX,           // nsIAccessible::ROLE_COMBOBOX          46
-    ATK_ROLE_CALENDAR,            // nsIAccessible::ROLE_DROPLIST          47
+    ATK_ROLE_COMBO_BOX,           // nsIAccessible::ROLE_DROPLIST          47
     ATK_ROLE_PROGRESS_BAR,        // nsIAccessible::ROLE_PROGRESSBAR       48
     ATK_ROLE_DIAL,                // nsIAccessible::ROLE_DIAL              49
     ATK_ROLE_UNKNOWN,             // nsIAccessible::ROLE_HOTKEYFIELD       50
@@ -159,6 +159,7 @@ PRUint32 atkRoleMap[] = {
     ATK_ROLE_INPUT_METHOD_WINDOW, // nsIAccessible::ROLE_IME               110
     ATK_ROLE_APPLICATION,         // nsIAccessible::ROLE_APP_ROOT          111
     ATK_ROLE_MENU,                // nsIAccessible::ROLE_PARENT_MENUITEM   112
+    ATK_ROLE_CALENDAR,            // nsIAccessible::ROLE_CALENDAR          113
     kROLE_ATK_LAST_ENTRY          // nsIAccessible::ROLE_LAST_ENTRY
 };
 

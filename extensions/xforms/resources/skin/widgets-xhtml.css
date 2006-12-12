@@ -108,3 +108,30 @@ span[mozType|slider] canvas {
   margin: 2px;
 }
 
+/* dropmarker */
+
+input[mozType|dropmarker] {
+  width: 12px;
+  height: 1.3em;
+  white-space: nowrap;
+  position: static !important;
+  background-image: url("data:image/gif;base64,R0lGODlhBwAEAIAAAAAAAP%2F%2F%2FyH5BAEAAAEALAAAAAAHAAQAAAIIhA%2BBGWoNWSgAOw%3D%3D") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  -moz-appearance: menulist-button;
+  -moz-user-select: none !important;
+  -moz-user-focus: ignore !important;
+  -moz-binding: none;
+  vertical-align: text-top;
+  margin: 0px !important;
+  margin-top: -1px !important;
+}
+
+input[mozType|dropmarker]::-moz-focus-inner {
+  border: 0 !important;
+}
+
+input[mozType|dropmarker]:active:hover {
+  border-style: outset;
+}
+

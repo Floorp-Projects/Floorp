@@ -42,12 +42,13 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:xforms="http://www.w3.org/2002/xforms">
+   xmlns:xforms="http://www.w3.org/2002/xforms"
+   xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
   <!-- select1 -->
   <binding id="xformswidget-select1"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    
+
     <!-- The strange indentation is because of the whitespace nodes.-->
     <content>
       <children includes="label|hint"/>
@@ -68,7 +69,7 @@
                  onclick="this.parentNode.parentNode.handleControlClick();"
                  onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
                  oninput="this.parentNode.parentNode.handleInput();"
-      /><html:input class="-moz-xforms-select1-dropdown"
+      /><html:input mozType:dropmarker="true"
                     type="button"
                     anonid="dropmarker"
                     tabindex="-1"
@@ -78,7 +79,7 @@
                              this.previousSibling.focus();"
         /></html:span></content>
 
-    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element, nsIXFormsNSEditableElement">
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsNSSelect1Element, nsIXFormsNSEditableElement, nsIXFormsComboboxUIWidget">
 
       <!-- nsIXFormsNSEditableElement -->
       <property name="editor" readonly="true"
@@ -103,6 +104,19 @@
             this.updateInputField();
             this._handleSelection(true);
           }
+        </setter>
+      </property>
+
+      <!-- nsIXFormsComboboxUIWidget -->
+      <property name="open">
+        <getter>
+          return this.popupOpen;
+        </getter>
+        <setter>
+          if (val)
+            this.showPopup();
+          else
+            this.hidePopup();
         </setter>
       </property>
 
@@ -487,13 +501,6 @@
         </body>
       </method>
 
-      <method name="hidePopup">
-        <body>
-          this.popup.style.visibility = "hidden";
-          this.popupOpen = false;
-        </body>
-      </method>
-
       <method name="refreshWidth">
         <body>
           <![CDATA[
@@ -518,87 +525,101 @@
         </body>
       </method>
 
+      <method name="hidePopup">
+        <body>
+          this.popup.style.visibility = "hidden";
+          this.popupOpen = false;
+        </body>
+      </method>
+
+      <method name="showPopup">
+        <body>
+        <![CDATA[
+          if (this.popupOpen || this.accessors.isReadonly())
+            return;
+
+          // Calculating the size and position of the popup.
+          var style = "";
+          var containerBox = document.getBoxObjectFor(this.container);
+          var x;
+          var y;
+          var adjust = 0;
+          var absolute = false;
+          var absoluteOffsetY = 0;
+          var p = this.container.offsetParent;
+          var compStyle =
+            document.defaultView.getComputedStyle(p, null);
+          if (compStyle.getPropertyValue("position") != "absolute" &&
+              compStyle.getPropertyValue("position") != "relative") {
+            adjust = document.documentElement.offsetTop;
+            x = containerBox.x;
+            y = containerBox.y;
+          } else {
+            absolute = true;
+            x = this.container.offsetLeft;
+            y = this.container.offsetTop;
+            absoluteOffsetY = y;
+            while (p) {
+              absoluteOffsetY += p.offsetTop;
+              p = p.offsetParent;
+            }
+          }
+
+          var h = containerBox.height;
+          var w = containerBox.width;
+          var targetY = y + h;
+          this.popup.style.maxHeight = "none";
+          var popupBox = document.getBoxObjectFor(this.popup);
+          var popupHeight = popupBox.height;
+          var pY = window.pageYOffset;
+          var iH = window.innerHeight;
+          var belowSelect = absolute
+            ? (iH - (absoluteOffsetY + h) - h)
+            : (iH - (y - pY + h - adjust) - h);
+
+          if (belowSelect < popupHeight) {
+            if ((y - pY) > popupHeight) {
+              targetY = y - popupHeight;
+            } else if (belowSelect < (y - pY)) {
+              style = style + "max-height:" + (y - pY - adjust) + "px;";
+              targetY = pY + adjust;
+            } else {
+              style = style + "max-height:" + belowSelect + "px;";
+            }
+          }
+          style = style + "left:" + x + "px;";
+          style = style + "top:" + targetY + "px;";
+
+          style = style + "width:";
+          if (this.selectionOpen) {
+            style = style + w + "px;";
+          } else if (this._width < 0) {
+            style = style + "auto;"
+          } else {
+            style = style + this._width + "px;";
+          }
+
+          style = style + "visibility:visible;";
+          this.popup.setAttribute("style", style);
+          this.popupOpen = true;
+          this._tmpSelected = this._selected;
+
+          if (this._selected) {
+            var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
+            if ("scrollIntoView" in el) {
+              el.scrollIntoView(false);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="togglePopup">
         <body>
-          <![CDATA[
-          if (!this.popupOpen && !this.accessors.isReadonly()) {
-            // Calculating the size and position of the popup.
-            var style = "";
-            var containerBox = document.getBoxObjectFor(this.container);
-            var x;
-            var y;
-            var adjust = 0;
-            var absolute = false;
-            var absoluteOffsetY = 0;
-            var p = this.container.offsetParent;
-            var compStyle =
-              document.defaultView.getComputedStyle(p, null);
-            if (compStyle.getPropertyValue("position") != "absolute" &&
-                compStyle.getPropertyValue("position") != "relative") {
-              adjust = document.documentElement.offsetTop;
-              x = containerBox.x;
-              y = containerBox.y;
-            } else {
-              absolute = true;
-              x = this.container.offsetLeft;
-              y = this.container.offsetTop;
-              absoluteOffsetY = y;
-              while (p) {
-                absoluteOffsetY += p.offsetTop;
-                p = p.offsetParent;
-              }
-            }
-
-            var h = containerBox.height;
-            var w = containerBox.width;
-            var targetY = y + h;
-            this.popup.style.maxHeight = "none";
-            var popupBox = document.getBoxObjectFor(this.popup);
-            var popupHeight = popupBox.height;
-            var pY = window.pageYOffset;
-            var iH = window.innerHeight;
-            var belowSelect = absolute
-              ? (iH - (absoluteOffsetY + h) - h)
-              : (iH - (y - pY + h - adjust) - h);
-
-            if (belowSelect < popupHeight) {
-              if ((y - pY) > popupHeight) {
-                targetY = y - popupHeight;
-              } else if (belowSelect < (y - pY)) {
-                style = style + "max-height:" + (y - pY - adjust) + "px;";
-                targetY = pY + adjust;
-              } else {
-                style = style + "max-height:" + belowSelect + "px;";
-              }
-            }
-            style = style + "left:" + x + "px;";
-            style = style + "top:" + targetY + "px;";
-
-            style = style + "width:";
-            if (this.selectionOpen) {
-              style = style + w + "px;";
-            } else if (this._width < 0) {
-              style = style + "auto;"
-            } else {
-              style = style + this._width + "px;";
-            }
-
-            style = style + "visibility:visible;";
-            this.popup.setAttribute("style", style);
-            this.popupOpen = true;
-            this._tmpSelected = this._selected;
-
-            if (this._selected) {
-              var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
-              if ("scrollIntoView" in el) {
-                el.scrollIntoView(false);
-              }
-            }
-          } else {
+          if (!this.popupOpen)
+            this.showPopup();
+          else
             this.hidePopup();
-            return;
-          }
-          ]]>
         </body>
       </method>
 

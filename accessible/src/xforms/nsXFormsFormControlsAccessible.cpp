@@ -257,6 +257,23 @@ nsXFormsInputBooleanAccessible::DoAction(PRUint8 aIndex)
   return DoCommand();
 }
 
+// nsXFormsInputDateAccessible
+
+nsXFormsInputDateAccessible::
+  nsXFormsInputDateAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell):
+  nsXFormsContainerAccessible(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXFormsInputDateAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = ROLE_DROPLIST;
+  return NS_OK;
+}
+
 // nsXFormsSecretAccessible
 
 nsXFormsSecretAccessible::

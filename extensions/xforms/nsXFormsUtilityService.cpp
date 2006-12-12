@@ -39,11 +39,14 @@
 
 #include "nsXFormsUtilityService.h"
 
+#include "nsIContent.h"
+
 #include "nsIXFormsDelegate.h"
 #include "nsIXFormsAccessors.h"
 #include "nsIXFormsRangeConditionAccessors.h"
 #include "nsIXFormsRangeAccessors.h"
 #include "nsIXFormsUIWidget.h"
+#include "nsIXFormsComboboxUIWidget.h"
 #include "nsIXFormsNSEditableElement.h"
 #include "nsXFormsUtils.h"
 
@@ -60,6 +63,13 @@ NS_ENSURE_TRUE(accessors, NS_ERROR_FAILURE);
 #define GET_XFORMS_UIWIDGET \
 NS_ENSURE_ARG_POINTER(aElement);\
 nsCOMPtr<nsIXFormsUIWidget> widget(do_QueryInterface(aElement));\
+NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
+
+#define GET_COMBOBOX_UIWIDGET \
+NS_ENSURE_ARG_POINTER(aElement);\
+nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));\
+nsCOMPtr<nsIContent> parent(content->GetBindingParent());\
+nsCOMPtr<nsIXFormsComboboxUIWidget> widget(do_QueryInterface(parent));\
 NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);\
 
 NS_IMETHODIMP
@@ -177,5 +187,24 @@ nsXFormsUtilityService::GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor)
   NS_ENSURE_TRUE(editable, NS_ERROR_FAILURE);
 
   return editable->GetEditor(aEditor);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen)
+{
+  NS_ENSURE_ARG_POINTER(aIsOpen);
+
+  GET_COMBOBOX_UIWIDGET
+  return widget->GetOpen(aIsOpen);
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::ToggleDropmarkerState(nsIDOMNode *aElement)
+{
+  GET_COMBOBOX_UIWIDGET
+
+  PRBool isOpen = PR_FALSE;
+  nsresult rv = widget->GetOpen(&isOpen);
+  return widget->SetOpen(!isOpen);
 }
 

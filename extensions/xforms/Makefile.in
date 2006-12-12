@@ -151,6 +151,7 @@ XPIDLSRCS	= \
 		nsIXFormsEphemeralMessageUI.idl \
 		nsIXFormsRangeConditionAccessors.idl \
 		nsIXFormsNSEditableElement.idl \
+		nsIXFormsComboboxUIWidget.idl \
 		nsIXFormsXPathFunctions.idl \
 		$(NULL)
 

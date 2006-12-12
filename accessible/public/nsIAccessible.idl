@@ -56,7 +56,7 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(1b9596e8-d7bf-4b99-b032-53a1bf9be1c3)]
+[scriptable, uuid(09078872-bc66-4854-a9b7-e3d145ca5cd7)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -487,7 +487,8 @@ interface nsIAccessible : nsISupports
   const unsigned long ROLE_IME = 110;
   const unsigned long ROLE_APP_ROOT = 111;
   const unsigned long ROLE_PARENT_MENUITEM = 112;
-  const unsigned long ROLE_LAST_ENTRY = 113; // Important -- helps ensure nsRoleMap's are synchronized
+  const unsigned long ROLE_CALENDAR = 113;
+  const unsigned long ROLE_LAST_ENTRY = 114; // Important -- helps ensure nsRoleMap's are synchronized
 
 // MSAA relationship extensions to accNavigate
   const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;

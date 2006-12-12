@@ -122,7 +122,7 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   // Walk anonymous content? Not currently used for HTML -- anonymous content there uses frame walking
   mState.siblingIndex = 0;   // Indicates our index into the sibling list
   if (parentContent) {
-    if (mBindingManager && !parentContent->IsNodeOfType(nsINode::eHTML)) {
+    if (mBindingManager) {
       // Walk anonymous content
       mBindingManager->GetXBLChildNodesFor(parentContent, getter_AddRefs(mState.siblingList)); // returns null if no anon nodes
     }
