@@ -45,11 +45,29 @@
 #define NS_NAMESPACE_XFORMS "http://www.w3.org/2002/xforms"
 
 /**
+ * Utility class that provides access to nsIXFormsUtilityService.
+ */
+class nsXFormsAccessibleBase
+{
+public:
+  nsXFormsAccessibleBase();
+
+protected:
+  // Used in GetActionName() methods.
+  enum { eAction_Click = 0 };
+
+  // Service allows to get some xforms functionality.
+  static nsIXFormsUtilityService *sXFormsService;
+};
+
+
+/**
  * Every XForms element that is bindable to XForms model or is able to contain
  * XForms hint and XForms label elements should have accessible object. This
  * class is base class for accessible objects for these XForms elements.
  */
-class nsXFormsAccessible : public nsHyperTextAccessible
+class nsXFormsAccessible : public nsHyperTextAccessible,
+                           public nsXFormsAccessibleBase
 {
 public:
   nsXFormsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -72,16 +90,10 @@ public:
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
 protected:
-  // Used in GetActionName() methods.
-  enum { eAction_Click = 0 };
-
   // Returns value of first child xforms element by tagname that is bound to
   // instance node.
   nsresult GetBoundChildElementValue(const nsAString& aTagName,
                                      nsAString& aValue);
-
-  // Service allows to get some xforms functionality.
-  static nsIXFormsUtilityService *sXFormsService;
 };
 
 

@@ -130,7 +130,20 @@ public:
    * Return nsIEditor for xforms element if element is editable, null if it is
    * not editable. Failure if given element doesn't support editing.
    */
-   NS_IMETHOD GetEditor(nsIDOMNode *aElemenet, nsIEditor **aEditor) = 0;
+   NS_IMETHOD GetEditor(nsIDOMNode *aElement, nsIEditor **aEditor) = 0;
+
+   /**
+    * Return true if dropmarker is in open state, otherwise false. Failure if
+    * given element is not dropmarker or its parent element isn't supposed to
+    * have dropmarker.
+    */
+   NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen) = 0;
+
+   /**
+    * Toggles dropmarker state. Failure if given element is not dropmarker or
+    * its parent element isn't supposed to have dropmarker.
+    */
+   NS_IMETHOD ToggleDropmarkerState(nsIDOMNode *aElement) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
