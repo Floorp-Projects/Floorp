@@ -128,6 +128,8 @@ nsNativeScrollbarFrame::Destroy()
     // the content node just to be safe about lifetime issues
     scrollbar->SetContent(nsnull, nsnull, nsnull);
   }
+
+  nsBoxFrame::Destroy();
 }
 
 //
