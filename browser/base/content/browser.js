@@ -5363,6 +5363,13 @@ var FeedHandler = {
     gBrowser.addEventListener("DOMLinkAdded", 
                               function (event) { FeedHandler.onLinkAdded(event); }, 
                               true);
+    gBrowser.addEventListener("pagehide", FeedHandler.onPageHide, true);
+  },
+  
+  onPageHide: function(event) {
+    var theBrowser = gBrowser.getBrowserForDocument(event.target);
+    if (theBrowser)
+      theBrowser.feeds = null;
   },
   
   /**
