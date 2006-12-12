@@ -34,7 +34,7 @@ at mozilla.org.
 <h3>Users</h3>
 
 A username is someone with an e-mail address.  As far as Despot is
-concerned, the e-mail address *is* the username.  We don't give away
+concerned, the e-mail address <b>is</b> the username.  We don't give away
 new sets of ids, we just use the full e-mail address.
 
 <p>
@@ -101,7 +101,11 @@ The branch for this partition.  HEAD means the trunk; no branch.
 A list of files.  If the last characters are "/*", then it means
 "anything in this directory, or in any subdirectory".  If the last
 characters are "/%", then it means only files within this directory;
-subdirectories are not included.
+subdirectories are not included.  A "*" anywhere else in the path
+allows that directory node to match any characters at that position,
+e.g. foo/*akefile.m*k will match foo/Makefile.mk, foo/Makefile.mak,
+foo/makefile.mk, and foo/makefile.meek, but not foo/makefile.m nor
+foo/m/akefile.mk.
 
 <a name="Owner">
 <h4>Owners</h4>

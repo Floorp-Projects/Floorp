@@ -248,6 +248,7 @@ while (@reprow = $repquery->fetchrow_array()) {
             my $regexp = $r2[0];
             $regexp =~ s/\./\\./g;
             $regexp =~ s:\*$:.*:;
+            $regexp =~ s:\*(.):[^/]*\1:g;
             $regexp =~ s:\%$:[^/]*:;
             $regexp = '^' . $regexp . "\$";
             print COMMITCHECK "if (m:$regexp:) {return '$partid';}\n";
