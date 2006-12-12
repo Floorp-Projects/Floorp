@@ -73,37 +73,6 @@ nsAccessibleTreeWalker::~nsAccessibleTreeWalker()
    MOZ_COUNT_DTOR(nsAccessibleTreeWalker);
 }
 
-// GetFullParentNode gets the parent node in the deep tree
-// This might not be the DOM parent in cases where <children/> was used in an XBL binding.
-// In that case, this returns the parent in the XBL'ized tree.
-
-NS_IMETHODIMP nsAccessibleTreeWalker::GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut)
-{
-  nsCOMPtr<nsIContent> childContent(do_QueryInterface(aChildNode));
-  nsCOMPtr<nsIContent> bindingParentContent;
-  nsCOMPtr<nsIDOMNode> parentNode;
-
-  if (mState.prevState)
-    parentNode = mState.prevState->domNode;
-  else {
-    if (mBindingManager) {
-      mBindingManager->GetInsertionParent(childContent, getter_AddRefs(bindingParentContent));
-      if (bindingParentContent) 
-        parentNode = do_QueryInterface(bindingParentContent);
-    }
-
-    if (!parentNode) 
-      aChildNode->GetParentNode(getter_AddRefs(parentNode));
-  }
-
-  if (parentNode) {
-    *aParentNodeOut = parentNode;
-    NS_ADDREF(*aParentNodeOut);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
 void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
 {
   nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aParentNode));
@@ -145,22 +114,6 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   }
 
   mState.siblingList->Item(0 /* 0 == mState.siblingIndex */, getter_AddRefs(mState.domNode));
-}
-
-NS_IMETHODIMP nsAccessibleTreeWalker::GetParent()
-{
-  nsCOMPtr<nsIDOMNode> parent;
-
-  while (NS_SUCCEEDED(GetFullTreeParentNode(mState.domNode, getter_AddRefs(parent)))) {
-    if (NS_FAILED(PopState())) {
-      mState.domNode = parent;
-      GetAccessible();
-    }
-    if (mState.accessible)
-      return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAccessibleTreeWalker::PopState()

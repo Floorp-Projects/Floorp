@@ -401,9 +401,10 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
   nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(*aAccessNode);
-  if (accessible) {
+  nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
+  if (privateAccessible) {
     nsCOMPtr<nsIAccessible> parent;
-    accessible->GetParent(getter_AddRefs(parent));
+    privateAccessible->GetCachedParent(getter_AddRefs(parent));
     nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(parent));
     if (privateParent) {
       privateParent->TestChildCache(accessible);
@@ -1236,7 +1237,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       containerAccessible = this;  // At the root of UI or content
     }
   }
-  if (!containerAccessible && childAccessible) {
+  if (!containerAccessible && privateChildAccessible) {
     GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =
@@ -1300,27 +1301,30 @@ NS_IMETHODIMP
 nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
                                             nsIAccessible **aAccessible)
 {
-  // Find a pre-existing accessible in parent chain of DOM nodes, or return null
+  // Find accessible in parent chain of DOM nodes, or return null
   *aAccessible = nsnull;
   nsCOMPtr<nsIDOMNode> currentNode(aNode), parentNode;
   nsCOMPtr<nsIAccessNode> accessNode;
 
-  do  {
-    GetCachedAccessNode(currentNode, getter_AddRefs(accessNode));
-    nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
-    if (accessible) {
-      if (currentNode == aNode) {
-        // We don't want an accessible for the passed-innode --
-        // it must be from an ancestor
-        return accessible->GetParent(aAccessible);
-      }
-      NS_ADDREF(*aAccessible = accessible);
-      break;
-    }
+  nsIAccessibilityService *accService = GetAccService();
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+  do {
     currentNode->GetParentNode(getter_AddRefs(parentNode));
     currentNode = parentNode;
-  }
-  while (currentNode);
+    if (!currentNode) {
+      NS_ADDREF_THIS();
+      *aAccessible = this;
+      break;
+    }
+
+    nsCOMPtr<nsIDOMNode> relevantNode;
+    if (NS_SUCCEEDED(accService->GetRelevantContentNodeFor(currentNode, getter_AddRefs(relevantNode))) && relevantNode) {
+      currentNode = relevantNode;
+    }
+
+    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+  } while (!*aAccessible);
 
   return NS_OK;
 }
