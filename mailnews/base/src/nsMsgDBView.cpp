@@ -657,7 +657,7 @@ nsresult nsMsgDBView::FetchKeywords(nsIMsgDBHdr *aHdr, char ** keywordString)
   {
     nsCAutoString labelStr("$label");
     labelStr.Append((char) (label + '0'));
-    if (!FindInReadable(labelStr, keywords))
+    if (!FindInReadable(labelStr, keywords, nsCaseInsensitiveCStringComparator()))
     {
       if (!keywords.IsEmpty())
         keywords.Append(' ');
@@ -687,7 +687,7 @@ nsresult nsMsgDBView::FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString)
   {
     nsCAutoString labelStr("$label");
     labelStr.Append((char) (label + '0'));
-    if (!FindInReadable(labelStr, keywords))
+    if (!FindInReadable(labelStr, keywords, nsCaseInsensitiveCStringComparator()))
       FetchLabel(aHdr, getter_Copies(tags));
   }
 
