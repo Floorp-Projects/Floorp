@@ -32,11 +32,8 @@
 
 [% title="View Testcase" %]
 
-
-[% PROCESS global/selects.none.tmpl %]
-
 [% includeselects=1 %] 
-[% INCLUDE global/html_header.tmpl js_files=['js/Help.js','js/SelectBoxes.js','js/FormValidation.js','js/FormPersist.js','js/ViewTestcase.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/FormValidation.js','js/MochiKit/MochiKit.js','js/json.js','js/Help.js','js/SelectBoxes.js','js/FormPersist.js','js/ViewTestcase.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
 <script type="text/javascript">
@@ -45,7 +42,6 @@ var testgroups=[% testgroups_js %];
 var subgroups=[% subgroups_js %];
 
 function init() {
-  populateProductSelect("product_id");
 [% IF searchType == "by_category" %]
   productBox = document.getElementById('product_id');
   testgroupBox = document.getElementById('testgroup_id');

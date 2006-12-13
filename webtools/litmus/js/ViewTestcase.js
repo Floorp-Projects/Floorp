@@ -1,14 +1,3 @@
-function populateProductSelect(selectID) {
-  if (products) {
-    var selectBox = document.getElementById(selectID)
-    selectBox.options.length = 0;
-    selectBox.options[0] = new Option('-Product-','');
-    for (var i=0; i<products.length; i++) {
-      selectBox.options[i+1] = new Option(products[i].name,products[i].product_id);
-    }
-  }
-}
-
 function changeProduct(productSelectBox) {
   if (productSelectBox.selectedIndex &&
       productSelectBox.options[productSelectBox.selectedIndex].value != '') {
