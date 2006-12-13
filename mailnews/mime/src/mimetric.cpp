@@ -101,12 +101,16 @@ MimeRichtextConvert (const char *line, PRInt32 length,
   const char *last_end;
   const char *this_start;
   const char *this_end;
-  int desired_size;
+  unsigned int desired_size;
 
   // The code below must never expand the input by more than 5x;
   // if it does, the desired_size multiplier (5) below must be changed too
-  desired_size = (length * 5) + 1;
-  if (desired_size >= *obuffer_sizeP)
+#define BGROWTH 5
+  if ( (PRUint32)length >= ( (PRUint32) 0xfffffffe)/BGROWTH )
+      return -1;
+  desired_size = (length * BGROWTH) + 1;
+#undef BGROWTH  
+  if (desired_size >= (PRUint32) *obuffer_sizeP)
 	status = mime_GrowBuffer (desired_size, sizeof(char), 1024,
 							 obufferP, obuffer_sizeP);
   if (status < 0) return status;
