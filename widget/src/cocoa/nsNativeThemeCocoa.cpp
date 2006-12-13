@@ -147,7 +147,7 @@ nsNativeThemeCocoa::DrawButton (CGContextRef cgContext, ThemeButtonKind inKind,
     bdi.adornment |= kThemeAdornmentFocus;
   }
 
-  if (inIsDefault)
+  if (inIsDefault && !inDisabled)
     bdi.adornment |= kThemeAdornmentDefault;
 
   HIThemeDrawButton (&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
