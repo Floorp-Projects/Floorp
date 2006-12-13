@@ -73,7 +73,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
-
+#include "nsIJSContextStack.h"
 
 class nsJSThunk : public nsIInputStream
 {
@@ -278,6 +278,18 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
             return rv;
         }
 
+        // Push our JSContext on the context stack so the JS_ValueToString call (and
+        // JS_ReportPendingException, if relevant) will use the principal of cx.
+        // Note that we do this as late as possible to make popping simpler.
+        nsCOMPtr<nsIJSContextStack> stack =
+            do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = stack->Push(cx);
+        }
+        if (NS_FAILED(rv)) {
+            return rv;
+        }    
+
         rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script), cx,
                                       sandbox, &rval);
 
@@ -307,6 +319,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
                 result = nsDependentJSString(str);
             }
         }
+
+        stack->Pop(nsnull);
     } else {
         // No need to use the sandbox, evaluate the script directly in
         // the given scope.
