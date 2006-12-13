@@ -357,7 +357,7 @@ function DeleteAllCookies() {
                (promptservice.BUTTON_TITLE_CANCEL * promptservice.BUTTON_POS_1) +
                promptservice.BUTTON_POS_1_DEFAULT)
   var yes = cookieBundle.getString("deleteAllCookiesYes");
-  if (promptservice.confirmEx(window, title, msg, flags, yes, null, null, {value:0}) == 1)
+  if (promptservice.confirmEx(window, title, msg, flags, yes, null, null, null, {value:0}) == 1)
     return;
 
   ClearCookieProperties();
