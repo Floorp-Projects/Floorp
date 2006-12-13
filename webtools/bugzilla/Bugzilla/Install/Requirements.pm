@@ -323,13 +323,17 @@ sub print_module_instructions {
 ***********************************************************************
 * Note For Windows Users                                              *
 ***********************************************************************
-* All the modules listed below are available at:                      *
+* In order to install the modules listed below, you first have to run * 
+* the following command as an Administrator:                          *
 *                                                                     *
-*    http://landfill.bugzilla.org/ppm/                                *
+*   ppm repo add theory58S http://theoryx5.uwinnipeg.ca/ppms          *
 *                                                                     *
-* You can add the repository with the following command:              *
+* Then you have to do (also as an Administrator):                     *
 *                                                                     *
-* ppm rep add bugzilla http://landfill.bugzilla.org/ppm/              *
+*   ppm repo up theory58S                                             *
+*                                                                     *
+* Do that last command over and over until you see "theory58S" at the *
+* top of the displayed list.                                          *
 ***********************************************************************
 EOT
         }
