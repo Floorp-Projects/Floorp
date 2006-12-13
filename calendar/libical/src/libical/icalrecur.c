@@ -442,7 +442,10 @@ struct icalrecurrencetype icalrecurrencetype_from_string(const char* str)
 	} else if (strcmp(name,"UNTIL") == 0){
 	    parser.rt.until = icaltime_from_string(value);
 	} else if (strcmp(name,"INTERVAL") == 0){
-	    parser.rt.interval = (short)atoi(value);
+	    short v = (short)atoi(value);
+	    if (v > 0) {
+		parser.rt.interval = v;
+	    }
 	} else if (strcmp(name,"WKST") == 0){
 	    parser.rt.week_start = icalrecur_string_to_weekday(value);
       sort_bydayrules(parser.rt.by_day,parser.rt.week_start);
