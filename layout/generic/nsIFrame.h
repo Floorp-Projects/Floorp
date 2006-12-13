@@ -622,10 +622,6 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
-  // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
-  
-  NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
-
   /**
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
@@ -668,6 +664,38 @@ public:
   nsPoint GetPositionIgnoringScrolling() {
     return mParent ? mParent->GetPositionOfChildIgnoringScrolling(this)
       : GetPosition();
+  }
+
+  /**
+   * Return the distance between the border edge of the frame and the
+   * margin edge of the frame.  Can only be called after Reflow for the
+   * frame has at least *started*.
+   *
+   * This doesn't include any margin collapsing that may have occurred.
+   */
+  virtual nsMargin GetUsedMargin() const;
+
+  /**
+   * Return the distance between the border edge of the frame (which is
+   * its rect) and the padding edge of the frame.  Can only be called
+   * after Reflow for the frame has at least *started*.
+   *
+   * Note that this differs from GetStyleBorder()->GetBorder() in that
+   * this describes region of the frame's box, and
+   * GetStyleBorder()->GetBorder() describes a border.  They differ only
+   * for tables, particularly border-collapse tables.
+   */
+  virtual nsMargin GetUsedBorder() const;
+
+  /**
+   * Return the distance between the padding edge of the frame and the
+   * content edge of the frame.  Can only be called after Reflow for the
+   * frame has at least *started*.
+   */
+  virtual nsMargin GetUsedPadding() const;
+
+  nsMargin GetUsedBorderAndPadding() const {
+    return GetUsedBorder() + GetUsedPadding();
   }
 
   /**

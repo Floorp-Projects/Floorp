@@ -1887,6 +1887,15 @@ nsHTMLReflowState::CalcLineHeight(nsPresContext* aPresContext,
   return lineHeight;
 }
 
+static void
+DestroyMarginFunc(void*    aFrame,
+                  nsIAtom* aPropertyName,
+                  void*    aPropertyValue,
+                  void*    aDtorData)
+{
+  delete NS_STATIC_CAST(nsMargin*, aPropertyValue);
+}
+
 void
 nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
 {
@@ -1937,6 +1946,11 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
                            styleMargin->mMargin.GetBottomUnit(),
                            styleMargin->mMargin.GetBottom(bottom),
                            mComputedMargin.bottom);
+
+    // XXX We need to include 'auto' horizontal margins in this too!
+    frame->SetProperty(nsLayoutAtoms::usedMarginProperty,
+                       new nsMargin(mComputedMargin),
+                       DestroyMarginFunc);
   }
 }
 
@@ -1968,8 +1982,13 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth)
                            stylePadding->mPadding.GetBottomUnit(),
                            stylePadding->mPadding.GetBottom(bottom),
                            mComputedPadding.bottom);
+
+    frame->SetProperty(nsLayoutAtoms::usedPaddingProperty,
+                       new nsMargin(mComputedPadding),
+                       DestroyMarginFunc);
   }
   // a table row/col group, row/col doesn't have padding
+  // XXXldb Neither do border-collapse tables.
   nsIAtom* frameType = frame->GetType();
   if (nsLayoutAtoms::tableRowGroupFrame == frameType ||
       nsLayoutAtoms::tableColGroupFrame == frameType ||

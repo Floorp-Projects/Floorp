@@ -278,6 +278,24 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
   return NS_OK;
 }
 
+/* virtual */ nsMargin
+nsTableRowFrame::GetUsedMargin() const
+{
+  return nsMargin(0,0,0,0);
+}
+
+/* virtual */ nsMargin
+nsTableRowFrame::GetUsedBorder() const
+{
+  return nsMargin(0,0,0,0);
+}
+
+/* virtual */ nsMargin
+nsTableRowFrame::GetUsedPadding() const
+{
+  return nsMargin(0,0,0,0);
+}
+
 nscoord 
 GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
                                  nsTableFrame&     aTableFrame)

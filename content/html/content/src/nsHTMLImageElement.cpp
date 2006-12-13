@@ -348,8 +348,7 @@ nsHTMLImageElement::GetWidthHeight()
     // mComputedSize.....
     size = frame->GetSize();
 
-    nsMargin margin;
-    frame->CalcBorderPadding(margin);
+    nsMargin margin = frame->GetUsedBorderAndPadding();
 
     size.height -= margin.top + margin.bottom;
     size.width -= margin.left + margin.right;

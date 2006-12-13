@@ -123,6 +123,10 @@ public:
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
+  virtual nsMargin GetUsedMargin() const;
+  virtual nsMargin GetUsedBorder() const;
+  virtual nsMargin GetUsedPadding() const;
+
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

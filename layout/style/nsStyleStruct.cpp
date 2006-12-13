@@ -69,80 +69,6 @@ inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
                 (aEnumOK && (aUnit == eStyleUnit_Enumerated)));
 }
 
-// XXX this is here to support deprecated calc spacing methods only
-// XXXldb Probably shouldn't be inline.
-inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord, 
-                           PRUint8 aSpacing, PRUint8 aSide)
-{
-  nscoord result = 0;
-
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Auto:
-      // Auto margins are handled by layout
-      break;
-
-    case eStyleUnit_Percent:
-      {
-        nscoord baseWidth = 0;
-        nsIFrame* frame = aFrame ?
-            nsHTMLReflowState::GetContainingBlockFor(aFrame) : nsnull;
-        if (frame) {
-          baseWidth = frame->GetSize().width;
-          // subtract border of containing block
-          nsMargin border;
-          frame->GetStyleBorder()->CalcBorderFor(frame, border);
-          baseWidth -= (border.left + border.right);
-          // if aFrame is not absolutely positioned, subtract
-          // padding of containing block
-          const nsStyleDisplay* displayData = aFrame->GetStyleDisplay();
-          if (displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
-              displayData->mPosition != NS_STYLE_POSITION_FIXED) {
-            nsMargin padding;
-            frame->GetStylePadding()->CalcPaddingFor(frame, padding);
-            baseWidth -= (padding.left + padding.right);
-          }
-        }
-        result = (nscoord)((float)baseWidth * aCoord.GetPercentValue());
-      }
-      break;
-
-    case eStyleUnit_Coord:
-      result = aCoord.GetCoordValue();
-      break;
-
-    case eStyleUnit_Enumerated:
-    case eStyleUnit_Null:
-    case eStyleUnit_Normal:
-    case eStyleUnit_Integer:
-    case eStyleUnit_Proportional:
-    default:
-      result = 0;
-      break;
-  }
-  if ((NS_SPACING_PADDING == aSpacing) || (NS_SPACING_BORDER == aSpacing)) {
-    if (result < 0) {
-      result = 0;
-    }
-  }
-  return result;
-}
-
-// XXXldb Probably shouldn't be inline.
-inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
-                         PRUint8 aSpacing, nsMargin& aResult)
-{
-  nsStyleCoord  coord;
-
-  aResult.left = CalcSideFor(aFrame, aSides.GetLeft(coord), aSpacing,
-                             NS_SIDE_LEFT);
-  aResult.top = CalcSideFor(aFrame, aSides.GetTop(coord), aSpacing,
-                            NS_SIDE_TOP);
-  aResult.right = CalcSideFor(aFrame, aSides.GetRight(coord), aSpacing,
-                              NS_SIDE_RIGHT);
-  aResult.bottom = CalcSideFor(aFrame, aSides.GetBottom(coord), aSpacing,
-                               NS_SIDE_BOTTOM);
-}
-
 static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 {
   PRBool eq;
@@ -351,16 +277,6 @@ nsChangeHint nsStyleMargin::MaxDifference()
 }
 #endif
 
-void 
-nsStyleMargin::CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const
-{
-  if (mHasCachedMargin) {
-    aMargin = mCachedMargin;
-  } else {
-    CalcSidesFor(aFrame, mMargin, NS_SPACING_MARGIN, aMargin);
-  }
-}
-
 nsStylePadding::nsStylePadding() {
   mPadding.Reset();
   mHasCachedPadding = PR_FALSE;
@@ -414,16 +330,6 @@ nsChangeHint nsStylePadding::MaxDifference()
   return NS_STYLE_HINT_REFLOW;
 }
 #endif
-
-void 
-nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
-{
-  if (mHasCachedPadding) {
-    aPadding = mCachedPadding;
-  } else {
-    CalcSidesFor(aFrame, mPadding, NS_SPACING_PADDING, aPadding);
-  }
-}
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   : mComputedBorder(0, 0, 0, 0)

@@ -2494,6 +2494,24 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
   return NS_OK;
 }
 
+/* virtual */ nsMargin
+nsTableFrame::GetUsedBorder() const
+{
+  if (!IsBorderCollapse())
+    return nsHTMLContainerFrame::GetUsedBorder();
+  
+  return GetIncludedOuterBCBorder();
+}
+
+/* virtual */ nsMargin
+nsTableFrame::GetUsedPadding() const
+{
+  if (!IsBorderCollapse())
+    return nsHTMLContainerFrame::GetUsedPadding();
+
+  return nsMargin(0,0,0,0);
+}
+
 static void
 DivideBCBorderSize(nscoord  aPixelSize,
                    nscoord& aSmallHalf,
@@ -4469,7 +4487,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       aSide = NS_SIDE_RIGHT;
     }
   }
-  styleData->CalcBorderFor(aFrame, aSide, width);
+  width = styleData->GetBorderWidth(aSide);
   aWidth = NSToCoordRound(aTwipsToPixels * (float)width);
 }
  

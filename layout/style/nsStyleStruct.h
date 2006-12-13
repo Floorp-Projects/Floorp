@@ -236,9 +236,6 @@ struct nsStyleMargin: public nsStyleStruct {
     return PR_FALSE;
   }
 
-  // XXX this is a deprecated method
-  void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
-
 protected:
   PRPackedBool  mHasCachedMargin;
   nsMargin      mCachedMargin;
@@ -270,9 +267,6 @@ struct nsStylePadding: public nsStyleStruct {
     return PR_FALSE;
   }
 
-  // XXX this is a deprecated method
-  void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
-  
 protected:
   PRPackedBool  mHasCachedPadding;
   nsMargin      mCachedPadding;
@@ -461,16 +455,6 @@ struct nsStyleBorder: public nsStyleStruct {
     mBorderStyle[aSide] |= BORDER_COLOR_FOREGROUND; 
   }
 
-  // XXX these are deprecated methods
-  void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
-  {
-    aBorder = GetBorder();
-  }
-  void CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide,
-                     nscoord& aWidth) const {
-    aWidth = GetBorderWidth(aSide);
-  }
-  
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.  In
   // particular, these widths take into account the border-style for the

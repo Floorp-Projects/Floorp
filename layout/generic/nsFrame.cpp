@@ -685,20 +685,55 @@ NS_IMETHODIMP nsFrame::DidSetStyleContext()
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
-  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
-  if (mStyleContext) {
-    nsStyleBorderPadding bpad;
-    mStyleContext->GetBorderPaddingFor(bpad);
-    if (!bpad.GetBorderPadding(aBorderPadding)) {
-      const nsStylePadding* paddingStyle = GetStylePadding();
-      paddingStyle->CalcPaddingFor(this, aBorderPadding);
-      const nsStyleBorder* borderStyle = GetStyleBorder();
-      aBorderPadding += borderStyle->GetBorder();
+/* virtual */ nsMargin
+nsIFrame::GetUsedMargin() const
+{
+  NS_ASSERTION(!(GetStateBits() &
+                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+               (GetStateBits() & NS_FRAME_IN_REFLOW),
+               "cannot call on a dirty frame not currently being reflowed");
+
+  nsMargin margin(0, 0, 0, 0);
+  if (!GetStyleMargin()->GetMargin(margin)) {
+    nsMargin *m = NS_STATIC_CAST(nsMargin*,
+                    GetProperty(nsLayoutAtoms::usedMarginProperty));
+    NS_ASSERTION(m, "used margin property missing (out of memory?)");
+    if (m) {
+      margin = *m;
     }
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return margin;
+}
+
+/* virtual */ nsMargin
+nsIFrame::GetUsedBorder() const
+{
+  NS_ASSERTION(!(GetStateBits() &
+                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+               (GetStateBits() & NS_FRAME_IN_REFLOW),
+               "cannot call on a dirty frame not currently being reflowed");
+
+  return GetStyleBorder()->GetBorder();
+}
+
+/* virtual */ nsMargin
+nsIFrame::GetUsedPadding() const
+{
+  NS_ASSERTION(!(GetStateBits() &
+                 (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+               (GetStateBits() & NS_FRAME_IN_REFLOW),
+               "cannot call on a dirty frame not currently being reflowed");
+
+  nsMargin padding(0, 0, 0, 0);
+  if (!GetStylePadding()->GetPadding(padding)) {
+    nsMargin *p = NS_STATIC_CAST(nsMargin*,
+                    GetProperty(nsLayoutAtoms::usedPaddingProperty));
+    NS_ASSERTION(p, "used padding property missing (out of memory?)");
+    if (p) {
+      padding = *p;
+    }
+  }
+  return padding;
 }
 
 nsStyleContext*

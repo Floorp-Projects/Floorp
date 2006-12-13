@@ -83,6 +83,10 @@ public:
     */
   friend nsIFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  virtual nsMargin GetUsedMargin() const;
+  virtual nsMargin GetUsedBorder() const;
+  virtual nsMargin GetUsedPadding() const;
+
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

@@ -2739,16 +2739,10 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   }
 
   if (calcHeight) {
-    nsMargin padding;
-    nsMargin border;
+    nsMargin bp = aFrame->GetUsedBorderAndPadding();
     nsSize size = aFrame->GetSize();
-    const nsStylePadding* paddingData = aFrame->GetStylePadding();
-    paddingData->CalcPaddingFor(aFrame, padding);
-    const nsStyleBorder* borderData = aFrame->GetStyleBorder();
-    borderData->CalcBorderFor(aFrame, border);
   
-    val->SetTwips(size.height - padding.top - padding.bottom -
-                  border.top - border.bottom);
+    val->SetTwips(size.height - bp.TopBottom());
   } else {
     // Just return the value in the style context
     const nsStylePosition* positionData = nsnull;
@@ -2801,14 +2795,8 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
 
   if (calcWidth) {
     nsSize size = aFrame->GetSize();
-    nsMargin padding;
-    nsMargin border;
-    const nsStylePadding *paddingData = aFrame->GetStylePadding();
-    paddingData->CalcPaddingFor(aFrame, padding);
-    const nsStyleBorder *borderData = aFrame->GetStyleBorder();
-    borderData->CalcBorderFor(aFrame, border);
-    val->SetTwips(size.width - padding.left - padding.right -
-                  border.left - border.right);
+    nsMargin bp = aFrame->GetUsedBorderAndPadding();
+    val->SetTwips(size.width - bp.LeftRight());
   } else {
     // Just return the value in the style context
     const nsStylePosition *positionData = nsnull;
@@ -3200,19 +3188,14 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
       case eStyleUnit_Percent:
         container = GetContainingBlockFor(aFrame);
         if (container) {
-          nsMargin border;
-          nsMargin padding;
-          container->GetStyleBorder()->CalcBorderFor(container, border);
-          container->GetStylePadding()->CalcPaddingFor(container, padding);
+          nsMargin bp = container->GetUsedBorderAndPadding();
           nsSize size = container->GetSize();
           if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
             val->SetTwips(sign * coord.GetPercentValue() *
-                          (size.width - border.left - border.right -
-                           padding.left - padding.right));
+                          (size.width - bp.LeftRight()));
           } else {
             val->SetTwips(sign * coord.GetPercentValue() *
-                          (size.height - border.top - border.bottom -
-                           padding.top - padding.bottom));
+                          (size.height - bp.TopBottom()));
           }
         } else {
           // XXX no containing block.
@@ -3333,26 +3316,19 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 nscoord
 nsComputedDOMStyle::GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame* aFrame)
 {
-  const nsStylePadding* paddingData = nsnull;
-  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData,
-               aFrame);
-
-  if (paddingData) {
-    nsMargin padding;
-    paddingData->CalcPaddingFor(aFrame, padding);
-    switch(aSide) {
-      case NS_SIDE_TOP    :
-        return padding.top;
-      case NS_SIDE_BOTTOM :
-        return padding.bottom;
-      case NS_SIDE_LEFT   :
-        return padding.left;
-      case NS_SIDE_RIGHT  :
-        return padding.right;
-      default:
-        NS_ERROR("Invalid side");
-        break;
-    }
+  nsMargin padding = aFrame->GetUsedPadding();
+  switch(aSide) {
+    case NS_SIDE_TOP    :
+      return padding.top;
+    case NS_SIDE_BOTTOM :
+      return padding.bottom;
+    case NS_SIDE_LEFT   :
+      return padding.left;
+    case NS_SIDE_RIGHT  :
+      return padding.right;
+    default:
+      NS_ERROR("Invalid side");
+      break;
   }
 
   return 0;
@@ -3361,28 +3337,11 @@ nsComputedDOMStyle::GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame* aFrame)
 nscoord
 nsComputedDOMStyle::GetBorderWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
 {
-  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
   const nsStyleBorder* borderData = nsnull;
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
 
   if (borderData) {
-    nsMargin border;
-    borderData->CalcBorderFor(aFrame, border);
-    switch(aSide) {
-      case NS_SIDE_TOP    :
-        return border.top;
-      case NS_SIDE_BOTTOM :
-        return border.bottom;
-      case NS_SIDE_LEFT   :
-        return border.left;
-      case NS_SIDE_RIGHT  :
-        return border.right;
-      default:
-        NS_ERROR("Invalid side");
-        break;
-    }
+    return borderData->GetBorderWidth(aSide);
   }
 
   return 0;
@@ -3529,9 +3488,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
 
   if (border) {
-    nscoord width;
-    border->CalcBorderFor(aFrame, aSide, width);
-    val->SetTwips(width);
+    val->SetTwips(border->GetBorderWidth(aSide));
   }
 
   return CallQueryInterface(val, aValue);
@@ -3594,24 +3551,19 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 nscoord
 nsComputedDOMStyle::GetMarginWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
 {
-  const nsStyleMargin* marginData = nsnull;
-  GetStyleData(eStyleStruct_Margin, (const nsStyleStruct*&)marginData, aFrame);
-  if (marginData) {
-    nsMargin margin;
-    marginData->CalcMarginFor(aFrame, margin);
-    switch(aSide) {
-      case NS_SIDE_TOP    :
-        return margin.top;
-      case NS_SIDE_BOTTOM :
-        return margin.bottom;
-      case NS_SIDE_LEFT   :
-        return margin.left;
-      case NS_SIDE_RIGHT  :
-        return margin.right;
-      default:
-        NS_ERROR("Invalid side");
-        break;
-    }
+  nsMargin margin = aFrame->GetUsedMargin();
+  switch(aSide) {
+    case NS_SIDE_TOP    :
+      return margin.top;
+    case NS_SIDE_BOTTOM :
+      return margin.bottom;
+    case NS_SIDE_LEFT   :
+      return margin.left;
+    case NS_SIDE_RIGHT  :
+      return margin.right;
+    default:
+      NS_ERROR("Invalid side");
+      break;
   }
 
   return 0;
