@@ -188,6 +188,7 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
   mBits.mNeedToCalcBCBorders    = PR_FALSE;
   mBits.mIsBorderCollapse       = PR_FALSE;
   mBits.mResizedColumns         = PR_FALSE; // only really matters if splitting
+  mBits.mGeometryDirty          = PR_FALSE;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
@@ -1914,6 +1915,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   if ((GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
       aReflowState.ShouldReflowAllKids() ||
+      IsGeometryDirty() ||
       needToInitiateSpecialReflow) {
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
     if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
@@ -2301,6 +2303,7 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
+  SetGeometryDirty();
 
   return NS_OK;
 }
@@ -2403,6 +2406,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
+  SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::InsertFrames\n");
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
@@ -2482,6 +2486,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
+  SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::RemoveFrame\n");
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
@@ -2954,8 +2959,10 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     }
   }
 
-  // We've now propagated the column resize to all the children.
+  // We've now propagated the column resizes and geometry changes to all
+  // the children.
   mBits.mResizedColumns = PR_FALSE;
+  ClearGeometryDirty();
 
   return rv;
 }
