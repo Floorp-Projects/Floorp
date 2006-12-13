@@ -522,6 +522,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_TEXTFIELD:
+      // HIThemeSetFill is not available on 10.3
+      CGContextSetRGBFillColor (cgContext, 1, 1, 1, 1);
+      CGContextFillRect (cgContext, macRect);
       DrawFrame (cgContext, kHIThemeFrameTextFieldSquare,
                  macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
@@ -610,6 +613,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
     
     case NS_THEME_LISTBOX:
+      // HIThemeSetFill is not available on 10.3
+      CGContextSetRGBFillColor (cgContext, 1, 1, 1, 1);
+      CGContextFillRect (cgContext, macRect);
       DrawFrame(cgContext, kHIThemeFrameListBox,
                 macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)), eventState);
       break;
