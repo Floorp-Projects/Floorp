@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCRTGlue.h"
+#include "nsStringBuffer.h"
 
 class imgIRequest;
 class nsIDocument;
@@ -145,7 +146,7 @@ public:
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
+  nsCSSValue(const nsString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(nscolor aValue) NS_HIDDEN;
   nsCSSValue(Array* aArray, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
@@ -199,9 +200,8 @@ public:
     NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr,
                  "not a string value");
     aBuffer.Truncate();
-    if (nsnull != mValue.mString) {
-      aBuffer.Append(mValue.mString);
-    }
+    PRUint32 len = NS_strlen(GetBufferValue(mValue.mString));
+    mValue.mString->ToString(len, aBuffer);
     return aBuffer;
   }
 
@@ -209,7 +209,7 @@ public:
   {
     NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr,
                  "not a string value");
-    return mValue.mString;
+    return GetBufferValue(mValue.mString);
   }
 
   nscolor GetColorValue() const
@@ -237,8 +237,9 @@ public:
   {
     NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
                  "not a URL value");
-    return mUnit == eCSSUnit_URL ?
-      mValue.mURL->mString : mValue.mImage->mString;
+    return GetBufferValue(mUnit == eCSSUnit_URL ?
+                            mValue.mURL->mString :
+                            mValue.mImage->mString);
   }
 
   // Not making this inline because that would force us to include
@@ -250,9 +251,8 @@ public:
 
   NS_HIDDEN_(void)  Reset()  // sets to null
   {
-    if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr) &&
-        (nsnull != mValue.mString)) {
-      NS_Free(mValue.mString);
+    if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
+      mValue.mString->Release();
     } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
       mValue.mArray->Release();
     } else if (eCSSUnit_URL == mUnit) {
@@ -267,7 +267,7 @@ public:
   NS_HIDDEN_(void)  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetPercentValue(float aValue);
   NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
-  NS_HIDDEN_(void)  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
+  NS_HIDDEN_(void)  SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetColorValue(nscolor aValue);
   NS_HIDDEN_(void)  SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetURLValue(nsCSSValue::URL* aURI);
@@ -281,6 +281,10 @@ public:
                                    PRBool aIsBGImage = PR_FALSE)
                                    const;  // Not really const, but pretending
 
+  // Returns an already addrefed buffer.  Can return null on allocation
+  // failure.
+  static nsStringBuffer* BufferFromString(const nsString& aValue);
+  
   struct Array {
 
     // return |Array| with reference count of zero
@@ -372,30 +376,28 @@ public:
   };
 
   struct URL {
-    // Caller must delete this object immediately if the allocation of
-    // |mString| fails.
-    URL(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer)
+    // aString must not be null.
+    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer)
       : mURI(aURI),
-        mString(NS_strdup(aString)),
+        mString(aString),
         mReferrer(aReferrer),
         mRefCnt(0)
     {
+      mString->AddRef();
       MOZ_COUNT_CTOR(nsCSSValue::URL);
     }
 
     ~URL()
     {
-      // null |mString| isn't valid normally, but is checked by callers
-      // of the constructor
-      if (mString)
-        NS_Free(mString);
+      mString->Release();
       MOZ_COUNT_DTOR(nsCSSValue::URL);
     }
 
     PRBool operator==(const URL& aOther)
     {
       PRBool eq;
-      return NS_strcmp(mString, aOther.mString) == 0 &&
+      return NS_strcmp(GetBufferValue(mString),
+                       GetBufferValue(aOther.mString)) == 0 &&
              (mURI == aOther.mURI || // handles null == null
               (mURI && aOther.mURI &&
                NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
@@ -403,7 +405,8 @@ public:
     }
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
-    PRUnichar* mString;
+    nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
+                             // null-checks; this is never null.
     nsCOMPtr<nsIURI> mReferrer;
 
     void AddRef() { ++mRefCnt; }
@@ -416,7 +419,8 @@ public:
     // Not making the constructor and destructor inline because that would
     // force us to include imgIRequest.h, which leads to REQUIRES hell, since
     // this header is included all over.
-    Image(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer,
+    // aString must not be null.
+    Image(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
           nsIDocument* aDocument, PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
     ~Image() NS_HIDDEN;
 
@@ -429,12 +433,19 @@ public:
     void Release() { if (--mRefCnt == 0) delete this; }
   };
 
+private:
+  static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
+    return NS_STATIC_CAST(PRUnichar*, aBuffer->Data());
+  }
+
 protected:
   nsCSSUnit mUnit;
   union {
     PRInt32    mInt;
     float      mFloat;
-    PRUnichar* mString;
+    // Note: the capacity of the buffer may exceed the length of the string.
+    // If we're of a string type, mString is not null.
+    nsStringBuffer* mString;
     nscolor    mColor;
     Array*     mArray;
     URL*       mURL;

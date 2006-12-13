@@ -48,9 +48,6 @@
 // Paint forcing
 #include "prenv.h"
 
-//#include "nsStyleConsts.h"
-
-
 nsCSSValue::nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
@@ -79,12 +76,17 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
   }
 }
 
-nsCSSValue::nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit)
+nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr), "not a string value");
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr)) {
-    mValue.mString = ToNewUnicode(aValue);
+    mValue.mString = BufferFromString(aValue);
+    if (NS_UNLIKELY(!mValue.mString)) {
+      // XXXbz not much we can do here; just make sure that our promise of a
+      // non-null mValue.mString holds for string units.
+      mUnit = eCSSUnit_Null;
+    }
   }
   else {
     mUnit = eCSSUnit_Null;
@@ -125,12 +127,8 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
-    if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = NS_strdup(aCopy.mValue.mString);
-    }
-    else {
-      mValue.mString = nsnull;
-    }
+    mValue.mString = aCopy.mValue.mString;
+    mValue.mString->AddRef();
   }
   else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
     mValue.mInt = aCopy.mValue.mInt;
@@ -173,14 +171,8 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
   if (mUnit == aOther.mUnit) {
     if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
-      if (nsnull == mValue.mString) {
-        if (nsnull == aOther.mValue.mString) {
-          return PR_TRUE;
-        }
-      }
-      else if (nsnull != aOther.mValue.mString) {
-        return (NS_strcmp(mValue.mString, aOther.mValue.mString) == 0);
-      }
+      return (NS_strcmp(GetBufferValue(mValue.mString),
+                        GetBufferValue(aOther.mValue.mString)) == 0);
     }
     else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
       return mValue.mInt == aOther.mValue.mInt;
@@ -277,14 +269,19 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
   }
 }
 
-void nsCSSValue::SetStringValue(const nsAString& aValue,
+void nsCSSValue::SetStringValue(const nsString& aValue,
                                 nsCSSUnit aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr), "not a string unit");
   Reset();
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr)) {
     mUnit = aUnit;
-    mValue.mString = ToNewUnicode(aValue);
+    mValue.mString = BufferFromString(aValue);
+    if (NS_UNLIKELY(!mValue.mString)) {
+      // XXXbz not much we can do here; just make sure that our promise of a
+      // non-null mValue.mString holds for string units.
+      mUnit = eCSSUnit_Null;
+    }
   }
 }
 
@@ -360,25 +357,39 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
                           mValue.mURL->mReferrer,
                           aDocument, aIsBGImage);
   if (image) {
-    if (image->mString) {
-      nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
-      writable->SetImageValue(image);
-    } else {
-      delete image;
-    }
+    nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
+    writable->SetImageValue(image);
   }
 }
 
-nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
+// static
+nsStringBuffer*
+nsCSSValue::BufferFromString(const nsString& aValue)
+{
+  nsStringBuffer* buffer = nsStringBuffer::FromString(aValue);
+  if (buffer) {
+    buffer->AddRef();
+    return buffer;
+  }
+  
+  PRUnichar length = aValue.Length();
+  buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
+  if (NS_LIKELY(buffer != 0)) {
+    PRUnichar* data = NS_STATIC_CAST(PRUnichar*, buffer->Data());
+    nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
+    // Null-terminate.
+    data[length] = 0;
+  }
+
+  return buffer;
+}
+
+nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
                          nsIURI* aReferrer, nsIDocument* aDocument,
                          PRBool aIsBGImage)
   : URL(aURI, aString, aReferrer)
 {
   MOZ_COUNT_CTOR(nsCSSValue::Image);
-
-  // Check for failed mString allocation first
-  if (!mString)
-    return;
 
   // If the pref is enabled, force all background image loads to
   // complete before firing onload for the document.  Otherwise, background

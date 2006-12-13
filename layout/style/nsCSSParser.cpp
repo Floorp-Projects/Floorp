@@ -4007,11 +4007,16 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
         // Set a null value on failure.  Most failure cases should be
         // NS_ERROR_MALFORMED_URI.
-        nsCSSValue::URL *url =
-          new nsCSSValue::URL(uri, tk->mIdent.get(), mSheetURL);
-        if (!url || !url->mString) {
+        nsStringBuffer* buffer = nsCSSValue::BufferFromString(tk->mIdent);
+        if (NS_UNLIKELY(!buffer)) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-          delete url;
+          return PR_FALSE;
+        }
+
+        nsCSSValue::URL *url = new nsCSSValue::URL(uri, buffer, mSheetURL);
+        buffer->Release();
+        if (NS_UNLIKELY(!url)) {
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
           return PR_FALSE;
         }
         aValue.SetURLValue(url);
