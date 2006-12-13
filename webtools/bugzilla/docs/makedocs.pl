@@ -81,10 +81,10 @@ print ENTITIES "\n <!-- Database Versions --> \n";
 
 my $db_modules = DB_MODULE;
 foreach my $db (keys %$db_modules) {
-    my $name = $db_modules->{$db}->{'dbd'};
-    $name =~ s/::/-/g;
+    my $dbd  = $db_modules->{$db}->{dbd};
+    my $name = $dbd->{package};
     $name = lc($name);
-    my $version = $db_modules->{$db}->{'dbd_version'} eq 0 ? 'any' : $db_modules->{$db}->{'dbd_version'};
+    my $version    = $dbd->{version} || 'any';
     my $db_version = $db_modules->{$db}->{'db_version'};
     print ENTITIES '<!ENTITY min-' . $name . '-ver "'.$version.'">' . "\n";
     print ENTITIES '<!ENTITY min-' . lc($db) . '-ver "'.$db_version.'">' . "\n";
