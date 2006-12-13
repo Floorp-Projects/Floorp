@@ -75,9 +75,9 @@ const REMOTE_STYLE = "\n\
       iframe {\n\
         position: fixed;\n\
         top: 0;\n\
-        right: 0;\n\
-        bottom: 0;\n\
         left: 0;\n\
+        width: 100%;\n\
+        height: 100%;\n\
         border: none;\n\
       }\n\
 ";
