@@ -251,6 +251,11 @@ void nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
   mColIndex = aColIndex;
 }
 
+/* virtual */ nsMargin
+nsTableCellFrame::GetUsedMargin() const
+{
+  return nsMargin(0,0,0,0);
+}
 
 //ASSURE DIFFERENT COLORS for selection
 inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
@@ -1018,6 +1023,14 @@ nsIAtom*
 nsBCTableCellFrame::GetType() const
 {
   return nsLayoutAtoms::bcTableCellFrame;
+}
+
+/* virtual */ nsMargin
+nsBCTableCellFrame::GetUsedBorder() const
+{
+  nsMargin result;
+  GetBorderWidth(GetPresContext()->PixelsToTwips(), result);
+  return result;
 }
 
 #ifdef DEBUG
