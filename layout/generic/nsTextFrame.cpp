@@ -5023,7 +5023,6 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
   PRBool  measureTextRuns = PR_FALSE;
-  nscoord lastWordWidth = NS_UNCONSTRAINEDSIZE;
 
   // Check whether we can break between the last text frame (if any) and this one
   PRBool trailingTextFrameCanWrap;
@@ -5574,13 +5573,13 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
   if (0 != aTextData.mX) {
     lineLayout.SetTrailingTextFrame(this, aTextData.mWrapping);
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
-    lineLayout.SetInWord(!endsInWhitespace, lastWordWidth);
+    lineLayout.SetInWord(!endsInWhitespace);
   } else {
     // Don't allow subsequent text frame to break-before. All our text is
     // being skipped (usually whitespace, could be discarded Unicode control
     // characters).
     lineLayout.SetTrailingTextFrame(nsnull, PR_FALSE);
-    lineLayout.SetInWord(PR_FALSE, 0);
+    lineLayout.SetInWord(PR_FALSE);
   }
   if (justDidFirstLetter) {
     lineLayout.SetFirstLetterFrame(this);
@@ -5996,8 +5995,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
   // Set inWord to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.
-  nscoord currentWordWidth;
-  PRBool inWord = lineLayout.InWord(&currentWordWidth);
+  PRBool inWord = lineLayout.InWord();
   if (inWord) {
     mState |= TEXT_IN_WORD;
   }
