@@ -144,25 +144,30 @@ AR		= emxomfar r $@
 LIB_SUFFIX	= lib
 endif
 
+# if we compile with GCC we can also use the high-memory flag if specified
+ifeq ($(MOZ_OS2_HIGH_MEMORY),1)
+HIGHMEM_LDFLAG		= -Zhigh-mem
+endif
+
 OS_LIBS     		= -lsocket -lemxio
 
 DEFINES += -DXP_OS2 -DXP_OS2_EMX -DOS2EMX_PLAIN_CHAR
 
 OS_CFLAGS     		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
 OS_EXE_CFLAGS 		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
-OS_DLLFLAGS 		= $(OMF_FLAG) -Zmt -Zdll -Zcrtdll -o $@
+OS_DLLFLAGS 		= $(OMF_FLAG) -Zmt -Zdll -Zcrtdll $(HIGHMEM_LDFLAG) -o $@
 ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
 EXEFLAGS                += -Zlinker /DE
 endif
 
 ifdef BUILD_OPT
 OPTIMIZER		= -O3
-DLLFLAGS		= 
-EXEFLAGS    		= -Zmtd -o $@
+DLLFLAGS		= $(HIGHMEM_LDFLAG)
+EXEFLAGS    		= $(HIGHMEM_LDFLAG) -Zmtd -o $@
 else
 OPTIMIZER		= -g #-s
-DLLFLAGS		= -g #-s
-EXEFLAGS		= -g $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@   # -s
+DLLFLAGS		= -g $(HIGHMEM_LDFLAG) #-s
+EXEFLAGS		= -g $(HIGHMEM_LDFLAG) $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@ # -s
 ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
 EXEFLAGS                += -Zlinker /DE
 endif

@@ -917,6 +917,17 @@ AC_ARG_WITH(macos-sdk,
 dnl ========================================================
 
 dnl ========================================================
+dnl Enable high-memory support on OS/2, disabled by default
+dnl ========================================================
+AC_ARG_ENABLE(os2-high-mem,
+    [  --enable-os2-high-mem Enable high-memory support on OS/2],
+    [ if test "$enableval" = "yes"; then
+        MOZ_OS2_HIGH_MEMORY=1
+      else
+        MOZ_OS2_HIGH_MEMORY=
+      fi ])
+
+dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
@@ -1819,6 +1830,11 @@ mips-sony-newsos*)
         OS_LIBS="-lsocket"
         IMPLIB='emximp -o'
         FILTER='emxexp -o'
+        if test -n "$MOZ_OS2_HIGH_MEMORY"; then
+          DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
+          LDFLAGS="$LDFLAGS -Zhigh-mem"
+          AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
+        fi
 
         # GCC for OS/2 currently predefines these, but we don't want them
         DEFINES="$DEFINES -Uunix -U__unix -U__unix__"
