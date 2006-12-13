@@ -56,6 +56,7 @@ if ($srcdir eq "") {
 chdir $srcdir || die "Couldn't chdir to $srcdir";
 
 use DBI;
+use lib qw(.);
 require 'utils.pl';
 
 use vars qw( $db_host $db_name $db_user $db_pass );

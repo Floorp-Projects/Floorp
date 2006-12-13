@@ -33,6 +33,7 @@ chdir $sourcedir || die "Couldn't chdir to $sourcedir";
 
 
 use DBI;
+use lib qw(.);
 require 'utils.pl';
 
 use vars qw( $db_host $db_name $db_user $db_pass );
