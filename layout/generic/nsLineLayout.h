@@ -254,21 +254,15 @@ public:
 
   /**
    * InWord is true when the last text frame reflowed ended in non-whitespace
-   * (so it has content that might form a word with subsequent text). The word width
-   * is the width of contiguous text up to the end of that last word, possibly
-   * including words from previous frames.
+   * (so it has content that might form a word with subsequent text).
    * 
    * If GetTrailingTextFrame is null then InWord will be false.
    */
-  PRBool InWord(nscoord* aWordWidth) {
-    if (!GetFlag(LL_INWORD))
-      return PR_FALSE;
-    *aWordWidth = mWordWidth;
-    return PR_TRUE;
+  PRBool InWord() {
+    return GetFlag(LL_INWORD);
   }
-  void SetInWord(PRBool aInWord, nscoord aWordWidth) {
+  void SetInWord(PRBool aInWord) {
     SetFlag(LL_INWORD, aInWord);
-    mWordWidth = aWordWidth;
   }
   
   /**
@@ -430,7 +424,6 @@ protected:
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
-  nscoord mWordWidth;
   PRInt32 mTextJustificationNumSpaces;
   PRInt32 mTextJustificationNumLetters;
 
