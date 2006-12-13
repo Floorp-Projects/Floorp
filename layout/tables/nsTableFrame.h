@@ -618,8 +618,8 @@ public:
   PRBool NeedColSpanExpansion() const;
   void SetNeedColSpanExpansion(PRBool aValue);
 
-  PRBool SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
-  PRBool ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
+  void SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
+  void ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
   PRBool IsGeometryDirty() const { return mBits.mGeometryDirty; }
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
