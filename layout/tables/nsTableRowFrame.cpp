@@ -200,6 +200,7 @@ nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
+  tableFrame->SetGeometryDirty();
 
   return NS_OK;
 }
@@ -240,6 +241,7 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
+  tableFrame->SetGeometryDirty();
 
   return NS_OK;
 }
@@ -265,6 +267,7 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
       AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       GetPresContext()->PresShell()->FrameNeedsReflow(this,
                                                     nsIPresShell::eTreeChange);
+      tableFrame->SetGeometryDirty();
     }
     else {
       NS_ERROR("unexpected frame type");
@@ -843,6 +846,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     // See if we should only reflow the dirty child frames
     PRBool doReflowChild = PR_TRUE;
     if (!aReflowState.ShouldReflowAllKids() &&
+        !aTableFrame.IsGeometryDirty() &&
         !(kidFrame->GetStateBits() &
           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
       if (!aReflowState.mFlags.mSpecialHeightReflow)

@@ -618,6 +618,10 @@ public:
   PRBool NeedColSpanExpansion() const;
   void SetNeedColSpanExpansion(PRBool aValue);
 
+  PRBool SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
+  PRBool ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
+  PRBool IsGeometryDirty() const { return mBits.mGeometryDirty; }
+
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
@@ -737,12 +741,12 @@ protected:
     PRUint32 mIsBorderCollapse:1;      // border collapsing model vs. separate model
     PRUint32 mRowInserted:1;
     PRUint32 mNeedToCalcBCBorders:1;
+    PRUint32 mGeometryDirty:1;
     PRUint32 mLeftContBCBorder:8;
     PRUint32 mNeedToCollapse:1;    // rows, cols that have visibility:collapse need to be collapsed
     PRUint32 mHasZeroColSpans:1;
     PRUint32 mNeedColSpanExpansion:1;
     PRBool mResizedColumns:1;          // have we resized columns since last reflow?
-    PRUint32 :8;                       // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
