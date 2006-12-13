@@ -295,3 +295,11 @@ blockquote[type=cite] > blockquote > blockquote {
    color: maroon !important;
    border-color: maroon !important;
 }
+
+/* Correct style for messages already converted from RSS to HTML email;
+   see bug 363154. */
+
+#\_mailrssiframe {
+  width: 100%;
+  height: 100%;
+}
