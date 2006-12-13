@@ -450,12 +450,11 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   // If neither 'left' not 'right' are auto, then we're over-constrained and
   // we ignore one of them
   if (!leftIsAuto && !rightIsAuto) {
-    const nsStyleVisibility* vis = frame->GetStyleVisibility();
-    
-    if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-      rightIsAuto = PR_TRUE;
-    } else {
+    if (mCBReflowState &&
+        NS_STYLE_DIRECTION_RTL == mCBReflowState->mStyleVisibility->mDirection) {
       leftIsAuto = PR_TRUE;
+    } else {
+      rightIsAuto = PR_TRUE;
     }
   }
 
@@ -971,7 +970,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
                            mComputedOffsets.right);
   }
 
-  PRUint8 direction = mStyleVisibility->mDirection;
+  PRUint8 direction = cbrs ? cbrs->mStyleVisibility->mDirection : NS_STYLE_DIRECTION_LTR;
 
   // Use the horizontal component of the hypothetical box in the cases
   // where it's needed.
@@ -1733,10 +1732,11 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   // If the available margin space is negative, then don't follow the
   // usual overconstraint rules.
   if (availMarginSpace < 0) {
-    if (mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
-      mComputedMargin.right += availMarginSpace;
-    } else {
+    if (mCBReflowState &&
+        mCBReflowState->mStyleVisibility->mDirection == NS_STYLE_DIRECTION_RTL) {
       mComputedMargin.left += availMarginSpace;
+    } else {
+      mComputedMargin.right += availMarginSpace;
     }
     return;
   }
@@ -1771,11 +1771,12 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
     }
     // Otherwise apply the CSS rules, and ignore one margin by forcing
     // it to 'auto', depending on 'direction'.
-    else if (NS_STYLE_DIRECTION_LTR == mStyleVisibility->mDirection) {
-      isAutoRightMargin = PR_TRUE;
+    else if (mCBReflowState &&
+             NS_STYLE_DIRECTION_RTL == mCBReflowState->mStyleVisibility->mDirection) {
+      isAutoLeftMargin = PR_TRUE;
     }
     else {
-      isAutoLeftMargin = PR_TRUE;
+      isAutoRightMargin = PR_TRUE;
     }
   }
 
