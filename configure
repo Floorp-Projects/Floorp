@@ -15461,7 +15461,7 @@ if test -n "${MOZ_JAVAXPCOM}"; then
         ;;
     esac
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      { echo "configure: error: The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}." 1>&2; exit 1; }
+      { echo "configure: error: The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom." 1>&2; exit 1; }
     fi
   fi
 
@@ -15544,7 +15544,7 @@ else
 fi
 
   if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    { echo "configure: error: The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}." 1>&2; exit 1; }
+    { echo "configure: error: The programs javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom." 1>&2; exit 1; }
   fi
 fi
 
