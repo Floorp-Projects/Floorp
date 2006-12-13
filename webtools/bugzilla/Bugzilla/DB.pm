@@ -136,16 +136,17 @@ sub bz_check_requirements {
 
     # Check the existence and version of the DBD that we need.
     my $dbd        = $db->{dbd};
-    my $dbd_ver    = $db->{dbd_version};
     my $sql_server = $db->{name};
     my $sql_want   = $db->{db_version};
-    unless (have_vers({ module => $dbd, version => $dbd_ver }, $output)) {
+    unless (have_vers($dbd, $output)) {
         my $command = install_command($dbd);
         my $root    = ROOT_USER;
+        my $dbd_mod = $dbd->{module};
+        my $dbd_ver = $dbd->{version};
         my $version = $dbd_ver ? " $dbd_ver or higher" : '';
         print <<EOT;
 
-For $sql_server, Bugzilla requires that perl's ${dbd}${version} be 
+For $sql_server, Bugzilla requires that perl's $dbd_mod $dbd_ver be 
 installed. To install this module, run the following command (as $root):
 
     $command

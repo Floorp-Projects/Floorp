@@ -51,6 +51,10 @@ use Bugzilla::Constants;
 # of the actual module we load with "require" to see if the package is
 # installed or not. "version" is the version we need, or 0 if we'll accept
 # any version.
+#
+# "blacklist" is an arrayref of regular expressions that describe versions that
+# are 'blacklisted'--that is, even if the version is high enough, Bugzilla
+# will refuse to say that it's OK to run with that version.
 sub REQUIRED_MODULES {
     my @modules = (
     {
@@ -272,9 +276,8 @@ sub check_requirements {
     my $have_one_dbd = 0;
     my $db_modules = DB_MODULE;
     foreach my $db (keys %$db_modules) {
-        my %info = (module  => $db_modules->{$db}->{dbd},
-                    version => $db_modules->{$db}->{dbd_version});
-        $have_one_dbd = 1 if have_vers(\%info, $output);
+        my $dbd = $db_modules->{$db}->{dbd};
+        $have_one_dbd = 1 if have_vers($dbd, $output);
     }
 
     print "\nThe following Perl modules are optional:\n" if $output;
@@ -379,13 +382,10 @@ EOT
 
         my %db_modules = %{DB_MODULE()};
         foreach my $db (keys %db_modules) {
-            my $command = install_command(
-                { module  => $db_modules{$db}->{dbd},
-                  package => $db_modules{$db}->{dbd} });
-
+            my $command = install_command($db_modules{$db}->{dbd});
             printf "%10s: \%s\n", $db_modules{$db}->{name}, $command;
             print ' ' x 12 . "Minimum version required: "
-                  . $db_modules{$db}->{dbd_version} . "\n";
+                  . $db_modules{$db}->{dbd}->{version} . "\n";
         }
         print "\n";
     }
@@ -525,7 +525,15 @@ sub have_vers {
     }
 
     my $vok = (vers_cmp($vnum,$wanted) > -1);
-    print ((($vok) ? "ok: " : " "), "$vstr\n") if $output;
+    my $blacklisted;
+    if ($vok && $params->{blacklist}) {
+        $blacklisted = grep($vnum =~ /$_/, @{$params->{blacklist}});
+        $vok = 0 if $blacklisted;
+    }
+
+    my $ok = $vok ? "ok:" : "";
+    my $black_string = $blacklisted ? "(blacklisted)" : "";
+    print "$ok $vstr $black_string\n" if $output;
     return $vok ? 1 : 0;
 }
 

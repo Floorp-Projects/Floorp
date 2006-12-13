@@ -359,10 +359,21 @@ use constant INSTALLATION_MODE_NON_INTERACTIVE => 1;
 # Data about what we require for different databases.
 use constant DB_MODULE => {
     'mysql' => {db => 'Bugzilla::DB::Mysql', db_version => '4.1.2',
-                dbd => 'DBD::mysql', dbd_version => '2.9003',
+                dbd => { 
+                    package => 'DBD-mysql',
+                    module  => 'DBD::mysql',
+                    version => '2.9003',
+                    # Certain versions are broken, development versions are
+                    # always disallowed.
+                    blacklist => ['^3\.000[3-6]', '_'],
+                },
                 name => 'MySQL'},
     'pg'    => {db => 'Bugzilla::DB::Pg', db_version => '8.00.0000',
-                dbd => 'DBD::Pg', dbd_version => '1.45',
+                dbd => {
+                    package => 'DBD-Pg',
+                    module  => 'DBD::Pg',
+                    version => '1.45',
+                },
                 name => 'PostgreSQL'},
 };
 
