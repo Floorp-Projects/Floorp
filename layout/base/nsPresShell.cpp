@@ -3978,7 +3978,9 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
   aScrollingView->GetLineHeight(&lineHeight);
   
   // See how the rect should be positioned vertically
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent ||
+      (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent &&
+       aRect.height < lineHeight)) {
     // The caller doesn't care where the frame is positioned vertically,
     // so long as it's fully visible
     if (aRect.y < visibleRect.y) {
@@ -4014,7 +4016,9 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
   }
 
   // See how the frame should be positioned horizontally
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent ||
+      (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent &&
+       aRect.width < lineHeight)) {
     // The caller doesn't care where the frame is positioned horizontally,
     // so long as it's fully visible
     if (aRect.x < visibleRect.x) {
