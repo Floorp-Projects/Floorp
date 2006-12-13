@@ -116,10 +116,7 @@
         this._anno =
           Cc["@mozilla.org/browser/annotation-service;1"].
           getService(Ci.nsIAnnotationService);
-        this._lms =
-          Cc["@mozilla.org/browser/livemark-service;2"].
-          getService(Ci.nsILivemarkService);
-          
+
         this._bms.addObserver(this._observer, false);
         var t = this;
         window.addEventListener("resize",
@@ -230,10 +227,20 @@
               if (PlacesController.nodeIsLivemarkContainer(child)) {
                 button.setAttribute("livemark", "true");
                 var folder = asFolder(child).folderId;
-                var siteURI = this._lms.getSiteURI(folder);
-                if (siteURI) {            
-                  button.setAttribute("siteURI", siteURI.spec);
+
+                // duplicate nsLivemarkService.getSiteURI to avoid instantiating
+                // the service on startup.
+                var containerURI = this._bms.getFolderURI(folder);
+                var siteURIString;
+                try { 
+                  siteURIString = 
+                    this._anno.getAnnotationString(containerURI, "livemark/siteURI");
                 }
+                catch (ex) {}
+                // end duplication
+
+                if (siteURIString)
+                  button.setAttribute("siteURI", siteURIString);
               }
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");

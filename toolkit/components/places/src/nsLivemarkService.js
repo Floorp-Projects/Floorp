@@ -303,6 +303,12 @@ LivemarkService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
   },
 
+  /**
+  * n.b. -- the body of this method is duplicated in 
+  *         /browser/components/places/content/toolbar.xml
+  *         to avoid instantiating the livemark service on
+  *         startup.
+  */
   getSiteURI: function LS_getSiteURI(container) {
     this._ensureLivemark(container);
     var containerURI = this._bms.getFolderURI(container);
