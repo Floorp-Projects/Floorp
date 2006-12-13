@@ -52,10 +52,16 @@
   min-height: 50px;
 }
 
-.alertImageBox {
-  margin-left: 4px;
-  margin-right: 6px;
+.alertBox[orient="horizontal"] > .alertImageBox {
+  -moz-margin-start: 4px;
+  -moz-margin-end: 6px;
   min-height: 46px;
+}
+
+.alertBox[orient="vertical"] > .alertImageBox {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  min-width: 46px;
 }
 
 .alertTitle {
@@ -63,7 +69,7 @@
 }
 
 .alertText {
-  margin-right: 6px;
+  -moz-margin-end: 6px;
 }
 
 .alertText[clickable="true"] {
@@ -76,9 +82,15 @@
   color: #424F63;
 }
 
-.alertTextBox
+.alertBox[orient="horizontal"] > .alertTextBox
 {
-  padding-right: 10px;
+  -moz-padding-start: 10px;
   padding-top: 5px;
 }
 
+.alertBox[orient="vertical"] > .alertTextBox {
+  -moz-padding-start: 5px;
+  -moz-padding-end: 5px;
+  margin-bottom: 8px;
+  -moz-box-align: center; /* also hard-coded in alert.js, see bug 311557 */
+}
