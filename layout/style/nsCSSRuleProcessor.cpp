@@ -931,7 +931,7 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, 
     return PR_TRUE;
   }
 
-  return aTextIsSignificant && isText &&
+  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
          (aWhitespaceIsSignificant ||
           !aChild->TextIsOnlyWhitespace());
 }
