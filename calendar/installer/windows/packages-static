@@ -45,7 +45,6 @@ bin\sunbird.exe
 bin\res\cmessage.txt
 bin\xpicleanup.exe
 bin\LICENSE
-bin\README.txt
 
 ; [Components]
 bin\AccessibleMarshal.dll

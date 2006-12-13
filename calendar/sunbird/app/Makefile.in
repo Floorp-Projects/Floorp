@@ -22,7 +22,7 @@
 #   Brian Ryner <bryner@brianryner.com>
 #   Jonathan Wilson <jonwil@tpgi.com.au>
 #   Dan Mosedale <dmose@mozilla.org>
-#   Matthew Willis <mattwillis@gmail.com>
+#   Matthew Willis <lilmatt@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -377,10 +377,7 @@ endif
 
 endif # LIBXUL_SDK
 
-README_FILE = $(topsrcdir)/README.txt
-
 libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
 	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
 
 libs:: $(srcdir)/profile/prefs.js
