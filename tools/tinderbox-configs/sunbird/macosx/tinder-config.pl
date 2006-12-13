@@ -27,6 +27,7 @@ $ENV{CVS_RSH} = "ssh";
 #$ENV{MOZ_SYMBOLS_TRANSFER_TYPE} = "scp";
 
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
+$BuildAdministrator = 'build@mozilla.org';
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 #$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
 
@@ -44,22 +45,24 @@ $ENV{CVS_RSH} = "ssh";
 #$TestOnly          = 0;      # Only run tests, don't pull/build
 #$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 #$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
-#$BuildLocales      = 1;      # Do l10n packaging?
+#$BuildLocales      = 0;      # Do l10n packaging?
 
 # Tests
 $CleanProfile             = 1;
 #$ResetHomeDirForTests     = 1;
 #$ProductName              = "Sunbird";
-$ProductName              = "Calendar";
-$VendorName               = 'Mozilla';
+$ProductName              = 'Calendar';
+$MacOSProductName         = 'Calendar';
+$VendorName               = "";
 
-$RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
+#$RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
 #$RegxpcomTest             = 1;
 #$AliveTest                = 1;
 #$JavaTest                 = 0;
 #$ViewerTest               = 0;
 #$BloatTest                = 0;  # warren memory bloat test
-#$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc#$DomToTextConversionTest  = 0;
+#$BloatTest2               = 0;  # dbaron memory bloat test, require tracemalloc
+#$DomToTextConversionTest  = 0;
 #$XpcomGlueTest            = 0;
 #$CodesizeTest             = 0;  # Z,  require mozilla/tools/codesighs
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
@@ -71,7 +74,6 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 #$XULWindowOpenTest        = 0;  # Txul
 #$StartupPerformanceTest   = 0;  # Ts
 #@CompareLocaleDirs        = (); # Run compare-locales test on these directories
-# ("network","dom","toolkit","security/manager");
 @CompareLocaleDirs = (
   "netwerk",
   "calendar",
@@ -80,8 +82,6 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
   "security/manager",
   "other-licenses/branding/sunbird",
 );
-#$CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
-                                # aviary directory structure?
 
 #$TestsPhoneHome           = 0;  # Should test report back to server?
 
@@ -108,7 +108,7 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 #$BloatTestTimeout                 = 120;   # seconds
 #$MailBloatTestTimeout             = 120;   # seconds
 #$JavaTestTimeout                  = 45;
-#$DomTestTimeout                          = 45;    # seconds
+#$DomTestTimeout                   = 45;    # seconds
 #$XpcomGlueTestTimeout             = 15;
 #$CodesizeTestTimeout              = 900;     # seconds
 #$CodesizeTestType                 = "auto";  # {"auto"|"base"}
@@ -117,7 +117,7 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 #$QATestTimeout                    = 1200;   # entire test, seconds
 #$LayoutPerformanceTestPageTimeout = 30000; # each page, ms
 #$StartupPerformanceTestTimeout    = 15;    # seconds
-#$XULWindowOpenTestTimeout            = 150;   # seconds
+#$XULWindowOpenTestTimeout         = 150;   # seconds
 
 
 #$MozConfigFileName = 'mozconfig';
@@ -144,7 +144,7 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
 #$moz_cvsroot   = $ENV{CVSROOT};
-$moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
+$moz_cvsroot   = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
@@ -153,7 +153,7 @@ $moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
 #$moz_client_mk = 'client.mk';
 
 #- Set if you want to build in a separate object tree
-$ObjDir = 'sunbird-obj';
+$ObjDir = '../build/unisunbird';
 
 # Extra build name, if needed.
 $BuildNameExtra = 'Sb-Release';
@@ -225,7 +225,7 @@ $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/sunbird/nightl
 #$tbox_ftp_path = $ftp_path;
 #$tbox_url_path = $url_path;
 #$milestone     = "trunk";
-$notify_list   = "build-announce\@mozilla.org";
+$notify_list   = 'build-announce@mozilla.org';
 $stub_installer = 0;
 $sea_installer = 0;
 $archive       = 1;
@@ -233,8 +233,8 @@ $push_raw_xpis = 0;
 $update_package = 1;
 $update_product = "Sunbird";
 $update_version = "trunk";
-$update_platform = "Darwin_ppc-gcc3";
-$update_hash = "md5";
+$update_platform = "Darwin_Universal-gcc3";
+$update_hash = "sha1";
 $update_filehost = "ftp.mozilla.org";
 $update_appv = "0.4a1";
 $update_extv = "0.4a1";
@@ -264,3 +264,5 @@ $update_pushinfo = 1;
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill.
 $ENV{NO_EM_RESTART} = '1';
+
+$MacUniversalBinary = 1;
