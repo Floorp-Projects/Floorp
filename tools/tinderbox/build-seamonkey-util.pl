@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.339 $ ';
+$::UtilsVersion = '$Revision: 1.340 $ ';
 
 package TinderUtils;
 
@@ -1319,7 +1319,10 @@ sub get_profile_dir {
         if ($profile_product_name eq 'Thunderbird') {
             $profile_dir = "$ENV{HOME}/Library/$profile_product_name/Profiles";
             ($profile_dir) = <$profile_dir/*.$Settings::MozProfileName>;
-        } elsif (($profile_product_name eq 'Firefox') || ($profile_product_name eq 'SeaMonkey')) {
+        } elsif (($profile_product_name eq 'Firefox') ||
+                 ($profile_product_name eq 'SeaMonkey') ||
+                 ($profile_product_name eq 'Sunbird'))
+        {
             $profile_dir = "$ENV{HOME}/Library/Application Support/$profile_product_name/Profiles";
             ($profile_dir) = <"$profile_dir/*$Settings::MozProfileName*">;
         } elsif ($profile_product_name eq 'Camino') {
