@@ -59,6 +59,7 @@
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "prdtoa.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -1960,6 +1961,17 @@ NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     nsAutoString xmlRole;
     if (GetRoleAttribute(content, xmlRole)) {
       attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
+    }
+
+    char *ariaProperties[] = { "live", "atomic", "relevant", "datatype", "level", "posinset", "setsize", "sort" };
+
+    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaProperties); index ++) {
+      nsAutoString value;
+      nsCOMPtr<nsIAtom> attr = do_GetAtom(ariaProperties[index]);
+      if (content->GetAttr(kNameSpaceID_WAIProperties, attr, value)) {
+        ToLowerCase(value);
+        attributes->SetStringProperty(nsDependentCString(ariaProperties[index]), value, oldValueUnused);    
+      }
     }
   }
 

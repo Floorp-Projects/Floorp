@@ -311,6 +311,38 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   // Tree items override this, because they provide the current level as well
 
   aDescription.Truncate();
+
+  // Try ARIA properties first:
+  // If they exist then map them to positional description string
+  nsIContent *content = GetRoleContent(mDOMNode);
+  nsAutoString posInSet, setSize;
+  if (content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::posinset, posInSet) &&
+      content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::setsize, setSize)) {
+    PRInt32 errPosInSet, errSetSize;
+    PRInt32 intPosInSet = posInSet.ToInteger(&errPosInSet);
+    PRInt32 intSetSize = setSize.ToInteger(&errSetSize);
+    if (NS_SUCCEEDED(errPosInSet) && intPosInSet >=1 && NS_SUCCEEDED(errSetSize) && intSetSize >= 1) {
+      nsAutoString level;
+      if (content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::level,  level)) {
+        // Position has a level
+        PRInt32 errLevel;
+        PRInt32 intLevel = level.ToInteger(&errLevel);
+        if (NS_SUCCEEDED(errLevel) && intLevel >= 1) {
+          // XXX How do we calculate the number of children?
+          // Normally we would append " with [numChildren]c" if we had that information
+          // In the future we may need to use the ARIA owns property to calculate that if it's present
+          nsTextFormatter::ssprintf(aDescription,
+                                    NS_LITERAL_STRING("L%d, %d of %d").get(), intLevel, intPosInSet, intSetSize);
+        }
+      }
+      else { // Position has no level
+        nsTextFormatter::ssprintf(aDescription,
+                                  NS_LITERAL_STRING("%d of %d").get(), intPosInSet, intSetSize);
+      }
+      return NS_OK;
+    }
+  }
+
   PRUint32 currentRole;
   nsresult rv = GetFinalRole(&currentRole);
   if (NS_FAILED(rv) ||
