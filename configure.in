@@ -5530,7 +5530,7 @@ if test -n "${MOZ_JAVAXPCOM}"; then
         ;;
     esac
     if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}.])
+      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
     fi
   fi
 
@@ -5545,7 +5545,7 @@ if test -n "${MOZ_JAVAXPCOM}"; then
   AC_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
   AC_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
   if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
+    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
   fi
 fi
 
