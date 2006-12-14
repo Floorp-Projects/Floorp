@@ -842,11 +842,11 @@ function loadReminder(item)
       if(item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_END)
         origin = "-1";
       var duration = item.alarmOffset.clone();
-      var relation = "START";
+      var relation = "END";
       if(duration.isNegative) {
         duration.isNegative = false;
         duration.normalize();
-        relation = "END";
+        relation = "START";
       }
       if(menuitem.getAttribute("origin") == origin) {
         if(menuitem.getAttribute("relation") == relation) {
@@ -889,11 +889,11 @@ function loadReminder(item)
       reminder.origin = "-1";
     }
     var offset = item.alarmOffset.clone();
-    var relation = "START";
+    var relation = "END";
     if(offset.isNegative) {
       offset.isNegative = false;
       offset.normalize();
-      relation = "END";
+      relation = "START";
     }
     reminder.relation = relation;
     if (offset.minutes) {
@@ -948,7 +948,7 @@ function saveReminder(item) {
     var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                              .createInstance(Components.interfaces.calIDuration);
     duration[reminder.unit] = Number(reminder.length);
-    if (reminder.relation != "START") {
+    if (reminder.relation != "END") {
       duration.isNegative = true;
     }
     duration.normalize();
