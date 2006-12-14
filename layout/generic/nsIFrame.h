@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// {7e8dfd8c-3892-411e-81d6-8cb645169aa1}
+// 49d3ddd7-dc10-46f1-8554-98cefb2544a4
 #define NS_IFRAME_IID \
-{ 0x7e8dfd8c, 0x3892, 0x411e, \
- { 0x81, 0xd6, 0x8c, 0xb6, 0x45, 0x16, 0x9a, 0xa1 } }
+{ 0x49d3ddd7, 0xdc10, 0x46f1, \
+  { 0x85, 0x54, 0x98, 0xce, 0xfb, 0x25, 0x44, 0xa4 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
