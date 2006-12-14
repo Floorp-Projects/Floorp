@@ -24,6 +24,10 @@ f== bugs/351641-2b.html bugs/351641-2-ref.html # bug 358433 (2006-10-19)
 == bugs/360757-1b.html bugs/360757-1-ref.html
 f== bugs/360065-1.html bugs/360065-1-ref.html # bug 18217
 == bugs/332557-1.html bugs/332557-1-ref.html
+== bugs/315620-1a.html bugs/315620-1-ref.html
+!= bugs/315620-1b.html bugs/315620-1-ref.html
+== bugs/315620-2a.xhtml bugs/315620-2-ref.xhtml
+!= bugs/315620-2b.xhtml bugs/315620-2-ref.xhtml
 
 # table-dom/
 == table-dom/appendCells1.html table-dom/appendCells1-ref.html
