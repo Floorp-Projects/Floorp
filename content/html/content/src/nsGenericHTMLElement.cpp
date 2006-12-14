@@ -3501,7 +3501,7 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
 nsresult
 nsGenericHTMLElement::Blur()
 {
-  if (ShouldFocus(this)) {
+  if (ShouldBlur(this)) {
     SetElementFocus(PR_FALSE);
   }
 
