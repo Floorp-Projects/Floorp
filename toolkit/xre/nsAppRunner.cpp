@@ -51,6 +51,9 @@
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
 #endif
+#ifdef MOZ_WIDGET_COCOA
+#include "MacApplicationDelegate.h"
+#endif
 
 #ifdef XP_OS2
 #include "private/pprthred.h"
@@ -2488,6 +2491,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           rv = cmdLine->Init(gArgc, gArgv,
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
           NS_ENSURE_SUCCESS(rv, 1);
+#endif
+#ifdef MOZ_WIDGET_COCOA
+          // Prepare Cocoa's form of Apple Event handling.
+          SetupMacApplicationDelegate();
 #endif
           nsCOMPtr<nsIObserverService> obsService
             (do_GetService("@mozilla.org/observer-service;1"));
