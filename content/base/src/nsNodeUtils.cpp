@@ -199,7 +199,9 @@ nsNodeUtils::LastRelease(nsINode* aNode, PRBool aDelete)
   // Kill properties first since that may run external code, so we want to
   // be in as complete state as possible at that time.
   if (aNode->HasProperties()) {
-    nsIDocument* document = aNode->GetOwnerDoc();
+    // Strong reference to the document so that deleting properties can't
+    // delete the document.
+    nsCOMPtr<nsIDocument> document = aNode->GetOwnerDoc();
     if (document) {
       nsHandlerData handlerData;
       handlerData.mOperation = nsIDOMUserDataHandler::NODE_DELETED;
