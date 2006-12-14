@@ -52,12 +52,14 @@ class nsIContent;
 class nsIXPConnectWrappedJS;
 class nsIAtom;
 class nsIDOMNodeList;
-class nsVoidArray;
 class nsIDocument;
 class nsIURI;
 class nsIXBLDocumentInfo;
 class nsIStreamListener;
 class nsStyleSet;
+template<class E> class nsTArray;
+template<class E> class nsRefPtr;
+typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
 
 class nsBindingManager : public nsIBindingManager,
                          public nsIStyleRuleSupplier,
@@ -205,7 +207,7 @@ protected:
   nsTObserverArray<nsIMutationObserver> mObservers;
 
   // A queue of binding attached event handlers that are awaiting execution.
-  nsVoidArray mAttachedStack;
+  nsBindingList mAttachedStack;
   PRBool mProcessingAttachedStack;
 };
 

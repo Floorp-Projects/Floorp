@@ -294,14 +294,6 @@ nsBindingManager::nsBindingManager(void)
   mWrapperTable.ops = nsnull;
 }
 
-static PRBool PR_CALLBACK
-ReleaseBindings(void *aElement, void *aData)
-{
-  nsXBLBinding *binding = NS_STATIC_CAST(nsXBLBinding*, aElement);
-  NS_IF_RELEASE(binding);
-  return PR_TRUE;
-}
-
 nsBindingManager::~nsBindingManager(void)
 {
   if (mContentListTable.ops)
@@ -312,7 +304,6 @@ nsBindingManager::~nsBindingManager(void)
     PL_DHashTableFinish(&mInsertionParentTable);
   if (mWrapperTable.ops)
     PL_DHashTableFinish(&mWrapperTable);
-  mAttachedStack.EnumerateForwards(ReleaseBindings, nsnull);
 }
 
 nsXBLBinding*
@@ -339,8 +330,8 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
   // after aContent has been deleted (if aBinding is null and the content node
   // dies before we process mAttachedStack).
   nsXBLBinding* oldBinding = mBindingTable.GetWeak(aContent);
-  if (oldBinding && mAttachedStack.RemoveElement(oldBinding)) {
-    NS_RELEASE(oldBinding);
+  if (oldBinding) {
+    mAttachedStack.RemoveElement(oldBinding);
   }
   
   PRBool result = PR_TRUE;
@@ -765,14 +756,12 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
   if (!mAttachedStack.AppendElement(aBinding))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(aBinding);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::ClearAttachedQueue()
 {
-  mAttachedStack.EnumerateForwards(ReleaseBindings, nsnull);
   mAttachedStack.Clear();
   return NS_OK;
 }
@@ -786,14 +775,12 @@ nsBindingManager::ProcessAttachedQueue()
   mProcessingAttachedStack = PR_TRUE;
 
   PRInt32 lastItem;
-  while ((lastItem = mAttachedStack.Count() - 1) >= 0) {
-    nsXBLBinding *binding = NS_STATIC_CAST(nsXBLBinding*,
-                                           mAttachedStack.FastElementAt(lastItem));
+  while ((lastItem = mAttachedStack.Length() - 1) >= 0) {
+    nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
     mAttachedStack.RemoveElementAt(lastItem);
 
     NS_ASSERTION(binding, "null item in attached stack?");
     binding->ExecuteAttachedHandler();
-    NS_RELEASE(binding);
   }
 
   mProcessingAttachedStack = PR_FALSE;
