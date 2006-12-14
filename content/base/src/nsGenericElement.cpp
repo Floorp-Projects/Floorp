@@ -54,6 +54,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIContentIterator.h"
 #include "nsIEventListenerManager.h"
+#include "nsIFocusController.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISupportsArray.h"
@@ -2184,6 +2185,37 @@ nsGenericElement::ShouldFocus(nsIContent *aContent)
   }
 
   return visible;
+}
+
+// static
+PRBool
+nsGenericElement::ShouldBlur(nsIContent *aContent)
+{
+  // Determine if the current element is focused, if it is not focused
+  // then we should not try to blur
+  PRBool isFocused = PR_FALSE;
+
+  nsIDocument *document = aContent->GetDocument();
+
+  if (document) {
+    nsPIDOMWindow *win = document->GetWindow();
+
+    if (win) {
+      nsCOMPtr<nsIFocusController> focusController =
+           win->GetRootFocusController();
+
+      if (focusController) {
+        nsCOMPtr<nsIDOMElement> focusedElement;
+        focusController->GetFocusedElement(getter_AddRefs(focusedElement));    
+        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aContent);
+        //when the element is the same as the focused element, blur it
+        if (domElement == focusedElement)
+          isFocused = PR_TRUE;
+      }
+    }
+  }
+
+  return isFocused;
 }
 
 nsIContent*

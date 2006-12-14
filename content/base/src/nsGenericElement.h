@@ -608,6 +608,8 @@ public:
 
   static PRBool ShouldFocus(nsIContent *aContent);
 
+  static PRBool ShouldBlur(nsIContent *aContent);
+
   /**
    * Actual implementation of the DOM InsertBefore and ReplaceChild methods.
    * Shared by nsDocument. When called from nsDocument, aParent will be null.
