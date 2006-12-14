@@ -41,8 +41,9 @@
 #include "nsIRemoteContainer.idl"
 
 interface nsIURI;
+interface nsINavBookmarksService;
 
-[scriptable, uuid(1e66ec55-87fa-45c2-a912-dd44afb06922)]
+[scriptable, uuid(86f0be08-7b7f-4ec6-97ff-ecace917b852)]
 interface nsILivemarkService : nsIRemoteContainer
 {
   /**
@@ -59,6 +60,16 @@ interface nsILivemarkService : nsIRemoteContainer
                          in nsIURI siteURI,
                          in nsIURI feedURI,
                          in PRInt32 index);
+
+  /**
+   * Same as above, use during startup to avoid HTTP traffic
+   */
+  PRInt64 createLivemarkFolderOnly(in nsINavBookmarksService bms,
+                                   in PRInt64 folder,
+                                   in AString name,
+                                   in nsIURI siteURI,
+                                   in nsIURI feedURI,
+                                   in PRInt32 index);
 
   /**
    * Determines whether the folder with the given folder ID identifies

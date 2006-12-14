@@ -213,7 +213,8 @@ class BookmarkContentSink : public nsIHTMLContentSink
 public:
   nsresult Init(PRBool aAllowRootChanges,
                 nsINavBookmarksService* bookmarkService,
-                PRInt64 aFolder);
+                PRInt64 aFolder,
+                PRBool aIsImportDefaults);
 
   NS_DECL_ISUPPORTS
 
@@ -276,6 +277,10 @@ protected:
   // to reparent it on import.
   PRBool mAllowRootChanges;
 
+  // if set, this is an import of initial bookmarks.html content,
+  // so we don't want to kick off HTTP traffic
+  PRBool mIsImportDefaults;
+
   // If a folder was specified to import into, then ignore flags to put
   // bookmarks in the bookmarks menu or toolbar and keep them inside
   // the folder.
@@ -327,7 +332,8 @@ protected:
 nsresult
 BookmarkContentSink::Init(PRBool aAllowRootChanges,
                           nsINavBookmarksService* bookmarkService,
-                          PRInt64 aFolder)
+                          PRInt64 aFolder,
+                          PRBool aIsImportDefaults)
 {
   nsresult rv;
   mBookmarksService = bookmarkService;
@@ -339,6 +345,7 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAllowRootChanges = aAllowRootChanges;
+  mIsImportDefaults = aIsImportDefaults;
 
   // initialize the root frame with the menu root
   PRInt64 menuRoot;
@@ -730,12 +737,23 @@ BookmarkContentSink::HandleLinkEnd()
     // (It gets created here instead of in HandleLinkBegin()
     // because we need to know the title before creating it.)
     PRInt64 folderId;
-    mLivemarkService->CreateLivemark(frame.mContainerID,
-                                     frame.mPreviousText,
-                                     frame.mPreviousLink,
-                                     frame.mPreviousFeed,
-                                     -1,
-                                     &folderId);
+
+    if (mIsImportDefaults) {
+      mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
+                                                 frame.mContainerID,
+                                                 frame.mPreviousText,
+                                                 frame.mPreviousLink,
+                                                 frame.mPreviousFeed,
+                                                 -1,
+                                                 &folderId);
+    } else {
+      mLivemarkService->CreateLivemark(frame.mContainerID,
+                                       frame.mPreviousText,
+                                       frame.mPreviousLink,
+                                       frame.mPreviousFeed,
+                                       -1,
+                                       &folderId);
+    }
 #ifdef DEBUG_IMPORT
     PrintNesting();
     printf("Creating livemark '%s'\n",
@@ -1033,20 +1051,21 @@ NS_IMETHODIMP
 nsNavBookmarks::ImportBookmarksHTML(nsIURI* aURL)
 {
   // this version is exposed on the interface and disallows changing of roots
-  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, 0);
+  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, 0, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsNavBookmarks::ImportBookmarksHTMLToFolder(nsIURI* aURL, PRInt64 aFolder)
 {
   // this version is exposed on the interface and disallows changing of roots
-  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, aFolder);
+  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, aFolder, PR_FALSE);
 }
 
 nsresult
 nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
                                             PRBool aAllowRootChanges,
-                                            PRInt64 aFolder)
+                                            PRInt64 aFolder,
+                                            PRBool aIsImportDefaults)
 {
   // wrap the import in a transaction to make it faster
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
@@ -1063,7 +1082,7 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
 
   nsCOMPtr<BookmarkContentSink> sink = new BookmarkContentSink;
   NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
-  rv = sink->Init(aAllowRootChanges, this, aFolder);
+  rv = sink->Init(aAllowRootChanges, this, aFolder, aIsImportDefaults);
   NS_ENSURE_SUCCESS(rv, rv);
   parser->SetContentSink(sink);
 

@@ -39,14 +39,16 @@
 
 // Get livemark service
 try {
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].getService(Ci.nsILivemarkService);
+  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
 } catch(ex) {
   do_throw("Could not get livemark-service\n");
 } 
 
 // Get bookmark service
 try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
 } catch(ex) {
   do_throw("Could not get nav-bookmarks-service\n");
 }
@@ -56,8 +58,10 @@ var root = bmsvc.bookmarksRoot;
 
 // main
 function run_test() {
-  var livemarkId = lmsvc.createLivemark(root, "foo", uri("http://example.com/"), 
-                                        uri("http://example.com/rss.xml"), -1);
+  var livemarkId = 
+    lmsvc.createLivemarkFolderOnly(bmsvc, root, "foo",
+                                   uri("http://example.com/"),
+                                   uri("http://example.com/rss.xml"), -1);
 
   do_check_true(lmsvc.isLivemark(livemarkId));
   do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://example.com/");
@@ -85,5 +89,5 @@ function run_test() {
   // make sure folders don't get counted as bookmarks
   // create folder
   var randomFolder = bmsvc.createFolder(root, "Random", -1);
-  do_check_true(!lmsvc.isLivemark(randomFolder))
+  do_check_true(!lmsvc.isLivemark(randomFolder));
 }

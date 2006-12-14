@@ -38,8 +38,4 @@
 // put cleanup of the bookmarks test here.
 
 // remove bookmarks file
-try {
-  var file = dirSvc.get('ProfD', Ci.nsIFile);
-  file.append("places.sqlite");
-  file.remove(false);
-} catch(ex) { dump(ex); }
+clearDB();
