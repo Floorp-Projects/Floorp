@@ -1,0 +1,9 @@
+svrcore 4.0.3.01
+================
+* Moved Makefile to src/Makefile.win for Windows build
+* Added support for --with-nspr and --with-nss
+* Use PK11_TokenKeyGenWithFlags instead of PK11_KeyGen
+
+svrcore 4.0.2.02
+================
+* Autotooled the build.

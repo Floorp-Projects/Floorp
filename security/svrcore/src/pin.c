@@ -38,6 +38,10 @@
  * pin.c - SVRCORE module implementing PK11 pin callback support
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <svrcore.h>
 
 #include <string.h>

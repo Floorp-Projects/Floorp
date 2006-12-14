@@ -40,7 +40,11 @@
  *
  ***********************************************************/
 
-#if defined( WIN32 ) 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#if defined( _WIN32 ) 
 
 #include <windows.h>
 #include <nspr.h>
@@ -164,4 +168,4 @@ NT_PromptForPin (const char *tokenName)
     return strdup(password);
 }
 
-#endif /* defined( WIN32 )  */
+#endif /* defined( _WIN32 )  */

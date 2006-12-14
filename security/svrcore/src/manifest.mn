@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-CORE_DEPTH = ..
+CORE_DEPTH = ../..
 
 MODULE = svrcore
 

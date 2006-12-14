@@ -38,12 +38,16 @@
  * user.c - SVRCORE module for reading PIN from the terminal
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <svrcore.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 /* ------------------------------------------------------------ */
 /* I18N */
@@ -60,14 +64,13 @@ struct SVRCOREUserPinObj
 };
 static const struct SVRCOREPinMethods vtable;
 
-#ifdef WIN32
+#ifdef _WIN32
 extern char* NT_PromptForPin(const char *tokenName);
-#endif
+#else
 /* ------------------------------------------------------------ */
 /* 
  * Support routines for changing terminal modes on UNIX
  */
-#ifdef XP_UNIX
 #include <termios.h>
 #include <unistd.h>
 static void echoOff(int fd)
@@ -89,7 +92,7 @@ static void echoOn(int fd)
         tcsetattr(fd, TCSAFLUSH, &tio);
     }
 }
-#endif
+#endif /* _WIN32 */
 
 /* ------------------------------------------------------------ */
 SVRCOREError
@@ -144,7 +147,7 @@ static char *getPin(SVRCOREPinObj *obj, const char *tokenName, PRBool retry)
   /* If the program is not interactive then return no result */
   if (!tty->interactive) return 0;
 
-#ifdef WIN32 
+#ifdef _WIN32 
   if (retry) {
         MessageBox(GetDesktopWindow(), nt_retryWarning,
                         "Netscape Server", MB_ICONEXCLAMATION | MB_OK);
@@ -191,7 +194,7 @@ static char *getPin(SVRCOREPinObj *obj, const char *tokenName, PRBool retry)
 
   return strdup(line);
 
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 }
 

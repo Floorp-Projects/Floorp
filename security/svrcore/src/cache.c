@@ -38,6 +38,10 @@
  * cache.c - SVRCORE module for caching PIN values
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <string.h>
 
 #include <svrcore.h>
