@@ -224,13 +224,13 @@ menuitem[checked="true"] {
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
+menuitem[checked="true"][_moz-menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
+menuitem[checked="true"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
   -moz-image-region: auto;
 }
 %endif
@@ -247,13 +247,13 @@ menuitem[checked="true"][type="radio"] {
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][type="radio"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
+menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
   -moz-image-region: auto;
 }
 
-menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
+menuitem[checked="true"][type="radio"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
   -moz-image-region: auto;
 }
 %endif
