@@ -631,14 +631,17 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
   mVisibleWidth = NSTwipsToIntPixels(visibleArea.width, t2p);
   mVisibleHeight = NSTwipsToIntPixels(visibleArea.height, t2p);
 
+  PRBool imageWasOverflowing = mImageIsOverflowing;
   mImageIsOverflowing =
     mImageWidth > mVisibleWidth || mImageHeight > mVisibleHeight;
+  PRBool windowBecameBigEnough = imageWasOverflowing && !mImageIsOverflowing;
 
-  if (changeState || mShouldResize || mFirstResize) {
+  if (changeState || mShouldResize || mFirstResize ||
+      windowBecameBigEnough) {
     if (mImageIsOverflowing && (changeState || mShouldResize)) {
       ShrinkToFit();
     }
-    else if (mImageIsResized || mFirstResize) {
+    else if (mImageIsResized || mFirstResize || windowBecameBigEnough) {
       RestoreImage();
     }
   }
