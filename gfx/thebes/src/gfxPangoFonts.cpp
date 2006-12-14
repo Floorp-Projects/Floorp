@@ -261,14 +261,12 @@ MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc, double 
 
 gfxPangoFont::gfxPangoFont(const nsAString &aName,
                            const gfxFontStyle *aFontStyle)
-    : gfxFont(aName, aFontStyle)
+    : gfxFont(aName, aFontStyle),
+    mPangoFontDesc(nsnull), mPangoCtx(nsnull),
+    mXftFont(nsnull), mHasMetrics(PR_FALSE),
+    mAdjustedSize(0)
 {
     InitPangoLib();
-
-    mPangoFontDesc = nsnull;
-    mPangoCtx = nsnull;
-    mHasMetrics = PR_FALSE;
-    mXftFont = nsnull;
 }
 
 gfxPangoFont::~gfxPangoFont()
@@ -358,7 +356,8 @@ gfxPangoFont::RealizeFont(PRBool force)
     mPangoFontDesc = pango_font_description_new();
 
     pango_font_description_set_family(mPangoFontDesc, NS_ConvertUTF16toUTF8(mName).get());
-    MOZ_pango_font_description_set_absolute_size(mPangoFontDesc, mStyle->size * PANGO_SCALE);
+    gfxFloat size = mAdjustedSize ? mAdjustedSize : mStyle->size;
+    MOZ_pango_font_description_set_absolute_size(mPangoFontDesc, size * PANGO_SCALE);
     pango_font_description_set_style(mPangoFontDesc, ThebesStyleToPangoStyle(mStyle));
     pango_font_description_set_weight(mPangoFontDesc, ThebesStyleToPangoWeight(mStyle));
 
@@ -376,6 +375,20 @@ gfxPangoFont::RealizeFont(PRBool force)
     pango_context_set_font_description(mPangoCtx, mPangoFontDesc);
 
     mHasMetrics = PR_FALSE;
+
+    if (mAdjustedSize != 0)
+        return;
+
+    mAdjustedSize = mStyle->size;
+    if (mStyle->sizeAdjust == 0)
+        return;
+
+    gfxSize isz, lsz;
+    GetSize("x", 1, isz, lsz);
+    gfxFloat aspect = isz.height / mStyle->size;
+    mAdjustedSize =
+        PR_MAX(NSToCoordRound(mStyle->size*(mStyle->sizeAdjust/aspect)), 1.0f);
+    RealizeFont(PR_TRUE);
 }
 
 void
@@ -539,7 +552,7 @@ gfxPangoFont::GetMetrics()
     PangoFontMetrics *pfm = pango_font_get_metrics (font, NULL);
 
     // ??
-    mMetrics.emHeight = mStyle->size;
+    mMetrics.emHeight = mAdjustedSize ? mAdjustedSize : mStyle->size;
 
     mMetrics.maxAscent = pango_font_metrics_get_ascent(pfm) / FLOAT_PANGO_SCALE;
     mMetrics.maxDescent = pango_font_metrics_get_descent(pfm) / FLOAT_PANGO_SCALE;
