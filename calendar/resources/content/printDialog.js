@@ -132,8 +132,14 @@ function getDialogSettings()
             eventList = theView.getSelectedItems({});
             break;
         case 'custom':
+            // We return the time from the timepickers using the selected
+            // timezone, as not doing so in timezones with a positive offset
+            // from UTC may cause the printout to include the wrong days.
+            var currentTimezone = calendarDefaultTimezone();
             start = jsDateToDateTime(document.getElementById("start-date-picker").value);
+            start = start.getInTimezone(currentTimezone);
             end   = jsDateToDateTime(document.getElementById("end-date-picker").value);
+            end   = end.getInTimezone(currentTimezone);
             break ;
         default :
             dump("Error : no case in printDialog.js::printCalendar()");
