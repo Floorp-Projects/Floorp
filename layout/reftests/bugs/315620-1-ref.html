@@ -1,0 +1,15 @@
+<html>
+<head>
+  <style>
+    div { background: red; height: 3em; }
+    div:empty { background: lime; }
+  </style>
+</head>
+<body>
+  <div style="display: none"></div>
+  <script>
+    var div = document.getElementsByTagName("div")[0];
+    div.style.display = "";
+  </script>
+</body>
+</html>
