@@ -241,7 +241,7 @@ var PlacesController = {
   _livemarks: null,
   get livemarks() {
     if (!this._livemarks) {
-      this._livemarks = 
+      this._livemarks =
         Cc["@mozilla.org/browser/livemark-service;2"].
         getService(Ci.nsILivemarkService);
     }
@@ -2249,8 +2249,16 @@ function PlacesBaseTransaction() {
 PlacesBaseTransaction.prototype = {
   bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
              getService(Ci.nsINavBookmarksService),
-  livemarks: Cc["@mozilla.org/browser/livemark-service;2"].
-             getService(Ci.nsILivemarkService),
+  _livemarks: null,
+  get livemarks() {
+    if (!this._livemarks) {
+      this._livemarks =
+        Cc["@mozilla.org/browser/livemark-service;2"].
+        getService(Ci.nsILivemarkService);
+    }
+    return this._livemarks;
+  },
+
   LOG: LOG,
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;

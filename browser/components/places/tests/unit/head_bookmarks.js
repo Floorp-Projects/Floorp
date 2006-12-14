@@ -75,3 +75,14 @@ var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 function uri(spec) {
   return iosvc.newURI(spec, null, null);
 }
+
+// Delete a previously created sqlite file
+function clearDB() {
+  try {
+    var file = dirSvc.get('ProfD', Ci.nsIFile);
+    file.append("places.sqlite");
+    if (file.exists())
+      file.remove(false);
+  } catch(ex) { dump("Exception: " + ex); }
+}
+clearDB();
