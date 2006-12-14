@@ -57,6 +57,18 @@ function fillrow(data, idx){
 	    return;
 	}
 }
+function getNote(idx,cid){
+	disableAllButtons(true);
+	dojo.io.bind({
+		url:     "tr_show_caserun.cgi",
+		content: {  caserun_id: cid, index: idx, action: 'get_notes'},
+		load:    function(type, data, evt){ 
+                dojo.byId('old_notes' + idx).innerHTML = data;
+		},
+		error:   function(type, error){ alert(error.message);},
+		mimetype: "text/plain"
+	});
+}
 //chBld Updates the caserun build 
 function chBld(idx, bid, sid, cid){
 	disableAllButtons(true);
@@ -73,6 +85,7 @@ function chBld(idx, bid, sid, cid){
 				displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 				disableAllButtons(false);
+                getNote(idx,cid);
 		},
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
@@ -96,6 +109,7 @@ function chEnv(idx, eid, sid, cid, oldid){
 				displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 	            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 				disableAllButtons(false);
+                getNote(idx,cid);
 		},
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
@@ -130,6 +144,7 @@ function chStat(idx, sid, cid){
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
+                    getNote(idx,cid);
 		         },
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
@@ -149,6 +164,7 @@ function chNote(idx, cid, note){
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
+                    getNote(idx,cid);
 		         },
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"
@@ -171,6 +187,7 @@ function chOwn(idx, cid, owner){
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
+                    getNote(idx,cid);
 		         },
 		error:   function(type, error){ alert(error.message);},
 		mimetype: "text/plain"

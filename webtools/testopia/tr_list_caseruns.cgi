@@ -122,29 +122,20 @@ if ($action eq 'Commit'){
             print $cgi->multipart_end if $serverpush;
             ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
         }
-    
+        
+        # Switch to the record representing this build and environment combo.
+        # If there is not one, it will create it and switch to that.
+        $caserun = $caserun->switch($build,$env);
+        
+        $caserun->set_status($status)     if ($caserun->status_id != $status);
+        $caserun->set_assignee($assignee) if ($caserun->assignee->id != $assignee);
+        $caserun->append_note($notes);
+        
         foreach my $bug (@buglist){
             $caserun->attach_bug($bug);
         }
         
-        my $testedby;
-        my $close_date;
-        if ($caserun->is_closed_status($status)){
-            $testedby = Bugzilla->user->id;
-            $close_date = get_time_stamp();
-            $caserun->update_bugs('REOPENED') if ($status == FAILED);
-            $caserun->update_bugs('VERIFIED') if ($status == PASSED);
-        }
-        my %newfields = (
-            'assignee' => $assignee,
-            'testedby' => $testedby,
-            'close_date' => $close_date,
-            'case_run_status_id' => $status,
-            'build_id' => $build,
-            'environment_id' => $env,
-        );
-        $caserun->update(\%newfields);
-        $caserun->append_note($notes);
+        
     }
     $vars->{'title'} = "Update Successful";
     $vars->{'tr_message'} = "$i Test Case-Runs Updated";

@@ -66,7 +66,6 @@ if ($action eq 'Commit'){
     my $notes    = $cgi->param('notes');
     my $build    = $cgi->param('caserun_build');
     my $env      = $cgi->param('caserun_env');
-    my $confirm  = $cgi->param('confirm');
     my $assignee = DBNameToIdAndCheck(trim($cgi->param('assignee')));
     
     validate_test_id($build, 'build');
@@ -81,65 +80,19 @@ if ($action eq 'Commit'){
     detaint_natural($build);
     detaint_natural($status);
     trick_taint($notes);
-        
-    my %newfields = (
-        'assignee' => $assignee,
-        'testedby' => Bugzilla->user->id,
-        'case_run_status_id' => $status,
-        'build_id' => $build,
-        'environment_id' => $env,
-    );
-    
-    my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build, $env);
-    my $existing = Bugzilla::Testopia::TestCaseRun->new($is) if $is;
-    if (($build != $caserun->build->id || $env != $caserun->environment->id)
-        && $is 
-          && $existing->status ne 'IDLE' 
-            && !$confirm){
-        my $statuslist = $caserun->get_status_list;
-        my $status;
-        foreach my $stat (@$statuslist){
-            if ($stat->{'id'} == $cgi->param('status')){
-                $status = $stat->{'name'};
-                last;
-            }
-        }
-        $vars->{'existing'} = $existing;
-        $vars->{'assignee'} = $cgi->param('assignee');
-        $vars->{'status_name'}   = $status;
-        $vars->{'status'}   = $cgi->param('status');
-        $vars->{'notes'}    = $notes;
-        if ($caserun->is_closed_status($cgi->param('status'))){
-            $vars->{'close_date'} = get_time_stamp();
-            $vars->{'testedby'} = Bugzilla->user->login;
-        }
-        $vars->{'bugs'} = $cgi->param('bugs');
-        $template->process("testopia/caserun/confirm.html.tmpl", $vars) ||
-            ThrowTemplateError($template->error());
-     
-        exit;   
-    }
 
-    if ($notes){
-        $caserun->append_note($notes);
-    }
+    # Switch to the record representing this build and environment combo.
+    # If there is not one, it will create it and switch to that.
+    $caserun = $caserun->switch($build,$env);
+    
+    $caserun->set_status($status)     if ($caserun->status_id != $status);
+    $caserun->set_assignee($assignee) if ($caserun->assignee->id != $assignee);
+    $caserun->append_note($notes)     if ($notes && $caserun->notes !~ /$notes/);
 
     foreach my $bug (@buglist){
         $caserun->attach_bug($bug);
     }
     
-    my $oldstatus_id = $caserun->status_id; 
-    if ($status != $oldstatus_id){
-        my $newstatus = $caserun->lookup_status($status);
-        my $oldstatus = $caserun->status();
-        $caserun->update_bugs('REOPENED') if ($newstatus eq 'FAILED');
-        $caserun->update_bugs('VERIFIED') if ($newstatus eq 'PASSED');
-        
-        my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;
-        $caserun->append_note($note);
-    }
-    
-    $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun->update(\%newfields));
     $vars->{'tr_message'} = "Case-run updated.";
     display($caserun);
 }
@@ -192,25 +145,20 @@ elsif ($action eq 'update_build'){
     my $build_id = $cgi->param('build_id');
     detaint_natural($build_id);
     validate_test_id($build_id, 'build');
-    my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build_id, $caserun->environment->id);
-    if ($is){
-        $caserun = Bugzilla::Testopia::TestCaseRun->new($is);
-    }
-    elsif ($caserun->status ne 'IDLE'){
-        my $cid = $caserun->clone({'build_id' => $build_id });
-        $caserun = Bugzilla::Testopia::TestCaseRun->new($cid);
-    }
-    else {
-        $caserun->set_build($build_id );
-    }
+    
+    $caserun = $caserun->switch($build_id, $caserun->environment->id);
+    
     my $body_data;
     my $head_data;
+    
     $vars->{'caserun'} = $caserun;
     $vars->{'index'}   = $cgi->param('index');
+    
     $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
         ThrowTemplateError($template->error());
     $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
         ThrowTemplateError($template->error());
+    
     print $head_data . "|~+" . $body_data;
 }
 elsif ($action eq 'update_environment'){
@@ -223,17 +171,9 @@ elsif ($action eq 'update_environment'){
     my $environment_id = $cgi->param('caserun_env');
     detaint_natural($environment_id);
     validate_test_id($environment_id, 'environment');
-    my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $caserun->build->id, $environment_id);
-    if ($is){
-        $caserun = Bugzilla::Testopia::TestCaseRun->new($is);
-    }
-    elsif ($caserun->status ne 'IDLE'){
-        my $cid = $caserun->clone({'environment_id' => $environment_id });
-        $caserun = Bugzilla::Testopia::TestCaseRun->new($cid);
-    }
-    else {
-        $caserun->set_environment($environment_id );
-    }
+    
+    $caserun = $caserun->switch($caserun->build->id, $environment_id);
+    
     my $body_data;
     my $head_data;
     $vars->{'caserun'} = $caserun;
@@ -253,15 +193,9 @@ elsif ($action eq 'update_status'){
     }
     my $status_id = $cgi->param('status_id');
     detaint_natural($status_id);
-    if ($status_id != $caserun->status_id){
-        my $oldstatus = $caserun->status(); 
-        $caserun->set_status($status_id);
-        my $newstatus = $caserun->status();
-        my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;
-        $note .= " for build: '". $caserun->build->name; 
-        $note .= "' and environment: '". $caserun->environment->name ."'.";
-        $caserun->append_note($note);
-    }
+    
+    $caserun->set_status($status_id);
+    
     print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;
     if ($caserun->updated_deps) {
         print "|". join(',', @{$caserun->updated_deps});
@@ -276,8 +210,7 @@ elsif ($action eq 'update_note'){
     }
     my $note = $cgi->param('note');
     trick_taint($note);
-    $caserun->append_note($note);
-    print '<pre>' .  $caserun->notes . '</pre>';
+    $caserun->append_note($note);    
 }
 elsif ($action eq 'update_assignee'){
     Bugzilla->login(LOGIN_REQUIRED);
@@ -292,6 +225,15 @@ elsif ($action eq 'update_assignee'){
         exit;
     }
     $caserun->set_assignee($assignee_id);
+}
+elsif ($action eq 'get_notes'){
+    Bugzilla->login(LOGIN_REQUIRED);
+    my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
+    if (!$caserun->canedit){
+        print "Error - You don't have permission";
+        exit;
+    }
+    print '<pre>' .  $caserun->notes . '</pre>';
 }
 elsif ($action eq 'attach_bug'){
     Bugzilla->login(LOGIN_REQUIRED);

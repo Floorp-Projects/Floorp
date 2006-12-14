@@ -10,11 +10,11 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Test Runner System.
+# The Original Code is the Bugzilla Testopia System.
 #
-# The Initial Developer of the Original Code is Maciej Maczynski.
-# Portions created by Maciej Maczynski are Copyright (C) 2001
-# Maciej Maczynski. All Rights Reserved.
+# The Initial Developer of the Original Code is Greg Hendricks.
+# Portions created by Greg Hendricks are Copyright (C) 2006
+# Novell. All Rights Reserved.
 #
 # Contributor(s): Greg Hendricks <ghendricks@novell.com>
 =head1 NAME
@@ -69,6 +69,7 @@ use Date::Format;
     case_run_status_id
     case_text_version
     build_id
+    environment_id
     notes
     close_date
     iscurrent
@@ -77,19 +78,19 @@ use Date::Format;
 =cut
 
 use constant DB_COLUMNS => qw(
-    test_case_runs.case_run_id
-    test_case_runs.run_id
-    test_case_runs.case_id
-    test_case_runs.assignee
-    test_case_runs.testedby
-    test_case_runs.case_run_status_id
-    test_case_runs.case_text_version
-    test_case_runs.build_id
-    test_case_runs.environment_id
-    test_case_runs.notes
-    test_case_runs.close_date
-    test_case_runs.iscurrent
-    test_case_runs.sortkey
+    case_run_id
+    run_id
+    case_id
+    assignee
+    testedby
+    case_run_status_id
+    case_text_version
+    build_id
+    environment_id
+    notes
+    close_date
+    iscurrent
+    sortkey
 );
 
 our $columns = join(", ", DB_COLUMNS);
@@ -207,48 +208,39 @@ Creates a copy of this caserun and sets it as the current record
 
 sub clone {
     my $self = shift;
-    my ($fields) = @_;
-    my $dbh = Bugzilla->dbh;
-    if ($fields->{'build_id'} && $self->{'build_id'} != $fields->{'build_id'}){
-        my $build = Bugzilla::Testopia::Build->new($fields->{'build_id'});
-        my $note  = "Build Changed by ". Bugzilla->user->login; 
-           $note .= ". Old build: '". $self->build->name;
-           $note .= "' New build: '". $build->name;
-           $note .= "'. Resetting to IDLE.";
-        $self->{'build_id'} = $fields->{'build_id'};
-        $self->{'build'} = $build;
-        $self->append_note($note);
-    }
-    if ($fields->{'environment_id'} && $self->{'environment_id'} != $fields->{'environment_id'}){
-        my $environment = Bugzilla::Testopia::Environment->new($fields->{'environment_id'});
-        my $note  = "Environment Changed by ". Bugzilla->user->login;
-           $note .= ". Old environment: '". $self->environment->name;
-           $note .= "' New environment: '". $environment->name;
-           $note .= "'. Resetting to IDLE.";
-        $self->{'environment_id'} = $fields->{'environment_id'};
-        $self->{'environment'} = $environment;
-        $self->append_note($note);
-    }
-    my $entry = $self->store;
-    $self->set_as_current($entry);
-    return $entry;
+    my ($build_id, $env_id ,$run_id, $case_id) = @_;
+    $run_id   ||= $self->{'run_id'};
+    $case_id  ||= $self->{'case_id'};
+    
+    my $dbh = Bugzilla->dbh;    
+    $dbh->do("INSERT INTO test_case_runs ($columns)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", undef,
+              (undef, $run_id, $case_id, $self->{'assignee'},
+               undef, IDLE, $self->{'case_text_version'}, 
+               $build_id, $env_id, 
+               undef, undef, 1, 0));
+
+    my $key = $dbh->bz_last_key( 'test_case_runs', 'case_run_id' );
+    
+    $self->set_as_current($key);
+    return $key;
 }
 
 =head2 check_exists
 
 Checks for an existing entry with the same build and environment for this 
-case and run and returns the id if it is found
+case and run and switches self to that object.
 
 =cut
 
-sub check_exists {
+sub switch {
    my $self = shift;
-   my ($run_id, $case_id, $build_id, $env_id) = @_;
+   my ($build_id, $env_id ,$run_id, $case_id) = @_;
 
-   $run_id ||= $self->{'run_id'};
-   $case_id ||= $self->{'case_id'};
+   $run_id   ||= $self->{'run_id'};
+   $case_id  ||= $self->{'case_id'};
    $build_id ||= $self->{'build_id'};
-   $env_id ||= $self->{'environment_id'};
+   $env_id   ||= $self->{'environment_id'};
    
    my $dbh = Bugzilla->dbh;     
    my ($is) = $dbh->selectrow_array(
@@ -260,58 +252,34 @@ sub check_exists {
             AND environment_id = ?",
           undef, ($run_id, $case_id, $build_id, $env_id));
 
-   return $is;
-
-}
-
-=head2 lookup_case_run_id
-
-Checks for an existing entry based on run, case, and build, 
-and returns the id if it is found
-
-=cut
-
-sub lookup_case_run_id 
-{
-   my ($run_id, $case_id, $build_id) = @_;
-
-   my $dbh = Bugzilla->dbh;     
-
-   my ($case_run_id) = $dbh->selectrow_array(
-        "SELECT case_run_id 
-           FROM test_case_runs 
-          WHERE run_id = ? AND case_id = ? AND build_id = ?",
-          undef, ($run_id, $case_id, $build_id));
-
-   return $case_run_id;
-}
-
-=head2 update
-
-Update this case-run in the database. This method checks which 
-fields have been changed and either creates a clone of the case-run
-or updates the existing one. 
-
-=cut
-
-sub update {
-    my $self = shift;
-    my ($fields) = @_;
-    my $dbh = Bugzilla->dbh;
-    if ($self->is_closed_status($fields->{'case_run_status_id'})){
-        $fields->{'close_date'} = Bugzilla::Testopia::Util::get_time_stamp();
-    }
-    my ($is) = $self->check_exists($self->run_id, $self->case_id, $fields->{'build_id'}, $fields->{'environment_id'});
-
-    if ($fields->{'build_id'} != $self->{'build_id'} || $fields->{'environment_id'} != $self->{'environment_id'}){
-        if ($is){
-            return $is;
-        }
-        if ($self->{'case_run_status_id'} != IDLE){
-            return $self->clone($fields);
-        }
-    }
-    return $self->_update_fields($fields);
+   if ($is){
+       $self = Bugzilla::Testopia::TestCaseRun->new($is);
+   }
+   else {
+       my $oldbuild = $self->{'build_id'};
+       my $oldenv = $self->{'environment_id'};
+       
+       $self = Bugzilla::Testopia::TestCaseRun->new($self->clone($build_id,$env_id));
+       
+       if ($oldbuild != $build_id){
+           my $build = Bugzilla::Testopia::Build->new($build_id);
+           my $note  = "Build Changed by ". Bugzilla->user->login; 
+              $note .= ". Old build: '". $self->build->name;
+              $note .= "' New build: '". $build->name;
+              $note .= "'. Resetting to IDLE.";
+           $self->append_note($note);
+       }
+       if ($oldenv != $env_id){
+           my $environment = Bugzilla::Testopia::Environment->new($env_id);
+           my $note  = "Environment Changed by ". Bugzilla->user->login;
+              $note .= ". Old environment: '". $self->environment->name;
+              $note .= "' New environment: '". $environment->name;
+              $note .= "'. Resetting to IDLE.";
+           $self->append_note($note);
+       }
+   } 
+   $self->set_as_current;
+   return $self;
 }
 
 =head2 _update_fields
@@ -408,6 +376,10 @@ if the status is a closed status.
 sub set_status {
     my $self = shift;
     my ($status_id) = @_;
+    
+    my $oldstatus = $self->status;
+    my $newstatus = $self->lookup_status($status_id);
+    
     $self->_update_fields({'case_run_status_id' => $status_id});
     if ($status_id == IDLE){
         $self->_update_fields({'close_date' => undef});
@@ -428,40 +400,12 @@ sub set_status {
         $self->update_bugs('REOPENED') if ($status_id == FAILED);
         $self->update_bugs('VERIFIED') if ($status_id == PASSED);
     }
-
+    
+    my $note = "Status changed from $oldstatus to $newstatus by ". Bugzilla->user->login;
+    $note .= " for build '". $self->build->name ."' and environment '". $self->environment->name; 
+    $self->append_note($note);
     $self->{'case_run_status_id'} = $status_id;
     $self->{'status'} = undef;
-}
-
-sub update_bugs {
-    my $self = shift;
-    my ($status) = @_;
-    my $dbh = Bugzilla->dbh;
-    my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
-    foreach my $bug (@{$self->bugs}){
-        my $oldstatus = $bug->bug_status;
-        
-        return if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
-        return if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
-        
-        my $comment  = "Status updated by Testopia:  ". Param('urlbase');
-           $comment .= "tr_show_caserun.cgi?caserun_id=" . $self->id;
-            
-        $dbh->bz_lock_tables("bugs WRITE, fielddefs READ, longdescs WRITE, bugs_activity WRITE");
-        $dbh->do("UPDATE bugs 
-                     SET bug_status = ?,
-                         delta_ts = ?
-                     WHERE bug_id = ?", 
-                     undef,($status, $timestamp, $bug->bug_id));
-        LogActivityEntry($bug->bug_id, 'bug_status', $oldstatus, 
-                         $status, Bugzilla->user->id, $timestamp);
-        LogActivityEntry($bug->bug_id, 'resolution', $bug->resolution, '', 
-                         Bugzilla->user->id, $timestamp) if ($status eq 'REOPENED');
-        AppendComment($bug->bug_id, Bugzilla->user->id, $comment, 
-                      !Bugzilla->user->in_group(Param('insidergroup')), $timestamp);
-        
-        $dbh->bz_unlock_tables();
-    }
 }
 
 =head2 set_assignee
@@ -473,7 +417,18 @@ Sets the assigned tester for the case-run
 sub set_assignee {
     my $self = shift;
     my ($user_id) = @_;
+    
+    my $oldassignee = $self->assignee->login;
+    my $newassignee = Bugzilla::User->new($user_id);
+    
     $self->_update_fields({'assignee' => $user_id});
+    $self->{'assignee'} = $newassignee;
+    
+    my $note = "Assignee changed from $oldassignee to ". $newassignee->login;
+    $note   .= " by ". Bugzilla->user->login;
+    $note   .= " for build '". $self->build->name;
+    $note   .= "' and environment '". $self->environment->name;
+    $self->append_note($note);
 }
 
 =head2 lookup_status
@@ -665,23 +620,62 @@ sub detach_bug {
 
 }
 
-=head2 get_buglist
+=head2 update_bugs
 
-Returns a comma separated string off bug ids associated with 
-this case-run
+Updates bug status depending on whether the case passed or failed. If
+the case failed it will reopen any attached bugs that are closed. If it
+passed it will mark RESOLVED bugs VERIFIED.
 
 =cut
 
-sub get_buglist {
+sub update_bugs {
+    my $self = shift;
+    my ($status) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
+    foreach my $bug (@{$self->bugs}){
+        my $oldstatus = $bug->bug_status;
+        
+        return if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
+        return if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
+        
+        my $comment  = "Status updated by Testopia:  ". Param('urlbase');
+           $comment .= "tr_show_caserun.cgi?caserun_id=" . $self->id;
+            
+        $dbh->bz_lock_tables("bugs WRITE, fielddefs READ, longdescs WRITE, bugs_activity WRITE");
+        $dbh->do("UPDATE bugs 
+                     SET bug_status = ?,
+                         delta_ts = ?
+                     WHERE bug_id = ?", 
+                     undef,($status, $timestamp, $bug->bug_id));
+        LogActivityEntry($bug->bug_id, 'bug_status', $oldstatus, 
+                         $status, Bugzilla->user->id, $timestamp);
+        LogActivityEntry($bug->bug_id, 'resolution', $bug->resolution, '', 
+                         Bugzilla->user->id, $timestamp) if ($status eq 'REOPENED');
+        AppendComment($bug->bug_id, Bugzilla->user->id, $comment, 
+                      !Bugzilla->user->in_group(Param('insidergroup')), $timestamp);
+        
+        $dbh->bz_unlock_tables();
+    }
+}
+
+=head2 obliterate
+
+Removes this caserun, its history, and all things that reference it.
+
+=cut
+
+sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
-    my $bugids = $dbh->selectcol_arrayref("SELECT bug_id 
-                                     FROM test_case_bugs 
-                                     WHERE case_run_id=?", 
-                                     undef, $self->{'case_run_id'});
-    return join(',', @{$bugids});
-}
     
+    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 
+              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id);
+    $dbh->do("DELETE FROM test_case_runs WHERE case_id = ? AND run_id = ?", 
+              undef, ($self->case_id, $self->run_id));
+    return 1;
+}
+   
 ###############################
 ####      Accessors        ####
 ###############################
@@ -918,6 +912,23 @@ sub bug_count{
     return $self->{'bug_count'};
 }
 
+=head2 get_buglist
+
+Returns a comma separated string off bug ids associated with 
+this case-run
+
+=cut
+
+sub get_buglist {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    my $bugids = $dbh->selectcol_arrayref("SELECT bug_id 
+                                     FROM test_case_bugs 
+                                     WHERE case_run_id=?", 
+                                     undef, $self->{'case_run_id'});
+    return join(',', @{$bugids});
+}
+
 =head2 is_open_status
 
 Returns true if the status of this case-run is an open status
@@ -1039,23 +1050,6 @@ sub candelete {
     return 1 if Bugzilla->user->in_group("admin");
     return 1 if Bugzilla->user->id == $self->run->manager->id;
     return 0;
-}
-
-=head2 obliterate
-
-Removes this caserun, its history, and all things that reference it.
-
-=cut
-
-sub obliterate {
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-    
-    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 
-              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id);
-    $dbh->do("DELETE FROM test_case_runs WHERE case_id = ? AND run_id = ?", 
-              undef, ($self->case_id, $self->run_id));
-    return 1;
 }
 
 =head1 SEE ALSO
