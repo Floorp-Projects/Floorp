@@ -63,6 +63,7 @@ public:
     PangoFont* GetPangoFont();
 
     XftFont * GetXftFont () { RealizeXftFont (); return mXftFont; }
+    gfxFloat GetAdjustedSize() { RealizeFont(); return mAdjustedSize; }
 
 protected:
     PangoFontDescription *mPangoFontDesc;
@@ -72,6 +73,7 @@ protected:
 
     PRBool mHasMetrics;
     Metrics mMetrics;
+    gfxFloat mAdjustedSize;
 
     void RealizeFont(PRBool force = PR_FALSE);
     void RealizeXftFont(PRBool force = PR_FALSE);
