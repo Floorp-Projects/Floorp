@@ -57,6 +57,7 @@ toolbox {
 toolbar {
   -moz-appearance: toolbar;
   min-width: 1px; /* DON'T DELETE! */
+  min-height: 19px;
   border-top: 1px solid;
   border-bottom: 1px solid;
   -moz-border-top-colors: ThreeDHighlight;
