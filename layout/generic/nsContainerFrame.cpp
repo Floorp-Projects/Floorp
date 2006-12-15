@@ -239,6 +239,22 @@ nsContainerFrame::IsLeaf() const
   return PR_FALSE;
 }
 
+PRBool
+nsContainerFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
+{
+  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
+  // Don't allow the caret to stay in an empty (leaf) container frame.
+  return PR_FALSE;
+}
+
+PRBool
+nsContainerFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
+{
+  NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
+  // Don't allow the caret to stay in an empty (leaf) container frame.
+  return PR_FALSE;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
