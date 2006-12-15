@@ -1,5 +1,7 @@
 // This file tests bug 250375
 
+do_import_script("test-harness/xpcshell-simple/httpd.js");
+
 function check_request_header(chan, name, value) {
   var chanValue;
   try {
@@ -33,7 +35,7 @@ var listener = {
     if (this._iteration == 1)
       run_test_continued();
     else
-      httpserv.stopListening();
+      httpserv.stop();
     do_test_finished();
   },
 
@@ -52,7 +54,8 @@ function makeChan() {
 var httpserv = null;
 
 function run_test() {
-  httpserv = start_server(4444);
+  httpserv = new nsHttpServer();
+  httpserv.start(4444);
 
   var chan = makeChan();
 
@@ -81,4 +84,3 @@ function run_test_continued() {
 
   do_test_pending();
 }
-

@@ -1,5 +1,7 @@
 // This file tests nsIContentSniffer, introduced in bug 324985
 
+do_import_script("test-harness/xpcshell-simple/httpd.js");
+
 const unknownType = "application/x-unknown-content-type";
 const sniffedType = "application/x-sniffed";
 
@@ -89,7 +91,8 @@ var urls = [
 var httpserv = null;
 
 function run_test() {
-  httpserv = start_server(4444);
+  httpserv = new nsHttpServer();
+  httpserv.start(4444);
 
   Components.manager.nsIComponentRegistrar.registerFactory(snifferCID,
     "Unit test content sniffer", snifferContract, sniffer);
@@ -103,7 +106,7 @@ function run_test_iteration(index) {
         sniffing_enabled = false;
         index = listener._iteration = 1;
     } else {
-        httpserv.stopListening();
+        httpserv.stop();
         return; // we're done
     }
   }

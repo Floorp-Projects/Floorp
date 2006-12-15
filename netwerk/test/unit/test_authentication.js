@@ -1,10 +1,13 @@
 // This file tests authentication prompt callbacks
 
+do_import_script("test-harness/xpcshell-simple/httpd.js");
+
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
 
 const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
+
 
 function AuthPrompt1(flags) {
   this.flags = flags;
@@ -202,7 +205,7 @@ var listener = {
       current_test++;
       tests[current_test]();
     } else { 
-      httpserv.stopListening();
+      httpserv.stop();
     }
 
     do_test_finished();
@@ -225,7 +228,13 @@ var current_test = 0;
 var httpserv = null;
 
 function run_test() {
-  httpserv = start_server(4444);
+  httpserv = new nsHttpServer();
+
+  httpserv.registerPathHandler("/auth", authHandler);
+  httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
+
+  httpserv.start(4444);
+
   tests[0]();
 }
 
@@ -308,3 +317,43 @@ function test_ntlm() {
   do_test_pending();
 }
 
+// PATH HANDLERS
+
+// /auth
+function authHandler(metadata, response) {
+  // btoa("guest:guest"), but that function is not available here
+  var expectedHeader = "Basic Z3Vlc3Q6Z3Vlc3Q=";
+
+  var body;
+  if (metadata.hasHeader("Authorization") &&
+      metadata.getHeader("Authorization") == expectedHeader)
+  {
+    response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
+    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+
+    body = "success";
+  }
+  else
+  {
+    // didn't know guest:guest, failure
+    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+
+    body = "failed";
+  }
+
+  response.bodyOutputStream.write(body, body.length);
+}
+
+// /auth/ntlm/simple
+function authNtlmSimple(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  response.setHeader("WWW-Authenticate", "NTLM" /* + ' realm="secret"' */);
+
+  var body = "NOTE: This just sends an NTLM challenge, it never\n" +
+             "accepts the authentication. It also closes\n" +
+             "the connection after sending the challenge\n";
+
+
+  response.bodyOutputStream.write(body, body.length);
+}
