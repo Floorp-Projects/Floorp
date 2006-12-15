@@ -845,11 +845,6 @@ public:
   NS_IMETHOD RecreateFramesFor(nsIContent* aContent);
 
   /**
-   * Post a request to handle a DOM event after Reflow has finished.
-   */
-  NS_IMETHOD PostDOMEvent(nsIContent* aContent, nsEvent* aEvent);
-
-  /**
    * Post a request to set and attribute after reflow has finished.
    */
   NS_IMETHOD PostAttributeChange(nsIContent* aContent,
@@ -1156,10 +1151,7 @@ protected:
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
 
-  // used for list of posted events and attribute changes. To be done
-  // after reflow.
-  nsDOMEventRequest* mFirstDOMEventRequest;
-  nsDOMEventRequest* mLastDOMEventRequest;
+  // used for list of posted attribute changes. To be done after reflow.
   nsAttributeChangeRequest* mFirstAttributeRequest;
   nsAttributeChangeRequest* mLastAttributeRequest;
   nsCallbackEventRequest* mFirstCallbackEventRequest;
@@ -1426,9 +1418,7 @@ PresShell::~PresShell()
 
   NS_ASSERTION(mCurrentEventContentStack.Count() == 0,
                "Huh, event content left on the stack in pres shell dtor!");
-  NS_ASSERTION(mFirstDOMEventRequest == nsnull &&
-               mLastDOMEventRequest == nsnull &&
-               mFirstAttributeRequest == nsnull &&
+  NS_ASSERTION(mFirstAttributeRequest == nsnull &&
                mLastAttributeRequest == nsnull &&
                mFirstCallbackEventRequest == nsnull &&
                mLastCallbackEventRequest == nsnull,
@@ -4672,39 +4662,6 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
 }
 
 /**
-* Post a request to handle a DOM event after Reflow has finished.
-* The event must have been created with the "new" operator.
-*/
-NS_IMETHODIMP
-PresShell::PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)
-{
- // ok we have a list of events to handle. Queue them up and handle them
- // after we finish reflow.
-
-  void* result = AllocateFrame(sizeof(nsDOMEventRequest));
-  if (NS_UNLIKELY(!result)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsDOMEventRequest* request = (nsDOMEventRequest*)result;
-
-  request->content = aContent;
-  NS_ADDREF(aContent);
-
-  request->event = aEvent;
-  request->next = nsnull;
-
-  if (mLastDOMEventRequest) {
-    mLastDOMEventRequest = mLastDOMEventRequest->next = request;
-  } else {
-    mFirstDOMEventRequest = request;
-    mLastDOMEventRequest = request;
-  }
- 
-  return NS_OK;
-}
-
-
-/**
  * Post a request to set and attribute after reflow has finished.
  */
 NS_IMETHODIMP
@@ -4765,30 +4722,6 @@ PresShell::HandlePostedReflowCallbacks()
 
    if (shouldFlush)
      FlushPendingNotifications(Flush_Layout);
-}
-
-void
-PresShell::HandlePostedDOMEvents()
-{
-   while(mFirstDOMEventRequest)
-   {
-      /* pull the node from the event request list. Be prepared for reentrant access to the list
-         from within Dispatch and its callees! */
-      nsDOMEventRequest* node = mFirstDOMEventRequest;
-      nsEventStatus status = nsEventStatus_eIgnore;
-
-      mFirstDOMEventRequest = node->next;
-      if (nsnull == mFirstDOMEventRequest) {
-        mLastDOMEventRequest = nsnull;
-      }
-
-      nsEventDispatcher::Dispatch(node->content, mPresContext, node->event,
-                                  nsnull, &status);
-      NS_RELEASE(node->content);
-      delete node->event;
-      node->nsDOMEventRequest::~nsDOMEventRequest(); // doesn't do anything, but just in case
-      FreeFrame(sizeof(nsDOMEventRequest), node);
-   }
 }
 
 void
@@ -6174,7 +6107,6 @@ PresShell::WillDoReflow()
 void
 PresShell::DidDoReflow()
 {
-  HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
   // Null-check mViewManager in case this happens during Destroy.  See
