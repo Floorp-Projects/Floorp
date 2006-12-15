@@ -1,10 +1,7 @@
+do_import_script("test-harness/xpcshell-simple/httpd.js");
+
 var server;
 var BUGID = "331825";
-
-function handle_response(stream) {
-  var response = server.handler.headers("304 Not Modified") + "\r\n";
-  stream.write(response, response.length);
-}
 
 function TestListener() {
 }
@@ -14,15 +11,17 @@ TestListener.prototype.onStopRequest = function(request, context, status) {
   var channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
   do_check_eq(channel.responseStatus, 304);
 
+  server.stop();
   do_test_finished();
-  server.stopListening();
 }
 
 function run_test() {
   // start server
-  server = new nsTestServ(4444);
-  server.handler["/bug" + BUGID] = handle_response;
-  server.startListening();
+  server = new nsHttpServer();
+
+  server.registerPathHandler("/bug" + BUGID, bug331825);
+
+  server.start(4444);
 
   // make request
   var channel =
@@ -35,4 +34,9 @@ function run_test() {
   channel.asyncOpen(new TestListener(), null);
 
   do_test_pending();
+}
+
+// PATH HANDLER FOR /bug331825
+function bug331825(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
 }

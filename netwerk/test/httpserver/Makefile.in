@@ -13,11 +13,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is MozJSHTTP code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Jeff Walden <jwalden+code@mit.edu>.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,84 +36,46 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= test_necko
+MODULE          = test_necko
 
-DIRS            = \
-                  httpserver \
+XPIDLSRCS       = \
+                  nsIHttpServer.idl \
                   $(NULL)
-
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  pref \
-		  $(NULL)
-
-CPPSRCS		= \
-		TestIncrementalDownload.cpp \
-		TestStreamLoader.cpp \
-		PropertiesTest.cpp \
-		urltest.cpp \
-		TestCallbacks.cpp \
-		TestPageLoad.cpp \
-		TestURLParser.cpp \
-		TestStandardURL.cpp \
-		TestUpload.cpp \
-		TestBlockingSocket.cpp \
-		TestDNS.cpp \
-		TestOpen.cpp \
-		TestCookie.cpp \
-		TestServ.cpp \
-		ReadNTLM.cpp \
-		$(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS += \
-		TestPerf.cpp \
-		TestIDN.cpp \
-		TestSocketTransport.cpp \
-		TestStreamTransport.cpp \
-		TestStreamChannel.cpp \
-		TestStreamPump.cpp \
-		TestProtocols.cpp \
-		TestIOThreads.cpp \
-		$(NULL)
-endif
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-include $(topsrcdir)/config/config.mk
-
-LIBS		= $(EXTRA_DSO_LIBS) \
-		  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		  $(XPCOM_LIBS) \
-		  $(NSPR_LIBS) \
-		  $(NULL)
-
-DEFINES += $(TK_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-_UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+_UNIT_FILES := $(wildcard $(srcdir)/test/*.js)
 
+_SERVER_SCRIPT_FILES = \
+                       httpd.js \
+                       $(NULL)
+
+# copy the server to the xpcshell test harness directory
+libs:: $(_SERVER_SCRIPT_FILES)
+	$(INSTALL) $^ $(DIST)/bin/test-harness/xpcshell-simple
+
+#
+# Server tests don't go in with necko's tests because:
+#
+#   - we then have to think about file name conflicts in two different locations
+#   - head_*.js files in separate locations are both run, even when this is not
+#     desired (e.g., we must either always import httpd.js [slowing down test
+#     processing even for tests which don't need it] or we must manually import
+#     it in every test that uses it [which would be extremely annoying for the
+#     server tests which all want it])
+#   - httpd.js doesn't clutter the global scope too much, but it does become a
+#     concern (consider Cc/Ci/Cr in particular, which as constants cannot be
+#     safely redefined)
+#
 libs:: $(_UNIT_FILES)
-	$(INSTALL) $^ $(DIST)/bin/necko_unit_tests
+	$(INSTALL) $^ $(DIST)/bin/httpserver_tests
 
 check::
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCookie
-	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/necko_unit_tests
-
-_RES_FILES 	= urlparse.dat \
-		  urlparse_unx.dat \
-		  jarlist.dat \
-		  $(NULL)
-libs:: $(_RES_FILES)
-	$(INSTALL) $^ $(DIST)/bin/res
-install:: $(_RES_FILES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh $(DIST)/bin/httpserver_tests

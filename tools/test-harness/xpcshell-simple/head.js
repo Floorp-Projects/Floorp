@@ -117,6 +117,10 @@ function do_check_true(condition) {
   do_check_eq(condition, true);
 }
 
+function do_check_false(condition) {
+  do_check_eq(condition, false);
+}
+
 function do_test_pending() {
   dump("*** test pending\n");
   _tests_pending++;
@@ -126,4 +130,13 @@ function do_test_finished() {
   dump("*** test finished\n");
   if (--_tests_pending == 0)
     _do_quit();
+}
+
+function do_import_script(distRelativePath) {
+  var scriptPath = environment["DIST"];
+  if (scriptPath.charAt(scriptPath.length - 1) != "/")
+    scriptPath += "/";
+  scriptPath += distRelativePath;
+
+  load(scriptPath);
 }

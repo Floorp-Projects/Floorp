@@ -83,7 +83,7 @@ done
 for t in $testdir/test_*.js
 do
     echo -n "$t: "
-    $bin/xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
+    DIST="$bin" $bin/xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
         echo "FAIL"
