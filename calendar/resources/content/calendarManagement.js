@@ -263,10 +263,13 @@ function setCalendarManagerUI()
 
 function onCalendarListSelect() {
     var selectedCalendar = getSelectedCalendarOrNull();
-    if (!selectedCalendar) {
-        return;
+    if (selectedCalendar) {
+        var compositeCalendar = getCompositeCalendar();
+        if (!compositeCalendar.getCalendar(selectedCalendar.uri)) {
+            compositeCalendar.addCalendar(selectedCalendar);
+        }
+        compositeCalendar.defaultCalendar = selectedCalendar;
     }
-    getCompositeCalendar().defaultCalendar = selectedCalendar;
 }
 
 function initCalendarManager()
