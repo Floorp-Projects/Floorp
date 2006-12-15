@@ -12540,7 +12540,7 @@ browser)
   MOZ_XUL_APP=1
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
-  MOZ_PLACES=
+  MOZ_PLACES=1
   MOZ_PLACES_BOOKMARKS=
   # always enabled for form history
   MOZ_MORKREADER=1
