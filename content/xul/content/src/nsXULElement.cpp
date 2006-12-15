@@ -2183,6 +2183,15 @@ nsXULElement::DoCommand()
 }
 
 // nsIFocusableContent interface and helpers
+void
+nsXULElement::SetFocus(nsPresContext* aPresContext)
+{
+    if (BoolAttrIsTrue(nsXULAtoms::disabled))
+        return;
+
+    aPresContext->EventStateManager()->SetContentState(this,
+                                                       NS_EVENT_STATE_FOCUS);
+}
 
 void
 nsXULElement::RemoveFocus(nsPresContext* aPresContext)
