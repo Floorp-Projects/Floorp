@@ -17,6 +17,7 @@
   #
   # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
   #                 Greg Hendricks <ghendricks@novell.com>
+  #                 Tyler Peterson <typeterson@novell.com>
   #%]
 
 [%# INTERFACE:
@@ -24,9 +25,14 @@
   #%]
 
 [% IF case.canedit %]
+<script src="testopia/js/DocumentManager.js" type="text/javascript"></script>
 <script type="text/javascript">
     dojo.require("dojo.widget.Editor2");  
     dojo.require("dojo.widget.Editor2Plugin.DialogCommands");  
+    setupDM     = new DocumentManager("tcsetup",     "[% action FILTER html %]", ["tcsetupHeading"]);
+    breakdownDM = new DocumentManager("tcbreakdown", "[% action FILTER html %]", ["tcbreakdownHeading"]);
+    actionDM    = new DocumentManager("tcaction",    "[% action FILTER html %]", ["tcactionHeading"]);
+    effectDM    = new DocumentManager("tceffect",    "[% action FILTER html %]", ["tceffectHeading"]);
 </script>
 [% END %]
 <a name="attributes"></a>
@@ -186,31 +192,11 @@
   </p>
 
 [%# action, effect %]
-  <h3>Set Up</h3>
-  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300" dontBeEvil="1"
-            id="tcsetup" name="tcsetup" dojoType="Editor2" focusOnLoad="false">
-[% case.text.setup FILTER xss %]</textarea>     
-  <p align="right">
-    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
-  </p>
-    <h3>Break Down</h3>
-  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
-            id="tcbreakdown" name="tcbreakdown" dojoType="Editor2" focusOnLoad="false">
-[% case.text.breakdown FILTER xss %]</textarea>     
-  <p align="right">
-    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
-  </p>
-  <h3>Action</h3>
-  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
-            id="tcaction" name="tcaction" dojoType="Editor2" focusOnLoad="false">
-[% case.text.action FILTER xss %]</textarea>     
-  <p align="right">
-    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
-  </p>
-  <h3>Expected Results</h3>
-  <textarea cols="122" rows="15" style="border: 1px solid #000000;" height="300"
-            id="tceffect" name="tceffect" dojoType="Editor2" focusOnLoad="false">
-[% case.text.effect FILTER xss %]</textarea>     
-  <p align="right">
-    <input type="SUBMIT" name="action" id="action" class="tr_button" value="[% action FILTER html %]">
-  </p>
+  <h3 id="tcsetupHeading">Set Up</h3>
+  <div id="tcsetupDiv">[% case.text.setup FILTER xss %]</div>
+  <h3 id="tcbreakdownHeading">Break Down</h3>
+  <div id="tcbreakdownDiv">[% case.text.breakdown FILTER xss %]</div>
+  <h3 id="tcactionHeading">Action</h3>
+  <div id="tcactionDiv">[% case.text.action FILTER xss %]</div>
+  <h3 id="tceffectHeading">Expected Results</h3>
+  <div id="tceffectDiv">[% case.text.effect FILTER xss %]</div>     
