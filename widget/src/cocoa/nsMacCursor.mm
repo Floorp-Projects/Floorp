@@ -212,13 +212,11 @@
 
 - (void) set
 {
-  if ( [self isAnimated])
-  {
+  if ([self isAnimated]) {
     [self createTimer];
   }
   //if the cursor isn't animated or the timer creation fails for any reason...
-  if (mTimer == nil)
-  {
+  if (!mTimer) {
     [self setFrame: 0];
   }
 }
@@ -247,8 +245,7 @@
 
 - (void) createTimer
 {
-  if ( mTimer == nil)
-  {
+  if (mTimer == nil) {
     mTimer = [[NSTimer scheduledTimerWithTimeInterval: 0.25
                                                target: self
                                              selector: @selector(spinCursor:)
@@ -259,8 +256,7 @@
 
 - (void) destroyTimer
 {
-  if ( mTimer != nil)
-  {
+  if (mTimer) {
       [mTimer invalidate];
       [mTimer release];
       mTimer = nil;
@@ -269,8 +265,7 @@
 
 - (void) spinCursor: (NSTimer *) aTimer
 {
-  if ( [aTimer isValid] )
-  {
+  if ([aTimer isValid]) {
     [self setFrame: [self getNextCursorFrame]];
   }
 }
@@ -300,18 +295,15 @@
 
 - (void) setFrame: (int) aFrameIndex
 {
-  if ( [self isAnimated] )
-  {
+  if ([self isAnimated]) {
     //if the cursor is animated try to draw the appropriate frame
     OSStatus err = ::SetAnimatedThemeCursor(mCursor, aFrameIndex);
-    if ( err != noErr )
-    {
+    if (err != noErr) {
       //in the event of any kind of problem, just try to show the first frame
       ::SetThemeCursor(mCursor);
     }
   }
-  else
-  {
+  else {
     ::SetThemeCursor(mCursor);
   }
 }
@@ -337,8 +329,7 @@
   self = [super init];
   NSEnumerator *it = [aCursorFrames objectEnumerator];
   NSObject *frame = nil;
-  while ((frame = [it nextObject]) != nil)
-  {
+  while ((frame = [it nextObject])) {
     NS_ASSERTION([frame isKindOfClass: [NSCursor class]], "Invalid argument: All frames must be of type NSCursor");
   }
   mFrames = [aCursorFrames retain];
@@ -440,8 +431,7 @@ static short sSaveResFile = 0;
   [nsResourceCursor openLocalResourceFile];
   CursHandle cursHandle = ::GetCursor(mFirstFrame + aFrameIndex);
   NS_ASSERTION(cursHandle, "Can't load cursor, is the resource file installed correctly?");
-  if (cursHandle)
-  {
+  if (cursHandle) {
     ::SetCursor(*cursHandle);
   }
   [nsResourceCursor closeLocalResourceFile];
@@ -451,4 +441,5 @@ static short sSaveResFile = 0;
 {
   return (mLastFrame - mFirstFrame) + 1;
 }
+
 @end
