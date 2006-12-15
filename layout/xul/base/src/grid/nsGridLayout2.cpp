@@ -140,28 +140,26 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
   nsSize total(0,0);
-  nsIBox* rowBox = mGrid.GetRowBox();
-  nsIBox* columnBox = mGrid.GetColumnBox();
-  if (!rowBox || !columnBox) {
-    if (!rowBox) {
+  nsIBox* rowsBox = mGrid.GetRowsBox();
+  nsIBox* columnsBox = mGrid.GetColumnsBox();
+  if (!rowsBox || !columnsBox) {
+    if (!rowsBox) {
       // max height is the sum of our rows
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord size = 0;
-        mGrid.GetMinRowHeight(aState, i, size, PR_TRUE); 
-        AddWidth(total, size, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetMinRowHeight(aState, i, PR_TRUE); 
+        AddWidth(total, height, PR_FALSE); // AddHeight
       }
     }
 
-    if (!columnBox) {
+    if (!columnsBox) {
       // max height is the sum of our rows
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord size = 0;
-        mGrid.GetMinRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
-        AddWidth(total, size, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetMinRowHeight(aState, i, PR_FALSE); 
+        AddWidth(total, width, PR_TRUE); // AddWidth
       }
     }
 
@@ -183,28 +181,26 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
   nsSize total(0,0);
-  nsIBox* rowBox = mGrid.GetRowBox();
-  nsIBox* columnBox = mGrid.GetColumnBox();
-  if (!rowBox || !columnBox) {
-    if (!rowBox) {
+  nsIBox* rowsBox = mGrid.GetRowsBox();
+  nsIBox* columnsBox = mGrid.GetColumnsBox();
+  if (!rowsBox || !columnsBox) {
+    if (!rowsBox) {
       // max height is the sum of our rows
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord size = 0;
-        mGrid.GetPrefRowHeight(aState, i, size, PR_TRUE); 
-        AddWidth(total, size, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetPrefRowHeight(aState, i, PR_TRUE); 
+        AddWidth(total, height, PR_FALSE); // AddHeight
       }
     }
 
-    if (!columnBox) {
+    if (!columnsBox) {
       // max height is the sum of our rows
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord size = 0;
-        mGrid.GetPrefRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
-        AddWidth(total, size, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetPrefRowHeight(aState, i, PR_FALSE);
+        AddWidth(total, width, PR_TRUE); // AddWidth
       }
     }
 
@@ -226,30 +222,28 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
   nsSize total(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-  nsIBox* rowBox = mGrid.GetRowBox();
-  nsIBox* columnBox = mGrid.GetColumnBox();
-  if (!rowBox || !columnBox) {
-    if (!rowBox) {
+  nsIBox* rowsBox = mGrid.GetRowsBox();
+  nsIBox* columnsBox = mGrid.GetColumnsBox();
+  if (!rowsBox || !columnsBox) {
+    if (!rowsBox) {
       total.height = 0;
       // max height is the sum of our rows
       PRInt32 rows = mGrid.GetRowCount();
       for (PRInt32 i=0; i < rows; i++)
       {
-        nscoord size = 0;
-        mGrid.GetMaxRowHeight(aState, i, size, PR_TRUE); 
-        AddWidth(total, size, PR_FALSE); // AddHeight
+        nscoord height = mGrid.GetMaxRowHeight(aState, i, PR_TRUE); 
+        AddWidth(total, height, PR_FALSE); // AddHeight
       }
     }
 
-    if (!columnBox) {
+    if (!columnsBox) {
       total.width = 0;
       // max height is the sum of our rows
       PRInt32 columns = mGrid.GetColumnCount();
       for (PRInt32 i=0; i < columns; i++)
       {
-        nscoord size = 0;
-        mGrid.GetMaxRowHeight(aState, i, size, PR_FALSE); // GetPrefRowWidth
-        AddWidth(total, size, PR_TRUE); // AddWidth
+        nscoord width = mGrid.GetMaxRowHeight(aState, i, PR_FALSE);
+        AddWidth(total, width, PR_TRUE); // AddWidth
       }
     }
 
