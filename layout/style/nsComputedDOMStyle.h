@@ -101,9 +101,6 @@ private:
                               nsIFrame *aFrame,
                               nsIDOMCSSValue** aValue);
 
-  nscoord GetPaddingWidthCoordFor(PRUint8 aSide,
-                                  nsIFrame *aFrame);
-
   nsresult GetBorderColorsFor(PRUint8 aSide,
                               nsIFrame *aFrame,
                               nsIDOMCSSValue** aValue);
@@ -120,9 +117,6 @@ private:
                              nsIFrame *aFrame,
                              nsIDOMCSSValue** aValue);
 
-  nscoord GetBorderWidthCoordFor(PRUint8 aSide,
-                                 nsIFrame *aFrame);
-
   nsresult GetBorderColorFor(PRUint8 aSide,
                              nsIFrame *aFrame,
                              nsIDOMCSSValue** aValue);
@@ -134,9 +128,6 @@ private:
   nsresult GetMarginWidthFor(PRUint8 aSide,
                              nsIFrame *aFrame,
                              nsIDOMCSSValue** aValue);
-
-  nscoord GetMarginWidthCoordFor(PRUint8 aSide,
-                                 nsIFrame *aFrame);
 
   nsresult GetLineHeightCoord(nsIFrame *aFrame,
                               const nsStyleText *aText,
