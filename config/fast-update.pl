@@ -102,6 +102,9 @@ my $esc_dir = escape($dir);
 if ($dir) {
   $url .= "&dir=$esc_dir";
 }
+if ($dirlocal) {
+  $url .= "&dirtype=local";
+}
 
 print "Contacting bonsai for updates to ${module} ";
 print "on the ${branch} branch " if ($branch);
@@ -170,8 +173,7 @@ foreach $dir (sort @dirlist) {
 
       if ($dir eq $rootdir) {
         $strippeddir = ".";
-      } elsif (!$dirlocal) {
-        # for local-only updates, skip all sub-dirs
+      } else {
         $strippeddir = substr($dir,(length $rootdir) + 1 );
       }
 
