@@ -80,7 +80,7 @@ PR_STATIC_CALLBACK(const void *)
 nameTableGetKey(PLDHashTable *, PLDHashEntryHdr *aHdr)
 {
     NameTableEntry* entry =
-        NS_STATIC_CAST(NameTableEntry *, entry);
+        NS_STATIC_CAST(NameTableEntry *, aHdr);
     return &(entry->mKey);
 }
 
