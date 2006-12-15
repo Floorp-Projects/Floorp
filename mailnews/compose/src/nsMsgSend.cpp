@@ -2347,6 +2347,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
                   if (!type.Equals("multipart/appledouble"))  // can't do apple double on non-macs
 #endif
                     m_attachments[newLoc].m_type = ToNewCString(type);
+                  // rtf and vcs files may look like text to sniffers,
+                  // but they're not human readable.
+                  if (type.IsEmpty() && !fileExt.IsEmpty() &&
+                       (fileExt.LowerCaseEqualsLiteral("rtf") || fileExt.LowerCaseEqualsLiteral("vcs")))
+                    m_attachments[newLoc].m_type = PL_strdup(APPLICATION_OCTET_STREAM);
                   }
                 }
               }
