@@ -5280,9 +5280,11 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     availWidth -=  availWidth % twp;
   }
 
+  // aState.mY is relative to the border-top, make it relative to the content-top
+  nscoord contentYOffset = aState.mY - aState.BorderPadding().top;
   nscoord availHeight = NS_UNCONSTRAINEDSIZE == aState.mContentArea.height
                         ? NS_UNCONSTRAINEDSIZE 
-                        : PR_MAX(0, aState.mContentArea.height - aState.mY);
+                        : PR_MAX(0, aState.mContentArea.height - contentYOffset);
 
   nsRect availSpace(aState.BorderPadding().left,
                     aState.BorderPadding().top,
