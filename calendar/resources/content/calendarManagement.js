@@ -203,9 +203,6 @@ function setCalendarManagerUI()
 {
     var calendarList = document.getElementById("list-calendars-listbox");
     var oldSelection = calendarList.selectedIndex;
-    if (!oldSelection || oldSelection < 0) {
-        oldSelection = 0;
-    }
     var child;
     while ((child = calendarList.lastChild) && (child.tagName == "listitem")) {
         calendarList.removeChild(child);
@@ -214,9 +211,6 @@ function setCalendarManagerUI()
     var composite = getCompositeCalendar();
     var calmgr = getCalendarManager();
     var calendars = calmgr.getCalendars({});
-    if (oldSelection >= calendars.length) {
-        oldSelection = calendars.length-1;
-    }
     var hasRefreshableCal = false;
     for each (var calendar in calendars) {
         if (calendar.canRefresh) {
@@ -247,6 +241,17 @@ function setCalendarManagerUI()
         listItem.calendar = calendar;
         calendarList.appendChild(listItem);
     }
+
+    // Ensure that a calendar is selected in calendar list after startup.
+    if (!oldSelection || oldSelection < 0) {
+        var defaultCalendar = composite.defaultCalendar;
+        var item = defaultCalendar ? getListItem(defaultCalendar) : null;
+        oldSelection = item ? calendarList.getIndexOfItem(item) : 0;
+    }
+    if (oldSelection >= calendars.length) {
+        oldSelection = calendars.length-1;
+    }
+
     calendarList.selectedIndex = oldSelection;
     var remoteCommand = document.getElementById("reload_remote_calendars");
     if (!hasRefreshableCal) {

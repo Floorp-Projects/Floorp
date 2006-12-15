@@ -52,15 +52,7 @@ var gCachedStyleSheet;
 function addCalendarToTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
-
-    // Special trick to compare interface pointers, since normal, ==
-    // comparison can fail due to javascript wrapping.
-    var sip = Components.classes["@mozilla.org/supports-interface-pointer;1"]
-                         .createInstance(Components.interfaces.nsISupportsInterfacePointer);
-    sip.data = aCalendar;
-    sip.dataIID = Components.interfaces.calICalendar;
-
-    boxobj.rowCountChanged(getCalendars().indexOf(sip.data), 1);
+    boxobj.rowCountChanged(getIndexForCalendar(aCalendar), 1);
 
     if (!gCachedStyleSheet) {
         gCachedStyleSheet = getStyleSheet("chrome://calendar/content/calendar-view-bindings.css");
@@ -71,14 +63,7 @@ function addCalendarToTree(aCalendar)
 function removeCalendarFromTree(aCalendar)
 {
     var calTree = document.getElementById("calendarTree")
-
-    // Special trick to compare interface pointers, since normal, ==
-    // comparison can fail due to javascript wrapping.
-    var sip = Components.classes["@mozilla.org/supports-interface-pointer;1"]
-                         .createInstance(Components.interfaces.nsISupportsInterfacePointer);
-    sip.data = aCalendar;
-    sip.dataIID = Components.interfaces.calICalendar;
-    var index = getCalendars().indexOf(sip.data);
+    var index = getIndexForCalendar(aCalendar);
     calTree.boxObject.rowCountChanged(index, -1);
 
     // Just select the new last row, if we removed the last listed calendar
@@ -346,8 +331,20 @@ function ltnSetTreeView()
 
     // Ensure that a calendar is selected in calendar tree after startup.
     if (document.getElementById("calendarTree").currentIndex == -1) {
-        document.getElementById("calendarTree").view.selection.select(0);
+        var index = getIndexForCalendar(getCompositeCalendar().defaultCalendar);
+        var indexToSelect = (index != - 1) ? index : 0;
+        document.getElementById("calendarTree").view.selection.select(indexToSelect);
     }
+}
+
+function getIndexForCalendar(aCalendar) {
+    // Special trick to compare interface pointers, since normal, ==
+    // comparison can fail due to javascript wrapping.
+    var sip = Components.classes["@mozilla.org/supports-interface-pointer;1"]
+                        .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+    sip.data = aCalendar;
+    sip.dataIID = Components.interfaces.calICalendar;
+    return getCalendars().indexOf(sip.data);
 }
 
 window.addEventListener("load", ltnSetTreeView, false);
