@@ -149,18 +149,32 @@ Private constructor for this object
 
 sub _init {
     my $self = shift;
-    my ($param) = (@_);
+    my ($param, $run_id, $build_id, $env_id) = (@_);
     my $dbh = Bugzilla->dbh;
 
     my $id = $param unless (ref $param eq 'HASH');
     my $obj;
 
-    if (defined $id && detaint_natural($id)) {
+    if (defined $id && detaint_natural($id) && !$run_id) {
 
         $obj = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM test_case_runs
             WHERE case_run_id = ?}, undef, $id);
-
+    
+    } elsif ($run_id && detaint_natural($run_id) 
+             && $build_id && detaint_natural($build_id) 
+             && $env_id && detaint_natural($env_id)){
+                 
+         my $case_id = $param;
+         detaint_natural($case_id) || return undef;
+         $obj = $dbh->selectrow_hashref(
+            "SELECT $columns FROM test_case_runs
+             WHERE case__id = ?
+               AND run_id = ?
+               AND build_id = ?
+               AND environment_id = ?", 
+             undef, ($case_id, $run_id, $build_id, $env_id));
+                  
     } elsif (ref $param eq 'HASH'){
          $obj = $param;   
 
