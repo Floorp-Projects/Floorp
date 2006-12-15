@@ -99,9 +99,7 @@ if ($action eq 'Commit'){
               || ThrowTemplateError($template->error());
         }
 
-        my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
         my $build    = $cgi->param('caserun_build') == -1 ? $caserun->build->id : $cgi->param('caserun_build');
-        my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));
         my $notes    = $cgi->param('notes');
         my $env      = $cgi->param('caserun_env') eq '--Do Not Change--' ? $caserun->environment->id : $cgi->param('caserun_env');
         
@@ -110,14 +108,9 @@ if ($action eq 'Commit'){
         
         detaint_natural($env);
         detaint_natural($build);
-        detaint_natural($status);
+        
         trick_taint($notes);
         
-        # If there is already a caserun with the selected build and environment,
-        # switch to it.
-        my $is = $caserun->check_exists($caserun->run_id, $caserun->case_id, $build, $env);
-        $caserun = Bugzilla::Testopia::TestCaseRun->new($is) if $is;
-
         unless ($caserun->canedit){
             print $cgi->multipart_end if $serverpush;
             ThrowUserError("testopia-read-only", {'object' => 'Case Run', 'id' => $caserun->id});
@@ -126,6 +119,11 @@ if ($action eq 'Commit'){
         # Switch to the record representing this build and environment combo.
         # If there is not one, it will create it and switch to that.
         $caserun = $caserun->switch($build,$env);
+        
+        my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
+        my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : DBNameToIdAndCheck(trim($cgi->param('assignee')));       
+        
+        detaint_natural($status);
         
         $caserun->set_status($status)     if ($caserun->status_id != $status);
         $caserun->set_assignee($assignee) if ($caserun->assignee->id != $assignee);
