@@ -1235,7 +1235,15 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 data.u.var.setter = js_SetLocalVariable;
                 data.u.var.attrs = JSPROP_PERMANENT;
 
+                /*
+                 * Temporarily transfer the owneship of the recycle list to
+                 * funtc. See bug 313967.
+                 */ 
+                funtc.nodeList = tc->nodeList;
+                tc->nodeList = NULL;
                 lhs = DestructuringExpr(cx, &data, &funtc, tt);
+                tc->nodeList = funtc.nodeList;
+                funtc.nodeList = NULL;
                 if (!lhs)
                     return NULL;
 
@@ -1302,7 +1310,16 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_BODY);
     pn->pn_pos.begin = CURRENT_TOKEN(ts).pos.begin;
 
+    /*
+     * Temporarily transfer the owneship of the recycle list to funtc.
+     * See bug 313967.
+     */ 
+    funtc.nodeList = tc->nodeList;
+    tc->nodeList = NULL;
     body = FunctionBody(cx, ts, fun, &funtc);
+    tc->nodeList = funtc.nodeList;
+    funtc.nodeList = NULL;
+    
     if (!body)
         return NULL;
 
