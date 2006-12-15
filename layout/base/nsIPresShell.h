@@ -97,10 +97,10 @@ class nsWeakFrame;
 
 typedef short SelectionType;
 
-// b6cf677a-aa50-47c2-b381-5a82e7e792da
+// 56719ada-52e9-4d81-b23d-acba10c5c1e2
 #define NS_IPRESSHELL_IID     \
-{ 0xb6cf677a, 0xaa50, 0x47c2, \
-  { 0xb3, 0x81, 0x5a, 0x82, 0xe7, 0xe7, 0x92, 0xda } }
+{ 0x56719ada, 0x52e9, 0x4d81, \
+  { 0xb2, 0x3d, 0xac, 0xba, 0x10, 0xc5, 0xc1, 0xe2 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -375,11 +375,6 @@ public:
    * @param aType the type of notifications to flush
    */
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType) = 0;
-
-  /**
-   * Post a request to handle a DOM event after Reflow has finished.
-   */
-  NS_IMETHOD PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)=0;
 
   /**
    * Post a request to set and attribute after reflow has finished.

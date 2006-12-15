@@ -1532,6 +1532,24 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
   }
 }
 
+class nsAsyncScrollPortEvent : public nsRunnable
+{
+public:
+  // nsAsyncScrollPortEvent owns aEvent.
+  nsAsyncScrollPortEvent(nsIContent* aTarget, nsPresContext* aPresContext,
+                         nsScrollPortEvent* aEvent)
+  : mTarget(aTarget), mPresContext(aPresContext), mEvent(aEvent) {}
+
+  NS_IMETHOD Run() {
+    nsEventDispatcher::Dispatch(mTarget, mPresContext, mEvent);
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIContent>         mTarget;
+  nsRefPtr<nsPresContext>      mPresContext;
+  nsAutoPtr<nsScrollPortEvent> mEvent;
+};
+
 void
 nsGfxScrollFrameInner::PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType)
 {
@@ -1539,8 +1557,12 @@ nsGfxScrollFrameInner::PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::
                                                    NS_SCROLLPORT_OVERFLOW :
                                                    NS_SCROLLPORT_UNDERFLOW,
                                                    nsnull);
+  ENSURE_TRUE(event);
   event->orient = aType;
-  mOuter->GetPresContext()->PresShell()->PostDOMEvent(mOuter->GetContent(), event);
+  nsCOMPtr<nsIRunnable> ev = new nsAsyncScrollPortEvent(mOuter->GetContent(),
+                                                        mOuter->GetPresContext(),
+                                                        event);
+  NS_DispatchToCurrentThread(ev);
 }
 
 void
