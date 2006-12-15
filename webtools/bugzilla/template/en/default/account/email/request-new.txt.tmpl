@@ -42,4 +42,4 @@ this request, visit the following link:
 [%+ Param('urlbase') %]token.cgi?t=[% token FILTER url_quote %]&a=cancel_new_account
 
 If you do nothing, the request will lapse after [%+ constants.MAX_TOKEN_AGE %] days
-(at precisely [%+ time2str("%H:%M on the %o of %B, %Y", expiration_ts) %]).
+(on [%+ time2str("%B %o, %Y at %H:%M %Z", expiration_ts) %]).
