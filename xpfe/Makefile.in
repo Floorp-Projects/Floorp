@@ -53,7 +53,10 @@ DIRS += \
         $(NULL)
 else
 ifndef MOZ_SUNBIRD
-DIRS += browser communicator global
+DIRS += browser global
+ifndef MOZ_SUITE
+DIRS += communicator
+endif
 endif
 endif
 
