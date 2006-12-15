@@ -112,7 +112,9 @@ elsif ($action eq 'getversions'){
         }
         @versions = @{$plan->get_product_versions($prod_id)};
     }
-    print objToJson(\@versions);
+    my $json = new JSON;
+    $json->autoconv(0);
+    print $json->objToJson(\@versions);
 }
 # For use in new_case and show_case since new_plan does not require an id
 elsif ($action eq 'getcomps'){
