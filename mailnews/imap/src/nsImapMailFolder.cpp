@@ -4534,6 +4534,13 @@ nsresult nsImapMailFolder::NotifyMessageFlagsFromHdr(nsIMsgDBHdr *dbHdr, nsMsgKe
     // make some people very unhappy.
     if (flags & kImapMsgLabelFlags)
       mDatabase->SetLabel(msgKey, (flags & kImapMsgLabelFlags) >> 9);
+    else
+    {
+      PRUint32 supportedFlags;
+      GetSupportedUserFlags(&supportedFlags);
+      if (supportedFlags & kImapMsgLabelFlags)
+        mDatabase->SetLabel(msgKey, 0);
+    }
     if (flags & kImapMsgMDNSentFlag)
       mDatabase->MarkMDNSent(msgKey, PR_TRUE, nsnull);
   
