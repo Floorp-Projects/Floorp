@@ -1354,6 +1354,16 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon, 
   if (aDomSel) {
     *aDomSel = nsnull;
   }
+  
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+  if (editor) {
+    editor->GetSelectionController(aSelCon);
+    NS_ENSURE_TRUE(aSelCon, NS_ERROR_FAILURE);
+    editor->GetSelection(aDomSel);
+    NS_ENSURE_TRUE(aDomSel, NS_ERROR_FAILURE);
+    return NS_OK;
+  }
+
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
