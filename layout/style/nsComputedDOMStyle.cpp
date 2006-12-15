@@ -3100,8 +3100,8 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
 
   nsIFrame* container = GetContainingBlockFor(aFrame);
   if (container) {
-    nscoord margin = GetMarginWidthCoordFor(aSide, aFrame);
-    nscoord border = GetBorderWidthCoordFor(aSide, container);
+    nsMargin margin = aFrame->GetUsedMargin();
+    nsMargin border = container->GetUsedBorder();
     nsMargin scrollbarSizes(0, 0, 0, 0);
     nsRect rect = aFrame->GetRect();
     nsRect containerRect = container->GetRect();
@@ -3124,21 +3124,21 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
     nscoord offset = 0;
     switch (aSide) {
       case NS_SIDE_TOP:
-        offset = rect.y - margin - border - scrollbarSizes.top;
+        offset = rect.y - margin.top - border.top - scrollbarSizes.top;
 
         break;
       case NS_SIDE_RIGHT:
         offset = containerRect.width - rect.width -
-          rect.x - margin - border - scrollbarSizes.right;
+          rect.x - margin.right - border.right - scrollbarSizes.right;
 
         break;
       case NS_SIDE_BOTTOM:
         offset = containerRect.height - rect.height -
-          rect.y - margin - border - scrollbarSizes.bottom;
+          rect.y - margin.bottom - border.bottom - scrollbarSizes.bottom;
 
         break;
       case NS_SIDE_LEFT:
-        offset = rect.x - margin - border - scrollbarSizes.left;
+        offset = rect.x - margin.left - border.left - scrollbarSizes.left;
 
         break;
       default:
@@ -3307,44 +3307,31 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 
   FlushPendingReflows();
   
-  nscoord width = GetPaddingWidthCoordFor(aSide, aFrame);
-  val->SetTwips(width);
+  val->SetTwips(0);
+
+  if (!aFrame) {
+    const nsStylePadding* padding = nsnull;
+    GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)padding, aFrame);
+
+    if (padding) {
+      nsStyleCoord c;
+      padding->mPadding.Get(aSide, c);
+      switch (c.GetUnit()) {
+        case eStyleUnit_Coord:
+          val->SetTwips(c.GetCoordValue());
+          break;
+        case eStyleUnit_Percent:
+          val->SetPercent(c.GetPercentValue());
+          break;
+        default:
+          break;
+      }
+    }
+  } else {
+    val->SetTwips(aFrame->GetUsedPadding().side(aSide));
+  }
 
   return CallQueryInterface(val, aValue);
-}
-
-nscoord
-nsComputedDOMStyle::GetPaddingWidthCoordFor(PRUint8 aSide, nsIFrame* aFrame)
-{
-  nsMargin padding = aFrame->GetUsedPadding();
-  switch(aSide) {
-    case NS_SIDE_TOP    :
-      return padding.top;
-    case NS_SIDE_BOTTOM :
-      return padding.bottom;
-    case NS_SIDE_LEFT   :
-      return padding.left;
-    case NS_SIDE_RIGHT  :
-      return padding.right;
-    default:
-      NS_ERROR("Invalid side");
-      break;
-  }
-
-  return 0;
-}
-
-nscoord
-nsComputedDOMStyle::GetBorderWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
-{
-  const nsStyleBorder* borderData = nsnull;
-  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData, aFrame);
-
-  if (borderData) {
-    return borderData->GetBorderWidth(aSide);
-  }
-
-  return 0;
 }
 
 nsresult
@@ -3542,31 +3529,34 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 
   FlushPendingReflows();
 
-  nscoord width = GetMarginWidthCoordFor(aSide, aFrame);
-  val->SetTwips(width);
+  val->SetTwips(0);
 
-  return CallQueryInterface(val, aValue);
-}
+  if (!aFrame) {
+    const nsStyleMargin* margin = nsnull;
+    GetStyleData(eStyleStruct_Margin, (const nsStyleStruct*&)margin, aFrame);
 
-nscoord
-nsComputedDOMStyle::GetMarginWidthCoordFor(PRUint8 aSide, nsIFrame *aFrame)
-{
-  nsMargin margin = aFrame->GetUsedMargin();
-  switch(aSide) {
-    case NS_SIDE_TOP    :
-      return margin.top;
-    case NS_SIDE_BOTTOM :
-      return margin.bottom;
-    case NS_SIDE_LEFT   :
-      return margin.left;
-    case NS_SIDE_RIGHT  :
-      return margin.right;
-    default:
-      NS_ERROR("Invalid side");
-      break;
+    if (margin) {
+      nsStyleCoord c;
+      margin->mMargin.Get(aSide, c);
+      switch (c.GetUnit()) {
+        case eStyleUnit_Coord:
+          val->SetTwips(c.GetCoordValue());
+          break;
+        case eStyleUnit_Percent:
+          val->SetPercent(c.GetPercentValue());
+          break;
+        case eStyleUnit_Auto:
+          val->SetIdent(nsLayoutAtoms::_auto);
+          break;
+        default:
+          break;
+      }
+    }
+  } else {
+    val->SetTwips(aFrame->GetUsedMargin().side(aSide));
   }
 
-  return 0;
+  return CallQueryInterface(val, aValue);
 }
 
 nsresult
