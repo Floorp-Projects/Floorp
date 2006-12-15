@@ -544,6 +544,7 @@ public:
     }
 #endif
 
+    virtual void SetFocus(nsPresContext* aPresContext);
     virtual void RemoveFocus(nsPresContext* aPresContext);
 
     virtual nsIContent *GetBindingParent() const;
