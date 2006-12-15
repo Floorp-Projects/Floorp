@@ -181,8 +181,8 @@ MimeObject_finalize (MimeObject *obj)
 
   if (obj->options && obj->options->state)
 	{
-	  PR_Free(obj->options->state);
-	  obj->options->state = 0;
+	  delete obj->options->state;
+	  obj->options->state = nsnull;
 	}
 }
 
