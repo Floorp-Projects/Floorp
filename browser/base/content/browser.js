@@ -5413,10 +5413,7 @@ var FeedHandler = {
 
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
-    
-    // Get the list of unique feeds, and if there's only one unique entry, 
-    // show the feed in the browser rather than displaying a menu. 
-    var feeds = this.harvestFeeds(feeds);
+
     if (feeds.length == 1) {
       var feedButton = document.getElementById("feed-button");
       if (feedButton)
@@ -5464,54 +5461,6 @@ var FeedHandler = {
     if (/^https?/.test(feedURI.scheme))
       href = "feed:" + href;
     this.loadFeed(href, event);
-  },
-
-  /**
-   * Attempt to generate a list of unique feeds from the list of feeds
-   * supplied by the web page. It is fairly common for a site to supply
-   * feeds in multiple formats but with divergent |title| attributes so
-   * we need to make a rough pass at trying to not show a menu when there
-   * is in fact only one feed. If this is the case, by default select
-   * the ATOM feed if one is supplied, otherwise pick the first one. 
-   * @param   feeds
-   *          An array of Feed info JS Objects representing the list of
-   *          feeds advertised by the web page
-   * @returns An array of what should be mostly unique feeds. 
-   */
-  harvestFeeds: function(feeds) {
-    var feedHash = { };
-    for (var i = 0; i < feeds.length; ++i) {
-      var feed = feeds[i];
-      if (!(feed.type in feedHash))
-        feedHash[feed.type] = [];
-      feedHash[feed.type].push(feed);
-    }
-    var mismatch = false;
-    var count = 0;
-    var defaultType = null;
-    for (var type in feedHash) {
-      // The default type is whichever is listed first on the web page.
-      // Nothing fancy, just something that works.
-      if (!defaultType) {
-        defaultType = type;
-        count = feedHash[type].length;
-      }
-      if (feedHash[type].length != count) {
-        mismatch = true;
-        break;
-      }
-      count = feedHash[type].length;
-    }
-    // There are more feeds of one type than another - this implies the
-    // content developer is supplying multiple channels, let's not do 
-    // anything fancier than this and just return the full set. 
-    if (mismatch)
-      return feeds;
-      
-    // Look for an atom feed by default, fall back to whichever was listed
-    // first if there is no atom feed supplied. 
-    const ATOMTYPE = "application/atom+xml";
-    return ATOMTYPE in feedHash ? feedHash[ATOMTYPE] : feedHash[defaultType];
   },
     
   /**
@@ -5592,8 +5541,6 @@ var FeedHandler = {
         feedButton.setAttribute("tooltiptext", 
                                 gNavigatorBundle.getString("feedHasFeedsNew"));
       }
-      // check for dupes before we pick which UI to expose
-      feeds = this.harvestFeeds(feeds);
       
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
