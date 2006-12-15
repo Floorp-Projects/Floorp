@@ -3607,7 +3607,7 @@ PRBool CSSParserImpl::TranslateDimension(nsresult& aErrorCode,
   nsCSSUnit units;
   PRInt32   type = 0;
   if (!aUnit.IsEmpty()) {
-    PRInt32 i;
+    PRUint32 i;
     for (i = 0; i < NS_ARRAY_LENGTH(UnitData); ++i) {
       if (aUnit.LowerCaseEqualsASCII(UnitData[i].name,
                                      UnitData[i].length)) {
