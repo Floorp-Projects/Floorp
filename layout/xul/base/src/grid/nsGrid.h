@@ -68,14 +68,14 @@ public:
   void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
   void RebuildIfNeeded();
 
-  nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
-  nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
-  nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal = PR_TRUE);
-  nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsHorizontal = PR_TRUE);
+  nsSize GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
+  nsSize GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
+  nsSize GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
+  nscoord GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
 
-  nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
-  nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
-  nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsHorizontal = PR_TRUE);
+  nscoord GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
+  nscoord GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
+  nscoord GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
   void GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, nscoord& aBottom, PRBool aIsHorizontal = PR_TRUE);
 
   void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsHorizontal = PR_TRUE);
@@ -90,8 +90,8 @@ public:
 // accessors
   void SetBox(nsIBox* aBox) { mBox = aBox; }
   nsIBox* GetBox() { return mBox; }
-  nsIBox* GetRowBox() { return mRowBox; }
-  nsIBox* GetColumnBox() { return mColumnBox; }
+  nsIBox* GetRowsBox() { return mRowsBox; }
+  nsIBox* GetColumnsBox() { return mColumnsBox; }
   nsGridRow* GetColumns();
   nsGridRow* GetRows();
   PRInt32 GetRowCount(PRInt32 aIsHorizontal = PR_TRUE);
@@ -130,12 +130,10 @@ private:
   nsGridRow* mColumns;
 
   // the first in the <grid> that implements the <rows> tag.
-  // XXXldb This should be called mRowsBox
-  nsIBox* mRowBox;
+  nsIBox* mRowsBox;
 
   // the first in the <grid> that implements the <columns> tag.
-  // XXXldb This should be called mColumnsBox
-  nsIBox* mColumnBox;
+  nsIBox* mColumnsBox;
 
   // a flag that is false tells us to rebuild the who grid
   PRBool mNeedsRebuild;

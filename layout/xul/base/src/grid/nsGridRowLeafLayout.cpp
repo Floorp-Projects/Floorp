@@ -75,17 +75,17 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isHorizontal = IsHorizontal(aBox);
+  PRBool isHorizontal = IsHorizontal(aBox);
 
   // If we are not in a grid. Then we just work like a box. But if we are in a grid
   // ask the grid for our size.
   if (!grid)
     return nsGridRowLayout::GetPrefSize(aBox, aState, aSize); 
   else {
-    nsresult rv = grid->GetPrefRowSize(aState, index, aSize, isHorizontal);
+    aSize = grid->GetPrefRowSize(aState, index, isHorizontal);
     //AddBorderAndPadding(aBox, aSize);
     //AddInset(aBox, aSize);
-    return rv;
+    return NS_OK;
   }
 }
 
@@ -95,15 +95,15 @@ nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isHorizontal = IsHorizontal(aBox);
+  PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
     return nsGridRowLayout::GetMinSize(aBox, aState, aSize); 
   else {
-    nsresult rv = grid->GetMinRowSize(aState, index, aSize, isHorizontal);
+    aSize = grid->GetMinRowSize(aState, index, isHorizontal);
     AddBorderAndPadding(aBox, aSize);
     AddInset(aBox, aSize);
-    return rv;
+    return NS_OK;
   }
 }
 
@@ -113,15 +113,15 @@ nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isHorizontal = IsHorizontal(aBox);
+  PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
     return nsGridRowLayout::GetMaxSize(aBox, aState, aSize); 
   else {
-    nsresult rv = grid->GetMaxRowSize(aState, index, aSize, isHorizontal);
+    aSize = grid->GetMaxRowSize(aState, index, isHorizontal);
     AddBorderAndPadding(aBox, aSize);
     AddInset(aBox, aSize);
-    return rv;
+    return NS_OK;
   }
 }
 
@@ -133,7 +133,7 @@ nsGridRowLeafLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isHorizontal = IsHorizontal(aBox);
+  PRBool isHorizontal = IsHorizontal(aBox);
 
   if (grid)
     grid->CellAddedOrRemoved(aState, index, isHorizontal);
@@ -147,7 +147,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
   GetGrid(aBox, &grid, &index);
-  PRInt32 isHorizontal = IsHorizontal(aBox);
+  PRBool isHorizontal = IsHorizontal(aBox);
 
   // Our base class SprocketLayout is giving us a chance to change the box sizes before layout
   // If we are a row lets change the sizes to match our columns. If we are a column then do the opposite
@@ -165,23 +165,20 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      column = grid->GetColumnAt(i,isHorizontal); 
 
      // make sure the value was computed before we use it.
-     nscoord pref = 0;
-     nscoord min  = 0;
-     nscoord max  = 0;
-     nscoord flex  = 0;
+     // !isHorizontal is passed in to invert the behavior of these methods.
+     nscoord pref =
+       grid->GetPrefRowHeight(aState, i, !isHorizontal); // GetPrefColumnWidth
+     nscoord min = 
+       grid->GetMinRowHeight(aState, i, !isHorizontal);  // GetMinColumnWidth
+     nscoord max = 
+       grid->GetMaxRowHeight(aState, i, !isHorizontal);  // GetMaxColumnWidth
+     nscoord flex =
+       grid->GetRowFlex(aState, i, !isHorizontal);       // GetColumnFlex
      nscoord left  = 0;
      nscoord right  = 0;
-
-     current = new (aState) nsBoxSize();
-
-     // !isHorizontal is passed in to invert the behavor of these methods.
-     grid->GetPrefRowHeight(aState, i, pref, !isHorizontal); // GetPrefColumnWidth
-     grid->GetMinRowHeight(aState, i, min, !isHorizontal);   // GetMinColumnWidth
-     grid->GetMaxRowHeight(aState, i, max, !isHorizontal);   // GetMaxColumnWidth
-     grid->GetRowFlex(aState, i, flex, !isHorizontal);       // GetColumnFlex
      grid->GetRowOffsets(aState, i, left, right, !isHorizontal); // GetColumnOffsets
      nsIBox* box = column->GetBox();
-     nscoord collapsed = PR_FALSE;
+     PRBool collapsed = PR_FALSE;
      nscoord topMargin = column->mTopMargin;
      nscoord bottomMargin = column->mBottomMargin;
 
@@ -235,7 +232,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      // initialize the box size here 
      nsBox::BoundsCheck(min, pref, max);
    
-
+     current = new (aState) nsBoxSize();
      current->pref = pref;
      current->min = min;
      current->max = max;
