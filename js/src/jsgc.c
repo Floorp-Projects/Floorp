@@ -2687,6 +2687,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     } else {
         for (i = 0; i < GCX_NTYPES; i++)
             cx->newborn[i] = NULL;
+        cx->lastInternalResult = JSVAL_NULL;
         cx->lastAtom = NULL;
         rt->gcPoke = JS_TRUE;
 
