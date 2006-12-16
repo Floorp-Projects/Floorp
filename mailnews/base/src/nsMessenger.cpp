@@ -480,23 +480,35 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
         }
         else
         {
-            PRInt16 dialogReturn;
+            // if we don't re-init the path for redisplay the picker will
+            // show the full path, not just the file name
+            nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
+            if (!currentFile) return NS_ERROR_FAILURE;
+
+            rv = currentFile->InitWithPath(path);
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString leafName;
+            currentFile->GetLeafName(leafName);
+            if (!leafName.IsEmpty())
+                path.Assign(leafName); // path should be a copy of leafName
+
             nsCOMPtr<nsIFilePicker> filePicker =
                 do_CreateInstance("@mozilla.org/filepicker;1", &rv);
             if (NS_FAILED(rv)) return rv;
-
             filePicker->Init(mWindow,
                              GetString(NS_LITERAL_STRING("SaveAttachment")),
                              nsIFilePicker::modeSave);
             filePicker->SetDefaultString(path);
             filePicker->AppendFilters(nsIFilePicker::filterAll);
-            
+
             nsCOMPtr <nsILocalFile> lastSaveDir;
             rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
             if (NS_SUCCEEDED(rv) && lastSaveDir) {
               filePicker->SetDisplayDirectory(lastSaveDir);
             }
 
+            PRInt16 dialogReturn;
             rv = filePicker->Show(&dialogReturn);
             if (NS_FAILED(rv) || dialogReturn == nsIFilePicker::returnCancel) {
                 // XXX todo
