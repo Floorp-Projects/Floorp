@@ -146,7 +146,7 @@ sub bz_check_requirements {
         my $version = $dbd_ver ? " $dbd_ver or higher" : '';
         print <<EOT;
 
-For $sql_server, Bugzilla requires that perl's $dbd_mod $dbd_ver be 
+For $sql_server, Bugzilla requires that perl's $dbd_mod $dbd_ver or later be
 installed. To install this module, run the following command (as $root):
 
     $command
