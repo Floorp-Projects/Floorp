@@ -59,7 +59,7 @@ messenger.jar:
     content/messenger/am-copiesOverlay.xul                          (/mailnews/base/prefs/resources/content/am-copiesOverlay.xul)
 *   content/messenger/am-junk.xul                                   (/mailnews/base/prefs/resources/content/am-junk.xul)
 *   content/messenger/am-junk.js                                    (/mailnews/base/prefs/resources/content/am-junk.js)
-    content/messenger/AccountWizard.xul                             (/mailnews/base/prefs/resources/content/AccountWizard.xul)
+*   content/messenger/AccountWizard.xul                             (/mailnews/base/prefs/resources/content/AccountWizard.xul)
     content/messenger/AccountWizard.js                              (/mailnews/base/prefs/resources/content/AccountWizard.js)
     content/messenger/aw-accounttype.js                             (/mailnews/base/prefs/resources/content/aw-accounttype.js)
     content/messenger/aw-identity.js                                (/mailnews/base/prefs/resources/content/aw-identity.js)

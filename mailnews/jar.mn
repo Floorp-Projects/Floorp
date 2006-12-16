@@ -74,7 +74,7 @@ messenger.jar:
     content/messenger/pref-receipts.js                                         (base/prefs/resources/content/pref-receipts.js)
     content/messenger/pref-character_encoding.xul                              (base/prefs/resources/content/pref-character_encoding.xul)
     content/messenger/pref-offline.xul                                         (base/prefs/resources/content/pref-offline.xul)
-    content/messenger/AccountWizard.xul                                        (base/prefs/resources/content/AccountWizard.xul)
+*   content/messenger/AccountWizard.xul                                        (base/prefs/resources/content/AccountWizard.xul)
     content/messenger/AccountWizard.js                                         (base/prefs/resources/content/AccountWizard.js)
     content/messenger/aw-accounttype.js                                        (base/prefs/resources/content/aw-accounttype.js)
     content/messenger/aw-identity.js                                           (base/prefs/resources/content/aw-identity.js)

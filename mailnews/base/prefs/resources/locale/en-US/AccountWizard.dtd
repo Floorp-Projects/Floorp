@@ -120,3 +120,4 @@
 <!ENTITY deferStorageDesc.label "Check this checkbox to store mail for this account in the Local Folders Global Inbox. Otherwise the account appears as a top-level account and its mail is stored in its own directory.">
 <!ENTITY deferStorage.label "Use Global Inbox (store mail in Local Folders)">
 <!ENTITY clickFinish.label "Click Finish to save these settings and exit the Account Wizard.">
+<!ENTITY clickFinish.labelMac "Click Done to save these settings and exit the Account Wizard.">

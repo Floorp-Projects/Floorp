@@ -311,7 +311,11 @@
         <checkbox id="downloadMsgs" hidden="true" label="&downloadOnLogin.label;" checked="true"/>
       </hbox>
       <spacer flex="1"/>
+#ifndef XP_MACOSX
       <description>&clickFinish.label;</description>
+#else
+      <description>&clickFinish.labelMac;</description>
+#endif
     </vbox>
   </wizardpage>
 
