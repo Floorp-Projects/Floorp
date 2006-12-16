@@ -80,6 +80,12 @@
 
 #include "nsTraceRefcntImpl.h"
 
+#define CHECK_mWorkingPath()                    \
+    PR_BEGIN_MACRO                              \
+        if (mWorkingPath.IsEmpty())             \
+            return NS_ERROR_NOT_INITIALIZED;    \
+    PR_END_MACRO
+
 // _mbsstr isn't declared in w32api headers but it's there in the libs
 #ifdef __MINGW32__
 extern "C" {
@@ -1737,6 +1743,9 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary * *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     PRBool isFile;
     nsresult rv = IsFile(&isFile);
 
@@ -1790,6 +1799,9 @@ nsLocalFile::Remove(PRBool recursive)
     // this processing is a lot simpler. Even if the shortcut file is 
     // pointing to a directory, only the mWorkingPath value is used and so
     // only the shortcut file will be deleted.
+
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
 
     PRBool isDir, isLink;
     nsresult rv;
@@ -1845,6 +1857,9 @@ nsLocalFile::Remove(PRBool recursive)
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aLastModifiedTime);
  
     // get the modified time of the target as determined by mFollowSymlinks
@@ -1867,6 +1882,9 @@ nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aLastModifiedTime);
  
     // The caller is assumed to have already called IsSymlink 
@@ -1888,6 +1906,9 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv))
         return rv;
@@ -1991,6 +2012,9 @@ nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 NS_IMETHODIMP
 nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissions)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aPermissions);
 
     // The caller is assumed to have already called IsSymlink 
@@ -2013,6 +2037,9 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissions)
 NS_IMETHODIMP
 nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     // set the permissions of the target as determined by mFollowSymlinks
     // If PR_TRUE, then this will be for the target of the shortcut file, 
     // otherwise it will be for the shortcut file itself (i.e. the same 
@@ -2071,6 +2098,9 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 NS_IMETHODIMP
 nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aFileSize);
 
     // The caller is assumed to have already called IsSymlink 
@@ -2087,6 +2117,9 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
 NS_IMETHODIMP
 nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv))
         return rv;
@@ -2120,6 +2153,9 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
 #ifndef WINCE
     NS_ENSURE_ARG(aDiskSpaceAvailable);
 
@@ -2141,6 +2177,9 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile * *aParent)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG_POINTER(aParent);
 
     nsAutoString parentPath(mWorkingPath);
@@ -2175,6 +2214,9 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 NS_IMETHODIMP
 nsLocalFile::Exists(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2188,6 +2230,9 @@ nsLocalFile::Exists(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsWritable(PRBool *aIsWritable)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     //TODO: extend to support NTFS file permissions
 
     // The read-only attribute on a FAT directory only means that it can't 
@@ -2210,6 +2255,9 @@ nsLocalFile::IsWritable(PRBool *aIsWritable)
 NS_IMETHODIMP
 nsLocalFile::IsReadable(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2225,6 +2273,9 @@ nsLocalFile::IsReadable(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsExecutable(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
     
@@ -2406,6 +2457,9 @@ nsLocalFile::HasFileAttribute(DWORD fileAttrib, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsSymlink(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
 
     // unless it is a valid shortcut path it's not a symlink
@@ -2458,6 +2512,9 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     *_retval = PR_FALSE;
 
     nsAutoString myFilePath;
@@ -2774,6 +2831,9 @@ nsLocalFile::GetNativeCanonicalPath(nsACString &aResult)
 NS_IMETHODIMP
 nsLocalFile::CopyToNative(nsIFile *newParentDir, const nsACString &newName)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     if (newName.IsEmpty())
         return CopyTo(newParentDir, EmptyString());
 
@@ -2802,6 +2862,9 @@ nsLocalFile::CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString 
 NS_IMETHODIMP
 nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString &newName)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     if (newName.IsEmpty())
         return MoveTo(newParentDir, EmptyString());
 
@@ -2816,6 +2879,9 @@ nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString &newName)
 NS_IMETHODIMP
 nsLocalFile::GetNativeTarget(nsACString &_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_WARNING("This API is lossy. Use GetTarget !");
     nsAutoString tmp;
     nsresult rv = GetTarget(tmp);

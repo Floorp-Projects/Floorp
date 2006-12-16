@@ -59,6 +59,12 @@
 #include "nsIMutableArray.h"
 #include "nsTraceRefcntImpl.h"
 
+#define CHECK_mWorkingPath()                    \
+    PR_BEGIN_MACRO                              \
+        if (mWorkingPath.IsEmpty())             \
+            return NS_ERROR_NOT_INITIALIZED;    \
+    PR_END_MACRO
+
 //-----------------------------------------------------------------------------
 // static helper functions
 //-----------------------------------------------------------------------------
@@ -1453,6 +1459,9 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
 nsresult
 nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool move)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     nsCOMPtr<nsIFile> newParentDir = aParentDir;
 
     nsresult rv  = Stat();
@@ -1658,6 +1667,9 @@ nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString &newName)
 NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary * *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     PRBool isFile;
     nsresult rv = IsFile(&isFile);
 
@@ -1686,6 +1698,9 @@ nsLocalFile::Load(PRLibrary * *_retval)
 NS_IMETHODIMP
 nsLocalFile::Remove(PRBool recursive)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     PRBool isDir = PR_FALSE;
 
     nsresult rv = IsDirectory(&isDir);
@@ -1730,6 +1745,9 @@ nsLocalFile::Remove(PRBool recursive)
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTime(PRInt64 *aLastModifiedTime)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aLastModifiedTime);
 
     *aLastModifiedTime = 0;
@@ -1755,6 +1773,9 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTime)
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     return nsLocalFile::SetModDate(aLastModifiedTime);
 }
 
@@ -1847,6 +1868,9 @@ nsLocalFile::GetPermissionsOfLink(PRUint32 *aPermissionsOfLink)
 NS_IMETHODIMP
 nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     nsresult rv = Stat();
     if (NS_FAILED(rv))
         return rv;
@@ -1889,6 +1913,9 @@ nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
 NS_IMETHODIMP
 nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aFileSize);
     *aFileSize = 0;
 
@@ -1951,6 +1978,9 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(aDiskSpaceAvailable);
     *aDiskSpaceAvailable = 0;
 
@@ -1978,6 +2008,9 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile * *aParent)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG_POINTER(aParent);
 
     nsCAutoString parentPath(mWorkingPath);
@@ -2014,6 +2047,9 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 NS_IMETHODIMP
 nsLocalFile::Exists(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2027,6 +2063,9 @@ nsLocalFile::Exists(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsWritable(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2056,6 +2095,9 @@ nsLocalFile::IsWritable(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsReadable(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2071,6 +2113,9 @@ nsLocalFile::IsReadable(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsExecutable(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
@@ -2190,6 +2235,9 @@ nsLocalFile::IsHidden(PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsSymlink(PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     NS_ENSURE_ARG_POINTER(_retval);
 
     // No Symlinks on OS/2
@@ -2223,6 +2271,9 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     *_retval = PR_FALSE;
 
     nsCAutoString myFilePath;
@@ -2253,6 +2304,9 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::GetNativeTarget(nsACString &_retval)
 {
+    // Check we are correctly initialized.
+    CHECK_mWorkingPath();
+
     _retval = mWorkingPath;
     return NS_OK;
 }
