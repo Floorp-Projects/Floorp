@@ -424,27 +424,8 @@ public:
   void SetDisplaySelection(PRInt16 aState) { mDisplaySelection = aState; }
   PRInt16 GetDisplaySelection() { return mDisplaySelection; }
 
-  /** Allow applications to specify how we should place the caret
-   *  when the user clicks over an existing selection. A aDelay
-   *  value of PR_TRUE means delay clearing the selection and
-   *  placing the caret until MouseUp, when the user clicks over
-   *  an existing selection. This is especially useful when applications
-   *  want to support Drag & Drop of the current selection. A value
-   *  of PR_FALSE means place the caret immediately. If the application
-   *  never calls this method, the nsIFrameSelection implementation
-   *  assumes the default value is PR_TRUE.
-   * @param aDelay PR_TRUE if we should delay caret placement.
-   */
-  void SetDelayCaretOverExistingSelection(PRBool aDelay);
-
-  /** Get the current delay caret setting.
-   */
-  PRBool GetDelayCaretOverExistingSelection() { return mDelayCaretOverExistingSelection; }
-
-  /** If we are delaying caret placement til MouseUp (see
-   *  Set/GetDelayCaretOverExistingSelection()), this method
-   *  can be used to store the data received during the MouseDown
-   *  so that we can place the caret during the MouseUp event.
+  /** This method can be used to store the data received during a MouseDown
+   *  event so that we can place the caret during the MouseUp event.
    * @aMouseEvent the event received by the selection MouseDown
    *  handling method. A NULL value can be use to tell this method
    *  that any data is storing is no longer valid.
@@ -655,7 +636,6 @@ private:
 
   nsMouseEvent mDelayedMouseEvent;
 
-  PRPackedBool mDelayCaretOverExistingSelection;
   PRPackedBool mDelayedMouseEventValid;
 
   PRPackedBool mChangesDuringBatching;

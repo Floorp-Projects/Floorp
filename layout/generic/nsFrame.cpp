@@ -1883,56 +1883,52 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     return frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
   }
 
-  PRBool supportsDelay = frameselection->GetDelayCaretOverExistingSelection();
   frameselection->SetDelayedCaretData(0);
 
-  if (supportsDelay)
+  // Check if any part of this frame is selected, and if the
+  // user clicked inside the selected region. If so, we delay
+  // starting a new selection since the user may be trying to
+  // drag the selected region to some other app.
+
+  SelectionDetails *details = 0;
+  PRBool isSelected = ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+
+  if (isSelected)
   {
-    // Check if any part of this frame is selected, and if the
-    // user clicked inside the selected region. If so, we delay
-    // starting a new selection since the user may be trying to
-    // drag the selected region to some other app.
+    details = frameselection->LookUpSelection(offsets.content, 0,
+        offsets.EndOffset(), PR_FALSE);
 
-    SelectionDetails *details = 0;
-    PRBool isSelected = ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+    //
+    // If there are any details, check to see if the user clicked
+    // within any selected region of the frame.
+    //
 
-    if (isSelected)
+    if (details)
     {
-      details = frameselection->LookUpSelection(offsets.content, 0,
-                                                offsets.EndOffset(), PR_FALSE);
+      SelectionDetails *curDetail = details;
 
-      //
-      // If there are any details, check to see if the user clicked
-      // within any selected region of the frame.
-      //
-
-      if (details)
+      while (curDetail)
       {
-        SelectionDetails *curDetail = details;
-
-        while (curDetail)
+        //
+        // If the user clicked inside a selection, then just
+        // return without doing anything. We will handle placing
+        // the caret later on when the mouse is released. We ignore
+        // the spellcheck selection.
+        //
+        if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
+            curDetail->mStart <= offsets.StartOffset() &&
+            offsets.EndOffset() <= curDetail->mEnd)
         {
-          //
-          // If the user clicked inside a selection, then just
-          // return without doing anything. We will handle placing
-          // the caret later on when the mouse is released. We ignore
-          // the spellcheck selection.
-          //
-          if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
-              curDetail->mStart <= offsets.StartOffset() &&
-              offsets.EndOffset() <= curDetail->mEnd)
-          {
-            delete details;
-            frameselection->SetMouseDownState(PR_FALSE);
-            frameselection->SetDelayedCaretData(me);
-            return NS_OK;
-          }
-
-          curDetail = curDetail->mNext;
+          delete details;
+          frameselection->SetMouseDownState(PR_FALSE);
+          frameselection->SetDelayedCaretData(me);
+          return NS_OK;
         }
 
-        delete details;
+        curDetail = curDetail->mNext;
       }
+
+      delete details;
     }
   }
 
@@ -2275,9 +2271,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
   if (!selectionOff) {
     frameselection = GetFrameSelection();
-    if (nsEventStatus_eConsumeNoDefault != *aEventStatus &&
-        frameselection &&
-        frameselection->GetDelayCaretOverExistingSelection()) {
+    if (nsEventStatus_eConsumeNoDefault != *aEventStatus && frameselection) {
       // Check if the frameselection recorded the mouse going down.
       // If not, the user must have clicked in a part of the selection.
       // Place the caret before continuing!

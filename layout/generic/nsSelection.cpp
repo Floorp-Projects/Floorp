@@ -852,7 +852,6 @@ nsFrameSelection::nsFrameSelection()
 
   mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
-  mDelayCaretOverExistingSelection = PR_TRUE;
   mDelayedMouseEventValid = PR_FALSE;
   mSelectionChangeReason = nsISelectionListener::NO_REASON;
 }
@@ -3891,15 +3890,6 @@ nsFrameSelection::DeleteFromDocument()
 #endif
 
   return NS_OK;
-}
-
-void
-nsFrameSelection::SetDelayCaretOverExistingSelection(PRBool aDelay)
-{
-  mDelayCaretOverExistingSelection = aDelay;
-  
-  if (! aDelay)
-    mDelayedMouseEventValid = PR_FALSE;
 }
 
 void
