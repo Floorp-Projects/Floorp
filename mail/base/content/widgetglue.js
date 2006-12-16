@@ -167,9 +167,7 @@ function MsgCompactFolder(isAll)
       if (expungedBytes > 0)
       { 
         if (gDBView)
-        {
           gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
-        }
 
         ClearThreadPaneSelection();
         ClearThreadPane();
