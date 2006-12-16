@@ -117,40 +117,42 @@ final class NativeString extends IdScriptableObject
         String s;
         int arity;
         switch (id) {
-          case Id_constructor:      arity=1; s="constructor";      break;
-          case Id_toString:         arity=0; s="toString";         break;
-          case Id_toSource:         arity=0; s="toSource";         break;
-          case Id_valueOf:          arity=0; s="valueOf";          break;
-          case Id_charAt:           arity=1; s="charAt";           break;
-          case Id_charCodeAt:       arity=1; s="charCodeAt";       break;
-          case Id_indexOf:          arity=1; s="indexOf";          break;
-          case Id_lastIndexOf:      arity=1; s="lastIndexOf";      break;
-          case Id_split:            arity=2; s="split";            break;
-          case Id_substring:        arity=2; s="substring";        break;
-          case Id_toLowerCase:      arity=0; s="toLowerCase";      break;
-          case Id_toUpperCase:      arity=0; s="toUpperCase";      break;
-          case Id_substr:           arity=2; s="substr";           break;
-          case Id_concat:           arity=1; s="concat";           break;
-          case Id_slice:            arity=2; s="slice";            break;
-          case Id_bold:             arity=0; s="bold";             break;
-          case Id_italics:          arity=0; s="italics";          break;
-          case Id_fixed:            arity=0; s="fixed";            break;
-          case Id_strike:           arity=0; s="strike";           break;
-          case Id_small:            arity=0; s="small";            break;
-          case Id_big:              arity=0; s="big";              break;
-          case Id_blink:            arity=0; s="blink";            break;
-          case Id_sup:              arity=0; s="sup";              break;
-          case Id_sub:              arity=0; s="sub";              break;
-          case Id_fontsize:         arity=0; s="fontsize";         break;
-          case Id_fontcolor:        arity=0; s="fontcolor";        break;
-          case Id_link:             arity=0; s="link";             break;
-          case Id_anchor:           arity=0; s="anchor";           break;
-          case Id_equals:           arity=1; s="equals";           break;
-          case Id_equalsIgnoreCase: arity=1; s="equalsIgnoreCase"; break;
-          case Id_match:            arity=1; s="match";            break;
-          case Id_search:           arity=1; s="search";           break;
-          case Id_replace:          arity=1; s="replace";          break;
-          case Id_localeCompare:    arity=1; s="localeCompare";    break;
+          case Id_constructor:       arity=1; s="constructor";       break;
+          case Id_toString:          arity=0; s="toString";          break;
+          case Id_toSource:          arity=0; s="toSource";          break;
+          case Id_valueOf:           arity=0; s="valueOf";           break;
+          case Id_charAt:            arity=1; s="charAt";            break;
+          case Id_charCodeAt:        arity=1; s="charCodeAt";        break;
+          case Id_indexOf:           arity=1; s="indexOf";           break;
+          case Id_lastIndexOf:       arity=1; s="lastIndexOf";       break;
+          case Id_split:             arity=2; s="split";             break;
+          case Id_substring:         arity=2; s="substring";         break;
+          case Id_toLowerCase:       arity=0; s="toLowerCase";       break;
+          case Id_toUpperCase:       arity=0; s="toUpperCase";       break;
+          case Id_substr:            arity=2; s="substr";            break;
+          case Id_concat:            arity=1; s="concat";            break;
+          case Id_slice:             arity=2; s="slice";             break;
+          case Id_bold:              arity=0; s="bold";              break;
+          case Id_italics:           arity=0; s="italics";           break;
+          case Id_fixed:             arity=0; s="fixed";             break;
+          case Id_strike:            arity=0; s="strike";            break;
+          case Id_small:             arity=0; s="small";             break;
+          case Id_big:               arity=0; s="big";               break;
+          case Id_blink:             arity=0; s="blink";             break;
+          case Id_sup:               arity=0; s="sup";               break;
+          case Id_sub:               arity=0; s="sub";               break;
+          case Id_fontsize:          arity=0; s="fontsize";          break;
+          case Id_fontcolor:         arity=0; s="fontcolor";         break;
+          case Id_link:              arity=0; s="link";              break;
+          case Id_anchor:            arity=0; s="anchor";            break;
+          case Id_equals:            arity=1; s="equals";            break;
+          case Id_equalsIgnoreCase:  arity=1; s="equalsIgnoreCase";  break;
+          case Id_match:             arity=1; s="match";             break;
+          case Id_search:            arity=1; s="search";            break;
+          case Id_replace:           arity=1; s="replace";           break;
+          case Id_localeCompare:     arity=1; s="localeCompare";     break;
+          case Id_toLocaleLowerCase: arity=0; s="toLocaleLowerCase"; break;
+          case Id_toLocaleUpperCase: arity=0; s="toLocaleUpperCase"; break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(STRING_TAG, id, s, arity);
@@ -316,6 +318,14 @@ final class NativeString extends IdScriptableObject
                 return ScriptRuntime.wrapNumber(collator.compare(
                         ScriptRuntime.toString(thisObj), 
                         ScriptRuntime.toString(args, 0)));
+            }
+            case Id_toLocaleLowerCase:
+            {
+                return ScriptRuntime.toString(thisObj).toLowerCase(cx.getLocale());
+            }
+            case Id_toLocaleUpperCase:
+            {
+                return ScriptRuntime.toString(thisObj).toUpperCase(cx.getLocale());
             }
         }
         throw new IllegalArgumentException(String.valueOf(id));
@@ -771,7 +781,7 @@ final class NativeString extends IdScriptableObject
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2006-09-26 14:27:05 CEST
+// #generated# Last update: 2006-12-16 16:22:36 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 3: c=s.charAt(2);
@@ -824,6 +834,10 @@ final class NativeString extends IdScriptableObject
                 } break L;
             case 13: X="localeCompare";id=Id_localeCompare; break L;
             case 16: X="equalsIgnoreCase";id=Id_equalsIgnoreCase; break L;
+            case 17: c=s.charAt(8);
+                if (c=='L') { X="toLocaleLowerCase";id=Id_toLocaleLowerCase; }
+                else if (c=='U') { X="toLocaleUpperCase";id=Id_toLocaleUpperCase; }
+                break L;
             }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
@@ -868,7 +882,9 @@ final class NativeString extends IdScriptableObject
         Id_search                    = 32,
         Id_replace                   = 33,
         Id_localeCompare             = 34,
-        MAX_PROTOTYPE_ID             = 34;
+        Id_toLocaleLowerCase         = 35,
+        Id_toLocaleUpperCase         = 36,
+        MAX_PROTOTYPE_ID             = 36;
 
 // #/string_id_map#
 
