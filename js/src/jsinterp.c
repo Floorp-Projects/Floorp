@@ -4747,8 +4747,6 @@ interrupt:
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_LITOPX_CASE(JSOP_DEFFUN, 0)
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = ATOM_TO_OBJECT(atom);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             id = ATOM_TO_JSID(fun->atom);
