@@ -160,7 +160,8 @@ NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 #define INTERNAL_NAME_FIREFOX         "firefox"
 #define INTERNAL_NAME_PHOENIX         "phoenix"
 #define INTERNAL_NAME_IEXPLORE        "iexplore"
-#define INTERNAL_NAME_SEAMONKEY       "apprunner"
+#define INTERNAL_NAME_MOZILLA_SUITE   "apprunner"
+#define INTERNAL_NAME_SEAMONKEY       "seamonkey"
 #define INTERNAL_NAME_DOGBERT         "netscape"
 #define INTERNAL_NAME_OPERA           "opera"
 #endif
@@ -242,7 +243,8 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
     aKey = "ie";
     return NS_OK;
   }
-  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_SEAMONKEY)) {
+  if (internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_MOZILLA_SUITE) ||
+      internalName.LowerCaseEqualsLiteral(INTERNAL_NAME_SEAMONKEY)) {
     aKey = "seamonkey";
     return NS_OK;
   }
