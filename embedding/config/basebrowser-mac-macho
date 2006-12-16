@@ -87,9 +87,10 @@ components/windowwatcher.xpt
 components/txtsvc.xpt
 
 ; gfx
-components/libgfx_mac.dylib                     
+components/libgkgfxthebes.dylib                     
 components/gfx.xpt 
 libgkgfx.dylib 
+libthebes.dylib 
 
 ; jar
 components/libjar50.dylib
@@ -245,7 +246,6 @@ res/entityTables/htmlEntityVersions.properties
 res/entityTables/html40Latin1.properties
 res/entityTables/html40Symbols.properties
 res/entityTables/transliterate.properties
-res/fonts/fontEncoding.properties
 
 ;
 ; Optional for MathML
@@ -270,5 +270,4 @@ components/p3p.xpt
 
 ; svg
 components/dom_svg.xpt
-components/gksvgrenderer.xpt
 res/svg.css
