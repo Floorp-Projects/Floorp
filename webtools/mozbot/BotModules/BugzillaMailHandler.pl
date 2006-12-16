@@ -319,24 +319,33 @@ sub parse_mail ($) {
     }
     debug_print("Component '$bug_info{component}' found.");
 
-    # New or Changed, and getting who did it.
+    # Who
+    $bug_info{'who'} = $email->header('X-Bugzilla-Who');
+
+    # New or Changed
+    # For Bugzilla vers < 3.0, this code also decides who
     if ($subject =~ /^\s*\[Bug \d+\]\s*New: /i) {
         $bug_info{'new'} = 1;
         debug_print("Bug is New.");
-        my ($reporter) = grep /^\s+ReportedBy:\s/, @body_lines;
-        $reporter =~ s/^\s+ReportedBy:\s//;
-        $bug_info{'who'} = $reporter;
+        unless ($bug_info{'who'}) {
+                my ($reporter) = grep /^\s+ReportedBy:\s/, @body_lines;
+                $reporter =~ s/^\s+ReportedBy:\s//;
+                $bug_info{'who'} = $reporter;
+        }
     }
-    elsif ( my ($changer_line) = grep /^\S+\schanged:$/, @body_lines) {
-        $changer_line =~ /^(\S+)\s/;
-        $bug_info{'who'} = $1;
+    elsif (!$bug_info{'who'}) {
+           if ( my ($changer_line) = grep /^\S+\schanged:$/, @body_lines) {
+               $changer_line =~ /^(\S+)\s/;
+               $bug_info{'who'} = $1;
+           }
+           elsif ( my ($comment_line) = 
+                       grep /^-+.*Comment.*From /i, @body_lines )
+           {
+               $comment_line =~ /^-+.*Comment.*From (\S+) /i;
+               $bug_info{'who'} = $1;
+           }
     }
-    elsif ( my ($comment_line) = 
-                grep /^-+.*Comment.*From /i, @body_lines )
-    {
-        $comment_line =~ /^-+.*Comment.*From (\S+) /i;
-        $bug_info{'who'} = $1;
-    } else {
+    else {
         debug_print("Could not determine who made the change.");
         return undef;
     }
