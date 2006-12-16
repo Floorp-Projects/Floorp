@@ -247,6 +247,22 @@ public class Context
      */
     public static final int FEATURE_STRICT_EVAL = 9;
 
+    /**
+     * When the feature is on Rhino will add a "fileName" and "lineNumber"
+     * properties to Error objects automatically. When the feature is off, you
+     * have to explicitly pass them as the second and third argument to the
+     * Error constructor. Note that neither behaviour is fully ECMA 262 
+     * compliant (as 262 doesn't specify a three-arg constructor), but keeping 
+     * the feature off results in Error objects that don't have
+     * additional non-ECMA properties when constructed using the ECMA-defined
+     * single-arg constructor and is thus desirable if a stricter ECMA 
+     * compliance is desired.
+     * <p>
+     * By default {@link #hasFeature(int)} returns false.
+     * @since 1.6 Release 6
+     */
+    public static final int FEATURE_LOCATION_INFORMATION_IN_ERROR = 10;
+
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
 
@@ -2089,6 +2105,7 @@ public class Context
      * @see #FEATURE_DYNAMIC_SCOPE
      * @see #FEATURE_STRICT_VARS
      * @see #FEATURE_STRICT_EVAL
+     * @see #FEATURE_LOCATION_INFORMATION_IN_ERROR
      */
     public boolean hasFeature(int featureIndex)
     {
