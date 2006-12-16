@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,13 +45,16 @@
   <!ENTITY cmdFindNext.accesskey "s">
 
   <!ENTITY cmdToggleAnonContent.label "Afficher le contenu anonyme">
-  <!ENTITY cmdToggleAnonContent.accesskey "a">
+  <!ENTITY cmdToggleAnonContent.accesskey "A">
 
   <!ENTITY cmdToggleWhitespaceNodes.label "Afficher les nœuds vides">
-  <!ENTITY cmdToggleWhitespaceNodes.accesskey "V">
+  <!ENTITY cmdToggleWhitespaceNodes.accesskey "v">
 
   <!ENTITY cmdToggleAccessibleNodes.label "Afficher les nœuds accessibles">
   <!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+
+  <!ENTITY cmdToggleProcessingInstructions.label "Afficher les instructions de traitement">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "h">
 
   <!ENTITY cmdFlashSelected.label "Faire clignoter l'élément sélectionné">
 
