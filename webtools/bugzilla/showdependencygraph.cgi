@@ -247,6 +247,11 @@ if ($webdotbase =~ /^https?:/) {
     
     # On Windows $pngfilename will contain \ instead of /
     $pngfilename =~ s|\\|/|g if $^O eq 'MSWin32';
+
+    # Under mod_perl, pngfilename will have an absolute path, and we
+    # need to make that into a relative path.
+    my $cgi_root = bz_locations()->{cgi_path};
+    $pngfilename =~ s/^\Q$cgi_root\E//;
     
     $vars->{'image_url'} = $pngfilename;
 

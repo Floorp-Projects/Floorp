@@ -433,7 +433,7 @@ sub bz_locations {
         # change showdependencygraph.cgi to set image_url to the correct 
         # location.
         # The script should really generate these graphs directly...
-        'webdotdir'   => "$datadir/webdot",
+        'webdotdir'   => "$libpath/$datadir/webdot",
         'extensionsdir' => "$libpath/extensions",
     };
 }
