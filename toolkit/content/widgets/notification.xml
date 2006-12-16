@@ -230,7 +230,7 @@
                 done = true;
               }
               else {
-                aNotification.style.marginTop = (margin + change) + "px";
+                aNotification.style.marginTop = (margin + change).toFixed(4) + "px";
                 if (opacitychange)
                   aNotification.style.opacity =
                     Number(aNotification.style.opacity) + opacitychange;
