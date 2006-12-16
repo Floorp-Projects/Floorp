@@ -2299,11 +2299,11 @@ function allowRemoteContentForSender()
   }
 
   var allowRemoteContent = false;
-  if (cardForEmailAddress)
+  if (cardForEmailAddress && addrbook instanceof Components.interfaces.nsIAbDirectory)
   {
     // set the property for remote content
     cardForEmailAddress.allowRemoteContent = true;
-    cardForEmailAddress.editCardToDatabase("");
+    addrbook.modifyCard(cardForEmailAddress);
     allowRemoteContent = true;
   }
   else
