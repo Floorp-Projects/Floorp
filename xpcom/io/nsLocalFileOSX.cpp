@@ -74,7 +74,7 @@
 
 #define CHECK_mBaseRef()                        \
     PR_BEGIN_MACRO                              \
-        if (mBaseRef.IsEmpty())                 \
+        if (!mBaseRef)                          \
             return NS_ERROR_NOT_INITIALIZED;    \
     PR_END_MACRO
 
