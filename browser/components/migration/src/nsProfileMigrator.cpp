@@ -191,6 +191,9 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   if (len == -1)
     return NS_ERROR_FAILURE;
 
+  // Move past ".exe"
+  len += 4;
+
   PRUint32 start = 0;
   // skip an opening quotation mark if present
   if (value.get()[1] != ':') {
