@@ -106,35 +106,37 @@
                align="center"/>
       </hbox>
     </vbox>
- 
-    <vbox align="start">  
+
+    <vbox align="start">
     <description class="desc">&retentionCleanup.label;</description>
 
         <hbox align="center" class="indent">
           <checkbox wsm_persist="true" id="retention.useDefault" accesskey="&retentionUseDefault.accesskey;"
               label="&retentionUseDefault.label;" checked="true" oncommand="onUseDefaultRetentionSettings()"/>
         </hbox>
-          <vbox class="indent">
-            <radiogroup wsm_persist="true" id="retention.keepMsg" class="indent">
+        <vbox class="indent">
+          <hbox class="indent">
+            <radiogroup wsm_persist="true" id="retention.keepMsg">
               <radio wsm_persist="true" value="1" accesskey="&retentionKeepAll.accesskey;"
                       label="&retentionKeepAll.label;" oncommand="onCheckKeepMsg();"/>
-              <hbox flex="1" >
+              <hbox flex="1" align="center">
                 <radio wsm_persist="true" accesskey="&retentionKeepNew.accesskey;" 
                         value="3" label="&retentionKeepNew.label;" oncommand="onCheckKeepMsg();"/>
                 <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="2" value="30"/>
                 <label value="&message.label;"/>
               </hbox>
-              <hbox flex="1">
+              <hbox flex="1" align="center">
                 <radio wsm_persist="true" accesskey="&retentionKeepMsg.accesskey;"
                         value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
                 <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
                 <label value="&daysOld.label;"/>
               </hbox>
             </radiogroup>
-            <hbox>
-              <checkbox wsm_persist="true" id="retention.keepUnread" accesskey="&retentionKeepUnread.accesskey;"
+          </hbox>
+          <hbox class="indent">
+            <checkbox wsm_persist="true" id="retention.keepUnread" accesskey="&retentionKeepUnread.accesskey;"
               label="&retentionKeepUnread.label;" observes="retention.keepMsg" checked="true"/>
-            </hbox>
+          </hbox>
         </vbox>
     </vbox>
 
