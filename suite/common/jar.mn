@@ -31,6 +31,17 @@ comm.jar:
 % overlay chrome://pippki/content/crlManager.xul chrome://communicator/content/helpSecurityOverlay.xul
 % overlay chrome://pippki/content/resetpassword.xul chrome://communicator/content/helpSecurityOverlay.xul
 % overlay chrome://pippki/content/downloadcert.xul chrome://communicator/content/helpSecurityOverlay.xul
+% overlay chrome://messenger/content/addressbook/pref-editdirectories.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/addressbook/pref-directory-add.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/AccountManager.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/FilterEditor.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/junkMailInfo.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/msgSelectOffline.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/subscribe.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/mailViewList.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger/content/mailViewSetup.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger-smime/content/msgCompSecurityInfo.xul chrome://communicator/content/helpMessengerOverlay.xul
+% overlay chrome://messenger-smime/content/msgReadSecurityInfo.xul chrome://communicator/content/helpMessengerOverlay.xul
 % content communicator-platform %content/communicator-platform/ platform xpcnativewrappers=yes
 % content communicator-region %content/communicator-region/ xpcnativewrappers=yes
 #else
@@ -50,6 +61,7 @@ comm.jar:
    content/communicator/editorBindings.xul
    content/communicator/emOverlay.xul
    content/communicator/findUtils.js
+   content/communicator/helpMessengerOverlay.xul
    content/communicator/helpSecurityOverlay.xul
    content/communicator/helpOverlay.js
    content/communicator/helpOverlay.xul
