@@ -1900,7 +1900,9 @@ function cmdMe(e)
     }
 
     var msg = filterOutput(e.action, "ACTION", e.sourceObject);
+    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "ACTION", "ME!", e.sourceObject);
+    client.munger.entries[".mailto"].enabled = false;
     e.sourceObject.act(msg);
 }
 
@@ -2107,7 +2109,9 @@ function cmdSay(e)
     }
 
     var msg = filterOutput(e.message, "PRIVMSG", e.sourceObject);
+    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "PRIVMSG", "ME!", e.sourceObject);
+    client.munger.entries[".mailto"].enabled = false;
     e.sourceObject.say(msg);
 }
 
@@ -2116,7 +2120,9 @@ function cmdMsg(e)
     var target = e.server.addTarget(e.nickname);
 
     var msg = filterOutput(e.message, "PRIVMSG", target);
+    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "PRIVMSG", "ME!", target);
+    client.munger.entries[".mailto"].enabled = false;
     target.say(msg);
 }
 
@@ -2149,7 +2155,9 @@ function cmdNotice(e)
     var target = e.server.addTarget(e.nickname);
 
     var msg = filterOutput(e.message, "NOTICE", target);
+    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
     e.sourceObject.display(msg, "NOTICE", "ME!", target);
+    client.munger.entries[".mailto"].enabled = false;
     target.notice(msg);
 }
 
@@ -3035,7 +3043,9 @@ function cmdVersion(e)
 
 function cmdEcho(e)
 {
+    client.munger.entries[".mailto"].enabled = client.prefs["munger.mailto"];
     display(e.message);
+    client.munger.entries[".mailto"].enabled = false;
 }
 
 function cmdInvite(e)

@@ -75,9 +75,9 @@ function initMunger()
     munger.addRule (".mirc-reverse", /(\x16)/, mircReverseColor);
     munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
     munger.addRule ("link", client.linkRE, insertLink);
-    munger.addRule ("mailto",
+    munger.addRule (".mailto",
        /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
-                    insertMailToLink);
+                    insertMailToLink, false);
     munger.addRule ("bugzilla-link",
                     /(?:\s|\W|^)(bug\s+(?:#?\d{3,6}|#[^\s,]{1,20}))/i,
                     insertBugzillaLink);

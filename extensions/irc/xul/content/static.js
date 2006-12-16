@@ -3629,10 +3629,7 @@ function cli_say(msg)
 {
     if ("say" in client.currentObject)
     {
-        msg = filterOutput(msg, "PRIVMSG", client.currentObject);
-        display(msg, "PRIVMSG", "ME!", client.currentObject);
-        client.currentObject.say(msg);
-
+        client.currentObject.dispatch("say " + msg);
         return;
     }
 
