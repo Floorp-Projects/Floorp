@@ -82,11 +82,14 @@ function getContentFrameDocument(aFocusedWindow)
 
 function getReferrer(doc)
 {
-  var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceDocument = getContentFrameDocument(focusedWindow);
+  if (!doc)
+    return null;
+
+  if (doc == document) // compatibility
+    doc = getContentFrameDocument(document.commandDispatcher.focusedWindow);
 
   try {
-    return makeURI(sourceDocument.location.href, sourceDocument.characterSet);
+    return makeURI(doc.location.href, doc.characterSet);
   } catch (e) {
     return null;
   }
@@ -95,30 +98,28 @@ function getReferrer(doc)
 function openAsExternal(aURL)
 {
   openNewTabWindowOrExistingWith(pref.getIntPref("browser.link.open_external"),
-                                 aURL, false, false);
+                                 aURL, null, false);
 }
 
-function openNewWindowWith(aURL, aSendReferrer)
+function openNewWindowWith(aURL, aDoc)
 {
-  openNewTabWindowOrExistingWith(kNewWindow, aURL, aSendReferrer, false);
+  openNewTabWindowOrExistingWith(kNewWindow, aURL, aDoc, false);
 }
 
-function openNewTabWith(aURL, aSendReferrer, aReverseBackgroundPref)
+function openNewTabWith(aURL, aDoc, aReverseBackgroundPref)
 {
-  openNewTabWindowOrExistingWith(kNewTab, aURL, aSendReferrer, aReverseBackgroundPref);
+  openNewTabWindowOrExistingWith(kNewTab, aURL, aDoc, aReverseBackgroundPref);
 }
 
-function openNewTabWindowOrExistingWith(aType, aURL, aSendReferrer, aReverseBackgroundPref)
+function openNewTabWindowOrExistingWith(aType, aURL, aDoc, aReverseBackgroundPref)
 {
   // Make sure we are allowed to open this url
   urlSecurityCheck(aURL, document);
 
   // get referrer, if as external should be null
-  var referrer = aSendReferrer ? getReferrer(document) : null;
+  var referrer = getReferrer(aDoc);
 
-  var browser;
   var browserWin;
-
   // if we're not opening a new window, try and find existing window
   if (aType != kNewWindow)
     browserWin = getTopWin();
@@ -143,7 +144,7 @@ function openNewTabWindowOrExistingWith(aType, aURL, aSendReferrer, aReverseBack
   }
 
   // Get the existing browser object
-  browser = browserWin.getBrowser();
+  var browser = browserWin.getBrowser();
 
   // Open link in an existing window.
   if (aType == kExistingWindow) {

@@ -178,7 +178,7 @@
     if (ceParams) {
       var href = ceParams.href;
       if (isKeyCommand) {
-        openNewTabWith(href, true, event.shiftKey);
+        openNewTabWith(href, event.target.ownerDocument, event.shiftKey);
         event.stopPropagation();
       }
       else {
@@ -236,18 +236,18 @@
     return false;
   }
 
-  function openNewTabOrWindow(event, href, sendReferrer)
+  function openNewTabOrWindow(event, href, doc)
   {
     // should we open it in a new tab?
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick")) {
-      openNewTabWith(href, sendReferrer, event.shiftKey);
+      openNewTabWith(href, doc, event.shiftKey);
       event.stopPropagation();
       return true;
     }
 
     // should we open it in a new window?
     if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {
-      openNewWindowWith(href, sendReferrer);
+      openNewWindowWith(href, doc);
       event.stopPropagation();
       return true;
     }
@@ -258,13 +258,13 @@
 
   function handleLinkClick(event, href, linkNode)
   {
-    // Make sure we are allowed to open this URL
-    urlSecurityCheck(href, document);
+    // Checking to make sure we are allowed to open this URL
+    // (call to urlSecurityCheck) is now done within openNew... functions
 
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (openNewTabOrWindow(event, href, true))
+          if (openNewTabOrWindow(event, href, linkNode.ownerDocument))
             return true;
         } 
         var saveModifier = true;
@@ -278,15 +278,15 @@
         saveModifier = saveModifier ? event.shiftKey : event.altKey;
           
         if (saveModifier) {                                           // if saveModifier is down
-          saveURL(href, linkNode ? gatherTextUnder(linkNode) : "",
-                  "SaveLinkTitle", false, getReferrer(document));
+          saveURL(href, gatherTextUnder(linkNode), "SaveLinkTitle",
+                  false, getReferrer(linkNode.ownerDocument));
           return true;
         }
         if (event.altKey)                                             // if alt is down
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (openNewTabOrWindow(event, href, true))
+        if (openNewTabOrWindow(event, href, linkNode.ownerDocument))
           return true;
         break;
     }
@@ -311,7 +311,7 @@
 
       url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
 
-      return openNewTabOrWindow(event, url, false);
+      return openNewTabOrWindow(event, url, null);
     }
 
     // If ctrl wasn't down, then just load the url in the targeted win/tab.

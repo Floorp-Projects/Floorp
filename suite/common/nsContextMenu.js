@@ -600,17 +600,17 @@ nsContextMenu.prototype = {
     // Open linked-to URL in a new window.
     openLink : function () {
         // Determine linked-to URL.
-        openNewWindowWith( this.linkURL(), true );
+        openNewWindowWith( this.linkURL(), this.target.ownerDocument );
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function ( reverseBackgroundPref ) {
         // Determine linked-to URL.
-        openNewTabWith( this.linkURL(), true, reverseBackgroundPref );
+        openNewTabWith( this.linkURL(), this.target.ownerDocument, reverseBackgroundPref );
     },
     // Open frame in a new tab.
     openFrameInTab : function ( reverseBackgroundPref ) {
         // Determine linked-to URL.
-        openNewTabWith( this.target.ownerDocument.location.href, true, reverseBackgroundPref );
+        openNewTabWith( this.target.ownerDocument.location.href, this.target.ownerDocument, reverseBackgroundPref );
     },
     // Reload clicked-in frame.
     reloadFrame : function () {
@@ -706,14 +706,12 @@ nsContextMenu.prototype = {
     // Save URL of clicked-on link.
     saveLink : function () {
         saveURL( this.linkURL(), this.linkText(), null, true,
-                 getReferrer(document) );
+                 getReferrer(this.target.ownerDocument) );
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        // Note: getReferrer wants our chrome document, not the actual
-        // target document; it handles getting that itself.
         saveImageURL( this.imageURL, null, "SaveImageTitle", false,
-                      getReferrer(document) );
+                      getReferrer(this.target.ownerDocument) );
     },
     // Generate email address.
     getEmail : function () {
