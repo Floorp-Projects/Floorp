@@ -868,7 +868,7 @@ JS_EndRequest(JSContext *cx)
             if (js_DropObjectMap(cx, &scope->map, NULL)) {
                 js_InitLock(&scope->lock);
                 scope->u.count = 0;                 /* NULL may not pun as 0 */
-                js_FinishSharingScope(rt, scope);   /* set ownercx = NULL */
+                js_FinishSharingScope(cx, scope);   /* set ownercx = NULL */
                 nshares++;
             }
         }

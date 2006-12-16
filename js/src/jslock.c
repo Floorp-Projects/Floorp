@@ -224,7 +224,9 @@ js_FinishLock(JSThinLock *tl)
 #endif
 }
 
+#ifndef NSPR_LOCK
 static void js_Dequeue(JSThinLock *);
+#endif
 
 #ifdef DEBUG_SCOPE_COUNT
 
@@ -317,10 +319,12 @@ WillDeadlock(JSScope *scope, JSContext *cx)
  * (i) rt->gcLock held
  */
 static void
-ShareScope(JSRuntime *rt, JSScope *scope)
+ShareScope(JSContext *cx, JSScope *scope)
 {
+    JSRuntime *rt;
     JSScope **todop;
 
+    rt = cx->runtime;
     if (scope->u.link) {
         for (todop = &rt->scopeSharingTodo; *todop != scope;
              todop = &(*todop)->u.link) {
@@ -355,7 +359,7 @@ ShareScope(JSRuntime *rt, JSScope *scope)
     } else {
         scope->u.count = 0;
     }
-    js_FinishSharingScope(rt, scope);
+    js_FinishSharingScope(cx, scope);
 }
 
 /*
@@ -372,15 +376,14 @@ ShareScope(JSRuntime *rt, JSScope *scope)
  */
 
 static JSBool
-MakeStringImmutable(JSRuntime *rt, JSString *str)
+MakeStringImmutable(JSContext *cx, JSString *str)
 {
     uint8 *flagp;
 
     flagp = js_GetGCThingFlags(str);
     if (*flagp & GCF_MUTABLE) {
-        if (JSSTRING_IS_DEPENDENT(str) && !js_UndependString(NULL, str)) {
-            /* FIXME bug 363057: Report out-of-memory here. */
-            JS_RUNTIME_METER(rt, badUndependStrings);
+        if (JSSTRING_IS_DEPENDENT(str) && !js_UndependString(cx, str)) {
+            JS_RUNTIME_METER(cx->runtime, badUndependStrings);
             return JS_FALSE;
         }
         *flagp &= ~GCF_MUTABLE;
@@ -389,7 +392,7 @@ MakeStringImmutable(JSRuntime *rt, JSString *str)
 }
 
 void
-js_FinishSharingScope(JSRuntime *rt, JSScope *scope)
+js_FinishSharingScope(JSContext *cx, JSScope *scope)
 {
     JSObject *obj;
     uint32 nslots, i;
@@ -400,17 +403,19 @@ js_FinishSharingScope(JSRuntime *rt, JSScope *scope)
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_STRING(v) &&
-            !MakeStringImmutable(rt, JSVAL_TO_STRING(v))) {
+            !MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
             /*
-             * FIXME bug 363059: The following recovery from out-of-memory
-             * changes the execution semantic arbitrary.
+             * FIXME bug 363059: The following error recovery changes the
+             * execution semantic arbitrary and silently ignores any errors
+             * except out-of-memory, which should have been reported through
+             * JS_ReportOutOfMemory at this point.
              */
             STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
         }
     }
 
     scope->ownercx = NULL;  /* NB: set last, after lock init */
-    JS_RUNTIME_METER(rt, sharedScopes);
+    JS_RUNTIME_METER(cx->runtime, sharedScopes);
 }
 
 /*
@@ -491,7 +496,7 @@ ClaimScope(JSScope *scope, JSContext *cx)
         if (rt->gcThread == cx->thread ||
             (ownercx->scopeToShare &&
              WillDeadlock(ownercx->scopeToShare, cx))) {
-            ShareScope(rt, scope);
+            ShareScope(cx, scope);
             break;
         }
 
@@ -672,7 +677,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 
     /* Any string stored in a thread-safe object must be immutable. */
     if (JSVAL_IS_STRING(v) &&
-        !MakeStringImmutable(cx->runtime, JSVAL_TO_STRING(v))) {
+        !MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
         /* FIXME bug 363059: See comments in js_FinishSharingScope. */
         v = JSVAL_NULL;
     }
