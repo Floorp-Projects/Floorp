@@ -67,6 +67,15 @@ fi
 
 while read entry
 do
+  # initialize all config variables
+  release="" 
+  product="" 
+  platform="" 
+  build_id="" 
+  locales=""
+  channel=""
+  from=""
+  to=""
   eval $entry
   for locale in $locales
   do
