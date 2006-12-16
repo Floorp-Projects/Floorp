@@ -308,7 +308,7 @@ static void utf16ToUcs4(const nsAString& in, PRUint32 *out, PRUint32 outBufLen, 
     if (i >= outBufLen) {
       NS_ERROR("input too big, the result truncated");
       out[outBufLen-1] = (PRUint32)'\0';
-      *outLen = i;
+      *outLen = outBufLen;
       return;
     }
   }
