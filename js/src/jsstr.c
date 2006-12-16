@@ -208,8 +208,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 }
 
 /*
- * May be called with null cx by js_GetStringChars, above; and by the jslock.c
- * MakeStringImmutable static function.
+ * May be called with null cx by js_GetStringChars, above.
  */
 const jschar *
 js_UndependString(JSContext *cx, JSString *str)
