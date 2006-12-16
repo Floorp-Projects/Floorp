@@ -1039,11 +1039,6 @@ function insertTalkbackLink(matchText, containerTag, eventData)
 
 function insertBugzillaLink (matchText, containerTag, eventData)
 {
-    var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/i)[1];
-
-    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                           "html:a");
-
     var bugURL;
     if (eventData.channel)
         bugURL = eventData.channel.prefs["bugURL"];
@@ -1052,12 +1047,22 @@ function insertBugzillaLink (matchText, containerTag, eventData)
     else
         bugURL = client.prefs["bugURL"];
 
-    anchor.setAttribute ("href", bugURL.replace("%s", idOrAlias));
-    anchor.setAttribute ("class", "chatzilla-link");
-    anchor.setAttribute ("target", "_content");
-    insertHyphenatedWord (matchText, anchor);
-    containerTag.appendChild (anchor);
+    if (bugURL.length > 0)
+    {
+        var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/i)[1];
+        var anchor = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                              "html:a");
 
+        anchor.setAttribute("href", bugURL.replace("%s", idOrAlias));
+        anchor.setAttribute("class", "chatzilla-link");
+        anchor.setAttribute("target", "_content");
+        insertHyphenatedWord(matchText, anchor);
+        containerTag.appendChild(anchor);
+    }
+    else
+    {
+        insertHyphenatedWord(matchText, containerTag);
+    }
 }
 
 function insertRheet (matchText, containerTag)
