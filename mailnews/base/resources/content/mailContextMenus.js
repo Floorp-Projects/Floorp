@@ -495,15 +495,15 @@ function fillMessagePaneContextMenu()
   //Figure out separators
   ShowMenuItem("messagePaneContext-sep-open", ShowSeparator("messagePaneContext-sep-open"));
   ShowMenuItem("messagePaneContext-sep-reply", ShowSeparator("messagePaneContext-sep-reply"));
-  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit") || gContextMenu.onMailtoLink);
+  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit"));
   ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
   ShowMenuItem("messagePaneContext-sep-image", ShowSeparator("messagePaneContext-sep-image"));
   ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
   ShowMenuItem("messagePaneContext-sep-tags", ShowSeparator("messagePaneContext-sep-tags"));
   ShowMenuItem("messagePaneContext-sep-mark", ShowSeparator("messagePaneContext-sep-mark"));
   
-  // if we are on an non-mailto link, go ahead and hide this separator
-  if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
+  // if we are on a link, go ahead and hide this separator
+  if (gContextMenu.onLink)
     ShowMenuItem("messagePaneContext-sep-edit", false);
 }
 
