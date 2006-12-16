@@ -256,7 +256,8 @@ public class Context
      * the feature off results in Error objects that don't have
      * additional non-ECMA properties when constructed using the ECMA-defined
      * single-arg constructor and is thus desirable if a stricter ECMA 
-     * compliance is desired.
+     * compliance is desired, specifically adherence to the point 15.11.5. of
+     * the standard.
      * <p>
      * By default {@link #hasFeature(int)} returns false.
      * @since 1.6 Release 6
