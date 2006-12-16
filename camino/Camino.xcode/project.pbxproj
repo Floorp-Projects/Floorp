@@ -37,7 +37,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.dylib";
 			name = libthebes.dylib;
-			path = ../dist/bin/libthebes.dylib;
+			path = ../dist/Embed/libthebes.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -57,9 +57,9 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libgkgfxthebes.dylib;
-			path = ../dist/bin/components/libgkgfxthebes.dylib;
+			path = ../dist/Embed/components/libgkgfxthebes.dylib;
 			refType = 2;
-			sourceTree = "<absolute>";
+			sourceTree = SOURCE_ROOT;
 		};
 		008115480B1811F0001CB3F0 = {
 			fileRef = 008115470B1811F0001CB3F0;
