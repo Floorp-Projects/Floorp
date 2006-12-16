@@ -2060,7 +2060,7 @@
       <destructor>
         <![CDATA[
           for (var i = 0; i < this.mTabListeners.length; ++i) {
-            this.mPanelContainer.childNodes[i].webProgress.removeProgressListener(this.mTabFilters[i]);
+            this.browsers[i].webProgress.removeProgressListener(this.mTabFilters[i]);
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
             this.mTabListeners[i] = null;
