@@ -67,6 +67,7 @@ private:
     PRBool PossiblyByteExpandedFileName(const nsAString& aIn);
     PRBool PossiblyHostPortUrl(const nsACString& aUrl);
     PRBool MakeAlternateURI(nsIURI *aURI);
+    PRBool IsLikelyFTP(const nsCString& aHostSpec);
     const char * GetFileSystemCharset();
     const char * GetCharsetForUrlBar();
 
