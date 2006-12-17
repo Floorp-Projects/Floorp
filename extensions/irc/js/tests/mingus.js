@@ -42,18 +42,14 @@ bot.personality.guessPrefixes = ["I guess ", "maybe ", "probably ", "I think ",
 bot.personality.guessActionPrefixes = ["guesses ", "postulates ", "figures ",
                                       "tries ","pretends ", "", ""];
 
-
 function initMingus ()
 {
-    
-    addOwner (/rginda.*!.*@adsl-63-198-63-20\.dsl\.snfc21\.pacbell\.net$/i);
-    addOwner (/rginda.*!.*@.*netscape\.com$/i);
-    addOwner (/ssieb.*!.*@.*pyr\.ec\.gc\.ca$/i);
-    addOwner (/ssieb.*!.*@.*wave\.home\.com$/i);
-    addOwner (/garyc.*!.*@.*ihug\.co\.nz$/i);
+    //XXX You should add the owner(s) of the bot here. You can do so with a
+    // regular expression which matches their hostmask, like so:
+    // addOwner(/rginda.*!.*@.*netscape\.com$/i);
 
     bot.primNet = bot.networks["moznet"];
-    
+
     load ("DP.js");
     CIRCNetwork.prototype.INITIAL_NICK = "mingus";
     CIRCNetwork.prototype.INITIAL_NAME = "mingus";
@@ -118,7 +114,7 @@ function initMingus ()
         }
     
         if (answer[0] != "\01")    
-        e.replyTo.say (e.user.properNick + ", " + answer);
+        e.replyTo.say (e.user.unicodeName + ", " + answer);
         else
         e.replyTo.say (answer);
 
@@ -147,7 +143,7 @@ function initMingus ()
             answer = "I don't know anything about " + e.matchresult[1];
 
         if (answer.charCodeAt (0) != 1)    
-            e.replyTo.say (e.user.properNick + ", " + answer);
+            e.replyTo.say (e.user.unicodeName + ", " + answer);
         else
             e.replyTo.say (answer);
 
@@ -179,7 +175,7 @@ function initMingus ()
         var ary = bot.personality.dp.getPhraseWeights (e.matchresult[1]);
         var c = bot.personality.dp.getPhraseWeight (e.matchresult[1]);
 
-        e.replyTo.say (e.user.properNick + ", that phrase weighs " + c + ": " + ary);
+        e.replyTo.say (e.user.unicodeName + ", that phrase weighs " + c + ": " + ary);
 
         return false;
 
@@ -244,7 +240,7 @@ function initMingus ()
     f = function (e)
     {
         print ("I can hear you.");
-        e.replyTo.say (e.user.properNick + ", yes, I am.");
+        e.replyTo.say (e.user.unicodeName + ", yes, I am.");
 
         return false;
 
@@ -298,7 +294,7 @@ function initMingus ()
 
     f = function (e)
     {
-        e.replyTo.say ("mmmmmmm. Thanks " + e.user.properNick + ".");
+        e.replyTo.say ("mmmmmmm. Thanks " + e.user.unicodeName + ".");
         return false;
 
     }
@@ -316,7 +312,7 @@ function initMingus ()
     f = function (e)
     {
         if (e.matchresult[1] == "me") 
-            e.replyTo.act ("hugs " + e.user.properNick);
+            e.replyTo.act ("hugs " + e.user.unicodeName);
         else
             e.replyTo.act ("hugs " + e.matchresult[1]);
         return false;
@@ -327,7 +323,7 @@ function initMingus ()
     f = function (e)
     {
         if (e.matchresult[1] == "me") 
-            e.replyTo.say (e.user.properNick + ", :*");
+            e.replyTo.say (e.user.unicodeName + ", :*");
         else
             e.replyTo.say (e.matchresult[1] + ", :*"); 
         return false;
@@ -337,7 +333,7 @@ function initMingus ()
 
     f = function (e)
     {
-        e.replyTo.say (e.user.properNick + ", I'll try :(");
+        e.replyTo.say (e.user.unicodeName + ", I'll try :(");
         return false;
     }
 

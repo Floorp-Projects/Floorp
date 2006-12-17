@@ -55,6 +55,9 @@ function loadDeps()
     load (LIB_PATH + "dcc.js");
     load (LIB_PATH + "irc.js");
     load (LIB_PATH + "irc-debug.js");
+    load (LIB_PATH + "message-manager.js");
+    
+    bot.messageManager = new MessageManager();
     
     if (!connection_init(LIB_PATH))
         return false;
@@ -62,6 +65,37 @@ function loadDeps()
     return true;
     
 }
+
+// FIXME: Find somewhere better for these guys. //
+function toUnicode (msg, charsetOrView)
+{
+    if (!msg)
+        return msg;
+
+    var charset;
+    if (typeof charsetOrView == "string")
+        charset = charsetOrView;
+    else
+        return msg;
+
+    return bot.messageManager.toUnicode(msg, charset);
+}
+
+function fromUnicode (msg, charsetOrView)
+{
+    if (!msg)
+        return msg;
+
+    var charset;
+    if (typeof charsetOrView == "string")
+        charset = charsetOrView;
+    else
+        return msg;
+
+    return bot.messageManager.fromUnicode(msg, charset);
+}
+// FIXME: END //
+
 
 function initStatic()
 {
@@ -78,7 +112,7 @@ function initStatic()
     CIRCNetwork.prototype.on433 = my_433;
     CIRCChannel.prototype.onPrivmsg = my_chan_privmsg;
     CIRCUser.prototype.onDCCChat = my_user_dccchat;
-    CDCCChat.prototype.onRawData = my_dccchat_rawdata;
+    CIRCDCCChat.prototype.onRawData = my_dccchat_rawdata;
 
 }
 
@@ -118,6 +152,16 @@ function go()
 
     if (!loadDeps())
         return false;
+
+    // The utils.js formatException relies on localization, we can't. Fix:
+    formatException = function formatException(ex)
+    {
+        if (isinstance(ex, Error) || ((typeof ex == "object") && ("filename" in ex)))
+            return [ex.name, ex.message, ex.fileName, ex.lineNumber].join(", ");
+
+        return String(ex);
+    };
+
     initStatic();
     init(bot);
     if (DEBUG)
@@ -179,13 +223,13 @@ function userIsOwner (user)
          * /whois so we'll know for sure next time.
          */
         if (user.TYPE == "IRCChanUser")
-            user.parent.parent.sendData ("WHOIS " + user.nick + "\n");
+            user.parent.parent.sendData ("WHOIS " + user.unicodeName + "\n");
         else
-            user.parent.sendData ("WHOIS " + user.nick + "\n");
+            user.parent.sendData ("WHOIS " + user.unicodeName + "\n");
         return false;
     }
     
-    var userString = user.nick + "!" + user.name + "@" + user.host;
+    var userString = user.unicodeName + "!" + user.name + "@" + user.host;
     dd ("userIsOwner: checking userString `" + userString + "' against:");
     
     for (var p in bot.ownerPatterns)
@@ -205,16 +249,20 @@ function psn_isAddressedToMe (e)
     if (!e.server)
         return false;
 
-    if ((e.type.search(/privmsg|ctcp-action/)) || (e.set != "channel") ||
-        (e.meat.indexOf(bot.prefix) == 0))
+    if ((e.type.search(/privmsg|ctcp-action/)) || (e.set != "channel"))
+        return false;
+
+    var msg = e.decodeParam(2);
+
+    if (msg.indexOf(bot.prefix) == 0)
         return false;
 
     /*
-    dd ("-*- checking to see if message '" + e.meat + "' is addressed to me.");
+    dd ("-*- checking to see if message '" + msg + "' is addressed to me.");
     */
     
-    var regex = new RegExp ("^\\s*" + e.server.me.nick + "\\W+(.*)", "i");
-    var ary = e.meat.match(regex);
+    var regex = new RegExp ("^\\s*" + e.server.me.unicodeName + "\\W+(.*)", "i");
+    var ary = msg.match(regex);
 
     //dd ("address match: "  + ary);
     
@@ -224,7 +272,8 @@ function psn_isAddressedToMe (e)
         return true;
     }
 
-    bot.personality.dp.addPhrase (e.meat);
+    //XXXgijs: Shouldn't this be in mingus.js?
+    bot.personality.dp.addPhrase(msg);
     return false;
     
 }
@@ -256,7 +305,7 @@ function bot_eval(e, script)
     }
     catch (ex)
     {
-        e.replyTo.say(e.user.nick + ": " + String(ex));
+        e.replyTo.say(e.user.unicodeName + ": " + String(ex));
         return false;
     }
     
@@ -267,7 +316,7 @@ function bot_eval(e, script)
         else
             v = "null";
         
-        var rsp = e.user.nick + ", your result is,";
+        var rsp = e.user.unicodeName + ", your result is,";
         
         if (v.indexOf ("\n") != -1)
             rsp += "\n";
@@ -291,19 +340,19 @@ function bot_eval(e, script)
 function my_chan_privmsg (e)
 {
     var user = e.user;
-    var meat = e.meat;
-    if (meat.indexOf(bot.prefix) == 0 && userIsOwner(user))
+    var msg = e.decodeParam(2);
+    if (msg.indexOf(bot.prefix) == 0 && userIsOwner(user))
     {
         /* if last char is a continuation character, then... */
-        if (meat[meat.length - 1] == '\\') {
-            user.accumulatedScript = meat.substring(bot.prefix.length,
-                                                    meat.length - 1);
+        if (msg[msg.length - 1] == '\\') {
+            user.accumulatedScript = msg.substring(bot.prefix.length,
+                                                   msg.length - 1);
             return false; // prevent other hooks from processing this... 
         }
         else
         {
-            return bot_eval(e, meat.substring(bot.prefix.length,
-                                              meat.length));
+            return bot_eval(e, msg.substring(bot.prefix.length,
+                                             msg.length));
         }
     }
     else if ((typeof(user.accumulatedScript) != "undefined")  &&
@@ -311,8 +360,8 @@ function my_chan_privmsg (e)
             /* if we were accumulating a message, add here,
              * and finish if not ends with '\'. */
     {
-        var lastLine = (meat[meat.length - 1] != '\\');
-        var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
+        var lastLine = (msg[msg.length - 1] != '\\');
+        var line = msg.substring(0, msg.length - (lastLine ?  0 : 1));
         user.accumulatedScript += line;
         if (lastLine)
         {
@@ -335,7 +384,7 @@ function my_user_dccchat (e)
         return false;
     }
     
-    var c = new CDCCChat (bot.eventPump);
+    var c = new CIRCDCCChat (bot.eventPump);
     
     if (!c.connect (e.user.host, e.port))
     {
@@ -406,4 +455,6 @@ function loadHTTP (host, path, onComplete)
     return htdoc;
     
 }
+
+
 

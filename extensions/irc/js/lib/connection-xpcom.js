@@ -445,8 +445,16 @@ function bc_readdata(timeout, count)
 
     var rv;
 
+    if (!("_sInputStream" in this)) {
+        this._sInputStream = toSInputStream(this._inputStream);
+        dump("OMG, setting up _sInputStream!\n");
+    }
+
     try
     {
+        // XPCshell h4x
+        if (typeof count == "undefined")
+            count = this._sInputStream.available();
         if (this.binaryMode)
             rv = this._sInputStream.readBytes(count);
         else
