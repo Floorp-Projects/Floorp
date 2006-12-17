@@ -358,7 +358,7 @@ public class Parser
             }
         } catch (StackOverflowError ex) {
             String msg = ScriptRuntime.getMessage0(
-                "mag.too.deep.parser.recursion");
+                "msg.too.deep.parser.recursion");
             throw Context.reportRuntimeError(msg, sourceURI,
                                              ts.getLineno(), null, 0);
         }
