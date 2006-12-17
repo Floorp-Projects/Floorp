@@ -38,6 +38,7 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
 import java.lang.reflect.*;
 
 /**
@@ -45,7 +46,8 @@ import java.lang.reflect.*;
  *
  * <p> This improves startup time and average memory usage.
  */
-public final class LazilyLoadedCtor {
+public final class LazilyLoadedCtor implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     public LazilyLoadedCtor(ScriptableObject scope,
                      String ctorName, String className, boolean sealed)
