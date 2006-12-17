@@ -70,11 +70,11 @@ nsArray::QueryElementAt(PRUint32 aIndex,
                         const nsIID& aIID,
                         void ** aResult)
 {
-    nsISupports * obj = mArray.ObjectAt(aIndex);
-    if (!obj) return NS_ERROR_UNEXPECTED;
+    nsISupports * obj = mArray.SafeObjectAt(aIndex);
+    if (!obj) return NS_ERROR_ILLEGAL_VALUE;
 
-    // no need to worry about a leak here, because ObjectAt() doesn't
-    // addref its result
+    // no need to worry about a leak here, because SafeObjectAt() 
+    // doesn't addref its result
     return obj->QueryInterface(aIID, aResult);
 }
 
