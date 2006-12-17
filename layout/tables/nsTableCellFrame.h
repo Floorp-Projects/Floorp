@@ -133,7 +133,8 @@ public:
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets();
+  virtual IntrinsicWidthOffsetData
+    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
 
   NS_IMETHOD Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,

@@ -278,7 +278,8 @@ public:
                                  InlineMinWidthData *aData);
   virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
                                   InlinePrefWidthData *aData);
-  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets();
+  virtual IntrinsicWidthOffsetData
+    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,

@@ -266,7 +266,8 @@ public:
   // border to the results of these functions.
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets();
+  virtual IntrinsicWidthOffsetData
+    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,

@@ -1659,10 +1659,10 @@ nsTableFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsTableFrame::IntrinsicWidthOffsets()
+nsTableFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result =
-    nsHTMLContainerFrame::IntrinsicWidthOffsets();
+    nsHTMLContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
 
   if (IsBorderCollapse()) {
     result.hPadding = 0;

@@ -239,7 +239,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     // Add in cell's padding and border.
                     // XXX This should use real percentage padding
                     nsIFrame::IntrinsicWidthOffsetData offsets =
-                        cellFrame->IntrinsicWidthOffsets();
+                        cellFrame->IntrinsicWidthOffsets(aReflowState.rendContext);
                     colWidth += offsets.hPadding + offsets.hBorder;
 
                     if (colSpan > 1) {
