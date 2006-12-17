@@ -332,7 +332,6 @@ public class Shell extends ScriptableObject
                 }
             }
         }
-        System.gc();
     }
 
     private static void p(String s) {
