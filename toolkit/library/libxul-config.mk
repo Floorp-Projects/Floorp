@@ -271,7 +271,6 @@ endif
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES += -DMOZ_ENABLE_POSTSCRIPT
 STATIC_LIBS += gfxpsshar
-COMPONENT_LIBS += gfxps
 endif
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
 ifndef MOZ_ENABLE_GNOMEUI
