@@ -3298,11 +3298,8 @@ nsPrintEngine::FinishPrintPreview()
     /* cleanup done, let's fire-up an error dialog to notify the user
      * what went wrong...
      */
-    SetIsPrintPreview(PR_FALSE);
     mPrt->OnEndPrinting();
     TurnScriptingOn(PR_TRUE);
-
-    FirePrintCompletionEvent();
 
     return CleanupOnFailure(rv, PR_FALSE); // ignore return value here
   }
