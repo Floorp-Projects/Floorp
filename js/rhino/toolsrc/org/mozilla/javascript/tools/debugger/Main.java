@@ -227,7 +227,7 @@ public class Main implements ContextListener {
 
     /**
      * Main entry point.  Creates a debugger attached to a Rhino
-     * {@link org.mozilla.tools.shell.Main} shell session.
+     * {@link org.mozilla.javascript.tools.shell.Main} shell session.
      */
     public static void main(String[] args) {
         Main main = new Main("Rhino JavaScript Debugger");

@@ -24,8 +24,9 @@
  * Contributor(s):
  *   Igor Bukanov
  *   Matt Gould
- *   Christopher Oliver
  *   Cameron McCormack
+ *   Christopher Oliver
+ *   Hannes Wallnoefer
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -437,21 +438,54 @@ public class SwingGui extends JFrame implements GuiCallback {
                 console.show();
             }
         } else {
+            showFileWindow(sourceName, -1);
             int lineNumber = frame.getLineNumber();
             FileWindow w = getFileWindow(sourceName);
             if (w != null) {
                 setFilePosition(w, lineNumber);
-            } else {
-                Dim.SourceInfo si = frame.sourceInfo();
-                createFileWindow(si, lineNumber);
             }
+        }
+    }
+
+    /**
+     * Shows a {@link FileWindow} for the given source, creating it
+     * if it doesn't exist yet. if <code>lineNumber</code> is greater
+     * than -1, it indicates the line number to select and display.
+     * @param sourceUrl the source URL
+     * @param lineNumber the line number to select, or -1
+     */
+    protected void showFileWindow(String sourceUrl, int lineNumber) {
+        FileWindow w = getFileWindow(sourceUrl);
+        if (w == null) {
+            Dim.SourceInfo si = dim.sourceInfo(sourceUrl);
+            createFileWindow(si, -1);
+            w = getFileWindow(sourceUrl);
+        }
+        if (lineNumber > -1) {
+            int start = w.getPosition(lineNumber-1);
+            int end = w.getPosition(lineNumber)-1;
+            w.textArea.select(start);
+            w.textArea.setCaretPosition(start);
+            w.textArea.moveCaretPosition(end);
+        }
+        try {
+            if (w.isIcon()) {
+                w.setIcon(false);
+            }
+            w.setVisible(true);
+            w.moveToFront();
+            w.setSelected(true);
+            requestFocus();
+            w.requestFocus();
+            w.textArea.requestFocus();
+        } catch (Exception exc) {
         }
     }
 
     /**
      * Creates and shows a new {@link FileWindow} for the given source.
      */
-    void createFileWindow(Dim.SourceInfo sourceInfo, int line) {
+    protected void createFileWindow(Dim.SourceInfo sourceInfo, int line) {
         boolean activate = true;
 
         String url = sourceInfo.url();
@@ -486,6 +520,25 @@ public class SwingGui extends JFrame implements GuiCallback {
             } catch (Exception exc) {
             }
         }
+    }
+
+    /**
+     * Update the source text for <code>sourceInfo</code>. This returns true
+     * if a {@link FileWindow} for the given source exists and could be updated.
+     * Otherwise, this does nothing and returns false.
+     * @param sourceInfo the source info
+     * @return true if a {@link FileWindow} for the given source exists
+     *              and could be updated, false otherwise.
+     */
+    protected boolean updateFileWindow(Dim.SourceInfo sourceInfo) {
+        String fileName = sourceInfo.url();
+        FileWindow w = getFileWindow(fileName);
+        if (w != null) {
+            w.updateText(sourceInfo);
+            w.show();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1551,19 +1604,14 @@ class MoreWindows extends JDialog implements ActionListener {
     private JList list;
 
     /**
-     * Table of file windows.
+     * Our parent frame.
      */
-    private Hashtable fileWindows;
+    private SwingGui swingGui;
 
     /**
      * The "Select" button.
      */
     private JButton setButton;
-
-    /**
-     * The "Refresh" button.
-     */
-    private JButton refreshButton;
 
     /**
      * The "Cancel" button.
@@ -1573,10 +1621,10 @@ class MoreWindows extends JDialog implements ActionListener {
     /**
      * Creates a new MoreWindows.
      */
-    MoreWindows(JFrame frame, Hashtable fileWindows, String title,
+    MoreWindows(SwingGui frame, Hashtable fileWindows, String title,
                 String labelText) {
         super(frame, title, true);
-        this.fileWindows = fileWindows;
+        this.swingGui = frame;
         //buttons
         cancelButton = new JButton("Cancel");
         setButton = new JButton("Select");
@@ -1676,14 +1724,7 @@ class MoreWindows extends JDialog implements ActionListener {
         } else if (cmd.equals("Select")) {
             value = (String)list.getSelectedValue();
             setVisible(false);
-            JInternalFrame w = (JInternalFrame)fileWindows.get(value);
-            if (w != null) {
-                try {
-                    w.show();
-                    w.setSelected(true);
-                } catch (Exception exc) {
-                }
-            }
+            swingGui.showFileWindow(value, -1);
         }
     }
 
@@ -1853,24 +1894,7 @@ class FindFunction extends JDialog implements ActionListener {
                 Dim.SourceInfo si = item.sourceInfo();
                 String url = si.url();
                 int lineNumber = item.firstLine();
-                FileWindow w = debugGui.getFileWindow(url);
-                if (w == null) {
-                    debugGui.createFileWindow(si, lineNumber);
-                    w = debugGui.getFileWindow(url);
-                    w.setPosition(-1);
-                }
-                int start = w.getPosition(lineNumber-1);
-                int end = w.getPosition(lineNumber)-1;
-                w.textArea.select(start);
-                w.textArea.setCaretPosition(start);
-                w.textArea.moveCaretPosition(end);
-                try {
-                    w.show();
-                    debugGui.requestFocus();
-                    w.requestFocus();
-                    w.textArea.requestFocus();
-                } catch (Exception exc) {
-                }
+                debugGui.showFileWindow(url, lineNumber);
             }
         }
     }
@@ -3541,11 +3565,8 @@ class RunProxy implements Runnable {
           case UPDATE_SOURCE_TEXT:
             {
                 String fileName = sourceInfo.url();
-                FileWindow w = debugGui.getFileWindow(fileName);
-                if (w != null) {
-                    w.updateText(sourceInfo);
-                    w.show();
-                } else if (!fileName.equals("<stdin>")) {
+                if (!debugGui.updateFileWindow(sourceInfo) &&
+                        !fileName.equals("<stdin>")) {
                     debugGui.createFileWindow(sourceInfo, -1);
                 }
             }
