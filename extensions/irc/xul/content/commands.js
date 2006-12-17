@@ -1084,8 +1084,7 @@ function cmdSync(e)
                   {
                       if (view.prefs["displayHeader"])
                           view.setHeaderState(false);
-                      view.changeCSS(view.getFontCSS("data"),
-                                     "cz-fonts");
+                      view.changeCSS(view.getFontCSS("data"), "cz-fonts");
                       if (view.prefs["displayHeader"])
                           view.setHeaderState(true);
                   };
@@ -1102,6 +1101,7 @@ function cmdSync(e)
             fun = function ()
                   {
                       view.changeCSS(view.prefs["motif.current"]);
+                      updateAppMotif(view.prefs["motif.current"]);
                       // Refresh the motif settings.
                       view.updateMotifSettings();
                   };

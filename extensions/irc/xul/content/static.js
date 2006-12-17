@@ -2457,6 +2457,45 @@ function updateSecurityIcon()
     }
 }
 
+function updateAppMotif(motifURL)
+{
+    var node = document.firstChild;
+    while (node && ((node.nodeType != node.PROCESSING_INSTRUCTION_NODE) ||
+                    !(/name="dyn-motif"/).test(node.data)))
+    {
+        node = node.nextSibling;
+    }
+
+    motifURL = motifURL.replace(/"/g, "%22");
+    var dataStr = "href=\"" + motifURL + "\" name=\"dyn-motif\"";
+    try 
+    {
+        // No dynamic style node yet.
+        if (!node)
+        {
+            node = document.createProcessingInstruction("xml-stylesheet", dataStr);
+            document.insertBefore(node, document.firstChild);
+        }
+        else
+        {
+            node.data = dataStr;
+        }
+    }
+    catch (ex)
+    {
+        dd(formatException(ex));
+        var err = ex.name;
+        // Mozilla 1.0 doesn't like document.insertBefore(...,
+        // document.firstChild); though it has a prototype for it -
+        // check for the right error:
+        if (err == "NS_ERROR_NOT_IMPLEMENTED")
+        {
+            display(MSG_NO_DYNAMIC_STYLE, MT_INFO);
+            updateAppMotif = function() {};
+        }
+    }
+}
+
 function updateNetwork()
 {
     var o = getObjectDetails (client.currentObject);
@@ -2816,6 +2855,9 @@ function setCurrentObject (obj)
     delete client.activityList[vk];
     client.deck.selectedIndex = vk;
 
+    // Style userlist and the like:
+    updateAppMotif(obj.prefs["motif.current"]);
+
     updateTitle();
     updateProgress();
     updateSecurityIcon();
@@ -3142,8 +3184,7 @@ function client_statechange (webProgress, request, stateFlags, status)
             {
                 cwin.getMsg = getMsg;
                 cwin.initOutputWindow(client, frame.source, onMessageViewClick);
-                cwin.changeCSS(frame.source.getFontCSS("data"),
-                               "cz-fonts");
+                cwin.changeCSS(frame.source.getFontCSS("data"), "cz-fonts");
                 scrollDown(frame, true);
 
                 try
