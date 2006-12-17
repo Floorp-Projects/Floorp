@@ -671,10 +671,10 @@ nsTableCellFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsTableCellFrame::IntrinsicWidthOffsets()
+nsTableCellFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result =
-    nsHTMLContainerFrame::IntrinsicWidthOffsets();
+    nsHTMLContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
 
   result.hMargin = 0;
   result.hPctMargin = 0;

@@ -2916,7 +2916,10 @@ nsIFrame::InlinePrefWidthData::Break(nsIRenderingContext *aRenderingContext)
 }
 
 static void
-AddCoord(const nsStyleCoord& aStyle, nscoord* aCoord, float* aPercent)
+AddCoord(const nsStyleCoord& aStyle,
+         nsIRenderingContext* aRenderingContext,
+         nsIFrame* aFrame,
+         nscoord* aCoord, float* aPercent)
 {
   switch (aStyle.GetUnit()) {
     case eStyleUnit_Coord:
@@ -2925,27 +2928,34 @@ AddCoord(const nsStyleCoord& aStyle, nscoord* aCoord, float* aPercent)
     case eStyleUnit_Percent:
       *aPercent += aStyle.GetPercentValue();
       break;
+    case eStyleUnit_Chars: {
+      SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
+      nscoord fontWidth;
+      aRenderingContext->GetWidth('M', fontWidth);
+      *aCoord += aStyle.GetIntValue() * fontWidth;
+      break;
+    }
     default:
       break;
   }
 }
 
 /* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsFrame::IntrinsicWidthOffsets()
+nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result;
   nsStyleCoord tmp;
 
   const nsStyleMargin *styleMargin = GetStyleMargin();
-  AddCoord(styleMargin->mMargin.GetLeft(tmp),
+  AddCoord(styleMargin->mMargin.GetLeft(tmp), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
-  AddCoord(styleMargin->mMargin.GetRight(tmp),
+  AddCoord(styleMargin->mMargin.GetRight(tmp), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin);
 
   const nsStylePadding *stylePadding = GetStylePadding();
-  AddCoord(stylePadding->mPadding.GetLeft(tmp),
+  AddCoord(stylePadding->mPadding.GetLeft(tmp), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
-  AddCoord(stylePadding->mPadding.GetRight(tmp),
+  AddCoord(stylePadding->mPadding.GetRight(tmp), aRenderingContext, this,
            &result.hPadding, &result.hPctPadding);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();

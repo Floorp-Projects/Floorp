@@ -1157,7 +1157,8 @@ public:
       , hPctPadding(0.0f), hPctMargin(0.0f)
     {}
   };
-  virtual IntrinsicWidthOffsetData IntrinsicWidthOffsets() = 0;
+  virtual IntrinsicWidthOffsetData
+    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext) = 0;
 
   /**
    * Compute the size that a frame will occupy.  Called while

@@ -183,7 +183,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
     // XXX Should col frame have border/padding considered?
     if (aCellFrame) {
         nsIFrame::IntrinsicWidthOffsetData offsets =
-            aCellFrame->IntrinsicWidthOffsets();
+            aCellFrame->IntrinsicWidthOffsets(aRenderingContext);
         // XXX Should we ignore percentage padding?
         nscoord add = offsets.hPadding + offsets.hBorder;
         minCoord += add;
