@@ -79,12 +79,6 @@
 #define IPC_MODULE
 #endif
 
-#ifdef MOZ_ENABLE_POSTSCRIPT
-#define POSTSCRIPT_MODULES MODULE(nsGfxPSModule)
-#else
-#define POSTSCRIPT_MODULES
-#endif
-
 #ifdef MOZ_CAIRO_GFX
 #  define GFX_MODULES MODULE(nsGfxModule)
 #else
@@ -285,7 +279,6 @@
     RDF_MODULE                               \
     RDFAPP_MODULES                           \
     MODULE(nsParserModule)                   \
-    POSTSCRIPT_MODULES                       \
     GFX_MODULES                              \
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
