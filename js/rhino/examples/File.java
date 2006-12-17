@@ -235,7 +235,7 @@ public class File extends ScriptableObject {
      *
      * Close the file when this object is collected.
      */
-    public void finalize() {
+    protected void finalize() {
         try {
             jsFunction_close();
         }
