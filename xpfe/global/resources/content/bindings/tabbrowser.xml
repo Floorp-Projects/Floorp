@@ -768,6 +768,11 @@
               }
             }
 
+            // We've selected the new tab, so go ahead and notify listeners
+            var event = document.createEvent("Events");
+            event.initEvent("TabSelect", true, false);
+            this.mCurrentTab.dispatchEvent(event);
+
             if (document.commandDispatcher.focusedElement && 
                 document.commandDispatcher.focusedElement.parentNode == 
                 this.mCurrentTab.parentNode) {
@@ -1035,6 +1040,10 @@
               // won't be called.  Explicitly clear the previous tab.
               this.mPreviousTab = null;
 
+            var evt = document.createEvent("Events");
+            evt.initEvent("TabOpen", true, false);
+            t.dispatchEvent(evt);
+
             return t;
           ]]>
         </body>
@@ -1184,6 +1193,14 @@
 
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
+
+            // We're committed to closing the tab now.
+            // Dispatch a notification.
+            // We dispatch it before any teardown so that event listeners can
+            // inspect the tab that's about to close.
+            var event = document.createEvent('Events');
+            event.initEvent("TabClose", true, false);
+            aTab.dispatchEvent(event);
 
             var l = this.mTabs.length;
             if (l == 1) {
@@ -1613,6 +1630,10 @@
             var tab = this.mTabContainer.insertBefore(this.mTabs[aSrcIndex], this.mTabs.item(aDestIndex));
 
             this.mCurrentTab.selected = true;
+
+            var evt = document.createEvent("UIEvents");
+            evt.initUIEvent("TabMove", true, false, window, aSrcIndex);
+            tab.dispatchEvent(evt);
 
             return tab;
           ]]>
