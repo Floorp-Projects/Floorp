@@ -504,7 +504,6 @@ if (regexp.anchorCh >= 0) {
         char rangeStart = 0;
         char c;
         int n;
-        int digit;
         int nDigits;
         int i;
         int max = 0;
@@ -759,7 +758,6 @@ if (regexp.anchorCh >= 0) {
         int num, tmp;
         RENode term;
         int termStart;
-        int ocp = state.cp;
 
         switch (c) {
         /* assertions and atoms */
@@ -894,7 +892,6 @@ if (regexp.anchorCh >= 0) {
                         int i;
                         for (i = 0; (i < nDigits)
                                 && (state.cp < state.cpend); i++) {
-                            int digit;
                             c = src[state.cp++];
                             n = Kit.xDigitToInt(c, n);
                             if (n < 0) {
@@ -1408,7 +1405,7 @@ if (regexp.anchorCh >= 0) {
     private static void
     addCharacterToCharSet(RECharSet cs, char c)
     {
-        int byteIndex = (int)(c / 8);
+        int byteIndex = (c / 8);
         if (c > cs.length)
             throw new RuntimeException();
         cs.bits[byteIndex] |= 1 << (c & 0x7);
@@ -1421,8 +1418,8 @@ if (regexp.anchorCh >= 0) {
     {
         int i;
 
-        int byteIndex1 = (int)(c1 / 8);
-        int byteIndex2 = (int)(c2 / 8);
+        int byteIndex1 = (c1 / 8);
+        int byteIndex2 = (c2 / 8);
 
         if ((c2 > cs.length) || (c1 > c2))
             throw new RuntimeException();
@@ -1431,13 +1428,13 @@ if (regexp.anchorCh >= 0) {
         c2 &= 0x7;
 
         if (byteIndex1 == byteIndex2) {
-            cs.bits[byteIndex1] |= ((int)(0xFF) >> (7 - (c2 - c1))) << c1;
+            cs.bits[byteIndex1] |= ((0xFF) >> (7 - (c2 - c1))) << c1;
         }
         else {
             cs.bits[byteIndex1] |= 0xFF << c1;
             for (i = byteIndex1 + 1; i < byteIndex2; i++)
                 cs.bits[i] = (byte)0xFF;
-            cs.bits[byteIndex2] |= (int)(0xFF) >> (7 - c2);
+            cs.bits[byteIndex2] |= (0xFF) >> (7 - c2);
         }
     }
 
@@ -1574,22 +1571,22 @@ if (regexp.anchorCh >= 0) {
                                                 (char)(charSet.length));
                     continue;
                 case 's':
-                    for (i = (int)(charSet.length); i >= 0; i--)
+                    for (i = charSet.length; i >= 0; i--)
                         if (isREWhiteSpace(i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'S':
-                    for (i = (int)(charSet.length); i >= 0; i--)
+                    for (i = charSet.length; i >= 0; i--)
                         if (!isREWhiteSpace(i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'w':
-                    for (i = (int)(charSet.length); i >= 0; i--)
+                    for (i = charSet.length; i >= 0; i--)
                         if (isWord((char)i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'W':
-                    for (i = (int)(charSet.length); i >= 0; i--)
+                    for (i = charSet.length; i >= 0; i--)
                         if (!isWord((char)i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
@@ -2734,7 +2731,7 @@ class REGlobalData {
 
     void set_parens(int i, int index, int length)
     {
-        parens[i] = ((long)index & 0xffffffffL) | ((long)length << 32);
+        parens[i] = (index & 0xffffffffL) | ((long)length << 32);
     }
 
 }
