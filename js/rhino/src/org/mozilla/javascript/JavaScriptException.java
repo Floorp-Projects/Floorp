@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Norris Boyd
  *   Bojan Cekrlic
+ *   Hannes Wallnoefer
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -74,11 +75,18 @@ public class JavaScriptException extends RhinoException
 
     public String details()
     {
-        if (value instanceof Scriptable) {
-            // to prevent potential of evaluation and throwing more exceptions
-            return ScriptRuntime.defaultObjectToString((Scriptable)value);
-        }
-        return ScriptRuntime.toString(value);
+       try {
+           return ScriptRuntime.toString(value);
+       } catch (RuntimeException rte) {
+           // ScriptRuntime.toString may throw a RuntimeException
+           if (value == null) {
+               return "null";
+           } else if (value instanceof Scriptable) {
+               return ScriptRuntime.defaultObjectToString((Scriptable)value);
+           } else {
+               return value.toString();
+           }
+       }
     }
 
     /**
