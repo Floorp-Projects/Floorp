@@ -5687,11 +5687,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
       char*       bp1;
       PRUnichar*  bp2;
     };
-    PRInt32 wordLen, contentLen;
-#ifdef IBMBIDI
-    // Is this right for this purpose?
-    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
+    PRInt32 wordLen = -1, contentLen;
     PRBool isWhitespace, wasTransformed;
     // XXX Is !aData->skipWhitespace the right criterion for when the
     // text transformer should capitalize the first letter?
@@ -5802,10 +5798,6 @@ nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
       PRUnichar*  bp2;
     };
     PRInt32 wordLen = -1, contentLen;
-#ifdef IBMBIDI
-    // Is this right for this purpose?
-    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
     PRBool isWhitespace, wasTransformed;
     // XXX Should fix this to use something better than GetNextWord!
     // XXX Is !aData->skipWhitespace the right criterion for when the
