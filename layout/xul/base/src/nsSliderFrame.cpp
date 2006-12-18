@@ -529,14 +529,10 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     break;
 
     case NS_MOUSE_BUTTON_UP:
-      if (aEvent->eventStructType != NS_MOUSE_EVENT ||
+      if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton ||
           (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eMiddleButton &&
-           !gMiddlePref)) {
-        break;
-      }
-
-      if (NS_STATIC_CAST(nsMouseEvent*, aEvent)->button == nsMouseEvent::eLeftButton) {
-         // stop capturing
+           gMiddlePref)) {
+        // stop capturing
         AddListener();
         DragThumb(PR_FALSE);
         if (mChange) {
