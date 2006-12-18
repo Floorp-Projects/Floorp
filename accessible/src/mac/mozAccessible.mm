@@ -183,7 +183,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return nil;
   
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
-    return NSAccessibilityUnignoredChildren ([self children]);
+    return [self children];
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) 
     return [self parent];
   
@@ -370,6 +370,15 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
         [mChildren addObject:GetObjectOrRepresentedView(curNative)];
     }
   }
+  
+#ifdef DEBUG_hakan
+  // make sure we're not returning any ignored accessibles.
+  NSEnumerator *e = [mChildren objectEnumerator];
+  mozAccessible *m = nil;
+  while ((m = [e nextObject])) {
+    NSAssert1(![m accessibilityIsIgnored], @"we should never return an ignored accessible! (%@)", m);
+  }
+#endif
   
   return mChildren;
 }

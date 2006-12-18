@@ -117,6 +117,9 @@ nsAccessibleWrap::GetNativeType ()
     case ROLE_CHECKBUTTON:
       return [mozCheckboxAccessible class];
       
+    case ROLE_AUTOCOMPLETE:
+      return [mozComboboxAccessible class];
+      
     case ROLE_ENTRY:
     case ROLE_STATICTEXT:
     case ROLE_HEADING:
@@ -124,8 +127,8 @@ nsAccessibleWrap::GetNativeType ()
     case ROLE_CAPTION:
     case ROLE_ACCEL_LABEL:
     case ROLE_TEXT_LEAF:
-    case ROLE_AUTOCOMPLETE:
-      return [mozTextAccessible class];
+      // normal textfield (static or editable)
+      return [mozTextAccessible class]; 
       
     case ROLE_COMBOBOX:
       return [mozPopupButtonAccessible class];

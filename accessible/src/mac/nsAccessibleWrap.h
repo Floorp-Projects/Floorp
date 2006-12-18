@@ -85,8 +85,7 @@ class nsAccessibleWrap : public nsAccessible
               role == ROLE_PUSHBUTTON     ||
               role == ROLE_TOGGLE_BUTTON  ||
               role == ROLE_SPLITBUTTON    ||
-              role == ROLE_ENTRY          ||
-              role == ROLE_AUTOCOMPLETE);
+              role == ROLE_ENTRY);
     }
     
     // ignored means that the accessible might still have children, but is not displayed

@@ -50,5 +50,6 @@
 - (int)isChecked;
 @end
 
+/* Used for buttons that may pop up a menu. */
 @interface mozPopupButtonAccessible : mozButtonAccessible
 @end
