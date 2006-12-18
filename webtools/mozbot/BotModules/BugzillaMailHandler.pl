@@ -345,7 +345,8 @@ sub parse_mail ($) {
                $bug_info{'who'} = $1;
            }
     }
-    else {
+
+    unless ($bug_info{'who'}) {
         debug_print("Could not determine who made the change.");
         return undef;
     }
