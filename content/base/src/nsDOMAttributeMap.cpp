@@ -329,9 +329,10 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    rv = GetAttribute(ni, aReturn, PR_TRUE);
+    rv = GetAttribute(ni, aReturn);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // This removes the attribute node from the attribute map.
     rv = mContent->UnsetAttr(ni->NamespaceID(), ni->NameAtom(), PR_TRUE);
   }
 
