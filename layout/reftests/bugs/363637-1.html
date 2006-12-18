@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<style>
+ body { background: white; }
+ .rel, body { position: relative; }
+ div > div { direction: ltr; height: 10px; }
+ div > div > div { width: 100px; background: lime; position: absolute }
+ .rtl { direction: rtl; }
+ #testpercentmargin > div > div { margin: 0 4%; }
+ #testabsolutemargin > div > div { margin: 0 20px; }
+ #testpercentpadding > div { padding: 0 4%; }
+ #testabsolutepadding > div { padding: 0 20px; }
+ #testborderparent > div { border-width: 0 20px; border-color: white; border-style: solid; }
+ #testborderkid > div > div { border-width: 0 20px; border-color: white; border-style: solid; }
+</style>
+<body style="width: 500px; margin-left: 100px;">
+<div id="testplain">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testpercentmargin">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testabsolutemargin">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testpercentpadding">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testabsolutepadding">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testborderparent">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+<div id="testborderkid">
+  <div><div></div></div>
+  <div class="rel"><div></div></div>
+  <div class="rtl"><div></div></div>
+  <div class="rel rtl"><div></div></div>
+</div>
+</body>
+</html>
