@@ -40,9 +40,10 @@
 #include "nsISupports.h"
 
 // IID for the nsITableCellLayout interface 
-// 8c921430-ba23-11d2-8f4b-006008159b0c
+// 0238f187-033d-426b-bd03-96eb75af5129
 #define NS_ITABLECELLAYOUT_IID \
- { 0x8c921430, 0xba23, 0x11d2,{0x8f, 0xb4, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
+{ 0x0238f187, 0x033d, 0x426b, \
+ { 0xbd, 0x03, 0x96, 0xeb, 0x75, 0xaf, 0x51, 0x29 } }
 
 /**
  * nsITableCellLayout
@@ -64,16 +65,6 @@ public:
   
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex) const = 0;
-
-  /** return the previous cell having the same column index as current cell
-    * returns null if no cell is present (but nsresult is still NS_OK)
-    */
-  NS_IMETHOD GetPreviousCellInColumn(nsITableCellLayout **aCellLayout)=0;
-
-  /** return the next cell having the same column index
-    * returns null if no cell is present (but nsresult is still NS_OK)
-    */
-  NS_IMETHOD GetNextCellInColumn(nsITableCellLayout **aCellLayout)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITableCellLayout, NS_ITABLECELLAYOUT_IID)

@@ -473,14 +473,6 @@ public:
                          PRBool                aRemoveFromCache,
                          PRBool                aRemoveFromCellMap);
 
-  nsTableCellFrame* GetCellInfoAt(PRInt32            aRowX, 
-                                  PRInt32            aColX, 
-                                  PRBool*            aOriginates = nsnull, 
-                                  PRInt32*           aColSpan = nsnull)
-  {
-    return GetCellMap()->GetCellInfoAt(aRowX, aColX, aOriginates, aColSpan);
-  }
-
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
 
@@ -694,12 +686,6 @@ public: /* ----- Cell Map public methods ----- */
 
   // return the last col index which isn't of type eColAnonymousCell
   PRInt32 GetIndexOfLastRealCol();
-
-  /** return the cell frame at aRowIndex, aColIndex.
-    * returns nsnull if the cell frame has not yet been allocated, 
-    * or if aRowIndex or aColIndex is out of range
-    */
-  nsTableCellFrame * GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex);
 
   /** returns PR_TRUE if table-layout:auto  */
   virtual PRBool IsAutoLayout();
