@@ -519,16 +519,26 @@ class nsTArray : public nsTArray_base {
       return AppendElements(&item, 1);
     }
 
+    // Append new elements without copy-constructing. This is useful to avoid
+    // temporaries.
+    // @return A pointer to the newly appended elements, or null on OOM.
+    elem_type *AppendElements(size_type count) {
+      if (!EnsureCapacity(Length() + count, sizeof(elem_type)))
+         return nsnull;
+      elem_type *elems = Elements() + Length();
+      size_type i;
+      for (i = 0; i < count; ++i) {
+        elem_traits::Construct(elems + i);
+      }
+      IncrementLength(count);
+      return elems;
+    }
+
     // Append a new element without copy-constructing. This is useful to avoid
     // temporaries.
     // @return A pointer to the newly appended element, or null on OOM.
     elem_type *AppendElement() {
-      if (!EnsureCapacity(Length() + 1, sizeof(elem_type)))
-         return nsnull;
-      elem_type *elem = Elements() + Length();
-      elem_traits::Construct(elem);
-      IncrementLength(1);
-      return elem;
+      return AppendElements(1);
     }
 
     // This method removes a range of elements from this array.
