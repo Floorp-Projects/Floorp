@@ -53,12 +53,16 @@ const NSString* kIsVisibleKey = @"Visible";
 const NSString* kIsKeyWindowKey = @"Key";
 const NSString* kIsMiniaturizedKey = @"Miniaturized";
 const NSString* kToolbarIsVisibleKey = @"ToolbarVisible";
-const NSString* kBookmarkBarIsVisibleKey = @"BoomarkBarVisible";
+const NSString* kBookmarkBarIsVisibleKey = @"BookmarkBarVisible";
+
+// Number of seconds to coalesce changes before saving them
+const NSTimeInterval kPersistDelay = 60.0;
 
 @interface SessionManager(Private)
 
 - (NSDictionary*)dictionaryForCurrentWindowState;
 - (void)setWindowStateFromDictionary:(NSDictionary*)windowState;
+- (void)setWindowStateIsDirty:(BOOL)isDirty;
 
 @end
 
@@ -76,6 +80,7 @@ const NSString* kBookmarkBarIsVisibleKey = @"BoomarkBarVisible";
 - (void)dealloc
 {
   [mSessionStatePath release];
+  [mDelayedPersistTimer release];
   [super dealloc];
 }
 
@@ -187,6 +192,7 @@ const NSString* kBookmarkBarIsVisibleKey = @"BoomarkBarVisible";
                                                                  format:NSPropertyListBinaryFormat_v1_0
                                                        errorDescription:NULL];
   [stateData writeToFile:mSessionStatePath atomically:YES];
+  [self setWindowStateIsDirty:NO];
 }
 
 - (void)restoreWindowState
@@ -205,6 +211,39 @@ const NSString* kBookmarkBarIsVisibleKey = @"BoomarkBarVisible";
   NSFileManager* fileManager = [NSFileManager defaultManager];
   if ([fileManager fileExistsAtPath:mSessionStatePath])
     [fileManager removeFileAtPath:mSessionStatePath handler:nil];
+
+  // Ensure that we don't immediately write out a new file
+  [self setWindowStateIsDirty:NO];
+}
+
+- (void)windowStateChanged
+{
+  [self setWindowStateIsDirty:YES];
+}
+
+- (void)setWindowStateIsDirty:(BOOL)isDirty
+{
+  if (isDirty == mDirty)
+    return;
+
+  mDirty = isDirty;
+  if (mDirty) {
+    mDelayedPersistTimer = [[NSTimer scheduledTimerWithTimeInterval:kPersistDelay
+                                                             target:self
+                                                           selector:@selector(performDelayedPersist:)
+                                                           userInfo:nil
+                                                            repeats:NO] retain];
+  }
+  else {
+    [mDelayedPersistTimer invalidate];
+    [mDelayedPersistTimer release];
+    mDelayedPersistTimer = nil;
+  }
+}
+
+- (void)performDelayedPersist:(NSTimer*)theTimer
+{
+  [self saveWindowState];
 }
 
 @end

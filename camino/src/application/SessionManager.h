@@ -45,12 +45,19 @@
 //
 @interface SessionManager : NSObject
 {
-  NSString* mSessionStatePath;
+  NSString* mSessionStatePath;    // strong
+  NSTimer*  mDelayedPersistTimer; // strong
+  BOOL      mDirty;
 }
 
 + (SessionManager*)sharedInstance;
 
-// Saves the window state to a file in the profile directory.
+// Notifies the SessionManager that the window state has changed. This
+// will eventually cause the window state to be saved to a file in the
+// profile directory, but changes may be coalesced before saving.
+- (void)windowStateChanged;
+
+// Immediately saves the window state to a file in the profile directory.
 - (void)saveWindowState;
 
 // Restores the window state from a file in the profile directory.
