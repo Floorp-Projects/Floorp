@@ -36,8 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// see bug 180535
+#ifndef MOZ_CAIRO_GFX
+#define USE_QUARTZ_FONT_PREFS 1
+#endif
+
 #include "nsIToolkit.h"
+
+#ifdef USE_QUARTZ_FONT_PREFS
 #include "nsIObserver.h"
+#endif
 
 #include <IOKit/IOKitLib.h>
 
@@ -68,7 +76,10 @@
 #define MAC_OS_X_VERSION_10_3_HEX 0x00001030
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
 
-class nsToolkit : public nsIToolkit, public nsIObserver
+class nsToolkit : public nsIToolkit
+#ifdef USE_QUARTZ_FONT_PREFS
+                , public nsIObserver
+#endif
 {
 public:
                      nsToolkit();
@@ -76,7 +87,9 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOOLKIT
+#ifdef USE_QUARTZ_FONT_PREFS
   NS_DECL_NSIOBSERVER
+#endif
 
   // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
   static long        OSXVersion();
@@ -88,9 +101,11 @@ protected:
   nsresult           RegisterForSleepWakeNotifcations();
   void               RemoveSleepWakeNotifcations();
 
+#ifdef USE_QUARTZ_FONT_PREFS
 protected:
 
   static void        SetupQuartzRendering();
+#endif
 
 protected:
 
