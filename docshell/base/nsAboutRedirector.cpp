@@ -70,7 +70,11 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
     { "plugins", "chrome://global/content/plugins.html", 0 },
     { "config", "chrome://global/content/config.xul", 0 },
+#ifdef MOZ_XUL_APP
+    { "logo", "chrome://branding/content/about.png",
+#else
     { "logo", "chrome://global/content/logo.gif",
+#endif
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     { "buildconfig", "chrome://global/content/buildconfig.html",
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
