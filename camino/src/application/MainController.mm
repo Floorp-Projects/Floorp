@@ -1189,14 +1189,19 @@ const int kReuseWindowOnAE = 2;
 //
 // -findInPage
 //
-// Called in response to "Find" in edit menu. Opens the find dialog. We only keep
-// one around for the whole app to use, showing/hiding as we see fit.
+// Called in response to "Find" in edit menu. Gives BWC a chance to handle it, then
+// opens the find dialog. We only keep one around for the whole app to use,
+// showing/hiding as we see fit.
 //
 - (IBAction)findInPage:(id)aSender
 {
-  if (!mFindDialog)
-    mFindDialog = [[FindDlgController alloc] initWithWindowNibName:@"FindDialog"];
-  [mFindDialog showWindow:self];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+
+  if (browserController && ![browserController performFindCommand]) {
+    if (!mFindDialog)
+      mFindDialog = [[FindDlgController alloc] initWithWindowNibName:@"FindDialog"];
+    [mFindDialog showWindow:self];
+  }
 }
 
 #pragma mark -
@@ -1537,11 +1542,10 @@ const int kReuseWindowOnAE = 2;
   // or the bookmark/history manager is open
   if (action == @selector(savePage:))
     return (browserController && ![browserController bookmarkManagerIsVisible]);
-  
+
   // disable the find panel if there's no text content
   if (action == @selector(findInPage:))
-    return (browserController && ![browserController bookmarkManagerIsVisible] &&
-            [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
+    return (browserController && [[[browserController getBrowserWrapper] getBrowserView] isTextBasedContent]);
 
   // BrowserWindowController decides about actions that are just sent on to
   // the front window's BrowserWindowController. This works because the selectors
@@ -1923,6 +1927,11 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void*
   if (!inURL || [inURL isEqualToString:@"about:blank"] || [inURL isEqualToString:@""])
     isBlank = YES;
   return isBlank;
+}
+
+- (void)closeFindDialog
+{
+  [mFindDialog close];
 }
 
 @end

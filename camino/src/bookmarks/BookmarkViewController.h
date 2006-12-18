@@ -187,6 +187,7 @@ enum
 
 - (IBAction)quicksearchPopupChanged:(id)aSender;
 - (void)resetSearchField;
+- (void)focusSearchField;
 
 - (NSView*)bookmarksEditingView;
 

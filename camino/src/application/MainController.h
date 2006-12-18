@@ -203,5 +203,6 @@ typedef enum EBookmarkOpenBehavior
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
 // utility routine to test if a url is "blank" (either empty or about:blank)
 + (BOOL)isBlankURL:(NSString*)inURL;
+- (void)closeFindDialog;
 
 @end

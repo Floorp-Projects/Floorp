@@ -2020,14 +2020,21 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if (inView == mBookmarksEditingView) {
     [self restoreSplitters];
 
+    [[NSApp delegate] closeFindDialog];
+
     // Set the initial focus to the Search field unless a row is already selected;
     // e.g., if setItemToRevealOnLoad: is used.
     // For more info about focus, see the header.
     if ([mBookmarksOutlineView selectedRow] == -1)
-      [[mBookmarksEditingView window] makeFirstResponder:mSearchField];
+      [self focusSearchField];
     else
       [[mBookmarksEditingView window] makeFirstResponder:mBookmarksOutlineView];
   }
+}
+
+- (void)focusSearchField
+{
+  [[mBookmarksEditingView window] makeFirstResponder:mSearchField];
 }
 
 @end

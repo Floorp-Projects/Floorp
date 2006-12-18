@@ -2705,6 +2705,20 @@ enum BWCOpenDest {
   }
 }
 
+// -performFindCommand
+//
+// Has the opportunity to handle a Find command.  Returns whether or not it did.
+//
+- (BOOL)performFindCommand
+{
+  if ([self bookmarkManagerIsVisible]) {
+    [[self bookmarkViewControllerForCurrentTab] focusSearchField];
+    return YES;
+  }
+
+  return NO;
+}
+
 - (void)stopThrobber
 {
   [mThrobberHandler stopThrobber];
@@ -2714,7 +2728,6 @@ enum BWCOpenDest {
   if (throbberItem)
     [throbberItem setImage: [[self throbberImages] objectAtIndex: 0]];
 }
-
 
 - (BOOL)findInPageWithPattern:(NSString*)text caseSensitive:(BOOL)inCaseSensitive
     wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
