@@ -983,8 +983,11 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 //
 - (NSArray*)resolveKeyword:(NSString *)keyword withArgs:(NSString *)args
 {
+  if (!keyword)
+    return nil;
+
   // see if it's us
-  if ([[self keyword] isEqualToString:keyword]) {
+  if ([[self keyword] caseInsensitiveCompare:keyword] == NSOrderedSame) {
     NSMutableArray *urlArray = (NSMutableArray *)[self childURLs];
     int i, j = [urlArray count];
     for (i = 0; i < j; i++) {
@@ -998,7 +1001,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   id aKid;
   while ((aKid = [enumerator nextObject])) {
     if ([aKid isKindOfClass:[Bookmark class]]) {
-      if ([[aKid keyword] isEqualToString:keyword])
+      if ([[aKid keyword] caseInsensitiveCompare:keyword] == NSOrderedSame)
         return [NSArray arrayWithObject:[self expandURL:[aKid url] withString:args]];
     }
     else if ([aKid isKindOfClass:[BookmarkFolder class]]) {
