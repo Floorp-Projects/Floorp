@@ -638,7 +638,13 @@
   
   NSString* sublabelValue = [self getLocalizedString:[defaultFontType stringByAppendingString:@"_note"]];
   [mProportionalSubLabel setStringValue:sublabelValue];
-  
+
+  NSString* noteFontExample = [defaultFontType isEqualToString:@"serif"] ? @"Times" : @"Helvetica";
+  [mProportionalSubLabel setFont:[[NSFontManager sharedFontManager] fontWithFamily:noteFontExample
+                                                                            traits:0
+                                                                            weight:5 /* normal weight */
+                                                                              size:[[mProportionalSubLabel font] pointSize]]];
+
   [self setupFontSamplesFromDict:regionDict];
 }
 
