@@ -117,7 +117,6 @@
       <treecols>
         <treecol id="folderNameCol"  sort="?folderTreeNameSort" sortActive="true" sortDirection="ascending"
                  flex="10" primary="true" hideheader="true" crop="center"/>
-        <splitter class="tree-splitter"/>
         <treecol id="selectedColumn" hideheader="true" flex="1"/>
       </treecols>
     </tree>
