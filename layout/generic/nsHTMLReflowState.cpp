@@ -537,37 +537,43 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   }
 }
 
-// Returns the nearest containing block frame for the specified frame.
-// Also returns the left, top, right, and bottom edges of the specified
-// frame's content area. These are in the coordinate space of the block
-// frame itself
-static nsIFrame*
-GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
+nsIFrame*
+nsHTMLReflowState::GetNearestContainingBlock(nsIFrame* aFrame, nscoord& aCBLeftEdge,
+                                             nscoord& aCBWidth)
 {
   for (aFrame = aFrame->GetParent(); aFrame && !aFrame->IsContainingBlock();
        aFrame = aFrame->GetParent())
     /* do nothing */;
 
-  if (aFrame) {
-    nsSize  size = aFrame->GetSize();
+  NS_ASSERTION(aFrame, "Must find containing block somewhere");
+  NS_ASSERTION(aFrame != frame, "How did that happen?");
 
-    aContentArea.left = 0;
-    aContentArea.top = 0;
-    aContentArea.right = size.width;
-    aContentArea.bottom = size.height;
-  
-    // Subtract off for border and padding. If it can't be computed because
-    // it's percentage based (for example) then just ignore it
-    nsStyleBorderPadding  bPad;
-    nsMargin              borderPadding;
-    nsStyleContext* styleContext = aFrame->GetStyleContext();
-    styleContext->GetBorderPaddingFor(bPad);
-    if (bPad.GetBorderPadding(borderPadding)) {
-      aContentArea.left += borderPadding.left;
-      aContentArea.top += borderPadding.top;
-      aContentArea.right -= borderPadding.right;
-      aContentArea.bottom -= borderPadding.bottom;
+  /* Now aFrame is the containing block we want */
+
+  /* Check whether the containing block is currently being reflown.
+     If so, use the info from the reflow state. */
+  const nsHTMLReflowState* state;
+  if (aFrame->GetStateBits() & NS_FRAME_IN_REFLOW) {
+    for (state = parentReflowState; state && state->frame != aFrame;
+         state = state->parentReflowState) {
+      /* do nothing */
     }
+  } else {
+    state = nsnull;
+  }
+  
+  if (state) {
+    aCBLeftEdge = state->mComputedBorderPadding.left;
+    aCBWidth = state->mComputedWidth;
+  } else {
+    /* Didn't find a reflow state for aFrame.  Just compute the information we
+       want, on the assumption that aFrame already knows its size.  This really
+       ought to be true by now. */
+    NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW,
+                 "aFrame shouldn't be in reflow; we'll lie if it is");
+    nsMargin borderPadding = aFrame->GetUsedBorderAndPadding();
+    aCBLeftEdge = borderPadding.left;
+    aCBWidth = aFrame->GetSize().width - borderPadding.LeftRight();
   }
 
   return aFrame;
@@ -705,9 +711,10 @@ static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
 // absolute containing block
 void
 nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
-                                            nsIFrame*          aPlaceholderFrame,
-                                            nsIFrame*          aContainingBlock,
-                                            nsMargin&          aBlockContentArea,
+                                            nsIFrame*         aPlaceholderFrame,
+                                            nsIFrame*         aContainingBlock,
+                                            nscoord           aBlockLeftContentEdge,
+                                            nscoord           aBlockContentWidth,
                                             const nsHTMLReflowState* cbrs,
                                             nsHypotheticalBox& aHypotheticalBox)
 {
@@ -741,8 +748,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // Determine the total amount of horizontal border/padding/margin that
     // the element would have had if it had been in the flow. Note that we
     // ignore any 'auto' and 'inherit' values
-    horizBorderPaddingMargin = CalculateHorizBorderPaddingMargin(aBlockContentArea.right -
-                                                                 aBlockContentArea.left);
+    horizBorderPaddingMargin = CalculateHorizBorderPaddingMargin(aBlockContentWidth);
 
     if (NS_FRAME_IS_REPLACED(mFrameType) && (eStyleUnit_Auto == widthUnit)) {
       // It's a replaced element with an 'auto' width so the box width is
@@ -754,15 +760,15 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
     } else if (eStyleUnit_Auto == widthUnit) {
       // The box width is the containing block width
-      boxWidth = aBlockContentArea.right - aBlockContentArea.left;
+      boxWidth = aBlockContentWidth;
       knowBoxWidth = PR_TRUE;
     
     } else {
       // We need to compute it. It's important we do this, because if it's
       // percentage based this computed value may be different from the comnputed
       // value calculated using the absolute containing block width
-      ComputeHorizontalValue(aBlockContentArea.right - aBlockContentArea.left,
-                             widthUnit, mStylePosition->mWidth, boxWidth);
+      ComputeHorizontalValue(aBlockContentWidth, widthUnit, mStylePosition->mWidth,
+                             boxWidth);
       boxWidth += horizBorderPaddingMargin;
       knowBoxWidth = PR_TRUE;
     }
@@ -843,7 +849,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // The placeholder represents the left edge of the hypothetical box
       aHypotheticalBox.mLeft = placeholderOffset.x;
     } else {
-      aHypotheticalBox.mLeft = aBlockContentArea.left;
+      aHypotheticalBox.mLeft = aBlockLeftContentEdge;
     }
     aHypotheticalBox.mLeftIsExact = PR_TRUE;
 
@@ -854,7 +860,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // We can't compute the right edge because we don't know the desired
       // width. So instead use the right content edge of the block parent,
       // but remember it's not exact
-      aHypotheticalBox.mRight = aBlockContentArea.right;
+      aHypotheticalBox.mRight = aBlockLeftContentEdge + aBlockContentWidth;
       aHypotheticalBox.mRightIsExact = PR_FALSE;
     }
 
@@ -863,7 +869,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
       aHypotheticalBox.mRight = placeholderOffset.x;
     } else {
-      aHypotheticalBox.mRight = aBlockContentArea.right;
+      aHypotheticalBox.mRight = aBlockLeftContentEdge + aBlockContentWidth;
     }
     aHypotheticalBox.mRightIsExact = PR_TRUE;
     
@@ -874,7 +880,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // We can't compute the left edge because we don't know the desired
       // width. So instead use the left content edge of the block parent,
       // but remember it's not exact
-      aHypotheticalBox.mLeft = aBlockContentArea.left;
+      aHypotheticalBox.mLeft = aBlockLeftContentEdge;
       aHypotheticalBox.mLeftIsExact = PR_FALSE;
     }
 
@@ -931,10 +937,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
 
   // Find the nearest containing block frame to the placeholder frame,
-  // and return its content area left, top, right, and bottom edges
-  nsMargin  cbContentArea;
-  nsIFrame* cbFrame = GetNearestContainingBlock(placeholderFrame,
-                                                cbContentArea);
+  // and return its left edge and width.
+  nscoord cbLeftEdge, cbWidth;
+  nsIFrame* cbFrame = GetNearestContainingBlock(placeholderFrame, cbLeftEdge,
+                                                cbWidth);
   
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
   // 'auto', then compute the hypothetical box of where the element would
@@ -946,7 +952,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
        (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()))) {
 
     CalculateHypotheticalBox(aPresContext, placeholderFrame, cbFrame,
-                             cbContentArea, cbrs, hypotheticalBox);
+                             cbLeftEdge, cbWidth, cbrs, hypotheticalBox);
   }
 
   // Initialize the 'left' and 'right' computed offsets
