@@ -729,9 +729,9 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         float pct = colFrame->GetPrefPercent();
         if (pct != 0.0f) {
             col_width = nscoord(float(width) * pct);
-            nscoord min = colFrame->GetMinCoord();
-            if (col_width < min)
-                col_width = min;
+            nscoord col_min = colFrame->GetMinCoord();
+            if (col_width < col_min)
+                col_width = col_min;
         } else {
             col_width = colFrame->GetPrefCoord();
         }
