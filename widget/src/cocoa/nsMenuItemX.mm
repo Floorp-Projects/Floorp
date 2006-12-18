@@ -283,6 +283,15 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 */
 NS_METHOD nsMenuItemX::DoCommand()
 {
+  // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
+  if (mMenuType == nsIMenuItem::eCheckbox ||
+      (mMenuType == nsIMenuItem::eRadio && !mIsChecked)) {
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::autocheck,
+                               nsWidgetAtoms::_false, eCaseMatters))
+    SetChecked(!mIsChecked);
+    /* the AttributeChanged code will update all the internal state */
+  }
+
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell)
     return nsEventStatus_eConsumeNoDefault;
