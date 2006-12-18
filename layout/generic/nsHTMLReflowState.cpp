@@ -569,7 +569,7 @@ nsHTMLReflowState::GetNearestContainingBlock(nsIFrame* aFrame, nscoord& aCBLeftE
     /* Didn't find a reflow state for aFrame.  Just compute the information we
        want, on the assumption that aFrame already knows its size.  This really
        ought to be true by now. */
-    NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW,
+    NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
                  "aFrame shouldn't be in reflow; we'll lie if it is");
     nsMargin borderPadding = aFrame->GetUsedBorderAndPadding();
     aCBLeftEdge = borderPadding.left;
