@@ -167,10 +167,24 @@ PROT_UrlCryptoKeyManager.prototype.setKeyUrl = function(keyUrl) {
 
   // Check to see if we should make a new getkey request.
   var prefs = new G_Preferences(PROT_UrlCryptoKeyManager.NEXT_REKEY_PREF);
-  var nextRekey = prefs.getPref(this.keyUrl_, 0);
+  var nextRekey = prefs.getPref(this.getPrefName_(this.keyUrl_), 0);
   if (nextRekey < parseInt(Date.now() / 1000, 10)) {
     this.reKey();
   }
+}
+
+/**
+ * Given a url, return the pref value to use (pref contains last update time).
+ * We basically use the url up until query parameters.  This avoids duplicate
+ * pref entries as version number changes over time.
+ * @param url String getkey URL
+ */
+PROT_UrlCryptoKeyManager.prototype.getPrefName_ = function(url) {
+  var queryParam = url.indexOf("?");
+  if (queryParam != -1) {
+    return url.substring(0, queryParam);
+  }
+  return url;
 }
 
 /**
@@ -196,7 +210,7 @@ PROT_UrlCryptoKeyManager.prototype.reKey = function() {
     var prefs = new G_Preferences(PROT_UrlCryptoKeyManager.NEXT_REKEY_PREF);
     var nextRekey = parseInt(Date.now() / 1000, 10)
                   + PROT_UrlCryptoKeyManager.KEY_MIN_UPDATE_TIME;
-    prefs.setPref(this.keyUrl_, nextRekey);
+    prefs.setPref(this.getPrefName_(this.keyUrl_), nextRekey);
   }
 }
 
