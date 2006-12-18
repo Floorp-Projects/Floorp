@@ -182,14 +182,12 @@ private:
   void ComputePadding(nscoord aContainingBlockWidth);
 
 protected:
-  inline void ComputeHorizontalValue(nscoord aContainingBlockWidth,
-                                     nsStyleUnit aUnit,
-                                     const nsStyleCoord& aCoord,
-                                     nscoord& aResult);
-  inline void ComputeVerticalValue(nscoord aContainingBlockHeight,
-                                   nsStyleUnit aUnit,
-                                   const nsStyleCoord& aCoord,
-                                   nscoord& aResult);
+  inline void ComputeWidthDependentValue(nscoord aContainingBlockWidth,
+                                         const nsStyleCoord& aCoord,
+                                         nscoord& aResult);
+  inline void ComputeHeightDependentValue(nscoord aContainingBlockHeight,
+                                          const nsStyleCoord& aCoord,
+                                          nscoord& aResult);
 };
 
 /**

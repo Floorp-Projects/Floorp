@@ -2997,22 +2997,25 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   // Compute width
 
   if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
-    result.width = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
-                     this, aCBSize.width, stylePos->mWidth) -
-                   boxSizingAdjust.width;
+    result.width =
+      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
+        aCBSize.width, stylePos->mWidth) -
+      boxSizingAdjust.width;
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
-    nscoord maxWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
-                         this, aCBSize.width, stylePos->mMaxWidth) -
-                       boxSizingAdjust.width;
+    nscoord maxWidth =
+      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
+        aCBSize.width, stylePos->mMaxWidth) -
+      boxSizingAdjust.width;
     if (maxWidth < result.width)
       result.width = maxWidth;
   }
 
-  nscoord minWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
-                       this, aCBSize.width, stylePos->mMinWidth) -
-                     boxSizingAdjust.width;
+  nscoord minWidth =
+    nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
+      aCBSize.width, stylePos->mMinWidth) -
+    boxSizingAdjust.width;
   if (minWidth > result.width)
     result.width = minWidth;
 
@@ -3022,24 +3025,27 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   // Compute height
 
   if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
-    result.height = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
-                      this, aCBSize.height, stylePos->mHeight) -
-                    boxSizingAdjust.height;
+    result.height =
+      nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
+        aCBSize.height, stylePos->mHeight) -
+      boxSizingAdjust.height;
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
     if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
-      nscoord maxHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
-                            this, aCBSize.height, stylePos->mMaxHeight) -
-                          boxSizingAdjust.height;
+      nscoord maxHeight =
+        nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
+          aCBSize.height, stylePos->mMaxHeight) -
+        boxSizingAdjust.height;
       if (maxHeight < result.height)
         result.height = maxHeight;
     }
 
     if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
-      nscoord minHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
-                            this, aCBSize.height, stylePos->mMinHeight) -
-                          boxSizingAdjust.height;
+      nscoord minHeight =
+        nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
+          aCBSize.height, stylePos->mMinHeight) -
+        boxSizingAdjust.height;
       if (minHeight > result.height)
         result.height = minHeight;
     }

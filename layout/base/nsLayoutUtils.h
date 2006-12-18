@@ -473,15 +473,17 @@ public:
                                        nsIFrame* aFrame,
                                        IntrinsicWidthType aType);
 
-  static nscoord ComputeHorizontalValue(nsIRenderingContext* aRenderingContext,
-                                        nsIFrame *aFrame,
-                                        nscoord aContainingBlockWidth,
-                                        const nsStyleCoord& aCoord);
+  static nscoord ComputeWidthDependentValue(
+                   nsIRenderingContext* aRenderingContext,
+                   nsIFrame*            aFrame,
+                   nscoord              aContainingBlockWidth,
+                   const nsStyleCoord&  aCoord);
 
-  static nscoord ComputeVerticalValue(nsIRenderingContext* aRenderingContext,
-                                      nsIFrame *aFrame,
-                                      nscoord aContainingBlockHeight,
-                                      const nsStyleCoord& aCoord);
+  static nscoord ComputeHeightDependentValue(
+                   nsIRenderingContext* aRenderingContext,
+                   nsIFrame*            aFrame,
+                   nscoord              aContainingBlockHeight,
+                   const nsStyleCoord&  aCoord);
 
   static nsSize ComputeSizeWithIntrinsicDimensions(
                     nsIRenderingContext* aRenderingContext,
