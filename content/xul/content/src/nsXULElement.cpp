@@ -436,7 +436,9 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
         inst = NS_STATIC_CAST(nsIXMLContent *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
-        inst = NS_STATIC_CAST(nsIScriptEventHandlerOwner *, this);
+        inst = NS_STATIC_CAST(nsIScriptEventHandlerOwner*,
+                              new nsXULElement::nsScriptEventHandlerOwnerTearoff(this));
+        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else if (aIID.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         inst = NS_STATIC_CAST(nsIChromeEventHandler *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
@@ -635,15 +637,23 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
 //----------------------------------------------------------------------
 // nsIScriptEventHandlerOwner interface
 
+NS_INTERFACE_MAP_BEGIN(nsXULElement::nsScriptEventHandlerOwnerTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptEventHandlerOwner)
+NS_INTERFACE_MAP_END_AGGREGATED(mElement)
+
+NS_IMPL_ADDREF(nsXULElement::nsScriptEventHandlerOwnerTearoff)
+NS_IMPL_RELEASE(nsXULElement::nsScriptEventHandlerOwnerTearoff)
+
 nsresult
-nsXULElement::GetCompiledEventHandler(nsIAtom *aName,
-                                      nsScriptObjectHolder &aHandler)
+nsXULElement::nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
+                                                nsIAtom *aName,
+                                                nsScriptObjectHolder &aHandler)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
     aHandler.drop();
 
     nsXULPrototypeAttribute *attr =
-        FindPrototypeAttribute(kNameSpaceID_None, aName);
+        mElement->FindPrototypeAttribute(kNameSpaceID_None, aName);
     if (attr) {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheHits);
         aHandler.set(attr->mEventHandler);
@@ -653,23 +663,24 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName,
 }
 
 nsresult
-nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
-                                  nsISupports* aTarget,
-                                  nsIAtom *aName,
-                                  const nsAString& aBody,
-                                  const char* aURL,
-                                  PRUint32 aLineNo,
-                                  nsScriptObjectHolder &aHandler)
+nsXULElement::nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
+                                                nsIScriptContext* aContext,
+                                                nsISupports* aTarget,
+                                                nsIAtom *aName,
+                                                const nsAString& aBody,
+                                                const char* aURL,
+                                                PRUint32 aLineNo,
+                                                nsScriptObjectHolder &aHandler)
 {
     nsresult rv;
 
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
     // XXX sXBL/XBL2 issue! Owner or current document?
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(GetOwnerDoc());
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->GetOwnerDoc());
 
     nsIScriptContext *context;
-    if (mPrototype && xuldoc) {
+    if (mElement->mPrototype && xuldoc) {
         // It'll be shared among the instances of the prototype.
 
         // Use the prototype document's special context.  Because
@@ -719,7 +730,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     if (NS_FAILED(rv)) return rv;
 
     nsXULPrototypeAttribute *attr =
-        FindPrototypeAttribute(kNameSpaceID_None, aName);
+        mElement->FindPrototypeAttribute(kNameSpaceID_None, aName);
     if (attr) {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
         // take a copy of the event handler, and tell the language about it.
