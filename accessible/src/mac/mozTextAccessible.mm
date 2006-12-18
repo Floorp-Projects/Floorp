@@ -181,3 +181,81 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
 }
 
 @end
+
+@implementation mozComboboxAccessible
+
+- (NSArray*)accessibilityAttributeNames
+{
+  static NSArray *supportedAttributes = nil;
+  if (!supportedAttributes) {
+    // standard attributes that are shared and supported by all generic elements.
+    supportedAttributes = [[NSArray alloc] initWithObjects:NSAccessibilityParentAttribute, // required
+                                                           NSAccessibilityRoleAttribute,   // required
+                                                           NSAccessibilityTitleAttribute,
+                                                           NSAccessibilityValueAttribute, // required
+                                                           NSAccessibilityHelpAttribute,
+                                                           NSAccessibilityRoleDescriptionAttribute,
+                                                           NSAccessibilityPositionAttribute, // required
+                                                           NSAccessibilitySizeAttribute, // required
+                                                           NSAccessibilityWindowAttribute, // required
+                                                           NSAccessibilityFocusedAttribute, // required
+                                                           NSAccessibilityEnabledAttribute, // required
+                                                           NSAccessibilityChildrenAttribute, // required
+                                                           NSAccessibilityHelpAttribute,
+                                                           // NSAccessibilityExpandedAttribute, // required
+                                                           kTopLevelUIElementAttribute, // required (on OS X 10.4+)
+                                                           kInstanceDescriptionAttribute, // required (on OS X 10.4+)
+                                                           /* text-specific attributes */
+                                                           NSAccessibilitySelectedTextAttribute, // required
+                                                           NSAccessibilitySelectedTextRangeAttribute, // required
+                                                           NSAccessibilityNumberOfCharactersAttribute, // required
+                                                           // TODO: NSAccessibilityVisibleCharacterRangeAttribute, // required
+                                                           // TODO: NSAccessibilityInsertionPointLineNumberAttribute
+                                                           nil];
+  }
+  return supportedAttributes;
+}
+
+- (NSArray *)accessibilityActionNames
+{
+  if ([self isEnabled]) {
+    return [NSArray arrayWithObjects:NSAccessibilityConfirmAction, 
+                                     NSAccessibilityShowMenuAction, 
+                                     nil];
+  }
+  return nil;
+}
+
+- (NSString *)accessibilityActionDescription:(NSString *)action
+{
+  if ([action isEqualToString:NSAccessibilityShowMenuAction])
+    return @"show menu";
+  if ([action isEqualToString:NSAccessibilityConfirmAction])
+    return @"confirm";
+    
+  return [super accessibilityActionDescription:action];
+}
+
+- (void)accessibilityPerformAction:(NSString *)action
+{
+  // both the ShowMenu and Click action do the same thing.
+  if ([self isEnabled]) {
+    if ([action isEqualToString:NSAccessibilityShowMenuAction])
+      [self showMenu];
+    if ([action isEqualToString:NSAccessibilityConfirmAction])
+      [self confirm];
+  }
+}
+
+- (void)showMenu
+{
+  // currently unimplemented. waiting for support in bug 363697
+}
+
+- (void)confirm
+{
+  // should be the same as pressing enter/return in this textfield.
+  // not yet implemented
+}
+
+@end
