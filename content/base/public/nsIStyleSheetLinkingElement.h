@@ -43,10 +43,11 @@
 class nsIParser;
 class nsIDocument;
 class nsICSSLoaderObserver;
+class nsIURI;
 
 #define NS_ISTYLESHEETLINKINGELEMENT_IID          \
-  {0xa6cf90e9, 0x15b3, 0x11d2,                    \
-  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+  {0x259f8226, 0x8dd7, 0x11db,                    \
+  {0x98, 0x5e, 0x92, 0xb7, 0x56, 0xd8, 0x95, 0x93}}
 
 class nsIStyleSheet;
 
@@ -110,6 +111,15 @@ public:
    * @param aCharset the charset
    */
   NS_IMETHOD GetCharset(nsAString& aCharset) = 0;
+
+  /**
+   * Tells this element to use a different base URI. This is used for
+   * proper loading of xml-stylesheet processing instructions in XUL overlays
+   * and is only currently used by nsXMLStylesheetPI.
+   *
+   * @param aNewBaseURI the new base URI, nsnull to use the default base URI.
+   */
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) = 0;
 
   // This doesn't entirely belong here since they only make sense for
   // some types of linking elements, but it's a better place than

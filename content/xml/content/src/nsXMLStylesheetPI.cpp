@@ -67,11 +67,16 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  
+
+  // nsIStyleSheetLinkingElement
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI);
+
   // nsStyleLinkElement
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
 protected:
+  nsCOMPtr<nsIURI> mOverriddenBaseURI;
+
   void GetStyleSheetURL(PRBool* aIsInline,
                         nsIURI** aURI);
   void GetStyleSheetInfo(nsAString& aTitle,
@@ -151,6 +156,12 @@ nsXMLStylesheetPI::GetCharset(nsAString& aCharset)
   return GetAttrValue(nsGkAtoms::charset, aCharset) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+/* virtual */ void
+nsXMLStylesheetPI::OverrideBaseURI(nsIURI* aNewBaseURI)
+{
+  mOverriddenBaseURI = aNewBaseURI;
+}
+
 void
 nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
                                     nsIURI** aURI)
@@ -168,10 +179,10 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   nsCAutoString charset;
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    baseURL = document->GetBaseURI();
+    baseURL = mOverriddenBaseURI ? mOverriddenBaseURI : document->GetBaseURI();
     charset = document->GetDocumentCharacterSet();
   } else {
-    baseURL = nsnull;
+    baseURL = mOverriddenBaseURI;
   }
 
   NS_NewURI(aURI, href, charset.get(), baseURL);

@@ -51,6 +51,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIStyleSheet.h"
 #include "nsIParser.h"
+#include "nsIURI.h"
 
 class nsIDocument;
 class nsStringArray;
@@ -92,6 +93,8 @@ public:
                               PRBool aForceUpdate = PR_FALSE);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
+
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI);
   virtual void SetLineNumber(PRUint32 aLineNumber);
 
   static void ParseLinkTypes(const nsAString& aTypes, nsStringArray& aResult);
