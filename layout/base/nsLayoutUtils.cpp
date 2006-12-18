@@ -1274,10 +1274,11 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeHorizontalValue(nsIRenderingContext* aRenderingContext,
-                                      nsIFrame* aFrame,
-                                      nscoord aContainingBlockWidth,
-                                      const nsStyleCoord& aCoord)
+nsLayoutUtils::ComputeWidthDependentValue(
+                 nsIRenderingContext* aRenderingContext,
+                 nsIFrame*            aFrame,
+                 nscoord              aContainingBlockWidth,
+                 const nsStyleCoord&  aCoord)
 {
   NS_PRECONDITION(aFrame, "non-null frame expected");
   NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
@@ -1295,10 +1296,11 @@ nsLayoutUtils::ComputeHorizontalValue(nsIRenderingContext* aRenderingContext,
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeVerticalValue(nsIRenderingContext* aRenderingContext,
-                                    nsIFrame* aFrame,
-                                    nscoord aContainingBlockHeight,
-                                    const nsStyleCoord& aCoord)
+nsLayoutUtils::ComputeHeightDependentValue(
+                 nsIRenderingContext* aRenderingContext,
+                 nsIFrame*            aFrame,
+                 nscoord              aContainingBlockHeight,
+                 const nsStyleCoord&  aCoord)
 {
   NS_PRECONDITION(aFrame, "non-null frame expected");
   NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
@@ -1366,7 +1368,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   nscoord width, minWidth, maxWidth, height, minHeight, maxHeight;
 
   if (!isAutoWidth) {
-    width = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+    width = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
               aFrame, aCBSize.width, stylePos->mWidth) -
             boxSizingAdjust.width;
     if (width < 0)
@@ -1374,7 +1376,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
-    maxWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+    maxWidth = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
                  aFrame, aCBSize.width, stylePos->mMaxWidth) -
                boxSizingAdjust.width;
     if (maxWidth < 0)
@@ -1383,14 +1385,14 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     maxWidth = nscoord_MAX;
   }
 
-  minWidth = nsLayoutUtils::ComputeHorizontalValue(aRenderingContext,
+  minWidth = nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext,
                aFrame, aCBSize.width, stylePos->mMinWidth) -
              boxSizingAdjust.width;
   if (minWidth < 0)
     minWidth = 0;
 
   if (!isAutoHeight) {
-    height = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+    height = nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext,
                aFrame, aCBSize.height, stylePos->mHeight) -
              boxSizingAdjust.height;
     if (height < 0)
@@ -1398,7 +1400,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   }
 
   if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
-    maxHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+    maxHeight = nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext,
                   aFrame, aCBSize.height, stylePos->mMaxHeight) -
                 boxSizingAdjust.height;
     if (maxHeight < 0)
@@ -1408,7 +1410,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   }
 
   if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
-    minHeight = nsLayoutUtils::ComputeVerticalValue(aRenderingContext,
+    minHeight = nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext,
                   aFrame, aCBSize.height, stylePos->mMinHeight) -
                 boxSizingAdjust.height;
     if (minHeight < 0)
