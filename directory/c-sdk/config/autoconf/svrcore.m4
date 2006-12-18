@@ -61,7 +61,7 @@ AC_DEFUN(AM_PATH_GIVEN_SVRCORE,
     # check for --with-svrcore-inc
     AC_ARG_WITH(svrcore-inc, [  --with-svrcore-inc=PATH        svrcore include file directory],
     [
-      if test -n "$withval" -a -e "$withval"/svrcore.h
+      if test -n "$withval" -a -f "$withval"/svrcore.h
       then
         AC_MSG_RESULT([using $withval])
         SVRCORE_CFLAGS="-I$withval"
