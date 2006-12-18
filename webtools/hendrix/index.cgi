@@ -130,7 +130,7 @@ exit;
 sub emailFilter {
     my ($var) = @_;
     $var =~ s/\@/at/;
-    $var =~ s/\./dot/;
+    $var =~ s/\./dot/g;
     return $var;
 }
 
