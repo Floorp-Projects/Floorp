@@ -72,9 +72,8 @@ nsGridRowLeafLayout::~nsGridRowLeafLayout()
 NS_IMETHODIMP
 nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   // If we are not in a grid. Then we just work like a box. But if we are in a grid
@@ -92,9 +91,8 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
 NS_IMETHODIMP
 nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
@@ -110,9 +108,8 @@ nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
 NS_IMETHODIMP
 nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
@@ -127,26 +124,22 @@ nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& 
 
 /** If a child is added or removed or changes size
   */
-NS_IMETHODIMP
+void
 nsGridRowLeafLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (grid)
     grid->CellAddedOrRemoved(aState, index, isHorizontal);
-
-  return NS_OK;
 }
 
 void
 nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   // Our base class SprocketLayout is giving us a chance to change the box sizes before layout
@@ -201,8 +194,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
       grid->GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, !isHorizontal);
 
       if (i == firstIndex || i == lastIndex) {
-        nsMargin offset(0,0,0,0);
-        GetTotalMargin(aBox, offset, isHorizontal);
+        nsMargin offset = GetTotalMargin(aBox, isHorizontal);
 
         nsMargin border(0,0,0,0);
         // can't call GetBorderPadding we will get into recursion
@@ -328,7 +320,7 @@ nsGridRowLeafLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
   return nsGridRowLayout::Layout(aBox, aBoxLayoutState);
 }
 
-NS_IMETHODIMP
+void
 nsGridRowLeafLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   if (aBox) {
@@ -338,11 +330,9 @@ nsGridRowLeafLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
     // calling MarkIntrinsicWidthsDirty for every row.
     aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGridRowLeafLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
   if (aBox) {
@@ -362,33 +352,16 @@ nsGridRowLeafLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32&
 
     aRowCount++;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGridRowLeafLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
+PRInt32
+nsGridRowLeafLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 { 
   if (aBox) {
       aRows[0].Init(aBox, PR_FALSE);
-      *aCount = 1;
-      return NS_OK;
+      return 1;
   }
 
-  *aCount = 0;
-
-  return NS_OK;
+  return 0;
 }
 
-NS_IMETHODIMP
-nsGridRowLeafLayout::GetRowCount(PRInt32& aRowCount)
-{
-  aRowCount = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIGridPart::Type)
-nsGridRowLeafLayout::GetType()
-{
-  return eRowLeaf;
-}

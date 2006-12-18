@@ -93,8 +93,8 @@ nsGridLayout2::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutSt
   return rv;
 }
 
-NS_IMETHODIMP
-nsGridLayout2::GetGrid(nsIBox* aBox, nsGrid** aGrid, PRInt32* aIndex, nsGridRowLayout* aRequestor)
+nsGrid*
+nsGridLayout2::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor)
 {
   // XXX This should be set a better way!
   mGrid.SetBox(aBox);
@@ -106,15 +106,7 @@ nsGridLayout2::GetGrid(nsIBox* aBox, nsGrid** aGrid, PRInt32* aIndex, nsGridRowL
   }
 #endif
 
-  *aGrid = &mGrid;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_FAILURE;
+  return &mGrid;
 }
 
 void
@@ -255,63 +247,11 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   return rv;
 }
 
-NS_IMETHODIMP
-nsGridLayout2::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
+nsMargin
+nsGridLayout2::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
 {
-  NS_ERROR("Should not be called");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
-{
-  NS_ERROR("Should not be called");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)
-{
-  (*aRowGroup) = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::CastToGridLayout(nsGridLayout2** aGridLayout)
-{
-  (*aGridLayout) = this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
-{
-  aMargin.left = 0;
-  aMargin.right = 0;
-  aMargin.top = 0;
-  aMargin.bottom = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridLayout2::GetRowCount(PRInt32& aRowCount)
-{
-  NS_ERROR("Should not be called");
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIGridPart::Type)
-nsGridLayout2::GetType()
-{
-  return eGrid;
+  nsMargin margin(0,0,0,0);
+  return margin;
 }
 
 NS_IMETHODIMP
@@ -330,7 +270,6 @@ nsGridLayout2::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsGridLayout2::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
                                nsIBox* aChildList)
@@ -338,7 +277,6 @@ nsGridLayout2::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
   mGrid.NeedsRebuild(aState);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsGridLayout2::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,

@@ -108,12 +108,12 @@ public:
 
 private:
   void GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart);
-  void GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal = PR_TRUE);
+  nsMargin GetBoxTotalMargin(nsIBox* aBox, PRBool aIsHorizontal = PR_TRUE);
 
   void FreeMap();
   void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
-  void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsHorizontal = PR_TRUE);
-  void BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells);
+  void BuildRows(nsIBox* aBox, PRInt32 aSize, nsGridRow** aColumnsRows, PRBool aIsHorizontal = PR_TRUE);
+  nsGridCell* BuildCellMap(PRInt32 aRows, PRInt32 aColumns);
   void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsHorizontal = PR_TRUE);
   void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsHorizontal = PR_TRUE);

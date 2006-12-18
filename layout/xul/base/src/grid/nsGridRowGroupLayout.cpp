@@ -72,18 +72,15 @@ nsGridRowGroupLayout::~nsGridRowGroupLayout()
 {
 }
 
-NS_IMETHODIMP
+void
 nsGridRowGroupLayout::ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (grid)
     grid->RowAddedOrRemoved(aState, index, isHorizontal);
-
-  return NS_OK;
 }
 
 void
@@ -110,9 +107,8 @@ nsGridRowGroupLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize
   * as well.
   */
 
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
 
   if (grid) 
   {
@@ -137,9 +133,8 @@ nsGridRowGroupLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
 {
  nsresult rv = nsGridRowLayout::GetMaxSize(aBox, aState, aSize); 
 
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
 
   if (grid) 
   {
@@ -164,9 +159,8 @@ nsGridRowGroupLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
 {
  nsresult rv = nsGridRowLayout::GetMinSize(aBox, aState, aSize); 
 
-  nsGrid* grid = nsnull;
   PRInt32 index = 0;
-  GetGrid(aBox, &grid, &index);
+  nsGrid* grid = GetGrid(aBox, &index);
 
   if (grid) 
   {
@@ -188,7 +182,7 @@ nsGridRowGroupLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
 /*
  * Run down through our children dirtying them recursively.
  */
-NS_IMETHODIMP
+void
 nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   if (aBox) {
@@ -217,12 +211,10 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
       child->GetNextBox(&child);
     }
   }
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
+void
 nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
   if (aBox) {
@@ -256,28 +248,14 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
 
     mRowCount = aRowCount - startCount;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGridRowGroupLayout::GetRowCount(PRInt32& aRowCount)
-{
-  aRowCount = mRowCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIGridPart::Type)
-nsGridRowGroupLayout::GetType()
-{
-  return eRowGroup;
-}
 
 /**
  * Fill out the given row structure recursively
  */
-NS_IMETHODIMP
-nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
+PRInt32 
+nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows)
 { 
   PRInt32 rowCount = 0;
 
@@ -295,9 +273,7 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
       if (layout) {
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) {
-          PRInt32 count = 0;
-          monument->BuildRows(deepChild, &aRows[rowCount], &count);
-          rowCount += count;
+          rowCount += monument->BuildRows(deepChild, &aRows[rowCount]);
           child->GetNextBox(&child);
           deepChild = child;
           continue;
@@ -313,24 +289,15 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
     }
   }
 
-  *aCount = rowCount;
-
-  return NS_OK;
+  return rowCount;
 }
 
-NS_IMETHODIMP
-nsGridRowGroupLayout::CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)
-{
-  (*aRowGroup) = this;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
+nsMargin
+nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
 {
   // group have border and padding added to the total margin
 
-  nsresult rv = nsGridRowLayout::GetTotalMargin(aBox, aMargin, aIsHorizontal);
+  nsMargin margin = nsGridRowLayout::GetTotalMargin(aBox, aIsHorizontal);
   
   // make sure we have the scrollframe on the outside if it has one.
   // that's where the border is.
@@ -339,13 +306,12 @@ nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIs
   // add our border/padding to it
   nsMargin borderPadding(0,0,0,0);
   aBox->GetBorderAndPadding(borderPadding);
+  margin += borderPadding;
 
-  aMargin += borderPadding;
   aBox->GetInset(borderPadding);
+  margin += borderPadding;
 
-  aMargin += borderPadding;
-
-  return rv;
+  return margin;
 }
 
 

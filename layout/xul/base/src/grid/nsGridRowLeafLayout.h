@@ -62,13 +62,13 @@ public:
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
+  virtual void ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
-  NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
-  NS_IMETHOD GetRowCount(PRInt32& aRowCount);
-  NS_IMETHOD_(Type) GetType();
+  virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
+  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
+  virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
+  virtual PRInt32 GetRowCount() { return 1; }
+  virtual Type GetType() { return eRowLeaf; }
 
 protected:
 
