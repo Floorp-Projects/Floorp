@@ -1054,8 +1054,9 @@ enum BWCOpenDest {
   }
 
   PRInt32 contentWidth = 0, contentHeight = 0;
+  const PRInt32 kMinSaneHeight = 20; // for bug 361049
   GeckoUtils::GetIntrisicSize(contentWindow, &contentWidth, &contentHeight);
-  if (contentWidth <= 1 || contentHeight <= 1) {
+  if (contentWidth <= 0 || contentHeight <= kMinSaneHeight) {
     // Something went wrong, maximize to screen
     [self setZoomState:defaultFrame defaultFrame:defaultFrame];
     return defaultFrame;
@@ -1066,8 +1067,16 @@ enum BWCOpenDest {
   float widthChange   = contentWidth  - curFrameSize.width;
   float heightChange  = contentHeight - curFrameSize.height;
 
-  // Change the window size, but don't let it be to narrow
+  // The values from GeckoUtils::GetIntrisicSize may be rounded down, add 1 extra pixel but
+  // only if the window will be smaller than the screen (see bug 360878)
   NSRect stdFrame     = [[self window] frame];
+  if (stdFrame.size.width + widthChange < defaultFrame.size.width)
+    widthChange += 1;
+
+  if (stdFrame.size.height + heightChange < defaultFrame.size.height)
+    heightChange += 1;
+
+  // Change the window size, but don't let it be to narrow
   stdFrame.size.width = MAX([[self window] minSize].width, stdFrame.size.width + widthChange);
 
   if ([mPersonalToolbar isVisible])

@@ -298,10 +298,6 @@ void GeckoUtils::GetIntrisicSize(nsIDOMWindow* aWindow,  PRInt32* outWidth, PRIn
   nsElement->GetClientWidth(outWidth); 
   nsElement->GetScrollHeight(outHeight);
 
-  // Add 1 px extra to the height and width to guard against these values being rounded down
-  *outWidth  += 1;
-  *outHeight += 1;
-
   nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(aWindow);
   if (!domWindow)
     return;
