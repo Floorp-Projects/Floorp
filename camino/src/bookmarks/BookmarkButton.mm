@@ -131,6 +131,12 @@
 
 - (void)bookmarkChanged:(BOOL*)outNeedsReflow
 {
+  // Don't let separator items change - we love them just the way they are
+  if ([mItem isSeparator]) {
+    *outNeedsReflow = NO;
+    return;
+  }
+
   if (![[self title] isEqualToString:[mItem title]]) {
     *outNeedsReflow = YES;    // assume title width changed
     [self setTitle:[mItem title]];
