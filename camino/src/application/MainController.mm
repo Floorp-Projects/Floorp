@@ -1632,7 +1632,9 @@ const int kReuseWindowOnAE = 2;
 //
 // We've turned off auto-enabling for the bookmarks menu because of the unknown
 // number of bookmarks in the list so we have to manage it manually. This routine
-// should be called whenever a window goes away, becomes main, or is no longer main.
+// should be evoked through |delayedAdjustBookmarksMenuItemsEnabling| whenever a
+// window goes away, becomes main or is no longer main, and any time the number of
+// tabs changes, the active tab changes, or any page is loaded.
 //
 - (void)doBookmarksMenuEnabling
 {
@@ -1652,11 +1654,6 @@ const int kReuseWindowOnAE = 2;
                                                                                   andAction:[mCreateBookmarksSeparatorMenuItem action]]];
   [mShowAllBookmarksMenuItem         takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mShowAllBookmarksMenuItem target]
                                                                                   andAction:[mShowAllBookmarksMenuItem action]]];
-
-  // Enable 'Create tab group' menu items based on number of tabs
-  int numberOfTabs = [[[self getKeyWindowBrowserController] getTabBrowser] numberOfTabViewItems];
-  [mAddTabGroupMenuItem setEnabled:(numberOfTabs > 1)];
-  [mAddTabGroupWithoutPromptMenuItem setEnabled:(numberOfTabs > 1)];
 
   // We enable bookmark items themselves from the carbon event handler that fires before the menu is shown.
   mBookmarksMenuUpdatePending = NO;

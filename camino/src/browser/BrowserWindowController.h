@@ -323,6 +323,7 @@ typedef enum
 - (IBAction)showSiteCertificate:(id)sender;
 
 - (IBAction)addBookmark:(id)aSender;
+- (IBAction)addTabGroup:(id)aSender;
 - (IBAction)addBookmarkWithoutPrompt:(id)aSender;
 - (IBAction)addTabGroupWithoutPrompt:(id)aSender;
 - (IBAction)addBookmarkForLink:(id)aSender;

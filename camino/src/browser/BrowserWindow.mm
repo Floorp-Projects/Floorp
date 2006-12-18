@@ -138,13 +138,15 @@ static const int kEscapeKeyCode = 53;
     keyChar = [keyString characterAtIndex:0];
     if (keyChar == 'd') {
       unsigned int standardModifierKeys = NSShiftKeyMask | NSControlKeyMask | NSAlternateKeyMask | NSCommandKeyMask;
-      if (([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) {  
+      if ((([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) &&
+          [windowController validateActionBySelector:@selector(addBookmark:)])
+      {
         [windowController addBookmark:nil];
         handled = YES;
       }
     }
   }
-  
+
   if (handled)
     return YES;
 
