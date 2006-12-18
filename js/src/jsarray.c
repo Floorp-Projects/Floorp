@@ -1570,8 +1570,16 @@ array_indexOfHelper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         start = js_DoubleToInteger(start);
         if (start < 0) {
             start += length;
-            i = (start < 0) ? 0 : (jsuint)start;
+            if (start < 0) {
+                if (isLast)
+                    goto not_found;
+                i = 0;
+            } else {
+                i = (jsuint)start;
+            }
         } else if (start >= length) {
+            if (!isLast)
+                goto not_found;
             i = length - 1;
         } else {
             i = (jsuint)start;
