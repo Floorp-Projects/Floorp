@@ -2503,6 +2503,12 @@ nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     // disable style sheet loading for now.
     ssle->SetEnableUpdates(PR_FALSE);
 
+    nsCOMPtr<nsIURI> baseURI;
+    rv = mCurrentPrototype->GetURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+
+    ssle->OverrideBaseURI(baseURI);
+
     rv = aParent->InsertChildAt(aPINode, aIndex, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
@@ -2547,10 +2553,14 @@ nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
         return NS_OK;
     }
 
+    nsCOMPtr<nsIURI> baseURI;
+    rv = mCurrentPrototype->GetURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+
     // Add the overlay to our list of overlays that need to be processed.
     nsCOMPtr<nsIURI> uri;
 
-    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull, mDocumentURI);
+    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull, baseURI);
     if (NS_SUCCEEDED(rv)) {
         // We insert overlays into mUnloadedOverlays at the same index in
         // document order, so they end up in the reverse of the document

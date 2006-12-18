@@ -151,6 +151,13 @@ nsStyleLinkElement::GetCharset(nsAString& aCharset)
 }
 
 /* virtual */ void
+nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI)
+{
+  NS_NOTREACHED("Base URI can't be overriden in this implementation "
+                "of nsIStyleSheetLinkingElement.");
+}
+
+/* virtual */ void
 nsStyleLinkElement::SetLineNumber(PRUint32 aLineNumber)
 {
   mLineNumber = aLineNumber;

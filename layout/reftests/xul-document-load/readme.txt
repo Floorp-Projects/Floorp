@@ -27,7 +27,8 @@ test009: Same as #008 for xul-overlay PIs
 test010: PIs in the master document, outside the prolog, don't have any effect but get
          added to the DOM.
 
-test011: Your ad could be here!
+test011: (bug 363406) Relative URIs in overlay's <?xml-stylesheet ?> PI are
+         resolved against overlay's URI, not the document URI.
 
 test012: Tests that sheets references from <?xml-stylesheet ?> PIs are added to the
          document in the same order as the PIs themselves are in - the simple case.
@@ -35,6 +36,12 @@ test012: Tests that sheets references from <?xml-stylesheet ?> PIs are added to 
 test013: Tests the same thing as #012, but for the case when the first sheet contains
          an @import statement, which makes it -finish- loading earlier than the
          second sheet.
+
+test014: (bug 363406) Relative URIs in overlay's <?xul-overlay ?> PI are resolved
+         against overlay's URI, not the document URI.
+
+test015: Relative URIs in overlay's <xul:script> are resolved against overlay's 
+         URI, not the document URI.
 
 test017: (bug 359959) <?xul-overlay ?> used as a direct child of <overlay>
          should be inserted into the DOM, but not cause the overlay to be
