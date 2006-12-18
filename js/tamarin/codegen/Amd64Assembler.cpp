@@ -1300,7 +1300,13 @@ namespace avmplus
 		if (!ensureMDBufferCapacity(pool, md_native_thunk_size))
 			return NULL;
 #endif /* FEATURE_BUFFER_GUARD */
+	
+#if 0
+		// test code to generate "int 3" 
+		(void) e;
+		*mip++ = 0xCC;
 
+#else
 		// the generated thunk does not call any helper methods, so we are
 		// free to use eax, ecx, edx as scratch regs without touchning the
 		// stack.
@@ -1363,6 +1369,8 @@ namespace avmplus
 		MOV (EAX, offsetof(VTable,methods)+4*e->disp_id, ECX); // load concrete env
 		MOV (_env, ESP, EAX);  // replace env before call
 		JMP (offsetof(MethodEnv, impl32), EAX); // invoke real method indirectly
+
+#endif
 
 #ifdef AVMPLUS_JIT_READONLY
 		makeCodeExecutable();

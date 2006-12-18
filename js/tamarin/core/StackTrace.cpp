@@ -41,7 +41,7 @@ namespace avmplus
 								   Traits**				traits,
 								   int					argc,
 								   uint32 *				ap,
-								   int volatile *		eip)
+								   sintptr volatile *	eip)
 	{
 		AvmCore *core = info->core();
 		this->env       = env;

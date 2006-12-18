@@ -230,7 +230,7 @@ namespace avmplus
 			if(cap > max) 
 			{
 				T* newvalues = (gc) ? (T*) gc->Calloc(cap, sizeof(T), gcFlags) : new T[cap];
-				sintptr* newkeys = (gc) ? (int*) gc->Calloc(cap, sizeof(sintptr), 0) : new sintptr[cap];
+				sintptr* newkeys = (gc) ? (sintptr*) gc->Calloc(cap, sizeof(sintptr), 0) : new sintptr[cap];
 				arraycopy(keys, 0, newkeys, 0 , len);
 				arraycopy(values, 0, newvalues, 0 , len);
 				if (gc)

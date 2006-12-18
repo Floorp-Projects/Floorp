@@ -225,7 +225,7 @@ namespace avmplus
 	void MethodEnv::debugEnter(int argc, uint32 *ap, 
 							   Traits**frameTraits, int localCount,
 							   CallStackNode* callstack,
-							   Atom* framep, volatile int *eip)
+							   Atom* framep, volatile sintptr *eip)
 	{
 		AvmCore* core = this->core();
 

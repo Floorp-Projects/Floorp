@@ -240,7 +240,7 @@ namespace avmplus
 		void debugEnter(int argc, uint32 *ap, 
 							   Traits**frameTraits, int localCount,
 							   CallStackNode* callstack,
-							   Atom* framep, volatile int *eip);
+							   Atom* framep, volatile sintptr *eip);
 		void debugExit(CallStackNode* callstack);
 		void sendEnter(int argc, uint32 *ap);
 		void sendExit();

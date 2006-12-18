@@ -121,7 +121,7 @@ namespace avmplus
 		sintptr CodegenMIR::debuggerAddr( int (Debugger::*f)() )
 		{
 			RETURN_METHOD_PTR(Debugger, f);
-		}
+		}		
 	#endif /* DEBUGGER */
 
 		sintptr CodegenMIR::scriptAddr(int (ScriptObject::*f)())
@@ -1503,7 +1503,7 @@ namespace avmplus
 
 		#ifdef DEBUGGER
 		#ifdef AVMPLUS_PROFILE
-		names->add(FUNCADDR(DynamicProfiler::mark), "DynamicProfiler::mark");
+		names->add(COREADDR(DynamicProfiler::mark), "DynamicProfiler::mark");
 		#endif
 		names->add(ENVADDR(MethodEnv::debugEnter), "MethodEnv::debugEnter");
 		names->add(ENVADDR(MethodEnv::debugExit), "MethodEnv::debugExit");
@@ -1947,7 +1947,7 @@ namespace avmplus
 		#ifdef AVMPLUS_PROFILE
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 2,
+			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 2,
 				(uintptr)&core->dprof, InsConst(OP_prologue));
 		}
 		#endif
@@ -2719,7 +2719,7 @@ namespace avmplus
 		DynamicProfiler::StackMark mark(OP_codegenop, &core->dprof);
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 1,
+			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 1,
 				(uintptr)&core->dprof, InsConst(opcode));
 		}
 		#else
@@ -4192,7 +4192,7 @@ namespace avmplus
 		DynamicProfiler::StackMark mark(OP_codegenop, &core->dprof);
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 1,
+			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 1,
 				(uintptr)&core->dprof, InsConst(opcode));
 		}
 		#endif /* AVMPLUS_PROFILE */

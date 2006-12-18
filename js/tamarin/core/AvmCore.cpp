@@ -112,11 +112,10 @@ namespace avmplus
 		#endif
 
 		#ifdef AVMPLUS_INTERP
-		// turbo flag only available if interpreter is there
 		#ifdef AVMPLUS_64BIT // turbo disabled by default since MIR not working yet
 		turbo = false;
 		#else
-		turbo = true;
+ 		turbo = true;
 		#endif
 		#endif
 
@@ -1006,7 +1005,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		return out;
 	}
 
-	String* AvmCore::toErrorString(sintptr d)
+	String* AvmCore::toErrorString(int d)
 	{
 		String* s = NULL;
 	#ifdef DEBUGGER

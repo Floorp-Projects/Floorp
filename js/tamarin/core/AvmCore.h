@@ -948,7 +948,7 @@ const int kBufferPadding = 16;
 		 * Convenience methods for converting various objects into value 
 		 * strings used for error message output.
 		 */
-		String* toErrorString(sintptr d);
+		String* toErrorString(int d);
 		String* toErrorString(AbstractFunction* m);
 		String* toErrorString(Multiname* n);
 		String* toErrorString(Namespace* ns);

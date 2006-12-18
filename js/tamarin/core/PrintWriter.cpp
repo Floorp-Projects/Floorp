@@ -296,26 +296,6 @@ namespace avmplus
 		writeHexByte(uint8(value>>8));
 		writeHexByte(uint8(value&0xff));
 	}
-
-	#ifdef AVMPLUS_64BIT
-	PrintWriter& PrintWriter::operator<< (hexQWord value)
-	{
-		writeHexQWord(value.getValue());
-		return *this;
-	}
-	
-	void PrintWriter::writeHexQWord(uint64 value)
-	{
-		writeHexByte(uint8((value>>54) & 0xff));
-		writeHexByte(uint8((value>>48) & 0xff));
-		writeHexByte(uint8((value>>40) & 0xff));
-		writeHexByte(uint8((value>>32) & 0xff));
-		writeHexByte(uint8((value>>24) & 0xff));
-		writeHexByte(uint8((value>>16) & 0xff));
-		writeHexByte(uint8(value>>8));
-		writeHexByte(uint8(value&0xff));
-	}
-	#endif
 	
 	void PrintWriter::formatTypeName(Traits* t)
 	{

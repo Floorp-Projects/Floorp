@@ -123,7 +123,7 @@ namespace avmplus
 					  Traits**			frameTraits,
 					  int				argc,
 					  uint32 *			ap,
-					  int volatile *	eip)
+					  sintptr volatile *eip)
 		{
 			initialize(env, info, framep, frameTraits, argc, ap, eip);
 		}
@@ -134,8 +134,8 @@ namespace avmplus
 						Atom*				framep,
 						Traits**			frameTraits,
 						int					argc,
-						uint32 *				ap,
-						int volatile *		eip);
+						uint32 *			ap,
+						sintptr volatile *	eip);
 
 		void exit();
 
@@ -150,7 +150,7 @@ namespace avmplus
 		int			argc;
 		Atom*		framep;		// pointer to top of AS registers
 		Traits**    traits;		// array of traits for AS registers
-		int volatile * eip; 	// ptr to where the current pc is stored
+		sintptr volatile * eip; 	// ptr to where the current pc is stored
 
 		void**		scopeBase(); // with MIR, array members are (ScriptObject*); with interpreter, they are (Atom).
 		#ifdef AVMPLUS_INTERP

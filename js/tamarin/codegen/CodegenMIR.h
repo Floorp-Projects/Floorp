@@ -855,7 +855,7 @@ namespace avmplus
 
 		void  storeIns(OP* v, uintptr disp, OP* base);
 
-		OP*   leaIns(int disp, OP* base);
+		OP*   leaIns(sintptr disp, OP* base);
 		OP*   callIns(sintptr addr, uint32 argCount, MirOpcode code);
 		OP*   callIndirect(MirOpcode code, OP* target, uint32 argCount, ...);
 		OP*   callIns(MirOpcode code, sintptr addr, uint32 argCount, ...);
