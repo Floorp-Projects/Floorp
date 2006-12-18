@@ -420,10 +420,17 @@ protected:
                        const nsMargin* aBorder,
                        const nsMargin* aPadding);
 
+  // Returns the nearest containing block frame for the specified frame.  Also
+  // returns the left edge and width of the containing block's content area.
+  // These are returned in the coordinate space of the containing block.
+  nsIFrame* GetNearestContainingBlock(nsIFrame* aFrame, nscoord& aCBLeftEdge,
+                                      nscoord& aCBWidth);
+
   void CalculateHypotheticalBox(nsPresContext*    aPresContext,
-                                nsIFrame*          aPlaceholderFrame,
-                                nsIFrame*          aContainingBlock,
-                                nsMargin&          aBlockContentArea,
+                                nsIFrame*         aPlaceholderFrame,
+                                nsIFrame*         aContainingBlock,
+                                nscoord           aBlockLeftContentEdge,
+                                nscoord           aBlockContentWidth,
                                 const nsHTMLReflowState* cbrs,
                                 nsHypotheticalBox& aHypotheticalBox);
 
