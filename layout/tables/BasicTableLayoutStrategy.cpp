@@ -47,6 +47,8 @@
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 
+#undef  DEBUG_TABLE_STRATEGY 
+
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aTableFrame)
   : mTableFrame(aTableFrame)
 {
@@ -283,6 +285,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             colFrame->AddPrefPercent(info.prefPercent);
         }
     }
+#ifdef DEBUG_TABLE_STRATEGY
+    printf("ComputeColumnIntrinsicWidths single\n");
+    mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 
     // Loop over the columns to consider cells *with* a colspan.
     // We consider these cells by seeing if they require adding to the
@@ -307,9 +313,6 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
-            info.minCoord -= spacing * (colSpan - 1);
-            info.prefCoord -= spacing * (colSpan - 1);
-
             // Accumulate information about the spanned columns, and
             // subtract the already-used space from |info|.
             nscoord totalSPref = 0, totalSNonPctPref = 0;
@@ -322,6 +325,15 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     NS_ERROR("column frames out of sync with cell map");
                     continue;
                 }
+                if (!mTableFrame->GetNumCellsOriginatingInCol(scol)) {
+                   continue;
+                }
+
+                if (scol != col) {
+                    info.minCoord -= spacing;
+                    info.prefCoord -= spacing;
+                }
+
                 totalSPref += scolFrame->GetPrefCoord();
                 float scolPct = scolFrame->GetPrefPercent();
                 if (scolPct == 0.0f) {
@@ -384,6 +396,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             }
         }
     }
+#ifdef DEBUG_TABLE_STRATEGY
+    printf("ComputeColumnIntrinsicWidths span incr.\n");
+    mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 
     // Combine the results of the span analysis into the main results.
 
@@ -420,6 +436,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
         colFrame->AdjustPrefPercent(&pct_used);
     }
+#ifdef DEBUG_TABLE_STRATEGY
+    printf("ComputeColumnIntrinsicWidths adjust\n");
+    mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 }
 
 void
@@ -432,12 +452,17 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
     float pct_total = 0.0f; // always from 0.0f - 1.0f
     PRInt32 colCount = cellMap->GetColCount();
     nscoord spacing = mTableFrame->GetCellSpacingX();
+    nscoord add = spacing; // add (colcount + 1) * spacing for columns 
+                           // where a cell originates
 
     for (PRInt32 col = 0; col < colCount; ++col) {
         nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
             NS_ERROR("column frames out of sync with cell map");
             continue;
+        }
+        if (mTableFrame->GetNumCellsOriginatingInCol(col)) {
+            add += spacing;
         }
         min += colFrame->GetMinCoord();
         pref += colFrame->GetPrefCoord();
@@ -486,7 +511,6 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
 
     // border-spacing isn't part of the basis for percentages
     if (colCount > 0) {
-        nscoord add = spacing * (colCount + 1);
         min += add;
         pref += add;
         pref_pct_expand += add;
@@ -541,8 +565,12 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     nscoord min = mMinWidth;
 
     // border-spacing isn't part of the basis for percentages.
-    // XXX Should only add columns that have cells originating in them!
-    nscoord subtract = spacing * (colCount + 1);
+    nscoord subtract = spacing;
+    for (PRInt32 col = 0; col < colCount; ++col) {
+        if (mTableFrame->GetNumCellsOriginatingInCol(col)) {
+            subtract += spacing;
+        }
+    }
     width -= subtract;
     min -= subtract;
 
@@ -785,4 +813,8 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         prev_x = new_x;
         prev_x_round = new_x_round;
     }
+#ifdef DEBUG_TABLE_STRATEGY
+    printf("ComputeColumnWidths final\n");
+    mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
+#endif
 }
