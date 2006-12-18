@@ -443,7 +443,6 @@ public:
 
 class nsXULElement : public nsGenericElement,
                      public nsIDOMXULElement,
-                     public nsIScriptEventHandlerOwner,
                      public nsIChromeEventHandler
 {
 public:
@@ -582,17 +581,6 @@ public:
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
 
-    // nsIScriptEventHandlerOwner
-    nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                 nsISupports* aTarget,
-                                 nsIAtom *aName,
-                                 const nsAString& aBody,
-                                 const char* aURL,
-                                 PRUint32 aLineNo,
-                                 nsScriptObjectHolder &aHandler);
-    nsresult GetCompiledEventHandler(nsIAtom *aName,
-                                     nsScriptObjectHolder &aHandler);
-
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER
 
@@ -707,7 +695,31 @@ protected:
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
            PRBool aIsScriptable);
-};
+    /**
+     * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.
+     */
+    class nsScriptEventHandlerOwnerTearoff : public nsIScriptEventHandlerOwner
+    {
+    public:
+        nsScriptEventHandlerOwnerTearoff(nsXULElement* aElement)
+        : mElement(aElement) {}
 
+        NS_DECL_ISUPPORTS
+
+        // nsIScriptEventHandlerOwner
+        virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
+                                             nsISupports* aTarget,
+                                             nsIAtom *aName,
+                                             const nsAString& aBody,
+                                             const char* aURL,
+                                             PRUint32 aLineNo,
+                                             nsScriptObjectHolder &aHandler);
+        virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
+                                                 nsScriptObjectHolder &aHandler);
+
+    private:
+        nsRefPtr<nsXULElement> mElement;
+    };
+};
 
 #endif // nsXULElement_h__
