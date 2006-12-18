@@ -71,9 +71,7 @@
             <option value="remove">Remove</option>
           [% END %]
         </select>
-        [%+ terms.bugs %]
-        <input type="text" name="bug_ids" size="12" maxlength="80">
-        <span id="lob_direction">to</span>
+        <a href="[% Param('docs_urlbase') %]query.html#individual-buglists">the named tag</a>
         [% IF lists_of_bugs.size %]
           <select id="lob_oldqueryname" name="oldqueryname">
             [% FOREACH query = lists_of_bugs %]
@@ -82,11 +80,14 @@
           </select>
         [% END %]
         <span id="lob_new_query_text">
-          [% " or to" IF lists_of_bugs.size %] the new saved search:
+          [% " or create and add the tag" IF lists_of_bugs.size %]
           <input class="txt" type="text" id="lob_newqueryname"
                  size="20" maxlength="64" name="newqueryname"
                  onkeyup="manage_old_lists();">
         </span>
+        <span id="lob_direction">to</span>
+        [%+ terms.bugs %]
+        <input type="text" name="bug_ids" size="12" maxlength="80">
         <input type="submit" value="Commit" id="commit_list_of_bugs">
       </form>
     </li></ul>
