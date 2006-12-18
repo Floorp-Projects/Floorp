@@ -1240,16 +1240,11 @@ bail:
 		__asm {
 			mov stackP,esp
 		} 
-		#ifdef WIN32
 		MEMORY_BASIC_INFORMATION mib;
 		// find the top of the stack
 		VirtualQuery(stackP, &mib, sizeof(MEMORY_BASIC_INFORMATION));
 		// go down whilst pages are committed
 		char *stackPeak = (char*) mib.BaseAddress;
-		#else
-		extern int StackTop;
-		char *stackPeak = (char*)StackTop;
-		#endif
 		while(true)
 		{
 			VirtualQuery(stackPeak - 4096, &mib, sizeof(MEMORY_BASIC_INFORMATION));

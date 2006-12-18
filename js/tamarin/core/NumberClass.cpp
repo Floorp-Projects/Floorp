@@ -76,7 +76,7 @@ namespace avmplus
 			}
 		}
 
-		wchar buffer[256];
+		wchar buffer[312];
 		int len;
 		MathUtils::convertDoubleToString(n,
 										 buffer,

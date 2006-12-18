@@ -76,7 +76,7 @@ namespace avmplus
 		#endif
 	}
 
-#if UNIX
+#ifdef UNIX
 	/*
 	 * MathUtils::isNaN and MathUtils::isInfinite are modified versions of
 	 * s_isNaN.c and s_isInfinite.c, freely usable code by Sun.  Copyright follows:
@@ -199,7 +199,7 @@ namespace avmplus
 		return (v == 0x8000000000000000LL);
 	}
 
-#endif
+#endif // UNIX
 
 	double MathUtils::nan()
 	{

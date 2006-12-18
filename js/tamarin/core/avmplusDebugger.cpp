@@ -260,7 +260,7 @@ namespace avmplus
 				if (!fnc->isFlagSet(AbstractFunction::SUGGEST_INTERP))
 				{
 					core->console << " @ 0x";			
-					core->console.writeHexDWord( (uintptr)fnc->impl32);
+					core->console.writeHexAddr( (uintptr)fnc->impl32);
 				}
 				core->console << "\n";		
 				astrace = lvl;

@@ -47,12 +47,12 @@ namespace MMgc
 		GCHashtable(unsigned int capacity=kDefaultSize);
 		~GCHashtable();
 		const void *get(const void *key);
-		const void *get(int key) { return get((const void*)key); }
+		const void *get(sintptr key) { return get((const void*)key); }
 		const void *remove(const void *key);
 		// updates value if present, adds and grows if necessary if not
 		void put(const void *key, const void *value);
 		void add(const void *key, const void *value) { put(key, value); }
-		void add(int key, const void *value) { put((const void*)key, value); }
+		void add(sintptr key, const void *value) { put((const void*)key, value); }
 		int count() { return numValues; }
 
 		int nextIndex(int index);

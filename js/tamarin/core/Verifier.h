@@ -94,7 +94,7 @@ namespace avmplus
 		 * @param info the method to verify
 		 */
 		void verify(CodegenMIR *mir);
-		FrameState* getFrameState(int targetpc);
+		FrameState* getFrameState(sintptr targetpc);
 
 	private:
 		Toplevel* toplevel;

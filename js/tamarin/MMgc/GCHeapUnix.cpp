@@ -284,8 +284,6 @@ namespace MMgc
 
 
 #ifdef MEMORY_INFO  
-
-	// Bandaid implementations for these functions. Windows has its own version.
 	void GetInfoFromPC(int pc, char *buff, int buffSize) 
 	{
 #ifdef AVMPLUS_LINUX

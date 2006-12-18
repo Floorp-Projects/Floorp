@@ -161,7 +161,7 @@ namespace MMgc
 		}
 #else
 		(void)obj;
-#endif
+#endif // WIN32 || LINUX
 		// cache
 		traceTable[index].memtag = name;
 		return name;

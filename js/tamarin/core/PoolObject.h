@@ -98,7 +98,7 @@ namespace avmplus
 		#ifdef AVMPLUS_MIR
 		/** buffer containing generated machine code for all methods */
 		GrowableBuffer *codeBuffer;
-		int stackOverflowHandler; // address of stack overflow handler
+		sintptr stackOverflowHandler; // address of stack overflow handler
 		#endif /*AVMPLUS_MIR */
 
 		PoolObject(AvmCore* core, ScriptBuffer& sb, const byte* startpos);

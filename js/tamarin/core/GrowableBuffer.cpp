@@ -445,7 +445,7 @@ namespace avmplus
 		return err;
 	}
 
-	typedef int (*f_sysctlnametomibTEST)(const char *name, int *mibp, size_t *sizep);
+	typedef int (*f_sysctlnametomib)(const char *name, int *mibp, size_t *sizep);
 
 	bool GenericGuard::rosetta = false;
 
@@ -470,9 +470,10 @@ namespace avmplus
 
 			CFBundleRef sysBundle;
 			if ( LoadFrameworkBundle( CFSTR("System.framework"), &sysBundle ) == noErr ) {
-				f_sysctlnametomibTEST p_sysctlnametomib;
-				void *func = CFBundleGetFunctionPointerForName( sysBundle, CFSTR("sysctlnametomib") );
-				*((void **)&p_sysctlnametomib) = func;
+				// gcc -pedantic insists that "ISO C++ forbids casting between pointer-to-function and pointer-to-object"
+				// this allows us to dodge that warning
+				void* tmp = CFBundleGetFunctionPointerForName( sysBundle, CFSTR("sysctlnametomib") );
+				f_sysctlnametomib p_sysctlnametomib = *(f_sysctlnametomib*)&tmp;
 				if ( p_sysctlnametomib ) {
 					if (p_sysctlnametomib(name, mib, &len) == -1) {
 						AvmAssertMsg(false, "sysctlbyname_with_pid(0): sysctlnametomib failed");				
@@ -1132,7 +1133,9 @@ namespace avmplus
 #ifdef AVMPLUS_LINUX
     bool BufferGuard::handleException(byte *addr)
     {
-        printf("BufferGuard::handleException: not implemented yet\n");
+#ifdef _DEBUG
+		printf("BufferGuard::handleException: not implemented yet\n");
+#endif
         return false;
     }
 #endif // AVMPLUS_LINUX

@@ -263,6 +263,9 @@ namespace avmplus
 	 */
 	void MethodInfo::unboxLocals(Atom* src, int srcPos, Traits** traitArr, void* dest, int destPos, int length)
 	{
+		#ifdef AVMPLUS_64BIT
+		AvmDebugMsg (true, "are these ops right for 64-bit?  alignment of int/uint/bool?\n");
+		#endif
 		int size = destPos+length;
 		int at = srcPos;
 
@@ -304,7 +307,7 @@ namespace avmplus
 				else
 				{
 					// ScriptObject, String, Namespace, or Null
-					*((int*)p) = (src[at++] & ~7);
+					*((sintptr*)p) = (src[at++] & ~7);
 				}
 			}
 		}

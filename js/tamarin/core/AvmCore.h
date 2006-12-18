@@ -619,7 +619,7 @@ const int kBufferPadding = 16;
 		static int integer_i(Atom a)
 		{
 			if ((a&7) == kIntegerType)
-				return a>>3;
+				return int(a>>3);
 			else
 				// TODO since we know value is legal int, use faster d->i
 				return MathUtils::real2int(atomToDouble(a));
@@ -630,7 +630,7 @@ const int kBufferPadding = 16;
 		{
 			if ((a&7) == kIntegerType)
 			{
-				return a>>3;
+				return uint32(a>>3);
 			}
 			else
 			{
@@ -742,7 +742,7 @@ const int kBufferPadding = 16;
             unsigned int c, d;
 			const byte* p2 = p;
             readOperands(p2, c, a, d, b);
-			return p2-p;
+			return int(p2-p);
 		}
 
         /**
@@ -948,7 +948,7 @@ const int kBufferPadding = 16;
 		 * Convenience methods for converting various objects into value 
 		 * strings used for error message output.
 		 */
-		String* toErrorString(int d);
+		String* toErrorString(sintptr d);
 		String* toErrorString(AbstractFunction* m);
 		String* toErrorString(Multiname* n);
 		String* toErrorString(Namespace* ns);
@@ -1036,11 +1036,11 @@ const int kBufferPadding = 16;
 		 *         exception if no handler is found.
 		 */
 		ExceptionHandler* findExceptionHandler(MethodInfo *info,
-											   int pc,
+											   sintptr pc,
 											   Exception *exception);
 		
 		ExceptionHandler* beginCatch(ExceptionFrame *ef,
-				MethodInfo *info, int pc, Exception *exception);
+				MethodInfo *info, sintptr pc, Exception *exception);
 
 		/**
 		 * Just like findExceptionHandler(), except that this function
@@ -1049,7 +1049,7 @@ const int kBufferPadding = 16;
 		 * it can't find a handler.
 		 */
 		ExceptionHandler* findExceptionHandlerNoRethrow(MethodInfo *info,
-														int pc,
+														sintptr pc,
 														Exception *exception);
 
 		/**
@@ -1284,7 +1284,7 @@ const int kBufferPadding = 16;
 		{
 			if (AvmCore::isInteger(a))
 			{
-				*result = a >> 3;
+				*result = uint32(a >> 3);
 				return true;
 			}
 			else

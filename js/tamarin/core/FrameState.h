@@ -60,7 +60,7 @@ namespace avmplus
 	{
 
 	public:
-		int pc;
+		sintptr pc;
 		int scopeDepth;
 		int stackDepth;
 		Verifier * const verifier;
@@ -95,7 +95,7 @@ namespace avmplus
 			return true;
 		}
 
-		Value& value(int i)
+		Value& value(sintptr i)
 		{
 			return locals[i];
 		}

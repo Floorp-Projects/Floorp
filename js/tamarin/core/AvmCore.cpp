@@ -1006,7 +1006,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		return out;
 	}
 
-	String* AvmCore::toErrorString(int d)
+	String* AvmCore::toErrorString(sintptr d)
 	{
 		String* s = NULL;
 	#ifdef DEBUGGER
@@ -1568,7 +1568,7 @@ return the result of the comparison ToPrimitive(x) == y.
 #endif
 
 	ExceptionHandler* AvmCore::beginCatch(ExceptionFrame *ef,
-		MethodInfo *info, int pc, Exception *exception)
+		MethodInfo *info, sintptr pc, Exception *exception)
 	{
 		ef->beginCatch();
 		ExceptionHandler* handler = findExceptionHandler(info,pc,exception);
@@ -1577,7 +1577,7 @@ return the result of the comparison ToPrimitive(x) == y.
 	}
 
 	ExceptionHandler* AvmCore::findExceptionHandler(MethodInfo *info,
-												    int pc,
+												    sintptr pc,
 												    Exception *exception)
 	{
 		ExceptionHandler* handler = findExceptionHandlerNoRethrow(info, pc, exception);
@@ -1590,7 +1590,7 @@ return the result of the comparison ToPrimitive(x) == y.
 	}
 
 	ExceptionHandler* AvmCore::findExceptionHandlerNoRethrow(MethodInfo *info,
-															 int pc,
+															 sintptr pc,
 															 Exception *exception)
 	{
 		// If this exception is an EXIT_EXCEPTION, it cannot

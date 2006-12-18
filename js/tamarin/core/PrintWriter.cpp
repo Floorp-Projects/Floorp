@@ -69,9 +69,9 @@ namespace avmplus
 		return *this;
 	}
 
-	PrintWriter& PrintWriter::operator<< (hexDWord value)
+	PrintWriter& PrintWriter::operator<< (hexAddr value)
 	{
-		writeHexDWord(value.getValue());
+		writeHexAddr(value.getValue());
 		return *this;
 	}
 	
@@ -283,8 +283,14 @@ namespace avmplus
 		writeHexByte((uint8)(value&0xff));
 	}
 
-	void PrintWriter::writeHexDWord(uint32 value)
+	void PrintWriter::writeHexAddr(uintptr value)
 	{
+#ifdef AVMPLUS_64BIT
+		writeHexByte(uint8((value>>56) & 0xff));
+		writeHexByte(uint8((value>>48) & 0xff));
+		writeHexByte(uint8((value>>40) & 0xff));
+		writeHexByte(uint8((value>>32) & 0xff));
+#endif
 		writeHexByte(uint8((value>>24) & 0xff));
 		writeHexByte(uint8((value>>16) & 0xff));
 		writeHexByte(uint8(value>>8));
@@ -411,9 +417,9 @@ namespace avmplus
 	#ifdef AVMPLUS_MIR
 				case 'A': // addr
 	#ifdef AVMPLUS_64BIT
-					*this << hexQWord(va_arg(ap,int64));
+					*this << hexAddr(va_arg(ap,int64));
 	#else
-					*this << hexDWord(va_arg(ap,int));
+					*this << hexAddr(va_arg(ap,int));
 	#endif				
 					break;
 

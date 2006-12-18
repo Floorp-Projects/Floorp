@@ -702,7 +702,7 @@ namespace avmplus
 		return Ins(value->isDouble() ? MIR_fdef : MIR_def, value);
 	}
 
-	OP* CodegenMIR::useIns(OP* def, int i)
+	OP* CodegenMIR::useIns(OP* def, sintptr i)
 	{
 		while (def->join)
 			def = def->join;
@@ -710,15 +710,15 @@ namespace avmplus
 	}
 
 	// address calc instruction
-	OP* CodegenMIR::leaIns(int disp, OP* base)
+	OP* CodegenMIR::leaIns(sintptr disp, OP* base)
 	{
 		AvmAssert((disp % 4) == 0);
 
-		return Ins(MIR_lea, base, (int32)disp);
+		return Ins(MIR_lea, base, disp);
 	}
 
 	// call 
-	OP* CodegenMIR::callIns(MirOpcode code, int32 addr, uint32 argCount, ...)
+	OP* CodegenMIR::callIns(MirOpcode code, sintptr addr, uint32 argCount, ...)
 	{
 		// if this is a pure operator function
 		if (core->cseopt && (code&MIR_oper))
@@ -781,7 +781,7 @@ namespace avmplus
 		return result;
 	}
 
-	OP* CodegenMIR::callIns(int32 addr, uint32 argCount, MirOpcode code)
+	OP* CodegenMIR::callIns(sintptr addr, uint32 argCount, MirOpcode code)
 	{
 		#ifdef DEBUGGER
 		if (!(code & MIR_oper))
@@ -831,7 +831,7 @@ namespace avmplus
 			else
 			{
 				AvmAssertMsg(false, "Add method name to codegenMethodNames table\n");
-				core->console.writeHexDWord(ip->addr);
+				core->console.writeHexAddr(ip->addr);
 			}
 			core->console << " (";
 
@@ -931,7 +931,7 @@ namespace avmplus
 		return where;
 	}
 
-	OP* CodegenMIR::localGet(uint32 i)				
+	OP* CodegenMIR::localGet(uintptr i)				
 	{
 		Value& v = state->value(i);
 		OP* op = v.ins;
@@ -940,7 +940,7 @@ namespace avmplus
 		return op;
 	}
 
-	void  CodegenMIR::localSet(uint32 i, OP* o)	
+	void  CodegenMIR::localSet(uintptr i, OP* o)	
 	{
 		Value &v = state->value(i);
 		v.ins = o;
@@ -977,7 +977,7 @@ namespace avmplus
 		return state->value(i).traits == NUMBER_TYPE;
 	}
 
-	OP* CodegenMIR::loadAtomRep(uint32 i)
+	OP* CodegenMIR::loadAtomRep(uintptr i)
 	{
 		Value& v = state->value(i);
 		Traits* t = v.traits;
@@ -993,14 +993,14 @@ namespace avmplus
 		{
 			if (t == INT_TYPE)
 			{
-				Atom a = core->intToAtom(native->imm);
+				Atom a = core->intToAtom(int(native->imm));
 				if(AvmCore::isInteger(a))
 					return InsConst(a);
 			}
 
 			if (t == UINT_TYPE)
 			{
-				Atom a = core->uintToAtom(native->imm);
+				Atom a = core->uintToAtom(uint32(native->imm));
 				if(AvmCore::isInteger(a))
 					return InsConst(a);
 			}
@@ -1018,7 +1018,7 @@ namespace avmplus
 
 		if (t == NUMBER_TYPE)
 		{
-			int funcaddr = COREADDR(AvmCore::doubleToAtom);
+			sintptr funcaddr = COREADDR(AvmCore::doubleToAtom);
 #ifdef AVMPLUS_IA32
 			if (core->sse2)
 				funcaddr = COREADDR(AvmCore::doubleToAtom_sse2);
@@ -1199,7 +1199,7 @@ namespace avmplus
 	}
 
 	// position label at OP->target (will trigger patching)
-	void CodegenMIR::mirPatch(OP* i, int targetpc)
+	void CodegenMIR::mirPatch(OP* i, sintptr targetpc)
 	{
 		mirPatchPtr(&i->target, targetpc);
 		if (targetpc < state->pc)
@@ -1217,7 +1217,7 @@ namespace avmplus
 			ins->lastUse = use;
 	}
 
-	void CodegenMIR::extendLastUse(OP* use, int targetpc)
+	void CodegenMIR::extendLastUse(OP* use, sintptr targetpc)
 	{
 		// if target of the branch is in the middle of any
 		// live range, extend the live range to include
@@ -1503,7 +1503,7 @@ namespace avmplus
 
 		#ifdef DEBUGGER
 		#ifdef AVMPLUS_PROFILE
-		names->add(COREADDR(DynamicProfiler::mark), "DynamicProfiler::mark");
+		names->add(FUNCADDR(DynamicProfiler::mark), "DynamicProfiler::mark");
 		#endif
 		names->add(ENVADDR(MethodEnv::debugEnter), "MethodEnv::debugEnter");
 		names->add(ENVADDR(MethodEnv::debugExit), "MethodEnv::debugExit");
@@ -1947,7 +1947,7 @@ namespace avmplus
 		#ifdef AVMPLUS_PROFILE
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 2,
+			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 2,
 				(uintptr)&core->dprof, InsConst(OP_prologue));
 		}
 		#endif
@@ -2523,7 +2523,7 @@ namespace avmplus
 				}
 				else
 				{
-					int funcaddr = FUNCADDR(AvmCore::integer_d);
+					sintptr funcaddr = FUNCADDR(AvmCore::integer_d);
 					// narrowing conversion number->int
 	#ifdef AVMPLUS_IA32
 					if (core->sse2)
@@ -2719,7 +2719,7 @@ namespace avmplus
 		DynamicProfiler::StackMark mark(OP_codegenop, &core->dprof);
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 1,
+			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 1,
 				(uintptr)&core->dprof, InsConst(opcode));
 		}
 		#else
@@ -2734,7 +2734,7 @@ namespace avmplus
 		}
 	}
 
-	void CodegenMIR::emitCall(FrameState *state, AbcOpcode opcode, int method_id, int argc, Traits* result)
+	void CodegenMIR::emitCall(FrameState *state, AbcOpcode opcode, sintptr method_id, int argc, Traits* result)
 	{
 		this->state = state;
 		emitPrep(opcode);
@@ -2793,7 +2793,7 @@ namespace avmplus
 		case OP_callinterface:
 		{
 			// method_id is pointer to interface method name (multiname)
-			int index = method_id % Traits::IMT_SIZE;
+			int index = int(method_id % Traits::IMT_SIZE);
 			OP* vtable = loadVTable(objDisp);
 			method = loadIns(MIR_ldop, offsetof(VTable, imt)+4*index, vtable);
 			iid = InsConst(method_id);
@@ -2842,7 +2842,7 @@ namespace avmplus
 			case OP_jump:
 			{
 				// spill everything first
-				int targetpc = op1;
+				sintptr targetpc = op1;
 
 				saveState();
 				
@@ -2866,8 +2866,8 @@ namespace avmplus
 				//pc += readS24(index < readU16(pc+4) ? 
 				//	(pc+6+3*index) :	// matched case
 				//	(pc+1));			// default
-				int count = 1 + op2;
-				int targetpc = op1;
+				int count = int(1 + op2);
+				sintptr targetpc = op1;
 
 				AvmAssert(state->value(sp).traits == INT_TYPE);
 
@@ -2892,7 +2892,7 @@ namespace avmplus
 
 				for (int i=0; i < count; i++)
 				{
-					int off = state->pc + AvmCore::readS24(pc+3*i);
+					sintptr off = state->pc + AvmCore::readS24(pc+3*i);
 					mirPatchPtr(&jmpt->args[i+1], off);	// patch case table 
 					if (off < state->pc)
 						extendLastUse(jmpt, off);
@@ -2912,7 +2912,7 @@ namespace avmplus
 			{
 				Traits* t;
 				OP* ptr;
-				int ptr_index;
+				sintptr ptr_index;
 				
 				if (opcode == OP_getslot || opcode == OP_setslot)
 				{
@@ -2944,7 +2944,7 @@ namespace avmplus
 					}				
 				}
 
-				int slot = op1;
+				int slot = int(op1);
 
 				AvmAssert(t->linked);
 				int offset = t->getOffsets()[slot];
@@ -2984,7 +2984,7 @@ namespace avmplus
 					{
 						#ifdef MMGC_DRC
 						MirOpcode op = MIR_cm;
-						int32 wbAddr = GCADDR(GC::writeBarrierRC);
+						sintptr wbAddr = GCADDR(GC::writeBarrierRC);
 						if(slotType == NULL || slotType == OBJECT_TYPE) {
 							// use fast atom wb
 							// TODO: inline pointer check
@@ -3315,7 +3315,7 @@ namespace avmplus
 			{
 				// stack in: method obj arg1..N
 				// sp[-argc-1] = call(env, sp[-argc], argc, ...)
-				int argc = op1;
+				int argc = int(op1);
 				int funcDisp = sp - argc - 1;
 				int dest = funcDisp;
 
@@ -3342,7 +3342,7 @@ namespace avmplus
 				// stack in: obj [ns [name]] arg1..N
 				// stack out: result
 
-				int argc = op2;
+				int argc = int(op2);
 				// obj = sp[-argc]
 				//tempAtom = callproperty(env, name, toVTable(obj), argc, ...);
 				//	*(sp -= argc) = tempAtom;
@@ -3377,7 +3377,7 @@ namespace avmplus
 				// stack in: obj [ns [name]] arg1..N
 				// stack out: result
 
-				int argc = op2;
+				int argc = int(op2);
 				// obj = sp[-argc]
 				//tempAtom = callproperty(env, name, toVTable(obj), argc, ...);
 				//	*(sp -= argc) = tempAtom;
@@ -3411,7 +3411,7 @@ namespace avmplus
 				// stack out: result
 				// null check must have already happened.
 				//	tempAtom = callsuper(multiname, obj, sp-argc+1, argc, vtable->base);
-				int argc = op2;
+				int argc = int(op2);
 				int argv = sp - argc + 1;
 				int objDisp = sp - argc;
 				OP* multi = initMultiname((Multiname*)op1, objDisp);
@@ -3437,7 +3437,7 @@ namespace avmplus
  			{
 				// stack in: method arg1..N
 				// sp[-argc] = construct(env, sp[-argc], argc, null, arg1..N)
- 				int argc = op1;
+ 				int argc = int(op1);
  				int funcDisp = sp - argc;
  				int dest = funcDisp;
 
@@ -3461,7 +3461,7 @@ namespace avmplus
 			case OP_newobject:
 			{
  				// result = env->op_newobject(sp, argc)
- 				int argc = op1;
+ 				int argc = int(op1);
  				int dest = sp - (2*argc-1);
 				int arg0 = dest;
 
@@ -3505,7 +3505,7 @@ namespace avmplus
  			case OP_newarray:
  			{
 				// sp[-argc+1] = core->arrayClass->newarray(sp-argc+1, argc)
- 				int argc = op1;
+ 				int argc = int(op1);
  				int arg0 = sp - 1*argc+1;
 
 				// convert array elements to Atom[]
@@ -3524,8 +3524,8 @@ namespace avmplus
 			case OP_newclass:
 			{
 				// sp[0] = core->newclass(env, cinit, scopeBase, scopeDepth, base)
-				int32 cinit = op1;
-				int localindex = op2;
+				sintptr cinit = op1;
+				int localindex = int(op2);
 				int extraScopes = state->scopeDepth;
 
 				OP* envArg = ldargIns(_env);
@@ -3538,7 +3538,7 @@ namespace avmplus
 				OP* argv = leaIns(0, ap);
 
 				OP* i3 = callIns(MIR_cm, ENVADDR(MethodEnv::newclass), 5, 
-					envArg, InsConst((int32)cinit), base, outer, argv);
+					envArg, InsConst((sintptr)cinit), base, outer, argv);
 				InsDealloc(ap);
 
 				AvmAssert(!result->isMachineType);
@@ -3629,7 +3629,7 @@ namespace avmplus
 				// stack out: obj
 				// framep[op2] = env->finddef(name)
 				Multiname* multiname = (Multiname*) op1;
-				int dest = op2;
+				sintptr dest = op2;
 				OP* name = InsConst((uintptr)multiname->getName());
 				OP* out;
 
@@ -3847,7 +3847,7 @@ namespace avmplus
 
 					OP *multi = leaIns(0, _tempname);
 
-					int func = opcode==OP_setproperty ? ENVADDR(MethodEnv::setpropertyHelper) :
+					sintptr func = opcode==OP_setproperty ? ENVADDR(MethodEnv::setpropertyHelper) :
 														ENVADDR(MethodEnv::initpropertyHelper);
 					callIns(MIR_cm, func, 6,
 							envarg, obj, multi, value, vtable, index);
@@ -4184,7 +4184,7 @@ namespace avmplus
 
 	} // emit()
 
-	void CodegenMIR::emitIf(FrameState *state, AbcOpcode opcode, int target, int a, int b)
+	void CodegenMIR::emitIf(FrameState *state, AbcOpcode opcode, sintptr target, int a, int b)
 	{
 		this->state = state;
 
@@ -4192,7 +4192,7 @@ namespace avmplus
 		DynamicProfiler::StackMark mark(OP_codegenop, &core->dprof);
 		if (core->dprof.dprofile)
 		{
-			callIns(MIR_cm, COREADDR(DynamicProfiler::mark), 1,
+			callIns(MIR_cm, FUNCADDR(DynamicProfiler::mark), 1,
 				(uintptr)&core->dprof, InsConst(opcode));
 		}
 		#endif /* AVMPLUS_PROFILE */
@@ -4419,7 +4419,7 @@ namespace avmplus
 		return binaryIns(MIR_icmp, binaryIns(MIR_xor, atom, c2), c4);
 	}
 
-	OP* CodegenMIR::cmpEq(int funcaddr, int lhsi, int rhsi)
+	OP* CodegenMIR::cmpEq(sintptr funcaddr, int lhsi, int rhsi)
 	{
 		OP *result = cmpOptimization (lhsi, rhsi);
 		if (result)
@@ -4552,7 +4552,7 @@ namespace avmplus
 		OP* blockStart = begin;
  
 		SortedIntMap<int*> bbNums;
-		int bbNum = 1;
+		sintptr bbNum = 1;
 		OP* ins = begin;
 
 		// start and end
@@ -4658,7 +4658,7 @@ namespace avmplus
 		uintptr prev = blockStart-begin;
 		uintptr bbprev = (uintptr) ( (bbNums.get(prev) > (int*)0) ? bbNums.get(prev) : bbNums.put(prev, (int*)bbNum++) );
 		uintptr current = ins-begin-1;
-		int bbcurrent = (uintptr) ( (bbNums.get(current) > (int*)0) ? bbNums.get(current) : bbNums.put(current, (int*)bbNum++) );
+		uintptr bbcurrent = (uintptr) ( (bbNums.get(current) > (int*)0) ? bbNums.get(current) : bbNums.put(current, (int*)bbNum++) );
 		if (!blockDone)
 		{
 			core->console << "BB" << (int)bbprev << "_" << (int)prev << " -> BB" << (int)bbcurrent << "_" << (int)current << " [weight=2] \n"; 
@@ -4841,7 +4841,7 @@ namespace avmplus
 				else
 				{
 					//AvmAssert(false);
-					buffer.writeHexDWord(op->addr);
+					buffer.writeHexAddr(op->addr);
 				}
 				uint32 argc = op->argc;
 				buffer << " (";
@@ -4888,7 +4888,7 @@ namespace avmplus
 #ifndef AVMPLUS_SYMBIAN
 				buffer << mirNames[op->code] << " ";
 #endif
-				buffer << op->disp << "(";
+				buffer << int(op->disp) << "(";
 				formatInsOperand(buffer, op->oprnd1, ipStart);
 				buffer << ")";
 				break;
@@ -4899,7 +4899,7 @@ namespace avmplus
 #ifndef AVMPLUS_SYMBIAN
 				buffer << mirNames[op->code] << " ";
 #endif
-				buffer << op->disp << "(";
+				buffer << int(op->disp) << "(";
 				formatInsOperand(buffer, op->oprnd1, ipStart);
 				buffer << ")";
 				buffer << " <- ";
@@ -4949,7 +4949,7 @@ namespace avmplus
 				buffer << mirNames[op->code] << " ";
 #endif
 				formatInsOperand(buffer, op->oprnd1, ipStart);
-				buffer << " [" << op->disp << "]";
+				buffer << " [" << int(op->disp) << "]";
 				break;
 
 			case MIR_jmpt: {
@@ -4969,7 +4969,7 @@ namespace avmplus
 
 			case MIR_jmpi:
 #ifndef AVMPLUS_SYMBIAN
-				buffer << mirNames[op->code] << " -> " << op->disp << "(";
+				buffer << mirNames[op->code] << " -> " << int(op->disp) << "(";
 #endif
 				formatInsOperand(buffer, op->base, ipStart);
 				buffer << ")";
@@ -5008,7 +5008,7 @@ namespace avmplus
 #endif
 				if (op->oprnd1 == 0)
 				{
-					buffer << " 0x" << hexDWord(op->imm);
+					buffer << " 0x" << hexAddr(op->imm);
 				}
 				else
 				{
@@ -5060,7 +5060,7 @@ namespace avmplus
 
 		// place the case table at the beginning of the md buffer
 		// 64bit - needs to be a table of uintptrs?
-		casePtr = (uint32*)&code[0];
+		casePtr = (uintptr*)&code[0];
 
 		mipStart = mip = (MDInstruction*) (casePtr+case_count);
 
@@ -5528,7 +5528,7 @@ namespace avmplus
 		if (framep == EBP)
 		{
 			// adjust esp by our activation record size
-			arSize = BIT_ROUND_UP(activation.highwatermark, 16);
+			arSize = uint32(BIT_ROUND_UP(activation.highwatermark, 16));
 
 			#ifdef _MAC
 			// On Mac, the stack size must be 16-byte aligned.
@@ -5593,9 +5593,11 @@ namespace avmplus
 #endif
 			if (!pool->stackOverflowHandler)
 			{
-				pool->stackOverflowHandler = (int)mip;
+				pool->stackOverflowHandler = (sintptr)mip;
 
-				#ifdef _MAC
+				#ifdef AVMPLUS_64BIT
+				AvmAssertMsg (true, "need 64-bit implementation\n");
+				#elif defined(_MAC)
 				// Stack must be aligned at 16-byte boundary for MacOS X ABI.
 				// The method did a CALL to stackOverflowHandler, so we're already
 				// 4 bytes pushed from the original 16-byte stack alignment.
@@ -5646,7 +5648,7 @@ namespace avmplus
 		#ifdef AVMPLUS_PROFILE
 			if (core->sprof.sprofile)
 			{
-				int	asByteCount = abcEnd-abcStart; 
+				int	asByteCount = int(abcEnd-abcStart); 
 				uintptr mirBytes = (uintptr)ipEnd-(uintptr)ipStart;
 				uintptr mdBytes = (uintptr)mip - (uintptr)&code[0];
 				Stringp name = info->name;
@@ -5669,7 +5671,7 @@ namespace avmplus
 		// fix case tables.  Each entry contains the absolute bytecode
 		// offset, we replace with absolute machine address
 		// now that the code buffer is at a known starting address.
-		uint32* mdCasePtr = (uint32*) &code[0];
+		uintptr* mdCasePtr = (uintptr*) &code[0];
 		for(int i=0, n=case_count; i<n; i++, mdCasePtr++)
 		{
 			OP* ins = (OP*)*mdCasePtr;
@@ -6687,7 +6689,7 @@ namespace avmplus
 
 		if (ins->code == MIR_imm)
 		{
-			uint32 v = ins->imm;
+			uint32 v = uint32(ins->imm);
 			Register r =  ins->reg;
 			#ifdef AVMPLUS_PPC
 			// todo add faster case for v=0? okay but make sure not to set cc's
@@ -7153,7 +7155,7 @@ namespace avmplus
         #endif
 		
 		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
-		return -ins->pos - ins->spillSize(); 
+		return int(-ins->pos - ins->spillSize()); 
 		#endif
 	}
 
@@ -7165,7 +7167,7 @@ namespace avmplus
 	{
 		// search the stack for a spot which is
 		// free and is large enough
-		int at = InvalidPos;
+		sintptr at = InvalidPos;
 		int bytes = forIns->spillSize();
 		int n=activation.temps.size();
 
@@ -7211,7 +7213,7 @@ namespace avmplus
 			activation.temps.add(forIns);
 			
 			// ensure our watermark is updated
-			int lastPos = at + bytes;
+			int lastPos = int(at + bytes);
 			if ( lastPos > activation.highwatermark)
 				activation.highwatermark = lastPos;
 		}
@@ -7224,8 +7226,8 @@ namespace avmplus
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
 		{
-			core->console << "                         alloca " << bytes << " at " << at 
-				      << " for @" << (int)(forIns-ipStart) 
+			core->console << "                         alloca " << bytes << " at " << int(at) 
+				      << " for @" << int(forIns-ipStart) 
 				<< " activation.size " << activation.size << "\n";
 			displayStackTable();
 		}
@@ -7305,7 +7307,7 @@ namespace avmplus
 		pool->codeBuffer->decommitUnused();
 
 #ifdef DEBUGGER
-		info->codeSize = (mip - mipStart) * sizeof(MDInstruction);
+		info->codeSize = int((mip - mipStart) * sizeof(MDInstruction));
 #endif
 	}
 
@@ -7336,7 +7338,7 @@ namespace avmplus
 		if (pool->codeBuffer->size() == 0)
 		{
 			// compute amount of space we should reserve.
-			int size = estimateMDBufferReservation(pool);
+			int size = int(estimateMDBufferReservation(pool));
 			pool->codeBuffer->reserve(size);
 		}
 #ifdef AVMPLUS_JIT_READONLY
@@ -7452,12 +7454,13 @@ namespace avmplus
 		*mip++ = get_rtoc();
 #endif
 
-		// funny gyration needed to work around GCC pedantic warning
-		typedef Atom (*AtomMethodProc)(MethodEnv*, int, uint32 *);
 		
 #if defined(_MAC) && !TARGET_RT_MAC_MACHO
-		f->impl32 = *(AtomMethodProc*) &(mip-2);
+		f->impl32 = (int (*)(MethodEnv*, int, va_list)) (mip-2);
 #else
+		// funny gyration needed to work around GCC pedantic warning
+		typedef Atom (*AtomMethodProc)(MethodEnv*, int, uint32 *);
+
 		f->impl32 = *(AtomMethodProc*) &mipStart;
 #endif
 		// lock in the next available location in the buffer (16B aligned)
@@ -7734,7 +7737,7 @@ namespace avmplus
 					}
 
 					OP* base = ip->base;
-					int disp = ip->disp;
+					sintptr disp = ip->disp;
 
 					if (base->code == MIR_alloc)
 					{
@@ -7809,7 +7812,7 @@ namespace avmplus
 					}
 
 					// address + offset
-					int disp = ip->disp;
+					sintptr disp = ip->disp;
 
 					RegInfo& regs = ip->isDouble() ? fpregs : gpregs;
 
@@ -7944,7 +7947,7 @@ namespace avmplus
 					// address + offset
 					OP* value = ip->value; // value
 					OP* addr = ip->base;
-					int disp = ip->disp;
+					sintptr disp = ip->disp;
 
 					// load up our requirements and send off to 
 					// the smart-ass allocator.  If its a stack
@@ -8176,11 +8179,11 @@ namespace avmplus
 						setResultReg(gpregs, ip, r);
 
 						if (mircode==MIR_lsh)
-							SHL(r, rhs->imm);
+							SHL(r, int(rhs->imm));
 						else if (mircode==MIR_rsh)
-							SAR(r, rhs->imm);
+							SAR(r, int(rhs->imm));
 						else // MIR_ush
-							SHR(r, rhs->imm);
+							SHR(r, int(rhs->imm));
 					}
 					else
 					{
@@ -9626,7 +9629,7 @@ namespace avmplus
 					Register r = R3;
 					Register rHint = R6;
 					#endif
-					int disp = 0;
+					sintptr disp = 0;
 					OP* base = NULL;
 					if ((mircode & ~MIR_float) == MIR_ci)
 					{
@@ -9901,7 +9904,7 @@ namespace avmplus
 
 		// def-use stats
 		OP* lastUse = ip->lastUse;
-		int span = lastUse - (ip+1);
+		int span = int(lastUse - (ip+1));
 
 #ifdef AVMPLUS_PROFILE
 		if (span > longestSpan)
@@ -10014,7 +10017,7 @@ namespace avmplus
 	}
 
 	/* patch the location 'where' with the value of the label */
-	void CodegenMIR::mirPatchPtr(OP** targetp, int pc)
+	void CodegenMIR::mirPatchPtr(OP** targetp, sintptr pc)
 	{
 		mirPatchPtr(targetp, state->verifier->getFrameState(pc)->label);
 	}
@@ -10070,7 +10073,7 @@ namespace avmplus
 		else
 		{
 			AvmAssertMsg(where > l->nextPatch, "patch points must be increasing addresses");
-			uint32 off = (l->nextPatch == 0) ? 0 : (MDInstruction*)where - (MDInstruction*)(l->nextPatch);
+			uint32 off = uint32((l->nextPatch == 0) ? 0 : (MDInstruction*)where - (MDInstruction*)(l->nextPatch));
 			MD_PATCH_LOCATION_SET(where, off);
 			l->nextPatch = where;
 		}
@@ -10088,13 +10091,13 @@ namespace avmplus
 		else
 		{
 			AvmAssertMsg(where > l->nextPatch, "patch points must be increasing addresses");
-			uint32 off = (l->nextPatch == 0) ? 0 : (MDInstruction*)where - (MDInstruction*)(l->nextPatch);
+			uint32 off = uint32((l->nextPatch == 0) ? 0 : (MDInstruction*)where - (MDInstruction*)(l->nextPatch));
 			MD_PATCH_LOCATION_SET(where, off);
 			l->nextPatch = where;
 		}
 	}
 
-	void CodegenMIR::mdApplyPatch(uint32* where, int labelvalue)
+	void CodegenMIR::mdApplyPatch(uint32* where, sintptr labelvalue)
 	{
         #ifdef AVMPLUS_PPC
 		MDInstruction* savedMip = mip;
@@ -10160,7 +10163,7 @@ namespace avmplus
 		#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
 		MDInstruction* savedMip = mip;
 		mip = (MDInstruction* )where;
-		IMM32( labelvalue-(uintptr)mip-4 );   // relative branch	(minus the size of the immediate)
+		IMM32( int(labelvalue-(uintptr)mip-4) );   // relative branch	(minus the size of the immediate)
 		mip = savedMip;
         #endif /* AVMPLUS_IA32 */
 

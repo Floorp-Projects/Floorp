@@ -45,11 +45,11 @@ bool P4Available();
 bool P4Available();
 #endif
 
+static MMgc::FixedMalloc* fm;
+
 #ifndef OVERRIDE_GLOBAL_NEW
 // Custom new and delete operators
 // User-defined operator new.
-
-static MMgc::FixedMalloc* fm;
 
 void *operator new(size_t size)
 {
@@ -898,7 +898,7 @@ namespace avmshell
 						else
 						{
 							console << "failed to compile err=0x";
-							console.writeHexDWord(GetLastError());
+							console.writeHexAddr(GetLastError());
 							console << "\n";
 							exec = false;
 						}
@@ -1145,24 +1145,12 @@ int main(int argc, char *argv[])
 int StackTop;
 #endif
 
-#ifndef AVMPLUS_LINUX
-#ifdef AVMPLUS_IA32
-// TODO this is a hack until we learn how to determine stack top
-// in IA-32 System V ABI
-int StackTop;
-#endif
-#endif
-
 int main(int argc, char *argv[])
 {
 	#ifdef AVMPLUS_ARM
 	int sp;
 	asm("mov %0,sp" : "=r" (sp));
 	StackTop = sp;
-	#elif defined AVMPLUS_IA32
-	#ifndef AVMPLUS_LINUX
-	asm("movl %%esp,%0\n" : "=r" (StackTop));
-	#endif
 	#endif
 
 #ifdef AVMPLUS_MACH_EXCEPTIONS

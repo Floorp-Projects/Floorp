@@ -103,7 +103,7 @@ namespace avmplus
 		{
 			len = 0;
 		}
-		T put(int k, T v)
+		T put(sintptr k, T v)
 		{
 			if (len == 0 || k > keys[len-1])
 			{
@@ -135,17 +135,17 @@ namespace avmplus
 				}
 			}
 		}
-		T get(int k) const
+		T get(sintptr k) const
 		{
 			int i = find(k);
 	        return i >= 0 ? values[i] : 0;
 		}
-		bool containsKey(int k) const
+		bool containsKey(sintptr k) const
 		{
 			int i = find(k);
 			return (i >= 0) ? true : false;
 		}
-		T remove(int k)
+		T remove(sintptr k)
 		{
 			int i = find(k);
 			return removeAt(i);
@@ -168,20 +168,20 @@ namespace avmplus
 		T first() const { return isEmpty() ? (T)0 : values[0]; }
 		T last()  const { return isEmpty() ? (T)0 : values[len-1]; }
 
-		int firstKey() const	{ return isEmpty() ? 0 : keys[0]; }
-		int lastKey() const		{ return isEmpty() ? 0 : keys[len-1]; }
+		sintptr firstKey() const	{ return isEmpty() ? 0 : keys[0]; }
+		sintptr lastKey() const		{ return isEmpty() ? 0 : keys[len-1]; }
 
 		// you need to allocate the space for these
-		int keyArray(int* arr) { arraycopy(keys, 0, arr, 0, len); return len; }
+		int keyArray(sintptr* arr) { arraycopy(keys, 0, arr, 0, len); return len; }
 		int valueArray(T* arr) { arraycopy(values, 0, arr, 0, len); return len; }
 
 		// iterator 
 		T	at(int i) const { return values[i]; }
-		int keyAt(int i) const { return keys[i]; }
+		sintptr keyAt(int i) const { return keys[i]; }
 
 	protected:
 		T *values;
-		int *keys;
+		sintptr *keys;
 		int len;
 		int max;
 
@@ -190,7 +190,7 @@ namespace avmplus
 		int gcFlags:3;
 		int livesInGCContainer:1;
 
-		void set(int index, int k, T v)
+		void set(int index, sintptr k, T v)
 		{
 			keys[index] = k;
 			if (gc)
@@ -203,7 +203,7 @@ namespace avmplus
 				values[index] = v;
 			}
 		}
-		int find(int k) const
+		int find(sintptr k) const
 		{
 			int lo = 0;
 			int hi = len-1;
@@ -211,7 +211,7 @@ namespace avmplus
 			while (lo <= hi)
 			{
 				int i = (lo + hi)/2;
-				long m = keys[i];
+				sintptr m = keys[i];
 				if (k > m)
 					lo = i + 1;
 				else if (k < m)
@@ -230,7 +230,7 @@ namespace avmplus
 			if(cap > max) 
 			{
 				T* newvalues = (gc) ? (T*) gc->Calloc(cap, sizeof(T), gcFlags) : new T[cap];
-				int* newkeys = (gc) ? (int*) gc->Calloc(cap, sizeof(int), 0) : new int[cap];
+				sintptr* newkeys = (gc) ? (int*) gc->Calloc(cap, sizeof(sintptr), 0) : new sintptr[cap];
 				arraycopy(keys, 0, newkeys, 0 , len);
 				arraycopy(values, 0, newvalues, 0 , len);
 				if (gc)
@@ -257,7 +257,7 @@ namespace avmplus
 				max = cap;
 			}
 		}
-		void arraycopy(int* src, int srcStart, int* dst, int dstStart, int nbr)
+		void arraycopy(sintptr* src, int srcStart, sintptr* dst, int dstStart, int nbr)
 		{
 			// we have 2 cases, either closing a gap or opening it.
 			if ((src == dst) && (srcStart > dstStart) )

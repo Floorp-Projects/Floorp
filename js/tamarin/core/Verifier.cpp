@@ -246,6 +246,8 @@ namespace avmplus
 		#endif //AVMPLUS_MIR
 #endif /* FEATURE_BUFFER_GUARD */
 
+		TRY(core, kCatchAction_Rethrow){
+
 		#ifdef AVMPLUS_INTERP
 		if (mir)
 		#endif
@@ -444,7 +446,7 @@ namespace avmplus
 					verifyFailed(kCorruptABCError);
 				}
 			}
-			size = nextpc-pc;
+			size = int(nextpc-pc);
 			if (pc+size > code_end)
 				verifyFailed(kLastInstExceedsCodeSizeError);
 
@@ -2254,7 +2256,7 @@ namespace avmplus
 				}
 
 				exceptions_pos = code_end;
-				code_length = code_end - pc;
+				code_length = int(code_end - pc);
 				parseExceptionHandlers();
 
 				break;
@@ -2297,6 +2299,25 @@ namespace avmplus
 		growthGuard = NULL;
 		#endif
 		#endif
+
+		} CATCH (Exception *exception) {
+
+			// clean up growthGuard
+#ifdef FEATURE_BUFFER_GUARD
+#ifdef AVMPLUS_MIR
+		    // Make sure the GrowthGuard is unregistered
+			if (growthGuard)
+			{
+					growthGuard->~GrowthGuard();
+//					growthGuard = NULL;
+			}
+#endif
+#endif
+			// re-throw exception
+			core->throwException(exception);
+		}
+		END_CATCH
+		END_TRY
 	}
 
 	void Verifier::checkPropertyMultiname(uint32 &depth, Multiname &multiname)
@@ -2564,7 +2585,7 @@ namespace avmplus
 		state->push(v2);
 	}
 
-	FrameState *Verifier::getFrameState(int targetpc)
+	FrameState *Verifier::getFrameState(sintptr targetpc)
 	{
 		const byte *target = code_pos + targetpc;
 		FrameState *targetState;

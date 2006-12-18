@@ -36,40 +36,23 @@
 namespace avmplus
 {
 	/**
-	 * hexDWord is an operator that can be used with PrintWriter
-	 * to write out a dword in hex
+	 * hexAddr is an operator that can be used with PrintWriter
+	 * to write out a dword/qword in hex
 	 */
-	class hexDWord
+	class hexAddr
 	{
 	public:
-		hexDWord(uint32 _value) { this->value = _value; }
-		hexDWord(const hexDWord& toCopy) { value = toCopy.value; }
-		hexDWord& operator= (const hexDWord& toCopy) {
+		hexAddr(uintptr _value) { this->value = _value; }
+		hexAddr(const hexAddr& toCopy) { value = toCopy.value; }
+		hexAddr& operator= (const hexAddr& toCopy) {
 			value = toCopy.value;
 			return *this;
 		}
-		uint32 getValue() const { return value; }
+		uintptr getValue() const { return value; }
 		
 	private:
-		uint32 value;
+		uintptr value;
 	};
-
-#ifdef AVMPLUS_64BIT
-	class hexQWord
-	{
-	public:
-		hexQWord(uint64 _value) { this->value = _value; }
-		hexQWord(const hexQWord& toCopy) { value = toCopy.value; }
-		hexQWord& operator= (const hexQWord& toCopy) {
-			value = toCopy.value;
-			return *this;
-		}
-		uint64 getValue() const { return value; }
-		
-	private:
-		uint64 value;
-	};
-#endif	
 	
 	/**
 	 * tabstop is an operator that can be used with PrintWriter
@@ -138,7 +121,7 @@ namespace avmplus
 		PrintWriter& operator<< (double value);
 		PrintWriter& operator<< (Stringp str);
 		PrintWriter& operator<< (tabstop tabs);
-		PrintWriter& operator<< (hexDWord tabs);
+		PrintWriter& operator<< (hexAddr tabs);
 		PrintWriter& operator<< (percent value);		
 		PrintWriter& operator<< (bool b);
 
@@ -146,13 +129,8 @@ namespace avmplus
 
 		void writeHexByte(uint8 value);
 		void writeHexWord(uint16 value);
-		void writeHexDWord(uint32 value);
+		void writeHexAddr(uintptr value);
 		
-		#ifdef AVMPLUS_64BIT
-		PrintWriter& operator<< (hexQWord tabs);
-		void writeHexQWord(uint64 value);
-		#endif
-
 		#ifdef AVMPLUS_VERBOSE
 		void format(const char *format, ...);
 		void formatV(const char *format, va_list ap);

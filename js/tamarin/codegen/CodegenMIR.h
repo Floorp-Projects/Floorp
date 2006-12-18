@@ -185,9 +185,9 @@ namespace avmplus
 		 */
 		void epilogue(FrameState* state);
 		bool prologue(FrameState* state);
-		void emitCall(FrameState* state, AbcOpcode opcode, int method_id, int argc, Traits* result);
+		void emitCall(FrameState* state, AbcOpcode opcode, sintptr method_id, int argc, Traits* result);
 		void emit(FrameState* state, AbcOpcode opcode, uintptr op1=0, uintptr op2=0, Traits* result=NULL);
-		void emitIf(FrameState* state, AbcOpcode opcode, int target, int lhs, int rhs);
+		void emitIf(FrameState* state, AbcOpcode opcode, sintptr target, int lhs, int rhs);
 		void emitSwap(FrameState* state, int i, int j);
 		void emitCopy(FrameState* state, int src, int dest);
 		void emitGetscope(FrameState* state, int scope, int dest);
@@ -528,16 +528,16 @@ namespace avmplus
 				OP* oprnd1;			// 1st operand of instruction
 				OP* base;			// base ptr for load/store/lea/jmpi
 				uint32 argc;		// arg count, for calls
-				int pos;			// position of spilled value, or position of label
+				sintptr pos;		// position of spilled value, or position of label
 			};
 
 			union
 			{
 				OP* oprnd2;			// 2nd operand of instruction	
-				int32 addr;			// call addr or pc addr
+				sintptr addr;		// call addr or pc addr
 				int32 size;			// alloca size, table size
-				int32 imm;			// imm value if const
-				int disp;			// immediate signed displacement for load/store/lea/jmpi
+				sintptr imm;		// imm value if const
+				sintptr disp;		// immediate signed displacement for load/store/lea/jmpi
 				OP* target;			// branch target
 				OP* join;			// def joined to
 				uint32 *nextPatch;
@@ -580,7 +580,7 @@ namespace avmplus
 		class MdLabel
 		{
 		public:
-			int value;
+			sintptr value;
 			uint32* nextPatch;	/* linked list of patch locations, where next address is an offset in the instruction */
 			MdLabel() {
 				value = 0;
@@ -634,7 +634,7 @@ namespace avmplus
 		GrowableBuffer* mirBuffer;
 
 		byte*	 code;
-		uint32*  casePtr;
+		uintptr*  casePtr;
 		int		 case_count;
 
 		#ifdef AVMPLUS_PPC
@@ -668,15 +668,15 @@ namespace avmplus
 		uint32 arg_index;
 
 		void	mirLabel(MirLabel& l, OP* bb); 
-		void	mirPatchPtr(OP** targetp, int pc);		/* patch the location 'where' with the 32b value of the label */
+		void	mirPatchPtr(OP** targetp, sintptr pc);		/* patch the location 'where' with the 32b value of the label */
 		void	mirPatchPtr(OP** targetp, MirLabel& l);
-		void	mirPatch(OP* i, int pc);
+		void	mirPatch(OP* i, sintptr pc);
 
 		void	mdLabel(MdLabel* l, void* v);			/* machine specific version of position label (will trigger patching) */
 		void	mdLabel(OP* l, void* v);			/* machine specific version of position label (will trigger patching) */
 		void	mdPatch(void* where, MdLabel* l);		/* machine specific version for patch the location 'where' with the 32b value of the label */
 		void	mdPatch(void* where, OP* l);		/* machine specific version for patch the location 'where' with the 32b value of the label */
-		void	mdApplyPatch(uint32* where, int labelvalue); /* patch label->value into where */
+		void	mdApplyPatch(uint32* where, sintptr labelvalue); /* patch label->value into where */
 
 		void    mdPatchPreviousOp(OP* ins) {
 			mdPatch( PREV_MD_INS(mip), ins );
@@ -791,7 +791,7 @@ namespace avmplus
 		OP* lastFunctionCall;
 
 		// track last pc value we generated a store for
-		int lastPcSave;
+		sintptr lastPcSave;
 
 		// cse table which prevents duplicate instructions in the same bb
 		OP* cseTable[MIR_last];
@@ -813,14 +813,14 @@ namespace avmplus
 		void saveState();
 
 		OP* defIns(OP* v);
-		OP* useIns(OP* def, int i);
+		OP* useIns(OP* def, sintptr i);
 
 		OP* undefConst;
 
 		// frame state helpers
-		OP*		localGet(uint32 i);
-		void	localSet(uint32 i, OP* o);
-		OP*		loadAtomRep(uint32 i);
+		OP*		localGet(uintptr i);
+		void	localSet(uintptr i, OP* o);
+		OP*		loadAtomRep(uintptr i);
 
 		OP*	  InsAt(int nbr)  { return ipStart+nbr; }
 		int	  InsNbr(OP* ins)	 { AvmAssert(ins >= ipStart); return (ins-ipStart); }
@@ -836,10 +836,10 @@ namespace avmplus
 		OP*	  defineArgInsReg(Register r);
 		OP*   binaryIns(MirOpcode code, OP* a1, OP* a2);
 		
-		OP*   loadIns(MirOpcode _code, int _disp, OP* _base)
+		OP*   loadIns(MirOpcode _code, sintptr _disp, OP* _base)
 		{
 			AvmAssert((_code & ~MIR_float & ~MIR_oper) == MIR_ld);
-			return Ins(_code, _base, (int32)_disp);
+			return Ins(_code, _base, (sintptr)_disp);
 		}
 
 		OP*   cmpOptimization (int lhs, int rhs);
@@ -851,14 +851,14 @@ namespace avmplus
 
 		OP*   cmpLt(int lhs, int rhs);
 		OP*   cmpLe(int lhs, int rhs);
-		OP*	  cmpEq(int funcaddr, int lhs, int rhs);
+		OP*	  cmpEq(sintptr funcaddr, int lhs, int rhs);
 
 		void  storeIns(OP* v, uintptr disp, OP* base);
 
 		OP*   leaIns(int disp, OP* base);
-		OP*   callIns(int32 addr, uint32 argCount, MirOpcode code);
+		OP*   callIns(sintptr addr, uint32 argCount, MirOpcode code);
 		OP*   callIndirect(MirOpcode code, OP* target, uint32 argCount, ...);
-		OP*   callIns(MirOpcode code, int32 addr, uint32 argCount, ...);
+		OP*   callIns(MirOpcode code, sintptr addr, uint32 argCount, ...);
 		OP*   promoteNumberIns(Traits* t, int i);
 
 		OP*   loadVTable(int base_index);
@@ -878,7 +878,7 @@ namespace avmplus
 
 		void updateUse(OP* currentIns, OP* op, Register hint=Unknown);
 
-		void extendLastUse(OP* use, int targetpc);
+		void extendLastUse(OP* use, sintptr targetpc);
 		void extendLastUse(OP* ins, OP* use, OP* target);
 
 		OP*  atomToNativeRep(Traits* t, OP* atom);

@@ -209,7 +209,7 @@ namespace avmplus
 		#endif
 
 		const byte* pc = code_start;
-		int volatile expc;
+		sintptr volatile expc;
 
 		#ifdef DEBUGGER
 		callStackNode.eip = &expc;
