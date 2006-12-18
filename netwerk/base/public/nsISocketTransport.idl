@@ -44,6 +44,10 @@ native PRNetAddr(union PRNetAddr);
 /**
  * nsISocketTransport
  *
+ * NOTE: Connection setup is triggered by opening an input or output stream,
+ * it does not start on its own. Completion of the connection setup is
+ * indicated by a STATUS_CONNECTED_TO notification to the event sink (if set).
+ *
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
@@ -76,6 +80,8 @@ interface nsISocketTransport : nsITransport
      * Security info object returned from the secure socket provider.  This
      * object supports nsISSLSocketControl, nsITransportSecurityInfo, and
      * possibly other interfaces.
+     *
+     * This attribute is only available once the socket is connected.
      */
     readonly attribute nsISupports securityInfo;
     
