@@ -499,16 +499,6 @@ nsTableFrame::GetColFrame(PRInt32 aColIndex) const
   }
 }
 
-// can return nsnull
-nsTableCellFrame* nsTableFrame::GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex)
-{
-  nsTableCellMap* cellMap = GetCellMap();
-  if (cellMap) 
-    return cellMap->GetCellInfoAt(aRowIndex, aColIndex);
-  return nsnull;
-}
-
-
 PRInt32 nsTableFrame::GetEffectiveRowSpan(PRInt32                 aRowIndex,
                                           const nsTableCellFrame& aCell) const
 {

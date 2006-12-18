@@ -931,49 +931,6 @@ nsTableCellFrame::GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)
   return  NS_OK;
 }
 
-NS_IMETHODIMP
-nsTableCellFrame::GetPreviousCellInColumn(nsITableCellLayout **aCellLayout)
-{
-  if (!aCellLayout) return NS_ERROR_NULL_POINTER;
-  *aCellLayout = nsnull;
-
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_FAILURE;
-
-  // Get current cell location
-  PRInt32 rowIndex, colIndex;
-  GetCellIndexes(rowIndex, colIndex);
-  if (colIndex > 0)
-  {
-    // Get the cellframe at previous colIndex
-    nsTableCellFrame *cellFrame = tableFrame->GetCellFrameAt(rowIndex, colIndex-1);
-    if (!cellFrame) return NS_ERROR_FAILURE;
-    return CallQueryInterface(cellFrame, aCellLayout);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
-{
-  if (!aCellLayout) return NS_ERROR_NULL_POINTER;
-  *aCellLayout = nsnull;
-
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_FAILURE;
-
-  // Get current cell location
-  PRInt32 rowIndex, colIndex;
-  GetCellIndexes(rowIndex, colIndex);
-
-  // Get the cellframe at next colIndex
-  nsTableCellFrame *cellFrame = tableFrame->GetCellFrameAt(rowIndex, colIndex+1);
-  if (!cellFrame) return NS_ERROR_FAILURE;
-  return CallQueryInterface(cellFrame, aCellLayout);
-}
-
 nsIFrame*
 NS_NewTableCellFrame(nsIPresShell*   aPresShell,
                      nsStyleContext* aContext,
