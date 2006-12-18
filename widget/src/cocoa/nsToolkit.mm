@@ -52,22 +52,23 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Carbon/Carbon.h>
+#include <Gestalt.h>
 
 #include "nsWidgetAtoms.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+
+#ifdef USE_QUARTZ_FONT_PREFS
 #include "nsIPrefBranch2.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-#include <Gestalt.h>
-
-
-static io_connect_t gRootPort = MACH_PORT_NULL;
-
 static const char kQuartzRenderingPref[] = "browser.quartz.enable";
 static const char kAllFontSizesPref[] = "browser.quartz.enable.all_font_sizes";
+#endif
+
+static io_connect_t gRootPort = MACH_PORT_NULL;
 
 // Static thread local storage index of the Toolkit 
 // object associated with a given thread...
@@ -89,7 +90,11 @@ nsToolkit::~nsToolkit()
 }
 
 
+#ifdef USE_QUARTZ_FONT_PREFS
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsToolkit, nsIToolkit, nsIObserver);
+#else
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
+#endif
 
 
 NS_IMETHODIMP
@@ -100,6 +105,8 @@ nsToolkit::Init(PRThread * aThread)
   mInited = true;
   
   RegisterForSleepWakeNotifcations();
+
+#ifdef USE_QUARTZ_FONT_PREFS
   SetupQuartzRendering();
   
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -107,10 +114,13 @@ nsToolkit::Init(PRThread * aThread)
     prefs->AddObserver(kQuartzRenderingPref, this, PR_FALSE);  
     prefs->AddObserver(kAllFontSizesPref, this, PR_FALSE);
   }
+#endif
+
   return NS_OK;
 }
 
 
+#ifdef USE_QUARTZ_FONT_PREFS
 // The pref changed, reset the app to use quartz rendering as dictated by the pref
 NS_IMETHODIMP
 nsToolkit::Observe(nsISupports*     aSubject,
@@ -120,6 +130,7 @@ nsToolkit::Observe(nsISupports*     aSubject,
   SetupQuartzRendering();
   return NS_OK;
 }
+#endif
 
 
 nsToolkit* NS_CreateToolkitInstance()
@@ -201,6 +212,7 @@ nsToolkit::RemoveSleepWakeNotifcations()
 }
 
 
+#ifdef USE_QUARTZ_FONT_PREFS
 // SetupQuartzRendering
 //
 // Use apple's technote for 10.1.5 to turn on quartz rendering with CG metrics. This
@@ -219,9 +231,8 @@ nsToolkit::SetupQuartzRendering()
   
   const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
   
-  // turn on quartz rendering if we find the symbol in the app framework. Just turn
-  // on the bits that we need, don't turn off what someone else might have wanted. If
-  // the pref isn't found, assume we want it on. That way, we have to explicitly put
+  // Just turn on the bits that we need, don't turn off what someone else might have wanted.
+  // If the pref isn't found, assume we want it on. That way, we have to explicitly put
   // in a pref to disable it, rather than force everyone who wants it to carry around
   // an extra pref.
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -242,9 +253,10 @@ nsToolkit::SetupQuartzRendering()
       SetOutlinePreferred(true);
   }
   else {
-    QDSwapTextFlags(oldFlags & !kFlagsWeUse);
+    QDSwapTextFlags(oldFlags & ~kFlagsWeUse);
   }
 }
+#endif
 
 
 // Return the nsIToolkit for the current thread.  If a toolkit does not
