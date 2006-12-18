@@ -47,10 +47,10 @@ class nsGridRowLayout;
 class nsGridRow;
 class nsGridLayout2;
 
-// adaee669-f8db-42d7-8817-a2299a341404
+// 07373ed7-e947-4a5e-b36c-69f7c195677b
 #define NS_IGRIDPART_IID \
-{ 0xadaee669, 0xf8db, 0x42d7, \
-  { 0x88, 0x17, 0xa2, 0x29, 0x9a, 0x34, 0x14, 0x04 } }
+{ 0x07373ed7, 0xe947, 0x4a5e, \
+  { 0xb3, 0x6c, 0x69, 0xf7, 0xc1, 0x95, 0x67, 0x7b } }
 
 /**
  * An additional interface implemented by nsIBoxLayout implementations
@@ -62,14 +62,12 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGRIDPART_IID)
 
-  NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)=0;
-  NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid)=0;
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout()=0;
+  virtual nsGridLayout2* CastToGridLayout()=0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
    *                  whose layout manager is |this|.
-   * @param aList [OUT] The grid of which aBox (a row, row group, or grid)
-   *                    is a part.
    * @param aIndex [INOUT] For callers not setting aRequestor, the value
    *                       pointed to by aIndex is incremented by the index
    *                       of the row (aBox) within its row group; if aBox
@@ -82,8 +80,9 @@ public:
    *                   in which case it is a pointer to that grid part.
    *                   (This may only be non-null for row groups and
    *                   grids.)
+   * @return The grid of which aBox (a row, row group, or grid) is a part.
    */
-  NS_IMETHOD GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull)=0;
+  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull)=0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -93,19 +92,25 @@ public:
    *                   row group).
    * @param aParentGridRow [OUT] The layout manager for aParentBox.
    */
-  NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)=0;
+  virtual void GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)=0;
 
-  NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
-  NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
-  NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)=0;
-  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)=0;
-  NS_IMETHOD GetRowCount(PRInt32& aRowCount)=0;
+  /**
+   * @param aBox [IN] The other half of the |this| parameter, i.e., the box
+   *                  whose layout manager is |this|.
+   * @param aRowCount [INOUT] Row count
+   * @param aComputedColumnCount [INOUT] Column count
+   */
+  virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
+  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
+  virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows)=0;
+  virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)=0;
+  virtual PRInt32 GetRowCount()=0;
   
   /**
    * Return the level of the grid hierarchy this grid part represents.
    */
   enum Type { eGrid, eRowGroup, eRowLeaf };
-  NS_IMETHOD_(Type) GetType()=0;
+  virtual Type GetType()=0;
 
   /**
    * Return whether this grid part is an appropriate parent for the argument.

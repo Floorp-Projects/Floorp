@@ -239,7 +239,7 @@ nsGrid::RebuildIfNeeded()
   BuildRows(mColumnsBox, columnCount, &mColumns, PR_FALSE);
 
   // build and populate the cell map
-  BuildCellMap(rowCount, columnCount, &mCellMap);
+  mCellMap = BuildCellMap(rowCount, columnCount);
 
   mRowCount = rowCount;
   mColumnCount = columnCount;
@@ -305,8 +305,7 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
      nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
      if (monument)
      {
-       nsGridRowGroupLayout* rowGroup = nsnull;
-       monument->CastToRowGroupLayout(&rowGroup);
+       nsGridRowGroupLayout* rowGroup = monument->CastToRowGroupLayout();
        if (rowGroup) {
           PRBool isHorizontal = !nsSprocketLayout::IsHorizontal(child);
           if (isHorizontal)
@@ -352,7 +351,7 @@ nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputed
  * Given the number of rows create nsGridRow objects for them and full them out.
  */
 void
-nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsHorizontal)
+nsGrid::BuildRows(nsIBox* aBox, PRInt32 aRowCount, nsGridRow** aRows, PRBool aIsHorizontal)
 {
   // if no rows then return null
   if (aRowCount == 0) {
@@ -400,8 +399,7 @@ nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsH
     if (layout) {
       nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
       if (monument) {
-         PRInt32 count;
-         monument->BuildRows(aBox, row, &count);
+         monument->BuildRows(aBox, row);
       }
     }
   }
@@ -413,19 +411,18 @@ nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsH
 /**
  * Given the number of rows and columns. Build a cellmap
  */
-void
-nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
+nsGridCell*
+nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns)
 {
   PRInt32 size = aRows*aColumns;
   PRInt32 oldsize = mRowCount*mColumnCount;
   if (size == 0) {
     delete[] mCellMap;
-    (*aCells) = nsnull;
   }
   else {
     if (size > oldsize) {
       delete[] mCellMap;
-      (*aCells) = new nsGridCell[size];
+      return new nsGridCell[size];
     } else {
       // clear out cellmap
       for (PRInt32 i=0; i < oldsize; i++)
@@ -433,10 +430,10 @@ nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
         mCellMap[i].SetBoxInRow(nsnull);
         mCellMap[i].SetBoxInColumn(nsnull);
       }
-
-      (*aCells) = mCellMap;
+      return mCellMap;
     }
   }
+  return nsnull;
 }
 
 /** 
@@ -450,7 +447,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
     return;
 
    // look through the columns
-  nscoord j = 0;
+  PRInt32 j = 0;
 
   for(PRInt32 i=0; i < aRowCount; i++) 
   {
@@ -644,17 +641,19 @@ nsGrid::GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart)
   }
 }
 
-void
-nsGrid::GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
+nsMargin
+nsGrid::GetBoxTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
 {
+  nsMargin margin(0,0,0,0);
   // walk the boxes parent chain getting the border/padding/margin of our parent rows
   
   // first get the layour manager
   nsCOMPtr<nsIGridPart> part;
-  nsCOMPtr<nsIGridPart> parent;
   GetPartFromBox(aBox, getter_AddRefs(part));
   if (part)
-    part->GetTotalMargin(aBox, aMargin, aIsHorizontal);
+    margin = part->GetTotalMargin(aBox, aIsHorizontal);
+
+  return margin;
 }
 
 /**
@@ -767,8 +766,6 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
        totalBorderPadding += inset; 
        totalBorderPadding += border;
        totalBorderPadding += padding;
-
-       box->GetMargin(margin);
      }
 
      // if we are the first or last row
@@ -777,9 +774,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
      // fortunately they only affect the first
      // and last row inside the <rows> tag
 
-     GetBoxTotalMargin(box, margin, aIsHorizontal);
-
-     totalMargin = margin;
+     totalMargin = GetBoxTotalMargin(box, aIsHorizontal);
   }
 
   if (aIsHorizontal) {
@@ -835,7 +830,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
            // include the margin of the columns. To the row
            // at this point border/padding and margins all added
            // up to more needed space.
-           GetBoxTotalMargin(box, margin, !aIsHorizontal);
+           margin = GetBoxTotalMargin(box, !aIsHorizontal);
            box->GetInset(inset);
            // get real border and padding. GetBorderAndPadding
            // is redefined on nsGridRowLeafFrame. If we called it here
@@ -1139,8 +1134,7 @@ nsGrid::IsGrid(nsIBox* aBox)
   if (!part)
     return PR_FALSE;
 
-  nsGridLayout2* grid = nsnull; 
-  part->CastToGridLayout(&grid);
+  nsGridLayout2* grid = part->CastToGridLayout();
 
   if (grid)
     return PR_TRUE;

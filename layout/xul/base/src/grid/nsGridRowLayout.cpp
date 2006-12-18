@@ -56,28 +56,32 @@ nsGridRowLayout::nsGridRowLayout(nsIPresShell* aPresShell):nsSprocketLayout()
 NS_IMETHODIMP
 nsGridRowLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
 {
-  return ChildAddedOrRemoved(aBox, aState);
+  ChildAddedOrRemoved(aBox, aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGridRowLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return ChildAddedOrRemoved(aBox, aState);
+  ChildAddedOrRemoved(aBox, aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGridRowLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return ChildAddedOrRemoved(aBox, aState);
+  ChildAddedOrRemoved(aBox, aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGridRowLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return ChildAddedOrRemoved(aBox, aState);
+  ChildAddedOrRemoved(aBox, aState);
+  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridPart)
 {
   // go up and find our parent gridRow. Skip and non gridRow
@@ -90,26 +94,23 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
 
   // get the parent
   if (aBox)
-      aBox->GetParentBox(&aBox);
+    aBox->GetParentBox(&aBox);
 
   if (aBox)
   {
-      nsCOMPtr<nsIBoxLayout> layout;
-      aBox->GetLayoutManager(getter_AddRefs(layout));
-      nsCOMPtr<nsIGridPart> parentGridRow = do_QueryInterface(layout);
-      if (parentGridRow && parentGridRow->CanContain(this)) {
-          parentGridRow.swap(*aParentGridPart);
-          *aParentBox = aBox;
-          return NS_OK;
-      }
+    nsCOMPtr<nsIBoxLayout> layout;
+    aBox->GetLayoutManager(getter_AddRefs(layout));
+    nsCOMPtr<nsIGridPart> parentGridRow = do_QueryInterface(layout);
+    if (parentGridRow && parentGridRow->CanContain(this)) {
+      parentGridRow.swap(*aParentGridPart);
+      *aParentBox = aBox;
+    }
   }
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor)
+nsGrid*
+nsGridRowLayout::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor)
 {
 
    if (aRequestor == nsnull)
@@ -118,9 +119,8 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
       nsIBox* parentBox; // nsIBox is implemented by nsIFrame and is not refcounted.
       GetParentGridPart(aBox, &parentBox, getter_AddRefs(parent));
       if (parent)
-         return parent->GetGrid(parentBox, aList, aIndex, this);
-      else
-         return NS_OK;
+         return parent->GetGrid(parentBox, aIndex, this);
+      return nsnull;
    }
 
    nsresult rv = NS_OK;
@@ -145,10 +145,7 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
           index = count;
           break;
        }
-
-       PRInt32 c = 0;
-       gridRow->GetRowCount(c);
-       count += c;
+       count += gridRow->GetRowCount();
      } else 
        count++;
 
@@ -159,9 +156,8 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
    // this could happen during initial construction so lets just
    // fail.
    if (index == -1) {
-     *aList = nsnull;
      *aIndex = -1;
-     return NS_OK;
+     return nsnull;
    }
 
    (*aIndex) += index;
@@ -171,27 +167,13 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
    GetParentGridPart(aBox, &parentBox, getter_AddRefs(parent));
 
    if (parent)
-      parent->GetGrid(parentBox, aList, aIndex, this);
+     return parent->GetGrid(parentBox, aIndex, this);
 
-   return NS_OK;
+   return nsnull;
 }
 
-NS_IMETHODIMP
-nsGridRowLayout::CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)
-{
-  (*aRowGroup) = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridRowLayout::CastToGridLayout(nsGridLayout2** aGridLayout)
-{
-  (*aGridLayout) = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
+nsMargin
+nsGridRowLayout::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
 {
   // get our parents margin
   nsMargin margin(0,0,0,0);
@@ -214,7 +196,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHoriz
     // get the parent first child to see if we are first
     parent->GetChildBox(&child);
 
-    part->GetTotalMargin(parent,margin,aIsHorizontal);
+    margin = part->GetTotalMargin(parent, aIsHorizontal);
 
     // if first or last
     if (child == aBox || next == nsnull) {
@@ -242,13 +224,12 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHoriz
     }
   }
     
-  aMargin = margin;
-
   // add ours to it.
-  aBox->GetMargin(margin);
-  aMargin += margin;
+  nsMargin ourMargin;
+  aBox->GetMargin(ourMargin);
+  margin += ourMargin;
 
-  return NS_OK;
+  return margin;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsGridRowLayout, nsBoxLayout)
