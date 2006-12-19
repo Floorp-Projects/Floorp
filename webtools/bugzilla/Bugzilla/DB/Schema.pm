@@ -490,6 +490,8 @@ use constant ABSTRACT_SCHEMA => {
 
     versions => {
         FIELDS => [
+            id         =>  {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
+                            PRIMARYKEY => 1},
             value      =>  {TYPE => 'varchar(64)', NOTNULL => 1},
             product_id =>  {TYPE => 'INT2', NOTNULL => 1},
         ],

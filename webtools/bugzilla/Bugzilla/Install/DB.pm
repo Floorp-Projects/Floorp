@@ -516,6 +516,8 @@ sub update_table_definitions {
 
     $dbh->bz_add_column('versions', 'id', 
         {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+    $dbh->bz_add_column('milestones', 'id',
+        {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
 
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #

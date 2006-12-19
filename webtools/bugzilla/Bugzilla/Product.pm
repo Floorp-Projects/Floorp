@@ -120,16 +120,11 @@ sub milestones {
     my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{milestones}) {
-        my $values = $dbh->selectcol_arrayref(q{
-            SELECT value FROM milestones
-            WHERE product_id = ?
-            ORDER BY sortkey}, undef, $self->id);
+        my $ids = $dbh->selectcol_arrayref(q{
+            SELECT id FROM milestones
+             WHERE product_id = ?}, undef, $self->id);
  
-        my @milestones;
-        foreach my $value (@$values) {
-            push @milestones, new Bugzilla::Milestone($self->id, $value);
-        }
-        $self->{milestones} = \@milestones;
+        $self->{milestones} = Bugzilla::Milestone->new_from_list($ids);
     }
     return $self->{milestones};
 }

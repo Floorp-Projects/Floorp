@@ -13,10 +13,13 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Tiago R. Mello <timello@async.com.br>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 
 package Bugzilla::Milestone;
+
+use base qw(Bugzilla::Object);
 
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -27,50 +30,45 @@ use Bugzilla::Error;
 
 use constant DEFAULT_SORTKEY => 0;
 
+use constant DB_TABLE => 'milestones';
+
 use constant DB_COLUMNS => qw(
-    milestones.value
-    milestones.product_id
-    milestones.sortkey
+    id
+    value
+    product_id
+    sortkey
 );
 
-my $columns = join(", ", DB_COLUMNS);
+use constant NAME_FIELD => 'value';
+use constant LIST_ORDER => 'sortkey, value';
 
 sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {};
-    bless($self, $class);
-    return $self->_init(@_);
-}
-
-sub _init {
-    my $self = shift;
-    my ($product_id, $value) = (@_);
+    my $class = shift;
+    my $param = shift;
     my $dbh = Bugzilla->dbh;
 
-    my $milestone;
+    my $product;
+    if (ref $param) {
+        $product = $param->{product};
+        my $name = $param->{name};
+        if (!defined $product) {
+            ThrowCodeError('bad_arg',
+                {argument => 'product',
+                 function => "${class}::new"});
+        }
+        if (!defined $name) {
+            ThrowCodeError('bad_arg',
+                {argument => 'name',
+                 function => "${class}::new"});
+        }
 
-    if (defined $product_id
-        && detaint_natural($product_id)
-        && defined $value) {
-
-        trick_taint($value);
-        $milestone = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM milestones
-            WHERE value = ?
-            AND product_id = ?}, undef, ($value, $product_id));
-    } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'product_id/value',
-             function => 'Bugzilla::Milestone::_init'});
+        my $condition = 'product_id = ? AND value = ?';
+        my @values = ($product->id, $name);
+        $param = { condition => $condition, values => \@values };
     }
 
-    return undef unless (defined $milestone);
-
-    foreach my $field (keys %$milestone) {
-        $self->{$field} = $milestone->{$field};
-    }
-    return $self;
+    unshift @_, $param;
+    return $class->SUPER::new(@_);
 }
 
 sub bug_count {
@@ -105,8 +103,8 @@ sub check_milestone {
         ThrowUserError('milestone_not_specified');
     }
 
-    my $milestone = new Bugzilla::Milestone($product->id,
-                                            $milestone_name);
+    my $milestone = new Bugzilla::Milestone({ product => $product,
+                                              name    => $milestone_name });
     unless ($milestone) {
         ThrowUserError('milestone_not_valid',
                        {'product' => $product->name,
@@ -141,7 +139,8 @@ Bugzilla::Milestone - Bugzilla product milestone class.
 
     use Bugzilla::Milestone;
 
-    my $milestone = new Bugzilla::Milestone(1, 'milestone_value');
+    my $milestone = new Bugzilla::Milestone(
+        { product => $product, name => 'milestone_value' });
 
     my $product_id = $milestone->product_id;
     my $value = $milestone->value;

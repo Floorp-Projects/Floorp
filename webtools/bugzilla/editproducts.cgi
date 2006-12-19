@@ -851,8 +851,8 @@ if ($action eq 'update') {
 
     # Only update milestone related stuff if 'usetargetmilestone' is on.
     if (Bugzilla->params->{'usetargetmilestone'}) {
-        my $milestone = new Bugzilla::Milestone($product_old->id,
-                                                $defaultmilestone);
+        my $milestone = new Bugzilla::Milestone(
+            { product => $product_old, name => $defaultmilestone });
 
         unless ($milestone) {
             ThrowUserError('product_must_define_defaultmilestone',

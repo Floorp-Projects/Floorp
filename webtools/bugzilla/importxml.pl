@@ -692,9 +692,8 @@ sub process_bug {
 
     # Milestone
     if ( $params->{"usetargetmilestone"} ) {
-        my $milestone =
-          new Bugzilla::Milestone( $product->id,
-                                   $bug_fields{'target_milestone'} );
+        my $milestone = new Bugzilla::Milestone(
+            { product => $product, name => $bug_fields{'target_milestone'} });
         if ($milestone) {
             push( @values, $milestone->name );
         }

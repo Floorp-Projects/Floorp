@@ -130,8 +130,8 @@ if ($action eq 'new') {
     $sortkey = Bugzilla::Milestone::check_sort_key($milestone_name,
                                                    $sortkey);
 
-    my $milestone = new Bugzilla::Milestone($product->id,
-                                            $milestone_name);
+    my $milestone = new Bugzilla::Milestone(
+        { product => $product, name => $milestone_name });
 
     if ($milestone) {
         ThrowUserError('milestone_already_exists',
@@ -145,8 +145,8 @@ if ($action eq 'new') {
               VALUES ( ?, ?, ? )',
              undef, $milestone_name, $product->id, $sortkey);
 
-    $milestone = new Bugzilla::Milestone($product->id,
-                                         $milestone_name);
+    $milestone = new Bugzilla::Milestone(
+        { product => $product, name => $milestone_name });
     delete_token($token);
 
     $vars->{'milestone'} = $milestone;
@@ -301,8 +301,8 @@ if ($action eq 'update') {
         unless ($milestone_name) {
             ThrowUserError('milestone_blank_name');
         }
-        my $milestone = 
-            new Bugzilla::Milestone($product->id, $milestone_name);
+        my $milestone = new Bugzilla::Milestone(
+            { product => $product, name => $milestone_name });
         if ($milestone) {
             ThrowUserError('milestone_already_exists',
                            {'name' => $milestone->name,
