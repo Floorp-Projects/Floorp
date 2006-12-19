@@ -3580,8 +3580,9 @@ nsWindow::SetUrgencyHint(GtkWidget *top_window, PRBool state)
         (*_gdk_window_set_urgency_hint)(top_window->window, state);
     else if (state)
         gdk_window_show_unraised(top_window->window);
-    
-    PR_UnloadLibrary(lib);
+
+    if (lib)
+        PR_UnloadLibrary(lib);
 }
 
 void *
