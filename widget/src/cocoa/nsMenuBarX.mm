@@ -69,11 +69,10 @@ static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIMutationObserver, 
                    nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
 
-
-NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 NSWindow* nsMenuBarX::sEventTargetWindow = nil;
+NSMenu* sApplicationMenu = nil;
 BOOL gSomeMenuBarPainted = NO;
 
 
