@@ -327,6 +327,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   
   [mCookiesTable setDeleteAction:@selector(removeCookies:)];
   [mCookiesTable setTarget:self];
+  
+  CookieDateFormatter* cookieDateFormatter = [[CookieDateFormatter alloc] initWithDateFormat:@"%b %d, %Y" allowNaturalLanguage:NO];
+  [[[mCookiesTable tableColumnWithIdentifier:@"Expires"] dataCell] setFormatter:cookieDateFormatter];
+  [cookieDateFormatter release];
 
   // start sorted by host
   mCachedCookies->Sort(compareCookieHosts, nsnull);
@@ -726,15 +730,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       } else if ([[aTableColumn identifier] isEqualToString: @"Expires"]) {
         PRUint64 expires = 0;
         mCachedCookies->ObjectAt(rowIndex)->GetExpires(&expires);
-        if (expires == 0) {
-          // if expires is 0, it's a session cookie; display as expiring on the current date.
-          // It's not perfect, but it's better than showing the epoch.
-          NSDate *date = [NSDate date];
-          return date;   // special case return
-        } else {
-          NSDate *date = [NSDate dateWithTimeIntervalSince1970: (NSTimeInterval)expires];
-          return date;   // special case return
-        }
+        // If expires is 0, it's a session cookie.
+        // We use a custom formatter to display a localised string in this case.
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)expires];
+        return date;   // special case return
       } else if ([[aTableColumn identifier] isEqualToString: @"Value"]) {
         mCachedCookies->ObjectAt(rowIndex)->GetValue(cookieVal);
       }
@@ -1144,6 +1143,20 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     return ([[mPermissionFilterField stringValue] length] == 0);
 
   return YES;
+}
+
+@end
+
+#pragma mark -
+
+@implementation CookieDateFormatter
+
+- (NSString*)stringForObjectValue:(id)anObject
+{
+  if ([(NSDate*)anObject timeIntervalSince1970] == 0)
+    return NSLocalizedString(@"CookieExpiresOnQuit", nil);
+  else
+    return [super stringForObjectValue:anObject];
 }
 
 @end

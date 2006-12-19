@@ -137,3 +137,9 @@ typedef enum ECookiePolicyPopupIndex
 - (void) filterCookiesPermissionsWithString: (NSString*) inFilterString;
 - (void) filterCookiesWithString: (NSString*) inFilterString;
 @end
+
+// custom formatter for cookies list to handle session cookie expiration sanely
+@interface CookieDateFormatter : NSDateFormatter
+{
+}
+@end
