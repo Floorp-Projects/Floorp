@@ -740,8 +740,7 @@
           <label for="cc"><b>CC</b></label>:
         </td>
         <td valign="top">
-          <select id="cc" name="cc" multiple="multiple" size="5"
-                  [%- " disabled=\"disabled\"" IF !user.id %]>
+          <select id="cc" name="cc" multiple="multiple" size="5">
           [% FOREACH c = bug.cc %]
             <option value="[% c FILTER html %]">[% c FILTER html %]</option>
           [% END %]
