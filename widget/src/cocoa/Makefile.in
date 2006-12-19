@@ -72,14 +72,12 @@ REQUIRES = xpcom \
 		  unicharutil \
 		  exthandler \
 		  appshell \
+		  thebes \
+		  cairo \
 		  $(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes cairo
 
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitz glitzagl
-endif
 endif
 
 ifdef ACCESSIBILITY
@@ -97,19 +95,10 @@ MAC_LCPPSRCS = \
 		nsPrintSessionX.cpp \
 		$(NULL)
 
-
-ifndef MOZ_ENABLE_CAIRO_GFX
-MAC_LCPPSRCS +=	nsNativeThemeMac.cpp \
-		$(NULL)
-endif
-
 CPPSRCS =  \
 		$(MAC_LCPPSRCS) \
+		nsNativeThemeCocoa.cpp \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-CPPSRCS += nsNativeThemeCocoa.cpp
-endif
 
 CMMSRCS = \
 		nsBidiKeyboard.mm \
@@ -150,11 +139,8 @@ EXTRA_DSO_LDOPTS += \
 		$(TK_LIBS) \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
 		$(MOZ_COMPONENT_LIBS) \
+		-lthebes \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += -lthebes
-endif
 
 GARBAGE		+= $(GFX_LCPPSRCS) $(MAC_LCPPSRCS)
 

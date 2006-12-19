@@ -56,7 +56,6 @@
 #include "nsUnicharUtils.h"
 #include "nsWidgetAtoms.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
@@ -65,13 +64,6 @@ extern "C" {
 }
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
-
-#else
-/* non-CAIRO */
-#include "nsIDrawingSurfaceMac.h"
-#define HITHEME_ORIENTATION kHIThemeOrientationNormal
-
-#endif
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
@@ -289,7 +281,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   // setup to draw into the correct port
   CGContextRef cgContext;
 
-#ifdef MOZ_CAIRO_GFX
   nsCOMPtr<nsIDeviceContext> dctx;
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   float t2p = dctx->TwipsToDevUnits();
@@ -363,20 +354,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                                NSTwipsToIntPixels(aRect.height, t2p));
   macRect.origin.x -= offsetX;
   macRect.origin.y -= offsetY;
-#else
-  nsIDrawingSurface* surf;
-  aContext->GetDrawingSurface(&surf);
-  nsCOMPtr<nsIDrawingSurfaceMac> macSurface(do_QueryInterface(surf));
-  cgContext = macSurface->StartQuartzDrawing();
-
-  // transform rect coordinates to correct coord system
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
-  nsRect transRect(aRect), transClipRect(aClipRect);
-
-  transformMatrix->TransformCoord(&transRect.x, &transRect.y, &transRect.width, &transRect.height);
-  CGRect macRect = CGRectMake (transRect.x, transRect.y, transRect.width, transRect.height);
-#endif
 
 #if 0
   fprintf (stderr, "    --> macRect %f %f %f %f\n",
@@ -633,11 +610,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
   }
 
-#ifdef MOZ_CAIRO_GFX
   CGContextRestoreGState(cgContext);
-#else
-  macSurface->EndQuartzDrawing(cgContext);
-#endif
 
   return NS_OK;
 }

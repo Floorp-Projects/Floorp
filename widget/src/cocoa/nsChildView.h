@@ -65,10 +65,7 @@
 #include "nsplugindefs.h"
 #include <Quickdraw.h>
 
-
-#ifdef MOZ_CAIRO_GFX
 class gfxASurface;
-#endif
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -80,18 +77,11 @@ struct nsPluginPort;
 
 class nsChildView;
 
-// Depending on whether we're on cairo, and if accessibility is on, we support different @protocols
-// and have a different superclass.
-@interface ChildView :
-#ifdef MOZ_CAIRO_GFX
-                      NSView<
-#else
-                      NSQuickDrawView<
-#endif
+@interface ChildView : NSView<
 #ifdef ACCESSIBILITY
-                                      mozAccessible,
+                              mozAccessible,
 #endif
-                                      mozView, NSTextInput>
+                              mozView, NSTextInput>
 {
 @private
   NSWindow* mWindow; // shortcut to the top window, [WEAK]
@@ -243,11 +233,6 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-#ifndef MOZ_CAIRO_GFX
-  virtual void            StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
-  virtual void            EndDraw();
-  void                    UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext, nsIRegion *aRegion);
-#endif
   NS_IMETHOD              Update();
 
   virtual void      ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
@@ -292,9 +277,8 @@ public:
   void              GetDocumentAccessible(nsIAccessible** aAccessible);
 #endif
 
-#ifdef MOZ_CAIRO_GFX
   virtual gfxASurface* GetThebesSurface();
-#endif  
+
 protected:
 
   PRBool            ReportDestroyEvent();
@@ -324,22 +308,14 @@ protected:
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;
-  
-#ifndef MOZ_CAIRO_GFX
-  nsCOMPtr<nsIFontMetrics>      mFontMetrics;
-  nsCOMPtr<nsIRenderingContext> mTempRenderingContext;
-  PRPackedBool          mTempRenderingContextMadeHere;
-#endif
-  
+
 #ifdef ACCESSIBILITY
   // weak ref to this childview's associated mozAccessible for speed reasons 
   // (we get queried for it *a lot* but don't want to own it)
   nsWeakPtr             mAccessible;
 #endif
 
-#ifdef MOZ_CAIRO_GFX
   nsRefPtr<gfxASurface> mTempThebesSurface;
-#endif
 
   PRPackedBool          mDestructorCalled;
   PRPackedBool          mVisible;
