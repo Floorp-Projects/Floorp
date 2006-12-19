@@ -133,9 +133,16 @@ function ViewChangeByValue(aValue)
       RefreshViewPopup(viewPickerPopup, true);
       selectedItems = viewPickerPopup.getElementsByAttribute("value", aValue);
     }
-    label = selectedItems && selectedItems.length && selectedItems[0].label;
+    label = selectedItems && selectedItems.length && selectedItems.item(0).label;
   }
   ViewChange(aValue, label);
+}
+
+
+function ViewChangeByFolder(aFolder)
+{
+  var result = GetMailViewForFolder(aFolder);
+  ViewChangeByValue(result);
 }
 
 

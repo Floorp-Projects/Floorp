@@ -114,15 +114,6 @@ var gSearchNotificationListener =
           vFolder.updateSummaryTotals(true); // force update from db.
           var msgdb = vFolder.getMsgDatabase(msgWindow);
           msgdb.Commit(MSG_DB_LARGE_COMMIT);
-
-          // load the last used mail view for the folder...
-          var result = GetMailViewForFolder(vFolder);
-          // do this on a timeout so that we don't issue a new search
-          // synchronously with the previous search's onSearchDone notification
-          // because that can cause a confusing sequence of onSearchDone and 
-          // onNewSearch notifications.
-          setTimeout(ViewChangeByValue, 0, result);
-
           // now that we have finished loading a virtual folder, scroll to the correct message
           ScrollToMessageAfterFolderLoad(vFolder);
         }
@@ -670,19 +661,6 @@ function Search(str)
 
   gSearchInput.value = str;  //on input does not get fired for some reason
   onSearchInput(true);
-}
-
-// When the front end has finished loading a virtual folder, it calls openVirtualFolder
-// to actually perform the folder search. We use this method instead of calling Search("") directly
-// from FolderLoaded in order to avoid moving focus into the search bar.
-function loadVirtualFolder()
-{
-  // bit of a hack...if the underlying real folder is loaded with the same view value
-  // as the value for the virtual folder being searched, then ViewChangeByValue
-  // fails to change the view because it thinks the view is already correctly loaded.
-  // so set gCurrentViewValue back to All. 
-  gCurrentViewValue = 0;
-  onEnterInSearchBar();
 }
 
 // helper methods for the quick search drop down menu

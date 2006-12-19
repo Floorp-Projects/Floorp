@@ -348,10 +348,10 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   if (gSearchSession && !gVirtualFolderTerms) // another var might be better...
   {
     viewDebug("doing a xf folder search in rerootFolder\n");
-    gDBView.searchSession = gSearchSession;
-    gSearchSession.search(msgWindow);
+    ViewChangeByFolder(newFolder);
+    gPreQuickSearchView = null; // don't remember the cross folder search
+    ScrollToMessageAfterFolderLoad(newFolder);
   }
-
 }
 
 function SwitchView(command)

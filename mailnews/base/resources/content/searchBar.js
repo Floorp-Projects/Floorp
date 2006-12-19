@@ -85,9 +85,10 @@ var gSearchNotificationListener =
         statusFeedback.showProgress(0);
         gStatusBar.setAttribute("mode","normal");
         gSearchInProgress = false;
+
         // ### TODO need to find out if there's quick search within a virtual folder.
         if (gCurrentVirtualFolderUri &&
-         (gSearchInput.value == "" || gSearchInput.showingSearchCriteria))
+         (!gSearchInput || gSearchInput.value == "" || gSearchInput.showingSearchCriteria))
         {
           var vFolder = GetMsgFolderFromUri(gCurrentVirtualFolderUri, false);
           var dbFolderInfo = vFolder.getMsgDatabase(msgWindow).dBFolderInfo;
@@ -96,6 +97,8 @@ var gSearchNotificationListener =
           vFolder.updateSummaryTotals(true); // force update from db.
           var msgdb = vFolder.getMsgDatabase(msgWindow);
           msgdb.Commit(MSG_DB_LARGE_COMMIT);
+          // now that we have finished loading a virtual folder, scroll to the correct message
+          ScrollToMessageAfterFolderLoad(vFolder);
         }
     },
 
@@ -290,44 +293,7 @@ function restorePreSearchView()
     else
       ClearMessagePane();
   }
-
-  // NOTE,
-  // if you change the scrolling code below,
-  // double check the scrolling logic in
-  // msgMail3PaneWindow.js, "FolderLoaded" event code
-  if (!scrolled)
-  {
-    // if we didn't just scroll, 
-    // scroll to the first new message
-    // but don't select it
-    if (pref.getBoolPref("mailnews.scroll_to_new_message"))
-      scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
-    if (!scrolled) 
-    {
-      // if we still haven't scrolled,
-      // scroll to the newest, which might be the top or the bottom
-      // depending on our sort order and sort type
-      if (sortOrder == nsMsgViewSortOrder.ascending) 
-      {
-        switch (sortType) 
-        {
-          case nsMsgViewSortType.byDate: 
-          case nsMsgViewSortType.byId: 
-          case nsMsgViewSortType.byThread: 
-            scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
-            break;
-        }
-      }
-      // if still we haven't scrolled,
-      // scroll to the top.
-      if (!scrolled)
-        EnsureRowInThreadTreeIsVisible(0);
-    }
-  }
-  // NOTE,
-  // if you change the scrolling code above,
-  // double check the scrolling logic in
-  // msgMail3PaneWindow.js, "FolderLoaded" event code
+  ScrollToMessageAfterFolderLoad(null);
 }
 
 function onSearch(aSearchTerms)
@@ -515,17 +481,4 @@ function Search(str)
 function saveViewAsVirtualFolder()
 {
   openNewVirtualFolderDialogWithArgs(gSearchInput.value, gSearchSession.searchTerms);
-}
-
-// When the front end has finished loading a virtual folder, it calls openVirtualFolder
-// to actually perform the folder search. We use this method instead of calling Search("") directly
-// from FolderLoaded in order to avoid moving focus into the search bar.
-function loadVirtualFolder()
-{
-  // bit of a hack...if the underlying real folder is loaded with the same view value
-  // as the value for the virtual folder being searched, then ViewChangeByValue
-  // fails to change the view because it thinks the view is already correctly loaded.
-  // so set gCurrentViewValue back to All. 
-  gCurrentViewValue = 0; 
-  onEnterInSearchBar();
 }
