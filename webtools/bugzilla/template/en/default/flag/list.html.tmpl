@@ -111,14 +111,14 @@
               [% IF user.can_request_flag(type) %]
                 <option value="X"></option>
               [% END %]
+              [% IF (type.is_requestable && user.can_request_flag(type)) || flag.status == "?" %]
+                <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+              [% END %]
               [% IF user.can_set_flag(type) || flag.status == "+" %]
                 <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
               [% END %]
               [% IF user.can_set_flag(type) || flag.status == "-" %]
                 <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
-              [% END %]
-              [% IF (type.is_requestable && user.can_request_flag(type)) || flag.status == "?" %]
-                <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
               [% END %]
             [% ELSE %]
               <option value="[% flag.status %]" selected="selected">[% flag.status %]</option>
@@ -158,12 +158,12 @@
                   [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
                   onchange="toggleRequesteeField(this);">
             <option value="X"></option>
+            [% IF type.is_requestable && user.can_request_flag(type) %]
+              <option value="?">?</option>
+            [% END %]
             [% IF user.can_set_flag(type) %]
               <option value="+">+</option>
               <option value="-">-</option>
-            [% END %]
-            [% IF type.is_requestable && user.can_request_flag(type) %]
-              <option value="?">?</option>
             [% END %]
           </select>
         </td>
@@ -184,7 +184,7 @@
 
   [%# Step 2: Display flag type again (if type is multiplicable). %]
   [% FOREACH type = flag_types %]
-    [% NEXT UNLESS type.flags && type.flags.size > 0 && type.is_multiplicable && type.is_active %]
+    [% NEXT UNLESS type.is_multiplicable && type.is_active %]
     [% IF !separator_displayed %]
         <tr><td colspan="3"><hr></td></tr>
         [% separator_displayed = 1 %]
@@ -201,12 +201,12 @@
                 [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
                 onchange="toggleRequesteeField(this);">
           <option value="X"></option>
+          [% IF type.is_requestable && user.can_request_flag(type) %]
+            <option value="?">?</option>
+          [% END %]
           [% IF user.can_set_flag(type) %]
             <option value="+">+</option>
             <option value="-">-</option>
-          [% END %]
-          [% IF type.is_requestable && user.can_request_flag(type) %]
-            <option value="?">?</option>
           [% END %]
         </select>
       </td>
