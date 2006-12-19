@@ -2605,13 +2605,10 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
     return nsnull;
   }
 
-  // XXX can this actually get hit? I don't think so  
-  nsCOMPtr<nsIScrollbarMediator> mediator;
-  nsIFrame* first = GetScrolledFrame();
-  mediator = do_QueryInterface(first);
+  nsIScrollbarMediator* mediator;
+  CallQueryInterface(GetScrolledFrame(), &mediator);
   if (mediator) {
-    // Child manages its own scrolling. Bail.
-    NS_ERROR("This code shouldn't be hit; alert robert@ocallahan.org");
+    // child handles its own scroll state, so don't bother saving state here
     return nsnull;
   }
 
