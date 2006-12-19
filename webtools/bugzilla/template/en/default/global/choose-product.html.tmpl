@@ -20,8 +20,9 @@
   #%]
 
 [%# INTERFACE:
-  # products: array of product objects. The list of products
-  #           the user can enter bugs into.
+  # classifications: array of hashes, with an 'object' key representing a
+  #                  classification object and 'products' the list of
+  #                  product objects the user can enter bugs into.
   # target:   the script that displays this template.
   # cloned_bug_id: ID of the bug being cloned.
   # format:   the desired format to display the target.
@@ -42,16 +43,29 @@
 
 <table>
 
-[% FOREACH p = products %]
-  <tr>
-    <th align="right" valign="top">
-      <a href="[% target %]?product=[% p.name FILTER url_quote -%]
-            [%- IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
-            [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
-      [% p.name FILTER html %]</a>:&nbsp;
-    </th>
+[% FOREACH c = classifications %]
+  [% IF c.object %]
+    <tr>
+      <th colspan="2" align="left">[% c.object.name FILTER html %]:
+      [%+ c.object.description FILTER html_light %]</th>
+    </tr>
+  [% END %]
 
-    <td valign="top">[% p.description FILTER html_light %]</td>
+  [% FOREACH p = c.products %]
+    <tr>
+      <th align="right" valign="top">
+        <a href="[% target %]?product=[% p.name FILTER url_quote -%]
+              [%- IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
+              [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
+        [% p.name FILTER html FILTER no_break %]</a>:&nbsp;
+      </th>
+
+      <td valign="top">[% p.description FILTER html_light %]</td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <th colspan="2">&nbsp;</th>
   </tr>
 [% END %]
 

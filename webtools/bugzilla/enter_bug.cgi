@@ -72,21 +72,36 @@ if ($product_name eq '') {
     my $classification = Bugzilla->params->{'useclassification'} ?
         scalar($cgi->param('classification')) : '__all';
 
-    unless ($classification) {
-        my $class;
-        # Get all classifications with at least one enterable product.
-        foreach my $product (@enterable_products) {
-            $class->{$product->classification_id} ||=
-                new Bugzilla::Classification($product->classification_id);
-        }
-        my @classifications = sort {$a->sortkey <=> $b->sortkey
-                                    || lc($a->name) cmp lc($b->name)}
-                                   (values %$class);
+    # Unless a real classification name is given, we sort products
+    # by classification.
+    my @classifications;
 
+    unless ($classification && $classification ne '__all') {
+        if (Bugzilla->params->{'useclassification'}) {
+            my $class;
+            # Get all classifications with at least one enterable product.
+            foreach my $product (@enterable_products) {
+                $class->{$product->classification_id}->{'object'} ||=
+                    new Bugzilla::Classification($product->classification_id);
+                # Nice way to group products per classification, without querying
+                # the DB again.
+                push(@{$class->{$product->classification_id}->{'products'}}, $product);
+            }
+            @classifications = sort {$a->{'object'}->sortkey <=> $b->{'object'}->sortkey
+                                     || lc($a->{'object'}->name) cmp lc($b->{'object'}->name)}
+                                    (values %$class);
+        }
+        else {
+            @classifications = ({object => undef, products => \@enterable_products});
+        }
+    }
+
+    unless ($classification) {
         # We know there is at least one classification available,
         # else we would have stopped earlier.
         if (scalar(@classifications) > 1) {
-            $vars->{'classifications'} = \@classifications;
+            # We only need classification objects.
+            $vars->{'classifications'} = [map {$_->{'object'}} @classifications];
 
             $vars->{'target'} = "enter_bug.cgi";
             $vars->{'format'} = $cgi->param('format');
@@ -98,7 +113,7 @@ if ($product_name eq '') {
             exit;
         }
         # If we come here, then there is only one classification available.
-        $classification = $classifications[0]->name;
+        $classification = $classifications[0]->{'object'}->name;
     }
 
     # Keep only enterable products which are in the specified classification.
@@ -108,6 +123,7 @@ if ($product_name eq '') {
         if ($class) {
             @enterable_products
               = grep {$_->classification_id == $class->id} @enterable_products;
+            @classifications = ({object => $class, products => \@enterable_products});
         }
         else {
             @enterable_products = ();
@@ -118,7 +134,7 @@ if ($product_name eq '') {
         ThrowUserError('no_products');
     }
     elsif (scalar(@enterable_products) > 1) {
-        $vars->{'products'} = \@enterable_products;
+        $vars->{'classifications'} = \@classifications;
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $cgi->param('format');
         $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
