@@ -1359,12 +1359,12 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon, 
   if (editor) {
     if (aSelCon) {
       editor->GetSelectionController(aSelCon);
-      NS_ENSURE_TRUE(aSelCon, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(*aSelCon, NS_ERROR_FAILURE);
     }
 
     if (aDomSel) {
       editor->GetSelection(aDomSel);
-      NS_ENSURE_TRUE(aDomSel, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(*aDomSel, NS_ERROR_FAILURE);
     }
 
     return NS_OK;
