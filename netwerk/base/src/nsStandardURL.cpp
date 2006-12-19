@@ -1427,6 +1427,11 @@ nsStandardURL::SetHost(const nsACString &input)
         return NS_ERROR_UNEXPECTED;
     }
 
+    // For consistency with SetSpec/nsURLParsers, don't allow spaces
+    // in the hostname.
+    if (strchr(host, ' '))
+        return NS_ERROR_MALFORMED_URI;
+
     InvalidateCache();
     mHostEncoding = eEncoding_ASCII;
 
