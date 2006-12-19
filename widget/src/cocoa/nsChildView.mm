@@ -68,7 +68,6 @@
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
@@ -79,10 +78,6 @@ CG_EXTERN void CGContextResetClip (CGContextRef);
 }
 
 #undef DEBUG_UPDATE
-
-#else
-#include "nsGfxUtils.h" // for StPortSetter
-#endif
 
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
@@ -337,9 +332,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
 , mParentView(nsnull)
 , mParentWidget(nsnull)
-#ifndef MOZ_CAIRO_GFX
-, mTempRenderingContextMadeHere(PR_FALSE)
-#endif
 , mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
@@ -757,11 +749,7 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 //-------------------------------------------------------------------------
 nsIFontMetrics* nsChildView::GetFont(void)
 {
-#ifdef MOZ_CAIRO_GFX
   return nsnull;
-#else
-  return mFontMetrics;
-#endif
 }
 
     
@@ -772,14 +760,7 @@ nsIFontMetrics* nsChildView::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::SetFont(const nsFont &aFont)
 {
-#ifdef MOZ_CAIRO_GFX
   return NS_ERROR_NOT_IMPLEMENTED;
-#else
-  mFontMetrics = nsnull;
-  if (mContext)
-    mContext->GetMetricsFor(aFont, *getter_AddRefs(mFontMetrics));
-  return NS_OK;
-#endif
 }
 
 
@@ -1274,77 +1255,6 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 }
 
 
-#ifndef MOZ_CAIRO_GFX
-//-------------------------------------------------------------------------
-//  StartDraw
-//
-//-------------------------------------------------------------------------
-void nsChildView::StartDraw(nsIRenderingContext* aRenderingContext)
-{
-  if (mDrawing)
-    return;
-  mDrawing = PR_TRUE;
-
-  if (aRenderingContext == nsnull) {
-    // make sure we have a rendering context
-    mTempRenderingContext = getter_AddRefs(GetRenderingContext());
-    mTempRenderingContextMadeHere = PR_TRUE;
-  }
-  else {
-    // if we already have a rendering context, save its state
-    mTempRenderingContext = aRenderingContext;
-    mTempRenderingContextMadeHere = PR_FALSE;
-    mTempRenderingContext->PushState();
-
-    // set the environment to the current widget
-    mTempRenderingContext->Init(mContext, this);
-  }
-
-  // set the widget font. nsMacControl implements SetFont, which is where
-  // the font should get set.
-  if (mFontMetrics) {
-    mTempRenderingContext->SetFont(mFontMetrics);
-  }
-
-  // set the widget background and foreground colors
-  nscolor color = GetBackgroundColor();
-  RGBColor macColor;
-  macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
-  macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
-  macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
-  ::RGBBackColor(&macColor);
-
-  color = GetForegroundColor();
-  macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
-  macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
-  macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
-  ::RGBForeColor(&macColor);
-
-  mTempRenderingContext->SetColor(color);       // just in case, set the rendering context color too
-}
-
-
-//-------------------------------------------------------------------------
-//  EndDraw
-//
-//-------------------------------------------------------------------------
-void nsChildView::EndDraw()
-{
-  if (!mDrawing)
-    return;
-  mDrawing = PR_FALSE;
-
-  if (mTempRenderingContextMadeHere)
-    mTempRenderingContext->PopState();
-
-  mTempRenderingContext = nsnull;
-}
-#endif /* MOZ_CAIRO_GFX */
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
 void
 nsChildView::Flash(nsPaintEvent &aEvent)
 {
@@ -1390,54 +1300,6 @@ NS_IMETHODIMP nsChildView::Update()
 
 
 #pragma mark -
-
-
-#ifndef MOZ_CAIRO_GFX
-//
-// UpdateWidget
-//
-// Dispatches the Paint event into Gecko. Usually called from our 
-// NSView in response to the display system noticing that something
-// needs repainting. We don't have to worry about painting our child views
-// because the display system will take care of that for us.
-//
-void 
-nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext, nsIRegion *aRegion)
-{
-  if (! mVisible)
-    return;
-
-  // For updating widgets, we _always_ want to use the NSQuickDrawView's port,
-  // since that's the correct port for gecko to use to make rendering contexts.
-  // The plugin is the only thing that uses the plugin port.
-  GrafPtr curPort = GetChildViewQuickDrawPort();
-  if (!curPort) return;
-
-  StPortSetter port(curPort);
-  
-  // initialize the paint event
-  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, this);
-  paintEvent.renderingContext = aContext;       // nsPaintEvent
-  paintEvent.rect             = &aRect;
-  paintEvent.region = aRegion;
-
-  // offscreen drawing is pointless.
-  if (paintEvent.rect->x < 0)
-    paintEvent.rect->x = 0;
-  if (paintEvent.rect->y < 0)
-    paintEvent.rect->y = 0;
-    
-  // draw the widget
-  StartDraw(aContext);
-  if ( OnPaint(paintEvent) ) {
-    nsEventStatus eventStatus;
-    DispatchWindowEvent(paintEvent,eventStatus);
-    if(eventStatus != nsEventStatus_eIgnore)
-      Flash(paintEvent);
-  }
-  EndDraw();
-}
-#endif
 
 
 //
@@ -1611,7 +1473,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 {
   nsEventStatus status;
@@ -1619,18 +1481,15 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
   return ConvertStatus(status);
 }
 
-//-------------------------------------------------------------------------
+
 PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus)
 {
   DispatchEvent(&event, aStatus);
   return ConvertStatus(aStatus);
 }
 
-//-------------------------------------------------------------------------
-//
+
 // Deal with all sort of mouse event
-//
-//-------------------------------------------------------------------------
 PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
   PRBool result = PR_FALSE;
@@ -1659,12 +1518,10 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
   return result;
 }
 
+
 #pragma mark -
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
+
 PRBool nsChildView::ReportDestroyEvent()
 {
   // nsEvent
@@ -1675,10 +1532,7 @@ PRBool nsChildView::ReportDestroyEvent()
   return (DispatchWindowEvent(event));
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
+
 PRBool nsChildView::ReportMoveEvent()
 {
   // nsEvent
@@ -1691,10 +1545,7 @@ PRBool nsChildView::ReportMoveEvent()
   return (DispatchWindowEvent(moveEvent));
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
+
 PRBool nsChildView::ReportSizeEvent()
 {
   // nsEvent
@@ -1711,29 +1562,21 @@ PRBool nsChildView::ReportSizeEvent()
 }
 
 
-
 #pragma mark -
 
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
 void nsChildView::CalcWindowRegions()
 {
   // i don't think this is necessary anymore...
 }
 
 
-
-//-------------------------------------------------------------------------
 /*  Calculate the x and y offsets for this particular widget
  *  @update  ps 09/22/98
  *  @param   aX -- x offset amount
  *  @param   aY -- y offset amount 
  *  @return  NOTHING
  */
- 
 NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 {
   aX = aY = 0;
@@ -1746,10 +1589,7 @@ NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 }
 
 
-//-------------------------------------------------------------------------
-// PointInWidget
-//    Find if a point in local coordinates is inside this object
-//-------------------------------------------------------------------------
+// Find if a point in local coordinates is inside this object
 PRBool nsChildView::PointInWidget(Point aThePoint)
 {
   // get the origin in local coordinates
@@ -2043,7 +1883,7 @@ nsChildView::Idle()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef MOZ_CAIRO_GFX
+
 gfxASurface*
 nsChildView::GetThebesSurface()
 {
@@ -2056,7 +1896,7 @@ nsChildView::GetThebesSurface()
   NS_ADDREF(surf);
   return surf;
 }
-#endif
+
 
 #ifdef ACCESSIBILITY
 void
@@ -2363,12 +2203,8 @@ NSEvent* globalDragEvent = nil;
 // 
 - (BOOL)isOpaque
 {
-#ifdef MOZ_CAIRO_GFX
   // this will be NO when we can do transparent windows/views
   return YES;
-#else
-  return mIsPluginView;
-#endif
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2484,7 +2320,6 @@ NSEvent* globalDragEvent = nil;
   if ([self isRectObscuredBySubview:aRect])
     return;
 
-#ifdef MOZ_CAIRO_GFX
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   nsRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
@@ -2562,28 +2397,6 @@ NSEvent* globalDragEvent = nil;
   CGContextSetLineWidth (cgContext, 4.0);
   CGContextStrokeRect (cgContext,
                        CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
-#endif
-
-#else 
-  /* non-MOZ_CAIRO_GFX */
-  nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
-  if (rgn) {
-    rgn->Init();
-
-    nsRect r;
-    const NSRect *rects;
-    int count, i;
-    [self getRectsBeingDrawn:&rects count:&count];
-    for (i = 0; i < count; ++i) {
-      NSRectToGeckoRect(rects[i], r);
-      rgn->Union(r.x, r.y, r.width, r.height);
-    }
-  }
-
-  nsRect fullRect;
-  NSRectToGeckoRect(aRect, fullRect);
-  nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
-  mGeckoChild->UpdateWidget(fullRect, rendContext, rgn);
 #endif
 }
 

@@ -61,11 +61,6 @@
 #include "nsIView.h"
 #include "nsIRegion.h"
 
-#ifndef MOZ_CAIRO_GFX
-#include "nsIImageMac.h"
-#include "nsGfxUtils.h"
-#endif
-
 #include <Cocoa/Cocoa.h>
 
 extern NSPasteboard* globalDragPboard;
@@ -218,7 +213,7 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
         
         nsCOMPtr<nsISupports> primitiveData;
         ptrPrimitive->GetData(getter_AddRefs(primitiveData));
-#ifdef MOZ_CAIRO_GFX
+
         nsCOMPtr<nsIImage> image(do_QueryInterface(primitiveData));
         if (!image) {
           NS_WARNING("Image isn't an nsIImage in transferable");
@@ -269,25 +264,6 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
           continue;
         
         [pasteboardOutputDict setObject:tiffData forKey:NSTIFFPboardType];
-#else
-        // We have an image, which is in the transferable as an nsIImageMac. Convert it
-        // to PICT and put those bits on the clipboard. The actual size
-        // of the picture is the size of the handle, not sizeof(Picture).
-        nsCOMPtr<nsIImageMac> image = do_QueryInterface(primitiveData);
-        
-        if (!image) {
-          NS_WARNING("Image isn't an nsIImageMac in transferable");
-          continue;
-        }
-        
-        PicHandle picture = nsnull;
-        image->ConvertToPICT(&picture);
-        if (picture) {
-          NSData* pictData = [NSData dataWithBytes:*picture length:(::GetHandleSize((Handle)picture))];
-          [pasteboardOutputDict setObject:pictData forKey:NSPICTPboardType];
-          ::KillPicture(picture);
-        }
-#endif
       }
       else {
         /* If it isn't an image, we just throw the data on the clipboard with the mime string
@@ -343,15 +319,6 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransferableArray,
                                  nsIScriptableRegion* aDragRgn, PRUint32 aActionType)
 {
-#ifndef MOZ_CAIRO_GFX 
-  nsGraphicsUtils::SetPortToKnownGoodPort();
-  GrafPtr port;
-  GDHandle handle;
-  ::GetGWorld(&port, &handle);
-  if (!IsValidPort(port))
-    return NS_ERROR_FAILURE;
-#endif
-
   nsBaseDragService::InvokeDragSession(aDOMNode, aTransferableArray, aDragRgn, aActionType);
 
   // put data on the clipboard
