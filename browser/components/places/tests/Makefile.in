@@ -58,11 +58,11 @@ MODULE		= test_places
 include $(topsrcdir)/config/rules.mk
 
 _UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
-#ifndef MOZ_PLACES_BOOKMARKS
+ifndef MOZ_PLACES_BOOKMARKS
 _UNIT_FILES := $(patsubst %marks.js,,$(_UNIT_FILES))
 _UNIT_FILES += $(wildcard $(srcdir)/unit/head*.js)
 _UNIT_FILES += $(wildcard $(srcdir)/unit/tail*.js)
-#endif
+endif
 
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/$(MODULE)
