@@ -49,7 +49,10 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 
-// externs defined in nsChildView.mm
+// defined in nsMenuBarX.mm
+extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
+
+// defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern BOOL                gSomeMenuBarPainted;
@@ -1038,6 +1041,52 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 @implementation WindowDelegate
 
 
+// We try to find a gecko menu bar to paint. If one does not exist, just paint
+// the application menu by itself so that a window doesn't have some other
+// window's menu bar.
++ (void)paintMenubarForWindow:(NSWindow*)aWindow
+{  
+  // make sure we only act on windows that have this kind of
+  // object as a delegate
+  id windowDelegate = [aWindow delegate];
+  if ([windowDelegate class] != [self class])
+    return;
+
+  nsCocoaWindow* geckoWidget = [windowDelegate geckoWidget];
+  NS_ASSERTION(geckoWidget, "Window delegate not returning a gecko widget!");
+  
+  nsIMenuBar* geckoMenuBar = geckoWidget->GetMenuBar();
+  if (geckoMenuBar) {
+    geckoMenuBar->Paint();
+  }
+  else {
+    // we are definitely going to need an application menu here, and we can't
+    // create one ourselves
+    NS_ASSERTION(sApplicationMenu, "No native application menu and we need one!");
+
+    // create a new menu bar with one item
+    NSMenu* newMenuBar = [[NSMenu alloc] init];
+    NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    [newMenuBar addItem:newMenuItem];
+    [newMenuItem release];
+
+    // Attach application menu as submenu for our one menu item. If the application
+    // menu has a supermenu, we need to disconnect it from its parent before hooking
+    // it up to the new menu bar
+    NSMenu* appMenuSupermenu = [sApplicationMenu supermenu];
+    if (appMenuSupermenu) {
+      int appMenuItemIndex = [appMenuSupermenu indexOfItemWithSubmenu:sApplicationMenu];
+      [[appMenuSupermenu itemAtIndex:appMenuItemIndex] setSubmenu:nil];
+    }
+    [newMenuItem setSubmenu:sApplicationMenu];
+
+    // set our new menu bar as the main menu
+    [NSApp setMainMenu:newMenuBar];
+    [newMenuBar release];
+  }
+}
+
+
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind
 {
   [super init];
@@ -1070,14 +1119,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
-  if (!mGeckoWindow)
-    return;
-
-  nsIMenuBar* myMenuBar = mGeckoWindow->GetMenuBar();
-  if (myMenuBar) {
-    // printf("painting window menu bar due to window becoming main\n");
-    myMenuBar->Paint();
-  }
+  NSWindow* window = [aNotification object];
+  if (window)
+    [WindowDelegate paintMenubarForWindow:window];
 }
 
 
@@ -1092,6 +1136,24 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();
   }
+}
+
+
+- (void)windowDidBecomeKey:(NSNotification *)aNotification
+{
+  NSWindow* window = [aNotification object];
+  if ([window isSheet])
+    [WindowDelegate paintMenubarForWindow:window];
+}
+
+
+- (void)windowDidResignKey:(NSNotification *)aNotification
+{
+  // If a sheet just resigned key then we should paint the menu bar
+  // for whatever window is now main.
+  NSWindow* window = [aNotification object];
+  if ([window isSheet])
+    [WindowDelegate paintMenubarForWindow:[NSApp mainWindow]];
 }
 
 
@@ -1172,6 +1234,12 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
   [[sheet delegate] sendLostFocusAndDeactivate];
   [sheet orderOut:self];
   [[(NSWindow*)contextInfo delegate] sendGotFocusAndActivate];
+}
+
+
+- (nsCocoaWindow*)geckoWidget;
+{
+  return mGeckoWindow;
 }
 
 

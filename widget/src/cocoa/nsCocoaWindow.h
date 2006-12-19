@@ -57,6 +57,7 @@ class nsChildView;
 - (void)windowDidResize:(NSNotification*)aNotification;
 - (void)sendGotFocusAndActivate;
 - (void)sendLostFocusAndDeactivate;
+- (nsCocoaWindow*)geckoWidget;
 @end
 
 

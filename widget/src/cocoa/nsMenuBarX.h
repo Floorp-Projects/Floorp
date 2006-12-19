@@ -164,9 +164,7 @@ protected:
     nsWeakPtr               mDocShellWeakRef;     // weak ref to docshell
     nsIDocument*            mDocument;            // pointer to document
 
-    NSMenu*                 mRootMenu;            // root menu, representing entire menu bar.
-    
-    static NSMenu*          sApplicationMenu;     // Application menu shared by all menubars
+    NSMenu*                 mRootMenu;            // root menu, representing entire menu bar
  
     static EventHandlerUPP  sCommandEventHandler; // carbon event handler for commands, shared
 };
