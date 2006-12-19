@@ -1060,9 +1060,9 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
     geckoMenuBar->Paint();
   }
   else {
-    // we are definitely going to need an application menu here, and we can't
-    // create one ourselves
-    NS_ASSERTION(sApplicationMenu, "No native application menu and we need one!");
+    // sometimes we don't have a native application menu early in launching
+    if (!sApplicationMenu)
+      return;
 
     // create a new menu bar with one item
     NSMenu* newMenuBar = [[NSMenu alloc] init];
