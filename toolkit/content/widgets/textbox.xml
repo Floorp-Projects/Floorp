@@ -47,6 +47,8 @@
 
       <property name="value"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
+      <property name="defaultValue" onset="this.inputField.defaultValue = val; return val;"
+                                  onget="return this.inputField.defaultValue;"/>
       <property name="type"       onset="this.inputField.type = val; return val;"
                                   onget="return this.inputField.type;"/>
       <property name="maxLength"  onset="this.inputField.maxLength = val; return val;"
@@ -76,6 +78,18 @@
           return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
         ]]></getter>
       </property>
+
+      <method name="reset">
+        <body><![CDATA[
+          this.value = this.defaultValue;
+          try {
+            this.editor.transactionManager.clear();
+            return true;
+          }
+          catch(e) {}
+          return false;
+        ]]></body>
+      </method>
 
       <method name="select">
         <body>
