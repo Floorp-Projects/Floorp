@@ -263,7 +263,7 @@ function cmgr_instkey (parentElem, command)
         return;
     }
     
-    var key = document.createElement ("key");
+    var key = parentElem.ownerDocument.createElement ("key");
     key.setAttribute ("id", "key:" + command.name);
     key.setAttribute ("oncommand", "dispatch('" + command.name +
                       "', {isInteractive: true});");

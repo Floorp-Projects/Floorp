@@ -1663,7 +1663,7 @@ function ss_hookDisplay (e)
     if (sessionView.messageCount == console.prefs["sessionView.maxHistory"])
         sessionView.outputTBody.removeChild(sessionView.outputTBody.firstChild);
     
-    sessionView.outputTBody.appendChild(msgRow);
+    sessionView.outputTBody.appendChild(sessionView.adoptNode(msgRow));
     sessionView.scrollDown();
 }
 
@@ -1763,7 +1763,9 @@ function ss_syncframe ()
     if (this.outputTable.firstChild)
         this.outputTable.removeChild (this.outputTable.firstChild);
 
-    this.outputTable.appendChild (this.outputTBody);
+    // Make sure the entire table body belongs to the right document.
+    this.adoptNode(this.outputTBody, this.outputDocument);
+    this.outputTable.appendChild(this.outputTBody);
     this.scrollDown();
 }
 
@@ -1772,6 +1774,33 @@ function ss_scroll()
 {
     if (this.outputWindow)
         this.outputWindow.scrollTo(0, this.outputDocument.height);
+}
+
+console.views.session.adoptNode =
+function ss_adoptnode(node, doc)
+{
+    // Assume the node is about to added as a session message, so use that doc.
+    if (typeof doc == "undefined")
+        doc = this.outputTBody.ownerDocument;
+
+    try
+    {
+        doc.adoptNode(node);
+    }
+    catch(ex)
+    {
+        dd(formatException(ex));
+        var err = ex.name;
+        // TypeError from before adoptNode was added; NOT_IMPL after.
+        if ((err == "TypeError") || (err == "NS_ERROR_NOT_IMPLEMENTED"))
+            console.views.session.adoptNode = ss_adoptnode_noop;
+    }
+    return node;
+}
+
+function ss_adoptnode_noop(node, doc)
+{
+    return node;
 }
 
 console.views.session.onShow =
