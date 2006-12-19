@@ -56,7 +56,6 @@
 
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#include "nsIDeviceContext.h"
 #include "nsIFrame.h"
 
 #include "nsICategoryManager.h"
@@ -380,20 +379,12 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   if (NS_FAILED(result) || !scrollableView)
     return NS_ERROR_FAILURE;
 
-  // Get device context
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  result = mozXMLTermUtils::GetPresContextDeviceContext(presContext,
-                                              getter_AddRefs(deviceContext));
-  if (NS_FAILED(result) || !deviceContext)
-    return NS_ERROR_FAILURE;
-
   // Determine twips to pixels conversion factor
   float pixelScale;
   pixelScale = presContext->TwipsToPixels();
 
-  // Get scrollbar dimensions in pixels
-  float sbWidth, sbHeight;
-  deviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
+  // Get scrollbar dimensions in pixels.  Ideally we'd measure the actual scrollbars here.
+  float sbWidth = 15.0, sbHeight = 15.0;
   PRInt32 scrollBarWidth = PRInt32(sbWidth*pixelScale);
   PRInt32 scrollBarHeight = PRInt32(sbHeight*pixelScale);
 

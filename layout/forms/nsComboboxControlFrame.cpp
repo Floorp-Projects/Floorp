@@ -89,6 +89,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "nsBoxLayoutState.h"
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run()
@@ -659,15 +660,13 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // First reflow our dropdown so that we know how tall we should be.
   ReflowDropdown(aPresContext, aReflowState);
   
-  // Get the default size of the scrollbar.
-  // That will be the default width of the dropdown button.
-  // The height will be the height of the text
-  // Can we cache this in a meaningful way?
-  float w, h;
-  // Get the width in Device pixels times p2t
-  aPresContext->DeviceContext()->GetScrollBarDimensions(w, h);
-
-  nscoord buttonWidth = NSToCoordRound(w);
+  // Get the width of the vertical scrollbar.  That will be the width of the
+  // dropdown button.
+  nsIScrollableFrame* scrollable;
+  CallQueryInterface(mListControlFrame, &scrollable);
+  NS_ASSERTION(scrollable, "List must be a scrollable frame");
+  nsBoxLayoutState bls(GetPresContext(), aReflowState.rendContext);
+  nscoord buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
 
   if (buttonWidth > aReflowState.mComputedWidth) {
     buttonWidth = 0;
