@@ -19,6 +19,7 @@
                 addBookmarkForLink = id; 
                 addBookmarkSeparator = id; 
                 addBookmarkWithoutPrompt = id; 
+                addTabGroup = id; 
                 addTabGroupWithoutPrompt = id; 
                 addToAddressBook = id; 
                 back = id; 
@@ -99,6 +100,7 @@
                 mSearchSheetWindow = NSWindow; 
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
+                mTabBarMenu = NSMenu; 
                 mTabBrowser = BrowserTabView; 
                 mTabMenu = NSMenu; 
                 mURLBar = AutoCompleteTextField; 
@@ -111,6 +113,7 @@
                 addBookmarkFolder = id; 
                 addBookmarkSeparator = id; 
                 addBookmarkWithoutPrompt = id; 
+                addTabGroup = id; 
                 addTabGroupWithoutPrompt = id; 
                 fillForm = id; 
                 getInfo = id; 
