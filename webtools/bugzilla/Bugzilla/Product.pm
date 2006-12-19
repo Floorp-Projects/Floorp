@@ -106,15 +106,11 @@ sub versions {
     my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{versions}) {
-        my $values = $dbh->selectcol_arrayref(q{
-            SELECT value FROM versions
+        my $ids = $dbh->selectcol_arrayref(q{
+            SELECT id FROM versions
             WHERE product_id = ?}, undef, $self->id);
 
-        my @versions;
-        foreach my $value (sort { vers_cmp (lc($a), lc($b)) } @$values) {
-            push @versions, new Bugzilla::Version($self->id, $value);
-        }
-        $self->{versions} = \@versions;
+        $self->{versions} = Bugzilla::Version->new_from_list($ids);
     }
     return $self->{versions};
 }

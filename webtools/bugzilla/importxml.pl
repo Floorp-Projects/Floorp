@@ -671,8 +671,8 @@ sub process_bug {
     # Since there is no default version for a product, we check that the one
     # coming over is valid. If not we will use the first one in @versions
     # and warn them.
-    my $version =
-      new Bugzilla::Version( $product->id, $bug_fields{'version'} );
+    my $version = new Bugzilla::Version(
+          { product => $product, name => $bug_fields{'version'} });
 
     push( @query, "version" );
     if ($version) {

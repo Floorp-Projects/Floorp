@@ -13,10 +13,13 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Tiago R. Mello <timello@async.com.br>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
 use strict;
 
 package Bugzilla::Version;
+
+use base qw(Bugzilla::Object);
 
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -27,49 +30,44 @@ use Bugzilla::Error;
 
 use constant DEFAULT_VERSION => 'unspecified';
 
+use constant DB_TABLE => 'versions';
+
 use constant DB_COLUMNS => qw(
-    versions.value
-    versions.product_id
+    id
+    value
+    product_id
 );
 
-our $columns = join(", ", DB_COLUMNS);
+use constant NAME_FIELD => 'value';
+use constant LIST_ORDER => NAME_FIELD;
 
 sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {};
-    bless($self, $class);
-    return $self->_init(@_);
-}
-
-sub _init {
-    my $self = shift;
-    my ($product_id, $value) = (@_);
+    my $class = shift;
+    my $param = shift;
     my $dbh = Bugzilla->dbh;
 
-    my $version;
+    my $product;
+    if (ref $param) {
+        $product = $param->{product};
+        my $name = $param->{name};
+        if (!defined $product) {
+            ThrowCodeError('bad_arg',
+                {argument => 'product',
+                 function => "${class}::new"});
+        }
+        if (!defined $name) {
+            ThrowCodeError('bad_arg',
+                {argument => 'name',
+                 function => "${class}::new"});
+        }
 
-    if (defined $product_id
-        && detaint_natural($product_id)
-        && defined $value) {
-
-        trick_taint($value);
-        $version = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM versions
-            WHERE value = ?
-            AND product_id = ?}, undef, ($value, $product_id));
-    } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'product_id/value',
-             function => 'Bugzilla::Version::_init'});
+        my $condition = 'product_id = ? AND value = ?';
+        my @values = ($product->id, $name);
+        $param = { condition => $condition, values => \@values };
     }
 
-    return undef unless (defined $version);
-
-    foreach my $field (keys %$version) {
-        $self->{$field} = $version->{$field};
-    }
-    return $self;
+    unshift @_, $param;
+    return $class->SUPER::new(@_);
 }
 
 sub bug_count {
@@ -110,7 +108,7 @@ sub update {
     $name = clean_text($name);
 
     return 0 if ($name eq $self->name);
-    my $version = new Bugzilla::Version($self->product_id, $name);
+    my $version = new Bugzilla::Version({ product => $product, name => $name });
 
     if ($version) {
         ThrowUserError('version_already_exists',
@@ -147,7 +145,8 @@ sub check_version {
     my ($product, $version_name) = @_;
 
     $version_name || ThrowUserError('version_not_specified');
-    my $version = new Bugzilla::Version($product->id, $version_name);
+    my $version = new Bugzilla::Version(
+        { product => $product, name => $version_name });
     unless ($version) {
         ThrowUserError('version_not_valid',
                        {'product' => $product->name,
@@ -166,7 +165,7 @@ sub create {
     # Remove unprintable characters
     $name = clean_text($name);
 
-    my $version = new Bugzilla::Version($product->id, $name);
+    my $version = new Bugzilla::Version({ product => $product, name => $name });
     if ($version) {
         ThrowUserError('version_already_exists',
                        {'name' => $version->name,
@@ -178,8 +177,7 @@ sub create {
     $dbh->do(q{INSERT INTO versions (value, product_id)
                VALUES (?, ?)}, undef, ($name, $product->id));
 
-    $version = new Bugzilla::Version($product->id, $name);
-    return $version;
+    return new Bugzilla::Version($dbh->bz_last_key('versions', 'id'));
 }
 
 1;

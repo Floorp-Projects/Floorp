@@ -514,6 +514,9 @@ sub update_table_definitions {
                         {TYPE => 'INT2', NOTNULL => 1, DEFAULT => '0'});
     $dbh->bz_add_column('longdescs', 'extra_data', {TYPE => 'varchar(255)'});
 
+    $dbh->bz_add_column('versions', 'id', 
+        {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################
