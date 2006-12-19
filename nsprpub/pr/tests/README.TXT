@@ -4,25 +4,10 @@ This document describes the test cases in the NSPR directory
 pr/tests.
 
 =====================================================================
-There are some sub-directories here:
+There is a sub-directory here:
 
 dll
 	sources for the .dll(.so) used by test dlltest.c
-
-macbuild
-	MacIntosh project files
-
-server
-	an empty directory. Does anyone remember why?
-
-w16gui
-	Sources for a modified version of the poppad application from
-	Charles Petzold's book "Programming Windows 3.1". These
-	sources were modified to test the library lib/ds/PLEvent.
-	These files are obsolete and will not be maintained.
-	
-	This test was superceded by lib/tests/windows/winevent.c and
-	lib/event.c and is now owned by CPD.
 
 =====================================================================
 The individual files are described here.
@@ -420,15 +405,3 @@ dll\mygetval.c
 
 dll\mysetval.c
 	Dynamic library test. See also dlltest.c
-
-w16gui\Makefile
-	Obsolete. Tests for lib/ds/PLEvent on Windows 3.1.
-w16gui\popfile.c
-w16gui\popfind.c
-w16gui\popfont.c
-w16gui\poppad.c
-w16gui\poppad.h
-w16gui\poppad.ico
-w16gui\poppad.rc
-w16gui\popprnt0.c
-w16gui\readme.1st
