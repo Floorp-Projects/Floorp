@@ -1360,24 +1360,18 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
 
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
-    float p2t;
-    p2t = presContext->PixelsToTwips();
+    nsIFrame* first = GetFirstChild(nsnull);
 
-    nsIDeviceContext *dx = presContext->DeviceContext();
+    nsIScrollableFrame *scrollableFrame;
+    CallQueryInterface(first, &scrollableFrame);
+    NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    float   scale;
-    dx->GetCanonicalPixelScale(scale);
+    nsBoxLayoutState bls(GetPresContext(), aRenderingContext);
+    nsMargin scrollbarSizes = scrollableFrame->GetDesiredScrollbarSizes(&bls);
 
-    float sbWidth;
-    float sbHeight;
-    dx->GetScrollBarDimensions(sbWidth, sbHeight);
-
-    nscoord scrollbarWidth  = PRInt32(sbWidth * scale);
-    nscoord scrollbarHeight = PRInt32(sbHeight * scale);
-
-    aIntrinsicSize.height += scrollbarHeight;
-
-    aIntrinsicSize.width  += scrollbarWidth;
+    aIntrinsicSize.width  += scrollbarSizes.LeftRight();
+    
+    aIntrinsicSize.height += scrollbarSizes.TopBottom();;
   }
 
   return NS_OK;
