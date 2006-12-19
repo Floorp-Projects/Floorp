@@ -77,9 +77,15 @@ public:
 private:
   void FlushPendingReflows();
   
-  nsresult GetStyleData(nsStyleStructID aID,
-                        const nsStyleStruct*& aStyleStruct,
-                        nsIFrame* aFrame=0);
+#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
+  const nsStyle##name_ * GetStyle##name_(nsIFrame* aFrame) {            \
+    return NS_STATIC_CAST(const nsStyle##name_ *,                       \
+                          GetStyleData(aFrame, eStyleStruct_##name_));  \
+  }
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
+  const nsStyleStruct* GetStyleData(nsIFrame* aFrame, nsStyleStructID aSID);
 
   nsresult GetOffsetWidthFor(PRUint8 aSide,
                              nsIFrame *aFrame,
