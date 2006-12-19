@@ -904,6 +904,14 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       isSupportedClassID = NS_SUCCEEDED(TypeForClassID(classid, typeForID));
     }
   }
+
+  if (hasID && !isSupportedClassID) {
+    // We have a class ID and it's unsupported.  Fallback in that case.
+    LOG(("OBJLC [%p]: invalid classid\n", this));
+    rv = NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;
+  }
+
   if (isSupportedClassID ||
       (!aURI && !aTypeHint.IsEmpty() &&
        GetTypeOfContent(aTypeHint) == eType_Plugin)) {
@@ -936,13 +944,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     }
 
     rv = Instantiate(mContentType, mURI);
-    return NS_OK;
-  }
-  // If we get here, and we had a class ID, then it must have been unsupported.
-  // Fallback in that case.
-  if (hasID) {
-    LOG(("OBJLC [%p]: invalid classid\n", this));
-    rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;
   }
 
