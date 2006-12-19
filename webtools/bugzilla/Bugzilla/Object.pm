@@ -60,6 +60,8 @@ sub _init {
     my $object;
 
     if (defined $id) {
+        # We special-case if somebody specifies an ID, so that we can
+        # validate it as numeric.
         detaint_natural($id)
           || ThrowCodeError('param_must_be_numeric',
                             {function => $class . '::_init'});
@@ -67,23 +69,40 @@ sub _init {
         $object = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM $table
              WHERE $id_field = ?}, undef, $id);
-    } elsif (defined $param->{'name'}) {
-        trick_taint($param->{'name'});
-        $object = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM $table
-             WHERE } . $dbh->sql_istrcmp($name_field, '?'), 
-            undef, $param->{'name'});
     } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'param',
-             function => $class . '::_init'});
+        unless (defined $param->{name} || (defined $param->{'condition'} 
+                                           && defined $param->{'values'}))
+        {
+            ThrowCodeError('bad_arg', { argument => 'param',
+                                        function => $class . '::new' });
+        }
+
+        my ($condition, @values);
+        if (defined $param->{name}) {
+            $condition = $dbh->sql_istrcmp($name_field, '?');
+            push(@values, $param->{name});
+        }
+        elsif (defined $param->{'condition'} && defined $param->{'values'}) {
+            caller->isa('Bugzilla::Object')
+                || ThrowCodeError('protection_violation',
+                       { caller    => caller, 
+                         function  => $class . '::new',
+                         argument  => 'condition/values' });
+            $condition = $param->{'condition'};
+            push(@values, @{$param->{'values'}});
+        }
+
+        map { trick_taint($_) } @values;
+        $object = $dbh->selectrow_hashref(
+            "SELECT $columns FROM $table WHERE $condition", undef, @values);
     }
 
     return $object;
 }
 
 sub new_from_list {
-    my $class = shift;
+    my $invocant = shift;
+    my $class = ref($invocant) || $invocant;
     my ($id_list) = @_;
     my $dbh = Bugzilla->dbh;
     my $columns = join(',', $class->DB_COLUMNS);
@@ -363,17 +382,47 @@ the L</ID_FIELD> usually can't be updated.)
 
 =item C<new($param)>
 
- Description: The constructor is used to load an existing object
-              from the database, by id or by name.
+=over
 
- Params:      $param - If you pass an integer, the integer is the
-                       id of the object, from the database, that we 
-                       want to read in. If you pass in a hash with 
-                       C<name> key, then the value of the name key 
-                       is the case-insensitive name of the object from 
-                       the DB.
+=item B<Description>
 
- Returns:     A fully-initialized object.
+The constructor is used to load an existing object from the database,
+by id or by name.
+
+=item B<Params>
+
+If you pass an integer, the integer is the id of the object, 
+from the database, that we  want to read in. (id is defined
+as the value in the L</ID_FIELD> column).
+
+If you pass in a hash, you can pass a C<name> key. The 
+value of the C<name> key is the case-insensitive name of the object 
+(from L</NAME_FIELD>) in the DB.
+
+B<Additional Parameters Available for Subclasses>
+
+If you are a subclass of C<Bugzilla::Object>, you can pass
+C<condition> and C<values> as hash keys, instead of the above.
+
+C<condition> is a set of SQL conditions for the WHERE clause, which contain
+placeholders.
+
+C<values> is a reference to an array. The array contains the values
+for each placeholder in C<condition>, in order.
+
+This is to allow subclasses to have complex parameters, and then to
+translate those parameters into C<condition> and C<values> when they
+call C<$self->SUPER::new> (which is this function, usually).
+
+If you try to call C<new> outside of a subclass with the C<condition>
+and C<values> parameters, Bugzilla will throw an error. These parameters
+are intended B<only> for use by subclasses.
+
+=item B<Returns>
+
+A fully-initialized object.
+
+=back
 
 =item C<new_from_list(\@id_list)>
 

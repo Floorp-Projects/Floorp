@@ -326,8 +326,8 @@ sub init() {
                   moved-default-product. \n", "REOPEN", $exporter);
     my $def_component = new Bugzilla::Component(
         {
-            product_id => $def_product->id,
-            name       => $params->{"moved-default-component"}
+            product => $def_product,
+            name    => $params->{"moved-default-component"}
         })
     || Error("Cannot import these bugs because an invalid default 
               component was defined for the target db."
@@ -622,8 +622,8 @@ sub process_bug {
       new Bugzilla::Product( { name => $params->{"moved-default-product"} } );
     my $def_component = new Bugzilla::Component(
         {
-            product_id => $def_product->id,
-            name       => $params->{"moved-default-component"}
+            product => $def_product,
+            name    => $params->{"moved-default-component"}
         }
     );
     my $product;
@@ -643,8 +643,8 @@ sub process_bug {
     if ( defined $bug_fields{'component'} ) {
         $component = new Bugzilla::Component(
             {
-                product_id => $product->id,
-                name       => $bug_fields{'component'}
+                product => $product,
+                name    => $bug_fields{'component'}
             }
         );
         unless ($component) {

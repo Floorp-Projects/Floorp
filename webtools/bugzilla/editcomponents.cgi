@@ -168,7 +168,7 @@ if ($action eq 'new') {
     }
 
     my $component =
-        new Bugzilla::Component({product_id => $product->id,
+        new Bugzilla::Component({product => $product,
                                  name => $comp_name});
 
     if ($component) {
@@ -200,7 +200,7 @@ if ($action eq 'new') {
              ($product->id, $comp_name, $description,
               $default_assignee_id, $default_qa_contact_id));
 
-    $component = new Bugzilla::Component({ product_id => $product->id,
+    $component = new Bugzilla::Component({ product => $product,
                                            name => $comp_name });
 
     my $sth = $dbh->prepare("INSERT INTO component_cc 
@@ -383,7 +383,7 @@ if ($action eq 'update') {
 
     if ($comp_name ne $component_old->name) {
         my $component =
-            new Bugzilla::Component({product_id => $product->id,
+            new Bugzilla::Component({product => $product,
                                      name => $comp_name});
         if ($component) {
             ThrowUserError('component_already_exists',

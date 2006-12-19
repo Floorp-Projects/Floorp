@@ -21,6 +21,8 @@ use strict;
 
 package Bugzilla::Component;
 
+use base qw(Bugzilla::Object);
+
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
@@ -30,68 +32,50 @@ use Bugzilla::FlagType;
 ####    Initialization     ####
 ###############################
 
-use constant DB_COLUMNS => qw(
-    components.id
-    components.name
-    components.product_id
-    components.initialowner
-    components.initialqacontact
-    components.description
-);
+use constant DB_TABLE => 'components';
 
-our $columns = join(", ", DB_COLUMNS);
+use constant DB_COLUMNS => qw(
+    id
+    name
+    product_id
+    initialowner
+    initialqacontact
+    description
+);
 
 ###############################
 ####       Methods         ####
 ###############################
 
 sub new {
-    my $invocant = shift;
-    my $class = ref($invocant) || $invocant;
-    my $self = {};
-    bless($self, $class);
-    return $self->_init(@_);
-}
-
-sub _init {
-    my $self = shift;
-    my ($param) = (@_);
+    my $class = shift;
+    my $param = shift;
     my $dbh = Bugzilla->dbh;
 
-    my $id = $param unless (ref $param eq 'HASH');
-    my $component;
+    my $product;
+    if (ref $param) {
+        $product = $param->{product};
+        my $name = $param->{name};
+        if (!defined $product) {
+            ThrowCodeError('bad_arg',
+                {argument => 'product',
+                 function => "${class}::new"});
+        }
+        if (!defined $name) {
+            ThrowCodeError('bad_arg',
+                {argument => 'name',
+                 function => "${class}::new"});
+        }
 
-    if (defined $id) {
-        detaint_natural($id)
-          || ThrowCodeError('param_must_be_numeric',
-                            {function => 'Bugzilla::Component::_init'});
-
-        $component = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM components
-            WHERE id = ?}, undef, $id);
-
-    } elsif (defined $param->{'product_id'}
-        && detaint_natural($param->{'product_id'})
-        && defined $param->{'name'}) {
-
-        trick_taint($param->{'name'});
-
-        $component = $dbh->selectrow_hashref(qq{
-            SELECT $columns FROM components
-            WHERE name = ? AND product_id = ?}, undef,
-            ($param->{'name'}, $param->{'product_id'}));
-    } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'param',
-             function => 'Bugzilla::Component::_init'});
+        my $condition = 'product_id = ? AND name = ?';
+        my @values = ($product->id, $name);
+        $param = { condition => $condition, values => \@values };
     }
 
-    return undef unless (defined $component);
-
-    foreach my $field (keys %$component) {
-        $self->{$field} = $component->{$field};
-    }
-    return $self;
+    unshift @_, $param;
+    my $component = $class->SUPER::new(@_);
+    $component->{product} = $product if $product;
+    return $component;
 }
 
 sub bug_count {
@@ -204,8 +188,8 @@ sub check_component {
     }
 
     my $component =
-        new Bugzilla::Component({product_id => $product->id,
-                                 name       => $comp_name});
+        new Bugzilla::Component({product => $product,
+                                 name    => $comp_name});
     unless ($component) {
         ThrowUserError('component_not_valid',
                        {'product' => $product->name,
@@ -227,8 +211,8 @@ Bugzilla::Component - Bugzilla product component class.
     use Bugzilla::Component;
 
     my $component = new Bugzilla::Component(1);
-    my $component = new Bugzilla::Component({product_id => 1,
-                                             name       => 'AcmeComp'});
+    my $component = new Bugzilla::Component({product => $product,
+                                             name    => 'AcmeComp'});
 
     my $bug_count          = $component->bug_count();
     my $bug_ids            = $component->bug_ids();

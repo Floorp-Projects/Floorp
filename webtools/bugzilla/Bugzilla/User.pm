@@ -931,10 +931,7 @@ sub product_responsibilities {
 
     # We cannot |use| it, because Component.pm already |use|s User.pm.
     require Bugzilla::Component;
-    my @components;
-    push(@components, new Bugzilla::Component($_)) foreach (@$comp_ids);
-
-    $self->{'product_resp'} = \@components;
+    $self->{'product_resp'} = Bugzilla::Component->new_from_list($comp_ids);
     return $self->{'product_resp'};
 }
 

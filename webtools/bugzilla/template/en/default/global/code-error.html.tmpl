@@ -325,6 +325,11 @@
 
   [% ELSIF error == "protection_violation" %]
     The function <code>[% function FILTER html %]</code> was called
+
+    [% IF argument %]
+        with the argument <code>[% argument FILTER html %]</code>
+    [% END %]
+
     from
    
     [% IF caller %]

@@ -65,12 +65,8 @@ sub components {
             WHERE product_id = ?
             ORDER BY name}, undef, $self->id);
 
-        my @components;
         require Bugzilla::Component;
-        foreach my $id (@$ids) {
-            push @components, new Bugzilla::Component($id);
-        }
-        $self->{components} = \@components;
+        $self->{components} = Bugzilla::Component->new_from_list($ids);
     }
     return $self->{components};
 }
