@@ -95,7 +95,7 @@ nsNoDataProtocolContentPolicy::ShouldLoad(PRUint32 aContentType,
       do_QueryInterface(handler);
 
     if (extHandler) {
-      *aDecision = nsIContentPolicy::REJECT_SERVER;
+      *aDecision = nsIContentPolicy::REJECT_REQUEST;
     }
   }
 
