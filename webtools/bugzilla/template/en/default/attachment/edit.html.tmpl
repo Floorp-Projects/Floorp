@@ -352,7 +352,7 @@
   Attachments on this [% terms.Bug %]:
   [% FOREACH a = attachments %]
     [% IF a == attachment.id %]
-      [% a %]
+      [%+ a %]
     [% ELSE %]
       <a href="attachment.cgi?id=[% a %]&amp;action=edit">[% a %]</a>
     [% END %]
