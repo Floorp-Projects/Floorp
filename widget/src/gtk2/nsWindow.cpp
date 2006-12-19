@@ -280,11 +280,6 @@ static _gdk_display_get_default_fn    _gdk_display_get_default;
 static _gdk_cursor_new_from_pixbuf_fn _gdk_cursor_new_from_pixbuf;
 static PRBool sPixbufCursorChecked;
 
-// needed for GetAttention calls
-// gdk_window_set_urgency_hint was added in 2.8
-typedef void* (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
-                                                 gboolean urgency);
-
 #define kWindowPositionSlop 20
 
 // cursor cache
@@ -719,16 +714,8 @@ nsWindow::SetFocus(PRBool aRaise)
 
     if (gRaiseWindows && aRaise && toplevelWidget &&
         !GTK_WIDGET_HAS_FOCUS(owningWidget) &&
-        !GTK_WIDGET_HAS_FOCUS(toplevelWidget)) {
-        GtkWidget* top_window = nsnull;
-        GetToplevelWidget(&top_window);
-        if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
-        {
-            gdk_window_show_unraised(top_window->window);
-            // Unset the urgency hint if possible.
-            SetUrgencyHint(top_window, PR_FALSE);
-        }
-    }
+        !GTK_WIDGET_HAS_FOCUS(toplevelWidget))
+        GetAttention(-1);
 
     nsWindow  *owningWindow = get_window_for_gtk_widget(owningWidget);
     if (!owningWindow)
@@ -1419,15 +1406,9 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
 
     GtkWidget* top_window = nsnull;
-    GtkWidget* top_focused_window = nsnull;
     GetToplevelWidget(&top_window);
-    if (gFocusWindow)
-        gFocusWindow->GetToplevelWidget(&top_focused_window);
-
-    // Don't get attention if the window is focused anyway.
-    if (top_window && (GTK_WIDGET_VISIBLE(top_window)) &&
-        top_window != top_focused_window) {
-        SetUrgencyHint(top_window, PR_TRUE);
+    if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
+        gdk_window_show_unraised(top_window->window);
     }
 
     return NS_OK;
@@ -1985,12 +1966,6 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 
     if (mIsTopLevel)
         mActivatePending = PR_TRUE;
-
-    // Unset the urgency hint, if possible
-    GtkWidget* top_window = nsnull;
-    GetToplevelWidget(&top_window);
-    if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
-        SetUrgencyHint(top_window, PR_FALSE);
 
     // dispatch a got focus event
     DispatchGotFocusEvent();
@@ -3562,27 +3537,6 @@ nsWindow::GetContainerWindow(nsWindow **aWindow)
         get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
 
     *aWindow = get_window_for_gtk_widget(owningWidget);
-}
-
-void
-nsWindow::SetUrgencyHint(GtkWidget *top_window, PRBool state)
-{
-    if (!top_window)
-        return;
-
-    // Try to get a pointer to gdk_window_set_urgency_hint
-    PRLibrary* lib;
-    _gdk_window_set_urgency_hint_fn _gdk_window_set_urgency_hint;
-    _gdk_window_set_urgency_hint = (_gdk_window_set_urgency_hint_fn)
-           PR_FindFunctionSymbolAndLibrary("gdk_window_set_urgency_hint", &lib);
-
-    if (_gdk_window_set_urgency_hint)
-        (*_gdk_window_set_urgency_hint)(top_window->window, state);
-    else if (state)
-        gdk_window_show_unraised(top_window->window);
-
-    if (lib)
-        PR_UnloadLibrary(lib);
 }
 
 void *
