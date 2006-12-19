@@ -634,7 +634,7 @@ nsHttpChannel::ApplyContentConversions()
             }
         }
     } else if (val != nsnull) {
-        return NS_ERROR_INVALID_CONTENT_ENCODING;
+        LOG(("Unknown content encoding '%s', ignoring\n", val));
     }
 
     return NS_OK;
