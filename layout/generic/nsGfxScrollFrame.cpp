@@ -674,10 +674,10 @@ nsHTMLScrollFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN && // ideal?
       mInner.mVScrollbarBox) {
     nsBoxLayoutState bls(GetPresContext(), aRenderingContext);
-    nsSize vScrollbarMinSize(0, 0);
+    nsSize vScrollbarPrefSize(0, 0);
     GetScrollbarMetrics(bls, mInner.mVScrollbarBox,
-                        &vScrollbarMinSize, nsnull, PR_TRUE);
-    result += vScrollbarMinSize.width;
+                        nsnull, &vScrollbarPrefSize, PR_TRUE);
+    result += vScrollbarPrefSize.width;
   }
 
   return result;
