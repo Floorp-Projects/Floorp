@@ -139,10 +139,13 @@ NS_IMETHODIMP
 nsSVGTextContainerFrame::RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame)
 {
   nsSVGTextFrame *textFrame = GetTextFrame();
+
+  nsresult rv = nsSVGDisplayContainerFrame::RemoveFrame(aListName, aOldFrame);
+
   if (textFrame)
     textFrame->NotifyGlyphMetricsChange();
 
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
