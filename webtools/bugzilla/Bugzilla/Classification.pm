@@ -106,12 +106,8 @@ sub products {
             SELECT id FROM products
             WHERE classification_id = ?
             ORDER BY name}, undef, $self->id);
- 
-        my @products;
-        foreach my $product_id (@$product_ids) {
-            push (@products, new Bugzilla::Product($product_id));
-        }
-        $self->{'products'} = \@products;
+
+        $self->{'products'} = Bugzilla::Product->new_from_list($product_ids);
     }
     return $self->{'products'};
 }
