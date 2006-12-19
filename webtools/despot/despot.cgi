@@ -59,7 +59,7 @@ use CGI qw(:standard :html3);
 
 require 'utils.pl';
 
-$::POSTTYPE = "Post";
+$::POSTTYPE = "POST";
 
 $| = 1;
 
@@ -129,7 +129,7 @@ sub Authenticate {
         if ($F::loginname && $F::loginname !~ /@/) {
             print p("Note! You must type in your full e-mail address, including the '\@'.");
         }
-        warn "DESPOT: Authentication failure for " . $F::loginname . "\n";
+        warn "DESPOT: Authentication failure for " . $F::loginname . "\n" if $F::loginname;
         PrintLoginForm();
         exit;
     }
@@ -307,7 +307,7 @@ sub MainMenu {
 }
 
 
-sub AddUser() {
+sub AddUser {
     EnsureDespot();
     if ($F::email eq "") {
         Punt("You must enter an email address.");
@@ -351,7 +351,7 @@ sub AddUser() {
 }
 
 
-sub EditUser() {
+sub EditUser {
     EnsureDespot();
     PrintHeader();
     print h1("Edit a user");
@@ -411,7 +411,7 @@ sub EditUser() {
     print end_form();
 }
 
-sub DeleteUser() {
+sub DeleteUser {
     EnsureDespot();
     my $id = EmailToId($F::email, 1);
     $::db->do("DELETE FROM members WHERE userid = ?", undef, $id);
@@ -425,7 +425,7 @@ sub DeleteUser() {
     MainMenu();
 }
 
-sub ChangeUser() {
+sub ChangeUser {
     EnsureDespot();
     foreach my $field ("email") {
         my $value = param($field);
@@ -511,7 +511,7 @@ sub UserHistory {
 }
 
 
-sub ListPartitions () {
+sub ListPartitions {
     PrintHeader();
     print p("If you're wondering what a 'partition' is, " .
             a({-href=>"help.html#partition"}, "read this") . ".");
@@ -526,7 +526,7 @@ sub ListPartitions () {
 }
 
 
-sub ListUsers() {
+sub ListUsers {
     EnsureDespot();
 
     PrintHeader();
@@ -861,7 +861,7 @@ sub AddPartition {
     EditPartition();
 }
 
-sub EditPartition() {
+sub EditPartition {
     my $partitionid;
     if (defined $F::partitionid) {
         $partitionid = $F::partitionid;
@@ -1090,7 +1090,7 @@ sub ChangePartition {
 }
 
 
-sub DeletePartition() {
+sub DeletePartition {
     EnsureCanChangePartition($F::partitionid);
     my $partitionid = $F::partitionid;
 
