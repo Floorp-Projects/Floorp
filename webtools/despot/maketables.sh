@@ -56,6 +56,7 @@ create table partitions (
     branchid mediumint,
     newsgroups mediumtext,
     doclinks mediumtext,
+    ownerspagedisplay enum("Yes", "No") not null default "Yes",
 
     index(name),
     index(repositoryid)

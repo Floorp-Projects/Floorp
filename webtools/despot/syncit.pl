@@ -19,6 +19,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Reed Loden <reed@reedloden.com>
 
 # $F::debug = 1;
 
@@ -298,6 +299,7 @@ while (@reprow = $repquery->fetchrow_array()) {
             $query = $::db->prepare("SELECT id, name, description, newsgroups, doclinks " .
                                     "FROM partitions " .
                                     "WHERE repositoryid = ? " .
+                                    "AND ownerspagedisplay != 'No' " .
                                     "ORDER BY name");
             $query->execute($repid);
             while (@row = $query->fetchrow_array()) {

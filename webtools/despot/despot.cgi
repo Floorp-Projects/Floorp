@@ -42,11 +42,11 @@ sub sillyness {
     $zz = $F::description;
     $zz = $F::id;
     $zz = $F::newpassword2;
-    $zz = $F::files;
     $zz = $F::partition;
     $zz = $F::doclinks;
     $zz = $F::file;
     $zz = $F::newsgroups;
+    $zz = $F::ownerspagedisplay;
 }
 
 my $emailregexp = q/^[^"'@|&, ]*@[^"'@|&, ]*\.[^"'@|&, ]*$/;
@@ -871,7 +871,7 @@ sub EditPartition {
     my $canchange = CanChangePartition($partitionid);
     my $query = $::db->prepare("SELECT partitions.name, partitions.description, state, " .
                                       "repositories.name, repositories.id, branches.name, " .
-                                      "newsgroups, doclinks " .
+                                      "newsgroups, doclinks, ownerspagedisplay " .
                                "FROM partitions, repositories, branches " .
                                "WHERE partitions.id = ? " .
                                  "AND repositories.id = repositoryid " .
@@ -879,7 +879,7 @@ sub EditPartition {
     $query->execute($partitionid);
 
     my ($partname,$partdesc,$state,$repname,$repid,$branchname,$newsgroups,
-        $doclinks) = $query->fetchrow_array();
+        $doclinks,$ownerspagedisplay) = $query->fetchrow_array();
     PrintHeader();
     print h1(($canchange ? "Edit" : "View") . " partition -- $partname");
     if (!$canchange) {
@@ -918,7 +918,12 @@ sub EditPartition {
                                -rows=>10,
                                -columns=>50,
                                -override=>1))));
-                                                  
+
+    push(@list, Tr(th("Display on website:"),
+                   td(checkbox(-name=>'ownerspagedisplay',
+                               -checked=>($ownerspagedisplay eq "Yes") ? 1 : 0,
+                               -value=>1,
+                               -label=>'Display this partition on '.$ownersurl))));
 
     push(@list,
          Tr(th(a({-href=>"help.html#state"},"State:")) .
@@ -936,7 +941,8 @@ sub EditPartition {
 
     $query = $::db->prepare("SELECT pattern FROM files WHERE partitionid = " .
         $::db->quote($partitionid) . " ORDER BY pattern");
-    push(@list, CreateListRow("files", $query));
+    push(@list, CreateListRow("Files", $query));
+
     foreach my $class ("Owner", "Peer", "Member") {
         $query = $::db->prepare("SELECT users.email, users.disabled " .
                                 "FROM members, users " .
@@ -979,7 +985,7 @@ sub ChangePartition {
 
     # Sanity checking first...
 
-    my @files = split(/\n/, $F::files);
+    my @files = split(/\n/, param("Files"));
 
     $query = $::db->prepare("SELECT files.pattern, partitions.name " .
                             "FROM files, partitions, branches " .
@@ -1052,9 +1058,10 @@ sub ChangePartition {
                                     "branchid = ?, " .
                                     "state = ?, " .
                                     "newsgroups = ?, " .
-                                    "doclinks = ? " .
+                                    "doclinks = ?, " .
+                                    "ownerspagedisplay = ? " .
               "WHERE id = ?",
-        undef, $F::partition, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::partitionid);
+        undef, $F::partition, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::ownerspagedisplay, $F::partitionid);
 
     $::db->do("DELETE FROM files WHERE partitionid = ?", undef, $F::partitionid);
     foreach my $f2 (@files) {
