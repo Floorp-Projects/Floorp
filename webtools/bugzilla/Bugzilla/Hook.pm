@@ -44,8 +44,8 @@ sub process {
         if (-e $extension.'/code/'.$name.'.pl') {
             Bugzilla->hook_args($args);
             do($extension.'/code/'.$name.'.pl');
-            ThrowCodeError('extension_invalid', {
-                name => $name, extension => $extension }) if $@;
+            ThrowCodeError('extension_invalid', 
+                { errstr => $@, name => $name, extension => $extension }) if $@;
         }
     }
     

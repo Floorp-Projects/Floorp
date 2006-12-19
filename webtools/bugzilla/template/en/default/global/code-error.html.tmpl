@@ -139,7 +139,7 @@
 
   [% ELSIF error == "extension_invalid" %]
     An error occurred processing hook [% name FILTER html %] in
-    extension [% extension FILTER html %].
+    extension [% extension FILTER html %]: [% errstr FILTER html %]
 
   [% ELSIF error == "extern_id_conflict" %]
     The external ID '[% extern_id FILTER html %]' already exists
