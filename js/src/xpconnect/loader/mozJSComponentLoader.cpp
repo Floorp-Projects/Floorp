@@ -210,7 +210,7 @@ Atob(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         else  
             --bin_dataLength;
     }
-    bin_dataLength = (PRUint32)((PRUint64)bin_dataLength * 3) / 4);
+    bin_dataLength = (PRUint32)((PRUint64)bin_dataLength * 3) / 4;
 
     char *bin_data = PL_Base64Decode(base64Str, base64StrLength, nsnull);
     if (!bin_data)
@@ -258,6 +258,7 @@ static JSFunctionSpec gGlobalFun[] = {
     {"debug",   Debug,  1,0,0},
     {"atob",    Atob,   1,0,0},
     {"btoa",    Btoa,   1,0,0},
+
     {nsnull,nsnull,0,0,0}
 };
 
