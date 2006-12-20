@@ -1117,24 +1117,6 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 }
 
 
-void
-nsChildView::Flash(nsPaintEvent &aEvent)
-{
-#if 0
-  Rect flashRect;
-  if (debug_WantPaintFlashing() && aEvent.rect ) {
-    ::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
-            aEvent.rect->y + aEvent.rect->height );
-    StPortSetter portSetter(GetQuickDrawPort());
-    unsigned long endTicks;
-    ::InvertRect ( &flashRect );
-    ::Delay(10, &endTicks);
-    ::InvertRect ( &flashRect );
-  }
-#endif
-}
-
-
 // Dummy impl, meant to be overridden
 PRBool
 nsChildView::OnPaint(nsPaintEvent &event)
@@ -1171,10 +1153,9 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   // Scroll the children (even if the widget is not visible)
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     // We use resize rather than move since it gives us control
-    // over repainting.  In the case of blitting, Quickdraw views
-    // draw their child widgets on the blit, so we can scroll
-    // like a bat out of hell by not wasting time invalidating
-    // the widgets, since it's completely unnecessary to do so.
+    // over repainting.  We can scroll like a bat out of hell
+    // by not wasting time invalidating the widgets, since it's
+    // completely unnecessary to do so.
     nsRect bounds;
     kid->GetBounds(bounds);
     kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
@@ -1610,19 +1591,6 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   [currentIM markedTextAbandoned:mView];
   
   return NS_OK;
-}
-
-
-// Find a quickdraw port in which to draw (needed by GFX until it
-// is converted to Cocoa). This must be overridden if CreateCocoaView()
-// does not create something that inherits from NSQuickDrawView!
-GrafPtr
-nsChildView::GetQuickDrawPort()
-{
-  if (mPluginPort)
-    return mPluginPort->port;
-
-  return GetChildViewQuickDrawPort();
 }
 
 
