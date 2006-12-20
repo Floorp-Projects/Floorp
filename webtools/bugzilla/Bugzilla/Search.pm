@@ -707,6 +707,18 @@ sub init {
                                "ON $table.bug_id = bugs.bug_id $extra");
              $f = "$table.thetext";
          },
+         "^longdescs\.isprivate," => sub {
+             my $table = "longdescs_$chartid";
+             my $extra = "";
+             if (Bugzilla->params->{"insidergroup"}
+                 && !Bugzilla->user->in_group(Bugzilla->params->{"insidergroup"}))
+             {
+                 $extra = "AND $table.isprivate < 1";
+             }
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id $extra");
+             $f = "$table.isprivate";
+         },
          "^work_time,changedby" => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .

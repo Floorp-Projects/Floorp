@@ -168,6 +168,7 @@ use constant DEFAULT_FIELDS => (
     {name => 'creation_ts', desc => 'Creation date', in_new_bugmail => 1},
     {name => 'delta_ts', desc => 'Last changed date', in_new_bugmail => 1},
     {name => 'longdesc',              desc => 'Comment'},
+    {name => 'longdescs.isprivate',   desc => 'Comment is private'},
     {name => 'alias',                 desc => 'Alias'},
     {name => 'everconfirmed',         desc => 'Ever Confirmed'},
     {name => 'reporter_accessible',   desc => 'Reporter Accessible'},
