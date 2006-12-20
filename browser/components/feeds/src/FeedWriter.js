@@ -999,8 +999,7 @@ iconDataURIGenerator.prototype = {
     if (!requestFailed && this._countRead != 0) {
       var str = String.fromCharCode.apply(null, this._bytes);
       try {
-        var dataURI = ICON_DATAURL_PREFIX +
-                      this._element.ownerDocument.defaultView.btoa(str);
+        var dataURI = ICON_DATAURL_PREFIX + btoa(str);
         this._element.setAttribute("image", dataURI);
       }
       catch(ex) {}
