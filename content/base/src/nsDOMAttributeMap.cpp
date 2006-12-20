@@ -282,10 +282,17 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
         // value is already empty
       }
     }
-    
-    // Set the new attribute value
+
     nsAutoString value;
     attribute->GetValue(value);
+
+    // Add the new attribute to the attribute map before updating
+    // its value in the element. @see bug 364413.
+    nsAttrKey attrkey(ni->NamespaceID(), ni->NameAtom());
+    rv = mAttributeCache.Put(attrkey, attribute);
+    NS_ENSURE_SUCCESS(rv, rv);
+    iAttribute->SetMap(this);
+
     if (!aWithNS && ni->NamespaceID() == kNameSpaceID_None &&
         mContent->IsNodeOfType(nsINode::eHTML)) {
       // Set via setAttribute(), which may do normalization on the
@@ -299,13 +306,8 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       rv = mContent->SetAttr(ni->NamespaceID(), ni->NameAtom(),
                              ni->GetPrefixAtom(), value, PR_TRUE);
     }
-    
-    if (NS_SUCCEEDED(rv)) {
-      nsAttrKey attrkey(ni->NamespaceID(), ni->NameAtom());
-      rv = mAttributeCache.Put(attrkey, attribute);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      iAttribute->SetMap(this);
+    if (NS_FAILED(rv)) {
+      DropAttribute(ni->NamespaceID(), ni->NameAtom());
     }
   }
 
