@@ -104,19 +104,6 @@ nsNativeScrollbar::CreateCocoaView(NSRect inFrame)
 }
 
 
-GrafPtr
-nsNativeScrollbar::GetQuickDrawPort ( )
-{
-  // pray we're always a child of a NSQuickDrawView
-  if ( [mParentView isKindOfClass: [ChildView class]] ) {
-    NSQuickDrawView* parent = NS_STATIC_CAST(NSQuickDrawView*, mParentView);
-    return (GrafPtr)[parent qdPort];
-  }
-  
-  return nsnull;
-}
-
-
 //
 // DoScroll
 //

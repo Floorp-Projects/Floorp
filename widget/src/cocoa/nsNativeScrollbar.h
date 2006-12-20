@@ -39,12 +39,11 @@
 #ifndef nsNativeScrollbar_h__
 #define nsNativeScrollbar_h__
 
+#include "mozView.h"
 #include "nsChildView.h"
 
 #include "nsINativeScrollbar.h"
 #include "nsIContent.h"
-
-#import "mozView.h"
 
 class nsIScrollbarMediator;
 
@@ -87,7 +86,6 @@ protected:
   void RecreateHorizontalScrollbar();
 
   virtual NSView*   CreateCocoaView(NSRect inFrame);
-  virtual GrafPtr   GetQuickDrawPort();
 
   void              UpdateScroller();
   

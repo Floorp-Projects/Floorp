@@ -269,7 +269,6 @@ public:
   virtual PRBool    DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
   virtual void      AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   PRBool            AcceptFocusOnClick() { return mAcceptFocusOnClick;};
-  void              Flash(nsPaintEvent  &aEvent);
   
   void              LiveResizeStarted();
   void              LiveResizeEnded();
@@ -290,15 +289,10 @@ protected:
 
   virtual PRBool    OnPaint(nsPaintEvent & aEvent);
 
-    // override to create different kinds of child views. Autoreleases, so
-    // caller must retain.
+  // override to create different kinds of child views. Autoreleases, so
+  // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
-
-    // Find a quickdraw port in which to draw (needed by GFX until it
-    // is converted to Cocoa). This MUST be overridden if CreateCocoaView()
-    // does not create something that inherits from NSQuickDrawView!
-  virtual GrafPtr   GetQuickDrawPort();   // gets plugin port or view's port
 
   // return qdPort for a focussed ChildView, and null otherwise
   GrafPtr           GetChildViewQuickDrawPort();
