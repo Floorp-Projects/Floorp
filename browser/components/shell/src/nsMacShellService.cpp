@@ -497,3 +497,8 @@ nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsAC
   return err != noErr ? NS_ERROR_FAILURE : NS_OK;
 }
 
+NS_IMETHODIMP
+nsMacShellService::GetDefaultFeedReader(nsILocalFile** _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
