@@ -4711,10 +4711,21 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
         if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
 #ifdef GC_MARK_DEBUG
             char buf[64];
-            JSAtom *atom = JSID_TO_ATOM(sprop->id);
-            const char *id = (atom && ATOM_IS_STRING(atom))
-                             ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                             : "unknown";
+            char buf2[11];
+            const char *id;
+
+            if (JSID_IS_ATOM(sprop->id)) {
+                JSAtom *atom = JSID_TO_ATOM(sprop->id);
+
+                id = (atom && ATOM_IS_STRING(atom))
+                     ? JS_GetStringBytes(ATOM_TO_STRING(atom))
+                     : "unknown";
+            } else if (JSID_IS_INT(sprop->id)) {
+                JS_snprintf(buf2, sizeof buf2, "%d", JSID_TO_INT(sprop->id));
+                id = buf2;
+            } else {
+                id = "<object>";
+            }
 #endif
 
             if (sprop->attrs & JSPROP_GETTER) {
