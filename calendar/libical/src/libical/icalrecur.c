@@ -1531,6 +1531,7 @@ static int next_month(icalrecur_iterator* impl)
       if ( day > days_in_month){
           impl->last.day = 1;
           increment_month(impl);
+          impl->last.day--; /* Go back one day, so searches next month start at day 1 */
           data_valid = 0; /* signal that impl->last is invalid */
       }
 
