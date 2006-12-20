@@ -53,7 +53,7 @@ pref("calendar.alarms.todoalarmunit", "minutes");
 
 + // autorefresh settings
 pref("calendar.autorefresh.enabled", true);
-pref("calendar.autorefresh.timeout", 600);
+pref("calendar.autorefresh.timeout", 30);
 
 
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
