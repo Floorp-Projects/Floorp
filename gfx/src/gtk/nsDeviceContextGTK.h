@@ -65,7 +65,6 @@ public:
 
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
-  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
 
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
@@ -97,8 +96,6 @@ private:
   PRUint32      mDepth;
   PRBool        mWriteable;
   PRUint32      mNumCells;
-  PRInt16       mScrollbarHeight;
-  PRInt16       mScrollbarWidth;
   static nscoord mDpi;
 
   float         mWidthFloat;

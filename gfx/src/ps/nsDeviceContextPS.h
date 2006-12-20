@@ -78,8 +78,6 @@ public:
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
   NS_IMETHOD  PrepareNativeWidget(nsIWidget* aWidget, void ** aOut);
 
-  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
-
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
 

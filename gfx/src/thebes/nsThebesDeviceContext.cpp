@@ -377,28 +377,6 @@ nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-    float scale;
-    GetCanonicalPixelScale(scale);
-
-    //XXXispiked initialize these to something in case nsILookAndFeel barfs
-    PRInt32 tmpWidth = 16;
-    PRInt32 tmpHeight = 16;
-    // Get the scrollbar width and height from nsILookAndFeel
-    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService("@mozilla.org/widget/lookandfeel;1");
-    if(lookAndFeel) {
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollbarWidth, tmpWidth);
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollbarHeight, tmpHeight);
-    }
-
-    aWidth = tmpWidth * mDevUnitsToAppUnits * scale;
-    aHeight = tmpHeight * mDevUnitsToAppUnits * scale;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
     if (!gSystemFonts) {

@@ -205,10 +205,6 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
 	/* Turn off virtual console support... */
 	mWidthFloat  = (float) aWidth;
 	mHeightFloat = (float) aHeight;
-    
-  /* Revisit: the scroll bar sizes is a gross guess based on Phab */
-  mScrollbarHeight = 17;
-  mScrollbarWidth  = 17;
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *&aContext ) {

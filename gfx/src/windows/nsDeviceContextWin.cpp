@@ -309,17 +309,6 @@ NS_IMETHODIMP nsDeviceContextWin :: SetCanonicalPixelScale(float aScale)
 }
 
 
-NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  float scale;
-  GetCanonicalPixelScale(scale);
-
-  aWidth  = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits * scale;
-  aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits * scale;
-
-  return NS_OK;
-}
-
 nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
                                                  nsFont* aFont, PRBool aIsWide) const
 {

@@ -214,21 +214,6 @@ NS_IMETHODIMP nsDeviceContextXp :: SupportsNativeWidgets(PRBool &aSupportsWidget
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- */
-NS_IMETHODIMP nsDeviceContextXp :: GetScrollBarDimensions(float &aWidth, 
-                                        float &aHeight) const
-{
-  // XXX Oh, yeah.  These are hard coded.
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth  = 15.f * mPixelsToTwips * scale;
-  aHeight = 15.f * mPixelsToTwips * scale;
-
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
  *        @update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextXp :: CheckFontExistence(const nsString& aFontName)
