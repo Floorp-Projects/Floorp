@@ -75,6 +75,8 @@
 // For reporting errors with the console service
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
+#include "prmem.h"
+#include "plbase64.h"
 
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
@@ -187,9 +189,75 @@ Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+Atob(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    if (!argc)
+        return JS_TRUE;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    size_t base64StrLength = JS_GetStringLength(str);
+    char *base64Str = JS_GetStringBytes(str);
+
+    PRUint32 bin_dataLength = (PRUint32)base64StrLength;
+    if (base64Str[base64StrLength - 1] == '=') {
+        if (base64Str[base64StrLength - 2] == '=')
+            bin_dataLength -= 2;
+        else  
+            --bin_dataLength;
+    }
+    bin_dataLength = (PRUint32)((PRUint64)bin_dataLength * 3) / 4);
+
+    char *bin_data = PL_Base64Decode(base64Str, base64StrLength, nsnull);
+    if (!bin_data)
+        return JS_FALSE;
+
+    str = JS_NewStringCopyN(cx, bin_data, bin_dataLength);
+    PR_Free(bin_data);
+    if (!str)
+        return JS_FALSE;
+
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+Btoa(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    if (!argc)
+        return JS_TRUE;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    char *bin_data = JS_GetStringBytes(str);
+    size_t bin_dataLength = JS_GetStringLength(str);
+
+    char *base64 = PL_Base64Encode(bin_data, bin_dataLength, nsnull);
+    if (!base64)
+        return JS_FALSE;
+
+    PRUint32 base64Length = ((bin_dataLength + 2) / 3) * 4;
+    str = JS_NewStringCopyN(cx, base64, base64Length);
+    PR_Free(base64);
+    if (!str)
+        return JS_FALSE;
+
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec gGlobalFun[] = {
     {"dump",    Dump,   1,0,0},
     {"debug",   Debug,  1,0,0},
+    {"atob",    Atob,   1,0,0},
+    {"btoa",    Btoa,   1,0,0},
     {nsnull,nsnull,0,0,0}
 };
 
