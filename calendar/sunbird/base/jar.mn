@@ -5,7 +5,11 @@ calendar.jar:
 *  content/calendar/aboutDialog.xul              (content/aboutDialog.xul)
 *  content/calendar/calendar.xul                 (content/calendar.xul)
 *  content/calendar/credits.xhtml                (content/credits.xhtml)
+#ifdef MOZILLA_1_8_BRANCH
 *  content/calendar/customizeToolbar.xul         (content/customizeToolbar.xul)
+#else
+% style chrome://global/content/customizeToolbar.xul chrome://calendar/skin/calendar.css
+#endif
 *  content/calendar/hiddenWindow.xul             (content/hiddenWindow.xul)
 *  content/calendar/hiddenWindow.js              (content/hiddenWindow.js)
 #ifdef MOZ_USE_GENERIC_BRANDING

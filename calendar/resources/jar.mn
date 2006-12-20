@@ -4,7 +4,7 @@ calendar.jar:
 % content calendar %content/calendar/
 *   content/calendar/applicationUtil.js (content/applicationUtil.js)
     content/calendar/attachFile.js (content/attachFile.js)
-    content/calendar/calendar.js (content/calendar.js)
+*   content/calendar/calendar.js (content/calendar.js)
     content/calendar/calendarUtils.js (content/calendarUtils.js)
     content/calendar/calendarMail.js (content/calendarMail.js)
     content/calendar/calendarManagement.js (content/calendarManagement.js)

@@ -471,9 +471,14 @@ function CalendarCustomizeToolbar()
     
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
-  
+
+#ifdef MOZILLA_1_8_BRANCH
   window.openDialog("chrome://calendar/content/customizeToolbar.xul", "CustomizeToolbar",
                     "chrome,all,dependent", document.getElementById("calendar-toolbox"));
+#else
+  window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
+                    "chrome,all,dependent", document.getElementById("calendar-toolbox"));
+#endif
 }
 
 function CalendarToolboxCustomizeDone(aToolboxChanged)
