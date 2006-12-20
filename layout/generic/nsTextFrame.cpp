@@ -309,9 +309,8 @@ public:
   virtual nsIFrame* GetLastInFlow() const;
   virtual nsIFrame* GetLastContinuation() const;
   
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const {
-    aIsSplittable = NS_FRAME_SPLITTABLE;
-    return NS_OK;
+  virtual nsSplittableType GetSplittableType() const {
+    return NS_FRAME_SPLITTABLE;
   }
   
   /**

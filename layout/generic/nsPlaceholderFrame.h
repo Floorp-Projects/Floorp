@@ -111,7 +111,7 @@ public:
                     nsReflowStatus& aStatus);
 
   virtual void Destroy();
-  NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
+  virtual nsSplittableType GetSplittableType() const;
 
   // nsIFrame overrides
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))

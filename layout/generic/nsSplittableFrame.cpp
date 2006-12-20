@@ -73,11 +73,10 @@ nsSplittableFrame::Destroy()
   nsFrame::Destroy();
 }
 
-NS_IMETHODIMP
-nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsSplittableFrame::GetSplittableType() const
 {
-  aIsSplittable = NS_FRAME_SPLITTABLE;
-  return NS_OK;
+  return NS_FRAME_SPLITTABLE;
 }
 
 nsIFrame* nsSplittableFrame::GetPrevContinuation() const

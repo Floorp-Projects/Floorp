@@ -133,7 +133,6 @@ public:
   void ReconstructMarginAbove(nsLineList::iterator aLine);
 
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
-                              nsSplittableType aSplitType,
                               const nsStyleDisplay* aDisplay,
                               nsRect& aResult);
 

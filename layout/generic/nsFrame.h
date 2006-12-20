@@ -223,7 +223,7 @@ public:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
+  virtual nsSplittableType GetSplittableType() const;
   virtual nsIFrame* GetPrevContinuation() const;
   NS_IMETHOD  SetPrevContinuation(nsIFrame*);
   virtual nsIFrame* GetNextContinuation() const;

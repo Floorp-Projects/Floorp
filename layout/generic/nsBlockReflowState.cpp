@@ -188,7 +188,6 @@ nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
 // GetAvailableSpace has already been called.
 void
 nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
-                                           nsSplittableType aSplitType,
                                            const nsStyleDisplay* aDisplay,
                                            nsRect& aResult)
 {
@@ -206,8 +205,9 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   // text controls are not splittable
   // XXXldb Why not just set the frame state bit?
 
-  if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType ||    // normal blocks 
-       NS_FRAME_NOT_SPLITTABLE == aSplitType) &&               // things like images mapped to display: block
+  nsSplittableType splitType = aFrame->GetSplittableType();
+  if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == splitType ||     // normal blocks 
+       NS_FRAME_NOT_SPLITTABLE == splitType) &&                // things like images mapped to display: block
       !(aFrame->IsFrameOfType(nsIFrame::eReplaced)) &&         // but not replaced elements
       aFrame->GetType() != nsLayoutAtoms::scrollFrame)         // or scroll frames
   {
@@ -577,9 +577,7 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       // Note that we could have unconstrained height and yet have
       // a next-in-flow placeholder --- for example columns can switch
       // from constrained height to unconstrained height.
-      nsSplittableType splitType;
-      aPlaceholder->IsSplittable(splitType);
-      if (splitType == NS_FRAME_NOT_SPLITTABLE) {
+      if (aPlaceholder->GetSplittableType() == NS_FRAME_NOT_SPLITTABLE) {
         placed = PR_FALSE;
       }
       else {
