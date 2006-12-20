@@ -20,88 +20,9 @@ package Bugzilla::WebService::Testopia::TestCase;
 use strict;
 use base qw(Bugzilla::WebService);
 use Bugzilla::User;
-use Bugzilla::Util qw(detaint_natural);
 use Bugzilla::Testopia::TestCase;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
-
-
-# Convert string field values to their respective integer id's
-sub _convert_to_ids
-{
-    my ($hash) = @_;
-
-    if (defined($$hash{"author"}))
-    {
-    	$$hash{"author_id"} = login_to_id($$hash{"author"});
-    }
-   	delete $$hash{"author"};
- 
-    if (defined($$hash{"case_status"}))
-    {
-    	$$hash{"case_status_id"} = Bugzilla::Testopia::TestCase::lookup_status_by_name($$hash{"case_status"});
-    }
-   	delete $$hash{"case_status"};
- 
-    if (defined($$hash{"category"}))
-    {
-    	$$hash{"category_id"} = Bugzilla::Testopia::TestCase::lookup_category_by_name($$hash{"category"});
-    }
-   	delete $$hash{"category"};
- 
-    if (defined($$hash{"default_tester"}))
-    {
-    	$$hash{"default_tester_id"} = login_to_id($$hash{"default_tester"});
-    }
-   	delete $$hash{"default_tester"};
- 
-    if (defined($$hash{"priority"}))
-    {
-    	$$hash{"priority_id"} = Bugzilla::Testopia::TestCase::lookup_priority_by_value($$hash{"priority"});
-    }
-   	delete $$hash{"priority"};
- }
-
-# Convert fields with integer id's to their respective string values
-sub _convert_to_strings
-{
-	my ($hash) = @_;
-
- 	$$hash{"author"} = "";
-    if (defined($$hash{"author_id"}))
-    {
-    	$$hash{"author"} = new Bugzilla::User($$hash{"author_id"})->login;
-    }
-   	delete $$hash{"author_id"};
- 
- 	$$hash{"case_status"} = "";
-    if (defined($$hash{"case_status_id"}))
-    {
-    	$$hash{"case_status"} = Bugzilla::Testopia::TestCase->lookup_status($$hash{"case_status_id"});
-    }
-   	delete $$hash{"case_status_id"};
- 
- 	$$hash{"category"} = "";
-    if (defined($$hash{"category_id"}))
-    {
-    	$$hash{"category"} = Bugzilla::Testopia::TestCase->lookup_category($$hash{"category_id"});
-    }
-   	delete $$hash{"category_id"};
- 
- 	$$hash{"default_tester"} = "";
-    if (defined($$hash{"default_tester_id"}))
-    {
-    	$$hash{"default_tester"} = new Bugzilla::User($$hash{"default_tester_id"})->login;
-    }  
-   	delete $$hash{"default_tester_id"};
- 
- 	$$hash{"priority"} = "";
-    if (defined($$hash{"priority_id"}))
-    {
-    	$$hash{"priority"} = Bugzilla::Testopia::TestCase->lookup_priority($$hash{"priority_id"});
-    }
-   	delete $$hash{"priority_id"};
- }
 
 # Utility method called by the list method
 sub _list
@@ -109,8 +30,6 @@ sub _list
     my ($query) = @_;
     
     my $cgi = Bugzilla->cgi;
-
-    $cgi->param("viewall", 1);
 
     $cgi->param("current_tab", "case");
     
@@ -135,42 +54,38 @@ sub get
     my $self = shift;
     my ($test_case_id) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
-    # We can detaint immediately if what we get passed is fully numeric.
-    # We leave bug alias checks to Bugzilla::Testopia::TestCase::new.
+    my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
     
-    if ($test_case_id =~ /^[0-9]+$/) {
-        detaint_natural($test_case_id);
-    }
+    $self->logout;
 
 	#Result is a test case hash map
-    my $testcase = new Bugzilla::Testopia::TestCase($test_case_id);
-    
-    _convert_to_strings($testcase);
-    
-    Bugzilla->logout;
-    
-    return $testcase;
+    return $test_case;
 }
 
 sub list
 {
-    Bugzilla->login;
-    
     my $self = shift;
     my ($query) = @_;
-    
-    _convert_to_ids($query);
+
+    $self->login;
     
 	my $list = _list($query);
 	
-	foreach (@$list)
-	{
-		_convert_to_strings($_);
-	}
-	    
-    Bugzilla->logout;
+    $self->logout;
     
     return $list;	
 }
@@ -180,16 +95,16 @@ sub create
 	my $self =shift;
 	my ($new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
-    _convert_to_ids($new_values);
-	
 	my $test_case = new Bugzilla::Testopia::TestCase($new_values);
 	
-	Bugzilla->logout;
+	my $result = $test_case->store();
 	
+	$self->logout;
+
 	# Result is new test plan id
-	return $test_case->store();
+	return $result
 }
 
 sub update
@@ -197,18 +112,30 @@ sub update
 	my $self =shift;
 	my ($test_case_id, $new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
 	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
 
-    _convert_to_ids($new_values);
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
 	
-	$test_case->update($new_values);
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_case->update($new_values);
+
+	$test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	$self->logout;
 	
-	Bugzilla->logout;
-	
-	# Result is zero on success, otherwise an exception will be thrown
-	return 0;
+	# Result is modified test case on success, otherwise an exception will be thrown
+	return $test_case;
 }
 
 sub get_text
@@ -216,20 +143,25 @@ sub get_text
 	my $self =shift;
 	my ($test_case_id) = @_;
 
-    Bugzilla->login;
+    $self->login;
     
 	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
 
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
 	my $doc = $test_case->text();
 
- 	$$doc{"author"} = "";
-    if (defined($$doc{"author_id"}))
-    {
-    	$$doc{"author"} = new Bugzilla::User($$doc{"author_id"})->login;
-    }  
-   	delete $$doc{"author_id"};
-	
-	Bugzilla->logout;
+	$self->logout;
 	
 	#Result is the latest test case doc hash map
 	return $doc;
@@ -238,20 +170,257 @@ sub get_text
 sub store_text
 {
 	my $self =shift;
-	my ($test_case_id, $author, $action, $effect) = @_;
+	my ($test_case_id, $author_id, $action, $effect, $setup, $breakdown) = @_;
 
-    Bugzilla->login;
+    $self->login;
     
-	my $author_id = login_to_id($author);
-	
 	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
 
-	my $version = $test_case->store_text($test_case_id, $author_id, $action, $effect);
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
 	
-	Bugzilla->logout;
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+	my $version = $test_case->store_text($test_case_id, $author_id, $action, $effect, $setup, $breakdown);
+	
+	$self->logout;
 	
 	# Result is new test case doc version on success, otherwise an exception will be thrown
 	return $version;
+}
+
+sub get_plans
+{
+    my $self = shift;
+    my ($test_case_id) = @_;
+
+    $self->login;
+
+    my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_case->plans();
+
+	$self->logout;
+	
+	# Result is list of test plans for the given test case
+	return $result;
+}
+
+sub add_component
+{
+	my $self =shift;
+	my ($test_case_id, $component_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_case->add_component($component_id);
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return 0;
+}
+
+sub remove_component
+{
+	my $self =shift;
+	my ($test_case_id, $component_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_case->remove_component($component_id);
+
+	$self->logout;
+	
+	# Result 0 on success, otherwise an exception will be thrown
+	return 0;
+}
+
+sub get_components
+{
+	my $self =shift;
+	my ($test_case_id) = @_;
+
+    $self->login;
+
+	my $test_case = new Bugzilla::Testopia::TestCase($test_case_id);
+
+	if (not defined $test_case)
+	{
+    	$self->logout;
+        die "Testcase, " . $test_case_id . ", not found"; 
+	}
+	
+	if (not $test_case->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    my $result = $test_case->components();
+
+	$self->logout;
+	
+	# Result list of components otherwise an exception will be thrown
+	return $result;
+}
+
+sub lookup_status_id_by_name
+{
+	my $self =shift;
+    my ($name) = @_;
+    
+    $self->login;
+
+  	my $result = Bugzilla::Testopia::TestCase::lookup_status_by_name($name);
+
+	$self->logout;
+
+	# Result is test case status id for the given test case status name
+	return $result;
+}
+
+sub lookup_status_name_by_id
+{
+	my $self =shift;
+    my ($id) = @_;
+    
+    $self->login;
+
+    my $test_case = new Bugzilla::Testopia::TestCase({});
+     
+    my $result = $test_case->lookup_status($id);
+
+	$self->logout;
+
+    if (!defined $result) 
+    {
+      $result = 0;
+    };
+	
+	# Result is test case status name for the given test case status id
+	return $result;
+}
+
+sub lookup_category_id_by_name
+{
+	my $self =shift;
+    my ($name) = @_;
+    
+    $self->login;
+
+  	my $result = Bugzilla::Testopia::TestCase::lookup_category_by_name($name);
+
+	$self->logout;
+
+	# Result is test case category id for the given test case category name
+	return $result;
+}
+
+sub lookup_category_name_by_id
+{
+	my $self =shift;
+    my ($id) = @_;
+    
+    $self->login;
+
+    my $test_case = new Bugzilla::Testopia::TestCase({});
+     
+    my $result = $test_case->lookup_category($id);
+
+	$self->logout;
+
+    if (!defined $result) 
+    {
+      $result = 0;
+    };
+	
+	# Result is test case category name for the given test case category id
+	return $result;
+}
+
+sub lookup_priority_id_by_name
+{
+	my $self =shift;
+    my ($name) = @_;
+    
+    $self->login;
+
+  	my $result = Bugzilla::Testopia::TestCase::lookup_priority_by_value($name);
+
+	$self->logout;
+
+	# Result is test case priority id for the given test case priority name
+	return $result;
+}
+
+sub lookup_priority_name_by_id
+{
+	my $self =shift;
+    my ($id) = @_;
+    
+    $self->login;
+
+    my $test_case = new Bugzilla::Testopia::TestCase({});
+     
+    my $result = $test_case->lookup_priority($id);
+
+	$self->logout;
+
+    if (!defined $result) 
+    {
+      $result = 0;
+    };
+	
+	# Result is test case priority name for the given test case priority id
+	return $result;
 }
 
 1;

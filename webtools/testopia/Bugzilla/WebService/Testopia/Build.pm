@@ -23,6 +23,94 @@ use base qw(Bugzilla::WebService);
 
 use Bugzilla::Testopia::Build;
 
+sub get
+{
+    my $self = shift;
+    my ($build_id) = @_;
+
+    $self->login;    
+
+	#Result is a test plan hash map
+    my $build = new Bugzilla::Testopia::Build($build_id);
+
+	if (not defined $build)
+	{
+    	$self->logout;
+        die "Build, " . $build_id . ", not found"; 
+	}
+	
+    $self->logout;
+
+    return $build;
+}
+
+sub create
+{
+	my $self = shift;
+	my ($new_values) = @_;  # Required: name, product_id
+
+    $self->login;
+
+	my $build = new Bugzilla::Testopia::Build($new_values);
+	
+	my $name = $$new_values{name};
+	
+    if (defined($name) && $build->check_name($name))
+    {
+        die "Build name, " . $name . ", already exists"; 
+    }
+
+	my $result = $build->store(); 
+	
+	$self->logout;
+	
+	# Result is new build id
+	return $result;
+}
+
+sub update
+{
+	my $self =shift;
+	my ($build_id, $new_values) = @_;  # Modifiable: name, description, milestone
+
+    $self->login;
+
+	my $build = new Bugzilla::Testopia::Build($build_id);
+	
+	if (not defined $build)
+	{
+    	$self->logout;
+        die "Build, " . $build_id . ", not found"; 
+	}
+	
+	my $name = $$new_values{name};
+	
+    if (defined($name) && $build->check_name($name))
+    {
+        die "Build name, " . $name . ", already exists"; 
+    }
+    
+    if (!defined($name))
+    {
+        $name = $build->name();
+    }
+    
+    my $description = (defined($$new_values{description}) ? $$new_values{description} : $build->description()); 
+
+    my $milestone = (defined($$new_values{milestone}) ? $$new_values{milestone} : $build->milestone()); 
+    
+    my $result = $build->update($name,
+                                $description,
+                                $milestone);
+
+	$build = new Bugzilla::Testopia::Build($build_id);
+	
+	$self->logout;
+
+	# Result is modified build, otherwise an exception will be thrown
+	return $build;
+}
+
 sub lookup_name_by_id
 {
   my $self = shift;

@@ -275,6 +275,20 @@
 
 [% END %]
 </form>
+
+[% IF case_table.list_count >0 %]
+<div id="buglist_actions">
+	<div class="links">
+[% IF case_table.list_count >0 %]
+		<span class="label">Export Test Cases:</span>
+		<a href="tr_show_plan.cgi?&amp;plan_id=[% plan.id FILTER none %]&amp;export=testcases&amp;ctype=csv&amp;viewall=1"><image src="testopia/img/csv.png" class="image"></a>
+		|
+		<a href="tr_show_plan.cgi?&amp;plan_id=[% plan.id FILTER none %]&amp;export=testcases&amp;ctype=xml&amp;viewall=1"><image src="testopia/img/xml.png" class="image"></a>
+[% END %]
+	</div>
+</div>
+[% END %]
+
 [%##### Footer #####%]
 
 [% PROCESS global/footer.html.tmpl %]

@@ -60,6 +60,13 @@ unless ($plan_id){
   exit;
 }
 validate_test_id($plan_id, 'plan');
+
+my $format = $template->get_format("testopia/plan/show", scalar $cgi->param('format'), scalar $cgi->param('ctype'));
+unless ( $format->{'extension'} eq "html" ){
+	export($plan_id);
+	exit;
+}
+
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 my $serverpush = support_server_push($cgi);
@@ -445,3 +452,34 @@ sub display {
     $template->process("testopia/plan/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }
+
+sub export {
+	my ($plan_id) = @_;
+	my $casequery = new Bugzilla::CGI($cgi);
+	
+	$casequery->param('current_tab', 'case');
+	my $search = Bugzilla::Testopia::Search->new($casequery);
+	my $table = Bugzilla::Testopia::Table->new('case', 'tr_show_plan.cgi', $casequery, undef, $search->query);
+	ThrowUserError('testopia-query-too-large', {'limit' => $case_query_limit}) if $table->view_count > $case_query_limit;
+	$vars->{'table'} = $table;    
+		
+	my $disp = "inline";
+	# We set CSV files to be downloaded, as they are designed for importing
+    # into other programs.
+    if ( $format->{'extension'} eq "csv" || $format->{'extension'} eq "xml" )
+    {
+		$disp = "attachment";
+		$vars->{'displaycolumns'} = \@Bugzilla::Testopia::Constants::TESTCASE_EXPORT;
+    }
+	
+	# Suggest a name for the bug list if the user wants to save it as a file.
+    my @time = localtime(time());
+    my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+	my $filename = "testcases-$date.$format->{extension}";
+    print $cgi->header(-type => $format->{'ctype'},
+					   -content_disposition => "$disp; filename=$filename");
+					   	  
+	$template->process($format->{'template'}, $vars) ||
+		ThrowTemplateError($template->error());
+}
+

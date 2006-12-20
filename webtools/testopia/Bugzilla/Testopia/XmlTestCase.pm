@@ -258,6 +258,14 @@ sub get_testcase_ids()
 	return @return_testcase_id;
 }
 
+=head2 store
+
+Saves a imported Test Case.  This method insures that all Test Case attributes not stored
+in the Test Case object are created. The attributes include the Test Plan, tags, compoents,
+attachments and categories.
+
+=cut
+
 sub store()
 {
 	my ($self, @new_testplans) = @_;
@@ -359,20 +367,49 @@ sub store()
 	return $error_message;
 }
 
+=head2 store_relationships
+
+Save the dependson and blocks relationships between Test Cases.  This method can only be
+called after the Test Cases being imported have been stored.  The dependson and blocks
+relationships use the Test Case identifier which is created only after the Test Case has
+been stored.
+
+=cut
+
 sub store_relationships()
 {
 	my ($self, @new_testcases) = @_;
 
-	my $blocks = join(' ',$self->get_testcase_ids("blocks",@new_testcases));
-    my $dependson = join(' ',$self->get_testcase_ids("dependson",@new_testcases));
+	# Hashes are used because the entires in blocks and dependson must be unique.
+	my %blocks = ();
+	foreach my $block ( $self->get_testcase_ids("blocks",@new_testcases) )
+	{
+		$blocks{$block}++;
+	}
+	my $blocks_size = keys( %blocks );
+	my %dependson = ();
+	foreach my $dependson ( $self->get_testcase_ids("dependson",@new_testcases) )
+	{
+		$dependson{$dependson}++;
+	}
+	my $dependson_size = keys( %dependson );
+			
 
-	if ( $blocks ne "" || $dependson ne "" )
+	if ( ( $blocks_size > 0 ) || ( $dependson_size > 0 ) )
 	{
 		# Need to add the current blocks and dependson from the Test Case; otherwise, they will
 		# be removed.
-		$blocks .= $self->testcase->blocked_list_uncached();
-    	$dependson .= $self->testcase->dependson_list_uncached();
-		$self->testcase->update_deps($dependson,$blocks);
+    	foreach my $block ( split(/ /,$self->testcase->blocked_list_uncached()) )
+		{
+			$blocks{$block}++;
+		}
+		foreach my $dependson ( split(/ /,$self->testcase->dependson_list_uncached()) )
+		{
+			$dependson{$dependson}++;
+		}
+		my @blocks = keys(%blocks);
+		my @dependson = keys(%dependson);
+		$self->testcase->update_deps( join(' ',@dependson ),join(' ',@blocks) );
 	}
 }
 

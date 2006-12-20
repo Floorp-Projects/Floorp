@@ -133,9 +133,11 @@ sub update
 
     my $result = $test_plan->update($new_values);
 
+	$test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+	
 	$self->logout;
 
-	# Result is zero on success, otherwise an exception will be thrown
+	# Result is modified test plan, otherwise an exception will be thrown
 	return $test_plan;
 }
 
@@ -222,7 +224,36 @@ sub get_categories
 
 	$self->logout;
 	
-	# Result is list of test runs for the given test plan
+	# Result is list of categories for the given test plan
+	return $result;
+}
+
+sub get_builds
+{
+	my $self =shift;
+    my ($test_plan_id) = @_;
+
+    $self->login;
+
+    my $test_plan = new Bugzilla::Testopia::TestPlan($test_plan_id);
+
+	if (not defined $test_plan)
+	{
+    	$self->logout;
+        die "Testplan, " . $test_plan_id . ", not found"; 
+	}
+	
+	if (not $test_plan->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+    
+    my $result = $test_plan->product->builds();
+
+	$self->logout;
+	
+	# Result is list of builds for the given test plan
 	return $result;
 }
 

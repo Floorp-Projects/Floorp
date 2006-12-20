@@ -18,57 +18,13 @@
 package Bugzilla::WebService::Testopia::TestCaseRun;
 
 use strict;
+
 use base qw(Bugzilla::WebService);
-use Bugzilla::Util qw(detaint_natural);
-use Bugzilla::Testopia::TestCaseRun;
+
 use Bugzilla::User;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
-
-# Convert string field values to their respective integer id's
-sub _convert_to_ids
-{
-    my ($hash) = @_;
-
-    if (defined($$hash{"assignee"}))
-    {
-    	$$hash{"assignee"} = login_to_id($$hash{"assignee"});
-    }
-
-    if (defined($$hash{"testedby"}))
-    {
-    	$$hash{"testedby"} = login_to_id($$hash{"testedby"});
-    }
-
-    if (defined($$hash{"case_run_status"}))
-    {
-    	$$hash{"case_run_status_id"} = Bugzilla::Testopia::TestCaseRun::lookup_status_by_name($$hash{"case_run_status"});
-    }
-   	delete $$hash{"case_run_status"};
-}
-
-# Convert fields with integer id's to their respective string values
-sub _convert_to_strings
-{
-	my ($hash) = @_;
-
-    if (defined($$hash{"assignee"}))
-    {
-    	$$hash{"assignee"} = new Bugzilla::User($$hash{"assignee"})->login;
-    }
-
-    if (defined($$hash{"testedby"}))
-    {
-    	$$hash{"testedby"} = new Bugzilla::User($$hash{"testedby"})->login;
-    }
-
-	$$hash{"case_run_status"} = "";    
-    if (defined($$hash{"case_run_status_id"}))
-    {
-    	$$hash{"case_run_status"} = Bugzilla::Testopia::TestCaseRun->lookup_status($$hash{"case_run_status_id"});
-    }
-   	delete $$hash{"case_run_status_id"};
-}
+use Bugzilla::Testopia::TestCaseRun;
 
 # Utility method called by the list method
 sub _list
@@ -100,21 +56,24 @@ sub get
     my $self = shift;
     my ($test_case_run_id) = @_;
 
-    Bugzilla->login;
-
-    # We can detaint immediately if what we get passed is fully numeric.
-    # We leave bug alias checks to Bugzilla::Testopia::TestCaseRun::new.
-    
-    if ($test_case_run_id =~ /^[0-9]+$/) {
-        detaint_natural($test_case_run_id);
-    }
+    $self->login;
 
     #Result is a test case run hash map
     my $test_case_run = new Bugzilla::Testopia::TestCaseRun($test_case_run_id);
+
+	if (not defined $test_case_run)
+	{
+    	$self->logout;
+        die "TestcaseRun, " . $test_case_run_id . ", not found"; 
+	}
+	
+	if (not $test_case_run->canview)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
     
-    _convert_to_strings($test_case_run);
-    
-    Bugzilla->logout;
+    $self->logout;
     
     return $test_case_run;
     
@@ -122,21 +81,14 @@ sub get
 
 sub list
 {
-    Bugzilla->login;
-    
     my $self = shift;
     my ($query) = @_;
-    
-    _convert_to_ids($query);
+
+    $self->login;
     
 	my $list = _list($query);
 	
-	foreach (@$list)
-	{
-		_convert_to_strings($_);
-	}
-	    
-    Bugzilla->logout;
+    $self->logout;
     
     return $list;	
 }
@@ -146,44 +98,128 @@ sub create
 	my $self =shift;
 	my ($new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
-    _convert_to_ids($new_values);
-	
 	my $test_case_run = new Bugzilla::Testopia::TestCaseRun($new_values);
 	
-	Bugzilla->logout;
+	my $result = $test_case_run->store();
 	
+	$self->logout;
+
 	# Result is new test case run id
-	return $test_case_run->store();
+	return $result;
 }
 
 sub update
 {
 	my $self =shift;
-	my ($run_id, $case_id, $build_id, $new_values) = @_;
+	my ($run_id, $case_id, $build_id, $environment_id, $new_values) = @_;
 
-    Bugzilla->login;
+    $self->login;
 
-	my $test_case_run_id = Bugzilla::Testopia::TestCaseRun::lookup_case_run_id($run_id, $case_id, $build_id);
-	
-	my $test_case_run = new Bugzilla::Testopia::TestCaseRun($test_case_run_id);
+    my $test_case_run = new Bugzilla::Testopia::TestCaseRun($case_id,
+                                                            $run_id,
+                                                            $build_id,
+                                                            $environment_id
+                                                            );
 
-    _convert_to_ids($new_values);
+	if (not defined $test_case_run)
+	{
+    	$self->logout;
+        die "TestCaseRun for build_id = " . $build_id .
+            ", case_id = " . $case_id . 
+            ", environment_id = " . $environment_id . 
+            ", run_id = " . $run_id . 
+            ", not found"; 
+	}
+
+	if (not $test_case_run->canedit)
+	{
+	    $self->logout;
+        die "User Not Authorized";
+	}
+
+    # Check to see what has changed then use set methods
     
-    $$new_values{build_id} = $build_id;  # Needed by TestCaseRun's update member function
-
-    if (not defined $$new_values{environment_id})
+    if (defined($$new_values{assignee}))
     {
-      $$new_values{environment_id} = $test_case_run->environment;  # Needed by TestCaseRun's update member function
+        $test_case_run->set_assignee($$new_values{assignee});
+    }
+
+    if (defined($$new_values{build_id}))
+    {
+        $test_case_run->set_build($$new_values{build_id});
+    }
+
+    if (defined($$new_values{environment_id}))
+    {
+        $test_case_run->set_environment($$new_values{environment_id});
+    }
+
+    if (defined($$new_values{case_run_status_id}))
+    {
+        $test_case_run->set_status($$new_values{case_run_status_id});
+    }
+
+    if (defined($$new_values{notes}))
+    {
+        $test_case_run->append_note($$new_values{notes});
     }
     
-	$test_case_run->update($new_values);
+    # Remove assignee user object and replace with just assignee id
+    if (ref($$test_case_run{assignee}) eq 'Bugzilla::User')
+    {
+        $$test_case_run{assignee} = $$test_case_run{assignee}->id();
+    }
+
+	$self->logout;
+
+	#Remove attributes we do not want to publish
+	delete $$test_case_run{bugs};
+	delete $$test_case_run{build};
+	delete $$test_case_run{case};
+	delete $$test_case_run{environment};
+	delete $$test_case_run{run};
 	
-	Bugzilla->logout;
+	# Result is modified test case run on success, otherwise an exception will be thrown
+	return $test_case_run;
+}
+
+sub lookup_status_id_by_name
+{
+	my $self =shift;
+    my ($name) = @_;
+    
+    $self->login;
+
+  	my $result = Bugzilla::Testopia::TestCaseRun::lookup_status_by_name($name);
+
+	$self->logout;
+
+	# Result is test case run status id for the given test case run status name
+	return $result;
+}
+
+sub lookup_status_name_by_id
+{
+	my $self =shift;
+    my ($id) = @_;
+    
+    $self->login;
+
+    my $test_case_run = new Bugzilla::Testopia::TestCaseRun({});
+     
+    my $result = $test_case_run->lookup_status($id);
+
+	$self->logout;
+
+    if (!defined $result) 
+    {
+      $result = 0;
+    };
 	
-	# Result is zero on success, otherwise an exception will be thrown
-	return 0;
+	# Result is test case run status name for the given test case run status id
+	return $result;
 }
 
 1;

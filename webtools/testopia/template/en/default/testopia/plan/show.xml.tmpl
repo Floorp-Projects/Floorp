@@ -15,19 +15,17 @@
   # Portions created by Maciej Maczynski are Copyright (C) 2001
   # Maciej Maczynski. All Rights Reserved.
   #
-  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
-  #                 David Koenig <dkoenig@novell.com>
+  # Contributor(s): David Koenig <dkoenig@novell.com>
   #%]
 
-[%# Testopia Test Case list CSV export template #%]
+[%# Testopia Test Case list XML export template #%]
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% colsepchar = user.settings.csv_colsepchar.value %]
-
-[% PROCESS testopia/export/csv.caseheader.tmpl %]
+[% PROCESS testopia/export/xml.header.tmpl -%]
 
 [% FOREACH test_case = table.list %]
-	[% PROCESS testopia/export/csv.case.tmpl case=test_case %]
-
+	[%+ PROCESS testopia/export/xml.case.tmpl case=test_case %]
 [% END %]
+
+[%- PROCESS testopia/export/xml.footer.tmpl %]

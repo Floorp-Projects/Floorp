@@ -92,7 +92,7 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 ===================================================================
 --- /bmo-2.22/Bugzilla/DB/Schema.pm	2006-01-06 07:38:42.000000000 -0700
 +++ /bmo-2.22-testopia/Bugzilla/DB/Schema.pm	2006-10-04 16:28:11.000000000 -0600
-@@ -1039,6 +1039,483 @@
+@@ -1039,6 +1039,492 @@
              version     => {TYPE => 'decimal(3,2)', NOTNULL => 1},
          ],
      },
@@ -125,6 +125,8 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 +        ],
 +        INDEXES => [
 +            category_name_idx => ['name'],
++            category_product_id_name_idx => {FIELDS => [qw(product_id name)],
++                                             TYPE => 'UNIQUE'},
 +        ],
 +    },
 +   
@@ -192,6 +194,8 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 +            case_run_shortkey_idx   => ['sortkey'],
 +            case_run_build_idx      => [qw(case_run_id build_id)],
 +            case_run_env_idx        => [qw(case_run_id environment_id)],
++            case_run_build_env_idx  => {FIELDS => [qw(run_id case_id build_id environment_id)],
++                                        TYPE => 'UNIQUE'},
 +        ],
 +    },
 +    
@@ -507,6 +511,11 @@ Index: /bmo-2.22/Bugzilla/DB/Schema.pm
 +            name        => {TYPE => 'varchar(255)'},
 +            description => {TYPE => 'TEXT'},        
 +        ],
++        INDEXES => [
++            build_name_idx => ['name'],
++            build_product_id_name_idx => {FIELDS => [qw(product_id name)],
++                                          TYPE => 'UNIQUE'},
++        ],      
 +    },
 +    
 +    test_attachment_data => {

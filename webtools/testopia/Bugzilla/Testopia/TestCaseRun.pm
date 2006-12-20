@@ -169,7 +169,7 @@ sub _init {
          detaint_natural($case_id) || return undef;
          $obj = $dbh->selectrow_hashref(
             "SELECT $columns FROM test_case_runs
-             WHERE case__id = ?
+             WHERE case_id = ?
                AND run_id = ?
                AND build_id = ?
                AND environment_id = ?", 
@@ -274,6 +274,7 @@ sub switch {
        my $oldenv = $self->{'environment_id'};
        
        $self = Bugzilla::Testopia::TestCaseRun->new($self->clone($build_id,$env_id));
+       $self->set_as_current;
        
        if ($oldbuild != $build_id){
            my $build = Bugzilla::Testopia::Build->new($build_id);
@@ -292,7 +293,6 @@ sub switch {
            $self->append_note($note);
        }
    } 
-   $self->set_as_current;
    return $self;
 }
 

@@ -188,13 +188,19 @@ sub remove_field_list
 		s/\342\200\235/&#8221;/g;
 		s/\302\251/&copy;/g;
 		s/\031/'/g;
-		s/\221/&apos;/g;
-		s/\222/&apos;/g;
-		s/\224/&apos;/g;
+		s/\221/&8216;/g;					# left single quotation mark
+		s/\222/&8217;/g;					# right single quotation mark
+		s/\223/&8220;/g;                    # left double quotation mark
+		s/\224/&8221;/g;                    # right double quotation mark
 		s/\226/-/g;
-		s/\341/&#224;/g;					# small letter a with grave
-		s/\344/&#228;/g;					# small letter a with diaeresis
-		s/\351/&#232;/g;					# small letter e with grave
+		s/\337/&#223;/g;					# beta
+		s/\341/&#224;/g;					# small letter a with acute accent
+		s/\342/&#225;/g;					# small letter a with grave accent
+		s/\344/&#228;/g;					# small letter a with tilde
+		s/\346/&#229;/g;					# small letter a with umlaut
+		s/\347/&#230;/g;					# small ae 
+		s/\350/&#231;/g;					# small letter c cedilla
+		s/\351/&#232;/g;					# small letter e with acute accent
 		s/\364/&#244;/g;					# small letter o with circumflex
 		
 		$line_count += 1;
@@ -290,7 +296,7 @@ sub remove_field_list
 					my $double_quote_index = $comma_index+1;
 					while ( $double_quote_index<=$#chars )
 					{
-						last if ( $chars[$double_quote_index] =~ m/\S/ );
+						last if ( $chars[$double_quote_index] =~ m/\S/ && $chars[$double_quote_index] ne ',' );
 						$double_quote_index++;
 					}
 					# Is the next non-white space character a comma followed by a double quote?  If yes then we
@@ -317,6 +323,13 @@ sub remove_field_list
 					}
 
 				}
+			}
+			#
+			# This check is for empty fields, i.e. "field1",,"field2".  
+			#
+			elsif ( $char eq "," && ! $in_quote_field )
+			{
+				push (@fields,"");
 			}
 			else
 			{
@@ -440,40 +453,40 @@ map_TCDB_users(\%tcdb_user);
 # Process the $field_list variable which comes from the first line of the CSV file.
 #
 # Format of the first line should be in the form: 
-#    "Testcase Name","Attributes","Priority","Description","Status","Folder","Creator",
-#    "Owner","ResDetails","Build","InstanceID","Long Description","Pass/Fail Definition",
-#    "Setup Steps","Cleanup Steps","Steps"
+#    "Testcase Name","Attributes","Priority","Description","Folder","Creator","Owner",
+#    "Pass/Fail Definition","Setup Steps","Cleanup Steps","Steps"
 # 
 # Fields currently used if they exist are: 
 #    attributes - split apart at each comma to become a tag.
 #    category - category for test case.
 #    cleanupsteps - added to Break Down section.
 #    component - component for test case.
-#    description - summary unless testcasename is defined.  added to Action section.
+#    description - summary unless testcasename is defined.  added to Action section if -tcdb flag
+#                  used.
 #    environment - split apart at each comma to become a tag.
 #    folder - only processed if -tcdb option is supplied.  split apart at each '/'.  based on each
 #             teams input one field becomes the category and others tags.  each team defines which
 #             sub folders they want to use.
-#    longdescription - added to Action section.
+#    longdescription - added to Action section if -tcdb flag used.
 #    owner (required) - in TCDB this is a ID that is mapped to a email address from the file
 #                       tcdbUsers.
 #    passfaildefinition - added to Expected Results section.
 #    priority - becomes the priority.  I just a number P is prepended.
-#    resdetails - added to Action section.
+#    resdetails - added to Action section if -tcdb flag used.
 #    setupsteps - added to Set Up section.
 #    steps - added to Action section.
 #    testcasename - becomes the summary.  if testcasename is not supplied the description
 #                   is the summary.  if testcasename and description are both null a error is
-#                   generated.
+#                   generated.  added to Action section if -tcdb flag used.
 #
 # The order of the fields is not important.  The fields supplied to Class::CSV will be in
 # order found on the first line of the CSV file.
 #
 # The field_list returned from remove_field_list() will have:
-#    Change to lower case.
+#    Changed to lower case.
 #    Remove spaces.
-#    Remove all "'s
-#    Remove all /'s.'
+#    Remove all "s.
+#    Remove all /s.
 #
 
 # More sources for the CSV's other than TCDB, transform some of the column names.
@@ -558,7 +571,14 @@ foreach my $line (@{$csv->lines()}) {
 	{
 		my @folder = split(/\\/,$line->folder()); 
 		print XMLOUTPUT "		<tag>" . fix_entities($folder[4]) . "</tag>\n" if ( defined( $folder[4] ) );
-		print XMLOUTPUT "		<categoryname>" . fix_entities($folder[5]) . "</categoryname>\n" if ( defined( $folder[5] ) );
+		if ( defined($fields{'category'}) )
+		{
+			print XMLOUTPUT "		<tag>" . fix_entities($folder[5]) . "</tag>\n" if ( defined( $folder[5] ) );
+		}
+		else 
+		{
+			print XMLOUTPUT "		<categoryname>" . fix_entities($folder[5]) . "</categoryname>\n" if ( defined( $folder[5] ) );
+		}
 		my $fieldstart = 6;
 		while ( defined $folder[$fieldstart] )
 		{
@@ -606,25 +626,28 @@ foreach my $line (@{$csv->lines()}) {
 		print XMLOUTPUT "</breakdown>\n";
 	}
 	print XMLOUTPUT "		<action>";
-	if ( defined($fields{'testcasename'}) && ( $line->testcasename() ne "") )
+	if ( $tcdb )
 	{
-		print XMLOUTPUT "[TCDB Test Case Name]\n" if ( $tcdb );
-		print XMLOUTPUT fix_entities($line->testcasename());
-	}
-	if ( defined($fields{'description'}) && ( $line->description() ne "") )
-	{
-		print XMLOUTPUT "\n\n[TCDB Description]\n" if ( $tcdb );
-		print XMLOUTPUT fix_entities($line->description());
-	}
-	if ( defined($fields{'longdescription'}) && ( $line->longdescription() ne "") )
-	{
-		print XMLOUTPUT "\n\n[TCDB Long Description]\n" if ( $tcdb );
-		print XMLOUTPUT fix_entities($line->longdescription());
-	}
-	if ( defined($fields{'resdetails'}) && ( $line->resdetails() ne "") )
-	{
-		print XMLOUTPUT "\n\n[TCDB Resolution Details]\n" if ( $tcdb );
-		print XMLOUTPUT fix_entities($line->resdetails());
+		if ( defined($fields{'testcasename'}) && ( $line->testcasename() ne "") )
+		{
+			print XMLOUTPUT "[TCDB Test Case Name]\n";
+			print XMLOUTPUT fix_entities($line->testcasename());
+		}
+		if ( defined($fields{'description'}) && ( $line->description() ne "") )
+		{
+			print XMLOUTPUT "\n\n[TCDB Description]\n";
+			print XMLOUTPUT fix_entities($line->description());
+		}
+		if ( defined($fields{'longdescription'}) && ( $line->longdescription() ne "") )
+		{
+			print XMLOUTPUT "\n\n[TCDB Long Description]\n";
+			print XMLOUTPUT fix_entities($line->longdescription());
+		}
+		if ( defined($fields{'resdetails'}) && ( $line->resdetails() ne "") )
+		{
+			print XMLOUTPUT "\n\n[TCDB Resolution Details]\n";
+			print XMLOUTPUT fix_entities($line->resdetails());
+		}
 	}
 	if ( defined($fields{'steps'}) && ( $line->steps() ne "") )
 	{

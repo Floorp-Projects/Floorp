@@ -87,6 +87,8 @@ use constant DB_COLUMNS => qw(
     test_plans.isactive
 );
 
+use constant NAME_MAX_LENGTH => 255;
+
 our $columns = join(", ", DB_COLUMNS);
 
 sub report_columns {
@@ -151,7 +153,7 @@ sub _init {
     } else {
         ThrowCodeError('bad_arg',
             {argument => 'param',
-             function => 'Testopia::TestRun::_init'});
+             function => 'Testopia::TestPlan::_init'});
     }
 
     return undef unless (defined $obj);
@@ -781,6 +783,7 @@ Returns the id of the type name passed.
 =cut
 
 sub lookup_type_by_name {
+    my $self = shift;
     my ($name) = @_;
     my $dbh = Bugzilla->dbh;
     

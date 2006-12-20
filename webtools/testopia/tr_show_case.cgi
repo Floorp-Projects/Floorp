@@ -434,7 +434,7 @@ sub export {
 	my $disp = "inline";
 	# We set CSV files to be downloaded, as they are designed for importing
     # into other programs.
-    if ($format->{'extension'} eq "csv")
+    if ( $format->{'extension'} eq "csv" || $format->{'extension'} eq "xml" )
     {
 		$disp = "attachment";
 		$vars->{'displaycolumns'} = \@Bugzilla::Testopia::Constants::TESTCASE_EXPORT;

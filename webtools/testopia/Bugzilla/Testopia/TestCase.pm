@@ -104,6 +104,11 @@ use constant DB_COLUMNS => qw(
     test_cases.alias
 );
 
+use constant ALIAS_MAX_LENGTH => 255;
+use constant REQUIREMENT_MAX_LENGTH => 255;
+use constant SUMMARY_MAX_LENGTH => 255;
+use constant TAG_MAX_LENGTH => 255;
+
 our $columns = join(", ", DB_COLUMNS);
 
 sub display_columns {

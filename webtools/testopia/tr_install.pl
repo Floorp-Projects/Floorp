@@ -366,6 +366,10 @@ sub UpdateDB {
     $dbh->bz_drop_index('test_runs', 'run_id_2');
     $dbh->bz_drop_index('test_runs', 'test_run_plan_id_run_id__idx');
 
+    $dbh->bz_add_index('test_builds', 'build_name_idx', ['name']);
+    $dbh->bz_add_index('test_builds', 'build_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_categories', 'category_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_runs', 'case_run_build_env_idx', {FIELDS => [qw(run_id case_id build_id environment_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_tags', 'case_tags_user_idx', [qw(tag_id userid)]);
     $dbh->bz_add_index('test_cases', 'test_case_requirement_idx', ['requirement']);
     $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
