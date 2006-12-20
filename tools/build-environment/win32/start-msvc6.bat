@@ -20,9 +20,6 @@ if "%VC6DIR%"=="Not Found" (
 REM For MSVC6, we use the "old" non-static moztools
 set MOZ_TOOLS=%MOZILLABUILD%\moztools-180compat
 
-SET INCLUDE=
-SET LIB=
-
 rem append moztools to PATH
 SET PATH=%PATH%;%MOZ_TOOLS%\bin
 

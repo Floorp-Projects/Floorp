@@ -49,7 +49,8 @@ environ["MOZ_SRCDIR"] = sourcedir
 print("Source file location: " + sourcedir)
 print("Output location: " + stagedir)
 
-rmtree(join(stagedir, "mozilla-build"))
+if exists(join(stagedir, "mozilla-build")):
+    rmtree(join(stagedir, "mozilla-build"))
 
 check_call([join(sourcedir, "7z442.exe"),
             "/D=" + join(stagedir, "mozilla-build", "7zip")])

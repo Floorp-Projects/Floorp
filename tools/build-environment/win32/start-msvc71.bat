@@ -20,9 +20,6 @@ if "%VC71DIR%"=="Not Found" (
 REM Use the "new" moztools-static
 set MOZ_TOOLS=%MOZILLABUILD%\moztools
 
-SET INCLUDE=
-SET LIB=
-
 rem append moztools to PATH
 SET PATH=%PATH%;%MOZ_TOOLS%\bin
 

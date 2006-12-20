@@ -1,5 +1,13 @@
 @ECHO OFF
 
+set CYGWIN=
+if not defined MOZ_NO_RESET_PATH (
+    set PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem
+)
+
+SET INCLUDE=
+SET LIB=
+
 SET MSVCROOTKEY=HKLM\SOFTWARE\Microsoft\VisualStudio
 SET MSVC6KEY=%MSVCROOTKEY%\6.0\Setup\Microsoft Visual C++
 SET MSVC71KEY=%MSVCROOTKEY%\7.1\Setup\VC
