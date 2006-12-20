@@ -95,8 +95,8 @@ data 'styl' (5000, "English") {
   $"0000 0000 0000"
 
   // Style 2.  This is used to display the body.
-  // Start character = 57
-  $"0000 0039"
+  // Start character = 62
+  $"0000 003E"
   // Height = 16
   $"0010"
   // Ascent = 12
