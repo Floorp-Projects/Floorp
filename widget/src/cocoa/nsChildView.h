@@ -41,6 +41,7 @@
 // formal protocols
 #import "mozView.h"
 #ifdef ACCESSIBILITY
+#include "nsIAccessible.h"
 #import "mozAccessibleProtocol.h"
 #endif
 
