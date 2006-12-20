@@ -24,6 +24,7 @@
  *  Blake Ross     <blake@cs.stanford.edu  (Desktop Color, DDE support)
  *  Jungshik Shin  <jshin@mailaps.org>     (I18N)
  *  Robert Strong  <robert.bugzilla@gmail.com>  (Long paths, DDE)
+ *  Asaf Romano    <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,6 +60,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "shlobj.h"
+#include "nsIWindowsRegKey.h"
 
 #include <mbstring.h>
 
@@ -1063,3 +1065,49 @@ nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const 
   return process->Run(PR_FALSE, &specStr, 1, &pid);
 }
 
+NS_IMETHODIMP
+nsWindowsShellService::GetDefaultFeedReader(nsILocalFile** _retval)
+{
+  *_retval = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
+                    NS_LITERAL_STRING("feed\\shell\\open\\command"),
+                    nsIWindowsRegKey::ACCESS_READ);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString path;
+  rv = regKey->ReadStringValue(EmptyString(), path);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (path.IsEmpty())
+    return NS_ERROR_FAILURE;
+
+  if (path.First() == '"') {
+    // Everything inside the quotes
+    path = Substring(path, 1, path.FindChar('"', 1) - 1);
+  }
+  else {
+    // Everything up to the first space
+    path = Substring(path, 0, path.FindChar(' '));
+  }
+
+  nsCOMPtr<nsILocalFile> defaultReader =
+    do_CreateInstance("@mozilla.org/file/local;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = defaultReader->InitWithPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool exists;
+  rv = defaultReader->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*_retval = defaultReader);
+  return NS_OK;
+}

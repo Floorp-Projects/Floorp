@@ -625,3 +625,9 @@ nsGNOMEShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const ns
   PRUint32 pid;
   return process->Run(PR_FALSE, &specStr, 1, &pid);
 }
+
+NS_IMETHODIMP
+nsGNOMEShellService::GetDefaultFeedReader(nsILocalFile** _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

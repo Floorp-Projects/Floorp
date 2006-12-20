@@ -40,7 +40,7 @@
 interface nsIDOMElement;
 interface nsILocalFile;
 
-[scriptable, uuid(FD63944D-F851-4116-A372-962E4D030B2D)]
+[scriptable, uuid(bb477da4-dddf-4106-a562-f06c85c7f9a8)]
 interface nsIShellService : nsISupports
 {
   /**
@@ -122,5 +122,9 @@ interface nsIShellService : nsISupports
    *          The uri to be loaded by the application
    */
   void openApplicationWithURI(in nsILocalFile aApplication, in ACString aURI);
+
+  /**
+   * The default system handler for web feeds
+   */
+  readonly attribute nsILocalFile defaultFeedReader;
 };
- 
