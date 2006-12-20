@@ -3730,12 +3730,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
               }
 
-              case JSOP_NEW_EQ:
-              case JSOP_NEW_NE:
+              case JSOP_STRICTEQ:
+              case JSOP_STRICTNE:
                 rval = POP_STR();
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, "%s %c== %s",
-                              lval, (op == JSOP_NEW_EQ) ? '=' : '!', rval);
+                              lval, (op == JSOP_STRICTEQ) ? '=' : '!', rval);
                 break;
 
               BEGIN_LITOPX_CASE(JSOP_CLOSURE)

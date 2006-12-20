@@ -3239,13 +3239,13 @@ interrupt:
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
 
-          BEGIN_CASE(JSOP_NEW_EQ)
+          BEGIN_CASE(JSOP_STRICTEQ)
             NEW_EQUALITY_OP(==);
-          END_CASE(JSOP_NEW_EQ)
+          END_CASE(JSOP_STRICTEQ)
 
-          BEGIN_CASE(JSOP_NEW_NE)
+          BEGIN_CASE(JSOP_STRICTNE)
             NEW_EQUALITY_OP(!=);
-          END_CASE(JSOP_NEW_NE)
+          END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_CASE)
             pc2 = (jsbytecode *) sp[-2-depth];
