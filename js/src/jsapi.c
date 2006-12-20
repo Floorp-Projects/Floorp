@@ -786,6 +786,12 @@ JS_DestroyRuntime(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
+#ifdef JS_OPMETER
+    extern void js_DumpOpPairMeter();
+
+    js_DumpOpPairMeter();
+#endif
+
     js_FinishDtoa();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
