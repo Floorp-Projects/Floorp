@@ -3058,7 +3058,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
                 (pc += js_CodeSpec[op].length) < endpc) {
                 op = (JSOp) *pc;
                 return op == JSOP_EQ || op == JSOP_NE ||
-                       op == JSOP_NEW_EQ || op == JSOP_NEW_NE;
+                       op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
             break;
         }

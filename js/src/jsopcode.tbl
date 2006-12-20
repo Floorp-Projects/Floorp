@@ -179,8 +179,8 @@ OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLES
 OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH|JOF_DETECTING)
 
 /* New, infallible/transitive identity ops. */
-OPDEF(JSOP_NEW_EQ,    72, "eq",         NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
-OPDEF(JSOP_NEW_NE,    73, "ne",         NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
+OPDEF(JSOP_STRICTEQ,  72, "stricteq",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
+OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
 
 /* Lexical closure constructor. */
 OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_CONST)
