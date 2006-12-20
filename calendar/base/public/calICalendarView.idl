@@ -89,7 +89,7 @@ interface calICalendarView : nsISupports
   readonly attribute calIDateTime startDate;
 
   /**
-   * The start date of the view's display.  If the view is displaying
+   * The end date of the view's display.  If the view is displaying
    * disjoint dates, this will be the latest date that's displayed.
    *
    * Note that this won't be equivalent to the aEndDate passed to
