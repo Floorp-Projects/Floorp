@@ -309,7 +309,7 @@ sub validate {
             ThrowCodeError('flag_type_inactive', {'type' => $flag_type->name});
         }
 
-        _validate(undef, $flag_type, $status, \@requestees, $private_attachment,
+        _validate(undef, $flag_type, $status, undef, \@requestees, $private_attachment,
                   $bug_id, $attach_id);
     }
 
@@ -323,15 +323,16 @@ sub validate {
         my $flag = new Bugzilla::Flag($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
-        _validate($flag, $flag->type, $status, \@requestees, $private_attachment);
+        _validate($flag, $flag->type, $status, undef, \@requestees, $private_attachment);
     }
 }
 
 sub _validate {
-    my ($flag, $flag_type, $status, $requestees, $private_attachment,
+    my ($flag, $flag_type, $status, $setter, $requestees, $private_attachment,
         $bug_id, $attach_id) = @_;
 
-    my $user = Bugzilla->user;
+    # By default, the flag setter (or requester) is the current user.
+    $setter ||= Bugzilla->user;
 
     my $id = $flag ? $flag->id : $flag_type->id; # Used in the error messages below.
     $bug_id ||= $flag->bug_id;
@@ -430,10 +431,10 @@ sub _validate {
     # - User in the request_group can clear pending requests and set flags
     #   and can rerequest set flags.
     return if (($status eq 'X' || $status eq '?')
-               && $user->can_request_flag($flag_type));
+               && $setter->can_request_flag($flag_type));
 
     # - User in the grant_group can set/clear flags, including "+" and "-".
-    return if $user->can_set_flag($flag_type);
+    return if $setter->can_set_flag($flag_type);
 
     # - Any other flag modification is denied
     ThrowUserError('flag_update_denied',
@@ -801,27 +802,29 @@ sub retarget {
     # If we found at least one, change the type of the flag,
     # assuming the setter/requester is allowed to set/request flags
     # belonging to this flagtype.
+    my $requestee = $flag->requestee ? [$flag->requestee->login] : [];
+    my $attach_id = $attachment ? $attachment->id : undef;
+    my $is_private = $attachment ? $attachment->isprivate : 0;
     my $is_retargetted = 0;
+
     foreach my $flagtype (@$flagtypes) {
         # Get the number of flags of this type already set for this target.
         my $has_flags = count(
-            { 'type_id'     => $flag->type->id,
+            { 'type_id'     => $flagtype->id,
               'target_type' => $attachment ? 'attachment' : 'bug',
               'bug_id'      => $bug->bug_id,
-              'attach_id'   => $attachment ? $attachment->id : undef });
+              'attach_id'   => $attach_id });
 
         # Do not create a new flag of this type if this flag type is
         # not multiplicable and already has a flag set.
-        next if (!$flag->type->is_multiplicable && $has_flags);
+        next if (!$flagtype->is_multiplicable && $has_flags);
 
         # Check user privileges.
         my $error_mode_cache = Bugzilla->error_mode;
         Bugzilla->error_mode(ERROR_MODE_DIE);
         eval {
-            my $requestee = $flag->requestee ? [$flag->requestee->login] : [];
-            my $is_private = $attachment ? $attachment->isprivate : 0;
-            _validate($flag, $flag->type, $flag->status, $flag->setter,
-                      $requestee, $is_private);
+            _validate(undef, $flagtype, $flag->status, $flag->setter,
+                      $requestee, $is_private, $bug->bug_id, $attach_id);
         };
         Bugzilla->error_mode($error_mode_cache);
         # If the validation failed, then we cannot use this flagtype.
