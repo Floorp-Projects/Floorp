@@ -189,8 +189,10 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 // whether or not to use xbl form controls
 pref("nglayout.debug.enable_xbl_forms", false);
 
-// size of scrollbar snapping region
-pref("slider.snapMultiplier", 6);
+// scrollbar snapping region
+// 0 - off
+// 1 and higher - slider thickness multiple
+pref("slider.snapMultiplier", 0);
 
 // option to choose plug-in finder
 pref("application.use_ns_plugin_finder", false);
@@ -1342,6 +1344,9 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // override double-click word selection behavior.
 pref("layout.word_select.eat_space_to_next_word", true);
 
+// scrollbar snapping region
+pref("slider.snapMultiplier", 6);
+
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
@@ -1743,9 +1748,6 @@ pref("netinst.profile.show_profile_wizard", true);
 
 pref("middlemouse.paste", true);
 
-// turn off scrollbar snapping
-pref("slider.snapMultiplier", 0);
-
 // override double-click word selection behavior.
 pref("layout.word_select.eat_space_to_next_word", true);
 pref("layout.word_select.stop_at_punctuation", false);
@@ -1899,9 +1901,6 @@ pref("layout.word_select.stop_at_punctuation", false);
 // autocomplete keyboard grab workaround
 pref("autocomplete.grab_during_popup", true);
 pref("autocomplete.ungrab_during_mode_switch", true);
-
-// turn off scrollbar snapping
-pref("slider.snapMultiplier", 0);
 
 // Default to using the system filepicker if possible, but allow
 // toggling to use the XUL filepicker

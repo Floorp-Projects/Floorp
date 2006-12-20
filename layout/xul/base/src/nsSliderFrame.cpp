@@ -79,7 +79,7 @@
 #include "nsDisplayList.h"
 
 PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
-PRInt32 nsSliderFrame::gSnapMultiplier = 6;
+PRInt32 nsSliderFrame::gSnapMultiplier;
 
 // Turn this on if you want to debug slider frames.
 #undef DEBUG_SLIDER
