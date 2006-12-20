@@ -174,8 +174,8 @@ const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Sur
 #endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0xb31ad9ce, 0x40cb, 0x43c4, \
-  { 0x90, 0xf8, 0x0f, 0x30, 0x53, 0xf6, 0xb8, 0xea } }
+{ 0xb05ae6b9, 0x280c, 0x4b16, \
+ { 0xb1, 0x36, 0x86, 0x7c, 0x48, 0xd2, 0x15, 0x54 } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -360,15 +360,6 @@ public:
    * @return error status
    */
   NS_IMETHOD  SetCanonicalPixelScale(float aScale) = 0;
-
-  /**
-   * Get the width of a vertical scroll bar and the height
-   * of a horizontal scrollbar in application units.
-   * @param aWidth out parameter for width
-   * @param aHeight out parameter for height
-   * @return error status
-   */
-  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
 
   /**
    * Fill in an nsFont based on the ID of a system font.  This function

@@ -187,20 +187,6 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
 }
 
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  // XXX Should we push this to widget library
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth = 16 * mDevUnitsToAppUnits * scale;
-  aHeight = 16 * mDevUnitsToAppUnits * scale;
-  return NS_OK;
-}
-
 // helper function to get the system font for a specific script
 #define FONTNAME_MAX_UNICHRS sizeof(fontName255) * 2
 nsresult 

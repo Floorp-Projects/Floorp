@@ -248,30 +248,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     SetDPI(mDpi); // to setup p2t and t2p
   }
 
-  sb = gtk_vscrollbar_new(NULL);
-  gtk_widget_ref(sb);
-  gtk_object_sink(GTK_OBJECT(sb));
-#ifdef MOZ_WIDGET_GTK2
-  gtk_widget_ensure_style(sb);
-  gtk_widget_queue_resize(sb);
-#endif /* MOZ_WIDGET_GTK2 */
-  gtk_widget_size_request(sb,&req);
-  mScrollbarWidth = req.width;
-  gtk_widget_destroy(sb);
-  gtk_widget_unref(sb);
-  
-  sb = gtk_hscrollbar_new(NULL);
-  gtk_widget_ref(sb);
-  gtk_object_sink(GTK_OBJECT(sb));
-#ifdef MOZ_WIDGET_GTK2
-  gtk_widget_ensure_style(sb);
-  gtk_widget_queue_resize(sb);
-#endif /* MOZ_WIDGET_GTK2 */
-  gtk_widget_size_request(sb,&req);
-  mScrollbarHeight = req.height;
-  gtk_widget_destroy(sb);
-  gtk_widget_unref(sb);
-
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
   if (once) {
@@ -372,16 +348,6 @@ NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets
   //XXX it is very critical that this not lie!! MMP
   // read the comments in the mac code for this
   aSupportsWidgets = PR_TRUE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth = mScrollbarWidth * mPixelsToTwips * scale;
-  aHeight = mScrollbarHeight * mPixelsToTwips * scale;
 
   return NS_OK;
 }

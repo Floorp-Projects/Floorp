@@ -155,9 +155,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
  
   SetDPI(mDpi); 
 
-  mScrollbarHeight = PRInt16(B_H_SCROLL_BAR_HEIGHT); 
-  mScrollbarWidth = PRInt16(B_V_SCROLL_BAR_WIDTH); 
-
   menu_info info;
   get_menu_info(&info);
   mMenuFont.SetFamilyAndStyle(info.f_family,info.f_style);
@@ -227,16 +224,6 @@ NS_IMETHODIMP nsDeviceContextBeOS::SupportsNativeWidgets(PRBool &aSupportsWidget
   //XXX it is very critical that this not lie!! MMP
   // read the comments in the mac code for this
   aSupportsWidgets = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextBeOS::GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth = mScrollbarWidth * mPixelsToTwips * scale;
-  aHeight = mScrollbarHeight * mPixelsToTwips * scale;
-
   return NS_OK;
 }
 

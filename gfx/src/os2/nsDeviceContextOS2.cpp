@@ -351,14 +351,6 @@ NS_IMETHODIMP nsDeviceContextOS2 :: SupportsNativeWidgets(PRBool &aSupportsWidge
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextOS2 :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  float scale = mCPixelScale;
-  aWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXVSCROLL) * mDevUnitsToAppUnits * scale;
-  aHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYHSCROLL) * mDevUnitsToAppUnits * scale;
-  return NS_OK;
-}
-
 nscolor GetSysColorInfo(int iSysColor) 
 {
   long lColor = ::WinQuerySysColor( HWND_DESKTOP, iSysColor, 0);

@@ -323,22 +323,6 @@ NS_IMETHODIMP nsDeviceContextPS::PrepareNativeWidget(nsIWidget* aWidget, void **
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::GetScrollBarDimensions(float &aWidth, float &aHeight) const
-{
-  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetScrollBarDimensions()\n"));
-
-  //XXX: Hardcoded values for Postscript
-  float scale;
-  GetCanonicalPixelScale(scale);
-  aWidth  = 20.f * scale;
-  aHeight = 20.f * scale;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDepth(mDepth=%d)\n", mDepth));
