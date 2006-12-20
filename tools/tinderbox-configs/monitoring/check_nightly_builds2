@@ -8,7 +8,7 @@
 CONFIG_DIR=/etc/nagios/tinderbox-monitoring
 CONFIG_FILE=$CONFIG_DIR/$1.txt
 
-output=`for i in $(cat $CONFIG_FILE | dos2unix); do /usr/lib/nagios/plugins/contrib/check_nightly_builds -a 100800 -f $i; done | grep CRITICAL`
+output=`for i in $(cat $CONFIG_FILE | dos2unix); do $CONFIG_DIR/check_nightly_builds -a 100800 -f $i; done | grep CRITICAL`
 
 if [ ! -z "$output" ]; then
   echo $output | sed 's/CRITICAL: //g'
