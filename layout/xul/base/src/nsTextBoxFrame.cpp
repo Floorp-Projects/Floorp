@@ -322,13 +322,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     if (mTitle.IsEmpty())
         return;
 
-    nsStyleBorderPadding  bPad;
-    mStyleContext->GetBorderPaddingFor(bPad);
-    nsMargin border(0,0,0,0);
-    bPad.GetBorderPadding(border);
-
     nsRect textRect(aPt, GetSize());
-    textRect.Deflate(border);
+    textRect.Deflate(GetUsedBorderAndPadding());
 
     // determine (cropped) title and underline position
     nsPresContext* presContext = GetPresContext();

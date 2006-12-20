@@ -2650,10 +2650,7 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   }
 
   if (calcHeight) {
-    nsMargin bp = aFrame->GetUsedBorderAndPadding();
-    nsSize size = aFrame->GetSize();
-  
-    val->SetTwips(size.height - bp.TopBottom());
+    val->SetTwips(aFrame->GetContentRect().height);
   } else {
     // Just return the value in the style context
     const nsStylePosition* positionData = GetStylePosition(aFrame);
@@ -2701,9 +2698,7 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
   }
 
   if (calcWidth) {
-    nsSize size = aFrame->GetSize();
-    nsMargin bp = aFrame->GetUsedBorderAndPadding();
-    val->SetTwips(size.width - bp.LeftRight());
+    val->SetTwips(aFrame->GetContentRect().width);
   } else {
     // Just return the value in the style context
     const nsStylePosition *positionData = GetStylePosition(aFrame);
@@ -3082,14 +3077,11 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
       case eStyleUnit_Percent:
         container = GetContainingBlockFor(aFrame);
         if (container) {
-          nsMargin bp = container->GetUsedBorderAndPadding();
-          nsSize size = container->GetSize();
+          nsSize size = container->GetContentRect().Size();
           if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
-            val->SetTwips(sign * coord.GetPercentValue() *
-                          (size.width - bp.LeftRight()));
+            val->SetTwips(sign * coord.GetPercentValue() * size.width);
           } else {
-            val->SetTwips(sign * coord.GetPercentValue() *
-                          (size.height - bp.TopBottom()));
+            val->SetTwips(sign * coord.GetPercentValue() * size.height);
           }
         } else {
           // XXX no containing block.

@@ -245,16 +245,6 @@ inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
   return mRuleNode->GetStyleData(aSID, this, PR_FALSE); // Our rule node will take care of it for us.
 }
 
-void
-nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
-{
-  nsMargin padding;
-  if (GetStylePadding()->GetPadding(padding)) {
-    padding += GetStyleBorder()->GetBorder();
-    aBorderPadding.SetBorderPadding(padding);
-  }
-}
-
 // This is an evil evil function, since it forces you to alloc your own separate copy of
 // style data!  Do not use this function unless you absolutely have to!  You should avoid
 // this at all costs! -dwh

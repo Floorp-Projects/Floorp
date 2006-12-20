@@ -346,12 +346,7 @@ nsHTMLImageElement::GetWidthHeight()
   if (frame) {
     // XXX we could put an accessor on nsIImageFrame to return its
     // mComputedSize.....
-    size = frame->GetSize();
-
-    nsMargin margin = frame->GetUsedBorderAndPadding();
-
-    size.height -= margin.top + margin.bottom;
-    size.width -= margin.left + margin.right;
+    size = frame->GetContentRect().Size();
 
     nsPresContext *context = GetPresContext();
     if (context) {

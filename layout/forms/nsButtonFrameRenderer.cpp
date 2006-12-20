@@ -269,31 +269,22 @@ nsButtonFrameRenderer::GetButtonContentRect(const nsRect& aRect, nsRect& r)
 nsMargin
 nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
 {
-  nsMargin focusBorderAndPadding(0,0,0,0);
+  nsMargin result(0,0,0,0);
 
   if (mOuterFocusStyle) {
-    nsStyleBorderPadding  bPad;
-    mOuterFocusStyle->GetBorderPaddingFor(bPad);
-    if (!bPad.GetBorderPadding(focusBorderAndPadding)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
+    if (!mOuterFocusStyle->GetStylePadding()->GetPadding(result)) {
+      NS_NOTYETIMPLEMENTED("percentage padding");
     }
+    result += mOuterFocusStyle->GetStyleBorder()->GetBorder();
   }
 
-  return focusBorderAndPadding;
+  return result;
 }
 
 nsMargin
 nsButtonFrameRenderer::GetButtonBorderAndPadding()
 {
-  nsStyleContext* context = mFrame->GetStyleContext();
-
-  nsMargin innerFocusBorderAndPadding(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  context->GetBorderPaddingFor(bPad);
-  if (!bPad.GetBorderPadding(innerFocusBorderAndPadding)) {
-    NS_NOTYETIMPLEMENTED("percentage border");
-  }
-  return innerFocusBorderAndPadding;
+  return mFrame->GetUsedBorderAndPadding();
 }
 
 /**
@@ -305,9 +296,10 @@ nsButtonFrameRenderer::GetButtonInnerFocusMargin()
   nsMargin innerFocusMargin(0,0,0,0);
 
   if (mInnerFocusStyle) {
-    // get the outer focus border and padding
     const nsStyleMargin* margin = mInnerFocusStyle->GetStyleMargin();
-    margin->GetMargin(innerFocusMargin);
+    if (!margin->GetMargin(innerFocusMargin)) {
+      NS_NOTYETIMPLEMENTED("percentage margin");
+    }
   }
 
   return innerFocusMargin;
@@ -316,18 +308,16 @@ nsButtonFrameRenderer::GetButtonInnerFocusMargin()
 nsMargin
 nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
 {
-  nsMargin innerFocusBorderAndPadding(0,0,0,0);
+  nsMargin result(0,0,0,0);
 
   if (mInnerFocusStyle) {
-    // get the outer focus border and padding
-    nsStyleBorderPadding  bPad;
-    mInnerFocusStyle->GetBorderPaddingFor(bPad);
-    if (!bPad.GetBorderPadding(innerFocusBorderAndPadding)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
+    if (!mInnerFocusStyle->GetStylePadding()->GetPadding(result)) {
+      NS_NOTYETIMPLEMENTED("percentage padding");
     }
+    result += mInnerFocusStyle->GetStyleBorder()->GetBorder();
   }
 
-  return innerFocusBorderAndPadding;
+  return result;
 }
 
 nsMargin

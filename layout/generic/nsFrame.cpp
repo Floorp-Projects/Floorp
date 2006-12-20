@@ -736,6 +736,50 @@ nsIFrame::GetUsedPadding() const
   return padding;
 }
 
+void
+nsIFrame::ApplySkipSides(nsMargin& aMargin) const
+{
+  PRIntn skipSides = GetSkipSides();
+  if (skipSides & (1 << NS_SIDE_TOP))
+    aMargin.top = 0;
+  if (skipSides & (1 << NS_SIDE_RIGHT))
+    aMargin.right = 0;
+  if (skipSides & (1 << NS_SIDE_BOTTOM))
+    aMargin.bottom = 0;
+  if (skipSides & (1 << NS_SIDE_LEFT))
+    aMargin.left = 0;
+}
+
+nsRect
+nsIFrame::GetMarginRect() const
+{
+  nsMargin m(GetUsedMargin());
+  ApplySkipSides(m);
+  nsRect r(mRect);
+  r.Inflate(m);
+  return r;
+}
+
+nsRect
+nsIFrame::GetPaddingRect() const
+{
+  nsMargin b(GetUsedBorder());
+  ApplySkipSides(b);
+  nsRect r(mRect);
+  r.Deflate(b);
+  return r;
+}
+
+nsRect
+nsIFrame::GetContentRect() const
+{
+  nsMargin bp(GetUsedBorderAndPadding());
+  ApplySkipSides(bp);
+  nsRect r(mRect);
+  r.Deflate(bp);
+  return r;
+}
+
 nsStyleContext*
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {

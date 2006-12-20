@@ -216,10 +216,8 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
 {
   // REVIEW: moved the mAppearance test out so we avoid constructing
   // a display item if it's not needed
-  nsMargin borderPadding = GetUsedBorderAndPadding();
-
   nsRect checkRect(aPt, mRect.Size());
-  checkRect.Deflate(borderPadding);
+  checkRect.Deflate(GetUsedBorderAndPadding());
 
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
