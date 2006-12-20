@@ -699,6 +699,20 @@ public:
   }
 
   /**
+   * Apply the result of GetSkipSides() on this frame to an nsMargin by
+   * setting to zero any sides that are skipped.
+   */
+  void ApplySkipSides(nsMargin& aMargin) const;
+
+  /**
+   * Like the frame's rect (see |GetRect|), which is the border rect,
+   * other rectangles of the frame, in twips, relative to the parent.
+   */
+  nsRect GetMarginRect() const;
+  nsRect GetPaddingRect() const;
+  nsRect GetContentRect() const;
+
+  /**
    * Used to iterate the list of additional child list names. Returns the atom
    * name for the additional child list at the specified 0-based index, or a
    * NULL pointer if there are no more named child lists.

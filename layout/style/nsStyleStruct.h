@@ -478,32 +478,6 @@ protected:
 };
 
 
-struct nsStyleBorderPadding: public nsStyleStruct {
-  nsStyleBorderPadding(void) { mHasCachedBorderPadding = PR_FALSE; };
-  ~nsStyleBorderPadding(void) {};
-
-  // No accessor for this struct, since it's not a real struct.  At
-  // least not for now...
-
-  PRBool GetBorderPadding(nsMargin& aBorderPadding) const {
-    if (mHasCachedBorderPadding) {
-      aBorderPadding = mCachedBorderPadding;
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
-  void SetBorderPadding(nsMargin aBorderPadding) {
-    mCachedBorderPadding = aBorderPadding;
-    mHasCachedBorderPadding = PR_TRUE;
-  }
-
-protected:
-  nsMargin      mCachedBorderPadding;
-  PRPackedBool  mHasCachedBorderPadding;
-};
-
-
 struct nsStyleOutline: public nsStyleStruct {
   nsStyleOutline(nsPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);

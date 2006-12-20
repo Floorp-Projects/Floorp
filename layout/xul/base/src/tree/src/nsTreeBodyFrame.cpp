@@ -187,9 +187,11 @@ nsTreeBodyFrame::Release(void)
 static void
 GetBorderPadding(nsStyleContext* aContext, nsMargin& aMargin)
 {
-  nsStyleBorderPadding  borderPaddingStyle;
-  aContext->GetBorderPaddingFor(borderPaddingStyle);
-  borderPaddingStyle.GetBorderPadding(aMargin);
+  aMargin.SizeTo(0, 0, 0, 0);
+  if (!aContext->GetStylePadding()->GetPadding(aMargin)) {
+    NS_NOTYETIMPLEMENTED("percentage padding");
+  }
+  aMargin += aContext->GetStyleBorder()->GetBorder();
 }
 
 static void

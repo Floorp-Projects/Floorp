@@ -781,14 +781,11 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     nscoord width = 0;
     nsMargin margin(0,0,0,0);
 
-    nsStyleBorderPadding  bPad;
-    styleContext->GetBorderPaddingFor(bPad);
-    bPad.GetBorderPadding(margin);
-
-    width += (margin.left + margin.right);
-
-    styleContext->GetStyleMargin()->GetMargin(margin);
-    width += (margin.left + margin.right);
+    if (styleContext->GetStylePadding()->GetPadding(margin))
+      width += margin.LeftRight();
+    width += styleContext->GetStyleBorder()->GetBorder().LeftRight();
+    if (styleContext->GetStyleMargin()->GetMargin(margin))
+      width += margin.LeftRight();
 
     nsIContent* listbox = mContent->GetBindingParent();
     NS_ENSURE_TRUE(listbox, largestWidth);

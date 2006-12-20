@@ -2066,10 +2066,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     if (!frame)
       return NS_OK;
 
-    nsMargin borderPadding = frame->GetUsedBorderAndPadding();
-    nsRect rect(frame->GetRect());
-    rect.Deflate(borderPadding);
-    adjSize = rect.Size();
+    adjSize = frame->GetContentRect().Size();
     documentIsTopLevel = PR_FALSE;
     // presshell exists because parent is printable
   } else {

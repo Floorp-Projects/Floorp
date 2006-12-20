@@ -616,15 +616,13 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
   nsRefPtr<nsStyleContext> styleContext =
     context->StyleSet()->ResolveStyleFor(content, nsnull);
 
-  const nsStyleMargin* marginData = styleContext->GetStyleMargin();
-  nsMargin margin;
-  marginData->GetMargin(margin);
-  visibleArea.Deflate(margin);
-
-  nsStyleBorderPadding bPad;
-  styleContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(margin);
-  visibleArea.Deflate(margin);
+  nsMargin m;
+  if (styleContext->GetStyleMargin()->GetMargin(m))
+    visibleArea.Deflate(m);
+  m = styleContext->GetStyleBorder()->GetBorder();
+  visibleArea.Deflate(m);
+  if (styleContext->GetStylePadding()->GetPadding(m))
+    visibleArea.Deflate(m);
 
   float t2p;
   t2p = context->TwipsToPixels();

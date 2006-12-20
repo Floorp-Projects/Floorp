@@ -1149,12 +1149,7 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
 const nsSize
 nsGenericHTMLElement::GetClientAreaSize(nsIFrame *aFrame)
 {
-  nsRect rect = aFrame->GetRect();
-  nsMargin border_size = aFrame->GetUsedBorder();
-
-  rect.Deflate(border_size);
-
-  return nsSize(rect.width, rect.height);
+  return aFrame->GetPaddingRect().Size();
 }
 
 nsresult
