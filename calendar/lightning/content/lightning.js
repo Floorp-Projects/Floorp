@@ -51,6 +51,11 @@ pref("calendar.alarms.onfortodos", 0);
 pref("calendar.alarms.todoalarmlen", 15);
 pref("calendar.alarms.todoalarmunit", "minutes");
 
++ // autorefresh settings
+pref("calendar.autorefresh.enabled", true);
+pref("calendar.autorefresh.timeout", 600);
+
+
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
 // a locale specific file.
 pref("calendar.week.start", 0);

@@ -51,6 +51,8 @@ pref("calendar.alarms.todoalarmlen", 15);
 pref("calendar.alarms.eventalarmunit", "minutes");
 pref("calendar.alarms.todoalarmunit", "minutes");
 pref("calendar.alarms.defaultsnoozelength", 60);
+pref("calendar.autorefresh.enabled", true);
+pref("calendar.autorefresh.timeout", 600);
 pref("calendar.date.format", 0);
 pref("calendar.event.defaultlength", 60);
 // Do NOT set this.  If it is unset, we guess the timezone from the system

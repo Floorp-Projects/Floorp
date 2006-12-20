@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
  *   Matthew Willis <lilmatt@mozilla.com>
+ *   Michiel van Leeuwen <mvl@exedo.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,7 +60,10 @@ function calCalendarManager() {
     this.wrappedJSObject = this;
     this.initDB();
     this.mCache = {};
+    this.mRefreshTimer = null;
+    this.setUpPrefObservers();
     this.setUpReadOnlyObservers();
+    this.setUpRefreshTimer();
 }
 
 function makeURI(uriString)
@@ -73,6 +77,7 @@ var calCalendarManagerClassInfo = {
         var ifaces = [
             Components.interfaces.nsISupports,
             Components.interfaces.calICalendarManager,
+            Components.interfaces.nsIObserver,
             Components.interfaces.nsIClassInfo
         ];
         count.value = ifaces.length;
@@ -96,12 +101,20 @@ calCalendarManager.prototype = {
             return calCalendarManagerClassInfo;
 
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calICalendarManager))
+            !aIID.equals(Components.interfaces.calICalendarManager) &&
+            !aIID.equals(Components.interfaces.nsIObserver))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
         return this;
+    },
+
+    setUpPrefObservers: function ccm_setUpPrefObservers() {
+        var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch2);
+        prefBranch.addObserver("calendar.autorefresh.enabled", this, false);
+        prefBranch.addObserver("calendar.autorefresh.timeout", this, false);
     },
 
     // When a calendar fails, its onError doesn't point back to the calendar.
@@ -116,6 +129,52 @@ calCalendarManager.prototype = {
         }
     },
 
+    setUpRefreshTimer: function ccm_setUpRefreshTimer() {
+        if (this.mRefreshTimer) {
+            this.mRefreshTimer.cancel();
+        }
+
+        var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefBranch);
+
+        var refreshEnabled = false;
+        try {
+            var refreshEnabled = prefBranch.getBoolPref("calendar.autorefresh.enabled");
+        } catch (e) {
+        }
+
+        // Read and convert the minute-based pref to msecs
+        var refreshTimeout = 0;
+        try {
+            var refreshTimeout = prefBranch.getIntPref("calendar.autorefresh.timeout") * 60000;
+        } catch (e) {
+        }
+
+        if (refreshEnabled && refreshTimeout > 0) {
+            this.mRefreshTimer = Components.classes["@mozilla.org/timer;1"]
+                                    .createInstance(Components.interfaces.nsITimer);
+            this.mRefreshTimer.init(this, refreshTimeout, 
+                                   Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        }
+    },
+    
+    observe: function ccm_observe(aSubject, aTopic, aData) {
+        if (aTopic == 'timer-callback') {
+            // Refresh all the calendars that can be refreshed.
+            var cals = this.getCalendars({});
+            for each (var cal in cals) {
+                if (cal.canRefresh) {
+                    cal.refresh();
+                }
+            }
+        } else if (aTopic == 'nsPref:changed') {
+            if (aData == "calendar.autorefresh.enabled" ||
+                aData == "calendar.autorefresh.timeout") {
+                this.setUpRefreshTimer();
+            }
+        }
+    },
+    
     DB_SCHEMA_VERSION: 6,
 
     upgradeDB: function (oldVersion) {

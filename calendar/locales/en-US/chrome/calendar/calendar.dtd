@@ -266,6 +266,7 @@
 <!ENTITY calendarproperties.location.label "Location:">
 <!ENTITY calendarproperties.name.label     "Name:">
 <!ENTITY calendarproperties.readonly.label "Read-only">
+<!ENTITY calendarproperties.autorefresh.label "Refresh calendar every N minutes">
 
 <!-- Sunbird Help -->
 <!ENTITY calendar.help.label               "Help Contents">
