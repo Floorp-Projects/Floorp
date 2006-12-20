@@ -151,6 +151,7 @@
                 <body><![CDATA[
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
 	            viewElement.tasksInView = this.mTasksInView;
+                    viewElement.displayDaysOff = !this.mWorkdaysOnly;
 
                     aDate = aDate.getInTimezone(viewElement.timezone);
 
@@ -171,13 +172,8 @@
                         d1.normalize();
                         d2.normalize();
                     }
-
-                    document.getAnonymousElementByAttribute(this, "anonid", "view-element").setDateRange(d1, d2);
-
+                    viewElement.setDateRange(d1, d2);
                     viewElement.selectedDay = aDate;
-                    if (this.mWorkdaysOnly) {
-                        this.removeNonWorkdays();
-                    }
                     this.setNavLabels(aDate);
                 ]]></body>
             </method>
@@ -213,32 +209,6 @@
                         nameArray.push(weekTitle);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
-                ]]></body>
-            </method>
-            <method name="removeNonWorkdays">
-                <body><![CDATA[
-                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element")
-                    var dateList = viewElement.getDateList({});
-
-                    var prefService = Components.classes[
-                                      "@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService);
-                    var weekBranch = prefService.getBranch("calendar.week.");
-                    var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
-                                     "d3wednesdaysoff", "d4thursdaysoff",
-                                     "d5fridaysoff", "d6saturdaysoff"];
-                    function getPrefValue(prefName) {
-                        return weekBranch.getBoolPref(prefName)
-                    }
-                    var prefValueArray = prefNames.map(getPrefValue);
-                    var newDateList = new Array();
-
-                    for each(date in dateList) {
-                        if (!prefValueArray[date.weekday]) {
-                            newDateList.push(date);
-                        }
-                    }
-                    viewElement.setDateList(newDateList.length, newDateList);
                 ]]></body>
             </method>
 

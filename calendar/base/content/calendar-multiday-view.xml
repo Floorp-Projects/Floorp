@@ -1703,6 +1703,7 @@
       <field name="mStartMin">0*60</field>
       <field name="mEndMin">24*60</field>
       <field name="mTasksInView">false</field>
+      <field name="mDisplayDaysOff">true</field>
       <field name="mDaysOffArray">[0,6]</field>
       <field name="mTimezone">"UTC"</field>
 
@@ -1950,6 +1951,10 @@
         ]]></setter>
       </property>
 
+      <property name="displayDaysOff"
+                onget="return this.mDisplayDaysOff;"
+                onset="return (this.mDisplayDaysOff = val);"/>
+
       <property name="daysOffArray">
         <getter><![CDATA[
            return this.mDaysOffArray;
@@ -2005,22 +2010,40 @@
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
         <body><![CDATA[
-          //dump ("setDateRange\n");
-          this.mDateList = null;
+          // normalize dates to display timezone
+          var startDate = aStartDate.getInTimezone(this.mTimezone);
+          startDate.isDate = true;
+          var endDate = aEndDate.getInTimezone(this.mTimezone);
+          endDate.isDate = true;
+          // make sure unnormalized version not used below
+          aStartDate = aEndDate = null; 
 
-          this.mStartDate = aStartDate.getInTimezone(this.mTimezone);
-          this.mStartDate.isDate = true;
-          this.mStartDate.makeImmutable();
-
-          this.mEndDate = aEndDate.getInTimezone(this.mTimezone);
-          this.mEndDate.isDate = true;
-          this.mEndDate.makeImmutable();
-
-          // this function needs to be smarter, and needs to compare
-          // the current date range and add/remove, instead of just
-          // replacing.
-
-          this.refresh();
+          if (this.mDisplayDaysOff) {
+            startDate.makeImmutable();
+            endDate.makeImmutable();
+            this.mDateList = null;
+            this.mStartDate = startDate;
+            this.mEndDate = endDate;
+            //
+            // For a true multiday view (e.g, 3 days advanced by one day
+            // at a time), a smarter refresh could reuse boxes, comparing
+            // the current date range and add/remove, instead of just
+            // replacing.
+            //
+            this.refresh();
+          } else { // workdays only
+            var dateList = new Array();
+            for (var d = startDate.clone(); d.compare(endDate) <= 0;) {
+              if (this.mDaysOffArray.indexOf(d.weekday) == -1) {
+                var workday = d.clone();
+                workday.makeImmutable();
+                dateList.push(workday);
+              }
+              d.day += 1;
+              d.normalize();
+            }
+            this.setDateList(dateList.length, dateList);
+          }
         ]]></body>
       </method>
 
@@ -2422,8 +2445,7 @@
               }
               setUpDayHeaderBox(dayHeaderBox);
 
-              function matchesDayOff(dayOffNum) { return dayOffNum == d.weekday; }
-              if (this.mDaysOffArray.some(matchesDayOff)) {
+              if (0 <= this.mDaysOffArray.indexOf(d.weekday)) {
                 dayEventsBox.setAttribute("weekend", "true");
                 dayHeaderBox.setAttribute("weekend", "true");
               } else {
