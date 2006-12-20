@@ -100,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 49d3ddd7-dc10-46f1-8554-98cefb2544a4
+// 42728a19-b289-48b8-b6f4-1a46b719a63b
 #define NS_IFRAME_IID \
-{ 0x49d3ddd7, 0xdc10, 0x46f1, \
-  { 0x85, 0x54, 0x98, 0xce, 0xfb, 0x25, 0x44, 0xa4 } }
+{ 0x42728a19, 0xb289, 0x48b8, \
+  { 0xb6, 0xf4, 0x1a, 0x46, 0xb7, 0x19, 0xa6, 0x3b } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -116,7 +116,7 @@ typedef class nsIFrame nsIBox;
  * frame to be the same width then return frSplittable and not
  * frSplittableNonRectangular.
  *
- * @see #IsSplittable()
+ * @see #GetSplittableType()
  */
 typedef PRUint32 nsSplittableType;
 
@@ -992,7 +992,7 @@ public:
   /**
    * Return how your frame can be split.
    */
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const = 0;
+  virtual nsSplittableType GetSplittableType() const = 0;
 
   /**
    * Continuation member functions

@@ -344,11 +344,10 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP
-nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsBlockFrame::GetSplittableType() const
 {
-  aIsSplittable = NS_FRAME_SPLITTABLE_NON_RECTANGULAR;
-  return NS_OK;
+  return NS_FRAME_SPLITTABLE_NON_RECTANGULAR;
 }
 
 #ifdef DEBUG
@@ -2839,10 +2838,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #endif
     PRBool isImpacted = aState.IsImpactedByFloat() ? PR_TRUE : PR_FALSE;
     aLine->SetLineIsImpactedByFloat(isImpacted);
-    nsSplittableType splitType = NS_FRAME_NOT_SPLITTABLE;
-    frame->IsSplittable(splitType);
     nsRect availSpace;
-    aState.ComputeBlockAvailSpace(frame, splitType, display, availSpace);
+    aState.ComputeBlockAvailSpace(frame, display, availSpace);
     
     // Now put the Y coordinate back to the top of the top-margin +
     // clearance, and flow the block.

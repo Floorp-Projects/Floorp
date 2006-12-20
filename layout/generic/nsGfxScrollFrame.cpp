@@ -213,11 +213,10 @@ nsHTMLScrollFrame::RemoveFrame(nsIAtom*  aListName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsHTMLScrollFrame::GetSplittableType() const
 {
-  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
-  return NS_OK;
+  return NS_FRAME_NOT_SPLITTABLE;
 }
 
 PRIntn
@@ -1010,11 +1009,10 @@ nsXULScrollFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
-NS_IMETHODIMP
-nsXULScrollFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsXULScrollFrame::GetSplittableType() const
 {
-  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
-  return NS_OK;
+  return NS_FRAME_NOT_SPLITTABLE;
 }
 
 NS_IMETHODIMP

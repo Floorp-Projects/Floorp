@@ -176,7 +176,7 @@ public:
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
-  NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
+  virtual nsSplittableType GetSplittableType() const;
   virtual PRBool IsContainingBlock() const;
   virtual PRBool IsFloatContainingBlock() const;
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

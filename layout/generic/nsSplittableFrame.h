@@ -53,7 +53,7 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
   
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
+  virtual nsSplittableType GetSplittableType() const;
 
   virtual void Destroy();
 

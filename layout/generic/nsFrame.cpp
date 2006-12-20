@@ -24,6 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Uri Bernstein <uriber@gmail.com>
  *   Eli Friedman <sharparrow1@yahoo.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3238,10 +3239,10 @@ nsFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 // Flow member functions
 
-NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsFrame::GetSplittableType() const
 {
-  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
-  return NS_OK;
+  return NS_FRAME_NOT_SPLITTABLE;
 }
 
 nsIFrame* nsFrame::GetPrevContinuation() const

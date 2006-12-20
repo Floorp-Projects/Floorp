@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -136,11 +137,11 @@ nsPlaceholderFrame::Destroy()
   nsSplittableFrame::Destroy();
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+nsSplittableType
+nsPlaceholderFrame::GetSplittableType() const
 {
-  NS_ASSERTION(mOutOfFlowFrame, "IsSplittable called at the wrong time");
-  return mOutOfFlowFrame->IsSplittable(aIsSplittable);
+  NS_ASSERTION(mOutOfFlowFrame, "GetSplittableType called at the wrong time");
+  return mOutOfFlowFrame->GetSplittableType();
 }
 
 nsIAtom*
