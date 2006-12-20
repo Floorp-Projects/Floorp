@@ -53,7 +53,7 @@ extern "C" {
 
 #ifdef MOZILLA_CLIENT
 #include "nscore.h"
-#else // MOZILLA_CLIENT
+#else /* MOZILLA_CLIENT */
 #ifndef nscore_h__
 /* Because this header may be included from files which not part of the mozilla
    build system, define macros from nscore.h */
@@ -67,8 +67,8 @@ extern "C" {
 #define NS_FROZENCALL
 #define NS_EXPORT_(type) type
 #define NS_IMPORT_(type) type
-#endif // nscore_h__
-#endif // MOZILLA_CLIENT
+#endif /* nscore_h__ */
+#endif /* MOZILLA_CLIENT */
 
 #ifdef XPCOM_GLUE
 
@@ -76,7 +76,7 @@ extern "C" {
   typedef type (NS_FROZENCALL * name##Type) params; \
   extern name##Type name NS_HIDDEN;
 
-#else // XPCOM_GLUE
+#else /* XPCOM_GLUE */
 
 #ifdef _IMPL_GTKMOZEMBED
 #define GTKMOZEMBED_API(type, name, params) NS_EXPORT_(type) name params;
@@ -84,7 +84,7 @@ extern "C" {
 #define GTKMOZEMBED_API(type,name, params) NS_IMPORT_(type) name params;
 #endif
 
-#endif // XPCOM_GLUE
+#endif /* XPCOM_GLUE */
 
 #ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
@@ -112,8 +112,8 @@ struct _GtkMozEmbed
   GtkBin            bin;
   void              *data;
   GtkObject         *common;
-  // FIXME: This is a temporary solution for wrong progress values 
-  // being passed up. Oleg has mentioned something about a bug in JS.
+  /* FIXME: This is a temporary solution for wrong progress values 
+     being passed up. Oleg has mentioned something about a bug in JS. */
   gint current_number_of_requests;
   gint total_number_of_requests;
   gint number_of_frames_loaded;
@@ -152,7 +152,7 @@ struct _GtkMozEmbedClass
   gint (* dom_mouse_dbl_click) (GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_mouse_over)      (GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_mouse_out)       (GtkMozEmbed *embed, gpointer dom_event);
-//  gint (* dom_mouse_move)      (GtkMozEmbed *embed, gpointer dom_event);
+/*  gint (* dom_mouse_move)      (GtkMozEmbed *embed, gpointer dom_event); */
   gint (* dom_mouse_scroll)    (GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_mouse_long_press)(GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_focus)           (GtkMozEmbed *embed, gpointer dom_event);
