@@ -1154,7 +1154,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 - (NSString*)stringForObjectValue:(id)anObject
 {
   if ([(NSDate*)anObject timeIntervalSince1970] == 0)
-    return NSLocalizedString(@"CookieExpiresOnQuit", nil);
+    return NSLocalizedStringFromTableInBundle(@"CookieExpiresOnQuit", nil,
+                                              [NSBundle bundleForClass:[self class]], nil);
   else
     return [super stringForObjectValue:anObject];
 }
