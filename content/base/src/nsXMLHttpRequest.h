@@ -142,12 +142,10 @@ protected:
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsIURI *GetBaseURI();
 
-  // Passing a null |event| is OK. In that case, a vanilla HTMLEvents event
-  // will be created.  If aType is non-empty, InitEvent will be called with
-  // that type.  Don't call this if we have no event listeners, since this may
+  // This creates a trusted event, which is not cancelable and doesn't
+  // bubble. Don't call this if we have no event listeners, since this may
   // use our script context, which is not set in that case.
-  nsresult CreateEvent(nsEvent* event, const nsAString& aType,
-                       nsIDOMEvent** domevent);
+  nsresult CreateEvent(const nsAString& aType, nsIDOMEvent** domevent);
 
   // Make a copy of a pair of members to be passed to NotifyEventListeners.
   void CopyEventListeners(ListenerHolder& aListener,

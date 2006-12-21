@@ -818,11 +818,10 @@ nsXMLHttpRequest::GetBaseURI()
 }
 
 nsresult
-nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, const nsAString& aType,
-                              nsIDOMEvent** aDOMEvent)
+nsXMLHttpRequest::CreateEvent(const nsAString& aType, nsIDOMEvent** aDOMEvent)
 {
-  nsresult rv = nsEventDispatcher::CreateEvent(nsnull, aEvent,
-                                               NS_LITERAL_STRING("HTMLEvents"),
+  nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
+                                               NS_LITERAL_STRING("Events"),
                                                aDOMEvent);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1414,10 +1413,9 @@ nsXMLHttpRequest::RequestCompleted()
   CopyEventListeners(mOnLoadListener, mLoadEventListeners, loadEventListeners);
 
   // We need to create the event before nulling out mDocument
-  nsEvent evt(PR_TRUE, NS_LOAD);
   nsCOMPtr<nsIDOMEvent> domevent;
   if (loadEventListeners.Count()) {
-    rv = CreateEvent(&evt, EmptyString(), getter_AddRefs(domevent));
+    rv = CreateEvent(NS_LITERAL_STRING(LOAD_STR), getter_AddRefs(domevent));
   }
 
   // We might have been sent non-XML data. If that was the case,
@@ -1855,9 +1853,8 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 
   // We need to create the event before nulling out mDocument
   nsCOMPtr<nsIDOMEvent> event = aEvent;
-  nsEvent evt(PR_TRUE, NS_LOAD_ERROR);
   if (!event && errorEventListeners.Count()) {
-    CreateEvent(&evt, EmptyString(), getter_AddRefs(event));
+    CreateEvent(NS_LITERAL_STRING(ERROR_STR), getter_AddRefs(event));
   }
 
   mDocument = nsnull;
@@ -1901,7 +1898,7 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
       aBroadcast &&
       readystatechangeEventListeners.Count()) {
     nsCOMPtr<nsIDOMEvent> event;
-    rv = CreateEvent(nsnull, NS_LITERAL_STRING(READYSTATE_STR),
+    rv = CreateEvent(NS_LITERAL_STRING(READYSTATE_STR),
                      getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1987,7 +1984,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
   
   if (progressListeners.Count()) {
     nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv = CreateEvent(nsnull, NS_LITERAL_STRING(PROGRESS_STR),
+    nsresult rv = CreateEvent(NS_LITERAL_STRING(PROGRESS_STR),
                               getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
     
