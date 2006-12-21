@@ -1154,3 +1154,13 @@ var gCategoriesPane = {
         catList.selectedIndex = index;
     }
 };
+
+// Make sure that an AUS update triggered restart doesn't automatically nuke
+// what the user is working on
+window.tryToClose = function calItemDialogAttemptClose() {
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                  .getService(Components.interfaces.nsIPromptService);
+    return promptService.confirm(window,
+                                 calGetString("calendar", "confirmCloseTitle"),
+                                 calGetString("calendar", "confirmCloseText"));
+}
