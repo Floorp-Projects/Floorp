@@ -402,8 +402,8 @@ PRBool nsJISx4051LineBreaker::BreakInBetween(
   const PRUnichar* aText2 , PRUint32 aTextLen2)
 {
   if(!aText1 || !aText2 || (0 == aTextLen1) || (0==aTextLen2) ||
-     IS_HIGH_SURROGATE(aText1[aTextLen1-1]) && 
-     IS_LOW_SURROGATE(aText2[0]) )  //Do not separate a surrogate pair
+     NS_IS_HIGH_SURROGATE(aText1[aTextLen1-1]) && 
+     NS_IS_LOW_SURROGATE(aText2[0]) )  //Do not separate a surrogate pair
   {
      return PR_FALSE;
   }

@@ -233,9 +233,9 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   PRUint32 len = nsCRT::strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
     nsAutoString key(NS_LITERAL_STRING("entity."));
-    if (IS_HIGH_SURROGATE(inString[i]) &&
+    if (NS_IS_HIGH_SURROGATE(inString[i]) &&
         i + 2 < len &&
-        IS_LOW_SURROGATE(inString[i + 1])) {
+        NS_IS_LOW_SURROGATE(inString[i + 1])) {
       key.AppendInt(SURROGATE_TO_UCS4(inString[i], inString[i+1]), 10);
       ++i;
     }

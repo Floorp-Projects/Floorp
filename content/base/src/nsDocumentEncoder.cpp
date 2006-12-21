@@ -449,8 +449,8 @@ ConvertAndWrite(const nsAString& aString,
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCAutoString entString("&#");
-      if (IS_HIGH_SURROGATE(unicodeBuf[unicodeLength - 1]) && 
-          unicodeLength < startLength && IS_LOW_SURROGATE(unicodeBuf[unicodeLength]))  {
+      if (NS_IS_HIGH_SURROGATE(unicodeBuf[unicodeLength - 1]) && 
+          unicodeLength < startLength && NS_IS_LOW_SURROGATE(unicodeBuf[unicodeLength]))  {
         entString.AppendInt(SURROGATE_TO_UCS4(unicodeBuf[unicodeLength - 1],
                                               unicodeBuf[unicodeLength]));
         unicodeLength += 1;

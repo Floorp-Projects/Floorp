@@ -2403,8 +2403,8 @@ ConvertUnicharToUCS4(const PRUnichar *aString, PRUint32 aLength,
         if (IS_NON_SURROGATE(c)) {
             outBuffer[outLen] = c;
         }
-        else if (IS_HIGH_SURROGATE(aString[i])) {
-            if (i + 1 < aLength && IS_LOW_SURROGATE(aString[i+1])) {
+        else if (NS_IS_HIGH_SURROGATE(aString[i])) {
+            if (i + 1 < aLength && NS_IS_LOW_SURROGATE(aString[i+1])) {
                 outBuffer[outLen] = SURROGATE_TO_UCS4(c, aString[i + 1]);
                 ++i;
             }
@@ -2412,7 +2412,7 @@ ConvertUnicharToUCS4(const PRUnichar *aString, PRUint32 aLength,
                 outBuffer[outLen] = UCS2_REPLACEMENT;
             }
         }
-        else if (IS_LOW_SURROGATE(aString[i])) { // Unpaired low surrogate?
+        else if (NS_IS_LOW_SURROGATE(aString[i])) { // Unpaired low surrogate?
             outBuffer[outLen] = UCS2_REPLACEMENT;
         }
 

@@ -327,7 +327,7 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
     extraSurrogateLength=0;
 
     FT_ULong code_point = aString[i];
-    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+    if(i<aLength-1 && NS_IS_HIGH_SURROGATE(code_point) && NS_IS_LOW_SURROGATE(aString[i+1])) {
       // if surrogate, make UCS4 code point from high aString[i] surrogate and
       // low surrogate aString[i+1]
       code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);
@@ -410,7 +410,7 @@ nsFreeTypeFont::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   for (i=0; i<aLength; i+=1+extraSurrogateLength) {
     extraSurrogateLength=0;
     FT_ULong code_point = aString[i];
-    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+    if(i<aLength-1 && NS_IS_HIGH_SURROGATE(code_point) && NS_IS_LOW_SURROGATE(aString[i+1])) {
       // if surrogate, make UCS4 code point from high aString[i] surrogate and
       // low surrogate aString[i+1]
       code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);
@@ -741,7 +741,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     FT_ULong code_point = aString[i];
     extraSurrogateLength = 0;
 
-    if(i<aLength-1 && IS_HIGH_SURROGATE(code_point) && IS_LOW_SURROGATE(aString[i+1])) {
+    if(i<aLength-1 && NS_IS_HIGH_SURROGATE(code_point) && NS_IS_LOW_SURROGATE(aString[i+1])) {
       // if surrogate, make UCS4 code point from high aString[i] surrogate and
       // low surrogate aString[i+1]
       code_point = SURROGATE_TO_UCS4(code_point, aString[i+1]);

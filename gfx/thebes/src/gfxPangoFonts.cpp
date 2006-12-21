@@ -777,7 +777,7 @@ gfxXftTextRun::SetSpacing(const nsTArray<gfxFloat>& spacingArray)
             for (; prevChar + 1 < curChar; prevChar++)
                 mUTF8Spacing.AppendElement(0);
             mUTF8Spacing.AppendElement((PRInt32)NSToCoordRound(mSpacing[i]));
-            if (IS_HIGH_SURROGATE(mWString[i]))
+            if (NS_IS_HIGH_SURROGATE(mWString[i]))
                 i++;
             prevChar = curChar;
             curChar = g_utf8_find_next_char(curChar, NULL);
@@ -1488,7 +1488,7 @@ gfxPangoTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
         for (; prevChar + 1 < curChar; prevChar++)
             mUTF8Spacing.AppendElement(0);
         mUTF8Spacing.AppendElement((PRInt32)NSToCoordRound(mSpacing[i] * FLOAT_PANGO_SCALE));
-        if (IS_HIGH_SURROGATE(mString[i]))
+        if (NS_IS_HIGH_SURROGATE(mString[i]))
             i++;
         prevChar = curChar;
         curChar = g_utf8_find_next_char(curChar, NULL);

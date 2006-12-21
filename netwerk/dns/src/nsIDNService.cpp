@@ -296,8 +296,8 @@ static void utf16ToUcs4(const nsAString& in, PRUint32 *out, PRUint32 outBufLen, 
     curChar= *start++;
 
     if (start != end &&
-        IS_HIGH_SURROGATE(curChar) && 
-        IS_LOW_SURROGATE(*start)) {
+        NS_IS_HIGH_SURROGATE(curChar) && 
+        NS_IS_LOW_SURROGATE(*start)) {
       out[i] = SURROGATE_TO_UCS4(curChar, *start);
       ++start;
     }

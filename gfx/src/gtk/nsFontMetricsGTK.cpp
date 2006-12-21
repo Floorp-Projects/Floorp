@@ -2079,7 +2079,7 @@ nsFontMetricsGTK::ResolveForwards(const PRUnichar        *aString,
 
   count = mLoadedFontsCount;
 
-  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+  if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
     currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
     currChar += 2;
   }
@@ -2100,7 +2100,7 @@ nsFontMetricsGTK::ResolveForwards(const PRUnichar        *aString,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       currChar += 2;
     }
@@ -2113,7 +2113,7 @@ nsFontMetricsGTK::ResolveForwards(const PRUnichar        *aString,
   // see if we can keep the same font for adjacent characters
   PRInt32 lastCharLen;
   while (currChar < lastChar) {
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       nextFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       lastCharLen = 2;
     }
@@ -3676,7 +3676,7 @@ nsFontMetricsGTK::GetWidth  (const PRUnichar* aString, PRUint32 aLength,
         PRUint32 c = aString[i];
         extraSurrogateLength=0;
 
-        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+        if(i < aLength-1 && NS_IS_HIGH_SURROGATE(c) && NS_IS_LOW_SURROGATE(aString[i+1])) {
           // if surrogate, make UCS4 code point from high aString[i] and
           // low surrogate aString[i+1]
           c = SURROGATE_TO_UCS4(c, aString[i+1]);
@@ -3835,7 +3835,7 @@ nsFontMetricsGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
     for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
         PRUint32 c = aString[i];
         extraSurrogateLength=0;
-        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+        if(i < aLength-1 && NS_IS_HIGH_SURROGATE(c) && NS_IS_LOW_SURROGATE(aString[i+1])) {
           // if surrogate, make UCS4 code point from high aString[i] and
           // low surrogate aString[i+1]
           c = SURROGATE_TO_UCS4(c, aString[i+1]);
@@ -4012,7 +4012,7 @@ nsFontMetricsGTK::GetBoundingMetrics(const PRUnichar *aString,
     for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
         PRUint32 c = aString[i];
         extraSurrogateLength=0;
-        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+        if(i < aLength-1 && NS_IS_HIGH_SURROGATE(c) && NS_IS_LOW_SURROGATE(aString[i+1])) {
           // if surrogate, make UCS4 code point from high aString[i] and
           // low surrogate aString[i+1]
           c = SURROGATE_TO_UCS4(c, aString[i+1]);
@@ -4106,7 +4106,7 @@ nsFontMetricsGTK::GetTextDimensions (const PRUnichar* aString,
     for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
         PRUint32 c = aString[i];
         extraSurrogateLength=0;
-        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+        if(i < aLength-1 && NS_IS_HIGH_SURROGATE(c) && NS_IS_LOW_SURROGATE(aString[i+1])) {
           // if surrogate, make UCS4 code point from high aString[i] and
           // low surrogate aString[i+1]
           c = SURROGATE_TO_UCS4(c, aString[i+1]);

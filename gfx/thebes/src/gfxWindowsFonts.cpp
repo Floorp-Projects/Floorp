@@ -1256,7 +1256,7 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
                 for (PRUint32 la = 0; la < mLength; la++) {
                     PRUint32 ch = mString[la];
 
-                    if ((la+1 < mLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(mString[la+1])) {
+                    if ((la+1 < mLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mString[la+1])) {
                         la++;
                         ch = SURROGATE_TO_UCS4(ch, mString[la]);
                     }
@@ -1395,7 +1395,7 @@ private:
         memcpy((void *)mAlternativeString, (const void *)mString,
                mLength * sizeof(PRUnichar));
         for (PRUint32 i = 0; i < mLength; i++) {
-            if (IS_HIGH_SURROGATE(mString[i]) || IS_LOW_SURROGATE(mString[i]))
+            if (NS_IS_HIGH_SURROGATE(mString[i]) || NS_IS_LOW_SURROGATE(mString[i]))
                 mAlternativeString[i] = PRUnichar(0xFFFD);
         }
     }

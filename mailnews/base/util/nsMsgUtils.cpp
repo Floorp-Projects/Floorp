@@ -386,7 +386,7 @@ nsresult NS_MsgHashIfNecessary(nsAutoString &name)
   {
     keptLength = MAX_LEN-8; 
     // To avoid keeping only the high surrogate of a surrogate pair
-    if (IS_HIGH_SURROGATE(name.CharAt(keptLength-1)))
+    if (NS_IS_HIGH_SURROGATE(name.CharAt(keptLength-1)))
         --keptLength;
   }
 

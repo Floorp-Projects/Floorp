@@ -394,9 +394,9 @@ nsTextFragment::SetBidiFlag()
     while (cp < end) {
       PRUnichar ch1 = *cp++;
       PRUint32 utf32Char = ch1;
-      if (IS_HIGH_SURROGATE(ch1) &&
+      if (NS_IS_HIGH_SURROGATE(ch1) &&
           cp < end &&
-          IS_LOW_SURROGATE(*cp)) {
+          NS_IS_LOW_SURROGATE(*cp)) {
         PRUnichar ch2 = *cp++;
         utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
       }

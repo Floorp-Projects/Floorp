@@ -252,8 +252,8 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
     // do the fallback
     if (!ATTR_NO_FALLBACK(mAttribute)) {
       PRUint32 unMappedChar;
-      if (IS_HIGH_SURROGATE(inString[pos1-1]) && 
-          inStringLength > pos1 && IS_LOW_SURROGATE(inString[pos1])) {
+      if (NS_IS_HIGH_SURROGATE(inString[pos1-1]) && 
+          inStringLength > pos1 && NS_IS_LOW_SURROGATE(inString[pos1])) {
         unMappedChar = SURROGATE_TO_UCS4(inString[pos1-1], inString[pos1]);
         pos1++;
       } else {

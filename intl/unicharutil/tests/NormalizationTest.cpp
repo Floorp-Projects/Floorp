@@ -161,8 +161,8 @@ PRUint32 UTF32CodepointFromTestcase(testcaseLine* testLine)
   if (!IS_SURROGATE(testLine->c1[0]))
     return testLine->c1[0];
 
-  NS_ASSERTION(IS_HIGH_SURROGATE(testLine->c1[0]) &&
-               IS_LOW_SURROGATE(testLine->c1[1]),
+  NS_ASSERTION(NS_IS_HIGH_SURROGATE(testLine->c1[0]) &&
+               NS_IS_LOW_SURROGATE(testLine->c1[1]),
                "Test data neither in BMP nor legal surrogate pair");
   return SURROGATE_TO_UCS4(testLine->c1[0], testLine->c1[1]);
 }

@@ -1301,9 +1301,9 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       PRBool fallbackDone = PR_FALSE;
       segDim.Clear();
       
-      if (IS_HIGH_SURROGATE(*aString) && 
+      if (NS_IS_HIGH_SURROGATE(*aString) && 
           ((processLen+1) < aLength) &&
-          IS_LOW_SURROGATE(*(aString+1)))
+          NS_IS_LOW_SURROGATE(*(aString+1)))
       {
          const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateGetDimensions(aString, segDim, fontNum, 
@@ -1486,9 +1486,9 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       PRBool fallbackDone = PR_FALSE;
       segBoundingMetrics.Clear();
 
-      if (IS_HIGH_SURROGATE(*aString) && 
+      if (NS_IS_HIGH_SURROGATE(*aString) && 
           ((processLen+1) < aLength) &&
-          IS_LOW_SURROGATE(*(aString+1)) )
+          NS_IS_LOW_SURROGATE(*(aString+1)) )
       {
          const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateGetBoundingMetrics(aString, segBoundingMetrics, fontNum, 
@@ -1626,9 +1626,9 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
   	  {
 		  PRBool fallbackDone = PR_FALSE;
 
-      if (IS_HIGH_SURROGATE(*aString) && 
+      if (NS_IS_HIGH_SURROGATE(*aString) && 
           ((processLen+1) < aLength) &&
-          IS_LOW_SURROGATE(*(aString+1)) )
+          NS_IS_LOW_SURROGATE(*(aString+1)) )
       {
          const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateDrawChar(aString, x, y, thisWidth, fontNum, 

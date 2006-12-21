@@ -359,7 +359,7 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
     for (PRUint32 z = 0; z < aLength; ++z) {
         PRUint32 ch = aString[z];
 
-        if ((z+1 < aLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(aString[z+1])) {
+        if ((z+1 < aLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(aString[z+1])) {
             z++;
             ch = SURROGATE_TO_UCS4(ch, aString[z]);
             surrogates = PR_TRUE;
