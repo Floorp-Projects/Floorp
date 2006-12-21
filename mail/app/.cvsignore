@@ -1,1 +1,6 @@
 Makefile
+nsStaticComponents.cpp
+thunderbird
+thunderbird-bin
+thunderbird-bin.pure
+thunderbird.1

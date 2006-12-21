@@ -1,2 +1,6 @@
 Makefile
 nsStaticComponents.cpp
+sunbird
+sunbird-bin
+sunbird-bin.pure
+sunbird.1
