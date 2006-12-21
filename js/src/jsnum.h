@@ -46,9 +46,6 @@
  * but floating point literals, results that overflow 31 bits, and division and
  * modulus operands and results require a 64-bit IEEE double.  These are GC'ed
  * and pointed to by 32-bit jsvals on the stack and in object properties.
- *
- * When a JS number is treated as an object (followed by . or []), the runtime
- * wraps it with a JSObject whose valueOf method returns the unwrapped number.
  */
 
 JS_BEGIN_EXTERN_C

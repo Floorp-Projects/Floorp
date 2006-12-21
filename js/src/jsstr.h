@@ -47,10 +47,6 @@
  * necessitating a pointer after the count, to form a separately allocated
  * string descriptor.  String descriptors are GC'ed, while their chars are
  * allocated from the malloc heap.
- *
- * When a string is treated as an object (by following it with . or []), the
- * runtime wraps it with a JSObject whose valueOf method returns the unwrapped
- * string descriptor.
  */
 #include <ctype.h>
 #include "jspubtd.h"
