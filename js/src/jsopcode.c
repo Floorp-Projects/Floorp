@@ -4630,6 +4630,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         /* Let pc2 be non-null only for JSOP_LITOPX. */
         pc2 = NULL;
         op = (JSOp) *pc;
+        if (op == JSOP_TRAP)
+            op = JS_GetTrapOpcode(cx, script, pc);
         cs = &js_CodeSpec[op];
         oplen = cs->length;
 
