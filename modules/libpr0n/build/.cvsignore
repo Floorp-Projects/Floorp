@@ -5,3 +5,4 @@ imglib2.dll
 module.rc
 module.res
 dependentLibs.h
+nsImgBuildDefines.h
