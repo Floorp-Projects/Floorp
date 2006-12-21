@@ -477,6 +477,9 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
        nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
+       if (!thumbFrame) {
+         return NS_OK;
+       }
 
        // take our current position and subtract the start location
        pos -= mDragStart;
@@ -567,6 +570,9 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
    // adjust so that the middle of the thumb is placed under the click
     nsIFrame* thumbFrame = mFrames.FirstChild();
+    if (!thumbFrame) {
+      return NS_OK;
+    }
     nsSize thumbSize = thumbFrame->GetSize();
     nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
     thumbLength /= onePixel;
@@ -832,6 +838,9 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
     // adjust so that the middle of the thumb is placed under the click
     nsIFrame* thumbFrame = mFrames.FirstChild();
+    if (!thumbFrame) {
+      return NS_OK;
+    }
     nsSize thumbSize = thumbFrame->GetSize();
     nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
     thumbLength /= onePixel;
@@ -851,6 +860,9 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   DragThumb(PR_TRUE);
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (!thumbFrame) {
+    return NS_OK;
+  }
 
   if (isHorizontal)
      mThumbStart = thumbFrame->GetPosition().x;
@@ -1058,6 +1070,10 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
     PRBool stop = PR_FALSE;
 
     nsIFrame* thumbFrame = mFrames.FirstChild();
+    if (!thumbFrame) {
+      nsRepeatService::GetInstance()->Stop();
+      return;
+    }
     nsRect thumbRect = thumbFrame->GetRect();
 
     PRBool isHorizontal = IsHorizontal();
