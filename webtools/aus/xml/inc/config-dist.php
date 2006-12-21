@@ -86,6 +86,10 @@ $branchVersions = array(
     '1.5.0.8'    =>  '1.5.0.x',
     '1.5.0.9pre' =>  '1.5.0.x',
     '1.5.0.9'    =>  '1.5.0.x',
+    '1.5.0.10pre'=>  '1.5.0.x',
+    '1.5.0.10'   =>  '1.5.0.x',
+    '1.5.0.11pre'=>  '1.5.0.x',
+    '1.5.0.11'   =>  '1.5.0.x',
     '1.6a1'      =>  'trunk',
     '2.0'        =>  '2.0',
     '2.0.0.1pre' =>  '2.0',
@@ -101,7 +105,11 @@ $branchVersions = array(
     '2.0b1pre'   =>  '2.0',
     '2.0b2'      =>  '2.0',
     '2.0b2pre'   =>  '2.0',
-    '3.0a1'      =>  'trunk'
+    '3.0a1'      =>  'trunk',
+    '3.0a2pre'   =>  'trunk',
+    '3.0a2'      =>  'trunk',
+    '3.0a3pre'   =>  'trunk',
+    '3.0a3'      =>  'trunk'
 );
 
 // Array that defines which %OS_VERSION% values are no longer supported.
