@@ -628,39 +628,32 @@ sub can_see_product {
 
 sub get_selectable_products {
     my $self = shift;
-    my $classification_id = shift;
+    my $class_id = shift;
+    my $class_restricted = Bugzilla->params->{'useclassification'} && $class_id;
 
-    if (defined $self->{selectable_products}) {
-        return $self->{selectable_products};
+    if (!defined $self->{selectable_products}) {
+        my $query = "SELECT id " .
+                    "  FROM products " .
+                 "LEFT JOIN group_control_map " .
+                    "    ON group_control_map.product_id = products.id ";
+        if (Bugzilla->params->{'useentrygroupdefault'}) {
+            $query .= " AND group_control_map.entry != 0 ";
+        } else {
+            $query .= " AND group_control_map.membercontrol = " . CONTROLMAPMANDATORY;
+        }
+        $query .= "     AND group_id NOT IN(" . $self->groups_as_string . ") " .
+                  "   WHERE group_id IS NULL " .
+                  "ORDER BY name";
+
+        my $prod_ids = Bugzilla->dbh->selectcol_arrayref($query);
+        $self->{selectable_products} = Bugzilla::Product->new_from_list($prod_ids);
     }
 
-    my $dbh = Bugzilla->dbh;
-    my @params = ();
-
-    my $query = "SELECT id " .
-                "FROM products " .
-                "LEFT JOIN group_control_map " .
-                "ON group_control_map.product_id = products.id ";
-    if (Bugzilla->params->{'useentrygroupdefault'}) {
-        $query .= "AND group_control_map.entry != 0 ";
-    } else {
-        $query .= "AND group_control_map.membercontrol = " .
-                  CONTROLMAPMANDATORY . " ";
+    # Restrict the list of products to those being in the classification, if any.
+    if ($class_restricted) {
+        return [grep {$_->classification_id == $class_id} @{$self->{selectable_products}}];
     }
-    $query .= "AND group_id NOT IN(" . 
-               $self->groups_as_string . ") " .
-              "WHERE group_id IS NULL ";
-
-    if (Bugzilla->params->{'useclassification'} && $classification_id) {
-        $query .= "AND classification_id = ? ";
-        detaint_natural($classification_id);
-        push(@params, $classification_id);
-    }
-
-    $query .= "ORDER BY name";
-
-    my $prod_ids = $dbh->selectcol_arrayref($query, undef, @params);
-    $self->{selectable_products} = Bugzilla::Product->new_from_list($prod_ids);
+    # If we come here, then we want all selectable products.
     return $self->{selectable_products};
 }
 
