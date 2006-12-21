@@ -23,6 +23,7 @@
 #   Jeff Walden <jwalden+code@mit.edu>
 #   Asaf Romano <mano@mozilla.com>
 #   Robert Sayre <sayrer@gmail.com>
+#   Michael Ventnor <m.ventnor@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -218,6 +219,27 @@ FeedWriter.prototype = {
     return this._defaultSystemReaderItemWrapped;
   },
 
+   /**
+   * Returns a date suitable for displaying in the feed preview. 
+   * If the date cannot be parsed, the return value is "false".
+   * @param   dateString
+   *          A date as extracted from a feed entry. (entry.updated)
+   */
+  _parseDate: function FW__parseDate(dateString) {
+    // Convert the date into the user's local time zone
+    dateObj = new Date(dateString);
+
+    // Make sure the date we're given is valid.
+    if (!dateObj.getTime())
+      return false;
+
+    var dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+                      getService(Ci.nsIScriptableDateFormat);
+    return dateService.FormatDateTime("", dateService.dateFormatLong, dateService.timeFormatNoSeconds,
+                                      dateObj.getFullYear(), dateObj.getMonth()+1, dateObj.getDate(),
+                                      dateObj.getHours(), dateObj.getMinutes(), dateObj.getSeconds());
+  },
+
   /**
    * Writes the feed title into the preview document.
    * @param   container
@@ -298,6 +320,14 @@ FeedWriter.prototype = {
         var title = this._document.createElementNS(HTML_NS, "h3");
         title.appendChild(a);
         entryContainer.appendChild(title);
+
+        var lastUpdated = this._parseDate(entry.updated);
+        if (lastUpdated) {
+          var dateDiv = this._document.createElementNS(HTML_NS, "div");
+          dateDiv.setAttribute("class", "lastUpdated");
+          title.appendChild(dateDiv);
+          dateDiv.textContent = lastUpdated;
+        }
       }
 
       var body = this._document.createElementNS(HTML_NS, "p");

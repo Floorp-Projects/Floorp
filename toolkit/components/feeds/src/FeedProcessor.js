@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
  *   Myk Melez <myk@mozilla.org>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -742,10 +743,10 @@ function trimString(s) {
 }
 
 // Regular expression matching RFC822 dates 
-const RFC822_RE = "^(((Mon)|(Tue)|(Wed)|(Thu)|(Fri)|(Sat)|(Sun)), *)?\\d\\d?"
-+ " +((Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec))"
-+ " +\\d\\d(\\d\\d)? +\\d\\d:\\d\\d(:\\d\\d)? +(([+-]?\\d\\d\\d\\d)|(UT)|(GMT)"
-+ "|(EST)|(EDT)|(CST)|(CDT)|(MST)|(MDT)|(PST)|(PDT)|\\w)$";
+const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
++ " +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)([a-z]+)?"
++ " +\\d\\d(\\d\\d)? +\\d?\\d:\\d\\d(:\\d\\d)?"
++ " +([+-]?\\d\\d\\d\\d|GMT|UT|(E|C|M|P)(ST|DT)|[A-IK-Z])$";
 
 /**
  * XXX -- need to decide what this should return. 
