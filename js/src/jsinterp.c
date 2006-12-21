@@ -3230,7 +3230,7 @@ interrupt:
             EQUALITY_OP(!=, JS_TRUE);
           END_CASE(JSOP_NE)
 
-#define NEW_EQUALITY_OP(OP)                                                   \
+#define STRICT_EQUALITY_OP(OP)                                                \
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
         lval = FETCH_OPND(-2);                                                \
@@ -3240,16 +3240,16 @@ interrupt:
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_STRICTEQ)
-            NEW_EQUALITY_OP(==);
+            STRICT_EQUALITY_OP(==);
           END_CASE(JSOP_STRICTEQ)
 
           BEGIN_CASE(JSOP_STRICTNE)
-            NEW_EQUALITY_OP(!=);
+            STRICT_EQUALITY_OP(!=);
           END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_CASE)
             pc2 = (jsbytecode *) sp[-2-depth];
-            NEW_EQUALITY_OP(==);
+            STRICT_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMP_OFFSET(pc);
@@ -3262,7 +3262,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_CASEX)
             pc2 = (jsbytecode *) sp[-2-depth];
-            NEW_EQUALITY_OP(==);
+            STRICT_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMPX_OFFSET(pc);
