@@ -2301,15 +2301,23 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     ptrdiff_t top;
 
     pn2 = pn->pn_expr;
-    if (op == JSOP_GETPROP &&
-        pn->pn_type == TOK_DOT &&
-        pn2->pn_type == TOK_NAME) {
-        /* Try to optimize arguments.length into JSOP_ARGCNT. */
-        if (!BindNameToSlot(cx, &cg->treeContext, pn2, JS_FALSE))
-            return JS_FALSE;
-        if (pn2->pn_op == JSOP_ARGUMENTS &&
-            pn->pn_atom == cx->runtime->atomState.lengthAtom) {
-            return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
+    if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
+        if (pn2->pn_op == JSOP_THIS && cg->atomList.count < JS_BIT(16)) {
+            /*
+             * Fast path for gets of |this.foo| where the immediate is
+             * guaranteed to fit.
+             */
+            return EmitAtomOp(cx, pn, JSOP_GETTHISPROP, cg);
+        }
+
+        if (pn2->pn_type == TOK_NAME) {
+            /* Try to optimize arguments.length into JSOP_ARGCNT. */
+            if (!BindNameToSlot(cx, &cg->treeContext, pn2, JS_FALSE))
+                return JS_FALSE;
+            if (pn2->pn_op == JSOP_ARGUMENTS &&
+                pn->pn_atom == cx->runtime->atomState.lengthAtom) {
+                return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
+            }
         }
     }
 

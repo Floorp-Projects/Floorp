@@ -3271,6 +3271,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = Sprint(&ss->sprinter, fmt, lval, rval);
                 break;
 
+              case JSOP_GETTHISPROP:
+                atom = GET_ATOM(cx, jp->script, pc);
+                GET_QUOTE_AND_FMT(index_format, dot_format, rval);
+                todo = Sprint(&ss->sprinter, fmt, js_this_str, rval);
+                break;
+
 #if JS_HAS_XML_SUPPORT
               BEGIN_LITOPX_CASE(JSOP_GETMETHOD)
                 sn = js_GetSrcNote(jp->script, pc);
