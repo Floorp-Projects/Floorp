@@ -963,9 +963,9 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
           else if (val > 127 && 
                    mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities &&
                    mEntityConverter) {
-            if (IS_HIGH_SURROGATE(val) &&
+            if (NS_IS_HIGH_SURROGATE(val) &&
                 c + 1 < fragmentEnd &&
-                IS_LOW_SURROGATE(*(c + 1))) {
+                NS_IS_LOW_SURROGATE(*(c + 1))) {
               PRUint32 valUTF32 = SURROGATE_TO_UCS4(val, *(++c));
               if (NS_SUCCEEDED(mEntityConverter->ConvertUTF32ToEntity(valUTF32,
                                nsIEntityConverter::entityW3C, &fullEntityText))) {

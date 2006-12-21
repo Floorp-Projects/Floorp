@@ -2433,7 +2433,7 @@ nsFontMetricsXlib::ResolveForwards(const PRUnichar*         aString,
 
   count = mLoadedFontsCount;
 
-  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+  if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
     currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
     currChar += 2;
   }
@@ -2454,7 +2454,7 @@ nsFontMetricsXlib::ResolveForwards(const PRUnichar*         aString,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       currChar += 2;
     }
@@ -2467,7 +2467,7 @@ nsFontMetricsXlib::ResolveForwards(const PRUnichar*         aString,
   // see if we can keep the same font for adjacent characters
   PRInt32 lastCharLen;
   while (currChar < lastChar) {
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       nextFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       lastCharLen = 2;
     }

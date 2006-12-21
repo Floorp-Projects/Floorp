@@ -252,7 +252,7 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
                 else
                   code_length = 3;
               }
-            else if ( IS_HIGH_SURROGATE(W) )
+            else if ( NS_IS_HIGH_SURROGATE(W) )
               W1 = W;
 #ifdef DEBUG
             else NS_ERROR("Got low surrogate but no previous high surrogate");
@@ -263,7 +263,7 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
               // as required by the standard, this code is careful to
               //  throw out illegal sequences
 
-            if ( IS_LOW_SURROGATE(W) )
+            if ( NS_IS_LOW_SURROGATE(W) )
               {
                 U = SURROGATE_TO_UCS4(W1, W);
                 NS_ASSERTION(IS_VALID_CHAR(U), "How did this happen?");

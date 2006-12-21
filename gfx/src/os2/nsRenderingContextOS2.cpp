@@ -2040,9 +2040,9 @@ do_DrawString(const nsFontSwitch* aFontSwitch,
       x = data->mX;
       y = data->mY;
       data->mTranMatrix->TransformCoord(&x, &y);
-      if (IS_HIGH_SURROGATE(*str) && 
+      if (NS_IS_HIGH_SURROGATE(*str) && 
           ((str+1)<end) && 
-          IS_LOW_SURROGATE(*(str+1))) 
+          NS_IS_LOW_SURROGATE(*(str+1))) 
       {
         // special case for surrogate pair
         font->DrawString(data->mPS, data->mSurface, x, y, str, 2);

@@ -1245,14 +1245,14 @@ PRBool nsExternalHelperAppService::promptForScheme(nsIURI* aURI,
 
     while (charIdx < uri.Length()) {
       // Don't insert characters in the middle of a surrogate pair.
-      if (IS_LOW_SURROGATE(uri[charIdx]))
+      if (NS_IS_LOW_SURROGATE(uri[charIdx]))
         --charIdx;
 
       if (numCharsToCrop > 0 && lineIdx == maxLines / 2) {
         NS_NAMED_LITERAL_STRING(ellipsis, "\n...\n");
 
         // Don't end the crop in the middle of a surrogate pair.
-        if (IS_HIGH_SURROGATE(uri[charIdx + numCharsToCrop - 1]))
+        if (NS_IS_HIGH_SURROGATE(uri[charIdx + numCharsToCrop - 1]))
           ++numCharsToCrop;
 
         uri.Replace(charIdx, numCharsToCrop, ellipsis);

@@ -291,7 +291,7 @@ public:
         *buffer = p;
         return c;
       }
-    else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
+    else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
         if (*buffer == end)
           {
@@ -307,7 +307,7 @@ public:
 
         c = *p++;
 
-        if (IS_LOW_SURROGATE(c))
+        if (NS_IS_LOW_SURROGATE(c))
           {
             // DC00- DFFF - Low Surrogate
             // N = (H - D800) *400 + 10000 + (L - DC00)
@@ -355,7 +355,7 @@ public:
           *err = PR_FALSE;
         return c;
       }
-    else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
+    else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
         if (iter == end)
           {
@@ -370,7 +370,7 @@ public:
 
         c = *iter++;
 
-        if (IS_LOW_SURROGATE(c))
+        if (NS_IS_LOW_SURROGATE(c))
           {
             // DC00- DFFF - Low Surrogate
             // N = (H - D800) *400 + 10000 + ( L - DC00 )
@@ -594,7 +594,7 @@ class ConvertUTF16toUTF8
                 *out++ = 0x80 | (char)(0x003F & (c >> 6));
                 *out++ = 0x80 | (char)(0x003F & c );
               }
-            else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
+            else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
               {
                 // D800- DBFF - High Surrogate
                 value_type h = c;
@@ -608,7 +608,7 @@ class ConvertUTF16toUTF8
                   }
                 c = *p;
 
-                if (IS_LOW_SURROGATE(c))
+                if (NS_IS_LOW_SURROGATE(c))
                   {
                     // DC00- DFFF - Low Surrogate
                     // N = (H - D800) *400 + 10000 + ( L - DC00 )

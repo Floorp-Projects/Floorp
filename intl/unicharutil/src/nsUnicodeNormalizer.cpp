@@ -392,7 +392,7 @@ mdn_normalize(PRBool do_composition, PRBool compat,
 		 */
 		curChar= *start++;
 
-		if (IS_HIGH_SURROGATE(curChar) && start != end && IS_LOW_SURROGATE(*(start)) ) {
+		if (NS_IS_HIGH_SURROGATE(curChar) && start != end && NS_IS_LOW_SURROGATE(*(start)) ) {
 			c = SURROGATE_TO_UCS4(curChar, *start);
 			++start;
 		} else {

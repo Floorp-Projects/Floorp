@@ -118,8 +118,8 @@ PRBool nsUnicodeToGB18030::EncodeSurrogate(
   PRUnichar aSurrogateLow,
   char* aOut)
 {
-  if( IS_HIGH_SURROGATE(aSurrogateHigh) && 
-      IS_LOW_SURROGATE(aSurrogateLow) )
+  if( NS_IS_HIGH_SURROGATE(aSurrogateHigh) && 
+      NS_IS_LOW_SURROGATE(aSurrogateLow) )
   {
     // notice that idx does not include the 0x10000 
     PRUint32 idx = ((aSurrogateHigh - (PRUnichar)0xD800) << 10 ) |
@@ -337,8 +337,8 @@ PRBool nsUnicodeToGBK::TryExtensionEncoder(
   PRInt32 *aOutLen
 )
 {
-  if( IS_HIGH_SURROGATE(aChar) || 
-      IS_LOW_SURROGATE(aChar) )
+  if( NS_IS_HIGH_SURROGATE(aChar) || 
+      NS_IS_LOW_SURROGATE(aChar) )
   {
     // performance tune for surrogate characters
     return PR_FALSE;
@@ -362,8 +362,8 @@ PRBool nsUnicodeToGBK::Try4BytesEncoder(
   PRInt32 *aOutLen
 )
 {
-  if( IS_HIGH_SURROGATE(aChar) || 
-      IS_LOW_SURROGATE(aChar) )
+  if( NS_IS_HIGH_SURROGATE(aChar) || 
+      NS_IS_LOW_SURROGATE(aChar) )
   {
     // performance tune for surrogate characters
     return PR_FALSE;
@@ -449,7 +449,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
           // we still cannot map. Let's try to
           // call the delegated GB18030 4 byte converter 
           aOutLen = 4;
-          if( IS_HIGH_SURROGATE(unicode) )
+          if( NS_IS_HIGH_SURROGATE(unicode) )
           {
             if((iSrcLength+1) < *aSrcLength ) {
               if(EncodeSurrogate(aSrc[0],aSrc[1], aDest)) {
@@ -469,9 +469,9 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
               break; // this will go to afterwhileloop
             }
           } else {
-            if( IS_LOW_SURROGATE(unicode) )
+            if( NS_IS_LOW_SURROGATE(unicode) )
             {
-              if(IS_HIGH_SURROGATE(mSurrogateHigh)) {
+              if(NS_IS_HIGH_SURROGATE(mSurrogateHigh)) {
                 if(EncodeSurrogate(mSurrogateHigh, aSrc[0], aDest)) {
                   iDestLength += aOutLen;
                   aDest += aOutLen;

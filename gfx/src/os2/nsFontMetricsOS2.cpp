@@ -2194,7 +2194,7 @@ nsFontMetricsOS2FT::ResolveForwards(HPS                  aPS,
 
   count = mLoadedFonts.Count();
 
-  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+  if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
     currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
     currChar += 2;
   }
@@ -2215,7 +2215,7 @@ nsFontMetricsOS2FT::ResolveForwards(HPS                  aPS,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       currChar += 2;
     }
@@ -2228,7 +2228,7 @@ nsFontMetricsOS2FT::ResolveForwards(HPS                  aPS,
   // see if we can keep the same font for adjacent characters
   PRInt32 lastCharLen;
   while (currChar < lastChar) {
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       nextFont = LocateFont(aPS, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       lastCharLen = 2;
     }
@@ -2278,7 +2278,7 @@ nsFontMetricsOS2FT::ResolveBackwards(HPS                  aPS,
   count = mLoadedFonts.Count();
 
   // see if one of our loaded fonts can represent the current character
-  if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+  if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
     currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
     currChar -= 2;
   }
@@ -2299,7 +2299,7 @@ nsFontMetricsOS2FT::ResolveBackwards(HPS                  aPS,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+    if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
       currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
       currChar -= 2;
     }
@@ -2314,7 +2314,7 @@ nsFontMetricsOS2FT::ResolveBackwards(HPS                  aPS,
   PRUint32 codepoint;
 
   while (currChar > lastChar) {
-    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+    if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
       codepoint =  SURROGATE_TO_UCS4(*(currChar-1), *currChar);
       nextFont = LocateFont(aPS, codepoint, count);
       lastCharLen = 2;

@@ -527,7 +527,7 @@ static PRInt32 FindSafeLength(nsRenderingContextImpl* aContext,
 
   // Ensure that we don't break inside a cluster or inside a surrogate pair
   while (len > 0 &&
-         (IS_LOW_SURROGATE(aString[len]) || (clusterHint && !buffer[len]))) {
+         (NS_IS_LOW_SURROGATE(aString[len]) || (clusterHint && !buffer[len]))) {
     len--;
   }
   if (len == 0) {

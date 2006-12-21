@@ -3245,7 +3245,7 @@ nsTextFrame::GetPositionSlowly(nsIRenderingContext* aRendContext,
     PRInt32* ip = indexBuffer.mBuffer;
     for (i = 0;i <= mContentLength; i ++){
       if ((ip[i] >= aOffset) && //reverse mapping
-          (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
+          (! NS_IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
           aOffset = i + mContentOffset;
           break;
       }
@@ -3369,8 +3369,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     else if (ch == ' ') {
       glyphWidth += aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing;
     }
-    else if (IS_HIGH_SURROGATE(ch) && aLength > 0 &&
-           IS_LOW_SURROGATE(*(aBuffer+1))) {
+    else if (NS_IS_HIGH_SURROGATE(ch) && aLength > 0 &&
+           NS_IS_LOW_SURROGATE(*(aBuffer+1))) {
       
       // special handling for surrogate pair
       aRenderingContext.GetWidth(aBuffer, 2, charWidth);
@@ -3499,8 +3499,8 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
         lastFont = aStyle.mNormalFont;
         aRenderingContext.SetFont(lastFont);
       }
-      if (IS_HIGH_SURROGATE(ch) && length > 0 &&
-        IS_LOW_SURROGATE(*inBuffer)) {
+      if (NS_IS_HIGH_SURROGATE(ch) && length > 0 &&
+        NS_IS_LOW_SURROGATE(*inBuffer)) {
         aRenderingContext.GetTextDimensions(inBuffer-1, (PRUint32)2, glyphDimensions);
         length--;
         inBuffer++;
@@ -4152,7 +4152,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
 #endif // IBMBIDI
         if (found) {
           PRInt32 charWidth;
-          if (IS_HIGH_SURROGATE(text[indx]))
+          if (NS_IS_HIGH_SURROGATE(text[indx]))
             rendContext->GetWidth(&text[indx], 2, charWidth);
           else
             rendContext->GetWidth(text[indx], charWidth);
@@ -4177,7 +4177,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
         PRInt32 i;
         for (i = 0; i < mContentLength; i ++){
           if ((ip[i] >= aContentOffset) && //reverse mapping
-              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
+              (! NS_IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
               break;
           }
         }
@@ -4542,7 +4542,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     for (i = startOffset-1; i >= 0; i--){
       if ((ip[i] < ip[startOffset]) &&
           (clusterBuffer.mBuffer[ip[i] - mContentOffset]) &&
-          (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
+          (! NS_IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
       {
         *aOffset = i;
         break;
@@ -4592,7 +4592,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     for (i = startOffset; i <= mContentLength; i++) {
       if ((ip[i] > ip[startOffset]) &&
           ((i == mContentLength) ||
-           (!IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i] - mContentOffset])) &&
+           (!NS_IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i] - mContentOffset])) &&
            (clusterBuffer.mBuffer[ip[i] - mContentOffset]))) {
         *aOffset = i;
         break;

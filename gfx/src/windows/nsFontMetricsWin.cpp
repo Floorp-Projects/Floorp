@@ -4028,7 +4028,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
 
   count = mLoadedFonts.Count();
 
-  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+  if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
     currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
     currChar += 2;
   }
@@ -4054,7 +4054,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       currChar += 2;
     }
@@ -4067,7 +4067,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
   // see if we can keep the same font for adjacent characters
   PRInt32 lastCharLen;
   while (currChar < lastChar) {
-    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    if (NS_IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && NS_IS_LOW_SURROGATE(*(currChar+1))) {
       nextFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
       lastCharLen = 2;
     }
@@ -4117,7 +4117,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
   count = mLoadedFonts.Count();
 
   // see if one of our loaded fonts can represent the current character
-  if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+  if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
     currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
     currChar -= 2;
   }
@@ -4144,7 +4144,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+    if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
       currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
       currChar -= 2;
     }
@@ -4159,7 +4159,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
   PRUint32 codepoint;
 
   while (currChar > lastChar) {
-    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+    if (NS_IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && NS_IS_HIGH_SURROGATE(*(currChar-1))) {
       codepoint =  SURROGATE_TO_UCS4(*(currChar-1), *currChar);
       nextFont = LocateFont(aDC, codepoint, count);
       lastCharLen = 2;
@@ -4291,8 +4291,8 @@ VerifyFontHasGlyph(nsFontWin* aFont, const PRUnichar* aString, PRInt32 aLength)
   const PRUnichar* last = aString + aLength;
   PRUint32 ch;
   while (curr < last) {
-    if (IS_HIGH_SURROGATE(*curr) && (curr+1) < last && 
-        IS_LOW_SURROGATE(*(curr+1))) {
+    if (NS_IS_HIGH_SURROGATE(*curr) && (curr+1) < last && 
+        NS_IS_LOW_SURROGATE(*(curr+1))) {
       ch = SURROGATE_TO_UCS4(*curr, *(curr+1));
       curr += 2;
     }

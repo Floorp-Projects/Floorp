@@ -914,7 +914,7 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
                         PRInt32&   aTextWidth)
 {
   PRInt32 range = aEndInx - aStartInx;
-  if ((range == 1) || (range == 2 && IS_HIGH_SURROGATE(aText[aStartInx]))) {
+  if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
     aRendContext->GetWidth(aText, aIndex, aTextWidth);
     return PR_TRUE;
@@ -923,7 +923,7 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
   PRInt32 inx = aStartInx + (range / 2);
 
   // Make sure we don't leave a dangling low surrogate
-  if (IS_HIGH_SURROGATE(aText[inx-1]))
+  if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
   PRInt32 textWidth = 0;
