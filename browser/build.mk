@@ -49,4 +49,8 @@ ifdef MOZ_BRANDING_DIRECTORY
 tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
 endif
 
+ifndef MOZ_PLACES_BOOKMARKS
+tier_app_dirs += xpfe/components/search
+endif
+
 tier_app_dirs += browser

@@ -83,12 +83,6 @@ DIRS += \
         filepicker \
         $(NULL)
 
-ifdef MOZ_PHOENIX
-ifndef MOZ_PLACES_BOOKMARKS
-DIRS += search
-endif
-endif
-
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
 DIRS += \
