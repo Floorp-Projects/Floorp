@@ -3067,7 +3067,7 @@ dtoa
 				goto no_digits;
 			goto one_digit;
 			}
-		for(i = 1;; i++, dval(d) *= 10.) {
+		for(i = 1; i <= k+1; i++, dval(d) *= 10.) {
 			L = (Long)(dval(d) / ds);
 			dval(d) -= L*ds;
 #ifdef Check_FLT_ROUNDS
