@@ -95,9 +95,9 @@
 
 #define PLANE1_BASE          PRUint32(0x00010000)
 // High surrogates are in the range 0xD800 -- OxDBFF
-#define IS_HIGH_SURROGATE(u) ((PRUint32(u) & 0xFFFFFC00) == 0xD800)
+#define NS_IS_HIGH_SURROGATE(u) ((PRUint32(u) & 0xFFFFFC00) == 0xD800)
 // Low surrogates are in the range 0xDC00 -- 0xDFFF
-#define IS_LOW_SURROGATE(u)  ((PRUint32(u) & 0xFFFFFC00) == 0xDC00)
+#define NS_IS_LOW_SURROGATE(u)  ((PRUint32(u) & 0xFFFFFC00) == 0xDC00)
 // Faster than testing IS_HIGH_SURROGATE || IS_LOW_SURROGATE
 #define IS_SURROGATE(u)      ((PRUint32(u) & 0xFFFFF800) == 0xD800)
 
