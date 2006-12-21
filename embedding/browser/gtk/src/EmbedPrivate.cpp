@@ -1732,7 +1732,7 @@ EmbedPrivate::FindText(const char *exp, PRBool  reverse,
 nsresult
 EmbedPrivate::ScrollToSelectedNode(nsIDOMNode *aDOMNode)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   if (aDOMNode) {
     nsCOMPtr <nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(aDOMNode, &rv);
     if (NS_SUCCEEDED(rv) && nodeElement) {
