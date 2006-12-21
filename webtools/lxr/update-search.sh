@@ -39,7 +39,7 @@ cd $db_dir/tmp
 echo '/CVS/' > .glimpse_exclude
 
 set -e
-time glimpseindex -H . $src_dir
+time glimpseindex -n -H . $src_dir
 chmod -R a+r .
 mv .glimpse* ../
 
