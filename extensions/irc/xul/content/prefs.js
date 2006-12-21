@@ -56,7 +56,7 @@ function initPrefs()
     profilePath.append("chatzilla");
 
     client.prefManager.addPref("profilePath", profilePath.path, null, null,
-                                                                      "global");
+                                                                      "hidden");
 
     profilePath = new nsLocalFile(client.prefs["profilePath"]);
 
