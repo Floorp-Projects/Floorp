@@ -35,59 +35,82 @@
  * ***** END LICENSE BLOCK ***** */
 
 const nsICmdLineHandler     = Components.interfaces.nsICmdLineHandler;
+const nsICommandLineHandler = Components.interfaces.nsICommandLineHandler;
 const nsIFactory            = Components.interfaces.nsIFactory;
 const nsISupports           = Components.interfaces.nsISupports;
 const nsIModule             = Components.interfaces.nsIModule;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsICategoryManager    = Components.interfaces.nsICategoryManager;
+const nsISupportsString     = Components.interfaces.nsISupportsString;
+const nsIWindowWatcher      = Components.interfaces.nsIWindowWatcher;
 
 const NS_ERROR_FAILURE        = Components.results.NS_ERROR_FAILURE;
 const NS_ERROR_NO_AGGREGATION = Components.results.NS_ERROR_NO_AGGREGATION;
 const NS_ERROR_NO_INTERFACE   = Components.results.NS_ERROR_NO_INTERFACE;
 
-function nsComposerCmdLineHandler() {
-}
-
+function nsComposerCmdLineHandler() {}
 nsComposerCmdLineHandler.prototype = {
-  /* nsISupports */
-
-  QueryInterface: function(iid) {
-    if (!iid.equals(nsICmdLineHandler) &&
-        !iid.equals(nsISupports)) {
-          throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
+  get wrappedJSObject() {
     return this;
   },
 
+  /* nsISupports */
+
+  QueryInterface: function(iid) {
+    if (iid.equals(nsISupports))
+      return this;
+
+    if (nsICmdLineHandler && iid.equals(nsICmdLineHandler))
+      return this;
+
+    if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
+      return this;
+
+    throw NS_ERROR_NO_INTERFACE;
+  },
+
   /* nsICmdLineHandler */
+  commandLineArgument : "-edit",
+  prefNameForStartup : "general.startup.editor",
+  chromeUrlForTask : "chrome://editor/content/editor.xul",
+  helpText : "Start with editor.",
+  handlesArgs : true,
+  defaultArgs : "about:blank",
+  openWindowWithArgs : true,
 
-  get commandLineArgument() {
-    return "-edit";
+  /* nsICommandLineHandler */
+  handle : function handle(cmdLine) {
+    var args = Components.classes["@mozilla.org/supports-string;1"]
+                         .createInstance(nsISupportsString);
+    try {
+      var uristr = cmdLine.handleFlagWithParam("edit", false);
+      if (uristr == null) {
+        // Try the editor flag (used for general.startup.* prefs)
+        uristr = cmdLine.handleFlagWithParam("editor", false);
+        if (uristr == null)
+          return;
+      }
+
+      try {
+        args.data = cmdLine.resolveURI(uristr).spec;
+      }
+      catch (e) {
+        return;
+      }
+    }
+    catch (e) {
+      // One of the flags is present but no data, so set default arg.
+      args.data = "about:blank";
+    }
+
+    var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                           .getService(nsIWindowWatcher);
+    wwatch.openWindow(null, "chrome://editor/content", "_blank",
+                      "chrome,dialog=no,all", args);
+    cmdLine.preventDefault = true;
   },
 
-  get prefNameForStartup() {
-    return "general.startup.editor";
-  },
-
-  get chromeUrlForTask() {
-    return "chrome://editor/content/editor.xul";
-  },
-
-  get helpText() {
-    return "Start with editor."
-  },
-
-  get handlesArgs() {
-    return true;
-  },
-
-  get defaultArgs() {
-    return "about:blank";
-  },
-
-  get openWindowWithArgs() {
-    return true;
-  }
+  helpInfo : "  -edit <url>          Open Composer.\n"
 };
 
 function nsComposerCmdLineHandlerFactory() {
@@ -105,7 +128,6 @@ nsComposerCmdLineHandlerFactory.prototype = {
   },
 
   /* nsIFactory */
-
   createInstance: function(outer, iid) {
     if (outer != null) {
       throw NS_ERROR_NO_AGGREGATION;
@@ -165,6 +187,10 @@ var thisModule = {
                             "nsComposerCmdLineHandler",
                             ContractIDPrefix + "edit",
                             true, true);
+    catMan.addCategoryEntry("command-line-handler",
+                            "m-edit",
+                            ContractIDPrefix + "edit",
+                            true, true);
   },
 
   unregisterSelf: function (compMgr, location, type) {
@@ -175,6 +201,8 @@ var thisModule = {
     var catMan = Components.classes["@mozilla.org/categorymanager;1"].getService(nsICategoryManager);
     catMan.deleteCategoryEntry("command-line-argument-handlers",
                                "nsComposerCmdLineHandler", true);
+    catMan.deleteCategoryEntry("command-line-handler",
+                               "m-edit", true);
   },    
 
   canUnload: function (compMgr) {
