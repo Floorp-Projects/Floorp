@@ -176,12 +176,13 @@ private:
     nsCString m_responseText;   /* text returned from Smtp server */
     nsMsgLineStreamBuffer *m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
-    char	   *m_addressCopy;
-    char	   *m_addresses;
-    PRUint32	m_addressesLeft;
-    char	   *m_verifyAddress;
+    char           *m_addressCopy;
+    char           *m_addresses;
+    PRUint32       m_addressesLeft;
+    char           *m_verifyAddress;
     nsXPIDLCString m_mailAddr;
-    PRInt32 m_sizelimit;
+    nsXPIDLCString m_helloArgument;
+    PRInt32        m_sizelimit;
 
     // *** the following should move to the smtp server when we support
     // multiple smtp servers
@@ -256,7 +257,7 @@ private:
 
     PRInt32 SendMessageInFile();
 
-    void GetUserDomainName(nsACString& domainName);
+    void AppendHelloArgument(nsACString& aResult);
     nsresult GetPassword(char **aPassword);
     nsresult GetUsernamePassword(char **aUsername, char **aPassword);
     nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar **formatStrings, char **aPassword);

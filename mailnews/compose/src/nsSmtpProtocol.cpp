@@ -313,6 +313,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         smtpServer->GetAuthMethod(&m_prefAuthMethod);
         smtpServer->GetTrySSL(&m_prefTrySSL);
         smtpServer->GetTrySecAuth(&m_prefTrySecAuth);
+        smtpServer->GetHelloArgument(getter_Copies(m_helloArgument));
     }
 
     rv = RequestOverrideInfo(smtpServer);
@@ -353,33 +354,51 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         return;
 }
 
-void nsSmtpProtocol::GetUserDomainName(nsACString& aResult)
+void nsSmtpProtocol::AppendHelloArgument(nsACString& aResult)
 {
   nsresult rv;
   
-  PRNetAddr iaddr; // IP address for this connection
-  // our transport is always a nsISocketTransport
-  nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(m_transport); 
-  // should return the interface ip of the SMTP connection
-  // minimum case - see bug 68877 and RFC 2821, chapter 4.1.1.1
-  rv = socketTransport->GetSelfAddr(&iaddr);
-
-  if (NS_SUCCEEDED(rv))
+  // is a custom EHLO/HELO argument configured for the transport to be used?
+  if (!m_helloArgument.IsEmpty())
   {
-    // turn it into a string
-    char ipAddressString[64];
-    if (PR_NetAddrToString(&iaddr, ipAddressString, sizeof(ipAddressString)) == PR_SUCCESS) 
-    {
-      NS_ASSERTION(PR_IsNetAddrType(&iaddr, PR_IpAddrV4Mapped) == PR_FALSE,
-        "unexpected IPv4-mapped IPv6 address");
-
-      if (iaddr.raw.family == PR_AF_INET6)   // IPv6 style address?
-        aResult.AssignLiteral("[IPv6:");
+      aResult += m_helloArgument;
+  }
+  else
+  {
+      // is a FQDN known for this system?
+      char hostName[256];
+      PR_GetSystemInfo(PR_SI_HOSTNAME_UNTRUNCATED, hostName, sizeof hostName);
+      if ((hostName[0] != '\0') && (strchr(hostName, '.') != NULL))
+      {
+          aResult += hostName;
+      }
       else
-        aResult.AssignLiteral("[");
+      {
+          PRNetAddr iaddr; // IP address for this connection
+          // our transport is always a nsISocketTransport
+          nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(m_transport); 
+          // should return the interface ip of the SMTP connection
+          // minimum case - see bug 68877 and RFC 2821, chapter 4.1.1.1
+          rv = socketTransport->GetSelfAddr(&iaddr);
 
-      aResult.Append(nsDependentCString(ipAddressString) + NS_LITERAL_CSTRING("]"));
-    }
+          if (NS_SUCCEEDED(rv))
+          {
+              // turn it into a string
+              char ipAddressString[64];
+              if (PR_NetAddrToString(&iaddr, ipAddressString, sizeof(ipAddressString)) == PR_SUCCESS) 
+              {
+                  NS_ASSERTION(PR_IsNetAddrType(&iaddr, PR_IpAddrV4Mapped) == PR_FALSE,
+                               "unexpected IPv4-mapped IPv6 address");
+
+                  if (iaddr.raw.family == PR_AF_INET6)   // IPv6 style address?
+                      aResult.AppendLiteral("[IPv6:");
+                  else
+                      aResult.AppendLiteral("[");
+
+                  aResult.Append(nsDependentCString(ipAddressString) + NS_LITERAL_CSTRING("]"));
+              }
+          }
+      }
   }
 }
 
@@ -506,7 +525,6 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length) 
 {
   PRInt32 status = 0;
-  nsCAutoString buffer("EHLO ");
   
   if (m_responseCode != 220)
   {
@@ -515,31 +533,18 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 #endif
     nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_GREETING,
                           m_responseText.get());
-
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
     return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
   }
   
-  char hostName[256];
-  PR_GetSystemInfo(PR_SI_HOSTNAME_UNTRUNCATED, hostName, sizeof hostName);
-
-  if ((hostName[0] != '\0') && (strchr(hostName, '.') != NULL))
-   {
-      buffer += hostName;
-   }
-  else
-  {
-    nsCAutoString domainName(256);
-    
-    GetUserDomainName(domainName);
-    buffer += domainName;
-    // buffer += " hostname not available";
-  }
+  nsCAutoString buffer("EHLO ");
+  AppendHelloArgument(buffer);
   buffer += CRLF;
   
   nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+
   status = SendData(url, buffer.get());
   
   m_nextState = SMTP_RESPONSE;
@@ -680,22 +685,11 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
                 return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
             }
 
-          nsCAutoString buffer("HELO ");
-          char hostName[256];
-          PR_GetSystemInfo(PR_SI_HOSTNAME_UNTRUNCATED, hostName, sizeof hostName);
-          if ((hostName[0] != '\0') && (strchr(hostName, '.') != NULL))
-          {
-            buffer += hostName;
-          }
-          else
-          {
-            nsCAutoString domainName(256);
-              
-            GetUserDomainName(domainName);
-            buffer += domainName;
-          }
-          buffer += CRLF;
-          status = SendData(url, buffer.get());
+            nsCAutoString buffer("HELO ");
+            AppendHelloArgument(buffer);
+            buffer += CRLF;
+
+            status = SendData(url, buffer.get());
 
             m_nextState = SMTP_RESPONSE;
             m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
@@ -751,7 +745,6 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if(m_prefTrySecAuth)
             {
-
                 if (responseLine.Find("GSSAPI", PR_TRUE, 5) >= 0)
                     SetFlag(SMTP_AUTH_GSSAPI_ENABLED);
 

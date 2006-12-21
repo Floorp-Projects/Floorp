@@ -229,6 +229,21 @@ nsSmtpServer::GetTrySecAuth(PRBool *trySecAuth)
 }
 
 NS_IMETHODIMP
+nsSmtpServer::GetHelloArgument(char * *aHelloArgument)
+{
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aHelloArgument);
+    rv = mPrefBranch->GetCharPref("hello_argument", aHelloArgument);
+    if (NS_FAILED(rv))
+    {
+        rv = mDefPrefBranch->GetCharPref("hello_argument", aHelloArgument);
+        if (NS_FAILED(rv))
+            *aHelloArgument = nsnull;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
 {
     NS_ENSURE_ARG_POINTER(authMethod);

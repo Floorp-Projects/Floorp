@@ -40,11 +40,11 @@
 
 interface nsIAuthPrompt;
 
-[scriptable, uuid(556ee1e9-8221-4c00-a502-8ce44f029b47)]
+[scriptable, uuid(eef39b32-9050-11db-92fa-000c6e0abfac)]
 interface nsISmtpServer : nsISupports {
-    
+
     attribute string key;       // unique identifier
-    
+
     attribute AUTF8String description; // user provided description for the server
     attribute string hostname;
     attribute PRInt32 port;
@@ -58,6 +58,7 @@ interface nsISmtpServer : nsISupports {
     attribute long authMethod;
     readonly attribute boolean trySecAuth;
     attribute long trySSL;
+    readonly attribute string helloArgument;
 
     readonly attribute string serverURI;
     string getPasswordWithUI(in wstring promptString, in wstring promptTitle,
@@ -66,5 +67,5 @@ interface nsISmtpServer : nsISupports {
                              in nsIAuthPrompt netPrompt, out string userid, out string password);
     void forgetPassword();
 
-	void clearAllValues();
+    void clearAllValues();
 };
