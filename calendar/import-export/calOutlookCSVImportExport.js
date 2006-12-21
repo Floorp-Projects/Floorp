@@ -274,7 +274,9 @@ function csv_importFromStream(aStream, aCount) {
                                       .createInstance(Components.interfaces.calIEvent);
 
                 event.title = title;
-                sDate.isDate = (locale.valueTrue == eventFields[args.allDayIndex]);
+                if (sDate) {
+                    sDate.isDate = (locale.valueTrue == eventFields[args.allDayIndex]);
+                }
                 if (locale.valueTrue == eventFields[args.privateIndex])
                     event.privacy = "PRIVATE";
 
@@ -353,6 +355,10 @@ function parseDateTime(aDate, aTime, aLocale)
 
     var rd = aLocale.dateRe.exec(aDate);
     var rt = aLocale.timeRe.exec(aTime);
+
+    if (!rd || !rt) {
+        return null;
+    }
     
     date.year = rd[aLocale.dateYearIndex];
     date.month = rd[aLocale.dateMonthIndex] - 1;
