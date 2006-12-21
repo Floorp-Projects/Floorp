@@ -79,15 +79,11 @@ my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 
-# Make sure the user is authorized to access sanitycheck.cgi.  Access
-# is restricted to logged-in users who have "editbugs" privileges,
-# which is a reasonable compromise between allowing all users to access
-# the script (creating the potential for denial of service attacks)
-# and restricting access to this installation's administrators (which
-# prevents users with a legitimate interest in Bugzilla integrity
-# from accessing the script).
-Bugzilla->user->in_group("editbugs")
-  || ThrowUserError("auth_failure", {group  => "editbugs",
+# Make sure the user is authorized to access sanitycheck.cgi.
+# As this script can now alter the group_control_map table, we no longer
+# let users with editbugs privs run it anymore.
+Bugzilla->user->in_group("editcomponents")
+  || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "run",
                                      object => "sanity_check"});
 
