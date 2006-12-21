@@ -1061,7 +1061,7 @@ sub ChangePartition {
                                     "doclinks = ?, " .
                                     "ownerspagedisplay = ? " .
               "WHERE id = ?",
-        undef, $F::partition, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::ownerspagedisplay, $F::partitionid);
+        undef, $F::partition, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, defined($F::ownerspagedisplay) ? 'Yes' : 'No', $F::partitionid);
 
     $::db->do("DELETE FROM files WHERE partitionid = ?", undef, $F::partitionid);
     foreach my $f2 (@files) {
