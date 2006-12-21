@@ -944,6 +944,11 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
       NS_NOTREACHED("Reparenting something that has no usable parent? "
                     "Shouldn't happen!");
     }
+    // XXX need to do something here to produce the correct style context
+    // for an IB split whose first inline part is inside a first-line frame.
+    // Currently the IB anonymous block's style context takes the first part's
+    // style context as parent, which is wrong since first-line style should
+    // not apply to the anonymous block.
 
     newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
                                                  newParentContext);
@@ -985,6 +990,20 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
 
           childList = aFrame->GetAdditionalChildListName(listIndex++);
         } while (childList);
+
+        // If this frame is part of an IB split, then the style context of
+        // the next part of the split might be a child of our style context.
+        // Reparent its style context just in case one of our ancestors
+        // (split or not) hasn't done so already). It's not a problem to
+        // reparent the same frame twice because the "if (newContext !=
+        // oldContext)" check will prevent us from redoing work.
+        if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+            !aFrame->GetPrevInFlow()) {
+          nsIFrame* sib = NS_STATIC_CAST(nsIFrame*, aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialSibling));
+          if (sib) {
+            ReParentStyleContext(sib);
+          }
+        }
 
         // do additional contexts 
         PRInt32 contextIndex = -1;
