@@ -1243,7 +1243,7 @@
       </menu>
       <menu id="viewMessageViewMenu" label="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;"
             observes="mailHideMenus" oncommand="ViewChangeByMenuitem(event.target);">
-        <menupopup id="viewMessagePopup">
+        <menupopup id="viewMessagePopup" onpopupshowing="RefreshViewPopup(this, false);">
           <menuitem id="viewMessageAll"    value="0" type="radio" label="&viewAll.label;" accesskey="&viewAll.accesskey;"/>
           <menuitem id="viewMessageUnread" value="1" type="radio" label="&viewUnread.label;" accesskey="&viewUnread.accesskey;"/>
           <menuseparator/>
