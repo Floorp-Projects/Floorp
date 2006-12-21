@@ -329,6 +329,7 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aOldFrame);
 
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     GetPresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   } else {
