@@ -151,13 +151,6 @@
             label="&calendar.displaytodos.checkbox.label;"
             accesskey="&calendar.displaytodos.checkbox.accesskey;"
             observes="toggle_tasks_in_view"/>
-            
-<!-- Disable this until Sunbird gets mail support
-  <menuseparator/>
-  <menuitem label="&calendar.context.emailevent.label;"
-            accesskey="&calendar.context.emailevent.accesskey;"
-            observes="send_event_command"/>
--->
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
@@ -574,8 +567,7 @@
     </vbox>
 
     <splitter id="calendar-splitter" collapse="before" persist="state"
-              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"
-              onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );"/>
+              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"/>
          
     <vbox flex="1">
       <vbox id="bottom-events-box" persist="height">
@@ -669,7 +661,7 @@
       </vbox>
 
       <splitter id="calendar-view-splitter" collapse="before" persist="state"
-                class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarViewSplitter()', 1 );">
+                class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="setTimeout('refreshEventTree();', 10 );">
         <grippy class="sidebar-splitter-grippy"/>
       </splitter>
 

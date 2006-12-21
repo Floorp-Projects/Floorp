@@ -109,8 +109,6 @@ function calendarInit()
    
    scheduleMidnightUpdate(refreshUIBits);
 
-   checkForMailNews();
-
    initCalendarManager();
 
    // fire up the alarm service

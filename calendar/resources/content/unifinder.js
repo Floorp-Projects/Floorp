@@ -374,12 +374,7 @@ function unifinderOnSelect( event )
    
    if( ArrayOfEvents.length == 1 )
    {
-      /*start date is either the next or last occurence, or the start date of the event */
-      var eventStartDate = calendarEvent.startDate.jsDate;
-      
-      /* you need this in case the current day is not visible. */
-      if( gCalendarWindow.currentView.getVisibleEvent( calendarEvent ) == false )
-         gCalendarWindow.currentView.goToDay( eventStartDate, true);
+       currentView().goToDay(ArrayOfEvents[0].startDate);
    }
    
    // Pass in true, so we don't end up in a circular loop
@@ -725,7 +720,7 @@ function refreshEventTree( eventArray )
          break;
 
       case "current":
-         var SelectedDate = gCalendarWindow.getSelectedDate();
+         var SelectedDate = currentView().selectedDay.jsDate;
          StartDate = new Date( SelectedDate.getFullYear(), SelectedDate.getMonth(), SelectedDate.getDate(), 0, 0, 0 );
          EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1000 );
          break;

@@ -62,9 +62,6 @@
   <!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/import-export.js"/>
 
-  <!-- NEEDED FOR MAIL SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
-
   <!-- NEEDED FOR PUBLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 

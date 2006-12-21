@@ -44,7 +44,7 @@ function hiddenWindowStartup()
 
   // Disable menus which are not appropriate
   var disabledItems = ['new_command', 'new_todo_command', 'new_calendar_command', 
-                       'modify_command', 'close_calendar_command', 'send_event_command', 
+                       'modify_command', 'close_calendar_command',
                        'print_command', 'cut_command', 'copy_command', 'paste_command', 
                        'delete_command', 'delete_todo_command', 'select_all_command', 
                        'day_view_command', 'week_view_command', 'multiweek_view_command', 

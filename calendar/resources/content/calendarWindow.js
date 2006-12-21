@@ -71,47 +71,10 @@ function CalendarWindow( )
     *   switch to the new views
    **/
    this.currentView = {
-       hiliteTodaysDate: function() {
-           document.getElementById("view-deck").selectedPanel.goToDay(now());
-       },
-       // This will get converted again to a calDateTime, which is silly, but let's
-       // not change too much right now.
-       getNewEventDate: function() {
-           var d = document.getElementById("view-deck").selectedPanel.selectedDay;
-           if (!d)
-               d = now();
-           d = d.getInTimezone("floating");
-           d.hour = now().hour;
-           return d.jsDate;
-       },
-       get eventList() { return new Array(); },
-       goToNext: function() {
-           document.getElementById("view-deck").selectedPanel.moveView(1);
-       },
-       goToPrevious: function() {
-           document.getElementById("view-deck").selectedPanel.moveView(-1);
-       },
        changeNumberOfWeeks: function(menuitem) {
            var mwView = document.getElementById("view-deck").selectedPanel;
            mwView.weeksInView = menuitem.value;
        },
-       get selectedDate() { return this.getNewEventDate(); },
-       get displayStartDate() { return document.getElementById("view-deck").selectedPanel.startDay; },
-       get displayEndDate() { return document.getElementById("view-deck").selectedPanel.endDay; },
-       getVisibleEvent: function(event) { 
-           var view = document.getElementById("view-deck").selectedPanel
-           if ((event.startDate.compare(view.endDay) != 1) &&
-               (event.endDate.compare(view.startDay) != -1)) {
-               return true;
-           }
-           return false;
-       },
-       goToDay: function(newDate) {
-           document.getElementById("view-deck").selectedPanel.goToDay(jsDateToDateTime(newDate));
-       },
-       refresh: function() {
-           this.goToDay(this.getNewEventDate());
-       }
    };
 
    // Get the last view that was shown before shutdown, and switch to it
@@ -152,11 +115,10 @@ CalendarWindow.prototype.goToToday = function calWin_goToToday( )
 
 CalendarWindow.prototype.pickAndGoToDate = function calWin_pickAndGoToDate( )
 {
-  var currentView = document.getElementById("view-deck").selectedPanel;
   var args = new Object();
-  args.initialDate = this.getSelectedDate();  
+  args.initialDate = currentView().selectedDay.getInTimezone("floating").jsDate;
   args.onOk = function receiveAndGoToDate( pickedDate ) {
-    currentView.goToDay( jsDateToDateTime(pickedDate) );
+    currentView().goToDay( jsDateToDateTime(pickedDate) );
     document.getElementById( "lefthandcalendar" ).value = pickedDate;
   };
   openDialog("chrome://calendar/content/goToDateDialog.xul",
@@ -181,20 +143,6 @@ CalendarWindow.prototype.goToDay = function calWin_goToDay( newDate )
     cdt.timezone = view.timezone;
     view.goToDay(cdt);
 }
-
-/** PUBLIC
-*
-*   Get the selected date
-*/
-
-CalendarWindow.prototype.getSelectedDate = function calWin_getSelectedDate( )
-{
-    // unifinder.js wants this as a js-date, stupid timezone issues between
-    // js-dates and calDateTimes
-    return document.getElementById("view-deck").selectedPanel.selectedDay
-                   .getInTimezone("floating").jsDate;
-}
-
 
 /** PRIVATE
 *
@@ -231,29 +179,4 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
     prevCommand.setAttribute("label", prevCommand.getAttribute(labelAttribute));
     var nextCommand = document.getElementById("calendar-go-menu-next");
     nextCommand.setAttribute("label", nextCommand.getAttribute(labelAttribute));
-}
-
-CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()
-{
-    return;
-}
-
-CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseUpCalendarViewSplitter()
-{
-   //check if calendar-view-splitter is collapsed
-   if( document.getElementById( "bottom-events-box" ).getAttribute( "collapsed" ) != "true" )
-   {
-      //do this because if they started with it collapsed, its not showing anything right now.
-
-      //in a setTimeout to give the pull down menu time to draw.
-      setTimeout( "refreshEventTree();", 10 );
-   }
-}
-
-/** PUBLIC
-*   The resize handler, used to set the size of the views so they fit the screen.
-*/
-CalendarWindow.prototype.doResize = function calWin_doResize(){
-  if( gCalendarWindow )
-    return;
 }
