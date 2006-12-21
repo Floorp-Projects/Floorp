@@ -893,24 +893,93 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
+GetSwitchTableBounds(JSScript *script, uintN offset,
+                     uintN *start, uintN *end)
+{
+    jsbytecode *pc;
+    JSOp op;
+    ptrdiff_t jmplen;
+    jsint low, high, n;
+
+    pc = script->code + offset;
+    op = *pc;
+    switch (op) {
+      case JSOP_TABLESWITCHX:
+        jmplen = JUMPX_OFFSET_LEN;
+        goto jump_table;
+      case JSOP_TABLESWITCH:
+        jmplen = JUMP_OFFSET_LEN;
+      jump_table:
+        pc += jmplen;
+        low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        high = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        n = high - low + 1;
+        break;
+
+      case JSOP_LOOKUPSWITCHX:
+        jmplen = JUMPX_OFFSET_LEN;
+        goto lookup_table;
+      default:
+        JS_ASSERT(op == JSOP_LOOKUPSWITCH);
+        jmplen = JUMP_OFFSET_LEN;
+      lookup_table:
+        pc += jmplen;
+        n = GET_ATOM_INDEX(pc);
+        pc += ATOM_INDEX_LEN;
+        jmplen += ATOM_INDEX_LEN;
+        break;
+    }
+
+    *start = (uintN)(pc - script->code);
+    *end = *start + (uintN)(n * jmplen);
+}
+
+
+/*
+ * SrcNotes assumes that SRC_METHODBASE should be distinguished from SRC_LABEL
+ * using the bytecode the source note points to.
+ */
+JS_STATIC_ASSERT(SRC_LABEL == SRC_METHODBASE);
+
+static void
 SrcNotes(JSContext *cx, JSScript *script)
 {
-    uintN offset, delta, caseOff;
+    uintN offset, delta, caseOff, switchTableStart, switchTableEnd;
     jssrcnote *notes, *sn;
     JSSrcNoteType type;
+    const char *name;
+    JSOp op;
     jsatomid atomIndex;
     JSAtom *atom;
 
     fprintf(gOutFile, "\nSource notes:\n");
     offset = 0;
     notes = SCRIPT_NOTES(script);
+    switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         delta = SN_DELTA(sn);
         offset += delta;
-        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                PTRDIFF(sn, notes, jssrcnote), offset, delta,
-                js_SrcNoteSpec[SN_TYPE(sn)].name);
         type = (JSSrcNoteType) SN_TYPE(sn);
+        name = js_SrcNoteSpec[type].name;
+        if (type == SRC_LABEL) {
+            /* Heavily overloaded case. */
+            if (switchTableStart <= offset && offset < switchTableEnd) {
+                name = "case";
+            } else {
+                op = script->code[offset];
+                if (op == JSOP_GETMETHOD || op == JSOP_SETMETHOD) {
+                    /* This is SRC_METHODBASE which we print as SRC_PCBASE. */
+                    type = SRC_PCBASE;
+                    name = "methodbase";
+                } else {
+                    JS_ASSERT(op == JSOP_NOP);
+                }
+            }
+        }
+        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
+                PTRDIFF(sn, notes, jssrcnote), offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
             fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
@@ -961,6 +1030,8 @@ SrcNotes(JSContext *cx, JSScript *script)
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 fprintf(gOutFile, " first case offset %u", caseOff);
+            GetSwitchTableBounds(script, offset,
+                                 &switchTableStart, &switchTableEnd);
             break;
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
