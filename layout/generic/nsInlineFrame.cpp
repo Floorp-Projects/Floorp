@@ -416,9 +416,8 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
 
       // Because we lazily set the parent pointer of child frames we get from
       // our prev-in-flow's overflow list, it's possible that we have not set
-      // the parent pointer for these frames. Check the first frame to see, and
-      // if we haven't set the parent pointer then set it now
-      mFrames.AppendFrames(overflowFrames->GetParent() == this ? nsnull : this, overflowFrames);
+      // the parent pointer for these frames.
+      mFrames.AppendFrames(this, overflowFrames);
     }
   }
 
