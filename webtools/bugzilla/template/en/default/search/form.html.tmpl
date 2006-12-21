@@ -44,8 +44,8 @@ var tms = new Array();
 [% FOREACH c = classification %]
   prods[[% nclass FILTER js %]] = [
     [% sep = '' %]
-    [%- FOREACH item = c.products -%]
-      [%- IF user.can_see_product(item.name) && item.components.size -%]
+    [%- FOREACH item = user.get_selectable_products(c.id) -%]
+      [%- IF item.components.size -%]
         [%- sep FILTER js %]'[% item.name FILTER js %]'
         [%- sep = ',' -%] 
       [%- END -%]
