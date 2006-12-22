@@ -61,6 +61,7 @@ public:
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
+    nsresult UpdateFontList();
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

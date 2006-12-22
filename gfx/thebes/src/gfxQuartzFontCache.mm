@@ -6,6 +6,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  * 
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
  *
@@ -47,17 +48,7 @@
 - (ATSUFontID)_atsFontID;
 @end
 
-gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
-
-gfxQuartzFontCache::gfxQuartzFontCache() {
-    mCache.Init();
-}
-
-#define SYNTHESIZED_FONT_TRAITS (NSBoldFontMask | NSItalicFontMask)
-
-
-#define IMPORTANT_FONT_TRAITS (0 \
-    | NSBoldFontMask       \
+#define NON_WEIGHT_TRAITS_MASK (0 \
     | NSCompressedFontMask \
     | NSCondensedFontMask \
     | NSExpandedFontMask \
@@ -65,7 +56,12 @@ gfxQuartzFontCache::gfxQuartzFontCache() {
     | NSNarrowFontMask \
     | NSPosterFontMask \
     | NSSmallCapsFontMask \
+    | NSFixedPitchFontMask \
 )
+
+#define IMPORTANT_TRAITS_MASK (NON_WEIGHT_TRAITS_MASK | NSBoldFontMask)
+
+#define SAME_TRAITS(a,b,mask) (((a) & mask) == ((b) & mask))
 
 #define DESIRED_WEIGHT 5
 
@@ -78,6 +74,281 @@ gfxQuartzFontCache::gfxQuartzFontCache() {
 #define INDEX_FONT_EXTRA_NAME 1
 #define INDEX_FONT_WEIGHT 2
 #define INDEX_FONT_TRAITS 3
+
+/* FontEntry */
+
+NSFont*
+FontEntry::GetNSFont(float aSize)
+{
+    NSString *name = GetNSStringForString(mName);
+    return [NSFont fontWithName:name size:aSize];
+}
+
+PRBool
+FontEntry::IsFixedPitch()
+{
+    return mTraits & NSFixedPitchFontMask ? PR_TRUE : PR_FALSE;
+}
+
+PRBool
+FontEntry::IsItalicStyle()
+{
+    return mTraits & NSItalicFontMask ? PR_TRUE : PR_FALSE;
+}
+
+PRBool
+FontEntry::IsBold()
+{
+    return mWeight >= APPLE_BOLD_WEIGHT ? PR_TRUE : PR_FALSE;
+}
+
+void
+FontEntry::Init()
+{
+    NSFont *font = GetNSFont(10.0);
+    NSFontManager *fontManager = [NSFontManager sharedFontManager];
+    mWeight = [fontManager weightOfFont:font];
+    mTraits = [fontManager traitsOfFont:font];
+}
+
+void
+FontEntry::GetStringForNSString(const NSString *aSrc, nsAString& aDist)
+{
+    aDist.SetLength([aSrc length]);
+    [aSrc getCharacters:aDist.BeginWriting()];
+}
+
+NSString*
+FontEntry::GetNSStringForString(const nsAString& aSrc)
+{
+    return [NSString stringWithCharacters:aSrc.BeginReading()
+                     length:aSrc.Length()];
+}
+
+/* gfxQuartzFontCache */
+
+gfxQuartzFontCache *gfxQuartzFontCache::sSharedFontCache = nsnull;
+
+gfxQuartzFontCache::gfxQuartzFontCache()
+{
+    mCache.Init();
+    mFamilies.Init(30);
+    mPostscriptFonts.Init(60);
+    mAllFontNames.Init(100);
+    InitFontList();
+    ::ATSFontNotificationSubscribe(ATSNotification,
+                                   kATSFontNotifyOptionDefault,
+                                   (void*)this, nsnull);
+}
+
+void
+gfxQuartzFontCache::GenerateFontListKey(const nsAString& aKeyName,
+                                        nsAString& aResult)
+{
+    aResult = aKeyName;
+    ToLowerCase(aResult);
+}
+
+static TextEncoding sUTF8Encoding =
+    ::CreateTextEncoding(kTextEncodingUnicodeDefault,
+                         kTextEncodingDefaultVariant,
+                         kUnicodeUTF8Format);
+
+PRBool
+gfxQuartzFontCache::AppendFontFamily(NSFontManager *aFontManager,
+                                     NSString *aName,
+                                     PRBool aNameIsPostscriptName)
+{
+    NSString *name;
+    if (aNameIsPostscriptName) {
+        // we should use display name that is localized the family name and
+        // extra name. (e.g., "mono")
+        NSFont *font = [NSFont fontWithName:aName size:10.0];
+        name = [font displayName];
+    } else {
+        // we should use localzed simple family name.
+        name = [aFontManager localizedNameForFamily:aName face:nil];
+    }
+    nsAutoString str;
+    str.SetLength([name length]);
+    [name getCharacters:str.BeginWriting()];
+    nsAutoString key;
+    GenerateFontListKey(str, key);
+    nsRefPtr<FamilyEntry> fe;
+    if (mFamilies.Get(key, &fe))
+        return PR_FALSE;
+    fe = new FamilyEntry(str);
+    mFamilies.Put(key, fe);
+    return PR_TRUE;
+}
+
+void
+gfxQuartzFontCache::InitFontList()
+{
+    mCache.Clear();
+    mFamilies.Clear();
+    mPostscriptFonts.Clear();
+    mAllFontNames.Clear();
+
+    nsAutoString key;
+
+    // We should use cocoa for listing up the font families.
+    NSFontManager *fontManager = [NSFontManager sharedFontManager];
+    NSArray *families = [fontManager availableFontFamilies];
+    PRUint32 familiesCount = [families count];
+    for (PRUint32 i = 0; i < familiesCount; i++) {
+        NSString *name = [families objectAtIndex:i];
+        if (!AppendFontFamily(fontManager, name, PR_FALSE))
+            continue;
+        // If this family has both variable pitch font and
+        // fixed pitch font, we should append the font to family.
+        // Because CSS cannot specify the pitch in the same family. 
+        NSFont *font = [NSFont fontWithName:name size:10.0];
+        PRBool isFixedPitch =
+            [fontManager traitsOfFont:font] & NSFixedPitchFontMask ? PR_TRUE :
+                                                                     PR_FALSE;
+        NSArray *members = [fontManager availableMembersOfFontFamily:name];
+        PRUint32 membersCount = [members count];
+        for (PRUint32 j = 0; j < membersCount; j++) {
+            NSArray *member = [members objectAtIndex:j];
+            PRUint32 newTraits =
+                [[member objectAtIndex:INDEX_FONT_TRAITS] unsignedIntValue];
+            if ((isFixedPitch && !(newTraits & NSFixedPitchFontMask)) ||
+                (!isFixedPitch && (newTraits & NSFixedPitchFontMask))) {
+                AppendFontFamily(fontManager,
+                    [member objectAtIndex:INDEX_FONT_POSTSCRIPT_NAME], PR_TRUE);
+                break;
+            }
+        }
+    }
+
+    // We should cache for all alias for all families.
+    // We will use this for resolving the font names to actual fonts.
+    // We should use ATSUI for this, because cocoa cannot show the all aliases.
+    ItemCount fontCount;
+    OSStatus err = ::ATSUFontCount(&fontCount);
+    if (err != noErr)
+        return;
+    ATSUFontID fontIDs[fontCount];
+    ItemCount arraySize = fontCount;
+    err = ::ATSUGetFontIDs(fontIDs, arraySize, &fontCount);
+    if (err != noErr)
+        return;
+    for (ItemCount i = 0; i < fontCount; i++) {
+        struct FontNames {
+            FontNames() {
+                mShouldProgress = PR_FALSE;
+            }
+            nsStringArray mNames;
+            nsString mPostscriptName;
+            PRBool mShouldProgress;
+        };
+        FontNames names;
+
+        ItemCount nameCount;
+        err = ::ATSUCountFontNames(fontIDs[i], &nameCount);
+        if (err != noErr || nameCount == 0)
+            continue;
+        for (ItemCount j = 0; j < nameCount; j++) {
+            ByteCount len;
+            err = ::ATSUGetIndFontName(fontIDs[i], j, 0, nsnull, &len,
+                                       nsnull, nsnull, nsnull, nsnull);
+            if (err != noErr || len == 0)
+                continue;
+            char buf[len];
+            FontNameCode nameCode;
+            FontPlatformCode platformCode;
+            FontScriptCode scriptCode;
+            FontLanguageCode langCode;
+            err = ::ATSUGetIndFontName(fontIDs[i], j, len,
+                                       buf, &len,
+                                       &nameCode, &platformCode,
+                                       &scriptCode, &langCode);
+            if (err != noErr || len == 0)
+                continue;
+            switch (nameCode) {
+                case kFontFamilyName:
+                case kFontFullName:
+                case kFontPostscriptName:
+                    break;
+                default:
+                    continue;
+            }
+            nsAutoString fontName;
+            if (platformCode == kFontMacintoshPlatform) {
+                CFStringEncoding encoding;
+                err = ::GetTextEncodingFromScriptInfo(scriptCode, langCode,
+                                                      kTextRegionDontCare,
+                                                      &encoding);
+                if (err != noErr)
+                    continue;
+                CFStringRef cfName =
+                    ::CFStringCreateWithBytes(nsnull, (UInt8*)buf, len,
+                                              encoding, false);
+                fontName.Assign(::CFStringGetCharactersPtr(cfName),
+                                ::CFStringGetLength(cfName));
+                // If the font name is not east asian name,
+                // the fontName is empty. We should retry with UTF8 string.
+                // Don't swap this order.
+                if (fontName.IsEmpty()) {
+                    nsCAutoString cName(::CFStringGetCStringPtr(cfName,
+                                                                sUTF8Encoding));
+                    fontName = NS_ConvertUTF8toUTF16(cName);
+                }
+                ::CFRelease(cfName);
+            } else if (platformCode == kFontUnicodePlatform ||
+                       platformCode == kFontMicrosoftPlatform) {
+                fontName.Assign((PRUnichar*)buf, len / sizeof(PRUnichar));
+            } else {
+                continue;
+            }
+
+            if (fontName[0] == PRUnichar('.') ||
+                fontName[0] == PRUnichar('%')) {
+                // We should ignore this font.
+                names.mShouldProgress = PR_FALSE;
+                break;
+            }
+            names.mShouldProgress = PR_TRUE;
+
+            switch (nameCode) {
+                case kFontFamilyName:
+                case kFontFullName:
+                    names.mNames.AppendString(fontName);
+                    break;
+                case kFontPostscriptName:
+                    NS_ASSERTION(names.mPostscriptName.IsEmpty(),
+                                 "A font id has two or more postscript name!");
+                    names.mPostscriptName = fontName;
+                    break;
+            }
+        }
+
+        if (!names.mShouldProgress)
+            continue;
+        if (names.mPostscriptName.IsEmpty())
+            continue;
+        nsRefPtr<FontEntry> psFont = new FontEntry(names.mPostscriptName);
+        GenerateFontListKey(names.mPostscriptName, key);
+        mPostscriptFonts.Put(key, psFont);
+
+        for (PRInt32 i = 0; i < names.mNames.Count(); i++) {
+            GenerateFontListKey(*names.mNames[i], key);
+            nsAutoString str;
+            if (mAllFontNames.Get(key, &str))
+                continue;
+            mAllFontNames.Put(key, psFont->Name());
+        }
+    }
+}
+
+void
+gfxQuartzFontCache::ATSNotification(ATSFontNotificationInfoRef aInfo,
+                                    void* aUserArg)
+{
+    gfxQuartzFontCache *qfc = (gfxQuartzFontCache*)aUserArg;
+    qfc->UpdateFontList();
+}
 
 // see docs for NSFontManager-availableMembersOfFontFamily:
 static const int CSSWeightToAppleWeight[] = {
@@ -92,6 +363,24 @@ static const int CSSWeightToAppleWeight[] = {
     9,
     10,
     12
+};
+
+static const int AppleWeightToCSSWeight[] = {
+    0,
+    1, // 1. 
+    1, // 2.  W1, ultralight
+    2, // 3.  W2, extralight
+    3, // 4.  W3, light
+    4, // 5.  W4, semilight
+    5, // 6.  W5, medium
+    6, // 7.
+    6, // 8.  W6, semibold
+    7, // 9.  W7, bold
+    8, // 10. W8, extrabold
+    8, // 11.
+    9, // 12. W9, ultrabold
+    9, // 13
+    9  // 14
 };
 
 // from the given CSS Weight, how many steps do we need to take in Apple Weights
@@ -110,112 +399,121 @@ static const int AppleWeightStepsToNextCSSWeight[] = {
     2
 };
 
-/*
- * Return PR_TRUE if the candidate font is acceptable for
- * the given desired traits.
- */
-static PRBool
-acceptableChoice (NSFontTraitMask desiredTraits, int desiredWeight,
-                  NSFontTraitMask candidateTraits, int candidateWeight)
+NSFont*
+gfxQuartzFontCache::FindFontWeight(NSFontManager *aFontManager,
+                                   FontEntry *aOriginalFont,
+                                   NSFont *aCurrentFont,
+                                   const gfxFontStyle *aStyle)
 {
-    // remove the traits we can synthesize, and compare the others
-    desiredTraits &= ~SYNTHESIZED_FONT_TRAITS;
-    return (candidateTraits & desiredTraits) == desiredTraits;
-}
+    // Assume that the weight of gfxFontStyle is a relative weight for the
+    // specified font, e.g., if a font has three font they are light, normal,
+    // and bold, when the light font is specified, we should use normal font
+    // for the bold style of light font insted of the bold font.
+    PRInt8 baseCSSWeight, weightOffset;
+    aStyle->ComputeWeightAndOffset(&baseCSSWeight, &weightOffset);
+    PRInt32 fontBaseCSSWeight =
+        PR_MIN(PR_MAX(AppleWeightToCSSWeight[aOriginalFont->Weight()], 1), 9);
+    PRInt32 desiredCSSWeight =
+        PR_MIN(PR_MAX(fontBaseCSSWeight - CSS_NORMAL_WEIGHT_BASE + baseCSSWeight, 1), 9);
+    PRInt32 desiredWeight = CSSWeightToAppleWeight[desiredCSSWeight];
 
-/*
- * Return PR_TRUE if the candidate font is better than the chosen font,
- * for the given desired traits
- */
-static PRBool
-betterChoice(NSFontTraitMask desiredTraits, int desiredWeight,
-             NSFontTraitMask chosenTraits, int chosenWeight,
-             NSFontTraitMask candidateTraits, int candidateWeight)
-{
-    if (!acceptableChoice(desiredTraits, desiredWeight, candidateTraits, candidateWeight))
-        return PR_FALSE;
+    PRInt32 currentWeight = [aFontManager weightOfFont:aCurrentFont];
+    if (currentWeight == desiredWeight && weightOffset == 0)
+        return aCurrentFont;
 
-    // A list of the traits we care about.
-    // The top item in the list is the worst trait to mismatch; if a font has this
-    // and we didn't ask for it, we'd prefer any other font in the family.
-    const NSFontTraitMask masks[] = {
-        NSPosterFontMask,
-        NSSmallCapsFontMask,
-        NSItalicFontMask,
-        NSCompressedFontMask,
-        NSCondensedFontMask,
-        NSExpandedFontMask,
-        NSNarrowFontMask,
-        NSBoldFontMask,
-        0 };
-
-    int i = 0;
-    NSFontTraitMask mask;
-    while ((mask = masks[i++])) {
-        BOOL desired = (desiredTraits & mask) != 0;
-        BOOL chosenHasUnwantedTrait = (desired != ((chosenTraits & mask) != 0));
-        BOOL candidateHasUnwantedTrait = (desired != ((candidateTraits & mask) != 0));
-        if (!candidateHasUnwantedTrait && chosenHasUnwantedTrait)
-            return PR_TRUE;
-        if (!chosenHasUnwantedTrait && candidateHasUnwantedTrait)
-            return PR_FALSE;
+    PRUint32 traits = [aFontManager traitsOfFont:aCurrentFont];
+    NSFont *newFont = aCurrentFont;
+    if (currentWeight != desiredWeight) {
+        NSFont *newFont = [aFontManager fontWithFamily:[aCurrentFont familyName]
+                                        traits:traits weight:desiredWeight
+                                        size:aStyle->size];
+        if (!SAME_TRAITS(traits, [aFontManager traitsOfFont:newFont],
+                         NON_WEIGHT_TRAITS_MASK))
+            newFont = aCurrentFont;
     }
 
-    int chosenWeightDelta = chosenWeight - desiredWeight;
-    int candidateWeightDelta = candidateWeight - desiredWeight;
+    newFont = aCurrentFont;
+    if (weightOffset < 0) {
+        while (weightOffset != 0 &&
+               [aFontManager weightOfFont:newFont] > desiredWeight) {
+            NSFont *font = [aFontManager convertWeight:NO ofFont:newFont];
+            if (newFont == font)
+                break;
+            if (!SAME_TRAITS(traits, [aFontManager traitsOfFont:font],
+                             NON_WEIGHT_TRAITS_MASK))
+                break;
+            newFont = font;
+            weightOffset++;
+        }
+    } else if (weightOffset > 0) {
+        while (weightOffset != 0 &&
+               [aFontManager weightOfFont:newFont] < desiredWeight) {
+            NSFont *font = [aFontManager convertWeight:YES ofFont:newFont];
+            if (newFont == font)
+                break;
+            if (!SAME_TRAITS(traits, [aFontManager traitsOfFont:font],
+                             NON_WEIGHT_TRAITS_MASK))
+                break;
+            newFont = font;
+            weightOffset--;
+        }
+    }
 
-    int chosenWeightDeltaMagnitude = ABS(chosenWeightDelta);
-    int candidateWeightDeltaMagnitude = ABS(candidateWeightDelta);
+    // The last resort. Some fonts cannot be bold by "font-weight: bold;".
+    // E.g., "Hiragino Kaku Gothic Pro".
+    // Maybe, we can remove this, if cairo supports the bold and italic font
+    // dinamic generating.
+    if (aStyle->weight < CSS_NORMAL_WEIGHT_BASE &&
+        [aFontManager weightOfFont:newFont] >= aOriginalFont->Weight()) {
+        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
+                                              aCurrentFont, aStyle, PR_FALSE);
+    } else if (aStyle->weight >= CSS_BOLD_WEIGHT_BASE &&
+              [aFontManager weightOfFont:newFont] <= aOriginalFont->Weight()) {
+        newFont = FindAnotherWeightMemberFont(aFontManager, aOriginalFont,
+                                              aCurrentFont, aStyle, PR_TRUE);        
+    }
 
-    // Smaller magnitude wins.
-    // If both have same magnitude, tie breaker is that the smaller weight wins.
-    // Otherwise, first font in the array wins (should almost never happen).
-    if (candidateWeightDeltaMagnitude < chosenWeightDeltaMagnitude)
-        return PR_TRUE;
-
-    if (candidateWeightDeltaMagnitude == chosenWeightDeltaMagnitude && candidateWeight < chosenWeight)
-        return PR_TRUE;
-
-    return PR_FALSE;
+    return newFont;
 }
 
 NSFont*
-FindFontWeight (NSFontManager *fontManager, NSFont *font, int desiredWeight, int weightSteps, float size)
+gfxQuartzFontCache::FindAnotherWeightMemberFont(NSFontManager *aFontManager,
+                                                FontEntry *aOriginalFont,
+                                                NSFont *aCurrentFont,
+                                                const gfxFontStyle *aStyle,
+                                                PRBool aBolder)
 {
-    NSFont *newFont;
+    NSArray *fonts =
+        [aFontManager availableMembersOfFontFamily:[aCurrentFont familyName]];
+    PRUint32 count = [fonts count];
+    PRInt32 baseWeight = aOriginalFont->Weight();
+    PRUint32 baseTraits = [aFontManager traitsOfFont:aCurrentFont];
 
-    int currentWeight = [fontManager weightOfFont:font];
-    if (currentWeight != desiredWeight) {
-        //fprintf (stderr, "desiredWeight: %d currentWeight: %d\n", desiredWeight, currentWeight);
-        newFont = [fontManager fontWithFamily:[font familyName] traits:[fontManager traitsOfFont:font] weight:desiredWeight size:size];
-        if (newFont) {
-            font = newFont;
-            currentWeight = [fontManager weightOfFont:font];
-            //fprintf (stderr, "picked new font, weight: %d\n", currentWeight);
+    PRInt32 newWeight = 0;
+    NSString *newFont;
+    for (PRUint32 i = 0; i < count; i++) {
+        NSArray *member = [fonts objectAtIndex:i];
+        PRInt32 weight = [[member objectAtIndex:INDEX_FONT_WEIGHT] intValue];
+        if ((aBolder && weight <= baseWeight) || (!aBolder && weight >= baseWeight))
+            continue;
+
+        PRUint32 traits =
+            [[member objectAtIndex:INDEX_FONT_TRAITS] unsignedIntValue];
+        if (!SAME_TRAITS(traits, baseTraits, NON_WEIGHT_TRAITS_MASK))
+            continue;
+
+        // we should use lightest weight font at finding the bolder font,
+        // otherwise, we should use boldest weight font.
+        if (!newWeight ||
+            (aBolder && newWeight > weight) ||
+            (!aBolder && newWeight < weight)) {
+            newFont = [member objectAtIndex:INDEX_FONT_POSTSCRIPT_NAME];
+            newWeight = weight;
         }
     }
-
-    if (weightSteps == 0) {
-        return font;
-    } else if (weightSteps < 0) {
-        while (weightSteps != 0) {
-            newFont = [fontManager convertWeight:NO ofFont:font];
-            if (newFont == font)
-                return font;
-            font = newFont;
-            weightSteps++;
-        }
-    } else if (weightSteps > 0) {
-        while (weightSteps != 0) {
-            newFont = [fontManager convertWeight:YES ofFont:font];
-            if (newFont == font)
-                return font;
-            font = newFont;
-            weightSteps--;
-        }
-    }
-
-    return font;
+    if (!newWeight)
+        return aCurrentFont;
+    return [NSFont fontWithName:newFont size:aStyle->size];
 }
 
 ATSUFontID
@@ -243,145 +541,44 @@ ATSUFontID
 gfxQuartzFontCache::FindFromSystem (const nsAString& aFamily,
                                     const gfxFontStyle *aStyle)
 {
-    NSString *desiredFamily = [NSString stringWithCharacters:aFamily.BeginReading() length:aFamily.Length()];
-    NSFontTraitMask desiredTraits = 0;
-    int desiredWeight;
-    PRInt8 baseCSSWeight, weightOffset;
+    nsAutoString key, fontName;
+    GenerateFontListKey(aFamily, key);
+    if (!mAllFontNames.Get(key, &fontName))
+        return kATSUInvalidFontID;
+    nsRefPtr<FontEntry> fe;
+    GenerateFontListKey(fontName, key);
+    if (!mPostscriptFonts.Get(key, &fe))
+        return kATSUInvalidFontID;
+    NSFont *font = fe->GetNSFont(aStyle->size);
 
-    //printf ("FindATSUFontIDForFamilyAndStyle: %s\n", [desiredFamily cString]);
-
-    aStyle->ComputeWeightAndOffset(&baseCSSWeight, &weightOffset);
-    desiredWeight = CSSWeightToAppleWeight[PR_MIN(PR_MAX(baseCSSWeight, 1), 9)];
-
+    PRUint32 desiredTraits = 0;
     // Oblique should really be synthesized italic; fix that later.
-    if (aStyle->style & FONT_STYLE_ITALIC || aStyle->style & FONT_STYLE_OBLIQUE)
+    if (fe->IsItalicStyle() || aStyle->style & FONT_STYLE_ITALIC ||
+                               aStyle->style & FONT_STYLE_OBLIQUE)
         desiredTraits |= NSItalicFontMask;
 
-    // we should really do the right thing with the offsets here, but that's harder.
-    if (desiredWeight >= APPLE_BOLD_WEIGHT)
-        desiredTraits |= NSBoldFontMask;
+    if (fe->IsFixedPitch())
+        desiredTraits |= NSFixedPitchFontMask;
 
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
-    NSFont *font = nsnull;
 
-    // Look for an exact match first.
-    NSEnumerator *availableFonts = [[fontManager availableFonts] objectEnumerator];
-    NSString *availableFont;
-    while ((availableFont = [availableFonts nextObject])) {
-        if ([desiredFamily caseInsensitiveCompare:availableFont] == NSOrderedSame) {
-            NSFont *nameMatchedFont = [NSFont fontWithName:availableFont size:aStyle->size];
-            NSFontTraitMask traits = [fontManager traitsOfFont:nameMatchedFont];
+    NSFont *newFont = font;
+    while (desiredTraits) {
+        newFont = [fontManager convertFont:font toHaveTrait:desiredTraits];
 
-            if ((traits & desiredTraits) == desiredTraits) {
-                font = [fontManager convertFont:nameMatchedFont toHaveTrait:desiredTraits];
-                font = FindFontWeight (fontManager, font, desiredWeight, weightOffset, aStyle->size);
-                //fprintf (stderr, "Exact match found; weight: %d\n", [fontManager weightOfFont:font]);
-                return [font _atsFontID];
-            }
-
+        PRInt32 newTraits = [fontManager traitsOfFont:newFont];
+        if (newTraits & desiredTraits == desiredTraits)
             break;
-        }
-    }
 
-    // Do a simple case insensitive search for a matching font family.
-    // NSFontManager requires exact name matches.
-    // This addresses the problem of matching arial to Arial, etc., but perhaps not all the issues.
-    NSEnumerator *e = [[fontManager availableFontFamilies] objectEnumerator];
-    NSString *availableFamily;
-    while ((availableFamily = [e nextObject])) {
-        if ([desiredFamily caseInsensitiveCompare:availableFamily] == NSOrderedSame) {
-            break;
-        }
-    }
+        newFont = font;
 
-    // If we can't find a match for this at all, then bail
-    if (availableFamily == nsnull)
-        return kATSUInvalidFontID;
-
-    // Found a family, now figure out what weight and traits to use.
-    BOOL choseFont = false;
-    int chosenWeight = 0;
-    NSFontTraitMask chosenTraits = 0;
-
-    NSArray *fonts = [fontManager availableMembersOfFontFamily:availableFamily];
-    unsigned n = [fonts count];
-    unsigned i;
-    for (i = 0; i < n; i++) {
-        NSArray *fontInfo = [fonts objectAtIndex:i];
-
-        // Array indices must be hard coded because of lame AppKit API.
-        int fontWeight = [[fontInfo objectAtIndex:INDEX_FONT_WEIGHT] intValue];
-        NSFontTraitMask fontTraits = [[fontInfo objectAtIndex:INDEX_FONT_TRAITS] unsignedIntValue];
-
-        BOOL newWinner;
-        if (!choseFont)
-            newWinner = acceptableChoice(desiredTraits, desiredWeight, fontTraits, fontWeight);
+        if (desiredTraits & NSItalicFontMask)
+            desiredTraits &= ~NSItalicFontMask;
         else
-            newWinner = betterChoice(desiredTraits, desiredWeight, chosenTraits, chosenWeight, fontTraits, fontWeight);
-
-        if (newWinner) {
-            choseFont = YES;
-            chosenWeight = fontWeight;
-            chosenTraits = fontTraits;
-
-            if (chosenWeight == desiredWeight &&
-                (chosenTraits & IMPORTANT_FONT_TRAITS) == (desiredTraits & IMPORTANT_FONT_TRAITS))
-            {
-                // this one is good enough; don't bother looking for something better
-                break;
-            }
-        }
+            break;
     }
-
-    // we couldn't find anything that was valid in the family
-    if (!choseFont)
-        return kATSUInvalidFontID;
-
-    // grab the actual font
-    font = [fontManager fontWithFamily:availableFamily traits:chosenTraits weight:chosenWeight size:aStyle->size];
-    if (!font)
-        return kATSUInvalidFontID;
-
-    //fprintf (stderr, "No exact match found; basic match weight: %d\n", [fontManager weightOfFont:font]);
-    font = FindFontWeight (fontManager, font, desiredWeight, weightOffset, aStyle->size);
-    //fprintf (stderr, "   after FindFontWeight: %d\n", [fontManager weightOfFont:font]);
-    chosenWeight = [fontManager weightOfFont:font];
-
-    // Figure out whether we need to synthesize
-    NSFontTraitMask actualTraits = 0;
-    if (desiredTraits & (NSItalicFontMask | NSBoldFontMask))
-        actualTraits = [fontManager traitsOfFont:font];
-
-    bool syntheticBold = (baseCSSWeight >= CSS_BOLD_WEIGHT_BASE && weightOffset <= 0) && (chosenWeight < APPLE_BOLD_WEIGHT);
-    bool syntheticOblique = (desiredTraits & NSItalicFontMask) && !(actualTraits & NSItalicFontMask);
-
-    // There are some malformed fonts that will be correctly returned
-    // by -fontWithFamily:traits:weight:size: as a match for a
-    // particular trait, though -[NSFontManager traitsOfFont:]
-    // incorrectly claims the font does not have the specified
-    // trait. This could result in applying synthetic bold on top of
-    // an already-bold font, as reported in
-    // <http://bugzilla.opendarwin.org/show_bug.cgi?id=6146>. To work
-    // around this problem, if we got an apparent exact match, but the
-    // requested traits aren't present in the matched font, we'll try
-    // to get a font from the same family without those traits (to
-    // apply the synthetic traits to later).
-    NSFontTraitMask nonSyntheticTraits = desiredTraits;
-
-    if (syntheticBold)
-        nonSyntheticTraits &= ~NSBoldFontMask;
-
-    if (syntheticOblique)
-        nonSyntheticTraits &= ~NSItalicFontMask;
-
-    if (nonSyntheticTraits != desiredTraits) {
-        NSFont *fontWithoutSyntheticTraits = [fontManager fontWithFamily:availableFamily traits:nonSyntheticTraits weight:chosenWeight size:aStyle->size];
-        if (fontWithoutSyntheticTraits)
-            font = fontWithoutSyntheticTraits;
-    }
-
-    //printf ("Font: %s -> %d\n", [availableFamily cString], GetNSFontATSUFontId(font));
-    return [font _atsFontID];
+    newFont = FindFontWeight(fontManager, fe, newFont, aStyle);
+    return [newFont _atsFontID];
 }
 
 ATSUFontID
@@ -390,23 +587,48 @@ gfxQuartzFontCache::GetDefaultATSUFontID (const gfxFontStyle* aStyle)
     return [[NSFont userFontOfSize:aStyle->size] _atsFontID];
 }
 
+struct FontListData {
+    FontListData(const nsACString& aLangGroup,
+                 const nsACString& aGenericFamily,
+                 nsStringArray& aListOfFonts) :
+        mLangGroup(aLangGroup), mGenericFamily(aGenericFamily),
+        mListOfFonts(aListOfFonts) {}
+    const nsACString& mLangGroup;
+    const nsACString& mGenericFamily;
+    nsStringArray& mListOfFonts;
+};
+
+PLDHashOperator PR_CALLBACK
+gfxQuartzFontCache::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
+                                            nsRefPtr<FamilyEntry>& aFamilyEntry,
+                                            void* aUserArg)
+{
+    FontListData *data = (FontListData*)aUserArg;
+    data->mListOfFonts.AppendString(aFamilyEntry->Name());
+    return PL_DHASH_NEXT;
+}
+
 void
 gfxQuartzFontCache::GetFontList (const nsACString& aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsStringArray& aListOfFonts)
 {
-    NSFontManager *fontManager = [NSFontManager sharedFontManager];
-    NSArray *familyArray = [fontManager availableFontFamilies];
+    FontListData data(aLangGroup, aGenericFamily, aListOfFonts);
 
-    unsigned int nFamilies = [familyArray count];
-    for (unsigned int i = 0; i < nFamilies; i++) {
-        NSString *family = [familyArray objectAtIndex:i];
-        nsString str;
-        str.SetLength([family length]);
-        [family getCharacters:(str.BeginWriting())];
-        aListOfFonts.AppendString(str);
-    }
+    mFamilies.Enumerate(gfxQuartzFontCache::HashEnumFuncForFamilies, &data);
 
     aListOfFonts.Sort();
+    aListOfFonts.Compact();
 }
 
+PRBool
+gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
+                                    nsAString& aResolvedFontName)
+{
+    nsAutoString name, key;
+    GenerateFontListKey(aFontName, key);
+    if (!mAllFontNames.Get(key, &name))
+        return PR_FALSE;
+    aResolvedFontName = name;
+    return PR_TRUE;
+}
