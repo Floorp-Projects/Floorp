@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
  *   Annie Sullivan <annie.sullivan@gmail.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,7 +52,7 @@ function selectPlaceURI(placeURI) {
 var PlacesOrganizer = {
   _places: null,
   _content: null,
-  
+
   init: function PO_init() {
     this._places = document.getElementById("placesList");
     this._content = document.getElementById("placeContent");  
@@ -64,11 +65,18 @@ var PlacesOrganizer = {
     if ("arguments" in window)
       placeURI = window.arguments[0];
     selectPlaceURI(placeURI);
-    
-    // Initialize the active view so that all commands work properly without
-    // the user needing to explicitly click in a view (since the search box is
-    // focused by default). 
-    PlacesController.activeView = this._places;
+
+    /**
+     * XXXmano: this used to be a hack which allowed using few places commands
+     * when the search field is focused. Re-implementing it would probably
+     * require adding a controller to the searchbox which would forward over
+     * those commands to the places tree controller.
+     *
+     * // Initialize the active view so that all commands work properly without
+     * // the user needing to explicitly click in a view (since the search box is
+     * // focused by default). 
+     * PlacesController.activeView = this._places;
+     */
 
     // Set up the search UI.
     PlacesSearchBox.init();
@@ -133,8 +141,8 @@ var PlacesOrganizer = {
   loadPlaceURI: function PO_loadPlaceURI() {
     var placeURI = document.getElementById("placeURI");
     var queriesRef = { }, optionsRef = { };
-    PlacesController.history.queryStringToQueries(placeURI.value, 
-                                                  queriesRef, { }, optionsRef);
+    PlacesUtils.history.queryStringToQueries(placeURI.value, 
+                                             queriesRef, { }, optionsRef);
     
     var autoFilterResults = document.getElementById("autoFilterResults");
     if (autoFilterResults.checked) {
@@ -160,9 +168,9 @@ var PlacesOrganizer = {
     var queries = queryNode.getQueries({});
     var options = queryNode.queryOptions;
     var loadedURI = document.getElementById("loadedURI");
-    loadedURI.value = 
-      PlacesController.history.queriesToQueryString(queries, queries.length, 
-                                                    options);
+    loadedURI.value =
+      PlacesUtils.history.queriesToQueryString(queries, queries.length, 
+                                               options);
   },
   
   /**
@@ -212,21 +220,23 @@ var PlacesOrganizer = {
    *          The mouse event.
    */
   onTreeClick: function PO_onTreeClicked(event) {
+    var currentView = event.currentTarget;
+    var controller = currentView.controller;
+
     // If the user clicked on a tree column header, update the sorting 
     // preferences to reflect their choices.
     if (event.target.localName == "treecol") {
       OptionsFilter.update(this._content.getResult());
       return;
     }
-    var v = PlacesController.activeView;
-    if (v.hasSingleSelection && event.button == 1) {
-      if (PlacesController.nodeIsURI(v.selectedNode))
-        PlacesController.mouseLoadURI(event);
-      else if (PlacesController.nodeIsContainer(v.selectedNode)) {
+    if (currentView.hasSingleSelection && event.button == 1) {
+      if (PlacesUtils.nodeIsURI(currentView.selectedNode))
+        controller.openSelectedNodeInBrowser(event);
+      else if (PlacesUtils.nodeIsContainer(currentView.selectedNode)) {
         // The command execution function will take care of seeing the 
         // selection is a folder/container and loading its contents in 
         // tabs for us. 
-        PlacesController.openLinksInTabs();
+        controller.openLinksInTabs();
       }
     }
   },
@@ -253,13 +263,13 @@ var PlacesOrganizer = {
    */
   exportBookmarks: function PO_export() {
     var fp = Cc["@mozilla.org/filepicker;1"].
-               createInstance(Ci.nsIFilePicker);
+            createInstance(Ci.nsIFilePicker);
     fp.init(window, "", Ci.nsIFilePicker.modeSave);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
       var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                  getService(Ci.nsINavBookmarksService);
+                getService(Ci.nsINavBookmarksService);
       bms.exportBookmarksHTML(fp.file);
     }
   }
@@ -820,7 +830,7 @@ var PlacesQueryBuilder = {
     var queryType = document.getElementById("advancedSearchType").selectedItem.value;
     var queries = [];
     if (queryType == "and")
-      queries.push(PlacesController.history.getNewQuery());
+      queries.push(PlacesUtils.history.getNewQuery());
     var updated = 0;
     for (var i = 1; updated < this._numRows; ++i) {
       var prefix = "advancedSearch" + i;
@@ -836,7 +846,7 @@ var PlacesQueryBuilder = {
         if (queryType == "and")
           query = queries[0];
         else
-          query = PlacesController.history.getNewQuery();
+          query = PlacesUtils.history.getNewQuery();
         
         var querySubject = querySubjectElement.value;
         this._queryBuilders[querySubject](query, prefix);

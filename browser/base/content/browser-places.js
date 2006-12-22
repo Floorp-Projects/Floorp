@@ -55,7 +55,7 @@ BookmarkAllTabsCommand.prototype = {
    */
   execute: function BATC_execute() {
     var tabURIs = this._getUniqueTabInfo(getBrowser());
-    PlacesController.showAddMultiBookmarkUI(tabURIs);
+    PlacesUtils.showAddMultiBookmarkUI(tabURIs);
   },
 
   /**
@@ -163,7 +163,7 @@ var PlacesCommandHook = {
         getService(Ci.nsIIOService);
     var linkURI = ios.newURI(url, null, null);
 
-    PlacesController.showAddBookmarkUI(linkURI, title);
+    PlacesUtils.showAddBookmarkUI(linkURI, title);
   },
 
   /**
@@ -171,7 +171,7 @@ var PlacesCommandHook = {
    */
   bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
     var selectedBrowser = getBrowser().selectedBrowser;
-    PlacesController.showAddBookmarkUI(selectedBrowser.currentURI);
+    PlacesUtils.showAddBookmarkUI(selectedBrowser.currentURI);
   },
   
   /**
@@ -232,8 +232,8 @@ var PlacesCommandHook = {
 #endif
 
     // TODO: add dialog for filing/confirmation
-    var bms = PlacesController.bookmarks;
-    var livemarks = PlacesController.livemarks;
+    var bms = PlacesUtils.bookmarks;
+    var livemarks = PlacesUtils.livemarks;
     livemarks.createLivemark(bms.toolbarRoot, title, browser.currentURI, 
                              feedURI, -1);
   },
@@ -259,7 +259,7 @@ var PlacesCommandHook = {
       organizer.focus();
     }
   },
-  
+
   /**
    * Update the state of the tagging icon, depending on whether or not the 
    * current page is bookmarked. 
@@ -271,7 +271,7 @@ var PlacesCommandHook = {
       
     var strings = document.getElementById("placeBundle");
     var currentLocation = getBrowser().selectedBrowser.webNavigation.currentURI;
-    if (PlacesController.bookmarks.isBookmarked(currentLocation)) {
+    if (PlacesUtils.bookmarks.isBookmarked(currentLocation)) {
       bookmarkButton.label = strings.getString("locationStatusBookmarked");
       bookmarkButton.setAttribute("bookmarked", "true");
     } else {
@@ -285,7 +285,7 @@ var PlacesCommandHook = {
    */
   onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {
     var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
-    PlacesController.showAddBookmarkUI(currentURI);
+    PlacesUtils.showAddBookmarkUI(currentURI);
   }
 };
 
@@ -330,7 +330,7 @@ var BookmarksEventHandler = {
     if (event.button != 1)
       return;
     
-    PlacesController.openLinksInTabs();
+    PlacesUtils.getViewForNode(event.target).controller.openLinksInTabs();
     
     // If this event bubbled up from a menu or menuitem,
     // close the menus.
@@ -363,16 +363,19 @@ var BookmarksEventHandler = {
    *        DOMEvent for the command
    */
   onCommand: function BM_onCommand(event) {
-    // If this is the special "Open in Tabs" menuitem, load all the menuitems in tabs.
+    // If this is the special "Open in Tabs" menuitem,
+    // load all the menuitems in tabs.
     if (event.target.hasAttribute("openInTabs"))
-      PlacesController.openLinksInTabs();
+      PlacesUtils.getViewForNode(event.target).controller.openLinksInTabs();
     else if (event.target.hasAttribute("siteURI"))
       openUILink(event.target.getAttribute("siteURI"), event);
     // If this is a normal bookmark, just load the bookmark's URI.
     else
-      PlacesController.mouseLoadURI(event);
+      PlacesUtils.getViewForNode(event.target)
+                 .controller
+                 .openSelectedNodeInBrowser(event);
   },
-  
+
   /**
    * Handler for popupshowing event for an item in bookmarks toolbar or menu.
    * If the item isn't the main bookmarks menu, add an "Open in Tabs" menuitem
@@ -484,7 +487,7 @@ var BookmarksMenuDropHandler = {
    */
   onDrop: function BMDH_onDrop(event, data, session) {
     var view = document.getElementById("bookmarksMenuPopup");
-    PlacesController.activeView = view;
+
     // The insertion point for a menupopup view should be -1 during a drag
     // & drop operation.
     NS_ASSERT(view.insertionPoint.index == -1, "Insertion point for an menupopup view during a drag must be -1!");

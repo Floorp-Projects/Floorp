@@ -55,7 +55,7 @@
 
   <commandset id="globalEditCommandSet"
               commandupdater="true"
-              events="focus"
+              events="focus,select"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
   <commandset id="selectEditCommandSet"
               commandupdater="true"

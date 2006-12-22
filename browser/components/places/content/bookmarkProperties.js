@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include controller.js
 #include ../../../../toolkit/content/debug.js
 
 var BookmarkPropertiesPanel = {
@@ -400,8 +399,7 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    *
    * @param dialogWindow the window object of the Bookmark Properties dialog
-   * @param controller   a PlacesController object for interacting with the
-   *                     Places system
+   * @param tm           the transaction Manager of the opener.
    * @param action       the desired user action; see determineVariant()
    * @param identifier   a nsIURI object representing the bookmarked URI or
    *                     integer folder ID of the item that
@@ -409,7 +407,7 @@ var BookmarkPropertiesPanel = {
    * @param title        a string representing the desired title of the
    *                     bookmark; undefined means "pick a default title"
    */
-  init: function BPP_init(dialogWindow, controller, action, identifier, title) {
+  init: function BPP_init(dialogWindow, tm, action, identifier, title) {
     this._variant = this._determineVariant(identifier, action);
 
     if (this._identifierIsURI()) {
@@ -424,7 +422,7 @@ var BookmarkPropertiesPanel = {
     }
     this._bookmarkTitle = title;
     this._dialogWindow = dialogWindow;
-    this._controller = controller;
+    this._tm = tm;
 
     this._initFolderTree();
     this._populateProperties();
@@ -693,7 +691,7 @@ var BookmarkPropertiesPanel = {
 
     var aggregate =
       new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
-    this._controller.tm.doTransaction(aggregate);
+    this._tm.doTransaction(aggregate);
   },
 
   /**
@@ -841,7 +839,7 @@ var BookmarkPropertiesPanel = {
 
     if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
         (newURI.spec != this._bookmarkURI.spec)) {
-          this._controller.changeBookmarkURI(this._bookmarkURI, newURI);
+         PlacesUtils.changeBookmarkURI(this._bookmarkURI, newURI);
     }
 
     if (this._isMicrosummaryVisible()) {
@@ -876,7 +874,7 @@ var BookmarkPropertiesPanel = {
     if (transactions.length > 0) {
       var aggregate =
         new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
-      this._controller.tm.doTransaction(aggregate);
+      this._tm.doTransaction(aggregate);
     }
   },
 

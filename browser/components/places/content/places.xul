@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Annie Sullivan <annie.sullivan@gmail.com>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,17 +45,23 @@
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
 
-<window id="places" title="&places.title;" 
+<window id="places"
+        title="&places.title;" 
         windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
         onunload="PlacesOrganizer.destroy();"
         width="700" height="500" screenX="10" screenY="10"
         persist="width height screenX screenY sizemode">
-  
+
+  <script type="application/x-javascript"
+          src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" 
+          src="chrome://browser/content/places/utils.js"/>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
@@ -71,23 +78,16 @@
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
   
-  <commandset id="TMCommandSet"
-              commandupdater="true" events="*" 
-              oncommandupdate="PlacesController.updateTMCommands()">
-    <command id="cmd_undo" 
-             label="&cmd.edit_undo.label;" accesskey="&cmd.edit_undo.accesskey;"
-             oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
-    <command id="cmd_redo" 
-             label="&cmd.edit_redo.label;" accesskey="&cmd.edit_redo.accesskey;"
-             oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
-  </commandset>
+  <commandset id="editMenuCommands"/>
+
 #include commands.inc
   <commandset id="organizerCommandSet">
     <command id="placesCmd_find:all" 
              label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
              oncommand="PlacesSearchBox.findAll();"/>
     <command id="placesCmd_find:current" 
-             label="&cmd.findCurrent.label;" accesskey="&cmd.findCurrent.accesskey;"
+             label="&cmd.findCurrent.label;"
+             accesskey="&cmd.findCurrent.accesskey;"
              oncommand="PlacesSearchBox.findCurrent();"/>
     <command id="placesCmd_export" 
              label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
@@ -111,9 +111,13 @@
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
          oncommand="close();"/>
 
-    <key id="placesKey_edit:undo" key="&cmd.edit_undo.key;" modifiers="accel" 
+    <key id="placesKey_edit:undo"
+         key="&cmd.edit_undo.key;"
+         modifiers="accel" 
          command="cmd_undo"/>
-    <key id="placesKey_edit:redo" key="&cmd.edit_redo.key;" modifiers="accel" 
+    <key id="placesKey_edit:redo"
+         key="&cmd.edit_redo.key;"
+         modifiers="accel" 
          command="cmd_redo"/>
     
     <key id="placesKey_show:debug"
@@ -121,37 +125,45 @@
          oncommand="PlacesOrganizer.toggleDebugPanel();"/>
          
     <!-- Command Keys -->
-    <key id="placesKey_find:all" command="placesCmd_find:all" 
-         key="&cmd.find.key;" modifiers="accel"/>
-    <key id="placesKey_find:current" command="placesCmd_find:current" 
-         key="&cmd.find.key;" modifiers="accel,shift"/>
-    <key id="placesKey_select:all" command="placesCmd_select:all" 
-         key="&cmd.select_all.key;" modifiers="accel"/>
-    <key id="placesKey_edit:cut" command="placesCmd_edit:cut" 
-         key="&cmd.edit_cut.key;" modifiers="accel"/>
-    <key id="placesKey_edit:copy" command="placesCmd_edit:copy" 
-         key="&cmd.edit_copy.key;" modifiers="accel"/>
-    <key id="placesKey_edit:paste" command="placesCmd_edit:paste" 
-         key="&cmd.edit_paste.key;" modifiers="accel"/>
-    <key id="placesKey_edit:delete" command="placesCmd_edit:delete" 
-         keycode="VK_DELETE"/>
-    <key id="placesKey_open" command="placesCmd_open" 
+    <key id="placesKey_find:all"
+         command="placesCmd_find:all" 
+         key="&cmd.find.key;"
+         modifiers="accel"/>
+    <key id="placesKey_find:current"
+         command="placesCmd_find:current" 
+         key="&cmd.find.key;"
+         modifiers="accel,shift"/>
+    <key id="placesKey_open"
+         command="placesCmd_open" 
          keycode="VK_ENTER"/>
-    <key id="placesKey_open" command="placesCmd_open" 
+    <key id="placesKey_open"
+         command="placesCmd_open" 
          keycode="VK_RETURN"/>
-    <key id="placesKey_open:window" command="placesCmd_open:window" 
-         keycode="VK_ENTER" modifiers="shift"/>
-    <key id="placesKey_open:window" command="placesCmd_open:window" 
-         keycode="VK_RETURN" modifiers="shift"/>
-    <key id="placesKey_open:tab" command="placesCmd_open:tab" 
-         keycode="VK_ENTER" modifiers="accel"/>
-    <key id="placesKey_open:tab" command="placesCmd_open:tab" 
-         keycode="VK_RETURN" modifiers="accel"/>
-    <key id="placesKey_show:info" command="placesCmd_show:info" 
-         key="&cmd.show_info.key;" modifiers="accel"/>
-    <key id="placesKey_rename" command="placesCmd_rename" 
+    <key id="placesKey_open:window"
+         command="placesCmd_open:window" 
+         keycode="VK_ENTER"
+         modifiers="shift"/>
+    <key id="placesKey_open:window"
+         command="placesCmd_open:window" 
+         keycode="VK_RETURN"
+         modifiers="shift"/>
+    <key id="placesKey_open:tab"
+         command="placesCmd_open:tab" 
+         keycode="VK_ENTER"
+         modifiers="accel"/>
+    <key id="placesKey_open:tab"
+         command="placesCmd_open:tab" 
+         keycode="VK_RETURN"
+         modifiers="accel"/>
+    <key id="placesKey_show:info"
+         command="placesCmd_show:info" 
+         key="&cmd.show_info.key;"
+         modifiers="accel"/>
+    <key id="placesKey_rename"
+         command="placesCmd_rename" 
          keycode="VK_F2"/>
-    <key id="placesKey_reload" command="placesCmd_reload" 
+    <key id="placesKey_reload"
+         command="placesCmd_reload" 
          key="&cmd.reload.key;" modifiers="accel"/>
   </keyset>
   
@@ -174,38 +186,39 @@
           <menuitem id="properties" command="placesCmd_show:info"/>
 #endif
           <menuseparator/>
-          <menuitem id="fileClose" key="placesKey_close" 
-                    label="&file.close.label;" accesskey="&file.close.accesskey;" 
+          <menuitem id="fileClose"
+                    key="placesKey_close" 
+                    label="&file.close.label;"
+                    accesskey="&file.close.accesskey;" 
                     oncommand="close();"/>
         </menupopup>
       </menu>
       <menu id="editMenu" label="&edit.label;" accesskey="&edit.accesskey;">
         <menupopup>
-          <menuitem id="editUndo" command="cmd_undo" key="placesKey_edit:undo"/>
-          <menuitem id="editRedo" command="cmd_redo" key="placesKey_edit:redo"/>
+          <menuitem id="menu_undo"/>
+          <menuitem id="menu_redo"/>
           <menuseparator/>
-          <menuitem id="editCut" command="placesCmd_edit:cut" 
-                    key="placesKey_edit:cut"/>
-          <menuitem id="editCopy" command="placesCmd_edit:copy" 
-                    key="placesKey_edit:copy"/>
-          <menuitem id="editPaste" command="placesCmd_edit:paste"
-                    key="placesKey_edit:paste"/>
-          <menuitem id="editDelete" command="placesCmd_edit:delete"
-                    key="placesKey_edit:delete"/>
+          <menuitem id="menu_cut"/>
+          <menuitem id="menu_copy"/>
+          <menuitem id="menu_paste"/>
+          <menuitem id="menu_delete"/>
           <menuseparator/>
-          <menuitem id="editSelectAll" command="placesCmd_select:all"
-                    key="placesKey_select:all"/>
+          <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menuitem id="editSortByName" command="placesCmd_sortby:name"
+          <menuitem id="editSortByName"
+                    command="placesCmd_sortby:name"
                     accesskey="&cmd.sortby_name.accesskey;"/>
           <menuseparator/>
-          <menuitem id="editFindAll" command="placesCmd_find:all"
+          <menuitem id="editFindAll"
+                    command="placesCmd_find:all"
                     key="placesKey_find:all"/>
-          <menuitem id="editFindCurrent" command="placesCmd_find:current"
+          <menuitem id="editFindCurrent"
+                    command="placesCmd_find:current"
                     key="placesKey_find:current"/>
 #ifdef XP_MACOSX
           <menuseparator/>
-          <menuitem id="properties" command="placesCmd_show:info"
+          <menuitem id="properties"
+                    command="placesCmd_show:info"
                     key="placesKey_show:info"/>
 #endif
         </menupopup>
@@ -322,7 +335,7 @@
 #include advancedSearch.inc          
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" type="places" 
-                ondblclick="PlacesController.mouseLoadURI(event);"
+                ondblclick="this.controller.openSelectedNodeInBrowser(event);"
                 onclick="PlacesOrganizer.onTreeClick(event);">
             <treecols id="placeContentColumns">
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 

@@ -49,15 +49,17 @@
         // Apply meta-model rules to this view. 
         ViewConfigurator.configure(this);
 
-        this.history = PlacesController.history;
-        this.controllers.appendController(PlacesController);
+        this._controller = new PlacesController(this);
+        this.controllers.appendController(this._controller);
 
         // Force an initial build. 
         this.place = this.place;
       ]]></constructor>
-      
-      <field name="history">null</field>
-      
+
+      <property name="controller"
+                readonly="true"
+                onget="return this._controller;"/>
+
       <!-- overriding -->
       <property name="view">
         <getter><![CDATA[
@@ -80,7 +82,7 @@
           // existing ones or create new ones. 
           var options = this.getResult().queryOptions;
           if (!options)
-            options = this.history.getNewQueryOptions();
+            options = PlacesUtils.history.getNewQueryOptions();
           return options;
         ]]></body>
       </method>
@@ -98,7 +100,7 @@
             options = optionsFilter.filter(queryNode.getQueries({}), options, 
                                            optionsFilter.historyHandler);
           
-          var query = this.history.getNewQuery();
+          var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
           
@@ -130,7 +132,7 @@
           options.excludeItems = this.excludeItems;
           options.excludeQueries = this.excludeQueries;
           options.expandQueries = this.expandQueries;
-          var result = this.history.executeQueries(queries, queries.length, 
+          var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                    options);
 
           var treeviewer = 
@@ -150,14 +152,14 @@
         -->
       <method name="selectPlaceURI">
         <parameter name="placeURI"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           function findNode(container, placeURI) {
             container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
               if (child.uri == placeURI)
                 return child;
-              else if (PlacesController.nodeIsContainer(child)) {
+              else if (PlacesUtils.nodeIsContainer(child)) {
                 var nested = findNode(asContainer(child), placeURI);
                 if (nested)
                   return nested;
@@ -254,11 +256,11 @@
           var queriesRef = { };
           var queryCountRef = { };
           var optionsRef = { };
-          this.history.queryStringToQueries(val, queriesRef, queryCountRef, optionsRef);
+          PlacesUtils.history.queryStringToQueries(val, queriesRef, queryCountRef, optionsRef);
           if (queryCountRef.value == 0)
-            queriesRef.value = [this.history.getNewQuery()];
+            queriesRef.value = [PlacesUtils.history.getNewQuery()];
           if (!optionsRef.value)
-            optionsRef.value = this.history.getNewQueryOptions();
+            optionsRef.value = PlacesUtils.history.getNewQueryOptions();
 
           this.load(queriesRef.value, optionsRef.value);
 
@@ -363,7 +365,7 @@
         <body><![CDATA[
           var nodes = this.getSelectionNodes();
           for (var i = nodes.length - 1; i >= 0; i--) {
-            if (PlacesController.nodeIsReadOnly(nodes[i].parent))
+            if (PlacesUtils.nodeIsReadOnly(nodes[i].parent))
               nodes.splice(i, 1);
           }
           return nodes;
@@ -398,7 +400,7 @@
 
           // only URI nodes should be returned
           var node = this.getResultView().nodeForTreeIndex(min.value);
-          if (PlacesController.nodeIsURI(node))
+          if (PlacesUtils.nodeIsURI(node))
             return node;
           return null;
         ]]></getter>
@@ -494,11 +496,11 @@
               // an item at the root is the result itself, which can be QI'ed to 
               // nsINavHistoryResult
               container = lastSelected.parent;
-              var lsi = PlacesController.getIndexOfNode(lastSelected);
+              var lsi = PlacesUtils.getIndexOfNode(lastSelected);
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
-          if (PlacesController.nodeIsFolder(container)) 
+          if (PlacesUtils.nodeIsFolder(container)) 
             return new InsertionPoint(asFolder(container).folderId, index, orientation);
           return null;
         ]]></body>
@@ -591,7 +593,7 @@
                  (child < node.childCount) && (len(indexes) > 0);
                  child++) {
               var childNode = node.getChild(child);
-              if (!PlacesController.nodeIsFolder(childNode))
+              if (!PlacesUtils.nodeIsFolder(childNode))
                 continue;
 
               var childFolder = asFolder(childNode);
@@ -662,7 +664,7 @@
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
             var parent = node.parent;
-            if (PlacesController.nodeIsFolder(parent) &&
+            if (PlacesUtils.nodeIsFolder(parent) &&
                 bms.getFolderReadonly(asFolder(parent).folderId)) 
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
 
@@ -671,7 +673,7 @@
             // root container than user-configurable items. 
             var treeIndex = this.getResultView().treeIndexForNode(nodes[i]);
             if (this.view.getLevel(treeIndex) == 0) {
-              var index = PlacesController.getIndexOfNode(nodes[i]);
+              var index = PlacesUtils.getIndexOfNode(nodes[i]);
               if (index < this.peerDropIndex)
                 throw Cr.NS_OK;
             }
@@ -681,7 +683,7 @@
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           // Stuff the encoded selection into the transferable data object
-          xferData.data = PlacesController.getTransferData(dragAction.action);
+          xferData.data = this._controller.getTransferData(dragAction.action);
         ]]></body>
       </method>
       
@@ -754,7 +756,7 @@
             var foundNode = null;
             for (var i = 0; i < cc; ++i) {
               var node = container.getChild(i);
-              if (PlacesController.nodeIsFolder(node)) {
+              if (PlacesUtils.nodeIsFolder(node)) {
                 var folder = asFolder(node);
                 if (folder.folderId == folderId) {
                   foundNode = node;
@@ -770,14 +772,14 @@
           }
           var folder = null;
           var root = asContainer(this.getResult().root);
-          if (PlacesController.nodeIsFolder(root) && 
+          if (PlacesUtils.nodeIsFolder(root) && 
               asFolder(root).folderId == insertionPoint.folderId)
             folder = root;
           else
             folder = findFolder(insertionPoint.folderId, root);
           
           // Since we find the folder manually, using findFolder instead of 
-          // PlacesController.getFolderContents, the folder is not opened for
+          // PlacesUtils.getFolderContents, the folder is not opened for
           // us. We need to do that ourselves (and remember if it was closed,
           // so that we can close it again later).
           var folderWasOpen = folder.containerOpen;
@@ -831,7 +833,7 @@
           var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
           // Cannot drop before fixed items in the list. 
           if (node.parent == result.root && 
-              PlacesController.getIndexOfNode(node) < this._self.peerDropIndex &&
+              PlacesUtils.getIndexOfNode(node) < this._self.peerDropIndex &&
               orientation != NHRVO.DROP_ON)
             return false;
 
@@ -987,15 +989,24 @@
           }
         ]]></body>
       </method>
-      
+
+      <!-- Since the controller is attached directly to the tree, its state
+           is only available for command updating if the tree is focused, thus
+           edit commands are always enabled. -->
+      <property name="enableEditCommands"
+                readonly="true"
+                onget="return true;"/>
+                
+      <method name="buildContextMenu">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
+          this.controller.buildContextMenu(aPopup);
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
-      <handler event="focus"><![CDATA[
-        PlacesController.activeView = this;
-        document.commandDispatcher.updateCommands("focus");
-      ]]></handler>
       <handler event="select"><![CDATA[
-        document.commandDispatcher.updateCommands("select");
+        window.updateCommands("select");
       ]]></handler>
       <handler event="draggesture"><![CDATA[
         // XXXben ew.

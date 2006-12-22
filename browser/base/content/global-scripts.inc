@@ -42,6 +42,7 @@
 <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 #ifdef MOZ_PLACES
+<script type="application/x-javascript" src="chrome://browser/content/places/utils.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/places/controller.js"/>
 #endif
 #ifndef MOZ_PLACES_BOOKMARKS

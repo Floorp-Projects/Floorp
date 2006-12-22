@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Ben Goodger <beng@google.com>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,8 +48,7 @@
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
-        this.history = PlacesController.history;
-        
+#if 0
         // Support an asyncinit attribute that causes the view to populate 
         // itself only after the window has been shown. This is to ensure we
         // do not regress browser window show time (Ts/Txul)
@@ -57,16 +57,18 @@
           //setTimeout(function() { self._init(); }, 0);
         }
         else
-          this._init();
+#endif
+        this._init();
       ]]></constructor>
       
       <destructor><![CDATA[
       ]]></destructor>
-      
-      <field name="history">null</field>
-      
+
       <method name="_init">
         <body><![CDATA[
+          this._controller = new PlacesController(this);
+          top.controllers.appendController(this._controller);
+
           if (!this.hasAttribute("place"))
             return;
 
@@ -78,13 +80,16 @@
           }
         ]]></body>
       </method>
-            
+
+      <property name="controller"
+                readonly="true"
+                onget="return this._controller;"/>
+
       <method name="onPopupShowing">
         <body><![CDATA[
-        PlacesController.activeView = this;
         if (!this._resultNode)
           this._init();
-        if (PlacesController.nodeIsContainer(this._resultNode)) {
+        if (PlacesUtils.nodeIsContainer(this._resultNode)) {
           this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           this._resultNode.containerOpen = true;
         }
@@ -181,7 +186,7 @@
 
           this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          if (PlacesController.nodeIsContainer(this._resultNode))
+          if (PlacesUtils.nodeIsContainer(this._resultNode))
             this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           else
             return; // Nothing to do if this menu isn't a container.
@@ -211,23 +216,23 @@
             for (var i = 0; i < cc; ++i) {
               var child = this._resultNode.getChild(i);
               var element = null;
-              if (PlacesController.nodeIsURI(child) || noSubmenus) {
+              if (PlacesUtils.nodeIsURI(child) || noSubmenus) {
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
                 element.setAttribute("url", child.uri);
                 element.setAttribute("statustext", child.uri);
                 element.className = "menuitem-iconic bookmark-item";
               }
-              else if (PlacesController.nodeIsSeparator(child)) {
+              else if (PlacesUtils.nodeIsSeparator(child)) {
                 element = document.createElementNS(XULNS, "menuseparator");
               }
-              else if (PlacesController.nodeIsContainer(child)) {
+              else if (PlacesUtils.nodeIsContainer(child)) {
                 element = document.createElementNS(XULNS, "menu");
                 element.setAttribute("type", "menu");
                 element.setAttribute("container", "true");
                 element.setAttribute("label", child.title);
 
-                if (PlacesController.nodeIsLivemarkContainer(child)) {
+                if (PlacesUtils.nodeIsLivemarkContainer(child)) {
                   element.setAttribute("livemark", "true");
                   var folder = asFolder(child).folderId;
                   var bms =
@@ -321,12 +326,13 @@
         <setter><![CDATA[ 
           this.setAttribute("place", val);
           var queries = { }, options = { };
-          this.history.queryStringToQueries(val, queries, { }, options);
+          PlacesUtils.history.queryStringToQueries(val, queries, { }, options);
           if (!queries.value.length) 
-            queries.value = [this.history.getNewQuery()];
+            queries.value = [PlacesUtils.history.getNewQuery()];
           this._result = 
-            this.history.executeQueries(queries.value, queries.value.length, 
-                                        options.value);
+            PlacesUtils.history.executeQueries(queries.value,
+                                               queries.value.length,
+                                               options.value);
           this._resultNode = this._result.root;
           if (this._resultNode.containerOpen)
             this._rebuild();
@@ -372,7 +378,7 @@
       <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          if (PlacesController.nodeIsReadOnly(this._resultNode))
+          if (PlacesUtils.nodeIsReadOnly(this._resultNode))
             return null;
           return this.getSelectionNodes();
         ]]></body>
@@ -389,7 +395,7 @@
       <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
-          return node && PlacesController.nodeIsURI(node) ? node : null;
+          return node && PlacesUtils.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
       
@@ -399,18 +405,18 @@
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
           var folderId = 0;
-          if(PlacesController.nodeIsFolder(this._resultNode))
+          if (PlacesUtils.nodeIsFolder(this._resultNode))
             folderId = this._resultNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           
           if (this.hasSelection) {
-            if(PlacesController.nodeIsFolder(this.selectedNode)) {
+            if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
               folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
-              index = PlacesController.getIndexOfNode(this.selectedNode)
+              index = PlacesUtils.getIndexOfNode(this.selectedNode)
             }
           }
           return new InsertionPoint(folderId, index);
@@ -551,8 +557,8 @@
         _getDropPoint: function TBV_DO_getDropPoint(event) {
           // Can't drop if the menu isn't a folder
           var resultNode = this._self._resultNode;
-          if (!PlacesController.nodeIsFolder(this._self._result.root) ||
-              !PlacesController.nodeIsFolder(resultNode))
+          if (!PlacesUtils.nodeIsFolder(this._self._result.root) ||
+              !PlacesUtils.nodeIsFolder(resultNode))
             return null;
           asFolder(resultNode);
           
@@ -567,8 +573,8 @@
             var nodeY = xulNode.boxObject.y - this._self.boxObject.y;
             var nodeHeight = xulNode.boxObject.height;
             if (xulNode.node &&
-                PlacesController.nodeIsFolder(xulNode.node) &&
-                !PlacesController.nodeIsReadOnly(xulNode.node)) {
+                PlacesUtils.nodeIsFolder(xulNode.node) &&
+                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
               // This is a folder. If the mouse is in the top 25% of the
               // node, drop above the folder.  If it's in the middle
               // 50%, drop into the folder.  If it's past that, drop below.
@@ -614,11 +620,10 @@
         },
         
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
-          PlacesController.activeView = this._self;
           this._self._selection = event.target.node;
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-          xferData.data = PlacesController.getTransferData(dragAction.action);
+          xferData.data = this._controller.getTransferData(dragAction.action);
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {
@@ -663,7 +668,6 @@
           var dropPoint = this._getDropPoint(event);
           if (dropPoint == null)
             return;
-          PlacesController.activeView = this._self;
           PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
           this._self._rebuild();
         },
@@ -716,26 +720,38 @@
           this._selection = event.target.node;
           if (event.target.node == null)
             this._selection = this._resultNode;
-          // Set the active view to this node.
-          PlacesController.activeView = this;
-          // When right clicking an item in a bookmarks menu the places commands
-          // need to be updated for the context menu to appear correctly.
-          document.commandDispatcher.updateCommands(event.type);
         ]]></body>
       </method>
       
       <property name="selType" onget="return 'single';"/>
-            
+
+      <!-- Edit commands are only enabled when the menu is open -->
+      <field name="_enableEditCommands">false</field>
+      <property name="enableEditCommands"
+                readonly="true"
+                onget="return this._enableEditCommands;"/>
+                
+      <method name="buildContextMenu">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
+          // When right clicking an item in a bookmarks menu the places commands
+          // need to be updated for the context menu to appear correctly.
+          window.updateCommands("select");
+          this.controller.buildContextMenu(aPopup);
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
       <handler event="popupshowing">
         if (event.target == this) {
+          this._enableEditCommands = true;
+          window.updateCommands("select");
           this.onPopupShowing();
         }
       </handler>
       <handler event="popuphidden">
         if (event.target == this) {
-          if (PlacesController.nodeIsContainer(this._resultNode)) {
+          if (PlacesUtils.nodeIsContainer(this._resultNode)) {
             this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
             this._resultNode.containerOpen = false;
           }
@@ -743,6 +759,8 @@
           // automatically opened when dragged over.  Turn off this attribute
           // when the folder closes because it is no longer applicable.
           this.removeAttribute("autoopened");
+          this._enableEditCommands = false;
+          window.updateCommands("select");
         }
       </handler>
       <!-- Set selected node/active view on mousedown/DOMMenuItemActive events

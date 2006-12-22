@@ -85,45 +85,44 @@
       </xul:vbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
         // Support an asyncinit attribute that causes the view to populate 
         // itself only after the window has been shown. This is to ensure we
         // do not regress browser window show time (Ts/Txul)
+#if 0
         if (this.hasAttribute("asyncinit")) {
           var self = this;
           //setTimeout(function() { self._init(); }, 0);
         }
         else
+#endif
           this._init();
       ]]></constructor>
       
       <destructor><![CDATA[ 
-        this._bms.removeObserver(this._observer);
+        PlacesUtils.bookmarks.removeObserver(this._observer);
         this.genericAnnoObserver.removeObserver("bookmarks/generatedTitle",
                                                 this._generatedTitleAnnoObserver);
-        this._anno.removeObserver(this.genericAnnoObserver);
+        PlacesUtils.annotations.removeObserver(this.genericAnnoObserver);
       ]]></destructor>
-      
+
+      <property name="controller"
+                readonly="true"
+                onget="return this._controller;"/>
+
       <method name="_init">
         <body><![CDATA[
-        this._places = 
-          Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService);
-        this._bms = 
-          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-          getService(Ci.nsINavBookmarksService);
-        this._anno =
-          Cc["@mozilla.org/browser/annotation-service;1"].
-          getService(Ci.nsIAnnotationService);
+        this._controller = new PlacesController(this);
+        top.controllers.appendController(this._controller);
 
-        this._bms.addObserver(this._observer, false);
+        PlacesUtils.bookmarks.addObserver(this._observer, false);
         var t = this;
         window.addEventListener("resize",
                                 function f(e) { t.updateChevron(e); },
                                 false);
 
-        this._anno.addObserver(this.genericAnnoObserver);
+        PlacesUtils.annotations.addObserver(this.genericAnnoObserver);
         this.genericAnnoObserver.addObserver("bookmarks/generatedTitle",
                                              this._generatedTitleAnnoObserver);
 
@@ -162,10 +161,11 @@
           if (!this.__generatedTitles) {
             this.__generatedTitles = {};
 
+            var annotations = PlacesUtils.annotations;
             // This try/catch block is a temporary workaround for bug 336194.
             var pages;
             try {
-              pages = this._anno.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+              pages = annotations.getPagesWithAnnotation("bookmarks/generatedTitle", {});
             }
             catch(e) {
               pages = [];
@@ -176,7 +176,7 @@
             // service provides no mechanism for doing so.
             for ( var i = 0; i < pages.length; i++)
               this.__generatedTitles[pages[i].spec] =
-                this._anno.getAnnotationString(pages[i], "bookmarks/generatedTitle");
+                annotations.getAnnotationString(pages[i], "bookmarks/generatedTitle");
           }
           
           return this.__generatedTitles;
@@ -207,7 +207,7 @@
             var child = this._result.root.getChild(i);
             var title = child.title;
             var button = null;
-            if (PlacesController.nodeIsURI(child)) {
+            if (PlacesUtils.nodeIsURI(child)) {
               button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("url", child.uri);
 
@@ -218,21 +218,21 @@
               if (this._generatedTitles[child.uri])
                 title = this._generatedTitles[child.uri];
 
-            } else if (PlacesController.nodeIsSeparator(child)) {
+            } else if (PlacesUtils.nodeIsSeparator(child)) {
               button = document.createElementNS(XULNS, "toolbarseparator");
-            } else if (PlacesController.nodeIsContainer(child)) {
+            } else if (PlacesUtils.nodeIsContainer(child)) {
               button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
-              if (PlacesController.nodeIsLivemarkContainer(child)) {
+              if (PlacesUtils.nodeIsLivemarkContainer(child)) {
                 button.setAttribute("livemark", "true");
                 var folder = asFolder(child).folderId;
 
                 // duplicate nsLivemarkService.getSiteURI to avoid instantiating
                 // the service on startup.
-                var containerURI = this._bms.getFolderURI(folder);
+                var containerURI = PlacesUtils.bookmarks.getFolderURI(folder);
                 var siteURIString;
-                try { 
+                try {
                   siteURIString = 
                     this._anno.getAnnotationString(containerURI, "livemark/siteURI");
                 }
@@ -337,14 +337,15 @@
         ]]></getter>
         <setter><![CDATA[ 
           this.setAttribute("place", val);
-          
+
+          var history = PlacesUtils.history;
           var queries = { }, options = { };
-          this._places.queryStringToQueries(val, queries, { }, options);
+          history.queryStringToQueries(val, queries, { }, options);
           if (!queries.value.length) 
-            queries.value = [this._places.getNewQuery()];
+            queries.value = [history.getNewQuery()];
           this._result = 
-            this._places.executeQueries(queries.value, queries.value.length, 
-                                        options.value);
+            history.executeQueries(queries.value, queries.value.length,
+                                   options.value);
           this._result.root.containerOpen = true;
           this._rebuild();
           return val;
@@ -389,7 +390,7 @@
       <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          if (PlacesController.nodeIsReadOnly(this._result.root))
+          if (PlacesUtils.nodeIsReadOnly(this._result.root))
             return null;
           return this.getSelectionNodes();
         ]]></body>
@@ -406,7 +407,7 @@
       <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
-          return node && PlacesController.nodeIsURI(node) ? node : null;
+          return node && PlacesUtils.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
       
@@ -418,14 +419,14 @@
           var folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           
           if (this.hasSelection) {
-            if(PlacesController.nodeIsFolder(this.selectedNode)) {
+            if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
               folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
-              index = PlacesController.getIndexOfNode(this.selectedNode)
+              index = PlacesUtils.getIndexOfNode(this.selectedNode)
             }
           }
           return new InsertionPoint(folderId, index, 1);
@@ -470,13 +471,13 @@
             this.doRebuild();
         },
         onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
-          if (folder == this._self._bms.toolbarRoot) {
+          if (folder == PlacesUtils.bookmarks.toolbarRoot) {
             this._self._currentURIs[bookmark.spec] = true;
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
           }
         },
         onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
-          if (folder == this._self._bms.toolbarRoot) {
+          if (folder == PlacesUtils.bookmarks.toolbarRoot) {
             delete this._self._currentURIs[bookmark.spec];
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
           }
@@ -488,20 +489,20 @@
           //this._self._init();
         },
         onItemReplaced: function TB_0_onItemReplaced(folder, item, newItem) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (folder == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          if (parent == this._self._bms.toolbarRoot)
+          if (parent == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          if (parent == this._self._bms.toolbarRoot)
+          if (parent == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          if (oldParent == this._self._bms.toolbarRoot ||
-              newParent == this._self._bms.toolbarRoot)
+          if (oldParent == PlacesUtils.bookmarks.toolbarRoot ||
+              newParent == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderChanged: function TB_O_onFolderChanged(folder, property) {
@@ -514,11 +515,11 @@
           setTimeout(hitch(this._self, this._self._rebuild), 1);
         },
         onSeparatorAdded: function TB_O_onSeparatorAdded(parent, index) {
-          if (parent == this._self._bms.toolbarRoot)
+          if (parent == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onSeparatorRemoved: function TB_O_onSeparatorRemoved(parent, index) {
-          if (parent == this._self._bms.toolbarRoot)
+          if (parent == PlacesUtils.bookmarks.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         }
       })]]></field>
@@ -610,7 +611,7 @@
         _getDropPoint: function TBV_DO_getDropPoint(event) {
           // Can't drop if the toolbar isn't a folder.
           var result = this._self.getResult();
-          if (!PlacesController.nodeIsFolder(result.root))
+          if (!PlacesUtils.nodeIsFolder(result.root))
             return null;
           asFolder(result.root);
           
@@ -619,8 +620,8 @@
           // get dropped in/next to
           for (var i = 0; i < this._self.childNodes.length; i++) {
             var xulNode = this._self.childNodes[i];
-            if (PlacesController.nodeIsFolder(xulNode.node) &&
-                !PlacesController.nodeIsReadOnly(xulNode.node)) {
+            if (PlacesUtils.nodeIsFolder(xulNode.node) &&
+                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
               NS_ASSERT(xulNode.getAttribute("type") == "menu");
               // This is a folder. If the mouse is in the left 25% of the
               // node, drop to the left of the folder.  If it's in the middle
@@ -656,11 +657,10 @@
         },
         
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
-          PlacesController.activeView = this._self;
           if (event.ctrlKey) {
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           }
-          xferData.data = PlacesController.getTransferData(dragAction.action);
+          xferData.data = this._controller.getTransferData(dragAction.action);
 #ifdef XP_WIN
           // Support folder dragging on the personal toolbar when the user 
           // holds the "alt" key while they drag (Ctrl+drag has another 
@@ -730,7 +730,6 @@
           var dropPoint = this._getDropPoint(event);
           if (dropPoint == null)
             return;
-          PlacesController.activeView = this._self;
           PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
         },
         
@@ -771,7 +770,7 @@
         onAnnotationSet: function TBV_GTAO_onAnnotationSet(uri, annoName) {
           NS_ASSERT(annoName == "bookmarks/generatedTitle",
                     "annotation " + annoName + ", is not 'bookmarks/generatedTitle'");
-          var newTitle = this._self._anno.getAnnotationString(uri, annoName);
+          var newTitle = PlacesUtils.annotations.getAnnotationString(uri, annoName);
           this._self._generatedTitles[uri.spec] = newTitle;
           this._doRebuild();
         },
@@ -891,6 +890,35 @@
       </method>
 
       <property name="selType" onget="return 'single';"/>
+
+      <!-- Edit commands are only enabled when the context menu is oepn -->
+      <field name="_enableEditCommands">false</field>
+      <property name="enableEditCommands"
+                readonly="true"
+                onget="return this._enableEditCommands;"/>
+
+      <method name="buildContextMenu">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
+          this._enableEditCommands = true;
+          window.updateCommands("select");
+          aPopup.addEventListener("popuphiding", this, true);
+          this.controller.buildContextMenu(aPopup);
+        ]]></body>
+      </method>
+
+      <!-- nsIDOMEventListener -->
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "popuphiding" &&
+              aEvent.eventPhase == Event.AT_TARGET) {
+            this._enableEditCommands = false;
+            window.updateCommands("select");
+            aEvent.target.removeEventListener("popuphiding", this, true);
+          }
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
       <handler event="mousedown"><![CDATA[
@@ -901,8 +929,8 @@
           this._selection = event.target.node;
         else 
           this._selection = this.getResult().root;
-        PlacesController.activeView = this;
-        document.commandDispatcher.updateCommands("mousedown");
+
+        window.updateCommands("select");
       ]]></handler>
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "toolbarbutton")

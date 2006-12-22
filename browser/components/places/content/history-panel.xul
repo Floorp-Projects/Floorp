@@ -44,7 +44,13 @@
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
-<!DOCTYPE page SYSTEM "chrome://browser/locale/history/history.dtd">
+<!DOCTYPE page [
+<!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd">
+%historyDTD;
+<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+%placesDTD;
+]>
+
 
 <!-- we need to keep id="history-panel" for upgrade and switching
      between versions of the browser -->
@@ -53,6 +59,8 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="HistorySidebarInit();">
 
+  <script type="application/x-javascript" 
+          src="chrome://browser/content/places/utils.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript" 
@@ -70,9 +78,7 @@
 
   <commandset id="editMenuCommands"/>
 
-  <!-- XXX fix me:  
-    context menu delete and cmd_delete are not working yet.  see bug #359462
-    -->
+#include commands.inc
   <keyset id="editMenuKeys">
 #ifdef XP_MACOSX
     <key id="key_delete2" keycode="VK_BACK" command="cmd_delete"/>
@@ -86,15 +92,19 @@
     <menuitem id="miCollapse" label="&collapse.label;" 
               accesskey="&collapse.accesskey;"
               default="true" oncommand="collapseExpand();"/>
-    <menuitem id="miOpen" label="&openLinkInWindow.label;" 
-              accesskey="&openLinkInWindow.accesskey;" default="true"
-              oncommand="openURLIn('current');"/>
-    <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" 
-              accesskey="&openInNewWindow.accesskey;"
-              oncommand="openURLIn('window');"/>
-    <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" 
-              accesskey="&openInNewTab.accesskey;"
-              oncommand="openURLIn('tab');"/>
+    <menuitem id="miOpen"
+              command="placesCmd_open"
+              label="&openLinkInWindow.label;" 
+              accesskey="&openLinkInWindow.accesskey;"
+              default="true"/>
+    <menuitem id="miOpenInNewWindow"
+              command="placesCmd_open:window"
+              label="&openInNewWindow.label;" 
+              accesskey="&openInNewWindow.accesskey;"/>
+    <menuitem id="miOpenInNewTab"
+              command="placesCmd_open:tab"
+              label="&openInNewTab.label;" 
+              accesskey="&openInNewTab.accesskey;"/>
     <menuseparator id="pre-bookmarks-separator"/>
     <menuitem id="miAddBookmark" label="&bookmarkLink.label;" 
               accesskey="&bookmarkLink.accesskey;" 

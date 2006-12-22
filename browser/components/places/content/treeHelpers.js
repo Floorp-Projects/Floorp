@@ -156,7 +156,7 @@ var OptionsFilter = {
    */
   deserialize: function OF_deserialize(string) {
     var optionsRef = { };
-    PlacesController.history.queryStringToQueries(string, {}, {}, optionsRef);
+    PlacesUtils.history.queryStringToQueries(string, {}, {}, optionsRef);
     return optionsRef.value;    
   },
   
@@ -168,8 +168,8 @@ var OptionsFilter = {
    * @returns A place: URI string that can be stored in preferences.
    */
   serialize: function OF_serialize(options) {
-    var query = PlacesController.history.getNewQuery();
-    return PlacesController.history.queriesToQueryString([query], 1, options);
+    var query = PlacesUtils.history.getNewQuery();
+    return PlacesUtils.history.queriesToQueryString([query], 1, options);
   },
   
   /**
@@ -199,7 +199,7 @@ var OptionsFilter = {
   init: function OF_init(grouper) {
     this._grouper = grouper;
   
-    var history = PlacesController.history;
+    var history = PlacesUtils.history;
     const NHQO = Ci.nsINavHistoryQueryOptions;
     
     var defaultHistoryOptions = history.getNewQueryOptions();
