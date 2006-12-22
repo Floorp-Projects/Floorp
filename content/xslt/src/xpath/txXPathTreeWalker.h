@@ -162,6 +162,8 @@ class txXPathNativeNode
 public:
     static txXPathNode* createXPathNode(nsIDOMNode* aNode,
                                         PRBool aKeepRootAlive = PR_FALSE);
+    static txXPathNode* createXPathNode(nsIContent* aContent,
+                                        PRBool aKeepRootAlive = PR_FALSE);
     static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);
     static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult);
     static nsIContent* getContent(const txXPathNode& aNode);

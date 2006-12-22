@@ -154,9 +154,10 @@ public:
      * Returns the index of the specified Node,
      * or -1 if the Node is not contained in the NodeSet
      * @param  aNode the Node to get the index for
+     * @param  aStart index to start searching at
      * @return index of specified node or -1 if the node does not exist
      */
-    PRInt32 indexOf(const txXPathNode& aNode) const;
+    PRInt32 indexOf(const txXPathNode& aNode, PRUint32 aStart = 0) const;
 
     /**
      * Returns true if the specified Node is contained in the set.
@@ -196,8 +197,6 @@ public:
     TX_DECL_EXPRRESULT
 
 private:
-    static void toString(const txNodeSet& aNodes, nsAString& aResult);
-
     /**
      * Ensure that this nodeset can take another aSize nodes.
      *

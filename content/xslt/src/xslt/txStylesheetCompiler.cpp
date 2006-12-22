@@ -942,7 +942,8 @@ txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
 #endif
 
 static nsresult
-TX_ConstructXSLTFunction(nsIAtom* aName, txStylesheetCompilerState* aState,
+TX_ConstructXSLTFunction(nsIAtom* aName, PRInt32 aNamespaceID,
+                         txStylesheetCompilerState* aState,
                          FunctionCall** aFunction)
 {
     if (aName == txXSLTAtoms::document) {
@@ -990,6 +991,7 @@ TX_ConstructXSLTFunction(nsIAtom* aName, txStylesheetCompilerState* aState,
 }
 
 typedef nsresult (*txFunctionFactory)(nsIAtom* aName,
+                                      PRInt32 aNamespaceID,
                                       txStylesheetCompilerState* aState,
                                       FunctionCall** aResult);
 struct txFunctionFactoryMapping
@@ -1000,14 +1002,21 @@ struct txFunctionFactoryMapping
 };
 
 extern nsresult
-TX_ConstructEXSLTCommonFunction(nsIAtom *aName,
-                                txStylesheetCompilerState* aState,
-                                FunctionCall **aResult);
+TX_ConstructEXSLTFunction(nsIAtom *aName,
+                          PRInt32 aNamespaceID,
+                          txStylesheetCompilerState* aState,
+                          FunctionCall **aResult);
 
 static txFunctionFactoryMapping kExtensionFunctions[] = {
     { "", kNameSpaceID_Unknown, TX_ConstructXSLTFunction },
     { "http://exslt.org/common", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTCommonFunction }
+      TX_ConstructEXSLTFunction },
+    { "http://exslt.org/sets", kNameSpaceID_Unknown,
+      TX_ConstructEXSLTFunction },
+    { "http://exslt.org/strings", kNameSpaceID_Unknown,
+      TX_ConstructEXSLTFunction },
+    { "http://exslt.org/math", kNameSpaceID_Unknown,
+      TX_ConstructEXSLTFunction }
 };
 
 extern nsresult
@@ -1041,7 +1050,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
     for (i = 0; i < NS_ARRAY_LENGTH(kExtensionFunctions); ++i) {
         const txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
         if (mapping.mNamespaceID == aNamespaceID) {
-            return mapping.mFactory(aName, aState, aResult);
+            return mapping.mFactory(aName, aNamespaceID, aState, aResult);
         }
     }
 
