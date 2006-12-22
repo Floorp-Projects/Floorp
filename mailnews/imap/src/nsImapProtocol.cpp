@@ -5779,8 +5779,14 @@ void nsImapProtocol::RefreshACLForFolder(const char *mailboxName)
       // First, clear what we have.
       ClearAllFolderRights(mailboxName, ns);
       // Now, get the new one.
-      GetACLForFolder(mailboxName);
       GetMyRightsForFolder(mailboxName);
+      if (m_imapMailFolderSink)
+      {
+        PRUint32 aclFlags = 0;
+        if (NS_SUCCEEDED(m_imapMailFolderSink->GetAclFlags(&aclFlags)) && aclFlags & IMAP_ACL_ADMINISTER_FLAG)
+            GetACLForFolder(mailboxName);
+      }
+          
       // We're all done, refresh the icon/flags for this folder
       RefreshFolderACLView(mailboxName, ns);
       break;
