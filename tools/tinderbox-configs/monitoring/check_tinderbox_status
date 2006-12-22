@@ -70,7 +70,7 @@ case "$1" in
 
     if [ -f "$OLD_STATE" ]
     then
-        curl -s "$URL" | grep -v '^State' | awk -F\| '{print $3}' > $NEW_STATE
+        curl -s "$URL" | grep -v 'State|' | awk -F\| '{print $3}' > $NEW_STATE
         added=`diff "$OLD_STATE" "$NEW_STATE" | grep '^> ' | sed 's/^> //' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /'`
         removed=`diff "$OLD_STATE" "$NEW_STATE" | grep '^< ' | sed 's/^< //' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /'`
         # restore state
@@ -92,7 +92,7 @@ case "$1" in
         fi
     else 
       # initialize old state
-      curl -s "$URL" | grep -v '^State' | awk -F\| '{print $3}' > "$OLD_STATE"
+      curl -s "$URL" | grep -v 'State|' | awk -F\| '{print $3}' > "$OLD_STATE"
       echo "Initialized old state."
       STATUS=0
     fi
