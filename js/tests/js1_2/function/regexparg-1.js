@@ -55,6 +55,10 @@ var TITLE   = "The variable statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+print("Note: Bug 61911 changed the behavior of typeof regexp in Gecko 1.9.");
+print("Prior to Gecko 1.9, typeof regexp returned 'function'.");
+print("However in Gecko 1.9 and later, typeof regexp will return 'object'.");
+
 function f(x) {return x;}
 
 x = f(/abc/);
@@ -81,12 +85,12 @@ new TestCase( SECTION,
         
 new TestCase( SECTION,
 	      "typeof f(/abc/)",
-	      "function",
+	      "object",
 	      typeof f(/abc/) );
 
 new TestCase( SECTION,
 	      "typeof new f(/abc/)",
-	      "function",
+	      "object",
 	      typeof new f(/abc/) );
 
 new TestCase( SECTION,
