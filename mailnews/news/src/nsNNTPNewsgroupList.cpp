@@ -134,17 +134,73 @@ nsNNTPNewsgroupList::Initialize(nsINntpUrl *runningURL, nsIMsgNewsFolder *newsFo
 nsresult
 nsNNTPNewsgroupList::CleanUp() 
 {
-  if (m_newsDB) {
+  // here we make sure that there aren't missing articles in the unread set
+  // So if an article is the unread set, and the known arts set, but isn't in the
+  // db, then we should mark it read in the unread set.
+  if (m_newsDB)
+  {
+    if (m_knownArts.set)
+    {
+      nsCOMPtr <nsIDBFolderInfo> folderInfo;
+      m_newsDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
+      PRInt32 firstKnown = m_knownArts.set->GetFirstMember();
+      PRInt32 lastKnown =  m_knownArts.set->GetLastMember();
+      if (folderInfo)
+      {
+        PRUint32 lastMissingCheck;
+        folderInfo->GetUint32Property("lastMissingCheck", 0, &lastMissingCheck);
+        if (lastMissingCheck)
+          firstKnown = lastMissingCheck + 1;
+      }
+      PRBool done = firstKnown > lastKnown; // just in case...
+      PRBool foundMissingArticle = PR_FALSE;
+      while (!done)
+      {
+        PRInt32 firstUnreadStart, firstUnreadEnd;
+        m_set->FirstMissingRange(firstKnown, lastKnown, &firstUnreadStart, &firstUnreadEnd);
+        if (firstUnreadStart)
+        {
+          while (firstUnreadStart <= firstUnreadEnd)
+          {
+            PRBool containsKey;
+            m_newsDB->ContainsKey(firstUnreadStart, &containsKey);
+            if (!containsKey)
+            {
+              m_set->Add(firstUnreadStart);
+              foundMissingArticle = PR_TRUE;
+            }
+            firstUnreadStart++;
+          }
+          firstKnown = firstUnreadStart;
+        }
+        else
+          break;
+
+      }
+      if (folderInfo)
+        folderInfo->SetUint32Property("lastMissingCheck", lastKnown);
+      
+      if (foundMissingArticle)
+      {
+        nsresult rv;
+        nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(m_newsDB, &rv));
+        NS_ENSURE_SUCCESS(rv,rv);
+        db->SetReadSet(m_set);
+      }
+    }
     m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
     m_newsDB->Close(PR_TRUE);
     m_newsDB = nsnull;
   }
 
-  if (m_knownArts.set) {
+  if (m_knownArts.set)
+  {
     delete m_knownArts.set;
     m_knownArts.set = nsnull;
   }
-
+  if (m_newsFolder)
+    m_newsFolder->NotifyFinishedDownloadinghdrs();
+  
   m_newsFolder = nsnull;
   m_runningURL = nsnull;
     
@@ -967,10 +1023,6 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 
   if (m_lastProcessedNumber)
     AddToKnownArticles(m_firstMsgNumber, m_lastProcessedNumber);
-  if (m_newsDB) {
-    m_newsDB->Close(PR_TRUE);
-    m_newsDB = nsnull;
-  }
 
   k = &m_knownArts;
 

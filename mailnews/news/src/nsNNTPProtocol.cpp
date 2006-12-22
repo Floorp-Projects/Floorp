@@ -2510,7 +2510,15 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
   
   char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData, nsnull, PR_TRUE);
   if (m_newsFolder && line)
-    m_newsFolder->NotifyDownloadedLine(line, m_key);
+  {
+    const char *unescapedLine = line;
+    // lines beginning with '.' are escaped by nntp server
+    // or is it just '.' on a line by itself?
+    if (line[0] == '.' && line[1] == '.')
+      unescapedLine++;
+    m_newsFolder->NotifyDownloadedLine(unescapedLine, m_key);
+    
+  }
   
   if(pauseForMoreData)
   {

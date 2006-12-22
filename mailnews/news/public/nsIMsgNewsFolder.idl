@@ -41,7 +41,7 @@
 interface nsIMsgWindow;
 interface nsINntpIncomingServer;
 
-[scriptable, uuid(02699533-7ba8-4e78-94dc-a20374fb2711)]
+[scriptable, uuid(5731576B-617B-462E-9270-19599510C602)]
 interface nsIMsgNewsFolder : nsISupports {
   attribute string groupUsername;
   attribute string groupPassword;
@@ -84,4 +84,5 @@ interface nsIMsgNewsFolder : nsISupports {
 
   void getNextNMessages(in nsIMsgWindow aMsgWindow);
   void notifyDownloadedLine(in string line, in nsMsgKey key);
+  void notifyFinishedDownloadinghdrs();
 };

@@ -793,8 +793,6 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 {
   nsresult rv = NS_OK;
   PRBool newsrcHasChanged = PR_FALSE;
-  PRInt32 oldUnreadMessages = mNumUnreadMessages;
-  PRInt32 oldTotalMessages = mNumTotalMessages;
   
   /* First, mark all of the articles now known to be expired as read. */
   if (oldest > 1) 
@@ -985,8 +983,6 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
 
 NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
 {
-  ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
-  ChangeNumPendingUnread(-GetNumPendingUnread());
   return GetNewsMessages(aMsgWindow, PR_FALSE, aListener);
 }
 
@@ -1803,6 +1799,13 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
   }
                                                                                 
   return rv;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::NotifyFinishedDownloadinghdrs()
+{
+  ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
+  ChangeNumPendingUnread(-GetNumPendingUnread());
+  return NS_OK;  
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
