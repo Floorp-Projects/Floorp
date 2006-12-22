@@ -330,11 +330,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
             fprintf(fp, " %u", GET_VARNO(pc));
 
         /*
-         * Set len to advance pc to skip op and any other immediates (namely,
-         * <varno> if JSOP_DEFLOCALFUN).
+         * Adjust len to advance pc to skip op and any other immediates
+         * (namely, <varno> if JSOP_DEFLOCALFUN).
          */
         JS_ASSERT(cs->length > ATOM_INDEX_LEN);
-        len = cs->length - ATOM_INDEX_LEN;
+        len += cs->length - (1 + ATOM_INDEX_LEN);
         break;
 
       default: {
