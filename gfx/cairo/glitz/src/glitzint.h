@@ -91,7 +91,9 @@
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
 #define __internal_linkage	__attribute__((__visibility__("hidden")))
-#else
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define __internal_linkage	__hidden
+#else /* not gcc >= 3.3 and not Sun Studio >= 8 */
 #define __internal_linkage
 #endif
 

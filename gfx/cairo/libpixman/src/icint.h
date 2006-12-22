@@ -985,7 +985,7 @@ typedef struct _PictFormat	*PictFormatPtr;
 #define PictureCmapPolicyColor	    3
 #define PictureCmapPolicyAll	    4
 
-extern int pixman_private PictureCmapPolicy;
+extern pixman_private int PictureCmapPolicy;
 
 int	PictureParseCmapPolicy (const char *name);
 
