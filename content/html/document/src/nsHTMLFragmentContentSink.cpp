@@ -1167,7 +1167,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
                                          kNameSpaceID_None,
                                          getter_AddRefs(nodeInfo));
       NS_ENSURE_SUCCESS(rv, rv);
-      NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
+      rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
       NS_ENSURE_SUCCESS(rv, rv);
       AddAttributes(aNode, content);
       ProcessBaseTag(content);
