@@ -66,6 +66,7 @@ endif
 
 DIRS = \
         find \
+        filepicker \
         $(NULL)
 
 ifdef MOZ_RDF
@@ -80,7 +81,6 @@ DIRS += \
         directory \
         resetPref \
         killAll \
-        filepicker \
         $(NULL)
 
 ifndef MOZ_PHOENIX
@@ -117,9 +117,7 @@ else
 # !MOZ_HAVE_BROWSER
 
 DIRS += \
-        filepicker \
         autocomplete \
-        console \
         history/public \
         bookmarks/public \
         $(NULL)
