@@ -2051,10 +2051,15 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
  * on shutdown that shows the graph of significant predecessor/successor pairs
  * executed, where the edge labels give the succession counts.  The .dot file
  * is named by the JS_OPMETER_FILE envariable, and defaults to /tmp/ops.dot.
+ *
+ * Bonus feature: JS_OPMETER also enables counters for stack-addressing ops
+ * such as JSOP_GETVAR, JSOP_INCARG, via METER_SLOT_OP.  The resulting counts
+ * are written to JS_OPMETER_HIST, defaulting to /tmp/ops.hist.
  */
 #ifndef JS_OPMETER
-# define METER_OP_INIT(op)       /* nothing */
-# define METER_OP_PAIR(op1, op2) /* nothing */
+# define METER_OP_INIT(op)      /* nothing */
+# define METER_OP_PAIR(op1,op2) /* nothing */
+# define METER_SLOT_OP(op,slot) /* nothing */
 #else
 
 # include <stdlib.h>
@@ -2064,10 +2069,13 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
  * in a byte, and mainly to optimize away multiplying by JSOP_LIMIT to address
  * any particular row.
  */
-static uint32 succeeds[JSOP_LIMIT][256];
-
 # define METER_OP_INIT(op)      ((op) = JSOP_STOP)
 # define METER_OP_PAIR(op1,op2) ((op1) != JSOP_STOP && ++succeeds[op1][op2])
+# define HIST_NSLOTS            8
+# define METER_SLOT_OP(op,slot) ((slot) < HIST_NSLOTS && ++slot_ops[op][slot])
+
+static uint32 succeeds[JSOP_LIMIT][256];
+static uint32 slot_ops[JSOP_LIMIT][HIST_NSLOTS];
 
 typedef struct Edge {
     const char  *from;
@@ -2085,7 +2093,7 @@ compare_edges(const void *a, const void *b)
 }
 
 void
-js_DumpOpPairMeter()
+js_DumpOpMeters()
 {
     const char *name, *from, *style;
     FILE *fp;
@@ -2146,6 +2154,36 @@ js_DumpOpPairMeter()
     }
     free(graph);
     fputs("}\n", fp);
+    fclose(fp);
+
+    name = getenv("JS_OPMETER_HIST");
+    if (!name)
+        name = "/tmp/ops.hist";
+    fp = fopen(name, "w");
+    if (!fp) {
+        perror(name);
+        return;
+    }
+    fputs("bytecode", fp);
+    for (j = 0; j < HIST_NSLOTS; j++)
+        fprintf(fp, "  slot %1u", (unsigned)j);
+    putc('\n', fp);
+    fputs("========", fp);
+    for (j = 0; j < HIST_NSLOTS; j++)
+        fputs(" =======", fp);
+    putc('\n', fp);
+    for (i = 0; i < JSOP_LIMIT; i++) {
+        for (j = 0; j < HIST_NSLOTS; j++) {
+            if (slot_ops[i][j] != 0) {
+                /* Reuse j in the next loop, since we break after. */
+                fprintf(fp, "%-8.8s", js_CodeSpec[i].name);
+                for (j = 0; j < HIST_NSLOTS; j++)
+                    fprintf(fp, " %7lu", (unsigned long)slot_ops[i][j]);
+                putc('\n', fp);
+                break;
+            }
+        }
+    }
     fclose(fp);
 }
 
@@ -3687,6 +3725,7 @@ interrupt:
 #define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OPEQ,MINMAX)                    \
     slot = SLOT;                                                              \
     JS_ASSERT(slot < fp->fun->COUNT);                                         \
+    METER_SLOT_OP(op, slot);                                                  \
     vp = fp->BASE + slot;                                                     \
     rval = *vp;                                                               \
     if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
@@ -3736,6 +3775,7 @@ interrupt:
 #define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OPEQ,MINMAX)                      \
     slot = GET_VARNO(pc);                                                     \
     JS_ASSERT(slot < fp->nvars);                                              \
+    METER_SLOT_OP(op, slot);                                                  \
     lval = fp->vars[slot];                                                    \
     if (JSVAL_IS_NULL(lval)) {                                                \
         op = SLOWOP;                                                          \
@@ -4739,6 +4779,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETARG)
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
+            METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->argv[slot]);
             obj = NULL;
           END_CASE(JSOP_GETARG)
@@ -4746,6 +4787,7 @@ interrupt:
           BEGIN_CASE(JSOP_SETARG)
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
+            METER_SLOT_OP(op, slot);
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
@@ -4755,6 +4797,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
+            METER_SLOT_OP(op, slot);
             PUSH_OPND(fp->vars[slot]);
             obj = NULL;
           END_CASE(JSOP_GETVAR)
@@ -4762,6 +4805,7 @@ interrupt:
           BEGIN_CASE(JSOP_SETVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
+            METER_SLOT_OP(op, slot);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
@@ -4771,6 +4815,7 @@ interrupt:
           BEGIN_CASE(JSOP_GETGVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->nvars);
+            METER_SLOT_OP(op, slot);
             lval = fp->vars[slot];
             if (JSVAL_IS_NULL(lval)) {
                 op = JSOP_NAME;
@@ -4785,6 +4830,7 @@ interrupt:
           BEGIN_CASE(JSOP_SETGVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->nvars);
+            METER_SLOT_OP(op, slot);
             rval = FETCH_OPND(-1);
             lval = fp->vars[slot];
             obj = fp->varobj;

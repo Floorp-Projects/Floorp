@@ -787,9 +787,9 @@ JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
 #ifdef JS_OPMETER
-    extern void js_DumpOpPairMeter();
+    extern void js_DumpOpMeters();
 
-    js_DumpOpPairMeter();
+    js_DumpOpMeters();
 #endif
 
     js_FinishDtoa();
