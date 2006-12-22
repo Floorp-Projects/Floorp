@@ -1667,7 +1667,6 @@ JS_malloc(JSContext *cx, size_t nbytes)
     void *p;
 
     JS_ASSERT(nbytes != 0);
-    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION);
     if (nbytes == 0)
         nbytes = 1;
 
@@ -1684,7 +1683,6 @@ JS_malloc(JSContext *cx, size_t nbytes)
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
-    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION);
     p = realloc(p, nbytes);
     if (!p)
         JS_ReportOutOfMemory(cx);

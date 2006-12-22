@@ -1222,12 +1222,3 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
         return &js_ErrorFormatString[errorNumber];
     return NULL;
 }
-
-JSBool
-js_ResetOperationCounter(JSContext *cx)
-{
-    JS_ASSERT(cx->operationCounter & JSOW_BRANCH_CALLBACK);
-
-    cx->operationCounter = 0;
-    return !cx->branchCallback || cx->branchCallback(cx, NULL);
-}
