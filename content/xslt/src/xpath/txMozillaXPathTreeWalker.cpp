@@ -766,6 +766,15 @@ txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
 
 /* static */
 txXPathNode*
+txXPathNativeNode::createXPathNode(nsIContent* aContent, PRBool aKeepRootAlive)
+{
+    nsINode* root = aKeepRootAlive ? txXPathNode::RootOf(aContent) : nsnull;
+
+    return new txXPathNode(aContent, txXPathNode::eContent, root);
+}
+
+/* static */
+txXPathNode*
 txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, PRBool aKeepRootAlive)
 {
     PRUint16 nodeType;

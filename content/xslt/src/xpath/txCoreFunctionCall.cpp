@@ -46,7 +46,7 @@
 #include <math.h>
 #include "txStringUtils.h"
 
-struct txFunctionDescriptor
+struct txCoreFunctionDescriptor
 {
     PRInt8 mMinParams;
     PRInt8 mMaxParams;
@@ -56,7 +56,7 @@ struct txFunctionDescriptor
 
 // This must be ordered in the same order as txCoreFunctionCall::eType.
 // If you change one, change the other.
-static const txFunctionDescriptor descriptTable[] =
+static const txCoreFunctionDescriptor descriptTable[] =
 {
     { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::count }, // COUNT
     { 1, 1, Expr::NODESET_RESULT, &txXPathAtoms::id }, // ID

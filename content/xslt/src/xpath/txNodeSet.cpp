@@ -455,7 +455,7 @@ txNodeSet::clear()
 }
 
 PRInt32
-txNodeSet::indexOf(const txXPathNode& aNode) const
+txNodeSet::indexOf(const txXPathNode& aNode, PRUint32 aStart) const
 {
     NS_ASSERTION(mDirection == kForward,
                  "only append(aNode) is supported on reversed nodesets");
@@ -464,11 +464,10 @@ txNodeSet::indexOf(const txXPathNode& aNode) const
         return -1;
     }
 
-    PRInt32 counter = 0;
-    txXPathNode* pos = mStart;
-    for (; pos < mEnd; ++counter, ++pos) {
+    txXPathNode* pos = mStart + aStart;
+    for (; pos < mEnd; ++pos) {
         if (*pos == aNode) {
-            return counter;
+            return pos - mStart;
         }
     }
 
