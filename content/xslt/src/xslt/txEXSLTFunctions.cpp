@@ -154,8 +154,8 @@ createDocFragment(txIEvalContext *aContext, nsIContent** aResult)
 }
 
 static nsresult
-createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue, txNodeSet* aResultSet,
-                     nsIContent* aResultHolder)
+createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
+                     txNodeSet* aResultSet, nsIContent* aResultHolder)
 {
     NS_ASSERTION(aResultHolder->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) &&
                  aResultHolder->GetOwnerDoc(),
@@ -300,13 +300,15 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             }
             else {
                 nsRefPtr<txNodeSet> resultSet;
-                rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
+                rv = aContext->recycler()->
+                    getNodeSet(getter_AddRefs(resultSet));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                if (exprResult->getResultType() == txAExprResult::RESULT_TREE_FRAGMENT) {
+                if (exprResult->getResultType() ==
+                    txAExprResult::RESULT_TREE_FRAGMENT) {
                     txResultTreeFragment *rtf =
                         NS_STATIC_CAST(txResultTreeFragment*,
-                                       NS_STATIC_CAST(txAExprResult*, exprResult));
+                                       exprResult.get());
 
                     const txXPathNode *node = rtf->getNode();
                     if (!node) {
@@ -323,7 +325,8 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                     exprResult->stringValue(value);
 
                     nsAutoPtr<txXPathNode> node;
-                    rv = createTextNode(aContext, value, getter_Transfers(node));
+                    rv = createTextNode(aContext, value,
+                                        getter_Transfers(node));
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     resultSet->append(*node);
@@ -337,14 +340,16 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case OBJECT_TYPE:
         {
             nsRefPtr<txAExprResult> exprResult;
-            nsresult rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult));
+            nsresult rv = mParams[0]->evaluate(aContext,
+                                               getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            AppendASCIItoUTF16(sTypes[exprResult->getResultType()], strRes->mValue);
+            AppendASCIItoUTF16(sTypes[exprResult->getResultType()],
+                               strRes->mValue);
 
             NS_ADDREF(*aResult = strRes);
 
@@ -567,20 +572,20 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 tailIndex = strStart.get() - string.get();
             }
             else {
-                PRInt32 foundIndex, startIndex = 0;
-                while ((foundIndex = string.FindCharInSet(pattern, startIndex)) !=
+                PRInt32 found, start = 0;
+                while ((found = string.FindCharInSet(pattern, start)) !=
                        kNotFound) {
-                    if (foundIndex != startIndex) {
+                    if (found != start) {
                         rv = createAndAddToResult(txXSLTAtoms::token,
-                                                  Substring(string, startIndex,
-                                                            foundIndex - startIndex),
+                                                  Substring(string, start,
+                                                            found - start),
                                                   resultSet, docFrag);
                         NS_ENSURE_SUCCESS(rv, rv);
                     }
-                    startIndex = foundIndex + 1;
+                    start = found + 1;
                 }
 
-                tailIndex = startIndex;
+                tailIndex = start;
             }
 
             // Add tail if needed
