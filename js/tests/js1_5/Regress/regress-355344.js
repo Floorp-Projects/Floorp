@@ -51,12 +51,14 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
+  var o = {};
+
   expect = 'setter: yikes';
 
-  this.watch('x', function(){throw 'yikes'}); 
+  o.watch('x', function(){throw 'yikes'}); 
   try
   {
-    x = 3; 
+    o.x = 3; 
   }
   catch(ex)
   {
