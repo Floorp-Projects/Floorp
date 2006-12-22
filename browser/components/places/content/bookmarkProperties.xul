@@ -27,6 +27,10 @@
                   src="chrome://browser/locale/places/bookmarkProperties.properties"/>
   </stringbundleset>
 
+  <script type="application/x-javascript" 
+          src="chrome://browser/content/places/utils.js"/>
+  <script type="application/x-javascript" 
+          src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
@@ -124,5 +128,3 @@
         </grid>
       </vbox>
 </dialog>
-
-

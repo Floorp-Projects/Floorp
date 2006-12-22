@@ -1037,13 +1037,7 @@ function delayedStartup()
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
 #else
-  var toolbar = document.getElementById("bookmarksBarContent");
-  if (toolbar)
-    toolbar._init();
-  var menu = document.getElementById("bookmarksMenuPopup");
-  menu._init();
   PlacesMenuDNDController.init();
-  window.controllers.appendController(PlacesController);
 #endif
 
   // called when we go into full screen, even if it is
@@ -1267,10 +1261,6 @@ function nonBrowserWindowDelayedStartup()
 #ifndef MOZ_PLACES_BOOKMARKS
   initServices();
   initBMService();
-#else
-  var menu = document.getElementById("bookmarksMenuPopup");
-  menu._init();
-  window.controllers.appendController(PlacesController);
 #endif
 
   // init global pref service
@@ -3449,10 +3439,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     // from the bar to the overflow item
     BookmarksToolbar.resizeFunc(null);
   }
-#else
-  var bookmarksBar = document.getElementById("bookmarksBarContent");
-  if (bookmarksBar)
-    bookmarksBar._init();
 #endif
 
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET

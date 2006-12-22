@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
+#   Asaf Romano <mano@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +38,59 @@
 <!-- if you make changes to this file you need to rebuild in both browser/base
      and browser/components/places for the effect to appear in both the toolbar/
      menu and the places organizer. -->
-<popup id="placesContext" 
-       onpopupshowing="return PlacesController.buildContextMenu(this);">
+<popup id="placesContext"
+       onpopupshowing="PlacesUtils.getViewForNode(document.popupNode)
+                                  .buildContextMenu(this);">
   <!-- the rules defined in the selection attribute control whether or not 
        the menu item is _visible_ regardless of whether or not the command
        is enabled. -->
-  <menuitem id="placesContext_open" command="placesCmd_open" default="true"
+  <menuitem id="placesContext_open"
+            command="placesCmd_open" default="true"
             selection="link"/>
-  <menuitem id="placesContext_open:tabs" command="placesCmd_open:tabs"
+  <menuitem id="placesContext_open:tabs"
+            command="placesCmd_open:tabs"
             selection="folder|links"/>
-  <menuitem id="placesContext_open:newwindow" command="placesCmd_open:window"
+  <menuitem id="placesContext_open:newwindow"
+            command="placesCmd_open:window"
             selection="link"/>
-  <menuitem id="placesContext_open:newtab" command="placesCmd_open:tab"
+  <menuitem id="placesContext_open:newtab"
+            command="placesCmd_open:tab"
             selection="link"/>
   <menuseparator id="placesContext_openSeparator"
             selection="link|links|folder"/>
-  <menuitem id="placesContext_new:folder" command="placesCmd_new:folder" accesskey="&cmd.context_new_folder.accesskey;"
+  <menuitem id="placesContext_new:folder"
+            command="placesCmd_new:folder"
+            accesskey="&cmd.context_new_folder.accesskey;"
             selection="mutable"/>
-  <menuitem id="placesContext_new:separator" command="placesCmd_new:separator"
+  <menuitem id="placesContext_new:separator"
+            command="placesCmd_new:separator"
             selection="mutable"/>
   <menuseparator id="placesContext_newSeparator"
             selection="mutable"/>
-  <menuitem id="placesContext_edit:cut" command="placesCmd_edit:cut"
+  <menuitem id="cMenu_undo"
             selection="separator|link|links|folder|mixed"/>
-  <menuitem id="placesContext_edit:copy" command="placesCmd_edit:copy"
+  <menuitem id="cMenu_copy"
             selection="separator|link|links|folder|mixed"/>
-  <menuitem id="placesContext_edit:paste" command="placesCmd_edit:paste"
+  <menuitem id="cMenu_paste"
             selection="mutable"/>
-  <menuitem id="placesContext_edit:delete" command="placesCmd_edit:delete"
+  <menuitem id="cMenu_delete"
             selection="host|separator|link|links|folder|mixed"/>
   <menuseparator id="placesContext_editSeparator"
             selection="link|links|folder|mixed|mutable"/>
-  <menuitem id="placesContext_select:all" command="placesCmd_select:all"
+  <menuitem id="cMenu_selectAll"
             selection="multiselect"/>
   <menuseparator id="placesContext_selectSeparator"
-            selection="multiselect"/>
-  <menuitem id="placesContext_reload" command="placesCmd_reload"
+                 selection="multiselect"/>
+  <menuitem id="placesContext_reload"
+            command="placesCmd_reload"
             selection="livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
-  <menuitem id="placesContext_sortby:name" command="placesCmd_sortby:name"
+  <menuitem id="placesContext_sortby:name"
+            command="placesCmd_sortby:name"
             accesskey="&cmd.context_sortby_name.accesskey;"
             selection="mutable"/>
   <menuseparator id="placesContext_sortSeparator"
             selection="mutable|livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
-  <menuitem id="placesContext_show:info" command="placesCmd_show:info"
+  <menuitem id="placesContext_show:info"
+            command="placesCmd_show:info"
             selection="link|folder|query"/>
 </popup>
-
