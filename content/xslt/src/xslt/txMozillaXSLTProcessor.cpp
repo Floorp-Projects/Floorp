@@ -65,6 +65,7 @@
 #include "nsThreadUtils.h"
 #include "jsapi.h"
 #include "txExprParser.h"
+#include "nsIErrorService.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -1030,7 +1031,9 @@ txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
         nsCAutoString spec;
         aUri->GetSpec(spec);
         CopyUTF8toUTF16(spec, mSourceText);
-        reportError(rv, nsnull, nsnull);
+        nsresult status = NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_XSLT ? rv :
+                          NS_ERROR_XSLT_NETWORK_ERROR;
+        reportError(status, nsnull, nsnull);
     }
     return rv;
 }
@@ -1238,6 +1241,37 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        PRInt32 aIndexInContainer)
 {
     mStylesheet = nsnull;
+}
+
+/* static*/
+nsresult
+txMozillaXSLTProcessor::Init()
+{
+    if (!txXSLTProcessor::init()) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsCOMPtr<nsIErrorService> errorService =
+        do_GetService(NS_ERRORSERVICE_CONTRACTID);
+    if (errorService) {
+        errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_XSLT,
+                                                XSLT_MSGS_URL);
+    }
+
+    return NS_OK;
+}
+
+/* static*/
+void
+txMozillaXSLTProcessor::Shutdown()
+{
+    txXSLTProcessor::shutdown();
+
+    nsCOMPtr<nsIErrorService> errorService =
+        do_GetService(NS_ERRORSERVICE_CONTRACTID);
+    if (errorService) {
+        errorService->UnregisterErrorStringBundle(NS_ERROR_MODULE_XSLT);
+    }
 }
 
 /* static*/

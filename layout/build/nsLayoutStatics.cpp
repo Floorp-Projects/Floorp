@@ -76,7 +76,7 @@
 #include "nsTextTransformer.h"
 #include "nsXBLAtoms.h"
 #include "nsXBLWindowKeyHandler.h"
-#include "txXSLTProcessor.h"
+#include "txMozillaXSLTProcessor.h"
 #include "nsDOMStorage.h"
 
 #ifdef MOZ_XUL
@@ -175,8 +175,10 @@ nsLayoutStatics::Initialize()
   }
   nsDOMAttribute::Initialize();
 
-  if (!txXSLTProcessor::init()) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  rv = txMozillaXSLTProcessor::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize txMozillaXSLTProcessor");
+    return rv;
   }
 
   rv = nsDOMStorageManager::Initialize();
@@ -192,7 +194,7 @@ void
 nsLayoutStatics::Shutdown()
 {
   nsDOMStorageManager::Shutdown();
-  txXSLTProcessor::shutdown();
+  txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
   nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
