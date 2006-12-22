@@ -73,12 +73,14 @@ txEXSLTRegExFunctions.prototype = {
         var matches = str.match(re);
         if (matches != null && matches.length > 0) {
             var doc = context.contextNode.ownerDocument;
+            var docFrag = doc.createDocumentFragment();
 
             for (var i = 0; i < matches.length; ++i) {
                 var match = matches[i];
                 var elem = doc.createElementNS(null, "match");
                 var text = doc.createTextNode(match ? match : '');
                 elem.appendChild(text);
+                docFrag.appendChild(elem);
                 nodeset.add(elem);
             }
         }
