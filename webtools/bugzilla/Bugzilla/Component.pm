@@ -74,7 +74,8 @@ sub new {
 
     unshift @_, $param;
     my $component = $class->SUPER::new(@_);
-    $component->{product} = $product if $product;
+    # Add the product object as attribute only if the component exists.
+    $component->{product} = $product if ($component && $product);
     return $component;
 }
 
